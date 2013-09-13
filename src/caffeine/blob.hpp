@@ -37,8 +37,6 @@ class Blob {
   Dtype* mutable_gpu_diff();
   void update();
  private:
-  void check_data();
-  void check_diff();
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
   int num_;
@@ -49,7 +47,5 @@ class Blob {
 };  // class Blob
 
 }  // namespace caffeine
-
-#include "caffeine/_blob.cpp"
 
 #endif  // CAFFEINE_BLOB_HPP_

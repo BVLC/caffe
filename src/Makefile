@@ -8,7 +8,7 @@
 PROJECT := caffeine
 NAME := lib$(PROJECT).so
 TEST_NAME := test_$(PROJECT)
-CXX_SRCS := $(shell find caffeine ! -name "test_*.cpp" ! -name "_*.cpp" -name "*.cpp")
+CXX_SRCS := $(shell find caffeine ! -name "test_*.cpp" -name "*.cpp")
 TEST_SRCS := $(shell find caffeine -name "test_*.cpp") gtest/gtest-all.cpp
 PROTO_SRCS := $(wildcard caffeine/proto/*.proto)
 PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}

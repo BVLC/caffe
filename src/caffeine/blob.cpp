@@ -18,56 +18,59 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() {
-  check_data();
-  return data_->cpu_data();
+  CHECK(data_);
+  return (const Dtype*)data_->cpu_data();
 }
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_data() {
-  check_data();
-  return data_->gpu_data();
+  CHECK(data_);
+  return (const Dtype*)data_->gpu_data();
 }
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() {
-  check_diff();
-  return diff_->cpu_data();
+  CHECK(diff_);
+  return (const Dtype*)diff_->cpu_data();
 }
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_diff() {
-  check_diff();
-  return diff_->gpu_data();
+  CHECK(diff_);
+  return (const Dtype*)diff_->gpu_data();
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
-  check_data();
-  return data_->mutable_cpu_data();
+  CHECK(data_);
+  return (Dtype*)data_->mutable_cpu_data();
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
-  check_data();
-  return data_->mutable_gpu_data();
+  CHECK(data_);
+  return (Dtype*)data_->mutable_gpu_data();
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
-  check_diff();
-  return diff_->mutable_cpu_data();
+  CHECK(diff_);
+  return (Dtype*)diff_->mutable_cpu_data();
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
-  check_diff();
-  return diff_->mutable_gpu_data();
+  CHECK(diff_);
+  return (Dtype*)diff_->mutable_gpu_data();
 }
 
 template <typename Dtype>
 void Blob<Dtype>::update() {
   
 }
+
+template class Blob<float>;
+template class Blob<double>;
 
 }  // namespace caffeine
 
