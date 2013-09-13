@@ -80,3 +80,4 @@ inline void* SyncedMemory::mutable_gpu_data() {
 
 
 }  // namespace caffeine
+

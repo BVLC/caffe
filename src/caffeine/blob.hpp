@@ -33,7 +33,8 @@ class Blob {
   Dtype* mutable_cpu_data();
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
-  Dtype* mutable_gpu_diff();  
+  Dtype* mutable_gpu_diff();
+  void update();
  private:
   void check_data();
   void check_diff();

@@ -12,8 +12,8 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
-  data_.reset(SyncedMemory(count_ * sizeof(Dtype)));
-  diff_.reset(SyncedMemory(count_ * sizeof(Dtype)));
+  data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+  diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
 }
 
 template <typename Dtype>
@@ -62,6 +62,11 @@ template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
   check_diff();
   return diff_->mutable_gpu_data();
+}
+
+template <typename Dtype>
+void Blob<Dtype>::update() {
+  
 }
 
 }  // namespace caffeine
