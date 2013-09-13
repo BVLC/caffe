@@ -16,6 +16,7 @@ class SyncedMemory {
   void* mutable_gpu_data();
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
+  size_t size() { return size_; }
  private:
   void to_cpu();
   void to_gpu();
