@@ -1,5 +1,5 @@
 #include <cstring>
-#include "cuda_runtime.h"
+#include <cuda_runtime.h>
 
 #include "caffeine/common.hpp"
 #include "caffeine/syncedmem.hpp"

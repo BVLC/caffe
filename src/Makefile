@@ -23,8 +23,8 @@ CUDA_DIR = /usr/local/cuda
 CUDA_INCLUDE_DIR = $(CUDA_DIR)/include
 CUDA_LIB_DIR = $(CUDA_DIR)/lib64
 
-INCLUDE_DIRS := . $(CUDA_INCLUDE_DIR)
-LIBRARY_DIRS := . $(CUDA_LIB_DIR)
+INCLUDE_DIRS := . /usr/local/include $(CUDA_INCLUDE_DIR)
+LIBRARY_DIRS := . /usr/local/lib $(CUDA_LIB_DIR)
 LIBRARIES := cuda cudart cublas protobuf glog
 WARNINGS := -Wall
 

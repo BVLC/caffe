@@ -13,11 +13,7 @@ class Blob {
        : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
        diff_() {};
   explicit Blob(const int num, const int channels, const int height,
-    const int width)
-      : num_(num), channels_(channels), height_(height), width_(width),
-      count_(num * channels * height * width),
-      data_(new SyncedMemory(count_ * sizeof(Dtype))),
-      diff_(new SyncedMemory(count_ * sizeof(Dtype))) {};
+    const int width);
   virtual ~Blob() {};
   void Reshape(const int num, const int channels, const int height,
       const int width);

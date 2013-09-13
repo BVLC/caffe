@@ -37,12 +37,11 @@ TYPED_TEST(BlobSimpleTest, TestInitialization) {
 }
 
 TYPED_TEST(BlobSimpleTest, TestPointers) {
-  EXPECT_TRUE(this->blob_preshaped_->gpu_data() != NULL);
-  EXPECT_TRUE(this->blob_preshaped_->cpu_data() != NULL);
-  EXPECT_TRUE(this->blob_preshaped_->mutable_gpu_data() != NULL);
-  EXPECT_TRUE(this->blob_preshaped_->mutable_cpu_data() != NULL);
+  EXPECT_TRUE(this->blob_preshaped_->gpu_data());
+  EXPECT_TRUE(this->blob_preshaped_->cpu_data());
+  EXPECT_TRUE(this->blob_preshaped_->mutable_gpu_data());
+  EXPECT_TRUE(this->blob_preshaped_->mutable_cpu_data());
 }
-
 
 TYPED_TEST(BlobSimpleTest, TestReshape) {
   this->blob_->Reshape(2, 3, 4, 5);
