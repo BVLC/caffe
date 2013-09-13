@@ -42,6 +42,7 @@ test: $(TEST_NAME)
   
 $(TEST_NAME): $(TEST_OBJS) $(OBJS)
 	$(CXX) $(TEST_OBJS) $(OBJS) -o $(TEST_NAME) $(LDFLAGS) $(WARNINGS)
+	./$(TEST_NAME)
 
 $(NAME): $(PROTO_GEN_CC) $(OBJS)
 	$(LINK) -shared $(OBJS) -o $(NAME)

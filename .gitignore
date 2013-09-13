@@ -15,3 +15,6 @@
 # Compiled protocol buffers
 *.pb.h
 *.pb.cc
+
+# test files
+src/test_caffeine
