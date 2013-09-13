@@ -41,7 +41,7 @@ all: $(NAME)
 test: $(TEST_NAME)
   
 $(TEST_NAME): $(OBJS) $(TEST_OBJS)
-	$(CXX) $(TEST_OBJS) $(OBJS) -o $(TEST_NAME) $(LDFLAGS) $(WARNINGS)
+	$(CXX) $(OBJS) $(TEST_OBJS) -o $(TEST_NAME) $(LDFLAGS) $(WARNINGS)
 	./$(TEST_NAME)
 
 $(NAME): $(PROTO_GEN_CC) $(OBJS)
@@ -51,8 +51,8 @@ $(PROTO_GEN_CC): $(PROTO_SRCS)
 	protoc $(PROTO_SRCS) --cpp_out=.
 
 clean:
-	$(RM) $(NAME)
-	$(RM) $(OBJS)
-	$(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC)
+	@- $(RM) $(NAME) $(TEST_NAME)
+	@- $(RM) $(OBJS) $(TEST_OBJS)
+	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC)
 
 distclean: clean
