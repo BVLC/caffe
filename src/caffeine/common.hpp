@@ -37,7 +37,7 @@ static std::ostream nullout(0);
 
 // TODO(Yangqing): make a better logging scheme
 #define CUDA_LOG_IF(condition) \
-    ((condition) != cudaSuccess) ? nullout : std::cout
+    ((condition) == cudaSuccess) ? nullout : std::cout
 
 #define CUDA_CHECK(condition) \
     CUDA_LOG_IF(condition) << "Check failed: " #condition " "
