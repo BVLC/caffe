@@ -1,3 +1,4 @@
+#include <cstring>
 #include "cuda_runtime.h"
 
 #include "caffeine/common.hpp"
@@ -56,23 +57,23 @@ inline void SyncedMemory::to_gpu() {
 }
 
 
-inline const void* SyncedMemory::cpu_data() {
+const void* SyncedMemory::cpu_data() {
   to_cpu();
   return (const void*)cpu_ptr_;
 }
 
-inline const void* SyncedMemory::gpu_data() {
+const void* SyncedMemory::gpu_data() {
   to_gpu();
   return (const void*)gpu_ptr_;
 }
 
-inline void* SyncedMemory::mutable_cpu_data() {
+void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
   return cpu_ptr_;
 }
 
-inline void* SyncedMemory::mutable_gpu_data() {
+void* SyncedMemory::mutable_gpu_data() {
   to_gpu();
   head_ = HEAD_AT_GPU;
   return gpu_ptr_;
