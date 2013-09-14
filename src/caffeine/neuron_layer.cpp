@@ -1,4 +1,4 @@
-#include "caffeine/base.h"
+#include "caffeine/base.hpp"
 
 namespace caffeine {
 
