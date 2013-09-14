@@ -28,7 +28,7 @@ class Caffeine {
   static cublasHandle_t cublas_handle();
   static Brew mode();
   // The setters for the variables
-  static Brew set_mode(Brew mode);
+  static void set_mode(Brew mode);
  private:
   Caffeine();
   static shared_ptr<Caffeine> singleton_;
@@ -36,6 +36,6 @@ class Caffeine {
   Brew mode_;
 };
 
-}
+}  // namespace caffeine
 
 #endif  // CAFFEINE_COMMON_HPP_

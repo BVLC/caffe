@@ -1,4 +1,4 @@
-#include "caffeine/base.hpp"
+#include "caffeine/layer.hpp"
 
 namespace caffeine {
 
@@ -6,7 +6,7 @@ namespace caffeine {
 // gpu specific implementations instead, and should not change these
 // functions.
 template <typename Dtype>
-inline void Layer<Dtype>::Forward(vector<const Blob<Dtype>*>& bottom,
+inline void Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   switch(Caffeine::mode()) {
   case Caffeine::CPU:
@@ -21,14 +21,15 @@ inline void Layer<Dtype>::Forward(vector<const Blob<Dtype>*>& bottom,
 };
 
 template <typename Dtype>
-inline void Layer<Dtype>::Backward(vector<Blob<Dtype>*>& bottom,
-    vector<const Blob<Dtype>*>* top, bool propagate_down) {
+inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+    const bool propagate_down,
+    vector<Blob<Dtype>*>* bottom) {
   switch(Caffeine::mode()) {
   case Caffeine::CPU:
-    Backward_cpu(bottom, top, propagate_down);
+    return Backward_cpu(top, propagate_down, bottom);
     break;
   case Caffeine::GPU:
-    Backward_gpu(bottom, top, propagate_down);
+    return Backward_gpu(top, propagate_down, bottom);
     break;
   default:
     LOG(FATAL) << "Unknown caffeine mode.";
@@ -36,7 +37,7 @@ inline void Layer<Dtype>::Backward(vector<Blob<Dtype>*>& bottom,
 };
 
 template <typename Dtype>
-inline void Layer<Dtype>::Predict(vector<const Blob<Dtype>*>& bottom,
+inline void Layer<Dtype>::Predict(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   switch(Caffeine::mode()) {
   case Caffeine::CPU:

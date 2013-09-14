@@ -1,7 +1,7 @@
 #ifndef CAFFEINE_CORE_LAYERS_HPP_
 #define CAFFEINE_CORE_LAYERS_HPP_
 
-#include "caffeine/base.hpp"
+#include "caffeine/layer.hpp"
 
 namespace caffeine {
 

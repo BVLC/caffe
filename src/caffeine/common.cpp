@@ -28,8 +28,9 @@ Caffeine::Brew Caffeine::mode() {
   return Get().mode_;
 }
 
-Caffeine::Brew Caffeine::set_mode(Caffeine::Brew mode) {
+void Caffeine::set_mode(Caffeine::Brew mode) {
   Get().mode_ = mode;
 }
 
 }  // namespace caffeine
+

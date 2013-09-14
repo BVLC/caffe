@@ -3,3 +3,12 @@ package caffeine;
 message LayerParameter {
   required string name = 1;
 }
+
+message BlobProto {
+  optional int32 num = 1 [default = 0];
+  optional int32 height = 2 [default = 0];
+  optional int32 width = 3 [default = 0];
+  optional int32 channels = 4 [default = 0];
+  repeated float data = 5;
+  repeated float diff = 6;
+}
