@@ -16,7 +16,7 @@ inline void Layer<Dtype>::Forward(vector<const Blob<Dtype>*>& bottom,
     Forward_gpu(bottom, top);
     break;
   default:
-    CHECK(false);
+    LOG(FATAL) << "Unknown caffeine mode.";
   }
 };
 
@@ -31,7 +31,7 @@ inline void Layer<Dtype>::Backward(vector<Blob<Dtype>*>& bottom,
     Backward_gpu(bottom, top, propagate_down);
     break;
   default:
-    CHECK(false);
+    LOG(FATAL) << "Unknown caffeine mode.";
   }
 };
 
@@ -46,7 +46,7 @@ inline void Layer<Dtype>::Predict(vector<const Blob<Dtype>*>& bottom,
     Predict_gpu(bottom, top);
     break;
   default:
-    CHECK(false);
+    LOG(FATAL) << "Unknown caffeine mode.";
   }
 };
 

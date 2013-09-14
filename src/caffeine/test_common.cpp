@@ -9,6 +9,9 @@ namespace caffeine {
 class CommonTest : public ::testing::Test {};
 
 TEST_F(CommonTest, TestCublasHandler) {
+  int cuda_device_id;
+  CUDA_CHECK(cudaGetDevice(&cuda_device_id));
+  LOG(INFO) << "Cuda device id: " << cuda_device_id;
   EXPECT_TRUE(Caffeine::cublas_handle());
 }
 
