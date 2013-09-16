@@ -4,6 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <cublas_v2.h>
 #include <glog/logging.h>
+#include <mkl_vsl.h>
 
 #include "driver_types.h"
 
@@ -13,8 +14,9 @@ namespace caffeine {
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
 
-#define CUDA_CHECK(condition) CHECK((condition) == cudaSuccess)
-#define CUBLAS_CHECK(condition) CHECK((condition) == CUBLAS_STATUS_SUCCESS)
+#define CUDA_CHECK(condition) CHECK_EQ((condition), cudaSuccess)
+#define CUBLAS_CHECK(condition) CHECK_EQ((condition), CUBLAS_STATUS_SUCCESS)
+#define VSL_CHECK(condition) CHECK_EQ((condition), VSL_STATUS_OK)
 
 // A singleton class to hold common caffeine stuff, such as the handler that
 // caffeine is going to use for cublas.
@@ -26,6 +28,7 @@ class Caffeine {
 
   // The getters for the variables. 
   static cublasHandle_t cublas_handle();
+  static VSLStreamStatePtr vsl_stream();
   static Brew mode();
   // The setters for the variables
   static void set_mode(Brew mode);
@@ -33,6 +36,7 @@ class Caffeine {
   Caffeine();
   static shared_ptr<Caffeine> singleton_;
   cublasHandle_t cublas_handle_;
+  VSLStreamStatePtr vsl_stream_;
   Brew mode_;
 };
 

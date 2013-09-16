@@ -2,6 +2,16 @@ package caffeine;
 
 message LayerParameter {
   required string name = 1;
+  required string type = 2;
+}
+
+message FillerParameter {
+  required string type = 1;
+  optional float value = 2 [default = 0]; // the value in constant filler
+  optional float min = 3 [default = 0]; // the min value in uniform filler
+  optional float max = 4 [default = 1]; // the max value in uniform filler
+  optional float mean = 5 [default = 0]; // the mean value in gaussian filler
+  optional float std = 6 [default = 1]; // the std value in gaussian filler
 }
 
 message BlobProto {

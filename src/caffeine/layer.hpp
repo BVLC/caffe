@@ -13,6 +13,9 @@ namespace caffeine {
 template <typename Dtype>
 class Layer {
  public:
+   // You should not implement your own constructor. Any set up code should go
+   // to SetUp(), where the dimensions of the bottom blobs are provided to the
+   // layer.
   explicit Layer(const LayerParameter& param)
     : layer_param_(param) {};
   virtual ~Layer();
@@ -35,7 +38,7 @@ class Layer {
   // The protobuf that stores the layer parameters
   LayerParameter layer_param_;
   // The vector that stores the parameters as a set of blobs.
-  vector<Blob<Dtype> > blobs;
+  vector<Blob<Dtype> > blobs_;
 
   // Forward functions
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
