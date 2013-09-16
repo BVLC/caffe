@@ -15,6 +15,7 @@
 # Compiled protocol buffers
 *.pb.h
 *.pb.cc
+*_pb2.py
 
 # test files
 src/test_caffeine
