@@ -47,10 +47,8 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
-  const int blocks = (count + CAFFEINE_CUDA_NUM_THREADS - 1) /
-      CAFFEINE_CUDA_NUM_THREADS;
-  ReLUForward<<<blocks, CAFFEINE_CUDA_NUM_THREADS>>>(count, bottom_data,
-      top_data);
+  ReLUForward<Dtype><<<CAFFEINE_GET_BLOCKS(count), CAFFEINE_CUDA_NUM_THREADS>>>(
+      count, bottom_data, top_data);
 }
 
 template <typename Dtype>
@@ -71,10 +69,8 @@ Dtype ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
     const int count = (*bottom)[0]->count();
-    const int blocks = (count + CAFFEINE_CUDA_NUM_THREADS - 1) /
-        CAFFEINE_CUDA_NUM_THREADS;
-    ReLUBackward<<<blocks, CAFFEINE_CUDA_NUM_THREADS>>>(count, top_diff,
-        bottom_data, bottom_diff);
+    ReLUBackward<Dtype><<<CAFFEINE_GET_BLOCKS(count), CAFFEINE_CUDA_NUM_THREADS>>>(
+        count, top_diff, bottom_data, bottom_diff);
   }
   return Dtype(0);
 }

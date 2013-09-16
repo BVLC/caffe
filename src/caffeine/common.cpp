@@ -7,11 +7,16 @@ shared_ptr<Caffeine> Caffeine::singleton_;
 Caffeine::Caffeine()
     : mode_(Caffeine::CPU), phase_(Caffeine::TRAIN) {
   CUBLAS_CHECK(cublasCreate(&cublas_handle_));
+  CURAND_CHECK(curandCreateGenerator(&curand_generator_,
+      CURAND_RNG_PSEUDO_XORWOW));
   VSL_CHECK(vslNewStream(&vsl_stream_, VSL_BRNG_MT19937, 1701));
 }
 
 Caffeine::~Caffeine() {
   if (!cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+  if (!curand_generator_) {
+    CURAND_CHECK(curandDestroyGenerator(curand_generator_));
+  }
   if (!vsl_stream_) VSL_CHECK(vslDeleteStream(&vsl_stream_));
 };
 
@@ -28,6 +33,10 @@ VSLStreamStatePtr Caffeine::vsl_stream() {
 
 cublasHandle_t Caffeine::cublas_handle() {
   return Get().cublas_handle_;
+};
+
+curandGenerator_t Caffeine::curand_generator() {
+  return Get().curand_generator_;
 };
 
 Caffeine::Brew Caffeine::mode() {

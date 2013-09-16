@@ -1,6 +1,11 @@
-#include "caffeine/layer.hpp"
-#include "caffeine/vision_layers.hpp"
 #include <algorithm>
+#include <limits>
+
+#include "caffeine/common.hpp"
+#include "caffeine/layer.hpp"
+#include "caffeine/syncedmem.hpp"
+#include "caffeine/vision_layers.hpp"
+
 
 using std::max;
 
@@ -11,24 +16,29 @@ void DropoutLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   NeuronLayer<Dtype>::SetUp(bottom, top);
   // Set up the cache for random number generation
-  rand_mat_.reset(new Blob<float>(bottom.num(), bottom.channels(),
-      bottom.height(), bottom.width());
-  filler_.reset(new UniformFiller<float>(FillerParameter()));
+  rand_vec_.reset(new SyncedMemory(bottom[0]->count() * sizeof(int)));
 };
 
 template <typename Dtype>
 void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  // First, create the random matrix
-  filler_->Fill(rand_mat_.get()); 
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  const Dtype* rand_vals = rand_mat_->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  float threshold = layer_param_->dropout_ratio();
-  float scale = layer_param_->dropo
+  float threshold = this->layer_param_.dropout_ratio();
+  DCHECK(threshold > 0.);
+  DCHECK(threshold < 1.);
+  float scale = 1. / threshold;
   const int count = bottom[0]->count();
-  for (int i = 0; i < count; ++i) {
-    top_data[i] = rand_mat_ > ;
+  if (Caffeine::phase() == Caffeine::TRAIN) {
+    // Create random numbers
+    viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, Caffeine::vsl_stream(),
+        count, (int*)(rand_vec_->mutable_cpu_data()),
+        1. - threshold);
+    for (int i = 0; i < count; ++i) {
+      top_data[i] = bottom_data[i] * rand_vec_[i] * scale;
+    }
+  } else {
+    memcpy(top_data, bottom_data, bottom[0]->count() * sizeof(Dtype));
   }
 }
 
@@ -36,23 +46,25 @@ template <typename Dtype>
 Dtype DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
+  CHECK(Caffeine::phase() == Caffeine::TRAIN);
   if (propagate_down) {
-    const Dtype* bottom_data = (*bottom)[0]->cpu_data();
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+    const int* mask = (int*)(rand_vec_->cpu_data());
     const int count = (*bottom)[0]->count();
     for (int i = 0; i < count; ++i) {
-      bottom_diff[i] = top_diff[i] * (bottom_data[i] >= 0);
+      bottom_diff[i] = top_diff[i] * mask[i];
     }
   }
   return Dtype(0);
 }
 
 template <typename Dtype>
-__global__ void DropoutForward(const int n, const Dtype* in, Dtype* out) {
+__global__ void DropoutForward(const int n, const Dtype* in,
+    const unsigned int* mask, const unsigned int threshold, Dtype* out) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
-    out[index] = max(in[index], Dtype(0.));
+    out[index] = in[index] * (mask[index] > threshold);
   }
 }
 
@@ -61,19 +73,32 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
+  float threshold = this->layer_param_.dropout_ratio();
+  DCHECK(threshold > 0.);
+  DCHECK(threshold < 1.);
+  float scale = 1. / threshold;
   const int count = bottom[0]->count();
-  const int blocks = (count + CAFFEINE_CUDA_NUM_THREADS - 1) /
-      CAFFEINE_CUDA_NUM_THREADS;
-  DropoutForward<<<blocks, CAFFEINE_CUDA_NUM_THREADS>>>(count, bottom_data,
-      top_data);
+  if (Caffeine::phase() == Caffeine::TRAIN) {
+    // Create random numbers
+    CURAND_CHECK(curandGenerate(Caffeine::curand_generator(),
+        (unsigned int*)(rand_vec_->mutable_gpu_data()), count));
+    unsigned int uint_thres = (unsigned int)(UINT_MAX * threshold);
+    // set thresholds
+    DropoutForward<Dtype><<<CAFFEINE_GET_BLOCKS(count), CAFFEINE_CUDA_NUM_THREADS>>>(
+        count, bottom_data, (unsigned int*)(rand_vec_->gpu_data(), uint_thres,
+        top_data);
+  } else {
+    CUDA_CHECK(cudaMemcpy(top_data, bottom_data,
+        count * sizeof(Dtype)));
+  }
 }
 
 template <typename Dtype>
 __global__ void DropoutBackward(const int n, const Dtype* in_diff,
-    const Dtype* in_data, Dtype* out_diff) {
+    const unsigned int* mask, const unsigned int threshold, Dtype* out_diff) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
-    out_diff[index] = in_diff[index] * (in_data[index] >= 0);
+    out_diff[index] = in_diff[index] * (mask[index] > threshold);
   }
 }
 
@@ -81,15 +106,15 @@ template <typename Dtype>
 Dtype DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
+  CHECK(Caffeine::phase() == Caffeine::TRAIN);
   if (propagate_down) {
-    const Dtype* bottom_data = (*bottom)[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+    const unsigned int* mask = (int*)(rand_vec_->gpu_data());
     const int count = (*bottom)[0]->count();
-    const int blocks = (count + CAFFEINE_CUDA_NUM_THREADS - 1) /
-        CAFFEINE_CUDA_NUM_THREADS;
-    DropoutBackward<<<blocks, CAFFEINE_CUDA_NUM_THREADS>>>(count, top_diff,
-        bottom_data, bottom_diff);
+    DropoutBackward<Dtype><<<CAFFEINE_GET_BLOCKS(count), CAFFEINE_CUDA_NUM_THREADS>>>(
+        count, top_diff, (unsigned int*)(rand_vec_->gpu_data(), uint_thres,
+        bottom_diff);
   }
   return Dtype(0);
 }

@@ -31,7 +31,7 @@ MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS := . /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS := . /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
-LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread
+LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread curand
 WARNINGS := -Wall
 
 CXXFLAGS += -fPIC -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))

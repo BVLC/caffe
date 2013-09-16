@@ -48,9 +48,7 @@ class DropoutLayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
- private:
-  shared_ptr<Blob<float> > rand_mat_;
-  shared_ptr<UniformFiller<float> > filler_;
+  shared_ptr<SyncedMemory> rand_vec_;
 };
 
 
