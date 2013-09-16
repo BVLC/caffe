@@ -27,21 +27,19 @@ MKL_DIR := /opt/intel/mkl
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64
 MKL_INCLUDE_DIR := $(MKL_DIR)/include
-MKL_LIB_DIR := $(MKL_DIR)/lib
+MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS := . /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS := . /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
 LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread
 WARNINGS := -Wall
 
-CXXFLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+CXXFLAGS += -fPIC $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir))
 LDFLAGS += $(foreach library,$(LIBRARIES),-l$(library))
 
-FPIC_FLAGS = -fPIC
-
-LINK = $(CXX) $(FPIC_FLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(WARNINGS)
-NVCC = nvcc -Xcompiler $(FPIC_FLAGS) $(CXXFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
+LINK = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(WARNINGS)
+NVCC = nvcc ${CXXFLAGS:-fPIC=-Xcompiler -fPIC} $(CPPFLAGS) $(CUDA_ARCH)
 
 .PHONY: all test clean distclean
 
