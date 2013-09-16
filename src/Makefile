@@ -38,8 +38,10 @@ CXXFLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir))
 LDFLAGS += $(foreach library,$(LIBRARIES),-l$(library))
 
-LINK = $(CXX) -fPIC $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(WARNINGS)
-NVCC = nvcc $(CXXFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
+FPIC_FLAGS = -fPIC
+
+LINK = $(CXX) $(FPIC_FLAGS) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(WARNINGS)
+NVCC = nvcc -Xcompiler $(FPIC_FLAGS) $(CXXFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
 .PHONY: all test clean distclean
 
