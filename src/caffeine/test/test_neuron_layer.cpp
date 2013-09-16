@@ -32,8 +32,23 @@ class NeuronLayerTest : public ::testing::Test {
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(NeuronLayerTest, Dtypes);
 
-TYPED_TEST(NeuronLayerTest, TestReLU) {
+TYPED_TEST(NeuronLayerTest, TestReLUCPU) {
   LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::CPU);
+  ReLULayer<TypeParam> layer(layer_param);
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestReLUGPU) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::GPU);
   ReLULayer<TypeParam> layer(layer_param);
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Now, check values
