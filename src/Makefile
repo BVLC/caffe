@@ -34,7 +34,7 @@ LIBRARY_DIRS := . /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
 LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread
 WARNINGS := -Wall
 
-CXXFLAGS += -fPIC $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+CXXFLAGS += -fPIC -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir))
 LDFLAGS += $(foreach library,$(LIBRARIES),-l$(library))
 
@@ -53,8 +53,8 @@ $(TEST_NAME): $(OBJS) $(TEST_OBJS)
 $(NAME): $(PROTO_GEN_CC) $(OBJS)
 	$(LINK) -shared $(OBJS) -o $(NAME)
 
-$(CU_OBJS): $(CU_SRCS)
-	$(NVCC) -c -o $(CU_OBJS) $(CU_SRCS)
+$(CU_OBJS): %.o: %.cu
+	$(NVCC) -c $< -o $@
 
 $(PROTO_GEN_CC): $(PROTO_SRCS)
 	protoc $(PROTO_SRCS) --cpp_out=. --python_out=.
