@@ -24,4 +24,10 @@ TEST_F(CommonTest, TestBrewMode) {
  EXPECT_EQ(Caffeine::mode(), Caffeine::GPU);
 }
 
+TEST_F(CommonTest, TestPhase) {
+ EXPECT_EQ(Caffeine::phase(), Caffeine::TRAIN);
+ Caffeine::set_phase(Caffeine::TEST);
+ EXPECT_EQ(Caffeine::phase(), Caffeine::TEST);
+}
+
 }

@@ -18,12 +18,12 @@ class Layer {
    // layer.
   explicit Layer(const LayerParameter& param)
     : layer_param_(param) {};
-  virtual ~Layer();
+  virtual ~Layer() {};
   // SetUp: your function should implement this.
-  virtual void SetUp(vector<const Blob<Dtype>*>& bottom,
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) = 0;
 
-  // Forward, backward and predict wrappers. You should implement the cpu and
+  // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
   // functions.
   inline void Forward(const vector<Blob<Dtype>*>& bottom,
@@ -31,8 +31,6 @@ class Layer {
   inline Dtype Backward(const vector<Blob<Dtype>*>& top,
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom);
-  inline void Predict(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
 
  protected:
   // The protobuf that stores the layer parameters
@@ -62,17 +60,6 @@ class Layer {
     LOG(WARNING) << "Using CPU code as backup.";
     return Backward_cpu(top, propagate_down, bottom);
   };
-
-  // Prediction functions: could be overridden, but the default behavior is to
-  // simply call the forward functions.
-  virtual void Predict_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) { Forward_cpu(bottom, top); };
-  // For prediction, if there is no Predict_gpu, then there are two options:
-  // to use predict_cpu as a backup, or to use forward_gpu (e.g. maybe the
-  // author forgot to write what backup s/he wants?). Thus, we will require
-  // the author to explicitly specify which fallback s/he wants.
-  virtual void Predict_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) = 0;
 };  // class Layer
 
 }  // namespace caffeine

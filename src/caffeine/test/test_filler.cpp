@@ -89,12 +89,20 @@ TYPED_TEST(GaussianFillerTest, TestFill) {
   const int count = this->blob_->count();
   const TypeParam* data = this->blob_->cpu_data();
   TypeParam mean = 0.;
+  TypeParam var = 0.;
   for (int i = 0; i < count; ++i) {
     mean += data[i];
+    var += (data[i] - this->filler_param_.mean()) * 
+        (data[i] - this->filler_param_.mean());
   }
   mean /= count;
-  EXPECT_GE(mean, this->filler_param_.mean() - this->filler_param_.std() * 10);
-  EXPECT_LE(mean, this->filler_param_.mean() + this->filler_param_.std() * 10);
+  var /= count;
+  // Very loose test.
+  EXPECT_GE(mean, this->filler_param_.mean() - this->filler_param_.std() * 5);
+  EXPECT_LE(mean, this->filler_param_.mean() + this->filler_param_.std() * 5);
+  TypeParam target_var = this->filler_param_.std() * this->filler_param_.std();
+  EXPECT_GE(var, target_var / 5.);
+  EXPECT_LE(var, target_var * 5.);
 }
 
 }
