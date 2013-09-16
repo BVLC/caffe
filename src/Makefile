@@ -20,14 +20,14 @@ PROTO_OBJS := ${PROTO_SRCS:.proto=.pb.o}
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 TEST_OBJS := ${TEST_SRCS:.cpp=.o}
 
-CUDA_DIR = /usr/local/cuda
-CUDA_ARCH = -arch=sm_20
-MKL_DIR = /opt/intel/mkl
+CUDA_DIR := /usr/local/cuda
+CUDA_ARCH := -arch=sm_20
+MKL_DIR := /opt/intel/mkl
 
-CUDA_INCLUDE_DIR = $(CUDA_DIR)/include
-CUDA_LIB_DIR = $(CUDA_DIR)/lib64
-MKL_INCLUDE_DIR = $(MKL_DIR)/include
-MKL_LIB_DIR = $(MKL_DIR)/lib
+CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
+CUDA_LIB_DIR := $(CUDA_DIR)/lib64
+MKL_INCLUDE_DIR := $(MKL_DIR)/include
+MKL_LIB_DIR := $(MKL_DIR)/lib
 
 INCLUDE_DIRS := . /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS := . /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
