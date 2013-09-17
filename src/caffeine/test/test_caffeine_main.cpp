@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdlib>
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>
@@ -15,6 +16,12 @@ int main(int argc, char** argv) {
   int device;
   cudaGetDeviceCount(&device);
   cout << "Cuda number of devices: " << device << endl;
+  if (argc > 1) {
+    // Use the given device
+    device = atoi(argv[1]);
+    cudaSetDevice(device);
+    cout << "Setting to use device " << device << endl;
+  }
   cudaGetDevice(&device);
   cout << "Current device id: " << device << endl;
   cudaGetDeviceProperties(&CAFFEINE_TEST_CUDA_PROP, device);
