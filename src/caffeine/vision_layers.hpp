@@ -5,6 +5,8 @@
 
 namespace caffeine {
 
+// The neuron layer is a specific type of layers that just works on single
+// celements.
 template <typename Dtype>
 class NeuronLayer : public Layer<Dtype> {
  public:
@@ -13,6 +15,7 @@ class NeuronLayer : public Layer<Dtype> {
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 };
+
 
 template <typename Dtype>
 class ReLULayer : public NeuronLayer<Dtype> {
@@ -30,6 +33,7 @@ class ReLULayer : public NeuronLayer<Dtype> {
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
+
 
 template <typename Dtype>
 class DropoutLayer : public NeuronLayer<Dtype> {
@@ -55,8 +59,28 @@ class DropoutLayer : public NeuronLayer<Dtype> {
 };
 
 
+template <typename Dtype>
+class InnerProductLayer : public Layer<Dtype> {
+ public:
+  explicit InnerProductLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {};
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
-
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  int M_;
+  int K_;
+  int N_;
+  bool biasterm_;
+};
 
 }  // namespace caffeine
 

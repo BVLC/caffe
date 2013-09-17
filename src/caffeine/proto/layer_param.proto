@@ -19,10 +19,14 @@ message LayerParameter {
 
   optional float alpha = 13 [default = 1.]; // for local response norm
   optional float beta = 14 [default = 0.75]; // for local response norm
+
+  // for innerproduct: if true, carry out inner product computation on the
+  // last dim only
+  optional bool gemm_last_dim = 15 [ default = false];
 }
 
 message FillerParameter {
-  required string type = 1;
+  required string type = 1 [default = 'constant'];
   optional float value = 2 [default = 0]; // the value in constant filler
   optional float min = 3 [default = 0]; // the min value in uniform filler
   optional float max = 4 [default = 1]; // the max value in uniform filler

@@ -25,6 +25,11 @@ class Filler {
 };  // class Filler
 
 template <typename Dtype>
+class FillerFactory {
+
+};
+
+template <typename Dtype>
 class ConstantFiller : public Filler<Dtype> {
  public:
   ConstantFiller(const FillerParameter& param) : Filler<Dtype>(param) {};
@@ -89,6 +94,24 @@ class GaussianFiller : public Filler<Dtype> {
     }
   };
 };
+
+// A function to get a specific filler from the specification given in
+// FillerParameter. Ideally this would be replaced by a factory pattern,
+// but we will leave it this way for now.
+template <typename Dtype>
+Filler<Dtype>* GetFiller(const FillerParameter& param) {
+  const std::string& type = param.type();
+  if (type == "constant") {
+    return new ConstantFiller<Dtype>(param);
+  } else if (type == "uniform") {
+    return new UniformFiller<Dtype>(param);
+  } else if (type == "gaussian") {
+    return new GaussianFiller<Dtype>(param);
+  } else {
+    CHECK(false) << "Unknown filler name: " << param.type();
+  }
+  return (Filler<Dtype>*)(NULL);
+}
 
 }  // namespace caffeine
 

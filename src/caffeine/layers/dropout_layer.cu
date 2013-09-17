@@ -6,7 +6,6 @@
 #include "caffeine/syncedmem.hpp"
 #include "caffeine/vision_layers.hpp"
 
-
 using std::max;
 
 namespace caffeine {
@@ -77,7 +76,6 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
   if (Caffeine::phase() == Caffeine::TRAIN) {
-    // Create random numbers
     CURAND_CHECK(curandGenerate(Caffeine::curand_generator(),
         (unsigned int*)(rand_vec_->mutable_gpu_data()), count));
     // set thresholds
@@ -117,8 +115,7 @@ Dtype DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   return Dtype(0);
 }
 
-template class DropoutLayer<float>;
-template class DropoutLayer<double>;
+INSTANTIATE_CLASS(DropoutLayer);
 
 
 }  // namespace caffeine

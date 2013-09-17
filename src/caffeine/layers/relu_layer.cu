@@ -75,8 +75,7 @@ Dtype ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   return Dtype(0);
 }
 
-template class ReLULayer<float>;
-template class ReLULayer<double>;
+INSTANTIATE_CLASS(ReLULayer);
 
 
 }  // namespace caffeine

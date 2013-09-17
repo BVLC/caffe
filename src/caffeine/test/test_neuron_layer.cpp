@@ -14,7 +14,7 @@ class NeuronLayerTest : public ::testing::Test {
  protected:
   NeuronLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
-        blob_top_(new Blob<Dtype>(2, 3, 4, 5)) {
+        blob_top_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -36,6 +36,7 @@ TYPED_TEST(NeuronLayerTest, TestReLUCPU) {
   LayerParameter layer_param;
   Caffeine::set_mode(Caffeine::CPU);
   ReLULayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
@@ -50,6 +51,7 @@ TYPED_TEST(NeuronLayerTest, TestReLUGPU) {
   LayerParameter layer_param;
   Caffeine::set_mode(Caffeine::GPU);
   ReLULayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
@@ -57,6 +59,78 @@ TYPED_TEST(NeuronLayerTest, TestReLUGPU) {
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestDropoutCPU) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::CPU);
+  Caffeine::set_phase(Caffeine::TRAIN);
+  DropoutLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  float scale = 1. / (1. - layer_param.dropout_ratio());
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (top_data[i] != 0) {
+      EXPECT_EQ(top_data[i], bottom_data[i] * scale);
+    }
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestDropoutCPUTestPhase) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::CPU);
+  Caffeine::set_phase(Caffeine::TEST);
+  DropoutLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  float scale = 1. / (1. - layer_param.dropout_ratio());
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (top_data[i] != 0) {
+      EXPECT_EQ(top_data[i], bottom_data[i]);
+    }
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestDropoutGPU) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::GPU);
+  Caffeine::set_phase(Caffeine::TRAIN);
+  DropoutLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  float scale = 1. / (1. - layer_param.dropout_ratio());
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (top_data[i] != 0) {
+      EXPECT_EQ(top_data[i], bottom_data[i] * scale);
+    }
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestDropoutGPUTestPhase) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::GPU);
+  Caffeine::set_phase(Caffeine::TEST);
+  DropoutLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  float scale = 1. / (1. - layer_param.dropout_ratio());
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (top_data[i] != 0) {
+      EXPECT_EQ(top_data[i], bottom_data[i]);
+    }
   }
 }
 
