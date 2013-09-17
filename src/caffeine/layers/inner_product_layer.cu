@@ -75,6 +75,7 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   					(float*)(top_data) + (N_ * i), 1);
   		}
   	}
+    break;
   case sizeof(double):
     // matrix multiply
   	cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M_, N_, K_,
@@ -87,6 +88,7 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   					(double*)(top_data) + (N_ * i), 1);
   		}
   	}
+    break;
   default:
   	CHECK(false) << "Unknown data type.";
   }
@@ -133,11 +135,13 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   	CUBLAS_CHECK(cublasSgemm(Caffeine::cublas_handle(), CUBLAS_OP_N,
   			CUBLAS_OP_N, N_, M_, K_, (float*)&alpha, (const float*)weight, N_,
   			(const float*)bottom_data, K_, (float*)&beta, (float*)top_data, N_));
+    break;
   case sizeof(double):
     // matrix multiply
   	CUBLAS_CHECK(cublasDgemm(Caffeine::cublas_handle(), CUBLAS_OP_N,
   			CUBLAS_OP_N, N_, M_, K_, (double*)&alpha, (const double*)weight, N_,
   			(const double*)bottom_data, K_, (double*)&beta, (double*)top_data, N_));
+    break;
   default:
   	CHECK(false) << "Unknown data type.";
   }

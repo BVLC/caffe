@@ -26,7 +26,9 @@ message LayerParameter {
 }
 
 message FillerParameter {
-  required string type = 1 [default = 'constant'];
+  // The filler type. In default we will set it to Gaussian for easy
+  // debugging.
+  required string type = 1 [default = 'gaussian'];
   optional float value = 2 [default = 0]; // the value in constant filler
   optional float min = 3 [default = 0]; // the min value in uniform filler
   optional float max = 4 [default = 1]; // the max value in uniform filler
