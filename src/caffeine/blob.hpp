@@ -15,19 +15,20 @@ class Blob {
        diff_() {};
   explicit Blob(const int num, const int height,
     const int width, const int channels);
+  Blob(const Blob<Dtype>& source);
   virtual ~Blob() {};
   void Reshape(const int num, const int height,
       const int width, const int channels);
-  inline int num() { return num_; }
-  inline int height() { return height_; }
-  inline int width() { return width_; }
-  inline int channels() { return channels_; }
-  inline int count() {return count_; }
+  inline int num() const { return num_; }
+  inline int height() const { return height_; }
+  inline int width() const { return width_; }
+  inline int channels() const { return channels_; }
+  inline int count() const {return count_; }
   
-  const Dtype* cpu_data();
-  const Dtype* gpu_data();
-  const Dtype* cpu_diff();
-  const Dtype* gpu_diff();
+  const Dtype* cpu_data() const;
+  const Dtype* gpu_data() const;
+  const Dtype* cpu_diff() const;
+  const Dtype* gpu_diff() const;
   Dtype* mutable_cpu_data();
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();

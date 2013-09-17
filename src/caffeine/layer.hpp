@@ -32,6 +32,8 @@ class Layer {
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
+  vector<Blob<Dtype> >& params() { return blobs_; };
+
  protected:
   // The protobuf that stores the layer parameters
   LayerParameter layer_param_;

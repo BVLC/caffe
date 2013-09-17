@@ -30,25 +30,23 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 		N_ = num_output;
 		(*top)[0]->Reshape(bottom[0]->num(), 1, 1, num_output);
 	}
-	if (biasterm_) {
-		this->blobs_.resize(2);
-	} else {
-		this->blobs_.resize(1);
-	}
+  if (biasterm_) {
+    this->blobs_.resize(2);
+  } else {
+    this->blobs_.resize(1);
+  }
 	// Intialize the weight
-	Blob<Dtype>& weight = this->blobs_[0];
-	weight.Reshape(1, 1, K_, N_);
+  this->blobs_[0].Reshape(1, 1, K_, N_);
 	// fill the weights
 	shared_ptr<Filler<Dtype> > weight_filler(
 			GetFiller<Dtype>(this->layer_param_.weight_filler()));
-	weight_filler->Fill(&weight);
+	weight_filler->Fill(&this->blobs_[0]);
 	// If necessary, intiialize and fill the bias term
 	if (biasterm_) {
-		Blob<Dtype>& bias = this->blobs_[1];
-		bias.Reshape(1, 1, 1, N_);
+    this->blobs_[1].Reshape(1, 1, 1, N_);
 		shared_ptr<Filler<Dtype> > bias_filler(
 				GetFiller<Dtype>(this->layer_param_.bias_filler()));
-		bias_filler->Fill(&bias);
+		bias_filler->Fill(&this->blobs_[1]);
 	}
 };
 
