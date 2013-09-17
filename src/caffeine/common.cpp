@@ -55,5 +55,14 @@ void Caffeine::set_phase(Caffeine::Phase phase) {
   Get().phase_ = phase;
 }
 
+void Caffeine::set_random_seed(const unsigned int seed) {
+  // Curand seed
+  CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
+      seed));
+  // VSL seed
+  VSL_CHECK(vslDeleteStream(&(Get().vsl_stream_)));
+  VSL_CHECK(vslNewStream(&(Get().vsl_stream_), VSL_BRNG_MT19937, seed));
+}
+
 }  // namespace caffeine
 

@@ -50,6 +50,7 @@ class Caffeine {
   // The setters for the variables
   static void set_mode(Brew mode);
   static void set_phase(Phase phase);
+  static void set_random_seed(const unsigned int seed);
  private:
   Caffeine();
   static shared_ptr<Caffeine> singleton_;

@@ -6,6 +6,7 @@
 #include "caffeine/common.hpp"
 #include "caffeine/filler.hpp"
 #include "caffeine/vision_layers.hpp"
+#include "caffeine/test/test_gradient_check_util.hpp"
 
 namespace caffeine {
   
@@ -47,6 +48,16 @@ TYPED_TEST(NeuronLayerTest, TestReLUCPU) {
   }
 }
 
+
+TYPED_TEST(NeuronLayerTest, TestReLUGradientCPU) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::CPU);
+  ReLULayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-3, 1e-3);
+  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
+
+
 TYPED_TEST(NeuronLayerTest, TestReLUGPU) {
   LayerParameter layer_param;
   Caffeine::set_mode(Caffeine::GPU);
@@ -61,6 +72,16 @@ TYPED_TEST(NeuronLayerTest, TestReLUGPU) {
     EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
   }
 }
+
+
+TYPED_TEST(NeuronLayerTest, TestReLUGradientGPU) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::GPU);
+  ReLULayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-3, 1e-3);
+  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
+
 
 TYPED_TEST(NeuronLayerTest, TestDropoutCPU) {
   LayerParameter layer_param;
@@ -80,6 +101,16 @@ TYPED_TEST(NeuronLayerTest, TestDropoutCPU) {
   }
 }
 
+
+TYPED_TEST(NeuronLayerTest, TestDropoutGradientCPU) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::CPU);
+  DropoutLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
+
+
 TYPED_TEST(NeuronLayerTest, TestDropoutCPUTestPhase) {
   LayerParameter layer_param;
   Caffeine::set_mode(Caffeine::CPU);
@@ -98,6 +129,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutCPUTestPhase) {
   }
 }
 
+
 TYPED_TEST(NeuronLayerTest, TestDropoutGPU) {
   LayerParameter layer_param;
   Caffeine::set_mode(Caffeine::GPU);
@@ -115,6 +147,16 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGPU) {
     }
   }
 }
+
+
+TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
+  LayerParameter layer_param;
+  Caffeine::set_mode(Caffeine::GPU);
+  DropoutLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
+
 
 TYPED_TEST(NeuronLayerTest, TestDropoutGPUTestPhase) {
   LayerParameter layer_param;

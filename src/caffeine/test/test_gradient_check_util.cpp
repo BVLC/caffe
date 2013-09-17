@@ -1,4 +1,5 @@
 #include <cmath>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 #include "caffeine/test/test_gradient_check_util.hpp"
 
@@ -23,32 +24,42 @@ void GradientChecker<Dtype>::CheckGradient(Layer<Dtype>& layer,
     blobs_to_check.push_back(bottom[check_bottom]);
   }
   // go through the blobs
-  for (int i = 0; i < blobs_to_check.size(); ++i) {
-    Blob<Dtype>* current_blob = blobs_to_check[i];
+  LOG(ERROR) << "Checking " << blobs_to_check.size() << " blobs.";
+  for (int blobid = 0; blobid < blobs_to_check.size(); ++blobid) {
+    Blob<Dtype>* current_blob = blobs_to_check[blobid];
+    LOG(ERROR) << "Blob " << blobid << ": checking " << current_blob->count()
+        << " parameters.";
     // go through the values
-    for (int j = 0; j < current_blob->count(); ++j) {
+    for (int feat_id = 0; feat_id < current_blob->count(); ++feat_id) {
       // First, obtain the original data
+      Caffeine::set_random_seed(seed_);
       layer.Forward(bottom, &top);
       Dtype computed_objective = GetObjAndGradient(top);
       // Get any additional loss from the layer
       computed_objective += layer.Backward(top, true, &bottom);
-      Dtype computed_gradient = current_blob->cpu_diff()[i];
+      Dtype computed_gradient = current_blob->cpu_diff()[feat_id];
       // compute score by adding stepsize
-      current_blob->mutable_cpu_data()[i] += stepsize_;
+      current_blob->mutable_cpu_data()[feat_id] += stepsize_;
+      Caffeine::set_random_seed(seed_);
       layer.Forward(bottom, &top);
       Dtype positive_objective = GetObjAndGradient(top);
       positive_objective += layer.Backward(top, true, &bottom);
       // compute score by subtracting stepsize
-      current_blob->mutable_cpu_data()[i] -= stepsize_ * 2;
+      current_blob->mutable_cpu_data()[feat_id] -= stepsize_ * 2;
+      Caffeine::set_random_seed(seed_);
       layer.Forward(bottom, &top);
       Dtype negative_objective = GetObjAndGradient(top);
       negative_objective += layer.Backward(top, true, &bottom);
       // Recover stepsize
-      current_blob->mutable_cpu_data()[i] += stepsize_;
+      current_blob->mutable_cpu_data()[feat_id] += stepsize_;
       Dtype estimated_gradient = (positive_objective - negative_objective) /
           stepsize_ / 2.;
+      Dtype feature = current_blob->cpu_data()[feat_id];
       EXPECT_GT(computed_gradient, estimated_gradient - threshold_);
       EXPECT_LT(computed_gradient, estimated_gradient + threshold_);
+      //LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
+      //LOG(ERROR) << "computed gradient: " << computed_gradient
+      //    << " estimated_gradient: " << estimated_gradient;
     }
   }
 }

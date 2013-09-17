@@ -10,8 +10,9 @@ namespace caffeine {
 template <typename Dtype>
 class GradientChecker {
  public:
-  GradientChecker(const Dtype stepsize, const Dtype threshold)
-      : stepsize_(stepsize), threshold_(threshold) {};
+  GradientChecker(const Dtype stepsize, const Dtype threshold,
+      const unsigned int seed = 1701)
+      : stepsize_(stepsize), threshold_(threshold), seed_(seed) {};
   // Checks the gradient of a layer, with provided bottom layers and top
   // layers. The gradient checker will check the gradient with respect to
   // the parameters of the layer, as well as the input blobs if check_through
@@ -24,6 +25,7 @@ class GradientChecker {
   Dtype GetObjAndGradient(vector<Blob<Dtype>*>& top);
   Dtype stepsize_;
   Dtype threshold_;
+  unsigned int seed_;
 };
 
 }  // namespace caffeine
