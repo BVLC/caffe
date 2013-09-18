@@ -32,6 +32,7 @@ class Layer {
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
+  // Returns the vector of parameters.
   vector<Blob<Dtype> >& params() { return blobs_; };
 
  protected:
