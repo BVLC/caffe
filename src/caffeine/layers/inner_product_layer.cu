@@ -6,6 +6,7 @@
 #include "caffeine/filler.hpp"
 #include "caffeine/layer.hpp"
 #include "caffeine/vision_layers.hpp"
+#include "caffeine/util/blas.hpp"
 
 namespace caffeine {
 
@@ -52,36 +53,12 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0].cpu_data();
-  const Dtype* bias = NULL;
+  caffeine_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_, (Dtype)1.,
+      bottom_data, weight, (Dtype)0., top_data);
   if (biasterm_) {
-    bias = this->blobs_[1].cpu_data();
-  }
-  switch(sizeof(Dtype)) {
-  case sizeof(float):
-    // matrix multiply
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M_, N_, K_,
-        1., (const float*)bottom_data, K_, (const float*)weight, N_, 0.,
-        (float*)top_data, N_);
-    if (bias) {
-      // add bias
-      cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M_, N_, 1,
-          1., (const float*)bias_multiplier_->cpu_data(), 1,
-          (const float*)bias, N_, 1., (float*)top_data, N_);
-    }
-    break;
-  case sizeof(double):
-    // matrix multiply
-    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M_, N_, K_,
-        1., (const double*)bottom_data, K_, (const double*)weight, N_, 0.,
-        (double*)top_data, N_);
-    if (bias) {
-      cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M_, N_, 1,
-          1., (const float*)bias_multiplier_->cpu_data(), 1,
-          (const float*)bias, N_, 1., (float*)top_data, N_);
-    }
-    break;
-  default:
-    CHECK(false) << "Unknown data type.";
+    caffeine_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
+        (Dtype*)bias_multiplier_->cpu_data(), this->blobs_[1].cpu_data(),
+        (Dtype)1., top_data);
   }
 }
 

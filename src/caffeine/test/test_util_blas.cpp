@@ -31,12 +31,12 @@ TYPED_TEST(GemmTest, TestGemm) {
 
   if (sizeof(TypeParam) == 4 || CAFFEINE_TEST_CUDA_PROP.major >= 2) {
     //[1,2,3; 4 5 6] * [1,2,3,4; 5,6,7,8; 9,10,11,12];
-    decaf_cpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
+    caffeine_cpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
     }
-    decaf_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
+    caffeine_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -45,12 +45,12 @@ TYPED_TEST(GemmTest, TestGemm) {
     // Test when we have a transposed A
     A.Reshape(1,1,3,2);
     memcpy(A.mutable_cpu_data(), A_reshape_data, 6 * sizeof(TypeParam));
-    decaf_cpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
+    caffeine_cpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
     }
-    decaf_gpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
+    caffeine_gpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -59,12 +59,12 @@ TYPED_TEST(GemmTest, TestGemm) {
     // Test when we have a transposed A and a transposed B too
     B.Reshape(1,1,4,3);
     memcpy(B.mutable_cpu_data(), B_reshape_data, 12 * sizeof(TypeParam));
-    decaf_cpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
+    caffeine_cpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
     }
-    decaf_gpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
+    caffeine_gpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
         A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -73,12 +73,12 @@ TYPED_TEST(GemmTest, TestGemm) {
     // Test when we have a transposed B
     A.Reshape(1,1,2,3);
     memcpy(A.mutable_cpu_data(), data, 6 * sizeof(TypeParam));
-    decaf_cpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
+    caffeine_cpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
     }
-    decaf_gpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
+    caffeine_gpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
         A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -100,12 +100,12 @@ TYPED_TEST(GemmTest, TestGemv) {
   memcpy(x.mutable_cpu_data(), data, 3 * sizeof(TypeParam));
 
   if (sizeof(TypeParam) == 4 || CAFFEINE_TEST_CUDA_PROP.major >= 2) {
-    decaf_cpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
+    caffeine_cpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
         x.cpu_data(), 0., y.mutable_cpu_data());
     for (int i = 0; i < 2; ++i) {
       EXPECT_EQ(y.cpu_data()[i], result_2[i]);
     }
-    decaf_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
+    caffeine_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
         x.gpu_data(), 0., y.mutable_gpu_data());
     for (int i = 0; i < 2; ++i) {
       EXPECT_EQ(y.cpu_data()[i], result_2[i]);
@@ -113,12 +113,12 @@ TYPED_TEST(GemmTest, TestGemv) {
 
     // Test transpose case
     memcpy(y.mutable_cpu_data(), data, 2 * sizeof(TypeParam));
-    decaf_cpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.cpu_data(),
+    caffeine_cpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.cpu_data(),
         y.cpu_data(), 0., x.mutable_cpu_data());
     for (int i = 0; i < 3; ++i) {
       EXPECT_EQ(x.cpu_data()[i], result_3[i]);
     }
-    decaf_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
+    caffeine_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
         y.gpu_data(), 0., x.mutable_gpu_data());
     for (int i = 0; i < 3; ++i) {
       EXPECT_EQ(x.cpu_data()[i], result_3[i]);
