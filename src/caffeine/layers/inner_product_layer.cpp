@@ -87,18 +87,6 @@ Dtype InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
-__global__ void BroadcastRow(const int total, const int vec_len,
-	const Dtype* in_vec, Dtype* out_matrix) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < total) {
-    int v_index = index % vec_len;
-    out_matrix[index] = in_vec[v_index];
-  }
-}
-
-
-
-template <typename Dtype>
 void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
