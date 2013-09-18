@@ -80,6 +80,7 @@ class InnerProductLayer : public Layer<Dtype> {
   int K_;
   int N_;
   bool biasterm_;
+  shared_ptr<SyncedMemory> bias_multiplier_;
 };
 
 }  // namespace caffeine
