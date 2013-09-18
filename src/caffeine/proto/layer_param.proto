@@ -1,28 +1,12 @@
 package caffeine;
 
-message LayerParameter {
-  required string name = 1; // the layer name
-  required string type = 2; // the string to specify the layer type
-
-  // Parameters to specify layers with inner products.
-  optional int32 num_output = 3; // The number of outputs for the layer
-  optional bool biasterm = 4 [default = true]; // whether to have bias terms
-  optional FillerParameter weight_filler = 5; // The filler for the weight
-  optional FillerParameter bias_filler = 6; // The filler for the bias
-
-  optional uint32 pad = 7 [default = 0]; // The padding size
-  optional uint32 kernelsize = 8; // The kernel size
-  optional uint32 group = 9 [default = 1]; // The group size for group conv
-  optional uint32 stride = 10 [default = 1]; // The stride
-  optional string pool = 11 [default = 'max']; // The pooling method
-  optional float dropout_ratio = 12 [default = 0.5]; // dropout ratio
-
-  optional float alpha = 13 [default = 1.]; // for local response norm
-  optional float beta = 14 [default = 0.75]; // for local response norm
-
-  // for innerproduct: if true, carry out inner product computation on the
-  // last dim only
-  optional bool gemm_last_dim = 15 [ default = false];
+message BlobProto {
+  optional int32 num = 1 [default = 0];
+  optional int32 height = 2 [default = 0];
+  optional int32 width = 3 [default = 0];
+  optional int32 channels = 4 [default = 0];
+  repeated float data = 5;
+  repeated float diff = 6;
 }
 
 message FillerParameter {
@@ -36,11 +20,24 @@ message FillerParameter {
   optional float std = 6 [default = 1]; // the std value in gaussian filler
 }
 
-message BlobProto {
-  optional int32 num = 1 [default = 0];
-  optional int32 height = 2 [default = 0];
-  optional int32 width = 3 [default = 0];
-  optional int32 channels = 4 [default = 0];
-  repeated float data = 5;
-  repeated float diff = 6;
+message LayerParameter {
+  required string name = 1; // the layer name
+  required string type = 2; // the string to specify the layer type
+
+  // Parameters to specify layers with inner products.
+  optional int32 num_output = 3; // The number of outputs for the layer
+  optional bool biasterm = 4 [default = true]; // whether to have bias terms
+  optional FillerParameter weight_filler = 5; // The filler for the weight
+  optional FillerParameter bias_filler = 6; // The filler for the bias
+
+  optional uint32 pad = 7 [default = 0]; // The padding size
+  optional float pad_value = 8 [default = 0]; // The padding value
+  optional uint32 kernelsize = 9; // The kernel size
+  optional uint32 group = 10 [default = 1]; // The group size for group conv
+  optional uint32 stride = 11 [default = 1]; // The stride
+  optional string pool = 12 [default = 'max']; // The pooling method
+  optional float dropout_ratio = 13 [default = 0.5]; // dropout ratio
+
+  optional float alpha = 14 [default = 1.]; // for local response norm
+  optional float beta = 15 [default = 0.75]; // for local response norm
 }

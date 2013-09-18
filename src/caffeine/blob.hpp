@@ -13,16 +13,16 @@ class Blob {
   Blob()
        : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
        diff_() {};
-  explicit Blob(const int num, const int height,
-    const int width, const int channels);
+  explicit Blob(const int num, const int channels, const int height,
+    const int width);
   Blob(const Blob<Dtype>& source);
   virtual ~Blob() {};
   void Reshape(const int num, const int height,
       const int width, const int channels);
   inline int num() const { return num_; }
+  inline int channels() const { return channels_; }
   inline int height() const { return height_; }
   inline int width() const { return width_; }
-  inline int channels() const { return channels_; }
   inline int count() const {return count_; }
   
   const Dtype* cpu_data() const;
@@ -40,9 +40,9 @@ class Blob {
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
   int num_;
+  int channels_;
   int height_;
   int width_;
-  int channels_;
   int count_;
 };  // class Blob
 
