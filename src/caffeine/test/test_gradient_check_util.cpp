@@ -55,8 +55,8 @@ void GradientChecker<Dtype>::CheckGradient(Layer<Dtype>& layer,
       Dtype estimated_gradient = (positive_objective - negative_objective) /
           stepsize_ / 2.;
       Dtype feature = current_blob->cpu_data()[feat_id];
-      LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
-          << current_blob->cpu_diff()[feat_id];
+      //LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
+      //    << current_blob->cpu_diff()[feat_id];
       if (kink_ - kink_range_ > feature || feature > kink_ + kink_range_) {
         EXPECT_GT(computed_gradient, estimated_gradient - threshold_);
         EXPECT_LT(computed_gradient, estimated_gradient + threshold_);
