@@ -1,7 +1,7 @@
 #include <mkl.h>
 #include <cublas_v2.h>
 #include "caffeine/common.hpp"
-#include "caffeine/util/gemm.hpp"
+#include "caffeine/util/blas.hpp"
 
 namespace caffeine {
 
@@ -59,5 +59,38 @@ void decaf_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));  
 }
 
+template <>
+void decaf_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
+    const int N, const float alpha, const float* A, const float* x,
+    const float beta, float* y) {
+  cblas_sgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
+}
+
+template <>
+void decaf_cpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
+    const int N, const double alpha, const double* A, const double* x,
+    const double beta, double* y) {
+  cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
+}
+
+template <>
+void decaf_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
+    const int N, const float alpha, const float* A, const float* x,
+    const float beta, float* y) {
+  cublasOperation_t cuTransA =
+      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
+  CUBLAS_CHECK(cublasSgemv(Caffeine::cublas_handle(), cuTransA, N, M, &alpha,
+      A, N, x, 1, &beta, y, 1));
+}
+
+template <>
+void decaf_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
+    const int N, const double alpha, const double* A, const double* x,
+    const double beta, double* y) {
+  cublasOperation_t cuTransA =
+      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
+  CUBLAS_CHECK(cublasDgemv(Caffeine::cublas_handle(), cuTransA, N, M, &alpha,
+      A, N, x, 1, &beta, y, 1));
+}
 
 }  // namespace caffeine

@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "caffeine/blob.hpp"
-#include "caffeine/util/gemm.hpp"
+#include "caffeine/util/blas.hpp"
 
 namespace caffeine {
 
@@ -88,5 +88,44 @@ TYPED_TEST(GemmTest, TestGemm) {
   }
 }
 
+
+TYPED_TEST(GemmTest, TestGemv) {
+  Blob<TypeParam> A(1,1,2,3);
+  Blob<TypeParam> x(1,1,1,3);
+  Blob<TypeParam> y(1,1,1,2);
+  TypeParam data[6] = {1, 2, 3, 4, 5, 6};
+  TypeParam result_2[2] = {14, 32};
+  TypeParam result_3[3] = {9, 12, 15};
+  memcpy(A.mutable_cpu_data(), data, 6 * sizeof(TypeParam));
+  memcpy(x.mutable_cpu_data(), data, 3 * sizeof(TypeParam));
+
+  if (sizeof(TypeParam) == 4 || CAFFEINE_TEST_CUDA_PROP.major >= 2) {
+    decaf_cpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
+        x.cpu_data(), 0., y.mutable_cpu_data());
+    for (int i = 0; i < 2; ++i) {
+      EXPECT_EQ(y.cpu_data()[i], result_2[i]);
+    }
+    decaf_gpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.gpu_data(),
+        x.gpu_data(), 0., y.mutable_gpu_data());
+    for (int i = 0; i < 2; ++i) {
+      EXPECT_EQ(y.cpu_data()[i], result_2[i]);
+    }
+
+    // Test transpose case
+    memcpy(y.mutable_cpu_data(), data, 2 * sizeof(TypeParam));
+    decaf_cpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.cpu_data(),
+        y.cpu_data(), 0., x.mutable_cpu_data());
+    for (int i = 0; i < 3; ++i) {
+      EXPECT_EQ(x.cpu_data()[i], result_3[i]);
+    }
+    decaf_gpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.gpu_data(),
+        y.gpu_data(), 0., x.mutable_gpu_data());
+    for (int i = 0; i < 3; ++i) {
+      EXPECT_EQ(x.cpu_data()[i], result_3[i]);
+    }
+  } else {
+    LOG(ERROR) << "Skipping test due to old architecture.";
+  }
+}
 
 }
