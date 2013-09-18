@@ -1,5 +1,25 @@
 package caffeine;
 
+message BlobProto {
+  optional int32 num = 1 [default = 0];
+  optional int32 height = 2 [default = 0];
+  optional int32 width = 3 [default = 0];
+  optional int32 channels = 4 [default = 0];
+  repeated float data = 5;
+  repeated float diff = 6;
+}
+
+message FillerParameter {
+  // The filler type. In default we will set it to Gaussian for easy
+  // debugging.
+  required string type = 1 [default = 'gaussian'];
+  optional float value = 2 [default = 0]; // the value in constant filler
+  optional float min = 3 [default = 0]; // the min value in uniform filler
+  optional float max = 4 [default = 1]; // the max value in uniform filler
+  optional float mean = 5 [default = 0]; // the mean value in gaussian filler
+  optional float std = 6 [default = 1]; // the std value in gaussian filler
+}
+
 message LayerParameter {
   required string name = 1; // the layer name
   required string type = 2; // the string to specify the layer type
@@ -20,27 +40,5 @@ message LayerParameter {
   optional float alpha = 13 [default = 1.]; // for local response norm
   optional float beta = 14 [default = 0.75]; // for local response norm
 
-  // for innerproduct: if true, carry out inner product computation on the
-  // last dim only
-  optional bool gemm_last_dim = 15 [ default = false];
-}
-
-message FillerParameter {
-  // The filler type. In default we will set it to Gaussian for easy
-  // debugging.
-  required string type = 1 [default = 'gaussian'];
-  optional float value = 2 [default = 0]; // the value in constant filler
-  optional float min = 3 [default = 0]; // the min value in uniform filler
-  optional float max = 4 [default = 1]; // the max value in uniform filler
-  optional float mean = 5 [default = 0]; // the mean value in gaussian filler
-  optional float std = 6 [default = 1]; // the std value in gaussian filler
-}
-
-message BlobProto {
-  optional int32 num = 1 [default = 0];
-  optional int32 height = 2 [default = 0];
-  optional int32 width = 3 [default = 0];
-  optional int32 channels = 4 [default = 0];
-  repeated float data = 5;
-  repeated float diff = 6;
+  repeated BlobProto blobs = 50; // for possible data.
 }

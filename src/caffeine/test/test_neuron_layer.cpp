@@ -8,7 +8,10 @@
 #include "caffeine/vision_layers.hpp"
 #include "caffeine/test/test_gradient_check_util.hpp"
 
+
 namespace caffeine {
+
+extern cudaDeviceProp CAFFEINE_TEST_CUDA_PROP;
   
 template <typename Dtype>
 class NeuronLayerTest : public ::testing::Test {
@@ -150,11 +153,15 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGPU) {
 
 
 TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
-  LayerParameter layer_param;
-  Caffeine::set_mode(Caffeine::GPU);
-  DropoutLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  if (CAFFEINE_TEST_CUDA_PROP.major >= 2) {
+    LayerParameter layer_param;
+    Caffeine::set_mode(Caffeine::GPU);
+    DropoutLayer<TypeParam> layer(layer_param);
+    GradientChecker<TypeParam> checker(1e-2, 1e-3);
+    checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  } else {
+    LOG(ERROR) << "Skipping test to spare my laptop.";
+  }
 }
 
 

@@ -7,9 +7,9 @@
 #include "caffeine/filler.hpp"
 #include "caffeine/vision_layers.hpp"
 
-extern cudaDeviceProp CAFFEINE_TEST_CUDA_PROP;
-
 namespace caffeine {
+
+extern cudaDeviceProp CAFFEINE_TEST_CUDA_PROP;
   
 template <typename Dtype>
 class InnerProductLayerTest : public ::testing::Test {
@@ -43,13 +43,6 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->height(), 1);
   EXPECT_EQ(this->blob_top_->width(), 1);
-  EXPECT_EQ(this->blob_top_->channels(), 10);
-  layer_param.set_gemm_last_dim(true);
-  layer.reset(new InnerProductLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->height(), 3);
-  EXPECT_EQ(this->blob_top_->width(), 4);
   EXPECT_EQ(this->blob_top_->channels(), 10);
 }
 

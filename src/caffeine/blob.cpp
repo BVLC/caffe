@@ -7,25 +7,25 @@
 namespace caffeine {
 
 template <typename Dtype>
-void Blob<Dtype>::Reshape(const int num, const int height,
-    const int width, const int channels) {
+void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
+    const int width) {
   CHECK_GT(num, 0);
+  CHECK_GT(channels, 0);
   CHECK_GT(height, 0);
   CHECK_GT(width, 0);
-  CHECK_GT(channels, 0);
   num_ = num;
+  channels_ = channels;
   height_ = height;
   width_ = width;
-  channels_ = channels;
-  count_ = num_ * height_ * width_ * channels_;
+  count_ = num_ * channels_ * height_ * width_;
   data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
   diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
 }
 
 template <typename Dtype>
-Blob<Dtype>::Blob(const int num, const int height,
-    const int width, const int channels) {
-  Reshape(num, height, width, channels);
+Blob<Dtype>::Blob(const int num, const int channels, const int height,
+    const int width) {
+  Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
@@ -33,7 +33,7 @@ Blob<Dtype>::Blob(const Blob<Dtype>& source) {
   if (source.count() == 0) {
     Blob();
   } else {
-    Reshape(source.num(), source.height(), source.width(), source.count());
+    Reshape(source.num(), source.channels(), source.height(), source.width());
     // create the synced memories.
     data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
     diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
@@ -99,7 +99,7 @@ void Blob<Dtype>::Update() {
 
 template <typename Dtype>
 void Blob<Dtype>::FromProto(const BlobProto& proto) {
-  Reshape(proto.num(), proto.height(), proto.width(), proto.channels());
+  Reshape(proto.num(), proto.channels(), proto.height(), proto.width());
   // copy data
   Dtype* data_vec = mutable_cpu_data();
   for (int i = 0; i < count_; ++i) {
@@ -114,9 +114,9 @@ void Blob<Dtype>::FromProto(const BlobProto& proto) {
 template <typename Dtype>
 void Blob<Dtype>::ToProto(BlobProto* proto) {
   proto->set_num(num_);
+  proto->set_channels(channels_);
   proto->set_height(height_);
   proto->set_width(width_);
-  proto->set_channels(channels_);
   proto->clear_data();
   proto->clear_diff();
   const Dtype* data_vec = cpu_data();

@@ -1,13 +1,19 @@
-#include <iostream>
 #include <cstdlib>
+#include <cstdio>
+#include <iostream>
 
 #include <cuda_runtime.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
-using namespace std;
+namespace caffeine {
 
 cudaDeviceProp CAFFEINE_TEST_CUDA_PROP;
+
+}  // namespace caffeine
+
+using namespace caffeine;
+using namespace std;
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -47,3 +53,4 @@ int main(int argc, char** argv) {
   
   return RUN_ALL_TESTS();
 }
+
