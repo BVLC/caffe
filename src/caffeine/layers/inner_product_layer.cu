@@ -101,7 +101,7 @@ Dtype InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
-__global__ void BroadcastCopy(const int total, const int vec_len,
+__global__ void BroadcastRow(const int total, const int vec_len,
 	const Dtype* in_vec, Dtype* out_matrix) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < total) {
@@ -109,6 +109,8 @@ __global__ void BroadcastCopy(const int total, const int vec_len,
   	out_matrix[index] = in_vec[v_index];
   }
 }
+
+
 
 template <typename Dtype>
 void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -123,7 +125,7 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   	beta = 1.;
   	const int count = (*top)[0]->count();
   	// we pre-copy the bias to the results, and then call gemm.
-  	BroadcastCopy<<<CAFFEINE_GET_BLOCKS(count), CAFFEINE_CUDA_NUM_THREADS>>>(
+  	BroadcastRow<<<CAFFEINE_GET_BLOCKS(count), CAFFEINE_CUDA_NUM_THREADS>>>(
   			count, N_, bias, top_data);
   }
   switch(sizeof(Dtype)) {
