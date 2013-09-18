@@ -94,7 +94,9 @@ __global__ void DropoutBackward(const int n, const Dtype* in_diff,
     Dtype* out_diff) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
-    out_diff[index] = in_diff[index] * (mask[index] > threshold) * scale;
+    if (mask[index] > threshold) {
+      out_diff[index] = in_diff[index] * scale;
+    }
   }
 }
 
@@ -109,8 +111,7 @@ Dtype DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const unsigned int* mask = (unsigned int*)rand_vec_->gpu_data();
     const int count = (*bottom)[0]->count();
     DropoutBackward<Dtype><<<CAFFEINE_GET_BLOCKS(count), CAFFEINE_CUDA_NUM_THREADS>>>(
-        count, top_diff, (unsigned int*)rand_vec_->gpu_data(), uint_thres_, scale_,
-        bottom_diff);
+        count, top_diff, mask, uint_thres_, scale_, bottom_diff);
   }
   return Dtype(0);
 }

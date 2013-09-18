@@ -26,8 +26,8 @@ inline void SyncedMemory::to_cpu() {
   case HEAD_AT_GPU:
     if (cpu_ptr_ == NULL) {
       CUDA_CHECK(cudaMallocHost(&cpu_ptr_, size_));
-      CUDA_CHECK(cudaMemcpy(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDeviceToHost));
     }
+    CUDA_CHECK(cudaMemcpy(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDeviceToHost));
     head_ = SYNCED;
     break;
   case HEAD_AT_CPU:
@@ -46,8 +46,8 @@ inline void SyncedMemory::to_gpu() {
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
       CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-      CUDA_CHECK(cudaMemcpy(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice));
     }
+    CUDA_CHECK(cudaMemcpy(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice));
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:
