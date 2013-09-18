@@ -55,7 +55,7 @@ void decaf_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  CUBLAS_CHECK(cublasDgemm(Caffeine::cublas_handle(), cuTransA, cuTransB,
+  CUBLAS_CHECK(cublasDgemm(Caffeine::cublas_handle(), cuTransB, cuTransA,
       N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));  
 }
 
