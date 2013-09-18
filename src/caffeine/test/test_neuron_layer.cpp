@@ -148,9 +148,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGPU) {
   }
 }
 
-/*
- * Yangqing's note: disabled due to some curand problem.
- *
+
 TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
   LayerParameter layer_param;
   Caffeine::set_mode(Caffeine::GPU);
@@ -158,7 +156,6 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
-*/
 
 
 TYPED_TEST(NeuronLayerTest, TestDropoutGPUTestPhase) {
