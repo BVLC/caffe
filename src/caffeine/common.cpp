@@ -9,7 +9,7 @@ Caffeine::Caffeine()
   CUBLAS_CHECK(cublasCreate(&cublas_handle_));
   CURAND_CHECK(curandCreateGenerator(&curand_generator_,
       CURAND_RNG_PSEUDO_DEFAULT));
-  CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator(),
+  CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator_,
       1701ULL));
   VSL_CHECK(vslNewStream(&vsl_stream_, VSL_BRNG_MT19937, 1701));
 }
