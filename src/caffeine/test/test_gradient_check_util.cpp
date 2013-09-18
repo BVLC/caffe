@@ -1,7 +1,10 @@
+#include <algorithm>
 #include <cmath>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 #include "caffeine/test/test_gradient_check_util.hpp"
+
+using std::max;
 
 namespace caffeine {
 
@@ -58,8 +61,12 @@ void GradientChecker<Dtype>::CheckGradient(Layer<Dtype>& layer,
       //LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
       //    << current_blob->cpu_diff()[feat_id];
       if (kink_ - kink_range_ > feature || feature > kink_ + kink_range_) {
-        EXPECT_GT(computed_gradient, estimated_gradient - threshold_);
-        EXPECT_LT(computed_gradient, estimated_gradient + threshold_);
+        // We check relative accuracy, but for too small values, we threshold
+        // the scale factor by 1.
+        Dtype scale = max(max(fabs(computed_gradient), fabs(estimated_gradient)),
+            1.);
+        EXPECT_GT(computed_gradient, estimated_gradient - threshold_ * scale);
+        EXPECT_LT(computed_gradient, estimated_gradient + threshold_ * scale);
       }
       //LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
       //LOG(ERROR) << "computed gradient: " << computed_gradient

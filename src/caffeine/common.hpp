@@ -19,6 +19,8 @@
   template class classname<float>; \
   template class classname<double>
 
+#define NOT_IMPLEMENTED CHECK(false) << "Not Implemented"
+
 namespace caffeine {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
