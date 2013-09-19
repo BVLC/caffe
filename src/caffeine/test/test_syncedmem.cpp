@@ -5,6 +5,7 @@
 #include "caffeine/common.hpp"
 #include "caffeine/syncedmem.hpp"
 
+#include "caffeine/test/test_caffeine_main.hpp"
 
 namespace caffeine {
 

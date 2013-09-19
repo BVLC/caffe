@@ -6,6 +6,8 @@
 #include "caffeine/blob.hpp"
 #include "caffeine/filler.hpp"
 
+#include "caffeine/test/test_caffeine_main.hpp"
+
 namespace caffeine {
   
 template <typename Dtype>

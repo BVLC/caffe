@@ -18,7 +18,7 @@
 *_pb2.py
 
 # test files
-src/test_caffeine
+*.testbin
 
 # vim swp files
 *.swp
