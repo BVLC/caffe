@@ -54,6 +54,9 @@ linecount: clean
 
 test: $(OBJS) $(GTEST_OBJ) $(TEST_BINS)
 
+runtest: test
+	for testbin in $(TEST_BINS); do $$testbin; done
+
 $(TEST_BINS): %.testbin : %.o
 	$(CXX) $< $(OBJS) $(GTEST_OBJ) -o $@ $(LDFLAGS) $(WARNINGS)
 
