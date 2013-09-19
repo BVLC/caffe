@@ -57,7 +57,7 @@ TYPED_TEST(NeuronLayerTest, TestReLUGradientCPU) {
   Caffeine::set_mode(Caffeine::CPU);
   ReLULayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
 
@@ -82,7 +82,7 @@ TYPED_TEST(NeuronLayerTest, TestReLUGradientGPU) {
   Caffeine::set_mode(Caffeine::GPU);
   ReLULayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
 
@@ -110,7 +110,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradientCPU) {
   Caffeine::set_mode(Caffeine::CPU);
   DropoutLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
 
@@ -158,7 +158,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
     Caffeine::set_mode(Caffeine::GPU);
     DropoutLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3);
-    checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+    checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
   } else {
     LOG(ERROR) << "Skipping test to spare my laptop.";
   }

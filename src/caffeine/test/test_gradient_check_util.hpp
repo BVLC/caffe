@@ -22,9 +22,20 @@ class GradientChecker {
   // Note that after the gradient check, we do not guarantee that the data
   // stored in the layer parameters and the blobs.
   void CheckGradient(Layer<Dtype>& layer, vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>& top, int check_bottom = -1);
+      vector<Blob<Dtype>*>& top, int check_bottom = -1) {
+      layer.SetUp(bottom, &top);
+      CheckGradientSingle(layer, bottom, top, check_bottom, -1, -1);
+  }
+  void CheckGradientExhaustive(Layer<Dtype>& layer,
+      vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>& top,
+      int check_bottom = -1);
+
+  void CheckGradientSingle(Layer<Dtype>& layer, vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>& top, int check_bottom, int top_id,
+      int top_data_id);
  protected:
-  Dtype GetObjAndGradient(vector<Blob<Dtype>*>& top);
+  Dtype GetObjAndGradient(vector<Blob<Dtype>*>& top, int top_id = -1,
+      int top_data_id = -1);
   Dtype stepsize_;
   Dtype threshold_;
   unsigned int seed_;

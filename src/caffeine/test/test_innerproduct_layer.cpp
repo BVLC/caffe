@@ -99,7 +99,7 @@ TYPED_TEST(InnerProductLayerTest, TestCPUGradient) {
   layer_param.mutable_bias_filler()->set_max(2);
   InnerProductLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
 TYPED_TEST(InnerProductLayerTest, TestGPUGradient) {

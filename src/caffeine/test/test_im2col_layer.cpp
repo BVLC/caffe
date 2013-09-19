@@ -70,7 +70,7 @@ TYPED_TEST(Im2colLayerTest, TestCPUGradient) {
   Caffeine::set_mode(Caffeine::CPU);
   Im2colLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
 }
