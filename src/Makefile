@@ -46,7 +46,7 @@ NVCC = nvcc ${CXXFLAGS:-fPIC=-Xcompiler -fPIC} $(CPPFLAGS) $(CUDA_ARCH)
 
 all: $(NAME)
 
-linecount:
+linecount: clean
 	cloc --read-lang-def=caffeine.cloc caffeine/
 
 test: $(TEST_NAME)
