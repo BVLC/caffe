@@ -93,12 +93,14 @@ Dtype LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // go through individual data
   int inverse_pre_pad = size_ - (size_ + 1) / 2;
   for (int n = 0; n < num_; ++n) {
+    int block_offset = scale_.offset(n);
     // first, compute diff_i * y_i / s_i
-    caffeine_mul<Dtype>(scale_.count(), top_diff, top_data,
+    caffeine_mul<Dtype>(channels_ * height_ * width_,
+        top_diff + block_offset, top_data + block_offset,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
-    caffeine_div<Dtype>(scale_.count(),
+    caffeine_div<Dtype>(channels_ * height_ * width_,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad),
-        scale_data,
+        scale_data + block_offset,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
     // Now, compute the accumulated ratios and the bottom diff
     memset(accum_ratio_data, 0, sizeof(Dtype) * accum_ratio.count());

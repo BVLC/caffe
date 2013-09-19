@@ -109,12 +109,12 @@ TYPED_TEST(LRNLayerTest, TestCPUGradient) {
   LRNLayer<TypeParam> layer(layer_param);
   Caffeine::set_mode(Caffeine::CPU);
   // when testing the GPU gradient, let's do a small shape.
-  this->blob_bottom_->Reshape(1, 7, 1, 1);
+  this->blob_bottom_->Reshape(2, 7, 3, 3);
   FillerParameter filler_param;
   GaussianFiller<TypeParam> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
 }
