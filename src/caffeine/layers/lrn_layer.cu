@@ -73,7 +73,53 @@ void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 Dtype LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  NOT_IMPLEMENTED;
+  const Dtype* top_diff = top[0]->cpu_diff();
+  const Dtype* top_data = top[0]->cpu_data();
+  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+  const Dtype* scale_data = scale_.cpu_data();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  Blob<Dtype> padded_ratio(1, channels_ + size_ - 1, height_, width_);
+  Blob<Dtype> accum_ratio(1, 1, height_, width_);
+  Dtype* padded_ratio_data = padded_ratio.mutable_cpu_data();
+  Dtype* accum_ratio_data = accum_ratio.mutable_cpu_data();
+  // We hack a little bit by using the diff() to store an additional result
+  Dtype* accum_ratio_times_bottom = accum_ratio.mutable_cpu_diff();
+  memset(padded_ratio_data, 0, sizeof(Dtype) * padded_ratio.count());
+  Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
+
+  caffeine_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
+  caffeine_mul<Dtype>(scale_.count(), top_diff, bottom_diff, bottom_diff);
+
+  // go through individual data
+  int inverse_pre_pad = size_ - (size_ + 1) / 2;
+  for (int n = 0; n < num_; ++n) {
+    // first, compute diff_i * y_i / s_i
+    caffeine_mul<Dtype>(scale_.count(), top_diff, top_data,
+        padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
+    caffeine_div<Dtype>(scale_.count(),
+        padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad),
+        scale_data,
+        padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
+    // Now, compute the accumulated ratios and the bottom diff
+    memset(accum_ratio_data, 0, sizeof(Dtype) * accum_ratio.count());
+    for (int c = 0; c < size_ - 1; ++c) {
+      caffeine_axpy<Dtype>(height_ * width_, 1.,
+          padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
+    }
+    for (int c = 0; c < channels_; ++c) {
+      caffeine_axpy<Dtype>(height_ * width_, 1.,
+          padded_ratio_data + padded_ratio.offset(0, c + size_ - 1),
+          accum_ratio_data);
+      // compute bottom diff
+      caffeine_mul<Dtype>(height_ * width_,
+          bottom_data + top[0]->offset(n, c),
+          accum_ratio_data, accum_ratio_times_bottom);
+      caffeine_axpy<Dtype>(height_ * width_, -cache_ratio_value,
+          accum_ratio_times_bottom, bottom_diff + top[0]->offset(n,c));
+      caffeine_axpy<Dtype>(height_ * width_, -1.,
+          padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
+    }
+  }
   return Dtype(0.);
 }
 

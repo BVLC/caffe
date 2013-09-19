@@ -130,6 +130,14 @@ void caffeine_mul<double>(const int n, const double* a, const double* b,
     double* y) { vdMul(n, a, b, y); }
 
 template <>
+void caffeine_div<float>(const int n, const float* a, const float* b,
+    float* y) { vsDiv(n, a, b, y); }
+
+template <>
+void caffeine_div<double>(const int n, const double* a, const double* b,
+    double* y) { vdDiv(n, a, b, y); }
+
+template <>
 void caffeine_powx<float>(const int n, const float* a, const float b,
     float* y) { vsPowx(n, a, b, y); }
 
