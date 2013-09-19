@@ -64,6 +64,21 @@ TYPED_TEST(Im2colLayerTest, TestCPU) {
   }
 }
 
+TYPED_TEST(Im2colLayerTest, TestGPU) {
+  LayerParameter layer_param;
+  layer_param.set_kernelsize(3);
+  layer_param.set_stride(2);
+  Im2colLayer<TypeParam> layer(layer_param);
+  Caffeine::set_mode(Caffeine::GPU);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // We are lazy and will only check the top left block
+  for (int c = 0; c < 27; ++c) {
+    EXPECT_EQ(this->blob_bottom_->data_at(0, (c / 9), (c / 3) % 3, c % 3),
+        this->blob_top_->data_at(0, c, 0, 0));
+  }
+}
+
 TYPED_TEST(Im2colLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
   layer_param.set_kernelsize(3);

@@ -17,7 +17,7 @@ PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}
 PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
 CXX_OBJS := ${CXX_SRCS:.cpp=.o}
-CU_OBJS := ${CU_SRCS:.cu=.o}
+CU_OBJS := ${CU_SRCS:.cu=.cuo}
 PROTO_OBJS := ${PROTO_SRCS:.proto=.pb.o}
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 TEST_OBJS := ${TEST_SRCS:.cpp=.o}
@@ -63,7 +63,7 @@ $(TEST_BINS): %.testbin : %.o
 $(NAME): $(PROTO_GEN_CC) $(OBJS)
 	$(LINK) -shared $(OBJS) -o $(NAME)
 
-$(CU_OBJS): %.o: %.cu
+$(CU_OBJS): %.cuo: %.cu
 	$(NVCC) -c $< -o $@
 
 $(PROTO_GEN_CC): $(PROTO_SRCS)
