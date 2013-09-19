@@ -53,6 +53,19 @@ Dtype Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   return Dtype(0.);
 }
 
+
+template <typename Dtype>
+Dtype Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+  const Dtype* top_diff = top[0]->gpu_diff();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+  for (int n = 0; n < top[0]->num(); ++n) {
+    col2im_gpu(top_diff + top[0]->offset(n), CHANNELS_, HEIGHT_,
+        WIDTH_, KSIZE_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
+  }
+  return Dtype(0.);
+}
+
 INSTANTIATE_CLASS(Im2colLayer);
 
 }  // namespace caffeine
