@@ -24,7 +24,7 @@
   template class classname<float>; \
   template class classname<double>
 
-#define NOT_IMPLEMENTED CHECK(false) << "Not Implemented"
+#define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
 namespace caffeine {
 

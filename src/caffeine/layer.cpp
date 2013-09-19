@@ -36,7 +36,6 @@ inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   }
 };
 
-template class Layer<float>;
-template class Layer<double>;
+INSTANTIATE_CLASS(Layer);
 
 }  // namespace caffeine

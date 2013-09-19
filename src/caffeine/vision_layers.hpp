@@ -108,6 +108,66 @@ class PaddingLayer : public Layer<Dtype> {
   int WIDTH_OUT_;
 };
 
+template <typename Dtype>
+class LRNLayer : public Layer<Dtype> {
+ public:
+  explicit LRNLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {};
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //    vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  //virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //    const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
+template <typename Dtype>
+class Im2colLayer : public Layer<Dtype> {
+ public:
+  explicit Im2colLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {};
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //    vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  //virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //    const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  int KSIZE_;
+  int STRIDE_;
+  int CHANNELS_;
+  int HEIGHT_;
+  int WIDTH_;
+};
+
+template <typename Dtype>
+class ConvolutionLayer : public Layer<Dtype> {
+ public:
+  explicit ConvolutionLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {};
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //    vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  //virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //    const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  Blob<Dtype> col_bob_;
+};
+
 }  // namespace caffeine
 
 #endif  // CAFFEINE_VISION_LAYERS_HPP_

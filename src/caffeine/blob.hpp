@@ -24,15 +24,19 @@ class Blob {
   inline int height() const { return height_; }
   inline int width() const { return width_; }
   inline int count() const {return count_; }
+  inline int offset(const int n, const int c = 0, const int h = 0,
+      const int w = 0) const {
+    return ((n * channels_ + c) * height_ + h) * width_ + w;
+  }
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {
-    return cpu_data()[((n * channels_ + c) * height_ + h) * width_ + w];
+    return *(cpu_data() + offset(n, c, h, w));
   }
 
   inline Dtype diff_at(const int n, const int c, const int h,
       const int w) const {
-    return cpu_diff()[((n * channels_ + c) * height_ + h) * width_ + w];
+    return *(cpu_diff() + offset(n, c, h, w));
   }
   
   const Dtype* cpu_data() const;

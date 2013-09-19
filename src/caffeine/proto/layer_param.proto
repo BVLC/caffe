@@ -25,7 +25,7 @@ message LayerParameter {
   required string type = 2; // the string to specify the layer type
 
   // Parameters to specify layers with inner products.
-  optional int32 num_output = 3; // The number of outputs for the layer
+  optional uint32 num_output = 3; // The number of outputs for the layer
   optional bool biasterm = 4 [default = true]; // whether to have bias terms
   optional FillerParameter weight_filler = 5; // The filler for the weight
   optional FillerParameter bias_filler = 6; // The filler for the bias
@@ -37,6 +37,7 @@ message LayerParameter {
   optional string pool = 11 [default = 'max']; // The pooling method
   optional float dropout_ratio = 12 [default = 0.5]; // dropout ratio
 
-  optional float alpha = 13 [default = 1.]; // for local response norm
-  optional float beta = 14 [default = 0.75]; // for local response norm
+  optional uint32 local_size = 13 [default = 5]; // for local response norm
+  optional float alpha = 14 [default = 1.]; // for local response norm
+  optional float beta = 15 [default = 0.75]; // for local response norm
 }
