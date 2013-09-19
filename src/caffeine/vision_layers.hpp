@@ -124,6 +124,16 @@ class LRNLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   //virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
   //    const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  // scale_ stores the intermediate summing results
+  Blob<Dtype> scale_;
+  int size_;
+  int pre_pad_;
+  Dtype alpha_;
+  Dtype beta_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
 };
 
 template <typename Dtype>
