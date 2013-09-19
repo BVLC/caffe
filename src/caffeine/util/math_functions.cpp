@@ -1,7 +1,7 @@
 #include <mkl.h>
 #include <cublas_v2.h>
 #include "caffeine/common.hpp"
-#include "caffeine/util/blas.hpp"
+#include "caffeine/util/math_functions.hpp"
 
 namespace caffeine {
 

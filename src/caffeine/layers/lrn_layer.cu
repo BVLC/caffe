@@ -1,6 +1,6 @@
 #include "caffeine/layer.hpp"
 #include "caffeine/vision_layers.hpp"
-#include "caffeine/util/blas.hpp"
+#include "caffeine/util/math_functions.hpp"
 
 namespace caffeine {
 

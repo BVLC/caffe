@@ -1,5 +1,5 @@
-#ifndef CAFFEINE_UTIL_GEMM_H_
-#define CAFFEINE_UTIL_GEMM_H_
+#ifndef CAFFEINE_UTIL_MATH_FUNCTIONS_H_
+#define CAFFEINE_UTIL_MATH_FUNCTIONS_H_
 
 #include <mkl.h>
 #include <cublas_v2.h>
@@ -52,4 +52,4 @@ void caffeine_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 }  // namespace caffeine
 
 
-#endif  // CAFFEINE_UTIL_GEMM_H_
+#endif  // CAFFEINE_UTIL_MATH_FUNCTIONS_H_
