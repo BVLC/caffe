@@ -15,6 +15,11 @@
 #define CURAND_CHECK(condition) CHECK_EQ((condition), CURAND_STATUS_SUCCESS)
 #define VSL_CHECK(condition) CHECK_EQ((condition), VSL_STATUS_OK)
 
+#define CUDA_POST_KERNEL_CHECK \
+  if (cudaSuccess != cudaPeekAtLastError()) {\
+    LOG(FATAL) << "Cuda kernel failed. Error: " << cudaGetLastError(); \
+  }
+
 #define INSTANTIATE_CLASS(classname) \
   template class classname<float>; \
   template class classname<double>

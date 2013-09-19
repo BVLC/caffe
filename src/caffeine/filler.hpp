@@ -61,7 +61,8 @@ class UniformFiller : public Filler<Dtype> {
       break;
     case sizeof(double):
       VSL_CHECK(vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffeine::vsl_stream(),
-          count, (double*)data, this->filler_param_.min(), this->filler_param_.max()));
+          count, (double*)data, this->filler_param_.min(),
+          this->filler_param_.max()));
       break;
     default:
       CHECK(false) << "Unknown dtype.";
