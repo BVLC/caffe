@@ -54,7 +54,7 @@ linecount: clean
 
 test: $(OBJS) $(GTEST_OBJ) $(TEST_BINS)
 
-$(TEST_BINS): %.test : %.o
+$(TEST_BINS): %.testbin : %.o
 	$(CXX) $< $(OBJS) $(GTEST_OBJ) -o $@ $(LDFLAGS) $(WARNINGS)
 
 $(NAME): $(PROTO_GEN_CC) $(OBJS)
