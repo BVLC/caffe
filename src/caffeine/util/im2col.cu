@@ -2,8 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <device_functions.h>
-
 #include "caffeine/common.hpp"
 #include "caffeine/util/im2col.hpp"
 
@@ -56,29 +54,6 @@ template void im2col_gpu<double>(const double* data_im, const int channels,
     const int height, const int width, const int ksize, const int stride,
     double* data_col);
 
-/*
-// A bunch of stuff dealing with double atomic add
-template <typename Dtype>
-__device__ inline Dtype MyAtomicAdd(Dtype* address, Dtype val);
-
-template <>
-__device__ float MyAtomicAdd<float>(float* address, float val) {
-  return atomicAdd(address, val);
-}
-template <>
-__device__ double MyAtomicAdd<double>(double* address, double val)
-{
-  unsigned long long int* address_as_ull = (unsigned long long int*)address;
-  unsigned long long int old = *address_as_ull, assumed;
-  do {
-    assumed = old;
-    old = atomicCAS(address_as_ull, assumed,__double_as_longlong(val +
-        __longlong_as_double(assumed)));
-  } while (assumed != old);
-  return __longlong_as_double(old);
-}
-*/
-
 template <typename Dtype>
 __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
   const int height, const int width, const int channels, const int ksize,
@@ -93,11 +68,14 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
     int w_col_end = min(w / stride + 1, width_col);
     int h_col_start = (h < ksize) ? 0 : (h - ksize) / stride + 1;
     int h_col_end = min(h / stride + 1, height_col);
+    int col_offset = c * ksize * ksize + h * ksize + w;
     for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
       for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
-        // the col location: [c * width * height + h_out, w_out]
-        int c_col = c * ksize * ksize + (h - h_col * stride) * ksize + (w - w_col * stride); 
-        data_im[index] += data_col[(c_col * height_col + h_col) * width_col + w_col];
+        //// the col location: [c * width * height + h_out, w_out]
+        //int c_col = c * ksize * ksize + (h - h_col * stride) * ksize + (w - w_col * stride); 
+        //data_im[index] += data_col[(c_col * height_col + h_col) * width_col + w_col];
+        data_im[index] +=
+            data_col[col_offset - (h_col * ksize + w_col) * stride];
       }
     }
   }
