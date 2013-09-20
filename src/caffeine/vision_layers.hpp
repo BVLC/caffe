@@ -169,13 +169,28 @@ class ConvolutionLayer : public Layer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-  //    vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
   virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  //virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
-  //    const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   Blob<Dtype> col_bob_;
+ protected:
+  int KSIZE_;
+  int STRIDE_;
+  int NUM_;
+  int CHANNELS_;
+  int HEIGHT_;
+  int WIDTH_;
+  int NUM_OUTPUT_;
+  int GROUP_;
+  Blob<Dtype> col_buffer_;
+  shared_ptr<SyncedMemory> bias_multiplier_;
+  bool biasterm_;
+  int M_;
+  int K_;
+  int N_;
 };
 
 }  // namespace caffeine

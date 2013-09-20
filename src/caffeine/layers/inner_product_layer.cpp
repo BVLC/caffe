@@ -28,7 +28,7 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     this->blobs_.resize(1);
   }
   // Intialize the weight
-  this->blobs_[0].Reshape(1, 1, K_, N_);
+  this->blobs_[0].Reshape(1, 1, N_, K_);
   // fill the weights
   shared_ptr<Filler<Dtype> > weight_filler(
       GetFiller<Dtype>(this->layer_param_.weight_filler()));

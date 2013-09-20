@@ -38,7 +38,7 @@ class Blob {
       const int w) const {
     return *(cpu_diff() + offset(n, c, h, w));
   }
-  
+
   const Dtype* cpu_data() const;
   const Dtype* gpu_data() const;
   const Dtype* cpu_diff() const;
