@@ -88,5 +88,16 @@ TYPED_TEST(Im2colLayerTest, TestCPUGradient) {
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
+/*
+TYPED_TEST(Im2colLayerTest, TestGPUGradient) {
+  LayerParameter layer_param;
+  layer_param.set_kernelsize(3);
+  layer_param.set_stride(2);
+  Caffeine::set_mode(Caffeine::GPU);
+  Im2colLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
+*/
 
 }
