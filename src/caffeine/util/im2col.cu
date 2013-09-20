@@ -57,6 +57,7 @@ template void im2col_gpu<double>(const double* data_im, const int channels,
     double* data_col);
 
 
+/*
 // A bunch of stuff dealing with double atomic add
 template <typename Dtype>
 __device__ inline Dtype MyAtomicAdd(Dtype* address, Dtype val);
@@ -77,8 +78,6 @@ __device__ double MyAtomicAdd<double>(double* address, double val)
   } while (assumed != old);
   return __longlong_as_double(old);
 }
-
-
 
 template <typename Dtype>
 __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
@@ -121,5 +120,6 @@ template void col2im_gpu<float>(const float* data_col, const int channels,
 template void col2im_gpu<double>(const double* data_col, const int channels,
     const int height, const int width, const int psize, const int stride,
     double* data_im);
+*/
 
 }  // namespace caffeine
