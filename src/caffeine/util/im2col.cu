@@ -45,7 +45,7 @@ void im2col_gpu(const Dtype* data_im, const int channels,
   im2col_gpu_kernel<Dtype><<<CAFFEINE_GET_BLOCKS(num_kernels), CAFFEINE_CUDA_NUM_THREADS>>>(
     num_kernels, data_im, height, width, ksize, stride, height_col, width_col,
     data_col);
-CUDA_POST_KERNEL_CHECK;
+  CUDA_POST_KERNEL_CHECK;
 }
 
 // Explicit instantiation
@@ -55,7 +55,6 @@ template void im2col_gpu<float>(const float* data_im, const int channels,
 template void im2col_gpu<double>(const double* data_im, const int channels,
     const int height, const int width, const int ksize, const int stride,
     double* data_col);
-
 
 /*
 // A bunch of stuff dealing with double atomic add
