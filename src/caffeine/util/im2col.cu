@@ -77,22 +77,29 @@ __device__ double MyAtomicAdd<double>(double* address, double val)
   } while (assumed != old);
   return __longlong_as_double(old);
 }
+*/
 
 template <typename Dtype>
 __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
-  const int height, const int width, const int ksize,
+  const int height, const int width, const int channels, const int ksize,
   const int stride, const int height_col, const int width_col, Dtype* data_im) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
-    int w_out = index % width_col;
-    index /= width_col;
-    int h_out = index % height_col;
-    int channel_out = index / height_col;
-    int w_in = w_out * stride + channel_out % ksize;
-    int h_in = h_out * stride + (channel_out / ksize) % ksize;
-    int channel_in = channel_out / ksize / ksize;
-    MyAtomicAdd(data_im + (channel_in * height + h_in) * width + w_in,
-        data_col[(channel_out* height_col + h_out) * width_col + w_out]);
+    int w = index % width;
+    int h = (index / width) % height;
+    int c = index / (width * height);
+    // compute the start and end of the output
+    int w_col_start = (w < ksize) ? 0 : (w - ksize) / stride + 1;
+    int w_col_end = min(w / stride + 1, width_col);
+    int h_col_start = (h < ksize) ? 0 : (h - ksize) / stride + 1;
+    int h_col_end = min(h / stride + 1, height_col);
+    for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
+      for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
+        // the col location: [c * width * height + h_out, w_out]
+        int c_col = c * ksize * ksize + (h - h_col * stride) * ksize + (w - w_col * stride); 
+        data_im[index] += data_col[(c_col * height_col + h_col) * width_col + w_col];
+      }
+    }
   }
 }
 
@@ -103,11 +110,12 @@ void col2im_gpu(const Dtype* data_col, const int channels,
   CUDA_CHECK(cudaMemset(data_im, 0, sizeof(Dtype) * height * width * channels));
   int height_col = (height - ksize) / stride + 1;
   int width_col = (width - ksize) / stride + 1;
-  int channels_col = channels * ksize * ksize;
-  int num_kernels = channels_col * height_col * width_col;
+  int num_kernels = channels * height * width;
+  // To avoid involving atomic operations, we will launch one kernel per
+  // bottom dimension, and then in the kernel add up the top dimensions.
   col2im_gpu_kernel<Dtype><<<CAFFEINE_GET_BLOCKS(num_kernels), CAFFEINE_CUDA_NUM_THREADS>>>(
-      num_kernels, data_col, height, width, ksize, stride, height_col, width_col,
-      data_im);
+      num_kernels, data_col, height, width, channels, ksize, stride,
+      height_col, width_col, data_im);
   CUDA_POST_KERNEL_CHECK;
 }
 
@@ -119,6 +127,6 @@ template void col2im_gpu<float>(const float* data_col, const int channels,
 template void col2im_gpu<double>(const double* data_col, const int channels,
     const int height, const int width, const int psize, const int stride,
     double* data_im);
-*/
+
 
 }  // namespace caffeine

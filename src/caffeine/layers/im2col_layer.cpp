@@ -57,9 +57,6 @@ Dtype Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 template <typename Dtype>
 Dtype Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  LOG(ERROR) << "Warning: still CPU version";
-  return Backward_cpu(top, propagate_down, bottom);
-  /*
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   for (int n = 0; n < top[0]->num(); ++n) {
@@ -67,7 +64,6 @@ Dtype Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         WIDTH_, KSIZE_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
   }
   return Dtype(0.);
-  */
 }
 
 INSTANTIATE_CLASS(Im2colLayer);
