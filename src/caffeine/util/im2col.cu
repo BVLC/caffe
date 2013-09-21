@@ -68,14 +68,11 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
     int w_col_end = min(w / stride + 1, width_col);
     int h_col_start = (h < ksize) ? 0 : (h - ksize) / stride + 1;
     int h_col_end = min(h / stride + 1, height_col);
-    int col_offset = c * ksize * ksize + h * ksize + w;
     for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
       for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
-        //// the col location: [c * width * height + h_out, w_out]
-        //int c_col = c * ksize * ksize + (h - h_col * stride) * ksize + (w - w_col * stride); 
-        //data_im[index] += data_col[(c_col * height_col + h_col) * width_col + w_col];
-        data_im[index] +=
-            data_col[col_offset - (h_col * ksize + w_col) * stride];
+        // the col location: [c * width * height + h_out, w_out]
+        int c_col = c * ksize * ksize + (h - h_col * stride) * ksize + (w - w_col * stride); 
+        data_im[index] += data_col[(c_col * height_col + h_col) * width_col + w_col];
       }
     }
   }
