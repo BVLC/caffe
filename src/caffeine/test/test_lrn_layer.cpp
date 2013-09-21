@@ -102,6 +102,15 @@ TYPED_TEST(LRNLayerTest, TestCPU) {
     EXPECT_LE(this->blob_top_->cpu_data()[i],
         top_reference.cpu_data()[i] + 1e-5);
   }
+
+  Caffeine::set_mode(Caffeine::GPU);
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(this->blob_top_->cpu_data()[i],
+        top_reference.cpu_data()[i] - 1e-5);
+    EXPECT_LE(this->blob_top_->cpu_data()[i],
+        top_reference.cpu_data()[i] + 1e-5);
+  }
 }
 
 TYPED_TEST(LRNLayerTest, TestCPUGradient) {
