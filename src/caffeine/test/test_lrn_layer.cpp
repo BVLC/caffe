@@ -26,7 +26,8 @@ class LRNLayerTest : public ::testing::Test {
       : blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {};
   virtual void SetUp() {
-    blob_bottom_->Reshape(2,7,3,3);
+    Caffeine::set_random_seed(1701);
+    blob_bottom_->Reshape(2, 7, 3, 3);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -87,7 +88,7 @@ TYPED_TEST(LRNLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
 
-TYPED_TEST(LRNLayerTest, TestCPU) {
+TYPED_TEST(LRNLayerTest, TestCPUForward) {
   LayerParameter layer_param;
   LRNLayer<TypeParam> layer(layer_param);
   Caffeine::set_mode(Caffeine::CPU);
@@ -102,9 +103,17 @@ TYPED_TEST(LRNLayerTest, TestCPU) {
     EXPECT_LE(this->blob_top_->cpu_data()[i],
         top_reference.cpu_data()[i] + 1e-5);
   }
+}
 
+TYPED_TEST(LRNLayerTest, TestGPUForward) {
+  LayerParameter layer_param;
+  LRNLayer<TypeParam> layer(layer_param);
   Caffeine::set_mode(Caffeine::GPU);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  Blob<TypeParam> top_reference;
+  this->ReferenceLRNForward(*(this->blob_bottom_), layer_param,
+      &top_reference);
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(this->blob_top_->cpu_data()[i],
         top_reference.cpu_data()[i] - 1e-5);
@@ -116,13 +125,34 @@ TYPED_TEST(LRNLayerTest, TestCPU) {
 TYPED_TEST(LRNLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
   LRNLayer<TypeParam> layer(layer_param);
-  Caffeine::set_mode(Caffeine::CPU);
-  // when testing the GPU gradient, let's do a small shape.
-  this->blob_bottom_->Reshape(2, 7, 3, 3);
-  FillerParameter filler_param;
-  GaussianFiller<TypeParam> filler(filler_param);
-  filler.Fill(this->blob_bottom_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  Caffeine::set_mode(Caffeine::CPU);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    this->blob_top_->mutable_cpu_diff()[i] = 1.;
+  }
+  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+  //for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  //  std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i] << std::endl;
+  //}
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+} 
+
+TYPED_TEST(LRNLayerTest, TestGPUGradient) {
+  LayerParameter layer_param;
+  LRNLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  Caffeine::set_mode(Caffeine::GPU);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    this->blob_top_->mutable_cpu_diff()[i] = 1.;
+  }
+  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+  //for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  //  std::cout << "GPU diff " << this->blob_bottom_->cpu_diff()[i] << std::endl;
+  //}
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
