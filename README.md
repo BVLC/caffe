@@ -1,6 +1,6 @@
-caffeine
+Caffe
 ========
 
-caffeine: Convolutional Algorithms For Feature Extraction.
+Caffe: Convolutional Algorithms For Feature Extraction.
 
 Copyright Yangqing Jia
