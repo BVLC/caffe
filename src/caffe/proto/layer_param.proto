@@ -1,0 +1,54 @@
+package caffe;
+
+message BlobProto {
+  optional int32 num = 1 [default = 0];
+  optional int32 channels = 2 [default = 0];
+  optional int32 height = 3 [default = 0];
+  optional int32 width = 4 [default = 0];
+  repeated float data = 5 [packed=true];
+  repeated float diff = 6 [packed=true];
+}
+
+message FillerParameter {
+  // The filler type. In default we will set it to Gaussian for easy
+  // debugging.
+  optional string type = 1 [default = 'gaussian'];
+  optional float value = 2 [default = 0]; // the value in constant filler
+  optional float min = 3 [default = 0]; // the min value in uniform filler
+  optional float max = 4 [default = 1]; // the max value in uniform filler
+  optional float mean = 5 [default = 0]; // the mean value in gaussian filler
+  optional float std = 6 [default = 1]; // the std value in gaussian filler
+}
+
+message LayerParameter {
+  optional string name = 1; // the layer name
+  optional string type = 2; // the string to specify the layer type
+
+  // Parameters to specify layers with inner products.
+  optional uint32 num_output = 3; // The number of outputs for the layer
+  optional bool biasterm = 4 [default = true]; // whether to have bias terms
+  optional FillerParameter weight_filler = 5; // The filler for the weight
+  optional FillerParameter bias_filler = 6; // The filler for the bias
+
+  optional uint32 pad = 7 [default = 0]; // The padding size
+  optional uint32 kernelsize = 8; // The kernel size
+  optional uint32 group = 9 [default = 1]; // The group size for group conv
+  optional uint32 stride = 10 [default = 1]; // The stride
+  optional string pool = 11 [default = 'max']; // The pooling method
+  optional float dropout_ratio = 12 [default = 0.5]; // dropout ratio
+
+  optional uint32 local_size = 13 [default = 5]; // for local response norm
+  optional float alpha = 14 [default = 1.]; // for local response norm
+  optional float beta = 15 [default = 0.75]; // for local response norm
+}
+
+message LayerConnection {
+  optional LayerParameter layer = 1; // the layer parameter
+  repeated string bottom = 2; // the name of the bottom blobs
+  repeated string top = 3; // the name of the top blobs
+}
+
+message NetParameter {
+  optional string name = 1; // consider giving the network a name
+  repeated LayerConnection layers = 2; // a bunch of layers.
+}
