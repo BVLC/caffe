@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #ifndef CAFFE_UTIL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
 

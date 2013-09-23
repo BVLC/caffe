@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #include <cmath>
 #include <cstdlib>
 #include <cstring>

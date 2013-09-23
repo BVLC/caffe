@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #ifndef CAFFE_SYNCEDMEM_HPP_
 #define CAFFE_SYNCEDMEM_HPP_
 

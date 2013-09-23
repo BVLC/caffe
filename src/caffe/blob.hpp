@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #ifndef CAFFE_BLOB_HPP_
 #define CAFFE_BLOB_HPP_
 

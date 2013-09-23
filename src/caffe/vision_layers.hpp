@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 

@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #ifndef CAFFE_LAYER_FACTORY_HPP_
 #define CAFFE_LAYER_FACTORY_HPP_
 

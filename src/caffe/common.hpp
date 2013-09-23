@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 

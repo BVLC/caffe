@@ -1,3 +1,5 @@
+// Copyright 2013 Yangqing Jia
+
 #include <cublas_v2.h>
 
 #include "caffe/blob.hpp"
