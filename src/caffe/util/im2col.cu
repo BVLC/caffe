@@ -60,6 +60,7 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
   const int stride, const int height_col, const int width_col, Dtype* data_im) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
+    Dtype val = 0;
     int w = index % width;
     int h = (index / width) % height;
     int c = index / (width * height);
@@ -72,9 +73,10 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
       for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
         // the col location: [c * width * height + h_out, w_out]
         int c_col = c * ksize * ksize + (h - h_col * stride) * ksize + (w - w_col * stride); 
-        data_im[index] += data_col[(c_col * height_col + h_col) * width_col + w_col];
+        val += data_col[(c_col * height_col + h_col) * width_col + w_col];
       }
     }
+    data_im[index] = val;
   }
 }
 
@@ -82,7 +84,7 @@ template <typename Dtype>
 void col2im_gpu(const Dtype* data_col, const int channels,
     const int height, const int width, const int ksize, const int stride,
     Dtype* data_im) {
-  CUDA_CHECK(cudaMemset(data_im, 0, sizeof(Dtype) * height * width * channels));
+  //CUDA_CHECK(cudaMemset(data_im, 0, sizeof(Dtype) * height * width * channels));
   int height_col = (height - ksize) / stride + 1;
   int width_col = (width - ksize) / stride + 1;
   int num_kernels = channels * height * width;

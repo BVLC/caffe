@@ -4,12 +4,12 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#define CAFFE_MAX_POOLING_THRESHOLD 1e-8f
+
 using std::max;
 using std::min;
 
 namespace caffe {
-
-const float CAFFE_MAX_POOLING_THRESHOLD = 1e-8;
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
