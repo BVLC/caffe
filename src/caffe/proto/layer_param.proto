@@ -34,7 +34,11 @@ message LayerParameter {
   optional uint32 kernelsize = 8; // The kernel size
   optional uint32 group = 9 [default = 1]; // The group size for group conv
   optional uint32 stride = 10 [default = 1]; // The stride
-  optional string pool = 11 [default = 'max']; // The pooling method
+  enum PoolMethod {
+    MAX = 0;
+    AVE = 1;
+  }
+  optional PoolMethod pool = 11 [default = MAX]; // The pooling method
   optional float dropout_ratio = 12 [default = 0.5]; // dropout ratio
 
   optional uint32 local_size = 13 [default = 5]; // for local response norm
