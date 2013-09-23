@@ -37,12 +37,12 @@ void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
   // Note that cublas follows fortran order.
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
-  cublasOperation_t cuTransA = 
+  cublasOperation_t cuTransA =
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));  
+      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
 template <>
@@ -53,12 +53,12 @@ void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
   // Note that cublas follows fortran order.
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
-  cublasOperation_t cuTransA = 
+  cublasOperation_t cuTransA =
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));  
+      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
 template <>
@@ -124,7 +124,7 @@ void caffe_scal<double>(const int N, const double alpha, double *X) {
 }
 
 template <>
-void caffe_sqr<float>(const int n, const float* a, float* y){
+void caffe_sqr<float>(const int n, const float* a, float* y) {
   vsSqr(n, a, y);
 }
 
@@ -173,7 +173,7 @@ void caffe_vRngUniform<double>(const int n, double* r,
 
 template <>
 void caffe_vRngGaussian<float>(const int n, float* r, const float a,
-    const float sigma){
+    const float sigma) {
   VSL_CHECK(vsRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
       Caffe::vsl_stream(), n, r, a, sigma));
 }
@@ -181,7 +181,7 @@ void caffe_vRngGaussian<float>(const int n, float* r, const float a,
 
 template <>
 void caffe_vRngGaussian<double>(const int n, double* r, const double a,
-    const double sigma){
+    const double sigma) {
   VSL_CHECK(vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
       Caffe::vsl_stream(), n, r, a, sigma));
 }

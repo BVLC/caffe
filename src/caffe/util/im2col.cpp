@@ -51,7 +51,7 @@ void col2im_cpu(const Dtype* data_col, const int channels,
     int c_im = c / ksize / ksize;
     for (int h = 0; h < height_col; ++h) {
       for (int w = 0; w < width_col; ++w) {
-        data_im[(c_im * height + h * stride + h_offset) * width + w * stride 
+        data_im[(c_im * height + h * stride + h_offset) * width + w * stride
             + w_offset] += data_col[(c * height_col + h) * width_col + w];
       }
     }
