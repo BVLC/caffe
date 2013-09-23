@@ -14,11 +14,11 @@ class Blob {
  public:
   Blob()
        : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
-       diff_() {};
+       diff_() {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
   Blob(const Blob<Dtype>& source);
-  virtual ~Blob() {};
+  virtual ~Blob() {}
   void Reshape(const int num, const int height,
       const int width, const int channels);
   inline int num() const { return num_; }

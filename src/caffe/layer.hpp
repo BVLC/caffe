@@ -15,12 +15,12 @@ namespace caffe {
 template <typename Dtype>
 class Layer {
  public:
-   // You should not implement your own constructor. Any set up code should go
-   // to SetUp(), where the dimensions of the bottom blobs are provided to the
-   // layer.
+  // You should not implement your own constructor. Any set up code should go
+  // to SetUp(), where the dimensions of the bottom blobs are provided to the
+  // layer.
   explicit Layer(const LayerParameter& param)
-    : layer_param_(param) {};
-  virtual ~Layer() {};
+    : layer_param_(param) {}
+  virtual ~Layer() {}
   // SetUp: your function should implement this.
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) = 0;
@@ -35,7 +35,9 @@ class Layer {
       vector<Blob<Dtype>*>* bottom);
 
   // Returns the vector of parameters.
-  vector<Blob<Dtype> >& params() { return blobs_; };
+  vector<Blob<Dtype> >& params() {
+    return blobs_;
+  }
 
  protected:
   // The protobuf that stores the layer parameters
@@ -73,7 +75,7 @@ class Layer {
 template <typename Dtype>
 inline void Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  switch(Caffe::mode()) {
+  switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
     break;
@@ -89,7 +91,7 @@ template <typename Dtype>
 inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  switch(Caffe::mode()) {
+  switch (Caffe::mode()) {
   case Caffe::CPU:
     return Backward_cpu(top, propagate_down, bottom);
   case Caffe::GPU:

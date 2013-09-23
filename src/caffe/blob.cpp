@@ -35,13 +35,16 @@ Blob<Dtype>::Blob(const Blob<Dtype>& source) {
   if (source.count() == 0) {
     Blob();
   } else {
-    Reshape(source.num(), source.channels(), source.height(), source.width());
+    Reshape(source.num(), source.channels(), source.height(),
+        source.width());
     // create the synced memories.
     data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
     diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
     // Copy the data.
-    memcpy(data_->mutable_cpu_data(), source.cpu_data(), count_ * sizeof(Dtype));
-    memcpy(diff_->mutable_cpu_data(), source.cpu_diff(), count_ * sizeof(Dtype));
+    memcpy(data_->mutable_cpu_data(), source.cpu_data(),
+        count_ * sizeof(Dtype));
+    memcpy(diff_->mutable_cpu_data(), source.cpu_diff(),
+        count_ * sizeof(Dtype));
   }
 }
 
@@ -72,25 +75,25 @@ const Dtype* Blob<Dtype>::gpu_diff() const {
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
-  return (Dtype*)data_->mutable_cpu_data();
+  return reinterpret_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
-  return (Dtype*)data_->mutable_gpu_data();
+  return reinterpret_cast<Dtype*>(data_->mutable_gpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
-  return (Dtype*)diff_->mutable_cpu_data();
+  return reinterpret_cast<Dtype*>(diff_->mutable_cpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
-  return (Dtype*)diff_->mutable_gpu_data();
+  return reinterpret_cast<Dtype*>(diff_->mutable_gpu_data());
 }
 
 template <typename Dtype>

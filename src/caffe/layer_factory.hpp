@@ -3,6 +3,8 @@
 #ifndef CAFFE_LAYER_FACTORY_HPP_
 #define CAFFE_LAYER_FACTORY_HPP_
 
+#include <string>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/layer_param.pb.h"

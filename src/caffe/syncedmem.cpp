@@ -12,14 +12,14 @@ SyncedMemory::~SyncedMemory() {
   if (cpu_ptr_) {
     CUDA_CHECK(cudaFreeHost(cpu_ptr_));
   }
-  
+
   if (gpu_ptr_) {
     CUDA_CHECK(cudaFree(gpu_ptr_));
   }
 }
 
 inline void SyncedMemory::to_cpu() {
-  switch(head_) {
+  switch (head_) {
   case UNINITIALIZED:
     CUDA_CHECK(cudaMallocHost(&cpu_ptr_, size_));
     memset(cpu_ptr_, 0, size_);
@@ -39,7 +39,7 @@ inline void SyncedMemory::to_cpu() {
 }
 
 inline void SyncedMemory::to_gpu() {
-  switch(head_) {
+  switch (head_) {
   case UNINITIALIZED:
     CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     CUDA_CHECK(cudaMemset(gpu_ptr_, 0, size_));
