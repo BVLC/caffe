@@ -97,6 +97,7 @@ inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   }
 };
 
+
 }  // namespace caffe
 
 #endif  // CAFFE_LAYER_H_

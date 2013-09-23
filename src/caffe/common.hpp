@@ -26,6 +26,7 @@
 
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
+
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
@@ -46,20 +47,32 @@ class Caffe {
   ~Caffe();
   static Caffe& Get();
   enum Brew { CPU, GPU };
-  enum Phase { TRAIN, TEST};
+  enum Phase { TRAIN, TEST };
 
-  // The getters for the variables. 
+  // The getters for the variables.
+  // Returns the cublas handle.
   static cublasHandle_t cublas_handle();
+  // Returns the curand generator.
   static curandGenerator_t curand_generator();
+  // Returns the MKL random stream.
   static VSLStreamStatePtr vsl_stream();
+  // Returns the mode: running on CPU or GPU.
   static Brew mode();
+  // Returns the phase: TRAIN or TEST.
   static Phase phase();
   // The setters for the variables
+  // Sets the mode.
   static void set_mode(Brew mode);
+  // Sets the phase.
   static void set_phase(Phase phase);
+  // Sets the random seed of both MKL and curand
   static void set_random_seed(const unsigned int seed);
+
  private:
+  // The private constructor to avoid duplicate instantiation.
   Caffe();
+
+ protected:
   static shared_ptr<Caffe> singleton_;
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
@@ -67,6 +80,7 @@ class Caffe {
   Brew mode_;
   Phase phase_;
 };
+
 
 }  // namespace caffe
 

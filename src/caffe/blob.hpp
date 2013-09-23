@@ -1,5 +1,5 @@
-#ifndef CAFFE_BLOB_HPP
-#define CAFFE_BLOB_HPP
+#ifndef CAFFE_BLOB_HPP_
+#define CAFFE_BLOB_HPP_
 
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
@@ -50,6 +50,7 @@ class Blob {
   void Update();
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto);
+
  private:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;

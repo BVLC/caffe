@@ -1,5 +1,5 @@
-#ifndef CAFFE_SYNCEDMEM_HPP
-#define CAFFE_SYNCEDMEM_HPP
+#ifndef CAFFE_SYNCEDMEM_HPP_
+#define CAFFE_SYNCEDMEM_HPP_
 
 namespace caffe {
 
