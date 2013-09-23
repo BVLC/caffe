@@ -1,5 +1,7 @@
 // Copyright 2013 Yangqing Jia
 
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -11,7 +13,7 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1) <<
       "Local Response Normalization Layer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) << 
+  CHECK_EQ(top->size(), 1) <<
       "Local Response Normalization Layer takes a single blob as output.";
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
@@ -119,7 +121,7 @@ Dtype LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           bottom_data + top[0]->offset(n, c),
           accum_ratio_data, accum_ratio_times_bottom);
       caffe_axpy<Dtype>(height_ * width_, -cache_ratio_value,
-          accum_ratio_times_bottom, bottom_diff + top[0]->offset(n,c));
+          accum_ratio_times_bottom, bottom_diff + top[0]->offset(n, c));
       caffe_axpy<Dtype>(height_ * width_, -1.,
           padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
     }

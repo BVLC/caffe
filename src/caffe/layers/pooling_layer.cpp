@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -23,14 +25,16 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHANNELS_ = bottom[0]->channels();
   HEIGHT_ = bottom[0]->height();
   WIDTH_ = bottom[0]->width();
-  POOLED_HEIGHT_ = int(ceil(float(HEIGHT_ - KSIZE_) / STRIDE_)) + 1;
-  POOLED_WIDTH_ = int(ceil(float(WIDTH_ - KSIZE_) / STRIDE_)) + 1;
+  POOLED_HEIGHT_ = static_cast<int>(
+      ceil(static_cast<float>(HEIGHT_ - KSIZE_) / STRIDE_)) + 1;
+  POOLED_WIDTH_ = static_cast<int>(
+      ceil(static_cast<float>(WIDTH_ - KSIZE_) / STRIDE_)) + 1;
   (*top)[0]->Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
       POOLED_WIDTH_);
 };
 
-
-// TODO: Is there a faster way to do pooling in the channel-first case?
+// TODO(Yangqing): Is there a faster way to do pooling in the channel-first
+// case?
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -96,7 +100,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
     // Our implementation simply divides the pooled values by KSIZE^2,
-    // regardless of the actual pooling region. This would allow one to not 
+    // regardless of the actual pooling region. This would allow one to not
     // trust too much on the border pooling regions, but I am not sure what
     // benefit / harm it would bring to the actual code.
     caffe_scal<Dtype>(top_count, Dtype(1.) / KSIZE_ / KSIZE_,
@@ -176,7 +180,7 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
     // Our implementation simply divides the pooled values by KSIZE^2,
-    // regardless of the actual pooling region. This would allow one to not 
+    // regardless of the actual pooling region. This would allow one to not
     // trust too much on the border pooling regions, but I am not sure what
     // benefit / harm it would bring to the actual code.
     caffe_scal<Dtype>((*bottom)[0]->count(), Dtype(1.) / KSIZE_ / KSIZE_,

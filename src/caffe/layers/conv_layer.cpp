@@ -1,5 +1,7 @@
 // Copyright 2013 Yangqing Jia
 
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/im2col.hpp"
@@ -31,7 +33,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(NUM_OUTPUT_ % GROUP_, 0)
       << "Number of output should be multiples of group.";
   biasterm_ = this->layer_param_.biasterm();
-  // Figure out the dimensions for individual gemms. 
+  // Figure out the dimensions for individual gemms.
   M_ = NUM_OUTPUT_ / GROUP_;
   K_ = CHANNELS_ * KSIZE_ * KSIZE_ / GROUP_;
   N_ = height_out * width_out;
@@ -54,7 +56,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         GetFiller<Dtype>(this->layer_param_.bias_filler()));
     bias_filler->Fill(&this->blobs_[1]);
     bias_multiplier_.reset(new SyncedMemory(N_ * sizeof(Dtype)));
-    Dtype* bias_multiplier_data = (Dtype*)bias_multiplier_->mutable_cpu_data();
+    Dtype* bias_multiplier_data =
+        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());
     for (int i = 0; i < N_; ++i) {
         bias_multiplier_data[i] = 1.;
     }
@@ -86,8 +89,8 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (biasterm_) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, NUM_OUTPUT_,
           N_, 1, (Dtype)1., this->blobs_[1].cpu_data(),
-          (Dtype*)bias_multiplier_->cpu_data(), (Dtype)1.,
-          top_data + (*top)[0]->offset(n));
+          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
+          (Dtype)1., top_data + (*top)[0]->offset(n));
     }
   }
 }
@@ -116,8 +119,8 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (biasterm_) {
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, NUM_OUTPUT_,
           N_, 1, (Dtype)1., this->blobs_[1].gpu_data(),
-          (Dtype*)bias_multiplier_->gpu_data(), (Dtype)1.,
-          top_data + (*top)[0]->offset(n));
+          reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
+          (Dtype)1., top_data + (*top)[0]->offset(n));
     }
   }
 }
@@ -140,8 +143,9 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     memset(bias_diff, 0., sizeof(Dtype) * this->blobs_[1].count());
     for (int n = 0; n < NUM_; ++n) {
       caffe_cpu_gemv<Dtype>(CblasNoTrans, NUM_OUTPUT_, N_,
-        1., top_diff + top[0]->offset(n),
-        (Dtype*)bias_multiplier_->cpu_data(), 1., bias_diff);
+          1., top_diff + top[0]->offset(n),
+          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), 1.,
+          bias_diff);
     }
   }
 
@@ -196,8 +200,9 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         sizeof(Dtype) * this->blobs_[1].count()));
     for (int n = 0; n < NUM_; ++n) {
       caffe_gpu_gemv<Dtype>(CblasNoTrans, NUM_OUTPUT_, N_,
-        1., top_diff + top[0]->offset(n),
-        (Dtype*)bias_multiplier_->gpu_data(), 1., bias_diff);
+          1., top_diff + top[0]->offset(n),
+          reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
+          1., bias_diff);
     }
   }
 

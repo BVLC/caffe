@@ -1,5 +1,7 @@
 // Copyright 2013 Yangqing Jia
 
+#include <vector>
+
 #include <mkl.h>
 #include <cublas_v2.h>
 
@@ -59,8 +61,8 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       bottom_data, weight, (Dtype)0., top_data);
   if (biasterm_) {
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
-        (Dtype*)bias_multiplier_->cpu_data(), this->blobs_[1].cpu_data(),
-        (Dtype)1., top_data);
+        reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
+        this->blobs_[1].cpu_data(), (Dtype)1., top_data);
   }
 }
 
@@ -76,7 +78,7 @@ Dtype InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (biasterm_) {
     // Gradient with respect to bias
     caffe_cpu_gemv<Dtype>(CblasTrans, M_, N_, (Dtype)1., top_diff,
-        (Dtype*)bias_multiplier_->cpu_data(), (Dtype)0.,
+        reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), (Dtype)0.,
         this->blobs_[1].mutable_cpu_diff());
   }
   if (propagate_down) {
@@ -98,8 +100,8 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       bottom_data, weight, (Dtype)0., top_data);
   if (biasterm_) {
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
-        (Dtype*)bias_multiplier_->gpu_data(), this->blobs_[1].gpu_data(),
-        (Dtype)1., top_data);
+        reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
+        this->blobs_[1].gpu_data(), (Dtype)1., top_data);
   }
 }
 
@@ -115,8 +117,8 @@ Dtype InnerProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (biasterm_) {
     // Gradient with respect to bias
     caffe_gpu_gemv<Dtype>(CblasTrans, M_, N_, (Dtype)1., top_diff,
-        (Dtype*)bias_multiplier_->gpu_data(), (Dtype)0.,
-        this->blobs_[1].mutable_gpu_diff());
+        reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
+        (Dtype)0., this->blobs_[1].mutable_gpu_diff());
   }
   if (propagate_down) {
     // Gradient with respect to bottom data
