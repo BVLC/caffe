@@ -6,7 +6,7 @@
 #include <vector>
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/proto/layer_param.pb.h"
+#include "caffe/proto/caffe.pb.h"
 
 using std::vector;
 

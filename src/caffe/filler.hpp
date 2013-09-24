@@ -14,7 +14,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/proto/layer_param.pb.h"
+#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 

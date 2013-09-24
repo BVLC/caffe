@@ -5,7 +5,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
-#include "caffe/proto/layer_param.pb.h"
+#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 
