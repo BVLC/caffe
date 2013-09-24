@@ -39,6 +39,9 @@ class Layer {
     return blobs_;
   }
 
+  // Writes the layer parameter to a protocol buffer
+  void ToProto(LayerParameter* param, bool write_diff = false);
+
  protected:
   // The protobuf that stores the layer parameters
   LayerParameter layer_param_;
@@ -101,6 +104,15 @@ inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   }
 };
 
+template <typename Dtype>
+void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
+  param->Clear();
+  param->CopyFrom(layer_param_);
+  param->clear_blobs();
+  for (int i = 0; i < blobs_.size(); ++i) {
+    blobs_[i].ToProto(param->add_blobs(), write_diff);
+  }
+}
 
 }  // namespace caffe
 
