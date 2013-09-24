@@ -13,7 +13,7 @@
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
- 
+
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>

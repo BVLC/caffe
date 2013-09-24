@@ -18,11 +18,13 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   leveldb::DB* db_temp;
   leveldb::Options options;
   options.create_if_missing = false;
+  LOG(INFO) << "Opening leveldb " << this->layer_param_.source();
   leveldb::Status status = leveldb::DB::Open(
       options, this->layer_param_.source(), &db_temp);
   CHECK(status.ok());
   db_.reset(db_temp);
   iter_.reset(db_->NewIterator(leveldb::ReadOptions()));
+  iter_->SeekToFirst();
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
@@ -42,7 +44,7 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   Datum datum;
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  Dtype* top_label = (*top)[0]->mutable_cpu_diff();
+  Dtype* top_label = (*top)[1]->mutable_cpu_data();
   for (int i = 0; i < this->layer_param_.batchsize(); ++i) {
     // get a blob
     datum.ParseFromString(iter_->value().ToString());
@@ -56,7 +58,7 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (!iter_->Valid()) {
       // We have reached the end. Restart from the first.
       LOG(INFO) << "Restarting data read from start.";
-      iter_.reset(db_->NewIterator(leveldb::ReadOptions()));
+      iter_->SeekToFirst();
     }
   }
 }

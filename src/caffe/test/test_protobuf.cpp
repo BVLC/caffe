@@ -10,7 +10,7 @@
 #include "caffe/proto/layer_param.pb.h"
 
 namespace caffe {
-  
+
 class ProtoTest : public ::testing::Test {};
 
 TEST_F(ProtoTest, TestSerialization) {
