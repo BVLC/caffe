@@ -7,7 +7,7 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <curand.h>
-//cuda driver types
+// cuda driver types
 #include <driver_types.h>
 #include <glog/logging.h>
 #include <mkl_vsl.h>
