@@ -117,7 +117,7 @@ void Blob<Dtype>::FromProto(const BlobProto& proto) {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::ToProto(BlobProto* proto) {
+void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) {
   proto->set_num(num_);
   proto->set_channels(channels_);
   proto->set_height(height_);
@@ -128,9 +128,11 @@ void Blob<Dtype>::ToProto(BlobProto* proto) {
   for (int i = 0; i < count_; ++i) {
     proto->add_data(data_vec[i]);
   }
-  const Dtype* diff_vec = cpu_diff();
-  for (int i = 0; i < count_; ++i) {
-    proto->add_diff(diff_vec[i]);
+  if (write_diff) {
+    const Dtype* diff_vec = cpu_diff();
+    for (int i = 0; i < count_; ++i) {
+      proto->add_diff(diff_vec[i]);
+    }
   }
 }
 

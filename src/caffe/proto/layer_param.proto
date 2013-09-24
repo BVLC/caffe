@@ -11,6 +11,11 @@ message BlobProto {
   repeated float diff = 6 [packed=true];
 }
 
+message Datum {
+  optional BlobProto blob = 1;
+  optional int32 label = 2;
+}
+
 message FillerParameter {
   // The filler type. In default we will set it to Gaussian for easy
   // debugging.
@@ -57,4 +62,6 @@ message LayerConnection {
 message NetParameter {
   optional string name = 1; // consider giving the network a name
   repeated LayerConnection layers = 2; // a bunch of layers.
+  repeated string bottom = 3; // The input to the network
+  repeated string top = 4; // The output of the network.
 }
