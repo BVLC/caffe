@@ -1,0 +1,89 @@
+name: "LeNet"
+bottom: "data"
+bottom: "label"
+layers {
+  layer {
+    name: "conv1"
+    type: "conv"
+    num_output: 20
+    kernelsize: 5
+    stride: 1
+  }
+  bottom: "data"
+  top: "conv1"
+}
+layers {
+  layer {
+    name: "pool1"
+    type: "pool"
+    kernelsize: 2
+    stride: 2
+    pool: MAX
+  }
+  bottom: "conv1"
+  top: "pool1"
+}
+layers {
+  layer {
+    name: "conv2"
+    type: "conv"
+    num_output: 50
+    kernelsize: 5
+    stride: 1
+  }
+  bottom: "pool1"
+  top: "conv2"
+}
+layers {
+  layer {
+    name: "pool2"
+    type: "pool"
+    kernelsize: 2
+    stride: 2
+    pool: MAX
+  }
+  bottom: "conv2"
+  top: "pool2"
+}
+layers {
+  layer {
+    name: "ip1"
+    type: "innerproduct"
+    num_output: 500
+  }
+  bottom: "pool2"
+  top: "ip1"
+}
+layers {
+  layer {
+    name: "relu1"
+    type: "relu"
+  }
+  bottom: "ip1"
+  top: "relu1"
+}
+layers {
+  layer {
+    name: "ip2"
+    type: "innerproduct"
+    num_output: 10
+  }
+  bottom: "relu1"
+  top: "ip2"
+}
+layers {
+  layer {
+    name: "prob"
+    type: "softmax"
+  }
+  bottom: "ip2"
+  top: "prob"
+}
+layers {
+  layer {
+    name: "loss"
+    type: "softmaxloss"
+  }
+  bottom: "prob"
+  bottom: "label"
+}
