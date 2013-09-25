@@ -1,11 +1,15 @@
 // Copyright 2013 Yangqing Jia
 
+#include <stdint.h>
+#include <string>
 #include <vector>
 
 #include <leveldb/db.h>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
+
+using std::string;
 
 namespace caffe {
 
@@ -28,15 +32,14 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
-  const BlobProto& blob = datum.blob();
   // image
   (*top)[0]->Reshape(
-      this->layer_param_.batchsize(), blob.channels(), blob.height(),
-      blob.width());
+      this->layer_param_.batchsize(), datum.channels(), datum.height(),
+      datum.width());
   // label
   (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
   // datum size
-  datum_size_ = blob.data_size();
+  datum_size_ = datum.data().size();
 }
 
 template <typename Dtype>
@@ -48,9 +51,9 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < this->layer_param_.batchsize(); ++i) {
     // get a blob
     datum.ParseFromString(iter_->value().ToString());
-    const BlobProto& blob = datum.blob();
+    const string& data = datum.data();
     for (int j = 0; j < datum_size_; ++j) {
-      top_data[i * datum_size_ + j] = blob.data(j);
+      top_data[i * datum_size_ + j] = (uint8_t)data[j];
     }
     top_label[i] = datum.label();
     // go to the next iter

@@ -1,8 +1,9 @@
 // Copyright 2013 Yangqing Jia
 
-#include <cstring>
 #include <cuda_runtime.h>
 #include <leveldb/db.h>
+
+#include <string>
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -11,6 +12,8 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/test/test_caffe_main.hpp"
+
+using std::string;
 
 namespace caffe {
 
@@ -38,13 +41,12 @@ class DataLayerTest : public ::testing::Test {
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
-      BlobProto* blob = datum.mutable_blob();
-      blob->set_num(1);
-      blob->set_channels(2);
-      blob->set_height(3);
-      blob->set_width(4);
+      datum.set_channels(2);
+      datum.set_height(3);
+      datum.set_width(4);
+      std::string* data = datum.mutable_data();
       for (int j = 0; j < 24; ++j) {
-        blob->add_data(i);
+        data->push_back((uint8_t)i);
       }
       stringstream ss;
       ss << i;
