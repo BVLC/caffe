@@ -31,7 +31,7 @@ class DataLayerTest : public ::testing::Test {
     blob_top_vec_.push_back(blob_top_label_);
     // Create the leveldb
     filename = tmpnam(NULL); // get temp name
-    LOG(ERROR) << "Using temporary leveldb " << filename;
+    LOG(INFO) << "Using temporary leveldb " << filename;
     leveldb::DB* db;
     leveldb::Options options;
     options.error_if_exists = true;
