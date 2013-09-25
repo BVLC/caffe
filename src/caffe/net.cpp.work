@@ -1,6 +1,0 @@
-// Copyright Yangqing Jia 2013
-
-#include <string>
-#include <vector>
-
-#include "caffe/proto/layer_param.proto"

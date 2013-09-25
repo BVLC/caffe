@@ -64,6 +64,12 @@ template <typename Dtype>
 void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
     const Dtype sigma);
 
+template <typename Dtype>
+void caffe_exp(const int n, const Dtype* a, Dtype* y);
+
+template <typename Dtype>
+Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y);
+
 }  // namespace caffe
 
 

@@ -186,5 +186,24 @@ void caffe_vRngGaussian<double>(const int n, double* r, const double a,
       Caffe::vsl_stream(), n, r, a, sigma));
 }
 
+template <>
+void caffe_exp<float>(const int n, const float* a, float* y) {
+  vsExp(n, a, y);
+}
+
+template <>
+void caffe_exp<double>(const int n, const double* a, double* y) {
+  vdExp(n, a, y);
+}
+
+template <>
+float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {
+  return cblas_sdot(n, x, 1, y, 1);
+}
+
+template <>
+double caffe_cpu_dot<double>(const int n, const double* x, const double* y) {
+  return cblas_ddot(n, x, 1, y, 1);
+}
 
 }  // namespace caffe
