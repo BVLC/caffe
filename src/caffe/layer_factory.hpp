@@ -21,6 +21,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   const std::string& type = param.type();
   if (type == "conv") {
     return new ConvolutionLayer<Dtype>(param);
+  } else if (type == "data") {
+    return new DataLayer<Dtype>(param);
   } else if (type == "dropout") {
     return new DropoutLayer<Dtype>(param);
   } else if (type == "im2col") {

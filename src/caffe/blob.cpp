@@ -37,9 +37,21 @@ Blob<Dtype>::Blob(const Blob<Dtype>& source) {
   } else {
     Reshape(source.num(), source.channels(), source.height(),
         source.width());
-    // create the synced memories.
-    data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+    if (count_ > 0) {
+      // Copy the data.
+      memcpy(data_->mutable_cpu_data(), source.cpu_data(),
+          count_ * sizeof(Dtype));
+      memcpy(diff_->mutable_cpu_data(), source.cpu_diff(),
+          count_ * sizeof(Dtype));
+    }
+  }
+}
+
+template <typename Dtype>
+const Blob<Dtype>& Blob<Dtype>::operator=(const Blob<Dtype>& source) {
+  Reshape(source.num(), source.channels(), source.height(),
+        source.width());
+  if (count_ > 0) {
     // Copy the data.
     memcpy(data_->mutable_cpu_data(), source.cpu_data(),
         count_ * sizeof(Dtype));
@@ -110,9 +122,11 @@ void Blob<Dtype>::FromProto(const BlobProto& proto) {
   for (int i = 0; i < count_; ++i) {
     data_vec[i] = proto.data(i);
   }
-  Dtype* diff_vec = mutable_cpu_diff();
-  for (int i = 0; i < count_; ++i) {
-    diff_vec[i] = proto.diff(i);
+  if (proto.diff_size() > 0) {
+    Dtype* diff_vec = mutable_cpu_diff();
+    for (int i = 0; i < count_; ++i) {
+      diff_vec[i] = proto.diff(i);
+    }
   }
 }
 
