@@ -70,6 +70,43 @@ TYPED_TEST(UniformFillerTest, TestFill) {
 }
 
 template <typename Dtype>
+class PositiveUnitballFillerTest : public ::testing::Test {
+ protected:
+  PositiveUnitballFillerTest()
+      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+        filler_param_() {
+    filler_.reset(new PositiveUnitballFiller<Dtype>(filler_param_));
+    filler_->Fill(blob_);
+  };
+  virtual ~PositiveUnitballFillerTest() { delete blob_; }
+  Blob<Dtype>* const blob_;
+  FillerParameter filler_param_;
+  shared_ptr<PositiveUnitballFiller<Dtype> > filler_;
+};
+
+TYPED_TEST_CASE(PositiveUnitballFillerTest, Dtypes);
+
+TYPED_TEST(PositiveUnitballFillerTest, TestFill) {
+  EXPECT_TRUE(this->blob_);
+  const int num = this->blob_->num();
+  const int count = this->blob_->count();
+  const int dim = count / num;
+  const TypeParam* data = this->blob_->cpu_data();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_GE(data[i], 0);
+    EXPECT_LE(data[i], 1);
+  }
+  for (int i = 0; i < num; ++i) {
+    TypeParam sum = 0;
+    for (int j = 0; j < dim; ++j) {
+      sum += data[i * dim + j];
+    }
+    EXPECT_GE(sum, 0.999);
+    EXPECT_LE(sum, 1.001);
+  }
+}
+
+template <typename Dtype>
 class GaussianFillerTest : public ::testing::Test {
  protected:
   GaussianFillerTest()
@@ -96,7 +133,7 @@ TYPED_TEST(GaussianFillerTest, TestFill) {
   TypeParam var = 0.;
   for (int i = 0; i < count; ++i) {
     mean += data[i];
-    var += (data[i] - this->filler_param_.mean()) * 
+    var += (data[i] - this->filler_param_.mean()) *
         (data[i] - this->filler_param_.mean());
   }
   mean /= count;

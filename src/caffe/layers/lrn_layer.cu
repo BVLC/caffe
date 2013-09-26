@@ -26,7 +26,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* in,
     int post_pad = size - pre_pad - 1;
     Dtype accum_scale = 0;
     // fill the scale at [n, :, h, w]
-    // accumulate values 
+    // accumulate values
     while (head < post_pad) {
       accum_scale += in[head * step] * in[head * step];
       ++head;

@@ -72,6 +72,32 @@ class GaussianFiller : public Filler<Dtype> {
   }
 };
 
+template <typename Dtype>
+class PositiveUnitballFiller : public Filler<Dtype> {
+ public:
+  explicit PositiveUnitballFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    Dtype* data = blob->mutable_cpu_data();
+    DCHECK(blob->count());
+    caffe_vRngUniform<Dtype>(blob->count(), blob->mutable_cpu_data(), 0, 1);
+    // We expect the filler to not be called very frequently, so we will
+    // just use a simple implementation
+    int dim = blob->count() / blob->num();
+    DCHECK(dim);
+    for (int i = 0; i < blob->num(); ++i) {
+      Dtype sum = 0;
+      for (int j = 0; j < dim; ++j) {
+        sum += data[i * dim + j];
+      }
+      for (int j = 0; j < dim; ++j) {
+        data[i * dim + j] /= sum;
+      }
+    }
+  }
+};
+
+
 // A function to get a specific filler from the specification given in
 // FillerParameter. Ideally this would be replaced by a factory pattern,
 // but we will leave it this way for now.
@@ -84,6 +110,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new UniformFiller<Dtype>(param);
   } else if (type == "gaussian") {
     return new GaussianFiller<Dtype>(param);
+  } else if (type == "positive_unitball") {
+    return new PositiveUnitballFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
