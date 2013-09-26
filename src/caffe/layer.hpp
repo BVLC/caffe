@@ -35,7 +35,7 @@ class Layer {
       vector<Blob<Dtype>*>* bottom);
 
   // Returns the vector of parameters.
-  vector<Blob<Dtype> >& params() {
+  vector<shared_ptr<Blob<Dtype> > >& params() {
     return blobs_;
   }
 
@@ -46,7 +46,7 @@ class Layer {
   // The protobuf that stores the layer parameters
   LayerParameter layer_param_;
   // The vector that stores the parameters as a set of blobs.
-  vector<Blob<Dtype> > blobs_;
+  vector<shared_ptr<Blob<Dtype> > > blobs_;
 
   // Forward functions
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -70,6 +70,8 @@ class Layer {
     LOG(WARNING) << "Using CPU code as backup.";
     return Backward_cpu(top, propagate_down, bottom);
   };
+
+  DISABLE_COPY_AND_ASSIGN(Layer);
 };  // class Layer
 
 // Forward and backward wrappers. You should implement the cpu and
@@ -110,7 +112,7 @@ void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
   param->CopyFrom(layer_param_);
   param->clear_blobs();
   for (int i = 0; i < blobs_.size(); ++i) {
-    blobs_[i].ToProto(param->add_blobs(), write_diff);
+    blobs_[i]->ToProto(param->add_blobs(), write_diff);
   }
 }
 

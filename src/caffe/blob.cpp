@@ -11,54 +11,28 @@ namespace caffe {
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
     const int width) {
-  CHECK_GT(num, 0);
-  CHECK_GT(channels, 0);
-  CHECK_GT(height, 0);
-  CHECK_GT(width, 0);
+  CHECK_GE(num, 0);
+  CHECK_GE(channels, 0);
+  CHECK_GE(height, 0);
+  CHECK_GE(width, 0);
   num_ = num;
   channels_ = channels;
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
-  data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-  diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+  if (count_) {
+    data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+    diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+  } else {
+    data_.reset((SyncedMemory*)NULL);
+    diff_.reset((SyncedMemory*)NULL);
+  }
 }
 
 template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
     const int width) {
   Reshape(num, channels, height, width);
-}
-
-template <typename Dtype>
-Blob<Dtype>::Blob(const Blob<Dtype>& source) {
-  if (source.count() == 0) {
-    Blob();
-  } else {
-    Reshape(source.num(), source.channels(), source.height(),
-        source.width());
-    if (count_ > 0) {
-      // Copy the data.
-      memcpy(data_->mutable_cpu_data(), source.cpu_data(),
-          count_ * sizeof(Dtype));
-      memcpy(diff_->mutable_cpu_data(), source.cpu_diff(),
-          count_ * sizeof(Dtype));
-    }
-  }
-}
-
-template <typename Dtype>
-const Blob<Dtype>& Blob<Dtype>::operator=(const Blob<Dtype>& source) {
-  Reshape(source.num(), source.channels(), source.height(),
-        source.width());
-  if (count_ > 0) {
-    // Copy the data.
-    memcpy(data_->mutable_cpu_data(), source.cpu_data(),
-        count_ * sizeof(Dtype));
-    memcpy(diff_->mutable_cpu_data(), source.cpu_diff(),
-        count_ * sizeof(Dtype));
-  }
-  return (*this);
 }
 
 template <typename Dtype>

@@ -22,6 +22,11 @@
     LOG(FATAL) << "Cuda kernel failed. Error: " << cudaGetLastError(); \
   }
 
+#define DISABLE_COPY_AND_ASSIGN(classname) \
+ private:\
+  classname(const classname&);\
+  classname& operator=(const classname&)
+
 #define INSTANTIATE_CLASS(classname) \
   template class classname<float>; \
   template class classname<double>

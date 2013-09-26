@@ -57,22 +57,4 @@ TYPED_TEST(BlobSimpleTest, TestReshape) {
   EXPECT_EQ(this->blob_->count(), 120);
 }
 
-TYPED_TEST(BlobSimpleTest, TestCopyConstructor) {
-  Blob<TypeParam> source(2, 3, 4, 5);
-  FillerParameter filler_param;
-  UniformFiller<TypeParam> filler(filler_param);
-  filler.Fill(&source);
-  Blob<TypeParam> target(source);
-  const TypeParam* source_data = source.cpu_data();
-  const TypeParam* target_data = target.cpu_data();
-  EXPECT_EQ(target.num(), source.num());
-  EXPECT_EQ(target.channels(), source.channels());
-  EXPECT_EQ(target.height(), source.height());
-  EXPECT_EQ(target.width(), source.width());
-  EXPECT_EQ(target.count(), source.count());
-  for (int i = 0; i < source.count(); ++i) {
-    EXPECT_EQ(source_data[i], target_data[i]);
-  }
-}
-
 }

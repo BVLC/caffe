@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -38,6 +39,10 @@ class Net {
 
   // returns the network name.
   const string& name() { return name_; }
+  // returns the layer names
+  const vector<string>& layer_names() { return layer_names_; }
+  // returns the blob names
+  const vector<string>& blob_names() { return blob_names_; }
 
  protected:
   // Individual layers in the net
@@ -45,7 +50,7 @@ class Net {
   vector<string> layer_names_;
   // blobs stores the blobs that store intermediate results between the
   // layers.
-  vector<Blob<Dtype> > blobs_;
+  vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
   // bottom_vecs stores the vectors containing the input for each layer, except
   // for the first layer whose bottom vec is provided by the network's input.

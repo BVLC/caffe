@@ -17,8 +17,6 @@ class Blob {
        diff_() {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
-  Blob(const Blob<Dtype>& source);
-  const Blob<Dtype>& operator=(const Blob<Dtype>& src);
   virtual ~Blob() {}
   void Reshape(const int num, const int height,
       const int width, const int channels);
@@ -62,6 +60,8 @@ class Blob {
   int height_;
   int width_;
   int count_;
+
+  DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
 
 }  // namespace caffe

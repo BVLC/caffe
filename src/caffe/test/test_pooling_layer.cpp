@@ -56,44 +56,6 @@ TYPED_TEST(PoolingLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
-TYPED_TEST(PoolingLayerTest, TestGPUMax) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_MAX);
-  Caffe::set_mode(Caffe::CPU);
-  PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  Blob<TypeParam> blob_reference(*this->blob_top_);
-  Caffe::set_mode(Caffe::GPU);
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  for (int i = 0; i < blob_reference.count(); ++i) {
-    EXPECT_EQ(blob_reference.cpu_data()[i], this->blob_top_->cpu_data()[i])
-        << "debug: index " << i;
-  }
-}
-
-TYPED_TEST(PoolingLayerTest, TestGPUAve) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_AVE);
-  Caffe::set_mode(Caffe::CPU);
-  PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  Blob<TypeParam> blob_reference(*this->blob_top_);
-  Caffe::set_mode(Caffe::GPU);
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  for (int i = 0; i < blob_reference.count(); ++i) {
-    EXPECT_GE(blob_reference.cpu_data()[i], this->blob_top_->cpu_data()[i] - 1e-4)
-        << "debug: index " << i;
-    EXPECT_LE(blob_reference.cpu_data()[i], this->blob_top_->cpu_data()[i] + 1e-4)
-        << "debug: index " << i;
-  }
-}
-
 /*
 TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
   LayerParameter layer_param;

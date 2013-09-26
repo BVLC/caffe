@@ -28,20 +28,25 @@ Net<Dtype>::Net(const NetParameter& param,
   // set the input blobs
   for (int i = 0; i < param.bottom_size(); ++i) {
     const string& blob_name = param.bottom(i);
-    blobs_.push_back(Blob<Dtype>(*bottom[i]));
+    CHECK_GT(bottom[i]->count(), 0);
+    shared_ptr<Blob<Dtype> > blob_pointer(
+        new Blob<Dtype>(bottom[i]->num(), bottom[i]->channels(),
+            bottom[i]->height(), bottom[i]->width()));
+    blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
     net_input_blob_indices_.push_back(i);
     blob_name_to_idx[blob_name] = i;
     available_blobs.insert(blob_name);
   }
   // For each layer, set up their input and output
-  layers_.resize(param.layers_size());
   bottom_vecs_.resize(param.layers_size());
   top_vecs_.resize(param.layers_size());
-  for (int i = 0; i < param.top_size(); ++i) {
+  for (int i = 0; i < param.layers_size(); ++i) {
     const LayerConnection& layer_connection = param.layers(i);
     const LayerParameter& layer_param = layer_connection.layer();
-    layers_[i].reset(GetLayer<Dtype>(layer_param));
+    layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
+    layer_names_.push_back(layer_param.name());
+    LOG(INFO) << "Creating Layer " << layer_param.name();
     // Figure out this layer's input and output
     for (int j = 0; j < layer_connection.bottom_size(); ++j) {
       const string& blob_name = layer_connection.bottom(j);
@@ -49,8 +54,9 @@ Net<Dtype>::Net(const NetParameter& param,
         LOG(FATAL) << "Unknown blob input " << blob_name <<
             " to layer" << j;
       }
+      LOG(INFO) << layer_param.name() << " <- " << blob_name;
       bottom_vecs_[i].push_back(
-          &blobs_[blob_name_to_idx[blob_name]]);
+          blobs_[blob_name_to_idx[blob_name]].get());
       available_blobs.erase(blob_name);
     }
     for (int j = 0; j < layer_connection.top_size(); ++j) {
@@ -58,18 +64,21 @@ Net<Dtype>::Net(const NetParameter& param,
       if (blob_name_to_idx.find(blob_name) != blob_name_to_idx.end()) {
         LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
       }
-      blobs_.push_back(Blob<Dtype>());
+      LOG(INFO) << layer_param.name() << " -> " << blob_name;
+      shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+      blobs_.push_back(blob_pointer);
       blob_names_.push_back(blob_name);
       blob_name_to_idx[blob_name] = blob_names_.size() - 1;
       available_blobs.insert(blob_name);
-      top_vecs_[i].push_back(&blobs_[blob_names_.size() - 1]);
+      top_vecs_[i].push_back(blobs_[blob_names_.size() - 1].get());
     }
   }
+  LOG(INFO) << "Checking top blobs.";
   // In the end, check if all remaining available blobs are top blobs.
   for (int i = 0; i < param.top_size(); ++i) {
     const string& blob_name = param.top(i);
     if (blob_name_to_idx.find(blob_name) == blob_name_to_idx.end()) {
-      LOG(FATAL) << "Unknown blob input " << blob_name;
+      LOG(FATAL) << "Unknown blob output " << blob_name;
     }
     net_output_blob_indices_.push_back(blob_name_to_idx[blob_name]);
     available_blobs.erase(blob_name);
@@ -84,8 +93,10 @@ Net<Dtype>::Net(const NetParameter& param,
 
   LOG(INFO) << "Setting up the layers.";
   for (int i = 0; i < layers_.size(); ++i) {
+    LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
   }
+  LOG(INFO) << "Network initialization done.";
 }
 
 template <typename Dtype>
@@ -93,7 +104,8 @@ void Net<Dtype>::Forward(const vector<Blob<Dtype>*> & bottom,
     vector<Blob<Dtype>*>* top) {
   // Copy bottom to internal bottom
   for (int i = 0; i < bottom.size(); ++i) {
-    blobs_[net_input_blob_indices_[i]] = *bottom[i];
+    memcpy(blobs_[net_input_blob_indices_[i]]->mutable_cpu_data(),
+        bottom[i]->cpu_data(), sizeof(Dtype) * bottom[i]->count());
   }
   for (int i = 0; i < layers_.size(); ++i) {
     layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
@@ -130,11 +142,12 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       continue;
     }
     LOG(INFO) << "Loading source layer " << source_layer_name;
-    vector<Blob<Dtype> >& target_blobs = layers_[target_layer_id]->params();
+    vector<shared_ptr<Blob<Dtype> > >& target_blobs =
+        layers_[target_layer_id]->params();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
-      target_blobs[j].FromProto(source_layer.blobs(j));
+      target_blobs[j]->FromProto(source_layer.blobs(j));
     }
   }
 }
