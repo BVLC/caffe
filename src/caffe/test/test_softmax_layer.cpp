@@ -46,6 +46,16 @@ TYPED_TEST(SoftmaxLayerTest, TestForwardCPU) {
   SoftmaxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Test sum
+  for (int i = 0; i < this->blob_bottom_->num(); ++i) {
+    TypeParam sum = 0;
+    for (int j = 0; j < this->blob_top_->channels(); ++j) {
+      sum += this->blob_top_->data_at(i, j, 0, 0);
+    }
+    EXPECT_GE(sum, 0.999);
+    EXPECT_LE(sum, 1.001);
+  }
+  // Test exact values
   for (int i = 0; i < this->blob_bottom_->num(); ++i) {
     TypeParam scale = 0;
     for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
