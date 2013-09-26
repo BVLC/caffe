@@ -1,5 +1,6 @@
 // Copyright 2013 Yangqing Jia
 
+#include <cmath>
 #include <cstring>
 #include <cuda_runtime.h>
 
@@ -39,15 +40,34 @@ class SoftmaxLayerTest : public ::testing::Test {
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(SoftmaxLayerTest, Dtypes);
 
-TYPED_TEST(SoftmaxLayerTest, TestReLUCPU) {
+TYPED_TEST(SoftmaxLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
   SoftmaxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  NOT_IMPLEMENTED;
+  for (int i = 0; i < this->blob_bottom_->num(); ++i) {
+    TypeParam scale = 0;
+    for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+      scale += exp(this->blob_bottom_->data_at(i, j, 0, 0));
+    }
+    for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+      EXPECT_GE(this->blob_top_->data_at(i, j, 0, 0) + 1e-4,
+          exp(this->blob_bottom_->data_at(i, j, 0, 0)) / scale)
+          << "debug: " << i << " " << j;
+      EXPECT_LE(this->blob_top_->data_at(i, j, 0, 0) - 1e-4,
+          exp(this->blob_bottom_->data_at(i, j, 0, 0)) / scale)
+          << "debug: " << i << " " << j;
+    }
+  }
 }
 
-
+TYPED_TEST(SoftmaxLayerTest, TestGradientCPU) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  SoftmaxLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
 
 }

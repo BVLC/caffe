@@ -58,6 +58,7 @@ const Blob<Dtype>& Blob<Dtype>::operator=(const Blob<Dtype>& source) {
     memcpy(diff_->mutable_cpu_data(), source.cpu_diff(),
         count_ * sizeof(Dtype));
   }
+  return (*this);
 }
 
 template <typename Dtype>
