@@ -8,6 +8,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/net.hpp"
+#include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/test/lenet.hpp"
@@ -35,6 +36,13 @@ TYPED_TEST(NetProtoTest, TestSetup) {
   // Now, initialize a network using the parameter
   shared_ptr<Blob<TypeParam> > data(new Blob<TypeParam>(10, 1, 28, 28));
   shared_ptr<Blob<TypeParam> > label(new Blob<TypeParam>(10, 1, 1, 1));
+  FillerParameter filler_param;
+  shared_ptr<Filler<TypeParam> > filler;
+  filler.reset(new ConstantFiller<TypeParam>(filler_param));
+  filler->Fill(label.get());
+  filler.reset(new GaussianFiller<TypeParam>(filler_param));
+  filler->Fill(data.get());
+
   vector<Blob<TypeParam>*> bottom_vec;
   bottom_vec.push_back(data.get());
   bottom_vec.push_back(label.get());
@@ -43,6 +51,7 @@ TYPED_TEST(NetProtoTest, TestSetup) {
   EXPECT_EQ(caffe_net.layer_names().size(), 9);
   EXPECT_EQ(caffe_net.blob_names().size(), 10);
 
+  // Print a few statistics to see if things are correct
   for (int i = 0; i < caffe_net.blobs().size(); ++i) {
     LOG(ERROR) << "Blob: " << caffe_net.blob_names()[i];
     LOG(ERROR) << "size: " << caffe_net.blobs()[i]->num() << ", "
@@ -50,6 +59,13 @@ TYPED_TEST(NetProtoTest, TestSetup) {
         << caffe_net.blobs()[i]->height() << ", "
         << caffe_net.blobs()[i]->width();
   }
+  // Run the network without training.
+  vector<Blob<TypeParam>*> top_vec;
+  LOG(ERROR) << "Performing Forward";
+  caffe_net.Forward(bottom_vec, &top_vec);
+  LOG(ERROR) << "Performing Backward";
+  LOG(ERROR) << caffe_net.Backward();
+
 }
 
 }  // namespace caffe

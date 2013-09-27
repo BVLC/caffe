@@ -121,7 +121,9 @@ Dtype Net<Dtype>::Backward() {
   Dtype loss = 0;
   // TODO(Yangqing): figure out those layers that do not need backward.
   for (int i = layers_.size() - 1; i >= 0; --i) {
-    loss += layers_[i]->Backward(top_vecs_[i], true, &bottom_vecs_[i]);
+    Dtype layer_loss = layers_[i]->Backward(
+        top_vecs_[i], true, &bottom_vecs_[i]);
+    loss += layer_loss;
   }
   return loss;
 }

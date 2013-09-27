@@ -1,9 +1,10 @@
 // Copyright 2013 Yangqing Jia
 
+#include <algorithm>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-#include <algorithm>
 
 using std::max;
 
@@ -34,11 +35,15 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
   memcpy(top_data, bottom_data, sizeof(Dtype) * bottom[0]->count());
-  // we need to subtract the sum to avoid numerical issues, compute the exp,
+  // we need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   // Compute sum
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., bottom_data,
-      sum_multiplier_.cpu_data(), 0., scale_data);
+  for (int i = 0; i < num; ++i) {
+    scale_data[i] = bottom_data[i*dim];
+    for (int j = 0; j < dim; ++j) {
+      scale_data[i] = max(scale_data[i], bottom_data[i * dim + j]);
+    }
+  }
   // subtraction
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
     scale_data, sum_multiplier_.cpu_data(), 1., top_data);
