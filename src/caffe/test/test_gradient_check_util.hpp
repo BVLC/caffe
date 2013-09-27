@@ -3,10 +3,13 @@
 #ifndef CAFFE_TEST_GRADIENT_CHECK_UTIL_H_
 #define CAFFE_TEST_GRADIENT_CHECK_UTIL_H_
 
-#include <algorithm>
-#include <cmath>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
 #include "caffe/layer.hpp"
 
 using std::max;
@@ -22,7 +25,7 @@ class GradientChecker {
       const unsigned int seed = 1701, const Dtype kink = 0.,
       const Dtype kink_range = -1)
       : stepsize_(stepsize), threshold_(threshold), seed_(seed),
-        kink_(kink), kink_range_(kink_range) {};
+        kink_(kink), kink_range_(kink_range) {}
   // Checks the gradient of a layer, with provided bottom layers and top
   // layers. The gradient checker will check the gradient with respect to
   // the parameters of the layer, as well as the input blobs if check_through
@@ -41,6 +44,7 @@ class GradientChecker {
   void CheckGradientSingle(Layer<Dtype>& layer, vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>& top, int check_bottom, int top_id,
       int top_data_id);
+
  protected:
   Dtype GetObjAndGradient(vector<Blob<Dtype>*>& top, int top_id = -1,
       int top_data_id = -1);
@@ -73,11 +77,11 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>& layer,
     blobs_to_check.push_back(bottom[check_bottom]);
   }
   // go through the bottom and parameter blobs
-  //LOG(ERROR) << "Checking " << blobs_to_check.size() << " blobs.";
+  // LOG(ERROR) << "Checking " << blobs_to_check.size() << " blobs.";
   for (int blobid = 0; blobid < blobs_to_check.size(); ++blobid) {
     Blob<Dtype>* current_blob = blobs_to_check[blobid];
-    //LOG(ERROR) << "Blob " << blobid << ": checking " << current_blob->count()
-    //    << " parameters.";
+    // LOG(ERROR) << "Blob " << blobid << ": checking " << current_blob->count()
+    //     << " parameters.";
     // go through the values
     for (int feat_id = 0; feat_id < current_blob->count(); ++feat_id) {
       // First, obtain the original data
@@ -104,13 +108,13 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>& layer,
       Dtype estimated_gradient = (positive_objective - negative_objective) /
           stepsize_ / 2.;
       Dtype feature = current_blob->cpu_data()[feat_id];
-      //LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
-      //    << current_blob->cpu_diff()[feat_id];
+      // LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
+      //     << current_blob->cpu_diff()[feat_id];
       if (kink_ - kink_range_ > feature || feature > kink_ + kink_range_) {
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
-        Dtype scale = max(max(fabs(computed_gradient), fabs(estimated_gradient)),
-            1.);
+        Dtype scale = max(
+            max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
         EXPECT_GT(computed_gradient, estimated_gradient - threshold_ * scale)
           << "debug: (top_id, top_data_id, blob_id, feat_id)="
           << top_id << "," << top_data_id << "," << blobid << "," << feat_id;
@@ -118,22 +122,23 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>& layer,
           << "debug: (top_id, top_data_id, blob_id, feat_id)="
           << top_id << "," << top_data_id << "," << blobid << "," << feat_id;
       }
-      //LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
-      //LOG(ERROR) << "computed gradient: " << computed_gradient
-      //    << " estimated_gradient: " << estimated_gradient;
+      // LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
+      // LOG(ERROR) << "computed gradient: " << computed_gradient
+      //     << " estimated_gradient: " << estimated_gradient;
     }
   }
 }
 
 template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientExhaustive(Layer<Dtype>& layer,
-    vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>& top, int check_bottom) {
+    vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>& top,
+    int check_bottom) {
   layer.SetUp(bottom, &top);
-  //LOG(ERROR) << "Exhaustive Mode.";
+  // LOG(ERROR) << "Exhaustive Mode.";
   for (int i = 0; i < top.size(); ++i) {
-    //LOG(ERROR) << "Exhaustive: blob " << i << " size " << top[i]->count();
+    // LOG(ERROR) << "Exhaustive: blob " << i << " size " << top[i]->count();
     for (int j = 0; j < top[i]->count(); ++j) {
-      //LOG(ERROR) << "Exhaustive: blob " << i << " data " << j;
+      // LOG(ERROR) << "Exhaustive: blob " << i << " data " << j;
       CheckGradientSingle(layer, bottom, top, check_bottom, i, j);
     }
   }
