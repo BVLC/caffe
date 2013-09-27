@@ -107,7 +107,7 @@ void Blob<Dtype>::FromProto(const BlobProto& proto) {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) {
+void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->set_num(num_);
   proto->set_channels(channels_);
   proto->set_height(height_);
