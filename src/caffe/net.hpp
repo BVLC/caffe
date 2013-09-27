@@ -45,8 +45,10 @@ class Net {
   inline const vector<string>& blob_names() { return blob_names_; }
   // returns the blobs
   inline const vector<shared_ptr<Blob<Dtype> > >& blobs() { return blobs_; }
-  // rethrns the layers
+  // returns the layers
   inline const vector<shared_ptr<Layer<Dtype> > >& layers() { return layers_; }
+  // returns the parameters
+  vector<shared_ptr<Blob<Dtype> > >& params() { return params_; };
 
  protected:
   // Individual layers in the net
@@ -66,6 +68,8 @@ class Net {
   vector<int> net_input_blob_indices_;
   vector<int> net_output_blob_indices_;
   string name_;
+  // The parameters in the network.
+  vector<shared_ptr<Blob<Dtype> > > params_;
 
   DISABLE_COPY_AND_ASSIGN(Net);
 };

@@ -95,7 +95,12 @@ Net<Dtype>::Net(const NetParameter& param,
   for (int i = 0; i < layers_.size(); ++i) {
     LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
+    vector<shared_ptr<Blob<Dtype> > >& layer_params = layers_[i].params();
+    for (int j = 0; j < layer_params.size(); ++j) {
+      params_.push_back(layer_params[j]);
+    }
   }
+
   LOG(INFO) << "Network initialization done.";
 }
 

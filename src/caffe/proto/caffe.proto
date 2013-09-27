@@ -77,3 +77,16 @@ message NetParameter {
   repeated string bottom = 3; // The input to the network
   repeated string top = 4; // The output of the network.
 }
+
+message SolverParameter {
+  optional float base_lr = 1; // The base learning rate
+  optional int32 display = 2; // display options. 0 = no display
+  optional int32 max_iter = 3; // the maximum number of iterations
+  optional int32 snapshot = 4; // The snapshot interval
+  optional string lr_policy = 5; // The learning rate decay policy.
+  optional float min_lr = 6 [default = 0]; // The mininum learning rate
+  optional float max_lr = 7 [default = 1e10]; // The maximum learning rate
+  optional float gamma = 8; // The parameter to compute the learning rate.
+  optional float power = 9; // The parameter to compute the learning rate.
+  optional float momentum = 10; // The momentum value.
+}
