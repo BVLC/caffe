@@ -42,6 +42,14 @@ TYPED_TEST(NetProtoTest, TestSetup) {
   Net<TypeParam> caffe_net(net_param, bottom_vec);
   EXPECT_EQ(caffe_net.layer_names().size(), 9);
   EXPECT_EQ(caffe_net.blob_names().size(), 10);
+
+  for (int i = 0; i < caffe_net.blobs().size(); ++i) {
+    LOG(ERROR) << "Blob: " << caffe_net.blob_names()[i];
+    LOG(ERROR) << "size: " << caffe_net.blobs()[i]->num() << ", "
+        << caffe_net.blobs()[i]->channels() << ", "
+        << caffe_net.blobs()[i]->height() << ", "
+        << caffe_net.blobs()[i]->width();
+  }
 }
 
 }  // namespace caffe

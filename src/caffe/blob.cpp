@@ -87,6 +87,7 @@ template <typename Dtype>
 void Blob<Dtype>::Update() {
   // not implemented yet.
   LOG(FATAL) << "not implemented";
+  // We will perform update based on where the data is located.
 }
 
 template <typename Dtype>

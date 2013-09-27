@@ -38,11 +38,15 @@ class Net {
   void ToProto(NetParameter* param, bool write_diff = false);
 
   // returns the network name.
-  const string& name() { return name_; }
+  inline const string& name() { return name_; }
   // returns the layer names
-  const vector<string>& layer_names() { return layer_names_; }
+  inline const vector<string>& layer_names() { return layer_names_; }
   // returns the blob names
-  const vector<string>& blob_names() { return blob_names_; }
+  inline const vector<string>& blob_names() { return blob_names_; }
+  // returns the blobs
+  inline const vector<shared_ptr<Blob<Dtype> > >& blobs() { return blobs_; }
+  // rethrns the layers
+  inline const vector<shared_ptr<Layer<Dtype> > >& layers() { return layers_; }
 
  protected:
   // Individual layers in the net
