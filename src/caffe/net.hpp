@@ -31,6 +31,12 @@ class Net {
   // been provided during the forward pass.
   Dtype Backward();
 
+  Dtype ForwardBackWard(const vector<Blob<Dtype>* > & bottom,
+      vector<Blob<Dtype>*>* top) {
+    Forward(bottom, top);
+    return Backward();
+  }
+
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
   void CopyTrainedLayersFrom(const NetParameter& param);
@@ -49,6 +55,8 @@ class Net {
   inline const vector<shared_ptr<Layer<Dtype> > >& layers() { return layers_; }
   // returns the parameters
   vector<shared_ptr<Blob<Dtype> > >& params() { return params_; };
+  // Updates the network
+  void Update();
 
  protected:
   // Individual layers in the net
@@ -61,9 +69,11 @@ class Net {
   // bottom_vecs stores the vectors containing the input for each layer, except
   // for the first layer whose bottom vec is provided by the network's input.
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
+  vector<vector<int> > bottom_id_vecs_;
   // top_vecs stores the vectors containing the output for each layer, except
   // for the last layer (likewise)
   vector<vector<Blob<Dtype>*> > top_vecs_;
+  vector<vector<int> > top_id_vecs_;
   // blob indices for the input and the output of the net.
   vector<int> net_input_blob_indices_;
   vector<int> net_output_blob_indices_;

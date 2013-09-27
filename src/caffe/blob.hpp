@@ -29,6 +29,10 @@ class Blob {
       const int w = 0) const {
     return ((n * channels_ + c) * height_ + h) * width_ + w;
   }
+  // Copy from source. If copy_diff is false, we copy the data; if copy_diff
+  // is true, we copy the diff.
+  void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
+      bool reshape = false);
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {

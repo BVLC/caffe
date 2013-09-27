@@ -46,6 +46,9 @@ template <typename Dtype>
 void caffe_scal(const int N, const Dtype alpha, Dtype *X);
 
 template <typename Dtype>
+void caffe_gpu_scal(const int N, const Dtype alpha, Dtype *X);
+
+template <typename Dtype>
 void caffe_sqr(const int N, const Dtype* a, Dtype* y);
 
 template <typename Dtype>

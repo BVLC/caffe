@@ -124,6 +124,16 @@ void caffe_scal<double>(const int N, const double alpha, double *X) {
 }
 
 template <>
+void caffe_gpu_scal<float>(const int N, const float alpha, float *X) {
+  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+}
+
+template <>
+void caffe_gpu_scal<double>(const int N, const double alpha, double *X) {
+  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+}
+
+template <>
 void caffe_sqr<float>(const int n, const float* a, float* y) {
   vsSqr(n, a, y);
 }
