@@ -15,6 +15,12 @@ layers {\n\
     num_output: 20\n\
     kernelsize: 5\n\
     stride: 1\n\
+    weight_filler {\n\
+      type: \"xavier\"\n\
+    }\n\
+    bias_filler {\n\
+      type: \"constant\"\n\
+    }\n\
   }\n\
   bottom: \"data\"\n\
   top: \"conv1\"\n\
@@ -37,6 +43,12 @@ layers {\n\
     num_output: 50\n\
     kernelsize: 5\n\
     stride: 1\n\
+    weight_filler {\n\
+      type: \"xavier\"\n\
+    }\n\
+    bias_filler {\n\
+      type: \"constant\"\n\
+    }\n\
   }\n\
   bottom: \"pool1\"\n\
   top: \"conv2\"\n\
@@ -57,6 +69,12 @@ layers {\n\
     name: \"ip1\"\n\
     type: \"innerproduct\"\n\
     num_output: 500\n\
+    weight_filler {\n\
+      type: \"xavier\"\n\
+    }\n\
+    bias_filler {\n\
+      type: \"constant\"\n\
+    }\n\
   }\n\
   bottom: \"pool2\"\n\
   top: \"ip1\"\n\
@@ -74,6 +92,12 @@ layers {\n\
     name: \"ip2\"\n\
     type: \"innerproduct\"\n\
     num_output: 10\n\
+    weight_filler {\n\
+      type: \"xavier\"\n\
+    }\n\
+    bias_filler {\n\
+      type: \"constant\"\n\
+    }\n\
   }\n\
   bottom: \"relu1\"\n\
   top: \"ip2\"\n\

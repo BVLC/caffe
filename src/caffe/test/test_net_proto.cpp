@@ -40,7 +40,7 @@ TYPED_TEST(NetProtoTest, TestSetup) {
   shared_ptr<Filler<TypeParam> > filler;
   filler.reset(new ConstantFiller<TypeParam>(filler_param));
   filler->Fill(label.get());
-  filler.reset(new GaussianFiller<TypeParam>(filler_param));
+  filler.reset(new UniformFiller<TypeParam>(filler_param));
   filler->Fill(data.get());
 
   vector<Blob<TypeParam>*> bottom_vec;
