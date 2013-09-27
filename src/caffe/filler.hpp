@@ -97,6 +97,16 @@ class PositiveUnitballFiller : public Filler<Dtype> {
   }
 };
 
+template <typename Dtype>
+class XavierFiller : public Filler<Dtype> {
+ public:
+  explicit XavierFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    
+  }
+};
+
 
 // A function to get a specific filler from the specification given in
 // FillerParameter. Ideally this would be replaced by a factory pattern,
