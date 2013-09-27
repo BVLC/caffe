@@ -1,10 +1,10 @@
 // Copyright 2013 Yangqing Jia
 
 #include <stdint.h>
+#include <leveldb/db.h>
+
 #include <string>
 #include <vector>
-
-#include <leveldb/db.h>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"

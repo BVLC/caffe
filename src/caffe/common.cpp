@@ -68,7 +68,7 @@ void Caffe::set_random_seed(const unsigned int seed) {
   CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator(),
-      (unsigned long long)seed));
+      seed));
   // VSL seed
   VSL_CHECK(vslDeleteStream(&(Get().vsl_stream_)));
   VSL_CHECK(vslNewStream(&(Get().vsl_stream_), VSL_BRNG_MT19937, seed));

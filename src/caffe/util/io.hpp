@@ -1,3 +1,5 @@
+// Copyright Yangqing Jia 2013
+
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 

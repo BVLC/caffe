@@ -23,7 +23,7 @@
   }
 
 #define DISABLE_COPY_AND_ASSIGN(classname) \
- private:\
+private:\
   classname(const classname&);\
   classname& operator=(const classname&)
 

@@ -118,7 +118,7 @@ class XavierFiller : public Filler<Dtype> {
     int fan_in = blob->width();
     Dtype scale = sqrt(Dtype(3) / fan_in);
     caffe_vRngUniform<Dtype>(blob->count(), blob->mutable_cpu_data(),
-        -scale, scale);    
+        -scale, scale);
   }
 };
 

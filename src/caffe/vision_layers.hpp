@@ -267,12 +267,12 @@ class SoftmaxLayer : public Layer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-  //    vector<Blob<Dtype>*>* top);
+  // virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //     vector<Blob<Dtype>*>* top);
   virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  //virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
-  //    const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  // virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
   // sum_multiplier is just used to carry out sum using blas
   Blob<Dtype> sum_multiplier_;
@@ -297,8 +297,8 @@ class MultinomialLogisticLossLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top) { return; }
   virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  //virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
-  //    const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  // virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
 }  // namespace caffe

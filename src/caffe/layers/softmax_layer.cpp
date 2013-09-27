@@ -1,6 +1,7 @@
 // Copyright 2013 Yangqing Jia
 
 #include <algorithm>
+#include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -82,7 +83,7 @@ Dtype SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   return Dtype(0);
 }
 
-// TODO: implement the GPU version of softmax.
+// TODO(Yangqing): implement the GPU version of softmax.
 
 INSTANTIATE_CLASS(SoftmaxLayer);
 

@@ -1,9 +1,10 @@
 // Copyright 2013 Yangqing Jia
 
-#include <vector>
 
 #include <mkl.h>
 #include <cublas_v2.h>
+
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -44,7 +45,8 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         GetFiller<Dtype>(this->layer_param_.bias_filler()));
     bias_filler->Fill(this->blobs_[1].get());
     bias_multiplier_.reset(new SyncedMemory(M_ * sizeof(Dtype)));
-    Dtype* bias_multiplier_data = (Dtype*)bias_multiplier_->mutable_cpu_data();
+    Dtype* bias_multiplier_data =
+        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());
     for (int i = 0; i < M_; ++i) {
         bias_multiplier_data[i] = 1.;
     }
