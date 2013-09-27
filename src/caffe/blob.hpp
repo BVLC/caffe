@@ -50,9 +50,9 @@ class Blob {
   Dtype* mutable_gpu_diff();
   void Update();
   void FromProto(const BlobProto& proto);
-  void ToProto(BlobProto* proto, bool write_diff = false);
+  void ToProto(BlobProto* proto, bool write_diff = false) const;
 
- private:
+ protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
   int num_;

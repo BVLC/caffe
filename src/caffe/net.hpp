@@ -66,6 +66,8 @@ class Net {
   vector<int> net_input_blob_indices_;
   vector<int> net_output_blob_indices_;
   string name_;
+
+  DISABLE_COPY_AND_ASSIGN(Net);
 };
 
 

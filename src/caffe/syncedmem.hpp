@@ -26,6 +26,8 @@ class SyncedMemory {
   void* gpu_ptr_;
   size_t size_;
   SyncedHead head_;
+
+  DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
 
 }  // namespace caffe
