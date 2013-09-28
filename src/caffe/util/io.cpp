@@ -1,6 +1,9 @@
 // Copyright 2013 Yangqing Jia
 
 #include <stdint.h>
+#include <fcntl.h>
+#include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -15,6 +18,7 @@ using cv::Mat;
 using cv::Vec3b;
 using std::max;
 using std::string;
+using google::protobuf::io::FileInputStream;
 
 namespace caffe {
 
@@ -57,5 +61,13 @@ void WriteProtoToImage(const string& filename, const BlobProto& proto) {
   CHECK(cv::imwrite(filename, cv_img));
 }
 
+void ReadProtoFromTextFile(const char* filename,
+    ::google::protobuf::Message* proto) {
+  int fd = open(filename, O_RDONLY);
+  FileInputStream* input = new FileInputStream(fd);
+  CHECK(google::protobuf::TextFormat::Parse(input, proto));
+  delete input;
+  close(fd);
+}
 
 }  // namespace caffe

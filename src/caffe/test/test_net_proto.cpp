@@ -1,15 +1,19 @@
 // Copyright 2013 Yangqing Jia
 
-#include <cstring>
 #include <cuda_runtime.h>
+#include <fcntl.h>
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <gtest/gtest.h>
+
+#include <cstring>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/net.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
 
 #include "caffe/test/lenet.hpp"
 #include "caffe/test/test_caffe_main.hpp"
@@ -21,6 +25,11 @@ class NetProtoTest : public ::testing::Test {};
 
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(NetProtoTest, Dtypes);
+
+TYPED_TEST(NetProtoTest, TestLoadFromText) {
+  NetParameter net_param;
+  ReadProtoFromTextFile("caffe/test/data/lenet.prototxt", &net_param);
+}
 
 TYPED_TEST(NetProtoTest, TestSetup) {
   NetParameter net_param;
@@ -65,7 +74,6 @@ TYPED_TEST(NetProtoTest, TestSetup) {
   caffe_net.Forward(bottom_vec, &top_vec);
   LOG(ERROR) << "Performing Backward";
   LOG(ERROR) << caffe_net.Backward();
-
 }
 
 }  // namespace caffe
