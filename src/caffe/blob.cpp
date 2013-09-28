@@ -12,7 +12,6 @@ namespace caffe {
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
     const int width) {
-  int old_count = count_;
   CHECK_GE(num, 0);
   CHECK_GE(channels, 0);
   CHECK_GE(height, 0);
@@ -23,10 +22,8 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
   if (count_) {
-    if (old_count != count_) {
-      data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-      diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-    }
+    data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+    diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
   } else {
     data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
     diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
