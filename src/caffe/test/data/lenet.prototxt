@@ -1,6 +1,6 @@
 name: "LeNet"
-bottom: "data"
-bottom: "label"
+input: "data"
+input: "label"
 layers {
   layer {
     name: "conv1"

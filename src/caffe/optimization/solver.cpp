@@ -20,9 +20,8 @@ void Solver<Dtype>::Solve(Net<Dtype>* net) {
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
-  vector<Blob<Dtype>*> top_vec;
   while (iter_++ < param_.max_iter()) {
-    Dtype loss = net_->ForwardBackWard(bottom_vec, &top_vec);
+    Dtype loss = net_->ForwardBackWard(bottom_vec);
     ComputeUpdateValue();
     net->Update();
 

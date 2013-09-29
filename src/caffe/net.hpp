@@ -24,16 +24,14 @@ class Net {
   Net(const NetParameter& param,
       const vector<Blob<Dtype>* >& bottom);
   ~Net() {}
-  void Forward(const vector<Blob<Dtype>* > & bottom,
-      vector<Blob<Dtype>*>* top);
+  const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom);
   // The network backward should take no input and output, since it solely
   // computes the gradient w.r.t the parameters, and the data has already
   // been provided during the forward pass.
   Dtype Backward();
 
-  Dtype ForwardBackWard(const vector<Blob<Dtype>* > & bottom,
-      vector<Blob<Dtype>*>* top) {
-    Forward(bottom, top);
+  Dtype ForwardBackWard(const vector<Blob<Dtype>* > & bottom) {
+    Forward(bottom);
     return Backward();
   }
 
@@ -66,17 +64,16 @@ class Net {
   // layers.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
-  // bottom_vecs stores the vectors containing the input for each layer, except
-  // for the first layer whose bottom vec is provided by the network's input.
+  // bottom_vecs stores the vectors containing the input for each layer
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
   vector<vector<int> > bottom_id_vecs_;
-  // top_vecs stores the vectors containing the output for each layer, except
-  // for the last layer (likewise)
+  // top_vecs stores the vectors containing the output for each layer
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
   // blob indices for the input and the output of the net.
   vector<int> net_input_blob_indices_;
   vector<int> net_output_blob_indices_;
+  vector<Blob<Dtype>*> net_output_blobs_;
   string name_;
   // The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;

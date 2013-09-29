@@ -12,8 +12,8 @@
 namespace caffe {
 
 const char* kLENET = "name: \"LeNet\"\n"
-"bottom: \"data\"\n"
-"bottom: \"label\"\n"
+"input: \"data\"\n"
+"input: \"label\"\n"
 "layers {\n"
 "  layer {\n"
 "    name: \"conv1\"\n"

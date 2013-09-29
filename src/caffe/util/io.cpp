@@ -48,13 +48,23 @@ void WriteProtoToImage(const string& filename, const BlobProto& proto) {
   CHECK_GT(proto.height(), 0);
   CHECK_GT(proto.width(), 0);
   Mat cv_img(proto.height(), proto.width(), CV_8UC3);
-  for (int c = 0; c < 3; ++c) {
-    int source_c = max(c, proto.channels() - 1);
-    for (int h = 0; h < cv_img.rows; ++h) {
-      for (int w = 0; w < cv_img.cols; ++w) {
-        cv_img.at<Vec3b>(h, w)[c] =
-            uint8_t(proto.data((source_c * cv_img.rows + h) * cv_img.cols + w)
-                * 255.);
+  if (proto.channels() == 1) {
+    for (int c = 0; c < 3; ++c) {
+      for (int h = 0; h < cv_img.rows; ++h) {
+        for (int w = 0; w < cv_img.cols; ++w) {
+          cv_img.at<Vec3b>(h, w)[c] =
+              uint8_t(proto.data(h * cv_img.cols + w) * 255.);
+        }
+      }
+    }
+  } else {
+    for (int c = 0; c < 3; ++c) {
+      for (int h = 0; h < cv_img.rows; ++h) {
+        for (int w = 0; w < cv_img.cols; ++w) {
+          cv_img.at<Vec3b>(h, w)[c] =
+              uint8_t(proto.data((c * cv_img.rows + h) * cv_img.cols + w)
+                  * 255.);
+        }
       }
     }
   }

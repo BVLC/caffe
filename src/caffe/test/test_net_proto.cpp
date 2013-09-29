@@ -39,8 +39,7 @@ TYPED_TEST(NetProtoTest, TestSetup) {
       lenet_string, &net_param));
   // check if things are right
   EXPECT_EQ(net_param.layers_size(), 9);
-  EXPECT_EQ(net_param.bottom_size(), 2);
-  EXPECT_EQ(net_param.top_size(), 0);
+  EXPECT_EQ(net_param.input_size(), 2);
 
   // Now, initialize a network using the parameter
   shared_ptr<Blob<TypeParam> > data(new Blob<TypeParam>(10, 1, 28, 28));
@@ -71,7 +70,7 @@ TYPED_TEST(NetProtoTest, TestSetup) {
   // Run the network without training.
   vector<Blob<TypeParam>*> top_vec;
   LOG(ERROR) << "Performing Forward";
-  caffe_net.Forward(bottom_vec, &top_vec);
+  caffe_net.Forward(bottom_vec);
   LOG(ERROR) << "Performing Backward";
   LOG(ERROR) << caffe_net.Backward();
 }

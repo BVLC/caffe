@@ -23,11 +23,11 @@ Net<Dtype>::Net(const NetParameter& param,
   map<string, int> blob_name_to_idx;
   set<string> available_blobs;
   int num_layers = param.layers_size();
-  CHECK_EQ(bottom.size(), param.bottom_size())
+  CHECK_EQ(bottom.size(), param.input_size())
       << "Incorrect bottom blob size.";
   // set the input blobs
-  for (int i = 0; i < param.bottom_size(); ++i) {
-    const string& blob_name = param.bottom(i);
+  for (int i = 0; i < param.input_size(); ++i) {
+    const string& blob_name = param.input(i);
     CHECK_GT(bottom[i]->count(), 0);
     shared_ptr<Blob<Dtype> > blob_pointer(
         new Blob<Dtype>(bottom[i]->num(), bottom[i]->channels(),
@@ -77,25 +77,15 @@ Net<Dtype>::Net(const NetParameter& param,
       top_id_vecs_[i].push_back(blob_names_.size() - 1);
     }
   }
-  LOG(INFO) << "Checking top blobs.";
-  // In the end, check if all remaining available blobs are top blobs.
-  for (int i = 0; i < param.top_size(); ++i) {
-    const string& blob_name = param.top(i);
-    if (blob_name_to_idx.find(blob_name) == blob_name_to_idx.end()) {
-      LOG(FATAL) << "Unknown blob output " << blob_name;
-    }
-    net_output_blob_indices_.push_back(blob_name_to_idx[blob_name]);
-    available_blobs.erase(blob_name);
-  }
-  if (!available_blobs.empty()) {
-    LOG(WARNING) << "There are some internal blobs not used:";
-    for (set<string>::iterator it = available_blobs.begin();
-        it != available_blobs.end(); ++it) {
-      LOG(WARNING) << "    " << *it;
-    }
+  // In the end, all remaining blobs are considered output blobs.
+  for (set<string>::iterator it = available_blobs.begin();
+      it != available_blobs.end(); ++it) {
+    LOG(ERROR) << "This network produces output " << *it;
+    net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
+    net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
   }
 
-  LOG(INFO) << "Setting up the layers.";
+  LOG(ERROR) << "Setting up the layers.";
   for (int i = 0; i < layers_.size(); ++i) {
     LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
@@ -105,12 +95,12 @@ Net<Dtype>::Net(const NetParameter& param,
     }
   }
 
-  LOG(INFO) << "Network initialization done.";
+  LOG(ERROR) << "Network initialization done.";
 }
 
 template <typename Dtype>
-void Net<Dtype>::Forward(const vector<Blob<Dtype>*> & bottom,
-    vector<Blob<Dtype>*>* top) {
+const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
+    const vector<Blob<Dtype>*> & bottom) {
   // Copy bottom to internal bottom
   for (int i = 0; i < bottom.size(); ++i) {
     blobs_[net_input_blob_indices_[i]]->CopyFrom(*bottom[i]);
@@ -118,10 +108,7 @@ void Net<Dtype>::Forward(const vector<Blob<Dtype>*> & bottom,
   for (int i = 0; i < layers_.size(); ++i) {
     layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
   }
-  // Copy internal top to top
-  for (int i = 0; i < (*top).size(); ++i) {
-    (*top)[i]->CopyFrom(*blobs_[net_output_blob_indices_[i]]);
-  }
+  return net_output_blobs_;
 }
 
 template <typename Dtype>
@@ -168,10 +155,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
   param->set_name(name_);
   // Add bottom and top
   for (int i = 0; i < net_input_blob_indices_.size(); ++i) {
-    param->add_bottom(blob_names_[net_input_blob_indices_[i]]);
-  }
-  for (int i = 0; i < net_output_blob_indices_.size(); ++i) {
-    param->add_top(blob_names_[net_output_blob_indices_[i]]);
+    param->add_input(blob_names_[net_input_blob_indices_[i]]);
   }
   for (int i = 0; i < layers_.size(); ++i) {
     LayerConnection* layer_connection = param->add_layers();

@@ -74,8 +74,7 @@ message LayerConnection {
 message NetParameter {
   optional string name = 1; // consider giving the network a name
   repeated LayerConnection layers = 2; // a bunch of layers.
-  repeated string bottom = 3; // The input to the network
-  repeated string top = 4; // The output of the network.
+  repeated string input = 3; // The input to the network
 }
 
 message SolverParameter {
