@@ -20,9 +20,10 @@ def array_to_blobproto(arr):
 def array_to_datum(arr):
   if arr.ndim != 3:
     raise ValueError('Incorrect array shape.')
-  if arr.dtype != np.uint8:
-    raise TypeError('Input array has to be of type uint8.')
   datum = caffe_pb2.Datum()
   datum.channels, datum.height, datum.width = arr.shape
-  datum.data = arr.tostring()
+  if arr.dtype == np.uint8:
+    datum.data = arr.tostring()
+  else:
+    datum.float_data.extend(arr.flat)
   return datum

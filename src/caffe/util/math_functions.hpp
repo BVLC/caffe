@@ -40,11 +40,22 @@ void caffe_axpy(const int N, const Dtype alpha, const Dtype* X,
     Dtype* Y);
 
 template <typename Dtype>
+void caffe_gpu_axpy(const int N, const Dtype alpha, const Dtype* X,
+    Dtype* Y);
+
+template <typename Dtype>
 void caffe_axpby(const int N, const Dtype alpha, const Dtype* X,
     const Dtype beta, Dtype* Y);
 
 template <typename Dtype>
+void caffe_gpu_axpby(const int N, const Dtype alpha, const Dtype* X,
+    const Dtype beta, Dtype* Y);
+
+template <typename Dtype>
 void caffe_copy(const int N, const Dtype *X, Dtype *Y);
+
+template <typename Dtype>
+void caffe_gpu_copy(const int N, const Dtype *X, Dtype *Y);
 
 template <typename Dtype>
 void caffe_scal(const int N, const Dtype alpha, Dtype *X);

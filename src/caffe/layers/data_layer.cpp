@@ -40,7 +40,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
   // datum size
-  datum_size_ = datum.data().size();
+    datum_size_ = datum.channels() * datum.height() * datum.width();
 }
 
 template <typename Dtype>
@@ -51,13 +51,25 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_label = (*top)[1]->mutable_cpu_data();
   const Dtype scale = this->layer_param_.scale();
   const Dtype subtraction = this->layer_param_.subtraction();
+  // LOG(ERROR) << "Debug code on";
+  // if (true) {
+  //   iter_->SeekToFirst();
+  // }
   for (int i = 0; i < this->layer_param_.batchsize(); ++i) {
     // get a blob
     datum.ParseFromString(iter_->value().ToString());
     const string& data = datum.data();
-    for (int j = 0; j < datum_size_; ++j) {
-      top_data[i * datum_size_ + j] =
-          (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
+    // we will prefer to use data() first, and then try float_data()
+    if (data.size()) {
+      for (int j = 0; j < datum_size_; ++j) {
+        top_data[i * datum_size_ + j] =
+            (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
+      }
+    } else {
+      for (int j = 0; j < datum_size_; ++j) {
+        top_data[i * datum_size_ + j] =
+            (datum.float_data(j) * scale) - subtraction;
+      }
     }
     top_label[i] = datum.label();
     // go to the next iter

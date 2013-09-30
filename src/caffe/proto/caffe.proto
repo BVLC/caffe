@@ -18,6 +18,8 @@ message Datum {
   // the actual image data, in bytes
   optional bytes data = 4;
   optional int32 label = 5;
+  // Optionally, the datum could also hold float data.
+  repeated float float_data = 6;
 }
 
 message FillerParameter {
@@ -84,7 +86,7 @@ message SolverParameter {
   optional float base_lr = 1; // The base learning rate
   optional int32 display = 2; // display options. 0 = no display
   optional int32 max_iter = 3; // the maximum number of iterations
-  optional int32 snapshot = 4; // The snapshot interval
+  optional int32 snapshot = 4 [default = 0]; // The snapshot interval
   optional string lr_policy = 5; // The learning rate decay policy.
   optional float min_lr = 6 [default = 0]; // The mininum learning rate
   optional float max_lr = 7 [default = 1e10]; // The maximum learning rate

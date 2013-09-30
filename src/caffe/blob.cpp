@@ -6,6 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -86,9 +87,24 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 
 template <typename Dtype>
 void Blob<Dtype>::Update() {
-  // not implemented yet.
-  LOG(FATAL) << "not implemented";
   // We will perform update based on where the data is located.
+  switch (data_->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    // perform computation on CPU
+    caffe_axpy<Dtype>(count_, Dtype(-1),
+        reinterpret_cast<const Dtype*>(diff_->cpu_data()),
+        reinterpret_cast<Dtype*>(data_->mutable_cpu_data()));
+    break;
+  case SyncedMemory::HEAD_AT_GPU:
+  case SyncedMemory::SYNCED:
+    // perform computation on GPU
+    caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
+        reinterpret_cast<const Dtype*>(diff_->gpu_data()),
+        reinterpret_cast<Dtype*>(data_->mutable_gpu_data()));
+    break;
+  default:
+    LOG(FATAL) << "Syncedmem not initialized.";
+  }
 }
 
 template <typename Dtype>
