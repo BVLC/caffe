@@ -40,7 +40,7 @@ class Layer {
   }
 
   // Writes the layer parameter to a protocol buffer
-  void ToProto(LayerParameter* param, bool write_diff = false);
+  virtual void ToProto(LayerParameter* param, bool write_diff = false);
 
  protected:
   // The protobuf that stores the layer parameters

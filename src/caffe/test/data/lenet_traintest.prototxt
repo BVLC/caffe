@@ -1,10 +1,10 @@
-name: "LeNet"
+name: "LeNet-test"
 layers {
   layer {
     name: "mnist"
     type: "data"
     source: "caffe/test/data/mnist-train-leveldb"
-    batchsize: 64
+    batchsize: 100
     scale: 0.00390625
   }
   top: "data"
@@ -114,9 +114,10 @@ layers {
 }
 layers {
   layer {
-    name: "loss"
-    type: "multinomial_logistic_loss"
+    name: "accuracy"
+    type: "accuracy"
   }
   bottom: "prob"
   bottom: "label"
+  top: "accuracy"
 }

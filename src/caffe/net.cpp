@@ -157,12 +157,13 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
   for (int i = 0; i < net_input_blob_indices_.size(); ++i) {
     param->add_input(blob_names_[net_input_blob_indices_[i]]);
   }
+  LOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
     LayerConnection* layer_connection = param->add_layers();
-    for (int j = 0; j < bottom_id_vecs_[i].size(); ++i) {
+    for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {
       layer_connection->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
     }
-    for (int j = 0; j < top_id_vecs_[i].size(); ++i) {
+    for (int j = 0; j < top_id_vecs_[i].size(); ++j) {
       layer_connection->add_top(blob_names_[top_id_vecs_[i][j]]);
     }
     LayerParameter* layer_parameter = layer_connection->mutable_layer();

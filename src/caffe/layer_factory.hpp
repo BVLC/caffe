@@ -19,7 +19,9 @@ namespace caffe {
 template <typename Dtype>
 Layer<Dtype>* GetLayer(const LayerParameter& param) {
   const std::string& type = param.type();
-  if (type == "conv") {
+  if (type == "accuracy") {
+    return new AccuracyLayer<Dtype>(param);
+  } else if (type == "conv") {
     return new ConvolutionLayer<Dtype>(param);
   } else if (type == "data") {
     return new DataLayer<Dtype>(param);

@@ -1,10 +1,11 @@
 // Copyright 2013 Yangqing Jia
+#include <algorithm>
+#include <cmath>
+#include <cfloat>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-#include <algorithm>
-#include <cmath>
 
 using std::max;
 
@@ -75,8 +76,47 @@ Dtype EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   return loss;
 }
 
+template <typename Dtype>
+void AccuracyLayer<Dtype>::SetUp(
+  const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  CHECK_EQ(bottom.size(), 2) << "Accuracy Layer takes two blobs as input.";
+  CHECK_EQ(top->size(), 1) << "Accuracy Layer takes 1 output.";
+  CHECK_EQ(bottom[0]->num(), bottom[1]->num())
+      << "The data and label should have the same number.";
+  CHECK_EQ(bottom[1]->channels(), 1);
+  CHECK_EQ(bottom[1]->height(), 1);
+  CHECK_EQ(bottom[1]->width(), 1);
+  (*top)[0]->Reshape(1, 1, 1, 1);
+}
+
+template <typename Dtype>
+void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  Dtype accuracy = 0;
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const Dtype* bottom_label = bottom[1]->cpu_data();
+  int num = bottom[0]->num();
+  int dim = bottom[0]->count() / bottom[0]->num();
+  for (int i = 0; i < num; ++i) {
+    Dtype maxval = -FLT_MAX;
+    int max_id = 0;
+    for (int j = 0; j < dim; ++j) {
+      if (bottom_data[i * dim + j] > maxval) {
+        maxval = bottom_data[i * dim + j];
+        max_id = j;
+      }
+    }
+    if (max_id == (int)bottom_label[i]) {
+      ++accuracy;
+    }
+  }
+  accuracy /= num;
+  LOG(INFO) << "Accuracy: " << accuracy;
+  (*top)[0]->mutable_cpu_data()[0] = accuracy;
+}
+
 INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
 INSTANTIATE_CLASS(EuclideanLossLayer);
-
+INSTANTIATE_CLASS(AccuracyLayer);
 
 }  // namespace caffe

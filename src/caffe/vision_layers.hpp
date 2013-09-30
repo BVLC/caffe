@@ -323,6 +323,26 @@ class EuclideanLossLayer : public Layer<Dtype> {
   Blob<Dtype> difference_;
 };
 
+template <typename Dtype>
+class AccuracyLayer : public Layer<Dtype> {
+ public:
+  explicit AccuracyLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  // The loss layer will do nothing during forward - all computation are
+  // carried out in the backward pass.
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // The accuracy layer should not be used to compute backward operations.
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    NOT_IMPLEMENTED;
+    return Dtype(0.);
+  }
+};
 
 }  // namespace caffe
 

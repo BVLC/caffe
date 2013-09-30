@@ -11,6 +11,7 @@
 #include "caffe/proto/caffe.pb.h"
 
 using std::string;
+using ::google::protobuf::Message;
 
 namespace caffe {
 
@@ -33,11 +34,29 @@ inline void WriteBlobToImage(const string& filename, const Blob<Dtype>& blob) {
 }
 
 void ReadProtoFromTextFile(const char* filename,
-    ::google::protobuf::Message* proto);
+    Message* proto);
 inline void ReadProtoFromTextFile(const string& filename,
-    ::google::protobuf::Message* proto) {
+    Message* proto) {
   ReadProtoFromTextFile(filename.c_str(), proto);
 }
+
+void WriteProtoToTextFile(const Message& proto, const char* filename);
+inline void WriteProtoToTextFile(const Message& proto, const string& filename) {
+  WriteProtoToTextFile(proto, filename.c_str());
+}
+
+void ReadProtoFromBinaryFile(const char* filename,
+    Message* proto);
+inline void ReadProtoFromBinaryFile(const string& filename,
+    Message* proto) {
+  ReadProtoFromBinaryFile(filename.c_str(), proto);
+}
+
+void WriteProtoToBinaryFile(const Message& proto, const char* filename);
+inline void WriteProtoToBinaryFile(const Message& proto, const string& filename) {
+  WriteProtoToBinaryFile(proto, filename.c_str());
+}
+
 
 }  // namespace caffe
 

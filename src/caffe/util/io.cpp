@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
@@ -16,9 +18,12 @@
 
 using cv::Mat;
 using cv::Vec3b;
+using std::fstream;
+using std::ios;
 using std::max;
 using std::string;
 using google::protobuf::io::FileInputStream;
+using google::protobuf::io::FileOutputStream;
 
 namespace caffe {
 
@@ -78,6 +83,24 @@ void ReadProtoFromTextFile(const char* filename,
   CHECK(google::protobuf::TextFormat::Parse(input, proto));
   delete input;
   close(fd);
+}
+
+void WriteProtoToTextFile(const Message& proto, const char* filename) {
+  int fd = open(filename, O_WRONLY);
+  FileOutputStream* output = new FileOutputStream(fd);
+  CHECK(google::protobuf::TextFormat::Print(proto, output));
+  delete output;
+  close(fd);
+}
+
+void ReadProtoFromBinaryFile(const char* filename, Message* proto) {
+  fstream input(filename, ios::in | ios::binary);
+  CHECK(proto->ParseFromIstream(&input));
+}
+
+void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
+  fstream output(filename, ios::out | ios::trunc | ios::binary);
+  CHECK(proto.SerializeToOstream(&output));
 }
 
 }  // namespace caffe

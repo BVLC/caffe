@@ -1,0 +1,34 @@
+name: "linear_regression_net"
+layers {
+  layer {
+    name: "datalayer"
+    type: "data"
+    source: "caffe/test/data/simple-linear-regression-leveldb"
+    batchsize: 32
+  }
+  top: "data"
+  top: "label"
+}
+layers {
+  layer {
+    name: "ip"
+    type: "innerproduct"
+    num_output: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+  bottom: "data"
+  top: "ip"
+}
+layers {
+  layer {
+    name: "loss"
+    type: "euclidean_loss"
+  }
+  bottom: "ip"
+  bottom: "label"
+}
