@@ -18,3 +18,13 @@ for i in range(60000):
   datum.label = mnist._label[i]
   db.Put('%d' % (i), datum.SerializeToString())
 del db
+
+mnist = core_layers.MNISTDataLayer(
+    rootfolder=MNIST_ROOT, name='mnist', is_training = False)
+db = leveldb.LevelDB('mnist-test-leveldb')
+
+for i in range(10000):
+  datum = convert.array_to_datum((mnist._data[i] * 255).reshape(1,28,28).astype(np.uint8))
+  datum.label = mnist._label[i]
+  db.Put('%d' % (i), datum.SerializeToString())
+del db
