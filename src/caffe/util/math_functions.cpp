@@ -104,6 +104,18 @@ void caffe_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
 
 template <>
+void caffe_axpby<float>(const int N, const float alpha, const float* X,
+    const float beta, float* Y) {
+  cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
+}
+
+template <>
+void caffe_axpby<double>(const int N, const double alpha, const double* X,
+    const double beta, double* Y) {
+  cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
+}
+
+template <>
 void caffe_copy<float>(const int N, const float* X, float* Y) {
   cblas_scopy(N, X, 1, Y, 1);
 }
@@ -142,6 +154,22 @@ template <>
 void caffe_sqr<double>(const int n, const double* a, double* y) {
   vdSqr(n, a, y);
 }
+
+template <>
+void caffe_add<float>(const int n, const float* a, const float* b,
+    float* y) { vsAdd(n, a, b, y); }
+
+template <>
+void caffe_add<double>(const int n, const double* a, const double* b,
+    double* y) { vdAdd(n, a, b, y); }
+
+template <>
+void caffe_sub<float>(const int n, const float* a, const float* b,
+    float* y) { vsSub(n, a, b, y); }
+
+template <>
+void caffe_sub<double>(const int n, const double* a, const double* b,
+    double* y) { vdSub(n, a, b, y); }
 
 template <>
 void caffe_mul<float>(const int n, const float* a, const float* b,
