@@ -33,8 +33,10 @@ TYPED_TEST(NetProtoTest, TestLoadFromText) {
     EXPECT_LE(lena_image.cpu_data()[i], 1);
   }
 
+  Caffe::set_mode(Caffe::CPU);
   // Initialize the network, and then does smoothing
   Net<TypeParam> caffe_net(net_param, bottom_vec);
+  LOG(ERROR) << "Start Forward.";
   const vector<Blob<TypeParam>*>& output = caffe_net.Forward(bottom_vec);
   LOG(ERROR) << "Forward Done.";
   EXPECT_EQ(output[0]->num(), 1);
