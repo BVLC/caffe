@@ -1,6 +1,15 @@
 name: "LeNet"
-input: "data"
-input: "label"
+layers {
+  layer {
+    name: "mnist"
+    type: "data"
+    source: "caffe/test/data/mnist-train-leveldb"
+    batchsize: 32
+    scale: 0.00390625
+  }
+  top: "data"
+  top: "label"
+}
 layers {
   layer {
     name: "conv1"

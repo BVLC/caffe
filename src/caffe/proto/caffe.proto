@@ -58,8 +58,11 @@ message LayerParameter {
 
   // For data layers, specify the data source
   optional string source = 16;
+  // For data pre-processing, we can do simple scaling and constant subtraction
+  optional float scale = 17 [ default = 1 ];
+  optional float subtraction = 18 [ default = 0 ];
   // For datay layers, specify the batch size.
-  optional uint32 batchsize = 17;
+  optional uint32 batchsize = 19;
 
   // The blobs containing the numeric parameters of the layer
   repeated BlobProto blobs = 50;

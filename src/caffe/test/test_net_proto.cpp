@@ -15,7 +15,6 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
-#include "caffe/test/lenet.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
@@ -26,37 +25,17 @@ class NetProtoTest : public ::testing::Test {};
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(NetProtoTest, Dtypes);
 
-TYPED_TEST(NetProtoTest, TestLoadFromText) {
-  NetParameter net_param;
-  ReadProtoFromTextFile("caffe/test/data/lenet.prototxt", &net_param);
-}
-
 TYPED_TEST(NetProtoTest, TestSetup) {
   NetParameter net_param;
-  string lenet_string(kLENET);
-  // Load the network
-  CHECK(google::protobuf::TextFormat::ParseFromString(
-      lenet_string, &net_param));
+  ReadProtoFromTextFile("caffe/test/data/lenet.prototxt", &net_param);
   // check if things are right
-  EXPECT_EQ(net_param.layers_size(), 9);
-  EXPECT_EQ(net_param.input_size(), 2);
-
-  // Now, initialize a network using the parameter
-  shared_ptr<Blob<TypeParam> > data(new Blob<TypeParam>(10, 1, 28, 28));
-  shared_ptr<Blob<TypeParam> > label(new Blob<TypeParam>(10, 1, 1, 1));
-  FillerParameter filler_param;
-  shared_ptr<Filler<TypeParam> > filler;
-  filler.reset(new ConstantFiller<TypeParam>(filler_param));
-  filler->Fill(label.get());
-  filler.reset(new UniformFiller<TypeParam>(filler_param));
-  filler->Fill(data.get());
+  EXPECT_EQ(net_param.layers_size(), 10);
+  EXPECT_EQ(net_param.input_size(), 0);
 
   vector<Blob<TypeParam>*> bottom_vec;
-  bottom_vec.push_back(data.get());
-  bottom_vec.push_back(label.get());
 
   Net<TypeParam> caffe_net(net_param, bottom_vec);
-  EXPECT_EQ(caffe_net.layer_names().size(), 9);
+  EXPECT_EQ(caffe_net.layer_names().size(), 10);
   EXPECT_EQ(caffe_net.blob_names().size(), 10);
 
   // Print a few statistics to see if things are correct
@@ -67,8 +46,15 @@ TYPED_TEST(NetProtoTest, TestSetup) {
         << caffe_net.blobs()[i]->height() << ", "
         << caffe_net.blobs()[i]->width();
   }
+  Caffe::set_mode(Caffe::CPU);
   // Run the network without training.
-  vector<Blob<TypeParam>*> top_vec;
+  LOG(ERROR) << "Performing Forward";
+  caffe_net.Forward(bottom_vec);
+  LOG(ERROR) << "Performing Backward";
+  LOG(ERROR) << caffe_net.Backward();
+  
+  Caffe::set_mode(Caffe::GPU);
+  // Run the network without training.
   LOG(ERROR) << "Performing Forward";
   caffe_net.Forward(bottom_vec);
   LOG(ERROR) << "Performing Backward";

@@ -48,12 +48,15 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Datum datum;
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   Dtype* top_label = (*top)[1]->mutable_cpu_data();
+  const Dtype scale = this->layer_param_.scale();
+  const Dtype subtraction = this->layer_param_.subtraction();
   for (int i = 0; i < this->layer_param_.batchsize(); ++i) {
     // get a blob
     datum.ParseFromString(iter_->value().ToString());
     const string& data = datum.data();
     for (int j = 0; j < datum_size_; ++j) {
-      top_data[i * datum_size_ + j] = (uint8_t)data[j];
+      top_data[i * datum_size_ + j] =
+          (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
     }
     top_label[i] = datum.label();
     // go to the next iter
