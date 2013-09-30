@@ -25,7 +25,8 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "Opening leveldb " << this->layer_param_.source();
   leveldb::Status status = leveldb::DB::Open(
       options, this->layer_param_.source(), &db_temp);
-  CHECK(status.ok());
+  CHECK(status.ok()) << "Failed to open leveldb "
+      << this->layer_param_.source();
   db_.reset(db_temp);
   iter_.reset(db_->NewIterator(leveldb::ReadOptions()));
   iter_->SeekToFirst();
