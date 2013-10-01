@@ -34,13 +34,24 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
   // image
-  (*top)[0]->Reshape(
-      this->layer_param_.batchsize(), datum.channels(), datum.height(),
-      datum.width());
+  int cropsize = this->layer_param_.cropsize();
+  if (cropsize > 0) {
+    (*top)[0]->Reshape(
+        this->layer_param_.batchsize(), datum.channels(), cropsize, cropsize);
+  } else {
+    (*top)[0]->Reshape(
+        this->layer_param_.batchsize(), datum.channels(), datum.height(),
+        datum.width());
+  }
   // label
   (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
   // datum size
-    datum_size_ = datum.channels() * datum.height() * datum.width();
+  datum_channels_ = datum.channels();
+  datum_height_ = datum.height();
+  datum_width_ = datum.width();
+  datum_size_ = datum.channels() * datum.height() * datum.width();
+  CHECK_GT(datum_height_, cropsize);
+  CHECK_GT(datum_width_, cropsize);
 }
 
 template <typename Dtype>
@@ -51,24 +62,38 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_label = (*top)[1]->mutable_cpu_data();
   const Dtype scale = this->layer_param_.scale();
   const Dtype subtraction = this->layer_param_.subtraction();
-  // LOG(ERROR) << "Debug code on";
-  // if (true) {
-  //   iter_->SeekToFirst();
-  // }
+  int cropsize = this->layer_param_.cropsize();
   for (int i = 0; i < this->layer_param_.batchsize(); ++i) {
     // get a blob
     datum.ParseFromString(iter_->value().ToString());
     const string& data = datum.data();
-    // we will prefer to use data() first, and then try float_data()
-    if (data.size()) {
-      for (int j = 0; j < datum_size_; ++j) {
-        top_data[i * datum_size_ + j] =
-            (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
+    if (cropsize) {
+      CHECK(data.size()) << "Image cropping only support uint8 data";
+      int h_offset = rand() % (datum_height_ - cropsize);
+      int w_offset = rand() % (datum_width_ - cropsize);
+      for (int c = 0; c < datum_channels_; ++i) {
+        for (int h = 0; h < cropsize; ++h) {
+          for (int w = 0; w < cropsize; ++w) {
+            top_data[((i * datum_channels_ + c) * cropsize + h) * cropsize + w] =
+                static_cast<Dtype>((uint8_t)data[
+                    (c * datum_height_ + h + h_offset) * datum_width_
+                    + w + w_offset]
+                ) * scale - subtraction;
+          }
+        }
       }
     } else {
-      for (int j = 0; j < datum_size_; ++j) {
-        top_data[i * datum_size_ + j] =
-            (datum.float_data(j) * scale) - subtraction;
+      // we will prefer to use data() first, and then try float_data()
+      if (data.size()) {
+        for (int j = 0; j < datum_size_; ++j) {
+          top_data[i * datum_size_ + j] =
+              (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
+        }
+      } else {
+        for (int j = 0; j < datum_size_; ++j) {
+          top_data[i * datum_size_ + j] =
+              (datum.float_data(j) * scale) - subtraction;
+        }
       }
     }
     top_label[i] = datum.label();
