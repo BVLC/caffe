@@ -19,8 +19,9 @@
 *.pb.cc
 *_pb2.py
 
-# test files
+# bin files
 *.testbin
+*.bin
 
 # vim swp files
 *.swp

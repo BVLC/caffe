@@ -79,8 +79,8 @@ $(PROTO_GEN_CC): $(PROTO_SRCS)
 	protoc $(PROTO_SRCS) --cpp_out=. --python_out=.
 
 clean:
-	@- $(RM) $(NAME) $(TEST_BINS)
-	@- $(RM) $(OBJS) $(TEST_OBJS) 
+	@- $(RM) $(NAME) $(TEST_BINS) $(PROGRAM_BINS)
+	@- $(RM) $(OBJS) $(TEST_OBJS) $(PROGRAM_OBJS)
 	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)
 
 distclean: clean

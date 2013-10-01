@@ -33,6 +33,8 @@ inline void WriteBlobToImage(const string& filename, const Blob<Dtype>& blob) {
   WriteProtoToImage(filename, proto);
 }
 
+void ReadImageToDatum(const string& filename, const int label, Datum* datum);
+
 void ReadProtoFromTextFile(const char* filename,
     Message* proto);
 inline void ReadProtoFromTextFile(const string& filename,

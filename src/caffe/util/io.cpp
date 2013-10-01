@@ -47,6 +47,28 @@ void ReadImageToProto(const string& filename, BlobProto* proto) {
   }
 }
 
+void ReadImageToDatum(const string& filename, const int label, Datum* datum) {
+  Mat cv_img;
+  cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+  CHECK(cv_img.data) << "Could not open or find the image.";
+  DCHECK_EQ(cv_img.channels(), 3);
+  datum->set_channels(3);
+  datum->set_height(cv_img.rows);
+  datum->set_width(cv_img.cols);
+  datum->set_label(label);
+  datum->clear_data();
+  datum->clear_float_data();
+  string* datum_string = datum->mutable_data();
+  for (int c = 0; c < 3; ++c) {
+    for (int h = 0; h < cv_img.rows; ++h) {
+      for (int w = 0; w < cv_img.cols; ++w) {
+        datum_string->push_back(static_cast<char>(cv_img.at<Vec3b>(h, w)[c]));
+      }
+    }
+  }
+}
+
+
 void WriteProtoToImage(const string& filename, const BlobProto& proto) {
   CHECK_EQ(proto.num(), 1);
   CHECK(proto.channels() == 3 || proto.channels() == 1);
