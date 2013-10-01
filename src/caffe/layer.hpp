@@ -54,7 +54,7 @@ class Layer {
   // If no gpu code is provided, we will simply use cpu code.
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-    LOG(WARNING) << "Using CPU code as backup.";
+    // LOG(WARNING) << "Using CPU code as backup.";
     Forward_cpu(bottom, top);
   };
 
@@ -67,7 +67,7 @@ class Layer {
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom) {
-    LOG(WARNING) << "Using CPU code as backup.";
+    // LOG(WARNING) << "Using CPU code as backup.";
     return Backward_cpu(top, propagate_down, bottom);
   };
 

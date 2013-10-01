@@ -111,7 +111,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
   }
   accuracy /= num;
-  LOG(INFO) << "Accuracy: " << accuracy;
+  // LOG(INFO) << "Accuracy: " << accuracy;
   (*top)[0]->mutable_cpu_data()[0] = accuracy;
 }
 

@@ -12,17 +12,20 @@ CXX_SRCS := $(shell find caffe ! -name "test_*.cpp" -name "*.cpp")
 CU_SRCS := $(shell find caffe -name "*.cu")
 TEST_SRCS := $(shell find caffe -name "test_*.cpp")
 GTEST_SRC := gtest/gtest-all.cpp
+PROGRAM_SRCS := $(shell find programs -name "*.cpp")
 PROTO_SRCS := $(wildcard caffe/proto/*.proto)
 PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}
 PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
 CXX_OBJS := ${CXX_SRCS:.cpp=.o}
 CU_OBJS := ${CU_SRCS:.cu=.cuo}
+PROGRAM_OBJS := ${PROGRAM_SRCS:.cpp=.o}
 PROTO_OBJS := ${PROTO_SRCS:.proto=.pb.o}
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 TEST_OBJS := ${TEST_SRCS:.cpp=.o}
 GTEST_OBJ := ${GTEST_SRC:.cpp=.o}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
+PROGRAM_BINS :=${PROGRAM_OBJS:.o=.bin}
 
 CUDA_DIR := /usr/local/cuda
 CUDA_ARCH := -arch=sm_20
@@ -46,7 +49,7 @@ LDFLAGS += $(foreach library,$(LIBRARIES),-l$(library))
 LINK = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(WARNINGS)
 NVCC = nvcc ${CXXFLAGS:-fPIC=-Xcompiler -fPIC} $(CPPFLAGS) $(CUDA_ARCH)
 
-.PHONY: all test clean distclean linecount
+.PHONY: all test clean distclean linecount program
 
 all: $(NAME)
 
@@ -55,11 +58,16 @@ linecount: clean
 
 test: $(OBJS) $(GTEST_OBJ) $(TEST_BINS)
 
+program: $(OBJS) $(PROGRAM_BINS)
+
 runtest: test
 	for testbin in $(TEST_BINS); do $$testbin; done
 
 $(TEST_BINS): %.testbin : %.o
 	$(CXX) $< $(OBJS) $(GTEST_OBJ) -o $@ $(LDFLAGS) $(WARNINGS)
+
+$(PROGRAM_BINS): %.bin : %.o
+	$(CXX) $< $(OBJS) -o $@ $(LDFLAGS) $(WARNINGS)
 
 $(NAME): $(PROTO_GEN_CC) $(OBJS)
 	$(LINK) -shared $(OBJS) -o $(NAME)

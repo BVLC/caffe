@@ -281,4 +281,16 @@ double caffe_cpu_dot<double>(const int n, const double* x, const double* y) {
   return cblas_ddot(n, x, 1, y, 1);
 }
 
+template <>
+void caffe_gpu_dot<float>(const int n, const float* x, const float* y,
+    float* out) {
+  CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+}
+
+template <>
+void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
+    double * out) {
+  CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+}
+
 }  // namespace caffe
