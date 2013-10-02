@@ -7,6 +7,7 @@
 // should be a list of files as well as their labels, in the format as
 // subfolder1/file1.JPEG 0
 // ....
+// You are responsible for shuffling the files yourself.
 
 #include <glog/logging.h>
 #include <leveldb/db.h>
@@ -20,6 +21,7 @@
 
 using namespace caffe;
 using std::string;
+using std::stringstream;
 
 // A utility function to generate random strings
 void GenerateRandomPrefix(const int n, string* key) {
@@ -47,18 +49,19 @@ int main(int argc, char** argv) {
   string filename;
   int label;
   Datum datum;
-  string key;
-  string value;
+  int count = 0;
+  char key_cstr[100];
   while (infile >> filename >> label) {
     ReadImageToDatum(root_folder + filename, label, &datum);
-    // get the key, and add a random string so the leveldb will have permuted
-    // data
-    GenerateRandomPrefix(8, &key);
-    key += filename;
+    sprintf(key_cstr, "%08d_%s", count, filename.c_str());
+    string key(key_cstr);
+    string value;
     // get the value
     datum.SerializeToString(&value);
     db->Put(leveldb::WriteOptions(), key, value);
-    LOG(ERROR) << "Writing " << key;
+    if (++count % 1000 == 0) {
+      LOG(ERROR) << "Processed " << count << " files.";
+    }
   }
 
   delete db;
