@@ -25,7 +25,7 @@ void Solver<Dtype>::Solve(Net<Dtype>* net) {
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
   while (iter_++ < param_.max_iter()) {
-    Dtype loss = net_->ForwardBackWard(bottom_vec);
+    Dtype loss = net_->ForwardBackward(bottom_vec);
     ComputeUpdateValue();
     net_->Update();
 

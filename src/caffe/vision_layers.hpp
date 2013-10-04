@@ -4,6 +4,7 @@
 #define CAFFE_VISION_LAYERS_HPP_
 
 #include <leveldb/db.h>
+#include <pthread.h>
 
 #include <vector>
 
@@ -233,7 +234,13 @@ class ConvolutionLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
+void* DataLayerPrefetch(void* layer_pointer);
+
+template <typename Dtype>
 class DataLayer : public Layer<Dtype> {
+  // The function used to perform prefetching.
+  friend void* DataLayerPrefetch<Dtype>(void*);
+
  public:
   explicit DataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
@@ -256,6 +263,9 @@ class DataLayer : public Layer<Dtype> {
   int datum_height_;
   int datum_width_;
   int datum_size_;
+  pthread_t thread_;
+  shared_ptr<Blob<Dtype> > prefetch_data_;
+  shared_ptr<Blob<Dtype> > prefetch_label_;
 };
 
 

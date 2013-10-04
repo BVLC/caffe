@@ -11,6 +11,7 @@
 
 #include <glog/logging.h>
 #include <leveldb/db.h>
+#include <leveldb/write_batch.h>
 
 #include <string>
 #include <iostream>
@@ -40,6 +41,8 @@ int main(int argc, char** argv) {
   leveldb::Options options;
   options.error_if_exists = true;
   options.create_if_missing = true;
+  options.create_if_missing = true;
+  options.write_buffer_size = 268435456;
   LOG(INFO) << "Opening leveldb " << argv[3];
   leveldb::Status status = leveldb::DB::Open(
       options, argv[3], &db);
@@ -51,6 +54,7 @@ int main(int argc, char** argv) {
   Datum datum;
   int count = 0;
   char key_cstr[100];
+  leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   while (infile >> filename >> label) {
     ReadImageToDatum(root_folder + filename, label, &datum);
     sprintf(key_cstr, "%08d_%s", count, filename.c_str());
@@ -58,9 +62,12 @@ int main(int argc, char** argv) {
     string value;
     // get the value
     datum.SerializeToString(&value);
-    db->Put(leveldb::WriteOptions(), key, value);
+    batch->Put(key, value);
     if (++count % 1000 == 0) {
+      db->Write(leveldb::WriteOptions(), batch);
       LOG(ERROR) << "Processed " << count << " files.";
+      delete batch;
+      batch = new leveldb::WriteBatch();
     }
   }
 

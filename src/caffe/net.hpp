@@ -30,7 +30,7 @@ class Net {
   // been provided during the forward pass.
   Dtype Backward();
 
-  Dtype ForwardBackWard(const vector<Blob<Dtype>* > & bottom) {
+  Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
     Forward(bottom);
     return Backward();
   }
