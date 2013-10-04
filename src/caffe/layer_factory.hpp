@@ -46,7 +46,7 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   } else if (type == "multinomial_logistic_loss") {
     return new MultinomialLogisticLossLayer<Dtype>(param);
   } else {
-    LOG(FATAL) << "Unknown filler name: " << type;
+    LOG(FATAL) << "Unknown layer name: " << type;
   }
   // just to suppress old compiler warnings.
   return (Layer<Dtype>*)(NULL);

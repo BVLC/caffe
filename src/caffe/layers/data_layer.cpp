@@ -43,6 +43,9 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         this->layer_param_.batchsize(), datum.channels(), datum.height(),
         datum.width());
   }
+  LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
+      << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
+      << (*top)[0]->width();
   // label
   (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
   // datum size
@@ -63,7 +66,7 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype scale = this->layer_param_.scale();
   const Dtype subtraction = this->layer_param_.subtraction();
   int cropsize = this->layer_param_.cropsize();
-  for (int i = 0; i < this->layer_param_.batchsize(); ++i) {
+  for (int itemid = 0; itemid < (*top)[0]->num(); ++itemid) {
     // get a blob
     datum.ParseFromString(iter_->value().ToString());
     const string& data = datum.data();
@@ -71,10 +74,10 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       CHECK(data.size()) << "Image cropping only support uint8 data";
       int h_offset = rand() % (datum_height_ - cropsize);
       int w_offset = rand() % (datum_width_ - cropsize);
-      for (int c = 0; c < datum_channels_; ++i) {
+      for (int c = 0; c < datum_channels_; ++c) {
         for (int h = 0; h < cropsize; ++h) {
           for (int w = 0; w < cropsize; ++w) {
-            top_data[((i * datum_channels_ + c) * cropsize + h) * cropsize + w] =
+            top_data[((itemid * datum_channels_ + c) * cropsize + h) * cropsize + w] =
                 static_cast<Dtype>((uint8_t)data[
                     (c * datum_height_ + h + h_offset) * datum_width_
                     + w + w_offset]
@@ -86,17 +89,17 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // we will prefer to use data() first, and then try float_data()
       if (data.size()) {
         for (int j = 0; j < datum_size_; ++j) {
-          top_data[i * datum_size_ + j] =
+          top_data[itemid * datum_size_ + j] =
               (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
         }
       } else {
         for (int j = 0; j < datum_size_; ++j) {
-          top_data[i * datum_size_ + j] =
+          top_data[itemid * datum_size_ + j] =
               (datum.float_data(j) * scale) - subtraction;
         }
       }
     }
-    top_label[i] = datum.label();
+    top_label[itemid] = datum.label();
     // go to the next iter
     iter_->Next();
     if (!iter_->Valid()) {
