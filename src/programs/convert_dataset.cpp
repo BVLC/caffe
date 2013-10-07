@@ -57,8 +57,13 @@ int main(int argc, char** argv) {
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   while (infile >> filename >> label) {
     ReadImageToDatum(root_folder + filename, label, &datum);
+    // sequential
     sprintf(key_cstr, "%08d_%s", count, filename.c_str());
     string key(key_cstr);
+    // random
+    // string key;
+    // GenerateRandomPrefix(8, &key);
+    // key += filename;
     string value;
     // get the value
     datum.SerializeToString(&value);

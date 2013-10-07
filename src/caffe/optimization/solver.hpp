@@ -12,6 +12,9 @@ class Solver {
   void Solve(Net<Dtype>* net);
 
  protected:
+  // PreSolve is run before any solving iteration starts, allowing one to
+  // put up some scaffold.
+  virtual void PreSolve() {};
   // Get the update value for the current iteration.
   virtual void ComputeUpdateValue() = 0;
   void Snapshot(bool is_final = false);
@@ -29,6 +32,7 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param) {}
 
  protected:
+  virtual void PreSolve();
   Dtype GetLearningRate();
   virtual void ComputeUpdateValue();
   // history maintains the historical momentum data.

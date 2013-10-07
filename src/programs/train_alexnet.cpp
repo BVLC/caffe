@@ -32,21 +32,15 @@ int main(int argc, char** argv) {
   LOG(ERROR) << "Performing Backward";
   LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
 
-  // Run the network without training.
-  LOG(ERROR) << "Multiple Passes";
-  for (int i = 0; i < 100; ++i) {
-    caffe_net.ForwardBackward(bottom_vec);
-  }
-  LOG(ERROR) << "Multiple passes done.";
-/*
   SolverParameter solver_param;
-  solver_param.set_base_lr(0.01);
-  solver_param.set_display(0);
-  solver_param.set_max_iter(6000);
-  solver_param.set_lr_policy("inv");
-  solver_param.set_gamma(0.0001);
-  solver_param.set_power(0.75);
+  solver_param.set_base_lr(0.001);
+  solver_param.set_display(1);
+  solver_param.set_max_iter(600000);
+  solver_param.set_lr_policy("fixed");
+  //solver_param.set_gamma(0.0001);
+  //solver_param.set_power(0.75);
   solver_param.set_momentum(0.9);
+  solver_param.set_weight_decay(0.0005);
 
   LOG(ERROR) << "Starting Optimization";
   SGDSolver<float> solver(solver_param);
@@ -60,41 +54,5 @@ int main(int argc, char** argv) {
   float loss = caffe_net.Backward();
   LOG(ERROR) << "Final loss: " << loss;
 
-  NetParameter trained_net_param;
-  caffe_net.ToProto(&trained_net_param);
-
-  NetParameter traintest_net_param;
-  ReadProtoFromTextFile("caffe/test/data/lenet_traintest.prototxt",
-      &traintest_net_param);
-  Net<float> caffe_traintest_net(traintest_net_param, bottom_vec);
-  caffe_traintest_net.CopyTrainedLayersFrom(trained_net_param);
-
-  // Test run
-  double train_accuracy = 0;
-  int batch_size = traintest_net_param.layers(0).layer().batchsize();
-  for (int i = 0; i < 60000 / batch_size; ++i) {
-    const vector<Blob<float>*>& result =
-        caffe_traintest_net.Forward(bottom_vec);
-    train_accuracy += result[0]->cpu_data()[0];
-  }
-  train_accuracy /= 60000 / batch_size;
-  LOG(ERROR) << "Train accuracy:" << train_accuracy;
-
-  NetParameter test_net_param;
-  ReadProtoFromTextFile("caffe/test/data/lenet_test.prototxt", &test_net_param);
-  Net<float> caffe_test_net(test_net_param, bottom_vec);
-  caffe_test_net.CopyTrainedLayersFrom(trained_net_param);
-
-  // Test run
-  double test_accuracy = 0;
-  batch_size = test_net_param.layers(0).layer().batchsize();
-  for (int i = 0; i < 10000 / batch_size; ++i) {
-    const vector<Blob<float>*>& result =
-        caffe_test_net.Forward(bottom_vec);
-    test_accuracy += result[0]->cpu_data()[0];
-  }
-  test_accuracy /= 10000 / batch_size;
-  LOG(ERROR) << "Test accuracy:" << test_accuracy;
-*/
   return 0;
 }

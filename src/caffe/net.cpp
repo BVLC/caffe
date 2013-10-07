@@ -89,9 +89,14 @@ Net<Dtype>::Net(const NetParameter& param,
   for (int i = 0; i < layers_.size(); ++i) {
     LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
-    vector<shared_ptr<Blob<Dtype> > >& layer_params = layers_[i]->params();
-    for (int j = 0; j < layer_params.size(); ++j) {
-      params_.push_back(layer_params[j]);
+    vector<shared_ptr<Blob<Dtype> > >& layer_blobs = layers_[i]->blobs();
+    for (int j = 0; j < layer_blobs.size(); ++j) {
+      params_.push_back(layer_blobs[j]);
+    }
+    for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
+      LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->channels() << " "
+          << top_vecs_[i][topid]->height() << " "
+          << top_vecs_[i][topid]->width();
     }
   }
 
@@ -106,7 +111,7 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
     blobs_[net_input_blob_indices_[i]]->CopyFrom(*bottom[i]);
   }
   for (int i = 0; i < layers_.size(); ++i) {
-    //LOG(ERROR) << "Forwarding " << layer_names_[i];
+    // LOG(ERROR) << "Forwarding " << layer_names_[i];
     layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
   }
   return net_output_blobs_;
@@ -141,7 +146,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     }
     LOG(INFO) << "Loading source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
-        layers_[target_layer_id]->params();
+        layers_[target_layer_id]->blobs();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {

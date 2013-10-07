@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
   solver_param.set_gamma(0.0001);
   solver_param.set_power(0.75);
   solver_param.set_momentum(0.9);
+  solver_param.set_weight_decay(0.0005);
 
   LOG(ERROR) << "Starting Optimization";
   SGDSolver<float> solver(solver_param);

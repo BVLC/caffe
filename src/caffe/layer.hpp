@@ -34,11 +34,13 @@ class Layer {
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
-  // Returns the vector of parameters.
-  vector<shared_ptr<Blob<Dtype> > >& params() {
+  // Returns the vector of blobs.
+  vector<shared_ptr<Blob<Dtype> > >& blobs() {
     return blobs_;
   }
 
+  // Returns the layer parameter
+  const LayerParameter& layer_param() { return layer_param_; }
   // Writes the layer parameter to a protocol buffer
   virtual void ToProto(LayerParameter* param, bool write_diff = false);
 

@@ -65,8 +65,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>& layer,
     int check_bottom, int top_id, int top_data_id) {
   // First, figure out what blobs we need to check against.
   vector<Blob<Dtype>*> blobs_to_check;
-  for (int i = 0; i < layer.params().size(); ++i) {
-    blobs_to_check.push_back(layer.params()[i].get());
+  for (int i = 0; i < layer.blobs().size(); ++i) {
+    blobs_to_check.push_back(layer.blobs()[i].get());
   }
   if (check_bottom < 0) {
     for (int i = 0; i < bottom.size(); ++i) {

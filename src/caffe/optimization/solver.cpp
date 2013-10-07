@@ -19,7 +19,8 @@ namespace caffe {
 template <typename Dtype>
 void Solver<Dtype>::Solve(Net<Dtype>* net) {
   net_ = net;
-  LOG(INFO) << "Solving net " << net_->name();
+  LOG(INFO) << "Solving " << net_->name();
+  PreSolve();
   iter_ = 0;
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
@@ -79,10 +80,11 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 }
 
 template <typename Dtype>
-void SGDSolver<Dtype>::ComputeUpdateValue() {
+void SGDSolver<Dtype>::PreSolve() {
   // First of all, see if we need to initialize the history
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
-  if (history_.size() == 0 && this->param_.momentum() > 0) {
+  history_.clear();
+  if (this->param_.momentum() > 0) {
     for (int i = 0; i < net_params.size(); ++i) {
       const Blob<Dtype>* net_param = net_params[i].get();
       history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
@@ -90,45 +92,54 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
           net_param->width())));
     }
   }
+}
+
+template <typename Dtype>
+void SGDSolver<Dtype>::ComputeUpdateValue() {
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   // get the learning rate
   Dtype rate = GetLearningRate();
-  if (this->param_.momentum() == 0) {
-    for (int i = 0; i < net_params.size(); ++i) {
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        caffe_scal(net_params[i]->count(), rate,
-            net_params[i]->mutable_cpu_diff());
-        break;
-      case Caffe::GPU:
-        caffe_gpu_scal(net_params[i]->count(), rate,
-            net_params[i]->mutable_gpu_diff());
-        break;
-      default:
-        LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  Dtype momentum = this->param_.momentum();
+  Dtype weight_decay = this->param_.weight_decay();
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // Compute the value to history, and then copy them to the blob's diff.
+      caffe_axpby(net_params[param_id]->count(), rate,
+          net_params[param_id]->cpu_diff(), momentum,
+          history_[param_id]->mutable_cpu_data());
+      if (weight_decay) {
+        // add weight decay
+        caffe_axpy(net_params[param_id]->count(), weight_decay * rate,
+            net_params[param_id]->cpu_data(),
+            history_[param_id]->mutable_cpu_data());
       }
+      // copy
+      caffe_copy(net_params[param_id]->count(),
+          history_[param_id]->cpu_data(),
+          net_params[param_id]->mutable_cpu_diff());
     }
-  } else {
-    // Need to maintain momentum
-    for (int i = 0; i < net_params.size(); ++i) {
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        caffe_axpby(net_params[i]->count(), rate,
-            net_params[i]->cpu_diff(), Dtype(this->param_.momentum()),
-            history_[i]->mutable_cpu_data());
-        caffe_copy(net_params[i]->count(), history_[i]->cpu_data(),
-            net_params[i]->mutable_cpu_diff());
-        break;
-      case Caffe::GPU:
-        caffe_gpu_axpby(net_params[i]->count(), rate,
-            net_params[i]->gpu_diff(), Dtype(this->param_.momentum()),
-            history_[i]->mutable_gpu_data());
-        caffe_gpu_copy(net_params[i]->count(), history_[i]->gpu_data(),
-            net_params[i]->mutable_gpu_diff());
-        break;
-      default:
-        LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    break;
+  case Caffe::GPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // Compute the value to history, and then copy them to the blob's diff.
+      caffe_gpu_axpby(net_params[param_id]->count(), rate,
+          net_params[param_id]->gpu_diff(), momentum,
+          history_[param_id]->mutable_gpu_data());
+      if (weight_decay) {
+        // add weight decay
+        caffe_gpu_axpy(net_params[param_id]->count(), weight_decay * rate,
+            net_params[param_id]->gpu_data(),
+            history_[param_id]->mutable_gpu_data());
       }
+      // copy
+      caffe_gpu_copy(net_params[param_id]->count(),
+          history_[param_id]->gpu_data(),
+          net_params[param_id]->mutable_gpu_diff());
     }
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
   }
 }
 
