@@ -4,8 +4,9 @@ layers {
     name: "mnist"
     type: "data"
     source: "caffe/test/data/mnist-train-leveldb"
-    batchsize: 64
+    batchsize: 128
     scale: 0.00390625
+    cropsize: 26
   }
   top: "data"
   top: "label"
