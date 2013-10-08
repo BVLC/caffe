@@ -45,7 +45,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     this->blobs_.resize(1);
   }
   // Intialize the weight
-  this->blobs_[0].reset(new Blob<Dtype>(1, 1, NUM_OUTPUT_, K_));
+  this->blobs_[0].reset(
+      new Blob<Dtype>(NUM_OUTPUT_, CHANNELS_ / GROUP_, KSIZE_, KSIZE_));
   // fill the weights
   shared_ptr<Filler<Dtype> > weight_filler(
       GetFiller<Dtype>(this->layer_param_.weight_filler()));

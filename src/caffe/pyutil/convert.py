@@ -5,8 +5,8 @@ from caffe.proto import caffe_pb2
 import numpy as np
 
 def blobproto_to_array(blob):
-  arr = np.array(blob.data).reshape(blob.num(), blob.channels(), blobs.height(),
-      blobs.width())
+  arr = np.array(blob.data).reshape(blob.num, blob.channels, blob.height,
+      blob.width)
   return arr
 
 def array_to_blobproto(arr):
@@ -14,7 +14,7 @@ def array_to_blobproto(arr):
     raise ValueError('Incorrect array shape.')
   blob = caffe_pb2.BlobProto()
   blob.num, blob.channels, blob.height, blob.width = arr.shape;
-  blob.data.extend(arr.flat)
+  blob.data.extend(arr.astype(float).flat)
   return blob
 
 def array_to_datum(arr):

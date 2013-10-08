@@ -31,9 +31,8 @@ void Solver<Dtype>::Solve(Net<Dtype>* net) {
     net_->Update();
 
     // Check if we need to do snapshot
-    if (param_.snapshot() > 0 && iter_ % param_.snapshot()) {
-      // TODO(Yangqing): snapshot
-      NOT_IMPLEMENTED;
+    if (param_.snapshot() > 0 && iter_ % param_.snapshot() == 0) {
+      Snapshot(false);
     }
     if (param_.display()) {
       LOG(ERROR) << "Iteration " << iter_ << ", loss = " << loss;
@@ -53,8 +52,10 @@ void Solver<Dtype>::Snapshot(bool is_final) {
   } else {
     ss << "_iter_" << iter_;
   }
+  string filename = ss.str();
+  LOG(ERROR) << "Snapshotting to " << filename;
   ofstream output_file;
-  output_file.open(ss.str().c_str());
+  output_file.open(filename.c_str());
   CHECK(net_param.SerializeToOstream(&output_file));
   output_file.close();
 }

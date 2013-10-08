@@ -3,7 +3,7 @@
 # a lowercase prefix (in this case "program") and an uppercased suffix (in this case "NAME"), separated
 # by an underscore is used to name attributes for a common element. Think of this like
 # using program.NAME, program.C_SRCS, etc. There are no structs in Make, so we use this convention
-# to keep track of attributes that all belong to the same target or program.  
+# to keep track of attributes that all belong to the same target or program.
 #
 PROJECT := caffe
 NAME := lib$(PROJECT).so
@@ -61,7 +61,7 @@ test: $(OBJS) $(GTEST_OBJ) $(TEST_BINS)
 program: $(OBJS) $(PROGRAM_BINS)
 
 runtest: test
-	for testbin in $(TEST_BINS); do $$testbin; done
+	for testbin in $(TEST_BINS); do $$testbin 1; done
 
 $(TEST_BINS): %.testbin : %.o
 	$(CXX) -pthread $< $(OBJS) $(GTEST_OBJ) -o $@ $(LDFLAGS) $(WARNINGS)

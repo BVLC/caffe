@@ -59,7 +59,6 @@ inline void SyncedMemory::to_gpu() {
   }
 }
 
-
 const void* SyncedMemory::cpu_data() {
   to_cpu();
   return (const void*)cpu_ptr_;

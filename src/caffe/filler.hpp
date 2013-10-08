@@ -103,8 +103,8 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 //
 // It fills the incoming matrix by randomly sampling uniform data from
 // [-scale, scale] where scale = sqrt(3 / fan_in) where fan_in is the number
-// of input nodes, and in our case we consider the blob width as the scale.
-// You should make sure the input blob has shape (1, 1, height, width).
+// of input nodes. You should make sure the input blob has shape (num, a, b, c)
+// where a * b * c = fan_in.
 template <typename Dtype>
 class XavierFiller : public Filler<Dtype> {
  public:
@@ -112,10 +112,7 @@ class XavierFiller : public Filler<Dtype> {
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    CHECK_EQ(blob->num(), 1) << "XavierFiller requires blob.num() = 1.";
-    CHECK_EQ(blob->channels(), 1)
-        << "XavierFiller requires blob.channels() = 1.";
-    int fan_in = blob->width();
+    int fan_in = blob->count() / blob->num();
     Dtype scale = sqrt(Dtype(3) / fan_in);
     caffe_vRngUniform<Dtype>(blob->count(), blob->mutable_cpu_data(),
         -scale, scale);
