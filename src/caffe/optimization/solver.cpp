@@ -6,6 +6,7 @@
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/net.hpp"
+#include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/optimization/solver.hpp"
 
@@ -54,10 +55,7 @@ void Solver<Dtype>::Snapshot(bool is_final) {
   }
   string filename = ss.str();
   LOG(ERROR) << "Snapshotting to " << filename;
-  ofstream output_file;
-  output_file.open(filename.c_str());
-  CHECK(net_param.SerializeToOstream(&output_file));
-  output_file.close();
+  WriteProtoToBinaryFile(net_param, filename.c_str());
 }
 
 template <typename Dtype>

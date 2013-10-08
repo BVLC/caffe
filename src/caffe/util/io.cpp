@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/io/coded_stream.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -24,6 +25,10 @@ using std::max;
 using std::string;
 using google::protobuf::io::FileInputStream;
 using google::protobuf::io::FileOutputStream;
+using google::protobuf::io::ZeroCopyInputStream;
+using google::protobuf::io::CodedInputStream;
+using google::protobuf::io::ZeroCopyOutputStream;
+using google::protobuf::io::CodedOutputStream;
 
 namespace caffe {
 
@@ -116,13 +121,28 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
 }
 
 void ReadProtoFromBinaryFile(const char* filename, Message* proto) {
-  fstream input(filename, ios::in | ios::binary);
-  CHECK(proto->ParseFromIstream(&input));
+  int fd = open(filename, O_RDONLY);
+  ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+  CodedInputStream* coded_input = new CodedInputStream(raw_input);
+  coded_input->SetTotalBytesLimit(536870912, 268435456);
+
+  CHECK(proto->ParseFromCodedStream(coded_input));
+
+  delete coded_input;
+  delete raw_input;
+  close(fd);
 }
 
 void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
-  fstream output(filename, ios::out | ios::trunc | ios::binary);
-  CHECK(proto.SerializeToOstream(&output));
+  int fd = open(filename, O_WRONLY);
+  ZeroCopyOutputStream* raw_output = new FileOutputStream(fd);
+  CodedOutputStream* coded_output = new CodedOutputStream(raw_output);
+
+  CHECK(proto.SerializeToCodedStream(coded_output));
+
+  delete coded_output;
+  delete raw_output;
+  close(fd);
 }
 
 }  // namespace caffe
