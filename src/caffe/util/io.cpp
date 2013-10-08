@@ -134,15 +134,8 @@ void ReadProtoFromBinaryFile(const char* filename, Message* proto) {
 }
 
 void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
-  int fd = open(filename, O_WRONLY);
-  ZeroCopyOutputStream* raw_output = new FileOutputStream(fd);
-  CodedOutputStream* coded_output = new CodedOutputStream(raw_output);
-
-  CHECK(proto.SerializeToCodedStream(coded_output));
-
-  delete coded_output;
-  delete raw_output;
-  close(fd);
+  fstream output(filename, ios::out | ios::trunc | ios::binary);
+  CHECK(proto.SerializeToOstream(&output));
 }
 
 }  // namespace caffe
