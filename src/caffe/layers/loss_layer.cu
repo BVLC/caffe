@@ -35,7 +35,7 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>
   int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
   memset(bottom_diff, 0, sizeof(Dtype) * (*bottom)[0]->count());
   Dtype loss = 0;
-  const Dtype kLOG_THRESHOLD = 1e-8;
+  const Dtype kLOG_THRESHOLD = 1e-20;
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
     Dtype prob = max(bottom_data[i * dim + label], kLOG_THRESHOLD);

@@ -233,6 +233,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
+// This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
 void* DataLayerPrefetch(void* layer_pointer);
 
@@ -293,6 +294,7 @@ class SoftmaxLayer : public Layer<Dtype> {
   Blob<Dtype> scale_;
 };
 
+
 template <typename Dtype>
 class MultinomialLogisticLossLayer : public Layer<Dtype> {
  public:
@@ -313,6 +315,39 @@ class MultinomialLogisticLossLayer : public Layer<Dtype> {
   // virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
   //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
+
+
+// SoftmaxWithLossLayer is a layer that implements softmax and then computes
+// the loss - it is preferred over softmax + multinomiallogisticloss in the
+// sense that during training, this will produce more numerically stable
+// gradients. During testing this layer could be replaced by a softmax layer
+// to generate probability outputs.
+template <typename Dtype>
+class SoftmaxWithLossLayer : public Layer<Dtype> {
+ public:
+  explicit SoftmaxWithLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
+  // prob stores the output probability of the layer.
+  Blob<Dtype> prob_;
+  // Vector holders to call the underlying softmax layer forward and backward.
+  vector<Blob<Dtype>*> softmax_bottom_vec_;
+  vector<Blob<Dtype>*> softmax_top_vec_;
+};
+
 
 template <typename Dtype>
 class EuclideanLossLayer : public Layer<Dtype> {
@@ -345,8 +380,6 @@ class AccuracyLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
  protected:
-  // The loss layer will do nothing during forward - all computation are
-  // carried out in the backward pass.
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   // The accuracy layer should not be used to compute backward operations.

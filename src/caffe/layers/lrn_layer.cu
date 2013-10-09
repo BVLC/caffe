@@ -109,7 +109,7 @@ __global__ void LRNComputeDiff(const int nthreads, const Dtype* bottom_data,
     int pre_pad = size - (size + 1) / 2;
     int post_pad = size - pre_pad - 1;
     Dtype accum_ratio = 0;
-    // accumulate values 
+    // accumulate values
     while (head < post_pad) {
       accum_ratio += top_diff[head * step] * top_data[head * step] /
           scale[head * step];

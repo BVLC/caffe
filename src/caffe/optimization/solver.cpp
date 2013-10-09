@@ -45,7 +45,8 @@ void Solver<Dtype>::Solve(Net<Dtype>* net) {
 template <typename Dtype>
 void Solver<Dtype>::Snapshot(bool is_final) {
   NetParameter net_param;
-  net_->ToProto(&net_param);
+  // For intermediate results, we will also dump the gradient values.
+  net_->ToProto(&net_param, !is_final);
   stringstream ss;
   ss << param_.snapshot_prefix();
   if (is_final) {
@@ -83,13 +84,11 @@ void SGDSolver<Dtype>::PreSolve() {
   // First of all, see if we need to initialize the history
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   history_.clear();
-  if (this->param_.momentum() > 0) {
-    for (int i = 0; i < net_params.size(); ++i) {
-      const Blob<Dtype>* net_param = net_params[i].get();
-      history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-          net_param->num(), net_param->channels(), net_param->height(),
-          net_param->width())));
-    }
+  for (int i = 0; i < net_params.size(); ++i) {
+    const Blob<Dtype>* net_param = net_params[i].get();
+    history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
+        net_param->num(), net_param->channels(), net_param->height(),
+        net_param->width())));
   }
 }
 
