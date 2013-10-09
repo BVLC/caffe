@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
+#include "caffe/net.hpp"
 
 using std::max;
 
@@ -31,7 +32,7 @@ class GradientChecker {
   // the parameters of the layer, as well as the input blobs if check_through
   // is set True.
   // Note that after the gradient check, we do not guarantee that the data
-  // stored in the layer parameters and the blobs.
+  // stored in the layer parameters and the blobs are unchanged.
   void CheckGradient(Layer<Dtype>& layer, vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>& top, int check_bottom = -1) {
       layer.SetUp(bottom, &top);
@@ -44,6 +45,12 @@ class GradientChecker {
   void CheckGradientSingle(Layer<Dtype>& layer, vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>& top, int check_bottom, int top_id,
       int top_data_id);
+
+  // Checks the gradient of a network. This network should not have any data
+  // layers or loss layers, since the function does not explicitly deal with
+  // such cases yet. All input blobs and parameter blobs are going to be
+  // checked, layer-by-layer to avoid numerical problems to accumulate.
+  void CheckGradientNet(Net<Dtype>& net, vector<Blob<Dtype>*>& input);
 
  protected:
   Dtype GetObjAndGradient(vector<Blob<Dtype>*>& top, int top_id = -1,
@@ -124,7 +131,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>& layer,
       }
       // LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
       // LOG(ERROR) << "computed gradient: " << computed_gradient
-      //     << " estimated_gradient: " << estimated_gradient;
+      //    << " estimated_gradient: " << estimated_gradient;
     }
   }
 }
@@ -136,11 +143,24 @@ void GradientChecker<Dtype>::CheckGradientExhaustive(Layer<Dtype>& layer,
   layer.SetUp(bottom, &top);
   // LOG(ERROR) << "Exhaustive Mode.";
   for (int i = 0; i < top.size(); ++i) {
-    // LOG(ERROR) << "Exhaustive: blob " << i << " size " << top[i]->count();
+    LOG(ERROR) << "Exhaustive: blob " << i << " size " << top[i]->count();
     for (int j = 0; j < top[i]->count(); ++j) {
       // LOG(ERROR) << "Exhaustive: blob " << i << " data " << j;
       CheckGradientSingle(layer, bottom, top, check_bottom, i, j);
     }
+  }
+}
+
+template <typename Dtype>
+void GradientChecker<Dtype>::CheckGradientNet(
+    Net<Dtype>& net, vector<Blob<Dtype>*>& input) {
+  const vector<shared_ptr<Layer<Dtype> > >& layers = net.layers();
+  vector<vector<Blob<Dtype>*> >& bottom_vecs = net.bottom_vecs();
+  vector<vector<Blob<Dtype>*> >& top_vecs = net.top_vecs();
+  for (int i = 0; i < layers.size(); ++i) {
+    net.Forward(input);
+    LOG(ERROR) << "Checking gradient for " << layers[i]->layer_param().name();
+    CheckGradientExhaustive(*(layers[i].get()), bottom_vecs[i], top_vecs[i]);
   }
 }
 

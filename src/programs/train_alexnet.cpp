@@ -17,7 +17,7 @@
 using namespace caffe;
 
 int main(int argc, char** argv) {
-  cudaSetDevice(1);
+  cudaSetDevice(0);
   Caffe::set_mode(Caffe::GPU);
 
   NetParameter net_param;
@@ -32,14 +32,28 @@ int main(int argc, char** argv) {
   LOG(ERROR) << "Performing Backward";
   LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
 
+  /*
+  // Now, let's dump all the layers
+  string output_prefix("alexnet_initial_dump_");
+  const vector<string>& blob_names = caffe_net.blob_names();
+  const vector<shared_ptr<Blob<float> > >& blobs = caffe_net.blobs();
+  for (int blobid = 0; blobid < caffe_net.blobs().size(); ++blobid) {
+    // Serialize blob
+    LOG(ERROR) << "Dumping " << blob_names[blobid];
+    BlobProto output_blob_proto;
+    blobs[blobid]->ToProto(&output_blob_proto);
+    WriteProtoToBinaryFile(output_blob_proto, output_prefix + blob_names[blobid]);
+  }
+  */
+
   SolverParameter solver_param;
-  solver_param.set_base_lr(0.001);
+  solver_param.set_base_lr(0.01);
   solver_param.set_display(1);
-  solver_param.set_max_iter(60000);
+  solver_param.set_max_iter(2);
   solver_param.set_lr_policy("fixed");
   solver_param.set_momentum(0.9);
   solver_param.set_weight_decay(0.0005);
-  solver_param.set_snapshot(1000);
+  solver_param.set_snapshot(1);
   solver_param.set_snapshot_prefix("alexnet");
 
   LOG(ERROR) << "Starting Optimization";

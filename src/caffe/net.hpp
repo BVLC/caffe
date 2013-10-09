@@ -51,6 +51,10 @@ class Net {
   inline const vector<shared_ptr<Blob<Dtype> > >& blobs() { return blobs_; }
   // returns the layers
   inline const vector<shared_ptr<Layer<Dtype> > >& layers() { return layers_; }
+  // returns the bottom and top vecs for each layer - usually you won't need
+  // this unless you do per-layer checks such as gradients.
+  inline vector<vector<Blob<Dtype>*> >& bottom_vecs() { return bottom_vecs_; }
+  inline vector<vector<Blob<Dtype>*> >& top_vecs() { return top_vecs_; }
   // returns the parameters
   vector<shared_ptr<Blob<Dtype> > >& params() { return params_; };
   // Updates the network

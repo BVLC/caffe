@@ -27,23 +27,31 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   K_ = bottom[0]->count() / bottom[0]->num();
   N_ = num_output;
   (*top)[0]->Reshape(bottom[0]->num(), num_output, 1, 1);
-  if (biasterm_) {
-    this->blobs_.resize(2);
+  // Check if we need to set up the weights
+  if (this->blobs_.size() > 0) {
+    LOG(INFO) << "Skipping parameter initialization";
   } else {
-    this->blobs_.resize(1);
-  }
-  // Intialize the weight
-  this->blobs_[0].reset(new Blob<Dtype>(1, 1, N_, K_));
-  // fill the weights
-  shared_ptr<Filler<Dtype> > weight_filler(
-      GetFiller<Dtype>(this->layer_param_.weight_filler()));
-  weight_filler->Fill(this->blobs_[0].get());
-  // If necessary, intiialize and fill the bias term
+    if (biasterm_) {
+      this->blobs_.resize(2);
+    } else {
+      this->blobs_.resize(1);
+    }
+    // Intialize the weight
+    this->blobs_[0].reset(new Blob<Dtype>(1, 1, N_, K_));
+    // fill the weights
+    shared_ptr<Filler<Dtype> > weight_filler(
+        GetFiller<Dtype>(this->layer_param_.weight_filler()));
+    weight_filler->Fill(this->blobs_[0].get());
+    // If necessary, intiialize and fill the bias term
+    if (biasterm_) {
+      this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, N_));
+      shared_ptr<Filler<Dtype> > bias_filler(
+          GetFiller<Dtype>(this->layer_param_.bias_filler()));
+      bias_filler->Fill(this->blobs_[1].get());
+    }
+  } // parameter initialization
+  // Setting up the bias multiplier
   if (biasterm_) {
-    this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, N_));
-    shared_ptr<Filler<Dtype> > bias_filler(
-        GetFiller<Dtype>(this->layer_param_.bias_filler()));
-    bias_filler->Fill(this->blobs_[1].get());
     bias_multiplier_.reset(new SyncedMemory(M_ * sizeof(Dtype)));
     Dtype* bias_multiplier_data =
         reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());

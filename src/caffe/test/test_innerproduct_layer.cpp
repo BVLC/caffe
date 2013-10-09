@@ -97,12 +97,12 @@ TYPED_TEST(InnerProductLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
   layer_param.set_num_output(10);
-  layer_param.mutable_weight_filler()->set_type("uniform");
-  layer_param.mutable_bias_filler()->set_type("uniform");
+  layer_param.mutable_weight_filler()->set_type("gaussian");
+  layer_param.mutable_bias_filler()->set_type("gaussian");
   layer_param.mutable_bias_filler()->set_min(1);
   layer_param.mutable_bias_filler()->set_max(2);
   InnerProductLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
@@ -111,10 +111,8 @@ TYPED_TEST(InnerProductLayerTest, TestGPUGradient) {
     LayerParameter layer_param;
     Caffe::set_mode(Caffe::GPU);
     layer_param.set_num_output(10);
-    layer_param.mutable_weight_filler()->set_type("uniform");
-    layer_param.mutable_bias_filler()->set_type("uniform");
-    layer_param.mutable_bias_filler()->set_min(1);
-    layer_param.mutable_bias_filler()->set_max(2);
+    layer_param.mutable_weight_filler()->set_type("gaussian");
+    layer_param.mutable_bias_filler()->set_type("gaussian");
     InnerProductLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-2);
     checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);

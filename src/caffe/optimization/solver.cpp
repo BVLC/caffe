@@ -99,6 +99,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   Dtype rate = GetLearningRate();
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
+  LOG(ERROR) << "rate:" << rate << " momentum:" << momentum
+      << " weight_decay:" << weight_decay;
   switch (Caffe::mode()) {
   case Caffe::CPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {

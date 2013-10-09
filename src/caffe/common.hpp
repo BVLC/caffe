@@ -18,9 +18,9 @@
 #define VSL_CHECK(condition) CHECK_EQ((condition), VSL_STATUS_OK)
 
 #define CUDA_POST_KERNEL_CHECK \
-  if (cudaSuccess != cudaPeekAtLastError()) {\
-    LOG(FATAL) << "Cuda kernel failed. Error: " << cudaGetLastError(); \
-  }
+  if (cudaSuccess != cudaPeekAtLastError()) \
+    LOG(FATAL) << "Cuda kernel failed. Error: " \
+        << cudaGetErrorString(cudaPeekAtLastError())
 
 #define DISABLE_COPY_AND_ASSIGN(classname) \
 private:\

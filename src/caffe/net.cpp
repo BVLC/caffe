@@ -111,7 +111,7 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
     blobs_[net_input_blob_indices_[i]]->CopyFrom(*bottom[i]);
   }
   for (int i = 0; i < layers_.size(); ++i) {
-    // LOG(ERROR) << "Forwarding " << layer_names_[i];
+    //LOG(ERROR) << "Forwarding " << layer_names_[i];
     layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
   }
   return net_output_blobs_;
@@ -177,7 +177,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
       layer_connection->add_top(blob_names_[top_id_vecs_[i][j]]);
     }
     LayerParameter* layer_parameter = layer_connection->mutable_layer();
-    layers_[i]->ToProto(layer_parameter);
+    layers_[i]->ToProto(layer_parameter, write_diff);
   }
 }
 

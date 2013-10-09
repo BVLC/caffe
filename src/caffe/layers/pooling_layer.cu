@@ -149,9 +149,6 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
         // figure out the pooling size
         int poolsize = (min(ph * stride + ksize, height) - ph * stride) *
             (min(pw * stride + ksize, width) - pw * stride);
-        if (poolsize <= 0) {
-          printf("error: %d %d %d %d %d\n", ph, pw, ksize, height, width);
-        }
         gradient += top_diff[ph * pooled_width + pw] / poolsize;
       }
     }

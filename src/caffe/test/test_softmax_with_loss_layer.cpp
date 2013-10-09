@@ -26,6 +26,7 @@ class SoftmaxWithLossLayerTest : public ::testing::Test {
         blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)) {
     // fill the values
     FillerParameter filler_param;
+    filler_param.set_std(10);
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);

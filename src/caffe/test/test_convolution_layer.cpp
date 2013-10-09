@@ -145,9 +145,11 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradient) {
   layer_param.set_kernelsize(3);
   layer_param.set_stride(2);
   layer_param.set_num_output(2);
+  layer_param.mutable_weight_filler()->set_type("gaussian");
+  layer_param.mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::CPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
@@ -157,9 +159,11 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
   layer_param.set_stride(2);
   layer_param.set_num_output(3);
   layer_param.set_group(3);
+  layer_param.mutable_weight_filler()->set_type("gaussian");
+  layer_param.mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::CPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
@@ -168,9 +172,11 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUGradient) {
   layer_param.set_kernelsize(3);
   layer_param.set_stride(2);
   layer_param.set_num_output(2);
+  layer_param.mutable_weight_filler()->set_type("gaussian");
+  layer_param.mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::GPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
@@ -180,9 +186,11 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUGradientGroup) {
   layer_param.set_stride(2);
   layer_param.set_num_output(3);
   layer_param.set_group(3);
+  layer_param.mutable_weight_filler()->set_type("gaussian");
+  layer_param.mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::GPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
 }
 
