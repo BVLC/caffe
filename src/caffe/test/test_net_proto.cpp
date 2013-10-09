@@ -38,6 +38,7 @@ TYPED_TEST(NetProtoTest, TestSetup) {
   EXPECT_EQ(caffe_net.layer_names().size(), 10);
   EXPECT_EQ(caffe_net.blob_names().size(), 10);
 
+  /*
   // Print a few statistics to see if things are correct
   for (int i = 0; i < caffe_net.blobs().size(); ++i) {
     LOG(ERROR) << "Blob: " << caffe_net.blob_names()[i];
@@ -46,13 +47,14 @@ TYPED_TEST(NetProtoTest, TestSetup) {
         << caffe_net.blobs()[i]->height() << ", "
         << caffe_net.blobs()[i]->width();
   }
+  */
   Caffe::set_mode(Caffe::CPU);
   // Run the network without training.
   LOG(ERROR) << "Performing Forward";
   caffe_net.Forward(bottom_vec);
   LOG(ERROR) << "Performing Backward";
   LOG(ERROR) << caffe_net.Backward();
-  
+
   Caffe::set_mode(Caffe::GPU);
   // Run the network without training.
   LOG(ERROR) << "Performing Forward";

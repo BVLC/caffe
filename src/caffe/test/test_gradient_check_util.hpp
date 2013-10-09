@@ -143,7 +143,7 @@ void GradientChecker<Dtype>::CheckGradientExhaustive(Layer<Dtype>& layer,
   layer.SetUp(bottom, &top);
   // LOG(ERROR) << "Exhaustive Mode.";
   for (int i = 0; i < top.size(); ++i) {
-    LOG(ERROR) << "Exhaustive: blob " << i << " size " << top[i]->count();
+    // LOG(ERROR) << "Exhaustive: blob " << i << " size " << top[i]->count();
     for (int j = 0; j < top[i]->count(); ++j) {
       // LOG(ERROR) << "Exhaustive: blob " << i << " data " << j;
       CheckGradientSingle(layer, bottom, top, check_bottom, i, j);
