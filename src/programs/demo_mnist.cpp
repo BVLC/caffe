@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   Caffe::set_mode(Caffe::GPU);
 
   NetParameter net_param;
-  ReadProtoFromTextFile("caffe/test/data/lenet.prototxt",
+  ReadProtoFromTextFile("data/lenet.prototxt",
       &net_param);
   vector<Blob<float>*> bottom_vec;
   Net<float> caffe_net(net_param, bottom_vec);
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
   caffe_net.ToProto(&trained_net_param);
 
   NetParameter traintest_net_param;
-  ReadProtoFromTextFile("caffe/test/data/lenet_traintest.prototxt",
+  ReadProtoFromTextFile("data/lenet_traintest.prototxt",
       &traintest_net_param);
   Net<float> caffe_traintest_net(traintest_net_param, bottom_vec);
   caffe_traintest_net.CopyTrainedLayersFrom(trained_net_param);
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
   LOG(ERROR) << "Train accuracy:" << train_accuracy;
 
   NetParameter test_net_param;
-  ReadProtoFromTextFile("caffe/test/data/lenet_test.prototxt", &test_net_param);
+  ReadProtoFromTextFile("data/lenet_test.prototxt", &test_net_param);
   Net<float> caffe_test_net(test_net_param, bottom_vec);
   caffe_test_net.CopyTrainedLayersFrom(trained_net_param);
 

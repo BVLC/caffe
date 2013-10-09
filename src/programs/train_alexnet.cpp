@@ -33,9 +33,9 @@ int main(int argc, char** argv) {
   LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
 
   SolverParameter solver_param;
-  solver_param.set_base_lr(0.002);
+  solver_param.set_base_lr(0.001);
   solver_param.set_display(1);
-  solver_param.set_max_iter(600000);
+  solver_param.set_max_iter(60000);
   solver_param.set_lr_policy("fixed");
   solver_param.set_momentum(0.9);
   solver_param.set_weight_decay(0.0005);

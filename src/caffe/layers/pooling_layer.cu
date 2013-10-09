@@ -61,7 +61,7 @@ __global__ void AvePoolForward(const int nthreads, const Dtype* bottom_data,
         aveval += bottom_data[h * width + w];
       }
     }
-    top_data[index] = aveval / ksize / ksize;
+    top_data[index] = aveval / (hend - hstart) / (wend - wstart);
   }  // (if index < nthreads)
 }
 
@@ -109,7 +109,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* bottom_data,
     int pwstart = (w < ksize) ? 0 : (w - ksize) / stride + 1;
     int pwend = min(w / stride + 1, pooled_width);
     Dtype gradient = 0;
-    Dtype bottom_datum = 
+    Dtype bottom_datum =
         bottom_data[((n * channels + c) * height + h) * width + w];
     top_data += (n * channels + c) * pooled_height * pooled_width;
     top_diff += (n * channels + c) * pooled_height * pooled_width;
@@ -146,10 +146,16 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
     top_diff += (n * channels + c) * pooled_height * pooled_width;
     for (int ph = phstart; ph < phend; ++ph) {
       for (int pw = pwstart; pw < pwend; ++pw) {
-        gradient += top_diff[ph * pooled_width + pw];
+        // figure out the pooling size
+        int poolsize = (min(ph * stride + ksize, height) - ph * stride) *
+            (min(pw * stride + ksize, width) - pw * stride);
+        if (poolsize <= 0) {
+          printf("error: %d %d %d %d %d\n", ph, pw, ksize, height, width);
+        }
+        gradient += top_diff[ph * pooled_width + pw] / poolsize;
       }
     }
-    bottom_diff[index] = gradient / ksize / ksize;
+    bottom_diff[index] = gradient;
   }  // (if index < nthreads)
 }
 

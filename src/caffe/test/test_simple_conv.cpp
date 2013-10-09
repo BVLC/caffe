@@ -22,9 +22,9 @@ TYPED_TEST_CASE(NetProtoTest, Dtypes);
 
 TYPED_TEST(NetProtoTest, TestLoadFromText) {
   NetParameter net_param;
-  ReadProtoFromTextFile("caffe/test/data/simple_conv.prototxt", &net_param);
+  ReadProtoFromTextFile("data/simple_conv.prototxt", &net_param);
   Blob<TypeParam> lena_image;
-  ReadImageToBlob<TypeParam>(string("caffe/test/data/lena_256.jpg"), &lena_image);
+  ReadImageToBlob<TypeParam>(string("data/lena_256.jpg"), &lena_image);
   vector<Blob<TypeParam>*> bottom_vec;
   bottom_vec.push_back(&lena_image);
 

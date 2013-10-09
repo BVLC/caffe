@@ -30,7 +30,7 @@ TYPED_TEST(SolverTest, TestSolve) {
   Caffe::set_mode(Caffe::GPU);
 
   NetParameter net_param;
-  ReadProtoFromTextFile("caffe/test/data/linear_regression.prototxt",
+  ReadProtoFromTextFile("data/linear_regression.prototxt",
       &net_param);
   // check if things are right
   EXPECT_EQ(net_param.layers_size(), 3);

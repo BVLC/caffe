@@ -92,6 +92,8 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                     bottom_data[h * WIDTH_ + w];
               }
             }
+            top_data[ph * POOLED_WIDTH_ + pw] /=
+                (hend - hstart) * (wend - wstart);
           }
         }
         // compute offset
@@ -99,12 +101,6 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         top_data += (*top)[0]->offset(0, 1);
       }
     }
-    // Our implementation simply divides the pooled values by KSIZE^2,
-    // regardless of the actual pooling region. This would allow one to not
-    // trust too much on the border pooling regions, but I am not sure what
-    // benefit / harm it would bring to the actual code.
-    caffe_scal<Dtype>(top_count, Dtype(1.) / KSIZE_ / KSIZE_,
-        (*top)[0]->mutable_cpu_data());
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
@@ -164,10 +160,11 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             int wstart = pw * STRIDE_;
             int hend = min(hstart + KSIZE_, HEIGHT_);
             int wend = min(wstart + KSIZE_, WIDTH_);
+            int poolsize = (hend - hstart) * (wend - wstart);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 bottom_diff[h * WIDTH_ + w] +=
-                  top_diff[ph * POOLED_WIDTH_ + pw];
+                  top_diff[ph * POOLED_WIDTH_ + pw] / poolsize;
               }
             }
           }
@@ -179,12 +176,6 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         top_diff += top[0]->offset(0, 1);
       }
     }
-    // Our implementation simply divides the pooled values by KSIZE^2,
-    // regardless of the actual pooling region. This would allow one to not
-    // trust too much on the border pooling regions, but I am not sure what
-    // benefit / harm it would bring to the actual code.
-    caffe_scal<Dtype>((*bottom)[0]->count(), Dtype(1.) / KSIZE_ / KSIZE_,
-        (*bottom)[0]->mutable_cpu_diff());
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";

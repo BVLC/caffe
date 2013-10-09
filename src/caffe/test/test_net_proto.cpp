@@ -27,7 +27,7 @@ TYPED_TEST_CASE(NetProtoTest, Dtypes);
 
 TYPED_TEST(NetProtoTest, TestSetup) {
   NetParameter net_param;
-  ReadProtoFromTextFile("caffe/test/data/lenet.prototxt", &net_param);
+  ReadProtoFromTextFile("data/lenet.prototxt", &net_param);
   // check if things are right
   EXPECT_EQ(net_param.layers_size(), 10);
   EXPECT_EQ(net_param.input_size(), 0);
