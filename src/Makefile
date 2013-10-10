@@ -42,12 +42,13 @@ LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread curand \
 		leveldb snappy opencv_core opencv_highgui pthread tcmalloc
 WARNINGS := -Wall
 
-CXXFLAGS += -fPIC $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+CXXFLAGS += -pthread -fPIC -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+NVCCFLAGS := -Xcompiler -fPIC -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir))
 LDFLAGS += $(foreach library,$(LIBRARIES),-l$(library))
 
 LINK = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(WARNINGS)
-NVCC = nvcc ${CXXFLAGS:-fPIC=-Xcompiler -fPIC} $(CPPFLAGS) $(CUDA_ARCH)
+NVCC = nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
 .PHONY: all test clean distclean linecount program
 

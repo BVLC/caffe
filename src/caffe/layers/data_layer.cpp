@@ -24,39 +24,64 @@ void* DataLayerPrefetch(void* layer_pointer) {
   const Dtype subtraction = layer->layer_param_.subtraction();
   const int batchsize = layer->layer_param_.batchsize();
   const int cropsize = layer->layer_param_.cropsize();
+  const bool mirror = layer->layer_param_.mirror();
+  if (mirror && cropsize == 0) {
+    LOG(FATAL) << "Current implementation requires mirror and cropsize to be "
+        << "set at the same time.";
+  }
+  // datum scales
+  const int channels = layer->datum_channels_;
+  const int height = layer->datum_height_;
+  const int width = layer->datum_width_;
+  const int size = layer->datum_size_;
   for (int itemid = 0; itemid < batchsize; ++itemid) {
     // get a blob
     datum.ParseFromString(layer->iter_->value().ToString());
     const string& data = datum.data();
     if (cropsize) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
-      int h_offset = rand() % (layer->datum_height_ - cropsize);
-      int w_offset = rand() % (layer->datum_width_ - cropsize);
-      for (int c = 0; c < layer->datum_channels_; ++c) {
-        for (int h = 0; h < cropsize; ++h) {
-          for (int w = 0; w < cropsize; ++w) {
-            top_data[((itemid * layer->datum_channels_ + c) * cropsize + h) * cropsize + w] =
-                static_cast<Dtype>((uint8_t)data[
-                    (c * layer->datum_height_ + h + h_offset) * layer->datum_width_
-                    + w + w_offset]
-                ) * scale - subtraction;
+      int h_offset = rand() % (height - cropsize);
+      int w_offset = rand() % (width - cropsize);
+      if (mirror && rand() % 2) {
+        // Copy mirrored version
+        for (int c = 0; c < channels; ++c) {
+          for (int h = 0; h < cropsize; ++h) {
+            for (int w = 0; w < cropsize; ++w) {
+              top_data[((itemid * channels + c) * cropsize + h) * cropsize + cropsize - 1 - w] =
+                  static_cast<Dtype>((uint8_t)data[
+                      (c * height + h + h_offset) * width + w + w_offset]
+                  ) * scale - subtraction;
+            }
+          }
+        }
+      } else {
+        // Normal copy
+        for (int c = 0; c < channels; ++c) {
+          for (int h = 0; h < cropsize; ++h) {
+            for (int w = 0; w < cropsize; ++w) {
+              top_data[((itemid * channels + c) * cropsize + h) * cropsize + w] =
+                  static_cast<Dtype>((uint8_t)data[
+                      (c * height + h + h_offset) * width + w + w_offset]
+                  ) * scale - subtraction;
+            }
           }
         }
       }
     } else {
       // we will prefer to use data() first, and then try float_data()
       if (data.size()) {
-        for (int j = 0; j < layer->datum_size_; ++j) {
-          top_data[itemid * layer->datum_size_ + j] =
+        for (int j = 0; j < size; ++j) {
+          top_data[itemid * size + j] =
               (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
         }
       } else {
-        for (int j = 0; j < layer->datum_size_; ++j) {
-          top_data[itemid * layer->datum_size_ + j] =
+        for (int j = 0; j < size; ++j) {
+          top_data[itemid * size + j] =
               (datum.float_data(j) * scale) - subtraction;
         }
       }
     }
+
     top_label[itemid] = datum.label();
     // go to the next iter
     layer->iter_->Next();

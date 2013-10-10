@@ -1,5 +1,7 @@
 // Copyright Yangqing Jia 2013
 
+#include <cstdio>
+
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -34,7 +36,7 @@ void Solver<Dtype>::Solve(Net<Dtype>* net) {
     if (param_.snapshot() > 0 && iter_ % param_.snapshot() == 0) {
       Snapshot(false);
     }
-    if (param_.display() && iter_ % param_.display()) {
+    if (param_.display() && iter_ % param_.display() == 0) {
       LOG(ERROR) << "Iteration " << iter_ << ", loss = " << loss;
     }
   }
@@ -47,14 +49,14 @@ void Solver<Dtype>::Snapshot(bool is_final) {
   NetParameter net_param;
   // For intermediate results, we will also dump the gradient values.
   net_->ToProto(&net_param, !is_final);
-  stringstream ss;
-  ss << param_.snapshot_prefix();
+  string filename(param_.snapshot_prefix());
   if (is_final) {
-    ss << "_final";
+    filename += "_final";
   } else {
-    ss << "_iter_" << iter_;
+    char iter_str_buffer[20];
+    sprintf(iter_str_buffer, "_iter_%d", iter_);
+    filename += iter_str_buffer;
   }
-  string filename = ss.str();
   LOG(ERROR) << "Snapshotting to " << filename;
   WriteProtoToBinaryFile(net_param, filename.c_str());
 }
