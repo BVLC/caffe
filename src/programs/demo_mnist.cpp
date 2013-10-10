@@ -19,6 +19,7 @@ using namespace caffe;
 int main(int argc, char** argv) {
   cudaSetDevice(0);
   Caffe::set_mode(Caffe::GPU);
+  Caffe::set_phase(Caffe::TRAIN);
 
   NetParameter net_param;
   ReadProtoFromTextFile("data/lenet.prototxt",
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
 
   SolverParameter solver_param;
   solver_param.set_base_lr(0.01);
-  solver_param.set_display(0);
+  solver_param.set_display(1);
   solver_param.set_max_iter(6000);
   solver_param.set_lr_policy("inv");
   solver_param.set_gamma(0.0001);
@@ -62,6 +63,8 @@ int main(int argc, char** argv) {
       &traintest_net_param);
   Net<float> caffe_traintest_net(traintest_net_param, bottom_vec);
   caffe_traintest_net.CopyTrainedLayersFrom(trained_net_param);
+
+  Caffe::set_phase(Caffe::TEST);
 
   // Test run
   double train_accuracy = 0;

@@ -26,5 +26,4 @@ TEST_F(ProtoTest, TestSerialization) {
   EXPECT_TRUE(true);
 }
 
-
 }

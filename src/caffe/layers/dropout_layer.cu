@@ -97,9 +97,7 @@ __global__ void DropoutBackward(const int n, const Dtype* in_diff,
     Dtype* out_diff) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
-    if (mask[index] > threshold) {
-      out_diff[index] = in_diff[index] * scale;
-    }
+    out_diff[index] = in_diff[index] * scale * (mask[index] > threshold);
   }
 }
 

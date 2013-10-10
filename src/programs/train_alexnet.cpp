@@ -19,6 +19,7 @@ using namespace caffe;
 int main(int argc, char** argv) {
   cudaSetDevice(0);
   Caffe::set_mode(Caffe::GPU);
+  Caffe::set_phase(Caffe::TRAIN);
 
   NetParameter net_param;
   ReadProtoFromTextFile(argv[1],
@@ -49,11 +50,11 @@ int main(int argc, char** argv) {
   SolverParameter solver_param;
   solver_param.set_base_lr(0.01);
   solver_param.set_display(1);
-  solver_param.set_max_iter(2);
+  solver_param.set_max_iter(60000);
   solver_param.set_lr_policy("fixed");
   solver_param.set_momentum(0.9);
   solver_param.set_weight_decay(0.0005);
-  solver_param.set_snapshot(1);
+  solver_param.set_snapshot(5000);
   solver_param.set_snapshot_prefix("alexnet");
 
   LOG(ERROR) << "Starting Optimization";
