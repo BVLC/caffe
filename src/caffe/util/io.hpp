@@ -55,7 +55,8 @@ inline void ReadProtoFromBinaryFile(const string& filename,
 }
 
 void WriteProtoToBinaryFile(const Message& proto, const char* filename);
-inline void WriteProtoToBinaryFile(const Message& proto, const string& filename) {
+inline void WriteProtoToBinaryFile(
+    const Message& proto, const string& filename) {
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
 

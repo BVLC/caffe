@@ -12,6 +12,7 @@
 
 namespace caffe {
 
+
 // The neuron layer is a specific type of layers that just works on single
 // celements.
 template <typename Dtype>
@@ -93,6 +94,7 @@ class InnerProductLayer : public Layer<Dtype> {
   shared_ptr<SyncedMemory> bias_multiplier_;
 };
 
+
 template <typename Dtype>
 class PaddingLayer : public Layer<Dtype> {
  public:
@@ -118,6 +120,7 @@ class PaddingLayer : public Layer<Dtype> {
   int HEIGHT_OUT_;
   int WIDTH_OUT_;
 };
+
 
 template <typename Dtype>
 class LRNLayer : public Layer<Dtype> {
@@ -148,6 +151,7 @@ class LRNLayer : public Layer<Dtype> {
   int width_;
 };
 
+
 template <typename Dtype>
 class Im2colLayer : public Layer<Dtype> {
  public:
@@ -171,6 +175,7 @@ class Im2colLayer : public Layer<Dtype> {
   int HEIGHT_;
   int WIDTH_;
 };
+
 
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
@@ -197,6 +202,7 @@ class PoolingLayer : public Layer<Dtype> {
   int POOLED_HEIGHT_;
   int POOLED_WIDTH_;
 };
+
 
 template <typename Dtype>
 class ConvolutionLayer : public Layer<Dtype> {
@@ -233,6 +239,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
+
 // This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
 void* DataLayerPrefetch(void* layer_pointer);
@@ -240,7 +247,7 @@ void* DataLayerPrefetch(void* layer_pointer);
 template <typename Dtype>
 class DataLayer : public Layer<Dtype> {
   // The function used to perform prefetching.
-  friend void* DataLayerPrefetch<Dtype>(void*);
+  friend void* DataLayerPrefetch<Dtype>(void* layer_pointer);
 
  public:
   explicit DataLayer(const LayerParameter& param)
@@ -370,6 +377,7 @@ class EuclideanLossLayer : public Layer<Dtype> {
   //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   Blob<Dtype> difference_;
 };
+
 
 template <typename Dtype>
 class AccuracyLayer : public Layer<Dtype> {

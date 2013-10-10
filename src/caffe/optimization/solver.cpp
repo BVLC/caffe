@@ -1,21 +1,20 @@
 // Copyright Yangqing Jia 2013
 
 #include <algorithm>
-#include <fstream>
 #include <string>
+#include <vector>
 
-#include "caffe/proto/caffe.pb.h"
 #include "caffe/net.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/optimization/solver.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/optimization/solver.hpp"
 
 using std::max;
 using std::min;
-using std::stringstream;
-using std::ofstream;
 
 namespace caffe {
+
 
 template <typename Dtype>
 void Solver<Dtype>::Solve(Net<Dtype>* net) {
@@ -42,6 +41,7 @@ void Solver<Dtype>::Solve(Net<Dtype>* net) {
   LOG(INFO) << "Optimization Done.";
 }
 
+
 template <typename Dtype>
 void Solver<Dtype>::Snapshot(bool is_final) {
   NetParameter net_param;
@@ -58,6 +58,7 @@ void Solver<Dtype>::Snapshot(bool is_final) {
   LOG(ERROR) << "Snapshotting to " << filename;
   WriteProtoToBinaryFile(net_param, filename.c_str());
 }
+
 
 template <typename Dtype>
 Dtype SGDSolver<Dtype>::GetLearningRate() {
@@ -79,6 +80,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   return rate;
 }
 
+
 template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
   // First of all, see if we need to initialize the history
@@ -91,6 +93,7 @@ void SGDSolver<Dtype>::PreSolve() {
         net_param->width())));
   }
 }
+
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue() {
@@ -142,6 +145,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
   }
 }
+
 
 INSTANTIATE_CLASS(Solver);
 INSTANTIATE_CLASS(SGDSolver);

@@ -1,5 +1,9 @@
+// Copyright Yangqing Jia 2013
+
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
+
+#include <vector>
 
 namespace caffe {
 
@@ -10,11 +14,12 @@ class Solver {
       : param_(param) {}
   // The main entry of the solver function.
   void Solve(Net<Dtype>* net);
+  virtual ~Solver() {}
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
   // put up some scaffold.
-  virtual void PreSolve() {};
+  virtual void PreSolve() {}
   // Get the update value for the current iteration.
   virtual void ComputeUpdateValue() = 0;
   void Snapshot(bool is_final = false);
@@ -24,6 +29,7 @@ class Solver {
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
+
 
 template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {

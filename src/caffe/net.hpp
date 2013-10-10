@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
-#include "caffe/layer.hpp"
 #include "caffe/common.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 using std::map;
@@ -17,6 +17,7 @@ using std::vector;
 using std::string;
 
 namespace caffe {
+
 
 template <typename Dtype>
 class Net {
@@ -56,7 +57,7 @@ class Net {
   inline vector<vector<Blob<Dtype>*> >& bottom_vecs() { return bottom_vecs_; }
   inline vector<vector<Blob<Dtype>*> >& top_vecs() { return top_vecs_; }
   // returns the parameters
-  vector<shared_ptr<Blob<Dtype> > >& params() { return params_; };
+  vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
   // Updates the network
   void Update();
 

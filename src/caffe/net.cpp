@@ -111,7 +111,7 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
     blobs_[net_input_blob_indices_[i]]->CopyFrom(*bottom[i]);
   }
   for (int i = 0; i < layers_.size(); ++i) {
-    //LOG(ERROR) << "Forwarding " << layer_names_[i];
+    // LOG(ERROR) << "Forwarding " << layer_names_[i];
     layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
   }
   return net_output_blobs_;
