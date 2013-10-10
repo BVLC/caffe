@@ -1,8 +1,11 @@
 // Copyright 2013 Yangqing Jia
+//
+// This is a simple script that allows one to quickly train a network whose
+// parameters are specified by text format protocol buffers.
+// Usage:
+//    train_net net_proto_file solver_proto_file
 
 #include <cuda_runtime.h>
-#include <fcntl.h>
-#include <google/protobuf/text_format.h>
 
 #include <cstring>
 
@@ -22,8 +25,7 @@ int main(int argc, char** argv) {
   Caffe::set_phase(Caffe::TRAIN);
 
   NetParameter net_param;
-  ReadProtoFromTextFile(argv[1],
-      &net_param);
+  ReadProtoFromTextFile(argv[1], &net_param);
   vector<Blob<float>*> bottom_vec;
   Net<float> caffe_net(net_param, bottom_vec);
 
