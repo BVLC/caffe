@@ -15,26 +15,6 @@ using ::google::protobuf::Message;
 
 namespace caffe {
 
-void ReadImageToProto(const string& filename, BlobProto* proto);
-
-template <typename Dtype>
-inline void ReadImageToBlob(const string& filename, Blob<Dtype>* blob) {
-  BlobProto proto;
-  ReadImageToProto(filename, &proto);
-  blob->FromProto(proto);
-}
-
-void WriteProtoToImage(const string& filename, const BlobProto& proto);
-
-template <typename Dtype>
-inline void WriteBlobToImage(const string& filename, const Blob<Dtype>& blob) {
-  BlobProto proto;
-  blob.ToProto(&proto);
-  WriteProtoToImage(filename, proto);
-}
-
-void ReadImageToDatum(const string& filename, const int label, Datum* datum);
-
 void ReadProtoFromTextFile(const char* filename,
     Message* proto);
 inline void ReadProtoFromTextFile(const string& filename,

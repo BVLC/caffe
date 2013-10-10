@@ -43,7 +43,7 @@ MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 INCLUDE_DIRS := . /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS := . /usr/lib /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
 LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread curand \
-		leveldb snappy opencv_core opencv_highgui pthread tcmalloc
+		leveldb snappy pthread tcmalloc
 WARNINGS := -Wall
 
 COMMON_FLAGS := $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
@@ -79,6 +79,10 @@ $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME)
 
 $(PROGRAM_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
+
+$(OBJS): $(PROTO_GEN_CC)
+
+$(PROGRAM_OBJS): $(PROTO_GEN_CC)
 
 $(CU_OBJS): %.cuo: %.cu
 	$(NVCC) -c $< -o $@

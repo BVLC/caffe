@@ -43,10 +43,6 @@ private:\
 
 namespace caffe {
 
-// Two classes whose purpose are solely for instantiating blob template
-// functions.
-class GPUBrewer {};
-class CPUBrewer {};
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.

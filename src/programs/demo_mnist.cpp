@@ -17,7 +17,7 @@
 using namespace caffe;
 
 int main(int argc, char** argv) {
-  cudaSetDevice(0);
+  cudaSetDevice(1);
   Caffe::set_mode(Caffe::GPU);
   Caffe::set_phase(Caffe::TRAIN);
 
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 
   SolverParameter solver_param;
   solver_param.set_base_lr(0.01);
-  solver_param.set_display(1);
+  solver_param.set_display(100);
   solver_param.set_max_iter(6000);
   solver_param.set_lr_policy("inv");
   solver_param.set_gamma(0.0001);
