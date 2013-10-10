@@ -34,7 +34,7 @@ void Solver<Dtype>::Solve(Net<Dtype>* net) {
     if (param_.snapshot() > 0 && iter_ % param_.snapshot() == 0) {
       Snapshot(false);
     }
-    if (param_.display()) {
+    if (param_.display() && iter_ % param_.display()) {
       LOG(ERROR) << "Iteration " << iter_ << ", loss = " << loss;
     }
   }
@@ -60,12 +60,24 @@ void Solver<Dtype>::Snapshot(bool is_final) {
 }
 
 
+// Return the current learning rate. The currently implemented learning rate
+// policies are as follows:
+//    - fixed: always return base_lr.
+//    - step: return base_lr * gamma ^ (floor(iter / step))
+//    - exp: return base_lr * gamma ^ iter
+//    - inv: return base_lr * (1 + gamma * iter) ^ (- power)
+// where base_lr, gamma, step and power are defined in the solver parameter
+// protocol buffer, and iter is the current iteration.
 template <typename Dtype>
 Dtype SGDSolver<Dtype>::GetLearningRate() {
   Dtype rate;
   const string& lr_policy = this->param_.lr_policy();
   if (lr_policy == "fixed") {
     rate = this->param_.base_lr();
+  } else if (lr_policy == "step") {
+    int current_step = this->iter_ / this->param_.stepsize();
+    rate = this->param_.base_lr() *
+        pow(this->param_.gamma(), current_step);
   } else if (lr_policy == "exp") {
     rate = this->param_.base_lr() * pow(this->param_.gamma(), this->iter_);
   } else if (lr_policy == "inv") {

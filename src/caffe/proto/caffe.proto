@@ -85,7 +85,9 @@ message NetParameter {
 
 message SolverParameter {
   optional float base_lr = 1; // The base learning rate
-  optional int32 display = 2; // display options. 0 = no display
+  // the number of iterations between displaying info. If display = 0, no info
+  // will be displayed.
+  optional int32 display = 2;
   optional int32 max_iter = 3; // the maximum number of iterations
   optional int32 snapshot = 4 [default = 0]; // The snapshot interval
   optional string lr_policy = 5; // The learning rate decay policy.
@@ -95,6 +97,7 @@ message SolverParameter {
   optional float power = 9; // The parameter to compute the learning rate.
   optional float momentum = 10; // The momentum value.
   optional float weight_decay = 11; // The weight decay.
+  optional float stepsize = 12; // the stepsize for learning rate policy "step"
 
-  optional string snapshot_prefix = 12; // The prefix for the snapshot.
+  optional string snapshot_prefix = 13; // The prefix for the snapshot.
 }
