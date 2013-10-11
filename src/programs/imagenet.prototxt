@@ -7,7 +7,7 @@ layers {
     batchsize: 96
     subtraction: 114
     cropsize: 227
-    mirror: true
+    mirror: false
   }
   top: "data"
   top: "label"

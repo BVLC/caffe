@@ -114,6 +114,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   // get the learning rate
   Dtype rate = GetLearningRate();
+  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+    LOG(ERROR) << "Iteration " << this->iter_ << ", lr = " << rate;
+  }
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
   // LOG(ERROR) << "rate:" << rate << " momentum:" << momentum
