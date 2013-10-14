@@ -39,7 +39,7 @@ template <typename Dtype>
 __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
-    out[index] = max(in[index], Dtype(0.));
+    out[index] = in[index] > 0 ? in[index] : 0;
   }
 }
 
