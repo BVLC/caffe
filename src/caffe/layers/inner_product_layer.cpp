@@ -49,7 +49,7 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
           GetFiller<Dtype>(this->layer_param_.bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
     }
-  } // parameter initialization
+  }  // parameter initialization
   // Setting up the bias multiplier
   if (biasterm_) {
     bias_multiplier_.reset(new SyncedMemory(M_ * sizeof(Dtype)));

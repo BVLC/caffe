@@ -1,10 +1,10 @@
-base_lr: 0.02
+base_lr: 0.01
 lr_policy: "step"
 gamma: 0.1
 stepsize: 340000
-display: 100
+display: 20
 max_iter: 1200000
 momentum: 0.9
 weight_decay: 0.0005
-snapshot: 15000
+snapshot: 5000
 snapshot_prefix: "alexnet_train"

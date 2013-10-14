@@ -26,7 +26,7 @@ class SolverTest : public ::testing::Test {};
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(SolverTest, Dtypes);
 
-TYPED_TEST(SolverTest, TestSolve) {
+TYPED_TEST(SolverTest, TestSolveGPU) {
   Caffe::set_mode(Caffe::GPU);
 
   NetParameter net_param;
@@ -41,10 +41,10 @@ TYPED_TEST(SolverTest, TestSolve) {
   EXPECT_EQ(caffe_net.blob_names().size(), 3);
 
   // Run the network without training.
-  LOG(ERROR) << "Performing Forward";
+  LOG(INFO) << "Performing Forward";
   caffe_net.Forward(bottom_vec);
-  LOG(ERROR) << "Performing Backward";
-  LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
+  LOG(INFO) << "Performing Backward";
+  LOG(INFO) << "Initial loss: " << caffe_net.Backward();
 
   SolverParameter solver_param;
   solver_param.set_base_lr(0.1);
@@ -55,13 +55,62 @@ TYPED_TEST(SolverTest, TestSolve) {
   solver_param.set_power(0.75);
   solver_param.set_momentum(0.9);
 
-  LOG(ERROR) << "Starting Optimization";
+  LOG(INFO) << "Starting Optimization";
   SGDSolver<TypeParam> solver(solver_param);
   solver.Solve(&caffe_net);
-  LOG(ERROR) << "Optimization Done.";
-  LOG(ERROR) << "Weight: " << caffe_net.params()[0]->cpu_data()[0] << ", "
+  LOG(INFO) << "Optimization Done.";
+  LOG(INFO) << "Weight: " << caffe_net.params()[0]->cpu_data()[0] << ", "
       << caffe_net.params()[0]->cpu_data()[1];
-  LOG(ERROR) << "Bias: " << caffe_net.params()[1]->cpu_data()[0];
+  LOG(INFO) << "Bias: " << caffe_net.params()[1]->cpu_data()[0];
+
+  EXPECT_GE(caffe_net.params()[0]->cpu_data()[0], 0.3);
+  EXPECT_LE(caffe_net.params()[0]->cpu_data()[0], 0.35);
+
+  EXPECT_GE(caffe_net.params()[0]->cpu_data()[1], 0.3);
+  EXPECT_LE(caffe_net.params()[0]->cpu_data()[1], 0.35);
+
+  EXPECT_GE(caffe_net.params()[1]->cpu_data()[0], -0.01);
+  EXPECT_LE(caffe_net.params()[1]->cpu_data()[0], 0.01);
+}
+
+
+
+TYPED_TEST(SolverTest, TestSolveCPU) {
+  Caffe::set_mode(Caffe::CPU);
+
+  NetParameter net_param;
+  ReadProtoFromTextFile("data/linear_regression.prototxt",
+      &net_param);
+  // check if things are right
+  EXPECT_EQ(net_param.layers_size(), 3);
+  EXPECT_EQ(net_param.input_size(), 0);
+  vector<Blob<TypeParam>*> bottom_vec;
+  Net<TypeParam> caffe_net(net_param, bottom_vec);
+  EXPECT_EQ(caffe_net.layer_names().size(), 3);
+  EXPECT_EQ(caffe_net.blob_names().size(), 3);
+
+  // Run the network without training.
+  LOG(INFO) << "Performing Forward";
+  caffe_net.Forward(bottom_vec);
+  LOG(INFO) << "Performing Backward";
+  LOG(INFO) << "Initial loss: " << caffe_net.Backward();
+
+  SolverParameter solver_param;
+  solver_param.set_base_lr(0.1);
+  solver_param.set_display(0);
+  solver_param.set_max_iter(100);
+  solver_param.set_lr_policy("inv");
+  solver_param.set_gamma(1.);
+  solver_param.set_power(0.75);
+  solver_param.set_momentum(0.9);
+
+  LOG(INFO) << "Starting Optimization";
+  SGDSolver<TypeParam> solver(solver_param);
+  solver.Solve(&caffe_net);
+  LOG(INFO) << "Optimization Done.";
+  LOG(INFO) << "Weight: " << caffe_net.params()[0]->cpu_data()[0] << ", "
+      << caffe_net.params()[0]->cpu_data()[1];
+  LOG(INFO) << "Bias: " << caffe_net.params()[1]->cpu_data()[0];
 
   EXPECT_GE(caffe_net.params()[0]->cpu_data()[0], 0.3);
   EXPECT_LE(caffe_net.params()[0]->cpu_data()[0], 0.35);

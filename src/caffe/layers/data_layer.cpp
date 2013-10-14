@@ -47,10 +47,12 @@ void* DataLayerPrefetch(void* layer_pointer) {
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < cropsize; ++h) {
             for (int w = 0; w < cropsize; ++w) {
-              top_data[((itemid * channels + c) * cropsize + h) * cropsize + cropsize - 1 - w] =
-                  static_cast<Dtype>((uint8_t)data[
-                      (c * height + h + h_offset) * width + w + w_offset]
-                  ) * scale - subtraction;
+              top_data[((itemid * channels + c) * cropsize + h) * cropsize
+                       + cropsize - 1 - w] =
+                  static_cast<Dtype>(
+                      (uint8_t)data[(c * height + h + h_offset) * width
+                                    + w + w_offset])
+                  * scale - subtraction;
             }
           }
         }
@@ -59,10 +61,11 @@ void* DataLayerPrefetch(void* layer_pointer) {
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < cropsize; ++h) {
             for (int w = 0; w < cropsize; ++w) {
-              top_data[((itemid * channels + c) * cropsize + h) * cropsize + w] =
-                  static_cast<Dtype>((uint8_t)data[
-                      (c * height + h + h_offset) * width + w + w_offset]
-                  ) * scale - subtraction;
+              top_data[((itemid * channels + c) * cropsize + h) * cropsize + w]
+                  = static_cast<Dtype>(
+                      (uint8_t)data[(c * height + h + h_offset) * width
+                                    + w + w_offset])
+                  * scale - subtraction;
             }
           }
         }
@@ -146,10 +149,10 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(datum_height_, cropsize);
   CHECK_GT(datum_width_, cropsize);
   // Now, start the prefetch thread.
-  //LOG(INFO) << "Initializing prefetch";
-  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>, (void*)this))
-      << "Pthread execution failed.";
-  //LOG(INFO) << "Prefetch initialized.";
+  // LOG(INFO) << "Initializing prefetch";
+  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
+      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  // LOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>
@@ -163,8 +166,8 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   memcpy((*top)[1]->mutable_cpu_data(), prefetch_label_->cpu_data(),
       sizeof(Dtype) * prefetch_label_->count());
   // Start a new prefetch thread
-  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>, (void*)this))
-      << "Pthread execution failed.";
+  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
+      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
 }
 
 template <typename Dtype>
@@ -173,13 +176,15 @@ void DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
   // Copy the data
-  CUDA_CHECK(cudaMemcpy((*top)[0]->mutable_gpu_data(), prefetch_data_->cpu_data(),
-      sizeof(Dtype) * prefetch_data_->count(), cudaMemcpyHostToDevice));
-  CUDA_CHECK(cudaMemcpy((*top)[1]->mutable_gpu_data(), prefetch_label_->cpu_data(),
-      sizeof(Dtype) * prefetch_label_->count(), cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy((*top)[0]->mutable_gpu_data(),
+      prefetch_data_->cpu_data(), sizeof(Dtype) * prefetch_data_->count(),
+      cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy((*top)[1]->mutable_gpu_data(),
+      prefetch_label_->cpu_data(), sizeof(Dtype) * prefetch_label_->count(),
+      cudaMemcpyHostToDevice));
   // Start a new prefetch thread
-  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>, (void*)this))
-      << "Pthread execution failed.";
+  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
+      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
 }
 
 // The backward operations are dummy - they do not carry any computation.

@@ -43,18 +43,14 @@ private:\
 
 namespace caffe {
 
-// Two classes whose purpose are solely for instantiating blob template
-// functions.
-class GPUBrewer {};
-class CPUBrewer {};
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
 
 
-// For backward compatibility we will just use 512 threads per block
-const int CAFFE_CUDA_NUM_THREADS = 512;
+// We will use 1024 threads per block, which requires cuda sm_2x or above.
+const int CAFFE_CUDA_NUM_THREADS = 1024;
 
 
 inline int CAFFE_GET_BLOCKS(const int N) {

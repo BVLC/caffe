@@ -8,8 +8,6 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#define CAFFE_MAX_POOLING_THRESHOLD 1e-8f
-
 using std::max;
 using std::min;
 
@@ -135,9 +133,8 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               for (int w = wstart; w < wend; ++w) {
                 bottom_diff[h * WIDTH_ + w] +=
                     top_diff[ph * POOLED_WIDTH_ + pw] *
-                    (bottom_data[h * WIDTH_ + w] >=
-                        top_data[ph * POOLED_WIDTH_ + pw] -
-                        CAFFE_MAX_POOLING_THRESHOLD);
+                    (bottom_data[h * WIDTH_ + w] ==
+                        top_data[ph * POOLED_WIDTH_ + pw]);
               }
             }
           }

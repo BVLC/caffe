@@ -4,7 +4,7 @@ layers {
     name: "data"
     type: "data"
     source: "/home/jiayq/caffe-train-leveldb"
-    batchsize: 96
+    batchsize: 128
     subtraction: 114
     cropsize: 227
     mirror: true
@@ -27,6 +27,8 @@ layers {
       type: "constant"
       value: 0
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "data"
   top: "conv1"
@@ -85,6 +87,8 @@ layers {
       type: "constant"
       value: 1
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "pad2"
   top: "conv2"
@@ -142,6 +146,8 @@ layers {
       type: "constant"
       value: 0
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "pad3"
   top: "conv3"
@@ -178,6 +184,8 @@ layers {
       type: "constant"
       value: 1
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "pad4"
   top: "conv4"
@@ -214,6 +222,8 @@ layers {
       type: "constant"
       value: 1
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "pad5"
   top: "conv5"
@@ -250,6 +260,8 @@ layers {
       type: "constant"
       value: 1
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "pool5"
   top: "fc6"
@@ -284,6 +296,8 @@ layers {
       type: "constant"
       value: 1
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "drop6"
   top: "fc7"
@@ -318,6 +332,8 @@ layers {
       type: "constant"
       value: 0
     }
+    blobs_lr: 1.
+    blobs_lr: 2.
   }
   bottom: "drop7"
   top: "fc8"

@@ -1,6 +1,6 @@
 // Copyright 2013 Yangqing Jia
 
-#ifndef _CAFFE_UTIL__IM2COL_HPP_
+#ifndef _CAFFE_UTIL_IM2COL_HPP_
 #define _CAFFE_UTIL_IM2COL_HPP_
 
 namespace caffe {
