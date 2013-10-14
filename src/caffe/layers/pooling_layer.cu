@@ -6,8 +6,6 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
-#define CAFFE_MAX_POOLING_THRESHOLD 1e-8f
-
 using std::max;
 using std::min;
 
@@ -116,8 +114,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* bottom_data,
     for (int ph = phstart; ph < phend; ++ph) {
       for (int pw = pwstart; pw < pwend; ++pw) {
         gradient += top_diff[ph * pooled_width + pw] *
-            (bottom_datum >= top_data[ph * pooled_width + pw] -
-                CAFFE_MAX_POOLING_THRESHOLD);
+            (bottom_datum == top_data[ph * pooled_width + pw]);
       }
     }
     bottom_diff[index] = gradient;
