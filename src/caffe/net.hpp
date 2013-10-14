@@ -57,7 +57,9 @@ class Net {
   inline vector<vector<Blob<Dtype>*> >& bottom_vecs() { return bottom_vecs_; }
   inline vector<vector<Blob<Dtype>*> >& top_vecs() { return top_vecs_; }
   // returns the parameters
-  vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
+  inline vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
+  // returns the parameter learning rate multipliers
+  inline vector<float>& params_lr() {return params_lr_; }
   // Updates the network
   void Update();
 
@@ -82,7 +84,8 @@ class Net {
   string name_;
   // The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
-
+  // the learning rate multipliers
+  vector<float> params_lr_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

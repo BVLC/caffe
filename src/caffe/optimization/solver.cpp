@@ -17,7 +17,6 @@ using std::min;
 
 namespace caffe {
 
-
 template <typename Dtype>
 void Solver<Dtype>::Solve(Net<Dtype>* net) {
   net_ = net;
@@ -112,6 +111,7 @@ void SGDSolver<Dtype>::PreSolve() {
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_lr = this->net_->params_lr();
   // get the learning rate
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
@@ -120,17 +120,19 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
   // LOG(ERROR) << "rate:" << rate << " momentum:" << momentum
-  //     << " weight_decay:" << weight_decay;
+  //    << " weight_decay:" << weight_decay;
   switch (Caffe::mode()) {
   case Caffe::CPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
       // Compute the value to history, and then copy them to the blob's diff.
-      caffe_axpby(net_params[param_id]->count(), rate,
+      Dtype local_rate = rate * net_params_lr[param_id];
+      caffe_axpby(net_params[param_id]->count(), local_rate,
           net_params[param_id]->cpu_diff(), momentum,
           history_[param_id]->mutable_cpu_data());
       if (weight_decay) {
         // add weight decay
-        caffe_axpy(net_params[param_id]->count(), weight_decay * rate,
+        caffe_axpy(net_params[param_id]->count(),
+            weight_decay * local_rate,
             net_params[param_id]->cpu_data(),
             history_[param_id]->mutable_cpu_data());
       }
@@ -143,12 +145,14 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   case Caffe::GPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
       // Compute the value to history, and then copy them to the blob's diff.
-      caffe_gpu_axpby(net_params[param_id]->count(), rate,
+      Dtype local_rate = rate * net_params_lr[param_id];
+      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
           net_params[param_id]->gpu_diff(), momentum,
           history_[param_id]->mutable_gpu_data());
       if (weight_decay) {
         // add weight decay
-        caffe_gpu_axpy(net_params[param_id]->count(), weight_decay * rate,
+        caffe_gpu_axpy(net_params[param_id]->count(),
+            weight_decay * local_rate,
             net_params[param_id]->gpu_data(),
             history_[param_id]->mutable_gpu_data());
       }

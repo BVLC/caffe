@@ -71,6 +71,9 @@ message LayerParameter {
 
   // The blobs containing the numeric parameters of the layer
   repeated BlobProto blobs = 50;
+  // The ratio that is multiplied on the global learning rate. If you want to set
+  // the learning ratio for one blob, you need to set it for all blobs.
+  repeated float blobs_lr = 51;
 }
 
 message LayerConnection {

@@ -85,7 +85,7 @@ Net<Dtype>::Net(const NetParameter& param,
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
   }
 
-  LOG(ERROR) << "Setting up the layers.";
+  LOG(INFO) << "Setting up the layers.";
   for (int i = 0; i < layers_.size(); ++i) {
     LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
@@ -93,14 +93,26 @@ Net<Dtype>::Net(const NetParameter& param,
     for (int j = 0; j < layer_blobs.size(); ++j) {
       params_.push_back(layer_blobs[j]);
     }
+    // push the learning rate mutlipliers
+    if (layers_[i]->layer_param().blobs_lr_size()) {
+      CHECK_EQ(layers_[i]->layer_param().blobs_lr_size(), layer_blobs.size());
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        float local_lr = layers_[i]->layer_param().blobs_lr(j);
+        CHECK_GT(local_lr, 0.);
+        params_lr_.push_back(local_lr);
+      }
+    } else {
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        params_lr_.push_back(1.);
+      }
+    }
     for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
       LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->channels() << " "
           << top_vecs_[i][topid]->height() << " "
           << top_vecs_[i][topid]->width();
     }
   }
-
-  LOG(ERROR) << "Network initialization done.";
+  LOG(INFO) << "Network initialization done.";
 }
 
 template <typename Dtype>
