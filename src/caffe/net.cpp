@@ -64,17 +64,30 @@ Net<Dtype>::Net(const NetParameter& param,
     }
     for (int j = 0; j < layer_connection.top_size(); ++j) {
       const string& blob_name = layer_connection.top(j);
-      if (blob_name_to_idx.find(blob_name) != blob_name_to_idx.end()) {
+      // Check if we are doing in-place computation
+      if (layer_connection.bottom_size() > j &&
+          blob_name == layer_connection.bottom(j)) {
+        // In-place computation
+        LOG(INFO) << layer_param.name() << " -> " << blob_name << " (in-place)";
+        available_blobs.insert(blob_name);
+        top_vecs_[i].push_back(
+            blobs_[blob_name_to_idx[blob_name]].get());
+        top_id_vecs_[i].push_back(blob_name_to_idx[blob_name]);
+      } else if (blob_name_to_idx.find(blob_name) != blob_name_to_idx.end()) {
+        // If we are not doing in-place computation but has duplicated blobs,
+        // raise an error.
         LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
+      } else {
+        // Normal output.
+        LOG(INFO) << layer_param.name() << " -> " << blob_name;
+        shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+        blobs_.push_back(blob_pointer);
+        blob_names_.push_back(blob_name);
+        blob_name_to_idx[blob_name] = blob_names_.size() - 1;
+        available_blobs.insert(blob_name);
+        top_vecs_[i].push_back(blobs_[blob_names_.size() - 1].get());
+        top_id_vecs_[i].push_back(blob_names_.size() - 1);
       }
-      LOG(INFO) << layer_param.name() << " -> " << blob_name;
-      shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
-      blobs_.push_back(blob_pointer);
-      blob_names_.push_back(blob_name);
-      blob_name_to_idx[blob_name] = blob_names_.size() - 1;
-      available_blobs.insert(blob_name);
-      top_vecs_[i].push_back(blobs_[blob_names_.size() - 1].get());
-      top_id_vecs_[i].push_back(blob_names_.size() - 1);
     }
   }
   // In the end, all remaining blobs are considered output blobs.
