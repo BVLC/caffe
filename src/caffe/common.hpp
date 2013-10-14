@@ -49,8 +49,8 @@ namespace caffe {
 using boost::shared_ptr;
 
 
-// For backward compatibility we will just use 512 threads per block
-const int CAFFE_CUDA_NUM_THREADS = 512;
+// We will use 1024 threads per block, which requires cuda sm_2x or above.
+const int CAFFE_CUDA_NUM_THREADS = 1024;
 
 
 inline int CAFFE_GET_BLOCKS(const int N) {

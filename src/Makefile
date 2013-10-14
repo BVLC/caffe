@@ -31,7 +31,7 @@ TEST_BINS := ${TEST_OBJS:.o=.testbin}
 
 # define third-party library paths
 CUDA_DIR := /usr/local/cuda
-CUDA_ARCH := -arch=sm_20
+CUDA_ARCH := -arch=sm_30
 MKL_DIR := /opt/intel/mkl
 
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
