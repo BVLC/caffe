@@ -12,7 +12,7 @@
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
-#include "caffe/optimization/solver.hpp"
+#include "caffe/solver.hpp"
 
 using namespace caffe;
 

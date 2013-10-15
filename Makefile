@@ -6,12 +6,12 @@ TEST_GPUID := 1
 NAME := lib$(PROJECT).so
 STATIC_NAME := lib$(PROJECT).a
 # All source files
-CXX_SRCS := $(shell find caffe ! -name "test_*.cpp" -name "*.cpp")
-CU_SRCS := $(shell find caffe -name "*.cu")
-TEST_SRCS := $(shell find caffe -name "test_*.cpp")
-GTEST_SRC := gtest/gtest-all.cpp
-PROGRAM_SRCS := $(shell find programs -name "*.cpp")
-PROTO_SRCS := $(wildcard caffe/proto/*.proto)
+CXX_SRCS := $(shell find src/caffe ! -name "test_*.cpp" -name "*.cpp")
+CU_SRCS := $(shell find src/caffe -name "*.cu")
+TEST_SRCS := $(shell find src/caffe -name "test_*.cpp")
+GTEST_SRC := src/gtest/gtest-all.cpp
+EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
+PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
 # The generated files for protocol buffers
 PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}
 PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
@@ -22,11 +22,11 @@ CU_OBJS := ${CU_SRCS:.cu=.cuo}
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # program and test objects
-PROGRAM_OBJS := ${PROGRAM_SRCS:.cpp=.o}
+EXAMPLE_OBJS := ${EXAMPLE_SRCS:.cpp=.o}
 TEST_OBJS := ${TEST_SRCS:.cpp=.o}
 GTEST_OBJ := ${GTEST_SRC:.cpp=.o}
 # program and test bins
-PROGRAM_BINS :=${PROGRAM_OBJS:.o=.bin}
+EXAMPLE_BINS :=${EXAMPLE_OBJS:.o=.bin}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
 
 # define third-party library paths
@@ -40,10 +40,11 @@ MKL_INCLUDE_DIR := $(MKL_DIR)/include
 MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 # define inclue and libaries
-INCLUDE_DIRS := . /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
-LIBRARY_DIRS := . /usr/lib /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
+# We put src here just for gtest
+INCLUDE_DIRS := ./src ./include /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
+LIBRARY_DIRS := /usr/lib /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
 LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread curand \
-		leveldb snappy pthread tcmalloc
+		leveldb snappy pthread
 WARNINGS := -Wall
 
 COMMON_FLAGS := $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
@@ -54,16 +55,16 @@ LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 
 NVCC = nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
-.PHONY: all test clean distclean linecount program
+.PHONY: all test clean distclean linecount examples distribute
 
-all: $(NAME) $(STATIC_NAME) test program
+all: $(NAME) $(STATIC_NAME) test examples
 
 linecount: clean
-	cloc --read-lang-def=caffe.cloc caffe/
+	cloc --read-lang-def=caffe.cloc src/caffe/
 
 test: $(TEST_BINS)
 
-program: $(PROGRAM_BINS)
+examples: $(EXAMPLE_BINS)
 
 $(NAME): $(PROTO_OBJS) $(OBJS)
 	$(CXX) -shared $(OBJS) -o $(NAME) $(LDFLAGS) $(WARNINGS)
@@ -77,22 +78,34 @@ runtest: test
 $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME)
 	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
 
-$(PROGRAM_BINS): %.bin : %.o $(STATIC_NAME)
+$(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
 
 $(OBJS): $(PROTO_GEN_CC)
 
-$(PROGRAM_OBJS): $(PROTO_GEN_CC)
+$(EXAMPLE_OBJS): $(PROTO_GEN_CC)
 
 $(CU_OBJS): %.cuo: %.cu
 	$(NVCC) -c $< -o $@
 
 $(PROTO_GEN_CC): $(PROTO_SRCS)
-	protoc $(PROTO_SRCS) --cpp_out=. --python_out=.
+	protoc --proto_path=src --cpp_out=src --python_out=src $(PROTO_SRCS)
+	mkdir -p include/caffe/proto
+	cp $(PROTO_GEN_HEADER) include/caffe/proto/
 
 clean:
-	@- $(RM) $(NAME) $(STATIC_NAME) $(TEST_BINS) $(PROGRAM_BINS)
-	@- $(RM) $(OBJS) $(TEST_OBJS) $(PROGRAM_OBJS)
+	@- $(RM) $(NAME) $(STATIC_NAME) $(TEST_BINS) $(EXAMPLE_BINS)
+	@- $(RM) $(OBJS) $(TEST_OBJS) $(EXAMPLE_OBJS)
 	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)
+	@- $(RM) -rf build
 
 distclean: clean
+
+distribute: all
+	mkdir build
+	cp -r include build/
+	mkdir build/bin
+	cp $(EXAMPLE_BINS) build/bin
+	mkdir build/lib
+	cp $(NAME) build/lib
+	cp $(STATIC_NAME) build/lib
