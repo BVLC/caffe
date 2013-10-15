@@ -18,11 +18,17 @@ using std::min;
 namespace caffe {
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(Net<Dtype>* net) {
+void Solver<Dtype>::Solve(Net<Dtype>* net, char* resume_file) {
   net_ = net;
   LOG(INFO) << "Solving " << net_->name();
   PreSolve();
+
   iter_ = 0;
+  if (resume_file) {
+    LOG(INFO) << "Restoring previous solver status from " << resume_file;
+    Restore(resume_file);
+  }
+
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
@@ -56,8 +62,26 @@ void Solver<Dtype>::Snapshot(bool is_final) {
     sprintf(iter_str_buffer, "_iter_%d", iter_);
     filename += iter_str_buffer;
   }
-  LOG(ERROR) << "Snapshotting to " << filename;
+  LOG(INFO) << "Snapshotting to " << filename;
   WriteProtoToBinaryFile(net_param, filename.c_str());
+  SolverState state;
+  SnapshotSolverState(&state);
+  state.set_iter(iter_);
+  state.set_learned_net(filename);
+  filename += ".solverstate";
+  LOG(INFO) << "Snapshotting solver state to " << filename;
+  WriteProtoToBinaryFile(state, filename.c_str());
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Restore(char* state_file) {
+  SolverState state;
+  NetParameter net_param;
+  ReadProtoFromBinaryFile(state_file, &state);
+  ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
+  net_->CopyTrainedLayersFrom(net_param);
+  iter_ = state.iter();
+  RestoreSolverState(state);
 }
 
 
@@ -167,6 +191,24 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   }
 }
 
+template <typename Dtype>
+void SGDSolver<Dtype>::SnapshotSolverState(SolverState* state) {
+  state->clear_history();
+  for (int i = 0; i < history_.size(); ++i) {
+    // Add history
+    BlobProto* history_blob = state->add_history();
+    history_[i]->ToProto(history_blob);
+  }
+}
+
+template <typename Dtype>
+void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
+  CHECK_EQ(state.history_size(), history_.size())
+      << "Incorrect length of history blobs.";
+  for (int i = 0; i < history_.size(); ++i) {
+    history_[i]->FromProto(state.history(i));
+  }
+}
 
 INSTANTIATE_CLASS(Solver);
 INSTANTIATE_CLASS(SGDSolver);

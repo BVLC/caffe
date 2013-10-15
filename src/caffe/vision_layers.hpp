@@ -274,6 +274,7 @@ class DataLayer : public Layer<Dtype> {
   pthread_t thread_;
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
+  Blob<Dtype> data_mean_;
 };
 
 

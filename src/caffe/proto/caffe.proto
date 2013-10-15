@@ -105,4 +105,22 @@ message SolverParameter {
   optional float stepsize = 12; // the stepsize for learning rate policy "step"
 
   optional string snapshot_prefix = 13; // The prefix for the snapshot.
+
+  // Adagrad solver parameters
+  // For Adagrad, we will first run normal sgd using the sgd parameters above
+  // for adagrad_skip iterations, and then kick in the adagrad algorithm, with
+  // the learning rate being adagrad_gamma * adagrad_skip. Note that the adagrad
+  // algorithm will NOT use the learning rate multiplier that is specified in
+  // the layer parameter specifications, as it will adjust the learning rate
+  // of individual parameters in a data-dependent way.
+  //    WORK IN PROGRESS: not actually implemented yet.
+  optional float adagrad_gamma = 14; // adagrad learning rate multiplier
+  optional float adagrad_skip = 15; // the steps to skip before adagrad kicks in
+}
+
+// A message that stores the solver snapshots
+message SolverState {
+  optional int32 iter = 1; // The current iteration
+  optional string learned_net = 2; // The file that stores the learned net.
+  repeated BlobProto history = 3; // The history for sgd solvers
 }

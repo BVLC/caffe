@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/layer_factory.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 
 using std::pair;

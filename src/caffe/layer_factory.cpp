@@ -54,6 +54,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   return (Layer<Dtype>*)(NULL);
 }
 
+template Layer<float>* GetLayer(const LayerParameter& param);
+template Layer<double>* GetLayer(const LayerParameter& param);
 
 }  // namespace caffe
 
