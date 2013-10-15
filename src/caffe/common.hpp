@@ -43,7 +43,6 @@ private:\
 
 namespace caffe {
 
-
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
@@ -61,13 +60,6 @@ inline int CAFFE_GET_BLOCKS(const int N) {
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
 class Caffe {
- private:
-  // The private constructor to avoid duplicate instantiation.
-  Caffe();
-
- protected:
-  static shared_ptr<Caffe> singleton_;
-
  public:
   ~Caffe();
   inline static Caffe& Get() {
@@ -106,6 +98,11 @@ class Caffe {
   VSLStreamStatePtr vsl_stream_;
   Brew mode_;
   Phase phase_;
+  static shared_ptr<Caffe> singleton_;
+
+ private:
+  // The private constructor to avoid duplicate instantiation.
+  Caffe();
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
