@@ -94,6 +94,8 @@ void* DataLayerPrefetch(void* layer_pointer) {
       layer->iter_->SeekToFirst();
     }
   }
+
+  return (void*)NULL;
 }
 
 
