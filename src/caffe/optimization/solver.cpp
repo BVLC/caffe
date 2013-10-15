@@ -38,8 +38,8 @@ void Solver<Dtype>::Solve(Net<Dtype>* net, char* resume_file) {
     net_->Update();
 
     // Check if we need to do snapshot
-    if (param_.snapshot() > 0 && iter_ % param_.snapshot() == 0) {
-      Snapshot(false);
+    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
+      Snapshot();
     }
     if (param_.display() && iter_ % param_.display() == 0) {
       LOG(ERROR) << "Iteration " << iter_ << ", loss = " << loss;
@@ -50,18 +50,14 @@ void Solver<Dtype>::Solve(Net<Dtype>* net, char* resume_file) {
 
 
 template <typename Dtype>
-void Solver<Dtype>::Snapshot(bool is_final) {
+void Solver<Dtype>::Snapshot() {
   NetParameter net_param;
   // For intermediate results, we will also dump the gradient values.
-  net_->ToProto(&net_param, !is_final);
+  net_->ToProto(&net_param, param_.snapshot_diff());
   string filename(param_.snapshot_prefix());
-  if (is_final) {
-    filename += "_final";
-  } else {
-    char iter_str_buffer[20];
-    sprintf(iter_str_buffer, "_iter_%d", iter_);
-    filename += iter_str_buffer;
-  }
+  char iter_str_buffer[20];
+  sprintf(iter_str_buffer, "_iter_%d", iter_);
+  filename += iter_str_buffer;
   LOG(INFO) << "Snapshotting to " << filename;
   WriteProtoToBinaryFile(net_param, filename.c_str());
   SolverState state;

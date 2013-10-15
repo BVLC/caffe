@@ -11,14 +11,7 @@ NEURON_LAYER_STYLE = {'shape': 'record', 'fillcolor': '#90EE90',
 BLOB_STYLE = {'shape': 'octagon', 'fillcolor': '#F0E68C',
         'style': 'filled'}
 
-def draw_net(caffe_net, ext='png'):
-  """Draws a caffe net and returns the image string encoded using the given
-  extension.
-
-  Input:
-    caffe_net: a caffe.proto.caffe_pb2.NetParameter protocol buffer.
-    ext: the image extension. Default 'png'.
-  """
+def get_pydot_graph(caffe_net):
   pydot_graph = pydot.Dot(caffe_net.name, graph_type='digraph')
   pydot_nodes = {}
   pydot_edges = []
@@ -47,11 +40,22 @@ def draw_net(caffe_net, ext='png'):
   for edge in pydot_edges:
     pydot_graph.add_edge(
         pydot.Edge(pydot_nodes[edge[0]], pydot_nodes[edge[1]]))
-  return pydot_graph.create(format=ext)
+  return pydot_graph
+
+def draw_net(caffe_net, ext='png'):
+  """Draws a caffe net and returns the image string encoded using the given
+  extension.
+
+  Input:
+    caffe_net: a caffe.proto.caffe_pb2.NetParameter protocol buffer.
+    ext: the image extension. Default 'png'.
+  """
+  return get_pydot_graph(caffe_net).create(format=ext)
 
 def draw_net_to_file(caffe_net, filename):
   """Draws a caffe net, and saves it to file using the format given as the
-  file extension.
+  file extension. Use '.raw' to output raw text that you can manually feed
+  to graphviz to draw graphs.
   """
   ext = filename[filename.rfind('.')+1:]
   with open(filename, 'w') as fid:
