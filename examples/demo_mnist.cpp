@@ -26,12 +26,12 @@ int main(int argc, char** argv) {
   }
   google::InitGoogleLogging(argv[0]);
 
-  if (argc == 4) {
-    if (strcmp(argv[3], "GPU") == 0) {
-      Caffe::set_mode(Caffe::GPU);
-    } else {
-      Caffe::set_mode(Caffe::CPU);
-    }
+  if (argc == 4 && strcmp(argv[3], "GPU") == 0) {
+    LOG(ERROR) << "Using GPU";
+    Caffe::set_mode(Caffe::GPU);
+  } else {
+    LOG(ERROR) << "Using CPU";
+    Caffe::set_mode(Caffe::CPU);
   }
 
   // Start training
