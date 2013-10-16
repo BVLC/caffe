@@ -1,10 +1,12 @@
 // Copyright 2013 Yangqing Jia
+// This example shows how to run a modified version of LeNet using Caffe.
 
 #include <cuda_runtime.h>
 #include <fcntl.h>
 #include <google/protobuf/text_format.h>
 
 #include <cstring>
+#include <iostream>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -17,12 +19,26 @@
 using namespace caffe;
 
 int main(int argc, char** argv) {
-  cudaSetDevice(1);
-  Caffe::set_mode(Caffe::GPU);
+  if (argc < 3) {
+    std::cout << "Usage:" << std::endl;
+    std::cout << "demo_mnist.bin train_file test_file [CPU/GPU]" << std::endl;
+    return 0;
+  }
+  google::InitGoogleLogging(argv[0]);
+
+  if (argc == 4) {
+    if (strcmp(argv[3], "GPU") == 0) {
+      Caffe::set_mode(Caffe::GPU);
+    } else {
+      Caffe::set_mode(Caffe::CPU);
+    }
+  }
+
+  // Start training
   Caffe::set_phase(Caffe::TRAIN);
 
   NetParameter net_param;
-  ReadProtoFromTextFile("data/lenet.prototxt",
+  ReadProtoFromTextFile(argv[1],
       &net_param);
   vector<Blob<float>*> bottom_vec;
   Net<float> caffe_net(net_param, bottom_vec);
@@ -34,9 +50,11 @@ int main(int argc, char** argv) {
   LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
 
   SolverParameter solver_param;
+  // Solver Parameters are hard-coded in this case, but you can write a
+  // SolverParameter protocol buffer to specify all these values.
   solver_param.set_base_lr(0.01);
   solver_param.set_display(100);
-  solver_param.set_max_iter(6000);
+  solver_param.set_max_iter(5000);
   solver_param.set_lr_policy("inv");
   solver_param.set_gamma(0.0001);
   solver_param.set_power(0.75);
@@ -48,43 +66,23 @@ int main(int argc, char** argv) {
   solver.Solve(&caffe_net);
   LOG(ERROR) << "Optimization Done.";
 
-  // Run the network after training.
-  LOG(ERROR) << "Performing Forward";
-  caffe_net.Forward(bottom_vec);
-  LOG(ERROR) << "Performing Backward";
-  float loss = caffe_net.Backward();
-  LOG(ERROR) << "Final loss: " << loss;
-
+  // Write the trained network to a NetParameter protobuf. If you are training
+  // the model and saving it for later, this is what you want to serialize and
+  // store.
   NetParameter trained_net_param;
   caffe_net.ToProto(&trained_net_param);
 
-  NetParameter traintest_net_param;
-  ReadProtoFromTextFile("data/lenet_traintest.prototxt",
-      &traintest_net_param);
-  Net<float> caffe_traintest_net(traintest_net_param, bottom_vec);
-  caffe_traintest_net.CopyTrainedLayersFrom(trained_net_param);
-
+  // Now, let's starting doing testing.
   Caffe::set_phase(Caffe::TEST);
 
-  // Test run
-  double train_accuracy = 0;
-  int batch_size = traintest_net_param.layers(0).layer().batchsize();
-  for (int i = 0; i < 60000 / batch_size; ++i) {
-    const vector<Blob<float>*>& result =
-        caffe_traintest_net.Forward(bottom_vec);
-    train_accuracy += result[0]->cpu_data()[0];
-  }
-  train_accuracy /= 60000 / batch_size;
-  LOG(ERROR) << "Train accuracy:" << train_accuracy;
-
+  // Using the testing data to test the accuracy.
   NetParameter test_net_param;
-  ReadProtoFromTextFile("data/lenet_test.prototxt", &test_net_param);
+  ReadProtoFromTextFile(argv[2], &test_net_param);
   Net<float> caffe_test_net(test_net_param, bottom_vec);
   caffe_test_net.CopyTrainedLayersFrom(trained_net_param);
 
-  // Test run
   double test_accuracy = 0;
-  batch_size = test_net_param.layers(0).layer().batchsize();
+  int batch_size = test_net_param.layers(0).layer().batchsize();
   for (int i = 0; i < 10000 / batch_size; ++i) {
     const vector<Blob<float>*>& result =
         caffe_test_net.Forward(bottom_vec);

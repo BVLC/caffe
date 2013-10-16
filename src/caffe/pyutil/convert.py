@@ -4,6 +4,7 @@
 from caffe.proto import caffe_pb2
 import numpy as np
 
+
 def blobproto_to_array(blob, return_diff=False):
   """Convert a blob proto to an array. In default, we will just return the data,
   unless return_diff is True, in which case we will return the diff.
@@ -14,6 +15,7 @@ def blobproto_to_array(blob, return_diff=False):
   else:
     return np.array(blob.data).reshape(
         blob.num, blob.channels, blob.height, blob.width)
+
 
 def array_to_blobproto(arr, diff=None):
   """Converts a 4-dimensional array to blob proto. If diff is given, also
@@ -28,6 +30,7 @@ def array_to_blobproto(arr, diff=None):
   if diff is not None:
     blob.diff.extend(diff.astype(float).flat)
   return blob
+
 
 def array_to_datum(arr, label=0):
   """Converts a 3-dimensional array to datum. If the array has dtype uint8,
@@ -44,6 +47,7 @@ def array_to_datum(arr, label=0):
     datum.float_data.extend(arr.flat)
   datum.label = label
   return datum
+
 
 def datum_to_array(datum):
   """Converts a datum to an array. Note that the label is not returned,
