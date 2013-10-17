@@ -9,13 +9,7 @@
 
 #include <cstring>
 
-#include "caffe/blob.hpp"
-#include "caffe/common.hpp"
-#include "caffe/net.hpp"
-#include "caffe/filler.hpp"
-#include "caffe/proto/caffe.pb.h"
-#include "caffe/util/io.hpp"
-#include "caffe/solver.hpp"
+#include "caffe/caffe.hpp"
 
 using namespace caffe;
 

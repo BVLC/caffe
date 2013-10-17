@@ -2,7 +2,6 @@
 
 #include <glog/logging.h>
 #include <leveldb/db.h>
-#include <leveldb/write_batch.h>
 
 #include <string>
 
@@ -23,7 +22,7 @@ int main(int argc, char** argv) {
   leveldb::Iterator* it = db->NewIterator(read_options);
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     // just a dummy operation
-    volatile std::string value = it->value().ToString();
+    it->value().ToString();
     // LOG(ERROR) << it->key().ToString();
     if (++count % 10000 == 0) {
       LOG(ERROR) << "Processed " << count << " files.";
