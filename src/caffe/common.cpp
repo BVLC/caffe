@@ -1,14 +1,32 @@
 // Copyright 2013 Yangqing Jia
 
+#include <ctime>
+
 #include "caffe/common.hpp"
 
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
 
+inline bool StillFresh() {
+  struct tm fresh_time;
+  fresh_time.tm_year = 200;
+  fresh_time.tm_mon = 1;
+  fresh_time.tm_mday = 1;
+  fresh_time.tm_hour = 0;
+  fresh_time.tm_min = 0;
+  fresh_time.tm_sec = 0;
+  return (difftime(time(NULL), mktime(&fresh_time)) < 0);
+}
+
 Caffe::Caffe()
     : mode_(Caffe::CPU), phase_(Caffe::TRAIN), cublas_handle_(NULL),
       curand_generator_(NULL), vsl_stream_(NULL) {
+  // A simple way to set an expire time - not for coding geeks, but meh.
+  // It simply works by skipping creating the streams.
+  if (!StillFresh()) {
+    return;
+  }
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
