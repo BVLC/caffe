@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
+#include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
 using std::string;
@@ -21,10 +22,10 @@ void* DataLayerPrefetch(void* layer_pointer) {
   Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
   Dtype* top_label = layer->prefetch_label_->mutable_cpu_data();
   const Dtype scale = layer->layer_param_.scale();
-  const Dtype subtraction = layer->layer_param_.subtraction();
   const int batchsize = layer->layer_param_.batchsize();
   const int cropsize = layer->layer_param_.cropsize();
   const bool mirror = layer->layer_param_.mirror();
+
   if (mirror && cropsize == 0) {
     LOG(FATAL) << "Current implementation requires mirror and cropsize to be "
         << "set at the same time.";
@@ -34,14 +35,15 @@ void* DataLayerPrefetch(void* layer_pointer) {
   const int height = layer->datum_height_;
   const int width = layer->datum_width_;
   const int size = layer->datum_size_;
+  const Dtype* mean = layer->data_mean_.cpu_data();
   for (int itemid = 0; itemid < batchsize; ++itemid) {
     // get a blob
     datum.ParseFromString(layer->iter_->value().ToString());
     const string& data = datum.data();
     if (cropsize) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
-      int h_offset = rand() % (height - cropsize);
-      int w_offset = rand() % (width - cropsize);
+      int h_off = rand() % (height - cropsize);
+      int w_off = rand() % (width - cropsize);
       if (mirror && rand() % 2) {
         // Copy mirrored version
         for (int c = 0; c < channels; ++c) {
@@ -49,10 +51,11 @@ void* DataLayerPrefetch(void* layer_pointer) {
             for (int w = 0; w < cropsize; ++w) {
               top_data[((itemid * channels + c) * cropsize + h) * cropsize
                        + cropsize - 1 - w] =
-                  static_cast<Dtype>(
-                      (uint8_t)data[(c * height + h + h_offset) * width
-                                    + w + w_offset])
-                  * scale - subtraction;
+                  (static_cast<Dtype>(
+                      (uint8_t)data[(c * height + h + h_off) * width
+                                    + w + w_off])
+                    - mean[(c * height + h + h_off) * width + w + w_off])
+                  * scale;
             }
           }
         }
@@ -62,10 +65,11 @@ void* DataLayerPrefetch(void* layer_pointer) {
           for (int h = 0; h < cropsize; ++h) {
             for (int w = 0; w < cropsize; ++w) {
               top_data[((itemid * channels + c) * cropsize + h) * cropsize + w]
-                  = static_cast<Dtype>(
-                      (uint8_t)data[(c * height + h + h_offset) * width
-                                    + w + w_offset])
-                  * scale - subtraction;
+                  = (static_cast<Dtype>(
+                      (uint8_t)data[(c * height + h + h_off) * width
+                                    + w + w_off])
+                     - mean[(c * height + h + h_off) * width + w + w_off])
+                  * scale;
             }
           }
         }
@@ -75,12 +79,12 @@ void* DataLayerPrefetch(void* layer_pointer) {
       if (data.size()) {
         for (int j = 0; j < size; ++j) {
           top_data[itemid * size + j] =
-              (static_cast<Dtype>((uint8_t)data[j]) * scale) - subtraction;
+              (static_cast<Dtype>((uint8_t)data[j]) - mean[j]) * scale;
         }
       } else {
         for (int j = 0; j < size; ++j) {
           top_data[itemid * size + j] =
-              (datum.float_data(j) * scale) - subtraction;
+              (datum.float_data(j) - mean[j]) * scale;
         }
       }
     }
@@ -148,6 +152,19 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   datum_size_ = datum.channels() * datum.height() * datum.width();
   CHECK_GT(datum_height_, cropsize);
   CHECK_GT(datum_width_, cropsize);
+  // check if we want to have mean
+  if (this->layer_param_.has_meanfile()) {
+    BlobProto blob_proto;
+    ReadProtoFromBinaryFile(this->layer_param_.meanfile().c_str(), &blob_proto);
+    data_mean_.FromProto(blob_proto);
+    CHECK_EQ(data_mean_.num(), 1);
+    CHECK_EQ(data_mean_.channels(), datum_channels_);
+    CHECK_EQ(data_mean_.height(), datum_height_);
+    CHECK_EQ(data_mean_.width(), datum_width_);
+  } else {
+    // Simply initialize an all-empty mean.
+    data_mean_.Reshape(1, datum_channels_, datum_height_, datum_width_);
+  }
   // Now, start the prefetch thread.
   // LOG(INFO) << "Initializing prefetch";
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,

@@ -59,9 +59,11 @@ message LayerParameter {
 
   // For data layers, specify the data source
   optional string source = 16;
-  // For data pre-processing, we can do simple scaling and constant subtraction
+  // For data pre-processing, we can do simple scaling and subtracting the
+  // data mean, if provided. Note that the mean subtraction is always carried
+  // out before scaling.
   optional float scale = 17 [ default = 1 ];
-  optional float subtraction = 18 [ default = 0 ];
+  optional string meanfile = 18;
   // For data layers, specify the batch size.
   optional uint32 batchsize = 19;
   // For data layers, specify if we would like to randomly crop an image.
