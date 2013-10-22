@@ -155,6 +155,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // check if we want to have mean
   if (this->layer_param_.has_meanfile()) {
     BlobProto blob_proto;
+    LOG(INFO) << "Loading mean file from" << this->layer_param_.meanfile();
     ReadProtoFromBinaryFile(this->layer_param_.meanfile().c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
     CHECK_EQ(data_mean_.num(), 1);
