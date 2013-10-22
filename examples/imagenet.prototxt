@@ -4,7 +4,8 @@ layers {
     name: "data"
     type: "data"
     source: "/home/jiayq/caffe-train-leveldb"
-    batchsize: 128
+    meanfile: "/home/jiayq/ilsvrc2012_mean.binaryproto"
+    batchsize: 64
     cropsize: 227
     mirror: true
   }
@@ -24,7 +25,7 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.1
     }
     blobs_lr: 1.
     blobs_lr: 2.
@@ -84,7 +85,7 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.1
     }
     blobs_lr: 1.
     blobs_lr: 2.
@@ -143,7 +144,7 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.1
     }
     blobs_lr: 1.
     blobs_lr: 2.
@@ -181,7 +182,7 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.1
     }
     blobs_lr: 1.
     blobs_lr: 2.
@@ -219,7 +220,7 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.1
     }
     blobs_lr: 1.
     blobs_lr: 2.
@@ -257,7 +258,7 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.1
     }
     blobs_lr: 1.
     blobs_lr: 2.
@@ -293,7 +294,7 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 1
+      value: 0.1
     }
     blobs_lr: 1.
     blobs_lr: 2.
