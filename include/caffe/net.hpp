@@ -60,6 +60,7 @@ class Net {
   inline vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
   // returns the parameter learning rate multipliers
   inline vector<float>& params_lr() {return params_lr_; }
+  inline vector<float>& params_weight_decay() { return params_weight_decay_; }
   // Updates the network
   void Update();
 
@@ -86,6 +87,8 @@ class Net {
   vector<shared_ptr<Blob<Dtype> > > params_;
   // the learning rate multipliers
   vector<float> params_lr_;
+  // the weight decay multipliers
+  vector<float> params_weight_decay_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

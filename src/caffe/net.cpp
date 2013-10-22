@@ -119,6 +119,20 @@ Net<Dtype>::Net(const NetParameter& param,
         params_lr_.push_back(1.);
       }
     }
+    // push the weight decay multipliers
+    if (layers_[i]->layer_param().weight_decay_size()) {
+      CHECK_EQ(layers_[i]->layer_param().weight_decay_size(),
+          layer_blobs.size());
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        float local_decay = layers_[i]->layer_param().weight_decay(j);
+        CHECK_GT(local_decay, 0.);
+        params_weight_decay_.push_back(local_decay);
+      }
+    } else {
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        params_weight_decay_.push_back(1.);
+      }
+    }
     for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
       LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->channels() << " "
           << top_vecs_[i][topid]->height() << " "

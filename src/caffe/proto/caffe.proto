@@ -76,6 +76,8 @@ message LayerParameter {
   // The ratio that is multiplied on the global learning rate. If you want to set
   // the learning ratio for one blob, you need to set it for all blobs.
   repeated float blobs_lr = 51;
+  // The weight decay that is multiplied on the global weight decay.
+  repeated float weight_decay = 52;
 }
 
 message LayerConnection {

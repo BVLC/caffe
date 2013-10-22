@@ -5,7 +5,7 @@ layers {
     type: "data"
     source: "/home/jiayq/caffe-train-leveldb"
     meanfile: "/home/jiayq/ilsvrc2012_mean.binaryproto"
-    batchsize: 64
+    batchsize: 256
     cropsize: 227
     mirror: true
   }
@@ -25,10 +25,12 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0.1
+      value: 0.
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "data"
   top: "conv1"
@@ -85,10 +87,12 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0.1
+      value: 1.
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "pad2"
   top: "conv2"
@@ -144,10 +148,12 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0.1
+      value: 0.
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "pad3"
   top: "conv3"
@@ -182,10 +188,12 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0.1
+      value: 1.
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "pad4"
   top: "conv4"
@@ -220,10 +228,12 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0.1
+      value: 1.
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "pad5"
   top: "conv5"
@@ -258,10 +268,12 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0.1
+      value: 1.
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "pool5"
   top: "fc6"
@@ -294,10 +306,12 @@ layers {
     }
     bias_filler {
       type: "constant"
-      value: 0.1
+      value: 1.
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "fc6"
   top: "fc7"
@@ -334,6 +348,8 @@ layers {
     }
     blobs_lr: 1.
     blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
   }
   bottom: "fc7"
   top: "fc8"
