@@ -96,8 +96,13 @@ Net<Dtype>::Net(const NetParameter& param,
       }
     }
     // After this layer is connected, set it up.
-    LOG(INFO) << "Setting up " << layer_names_[i];
+    // LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
+    for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
+      LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->channels() << " "
+          << top_vecs_[i][topid]->height() << " "
+          << top_vecs_[i][topid]->width();
+    }
     // Check if this layer needs backward operation itself
     for (int j = 0; j < layers_[i]->layer_param().blobs_lr_size(); ++j) {
       need_backward |= (layers_[i]->layer_param().blobs_lr(j) > 0);
@@ -159,11 +164,6 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
       for (int j = 0; j < layer_blobs.size(); ++j) {
         params_weight_decay_.push_back(1.);
       }
-    }
-    for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
-      LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->channels() << " "
-          << top_vecs_[i][topid]->height() << " "
-          << top_vecs_[i][topid]->width();
     }
   }
 }
