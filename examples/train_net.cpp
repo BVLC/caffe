@@ -14,6 +14,12 @@
 using namespace caffe;
 
 int main(int argc, char** argv) {
+  if (argc < 3) {
+    LOG(ERROR) << "Usage: train_net net_proto_file solver_proto_file "
+               << "[resume_point_file]";
+    return 0;
+  }
+
   cudaSetDevice(0);
   Caffe::set_mode(Caffe::GPU);
   Caffe::set_phase(Caffe::TRAIN);
