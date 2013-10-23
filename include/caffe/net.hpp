@@ -65,13 +65,19 @@ class Net {
   void Update();
 
  protected:
+  // Function to get misc parameters, e.g. the learning rate multiplier and
+  // weight decay.
+  void GetLearningRateAndWeightDecay();
+
   // Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
+  vector<bool> layer_need_backward_;
   // blobs stores the blobs that store intermediate results between the
   // layers.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
+  vector<bool> blob_need_backward_;
   // bottom_vecs stores the vectors containing the input for each layer
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
   vector<vector<int> > bottom_id_vecs_;

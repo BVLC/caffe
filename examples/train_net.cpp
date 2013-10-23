@@ -3,7 +3,7 @@
 // This is a simple script that allows one to quickly train a network whose
 // parameters are specified by text format protocol buffers.
 // Usage:
-//    train_net net_proto_file solver_proto_file
+//    train_net net_proto_file solver_proto_file [resume_point_file]
 
 #include <cuda_runtime.h>
 
@@ -28,7 +28,12 @@ int main(int argc, char** argv) {
 
   LOG(ERROR) << "Starting Optimization";
   SGDSolver<float> solver(solver_param);
-  solver.Solve(&caffe_net);
+  if (argc == 4) {
+    LOG(ERROR) << "Resuming from " << argv[3];
+    solver.Solve(&caffe_net, argv[3]);
+  } else {
+    solver.Solve(&caffe_net);
+  }
   LOG(ERROR) << "Optimization Done.";
 
   return 0;
