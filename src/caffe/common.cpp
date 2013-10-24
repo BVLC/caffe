@@ -1,5 +1,6 @@
 // Copyright 2013 Yangqing Jia
 
+#include <cstdio>
 #include <ctime>
 
 #include "caffe/common.hpp"
@@ -71,6 +72,35 @@ void Caffe::set_random_seed(const unsigned int seed) {
   // VSL seed
   VSL_CHECK(vslDeleteStream(&(Get().vsl_stream_)));
   VSL_CHECK(vslNewStream(&(Get().vsl_stream_), VSL_BRNG_MT19937, seed));
+}
+
+void Caffe::DeviceQuery() {
+  cudaDeviceProp prop;
+  int device;
+  CUDA_CHECK(cudaGetDevice(&device));
+  CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
+  printf("Major revision number:         %d\n", prop.major);
+  printf("Minor revision number:         %d\n", prop.minor);
+  printf("Name:                          %s\n", prop.name);
+  printf("Total global memory:           %lu\n", prop.totalGlobalMem);
+  printf("Total shared memory per block: %lu\n", prop.sharedMemPerBlock);
+  printf("Total registers per block:     %d\n", prop.regsPerBlock);
+  printf("Warp size:                     %d\n", prop.warpSize);
+  printf("Maximum memory pitch:          %lu\n", prop.memPitch);
+  printf("Maximum threads per block:     %d\n", prop.maxThreadsPerBlock);
+  printf("Maximum dimension of block:    %d, %d, %d\n",
+      prop.maxThreadsDim[0], prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
+  printf("Maximum dimension of grid:     %d, %d, %d\n",
+      prop.maxGridSize[0], prop.maxGridSize[1], prop.maxGridSize[2]);
+  printf("Clock rate:                    %d\n", prop.clockRate);
+  printf("Total constant memory:         %lu\n", prop.totalConstMem);
+  printf("Texture alignment:             %lu\n", prop.textureAlignment);
+  printf("Concurrent copy and execution: %s\n",
+      (prop.deviceOverlap ? "Yes" : "No"));
+  printf("Number of multiprocessors:     %d\n", prop.multiProcessorCount);
+  printf("Kernel execution timeout:      %s\n",
+      (prop.kernelExecTimeoutEnabled ? "Yes" : "No"));
+  return;
 }
 
 }  // namespace caffe

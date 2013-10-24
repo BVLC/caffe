@@ -91,6 +91,8 @@ class Caffe {
   inline static void set_phase(Phase phase) { Get().phase_ = phase; }
   // Sets the random seed of both MKL and curand
   static void set_random_seed(const unsigned int seed);
+  // Prints the current GPU status.
+  static void DeviceQuery();
 
  protected:
   cublasHandle_t cublas_handle_;
