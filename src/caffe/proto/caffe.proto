@@ -106,7 +106,7 @@ message SolverParameter {
   optional float power = 9; // The parameter to compute the learning rate.
   optional float momentum = 10; // The momentum value.
   optional float weight_decay = 11; // The weight decay.
-  optional float stepsize = 12; // the stepsize for learning rate policy "step"
+  optional int32 stepsize = 12; // the stepsize for learning rate policy "step"
 
   optional string snapshot_prefix = 13; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help
