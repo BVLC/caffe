@@ -206,7 +206,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   if (biasterm_) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
-    CUDA_CHECK(cudaMemset(bias_diff, 0.,
+    CUDA_CHECK(cudaMemset(bias_diff, 0,
         sizeof(Dtype) * this->blobs_[1]->count()));
     for (int n = 0; n < NUM_; ++n) {
       caffe_gpu_gemv<Dtype>(CblasNoTrans, NUM_OUTPUT_, N_,
@@ -219,7 +219,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
-  CUDA_CHECK(cudaMemset(weight_diff, 0.,
+  CUDA_CHECK(cudaMemset(weight_diff, 0,
       sizeof(Dtype) * this->blobs_[0]->count()));
   for (int n = 0; n < NUM_; ++n) {
     // since we saved memory in the forward pass by not storing all col data,
