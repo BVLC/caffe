@@ -170,8 +170,9 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  layer->prefetch_data_->mutable_cpu_data();
-  layer->prefetch_label_->mutable_cpu_data();
+  prefetch_data_->mutable_cpu_data();
+  prefetch_label_->mutable_cpu_data();
+  data_mean_.cpu_data();
   // LOG(INFO) << "Initializing prefetch";
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
