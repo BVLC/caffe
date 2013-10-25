@@ -36,13 +36,13 @@ Caffe::Caffe()
   // Try to create a curand handler.
   if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
       != CURAND_STATUS_SUCCESS ||
-      curandSetPseudoRandomGeneratorSeed(curand_generator_, time(NULL))
+      curandSetPseudoRandomGeneratorSeed(curand_generator_, 1701ULL)
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
   // Try to create a vsl stream. This should almost always work, but we will
   // check it anyway.
-  if (vslNewStream(&vsl_stream_, VSL_BRNG_MT19937, time(NULL)) != VSL_STATUS_OK) {
+  if (vslNewStream(&vsl_stream_, VSL_BRNG_MT19937, 1701) != VSL_STATUS_OK) {
     LOG(ERROR) << "Cannot create vsl stream. VSL random number generator "
         << "won't be available.";
   }
