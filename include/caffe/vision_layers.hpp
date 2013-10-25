@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
+#include "caffe/layer_register.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -43,6 +44,7 @@ class ReLULayer : public NeuronLayer<Dtype> {
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
+REGISTER_LAYER("relu", ReLULayer);
 
 
 template <typename Dtype>
@@ -68,6 +70,7 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   float scale_;
   unsigned int uint_thres_;
 };
+REGISTER_LAYER("dropout", DropoutLayer);
 
 
 template <typename Dtype>
@@ -94,6 +97,7 @@ class InnerProductLayer : public Layer<Dtype> {
   bool biasterm_;
   shared_ptr<SyncedMemory> bias_multiplier_;
 };
+REGISTER_LAYER("innerproduct", InnerProductLayer);
 
 
 template <typename Dtype>
@@ -121,6 +125,7 @@ class PaddingLayer : public Layer<Dtype> {
   int HEIGHT_OUT_;
   int WIDTH_OUT_;
 };
+REGISTER_LAYER("padding", PaddingLayer);
 
 
 template <typename Dtype>
@@ -151,6 +156,7 @@ class LRNLayer : public Layer<Dtype> {
   int height_;
   int width_;
 };
+REGISTER_LAYER("lrn", LRNLayer);
 
 
 template <typename Dtype>
@@ -176,6 +182,7 @@ class Im2colLayer : public Layer<Dtype> {
   int HEIGHT_;
   int WIDTH_;
 };
+REGISTER_LAYER("im2col", Im2colLayer);
 
 
 template <typename Dtype>
@@ -203,6 +210,7 @@ class PoolingLayer : public Layer<Dtype> {
   int POOLED_HEIGHT_;
   int POOLED_WIDTH_;
 };
+REGISTER_LAYER("pool", PoolingLayer);
 
 
 template <typename Dtype>
@@ -239,7 +247,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int K_;
   int N_;
 };
-
+REGISTER_LAYER("conv", ConvolutionLayer);
 
 // This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
@@ -277,6 +285,7 @@ class DataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
 };
+REGISTER_LAYER("data", DataLayer);
 
 
 template <typename Dtype>
@@ -302,6 +311,7 @@ class SoftmaxLayer : public Layer<Dtype> {
   // scale is an intermediate blob to hold temporary results.
   Blob<Dtype> scale_;
 };
+REGISTER_LAYER("softmax", SoftmaxLayer);
 
 
 template <typename Dtype>
@@ -324,6 +334,7 @@ class MultinomialLogisticLossLayer : public Layer<Dtype> {
   // virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
   //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
+REGISTER_LAYER("multinomial_logistic_loss", MultinomialLogisticLossLayer);
 
 
 // SoftmaxWithLossLayer is a layer that implements softmax and then computes
@@ -356,6 +367,7 @@ class SoftmaxWithLossLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> softmax_bottom_vec_;
   vector<Blob<Dtype>*> softmax_top_vec_;
 };
+REGISTER_LAYER("softmax_loss", SoftmaxWithLossLayer);
 
 
 template <typename Dtype>
@@ -379,6 +391,7 @@ class EuclideanLossLayer : public Layer<Dtype> {
   //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   Blob<Dtype> difference_;
 };
+REGISTER_LAYER("euclidean_loss", EuclideanLossLayer);
 
 
 template <typename Dtype>
@@ -399,6 +412,8 @@ class AccuracyLayer : public Layer<Dtype> {
     return Dtype(0.);
   }
 };
+REGISTER_LAYER("accuracy", AccuracyLayer);
+
 
 }  // namespace caffe
 
