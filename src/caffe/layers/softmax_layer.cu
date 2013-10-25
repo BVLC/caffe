@@ -176,6 +176,7 @@ Dtype SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(SoftmaxLayer);
+REGISTER_LAYER("softmax", SoftmaxLayer);
 
 
 }  // namespace caffe

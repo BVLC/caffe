@@ -130,6 +130,7 @@ Dtype LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(LRNLayer);
+REGISTER_LAYER("lrn", LRNLayer);
 
 
 }  // namespace caffe

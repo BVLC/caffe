@@ -32,7 +32,7 @@ class LayerRegistry {
     if (it == layer_map_.end()) {
       LOG(FATAL) << "Unknown layer: " << name;
     }
-    return *(it->second)(param);
+    return (it->second)(param);
   }
 
  private:

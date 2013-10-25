@@ -182,6 +182,7 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 
 INSTANTIATE_CLASS(PoolingLayer);
+REGISTER_LAYER("pool", PoolingLayer);
 
 
 }  // namespace caffe
