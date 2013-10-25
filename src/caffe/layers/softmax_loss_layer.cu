@@ -68,7 +68,6 @@ Dtype SoftmaxWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
-REGISTER_LAYER("softmax_loss", SoftmaxWithLossLayer);
 
 
 }  // namespace caffe

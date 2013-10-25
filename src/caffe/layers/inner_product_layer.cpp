@@ -140,6 +140,5 @@ Dtype InnerProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(InnerProductLayer);
-REGISTER_LAYER("innerproduct", InnerProductLayer);
 
 }  // namespace caffe

@@ -225,7 +225,5 @@ Dtype DataLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(DataLayer);
-REGISTER_LAYER("data", DataLayer);
-
 
 }  // namespace caffe

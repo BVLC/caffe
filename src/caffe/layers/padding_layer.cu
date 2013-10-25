@@ -134,7 +134,6 @@ Dtype PaddingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(PaddingLayer);
-REGISTER_LAYER("padding", PaddingLayer);
 
 
 }  // namespace caffe
