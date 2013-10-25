@@ -127,9 +127,6 @@ void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
   }
 }
 
-// The layer factory function
-template <typename Dtype>
-Layer<Dtype>* GetLayer(const LayerParameter& param);
 
 }  // namespace caffe
 

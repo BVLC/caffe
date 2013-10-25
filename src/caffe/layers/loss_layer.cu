@@ -117,7 +117,11 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
+REGISTER_LAYER("multinomial_logistic_loss", MultinomialLogisticLossLayer);
 INSTANTIATE_CLASS(EuclideanLossLayer);
+REGISTER_LAYER("euclidean_loss", EuclideanLossLayer);
 INSTANTIATE_CLASS(AccuracyLayer);
+REGISTER_LAYER("accuracy", AccuracyLayer);
+
 
 }  // namespace caffe

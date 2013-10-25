@@ -7,6 +7,7 @@
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/layer.hpp"
+#include "caffe/layer_register.hpp"
 #include "caffe/net.hpp"
 
 using std::pair;
@@ -47,7 +48,8 @@ Net<Dtype>::Net(const NetParameter& param,
   for (int i = 0; i < param.layers_size(); ++i) {
     const LayerConnection& layer_connection = param.layers(i);
     const LayerParameter& layer_param = layer_connection.layer();
-    layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
+    layers_.push_back(
+        shared_ptr<Layer<Dtype> >(CreateLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = false;

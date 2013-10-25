@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
+#include "caffe/layer_register.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -399,6 +400,7 @@ class AccuracyLayer : public Layer<Dtype> {
     return Dtype(0.);
   }
 };
+
 
 }  // namespace caffe
 

@@ -250,5 +250,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(ConvolutionLayer);
+REGISTER_LAYER("conv", ConvolutionLayer);
+
 
 }  // namespace caffe
