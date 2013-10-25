@@ -21,6 +21,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   const std::string& type = param.type();
   if (type == "accuracy") {
     return new AccuracyLayer<Dtype>(param);
+  } else if (type == "bnll") {
+    return new BNLLLayer<Dtype>(param);
   } else if (type == "conv") {
     return new ConvolutionLayer<Dtype>(param);
   } else if (type == "data") {
