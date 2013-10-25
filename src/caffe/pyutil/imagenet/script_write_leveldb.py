@@ -51,7 +51,7 @@ def write_db():
     img = img.swapaxes(1,2).swapaxes(0,1)
     datum = convert.array_to_datum(img, label=label)
     batch.Put(key_format % (line_id, imagename), datum.SerializeToString())
-    if line_id > 0 and line_id % 10000 == 0:
+    if line_id > 0 and line_id % 1000 == 0:
       print '%d of %d done.' % (line_id, total)
     if line_id > 0 and line_id % BATCH_SIZE == 0:
       # Write the current batch and start a new batch.
