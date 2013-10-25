@@ -76,6 +76,8 @@ message LayerParameter {
   // The ratio that is multiplied on the global learning rate. If you want to set
   // the learning ratio for one blob, you need to set it for all blobs.
   repeated float blobs_lr = 51;
+  // The weight decay that is multiplied on the global weight decay.
+  repeated float weight_decay = 52;
 }
 
 message LayerConnection {
@@ -104,7 +106,7 @@ message SolverParameter {
   optional float power = 9; // The parameter to compute the learning rate.
   optional float momentum = 10; // The momentum value.
   optional float weight_decay = 11; // The weight decay.
-  optional float stepsize = 12; // the stepsize for learning rate policy "step"
+  optional int32 stepsize = 12; // the stepsize for learning rate policy "step"
 
   optional string snapshot_prefix = 13; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help

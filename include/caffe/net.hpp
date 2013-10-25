@@ -60,17 +60,24 @@ class Net {
   inline vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
   // returns the parameter learning rate multipliers
   inline vector<float>& params_lr() {return params_lr_; }
+  inline vector<float>& params_weight_decay() { return params_weight_decay_; }
   // Updates the network
   void Update();
 
  protected:
+  // Function to get misc parameters, e.g. the learning rate multiplier and
+  // weight decay.
+  void GetLearningRateAndWeightDecay();
+
   // Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
+  vector<bool> layer_need_backward_;
   // blobs stores the blobs that store intermediate results between the
   // layers.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
+  vector<bool> blob_need_backward_;
   // bottom_vecs stores the vectors containing the input for each layer
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
   vector<vector<int> > bottom_id_vecs_;
@@ -86,6 +93,8 @@ class Net {
   vector<shared_ptr<Blob<Dtype> > > params_;
   // the learning rate multipliers
   vector<float> params_lr_;
+  // the weight decay multipliers
+  vector<float> params_weight_decay_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

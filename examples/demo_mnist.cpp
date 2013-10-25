@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
     return 0;
   }
   google::InitGoogleLogging(argv[0]);
+  Caffe::DeviceQuery();
 
   if (argc == 4 && strcmp(argv[3], "GPU") == 0) {
     LOG(ERROR) << "Using GPU";

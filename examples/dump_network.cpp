@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     ReadProtoFromTextFile(argv[1], &net_param);
   }
   ReadProtoFromBinaryFile(argv[2], &trained_net_param);
-  
+
   vector<Blob<float>* > input_vec;
   if (strcmp(argv[3], "none") != 0) {
     BlobProto input_blob_proto;

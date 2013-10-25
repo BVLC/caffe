@@ -166,7 +166,13 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     // Simply initialize an all-empty mean.
     data_mean_.Reshape(1, datum_channels_, datum_height_, datum_width_);
   }
-  // Now, start the prefetch thread.
+  // Now, start the prefetch thread. Before calling prefetch, we make two
+  // cpu_data calls so that the prefetch thread does not accidentally make
+  // simultaneous cudaMalloc calls when the main thread is running. In some
+  // GPUs this seems to cause failures if we do not so.
+  prefetch_data_->mutable_cpu_data();
+  prefetch_label_->mutable_cpu_data();
+  data_mean_.cpu_data();
   // LOG(INFO) << "Initializing prefetch";
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
