@@ -50,12 +50,14 @@ class SGDSolver : public Solver<Dtype> {
 
  protected:
   virtual void PreSolve();
-  virtual Dtype GetLearningRate();
+  Dtype GetLearningRate();
   virtual void ComputeUpdateValue();
   virtual void SnapshotSolverState(SolverState * state);
   virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
   vector<shared_ptr<Blob<Dtype> > > history_;
+
+  DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
 
 

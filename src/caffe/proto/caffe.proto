@@ -112,16 +112,6 @@ message SolverParameter {
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.
   optional bool snapshot_diff = 14 [ default = false];
-  // Adagrad solver parameters
-  // For Adagrad, we will first run normal sgd using the sgd parameters above
-  // for adagrad_skip iterations, and then kick in the adagrad algorithm, with
-  // the learning rate being adagrad_gamma * adagrad_skip. Note that the adagrad
-  // algorithm will NOT use the learning rate multiplier that is specified in
-  // the layer parameter specifications, as it will adjust the learning rate
-  // of individual parameters in a data-dependent way.
-  //    WORK IN PROGRESS: not actually implemented yet.
-  optional float adagrad_gamma = 15; // adagrad learning rate multiplier
-  optional float adagrad_skip = 16; // the steps to skip before adagrad kicks in
 }
 
 // A message that stores the solver snapshots

@@ -116,7 +116,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
-  // First of all, see if we need to initialize the history
+  // Initialize the history
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   history_.clear();
   for (int i = 0; i < net_params.size(); ++i) {
