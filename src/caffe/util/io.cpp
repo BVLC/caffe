@@ -5,6 +5,8 @@
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #include <algorithm>
 #include <string>
@@ -61,6 +63,27 @@ void ReadProtoFromBinaryFile(const char* filename, Message* proto) {
 void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   fstream output(filename, ios::out | ios::trunc | ios::binary);
   CHECK(proto.SerializeToOstream(&output));
+}
+
+
+void ReadImageToDatum(const string& filename, const int label, Datum* datum) {
+  Mat cv_img;
+  cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+  CHECK(cv_img.data) << "Could not open or find the image.";
+  datum->set_channels(3);
+  datum->set_height(cv_img.rows);
+  datum->set_width(cv_img.cols);
+  datum->set_label(label);
+  datum->clear_data();
+  datum->clear_float_data();
+  string* datum_string = datum->mutable_data();
+  for (int c = 0; c < 3; ++c) {
+    for (int h = 0; h < cv_img.rows; ++h) {
+      for (int w = 0; w < cv_img.cols; ++w) {
+        datum_string->push_back(static_cast<char>(cv_img.at<Vec3b>(h, w)[c]));
+      }
+    }
+  }
 }
 
 }  // namespace caffe

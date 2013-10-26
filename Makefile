@@ -43,8 +43,8 @@ MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 # We put src here just for gtest
 INCLUDE_DIRS := ./src ./include /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS := /usr/lib /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
-LIBRARIES := cuda cudart cublas protobuf glog mkl_rt mkl_intel_thread curand \
-		leveldb snappy pthread
+LIBRARIES := cuda cudart cublas curand protobuf opencv_core opencv_highgui \
+	glog mkl_rt mkl_intel_thread leveldb snappy pthread
 WARNINGS := -Wall
 
 COMMON_FLAGS := $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
