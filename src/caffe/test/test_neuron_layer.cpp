@@ -188,4 +188,57 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGPUTestPhase) {
   }
 }
 
+
+TYPED_TEST(NeuronLayerTest, TestBNLLCPU) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  BNLLLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_GE(top_data[i], bottom_data[i]);
+  }
+}
+
+
+TYPED_TEST(NeuronLayerTest, TestBNLLGradientCPU) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  BNLLLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
+
+
+TYPED_TEST(NeuronLayerTest, TestBNLLGPU) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::GPU);
+  BNLLLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_GE(top_data[i], bottom_data[i]);
+  }
+}
+
+
+TYPED_TEST(NeuronLayerTest, TestBNLLGradientGPU) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::GPU);
+  BNLLLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+}
+
+
+
+
 }
