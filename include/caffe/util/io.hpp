@@ -40,6 +40,7 @@ inline void WriteProtoToBinaryFile(
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
 
+void ReadImageToDatum(const string& filename, const int label, Datum* datum);
 
 }  // namespace caffe
 
