@@ -67,7 +67,7 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 
 
 void ReadImageToDatum(const string& filename, const int label, Datum* datum) {
-  Mat cv_img;
+  cv::Mat cv_img;
   cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
   CHECK(cv_img.data) << "Could not open or find the image.";
   datum->set_channels(3);
@@ -80,7 +80,7 @@ void ReadImageToDatum(const string& filename, const int label, Datum* datum) {
   for (int c = 0; c < 3; ++c) {
     for (int h = 0; h < cv_img.rows; ++h) {
       for (int w = 0; w < cv_img.cols; ++w) {
-        datum_string->push_back(static_cast<char>(cv_img.at<Vec3b>(h, w)[c]));
+        datum_string->push_back(static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
       }
     }
   }

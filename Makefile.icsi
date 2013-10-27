@@ -44,7 +44,7 @@ MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 INCLUDE_DIRS := ./src ./include /u/vis/software/include /usr/local/include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS := /usr/lib /u/vis/software/lib /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
 LIBRARIES := cudart cublas protobuf glog mkl_rt curand \
-		leveldb snappy pthread
+		leveldb snappy pthread opencv_core opencv_highgui
 WARNINGS := -Wall
 
 COMMON_FLAGS := $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))

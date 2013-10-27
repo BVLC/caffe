@@ -31,7 +31,7 @@ using std::stringstream;
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   std::ifstream infile(argv[2]);
-  vector<pair<string, int> > lines;
+  std::vector<std::pair<string, int> > lines;
   string filename;
   int label;
   while (infile >> filename >> label) {

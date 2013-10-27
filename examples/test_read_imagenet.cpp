@@ -22,8 +22,7 @@ int main(int argc, char** argv) {
   leveldb::Iterator* it = db->NewIterator(read_options);
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     // just a dummy operation
-    it->value().ToString();
-    // LOG(ERROR) << it->key().ToString();
+    LOG(ERROR) << it->key().ToString();
     if (++count % 10000 == 0) {
       LOG(ERROR) << "Processed " << count << " files.";
     }

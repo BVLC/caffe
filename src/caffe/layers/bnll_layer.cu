@@ -17,7 +17,9 @@ void BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
   for (int i = 0; i < count; ++i) {
-    top_data[i] = log(1. + exp(min(bottom_data[i], Dtype(kBNLL_THRESHOLD))));
+    top_data[i] = bottom_data[i] > 0 ?
+        bottom_data[i] + log(1. + exp(-bottom_data[i])) :
+        log(1. + exp(bottom_data[i]));
   }
 }
 
@@ -43,7 +45,9 @@ template <typename Dtype>
 __global__ void BNLLForward(const int n, const Dtype* in, Dtype* out) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
-    out[index] = log(1. + exp(min(in[index], Dtype(kBNLL_THRESHOLD))));
+    out[index] = in[index] > 0 ?
+        in[index] + log(1. + exp(-in[index])) :
+        log(1. + exp(in[index]));
   }
 }
 
