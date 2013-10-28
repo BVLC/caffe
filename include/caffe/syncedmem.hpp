@@ -3,7 +3,29 @@
 #ifndef CAFFE_SYNCEDMEM_HPP_
 #define CAFFE_SYNCEDMEM_HPP_
 
+#include <cstdlib>
+
+#include "caffe/common.hpp"
+
 namespace caffe {
+
+inline void CaffeMallocHost(void** ptr, size_t size) {
+  if (Caffe::mode() == Caffe::GPU) {
+    CUDA_CHECK(cudaMallocHost(ptr, size));
+  } else {
+    *ptr = malloc(size);
+  }
+}
+
+
+inline void CaffeFreeHost(void* ptr) {
+  if (Caffe::mode() == Caffe::GPU) {
+    CUDA_CHECK(cudaFreeHost(ptr)));
+  } else {
+    free(ptr)
+  }
+}
+
 
 class SyncedMemory {
  public:

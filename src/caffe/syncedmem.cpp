@@ -11,7 +11,7 @@ namespace caffe {
 
 SyncedMemory::~SyncedMemory() {
   if (cpu_ptr_) {
-    CUDA_CHECK(cudaFreeHost(cpu_ptr_));
+    CaffeFreeHost(cpu_ptr_);
   }
 
   if (gpu_ptr_) {
@@ -22,13 +22,13 @@ SyncedMemory::~SyncedMemory() {
 inline void SyncedMemory::to_cpu() {
   switch (head_) {
   case UNINITIALIZED:
-    CUDA_CHECK(cudaMallocHost(&cpu_ptr_, size_));
+    CaffeMallocHost(&cpu_ptr_, size_);
     memset(cpu_ptr_, 0, size_);
     head_ = HEAD_AT_CPU;
     break;
   case HEAD_AT_GPU:
     if (cpu_ptr_ == NULL) {
-      CUDA_CHECK(cudaMallocHost(&cpu_ptr_, size_));
+      CaffeMallocHost(&cpu_ptr_, size_);
     }
     CUDA_CHECK(cudaMemcpy(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDeviceToHost));
     head_ = SYNCED;

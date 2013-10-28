@@ -85,7 +85,10 @@ class Caffe {
   // Returns the phase: TRAIN or TEST.
   inline static Phase phase() { return Get().phase_; }
   // The setters for the variables
-  // Sets the mode.
+  // Sets the mode. It is recommended that you don't change the mode halfway
+  // into the program since that may cause allocation of pinned memory being
+  // freed in a non-pinned way, which may cause problems - I haven't verified
+  // it personally but better to note it here in the header file.
   inline static void set_mode(Brew mode) { Get().mode_ = mode; }
   // Sets the phase.
   inline static void set_phase(Phase phase) { Get().phase_ = phase; }
