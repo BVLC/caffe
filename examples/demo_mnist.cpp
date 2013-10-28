@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   SolverParameter solver_param;
   // Solver Parameters are hard-coded in this case, but you can write a
   // SolverParameter protocol buffer to specify all these values.
-  solver_param.set_base_lr(0.001);
+  solver_param.set_base_lr(0.01);
   solver_param.set_display(100);
   solver_param.set_max_iter(5000);
   solver_param.set_lr_policy("inv");
