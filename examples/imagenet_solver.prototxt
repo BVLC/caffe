@@ -1,7 +1,7 @@
 base_lr: 0.01
 lr_policy: "step"
-gamma: 0.1
-stepsize: 340000
+gamma: 0.5
+stepsize: 40000
 display: 20
 max_iter: 1200000
 momentum: 0.9
