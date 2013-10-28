@@ -10,6 +10,9 @@ For the leveldb, the keys will be a monotonically increasing id followed by the
 filename. If --shuffle, we will shuffle the lines before writing to leveldb,
 which will make a random order easier for training.
 
+To make the output consistent with the C++ code, we will store the images in
+BGR format.
+
 Copyright 2013 Yangqing Jia
 """
 
@@ -48,7 +51,8 @@ def write_db():
     img = io.imread(os.path.join(FLAGS.input_folder, imagename))
     if img.ndim == 2:
       img = np.tile(img, (1,1,3))
-    img = img.swapaxes(1,2).swapaxes(0,1)
+    # convert to BGR, and then swap the axes.
+    img = img[::-1].swapaxes(1,2).swapaxes(0,1)
     datum = convert.array_to_datum(img, label=label)
     batch.Put(key_format % (line_id, imagename), datum.SerializeToString())
     if line_id > 0 and line_id % 1000 == 0:
