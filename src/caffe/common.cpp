@@ -49,11 +49,11 @@ Caffe::Caffe()
 }
 
 Caffe::~Caffe() {
-  if (!cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
-  if (!curand_generator_) {
+  if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+  if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
-  if (!vsl_stream_) VSL_CHECK(vslDeleteStream(&vsl_stream_));
+  if (vsl_stream_) VSL_CHECK(vslDeleteStream(&vsl_stream_));
 };
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -77,7 +77,10 @@ void Caffe::set_random_seed(const unsigned int seed) {
 void Caffe::DeviceQuery() {
   cudaDeviceProp prop;
   int device;
-  CUDA_CHECK(cudaGetDevice(&device));
+  if (cudaSuccess != cudaGetDevice(&device)) {
+    printf("No cuda device present.\n");
+    return;
+  }
   CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
   printf("Major revision number:         %d\n", prop.major);
   printf("Minor revision number:         %d\n", prop.minor);
