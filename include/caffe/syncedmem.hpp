@@ -20,9 +20,9 @@ inline void CaffeMallocHost(void** ptr, size_t size) {
 
 inline void CaffeFreeHost(void* ptr) {
   if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaFreeHost(ptr)));
+    CUDA_CHECK(cudaFreeHost(ptr));
   } else {
-    free(ptr)
+    free(ptr);
   }
 }
 
