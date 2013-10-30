@@ -42,8 +42,15 @@ void* DataLayerPrefetch(void* layer_pointer) {
     const string& data = datum.data();
     if (cropsize) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
-      int h_off = rand() % (height - cropsize);
-      int w_off = rand() % (width - cropsize);
+      int h_off, w_off;
+      // We only do random crop when we do training.
+      if (Caffe::phase() == Caffe::TRAIN) {
+        h_off = rand() % (height - cropsize);
+        w_off = rand() % (width - cropsize);
+      } else {
+        h_off = (height - cropsize) / 2;
+        w_off = (width - cropsize) / 2;
+      }
       if (mirror && rand() % 2) {
         // Copy mirrored version
         for (int c = 0; c < channels; ++c) {
