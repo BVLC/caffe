@@ -30,6 +30,10 @@ using std::stringstream;
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
+  if (argc < 4) {
+    LOG(ERROR) << "Usage: convert_imageset ROOTFOLDER LISTFILE DB_NAME [0/1]";
+    return 0;
+  }
   std::ifstream infile(argv[2]);
   std::vector<std::pair<string, int> > lines;
   string filename;
@@ -43,7 +47,7 @@ int main(int argc, char** argv) {
     std::random_shuffle(lines.begin(), lines.end());
   }
   LOG(INFO) << "A total of " << lines.size() << "images.";
-  
+
   leveldb::DB* db;
   leveldb::Options options;
   options.error_if_exists = true;
