@@ -9,6 +9,12 @@
 
 namespace caffe {
 
+
+#if 0
+
+// This chunk of code should be used when one has a machine that does not have
+// GPU, thus cannot be used if we just want to distribute a single binary.
+
 inline void CaffeMallocHost(void** ptr, size_t size) {
   if (Caffe::mode() == Caffe::GPU) {
     CUDA_CHECK(cudaMallocHost(ptr, size));
@@ -16,7 +22,6 @@ inline void CaffeMallocHost(void** ptr, size_t size) {
     *ptr = malloc(size);
   }
 }
-
 
 inline void CaffeFreeHost(void* ptr) {
   if (Caffe::mode() == Caffe::GPU) {
@@ -26,6 +31,20 @@ inline void CaffeFreeHost(void* ptr) {
   }
 }
 
+#else
+
+// This chunk of code is safer, but may not be as fast as the cuda pinned memory
+// version.
+
+inline void CaffeMallocHost(void** ptr, size_t size) {
+  *ptr = malloc(size);
+}
+
+inline void CaffeFreeHost(void* ptr) {
+  free(ptr);
+}
+
+#endif  // code to define CaffeMallocHost and CaffeFreeHost
 
 class SyncedMemory {
  public:
