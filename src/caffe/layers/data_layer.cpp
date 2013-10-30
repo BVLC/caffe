@@ -101,7 +101,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
     layer->iter_->Next();
     if (!layer->iter_->Valid()) {
       // We have reached the end. Restart from the first.
-      LOG(INFO) << "Restarting data read from start.";
+      LOG(INFO) << "Restarting data prefetching from start.";
       layer->iter_->SeekToFirst();
     }
   }
