@@ -29,6 +29,11 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       ceil(static_cast<float>(WIDTH_ - KSIZE_) / STRIDE_)) + 1;
   (*top)[0]->Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
       POOLED_WIDTH_);
+  // If stochastic pooling, we will initialize the random index part.
+  if (this->layer_param_.pool() == LayerParameter_PoolMethod_STOCHASTIC) {
+    rand_idx_.Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
+      POOLED_WIDTH_);
+  }
 };
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
@@ -99,6 +104,9 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         top_data += (*top)[0]->offset(0, 1);
       }
     }
+    break;
+  case LayerParameter_PoolMethod_STOCHASTIC:
+    NOT_IMPLEMENTED;
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
@@ -173,6 +181,9 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         top_diff += top[0]->offset(0, 1);
       }
     }
+    break;
+  case LayerParameter_PoolMethod_STOCHASTIC:
+    NOT_IMPLEMENTED;
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";

@@ -221,6 +221,7 @@ class PoolingLayer : public Layer<Dtype> {
   int WIDTH_;
   int POOLED_HEIGHT_;
   int POOLED_WIDTH_;
+  Blob<float> rand_idx_;
 };
 
 
