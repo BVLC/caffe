@@ -94,25 +94,28 @@ message NetParameter {
 }
 
 message SolverParameter {
-  optional float base_lr = 1; // The base learning rate
+  optional string train_net = 1; // The proto file for the training net.
+  optional string test_net = 2; // The proto file for the testing net.
+  // The number of iterations for each testing phase.
+  optional int32 test_iter = 3 [ default = 0 ];
+  // The number of iterations between two testing phases.
+  optional int32 test_interval = 4 [ default = 0 ];
+  optional float base_lr = 5; // The base learning rate
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
-  optional int32 display = 2;
-  optional int32 max_iter = 3; // the maximum number of iterations
-  optional int32 snapshot = 4 [default = 0]; // The snapshot interval
-  optional string lr_policy = 5; // The learning rate decay policy.
-  optional float min_lr = 6 [default = 0]; // The mininum learning rate
-  optional float max_lr = 7 [default = 1e10]; // The maximum learning rate
-  optional float gamma = 8; // The parameter to compute the learning rate.
-  optional float power = 9; // The parameter to compute the learning rate.
-  optional float momentum = 10; // The momentum value.
-  optional float weight_decay = 11; // The weight decay.
-  optional int32 stepsize = 12; // the stepsize for learning rate policy "step"
-
-  optional string snapshot_prefix = 13; // The prefix for the snapshot.
+  optional int32 display = 6;
+  optional int32 max_iter = 7; // the maximum number of iterations
+  optional string lr_policy = 8; // The learning rate decay policy.
+  optional float gamma = 9; // The parameter to compute the learning rate.
+  optional float power = 10; // The parameter to compute the learning rate.
+  optional float momentum = 11; // The momentum value.
+  optional float weight_decay = 12; // The weight decay.
+  optional int32 stepsize = 13; // the stepsize for learning rate policy "step"
+  optional int32 snapshot = 14 [default = 0]; // The snapshot interval
+  optional string snapshot_prefix = 15; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.
-  optional bool snapshot_diff = 14 [ default = false];
+  optional bool snapshot_diff = 16 [ default = false];
 }
 
 // A message that stores the solver snapshots

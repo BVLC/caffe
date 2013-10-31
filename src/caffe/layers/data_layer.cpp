@@ -101,7 +101,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
     layer->iter_->Next();
     if (!layer->iter_->Valid()) {
       // We have reached the end. Restart from the first.
-      LOG(INFO) << "Restarting data prefetching from start.";
+      DLOG(INFO) << "Restarting data prefetching from start.";
       layer->iter_->SeekToFirst();
     }
   }
@@ -180,10 +180,10 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   prefetch_data_->mutable_cpu_data();
   prefetch_label_->mutable_cpu_data();
   data_mean_.cpu_data();
-  // LOG(INFO) << "Initializing prefetch";
+  DLOG(INFO) << "Initializing prefetch";
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
-  // LOG(INFO) << "Prefetch initialized.";
+  DLOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>

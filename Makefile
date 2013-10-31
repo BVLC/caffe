@@ -47,7 +47,7 @@ LIBRARIES := cuda cudart cublas curand protobuf opencv_core opencv_highgui \
 	glog mkl_rt mkl_intel_thread leveldb snappy pthread
 WARNINGS := -Wall
 
-COMMON_FLAGS := $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+COMMON_FLAGS := -DNDEBUG $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC -O2 $(COMMON_FLAGS)
 NVCCFLAGS := -Xcompiler -fPIC -O2 $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \

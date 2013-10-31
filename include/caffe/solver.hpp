@@ -10,11 +10,11 @@ namespace caffe {
 template <typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param)
-      : param_(param) {}
+  explicit Solver(const SolverParameter& param);
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
-  void Solve(Net<Dtype>* net, char* state_file = NULL);
+  void Solve(const char* resume_file = NULL);
+  inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   virtual ~Solver() {}
 
  protected:
@@ -28,15 +28,18 @@ class Solver {
   // function that produces a SolverState protocol buffer that needs to be
   // written to disk together with the learned net.
   void Snapshot();
+  // The test routine
+  void Test();
   virtual void SnapshotSolverState(SolverState* state) = 0;
   // The Restore function implements how one should restore the solver to a
   // previously snapshotted state. You should implement the RestoreSolverState()
   // function that restores the state from a SolverState protocol buffer.
-  void Restore(char* state_file);
+  void Restore(const char* resume_file);
   virtual void RestoreSolverState(const SolverState& state) = 0;
   SolverParameter param_;
   int iter_;
   Net<Dtype>* net_;
+  Net<Dtype>* test_net_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };

@@ -121,7 +121,7 @@ Net<Dtype>::Net(const NetParameter& param,
   // In the end, all remaining blobs are considered output blobs.
   for (set<string>::iterator it = available_blobs.begin();
       it != available_blobs.end(); ++it) {
-    LOG(ERROR) << "This network produces output " << *it;
+    LOG(INFO) << "This network produces output " << *it;
     net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
   }
@@ -207,10 +207,10 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       ++target_layer_id;
     }
     if (target_layer_id == layer_names_.size()) {
-      LOG(INFO) << "Ignoring source layer " << source_layer_name;
+      DLOG(INFO) << "Ignoring source layer " << source_layer_name;
       continue;
     }
-    LOG(INFO) << "Loading source layer " << source_layer_name;
+    DLOG(INFO) << "Loading source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
         layers_[target_layer_id]->blobs();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
@@ -233,7 +233,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
   for (int i = 0; i < net_input_blob_indices_.size(); ++i) {
     param->add_input(blob_names_[net_input_blob_indices_[i]]);
   }
-  LOG(INFO) << "Serializing " << layers_.size() << " layers";
+  DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
     LayerConnection* layer_connection = param->add_layers();
     for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {

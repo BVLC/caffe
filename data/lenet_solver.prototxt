@@ -1,0 +1,12 @@
+train_net: "data/lenet.prototxt"
+test_net: "data/lenet_test.prototxt"
+base_lr: 0.01
+lr_policy: "inv"
+gamma: 0.0001
+power: 0.75
+display: 100
+max_iter: 5000
+momentum: 0.9
+weight_decay: 0.0005
+test_iter: 100
+test_interval: 500
