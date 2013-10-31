@@ -108,6 +108,16 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   filler_param.set_value(1.);
   ConstantFiller<TypeParam> filler(filler_param);
   filler.Fill(this->blob_bottom_);
+  TypeParam* bottom_data = this->blob_bottom_->mutable_cpu_data();
+  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
+    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
+      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
+        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
+          bottom_data[this->blob_bottom_->offset(n, c, h, w)] = c;
+        }
+      }
+    }
+  }
   LayerParameter layer_param;
   layer_param.set_kernelsize(3);
   layer_param.set_stride(2);
@@ -124,18 +134,32 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // After the convolution, the output should all have output values 9.1
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_GE(top_data[i], 9.1 - 1e-4);
-    EXPECT_LE(top_data[i], 9.1 + 1e-4);
+  for (int n = 0; n < this->blob_top_->num(); ++n) {
+    for (int c = 0; c < this->blob_top_->channels(); ++c) {
+      for (int h = 0; h < this->blob_top_->height(); ++h) {
+        for (int w = 0; w < this->blob_top_->width(); ++w) {
+          TypeParam data = top_data[this->blob_top_->offset(n, c, h, w)];
+          EXPECT_GE(data, c * 9 + 0.1 - 1e-4);
+          EXPECT_LE(data, c * 9 + 0.1 + 1e-4);
+        }
+      }
+    }
   }
   // Test GPU
   Caffe::set_mode(Caffe::GPU);
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // After the convolution, the output should all have output values 9.1
   top_data = this->blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_GE(top_data[i], 9.1 - 1e-4);
-    EXPECT_LE(top_data[i], 9.1 + 1e-4);
+  for (int n = 0; n < this->blob_top_->num(); ++n) {
+    for (int c = 0; c < this->blob_top_->channels(); ++c) {
+      for (int h = 0; h < this->blob_top_->height(); ++h) {
+        for (int w = 0; w < this->blob_top_->width(); ++w) {
+          TypeParam data = top_data[this->blob_top_->offset(n, c, h, w)];
+          EXPECT_GE(data, c * 9 + 0.1 - 1e-4);
+          EXPECT_LE(data, c * 9 + 0.1 + 1e-4);
+        }
+      }
+    }
   }
 }
 
