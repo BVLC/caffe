@@ -28,9 +28,7 @@ class GradientChecker {
       : stepsize_(stepsize), threshold_(threshold), seed_(seed),
         kink_(kink), kink_range_(kink_range) {}
   // Checks the gradient of a layer, with provided bottom layers and top
-  // layers. The gradient checker will check the gradient with respect to
-  // the parameters of the layer, as well as the input blobs if check_through
-  // is set True.
+  // layers.
   // Note that after the gradient check, we do not guarantee that the data
   // stored in the layer parameters and the blobs are unchanged.
   void CheckGradient(Layer<Dtype>& layer, vector<Blob<Dtype>*>& bottom,

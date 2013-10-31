@@ -33,8 +33,6 @@ class PoolingLayerTest : public ::testing::Test {
     blob_top_vec_.push_back(blob_top_);
   };
   virtual ~PoolingLayerTest() { delete blob_bottom_; delete blob_top_; }
-  void ReferenceLRNForward(const Blob<Dtype>& blob_bottom,
-      const LayerParameter& layer_param, Blob<Dtype>* blob_top);
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -71,7 +69,7 @@ TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
   }
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     cout << "top data " << i << " " << this->blob_top_->cpu_data()[i] << endl;
-  }  
+  }
 
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
@@ -79,7 +77,7 @@ TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
   layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     cout << "bottom diff " << i << " " << this->blob_bottom_->cpu_diff()[i] << endl;
-  }  
+  }
 }
 */
 
