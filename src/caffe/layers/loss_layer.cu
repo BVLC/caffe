@@ -11,6 +11,8 @@ using std::max;
 
 namespace caffe {
 
+const float kLOG_THRESHOLD = 1e-20;
+
 template <typename Dtype>
 void MultinomialLogisticLossLayer<Dtype>::SetUp(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
@@ -35,7 +37,6 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>
   int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
   memset(bottom_diff, 0, sizeof(Dtype) * (*bottom)[0]->count());
   Dtype loss = 0;
-  const Dtype kLOG_THRESHOLD = 1e-20;
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
     Dtype prob = max(bottom_data[i * dim + label], kLOG_THRESHOLD);
@@ -87,18 +88,20 @@ void AccuracyLayer<Dtype>::SetUp(
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  (*top)[0]->Reshape(1, 1, 1, 1);
+  (*top)[0]->Reshape(1, 2, 1, 1);
 }
 
 template <typename Dtype>
 void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype accuracy = 0;
+  Dtype logprob = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
   for (int i = 0; i < num; ++i) {
+    // Accuracy
     Dtype maxval = -FLT_MAX;
     int max_id = 0;
     for (int j = 0; j < dim; ++j) {
@@ -110,10 +113,12 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (max_id == (int)bottom_label[i]) {
       ++accuracy;
     }
+    Dtype prob = max(bottom_data[i * dim + (int)bottom_label[i]], kLOG_THRESHOLD);
+    logprob -= log(prob);
   }
-  accuracy /= num;
   // LOG(INFO) << "Accuracy: " << accuracy;
-  (*top)[0]->mutable_cpu_data()[0] = accuracy;
+  (*top)[0]->mutable_cpu_data()[0] = accuracy / num;
+  (*top)[0]->mutable_cpu_data()[1] = logprob / num;
 }
 
 INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
