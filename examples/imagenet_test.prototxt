@@ -5,7 +5,7 @@ layers {
     type: "data"
     source: "/home/jiayq/caffe-val-leveldb"
     meanfile: "/home/jiayq/ilsvrc2012_mean.binaryproto"
-    batchsize: 100
+    batchsize: 50
     cropsize: 227
     mirror: false
   }
