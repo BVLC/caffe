@@ -19,7 +19,7 @@ namespace caffe {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : param_(param), net_(NULL), test_net_(NULL) {
+    : param_(param), net_(), test_net_() {
   // Scaffolding code
   NetParameter train_net_param;
   ReadProtoFromTextFile(param_.train_net(), &train_net_param);
@@ -27,12 +27,12 @@ Solver<Dtype>::Solver(const SolverParameter& param)
   // a dummy bottom_vec instance to initialize the networks.
   vector<Blob<Dtype>*> bottom_vec;
   LOG(INFO) << "Creating training net.";
-  net_ = new Net<Dtype>(train_net_param, bottom_vec);
+  net_.reset(new Net<Dtype>(train_net_param, bottom_vec));
   if (param_.has_test_net()) {
     LOG(INFO) << "Creating testing net.";
     NetParameter test_net_param;
     ReadProtoFromTextFile(param_.test_net(), &test_net_param);
-    test_net_ = new Net<Dtype>(test_net_param, bottom_vec);
+    test_net_.reset(new Net<Dtype>(test_net_param, bottom_vec));
     CHECK_GT(param_.test_iter(), 0);
     CHECK_GT(param_.test_interval(), 0);
   }
@@ -83,7 +83,7 @@ void Solver<Dtype>::Test() {
   LOG(INFO) << "Testing net";
   NetParameter net_param;
   net_->ToProto(&net_param);
-  CHECK_NOTNULL(test_net_)->CopyTrainedLayersFrom(net_param);
+  CHECK_NOTNULL(test_net_.get())->CopyTrainedLayersFrom(net_param);
   vector<Dtype> test_score;
   vector<Blob<Dtype>*> bottom_vec;
   for (int i = 0; i < param_.test_iter(); ++i) {
@@ -138,8 +138,10 @@ void Solver<Dtype>::Restore(const char* state_file) {
   SolverState state;
   NetParameter net_param;
   ReadProtoFromBinaryFile(state_file, &state);
-  ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
-  net_->CopyTrainedLayersFrom(net_param);
+  if (state.has_learned_net()) {
+    ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
+    net_->CopyTrainedLayersFrom(net_param);
+  }
   iter_ = state.iter();
   RestoreSolverState(state);
 }
