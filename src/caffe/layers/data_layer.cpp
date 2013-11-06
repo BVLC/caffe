@@ -113,8 +113,8 @@ void* DataLayerPrefetch(void* layer_pointer) {
 template <typename Dtype>
 void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 0) << "Neuron Layer takes no input blobs.";
-  CHECK_EQ(top->size(), 2) << "Neuron Layer takes two blobs as output.";
+  CHECK_EQ(bottom.size(), 0) << "Data Layer takes no input blobs.";
+  CHECK_EQ(top->size(), 2) << "Data Layer takes two blobs as output.";
   // Initialize the leveldb
   leveldb::DB* db_temp;
   leveldb::Options options;
@@ -127,6 +127,17 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   db_.reset(db_temp);
   iter_.reset(db_->NewIterator(leveldb::ReadOptions()));
   iter_->SeekToFirst();
+  // Check if we would need to randomly skip a few data points
+  if (this->layer_param_.rand_skip()) {
+    unsigned int skip = rand() % this->layer_param_.rand_skip();
+    LOG(INFO) << "Skipping first " << skip << " data points.";
+    while (skip-- > 0) {
+      iter_->Next();
+      if (!iter_->Valid()) {
+        iter_->SeekToFirst();
+      }
+    }
+  }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   datum.ParseFromString(iter_->value().ToString());
