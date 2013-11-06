@@ -64,8 +64,10 @@ int main(int argc, char** argv) {
   char key_cstr[100];
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
-    ReadImageToDatum(root_folder + lines[line_id].first, lines[line_id].second,
-        &datum);
+    if (!ReadImageToDatum(root_folder + lines[line_id].first, lines[line_id].second,
+        &datum)) {
+      continue;
+    };
     // sequential
     sprintf(key_cstr, "%08d_%s", line_id, lines[line_id].first.c_str());
     string value;

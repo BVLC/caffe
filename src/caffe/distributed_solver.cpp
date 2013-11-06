@@ -28,6 +28,7 @@ void DistributedSolverParamServer<Dtype>::Solve(const char* resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Solver<Dtype>::Restore(resume_file);
   }
+  next_snapshot_ = this->iter_ + this->param_.snapshot();
 
   // the main loop.
   LOG(INFO) << "Waiting for incoming updates...";
@@ -76,9 +77,10 @@ void DistributedSolverParamServer<Dtype>::ReceiveAndSend() {
       total_received += count;
     }
     LOG(INFO) << "Received " << total_received << " variables.";
-    // Check Error
-    if (!data_stream) {
-      LOG(ERROR) << "Error in receiving.";
+    // Check error: if there are any error in the receiving phase, we will not
+    // trust the passed in update.
+    if (data_stream.error()) {
+      LOG(ERROR) << "Error in receiving. Error code: " << data_stream.error().message();
     } else {
       // If the read is successful, update the network.
       this->iter_ += incoming_iter;
@@ -101,7 +103,6 @@ void DistributedSolverParamServer<Dtype>::ReceiveAndSend() {
   }
   LOG(INFO) << "Sent " << total_sent << " variables.";
   data_stream.flush();
-  data_stream.close();
 }
 
 
@@ -121,6 +122,7 @@ void DistributedSolverParamClient<Dtype>::Solve(const char* resume_file) {
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
+  next_display_ = this->iter_ + this->param_.display();
   while (this->iter_++ < this->param_.max_iter()) {
     Dtype loss = this->net_->ForwardBackward(bottom_vec);
     ComputeUpdateValue();
@@ -128,7 +130,7 @@ void DistributedSolverParamClient<Dtype>::Solve(const char* resume_file) {
 
     if (this->param_.display() && this->iter_ > next_display_) {
       LOG(INFO) << "Iteration " << this->iter_ << ", loss = " << loss;
-      next_display_ += this->param_.display();
+      next_display_ = this->iter_ + this->param_.display();
     }
   }
   LOG(INFO) << "Optimization Done.";
@@ -138,7 +140,9 @@ void DistributedSolverParamClient<Dtype>::Solve(const char* resume_file) {
 template <typename Dtype>
 void DistributedSolverParamClient<Dtype>::SendAndReceive(bool receive_only) {
   tcp::iostream data_stream(this->param_.tcp_server(), this->param_.tcp_port());
-  CHECK(data_stream) << "Error in connection.";
+  if (!data_stream) {
+    LOG(FATAL) << "Unable to connect. Error code: " << data_stream.error().message();
+  }
   data_stream.write(reinterpret_cast<char*>(&receive_only), sizeof(receive_only));
   if (!receive_only) {
     LOG(INFO) << "Sending local changes.";
@@ -157,6 +161,8 @@ void DistributedSolverParamClient<Dtype>::SendAndReceive(bool receive_only) {
       total_sent += count;
     }
     LOG(INFO) << "Sent " << total_sent << " variables.";
+    CHECK(!data_stream.error()) << "Error in sending. Error code: "
+        << data_stream.error().message();
   }// else {
   //  LOG(INFO) << "Not sending local changes. Receive only.";
   //}
@@ -179,6 +185,8 @@ void DistributedSolverParamClient<Dtype>::SendAndReceive(bool receive_only) {
     memset(net_params[param_id]->mutable_cpu_diff(), 0,
         net_params[param_id]->count() * sizeof(Dtype));
   }
+  CHECK(!data_stream.error()) << "Error in communication. Error code: "
+      << data_stream.error().message();
   LOG(INFO) << "Received " << total_received << " variables.";
   // Set the next send iter.
   next_send_iter_ = this->iter_ + this->param_.communication_interval();

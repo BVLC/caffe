@@ -11,6 +11,7 @@
 
 #include "caffe/solver.hpp"
 
+
 namespace caffe {
 
 template <typename Dtype>
