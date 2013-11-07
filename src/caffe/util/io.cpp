@@ -66,10 +66,13 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 }
 
 
-void ReadImageToDatum(const string& filename, const int label, Datum* datum) {
+bool ReadImageToDatum(const string& filename, const int label, Datum* datum) {
   cv::Mat cv_img;
   cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
-  CHECK(cv_img.data) << "Could not open or find the image.";
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return false;
+  }
   datum->set_channels(3);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
@@ -84,6 +87,7 @@ void ReadImageToDatum(const string& filename, const int label, Datum* datum) {
       }
     }
   }
+  return true;
 }
 
 }  // namespace caffe

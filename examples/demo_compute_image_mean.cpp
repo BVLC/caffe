@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
   sum_blob.set_channels(datum.channels());
   sum_blob.set_height(datum.height());
   sum_blob.set_width(datum.width());
+  const int data_size = datum.channels() * datum.height() * datum.width();
   for (int i = 0; i < datum.data().size(); ++i) {
     sum_blob.add_data(0.);
   }
@@ -47,6 +48,7 @@ int main(int argc, char** argv) {
     // just a dummy operation
     datum.ParseFromString(it->value().ToString());
     const string& data = datum.data();
+    CHECK_EQ(data.size(), data_size) << "Incorrect data field size " << data.size();
     for (int i = 0; i < data.size(); ++i) {
       sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
     }

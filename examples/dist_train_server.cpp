@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  Caffe::SetDevice(0);
-  Caffe::set_mode(Caffe::GPU);
+  //Caffe::SetDevice(0);
+  Caffe::set_mode(Caffe::CPU);
 
   SolverParameter solver_param;
   ReadProtoFromTextFile(argv[1], &solver_param);
