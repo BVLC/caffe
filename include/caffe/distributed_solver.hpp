@@ -12,6 +12,8 @@
 
 #include "caffe/solver.hpp"
 
+using boost::asio::ip::tcp;
+
 
 namespace caffe {
 
@@ -29,7 +31,8 @@ class DistributedSolverParamServer : public Solver<Dtype> {
   virtual void SnapshotSolverState(SolverState* state) {}
   virtual void RestoreSolverState(const SolverState& state) {}
   // The function that implements the actual communication.
-  void ReceiveAndSend(boost::asio::io_service& io_s);
+  void ReceiveAndSend(boost::asio::io_service& io_s,
+      tcp::acceptor& data_acceptor);
 
   int next_snapshot_;
 };
