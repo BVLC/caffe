@@ -32,8 +32,9 @@ void DistributedSolverParamServer<Dtype>::Solve(const char* resume_file) {
 
   // the main loop.
   LOG(INFO) << "Waiting for incoming updates...";
+  boost::asio::io_service io_s;
   while (this->iter_ < this->param_.max_iter()) {
-    ReceiveAndSend();
+    ReceiveAndSend(io_s);
     // Check if we need to do snapshot
     if (this->param_.snapshot() && this->iter_ > next_snapshot_) {
       Solver<Dtype>::Snapshot();
@@ -50,11 +51,11 @@ void DistributedSolverParamServer<Dtype>::Solve(const char* resume_file) {
 // updates the network. It then sends back the updated network value to the
 // client.
 template <typename Dtype>
-void DistributedSolverParamServer<Dtype>::ReceiveAndSend() {
+void DistributedSolverParamServer<Dtype>::ReceiveAndSend(
+    boost::asio::io_service& io_s) {
   bool send_only;
   int incoming_iter;
 
-  boost::asio::io_service io_s;
   tcp::acceptor data_acceptor(
       io_s, tcp::endpoint(tcp::v4(), atoi(this->param_.tcp_port().c_str())));
   tcp::iostream data_stream;
@@ -163,9 +164,7 @@ void DistributedSolverParamClient<Dtype>::SendAndReceive(bool receive_only) {
     LOG(INFO) << "Sent " << total_sent << " variables.";
     CHECK(!data_stream.error()) << "Error in sending. Error code: "
         << data_stream.error().message();
-  }// else {
-  //  LOG(INFO) << "Not sending local changes. Receive only.";
-  //}
+  }
   data_stream.flush();
   // Receive parameters
   LOG(INFO) << "Receiving parameters.";

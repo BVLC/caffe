@@ -8,6 +8,7 @@
 #define CAFFE_OPTIMIZATION_DISTRIBUTED_SOLVER_HPP_
 
 #include <vector>
+#include <boost/asio.hpp>
 
 #include "caffe/solver.hpp"
 
@@ -28,7 +29,7 @@ class DistributedSolverParamServer : public Solver<Dtype> {
   virtual void SnapshotSolverState(SolverState* state) {}
   virtual void RestoreSolverState(const SolverState& state) {}
   // The function that implements the actual communication.
-  void ReceiveAndSend();
+  void ReceiveAndSend(boost::asio::io_service& io_s);
 
   int next_snapshot_;
 };
