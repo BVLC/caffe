@@ -65,13 +65,21 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
-
-bool ReadImageToDatum(const string& filename, const int label, Datum* datum) {
+bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, Datum* datum) {
   cv::Mat cv_img;
-  cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+  if (height > 0 && width > 0) {
+    cv::Mat cv_img_origin = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+    cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
+  } else {
+    cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+  }
   if (!cv_img.data) {
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
+  }
+  if (height > 0 && width > 0) {
+
   }
   datum->set_channels(3);
   datum->set_height(cv_img.rows);

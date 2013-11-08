@@ -22,10 +22,22 @@ namespace caffe {
 template <typename Dtype>
 class Net {
  public:
-  Net(const NetParameter& param,
+  Net(const NetParameter& param, const vector<Blob<Dtype>* >& bottom);
+  Net(const NetParameter& param, const vector<int>& bottom);
+  Net(const string& param_file, const vector<Blob<Dtype>* >& bottom);
+  Net(const string& param_file, const vector<int>& bottom);
+  Net(const string& param_file);
+  virtual ~Net() {}
+
+  // Initialize a network with the network parameter and the bottom vectors.
+  void Init(const NetParameter& param,
       const vector<Blob<Dtype>* >& bottom);
-  ~Net() {}
+
+  // Run forward using a set of bottom blobs, and return the result.
   const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom);
+  // Run forward using a serialized BlobProtoVector and return the result
+  // as a serialized BlobProtoVector
+  string Forward(const string& input_blob_protos);
   // The network backward should take no input and output, since it solely
   // computes the gradient w.r.t the parameters, and the data has already
   // been provided during the forward pass.
@@ -39,6 +51,7 @@ class Net {
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
   void CopyTrainedLayersFrom(const NetParameter& param);
+  void CopyTrainedLayersFrom(const string trained_filename);
   // Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
 

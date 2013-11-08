@@ -115,6 +115,7 @@ class Caffe {
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
 
+
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_HPP_

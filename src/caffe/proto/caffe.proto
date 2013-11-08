@@ -11,6 +11,12 @@ message BlobProto {
   repeated float diff = 6 [packed=true];
 }
 
+// The BlobProtoVector is simply a way to pass multiple blobproto instances
+// around.
+message BlobProtoVector {
+  repeated BlobProto blobs = 1;
+}
+
 message Datum {
   optional int32 channels = 1;
   optional int32 height = 2;

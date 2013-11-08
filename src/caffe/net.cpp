@@ -5,9 +5,12 @@
 #include <string>
 #include <vector>
 
+#include <boost/python.hpp>
+
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
+#include "caffe/util/io.hpp"
 
 using std::pair;
 using std::map;
@@ -17,6 +20,57 @@ namespace caffe {
 
 template <typename Dtype>
 Net<Dtype>::Net(const NetParameter& param,
+    const vector<Blob<Dtype>* >& bottom) {
+  Init(param, bottom);
+}
+
+template <typename Dtype>
+Net<Dtype>::Net(const NetParameter& param, const vector<int>& bottom) {
+  CHECK_EQ(bottom.size() % 4, 0);
+  vector<Blob<Dtype>* > bottom_blobs;
+  for (int i = 0; i < bottom.size(); i += 4) {
+    bottom_blobs.push_back(
+        new Blob<Dtype>(bottom[i], bottom[i+1], bottom[i+2], bottom[i+3]));
+  }
+  Init(param, bottom_blobs);
+  for (int i = 0; i < bottom_blobs.size(); ++i) {
+    delete bottom_blobs[i];
+  }
+}
+
+template <typename Dtype>
+Net<Dtype>::Net(const string& param_file,
+    const vector<Blob<Dtype>* >& bottom) {
+  NetParameter param;
+  ReadProtoFromTextFile(param_file, &param);
+  Init(param, bottom);
+}
+
+template <typename Dtype>
+Net<Dtype>::Net(const string& param_file, const vector<int>& bottom) {
+  CHECK_EQ(bottom.size() % 4, 0);
+  NetParameter param;
+  ReadProtoFromTextFile(param_file, &param);
+  vector<Blob<Dtype>* > bottom_blobs;
+  for (int i = 0; i < bottom.size(); i += 4) {
+    bottom_blobs.push_back(
+        new Blob<Dtype>(bottom[i], bottom[i+1], bottom[i+2], bottom[i+3]));
+  }
+  Init(param, bottom_blobs);
+  for (int i = 0; i < bottom_blobs.size(); ++i) {
+    delete bottom_blobs[i];
+  }
+}
+
+template <typename Dtype>
+Net<Dtype>::Net(const string& param_file) {
+  NetParameter param;
+  ReadProtoFromTextFile(param_file, &param);
+  Init(param, vector<Blob<Dtype>* >());
+}
+
+template <typename Dtype>
+void Net<Dtype>::Init(const NetParameter& param,
     const vector<Blob<Dtype>* >& bottom) {
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
@@ -182,6 +236,29 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
   return net_output_blobs_;
 }
 
+
+template <typename Dtype>
+string Net<Dtype>::Forward(const string& input_blob_protos) {
+  BlobProtoVector blob_proto_vec;
+  blob_proto_vec.ParseFromString(input_blob_protos);
+  CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blob_indices_.size())
+      << "Incorrect input size.";
+  for (int i = 0; i < blob_proto_vec.blobs_size(); ++i) {
+    blobs_[net_input_blob_indices_[i]]->FromProto(blob_proto_vec.blobs(i));
+  }
+  for (int i = 0; i < layers_.size(); ++i) {
+    layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
+  }
+  blob_proto_vec.Clear();
+  for (int i = 0; i < layers_.size(); ++i) {
+    net_output_blobs_[i]->ToProto(blob_proto_vec.add_blobs());
+  }
+  string output;
+  blob_proto_vec.SerializeToString(&output);
+  return output;
+}
+
+
 template <typename Dtype>
 Dtype Net<Dtype>::Backward() {
   Dtype loss = 0;
@@ -223,6 +300,13 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       target_blobs[j]->FromProto(source_layer.blobs(j));
     }
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
+  NetParameter param;
+  ReadProtoFromBinaryFile(trained_filename, &param);
+  CopyTrainedLayersFrom(param);
 }
 
 template <typename Dtype>
