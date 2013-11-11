@@ -16,6 +16,7 @@ class Solver {
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   virtual ~Solver() {}
+  inline Net<Dtype>* net() { return net_.get(); }
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
@@ -36,6 +37,7 @@ class Solver {
   // function that restores the state from a SolverState protocol buffer.
   void Restore(const char* resume_file);
   virtual void RestoreSolverState(const SolverState& state) = 0;
+
   SolverParameter param_;
   int iter_;
   shared_ptr<Net<Dtype> > net_;
