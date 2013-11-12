@@ -33,6 +33,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new EuclideanLossLayer<Dtype>(param);
   } else if (type == "im2col") {
     return new Im2colLayer<Dtype>(param);
+  } else if (type == "infogain_loss") {
+    return new InfogainLossLayer<Dtype>(param);
   } else if (type == "innerproduct") {
     return new InnerProductLayer<Dtype>(param);
   } else if (type == "lrn") {

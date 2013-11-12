@@ -45,7 +45,8 @@ INCLUDE_DIRS := ./src ./include /usr/local/include $(CUDA_INCLUDE_DIR) \
 	$(MKL_INCLUDE_DIR)
 LIBRARY_DIRS := /usr/lib /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
 LIBRARIES := cuda cudart cublas curand protobuf opencv_core opencv_highgui \
-	glog mkl_rt mkl_intel_thread leveldb snappy pthread boost_system
+	glog mkl_rt mkl_intel_thread leveldb snappy pthread boost_system \
+	opencv_imgproc
 WARNINGS := -Wall
 
 COMMON_FLAGS := -DNDEBUG $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))

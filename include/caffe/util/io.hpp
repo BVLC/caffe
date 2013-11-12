@@ -45,7 +45,7 @@ bool ReadImageToDatum(const string& filename, const int label,
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
-  ReadImageToDatum(filename, label, 0, 0, datum);
+  return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
 }  // namespace caffe
