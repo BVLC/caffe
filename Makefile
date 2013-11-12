@@ -105,6 +105,8 @@ clean:
 	@- $(RM) $(NAME) $(STATIC_NAME) $(TEST_BINS) $(EXAMPLE_BINS)
 	@- $(RM) $(OBJS) $(TEST_OBJS) $(EXAMPLE_OBJS)
 	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)
+	@- $(RM) include/caffe/proto/caffe.pb.h
+	@- $(RM) python/caffe/proto/caffe_pb2.py
 	@- $(RM) -rf build
 
 distclean: clean
