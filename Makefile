@@ -61,9 +61,9 @@ NVCC = nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
 all: $(NAME) $(STATIC_NAME) test examples pycaffe
 
-pycaffe: $(STATIC_NAME) src/pycaffe/pycaffe.cpp
-	$(CXX) -o pycaffe.so -I/usr/include/python2.7 -shared \
-			src/pycaffe/pycaffe.cpp $(STATIC_NAME) $(CXXFLAGS) $(LDFLAGS) \
+pycaffe: $(STATIC_NAME) python/caffe/pycaffe.cpp
+	$(CXX) -o python/caffe/pycaffe.so -I/usr/include/python2.7 -shared \
+			python/caffe/pycaffe.cpp $(STATIC_NAME) $(CXXFLAGS) $(LDFLAGS) \
 			$(WARNING) -lboost_python -lpython2.7
 
 linecount: clean
