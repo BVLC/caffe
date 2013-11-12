@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/python.hpp>
-
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
@@ -240,17 +238,19 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
 template <typename Dtype>
 string Net<Dtype>::Forward(const string& input_blob_protos) {
   BlobProtoVector blob_proto_vec;
-  blob_proto_vec.ParseFromString(input_blob_protos);
-  CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blob_indices_.size())
-      << "Incorrect input size.";
-  for (int i = 0; i < blob_proto_vec.blobs_size(); ++i) {
-    blobs_[net_input_blob_indices_[i]]->FromProto(blob_proto_vec.blobs(i));
+  if (net_input_blob_indices_.size()) {
+    blob_proto_vec.ParseFromString(input_blob_protos);
+    CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blob_indices_.size())
+        << "Incorrect input size.";
+    for (int i = 0; i < blob_proto_vec.blobs_size(); ++i) {
+      blobs_[net_input_blob_indices_[i]]->FromProto(blob_proto_vec.blobs(i));
+    }
   }
   for (int i = 0; i < layers_.size(); ++i) {
     layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
   }
   blob_proto_vec.Clear();
-  for (int i = 0; i < layers_.size(); ++i) {
+  for (int i = 0; i < net_output_blobs_.size(); ++i) {
     net_output_blobs_[i]->ToProto(blob_proto_vec.add_blobs());
   }
   string output;

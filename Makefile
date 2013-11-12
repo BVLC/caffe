@@ -57,9 +57,14 @@ LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 
 NVCC = nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
-.PHONY: all test clean distclean linecount examples distribute
+.PHONY: all test clean distclean linecount examples pycaffe distribute
 
-all: $(NAME) $(STATIC_NAME) test examples
+all: $(NAME) $(STATIC_NAME) test examples pycaffe
+
+pycaffe: $(STATIC_NAME) src/pycaffe/pycaffe.cpp
+	$(CXX) -o pycaffe.so -I/usr/include/python2.7 -shared \
+			src/pycaffe/pycaffe.cpp $(STATIC_NAME) $(CXXFLAGS) $(LDFLAGS) \
+			$(WARNING) -lboost_python -lpython2.7
 
 linecount: clean
 	cloc --read-lang-def=caffe.cloc src/caffe/
