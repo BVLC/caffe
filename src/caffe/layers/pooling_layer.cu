@@ -120,7 +120,8 @@ __global__ void StoPoolForwardTest(const int nthreads,
     int hend = min(hstart + ksize, height);
     int wstart = pw * stride;
     int wend = min(wstart + ksize, width);
-    Dtype cumsum = 0.;
+    // We set cumsum to be 0 to avoid divide-by-zero problems
+    Dtype cumsum = FLT_MIN;
     Dtype cumvalues = 0.;
     bottom_data += (n * channels + c) * height * width;
     // First pass: get sum
