@@ -63,7 +63,8 @@ all: $(NAME) $(STATIC_NAME) test examples pycaffe
 
 pycaffe: $(STATIC_NAME) python/caffe/pycaffe.cpp $(PROTO_GEN_PY)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
-	$(CXX) -o python/caffe/pycaffe.so -I/usr/include/python2.7 -shared \
+	$(CXX) -o python/caffe/pycaffe.so -I/usr/include/python2.7 \
+			-I/usr/local/lib/python2.7/dist-packages/numpy/core/include/ -shared \
 			python/caffe/pycaffe.cpp $(STATIC_NAME) $(CXXFLAGS) $(LDFLAGS) \
 			$(WARNING) -lboost_python -lpython2.7
 

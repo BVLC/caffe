@@ -32,6 +32,23 @@ def array_to_blobproto(arr, diff=None):
   return blob
 
 
+def arraylist_to_blobprotovecor_str(arraylist):
+  """Converts a list of arrays to a serialized blobprotovec, which could be
+  then passed to a network for processing.
+  """
+  vec = caffe_pb2.BlobProtoVector()
+  vec.blobs.extend([array_to_blobproto(arr) for arr in arraylist])
+  return vec.SerializeToString()
+
+
+def blobprotovector_str_to_arraylist(str):
+  """Converts a serialized blobprotovec to a list of arrays.
+  """
+  vec = caffe_pb2.BlobProtoVector()
+  vec.ParseFromString(str)
+  return [blobproto_to_array(blob) for blob in vec.blobs]
+
+
 def array_to_datum(arr, label=0):
   """Converts a 3-dimensional array to datum. If the array has dtype uint8,
   the output data will be encoded as a string. Otherwise, the output data

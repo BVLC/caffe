@@ -33,11 +33,15 @@ class Net {
   void Init(const NetParameter& param,
       const vector<Blob<Dtype>* >& bottom);
 
+  // Run forward with the input blobs already fed separately. You can get the
+  // input blobs using input_blobs().
+  const vector<Blob<Dtype>*>& ForwardPrefilled();
   // Run forward using a set of bottom blobs, and return the result.
   const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom);
   // Run forward using a serialized BlobProtoVector and return the result
   // as a serialized BlobProtoVector
   string Forward(const string& input_blob_protos);
+
   // The network backward should take no input and output, since it solely
   // computes the gradient w.r.t the parameters, and the data has already
   // been provided during the forward pass.
@@ -47,6 +51,9 @@ class Net {
     Forward(bottom);
     return Backward();
   }
+
+  // Updates the network weights based on the diff values computed.
+  void Update();
 
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
@@ -74,8 +81,11 @@ class Net {
   // returns the parameter learning rate multipliers
   inline vector<float>& params_lr() {return params_lr_; }
   inline vector<float>& params_weight_decay() { return params_weight_decay_; }
-  // Updates the network
-  void Update();
+  // Input and output blob numbers
+  inline int num_inputs() { return net_input_blobs_.size(); }
+  inline int num_outputs() { return net_output_blobs_.size(); }
+  inline vector<Blob<Dtype>*>& input_blobs() { return net_input_blobs_; }
+  inline vector<Blob<Dtype>*>& output_blobs() { return net_output_blobs_; }
 
  protected:
   // Function to get misc parameters, e.g. the learning rate multiplier and
@@ -91,15 +101,17 @@ class Net {
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
   vector<bool> blob_need_backward_;
-  // bottom_vecs stores the vectors containing the input for each layer
+  // bottom_vecs stores the vectors containing the input for each layer.
+  // They don't actually host the blobs (blobs_ does), so we simply store
+  // pointers.
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
   vector<vector<int> > bottom_id_vecs_;
   // top_vecs stores the vectors containing the output for each layer
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
-  // blob indices for the input and the output of the net.
+  // blob indices for the input and the output of the net
   vector<int> net_input_blob_indices_;
-  vector<int> net_output_blob_indices_;
+  vector<Blob<Dtype>*> net_input_blobs_;
   vector<Blob<Dtype>*> net_output_blobs_;
   string name_;
   // The parameters in the network.

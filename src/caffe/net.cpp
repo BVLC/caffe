@@ -88,6 +88,7 @@ void Net<Dtype>::Init(const NetParameter& param,
     blob_names_.push_back(blob_name);
     blob_need_backward_.push_back(false);
     net_input_blob_indices_.push_back(i);
+    net_input_blobs_.push_back(blob_pointer.get());
     blob_name_to_idx[blob_name] = i;
     available_blobs.insert(blob_name);
   }
@@ -174,7 +175,6 @@ void Net<Dtype>::Init(const NetParameter& param,
   for (set<string>::iterator it = available_blobs.begin();
       it != available_blobs.end(); ++it) {
     LOG(INFO) << "This network produces output " << *it;
-    net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
   }
   GetLearningRateAndWeightDecay();
@@ -221,12 +221,7 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 }
 
 template <typename Dtype>
-const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
-    const vector<Blob<Dtype>*> & bottom) {
-  // Copy bottom to internal bottom
-  for (int i = 0; i < bottom.size(); ++i) {
-    blobs_[net_input_blob_indices_[i]]->CopyFrom(*bottom[i]);
-  }
+const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled() {
   for (int i = 0; i < layers_.size(); ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
@@ -234,21 +229,29 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
   return net_output_blobs_;
 }
 
+template <typename Dtype>
+const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
+    const vector<Blob<Dtype>*> & bottom) {
+  // Copy bottom to internal bottom
+  for (int i = 0; i < bottom.size(); ++i) {
+    net_input_blobs_[i]->CopyFrom(*bottom[i]);
+  }
+  return ForwardPrefilled();
+}
+
 
 template <typename Dtype>
 string Net<Dtype>::Forward(const string& input_blob_protos) {
   BlobProtoVector blob_proto_vec;
-  if (net_input_blob_indices_.size()) {
+  if (net_input_blobs_.size()) {
     blob_proto_vec.ParseFromString(input_blob_protos);
-    CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blob_indices_.size())
+    CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blobs_.size())
         << "Incorrect input size.";
     for (int i = 0; i < blob_proto_vec.blobs_size(); ++i) {
-      blobs_[net_input_blob_indices_[i]]->FromProto(blob_proto_vec.blobs(i));
+      net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i));
     }
   }
-  for (int i = 0; i < layers_.size(); ++i) {
-    layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
-  }
+  ForwardPrefilled();
   blob_proto_vec.Clear();
   for (int i = 0; i < net_output_blobs_.size(); ++i) {
     net_output_blobs_[i]->ToProto(blob_proto_vec.add_blobs());
