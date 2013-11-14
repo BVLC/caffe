@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  cudaSetDevice(1);
+  cudaSetDevice(0);
   Caffe::set_phase(Caffe::TEST);
 
   if (argc == 5 && strcmp(argv[4], "GPU") == 0) {

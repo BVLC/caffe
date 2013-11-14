@@ -57,7 +57,10 @@ def prepare_image(filename, center_only = False):
   img = io.imread(filename)
   if img.ndim == 2:
     img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
-  img_reshape = transform.resize(img, (IMAGE_DIM,IMAGE_DIM)) * 255
+  elif img.shape[2] == 4:
+    img = img[:,:,:3]
+  # Resize and convert to BGR
+  img_reshape = (transform.resize(img, (IMAGE_DIM,IMAGE_DIM)) * 255)[:, :, ::-1]
   # subtract main
   img_reshape -= IMAGENET_MEAN
   return oversample(img_reshape, center_only)
@@ -101,6 +104,7 @@ def main(argv):
     print 'Use gpu.'
     net.caffenet.set_mode_gpu()
   files = glob.glob(os.path.join(FLAGS.root, "*." + FLAGS.ext))
+  files.sort()
   print 'A total of %d files' % len(files)
   output = np.empty((len(files), 1000), dtype=np.float32)
   start = time.time()
@@ -109,8 +113,8 @@ def main(argv):
     if i % 1000 == 0:
       print 'Processed %d files, elapsed %.2f s' % (i, time.time() - start)
   # Finally, write the results
-  np.save(FLAG.output, output)
-  print 'Done. Saved to %s.' % FLAGS.output 
+  np.save(FLAGS.output, output)
+  print 'Done. Saved to %s.' % FLAGS.output
 
 
 if __name__ == "__main__":
