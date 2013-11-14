@@ -9,6 +9,11 @@
 #include <numpy/arrayobject.h>
 #include "caffe/caffe.hpp"
 
+// Temporary solution for numpy < 1.7 versions: old macro.
+#ifndef NPY_ARRAY_C_CONTIGUOUS
+#define NPY_ARRAY_C_CONTIGUOUS NPY_C_CONTIGUOUS
+#endif
+
 
 using namespace caffe;
 using boost::python::extract;
