@@ -53,9 +53,9 @@ struct CaffeNet
         LOG(FATAL) << "Unknown Caffe mode.";
       }  // switch (Caffe::mode())
     }
-    LOG(INFO) << "Start";
+    //LOG(INFO) << "Start";
     const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
-    LOG(INFO) << "End";
+    //LOG(INFO) << "End";
     for (int i = 0; i < output_blobs.size(); ++i) {
       boost::python::object elem = top[i];
       PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
@@ -79,7 +79,6 @@ struct CaffeNet
       default:
         LOG(FATAL) << "Unknown Caffe mode.";
       }  // switch (Caffe::mode())
-
     }
   }
   
@@ -89,6 +88,7 @@ struct CaffeNet
   void set_phase_train() { Caffe::set_phase(Caffe::TRAIN); }
   void set_phase_test() { Caffe::set_phase(Caffe::TEST); }
 
+  void set_device(int device_id) { Caffe::SetDevice(device_id); }
 	shared_ptr<Net<float> > net_;
 };
 
@@ -100,5 +100,6 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("set_mode_gpu", &CaffeNet::set_mode_gpu)
       .def("set_phase_train", &CaffeNet::set_phase_train)
       .def("set_phase_test", &CaffeNet::set_phase_test)
+      .def("set_device", &CaffeNet::set_device)
   ;
 }
