@@ -23,16 +23,13 @@ Solver<Dtype>::Solver(const SolverParameter& param)
   // Scaffolding code
   NetParameter train_net_param;
   ReadProtoFromTextFile(param_.train_net(), &train_net_param);
-  // For the training network, there should be no input - so we simply create
-  // a dummy bottom_vec instance to initialize the networks.
-  vector<Blob<Dtype>*> bottom_vec;
   LOG(INFO) << "Creating training net.";
-  net_.reset(new Net<Dtype>(train_net_param, bottom_vec));
+  net_.reset(new Net<Dtype>(train_net_param));
   if (param_.has_test_net()) {
     LOG(INFO) << "Creating testing net.";
     NetParameter test_net_param;
     ReadProtoFromTextFile(param_.test_net(), &test_net_param);
-    test_net_.reset(new Net<Dtype>(test_net_param, bottom_vec));
+    test_net_.reset(new Net<Dtype>(test_net_param));
     CHECK_GT(param_.test_iter(), 0);
     CHECK_GT(param_.test_interval(), 0);
   }

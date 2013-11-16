@@ -17,73 +17,34 @@ using std::set;
 namespace caffe {
 
 template <typename Dtype>
-Net<Dtype>::Net(const NetParameter& param,
-    const vector<Blob<Dtype>* >& bottom) {
-  Init(param, bottom);
-}
-
-template <typename Dtype>
-Net<Dtype>::Net(const NetParameter& param, const vector<int>& bottom) {
-  CHECK_EQ(bottom.size() % 4, 0);
-  vector<Blob<Dtype>* > bottom_blobs;
-  for (int i = 0; i < bottom.size(); i += 4) {
-    bottom_blobs.push_back(
-        new Blob<Dtype>(bottom[i], bottom[i+1], bottom[i+2], bottom[i+3]));
-  }
-  Init(param, bottom_blobs);
-  for (int i = 0; i < bottom_blobs.size(); ++i) {
-    delete bottom_blobs[i];
-  }
-}
-
-template <typename Dtype>
-Net<Dtype>::Net(const string& param_file,
-    const vector<Blob<Dtype>* >& bottom) {
-  NetParameter param;
-  ReadProtoFromTextFile(param_file, &param);
-  Init(param, bottom);
-}
-
-template <typename Dtype>
-Net<Dtype>::Net(const string& param_file, const vector<int>& bottom) {
-  CHECK_EQ(bottom.size() % 4, 0);
-  NetParameter param;
-  ReadProtoFromTextFile(param_file, &param);
-  vector<Blob<Dtype>* > bottom_blobs;
-  for (int i = 0; i < bottom.size(); i += 4) {
-    bottom_blobs.push_back(
-        new Blob<Dtype>(bottom[i], bottom[i+1], bottom[i+2], bottom[i+3]));
-  }
-  Init(param, bottom_blobs);
-  for (int i = 0; i < bottom_blobs.size(); ++i) {
-    delete bottom_blobs[i];
-  }
+Net<Dtype>::Net(const NetParameter& param) {
+  Init(param);
 }
 
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file) {
   NetParameter param;
   ReadProtoFromTextFile(param_file, &param);
-  Init(param, vector<Blob<Dtype>* >());
+  Init(param);
 }
 
 template <typename Dtype>
-void Net<Dtype>::Init(const NetParameter& param,
-    const vector<Blob<Dtype>* >& bottom) {
+void Net<Dtype>::Init(const NetParameter& param) {
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
   set<string> available_blobs;
   int num_layers = param.layers_size();
-  CHECK_EQ(bottom.size(), param.input_size())
-      << "Incorrect bottom blob size.";
+  CHECK_EQ(param.input_size() * 4, param.input_dim_size())
+      << "Incorrect bottom blob dimension specifications.";
   // set the input blobs
   for (int i = 0; i < param.input_size(); ++i) {
     const string& blob_name = param.input(i);
-    CHECK_GT(bottom[i]->count(), 0);
     shared_ptr<Blob<Dtype> > blob_pointer(
-        new Blob<Dtype>(bottom[i]->num(), bottom[i]->channels(),
-            bottom[i]->height(), bottom[i]->width()));
+        new Blob<Dtype>(param.input_dim(i * 4),
+                        param.input_dim(i * 4 + 1),
+                        param.input_dim(i * 4 + 2),
+                        param.input_dim(i * 4 + 3)));
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
     blob_need_backward_.push_back(false);

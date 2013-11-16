@@ -3,9 +3,9 @@ layers {
   layer {
     name: "data"
     type: "data"
-    source: "/home/jiayq/caffe-val-leveldb"
-    meanfile: "/home/jiayq/ilsvrc2012_mean.binaryproto"
-    batchsize: 50
+    source: "/home/jiayq/Data/ILSVRC12/val-leveldb"
+    meanfile: "/home/jiayq/Data/ILSVRC12/image_mean.binaryproto"
+    batchsize: 200
     cropsize: 227
     mirror: false
   }
@@ -260,10 +260,18 @@ layers {
 }
 layers {
   layer {
+    name: "prob"
+    type: "softmax"
+  }
+  bottom: "fc8"
+  top: "prob"
+}
+layers {
+  layer {
     name: "accuracy"
     type: "accuracy"
   }
-  bottom: "fc8"
+  bottom: "prob"
   bottom: "label"
   top: "accuracy"
 }

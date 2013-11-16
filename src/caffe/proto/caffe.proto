@@ -102,7 +102,12 @@ message LayerConnection {
 message NetParameter {
   optional string name = 1; // consider giving the network a name
   repeated LayerConnection layers = 2; // a bunch of layers.
-  repeated string input = 3; // The input to the network
+  // The input blobs to the network.
+  repeated string input = 3;
+  // The dim of the input blobs. For each input blob there should be four
+  // values specifying the num, channels, height and width of the input blob.
+  // Thus, there should be a total of (4 * #input) numbers.
+  repeated int32 input_dim = 4;
 }
 
 message SolverParameter {

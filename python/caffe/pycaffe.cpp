@@ -25,13 +25,8 @@ using boost::python::object;
 // A simple wrapper over CaffeNet that runs the forward process.
 struct CaffeNet
 {
-  CaffeNet(string param_file, string pretrained_param_file,
-      list bottom) {
-    vector<int> bottom_vec;
-    for (int i = 0; i < len(bottom); ++i) {
-      bottom_vec.push_back(extract<int>(bottom[i]));
-    }
-    net_.reset(new Net<float>(param_file, bottom_vec));
+  CaffeNet(string param_file, string pretrained_param_file) {
+    net_.reset(new Net<float>(param_file));
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
 
@@ -112,7 +107,7 @@ struct CaffeNet
 BOOST_PYTHON_MODULE(pycaffe)
 {
   boost::python::class_<CaffeNet>(
-      "CaffeNet", boost::python::init<string, string, list>())
+      "CaffeNet", boost::python::init<string, string>())
       .def("Forward", &CaffeNet::Forward)
       .def("set_mode_cpu", &CaffeNet::set_mode_cpu)
       .def("set_mode_gpu", &CaffeNet::set_mode_gpu)

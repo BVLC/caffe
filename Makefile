@@ -1,6 +1,6 @@
 # The makefile for caffe. Extremely hack.
 PROJECT := caffe
-TEST_GPUID := 1
+TEST_GPUID := 0
 
 # The target static library and shared library name
 NAME := lib$(PROJECT).so

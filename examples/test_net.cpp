@@ -32,10 +32,9 @@ int main(int argc, char** argv) {
     Caffe::set_mode(Caffe::CPU);
   }
 
-  vector<Blob<float>*> bottom_vec;
   NetParameter test_net_param;
   ReadProtoFromTextFile(argv[1], &test_net_param);
-  Net<float> caffe_test_net(test_net_param, bottom_vec);
+  Net<float> caffe_test_net(test_net_param);
   NetParameter trained_net_param;
   ReadProtoFromBinaryFile(argv[2], &trained_net_param);
   caffe_test_net.CopyTrainedLayersFrom(trained_net_param);
@@ -44,9 +43,10 @@ int main(int argc, char** argv) {
   LOG(ERROR) << "Running " << total_iter << "Iterations.";
 
   double test_accuracy = 0;
+  vector<Blob<float>*> dummy_blob_input_vec;
   for (int i = 0; i < total_iter; ++i) {
     const vector<Blob<float>*>& result =
-        caffe_test_net.Forward(bottom_vec);
+        caffe_test_net.Forward(dummy_blob_input_vec);
     test_accuracy += result[0]->cpu_data()[0];
     LOG(ERROR) << "Batch " << i << ", accuracy: " << result[0]->cpu_data()[0];
   }

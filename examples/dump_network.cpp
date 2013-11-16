@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     input_vec.push_back(input_blob.get());
   }
 
-  shared_ptr<Net<float> > caffe_net(new Net<float>(net_param, input_vec));
+  shared_ptr<Net<float> > caffe_net(new Net<float>(net_param));
   caffe_net->CopyTrainedLayersFrom(trained_net_param);
 
   string output_prefix(argv[4]);

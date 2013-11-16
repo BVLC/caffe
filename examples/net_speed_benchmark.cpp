@@ -26,12 +26,13 @@ int main(int argc, char** argv) {
   NetParameter net_param;
   ReadProtoFromTextFile(argv[1],
       &net_param);
-  vector<Blob<float>*> bottom_vec;
-  Net<float> caffe_net(net_param, bottom_vec);
+  Net<float> caffe_net(net_param);
 
   // Run the network without training.
   LOG(ERROR) << "Performing Forward";
-  caffe_net.Forward(bottom_vec);
+  // Note that for the speed benchmark, we will assume that the network does
+  // not take any input blobs.
+  caffe_net.Forward(vector<Blob<float>*>());
   LOG(ERROR) << "Performing Backward";
   LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
 
