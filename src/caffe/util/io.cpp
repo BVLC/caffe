@@ -73,7 +73,7 @@ bool ReadImageToDatum(const string& filename, const int label,
     cv::Mat cv_img_origin = cv::imread(filename, cv::IMREAD_COLOR);
     cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
   } else {
-    cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+    cv_img = cv::imread(filename, cv::IMREAD_COLOR);
   }
   if (!cv_img.data) {
     LOG(ERROR) << "Could not open or find file " << filename;
