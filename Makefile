@@ -59,7 +59,7 @@ NVCC = $(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
 .PHONY: all test clean distclean linecount examples pycaffe distribute
 
-all: $(NAME) $(STATIC_NAME) test examples pycaffe
+all: $(NAME) $(STATIC_NAME) examples pycaffe
 
 pycaffe: $(STATIC_NAME) python/caffe/pycaffe.cpp $(PROTO_GEN_PY)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
