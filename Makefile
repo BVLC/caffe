@@ -55,7 +55,7 @@ NVCCFLAGS := -Xcompiler -fPIC -O2 $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 
-NVCC = nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
+NVCC = $(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
 .PHONY: all test clean distclean linecount examples pycaffe distribute
 
@@ -98,7 +98,7 @@ $(CU_OBJS): %.cuo: %.cu
 	$(NVCC) -c $< -o $@
 
 $(PROTO_GEN_CC): $(PROTO_SRCS)
-	protoc --proto_path=src --cpp_out=src --python_out=src $(PROTO_SRCS)
+	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS)
 	mkdir -p include/caffe/proto
 	cp $(PROTO_GEN_HEADER) include/caffe/proto/
 
