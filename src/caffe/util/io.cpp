@@ -70,7 +70,7 @@ bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, Datum* datum) {
   cv::Mat cv_img;
   if (height > 0 && width > 0) {
-    cv::Mat cv_img_origin = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+    cv::Mat cv_img_origin = cv::imread(filename, cv::IMREAD_COLOR);
     cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
   } else {
     cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
