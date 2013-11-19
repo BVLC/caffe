@@ -62,7 +62,6 @@ NVCC = $(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 all: $(NAME) $(STATIC_NAME) examples pycaffe
 
 pycaffe: $(STATIC_NAME) python/caffe/pycaffe.cpp $(PROTO_GEN_PY)
-	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
 	$(CXX) -o python/caffe/pycaffe.so -I/usr/include/python2.7 \
 			-I/usr/local/lib/python2.7/dist-packages/numpy/core/include/ -shared \
 			python/caffe/pycaffe.cpp $(STATIC_NAME) $(CXXFLAGS) $(LDFLAGS) \
@@ -96,6 +95,9 @@ $(EXAMPLE_OBJS): $(PROTO_GEN_CC)
 
 $(CU_OBJS): %.cuo: %.cu
 	$(NVCC) -c $< -o $@
+
+$(PROTO_GEN_PY): $(PROTO_SRCS)
+	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
 
 $(PROTO_GEN_CC): $(PROTO_SRCS)
 	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS)
