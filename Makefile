@@ -1,22 +1,56 @@
-# The makefile for caffe. Extremely hack.
+# The makefile for caffe. Extremely hacky.
 PROJECT := caffe
 TEST_GPUID := 0
+
+# define third-party library paths
+# CHANGE YOUR CUDA PATH IF IT IS NOT THIS
+CUDA_DIR := /usr/local/cuda
+# CHANGE YOUR CUDA ARCH IF IT IS NOT THIS
+CUDA_ARCH := -arch=sm_30
+# CHANGE YOUR MKL PATH IF IT IS NOT THIS
+MKL_DIR := /opt/intel/mkl
+# PUT ALL OTHER INCLUDE AND LIB DIRECTORIES HERE
+INCLUDE_DIRS := /usr/local/include /usr/include/python2.7 \
+    /usr/local/lib/python2.7/dist-packages/numpy/core/include
+LIBRARY_DIRS := /usr/lib /usr/local/lib
+
+
+##############################################################################
+# After this line, things should happen automatically.
+##############################################################################
 
 # The target static library and shared library name
 NAME := lib$(PROJECT).so
 STATIC_NAME := lib$(PROJECT).a
-# All source files
+
+##############################
+# Get all source files
+##############################
+# CXX_SRCS are the source files excluding the test ones.
 CXX_SRCS := $(shell find src/caffe ! -name "test_*.cpp" -name "*.cpp")
+# CU_SRCS are the cuda source files
 CU_SRCS := $(shell find src/caffe -name "*.cu")
+# TEST_SRCS are the test source files
 TEST_SRCS := $(shell find src/caffe -name "test_*.cpp")
 GTEST_SRC := src/gtest/gtest-all.cpp
+# EXSAMPLE_SRCS are the source files for the example binaries
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
+# PROTO_SRCS are the protocol buffer definitions
 PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
+# PYCAFFE_SRC is the python wrapper for caffe
+PYCAFFE_SRC := python/caffe/pycaffe.cpp
+PYCAFFE_SO := python/caffe/pycaffe.so
+
+##############################
+# Derive generated files
+##############################
 # The generated files for protocol buffers
 PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}
 PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
-# The objects that are needed to generate the library
+# The objects corresponding to the source files
+# These objects will be linked into the final shared library, so we 
+# exclude the test and example objects.
 CXX_OBJS := ${CXX_SRCS:.cpp=.o}
 CU_OBJS := ${CU_SRCS:.cu=.cuo}
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
@@ -29,43 +63,37 @@ GTEST_OBJ := ${GTEST_SRC:.cpp=.o}
 EXAMPLE_BINS :=${EXAMPLE_OBJS:.o=.bin}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
 
-# define third-party library paths
-CUDA_DIR := /usr/local/cuda
-CUDA_ARCH := -arch=sm_30
-MKL_DIR := /opt/intel/mkl
-
+##############################
+# Derive include and lib directories
+##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64
 MKL_INCLUDE_DIR := $(MKL_DIR)/include
 MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
-# define inclue and libaries
-# We put src here just for gtest
-INCLUDE_DIRS := ./src ./include /usr/local/include $(CUDA_INCLUDE_DIR) \
-	$(MKL_INCLUDE_DIR)
-LIBRARY_DIRS := /usr/lib /usr/local/lib $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
-LIBRARIES := cuda cudart cublas curand protobuf opencv_core opencv_highgui \
+INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
+LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
+LIBRARIES := cudart cublas curand protobuf opencv_core opencv_highgui \
 	glog mkl_rt mkl_intel_thread leveldb snappy pthread boost_system \
 	opencv_imgproc
+PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
 COMMON_FLAGS := -DNDEBUG $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC -O2 $(COMMON_FLAGS)
 NVCCFLAGS := -Xcompiler -fPIC -O2 $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
-		$(foreach library,$(LIBRARIES),-l$(library))
+		$(foreach library,$(LIBRARIES),-l$(library)) \
+		-Wl,-rpath,../libs/
+PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
-NVCC = $(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CPPFLAGS) $(CUDA_ARCH)
 
-.PHONY: all test clean distclean linecount examples pycaffe distribute
+##############################
+# Define build targets
+##############################
+.PHONY: all test clean linecount examples pycaffe distribute
 
 all: $(NAME) $(STATIC_NAME) examples pycaffe
-
-pycaffe: $(STATIC_NAME) python/caffe/pycaffe.cpp $(PROTO_GEN_PY)
-	$(CXX) -o python/caffe/pycaffe.so -I/usr/include/python2.7 \
-			-I/usr/local/lib/python2.7/dist-packages/numpy/core/include/ -shared \
-			python/caffe/pycaffe.cpp $(STATIC_NAME) $(CXXFLAGS) $(LDFLAGS) \
-			$(WARNING) -lboost_python -lpython2.7
 
 linecount: clean
 	cloc --read-lang-def=caffe.cloc src/caffe/
@@ -74,8 +102,12 @@ test: $(TEST_BINS)
 
 examples: $(EXAMPLE_BINS)
 
+pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY)
+	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) \
+		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+
 $(NAME): $(PROTO_OBJS) $(OBJS)
-	$(CXX) -shared $(OBJS) -o $(NAME) $(LDFLAGS) $(WARNINGS)
+	$(CXX) -shared -o $(NAME) $(OBJS) $(LDFLAGS) $(WARNINGS)
 
 $(STATIC_NAME): $(PROTO_OBJS) $(OBJS)
 	ar rcs $(STATIC_NAME) $(PROTO_OBJS) $(OBJS)
@@ -94,7 +126,7 @@ $(OBJS): $(PROTO_GEN_CC)
 $(EXAMPLE_OBJS): $(PROTO_GEN_CC)
 
 $(CU_OBJS): %.cuo: %.cu
-	$(NVCC) -c $< -o $@
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 
 $(PROTO_GEN_PY): $(PROTO_SRCS)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
@@ -112,13 +144,16 @@ clean:
 	@- $(RM) python/caffe/proto/caffe_pb2.py
 	@- $(RM) -rf build
 
-distclean: clean
-
 distribute: all
 	mkdir build
+	# add include
 	cp -r include build/
+	# add example binaries
 	mkdir build/bin
 	cp $(EXAMPLE_BINS) build/bin
+	# add libraries
 	mkdir build/lib
 	cp $(NAME) build/lib
 	cp $(STATIC_NAME) build/lib
+	# add python - it's not the standard way, indeed...
+	cp -r python build/python
