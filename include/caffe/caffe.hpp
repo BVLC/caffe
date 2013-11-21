@@ -11,7 +11,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/solver.hpp"
-#include "caffe/distributed_solver.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
