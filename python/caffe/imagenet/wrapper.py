@@ -106,12 +106,12 @@ def main(argv):
   files = glob.glob(os.path.join(FLAGS.root, "*." + FLAGS.ext))
   files.sort()
   print 'A total of %d files' % len(files)
-  output = np.empty((len(files), self._output_blobs[0].shape[1]),
+  output = np.empty((len(files), net._output_blobs[0].shape[1]),
       dtype=np.float32)
   start = time.time()
   for i, f in enumerate(files):
     output[i] = net.predict(f)
-    if i % 1000 == 0:
+    if i % 1000 == 0 and i > 0:
       print 'Processed %d files, elapsed %.2f s' % (i, time.time() - start)
   # Finally, write the results
   np.save(FLAGS.output, output)
