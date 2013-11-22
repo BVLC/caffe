@@ -1,46 +1,62 @@
-function res = matcaffe_demo(im, gpu)
+function scores = matcaffe_demo(im, use_gpu)
+% scores = matcaffe_demo(im, use_gpu)
+% 
+% Demo of the matlab wrapper using the ILSVRC network.
+%
+% input
+%   im       color image as uint8 HxWx3
+%   use_gpu  1 to use the GPU, 0 to use the CPU
+%
+% output
+%   scores   1000-dimensional ILSVRC score vector
 
-% load image net mean
-%  // In matlab, reading an image gives [height, width, channels] where height is the fastest dimension
-%  //  - want to have the order as [width, height, channels, images]
-%  //    (channels in BGR order)
-%  //  - 
+model_def_file = '../../examples/imagenet_deploy.prototxt';
+% NOTE: you'll have to get the pre-trained ILSVRC network
+model_file = '../../examples/alexnet_train_iter_470000';
 
-% 1: swap channel order to BGR
-% 2: extract 5 crops and their flips
-% 3: swap rows and columns and concat along 4th dim
-% 4: wrap in cell aray
+% init caffe network (spews logging info)
+caffe('init', model_def_file, model_file);
 
-caffe('init');
-if gpu
+% set to use GPU or CPU
+if exist('use_gpu', 'var') && use_gpu
   caffe('set_mode_gpu');
 else
   caffe('set_mode_cpu');
 end
+
+% put into test mode
 caffe('set_phase_test');
+
+% prepare oversampled input
 tic;
-blob = {prepare_image(im)};
+input_data = {prepare_image(im)};
 toc;
+
+% do forward pass to get scores
 tic;
-res = caffe('forward', blob);
+scores = caffe('forward', input_data);
 toc;
-res = reshape(res{1}, [1000 10]);
-res = mean(res, 2);
+
+% average output scores
+scores = reshape(scores{1}, [1000 10]);
+scores = mean(scores, 2);
 
 
+% ------------------------------------------------------------------------
 function images = prepare_image(im)
+% ------------------------------------------------------------------------
 d = load('ilsvrc_2012_mean');
-image_mean = d.image_mean;
+IMAGE_MEAN = d.image_mean;
 IMAGE_DIM = 256;
 CROPPED_DIM = 227;
 
 % resize to fixed input size
 im = single(im);
 im = imresize(im, [IMAGE_DIM IMAGE_DIM], 'bilinear');
-% permute from RGB to BGR
-im = im(:,:,[3 2 1]) - image_mean;
+% permute from RGB to BGR (IMAGE_MEAN is already BGR)
+im = im(:,:,[3 2 1]) - IMAGE_MEAN;
 
-% oversample
+% oversample (4 corners, center, and their x-axis flips)
 images = zeros(CROPPED_DIM, CROPPED_DIM, 3, 10, 'single');
 indices = [0 IMAGE_DIM-CROPPED_DIM] + 1;
 curr = 1;
