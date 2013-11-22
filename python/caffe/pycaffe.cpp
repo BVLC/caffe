@@ -91,6 +91,51 @@ struct CaffeNet
     }
   }
 
+  void Backward(list top_diff, list bottom_diff) {
+    vector<Blob<float>*>& output_blobs = net_->output_blobs();
+    vector<Blob<float>*>& input_blobs = net_->input_blobs();
+    CHECK_EQ(len(bottom_diff), input_blobs.size());
+    CHECK_EQ(len(top_diff), output_blobs.size());
+    // First, copy the output diff
+    for (int i = 0; i < output_blobs.size(); ++i) {
+      object elem = top_diff[i];
+      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
+      check_array_against_blob(arr, output_blobs[i]);
+      switch (Caffe::mode()) {
+      case Caffe::CPU:
+        memcpy(output_blobs[i]->mutable_cpu_diff(), PyArray_DATA(arr),
+            sizeof(float) * output_blobs[i]->count());
+        break;
+      case Caffe::GPU:
+        cudaMemcpy(output_blobs[i]->mutable_gpu_diff(), PyArray_DATA(arr),
+            sizeof(float) * output_blobs[i]->count(), cudaMemcpyHostToDevice);
+        break;
+      default:
+        LOG(FATAL) << "Unknown Caffe mode.";
+      }  // switch (Caffe::mode())
+    }
+    //LOG(INFO) << "Start";
+    net_->Backward();
+    //LOG(INFO) << "End";
+    for (int i = 0; i < input_blobs.size(); ++i) {
+      object elem = bottom_diff[i];
+      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
+      check_array_against_blob(arr, input_blobs[i]);
+      switch (Caffe::mode()) {
+      case Caffe::CPU:
+        memcpy(PyArray_DATA(arr), input_blobs[i]->cpu_diff(),
+            sizeof(float) * input_blobs[i]->count());
+        break;
+      case Caffe::GPU:
+        cudaMemcpy(PyArray_DATA(arr), input_blobs[i]->gpu_diff(),
+            sizeof(float) * input_blobs[i]->count(), cudaMemcpyDeviceToHost);
+        break;
+      default:
+        LOG(FATAL) << "Unknown Caffe mode.";
+      }  // switch (Caffe::mode())
+    }
+  }
+
   // The caffe::Caffe utility functions.
   void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
   void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
@@ -108,11 +153,12 @@ BOOST_PYTHON_MODULE(pycaffe)
 {
   boost::python::class_<CaffeNet>(
       "CaffeNet", boost::python::init<string, string>())
-      .def("Forward", &CaffeNet::Forward)
-      .def("set_mode_cpu", &CaffeNet::set_mode_cpu)
-      .def("set_mode_gpu", &CaffeNet::set_mode_gpu)
+      .def("Forward",         &CaffeNet::Forward)
+      .def("Backward",        &CaffeNet::Backward)
+      .def("set_mode_cpu",    &CaffeNet::set_mode_cpu)
+      .def("set_mode_gpu",    &CaffeNet::set_mode_gpu)
       .def("set_phase_train", &CaffeNet::set_phase_train)
-      .def("set_phase_test", &CaffeNet::set_phase_test)
-      .def("set_device", &CaffeNet::set_device)
+      .def("set_phase_test",  &CaffeNet::set_phase_test)
+      .def("set_device",      &CaffeNet::set_device)
   ;
 }

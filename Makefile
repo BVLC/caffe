@@ -49,7 +49,7 @@ PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}
 PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
 # The objects corresponding to the source files
-# These objects will be linked into the final shared library, so we 
+# These objects will be linked into the final shared library, so we
 # exclude the test and example objects.
 CXX_OBJS := ${CXX_SRCS:.cpp=.o}
 CU_OBJS := ${CU_SRCS:.cu=.cuo}
@@ -84,7 +84,7 @@ CXXFLAGS += -pthread -fPIC -O2 $(COMMON_FLAGS)
 NVCCFLAGS := -Xcompiler -fPIC -O2 $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library)) \
-		-Wl,-rpath,../libs/
+		-Wl,-rpath,../lib/
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 
