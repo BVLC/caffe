@@ -108,6 +108,10 @@ message NetParameter {
   // values specifying the num, channels, height and width of the input blob.
   // Thus, there should be a total of (4 * #input) numbers.
   repeated int32 input_dim = 4;
+  // Whether the network will force every layer to carry out backward operation.
+  // If set False, then whether to carry out backward is determined
+  // automatically according to the net structure and learning rates.
+  optional bool force_backward = 5 [ default = false ];
 }
 
 message SolverParameter {

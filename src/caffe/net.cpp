@@ -47,7 +47,7 @@ void Net<Dtype>::Init(const NetParameter& param) {
                         param.input_dim(i * 4 + 3)));
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
-    blob_need_backward_.push_back(false);
+    blob_need_backward_.push_back(param.force_backward());
     net_input_blob_indices_.push_back(i);
     net_input_blobs_.push_back(blob_pointer.get());
     blob_name_to_idx[blob_name] = i;
@@ -64,7 +64,7 @@ void Net<Dtype>::Init(const NetParameter& param) {
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
-    bool need_backward = false;
+    bool need_backward = param.force_backward();
     // Figure out this layer's input and output
     for (int j = 0; j < layer_connection.bottom_size(); ++j) {
       const string& blob_name = layer_connection.bottom(j);
@@ -102,7 +102,7 @@ void Net<Dtype>::Init(const NetParameter& param) {
         shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
         blobs_.push_back(blob_pointer);
         blob_names_.push_back(blob_name);
-        blob_need_backward_.push_back(false);
+        blob_need_backward_.push_back(param.force_backward());
         blob_name_to_idx[blob_name] = blob_names_.size() - 1;
         available_blobs.insert(blob_name);
         top_vecs_[i].push_back(blobs_[blob_names_.size() - 1].get());
