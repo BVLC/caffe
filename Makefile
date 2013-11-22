@@ -40,6 +40,9 @@ PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
 # PYCAFFE_SRC is the python wrapper for caffe
 PYCAFFE_SRC := python/caffe/pycaffe.cpp
 PYCAFFE_SO := python/caffe/pycaffe.so
+# MATCAFFE_SRC is the matlab wrapper for caffe
+MATCAFFE_SRC := matlab/caffe/matcaffe.cpp
+MATCAFFE_SO := matlab/caffe/caffe
 
 ##############################
 # Derive generated files
@@ -105,6 +108,12 @@ examples: $(EXAMPLE_BINS)
 pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY)
 	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+
+matcaffe: $(STATIC_NAME) $(MATCAFFE_SRC)
+	mex $(MATCAFFE_SRC) $(STATIC_NAME) \
+		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
+		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" \
+		-o $(MATCAFFE_SO)
 
 $(NAME): $(PROTO_OBJS) $(OBJS)
 	$(CXX) -shared -o $(NAME) $(OBJS) $(LDFLAGS) $(WARNINGS)
