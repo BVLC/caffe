@@ -9,6 +9,16 @@ function scores = matcaffe_demo(im, use_gpu)
 %
 % output
 %   scores   1000-dimensional ILSVRC score vector
+%
+% You may need to do the following before you start matlab:
+%  $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda/lib64
+%  $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+% Or the equivalent based on where things are installed on your system
+%
+% Usage:
+%  im = imread('../../examples/cat.jpg');
+%  scores = matcaffe_demo(im, 1);
+%  [score, class] = max(scores);
 
 model_def_file = '../../examples/imagenet_deploy.prototxt';
 % NOTE: you'll have to get the pre-trained ILSVRC network
