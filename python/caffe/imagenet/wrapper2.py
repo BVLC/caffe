@@ -2,7 +2,12 @@
 wrapper2.py classifies a number of images at once, optionally using
 selective search crops.
 
-TODO: also store the window coordinates with the image filenames.
+The selective_search_ijcv_with_python code is available at
+https://github.com/sergeyk/selective_search_ijcv_with_python
+
+TODO:
+- [ ] store the window coordinates with the image filenames.
+- [ ] batch up image filenames as well: don't want to load all of them into memory
 """
 import numpy as np
 import os
@@ -12,7 +17,7 @@ import pandas as pd
 import time
 from skimage import io
 from skimage import transform
-import selective_search_ijcv as selective_search
+import selective_search_ijcv_with_python as selective_search
 import caffe
 
 IMAGE_DIM = 256
@@ -42,11 +47,19 @@ def load_image(filename):
 
 
 def format_image(image, window=None, dim=IMAGE_DIM):
+  """
+  Input:
+    image: (H x W x 3) ndarray
+    window: (4) ndarray
+      (y, x, h, w) coordinates
+    dim: int
+      Final width of the square image.
+  """
   # Crop a subimage if window is provided.
   if window is not None:
     image = image[
-      window[1]:window[1] + window[3],
-      window[0]:window[0] + window[2]
+      window[0]:window[2],
+      window[1]:window[3]
     ]
 
   # Resize to ImageNet size, convert to BGR, subtract mean.
@@ -54,28 +67,26 @@ def format_image(image, window=None, dim=IMAGE_DIM):
   image -= IMAGENET_MEAN
 
   # Resize further if needed.
-  if not np.all(dim == IMAGE_DIM):
-    image = transform.resize(image, (dim, dim) * 255)
-
+  if not dim == IMAGE_DIM:
+    image = transform.resize(image, (dim, dim))
   image = image.swapaxes(1, 2).swapaxes(0, 1)
   return image
 
 
-def _assemble_images_center_only(image_fnames, max_batch_size):
+def _assemble_images_center_only(image_fnames):
   all_images = []
   for image_filename in image_fnames:
     image = format_image(load_image(image_filename))
-
     all_images.append(np.ascontiguousarray(
-        image[:,
+        image[np.newaxis, :,
               IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
               IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM],
         dtype=np.float32
     ))
-  return all_images[np.newaxis, :], image_fnames
+  return all_images, image_fnames
 
 
-def _assemble_images_corners(image_fnames, max_batch_size):
+def _assemble_images_corners(image_fnames):
   all_images = []
   fnames = []
   for image_filename in image_fnames:
@@ -93,16 +104,14 @@ def _assemble_images_corners(image_fnames, max_batch_size):
       IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
       IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM
     ]
-
-    # Add flipped versions.
-    images[5:] = images[:5, :, :, ::-1]
+    images[5:] = images[:5, :, :, ::-1]  # flipped versions
 
     all_images.append(images)
     fnames.append(image_filename)
   return all_images, fnames
 
 
-def _assemble_images_selective_search(image_fnames, max_batch_size):
+def _assemble_images_selective_search(image_fnames):
   windows_list = selective_search.get_windows(image_fnames)
   all_images = []
   fnames = []
@@ -136,27 +145,24 @@ def assemble_batches(
       images: (X x 3 x 227 x 227) ndarray, where X <= max_batch_size
   """
   if crop_mode == 'center_only':
-    all_images, fnames = _assemble_images_center_only(
-      image_fnames, max_batch_size)
+    all_images, fnames = _assemble_images_center_only(image_fnames)
 
   elif crop_mode == 'corners':
-    all_images, fnames = _assemble_images_corners(
-      image_fnames, max_batch_size)
+    all_images, fnames = _assemble_images_corners(image_fnames)
 
   elif crop_mode == 'selective_search':
-    all_images, fnames = _assemble_images_selective_search(
-      image_fnames, max_batch_size)
+    all_images, fnames = _assemble_images_selective_search(image_fnames)
 
   else:
     raise Exception("Unknown mode: not in {}".format(CROP_MODES))
 
   # Concatenate into one (N, 3, CROPPED_DIM, CROPPED_DIM) array,
   # then split to (N/max_batch_size, 3, CROPPED_DIM, CROPPED_DIM) chunks
-  all_images = np.concatenate(all_images, 0)
   all_fnames = np.repeat(fnames, [len(images) for images in all_images])
+  all_images = np.concatenate(all_images, 0)
   assert(all_images.shape[0] == all_fnames.shape[0])
 
-  num_batches = int(all_images.shape[0] / max_batch_size)
+  num_batches = 1 + int(all_images.shape[0] / max_batch_size)
   image_batches = np.array_split(all_images, num_batches, axis=0)
   fname_batches = np.array_split(all_fnames, num_batches, axis=0)
   return image_batches, fname_batches
@@ -183,7 +189,7 @@ if __name__ == "__main__":
   gflags.DEFINE_string(
     "pretrained_model", "", "The pretrained model.")
   gflags.DEFINE_boolean(
-    "gpu", True, "use gpu for computation")
+    "gpu", False, "use gpu for computation")
   gflags.DEFINE_string(
     "crop_mode", "center_only", "Crop mode, from {}".format(CROP_MODES))
   gflags.DEFINE_string(
@@ -202,12 +208,16 @@ if __name__ == "__main__":
     caffenet.set_mode_gpu()
 
   ## Load list of image filenames and assemble into batches.
-  with open(gflags.images_file) as f:
+  with open(FLAGS.images_file) as f:
     image_fnames = [_.strip() for _ in f.readlines()]
   image_batches, fname_batches = assemble_batches(
     image_fnames, FLAGS.crop_mode)
   print 'Running on {} files in {} batches'.format(
     len(image_fnames), len(image_batches))
+
+  from IPython import embed; embed()
+  # TODO: debug this
+  # F1125 07:17:35.980950  6826 pycaffe.cpp:52] Check failed: len(bottom) == input_blobs.size() (1 vs. 0)
 
   # Process the batches.
   start = time.time()
