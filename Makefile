@@ -9,6 +9,9 @@ CUDA_DIR := /usr/local/cuda
 CUDA_ARCH := -arch=sm_30
 # CHANGE YOUR MKL PATH IF IT IS NOT THIS
 MKL_DIR := /opt/intel/mkl
+# CHANGE YOUR MATLAB PATH IF IT IS NOT THIS
+# your mex binary should be located at $(MATLAB_DIR)/bin/mex
+MATLAB_DIR := /usr/local
 # PUT ALL OTHER INCLUDE AND LIB DIRECTORIES HERE
 INCLUDE_DIRS := /usr/local/include /usr/include/python2.7 \
     /usr/local/lib/python2.7/dist-packages/numpy/core/include
@@ -96,7 +99,7 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 ##############################
 .PHONY: all test clean linecount examples pycaffe distribute
 
-all: $(NAME) $(STATIC_NAME) examples pycaffe
+all: $(NAME) $(STATIC_NAME) examples
 
 linecount: clean
 	cloc --read-lang-def=caffe.cloc src/caffe/
@@ -110,7 +113,7 @@ pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY)
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 
 matcaffe: $(STATIC_NAME) $(MATCAFFE_SRC)
-	mex $(MATCAFFE_SRC) $(STATIC_NAME) \
+	$(MATLAB_DIR)/bin/mex $(MATCAFFE_SRC) $(STATIC_NAME) \
 		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
 		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" \
 		-o $(MATCAFFE_SO)
