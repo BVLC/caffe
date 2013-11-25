@@ -175,8 +175,11 @@ def compute_feats(batch, layer='imagenet'):
     raise ValueError("Unknown layer requested: {}".format(layer))
 
   num = batch.shape[0]
+  input_blobs = [batch]
   output_blobs = [np.empty((num, num_output, 1, 1), dtype=np.float32)]
-  caffenet.Forward([batch], output_blobs)
+  print(len(input_blobs), len(output_blobs))
+  print(input_blobs[0].shape, output_blobs[0].shape)
+  caffenet.Forward(input_blobs, output_blobs)
   feats = [output_blobs[0][i].flatten() for i in range(len(output_blobs[0]))]
 
   return feats
@@ -215,17 +218,15 @@ if __name__ == "__main__":
   print 'Running on {} files in {} batches'.format(
     len(image_fnames), len(image_batches))
 
-  from IPython import embed; embed()
-  # TODO: debug this
-  # F1125 07:17:35.980950  6826 pycaffe.cpp:52] Check failed: len(bottom) == input_blobs.size() (1 vs. 0)
-
   # Process the batches.
   start = time.time()
   all_feats = []
-  for i, batch in range(len(image_batches)):
+  for i in range(len(image_batches)):
     if i % 10 == 0:
       print('Batch {}/{}, elapsed {:.3f} s'.format(
         i, len(image_batches), time.time() - start))
+  # TODO: debug this
+  # F1125 07:17:35.980950  6826 pycaffe.cpp:52] Check failed: len(bottom) == input_blobs.size() (1 vs. 0)
     all_feats.append(compute_feats(image_batches[i]))
   all_feats = np.concatenate(all_feats, 0)
   all_fnames = np.concatenate(fname_batches, 0)
