@@ -18,7 +18,7 @@
 using namespace caffe;
 
 int main(int argc, char** argv) {
-  cudaSetDevice(1);
+  cudaSetDevice(0);
   Caffe::set_mode(Caffe::GPU);
   Caffe::set_phase(Caffe::TRAIN);
   int repeat = 100;
