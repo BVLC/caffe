@@ -63,7 +63,7 @@ TEST_BINS := ${TEST_OBJS:.o=.testbin}
 # Derive include and lib directories
 ##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
-CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
+CUDA_LIB_DIR := $(CUDA_DIR)/lib $(CUDA_DIR)/lib64
 MKL_INCLUDE_DIR := $(MKL_DIR)/include
 MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
