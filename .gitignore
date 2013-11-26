@@ -25,3 +25,10 @@
 
 # vim swp files
 *.swp
+
+# matlab binary
+*.mexa64
+
+# anything under data/ unless we force include them
+data/*
+
