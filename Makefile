@@ -5,6 +5,7 @@ TEST_GPUID := 0
 # define third-party library paths
 # CHANGE YOUR CUDA PATH IF IT IS NOT THIS
 CUDA_DIR := /usr/local/cuda
+# CUDA_DIR := /Developer/NVIDIA/CUDA-5.5
 # CHANGE YOUR CUDA ARCH IF IT IS NOT THIS
 CUDA_ARCH := -arch=sm_30
 # CHANGE YOUR MKL PATH IF IT IS NOT THIS
@@ -73,7 +74,7 @@ TEST_BINS := ${TEST_OBJS:.o=.testbin}
 # Derive include and lib directories
 ##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
-CUDA_LIB_DIR := $(CUDA_DIR)/lib64
+CUDA_LIB_DIR := $(CUDA_DIR)/lib $(CUDA_DIR)/lib64
 MKL_INCLUDE_DIR := $(MKL_DIR)/include
 MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
@@ -85,9 +86,11 @@ LIBRARIES := cudart cublas curand protobuf opencv_core opencv_highgui \
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
+# NOTE: on OS X, use clang++ to have NVCC play nice.
+CXX := /usr/bin/c++
 COMMON_FLAGS := -DNDEBUG $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC -O2 $(COMMON_FLAGS)
-NVCCFLAGS := -Xcompiler -fPIC -O2 $(COMMON_FLAGS)
+NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC -O2 $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library)) \
 		-Wl,-rpath,../lib/
