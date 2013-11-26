@@ -6,6 +6,7 @@ The selective_search_ijcv_with_python code is available at
 https://github.com/sergeyk/selective_search_ijcv_with_python
 
 TODO:
+- [ ] make sure all batches are the same size
 - [ ] store the window coordinates with the image filenames.
 - [ ] batch up image filenames as well: don't want to load all of them into memory
 """
@@ -25,6 +26,8 @@ CROPPED_DIM = 227
 IMAGE_CENTER = int((IMAGE_DIM - CROPPED_DIM) / 2)
 
 CROP_MODES = ['center_only', 'corners', 'selective_search']
+
+BATCH_SIZE = 256
 
 # Load the imagenet mean file
 IMAGENET_MEAN = np.load(
@@ -112,22 +115,24 @@ def _assemble_images_corners(image_fnames):
 
 
 def _assemble_images_selective_search(image_fnames):
+  # Get window proposals.
   windows_list = selective_search.get_windows(image_fnames)
-  all_images = []
-  fnames = []
+
+  #
   for image_fname, windows in zip(image_fnames, windows_list):
     image = load_image(image_fname)
-    images = np.empty(
-      (len(windows), 3, CROPPED_DIM, CROPPED_DIM), dtype=np.float32)
     for i, window in enumerate(windows):
-      images[i] = format_image(image, window, CROPPED_DIM)
-    all_images.append(images)
-    fnames.append(image_fname)
-  return all_images, fnames
+      data.append({
+        'image': format_image(image, window, CROPPED_DIM),
+        'window': window,
+        'filename': image_fname
+      })
+  images_df = pd.DataFrame(data)
+  return images_df
 
 
 def assemble_batches(
-  image_fnames, crop_mode='center_only', max_batch_size=256):
+  image_fnames, crop_mode='center_only'):
   """
   Assemble list of batches, each one of at most max_batch_size subimage
   objects.
@@ -142,27 +147,30 @@ def assemble_batches(
           image, and take each enclosing subwindow.
 
   Output:
-      images: (X x 3 x 227 x 227) ndarray, where X <= max_batch_size
+      : list of (X x 3 x 227 x 227) ndarray, where X <= max_batch_size
   """
   if crop_mode == 'center_only':
-    all_images, fnames = _assemble_images_center_only(image_fnames)
+    images_df = _assemble_images_center_only(image_fnames)
 
   elif crop_mode == 'corners':
-    all_images, fnames = _assemble_images_corners(image_fnames)
+    images_df = _assemble_images_corners(image_fnames)
 
   elif crop_mode == 'selective_search':
-    all_images, fnames = _assemble_images_selective_search(image_fnames)
+    images_df = _assemble_images_selective_search(image_fnames)
 
   else:
     raise Exception("Unknown mode: not in {}".format(CROP_MODES))
 
-  # Concatenate into one (N, 3, CROPPED_DIM, CROPPED_DIM) array,
+  # Make sure the DataFrame has a multiple of BATCH_SIZE rows:
+  # just fill the extra rows with NaN filenames and all-zero images.
+  pass
+
   # then split to (N/max_batch_size, 3, CROPPED_DIM, CROPPED_DIM) chunks
   all_fnames = np.repeat(fnames, [len(images) for images in all_images])
   all_images = np.concatenate(all_images, 0)
   assert(all_images.shape[0] == all_fnames.shape[0])
 
-  num_batches = 1 + int(all_images.shape[0] / max_batch_size)
+  num_batches = 1 + int(all_images.shape[0] / BATCH_SIZE)
   image_batches = np.array_split(all_images, num_batches, axis=0)
   fname_batches = np.array_split(all_fnames, num_batches, axis=0)
   return image_batches, fname_batches
@@ -211,23 +219,25 @@ if __name__ == "__main__":
     caffenet.set_mode_gpu()
 
   ## Load list of image filenames and assemble into batches.
+  t = time.time()
+  print('Assembling batches...')
   with open(FLAGS.images_file) as f:
     image_fnames = [_.strip() for _ in f.readlines()]
   image_batches, fname_batches = assemble_batches(
     image_fnames, FLAGS.crop_mode)
-  print 'Running on {} files in {} batches'.format(
-    len(image_fnames), len(image_batches))
+  print('{} batches assembled in {:.3f} s'.format(time.time() - t))
 
   # Process the batches.
-  start = time.time()
+  t = time.time()
+  print 'Running on {} files in {} batches'.format(
+    len(image_fnames), len(image_batches))
   all_feats = []
   for i in range(len(image_batches)):
     if i % 10 == 0:
       print('Batch {}/{}, elapsed {:.3f} s'.format(
-        i, len(image_batches), time.time() - start))
-  # TODO: debug this
-  # F1125 07:17:35.980950  6826 pycaffe.cpp:52] Check failed: len(bottom) == input_blobs.size() (1 vs. 0)
+        i, len(image_batches), time.time() - t))
     all_feats.append(compute_feats(image_batches[i]))
+
   all_feats = np.concatenate(all_feats, 0)
   all_fnames = np.concatenate(fname_batches, 0)
 
