@@ -2,21 +2,7 @@
 PROJECT := caffe
 TEST_GPUID := 0
 
-# define third-party library paths
-# CHANGE YOUR CUDA PATH IF IT IS NOT THIS
-CUDA_DIR := /usr/local/cuda
-# CHANGE YOUR CUDA ARCH IF IT IS NOT THIS
-CUDA_ARCH := -arch=sm_30
-# CHANGE YOUR MKL PATH IF IT IS NOT THIS
-MKL_DIR := /opt/intel/mkl
-# CHANGE YOUR MATLAB PATH IF IT IS NOT THIS
-# your mex binary should be located at $(MATLAB_DIR)/bin/mex
-MATLAB_DIR := /usr/local
-# PUT ALL OTHER INCLUDE AND LIB DIRECTORIES HERE
-INCLUDE_DIRS := /usr/local/include /usr/include/python2.7 \
-    /usr/local/lib/python2.7/dist-packages/numpy/core/include
-LIBRARY_DIRS := /usr/lib /usr/local/lib
-
+include Makefile.config
 
 ##############################################################################
 # After this line, things should happen automatically.
@@ -85,9 +71,9 @@ LIBRARIES := cudart cublas curand protobuf opencv_core opencv_highgui \
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
-COMMON_FLAGS := -DNDEBUG $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -pthread -fPIC -O2 $(COMMON_FLAGS)
-NVCCFLAGS := -Xcompiler -fPIC -O2 $(COMMON_FLAGS)
+COMMON_FLAGS := -DNDEBUG -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
+NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library)) \
 		-Wl,-rpath,../lib/
