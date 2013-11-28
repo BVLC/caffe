@@ -34,6 +34,7 @@ namespace caffe {
 void ReadProtoFromTextFile(const char* filename,
     ::google::protobuf::Message* proto) {
   int fd = open(filename, O_RDONLY);
+  CHECK_NE(fd, -1) << "File not found: " << filename;
   FileInputStream* input = new FileInputStream(fd);
   CHECK(google::protobuf::TextFormat::Parse(input, proto));
   delete input;
@@ -50,6 +51,7 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
 
 void ReadProtoFromBinaryFile(const char* filename, Message* proto) {
   int fd = open(filename, O_RDONLY);
+  CHECK_NE(fd, -1) << "File not found: " << filename;
   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
   coded_input->SetTotalBytesLimit(536870912, 268435456);
