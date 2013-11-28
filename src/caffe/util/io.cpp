@@ -7,6 +7,7 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <algorithm>
@@ -72,10 +73,10 @@ bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, Datum* datum) {
   cv::Mat cv_img;
   if (height > 0 && width > 0) {
-    cv::Mat cv_img_origin = cv::imread(filename, cv::IMREAD_COLOR);
+    cv::Mat cv_img_origin = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
     cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
   } else {
-    cv_img = cv::imread(filename, cv::IMREAD_COLOR);
+    cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
   }
   if (!cv_img.data) {
     LOG(ERROR) << "Could not open or find file " << filename;
