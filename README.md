@@ -1,6 +1,6 @@
 Caffe
 ========
 
-Caffe: Convolutional Algorithms For Feature Extraction.
+Caffe: Convolutional Architecture For Feature Embedding
 
 Copyright Yangqing Jia
