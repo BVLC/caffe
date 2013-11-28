@@ -17,12 +17,16 @@ STATIC_NAME := lib$(PROJECT).a
 ##############################
 # CXX_SRCS are the source files excluding the test ones.
 CXX_SRCS := $(shell find src/caffe ! -name "test_*.cpp" -name "*.cpp")
+# HXX_SRCS are the header files
+HXX_SRCS := $(shell find include/caffe ! -name "*.hpp")
 # CU_SRCS are the cuda source files
 CU_SRCS := $(shell find src/caffe -name "*.cu")
 # TEST_SRCS are the test source files
 TEST_SRCS := $(shell find src/caffe -name "test_*.cpp")
 GTEST_SRC := src/gtest/gtest-all.cpp
-# EXSAMPLE_SRCS are the source files for the example binaries
+# TEST_HDRS are the test header files
+TEST_HDRS := $(shell find src/caffe -name "test_*.hpp")
+# EXAMPLE_SRCS are the source files for the example binaries
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
@@ -112,13 +116,13 @@ $(STATIC_NAME): $(PROTO_OBJS) $(OBJS)
 runtest: test
 	for testbin in $(TEST_BINS); do $$testbin $(TEST_GPUID); done
 
-$(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME)
+$(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
 	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
 
 $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
 
-$(OBJS): $(PROTO_GEN_CC)
+$(OBJS): $(PROTO_GEN_CC) $(HXX_SRCS)
 
 $(EXAMPLE_OBJS): $(PROTO_GEN_CC)
 
