@@ -137,11 +137,8 @@ message SolverParameter {
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.
   optional bool snapshot_diff = 16 [ default = false];
-
-  // the asynchronous solver stuff
-  optional string tcp_port = 20 [ default = "20901"];
-  optional string tcp_server = 21;
-  optional int32 communication_interval = 22;
+  // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
+  optional int32 solver_mode = 17 [default = 1];
 }
 
 // A message that stores the solver snapshots

@@ -19,9 +19,6 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  Caffe::SetDevice(0);
-  Caffe::set_mode(Caffe::GPU);
-
   SolverParameter solver_param;
   ReadProtoFromTextFile(argv[1], &solver_param);
 
