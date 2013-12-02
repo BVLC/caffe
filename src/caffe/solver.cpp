@@ -39,6 +39,7 @@ Solver<Dtype>::Solver(const SolverParameter& param)
 
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
+  Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
   Caffe::set_phase(Caffe::TRAIN);
   LOG(INFO) << "Solving " << net_->name();
   PreSolve();
@@ -71,6 +72,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       Caffe::set_phase(Caffe::TRAIN);
     }
   }
+  // After the optimization is done, always do a snapshot.
+  iter_--;
+  Snapshot();
   LOG(INFO) << "Optimization Done.";
 }
 
