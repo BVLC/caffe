@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Shuffling data";
     std::random_shuffle(lines.begin(), lines.end());
   }
-  LOG(INFO) << "A total of " << lines.size() << "images.";
+  LOG(INFO) << "A total of " << lines.size() << " images.";
 
   leveldb::DB* db;
   leveldb::Options options;
