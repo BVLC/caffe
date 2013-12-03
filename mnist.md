@@ -26,8 +26,8 @@ The design of LeNet contains the essence of CNNs that are still used in larger m
 
 If you would like to read about step-by-step instruction on how the protobuf definitions are written, see [MNIST: Define the Network](mnist_prototxt.html) and [MNIST: Define the Solver](mnist_solver_prototxt.html)?.
 
-Training the Model
-------------------
+Training and Testing the Model
+------------------------------
 
 Training the model is simple as long as you have written the network definition protobuf and solver protobuf files. Simply run `train_mnist.sh`, or the following command directly:
 
