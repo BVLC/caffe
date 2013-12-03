@@ -23,8 +23,8 @@ Quick Links
 -----------
 
 * [Presentation](https://docs.google.com/presentation/d/1lzyXMRQFlOYE2Jy0lCNaqltpcCIKuRzKJxQ7vCuPRc8/edit?usp=sharing): Yangqing's presentation on Caffe at the Berkeley vision group meeting.
-* [Installation](installation.html): expect some bumps along the ride.
-* [Tutorial: MNIST](mnist.html): end-to-end training and testing on the MNIST data.
+* [Installation](installation.html): Instructions on installing Caffe, mainly with Ubuntu 12.04LTS.
+* [MNIST Demo](mnist.html): end-to-end training and testing on the MNIST data.
 * [Reference ImageNet Model](imagenet.html): on how to run the ImageNet reference model.
 
 Citing Caffe
