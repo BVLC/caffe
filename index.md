@@ -6,14 +6,14 @@ title: Caffe
 Welcome to Caffe
 ================
 
-Caffe is a reference implementation for the recent convolutional neural networks algorithms with speed in mind. It is written and maintained by [Yangqing Jia](http://www.eecs.berkeley.edu/~jiayq/) as a replacement of [decaf](http://decaf.berkeleyvision.org/), the python implementation of convolutional neural networks. Several [Berkeley vision group](http://www.berkeelyvision.org/) members are actively contributing to the codebase.
+Caffe is a reference implementation for the recent convolutional neural networks  with speed in mind. It is written and maintained by [Yangqing Jia](http://www.eecs.berkeley.edu/~jiayq/) as a replacement of [decaf](http://decaf.berkeleyvision.org/), the python implementation of CNNs. Several [Berkeley vision group](http://www.berkeelyvision.org/) members are actively contributing to the codebase.
 
 Why Caffe?
 ----------
 
-Caffe aims to expand deep learning research by providing computer vision researchers easier access to state-of-the-art deep learning implementations. At the same time, caffe also aims for fast computation speed that fits industry needs, with codes in C++/Cuda providing maximum performance through efficient GPU computations. Being able to process more than 20 million images per day\*, Caffe is currently **the fastest GPU CNN implementation publicly available**.
+Caffe aims to expand deep learning research by providing computer vision scientists easier access to state-of-the-art deep learning implementations. At the same time, caffe also aims for fast computation speed that fits industry needs, with codes in C++/Cuda providing maximum performance through efficient GPU computations. Being able to process more than 20 million images per day\*, Caffe is currently **the fastest GPU CNN implementation publicly available**.
 
-Caffe also provides **seamless switch between CPU and GPU implementations**, which allows one to train models with fast GPUs, but to still have the flexibility of deploying models on cheaper, non-GPU clusters, with only one line of code necessary:
+Caffe also provides **seamless switch between CPU and GPU**, which allows one to train models with fast GPUs, but to still have the flexibility of deploying models on cheaper, non-GPU clusters, with only one line of code necessary:
 
 ```
 Caffe::set_mode(Caffe::CPU);
