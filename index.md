@@ -44,4 +44,5 @@ Please kindly cite Caffe in your publications if it helps your research:
 \* When measured with the [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model that won the ImageNet Large Scale Visual Recognition Challenge 2012, and run on a single machine with Intel i5 processor and Tesla K20. Benchmark details coming soon.
 
 \*\* Yangqing would like to thank the NVidia Academic program for providing a K20 GPU.
+
 \*\*\* Matlab wrapper courtsy of [Dr Ross Girshick](http://www.cs.berkeley.edu/~rbg/).
