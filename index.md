@@ -37,7 +37,7 @@ Please kindly cite Caffe in your publications if it helps your research:
     @misc{Jia13caffe,
        Author = {Yangqing Jia},
        Title = { {Caffe}: An Open Source Convolutional Architecture
-                for Feature Extraction},
+                for Feature Embedding},
        Year  = {2013},
        Howpublished = {\url{http://yangqing.github.io/caffe/}}
 
