@@ -29,7 +29,7 @@ If you would like to read about step-by-step instruction on how the protobuf def
 Training and Testing the Model
 ------------------------------
 
-Training the model is simple as long as you have written the network definition protobuf and solver protobuf files. Simply run `train_mnist.sh`, or the following command directly:
+Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_mnist.sh`, or the following command directly:
 
     cd $CAFFE_ROOT/data
     GLOG_logtostderr=1 ../examples/train_net.bin lenet_solver.prototxt

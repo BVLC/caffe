@@ -14,6 +14,8 @@ Several [Berkeley vision group](http://ucbvlc.org/) members are actively contrib
 
 Caffe is currently released under [the UC Berkeley non-commercial license](license.html).
 
+Decaf, the big brother of Caffe, has a cool [demo](http://decaf.berkeleyvision.org). Caffe's own demo will come soon.
+
 Why Caffe?
 ----------
 
