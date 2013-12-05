@@ -23,7 +23,7 @@ Caffe is currently the fastest GPU CNN implementation publicly available, and is
 
 Caffe also provides **seamless switching between CPU and GPU**, which allows one to train models with fast GPUs and then deploy them on non-GPU clusters with one line of code: `Caffe::set_mode(Caffe::CPU)`.
 
-Even in CPU mode, computing predictions on an image takes only 200 ms.
+Even in CPU mode, computing predictions on an image takes only 20 ms when images are processed in batch mode.
 
 Quick Links
 -----------
