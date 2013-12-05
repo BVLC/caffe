@@ -35,8 +35,9 @@ Quick Links
 * [Presentation](https://docs.google.com/presentation/d/1lzyXMRQFlOYE2Jy0lCNaqltpcCIKuRzKJxQ7vCuPRc8/edit?usp=sharing): Presentation on Caffe at the UC Berkeley Vision Group meeting.
 * [Installation](installation.html): Instructions on installing Caffe (tested on Ubuntu 12.04, but works on Red Hat, OS X, etc.).
 * [MNIST Demo](mnist.html): example of end-to-end training and testing on the MNIST data.
-* [Pretrained ImageNet](imagenet_pretrained.html): start running ImageNet classification in minutes.
 * [Training ImageNet](imagenet.html): tutorial on training an ImageNet classifier.
+* [Running Pretrained ImageNet](imagenet_pretrained.html): start running ImageNet classification in minutes.
+
 
 Citing Caffe
 ------------
