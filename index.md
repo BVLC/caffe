@@ -3,8 +3,6 @@ layout: default
 title: Caffe
 ---
 
-**This is a preview of the Caffe features. The code will be released in a few days - please bear with us.**
-
 Welcome to Caffe
 ================
 
@@ -56,6 +54,7 @@ Please kindly cite Caffe in your publications if it helps your research:
 Yangqing would like to thank the NVidia Academic program for providing a K20 GPU.
 The Caffe Matlab wrapper is courtesy of [Dr. Ross Girshick](http://www.cs.berkeley.edu/~rbg/).
 The detection module (coming soon) is courtesy of [Sergey Karayev](http://sergeykarayev.com/).
+Our thanks also go to [Jeff Donahue](http://jeffdonahue.com/) and [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for various discussions along the journey.
 
 ---
 
