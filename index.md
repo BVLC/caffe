@@ -3,6 +3,8 @@ layout: default
 title: Caffe
 ---
 
+**This is a preview of the Caffe features. The code will be released in a few days - please bear with us.**
+
 Welcome to Caffe
 ================
 
