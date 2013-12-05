@@ -37,6 +37,7 @@ Quick Links
 * [MNIST Demo](mnist.html): example of end-to-end training and testing on the MNIST data.
 * [Training ImageNet](imagenet.html): tutorial on training an ImageNet classifier.
 * [Running Pretrained ImageNet](imagenet_pretrained.html): start running ImageNet classification in minutes.
+* [Running Detection](imagenet_detection.html): run a pretrained model as a detector (under construction).
 
 
 Citing Caffe
