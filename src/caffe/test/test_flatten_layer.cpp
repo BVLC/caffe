@@ -58,6 +58,8 @@ TYPED_TEST(FlattenLayerTest, TestCPU) {
   for (int c = 0; c < 3 * 6 * 5; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
         this->blob_bottom_->data_at(0, c / (6 * 5), (c / 5) % 6, c % 5));
+    EXPECT_EQ(this->blob_top_->data_at(1, c, 0, 0),
+        this->blob_bottom_->data_at(1, c / (6 * 5), (c / 5) % 6, c % 5));
   }
 }
 
