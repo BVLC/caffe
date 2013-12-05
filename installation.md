@@ -6,7 +6,7 @@ title: Caffe
 Installation
 ================
 
-Here are some installation notes on various platforms. We have used Ubuntu 12.04 for development, so here describes the step-to-step guide on installing caffe with Ubuntu. You will be able to install Caffe on other platforms but you may need to tinker with paths in `Makefile.config` and maybe `Makefile` a little bit.
+We mostly used Ubuntu 12.04 for development, and here we describe the step-to-step guide on installing Caffe on Ubuntu. You will be able to install Caffe on other platforms, but you may need to minimally tinker with paths in `Makefile.config` and maybe the `Makefile` itself.
 
 Prerequisites
 -------------
@@ -42,4 +42,4 @@ Optionally, you can run `make distribute` to create a `build` directory that con
 
 To use Caffe with python, you will need to add `/path/to/caffe/python` or `/path/to/caffe/build/python` to your `PYTHONPATH`.
 
-Now that you have compiled Caffe, check out the [MNIST demo](mnist.html) and the pretrained [ImageNet example](imagenet.html). 
+Now that you have compiled Caffe, check out the [MNIST demo](mnist.html) and the pretrained [ImageNet example](imagenet.html).
