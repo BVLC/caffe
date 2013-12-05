@@ -54,7 +54,7 @@ Please kindly cite Caffe in your publications if it helps your research:
 ### Acknowledgements
 
 Yangqing would like to thank the NVidia Academic program for providing a K20 GPU.
-The Caffe Matlab wrapper is courtesy of [Dr. Ross Girshick](http://www.cs.berkeley.edu/~rbg/).
+The Caffe Matlab wrapper is courtesy of [Dr. Ross Girshick](http://www.cs.berkeley.edu/~rbg/). The detection module is courtesy of [Sergey Karayev](http://sergeykarayev.com/).
 
 ---
 
