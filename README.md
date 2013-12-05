@@ -1,6 +1,1 @@
-Caffe
-========
-
-Caffe: Convolutional Architecture For Feature Embedding
-
-Copyright Yangqing Jia
+[Caffe: Convolutional Architecture for Fast Feature Extraction](http://daggerfs.com/caffe/)
