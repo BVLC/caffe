@@ -31,7 +31,8 @@ IMAGE_CENTER = int((IMAGE_DIM - CROPPED_DIM) / 2)
 
 CROP_MODES = ['center_only', 'corners', 'selective_search']
 
-BATCH_SIZE = 256
+# NOTE: this must match the setting in the prototxt that is used!
+BATCH_SIZE = 245
 
 # Load the imagenet mean file
 IMAGENET_MEAN = np.load(
@@ -146,7 +147,7 @@ def _assemble_images_corners(image_fnames):
     all_images.append(images)
 
   images_df = pd.DataFrame({
-    'image': [row for row in images for images in all_images],
+    'image': [row[np.newaxis, :] for row in images for images in all_images],
     'filename': np.repeat(image_fnames, 10)
   })
   return images_df
@@ -239,12 +240,12 @@ def compute_feats(images_df, layer='imagenet'):
     raise ValueError("Unknown layer requested: {}".format(layer))
 
   num = images_df.shape[0]
-  input_blobs = [np.concatenate(images_df['image'].values)]
+  input_blobs = [np.ascontiguousarray(
+    np.concatenate(images_df['image'].values), dtype='float32')]
   output_blobs = [np.empty((num, num_output, 1, 1), dtype=np.float32)]
-  print(len(input_blobs), len(output_blobs))
   print(input_blobs[0].shape, output_blobs[0].shape)
 
-  #caffenet.Forward(input_blobs, output_blobs)
+  caffenet.Forward(input_blobs, output_blobs)
   feats = [output_blobs[0][i].flatten() for i in range(len(output_blobs[0]))]
 
   # Add the features and delete the images.
@@ -313,3 +314,5 @@ if __name__ == "__main__":
   df.to_hdf(FLAGS.output, 'df', mode='w')
   print("Done. Saving to {} took {:.3f} s.".format(
     FLAGS.output, time.time() - t))
+
+  sys.exit()
