@@ -37,6 +37,9 @@ BATCH_SIZE = 245
 # Load the imagenet mean file
 IMAGENET_MEAN = np.load(
     os.path.join(os.path.dirname(__file__), 'ilsvrc_2012_mean.npy'))
+CROPPED_IMAGENET_MEAN = IMAGENET_MEAN[
+  IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
+  IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM, :]
 
 
 def load_image(filename):
@@ -55,18 +58,18 @@ def load_image(filename):
   return img
 
 
-def format_image(image, window=None, dim=IMAGE_DIM):
+def format_image(image, window=None, cropped_size=False):
   """
   Input:
     image: (H x W x 3) ndarray
     window: (4) ndarray
       (y, x, h, w) coordinates
-    dim: int
-      Final width of the square image.
+    cropped_size: bool
+      Whether to output cropped size image or full size image.
 
   Output:
     image: (3 x H x W) ndarray
-      Resized to (dim, dim).
+      Resized to either IMAGE_DIM or CROPPED_DIM.
   """
   # Crop a subimage if window is provided.
   if window is not None:
@@ -75,13 +78,16 @@ def format_image(image, window=None, dim=IMAGE_DIM):
       window[1]:window[3]
     ]
 
-  # Resize to ImageNet size, convert to BGR, subtract mean.
-  image = (skimage.transform.resize(image, (IMAGE_DIM, IMAGE_DIM)) * 255)[:, :, ::-1]
-  image -= IMAGENET_MEAN
 
-  # Resize further if needed.
-  if not dim == IMAGE_DIM:
-    image = skimage.transform.resize(image, (dim, dim))
+  # Resize to ImageNet size, convert to BGR, subtract mean.
+  image = image[:, :, ::-1]
+  if cropped_size:
+    image = skimage.transform.resize(image, (CROPPED_DIM, CROPPED_DIM)) * 255
+    image -= CROPPED_IMAGENET_MEAN
+  else:
+    image = skimage.transform.resize(image, (IMAGE_DIM, IMAGE_DIM)) * 255
+    image -= IMAGENET_MEAN
+
   image = image.swapaxes(1, 2).swapaxes(0, 1)
   return image
 
