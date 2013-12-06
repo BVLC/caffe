@@ -72,7 +72,7 @@ prediction, right?
 
 Now, why don't we see how long it takes to perform the classification end to
 end? This result is run from an Intel i5 CPU, so you may observe some
-performance differences.
+performance differences with different machines.
 
 
     %timeit net.predict(IMAGE_FILE)
@@ -81,8 +81,8 @@ performance differences.
 
 
 It may look a little slow, but note that it also includes image loading,
-cropping, and python interfacing time, and it is running 10 images. As a
-performance notice, if you really want to make prediction fast, you can
+cropping, and python interfacing time, and the convnet is working on 10 images due to that. As a
+performance note, if you really want to make prediction fast, you can
 optionally write things in C and also pipeline the image loading part. But for
 most applications, the current speed might be fine I guess?
 
