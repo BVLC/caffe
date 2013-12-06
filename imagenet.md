@@ -96,6 +96,6 @@ where `caffe_imagenet_train_1000.solverstate` is the solver state snapshot that 
 Parting Words
 -------------
 
-Hope you liked this recipe. Many researchers have gone further since the ILSVRC 2012 challenge, changing the network architecture and/or finetuning the various parameters in the network. Caffe allows one to do this more easily, by simply writing different prototxt files - isn't that exciting?
+Hope you liked this recipe. Many researchers have gone further since the ILSVRC 2012 challenge, changing the network architecture and/or finetuning the various parameters in the network. The recent ILSVRC 2013 challenge suggests that there are quite some room for improvement. **Caffe allows one to explore different network choices  more easily, by simply writing different prototxt files** - isn't that exciting?
 
 And since now you have a trained network, check out how to use it: [Running Pretrained ImageNet](imagenet_pretrained.html). This time we will use Python, but if you have wrappers for other languages, please kindly send me a pull request!
