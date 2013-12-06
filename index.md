@@ -34,7 +34,7 @@ Quick Links
 * [Installation](installation.html): Instructions on installing Caffe (tested on Ubuntu 12.04, but works on Red Hat, OS X, etc.).
 * [MNIST Demo](mnist.html): example of end-to-end training and testing on the MNIST data.
 * [Training ImageNet](imagenet.html): tutorial on end-to-end training of an ImageNet classifier.
-* [Running Pretrained ImageNet](imagenet_pretrained.html): start running ImageNet classification in minutes (coming soon).
+* [Running Pretrained ImageNet](imagenet_pretrained.html): simply runs in Python!
 * [Running Detection](imagenet_detection.html): run a pretrained model as a detector (coming soon).
 
 
