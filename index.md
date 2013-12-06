@@ -35,7 +35,7 @@ Quick Links
 * [MNIST Demo](mnist.html): example of end-to-end training and testing on the MNIST data.
 * [Training ImageNet](imagenet.html): tutorial on end-to-end training of an ImageNet classifier.
 * [Running Pretrained ImageNet](imagenet_pretrained.html): simply runs in Python!
-* [Running Detection](imagenet_detection.html): run a pretrained model as a detector (coming soon).
+* [Running Detection](imagenet_detection.html): run a pretrained model as a detector.
 
 
 Citing Caffe
@@ -53,7 +53,7 @@ Please kindly cite Caffe in your publications if it helps your research:
 
 Yangqing would like to thank the NVidia Academic program for providing a K20 GPU.
 The Caffe Matlab wrapper is courtesy of [Dr. Ross Girshick](http://www.cs.berkeley.edu/~rbg/).
-The detection module (coming soon) is courtesy of [Sergey Karayev](http://sergeykarayev.com/).
+The detection module (`power_wrapper`) is courtesy of [Sergey Karayev](http://sergeykarayev.com/).
 Our thanks also go to [Jeff Donahue](http://jeffdonahue.com/) and [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for various discussions along the journey.
 
 ---

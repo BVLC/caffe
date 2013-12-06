@@ -1,0 +1,15 @@
+Top detection:
+tiger cat       0.927175
+tabby           0.039722
+tiger           0.027441
+lynx            0.004363
+Egyptian cat    0.000862
+dtype: float32
+
+10th detection:
+tiger cat           0.790947
+dhole               0.068737
+red fox             0.028559
+proboscis monkey    0.020050
+tiger               0.016998
+dtype: float32
