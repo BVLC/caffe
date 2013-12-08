@@ -4,6 +4,7 @@
 #include <limits>
 
 #include "caffe/common.hpp"
+#include "caffe/util/math_functions.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/vision_layers.hpp"
@@ -34,8 +35,10 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int count = bottom[0]->count();
   if (Caffe::phase() == Caffe::TRAIN) {
     // Create random numbers
-    viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, Caffe::vsl_stream(),
-        count, mask, 1. - threshold_);
+    //viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, Caffe::vsl_stream(),
+    //    count, mask, 1. - threshold_);
+    caffe_vRngBernoulli<int>(count, mask, 1. - threshold_);
+
     for (int i = 0; i < count; ++i) {
       top_data[i] = bottom_data[i] * mask[i] * scale_;
     }
