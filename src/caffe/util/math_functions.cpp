@@ -1,11 +1,20 @@
 // Copyright 2013 Yangqing Jia
 
-#include <mkl.h>
+//#include <mkl.h>
+#include <eigen3/Eigen/Dense>
+#include <boost/random.hpp>
+
 #include <cublas_v2.h>
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+
+const int data_alignment = Eigen::Aligned; // how is data allocated ?
+typedef Eigen::Map<const Eigen::VectorXf, data_alignment> const_map_vector_float_t;
+typedef Eigen::Map<Eigen::VectorXf, data_alignment> map_vector_float_t;
+typedef Eigen::Map<const Eigen::VectorXd, data_alignment> const_map_vector_double_t;
+typedef Eigen::Map<Eigen::VectorXd, data_alignment> map_vector_double_t;
 
 template<>
 void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
@@ -119,13 +128,20 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
 template <>
 void caffe_axpby<float>(const int N, const float alpha, const float* X,
     const float beta, float* Y) {
-  cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
+    // y := a*x + b*y
+    //cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
+    map_vector_float_t(Y, N) *= beta;
+    map_vector_float_t(Y, N) += (alpha * const_map_vector_float_t(X, N));
+
 }
 
 template <>
 void caffe_axpby<double>(const int N, const double alpha, const double* X,
     const double beta, double* Y) {
-  cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
+    // y := a*x + b*y
+  //cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
+    map_vector_double_t(Y, N) *= beta;
+    map_vector_double_t(Y, N) += (alpha * const_map_vector_double_t(X, N));
 }
 
 template <>
@@ -184,91 +200,178 @@ void caffe_gpu_axpby<double>(const int N, const double alpha, const double* X,
 
 template <>
 void caffe_sqr<float>(const int n, const float* a, float* y) {
-  vsSqr(n, a, y);
+  //vsSqr(n, a, y);
+  map_vector_float_t(y, n) = const_map_vector_float_t(a, n).array().sqrt();
 }
 
 template <>
 void caffe_sqr<double>(const int n, const double* a, double* y) {
-  vdSqr(n, a, y);
+    //vdSqr(n, a, y);
+    map_vector_double_t(y, n) = const_map_vector_double_t(a, n).array().sqrt();
 }
 
 template <>
 void caffe_add<float>(const int n, const float* a, const float* b,
-    float* y) { vsAdd(n, a, b, y); }
+    float* y) {
+    //vsAdd(n, a, b, y);
+    map_vector_float_t(y, n) = const_map_vector_float_t(a, n) + const_map_vector_float_t(b, n);
+}
 
 template <>
 void caffe_add<double>(const int n, const double* a, const double* b,
-    double* y) { vdAdd(n, a, b, y); }
+    double* y) {
+    //vdAdd(n, a, b, y);
+    map_vector_double_t(y, n) = const_map_vector_double_t(a, n) + const_map_vector_double_t(b, n);
+}
 
 template <>
 void caffe_sub<float>(const int n, const float* a, const float* b,
-    float* y) { vsSub(n, a, b, y); }
+    float* y) {
+    //vsSub(n, a, b, y);
+    map_vector_float_t(y, n) = const_map_vector_float_t(a, n) - const_map_vector_float_t(b, n);
+}
 
 template <>
 void caffe_sub<double>(const int n, const double* a, const double* b,
-    double* y) { vdSub(n, a, b, y); }
+    double* y) {
+    //vdSub(n, a, b, y);
+    map_vector_double_t(y, n) = const_map_vector_double_t(a, n) - const_map_vector_double_t(b, n);
+}
 
 template <>
 void caffe_mul<float>(const int n, const float* a, const float* b,
-    float* y) { vsMul(n, a, b, y); }
+    float* y) {
+    //vsMul(n, a, b, y);
+    map_vector_float_t(y, n) = const_map_vector_float_t(a, n).array() * const_map_vector_float_t(b, n).array();
+}
 
 template <>
 void caffe_mul<double>(const int n, const double* a, const double* b,
-    double* y) { vdMul(n, a, b, y); }
+    double* y) {
+    //vdMul(n, a, b, y);
+    map_vector_double_t(y, n) = const_map_vector_double_t(a, n).array() * const_map_vector_double_t(b, n).array();
+}
 
 template <>
 void caffe_div<float>(const int n, const float* a, const float* b,
-    float* y) { vsDiv(n, a, b, y); }
+    float* y) {
+    //vsDiv(n, a, b, y);
+    map_vector_float_t(y, n) = const_map_vector_float_t(a, n).array() / const_map_vector_float_t(b, n).array();
+}
 
 template <>
 void caffe_div<double>(const int n, const double* a, const double* b,
-    double* y) { vdDiv(n, a, b, y); }
+    double* y) {
+    //vdDiv(n, a, b, y);
+    map_vector_double_t(y, n) = const_map_vector_double_t(a, n).array() / const_map_vector_double_t(b, n).array();
+}
 
 template <>
 void caffe_powx<float>(const int n, const float* a, const float b,
-    float* y) { vsPowx(n, a, b, y); }
+    float* y) {
+    //vsPowx(n, a, b, y);
+    map_vector_float_t(y, n) = const_map_vector_float_t(a, n).array().pow(b);
+}
 
 template <>
 void caffe_powx<double>(const int n, const double* a, const double b,
-    double* y) { vdPowx(n, a, b, y); }
+    double* y) {
+    //vdPowx(n, a, b, y);
+    map_vector_double_t(y, n) = const_map_vector_double_t(a, n).array().pow(b);
+}
 
 template <>
 void caffe_vRngUniform<float>(const int n, float* r,
     const float a, const float b) {
-  VSL_CHECK(vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffe::vsl_stream(),
-      n, r, a, b));
+  //VSL_CHECK(vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffe::vsl_stream(),
+  //    n, r, a, b));
+
+  // FIXME check if boundaries are handled in the same way ?
+  boost::uniform_real<float> random_distribution(a, b);
+  Caffe::random_generator_t &generator = Caffe::vsl_stream();
+
+  for(int i = 0; i < n; i += 1)
+  {
+      r[i] = random_distribution(generator);
+  }
 }
 
 template <>
 void caffe_vRngUniform<double>(const int n, double* r,
     const double a, const double b) {
-  VSL_CHECK(vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffe::vsl_stream(),
-      n, r, a, b));
+  //VSL_CHECK(vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffe::vsl_stream(),
+  //    n, r, a, b));
+
+    // FIXME check if boundaries are handled in the same way ?
+    boost::uniform_real<double> random_distribution(a, b);
+    Caffe::random_generator_t &generator = Caffe::vsl_stream();
+
+    for(int i = 0; i < n; i += 1)
+    {
+        r[i] = random_distribution(generator);
+    }
 }
 
 template <>
 void caffe_vRngGaussian<float>(const int n, float* r, const float a,
     const float sigma) {
-  VSL_CHECK(vsRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
-      Caffe::vsl_stream(), n, r, a, sigma));
+  //VSL_CHECK(vsRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
+//      Caffe::vsl_stream(), n, r, a, sigma));
+
+    // FIXME check if parameters are handled in the same way ?
+    boost::normal_distribution<float> random_distribution(a, sigma);
+    Caffe::random_generator_t &generator = Caffe::vsl_stream();
+
+    for(int i = 0; i < n; i += 1)
+    {
+        r[i] = random_distribution(generator);
+    }
 }
 
 
 template <>
 void caffe_vRngGaussian<double>(const int n, double* r, const double a,
     const double sigma) {
-  VSL_CHECK(vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
-      Caffe::vsl_stream(), n, r, a, sigma));
+  //VSL_CHECK(vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
+  //    Caffe::vsl_stream(), n, r, a, sigma));
+
+    // FIXME check if parameters are handled in the same way ?
+    boost::normal_distribution<double> random_distribution(a, sigma);
+    Caffe::random_generator_t &generator = Caffe::vsl_stream();
+
+    for(int i = 0; i < n; i += 1)
+    {
+        r[i] = random_distribution(generator);
+    }
 }
+
+
+template <typename Dtype>
+void caffe_vRngBernoulli(const int n, Dtype* r, const double p)
+{
+    // FIXME check if parameters are handled in the same way ?
+    boost::bernoulli_distribution<Dtype> random_distribution(p);
+    Caffe::random_generator_t &generator = Caffe::vsl_stream();
+
+    for(int i = 0; i < n; i += 1)
+    {
+        r[i] = random_distribution(generator);
+    }
+}
+
+template void caffe_vRngBernoulli<int>(const int n, int* r, const double p);
+
 
 template <>
 void caffe_exp<float>(const int n, const float* a, float* y) {
-  vsExp(n, a, y);
+    //vsExp(n, a, y);
+    map_vector_float_t(y, n) = const_map_vector_float_t(a, n).array().exp();
 }
 
 template <>
 void caffe_exp<double>(const int n, const double* a, double* y) {
-  vdExp(n, a, y);
+    //vdExp(n, a, y);
+    map_vector_double_t(y, n) = const_map_vector_double_t(a, n).array().exp();
 }
 
 template <>
