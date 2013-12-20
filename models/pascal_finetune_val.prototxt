@@ -8,9 +8,9 @@ layers {
     batchsize: 128
     cropsize: 227
     mirror: true
-    det_fg_threshold: 0.6
-    det_bg_threshold: 0.3
-    det_fg_fraction: 0.5
+    det_fg_threshold: 0.5
+    det_bg_threshold: 0.5
+    det_fg_fraction: 0.25
   }
   top: "data"
   top: "label"
@@ -349,8 +349,8 @@ layers {
       type: "constant"
       value: 0
     }
-    blobs_lr: 1.
-    blobs_lr: 2.
+    blobs_lr: 100.
+    blobs_lr: 200.
     weight_decay: 1.
     weight_decay: 0.
   }
