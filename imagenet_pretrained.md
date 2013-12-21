@@ -3,8 +3,8 @@ layout: default
 title: Caffe
 ---
 
-Running Pretrained ImageNet: the Easy Way
-=========================================
+Running Pretrained ImageNet
+===========================
 
 [View this page as an IPython Notebook](http://nbviewer.ipython.org/url/daggerfs.com/caffe/imagenet_pretrained_files/imagenet_pretrained.ipynb)
 
