@@ -3,8 +3,8 @@ layout: default
 title: Caffe
 ---
 
-Running Pretrained ImageNet: the Easy Way
-=========================================
+Running Pretrained ImageNet
+===========================
 
 [View this page as an IPython Notebook](http://nbviewer.ipython.org/url/daggerfs.com/caffe/imagenet_pretrained_files/imagenet_pretrained.ipynb)
 
@@ -18,7 +18,7 @@ We assume that you have successfully compiled Caffe and set the correct
 `PYTHONPATH`. If not, please refer to the [installation
 instructions](installation.html). You will use our pre-trained imagenet model,
 which you can [download
-here](https://www.dropbox.com/sh/854ufsssbqadhvr/t7zgt1meni) (232.57MB).
+here](https://www.dropbox.com/s/n3jups0gr7uj0dv/caffe_reference_imagenet_model) (232.57MB).
 
 Ready? Let's start.
 

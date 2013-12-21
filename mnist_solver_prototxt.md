@@ -3,8 +3,8 @@ layout: default
 title: Caffe
 ---
 
-MNIST: Define the Solver
-===========================
+Define the MNIST Solver
+=======================
 
 The page is under construction. For now, check out the comments in the solver prototxt file, which explains each line in the prototxt:
 

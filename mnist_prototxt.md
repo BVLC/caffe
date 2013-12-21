@@ -3,8 +3,8 @@ layout: default
 title: Caffe
 ---
 
-MNIST: Define the Network
-===========================
+Define the MNIST Network
+=========================
 
 This page explains the prototxt file used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at [src/caffe/proto/caffe.proto](https://github.com/Yangqing/caffe/blob/master/src/caffe/proto/caffe.proto).
 
