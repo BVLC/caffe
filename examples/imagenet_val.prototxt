@@ -5,7 +5,7 @@ layers {
     type: "data"
     source: "/home/jiayq/Data/ILSVRC12/val-leveldb"
     meanfile: "/home/jiayq/Data/ILSVRC12/image_mean.binaryproto"
-    batchsize: 200
+    batchsize: 50
     cropsize: 227
     mirror: false
   }
