@@ -43,7 +43,13 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   const float fg_fraction = layer->layer_param_.det_fg_fraction();
   const Dtype* mean = layer->data_mean_.cpu_data();
   const int mean_off = (layer->data_mean_.width() - cropsize) / 2;
+  const int mean_width = layer->data_mean_.width();
+  const int mean_height = layer->data_mean_.height();
   cv::Size cv_crop_size(cropsize, cropsize);
+
+//  CHECK_EQ(mean_width, mean_height);
+//  CHECK_EQ(mean_width, 256);
+//  CHECK_EQ(mean_off, 14);
 
   const int num_fg = static_cast<int>(static_cast<float>(batchsize) 
       * fg_fraction);
@@ -68,6 +74,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         return (void*)NULL;
       }
       const int channels = cv_img.channels();
+//      CHECK_EQ(channels, 3);
 
       // crop window out of image and warp it
       const int x1 = window[WindowDataLayer<Dtype>::X1];
@@ -80,8 +87,10 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
           cv_crop_size, 0, 0, cv::INTER_LINEAR);
       
       // horizontal flip at random
+//      bool is_mirror = false;
       if (mirror && rand() % 2) {
         cv::flip(cv_cropped_img, cv_cropped_img, 1);
+//        is_mirror = true;
       }
       
       // TODO(rbg): this could probably be made more efficient
@@ -90,13 +99,13 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       for (int c = 0; c < channels; ++c) {
         for (int h = 0; h < cropsize; ++h) {
           for (int w = 0; w < cropsize; ++w) {
-            char pixel = 
-                static_cast<char>(cv_cropped_img.at<cv::Vec3b>(h, w)[c]);
+            Dtype pixel = 
+                static_cast<Dtype>(cv_cropped_img.at<cv::Vec3b>(h, w)[c]);
 
             top_data[((itemid * channels + c) * cropsize + h) * cropsize + w]
-                = (static_cast<Dtype>(pixel)
-                    - mean[(c * cropsize + h + mean_off) 
-                           * cropsize + w + mean_off])
+                = (pixel
+                    - mean[(c * mean_height + h + mean_off) 
+                           * mean_width + w + mean_off])
                   * scale;
           }
         }
@@ -104,6 +113,38 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
 
       // get window label
       top_label[itemid] = window[WindowDataLayer<Dtype>::LABEL];
+
+//      string file_id;
+//      std::stringstream ss;
+//      ss << rand();
+//      ss >> file_id;
+//      std::ofstream inf((string("dump/") + file_id + string("_info.txt")).c_str(), std::ofstream::out);
+//      inf << image.first << std::endl 
+//          << x1+1 << std::endl
+//          << y1+1 << std::endl
+//          << x2+1 << std::endl
+//          << y2+1 << std::endl
+//          << is_mirror << std::endl
+//          << top_label[itemid] << std::endl
+//          << is_fg << std::endl;
+////          << "is_fg: " << is_fg << std::endl
+////          << "label: " << top_label[itemid] << " " << window[WindowDataLayer<Dtype>::LABEL] << std::endl
+////          << "num bg samples: " << num_samples[0] << std::endl
+////          << "num fg samples: " << num_samples[1];
+//      inf.close();
+//      std::ofstream top_data_file((string("dump/") + file_id + string("_data.txt")).c_str(), 
+//            std::ofstream::out | std::ofstream::binary);
+//      for (int c = 0; c < channels; ++c) {
+//        for (int h = 0; h < cropsize; ++h) {
+//          for (int w = 0; w < cropsize; ++w) {
+//            top_data_file.write(
+//                reinterpret_cast<char*>(&top_data[((itemid * channels + c) 
+//                                                   * cropsize + h) * cropsize + w]),
+//                sizeof(Dtype));
+//          }
+//        }
+//      }
+//      top_data_file.close();
 
       itemid++;
     }
@@ -146,6 +187,9 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(infile.good()) << "Failed to open window file " 
       << this->layer_param_.source() << std::endl;
 
+  vector<float> label_hist(21);
+  std::fill(label_hist.begin(), label_hist.end(), 0);
+
   string hashtag;
   int image_index, channels;
   while (infile >> hashtag >> image_index) {
@@ -178,6 +222,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       
       // add window to foreground list or background list
       if (overlap >= this->layer_param_.det_fg_threshold()) {
+        CHECK_GT(window[WindowDataLayer::LABEL], 0);
         fg_windows_.push_back(window);
       } else if (overlap < this->layer_param_.det_bg_threshold()) {
         // background window, force label and overlap to 0
@@ -185,6 +230,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         window[WindowDataLayer::OVERLAP] = 0;
         bg_windows_.push_back(window);
       }
+      label_hist[window[WindowDataLayer::LABEL]]++;
     }
 
     if (image_index % 1000 == 0) {
@@ -195,6 +241,10 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
           << image_size[2] << " "
           << "windows to process: " << num_windows;
     }
+  }
+
+  for (int i = 0; i < 21; ++i) {
+    LOG(INFO) << "class " << i << " has " << label_hist[i] << " samples";
   }
 
   // image
