@@ -233,7 +233,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       label_hist[window[WindowDataLayer::LABEL]]++;
     }
 
-    if (image_index % 1000 == 0) {
+    if (image_index % 1 == 0) {
       LOG(INFO) << "num: " << image_index << " "
           << image_path << " " 
           << image_size[0] << " "
@@ -242,6 +242,8 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
           << "windows to process: " << num_windows;
     }
   }
+
+  LOG(INFO) << "Number of images: " << image_index;
 
   for (int i = 0; i < 21; ++i) {
     LOG(INFO) << "class " << i << " has " << label_hist[i] << " samples";
