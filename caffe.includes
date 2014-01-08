@@ -1,3 +1,0 @@
-include/caffe/proto
-src/caffe/proto
-src/gtest
