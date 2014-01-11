@@ -1,8 +1,10 @@
 // Copyright 2013 Yangqing Jia
 // Copyright 2014 kloudkl@github
 
+#include <limits>
 //#include <mkl.h>
 #include <eigen3/Eigen/Dense>
+#include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
 #include <cublas_v2.h>
@@ -281,6 +283,11 @@ void caffe_powx<double>(const int n, const double* a, const double b,
     map_vector_double_t(y, n) = const_map_vector_double_t(a, n).array().pow(b);
 }
 
+template <typename Dtype>
+Dtype caffe_nextafter(const Dtype b) {
+  return boost::math::nextafter<Dtype, Dtype>(b, std::numeric_limits<Dtype>::max());
+}
+
 template <>
 void caffe_vRngUniform<float>(const int n, float* r,
     const float a, const float b) {
@@ -288,7 +295,8 @@ void caffe_vRngUniform<float>(const int n, float* r,
   //    n, r, a, b));
 
   // FIXME check if boundaries are handled in the same way ?
-  boost::uniform_real<float> random_distribution(a, b);
+  boost::random::uniform_real_distribution<float> random_distribution(
+      a, caffe_nextafter<float>(b));
   Caffe::random_generator_t &generator = Caffe::vsl_stream();
 
   for(int i = 0; i < n; i += 1)
@@ -304,7 +312,8 @@ void caffe_vRngUniform<double>(const int n, double* r,
   //    n, r, a, b));
 
     // FIXME check if boundaries are handled in the same way ?
-    boost::uniform_real<double> random_distribution(a, b);
+    boost::random::uniform_real_distribution<double> random_distribution(
+        a, caffe_nextafter<double>(b));
     Caffe::random_generator_t &generator = Caffe::vsl_stream();
 
     for(int i = 0; i < n; i += 1)
@@ -316,6 +325,7 @@ void caffe_vRngUniform<double>(const int n, double* r,
 template <>
 void caffe_vRngGaussian<float>(const int n, float* r, const float a,
     const float sigma) {
+    DCHECK(sigma > 0);
   //VSL_CHECK(vsRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
 //      Caffe::vsl_stream(), n, r, a, sigma));
 
@@ -333,6 +343,7 @@ void caffe_vRngGaussian<float>(const int n, float* r, const float a,
 template <>
 void caffe_vRngGaussian<double>(const int n, double* r, const double a,
     const double sigma) {
+    DCHECK(sigma > 0);
   //VSL_CHECK(vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
   //    Caffe::vsl_stream(), n, r, a, sigma));
 

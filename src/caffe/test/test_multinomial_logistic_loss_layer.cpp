@@ -25,6 +25,7 @@ class MultinomialLogisticLossLayerTest : public ::testing::Test {
   MultinomialLogisticLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
         blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)) {
+    Caffe::set_random_seed(1701);
     // fill the values
     FillerParameter filler_param;
     PositiveUnitballFiller<Dtype> filler(filler_param);
