@@ -146,8 +146,6 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
   }
 }
 
-
-
 TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
   Caffe::set_mode(Caffe::GPU);
   Caffe::set_phase(Caffe::TRAIN);
@@ -157,7 +155,7 @@ TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
 
   layer_param.set_pool(LayerParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  GradientChecker<TypeParam> checker(1e-4, 1e-2);
   // it is too expensive to call curand multiple times, so we don't do an
   // exhaustive gradient check.
   checker.CheckGradient(&layer, &(this->blob_bottom_vec_),
