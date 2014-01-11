@@ -87,6 +87,9 @@ template <typename Dtype>
 void caffe_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
 template <typename Dtype>
+Dtype caffe_nextafter(const Dtype b);
+
+template <typename Dtype>
 void caffe_vRngUniform(const int n, Dtype* r, const Dtype a, const Dtype b);
 
 template <typename Dtype>
