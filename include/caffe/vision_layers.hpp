@@ -294,6 +294,7 @@ class DataLayer : public Layer<Dtype> {
  public:
   explicit DataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~DataLayer();
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
