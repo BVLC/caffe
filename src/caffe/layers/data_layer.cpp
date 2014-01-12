@@ -17,8 +17,11 @@ namespace caffe {
 
 template <typename Dtype>
 void* DataLayerPrefetch(void* layer_pointer) {
+  CHECK(layer_pointer);
   DataLayer<Dtype>* layer = reinterpret_cast<DataLayer<Dtype>*>(layer_pointer);
+  CHECK(layer);
   Datum datum;
+  CHECK(layer->prefetch_data_);
   Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
   Dtype* top_label = layer->prefetch_label_->mutable_cpu_data();
   const Dtype scale = layer->layer_param_.scale();
@@ -38,6 +41,8 @@ void* DataLayerPrefetch(void* layer_pointer) {
   const Dtype* mean = layer->data_mean_.cpu_data();
   for (int itemid = 0; itemid < batchsize; ++itemid) {
     // get a blob
+    CHECK(layer->iter_);
+    CHECK(layer->iter_->Valid());
     datum.ParseFromString(layer->iter_->value().ToString());
     const string& data = datum.data();
     if (cropsize) {
@@ -109,6 +114,11 @@ void* DataLayerPrefetch(void* layer_pointer) {
   return (void*)NULL;
 }
 
+template <typename Dtype>
+DataLayer<Dtype>::~DataLayer<Dtype>() {
+  // Finally, join the thread
+  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+}
 
 template <typename Dtype>
 void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
