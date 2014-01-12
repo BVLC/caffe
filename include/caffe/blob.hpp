@@ -27,6 +27,14 @@ class Blob {
   inline int count() const {return count_; }
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
+    CHECK_GE(n, 0);
+    CHECK_LE(n, num_);
+    CHECK_GE(channels_, 0);
+    CHECK_LE(c, channels_);
+    CHECK_GE(height_, 0);
+    CHECK_LE(h, height_);
+    CHECK_GE(width_, 0);
+    CHECK_LE(w, width_);
     return ((n * channels_ + c) * height_ + h) * width_ + w;
   }
   // Copy from source. If copy_diff is false, we copy the data; if copy_diff
