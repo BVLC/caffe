@@ -3,8 +3,8 @@ layers {
   layer {
     name: "data"
     type: "window_data"
-    source: "/work5/rbg/convnet-selective-search/selective-search-data/window_file_2007_test.txt"
-    meanfile: "/home/rbg/working/caffe-rbg/data/ilsvrc2012_mean.binaryproto"
+    source: "/work4/rbg/convnet-selective-search/selective-search-data/window_file_2007_test.txt"
+    meanfile: "/home/eecs/rbg/working/caffe-rbg/data/ilsvrc2012_mean.binaryproto"
     batchsize: 128
     cropsize: 227
     context_pad: 16
@@ -350,8 +350,8 @@ layers {
       type: "constant"
       value: 0
     }
-    blobs_lr: 100.
-    blobs_lr: 200.
+    blobs_lr: 10.
+    blobs_lr: 20.
     weight_decay: 1.
     weight_decay: 0.
   }
