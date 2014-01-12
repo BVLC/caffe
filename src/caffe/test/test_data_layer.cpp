@@ -81,8 +81,8 @@ TYPED_TEST(DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
-  // Go throught the data twice
-  for (int iter = 0; iter < 2; ++iter) {
+  // Go through the data 100 times
+  for (int iter = 0; iter < 100; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
