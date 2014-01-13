@@ -16,26 +16,26 @@ STATIC_NAME := lib$(PROJECT).a
 # Get all source files
 ##############################
 # CXX_SRCS are the source files excluding the test ones.
-CXX_SRCS := $(shell find src/caffe ! -name "test_*.cpp" -name "*.cpp")
+CXX_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cpp" -name "*.cpp")
 # HXX_SRCS are the header files
-HXX_SRCS := $(shell find include/caffe ! -name "*.hpp")
+HXX_SRCS := $(shell find include/$(PROJECT) ! -name "*.hpp")
 # CU_SRCS are the cuda source files
-CU_SRCS := $(shell find src/caffe -name "*.cu")
+CU_SRCS := $(shell find src/$(PROJECT) -name "*.cu")
 # TEST_SRCS are the test source files
-TEST_SRCS := $(shell find src/caffe -name "test_*.cpp")
+TEST_SRCS := $(shell find src/$(PROJECT) -name "test_*.cpp")
 GTEST_SRC := src/gtest/gtest-all.cpp
 # TEST_HDRS are the test header files
-TEST_HDRS := $(shell find src/caffe -name "test_*.hpp")
+TEST_HDRS := $(shell find src/$(PROJECT) -name "test_*.hpp")
 # EXAMPLE_SRCS are the source files for the example binaries
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
-PROTO_SRCS := $(wildcard src/caffe/proto/*.proto)
-# PYCAFFE_SRC is the python wrapper for caffe
-PYCAFFE_SRC := python/caffe/pycaffe.cpp
-PYCAFFE_SO := python/caffe/pycaffe.so
-# MATCAFFE_SRC is the matlab wrapper for caffe
-MATCAFFE_SRC := matlab/caffe/matcaffe.cpp
-MATCAFFE_SO := matlab/caffe/caffe
+PROTO_SRCS := $(wildcard src/$(PROJECT)/proto/*.proto)
+# PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
+PY$(PROJECT)_SRC := python/$(PROJECT)/py$(PROJECT).cpp
+PY$(PROJECT)_SO := python/$(PROJECT)/py$(PROJECT).so
+# MAT$(PROJECT)_SRC is the matlab wrapper for $(PROJECT)
+MAT$(PROJECT)_SRC := matlab/$(PROJECT)/mat$(PROJECT).cpp
+MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT)
 
 ##############################
 # Derive generated files
@@ -47,16 +47,16 @@ PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
 # The objects corresponding to the source files
 # These objects will be linked into the final shared library, so we
 # exclude the test and example objects.
-CXX_OBJS := ${CXX_SRCS:.cpp=.o}
-CU_OBJS := ${CU_SRCS:.cu=.cuo}
-PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
+CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
+CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
+PROTO_OBJS := $(addprefix $(BUILD_DIR)/, ${PROTO_GEN_CC:.cc=.o})
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # program and test objects
-EXAMPLE_OBJS := ${EXAMPLE_SRCS:.cpp=.o}
-TEST_OBJS := ${TEST_SRCS:.cpp=.o}
-GTEST_OBJ := ${GTEST_SRC:.cpp=.o}
+EXAMPLE_OBJS := $(addprefix $(BUILD_DIR)/, ${EXAMPLE_SRCS:.cpp=.o})
+TEST_OBJS := $(addprefix $(BUILD_DIR)/, ${TEST_SRCS:.cpp=.o})
+GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
 # program and test bins
-EXAMPLE_BINS :=${EXAMPLE_OBJS:.o=.bin}
+EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
 
 ##############################
@@ -86,32 +86,47 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 ##############################
 # Define build targets
 ##############################
-.PHONY: all test clean linecount examples pycaffe distribute
+.PHONY: all init test clean linecount examples py mat distribute py$(PROJECT) mat$(PROJECT) 
 
-all: $(NAME) $(STATIC_NAME) examples
+all: init $(NAME) $(STATIC_NAME) examples
+	@echo $(CXX_OBJS)
+	
+init: 
+	@ mkdir -p $(foreach obj,$(OBJS),$(dir $(obj)))
+	@ mkdir -p $(foreach obj,$(EXAMPLE_OBJS),$(dir $(obj)))
+	@ mkdir -p $(foreach obj,$(TEST_OBJS),$(dir $(obj)))
+	@ mkdir -p $(foreach obj,$(GTEST_OBJ),$(dir $(obj)))	
 
 linecount: clean
-	cloc --read-lang-def=caffe.cloc src/caffe/
+	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
 
-test: $(TEST_BINS)
+test: init $(TEST_BINS)
 
-examples: $(EXAMPLE_BINS)
+examples: init $(EXAMPLE_BINS)
 
-pycaffe: $(STATIC_NAME) $(PYCAFFE_SRC) $(PROTO_GEN_PY)
-	$(CXX) -shared -o $(PYCAFFE_SO) $(PYCAFFE_SRC) \
+py$(PROJECT): py
+
+py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY)
+	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+	@echo
+	
+mat$(PROJECT): mat
 
-matcaffe: $(STATIC_NAME) $(MATCAFFE_SRC)
-	$(MATLAB_DIR)/bin/mex $(MATCAFFE_SRC) $(STATIC_NAME) \
+mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
+	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
 		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
 		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" \
-		-o $(MATCAFFE_SO)
-
-$(NAME): $(PROTO_OBJS) $(OBJS)
+		-o $(MAT$(PROJECT)_SO)
+	@echo
+		
+$(NAME): init $(PROTO_OBJS) $(OBJS)
 	$(CXX) -shared -o $(NAME) $(OBJS) $(LDFLAGS) $(WARNINGS)
+	@echo
 
-$(STATIC_NAME): $(PROTO_OBJS) $(OBJS)
+$(STATIC_NAME): init $(PROTO_OBJS) $(OBJS)
 	ar rcs $(STATIC_NAME) $(PROTO_OBJS) $(OBJS)
+	@echo
 
 runtest: test
 	for testbin in $(TEST_BINS); do $$testbin $(TEST_GPUID); done
@@ -121,40 +136,73 @@ $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
 
 $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
+	@echo
 
 $(OBJS): $(PROTO_GEN_CC) $(HXX_SRCS)
 
-$(EXAMPLE_OBJS): $(PROTO_GEN_CC)
-
-$(CU_OBJS): %.cuo: %.cu
+$(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
+	
+$(BUILD_DIR)/src/$(PROJECT)/layers/%.o: src/$(PROJECT)/layers/%.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
+	
+$(BUILD_DIR)/src/$(PROJECT)/proto/%.o: src/$(PROJECT)/proto/%.cc
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
+	
+$(BUILD_DIR)/src/$(PROJECT)/test/%.o: src/test/%.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
+	
+$(BUILD_DIR)/src/$(PROJECT)/util/%.o: src/$(PROJECT)/util/%.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
+	
+$(BUILD_DIR)/src/gtest/%.o: src/gtest/%.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
+	
+$(BUILD_DIR)/src/$(PROJECT)/layers/%.cuo: src/$(PROJECT)/layers/%.cu
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	@echo
+	
+$(BUILD_DIR)/src/$(PROJECT)/util/%.cuo: src/$(PROJECT)/util/%.cu
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	@echo
+	
+$(BUILD_DIR)/examples/%.o: examples/%.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
 
 $(PROTO_GEN_PY): $(PROTO_SRCS)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
+	@echo
 
 $(PROTO_GEN_CC): $(PROTO_SRCS)
 	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS)
-	mkdir -p include/caffe/proto
-	cp $(PROTO_GEN_HEADER) include/caffe/proto/
-
+	mkdir -p include/$(PROJECT)/proto
+	cp $(PROTO_GEN_HEADER) include/$(PROJECT)/proto/
+	@echo
+	
 clean:
-	@- $(RM) $(NAME) $(STATIC_NAME) $(TEST_BINS) $(EXAMPLE_BINS)
-	@- $(RM) $(OBJS) $(TEST_OBJS) $(EXAMPLE_OBJS)
+	@- $(RM) $(NAME) $(STATIC_NAME)
 	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)
-	@- $(RM) include/caffe/proto/caffe.pb.h
-	@- $(RM) python/caffe/proto/caffe_pb2.py
-	@- $(RM) -rf build
+	@- $(RM) include/$(PROJECT)/proto/$(PROJECT).pb.h
+	@- $(RM) python/$(PROJECT)/proto/$(PROJECT)_pb2.py
+	@- $(RM) -rf $(BUILD_DIR)
 
 distribute: all
-	mkdir build
+	mkdir $(DISTRIBUTE_DIR)
 	# add include
-	cp -r include build/
+	cp -r include $(DISTRIBUTE_DIR)/
 	# add example binaries
-	mkdir build/bin
-	cp $(EXAMPLE_BINS) build/bin
+	mkdir $(DISTRIBUTE_DIR)/bin
+	cp $(EXAMPLE_BINS) $(DISTRIBUTE_DIR)/bin
 	# add libraries
-	mkdir build/lib
-	cp $(NAME) build/lib
-	cp $(STATIC_NAME) build/lib
+	mkdir $(DISTRIBUTE_DIR)/lib
+	cp $(NAME) $(DISTRIBUTE_DIR)/lib
+	cp $(STATIC_NAME) $(DISTRIBUTE_DIR)/lib
 	# add python - it's not the standard way, indeed...
-	cp -r python build/python
+	cp -r python $(DISTRIBUTE_DIR)/python
