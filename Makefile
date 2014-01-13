@@ -194,6 +194,7 @@ clean:
 	@- $(RM) include/$(PROJECT)/proto/$(PROJECT).pb.h
 	@- $(RM) python/$(PROJECT)/proto/$(PROJECT)_pb2.py
 	@- $(RM) -rf $(BUILD_DIR)
+	@- $(RM) -rf $(DISTRIBUTE_DIR)
 
 distribute: all
 	mkdir $(DISTRIBUTE_DIR)
