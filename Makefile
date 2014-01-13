@@ -86,7 +86,7 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 ##############################
 # Define build targets
 ##############################
-.PHONY: all init test clean linecount examples py mat distribute py$(PROJECT) mat$(PROJECT) 
+.PHONY: all init test clean linecount examples py mat distribute py$(PROJECT) mat$(PROJECT) proto
 
 all: init $(NAME) $(STATIC_NAME) examples
 	@echo $(CXX_OBJS)
@@ -179,6 +179,8 @@ $(BUILD_DIR)/examples/%.o: examples/%.cpp
 $(PROTO_GEN_PY): $(PROTO_SRCS)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
 	@echo
+
+proto: $(PROTO_GEN_CC)
 
 $(PROTO_GEN_CC): $(PROTO_SRCS)
 	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS)
