@@ -220,6 +220,8 @@ struct CaffeNet
       return vector<CaffeBlob>(net_->blobs().begin(), net_->blobs().end());
   }
 
+  vector<CaffeBlob> params() {
+      return vector<CaffeBlob>(net_->params().begin(), net_->params().end());
   }
 
   // The pointer to the internal caffe::Net instant.
@@ -242,6 +244,7 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("set_phase_test",  &CaffeNet::set_phase_test)
       .def("set_device",      &CaffeNet::set_device)
       .def("blobs",           &CaffeNet::blobs)
+      .def("params",          &CaffeNet::params)
   ;
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
