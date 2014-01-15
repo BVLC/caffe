@@ -13,6 +13,7 @@
 #include <vector>  // NOLINT(build/include_order)
 
 #include "caffe/caffe.hpp"
+#include "stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -216,6 +217,58 @@ struct CaffeNet {
     }
   }
 
+  //void testIO(){ } //dummy example
+
+  //float* -> numpy -> boost python (which can be returned to Python)
+  boost::python::object array_to_boostPython_4d(float* pyramid_float, 
+                                                int nbPlanes, int depth_, int MaxHeight_, int MaxWidth_)
+  {
+
+    npy_intp dims[4] = {nbPlanes, depth_, MaxHeight_, MaxWidth_}; //in floats
+    PyArrayObject* pyramid_float_py = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
+
+    //thanks: stackoverflow.com/questions/19185574 
+    boost::python::object pyramid_float_py_boost(boost::python::handle<>((PyObject*)pyramid_float_py));
+    return pyramid_float_py_boost;
+  } 
+
+  //return a list containing one 4D numpy/boost array. (toy example)
+  boost::python::list testIO()
+  {
+    int nbPlanes = 1;
+    int depth_ = 1;
+    int MaxHeight_ = 10;
+    int MaxWidth_ = 10;
+
+    //prepare data that we'll send to Python
+    float* pyramid_float = (float*)malloc(sizeof(float) * nbPlanes * depth_ * MaxHeight_ * MaxWidth_);
+    memset(pyramid_float, 0, sizeof(float) * nbPlanes * depth_ * MaxHeight_ * MaxWidth_);
+    pyramid_float[10] = 123; //test -- see if it shows up in Python
+
+    boost::python::object pyramid_float_py_boost = array_to_boostPython_4d(pyramid_float, nbPlanes, depth_, MaxHeight_, MaxWidth_);
+
+    boost::python::list blobs_top_boost; //list to return
+    blobs_top_boost.append(pyramid_float_py_boost); //put the output array in list
+
+    return blobs_top_boost; //compile error: return-statement with no value  
+  }
+
+  void testString(string st){
+    printf("    string from python: %s \n", st.c_str());
+  }
+
+  void testInt(int i){
+    printf("    int from python: %d \n", i);
+  }
+
+  void extract_featpyramid(string file){
+
+    int padding = 8;
+    int interval = 10;
+    Patchwork patchwork = stitch_pyramid(file, padding, interval); 
+
+  }
+
   // The caffe::Caffe utility functions.
   void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
   void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
@@ -261,6 +314,10 @@ BOOST_PYTHON_MODULE(pycaffe) {
       .def("set_phase_train", &CaffeNet::set_phase_train)
       .def("set_phase_test",  &CaffeNet::set_phase_test)
       .def("set_device",      &CaffeNet::set_device)
+      .def("testIO",          &CaffeNet::testIO) //Forrest's test (return a numpy array)
+      .def("testString",      &CaffeNet::testString) 
+      .def("testInt",         &CaffeNet::testInt)
+      .def("extract_featpyramid",         &CaffeNet::extract_featpyramid) //NEW
       .def("blobs",           &CaffeNet::blobs)
       .def("params",          &CaffeNet::params);
 

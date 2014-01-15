@@ -142,7 +142,7 @@ examples: init $(EXAMPLE_BINS)
 py$(PROJECT): py
 
 py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY)
-	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) \
+	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) -L./python/caffe/stitch_pyramid/build -lPyramidStitcher -I./python/caffe/stitch_pyramid \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 	@echo
 
