@@ -11,4 +11,4 @@ max_iter: 100000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "./snapshots/pascal_context16_finetune_train"
+snapshot_prefix: "./snapshots/pascal_warp_context16_finetune_train"
