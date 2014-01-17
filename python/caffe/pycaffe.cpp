@@ -221,10 +221,10 @@ struct CaffeNet {
 
   //float* -> numpy -> boost python (which can be returned to Python)
   boost::python::object array_to_boostPython_4d(float* pyramid_float, 
-                                                int nbPlanes, int depth_, int MaxHeight_, int MaxWidth_)
+                                                int batchsize, int depth_, int MaxHeight_, int MaxWidth_)
   {
 
-    npy_intp dims[4] = {nbPlanes, depth_, MaxHeight_, MaxWidth_}; //in floats
+    npy_intp dims[4] = {batchsize, depth_, MaxHeight_, MaxWidth_}; //in floats
     PyArrayObject* pyramid_float_py = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
 
     //thanks: stackoverflow.com/questions/19185574 
@@ -235,17 +235,17 @@ struct CaffeNet {
   //return a list containing one 4D numpy/boost array. (toy example)
   boost::python::list testIO()
   {
-    int nbPlanes = 1;
+    int batchsize = 1;
     int depth_ = 1;
     int MaxHeight_ = 10;
     int MaxWidth_ = 10;
 
     //prepare data that we'll send to Python
-    float* pyramid_float = (float*)malloc(sizeof(float) * nbPlanes * depth_ * MaxHeight_ * MaxWidth_);
-    memset(pyramid_float, 0, sizeof(float) * nbPlanes * depth_ * MaxHeight_ * MaxWidth_);
+    float* pyramid_float = (float*)malloc(sizeof(float) * batchsize * depth_ * MaxHeight_ * MaxWidth_);
+    memset(pyramid_float, 0, sizeof(float) * batchsize * depth_ * MaxHeight_ * MaxWidth_);
     pyramid_float[10] = 123; //test -- see if it shows up in Python
 
-    boost::python::object pyramid_float_py_boost = array_to_boostPython_4d(pyramid_float, nbPlanes, depth_, MaxHeight_, MaxWidth_);
+    boost::python::object pyramid_float_py_boost = array_to_boostPython_4d(pyramid_float, batchsize, depth_, MaxHeight_, MaxWidth_);
 
     boost::python::list blobs_top_boost; //list to return
     blobs_top_boost.append(pyramid_float_py_boost); //put the output array in list
@@ -268,9 +268,24 @@ struct CaffeNet {
     int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
 
     assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
+    assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
     //TODO: verify that top-upsampled version of input img fits within planeDim
 
     Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
+
+    int planeID = 0; //TODO: iterate to patchwork.planes.size(), running one at a time in Caffe
+    JPEGImage* currPlane = &(patchwork.planes_[0]);
+/*
+    //TODO: separate function...
+    //            copy_JPEG_to_boostPythonFloat(JPEGImage image_src, boost::python::object float_dst)
+    // or just    copy_JPEG_to_float_unpacked(JPEGImage image_src, float* float_dst)
+    // image_src is 8-bit packed image
+    // float_dst is 32-bit float unpacked (separate channels) image
+    for(int y=0; ...
+        for(int x=0; ...
+            for(int ch=0; ...
+                
+*/
 
     printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
   }
