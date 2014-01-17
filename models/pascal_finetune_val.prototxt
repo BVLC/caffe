@@ -3,7 +3,7 @@ layers {
   layer {
     name: "data"
     type: "window_data"
-    source: "/work4/rbg/convnet-selective-search/selective-search-data/window_file_2007_test.txt"
+    source: "/work5/rbg/convnet-selective-search/selective-search-data/window_file_2007_test.txt"
     meanfile: "/home/eecs/rbg/working/caffe-rbg/data/ilsvrc2012_mean.binaryproto"
     batchsize: 128
     cropsize: 227
