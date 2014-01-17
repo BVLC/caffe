@@ -108,6 +108,11 @@ message LayerParameter {
   // (used only by the window_data_layer)
   optional uint32 context_pad = 58 [default = 0];
 
+  // Mode for cropping out a detection window
+  // warp: cropped window is warped to a fixed size and aspect ratio
+  // square: the tightest square around the window is cropped
+  optional string crop_mode = 59 [default = "warp"];
+
   // For ReshapeLayer, one needs to specify the new dimensions.
   optional int32 new_num = 60 [default = 0];
   optional int32 new_channels = 61 [default = 0];

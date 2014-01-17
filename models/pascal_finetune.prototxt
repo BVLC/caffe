@@ -8,6 +8,7 @@ layers {
     batchsize: 128
     cropsize: 227
     context_pad: 16
+    crop_mode: "warp"
     mirror: true
     det_fg_threshold: 0.5
     det_bg_threshold: 0.5

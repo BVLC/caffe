@@ -47,6 +47,9 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   const int mean_width = layer->data_mean_.width();
   const int mean_height = layer->data_mean_.height();
   cv::Size cv_crop_size(cropsize, cropsize);
+  const string& crop_mode = layer->layer_param_.crop_mode();
+
+  bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
   memset(top_data, 0, sizeof(Dtype)*layer->prefetch_data_->count());
@@ -93,7 +96,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
 
       int pad_w = 0;
       int pad_h = 0;
-      if (context_pad > 0) {
+      if (context_pad > 0 || use_square) {
         // scale factor by which to expand the original region 
         // such that after warping the expanded region to cropsize x cropsize
         // there's exactly context_pad amount of padding on each side
@@ -105,6 +108,13 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         Dtype half_width = static_cast<Dtype>(x2-x1+1)/2.0;
         Dtype center_x = static_cast<Dtype>(x1) + half_width;
         Dtype center_y = static_cast<Dtype>(y1) + half_height;
+        if (use_square) {
+          if (half_height > half_width) {
+            half_width = half_height;
+          } else {
+            half_height = half_width;
+          }
+        }
         x1 = static_cast<int>(round(center_x - half_width*context_scale));
         x2 = static_cast<int>(round(center_x + half_width*context_scale));
         y1 = static_cast<int>(round(center_y - half_height*context_scale));
@@ -338,6 +348,8 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   LOG(INFO) << "Amount of context padding: " 
       << this->layer_param_.context_pad();
+
+  LOG(INFO) << "Crop mode: " << this->layer_param_.crop_mode();
 
   // image
   int cropsize = this->layer_param_.cropsize();
