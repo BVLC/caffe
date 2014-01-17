@@ -217,20 +217,86 @@ struct CaffeNet {
     }
   }
 
-  //void testIO(){ } //dummy example
-
   //float* -> numpy -> boost python (which can be returned to Python)
   boost::python::object array_to_boostPython_4d(float* pyramid_float, 
                                                 int batchsize, int depth_, int MaxHeight_, int MaxWidth_)
   {
 
     npy_intp dims[4] = {batchsize, depth_, MaxHeight_, MaxWidth_}; //in floats
-    PyArrayObject* pyramid_float_py = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
+    PyArrayObject* pyramid_float_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, pyramid_float, 0, 0, 0 ); //not specifying strides
 
     //thanks: stackoverflow.com/questions/19185574 
-    boost::python::object pyramid_float_py_boost(boost::python::handle<>((PyObject*)pyramid_float_py));
-    return pyramid_float_py_boost;
+    boost::python::object pyramid_float_npy_boost(boost::python::handle<>((PyObject*)pyramid_float_npy));
+    return pyramid_float_npy_boost;
   } 
+
+  // for now, one batch at a time. (later, can modify this to allocate & fill a >1 batch 4d array)
+  // @param  jpeg = typically a plane from Patchwork, in packed JPEG<uint8_t> [RGB,RGB,RGB] format
+  // @return numpy float array of jpeg, in unpacked [RRRRR..,GGGGG..,BBBBB..] format
+  PyArrayObject* JPEGImage_to_numpy_float(JPEGImage &jpeg){
+
+    int depth = jpeg.depth();
+    int height = jpeg.height();
+    int width = jpeg.width();
+    int batchsize = 1;
+    npy_intp dims[4] = {batchsize, depth, height, width};
+
+    PyArrayObject* jpeg_float_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //numpy malloc
+
+    //TODO: make sure of RGB vs BGR (just for documentation purposes)
+
+    //copy jpeg into jpeg_float_npy
+    for(int y=0; y<height; y++){
+        for(int x=0; x<width; x++){
+            for(int ch=0; ch<depth; ch++){
+                //jpeg:           row-major, packed RGB, RGB, ...          uint8_t.
+                //jpeg_float_npy: row-major, unpacked RRRR..,GGGG..,BBBB.. float.
+                *((float *)PyArray_GETPTR4( jpeg_float_npy, 0, ch, y, x)) = jpeg.bits()[y*width*depth + x*depth + ch];
+            }
+        }
+    }
+
+    return jpeg_float_npy;
+  }
+
+  void extract_featpyramid(string file){
+
+    int padding = 8;
+    int interval = 10;
+    int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
+
+    assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
+    assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
+    //TODO: verify that top-upsampled version of input img fits within planeDim
+
+    //TODO: think about how to use image_mean.
+    //        ignoring image_mean for now, because the 'subtract image mean from whatever input region we get'
+    //        thing in r-cnn feels kinda silly.
+ 
+    Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
+
+    int planeID = 0; //TODO: iterate to patchwork.planes.size(), running one at a time in Caffe
+
+    //prep input data
+    JPEGImage* currPlane = &(patchwork.planes_[planeID]);
+    PyArrayObject* currPlane_npy = JPEGImage_to_numpy_float(*currPlane); //TODO: agree on dereference and/or pass-by-ref JPEGImage currPlane
+    boost::python::object currPlane_npy_boost(boost::python::handle<>((PyObject*)currPlane_npy)); //numpy -> wrap in boost
+    boost::python::list blobs_bottom; //input to Caffe::Forward
+    blobs_bottom.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
+
+    //prep output space
+    PyArrayObject* resultPlane_npy = (PyArrayObject*)PyArray_NewLikeArray(currPlane_npy, NPY_KEEPORDER, NULL, 1); //same size/shape as currPlane_npy
+    boost::python::object resultPlane_npy_boost(boost::python::handle<>((PyObject*)resultPlane_npy)); //numpy -> wrap in boost
+    boost::python::list blobs_top; //output buffer for Caffe::Forward
+    blobs_top.append(resultPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
+    
+    //Forward(list bottom, list top)
+    Forward(blobs_bottom, blobs_top); 
+
+    printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
+  }
+
+  //void testIO(){ } //dummy example
 
   //return a list containing one 4D numpy/boost array. (toy example)
   boost::python::list testIO()
@@ -245,10 +311,10 @@ struct CaffeNet {
     memset(pyramid_float, 0, sizeof(float) * batchsize * depth_ * MaxHeight_ * MaxWidth_);
     pyramid_float[10] = 123; //test -- see if it shows up in Python
 
-    boost::python::object pyramid_float_py_boost = array_to_boostPython_4d(pyramid_float, batchsize, depth_, MaxHeight_, MaxWidth_);
+    boost::python::object pyramid_float_npy_boost = array_to_boostPython_4d(pyramid_float, batchsize, depth_, MaxHeight_, MaxWidth_);
 
     boost::python::list blobs_top_boost; //list to return
-    blobs_top_boost.append(pyramid_float_py_boost); //put the output array in list
+    blobs_top_boost.append(pyramid_float_npy_boost); //put the output array in list
 
     return blobs_top_boost; //compile error: return-statement with no value  
   }
@@ -259,35 +325,6 @@ struct CaffeNet {
 
   void testInt(int i){
     printf("    int from python: %d \n", i);
-  }
-
-  void extract_featpyramid(string file){
-
-    int padding = 8;
-    int interval = 10;
-    int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
-
-    assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
-    assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
-    //TODO: verify that top-upsampled version of input img fits within planeDim
-
-    Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
-
-    int planeID = 0; //TODO: iterate to patchwork.planes.size(), running one at a time in Caffe
-    JPEGImage* currPlane = &(patchwork.planes_[0]);
-/*
-    //TODO: separate function...
-    //            copy_JPEG_to_boostPythonFloat(JPEGImage image_src, boost::python::object float_dst)
-    // or just    copy_JPEG_to_float_unpacked(JPEGImage image_src, float* float_dst)
-    // image_src is 8-bit packed image
-    // float_dst is 32-bit float unpacked (separate channels) image
-    for(int y=0; ...
-        for(int x=0; ...
-            for(int ch=0; ...
-                
-*/
-
-    printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
   }
 
   // The caffe::Caffe utility functions.
