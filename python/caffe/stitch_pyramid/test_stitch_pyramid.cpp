@@ -152,7 +152,7 @@ int main(int argc, char * argv[]){
     printf("    base_filename = %s \n", base_filename.c_str());
     printf("    output_stitched_dir = %s \n", output_stitched_dir.c_str());
 
-    Patchwork patchwork = stitch_pyramid(file, padding, interval);
+    Patchwork patchwork = stitch_pyramid(file, padding, interval, -1); //planeDim = -1 (use defaults)
     //printScaleSizes(pyramid);
     //writePyraToJPG(pyramid);
     writePatchworkToJPG(patchwork, output_stitched_dir, base_filename); //outputs to output_stitched_dir/base_filename_[planeID].jpg

@@ -3,10 +3,6 @@ test cases for multiscale pyramids of Convnet features.
 
     used power_wrapper.py as a starting point.
 
-
-example usage:
-python featpyramid_tests.py --images_file=image_cat.txt --crop_mode=selective_search --model_def=../../../examples/imagenet_deploy.prototxt --pretrained_model=../../../alexnet_train_iter_470000 --output=selective_cat.h5
-
 '''
 
 import numpy as np
@@ -28,9 +24,6 @@ import caffe
 
 #hopefully caffenet is passed by ref...
 def test_pyramid_IO(caffenet, imgFname):
-    #TODO
-
-    #caffenet.testIO()
     example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
     #example_np_arrays = caffenet.testIO_multiPlane() #return array of arrays
 
@@ -48,12 +41,17 @@ def featpyramid(caffenet, imgFname, [params]):
     return pyra
 '''
 
+def test_featpyramid(caffenet, imgFname):
+
+    caffenet.extract_featpyramid(imgFname) #test... TODO: return descriptors here 
+
 
 if __name__ == "__main__":
 
     #pretend that these flags came off the command line:
     imgFname = './pascal_009959.jpg'
-    model_def = '../../../examples/imagenet_deploy.prototxt' 
+    #model_def = '../../../examples/imagenet_deploy.prototxt'
+    model_def = './imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
     pretrained_model = '../../../alexnet_train_iter_470000'
     use_gpu = True
     
@@ -66,4 +64,5 @@ if __name__ == "__main__":
     #experiments...
     test_pyramid_IO(caffenet, imgFname)
 
+    test_featpyramid(caffenet, imgFname)
 

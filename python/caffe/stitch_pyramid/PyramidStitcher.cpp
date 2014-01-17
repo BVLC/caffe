@@ -14,8 +14,9 @@ using namespace std;
 
 //TODO: have a pyramid stitch class?
 
-//int main(int argc, char * argv[])
-Patchwork stitch_pyramid(string file, int padding=8, int interval=10)
+//  @param planeDim == width == height of planes to cover with images (optional)
+//            if planeDim <= 0, then ignore planeDim and compute plane size based on input image dims
+Patchwork stitch_pyramid(string file, int padding=8, int interval=10, int planeDim=-1)
 {
 	JPEGImage image(file);
     if (image.empty()) {
@@ -26,15 +27,24 @@ Patchwork stitch_pyramid(string file, int padding=8, int interval=10)
     image = image.resize(image.width()*2, image.height()*2); //UPSAMPLE so that Caffe's 16x downsampling looks like 8x downsampling
 
   // Compute the downsample+stitch
-    JPEGPyramid pyramid(image, padding, padding, interval); //DOWNSAMPLE with (padx == pady == padding)
+    JPEGPyramid pyramid(image, padding, padding, interval); //multiscale DOWNSAMPLE with (padx == pady == padding)
     if (pyramid.empty()) {
         cerr << "\nInvalid image " << file << endl;
     }
-    
-    int planeWidth = (pyramid.levels()[0].width() + 15) & ~15; //TODO: don't subtract padx, pady? 
-    int planeHeight = (pyramid.levels()[0].height() + 15) & ~15; 
-    planeWidth = max(planeWidth, planeHeight);  //SQUARE planes for Caffe convnet
-    planeHeight = max(planeWidth, planeHeight);
+
+    int planeWidth; 
+    int planeHeight;
+   
+    if(planeDim > 0){
+        planeWidth = planeDim;
+        planeHeight = planeDim;
+    } 
+    else{
+        planeWidth = (pyramid.levels()[0].width() + 15) & ~15; //TODO: don't subtract padx, pady? 
+        planeHeight = (pyramid.levels()[0].height() + 15) & ~15; 
+        planeWidth = max(planeWidth, planeHeight);  //SQUARE planes for Caffe convnet
+        planeHeight = max(planeWidth, planeHeight);
+    }
 
     Patchwork::Init(planeHeight, planeWidth); 
     const Patchwork patchwork(pyramid); //STITCH

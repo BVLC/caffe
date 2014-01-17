@@ -265,8 +265,14 @@ struct CaffeNet {
 
     int padding = 8;
     int interval = 10;
-    Patchwork patchwork = stitch_pyramid(file, padding, interval); 
+    int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
 
+    assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
+    //TODO: verify that top-upsampled version of input img fits within planeDim
+
+    Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
+
+    printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
   }
 
   // The caffe::Caffe utility functions.
