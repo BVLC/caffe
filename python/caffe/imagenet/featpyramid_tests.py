@@ -2,19 +2,22 @@
 test cases for multiscale pyramids of Convnet features.
 
     used power_wrapper.py as a starting point.
-
 '''
 
 import numpy as np
 import os
 import sys
 import gflags
-import pandas as pd
+#import pandas as pd
 import time
-import skimage.io
-import skimage.transform
-import selective_search_ijcv_with_python as selective_search
+#import skimage.io
+#import skimage.transform
+#import selective_search_ijcv_with_python as selective_search
 import caffe
+
+#for visualization, can be removed easily:
+from matplotlib import cm, pyplot
+import pylab
 
 #parameters to consider passing to C++ Caffe::featpyramid...
 # image filename
@@ -32,18 +35,26 @@ def test_pyramid_IO(caffenet, imgFname):
 
     caffenet.testString('hi')
     caffenet.testInt(1337)
-'''
-def featpyramid(caffenet, imgFname, [params]):
-    stitched_pyra = caffenet.extract_featpyramid(imgFname, [params])    
-
-    pyra = unstitch_pyra(stitched_pyra) #alternatively, do this in C++ inside extract_featpyramid()
-
-    return pyra
-'''
 
 def test_featpyramid(caffenet, imgFname):
 
-    caffenet.extract_featpyramid(imgFname) #test... TODO: return descriptors here 
+    #blobs_bottom = features computed on PLANES.
+    blobs_bottom = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+    print blobs_bottom[0]
+    print 'blobs shape: '
+    print blobs_bottom[0].shape
+
+    #TODO: tweak extract_featpyramid to unstitch planes -> descriptor pyramid
+
+    #prep for visualization (sum over depth of descriptors)
+    flat_descriptor = np.sum(blobs_bottom[0], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
+    flat_descriptor = flat_descriptor[0] #(1, 124, 124) -> (124, 124) ... first image (in a batch size of 1)
+
+    #visualization
+    pyplot.figure()
+    pyplot.title('Welcome to deep learning land. You have arrived.')
+    pyplot.imshow(flat_descriptor, cmap = cm.gray)
+    pylab.savefig('flat_descriptor.jpg')
 
 
 if __name__ == "__main__":

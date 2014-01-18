@@ -259,7 +259,23 @@ struct CaffeNet {
     return jpeg_float_npy;
   }
 
-  void extract_featpyramid(string file){
+  //obtains resultPlane dims with shared ptr to net_
+  PyArrayObject* allocate_resultPlane(){
+
+    int batchsize = net_->output_blobs()[0]->num();
+    int depth = net_->output_blobs()[0]->channels();
+    int width = net_->output_blobs()[0]->width();
+    int height = net_->output_blobs()[0]->height();
+    npy_intp dims[4] = {batchsize, depth, height, width};
+    printf("    in allocate_resultPlane(). OUTPUT_BLOBS... batchsize=%d, depth=%d, width=%d, height=%d \n", batchsize, depth, width, height);
+
+    //PyArrayObject* resultPlane = NULL; //stub
+    PyArrayObject* resultPlane = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //numpy malloc
+    return resultPlane;
+  }
+
+  //void extract_featpyramid(string file){
+  boost::python::list extract_featpyramid(string file){
 
     int padding = 8;
     int interval = 10;
@@ -275,7 +291,8 @@ struct CaffeNet {
  
     Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
 
-    int planeID = 0; //TODO: iterate to patchwork.planes.size(), running one at a time in Caffe
+    int planeID = 0; //TODO: append multiple blobs to blobs_{top,bottom}, iterating to planes_.size()
+                     //         then, run Forward() on the list of blobs.
 
     //prep input data
     JPEGImage* currPlane = &(patchwork.planes_[planeID]);
@@ -285,15 +302,18 @@ struct CaffeNet {
     blobs_bottom.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
 
     //prep output space
-    PyArrayObject* resultPlane_npy = (PyArrayObject*)PyArray_NewLikeArray(currPlane_npy, NPY_KEEPORDER, NULL, 1); //same size/shape as currPlane_npy
+    //PyArrayObject* resultPlane_npy = (PyArrayObject*)PyArray_NewLikeArray(currPlane_npy, NPY_KEEPORDER, NULL, 1); //same size/shape as currPlane_npy
+    PyArrayObject* resultPlane_npy = allocate_resultPlane(); //gets resultPlane dims from shared ptr to net_->output_blobs()
     boost::python::object resultPlane_npy_boost(boost::python::handle<>((PyObject*)resultPlane_npy)); //numpy -> wrap in boost
     boost::python::list blobs_top; //output buffer for Caffe::Forward
     blobs_top.append(resultPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
     
-    //Forward(list bottom, list top)
-    Forward(blobs_bottom, blobs_top); 
+    Forward(blobs_bottom, blobs_top); //lists of blobs... bottom=input planes, top=output descriptors
 
     printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
+
+    return blobs_bottom; //for debugging only (stitched pyramid in RGB)
+    //return blobs_top; //output plane(s)
   }
 
   //void testIO(){ } //dummy example
