@@ -132,6 +132,7 @@ string parse_base_filename(string file){
 void printScaleSizes(JPEGPyramid pyramid);
 void writePyraToJPG(JPEGPyramid pyramid);
 void writePatchworkToJPG(Patchwork patchwork, string output_stitched_dir, string base_filename);
+void print_scaleLocations(vector<ScaleLocation> scaleLocations);
 
 //TODO: split this test into its own function, e.g. test_stitch_pyramid()
 int main(int argc, char * argv[]){
@@ -157,6 +158,11 @@ int main(int argc, char * argv[]){
     //writePyraToJPG(pyramid);
     writePatchworkToJPG(patchwork, output_stitched_dir, base_filename); //outputs to output_stitched_dir/base_filename_[planeID].jpg
 
+    int convnet_subsampling_ratio = 1; // we're not actually computing convnet features in this test, 
+                                       // so there's no feature downsampling.
+    vector<ScaleLocation> scaleLocations =  unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
+    print_scaleLocations(scaleLocations);
+
    	return EXIT_SUCCESS;
 }
 
@@ -168,6 +174,15 @@ void printScaleSizes(JPEGPyramid pyramid){
         int height = pyramid.levels()[level].height();
         int depth = pyramid.NbChannels;
         printf("        level %d: width=%d, height=%d, depth=%d \n", level, width, height, depth);
+    }
+}
+
+void print_scaleLocations(vector<ScaleLocation> scaleLocations){
+    printf("scaleLocations: \n");
+    for(int i=0; i<scaleLocations.size(); i++){
+        printf("    idx=%d, xMin=%d, xMax=%d, width=%d, yMin=%d, yMax=%d, height=%d, planeID=%d \n", 
+               i, scaleLocations[i].xMin, scaleLocations[i].xMax, scaleLocations[i].width,
+                  scaleLocations[i].yMin, scaleLocations[i].yMax, scaleLocations[i].height, scaleLocations[i].planeID); 
     }
 }
 

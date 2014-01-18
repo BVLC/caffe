@@ -8,11 +8,7 @@ import numpy as np
 import os
 import sys
 import gflags
-#import pandas as pd
 import time
-#import skimage.io
-#import skimage.transform
-#import selective_search_ijcv_with_python as selective_search
 import caffe
 
 #for visualization, can be removed easily:
@@ -27,8 +23,8 @@ import pylab
 
 #hopefully caffenet is passed by ref...
 def test_pyramid_IO(caffenet, imgFname):
-    example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
-    #example_np_arrays = caffenet.testIO_multiPlane() #return array of arrays
+    #example_np_array = caffenet.testIO() #just return an array with 1 2 3 4...
+    example_np_array = caffenet.test_NumpyView()
 
     print example_np_array
     print example_np_array[0].shape
@@ -37,17 +33,15 @@ def test_pyramid_IO(caffenet, imgFname):
     caffenet.testInt(1337)
 
 def test_featpyramid(caffenet, imgFname):
+    #blobs_top = features computed on PLANES.
+    blobs_top = caffenet.extract_featpyramid(imgFname) # THE CRUX 
 
-    #blobs_bottom = features computed on PLANES.
-    blobs_bottom = caffenet.extract_featpyramid(imgFname) # THE CRUX 
-    print blobs_bottom[0]
+    #print blobs_top[0]
     print 'blobs shape: '
-    print blobs_bottom[0].shape
-
-    #TODO: tweak extract_featpyramid to unstitch planes -> descriptor pyramid
+    print blobs_top[0].shape
 
     #prep for visualization (sum over depth of descriptors)
-    flat_descriptor = np.sum(blobs_bottom[0], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
+    flat_descriptor = np.sum(blobs_top[0], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
     flat_descriptor = flat_descriptor[0] #(1, 124, 124) -> (124, 124) ... first image (in a batch size of 1)
 
     #visualization
@@ -56,6 +50,24 @@ def test_featpyramid(caffenet, imgFname):
     pyplot.imshow(flat_descriptor, cmap = cm.gray)
     pylab.savefig('flat_descriptor.jpg')
 
+
+def test_featpyramid_allScales(caffenet, imgFname):
+    #blobs_top = list of feature arrays... one array per scale.
+    blobs_top = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+
+    for i in xrange(0, len(blobs_top)):
+        print 'blobs[%d] shape: '%i
+        print blobs_top[i].shape
+
+        #prep for visualization (sum over depth of descriptors)
+        flat_descriptor = np.sum(blobs_top[i], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
+        flat_descriptor = flat_descriptor[0] #(1, 124, 124) -> (124, 124) ... first image (in a batch size of 1)
+
+        #visualization
+        pyplot.figure()
+        pyplot.title('Welcome to deep learning land. You have arrived.')
+        pyplot.imshow(flat_descriptor, cmap = cm.gray)
+        pylab.savefig('output_pyra/flat_descriptor_scale%d.jpg' %i)
 
 if __name__ == "__main__":
 
@@ -74,6 +86,5 @@ if __name__ == "__main__":
 
     #experiments...
     test_pyramid_IO(caffenet, imgFname)
-
-    test_featpyramid(caffenet, imgFname)
-
+    #test_featpyramid(caffenet, imgFname)
+    test_featpyramid_allScales(caffenet, imgFname)

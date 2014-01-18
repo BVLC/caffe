@@ -95,11 +95,7 @@ public:
     std::vector<Plane> planes_;
     int nbScales;
 	
-private:
-	// Bottom-Left fill algorithm
-	static int BLF(std::vector<std::pair<Rectangle, int> > & rectangles);
-	
-	int padx_;
+    int padx_;
 	int pady_;
 	int interval_;
 	std::vector<std::pair<Rectangle, int> > rectangles_;
@@ -107,6 +103,11 @@ private:
 	static int MaxRows_; //TODO: make these public.
 	static int MaxCols_;
 	static int HalfCols_;
+
+private:
+    // Bottom-Left fill algorithm
+    static int BLF(std::vector<std::pair<Rectangle, int> > & rectangles);
+
 };
 }
 
