@@ -17,7 +17,7 @@ namespace caffe {
 // problem when running on a machine without GPU. Thus, we simply define
 // these two functions for safety and possible future change if the problem
 // of calling cuda functions disappears in a future version.
-// 
+//
 // In practice, although we are creating unpinned memory here, as long as we
 // are constantly accessing them the memory pages almost always stays in
 // the physical memory (assuming we have large enough memory installed), and

@@ -20,7 +20,7 @@ using std::max;
 namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-  
+
 template <typename Dtype>
 class LRNLayerTest : public ::testing::Test {
  protected:
@@ -48,7 +48,7 @@ class LRNLayerTest : public ::testing::Test {
 
 template <typename Dtype>
 void LRNLayerTest<Dtype>::ReferenceLRNForward(
-    const Blob<Dtype>& blob_bottom, const LayerParameter& layer_param, 
+    const Blob<Dtype>& blob_bottom, const LayerParameter& layer_param,
     Blob<Dtype>* blob_top) {
   blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
       blob_bottom.height(), blob_bottom.width());
@@ -139,7 +139,7 @@ TYPED_TEST(LRNLayerTest, TestCPUGradient) {
   //  std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i] << std::endl;
   //}
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
-} 
+}
 
 TYPED_TEST(LRNLayerTest, TestGPUGradient) {
   LayerParameter layer_param;
