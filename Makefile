@@ -90,12 +90,12 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 all: init $(NAME) $(STATIC_NAME) examples
 	@echo $(CXX_OBJS)
-	
-init: 
+
+init:
 	@ mkdir -p $(foreach obj,$(OBJS),$(dir $(obj)))
 	@ mkdir -p $(foreach obj,$(EXAMPLE_OBJS),$(dir $(obj)))
 	@ mkdir -p $(foreach obj,$(TEST_OBJS),$(dir $(obj)))
-	@ mkdir -p $(foreach obj,$(GTEST_OBJ),$(dir $(obj)))	
+	@ mkdir -p $(foreach obj,$(GTEST_OBJ),$(dir $(obj)))
 
 linecount: clean
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
@@ -110,7 +110,7 @@ py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY)
 	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 	@echo
-	
+
 mat$(PROJECT): mat
 
 mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
@@ -119,7 +119,7 @@ mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
 		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" \
 		-o $(MAT$(PROJECT)_SO)
 	@echo
-		
+
 $(NAME): init $(PROTO_OBJS) $(OBJS)
 	$(CXX) -shared -o $(NAME) $(OBJS) $(LDFLAGS) $(WARNINGS)
 	@echo
@@ -143,35 +143,35 @@ $(OBJS): $(PROTO_GEN_CC) $(HXX_SRCS)
 $(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
-	
+
 $(BUILD_DIR)/src/$(PROJECT)/layers/%.o: src/$(PROJECT)/layers/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
-	
+
 $(BUILD_DIR)/src/$(PROJECT)/proto/%.o: src/$(PROJECT)/proto/%.cc
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
-	
+
 $(BUILD_DIR)/src/$(PROJECT)/test/%.o: src/test/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
-	
+
 $(BUILD_DIR)/src/$(PROJECT)/util/%.o: src/$(PROJECT)/util/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
-	
+
 $(BUILD_DIR)/src/gtest/%.o: src/gtest/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
-	
+
 $(BUILD_DIR)/src/$(PROJECT)/layers/%.cuo: src/$(PROJECT)/layers/%.cu
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@echo
-	
+
 $(BUILD_DIR)/src/$(PROJECT)/util/%.cuo: src/$(PROJECT)/util/%.cu
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@echo
-	
+
 $(BUILD_DIR)/examples/%.o: examples/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
@@ -187,7 +187,7 @@ $(PROTO_GEN_CC): $(PROTO_SRCS)
 	mkdir -p include/$(PROJECT)/proto
 	cp $(PROTO_GEN_HEADER) include/$(PROJECT)/proto/
 	@echo
-	
+
 clean:
 	@- $(RM) $(NAME) $(STATIC_NAME)
 	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)

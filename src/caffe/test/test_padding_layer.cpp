@@ -15,7 +15,7 @@
 namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-  
+
 template <typename Dtype>
 class PaddingLayerTest : public ::testing::Test {
  protected:
