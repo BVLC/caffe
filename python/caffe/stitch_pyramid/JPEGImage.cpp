@@ -29,6 +29,36 @@
 using namespace FFLD;
 using namespace std;
 
+//thanks: http://stackoverflow.com/questions/11641629/generating-a-uniform-distribution-of-integers-in-c
+//uniform_distribution returns an INTEGER in [rangeLow, rangeHigh], inclusive.
+inline int uniform_distribution(int rangeLow, int rangeHigh)
+{
+    int myRand = (int)rand();
+    int range = rangeHigh - rangeLow + 1; //+1 makes it [rangeLow, rangeHigh], inclusive.
+    int myRand_scaled = (myRand % range) + rangeLow;
+    return myRand_scaled;
+}
+
+// THIS IS VERY SLOWWWW:
+//to avoid hard borders on images in plane (which look like edges to the convnet)
+void JPEGImage::fill_with_rand(){
+    //int height = img.height();
+    //int width = img.width();
+    //int depth = img.depth();
+    int height = this->height();
+    int width = this->width();
+    int depth = this->depth();
+
+    for (int y = 0; y < height; y++){
+        for (int x = 0; x < width; x++){
+            for (int ch = 0; ch < depth; ch++){
+
+                this->bits()[y*width*depth + x*depth + ch] = (uint8_t)uniform_distribution(0, 255);
+            }
+        }
+    }
+}
+
 JPEGImage::JPEGImage() : width_(0), height_(0), depth_(0)
 {
 }
@@ -249,7 +279,7 @@ JPEGImage JPEGImage::crop(int x, int y, int width, int height) const
 }
 
 //TODO: remove const?
-JPEGImage JPEGImage::pad(int padx, int pady) const
+JPEGImage JPEGImage::pad(int padx, int pady, bool randPad) const
 {
     // empty image
     if( (padx < 0) || (pady < 0) )
@@ -267,6 +297,10 @@ JPEGImage JPEGImage::pad(int padx, int pady) const
 	result.height_ = dstHeight;
 	result.depth_ = depth_;
 	result.bits_.resize(dstWidth * dstHeight * depth_);
+
+    if(randPad == true)
+        result.fill_with_rand();
+        //fill_with_rand(result);
 
     //rectangle packing offsets: 
     int x_off = padx; 

@@ -161,7 +161,7 @@ int main(int argc, char * argv[]){
     int convnet_subsampling_ratio = 1; // we're not actually computing convnet features in this test, 
                                        // so there's no feature downsampling.
     vector<ScaleLocation> scaleLocations =  unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
-    print_scaleLocations(scaleLocations);
+    //print_scaleLocations(scaleLocations);
 
    	return EXIT_SUCCESS;
 }

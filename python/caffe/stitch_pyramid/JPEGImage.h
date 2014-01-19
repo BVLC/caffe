@@ -33,6 +33,9 @@ namespace FFLD
 class JPEGImage
 {
 public:
+
+    void fill_with_rand(); //fill self with random numbers (e.g. before filling w/ data so we get rand-padding)
+
 	/// Constructs an empty image. An empty image has zero size.
 	JPEGImage();
 	
@@ -85,7 +88,8 @@ public:
 	/// @note The returned image might be smaller if some of the coordinates are outside the image.
 	JPEGImage crop(int x, int y, int width, int height) const;
 
-    JPEGImage pad(int x, int y) const;
+    // @param randPad = whether to use random numbers in padding (or, if false, use zero padding)
+    JPEGImage pad(int x, int y, bool randPad) const;
 	
 private:
 	// Blur and downscale an image by a factor 2

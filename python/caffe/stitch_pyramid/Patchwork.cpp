@@ -62,9 +62,10 @@ interval_(pyramid.interval())
 		return;
 	
 	planes_.resize(nbPlanes);
+    #pragma omp parallel for
 	for (int i = 0; i < nbPlanes; ++i) {
-		//planes_[i] = Plane::Constant(MaxRows_, HalfCols_, Cell::Zero());
         planes_[i] = JPEGImage(MaxCols_, MaxRows_, JPEGPyramid::NbChannels);     //JPEGImage(width, height, depth)
+        //planes_[i].fill_with_rand(); //random noise that will go between images on plane. (TODO: allow user to enable/disable)
 	}
 
     int depth = JPEGPyramid::NbChannels;
@@ -92,7 +93,7 @@ interval_(pyramid.interval())
     
         for (int y = 0; y < srcHeight; y++){
             for (int x = 0; x < srcWidth; x++){
-                for (int ch = 0; ch < JPEGPyramid::NbChannels; ch++){
+                for (int ch = 0; ch < depth; ch++){
 
                     //currPlane.bits[...] = pyramid.levels()[i].data[...];
                     currPlane->bits()[((y + y_off)*dstWidth*depth) + ((x + x_off)*depth) + ch] = currLevel->bits()[y*srcWidth*depth + x*depth + ch];

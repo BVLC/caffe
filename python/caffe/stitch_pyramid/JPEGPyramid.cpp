@@ -77,7 +77,8 @@ pady_(0), interval_(0)
 
 		double scale = pow(2.0, static_cast<double>(-i) / interval);
 		JPEGImage scaled = image.resize(image.width() * scale + 0.5, image.height() * scale + 0.5);
-        scaled = scaled.pad(padx, pady); //an additional deepcopy. (for efficiency, could have 'resize()' accept padding too
+        bool use_randPad = false;
+        scaled = scaled.pad(padx, pady, use_randPad); //an additional deepcopy. (for efficiency, could have 'resize()' accept padding too
 
         levels_[i] = scaled;
     }
