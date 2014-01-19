@@ -32,7 +32,7 @@ IMAGE_CENTER = int((IMAGE_DIM - CROPPED_DIM) / 2)
 CROP_MODES = ['center_only', 'corners', 'selective_search']
 
 # NOTE: this must match the setting in the prototxt that is used!
-BATCH_SIZE = 245
+BATCH_SIZE = 10
 
 # Load the imagenet mean file
 IMAGENET_MEAN = np.load(
