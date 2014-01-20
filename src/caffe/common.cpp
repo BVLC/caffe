@@ -5,6 +5,10 @@
 
 #include "caffe/common.hpp"
 
+#ifdef WIN32
+#include <process.h>
+#endif
+
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
@@ -12,7 +16,7 @@ shared_ptr<Caffe> Caffe::singleton_;
 
 long cluster_seedgen(void) {
   long s, seed, pid;
-  pid = getpid();
+  pid = _getpid();
   s = time(NULL);
   seed = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
   return seed;

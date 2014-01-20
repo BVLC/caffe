@@ -19,6 +19,10 @@
 #include "caffe/util/io.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#ifdef WIN32
+#include <io.h>
+#endif
+
 using std::fstream;
 using std::ios;
 using std::max;
