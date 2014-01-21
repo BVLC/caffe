@@ -32,28 +32,13 @@ def test_pyramid_IO(caffenet, imgFname):
     caffenet.testString('hi')
     caffenet.testInt(1337)
 
-def test_featpyramid(caffenet, imgFname):
-    #blobs_top = features computed on PLANES.
-    blobs_top = caffenet.extract_featpyramid(imgFname) # THE CRUX 
-
-    #print blobs_top[0]
-    print 'blobs shape: '
-    print blobs_top[0].shape
-
-    #prep for visualization (sum over depth of descriptors)
-    flat_descriptor = np.sum(blobs_top[0], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
-    flat_descriptor = flat_descriptor[0] #(1, 124, 124) -> (124, 124) ... first image (in a batch size of 1)
-
-    #visualization
-    pyplot.figure()
-    pyplot.title('Welcome to deep learning land. You have arrived.')
-    pyplot.imshow(flat_descriptor, cmap = cm.gray)
-    pylab.savefig('flat_descriptor.jpg')
-
-
 def test_featpyramid_allScales(caffenet, imgFname):
     #blobs_top = list of feature arrays... one array per scale.
     blobs_top = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+
+    # optional breakpoint...
+    #from IPython import embed
+    #embed()
 
     for i in xrange(0, len(blobs_top)):
         print 'blobs[%d] shape: '%i
@@ -85,6 +70,5 @@ if __name__ == "__main__":
 
 
     #experiments...
-    test_pyramid_IO(caffenet, imgFname)
-    #test_featpyramid(caffenet, imgFname)
+    #test_pyramid_IO(caffenet, imgFname)
     test_featpyramid_allScales(caffenet, imgFname)
