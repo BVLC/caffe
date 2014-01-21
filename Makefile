@@ -47,6 +47,7 @@ FAILED_LINT_REPORT := $(BUILD_DIR)/cpp_lint.error_log
 # STITCHPYRAMID is for stitching multiresolution feature pyramids. (exclude test files)
 STITCHPYRAMID_SRC := $(shell find python/caffe/stitch_pyramid/build ! -name "test_*.cpp" -name "*.cpp")
 STITCHPYRAMID_HDRS := $(shell find python/caffe/stitch_pyramid/build -name "*.h")
+STITCHPYRAMID_SO := python/caffe/stitch_pyramid/libPyramidStitcher.so
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/py$(PROJECT).cpp
 PY$(PROJECT)_SO := python/$(PROJECT)/py$(PROJECT).so
@@ -142,9 +143,12 @@ tools: init $(TOOL_BINS)
 
 examples: init $(EXAMPLE_BINS)
 
+$(STITCHPYRAMID_SO): $(STITCHPYRAMID_HDRS) $(STITCHPYRAMID_SRC) 
+	$(CXX) -shared -o $(STITCHPYRAMID_SO) $(STITCHPYRAMID_SRC) $(CXXFLAGS)
+
 py$(PROJECT): py
 
-py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY)
+py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY) $(STITCHPYRAMID_SO) 
 	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) -L./python/caffe/stitch_pyramid/build -lPyramidStitcher -I./python/caffe/stitch_pyramid \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 	@echo
