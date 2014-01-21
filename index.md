@@ -7,10 +7,10 @@ Welcome to Caffe
 ================
 
 Caffe is a framework for convolutional neural network algorithms, developed with speed in mind.
-It is written and maintained by [Yangqing Jia](http://www.eecs.berkeley.edu/~jiayq/) as a replacement of [decaf](http://decaf.berkeleyvision.org/), Yangqing's earlier Python implementation of CNNs.
-Several [Berkeley vision group](http://ucbvlc.org/) members are actively contributing to the codebase.
+It was created by [Yangqing Jia](http://www.eecs.berkeley.edu/~jiayq/) as a replacement of [decaf](http://decaf.berkeleyvision.org/), Yangqing's earlier Python implementation of CNNs.
+It is maintained by the [Berkeley Vision and Learning Center](http://bvlc.eecs.berkeley.edu) and several Berkeley vision group members are actively contributing to the codebase.
 
-Caffe is currently released under [the UC Berkeley non-commercial license](license.html).
+Caffe is released under [the BSD 2-Clause license](license.html).
 
 Decaf, the big brother of Caffe, has a cool [demo](http://decaf.berkeleyvision.org). Caffe's own demo will come soon.
 
