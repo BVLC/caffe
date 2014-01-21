@@ -20,7 +20,7 @@ If you would like to compile the Matlab wrapper, you will need to install Matlab
 
 You will also need other packages, most of which can be installed via apt-get using:
 
-    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost1.48-dev
+    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost1.48-all-dev
 
 The only exception being the google logging library, which does not exist in the Ubuntu 12.04 repository. To install it, do:
 
