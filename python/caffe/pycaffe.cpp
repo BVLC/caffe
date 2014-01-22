@@ -313,12 +313,9 @@ struct CaffeNet {
     int dim = scales.size(); 
     npy_intp dims[1] = {dim};
 
-    //PyArrayObject* scales_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 1, dims, NPY_FLOAT, 0, &scales[0], 0, 0, 0 ); //not specifying strides
-    PyArrayObject* scales_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 1, dims, NPY_FLOAT, 0, 0, 0, 0, 0 );
+    PyArrayObject* scales_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 1, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //malloc new memory 
     for(int i=0; i<scales.size(); i++){
-        *(float*)PyArray_GETPTR1(scales_npy, i) = 1;
-        //*(float*)(PyArray_DATA(scales_npy)+i) = 0;
-        //float x = *(float*)PyArray_DATA(scales_npy);
+        *(float*)PyArray_GETPTR1(scales_npy, i) = scales[i]; //putting a memcpy() here would be equally good. 
     }
 
     boost::python::object scales_npy_boost(boost::python::handle<>((PyObject*)scales_npy));
