@@ -378,7 +378,7 @@ void caffe_exp<double>(const int n, const double* a, double* y) {
 
 template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b) {
-  return boost::math::nextafter<Dtype, Dtype>(
+  return boost::math::nextafter<Dtype>(
       b, std::numeric_limits<Dtype>::max());
 }
 
