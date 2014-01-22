@@ -27,7 +27,6 @@
 #include <set>
 #include <iostream>
 
-//using namespace Eigen;
 using namespace FFLD;
 using namespace std;
 
@@ -74,7 +73,7 @@ interval_(pyramid.interval())
 
     // [Forrest implemented... ]
     //COPY scaled images -> fixed-size planes
-#pragma omp parallel for
+    #pragma omp parallel for
     for (int i = 0; i < nbScales; ++i) {
 
         //currPlane is destination

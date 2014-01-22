@@ -33,19 +33,8 @@ namespace FFLD
 class Patchwork
 {
 public:
-	/// Type of a scalar value.
-	//typedef std::complex<JPEGPyramid::Scalar> Scalar;
 
-#if 0	
-	/// Type of a matrix.
-	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
-	
-	/// Type of a patchwork plane cell (fixed-size complex vector of size NbChannels).
-	typedef Eigen::Array<Scalar, JPEGPyramid::NbChannels, 1> Cell;	
-#endif
-
-	/// Type of a patchwork plane (matrix of cells).
-	//typedef Eigen::Matrix<Cell, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Plane;
+	/// Type of a patchwork plane .
     typedef JPEGImage Plane;	
 
 	/// Type of a patchwork filter (plane + original filter size).
@@ -112,21 +101,5 @@ private:
 
 };
 }
-
-#if 0
-// Some compilers complain about the lack of a NumTraits for Eigen::Array<Scalar, NbChannels, 1>
-namespace Eigen
-{
-template <>
-struct NumTraits<Array<FFLD::Patchwork::Scalar, FFLD::JPEGPyramid::NbChannels, 1> > :
-	GenericNumTraits<Array<FFLD::Patchwork::Scalar, FFLD::JPEGPyramid::NbChannels, 1> >
-{
-	static inline FFLD::JPEGPyramid::Scalar dummy_precision()
-	{
-		return 0; // Never actually called
-	}
-};
-}
-#endif
 
 #endif

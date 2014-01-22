@@ -26,13 +26,10 @@
 #include <limits>
 #include <stdio.h>
 
-//#define DISABLE_HOG_BLOCKS //if defined: just compute hog cells; don't normalize into hog blocks
-
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-//using namespace Eigen;
 using namespace FFLD;
 using namespace std;
 

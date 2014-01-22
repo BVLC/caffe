@@ -23,9 +23,6 @@
 
 #include "JPEGImage.h"
 
-//#include <Eigen/Core>
-//#include <Eigen/Sparse>
-
 using namespace std;
 
 namespace FFLD
@@ -46,25 +43,9 @@ public:
 	static const int NbChannels = 3; //RGB
 	
 	/// Type of a scalar value.
-#ifndef FFLD_JPEGPYRAMID_DOUBLE
 	typedef float Scalar;
-#else
-	typedef double Scalar;
-#endif
-
-	/// Type of a matrix.
-	//typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
-
-#if 0	
-	/// Type of a sparse matrix.
-	typedef Eigen::SparseMatrix<Scalar, Eigen::RowMajor> SparseMatrix;
-	
-	/// Type of a pyramid level cell (fixed-size vector of length NbChannels).
-	typedef Eigen::Array<Scalar, NbChannels, 1> Cell;	
-#endif
 
 	/// Type of a pyramid level (matrix of cells).
-	//typedef Eigen::Matrix<Cell, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Level;
     typedef JPEGImage Level;	
 
 	/// Constructs an empty pyramid. An empty pyramid has no level.
@@ -113,21 +94,5 @@ private:
 	std::vector<Level> levels_;
 };
 }
-
-#if 0
-// Some compilers complain about the lack of a NumTraits for Eigen::Array<Scalar, NbChannels, 1>
-namespace Eigen
-{
-template <>
-struct NumTraits<Array<FFLD::JPEGPyramid::Scalar, FFLD::JPEGPyramid::NbChannels, 1> > :
-	GenericNumTraits<Array<FFLD::JPEGPyramid::Scalar, FFLD::JPEGPyramid::NbChannels, 1> >
-{
-	static inline FFLD::JPEGPyramid::Scalar dummy_precision()
-	{
-		return 0; // Never actually called
-	}
-};
-}
-#endif
 
 #endif
