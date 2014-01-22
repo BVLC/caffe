@@ -43,8 +43,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussian) {
   caffe_vRngGaussian(sample_size, (TypeParam*)data_a.mutable_cpu_data(), mu, sigma);
   TypeParam true_mean = mu;
   TypeParam true_std = sigma;
-  TypeParam bound = mean_bound(true_std, sample_size);
-  TypeParam real_mean = sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
+  TypeParam bound = this->mean_bound(true_std, sample_size);
+  TypeParam real_mean = this->sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
   EXPECT_NEAR(real_mean, true_mean, bound);
 }
 
@@ -57,8 +57,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniform) {
   caffe_vRngUniform(sample_size, (TypeParam*)data_a.mutable_cpu_data(), lower, upper);
   TypeParam true_mean = (lower + upper) / 2;
   TypeParam true_std = (upper - lower) / sqrt(12);
-  TypeParam bound = mean_bound(true_std, sample_size);
-  TypeParam real_mean = sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
+  TypeParam bound = this->mean_bound(true_std, sample_size);
+  TypeParam real_mean = this->sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
   EXPECT_NEAR(real_mean, true_mean, bound);
 }
 
