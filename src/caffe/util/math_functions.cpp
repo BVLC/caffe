@@ -398,12 +398,15 @@ void caffe_vRngUniform(const int n, Dtype* r,
 
   // FIXME check if boundaries are handled in the same way ?
   // Fixed by caffe_nextafter
-  boost::random::uniform_real_distribution<Dtype> random_distribution(
+  boost::uniform_real<Dtype> random_distribution(
       a, caffe_nextafter<Dtype>(b));
   Caffe::random_generator_t &generator = Caffe::vsl_stream();
+  boost::variate_generator<Caffe::random_generator_t,
+      boost::uniform_real<Dtype> > variate_generator(
+      generator, random_distribution);
 
-  for(int i = 0; i < n; i += 1) {
-    r[i] = random_distribution(generator);
+  for (int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
   }
 }
 
@@ -431,9 +434,12 @@ void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
     // the tests are irrelevant to the random numbers.
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
   Caffe::random_generator_t &generator = Caffe::vsl_stream();
+  boost::variate_generator<Caffe::random_generator_t,
+      boost::normal_distribution<Dtype> > variate_generator(
+      generator, random_distribution);
 
-  for(int i = 0; i < n; i += 1) {
-    r[i] = random_distribution(generator);
+  for (int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
   }
 }
 
@@ -454,9 +460,12 @@ void caffe_vRngBernoulli(const int n, Dtype* r, const double p) {
     // FIXME check if parameters are handled in the same way ?
   boost::bernoulli_distribution<Dtype> random_distribution(p);
   Caffe::random_generator_t &generator = Caffe::vsl_stream();
+  boost::variate_generator<Caffe::random_generator_t,
+      boost::bernoulli_distribution<Dtype> > variate_generator(
+      generator, random_distribution);
 
-  for(int i = 0; i < n; i += 1) {
-    r[i] = random_distribution(generator);
+  for (int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
   }
 }
 
