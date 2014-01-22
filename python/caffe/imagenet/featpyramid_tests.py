@@ -59,6 +59,9 @@ def test_featpyramid_allScales(caffenet, imgFname):
         pyplot.imshow(flat_descriptor, cmap = cm.gray, interpolation='nearest')
         pylab.savefig('output_pyra/flat_descriptor_scale%d.jpg' %i)
 
+    print "\n pyra scales:"
+    print pyra["scales"]
+
 if __name__ == "__main__":
 
     #pretend that these flags came off the command line:

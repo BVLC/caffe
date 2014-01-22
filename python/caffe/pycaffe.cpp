@@ -307,6 +307,25 @@ struct CaffeNet {
     return resultPlane;
   }
 
+  //pull list of scales out of patchwork; pack it into boost::python array
+  boost::python::object get_scales_boost(Patchwork patchwork){
+    vector<float> scales = patchwork.scales_;
+    int dim = scales.size(); 
+    npy_intp dims[1] = {dim};
+
+    //PyArrayObject* scales_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 1, dims, NPY_FLOAT, 0, &scales[0], 0, 0, 0 ); //not specifying strides
+    PyArrayObject* scales_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 1, dims, NPY_FLOAT, 0, 0, 0, 0, 0 );
+    for(int i=0; i<scales.size(); i++){
+        *(float*)PyArray_GETPTR1(scales_npy, i) = 1;
+        //*(float*)(PyArray_DATA(scales_npy)+i) = 0;
+        //float x = *(float*)PyArray_DATA(scales_npy);
+    }
+
+    boost::python::object scales_npy_boost(boost::python::handle<>((PyObject*)scales_npy));
+
+    return scales_npy_boost;
+  }
+
   // @param scaleLocs = location of each scale on planes (see unstitch_pyramid_locations in PyramidStitcher.cpp)
   // @param descriptor_planes -- each element of the list is a plane of Caffe descriptors
   //          typically, descriptor_planes = blobs_top.
@@ -384,17 +403,17 @@ struct CaffeNet {
       Forward(blobs_bottom_tmp, blobs_top_tmp); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
     }
 
-    //printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
+    printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
 
     vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
     boost::python::list unstitched_features = unstitch_planes(scaleLocations, blobs_top, resultDepth);
+    boost::python::object scales_npy_boost = get_scales_boost(patchwork);
 
-    boost::python::dict d;    
+    boost::python::dict d; 
     //d["blobs_top"]    = blobs_top;    //for debugging -- stitched pyra in RGB
     //d["blobs_bottom"] = blobs_bottom; //for debugging -- stitched descriptors
     d["feat"] = unstitched_features;
-    
-    //TODO: d["scales"] = patchwork.scales_;
+    d["scales"] = scales_npy_boost;
 
     return d;
   }
