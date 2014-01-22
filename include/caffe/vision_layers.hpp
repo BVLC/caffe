@@ -621,6 +621,43 @@ class AccuracyLayer : public Layer<Dtype> {
   }
 };
 
+// This function is used to create a pthread that prefetches the window data.
+template <typename Dtype>
+void* WindowDataLayerPrefetch(void* layer_pointer);
+
+template <typename Dtype>
+class WindowDataLayer : public Layer<Dtype> {
+  // The function used to perform prefetching.
+  friend void* WindowDataLayerPrefetch<Dtype>(void* layer_pointer);
+
+ public:
+  explicit WindowDataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~WindowDataLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  pthread_t thread_;
+  shared_ptr<Blob<Dtype> > prefetch_data_;
+  shared_ptr<Blob<Dtype> > prefetch_label_;
+  Blob<Dtype> data_mean_;
+  vector<std::pair<std::string, vector<int> > > image_database_;
+  enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
+  vector<vector<float> > fg_windows_;
+  vector<vector<float> > bg_windows_;
+};
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_

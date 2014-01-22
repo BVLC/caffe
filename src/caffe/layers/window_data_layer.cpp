@@ -1,10 +1,13 @@
 // Copyright 2013 Ross Girshick
+//
+// Based on data_layer.cpp by Yangqing Jia.
 
 #include <stdint.h>
 #include <pthread.h>
 
 #include <string>
 #include <vector>
+#include <map>
 #include <fstream>
 
 #include "caffe/layer.hpp"
@@ -16,13 +19,12 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 using std::string;
+using std::map;
+using std::pair;
 
 // caffe.proto > LayerParameter
 //   'source' field specifies the window_file
 //   'cropsize' indicates the desired warped size
-
-// TODO(rbg):
-//  - try uniform sampling over classes
 
 namespace caffe {
 
@@ -39,7 +41,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   const Dtype scale = layer->layer_param_.scale();
   const int batchsize = layer->layer_param_.batchsize();
   const int cropsize = layer->layer_param_.cropsize();
-  const int context_pad = layer->layer_param_.context_pad();
+  const int context_pad = layer->layer_param_.det_context_pad();
   const bool mirror = layer->layer_param_.mirror();
   const float fg_fraction = layer->layer_param_.det_fg_fraction();
   const Dtype* mean = layer->data_mean_.cpu_data();
@@ -47,16 +49,12 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   const int mean_width = layer->data_mean_.width();
   const int mean_height = layer->data_mean_.height();
   cv::Size cv_crop_size(cropsize, cropsize);
-  const string& crop_mode = layer->layer_param_.crop_mode();
+  const string& crop_mode = layer->layer_param_.det_crop_mode();
 
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
   memset(top_data, 0, sizeof(Dtype)*layer->prefetch_data_->count());
-
-//  CHECK_EQ(mean_width, mean_height);
-//  CHECK_EQ(mean_width, 256);
-//  CHECK_EQ(mean_off, 14);
 
   const int num_fg = static_cast<int>(static_cast<float>(batchsize) 
       * fg_fraction);
@@ -77,7 +75,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       }
 
       // load the image containing the window
-      std::pair<std::string, vector<int> > image = 
+      pair<std::string, vector<int> > image = 
           layer->image_database_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
 
       cv::Mat cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
@@ -86,7 +84,6 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         return (void*)NULL;
       }
       const int channels = cv_img.channels();
-//      CHECK_EQ(channels, 3);
 
       // crop window out of image and warp it
       int x1 = window[WindowDataLayer<Dtype>::X1];
@@ -177,15 +174,6 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         }
       }
 
-//      CHECK_GT(x1, -1);
-//      CHECK_GT(y1, -1);
-//      CHECK_LT(x1, cv_img.cols);
-//      CHECK_LT(y1, cv_img.rows);
-//      CHECK_GT(x2, x1-1);
-//      CHECK_GT(y2, y1-1);
-//      CHECK_LT(x2, cv_img.cols);
-//      CHECK_LT(y2, cv_img.rows);
-
       cv::Rect roi(x1, y1, x2-x1+1, y2-y1+1);
       cv::Mat cv_cropped_img = cv_img(roi);
       cv::resize(cv_cropped_img, cv_cropped_img, 
@@ -215,33 +203,38 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       // get window label
       top_label[itemid] = window[WindowDataLayer<Dtype>::LABEL];
 
-//      string file_id;
-//      std::stringstream ss;
-//      ss << rand();
-//      ss >> file_id;
-//      std::ofstream inf((string("dump/") + file_id + string("_info.txt")).c_str(), std::ofstream::out);
-//      inf << image.first << std::endl 
-//          << window[WindowDataLayer<Dtype>::X1]+1 << std::endl
-//          << window[WindowDataLayer<Dtype>::Y1]+1 << std::endl
-//          << window[WindowDataLayer<Dtype>::X2]+1 << std::endl
-//          << window[WindowDataLayer<Dtype>::Y2]+1 << std::endl
-//          << do_mirror << std::endl
-//          << top_label[itemid] << std::endl
-//          << is_fg << std::endl;
-//      inf.close();
-//      std::ofstream top_data_file((string("dump/") + file_id + string("_data.txt")).c_str(), 
-//            std::ofstream::out | std::ofstream::binary);
-//      for (int c = 0; c < channels; ++c) {
-//        for (int h = 0; h < cropsize; ++h) {
-//          for (int w = 0; w < cropsize; ++w) {
-//            top_data_file.write(
-//                reinterpret_cast<char*>(&top_data[((itemid * channels + c) 
-//                                                   * cropsize + h) * cropsize + w]),
-//                sizeof(Dtype));
-//          }
-//        }
-//      }
-//      top_data_file.close();
+      #if 0
+      // useful debugging code for dumping transformed windows to disk
+      string file_id;
+      std::stringstream ss;
+      ss << rand();
+      ss >> file_id;
+      std::ofstream inf((string("dump/") + file_id + 
+          string("_info.txt")).c_str(), std::ofstream::out);
+      inf << image.first << std::endl 
+          << window[WindowDataLayer<Dtype>::X1]+1 << std::endl
+          << window[WindowDataLayer<Dtype>::Y1]+1 << std::endl
+          << window[WindowDataLayer<Dtype>::X2]+1 << std::endl
+          << window[WindowDataLayer<Dtype>::Y2]+1 << std::endl
+          << do_mirror << std::endl
+          << top_label[itemid] << std::endl
+          << is_fg << std::endl;
+      inf.close();
+      std::ofstream top_data_file((string("dump/") + file_id + 
+          string("_data.txt")).c_str(), 
+          std::ofstream::out | std::ofstream::binary);
+      for (int c = 0; c < channels; ++c) {
+        for (int h = 0; h < cropsize; ++h) {
+          for (int w = 0; w < cropsize; ++w) {
+            top_data_file.write(
+                reinterpret_cast<char*>(&top_data[((itemid * channels + c) 
+                                                   * cropsize + h) * cropsize + w]),
+                sizeof(Dtype));
+          }
+        }
+      }
+      top_data_file.close();
+      #endif
 
       itemid++;
     }
@@ -250,6 +243,10 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   return (void*)NULL;
 }
 
+template <typename Dtype>
+WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
+  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+}
 
 template <typename Dtype>
 void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
@@ -284,8 +281,8 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(infile.good()) << "Failed to open window file " 
       << this->layer_param_.source() << std::endl;
 
-  vector<float> label_hist(21);
-  std::fill(label_hist.begin(), label_hist.end(), 0);
+  map<int, int> label_hist;
+  label_hist.insert(std::make_pair(0, 0));
 
   string hashtag;
   int image_index, channels;
@@ -319,15 +316,18 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       
       // add window to foreground list or background list
       if (overlap >= this->layer_param_.det_fg_threshold()) {
-        CHECK_GT(window[WindowDataLayer::LABEL], 0);
+        int label = window[WindowDataLayer::LABEL];
+        CHECK_GT(label, 0);
         fg_windows_.push_back(window);
+        label_hist.insert(std::make_pair(label, 0));
+        label_hist[label]++;
       } else if (overlap < this->layer_param_.det_bg_threshold()) {
         // background window, force label and overlap to 0
         window[WindowDataLayer::LABEL] = 0;
         window[WindowDataLayer::OVERLAP] = 0;
         bg_windows_.push_back(window);
+        label_hist[0]++;
       }
-      label_hist[window[WindowDataLayer::LABEL]]++;
     }
 
     if (image_index % 100 == 0) {
@@ -342,14 +342,15 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   LOG(INFO) << "Number of images: " << image_index+1;
 
-  for (int i = 0; i < 21; ++i) {
-    LOG(INFO) << "class " << i << " has " << label_hist[i] << " samples";
+  for (map<int,int>::iterator it = label_hist.begin(); 
+      it != label_hist.end(); ++it) {
+    LOG(INFO) << "class " << it->first << " has " << label_hist[it->first] << " samples";
   }
 
   LOG(INFO) << "Amount of context padding: " 
-      << this->layer_param_.context_pad();
+      << this->layer_param_.det_context_pad();
 
-  LOG(INFO) << "Crop mode: " << this->layer_param_.crop_mode();
+  LOG(INFO) << "Crop mode: " << this->layer_param_.det_crop_mode();
 
   // image
   int cropsize = this->layer_param_.cropsize();
