@@ -7,9 +7,9 @@ layers {
     meanfile: "/home/eecs/rbg/working/caffe-rbg/data/ilsvrc2012_mean.binaryproto"
     batchsize: 128
     cropsize: 227
-    context_pad: 16
-    crop_mode: "warp"
     mirror: true
+    det_context_pad: 16
+    det_crop_mode: "warp"
     det_fg_threshold: 0.5
     det_bg_threshold: 0.5
     det_fg_fraction: 0.25
@@ -340,7 +340,7 @@ layers {
 }
 layers {
   layer {
-    name: "fc8"
+    name: "fc8_pascal"
     type: "innerproduct"
     num_output: 21
     weight_filler {
@@ -355,16 +355,15 @@ layers {
     blobs_lr: 20.
     weight_decay: 1.
     weight_decay: 0.
-    can_clobber: false
   }
   bottom: "fc7"
-  top: "fc8"
+  top: "fc8_pascal"
 }
 layers {
   layer {
     name: "loss"
     type: "softmax_loss"
   }
-  bottom: "fc8"
+  bottom: "fc8_pascal"
   bottom: "label"
 }
