@@ -6,10 +6,32 @@ title: Caffe
 Installation
 ================
 
-We mostly used Ubuntu 12.04 for development, and here we describe the step-to-step guide on installing Caffe on Ubuntu. You will be able to install Caffe on other platforms, but you may need to minimally tinker with paths in `Makefile.config` and maybe the `Makefile` itself.
+To build and test Caffe do
+
+    make
+    make test
+    make runtest
+
+You may need to minimally tinker with paths in `Makefile.config` and maybe the
+`Makefile` itself.
+
+Note that building and running CPU-only works, but GPU tests will naturally
+fail.
+
+We mostly used Ubuntu 12.04 for development, and here we describe the
+step-to-step guide on installing Caffe on Ubuntu.
 
 Prerequisites
 -------------
+
+* CUDA (5.0 or 5.5)
+* Boost
+* MKL (but see the [boost-eigen branch](https://github.com/BVLC/caffe/tree/boost-eigen) for a boost/Eigen3 port)
+* OpenCV
+* glog, gflags, protobuf, leveldb, snappy
+* For the Python wrapper: python, numpy (>= 1.7 preferred), and boost_python
+* For the Matlab wrapper: Matlab with mex
+
 Caffe requires the CUDA NVCC compiler to compile its GPU code. To install CUDA, go to the [NVidia CUDA website](https://developer.nvidia.com/cuda-downloads) and follow installation instructions there. Caffe is verified to compile with both CUDA 5.0 and 5.5.
 
 Caffe also needs Intel MKL as the backend of its matrix computation and vectorized computations. We are in the process of removing MKL dependency, but for now you will need to have an MKL installation. You can obtain a [trial license](http://software.intel.com/en-us/intel-mkl) or an [academic license](http://software.intel.com/en-us/intel-education-offerings) (if you are a student).
@@ -20,7 +42,7 @@ If you would like to compile the Matlab wrapper, you will need to install Matlab
 
 You will also need other packages, most of which can be installed via apt-get using:
 
-    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost1.48-all-dev
+    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev
 
 The only exception being the google logging library, which does not exist in the Ubuntu 12.04 repository. To install it, do:
 
