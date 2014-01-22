@@ -37,19 +37,20 @@ def test_pyramid_IO(caffenet, imgFname):
     print example_dict
 
 def test_featpyramid_allScales(caffenet, imgFname):
-    #blobs_top = list of feature arrays... one array per scale.
-    blobs_top = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+
+    pyra = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+    feat = pyra["feat"]
 
     # optional breakpoint...
     #from IPython import embed
     #embed()
 
-    for i in xrange(0, len(blobs_top)):
-        print 'blobs[%d] shape: '%i
-        print blobs_top[i].shape
+    for i in xrange(0, len(feat)):
+        print 'feat[%d] shape: '%i
+        print feat[i].shape
 
         #prep for visualization (sum over depth of descriptors)
-        flat_descriptor = np.sum(blobs_top[i], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
+        flat_descriptor = np.sum(feat[i], axis=1) #e.g. (1, depth=256, height=124, width=124) -> (1, 124, 124) 
         flat_descriptor = flat_descriptor[0] #(1, 124, 124) -> (124, 124) ... first image (in a batch size of 1)
 
         #visualization
@@ -74,5 +75,5 @@ if __name__ == "__main__":
 
 
     #experiments...
-    test_pyramid_IO(caffenet, imgFname)
-    #test_featpyramid_allScales(caffenet, imgFname)
+    #test_pyramid_IO(caffenet, imgFname)
+    test_featpyramid_allScales(caffenet, imgFname)

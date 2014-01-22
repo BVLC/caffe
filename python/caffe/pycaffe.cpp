@@ -343,7 +343,7 @@ struct CaffeNet {
   }
 
    //void extract_featpyramid(string file){
-  boost::python::list extract_featpyramid(string file){
+  boost::python::dict extract_featpyramid(string file){
 
     int padding = 16;
     int interval = 10;
@@ -374,9 +374,6 @@ struct CaffeNet {
       blobs_bottom_tmp.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
       blobs_bottom.append(currPlane_npy_boost); //for long-term keeping (return a list that might be longer than 1)
 
-      //TODO: make an option (or separate function) to pull out blobs_bottom to python here.
-      //      (for debugging -- make sure the planes are stitched properly. have done a reasonable job verifying this so far.)
-
       //prep output space
       PyArrayObject* resultPlane_npy = allocate_resultPlane(); //gets resultPlane dims from shared ptr to net_->output_blobs()
       boost::python::object resultPlane_npy_boost(boost::python::handle<>((PyObject*)resultPlane_npy)); //numpy -> wrap in boost
@@ -387,14 +384,19 @@ struct CaffeNet {
       Forward(blobs_bottom_tmp, blobs_top_tmp); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
     }
 
-    printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
+    //printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
 
     vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
     boost::python::list unstitched_features = unstitch_planes(scaleLocations, blobs_top, resultDepth);
 
-    //return blobs_bottom; //for debugging only (stitched pyramid in RGB)
-    //return blobs_top; //output plane(s)
-    return unstitched_features; //unstitched pyramid from output plane(s)
+    boost::python::dict d;    
+    //d["blobs_top"]    = blobs_top;    //for debugging -- stitched pyra in RGB
+    //d["blobs_bottom"] = blobs_bottom; //for debugging -- stitched descriptors
+    d["feat"] = unstitched_features;
+    
+    //TODO: d["scales"] = patchwork.scales_;
+
+    return d;
   }
 
   //return a list containing one 4D numpy/boost array. (toy example)
