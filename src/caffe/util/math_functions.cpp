@@ -399,7 +399,7 @@ void caffe_vRngUniform(const int n, Dtype* r,
 
   // FIXME check if boundaries are handled in the same way ?
   // Fixed by caffe_nextafter
-  boost::random::uniform_real_distribution<Dtype> random_distribution(
+  boost::uniform_real<Dtype> random_distribution(
       a, caffe_nextafter<Dtype>(b));
   Caffe::random_generator_t &generator = Caffe::vsl_stream();
 
