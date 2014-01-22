@@ -25,6 +25,7 @@
 #include "Rectangle.h"
 
 #include <utility>
+using namespace std;
 
 namespace FFLD
 {
@@ -92,13 +93,14 @@ public:
 	/// Returns the current maximum number of columns of a pyramid level (including padding).
 	static int MaxCols();
 
-    std::vector<Plane> planes_;
+    vector<Plane> planes_;
     int nbScales;
 	
     int padx_;
 	int pady_;
 	int interval_;
-	std::vector<std::pair<Rectangle, int> > rectangles_;
+	vector<std::pair<Rectangle, int> > rectangles_;
+    vector<float> scales_;
 	
 	static int MaxRows_; //TODO: make these public.
 	static int MaxCols_;
@@ -106,7 +108,7 @@ public:
 
 private:
     // Bottom-Left fill algorithm
-    static int BLF(std::vector<std::pair<Rectangle, int> > & rectangles);
+    static int BLF(vector<std::pair<Rectangle, int> > & rectangles);
 
 };
 }

@@ -42,6 +42,8 @@ Patchwork::Patchwork() : padx_(0), pady_(0), interval_(0)
 Patchwork::Patchwork(const JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyramid.pady()),
 interval_(pyramid.interval())
 {
+    scales_ = pyramid.scales_; //keep track of pyra scales
+
     nbScales = pyramid.levels().size(); //Patchwork class variable
     //cout << "    nbScales = " << nbScales << endl;
     //printf("    MaxRows_ = %d, MaxCols_=%d \n", MaxRows_, MaxCols_);

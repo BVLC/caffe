@@ -26,10 +26,12 @@ Patchwork stitch_pyramid(string file, int padding, int interval, int planeDim)
     }
 
     //image = image.resize(image.width()*4, image.height()*4); //UPSAMPLE so that Caffe's 16x downsampling looks like 4x downsampling
-    image = image.resize(image.width()*2, image.height()*2); //UPSAMPLE so that Caffe's 16x downsampling looks like 8x downsampling
+    //image = image.resize(image.width()*2, image.height()*2); //UPSAMPLE so that Caffe's 16x downsampling looks like 8x downsampling
+
+    int upsampleFactor = 2;
 
   // Compute the downsample+stitch
-    JPEGPyramid pyramid(image, padding, padding, interval); //multiscale DOWNSAMPLE with (padx == pady == padding)
+    JPEGPyramid pyramid(image, padding, padding, interval, upsampleFactor); //multiscale DOWNSAMPLE with (padx == pady == padding)
     if (pyramid.empty()) {
         cerr << "\nInvalid image " << file << endl;
     }

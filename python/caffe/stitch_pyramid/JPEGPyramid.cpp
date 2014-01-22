@@ -52,27 +52,27 @@ pady_(0), interval_(0)
 	levels_ = levels;
 }
 
-JPEGPyramid::JPEGPyramid(const JPEGImage & image, int padx, int pady, int interval) : padx_(0),
+JPEGPyramid::JPEGPyramid(const JPEGImage & image, int padx, int pady, int interval, int upsampleFactor) : padx_(0),
 pady_(0), interval_(0)
 {
 	if (image.empty() || (padx < 1) || (pady < 1) || (interval < 1))
 		return;
 	
 	// Copmute the number of scales such that the smallest size of the last level is 5
-	const int maxScale = ceil(log(min(image.width(), image.height()) / 40.0) / log(2.0)) * interval;
+	const int numScales = ceil(log(min(image.width(), image.height()) / 40.0) / log(2.0)) * interval; //'max_scale' in voc5 featpyramid.m
 	
 	// Cannot compute the pyramid on images too small
-	if (maxScale < interval)
+	if (numScales < interval)
 		return;
 
 	padx_ = padx;
 	pady_ = pady;
 	interval_ = interval;
-	levels_.resize(maxScale + 1);
-    vector<double> scales(maxScale+1);
+	levels_.resize(numScales+1);
+    scales_.resize(numScales+1);
 
 #pragma omp parallel for 
-    for (int i = 0; i <= maxScale; ++i){
+    for (int i = 0; i <= numScales; ++i){
         //generic pyramid... not stitched.
 
 		double scale = pow(2.0, static_cast<double>(-i) / interval);
@@ -80,6 +80,7 @@ pady_(0), interval_(0)
         bool use_randPad = false;
         scaled = scaled.pad(padx, pady, use_randPad); //an additional deepcopy. (for efficiency, could have 'resize()' accept padding too
 
+        scales_[i] = scale;
         levels_[i] = scaled;
     }
 }

@@ -133,6 +133,7 @@ void printScaleSizes(JPEGPyramid pyramid);
 void writePyraToJPG(JPEGPyramid pyramid);
 void writePatchworkToJPG(Patchwork patchwork, string output_stitched_dir, string base_filename);
 void print_scaleLocations(vector<ScaleLocation> scaleLocations);
+void print_scales(Patchwork patchwork);
 
 //TODO: split this test into its own function, e.g. test_stitch_pyramid()
 int main(int argc, char * argv[]){
@@ -162,6 +163,7 @@ int main(int argc, char * argv[]){
                                        // so there's no feature downsampling.
     vector<ScaleLocation> scaleLocations =  unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
     //print_scaleLocations(scaleLocations);
+    print_scales(patchwork);
 
    	return EXIT_SUCCESS;
 }
@@ -208,6 +210,12 @@ void writePatchworkToJPG(Patchwork patchwork, string output_stitched_dir, string
         //cout << fname.str() << endl;
 
         patchwork.planes_[planeID].save(fname.str());
+    }
+}
+
+void print_scales(Patchwork patchwork){
+    for(int i=0; i<patchwork.scales_.size(); i++){
+        printf("    patchwork.scales_[%d] = %f \n", i, patchwork.scales_[i]);
     }
 }
 

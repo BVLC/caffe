@@ -26,6 +26,8 @@
 //#include <Eigen/Core>
 //#include <Eigen/Sparse>
 
+using namespace std;
+
 namespace FFLD
 {
 /// The JPEGPyramid class computes and stores the HOG features extracted from a jpeg image at
@@ -81,8 +83,9 @@ public:
 	/// @param[in] padx Amount of horizontal zero padding (in cells).
 	/// @param[in] pady Amount of vertical zero padding (in cells).
 	/// @param[in] interval Number of levels per octave in the pyramid.
+    /// @param[in] upsampleFactor = how big should top scale be? (compared to input img)
 	/// @note The amount of padding and the interval should be at least 1.
-	JPEGPyramid(const JPEGImage & image, int padx, int pady, int interval = 10);
+	JPEGPyramid(const JPEGImage & image, int padx, int pady, int interval = 10, int upsampleFactor = 2);
 	
 	/// Returns whether the pyramid is empty. An empty pyramid has no level.
 	bool empty() const;
@@ -99,6 +102,9 @@ public:
 	/// Returns the pyramid levels.
 	/// @note Scales are given by the following formula: 2^(1 - @c index / @c interval).
 	const std::vector<Level> & levels() const;
+
+    //upsampling/downsampling multipliers. (scales_[i] corresponds to levels_[i])
+    vector<float> scales_;
 
 private:
 	int padx_;
