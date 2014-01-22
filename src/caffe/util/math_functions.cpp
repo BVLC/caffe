@@ -432,9 +432,12 @@ void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
     // the tests are irrelevant to the random numbers.
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
   Caffe::random_generator_t &generator = Caffe::vsl_stream();
+  boost::variate_generator<Caffe::random_generator_t,
+      boost::normal_distribution<Dtype> > variate_generator(
+      generator, random_distribution);
 
-  for(int i = 0; i < n; i += 1) {
-    r[i] = random_distribution(generator);
+  for(int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
   }
 }
 
