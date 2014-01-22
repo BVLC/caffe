@@ -264,7 +264,6 @@ struct CaffeNet {
     return channel_mean;
   }
 
-
   // for now, one batch at a time. (later, can modify this to allocate & fill a >1 batch 4d array)
   // @param  jpeg = typically a plane from Patchwork, in packed JPEG<uint8_t> [RGB,RGB,RGB] format
   // @return numpy float array of jpeg, in unpacked [BBBBB..,GGGGG..,RRRRR..] format with channel mean subtracted
@@ -416,7 +415,33 @@ struct CaffeNet {
     boost::python::list blobs_top_boost; //list to return
     blobs_top_boost.append(pyramid_float_npy_boost); //put the output array in list
 
-    return blobs_top_boost; //compile error: return-statement with no value  
+    return blobs_top_boost;  
+  }
+
+  boost::python::dict test_return_dict()
+  {
+    int batchsize = 1;
+    int depth_ = 1;
+    int MaxHeight_ = 3;
+    int MaxWidth_ = 3;
+
+    //prepare data that we'll send to Python
+    float* pyramid_float = (float*)malloc(sizeof(float) * batchsize * depth_ * MaxHeight_ * MaxWidth_);
+    memset(pyramid_float, 0, sizeof(float) * batchsize * depth_ * MaxHeight_ * MaxWidth_);
+    pyramid_float[4] = 123; //test -- see if it shows up in Python
+
+    boost::python::object pyramid_float_npy_boost = array_to_boostPython_4d(pyramid_float, batchsize, depth_, MaxHeight_, MaxWidth_);
+    boost::python::list blobs_top_boost; //list to return
+    blobs_top_boost.append(pyramid_float_npy_boost); //put the output array in list
+
+    string myStr = "ohai";
+
+    boost::python::dict d;
+    d["pyramid"] = blobs_top_boost;
+    d["note"] = myStr;
+
+    //return blobs_top_boost; 
+    return d; 
   }
 
   //return a slice ("view") of a numpy array
@@ -530,7 +555,8 @@ BOOST_PYTHON_MODULE(pycaffe) {
       .def("set_device",      &CaffeNet::set_device)
       .def("testIO",          &CaffeNet::testIO) //Forrest's test (return a numpy array)
       .def("test_NumpyView",          &CaffeNet::test_NumpyView) //Forrest's test (return view of a numpy array)
-      .def("testString",      &CaffeNet::testString) 
+      .def("testString",      &CaffeNet::testString)
+      .def("test_return_dict", &CaffeNet::test_return_dict) 
       .def("testInt",         &CaffeNet::testInt)
       .def("extract_featpyramid",         &CaffeNet::extract_featpyramid) //NEW
       .def("blobs",           &CaffeNet::blobs)

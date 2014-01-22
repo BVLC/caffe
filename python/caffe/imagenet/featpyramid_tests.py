@@ -32,6 +32,10 @@ def test_pyramid_IO(caffenet, imgFname):
     caffenet.testString('hi')
     caffenet.testInt(1337)
 
+    print "\n example dict from C++:"
+    example_dict = caffenet.test_return_dict()
+    print example_dict
+
 def test_featpyramid_allScales(caffenet, imgFname):
     #blobs_top = list of feature arrays... one array per scale.
     blobs_top = caffenet.extract_featpyramid(imgFname) # THE CRUX 
@@ -70,5 +74,5 @@ if __name__ == "__main__":
 
 
     #experiments...
-    #test_pyramid_IO(caffenet, imgFname)
-    test_featpyramid_allScales(caffenet, imgFname)
+    test_pyramid_IO(caffenet, imgFname)
+    #test_featpyramid_allScales(caffenet, imgFname)
