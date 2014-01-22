@@ -25,10 +25,7 @@ Patchwork stitch_pyramid(string file, int padding, int interval, int planeDim)
         cerr << "\nInvalid image " << file << endl;
     }
 
-    //image = image.resize(image.width()*4, image.height()*4); //UPSAMPLE so that Caffe's 16x downsampling looks like 4x downsampling
-    //image = image.resize(image.width()*2, image.height()*2); //UPSAMPLE so that Caffe's 16x downsampling looks like 8x downsampling
-
-    int upsampleFactor = 2;
+    int upsampleFactor = 2; //TODO: make this an input param?
 
   // Compute the downsample+stitch
     JPEGPyramid pyramid(image, padding, padding, interval, upsampleFactor); //multiscale DOWNSAMPLE with (padx == pady == padding)
@@ -44,7 +41,7 @@ Patchwork stitch_pyramid(string file, int padding, int interval, int planeDim)
         planeHeight = planeDim;
     } 
     else{
-        planeWidth = (pyramid.levels()[0].width() + 15) & ~15; //TODO: don't subtract padx, pady? 
+        planeWidth = (pyramid.levels()[0].width() + 15) & ~15; 
         planeHeight = (pyramid.levels()[0].height() + 15) & ~15; 
         planeWidth = max(planeWidth, planeHeight);  //SQUARE planes for Caffe convnet
         planeHeight = max(planeWidth, planeHeight);

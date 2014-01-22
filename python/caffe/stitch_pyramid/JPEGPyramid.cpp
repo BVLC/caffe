@@ -75,7 +75,7 @@ pady_(0), interval_(0)
     for (int i = 0; i <= numScales; ++i){
         //generic pyramid... not stitched.
 
-		double scale = pow(2.0, static_cast<double>(-i) / interval);
+		double scale = pow(2.0, static_cast<double>(-i) / interval) * upsampleFactor;
 		JPEGImage scaled = image.resize(image.width() * scale + 0.5, image.height() * scale + 0.5);
         bool use_randPad = false;
         scaled = scaled.pad(padx, pady, use_randPad); //an additional deepcopy. (for efficiency, could have 'resize()' accept padding too
