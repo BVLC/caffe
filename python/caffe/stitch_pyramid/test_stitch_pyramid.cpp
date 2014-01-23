@@ -154,9 +154,16 @@ int main(int argc, char * argv[]){
     printf("    base_filename = %s \n", base_filename.c_str());
     printf("    output_stitched_dir = %s \n", output_stitched_dir.c_str());
 
+#if 0 //just for generating paper figs... the call to JPEGPyramid is now contained in stitch_pyramid.
+    JPEGImage image(file);
+    int upsampleFactor = 2;
+    JPEGPyramid pyramid(image, padding, padding, interval, upsampleFactor); 
+    writePyraToJPG(pyramid);
+#endif
+
+    //Patchwork patchwork = stitch_pyramid(file, padding, interval, 2000);
     Patchwork patchwork = stitch_pyramid(file, padding, interval, -1); //planeDim = -1 (use defaults)
     //printScaleSizes(pyramid);
-    //writePyraToJPG(pyramid);
     writePatchworkToJPG(patchwork, output_stitched_dir, base_filename); //outputs to output_stitched_dir/base_filename_[planeID].jpg
 
     int convnet_subsampling_ratio = 1; // we're not actually computing convnet features in this test, 
@@ -194,8 +201,9 @@ void writePyraToJPG(JPEGPyramid pyramid){
 
     for(int level = 0; level < nlevels; level++){
         ostringstream fname;
+        //fname << "/home/forrest/paper-writing/ICML14_dense_convnet/figures/featpyramid_figs/multiscale_unstitched_img/scale_" << level << ".jpg";
         fname << "../pyra_results/level" << level << ".jpg"; //TODO: get orig img name into the JPEG name.
-        //cout << fname.str() << endl;
+        cout << fname.str() << endl;
 
         pyramid.levels()[level].save(fname.str());
     }
