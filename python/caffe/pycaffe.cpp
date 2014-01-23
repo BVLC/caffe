@@ -371,10 +371,6 @@ struct CaffeNet {
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
     //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-    //TODO: think about how to use image_mean.
-    //        ignoring image_mean for now, because the 'subtract image mean from whatever input region we get'
-    //        thing in r-cnn feels kinda silly.
- 
     Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
     int nbPlanes = patchwork.planes_.size();
 
@@ -407,8 +403,8 @@ struct CaffeNet {
     boost::python::object scales_npy_boost = get_scales_boost(patchwork);
 
     boost::python::dict d; 
-    //d["blobs_top"]    = blobs_top;    //for debugging -- stitched pyra in RGB
-    //d["blobs_bottom"] = blobs_bottom; //for debugging -- stitched descriptors
+    //d["blobs_bottom"]    = blobs_bottom;    //for debugging -- stitched pyra in RGB
+    //d["blobs_top"] = blobs_top; //for debugging -- stitched descriptors
     d["feat"] = unstitched_features;
     d["scales"] = scales_npy_boost;
 
