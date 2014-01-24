@@ -203,6 +203,9 @@ def assemble_batches(image_fnames, crop_mode='center_only', batch_size=10):
       Column 'image' contains (X x 3 x 227 x 227) ndarrays.
       Column 'filename' contains source filenames.
       If 'filename' is None, then the row is just for padding.
+
+  Note: for increased efficiency, increase the batch size (to the limit of gpu
+  memory) to avoid the communication cost
   """
   if crop_mode == 'center_only':
     images_df = _assemble_images_center_only(image_fnames)
