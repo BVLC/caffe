@@ -31,9 +31,6 @@ IMAGE_CENTER = int((IMAGE_DIM - CROPPED_DIM) / 2)
 
 CROP_MODES = ['center_only', 'corners', 'selective_search']
 
-# NOTE: this must match the setting in the prototxt that is used!
-BATCH_SIZE = 10
-
 # Load the imagenet mean file
 IMAGENET_MEAN = np.load(
     os.path.join(os.path.dirname(__file__), 'ilsvrc_2012_mean.npy'))
@@ -187,7 +184,7 @@ def _assemble_images_selective_search(image_fnames):
   return images_df
 
 
-def assemble_batches(image_fnames, crop_mode='center_only', batch_size=256):
+def assemble_batches(image_fnames, crop_mode='center_only', batch_size=10):
   """
   Assemble DataFrame of image crops for feature computation.
 
@@ -201,7 +198,7 @@ def assemble_batches(image_fnames, crop_mode='center_only', batch_size=256):
         image, and take each enclosing subwindow.
 
   Output:
-    df_batches: list of DataFrames, each one of BATCH_SIZE rows.
+    df_batches: list of DataFrames, each one of batch_size rows.
       Each row has 'image', 'filename', and 'window' info.
       Column 'image' contains (X x 3 x 227 x 227) ndarrays.
       Column 'filename' contains source filenames.
@@ -219,23 +216,23 @@ def assemble_batches(image_fnames, crop_mode='center_only', batch_size=256):
   else:
     raise Exception("Unknown mode: not in {}".format(CROP_MODES))
 
-  # Make sure the DataFrame has a multiple of BATCH_SIZE rows:
+  # Make sure the DataFrame has a multiple of batch_size rows:
   # just fill the extra rows with NaN filenames and all-zero images.
   N = images_df.shape[0]
-  remainder = N % BATCH_SIZE
+  remainder = N % batch_size
   if remainder > 0:
     zero_image = np.zeros_like(images_df['image'].iloc[0])
     remainder_df = pd.DataFrame([{
       'filename': None,
       'image': zero_image,
       'window': [0, 0, 0, 0]
-    }] * (BATCH_SIZE - remainder))
+    }] * (batch_size - remainder))
     images_df = images_df.append(remainder_df)
     N = images_df.shape[0]
 
-  # Split into batches of BATCH_SIZE.
-  ind = np.arange(N) / BATCH_SIZE
-  df_batches = [images_df[ind == i] for i in range(N / BATCH_SIZE)]
+  # Split into batches of batch_size.
+  ind = np.arange(N) / batch_size
+  df_batches = [images_df[ind == i] for i in range(N / batch_size)]
   return df_batches
 
 
@@ -273,7 +270,7 @@ if __name__ == "__main__":
   gflags.DEFINE_string(
     "images_file", "", "File that contains image filenames.")
   gflags.DEFINE_string(
-    "batch_size", 256, "Number of image crops to let through in one go")
+    "batch_size", 10, "Number of image crops to let through in one go")
   gflags.DEFINE_string(
     "output", "", "The output DataFrame HDF5 filename.")
   gflags.DEFINE_string(
