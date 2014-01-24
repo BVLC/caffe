@@ -21,7 +21,7 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
 %  imfn = '../../examples/cat.jpg';
 %  pyra = featpyramid_matcaffe_demo(imfn, 1);
 
-if ! exist('imfn', 'var') 
+if ~exist('imfn', 'var') 
    imfn = '/home/moskewcz/svn_work/boda/test/pascal/000001.jpg'
 end
 

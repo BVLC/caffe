@@ -157,8 +157,8 @@ mat$(PROJECT): mat
 
 mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
-		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
-		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" \
+		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" -I./python/caffe \
+		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -L./python/caffe/stitch_pyramid -lPyramidStitcher \
 		-o $(MAT$(PROJECT)_SO)
 	@echo
 
