@@ -9,6 +9,10 @@
 
 #include "mex.h"
 #include "caffe/caffe.hpp"
+#include "python/caffe/stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
+#include "boost/shared_ptr.hpp"
+#include "featpyra_common.hpp"
+#include<stdexcept>
 
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs
 
@@ -87,6 +91,59 @@ static mxArray* do_forward(const mxArray* const bottom) {
   return mx_out;
 }
 
+typedef vector< mxArray * > vect_rp_mxArray;
+typedef vector< float > vect_float;
+typedef shared_ptr< vect_float > p_vect_float;
+typedef vector< p_vect_float > vect_p_vect_float;
+
+p_vect_float make_p_vect_float( size_t const num ) {
+  p_vect_float ret( new vect_float );
+  ret->resize( num, 0.0f );
+  return ret;
+};
+
+
+static void raw_do_forward( vect_p_vect_float const & bottom ) {
+  vector<Blob<float>*>& input_blobs = net_->input_blobs();
+  CHECK_EQ(bottom.size(), input_blobs.size());
+  for (unsigned int i = 0; i < input_blobs.size(); ++i) {
+    assert( bottom[i]->size() == uint32_t(input_blobs[i]->count()) );
+    const float* const data_ptr = &bottom[i]->front(); 
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(input_blobs[i]->mutable_cpu_data(), data_ptr,
+          sizeof(float) * input_blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      cudaMemcpy(input_blobs[i]->mutable_gpu_data(), data_ptr,
+          sizeof(float) * input_blobs[i]->count(), cudaMemcpyHostToDevice);
+      break;
+    default:
+      LOG(FATAL) << "Unknown Caffe mode.";
+    }  // switch (Caffe::mode())
+  }
+  //const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
+  net_->ForwardPrefilled();
+}
+
+static void copy_output_blob_data( uint32_t const output_blob_ix, float * const dest, uint32_t const dest_sz_floats )
+{
+  const vector<Blob<float>*>& output_blobs = net_->output_blobs();
+  if( ! (output_blob_ix < output_blobs.size() ) ) {
+    LOG(FATAL) << "!(output_blobs_ix < output_blobs.size())";
+  }  
+  Blob<float> * const output_blob = output_blobs[output_blob_ix];
+  if( dest_sz_floats != (uint32_t)output_blob->count() ) {
+    LOG(FATAL) << "dest_sz_floats != output_blob->count()";
+  }
+  switch (Caffe::mode()) {
+  case Caffe::CPU: memcpy(dest, output_blob->cpu_data(), sizeof(float) * dest_sz_floats ); break;
+  case Caffe::GPU: cudaMemcpy(dest, output_blob->gpu_data(), sizeof(float) * dest_sz_floats, cudaMemcpyDeviceToHost); break;
+  default: LOG(FATAL) << "Unknown Caffe mode.";
+  }  // switch (Caffe::mode())
+}
+
+
 // The caffe::Caffe utility functions.
 static void set_mode_cpu(MEX_ARGS) {
   Caffe::set_mode(Caffe::CPU);
@@ -139,6 +196,216 @@ static void forward(MEX_ARGS) {
   plhs[0] = do_forward(prhs[0]);
 }
 
+
+char const * fnames[] = { "scale", "feats" };
+static void test_io(MEX_ARGS) {
+  if (nrhs != 0) {
+    LOG(ERROR) << "Given " << nrhs << " arguments, expected 0.";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+  if (nlhs != 1) {
+    LOG(ERROR) << "Caller wanted " << nlhs << " outputs, but this function always produces 1.";
+    mexErrMsgTxt("Wrong number of outputs");
+  }
+  uint32_t const ret_rows = 5;
+  mxArray * ret = mxCreateStructMatrix( ret_rows, 1, 2, fnames );
+  for( uint32_t r = 0; r < ret_rows; ++r ) {
+    mxArray * const scale = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
+    float * const scale_ptr = (float*)(mxGetData(scale));
+    *scale_ptr = 0.5f + float(r);
+    mxSetFieldByNumber( ret, r, 0, scale );
+    mxArray * const feats = mxCreateNumericMatrix( 3, 3, mxSINGLE_CLASS, mxREAL );
+    mxSetFieldByNumber( ret, r, 1, feats );
+  }
+  plhs[0] = ret;
+}
+
+template< typename T >
+T sz_from_dims( uint32_t const num_dims, T const * const dims ) {
+  T ret = 1;
+  for( uint32_t dim = 0; dim < num_dims; ++dim ) { ret *= dims[dim]; }
+  return ret;
+}
+
+
+void check_dims_equal( uint32_t const num_dims, uint32_t const * const dims_a, uint32_t const * const dims_b ) {
+  bool dims_eq = 1;
+  for( uint32_t dim = 0; dim < num_dims; ++dim ) { if( dims_a[dim] != dims_b[dim] ) { dims_eq = 0; } }
+  if( !dims_eq ) { throw( std::runtime_error( "dims unequal" ) ); }
+}
+
+void check_input_blobs_dims( uint32_t const num_dims, uint32_t const * const dims_b )
+{
+  if( num_dims != 4 ) { throw( std::runtime_error( "wrong # dims" ) ); }
+  int batchsize = net_->input_blobs()[0]->num();
+  int depth = net_->input_blobs()[0]->channels();
+  int width = net_->input_blobs()[0]->width();
+  int height = net_->input_blobs()[0]->height();
+  uint32_t dims[4] = {batchsize, depth, height, width};
+  check_dims_equal( 4, dims, dims_b );
+}
+
+
+mxArray * numeric_array_from_output_blob( void )
+{
+  if( net_->num_outputs() != 1 ) { 
+    LOG(FATAL) << "expecting 1 output blob, but got " << net_->num_outputs();
+  }
+  int batchsize = net_->output_blobs()[0]->num();
+  if( batchsize != 1 ) {
+    LOG(FATAL) << "expecting batchsize=1, but got batchsize=" << batchsize;
+  }
+
+  int depth = net_->output_blobs()[0]->channels();
+  int width = net_->output_blobs()[0]->width();
+  int height = net_->output_blobs()[0]->height();
+  mwSize dims[3] = {width, height, depth};
+
+  mxArray * const ret = mxCreateNumericArray( 3, dims, mxSINGLE_CLASS, mxREAL );
+  copy_output_blob_data( 0, (float *)mxGetData(ret), sz_from_dims( 3, dims ) );
+  
+  return ret;
+}
+
+p_vect_float JPEGImage_to_p_float( JPEGImage &jpeg ){
+  int depth = jpeg.depth();
+  int height = jpeg.height();
+  int width = jpeg.width();
+  int batchsize = 1;
+  uint32_t dims[4] = {batchsize, depth, height, width};
+  check_input_blobs_dims( 4, dims );
+
+  uint32_t const ret_sz = sz_from_dims( 4U, dims );
+  p_vect_float ret = make_p_vect_float( ret_sz );
+  
+  //copy jpeg into jpeg_float_npy
+  for(int ch_src=0; ch_src<depth; ch_src++){ //ch_src is in RGB
+    int ch_dst = get_BGR(ch_src); //for Caffe BGR convention
+    float const ch_mean = get_mean_RGB(ch_src); //mean of all imagenet pixels of this channel
+    for(int y=0; y<height; y++){
+      for(int x=0; x<width; x++){
+	//jpeg:           row-major, packed RGB, RGB, ...          uint8_t.
+	//rp_float: row-major, unpacked BBBB..,GGGG..,RRRR.. float.
+	uint32_t const rix = ch_dst*height*width+y*width+x;
+	ret->at(rix) = jpeg.bits()[y*width*depth + x*depth + ch_src] - ch_mean;
+      }
+    }
+  }
+  return ret;
+}
+
+// @param out output a list of mxArray *'s, one list element per scale, each holding a 3D numeric array of the features
+// @param scaleLocs = location of each scale on planes (see unstitch_pyramid_locations in PyramidStitcher.cpp)
+// @param descriptor_planes -- each element of the list is a plane of Caffe descriptors
+//          typically, descriptor_planes = blobs_top.
+// @param depth = #channels (typically 256 for conv5)
+static void unstitch_planes(vect_rp_mxArray & out, vector<ScaleLocation> const & scaleLocs, vect_rp_mxArray const & descriptor_planes, int depth) {
+  assert( out.empty() );
+
+  int nbScales = scaleLocs.size();
+
+  for(int i=0; i<nbScales; i++) //go from largest to smallest scale
+  { 
+    int depth = net_->output_blobs()[0]->channels();
+    int width = net_->output_blobs()[0]->width();
+    int height = net_->output_blobs()[0]->height();
+
+    int planeID = scaleLocs[i].planeID;
+    assert( uint32_t(planeID) < descriptor_planes.size() );
+    mxArray * dp = descriptor_planes[planeID];
+    mwSize dp_num_dims = mxGetNumberOfDimensions( dp );
+    assert( dp_num_dims == 3 );
+    mwSize * dp_dims = mxGetDimensions( dp );
+    assert( dp_dims[0] == width );
+    assert( dp_dims[1] == height );
+    assert( dp_dims[2] == depth );
+    float * const dp_data = ( float * )mxGetData( dp );
+
+    // row-major / C / numpy / caffe dims (note: the matlab dims of descriptor_planes are (correctly) the reverse of this)
+    // dims[3] = {depth, height, width}; 
+
+    mwSize ret_dims[3] = {depth, scaleLocs[i].height, scaleLocs[i].width }; // desired column-major / F / matlab dims
+    mxArray * const ret = mxCreateNumericArray( 3, ret_dims, mxSINGLE_CLASS, mxREAL );
+    float * const ret_data = (float * )mxGetData( ret );
+    mwSize ret_sz = sz_from_dims( 3, ret_dims );
+    for( uint32_t x = 0; x < uint32_t(ret_dims[2]); ++x ) {
+      for( uint32_t y = 0; y < uint32_t(ret_dims[1]); ++y ) {
+	for( uint32_t d = 0; d < uint32_t(ret_dims[0]); ++d ) {
+	  uint32_t const rix = d + y*ret_dims[0] + x*ret_dims[0]*ret_dims[1];
+	  assert( rix < uint32_t(ret_sz) );
+	  uint32_t const dp_x = x + scaleLocs[i].xMin;
+	  uint32_t const dp_y = y + scaleLocs[i].yMin;
+	  assert( dp_x < uint32_t(dp_dims[0]) );
+	  assert( dp_y < uint32_t(dp_dims[1]) );
+	  assert( d < uint32_t(dp_dims[2]) );
+	  //ret_data[rix] = float(d) + 1000.0*y + 1000000.0*x;
+	  ret_data[rix] = dp_data[ dp_x + dp_y*dp_dims[0] + d*dp_dims[0]*dp_dims[1] ];
+	}
+      }
+    }
+    out.push_back(ret);
+  }
+
+}
+
+static void extract_featpyramid(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Given " << nrhs << " arguments, expected 1.";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+  if (nlhs != 1) {
+    LOG(ERROR) << "Caller wanted " << nlhs << " outputs, but this function always produces 1.";
+    mexErrMsgTxt("Wrong number of outputs");
+  }
+  char *fn_cs = mxArrayToString(prhs[0]);
+  string const file( fn_cs );
+  mxFree(fn_cs);
+  
+  int padding = 16;
+  int interval = 10;
+  int convnet_subsampling_ratio = 16; //for conv5 layer features
+  int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
+  int resultDepth = net_->output_blobs()[0]->channels();
+
+  assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
+  assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
+  //TODO: verify/assert that top-upsampled version of input img fits within planeDim
+
+  Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
+  int nbPlanes = patchwork.planes_.size();
+
+  vect_rp_mxArray mx_outs;
+  //prep input data for Caffe feature extraction    
+  for(int planeID=0; planeID<nbPlanes; planeID++){
+    vect_p_vect_float blobs_bottom; //input buffer(s) for Caffe::Forward 
+    blobs_bottom.push_back( JPEGImage_to_p_float(patchwork.planes_.at(planeID)) ); 
+    raw_do_forward( blobs_bottom ); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
+    mx_outs.push_back( numeric_array_from_output_blob() );
+  }
+
+  vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
+  uint32_t const ret_rows = patchwork.scales_.size();
+  assert( scaleLocations.size() == ret_rows );
+
+  vect_rp_mxArray feats;
+  unstitch_planes( feats, scaleLocations, mx_outs, resultDepth );
+  assert( feats.size() == ret_rows );
+
+  for( vect_rp_mxArray::const_iterator i = mx_outs.begin(); i != mx_outs.end(); ++i ) { mxDestroyArray(*i); }
+
+  mxArray * ret = mxCreateStructMatrix( ret_rows, 1, 2, fnames );
+  for( uint32_t r = 0; r < ret_rows; ++r ) {
+    mxArray * const scale = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
+    float * const scale_ptr = (float*)(mxGetData(scale));
+    *scale_ptr = patchwork.scales_[r];
+    mxSetFieldByNumber( ret, r, 0, scale );
+    mxSetFieldByNumber( ret, r, 1, feats[r] );
+  }
+
+  plhs[0] = ret;
+}
+
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -156,9 +423,17 @@ static handler_registry handlers[] = {
   { "set_phase_train",    set_phase_train },
   { "set_phase_test",     set_phase_test  },
   { "set_device",         set_device      },
+  // featpyramid functions 
+  { "test_io",            test_io         },
+  { "extract_featpyramid",extract_featpyramid },
+
   // The end.
   { "END",                NULL            },
 };
+
+
+// building with mkoctfile
+// CXXFLAGS="-fpic -DNDEBUG -O2" mkoctfile --mex matlab/caffe/matcaffe.cpp libcaffe.a -pthread -I/usr/local/include -I/usr/include/python2.7 -I/usr/local/lib/python2.7/dist-packages/numpy/core/include -I./src -I./include -I/usr/local/cuda/include -I/opt/intel/mkl/include -Wall -L/usr/lib -L/usr/local/lib -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -L/opt/intel/mkl/lib -L/opt/intel/mkl/lib/intel64 -lcudart -lcublas -lcurand -lprotobuf -lopencv_core -lopencv_highgui -lglog -lmkl_rt -lmkl_intel_thread -lleveldb -lsnappy -lpthread -lboost_system -lopencv_imgproc -o matlab/caffe/caffe
 
 
 /** -----------------------------------------------------------------
