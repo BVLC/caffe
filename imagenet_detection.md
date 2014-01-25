@@ -6,7 +6,7 @@ title: Caffe
 Running Windowed Detection with Caffe
 =====================================
 
-[View this page as an IPython Notebook](http://nbviewer.ipython.org/url/daggerfs.com/caffe/selective_search_demo.ipynb)
+[View this page as an IPython Notebook](http://nbviewer.ipython.org/url/caffe.berkeleyvision.org/selective_search_demo.ipynb)
 
 This approach follows ideas described in Ross Girshick, Jeff Donahue, Trevor Darrell, Jitendra Malik. *Rich feature hierarchies for accurate object detection and semantic segmentation*. [Arxiv 2013](http://arxiv.org/abs/1311.2524).
 
