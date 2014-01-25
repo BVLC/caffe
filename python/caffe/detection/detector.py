@@ -1,6 +1,6 @@
 """
-Classify a number of images at once, optionally using the selective
-search window proposal method.
+Do windowed detection by classifying a number of images/crops at once,
+optionally using the selective search window proposal method.
 
 This implementation follows
   Ross Girshick, Jeff Donahue, Trevor Darrell, Jitendra Malik.
@@ -300,7 +300,7 @@ if __name__ == "__main__":
     "images_dim", 256, "Canonical dimension of (square) images.")
   gflags.DEFINE_string(
     "images_mean_file",
-    os.path.join(os.path.dirname(__file__), 'ilsvrc_2012_mean.npy'),
+    os.path.join(os.path.dirname(__file__), '../imagenet/ilsvrc_2012_mean.npy'),
     "Data set image mean (numpy array).")
   FLAGS = gflags.FLAGS
   FLAGS(sys.argv)
