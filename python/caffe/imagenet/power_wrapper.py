@@ -257,27 +257,27 @@ def compute_feats(images_df, layer='imagenet'):
 
 
 if __name__ == "__main__":
-  ## Parse cmdline options
+  # Parse cmdline options
   gflags.DEFINE_string(
-    "model_def", "", "The model definition file.")
+    "model_def", "", "Model definition file.")
   gflags.DEFINE_string(
-    "pretrained_model", "", "The pretrained model.")
+    "pretrained_model", "", "Pretrained model weights file.")
   gflags.DEFINE_boolean(
-    "gpu", False, "use gpu for computation")
+    "gpu", False, "Switch for gpu computation.")
   gflags.DEFINE_string(
     "crop_mode", "center_only", "Crop mode, from {}".format(CROP_MODES))
   gflags.DEFINE_string(
-    "images_file", "", "File that contains image filenames.")
+    "images_file", "", "Image filenames file.")
   gflags.DEFINE_string(
     "batch_size", 10, "Number of image crops to let through in one go")
   gflags.DEFINE_string(
-    "output", "", "The output DataFrame HDF5 filename.")
+    "output", "", "Output DataFrame HDF5 filename.")
   gflags.DEFINE_string(
     "layer", "imagenet", "Layer to output.")
   FLAGS = gflags.FLAGS
   FLAGS(sys.argv)
 
-  ## Load list of image filenames and assemble into batches.
+  # Load list of image filenames and assemble into batches.
   t = time.time()
   print('Assembling batches...')
   with open(FLAGS.images_file) as f:
