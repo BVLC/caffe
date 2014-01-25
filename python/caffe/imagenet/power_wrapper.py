@@ -12,7 +12,9 @@ The selective_search_ijcv_with_python code is available at
   https://github.com/sergeyk/selective_search_ijcv_with_python
 
 TODO:
-- [ ] batch up image filenames as well: don't want to load all of them into memory
+- batch up image filenames as well: don't want to load all of them into memory
+- refactor into class (without globals)
+- update demo notebook with new options
 """
 import numpy as np
 import os
