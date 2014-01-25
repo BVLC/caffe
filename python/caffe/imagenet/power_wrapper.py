@@ -34,9 +34,9 @@ CROP_MODES = ['center_only', 'corners', 'selective_search']
 # Load the imagenet mean file
 IMAGENET_MEAN = np.load(
     os.path.join(os.path.dirname(__file__), 'ilsvrc_2012_mean.npy'))
-CROPPED_IMAGENET_MEAN = IMAGENET_MEAN[
-  IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
-  IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM, :]
+CROPPED_IMAGENET_MEAN = IMAGENET_MEAN[IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
+                                      IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
+                                      :]
 
 
 def load_image(filename):
@@ -70,11 +70,7 @@ def format_image(image, window=None, cropped_size=False):
   """
   # Crop a subimage if window is provided.
   if window is not None:
-    image = image[
-      window[0]:window[2],
-      window[1]:window[3]
-    ]
-
+    image = image[window[0]:window[2], window[1]:window[3]]
 
   # Resize to ImageNet size, convert to BGR, subtract mean.
   image = image[:, :, ::-1]
@@ -286,10 +282,10 @@ if __name__ == "__main__":
   print('Assembling batches...')
   with open(FLAGS.images_file) as f:
     image_fnames = [_.strip() for _ in f.readlines()]
-  image_batches = assemble_batches(
-    image_fnames, FLAGS.crop_mode, FLAGS.batch_size)
-  print('{} batches assembled in {:.3f} s'.format(
-    len(image_batches), time.time() - t))
+  image_batches = assemble_batches(image_fnames, FLAGS.crop_mode,
+                                   FLAGS.batch_size)
+  print('{} batches assembled in {:.3f} s'.format(len(image_batches),
+                                                  time.time() - t))
 
   # Initialize network by loading model definition and weights.
   t = time.time()
@@ -302,13 +298,14 @@ if __name__ == "__main__":
 
   # Process the batches.
   t = time.time()
-  print 'Processing {} files in {} batches'.format(
-    len(image_fnames), len(image_batches))
+  print 'Processing {} files in {} batches'.format(len(image_fnames),
+                                                   len(image_batches))
   dfs_with_feats = []
   for i in range(len(image_batches)):
     if i % 10 == 0:
-      print('Batch {}/{}, elapsed time: {:.3f} s'.format(
-        i, len(image_batches), time.time() - t))
+      print('Batch {}/{}, elapsed time: {:.3f} s'.format(i,
+                                                         len(image_batches),
+                                                         time.time() - t))
     dfs_with_feats.append(compute_feats(image_batches[i]))
 
   # Concatenate, droppping the padding rows.
