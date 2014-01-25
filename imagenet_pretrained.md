@@ -6,7 +6,7 @@ title: Caffe
 Running Pretrained ImageNet
 ===========================
 
-[View this page as an IPython Notebook](http://nbviewer.ipython.org/url/daggerfs.com/caffe/imagenet_pretrained_files/imagenet_pretrained.ipynb)
+[View this page as an IPython Notebook](http://nbviewer.ipython.org/url/caffe.berkeleyvision.org/imagenet_pretrained_files/imagenet_pretrained.ipynb)
 
 For easier use of pretrained models, we provide a wrapper specifically written
 for the case of ImageNet, so one can take an image and directly compute features
