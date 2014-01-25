@@ -295,11 +295,11 @@ if __name__ == "__main__":
   gflags.DEFINE_string(
     "batch_size", 10, "Number of image crops to let through in one go")
   gflags.DEFINE_string(
-    "output", "", "Output DataFrame HDF5 filename.")
+    "output_file", "", "Output DataFrame HDF5 filename.")
   gflags.DEFINE_string(
-    "image_dim", 256, "Canonical (square) image dimension.")
+    "images_dim", 256, "Canonical dimension of (square) images.")
   gflags.DEFINE_string(
-    "image_mean_file",
+    "images_mean_file",
     os.path.join(os.path.dirname(__file__), 'ilsvrc_2012_mean.npy'),
     "Data set image mean (numpy array).")
   FLAGS = gflags.FLAGS
@@ -307,8 +307,8 @@ if __name__ == "__main__":
 
 
   # Configure network, input, output
-  config(FLAGS.model_def, FLAGS.pretrained_model, FLAGS.gpu, FLAGS.image_dim,
-         FLAGS.image_mean_file)
+  config(FLAGS.model_def, FLAGS.pretrained_model, FLAGS.gpu, FLAGS.images_dim,
+         FLAGS.images_mean_file)
 
   # Load list of image filenames and assemble into batches.
   t = time.time()
@@ -338,8 +338,8 @@ if __name__ == "__main__":
 
   # Write our the results.
   t = time.time()
-  df.to_hdf(FLAGS.output, 'df', mode='w')
+  df.to_hdf(FLAGS.output_file, 'df', mode='w')
   print("Done. Saving to {} took {:.3f} s.".format(
-    FLAGS.output, time.time() - t))
+    FLAGS.output_file, time.time() - t))
 
   sys.exit()
