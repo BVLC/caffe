@@ -1,6 +1,6 @@
 """
-Classify a number of images at once, optionally using the selective
-search window proposal method.
+Do windowed detection by classifying a number of images/crops at once,
+optionally using the selective search window proposal method.
 
 This implementation follows
   Ross Girshick, Jeff Donahue, Trevor Darrell, Jitendra Malik.
@@ -12,7 +12,9 @@ The selective_search_ijcv_with_python code is available at
   https://github.com/sergeyk/selective_search_ijcv_with_python
 
 TODO:
-- [ ] batch up image filenames as well: don't want to load all of them into memory
+- batch up image filenames as well: don't want to load all of them into memory
+- refactor into class (without globals)
+- update demo notebook with new options
 """
 import numpy as np
 import os
@@ -25,19 +27,18 @@ import skimage.transform
 import selective_search_ijcv_with_python as selective_search
 import caffe
 
-IMAGE_DIM = 256
-CROPPED_DIM = 227
-IMAGE_CENTER = int((IMAGE_DIM - CROPPED_DIM) / 2)
+NET = None
+
+IMAGE_DIM = None
+CROPPED_DIM = None
+IMAGE_CENTER = None
+
+IMAGE_MEAN = None
+CROPPED_IMAGE_MEAN = None
+
+NUM_OUTPUT = None
 
 CROP_MODES = ['center_only', 'corners', 'selective_search']
-
-# Load the imagenet mean file
-IMAGENET_MEAN = np.load(
-    os.path.join(os.path.dirname(__file__), 'ilsvrc_2012_mean.npy'))
-CROPPED_IMAGENET_MEAN = IMAGENET_MEAN[
-  IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
-  IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM, :]
-
 
 def load_image(filename):
   """
@@ -70,20 +71,16 @@ def format_image(image, window=None, cropped_size=False):
   """
   # Crop a subimage if window is provided.
   if window is not None:
-    image = image[
-      window[0]:window[2],
-      window[1]:window[3]
-    ]
+    image = image[window[0]:window[2], window[1]:window[3]]
 
-
-  # Resize to ImageNet size, convert to BGR, subtract mean.
+  # Resize to input size, convert to BGR, subtract mean.
   image = image[:, :, ::-1]
   if cropped_size:
     image = skimage.transform.resize(image, (CROPPED_DIM, CROPPED_DIM)) * 255
-    image -= CROPPED_IMAGENET_MEAN
+    image -= CROPPED_IMAGE_MEAN
   else:
     image = skimage.transform.resize(image, (IMAGE_DIM, IMAGE_DIM)) * 255
-    image -= IMAGENET_MEAN
+    image -= IMAGE_MEAN
 
   image = image.swapaxes(1, 2).swapaxes(0, 1)
   return image
@@ -239,19 +236,14 @@ def assemble_batches(image_fnames, crop_mode='center_only', batch_size=10):
   return df_batches
 
 
-def compute_feats(images_df, layer='imagenet'):
-  if layer == 'imagenet':
-    num_output = 1000
-  else:
-    raise ValueError("Unknown layer requested: {}".format(layer))
-
+def compute_feats(images_df):
   num = images_df.shape[0]
   input_blobs = [np.ascontiguousarray(
     np.concatenate(images_df['image'].values), dtype='float32')]
-  output_blobs = [np.empty((num, num_output, 1, 1), dtype=np.float32)]
+  output_blobs = [np.empty((num, NUM_OUTPUT, 1, 1), dtype=np.float32)]
   print(input_blobs[0].shape, output_blobs[0].shape)
 
-  caffenet.Forward(input_blobs, output_blobs)
+  NET.Forward(input_blobs, output_blobs)
   feats = [output_blobs[0][i].flatten() for i in range(len(output_blobs[0]))]
 
   # Add the features and delete the images.
@@ -260,55 +252,84 @@ def compute_feats(images_df, layer='imagenet'):
   return images_df
 
 
-if __name__ == "__main__":
-  ## Parse cmdline options
-  gflags.DEFINE_string(
-    "model_def", "", "The model definition file.")
-  gflags.DEFINE_string(
-    "pretrained_model", "", "The pretrained model.")
-  gflags.DEFINE_boolean(
-    "gpu", False, "use gpu for computation")
-  gflags.DEFINE_string(
-    "crop_mode", "center_only", "Crop mode, from {}".format(CROP_MODES))
-  gflags.DEFINE_string(
-    "images_file", "", "File that contains image filenames.")
-  gflags.DEFINE_string(
-    "batch_size", 10, "Number of image crops to let through in one go")
-  gflags.DEFINE_string(
-    "output", "", "The output DataFrame HDF5 filename.")
-  gflags.DEFINE_string(
-    "layer", "imagenet", "Layer to output.")
-  FLAGS = gflags.FLAGS
-  FLAGS(sys.argv)
-
-  ## Load list of image filenames and assemble into batches.
-  t = time.time()
-  print('Assembling batches...')
-  with open(FLAGS.images_file) as f:
-    image_fnames = [_.strip() for _ in f.readlines()]
-  image_batches = assemble_batches(
-    image_fnames, FLAGS.crop_mode, FLAGS.batch_size)
-  print('{} batches assembled in {:.3f} s'.format(
-    len(image_batches), time.time() - t))
+def config(model_def, pretrained_model, gpu, image_dim, image_mean_file):
+  global IMAGE_DIM, CROPPED_DIM, IMAGE_CENTER, IMAGE_MEAN, CROPPED_IMAGE_MEAN
+  global NET, NUM_OUTPUT
 
   # Initialize network by loading model definition and weights.
   t = time.time()
   print("Loading Caffe model.")
-  caffenet = caffe.CaffeNet(FLAGS.model_def, FLAGS.pretrained_model)
-  caffenet.set_phase_test()
-  if FLAGS.gpu:
-    caffenet.set_mode_gpu()
+  NET = caffe.CaffeNet(model_def, pretrained_model)
+  NET.set_phase_test()
+  if gpu:
+    NET.set_mode_gpu()
   print("Caffe model loaded in {:.3f} s".format(time.time() - t))
+
+  # Configure for input/output data
+  IMAGE_DIM = image_dim
+  CROPPED_DIM = NET.blobs()[0].width
+  IMAGE_CENTER = int((IMAGE_DIM - CROPPED_DIM) / 2)
+
+    # Load the data set mean file
+  IMAGE_MEAN = np.load(image_mean_file)
+
+
+  CROPPED_IMAGE_MEAN = IMAGE_MEAN[IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
+                                  IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
+                                  :]
+  NUM_OUTPUT = NET.blobs()[-1].channels # number of output classes
+
+
+if __name__ == "__main__":
+  # Parse cmdline options
+  gflags.DEFINE_string(
+    "model_def", "", "Model definition file.")
+  gflags.DEFINE_string(
+    "pretrained_model", "", "Pretrained model weights file.")
+  gflags.DEFINE_boolean(
+    "gpu", False, "Switch for gpu computation.")
+  gflags.DEFINE_string(
+    "crop_mode", "center_only", "Crop mode, from {}".format(CROP_MODES))
+  gflags.DEFINE_string(
+    "images_file", "", "Image filenames file.")
+  gflags.DEFINE_string(
+    "batch_size", 10, "Number of image crops to let through in one go")
+  gflags.DEFINE_string(
+    "output_file", "", "Output DataFrame HDF5 filename.")
+  gflags.DEFINE_string(
+    "images_dim", 256, "Canonical dimension of (square) images.")
+  gflags.DEFINE_string(
+    "images_mean_file",
+    os.path.join(os.path.dirname(__file__), '../imagenet/ilsvrc_2012_mean.npy'),
+    "Data set image mean (numpy array).")
+  FLAGS = gflags.FLAGS
+  FLAGS(sys.argv)
+
+
+  # Configure network, input, output
+  config(FLAGS.model_def, FLAGS.pretrained_model, FLAGS.gpu, FLAGS.images_dim,
+         FLAGS.images_mean_file)
+
+  # Load list of image filenames and assemble into batches.
+  t = time.time()
+  print('Assembling batches...')
+  with open(FLAGS.images_file) as f:
+    image_fnames = [_.strip() for _ in f.readlines()]
+  image_batches = assemble_batches(image_fnames, FLAGS.crop_mode,
+                                   FLAGS.batch_size)
+  print('{} batches assembled in {:.3f} s'.format(len(image_batches),
+                                                  time.time() - t))
 
   # Process the batches.
   t = time.time()
-  print 'Processing {} files in {} batches'.format(
-    len(image_fnames), len(image_batches))
+  print 'Processing {} files in {} batches'.format(len(image_fnames),
+                                                   len(image_batches))
   dfs_with_feats = []
   for i in range(len(image_batches)):
     if i % 10 == 0:
-      print('Batch {}/{}, elapsed time: {:.3f} s'.format(
-        i, len(image_batches), time.time() - t))
+      print('Batch {}/{}, elapsed time: {:.3f} s'.format(i,
+                                                         len(image_batches),
+                                                         time.time() - t))
     dfs_with_feats.append(compute_feats(image_batches[i]))
 
   # Concatenate, droppping the padding rows.
@@ -317,8 +338,8 @@ if __name__ == "__main__":
 
   # Write our the results.
   t = time.time()
-  df.to_hdf(FLAGS.output, 'df', mode='w')
+  df.to_hdf(FLAGS.output_file, 'df', mode='w')
   print("Done. Saving to {} took {:.3f} s.".format(
-    FLAGS.output, time.time() - t))
+    FLAGS.output_file, time.time() - t))
 
   sys.exit()
