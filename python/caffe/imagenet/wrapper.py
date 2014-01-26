@@ -2,15 +2,12 @@
 from disk, using the imagenet classifier.
 """
 
-from google.protobuf import text_format
-import gzip
 import numpy as np
 import os
 from skimage import io
 from skimage import transform
 
 import caffe
-from caffe.proto import caffe_pb2
 
 IMAGE_DIM = 256
 CROPPED_DIM = 227
@@ -20,8 +17,9 @@ IMAGENET_MEAN = np.load(
     os.path.join(os.path.dirname(__file__), 'ilsvrc_2012_mean.npy'))
 
 
-def oversample(image, center_only = False):
-  """Oversamples an image. Currently the indices are hard coded to the
+def oversample(image, center_only=False):
+  """
+  Oversamples an image. Currently the indices are hard coded to the
   4 corners and the center of the image, as well as their flipped ones,
   a total of 10 images.
 
@@ -31,7 +29,7 @@ def oversample(image, center_only = False):
   Output:
       images: the output of size (10 x 3 x 227 x 227)
   """
-  image = image.swapaxes(1,2).swapaxes(0,1)
+  image = image.swapaxes(1, 2).swapaxes(0, 1)
   indices = [0, IMAGE_DIM - CROPPED_DIM]
   center = int(indices[1] / 2)
   if center_only:
@@ -46,19 +44,19 @@ def oversample(image, center_only = False):
       for j in indices:
         images[curr] = image[:, i:i + CROPPED_DIM, j:j + CROPPED_DIM]
         curr += 1
-    images[4] = image[
-        :, center:center + CROPPED_DIM,center:center + CROPPED_DIM]
+    images[4] = image[:, center:center + CROPPED_DIM,
+                      center:center + CROPPED_DIM]
     # flipped version
     images[5:] = images[:5, :, :, ::-1]
     return images
 
 
-def prepare_image(filename, center_only = False):
+def prepare_image(filename, center_only=False):
   img = io.imread(filename)
   if img.ndim == 2:
     img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
   elif img.shape[2] == 4:
-    img = img[:,:,:3]
+    img = img[:, :, :3]
   # Resize and convert to BGR
   img_reshape = (transform.resize(img, (IMAGE_DIM,IMAGE_DIM)) * 255)[:, :, ::-1]
   # subtract main
@@ -67,11 +65,12 @@ def prepare_image(filename, center_only = False):
 
 
 class ImageNetClassifier(object):
-  """The ImageNetClassifier is a wrapper class to perform easier deployment
+  """
+  The ImageNetClassifier is a wrapper class to perform easier deployment
   of models trained on imagenet.
   """
-  def __init__(self, model_def_file, pretrained_model, center_only = False,
-      num_output=1000):
+  def __init__(self, model_def_file, pretrained_model, center_only=False,
+               num_output=1000):
     if center_only:
       num = 1
     else:
@@ -87,7 +86,9 @@ class ImageNetClassifier(object):
 
 
 def main(argv):
-  """The main function will carry out classification."""
+  """
+  The main function will carry out classification.
+  """
   import gflags
   import glob
   import time
@@ -99,15 +100,18 @@ def main(argv):
   gflags.DEFINE_boolean("gpu", True, "use gpu for computation")
   FLAGS = gflags.FLAGS
   FLAGS(argv)
+
   net = ImageNetClassifier(FLAGS.model_def, FLAGS.pretrained_model)
+
   if FLAGS.gpu:
     print 'Use gpu.'
     net.caffenet.set_mode_gpu()
+
   files = glob.glob(os.path.join(FLAGS.root, "*." + FLAGS.ext))
   files.sort()
   print 'A total of %d files' % len(files)
   output = np.empty((len(files), net._output_blobs[0].shape[1]),
-      dtype=np.float32)
+                    dtype=np.float32)
   start = time.time()
   for i, f in enumerate(files):
     output[i] = net.predict(f)
