@@ -16,24 +16,30 @@ Matlab Selective Search code.
 
 Let's run detection on an image of a couple of cats frolicking (one of the
 ImageNet detection challenge pictures), which we will download from the web.
-You'll need a prototxt specifying the network, and a trained model.
-We will use `examples/imagenet_deploy.prototxt` and
-`models/alexnet_train_iter_470000`: you'll need to download the latter for
-yourself!
+You'll need a prototxt specifying the network, and a trained model. We will use
+`examples/imagenet_deploy.prototxt` and `alexnet_train_iter_470000` or
+`[caffe_reference_imagenet_model](https://www.dropbox.com/s/n3jups0gr7uj0dv/caffe_reference_imagenet_model)`:
+you'll need to download the model for yourself! Note that
+`caffe_reference_imagenet_model` may give slightly different results than this
+example, which uses `alexnet_train_iter_470000`.
 
     wget http://farm1.static.flickr.com/220/512450093_7717fb8ce8.jpg
     echo `pwd`/"512450093_7717fb8ce8.jpg" > image_cat.txt
-    python power_wrapper.py --images_file=image_cat.txt --crop_mode=selective_search --model_def=<path to imagenet_deploy.prototxt> --pretrained_model=<path to alexnet_train_iter_470000> --output=selective_cat.h5
+    python detector.py --images_file=image_cat.txt --crop_mode=selective_search --model_def=<path to imagenet_deploy.prototxt> --pretrained_model=<path to alexnet_train_iter_470000> --output_file=selective_cat.h5
 
 Running this outputs an HDF5 file with the filenames, selected windows, and
 their ImageNet scores.
 Of course, we only ran on one image, so the filenames will all be the same.
 
-In general, `power_wrapper` is most efficient when running on a lot of images:
-it first extracts window proposals for all of them, then batches the windows for
-efficient GPU processing, and then outputs the results.
-Simply list an image per line in the `images_file`, and `power_wrapper` will
-process all of them.
+In general, `detector` is most efficient when running on a lot of images: it
+first extracts window proposals for all of them, batches the windows for
+efficient GPU processing, and then outputs the results. Simply list an image per
+line in the `images_file`, and `detector` will process all of them.
+
+Although this guide gives an example of ImageNet detection, `detector` is clever
+enough to adapt to different Caffe models’ input dimensions, batch size, and
+output categories. Refer to `python detector.py --help` and the `images_dim` and
+`images_mean_file` parameters to describe your data set. No need for hardcoding.
 
     import pandas as pd
 
