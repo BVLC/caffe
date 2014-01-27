@@ -43,5 +43,5 @@ end
 % put into test mode
 caffe('set_phase_test');
 
-pyra = caffe('extract_featpyramid', imfn );
+pyra = caffe('convnet_featpyramid', imfn );
 

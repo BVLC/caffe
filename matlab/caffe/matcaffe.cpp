@@ -340,7 +340,7 @@ static void unstitch_planes(vect_rp_mxArray & out, vector<ScaleLocation> const &
 
 }
 
-static void extract_featpyramid(MEX_ARGS) {
+static void convnet_featpyramid(MEX_ARGS) {
   if (nrhs != 1) {
     LOG(ERROR) << "Given " << nrhs << " arguments, expected 1.";
     mexErrMsgTxt("Wrong number of arguments");
@@ -415,7 +415,7 @@ static handler_registry handlers[] = {
   { "set_device",         set_device      },
   // featpyramid functions 
   { "test_io",            test_io         },
-  { "extract_featpyramid",extract_featpyramid },
+  { "convnet_featpyramid",convnet_featpyramid },
 
   // The end.
   { "END",                NULL            },
