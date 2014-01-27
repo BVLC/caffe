@@ -45,9 +45,9 @@ NONGEN_CXX_SRCS := $(shell find \
 LINT_REPORT := $(BUILD_DIR)/cpp_lint.log
 FAILED_LINT_REPORT := $(BUILD_DIR)/cpp_lint.error_log
 # STITCHPYRAMID is for stitching multiresolution feature pyramids. (exclude test files)
-STITCHPYRAMID_SRC := $(shell find python/caffe/stitch_pyramid/build ! -name "test_*.cpp" -name "*.cpp")
-STITCHPYRAMID_HDRS := $(shell find python/caffe/stitch_pyramid/build -name "*.h")
-STITCHPYRAMID_SO := python/caffe/stitch_pyramid/libPyramidStitcher.so
+STITCHPYRAMID_SRC := $(shell find src/stitch_pyramid ! -name "test_*.cpp" -name "*.cpp")
+STITCHPYRAMID_HDRS := $(shell find src/stitch_pyramid -name "*.h")
+STITCHPYRAMID_SO := src/stitch_pyramid/libPyramidStitcher.so
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/py$(PROJECT).cpp
 PY$(PROJECT)_SO := python/$(PROJECT)/py$(PROJECT).so
@@ -149,7 +149,7 @@ $(STITCHPYRAMID_SO): $(STITCHPYRAMID_HDRS) $(STITCHPYRAMID_SRC)
 py$(PROJECT): py
 
 py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY) $(STITCHPYRAMID_SO) 
-	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) -L./python/caffe/stitch_pyramid/build -lPyramidStitcher -I./python/caffe/stitch_pyramid \
+	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) -L./src/stitch_pyramid -lPyramidStitcher -I./src/stitch_pyramid \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 	@echo
 
@@ -158,7 +158,7 @@ mat$(PROJECT): mat
 mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
 		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" -I./python/caffe \
-		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -L./python/caffe/stitch_pyramid -lPyramidStitcher \
+		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -L./src/stitch_pyramid -lPyramidStitcher \
 		-o $(MAT$(PROJECT)_SO)
 	@echo
 
