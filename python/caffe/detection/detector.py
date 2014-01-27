@@ -39,7 +39,7 @@ CROPPED_IMAGE_MEAN = None
 BATCH_SIZE = None
 NUM_OUTPUT = None
 
-CROP_MODES = ['center_only', 'corners', 'selective_search']
+CROP_MODES = ['list', 'center_only', 'corners', 'selective_search']
 
 
 def load_image(filename):
@@ -87,6 +87,30 @@ def format_image(image, window=None, cropped_size=False):
   image = image.swapaxes(1, 2).swapaxes(0, 1)
   return image
 
+
+def _assemble_images_list(image_windows):
+  """
+  For each image, collect the crops for the given windows
+
+  Input:
+    image_windows: list
+
+  Output:
+    images_df: pandas.DataFrame
+      With 'image', 'window', 'filename' columns
+  """
+  data = []
+  for image_fname, windows in image_windows.iteritems():
+    image = load_image(image_fname)
+    for window in windows:
+      data.append({
+        'image': format_image(image, window, CROPPED_DIM)[np.newaxis, :],
+        'window': window,
+        'filename': image_fname
+      })
+
+  images_df = pd.DataFrame(data)
+  return images_df
 
 def _assemble_images_center_only(image_fnames):
   """
@@ -165,7 +189,7 @@ def _assemble_images_selective_search(image_fnames):
 
   Output:
     images_df: pandas.DataFrame
-      With 'image', 'filename' columns.
+      With 'image', 'window', 'filename' columns.
   """
   windows_list = selective_search.get_windows(image_fnames)
 
@@ -190,6 +214,8 @@ def assemble_batches(image_fnames, crop_mode='center_only'):
   Input:
     image_fnames: list of string
     mode: string
+      'list': the crops are lines in a (image_filename xmin ymin xmax ymax)
+        format file. Set this mode by --crop_mode=list:/path/to/windows_file
       'center_only': the CROPPED_DIM middle of the image is taken as is
       'corners': take CROPPED_DIM-sized boxes at 4 corners and center of
         the image, as well as their flipped versions: a total of 10.
@@ -206,7 +232,18 @@ def assemble_batches(image_fnames, crop_mode='center_only'):
   Note: for increased efficiency, increase the batch size (to the limit of gpu
   memory) to avoid the communication cost
   """
-  if crop_mode == 'center_only':
+  if crop_mode.startswith('list'):
+    from collections import defaultdict
+    image_windows = defaultdict(list)
+    crop_mode, windows_file = crop_mode.split(':')
+    with open(windows_file, 'r') as f:
+      for line in f:
+        parts = line.split(' ')
+        image_fname, window = parts[0], parts[1:]
+        image_windows[image_fname].append([int(x) for x in window])
+    images_df = _assemble_images_list(image_windows)
+
+  elif crop_mode == 'center_only':
     images_df = _assemble_images_center_only(image_fnames)
 
   elif crop_mode == 'corners':
