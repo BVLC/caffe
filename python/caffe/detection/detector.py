@@ -48,7 +48,7 @@ def load_image(filename):
     filename: string
 
   Output:
-    image: an image of size (256 x 256 x 3) of type uint8.
+    image: an image of size (IMAGE_DIM x IMAGE_DIM x 3) of type uint8.
   """
   img = skimage.io.imread(filename)
   if img.ndim == 2:
@@ -199,7 +199,7 @@ def assemble_batches(image_fnames, crop_mode='center_only'):
   Output:
     df_batches: list of DataFrames, each one of BATCH_SIZE rows.
       Each row has 'image', 'filename', and 'window' info.
-      Column 'image' contains (X x 3 x 227 x 227) ndarrays.
+      Column 'image' contains (X x 3 x CROPPED_DIM x CROPPED_IM) ndarrays.
       Column 'filename' contains source filenames.
       If 'filename' is None, then the row is just for padding.
 
