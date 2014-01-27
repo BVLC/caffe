@@ -280,7 +280,8 @@ p_vect_float JPEGImage_to_p_float( JPEGImage &jpeg ){
   //copy jpeg into jpeg_float_npy
   for(int ch_src=0; ch_src<depth; ch_src++){ //ch_src is in RGB
     int ch_dst = get_BGR(ch_src); //for Caffe BGR convention
-    float const ch_mean = get_mean_RGB(ch_src); //mean of all imagenet pixels of this channel
+    //float const ch_mean = get_mean_RGB(ch_src); //mean of all imagenet pixels of this channel
+    float const ch_mean = IMAGENET_MEAN_RGB[ch_src];
     for(int y=0; y<height; y++){
       for(int x=0; x<width; x++){
 	//jpeg:           row-major, packed RGB, RGB, ...          uint8_t.

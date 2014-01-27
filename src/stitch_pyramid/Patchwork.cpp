@@ -67,6 +67,7 @@ interval_(pyramid.interval())
 	for (int i = 0; i < nbPlanes; ++i) {
         planes_[i] = JPEGImage(MaxCols_, MaxRows_, JPEGPyramid::NbChannels);     //JPEGImage(width, height, depth)
         //planes_[i].fill_with_rand(); //random noise that will go between images on plane. (TODO: allow user to enable/disable)
+        planes_[i].fill_with_imagenet_mean(); //fill with imagenet avg pixel value
 	}
 
     int depth = JPEGPyramid::NbChannels;

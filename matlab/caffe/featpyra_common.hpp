@@ -6,6 +6,7 @@ inline int get_BGR(int channel_RGB) { assert( channel_RGB < 3 ); return 2 - chan
 
 // get avg value for imagenet pixels on particular channel
 // these are defined in caffe/include/caffe/imagenet_mean.hpp
+/*
 inline float get_mean_RGB(int channel_RGB){
   if(channel_RGB==0) { return float(IMAGENET_MEAN_R); }
   if(channel_RGB==1) { return float(IMAGENET_MEAN_G); }
@@ -13,6 +14,7 @@ inline float get_mean_RGB(int channel_RGB){
   else { assert(0); }
   return 0;
 }
+*/
 
 template< typename T >
 inline std::string str(T const & i)	// convert T i to string

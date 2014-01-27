@@ -36,6 +36,8 @@ public:
 
     void fill_with_rand(); //fill self with random numbers (e.g. before filling w/ data so we get rand-padding)
 
+    void fill_with_imagenet_mean();
+
 	/// Constructs an empty image. An empty image has zero size.
 	JPEGImage();
 	
@@ -90,6 +92,7 @@ public:
 
     // @param randPad = whether to use random numbers in padding (or, if false, use zero padding)
     JPEGImage pad(int x, int y, bool randPad) const;
+
 	
 private:
 	// Blur and downscale an image by a factor 2

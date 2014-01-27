@@ -19,6 +19,7 @@
 //--------------------------------------------------------------------------------------------------
 
 #include "JPEGImage.h"
+#include "imagenet_mean.hpp" //contains hard-coded imagenet RGB mean. from Caffe.
 
 #include <algorithm>
 #include <utility>
@@ -42,9 +43,6 @@ inline int uniform_distribution(int rangeLow, int rangeHigh)
 // THIS IS VERY SLOWWWW:
 //to avoid hard borders on images in plane (which look like edges to the convnet)
 void JPEGImage::fill_with_rand(){
-    //int height = img.height();
-    //int width = img.width();
-    //int depth = img.depth();
     int height = this->height();
     int width = this->width();
     int depth = this->depth();
@@ -54,6 +52,23 @@ void JPEGImage::fill_with_rand(){
             for (int ch = 0; ch < depth; ch++){
 
                 this->bits()[y*width*depth + x*depth + ch] = (uint8_t)uniform_distribution(0, 255);
+            }
+        }
+    }
+}
+
+//prefill plane with the average imagenet pixel value
+void JPEGImage::fill_with_imagenet_mean(){
+    int height = this->height();
+    int width = this->width();
+    int depth = this->depth();
+
+    for (int ch = 0; ch < depth; ch++){
+        uint8_t ch_mean = (uint8_t)IMAGENET_MEAN_RGB[ch];
+        for (int y = 0; y < height; y++){
+            for (int x = 0; x < width; x++){
+                this->bits()[y*width*depth + x*depth + ch] = ch_mean;
+                //this->bits()[y*width*depth + x*depth + ch] = (uint8_t)uniform_distribution(0, 255);
             }
         }
     }

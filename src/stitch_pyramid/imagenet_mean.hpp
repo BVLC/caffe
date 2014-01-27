@@ -1,0 +1,1 @@
+../../include/caffe/imagenet_mean.hpp

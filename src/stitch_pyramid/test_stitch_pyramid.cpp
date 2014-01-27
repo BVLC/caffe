@@ -134,6 +134,7 @@ void writePyraToJPG(JPEGPyramid pyramid);
 void writePatchworkToJPG(Patchwork patchwork, string output_stitched_dir, string base_filename);
 void print_scaleLocations(vector<ScaleLocation> scaleLocations);
 void print_scales(Patchwork patchwork);
+void test_linear_interp();
 
 //TODO: split this test into its own function, e.g. test_stitch_pyramid()
 int main(int argc, char * argv[]){
@@ -171,6 +172,8 @@ int main(int argc, char * argv[]){
     vector<ScaleLocation> scaleLocations =  unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
     //print_scaleLocations(scaleLocations);
     print_scales(patchwork);
+
+    test_linear_interp();
 
    	return EXIT_SUCCESS;
 }
@@ -226,4 +229,21 @@ void print_scales(Patchwork patchwork){
         printf("    patchwork.scales_[%d] = %f \n", i, patchwork.scales_[i]);
     }
 }
+
+void test_linear_interp(){
+    float val0 = 10;
+    float val1 = 35;
+    int n_elements = 10;
+    float inout_lerp[n_elements];
+    
+    JPEGPyramid dummy_pyra;
+    dummy_pyra.linear_interp(val0, val1, n_elements, inout_lerp);
+
+    printf("lerp results: \n    ");
+    for(int i=0; i<n_elements; i++){
+        printf("%f, ", inout_lerp[i]);
+    }
+    printf("\n");
+}
+
 

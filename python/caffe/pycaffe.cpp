@@ -247,23 +247,6 @@ struct CaffeNet {
     return channel_BGR;
   }
 
-  // get avg value for imagenet pixels on particular channel
-  // these are defined in caffe/include/caffe/imagenet_mean.hpp
-  float get_mean_RGB(int channel_RGB){
-    float channel_mean; //output
-
-    if(channel_RGB==0)
-      channel_mean = IMAGENET_MEAN_R;
-
-    else if (channel_RGB==1)
-      channel_mean = IMAGENET_MEAN_G;
-
-    else if (channel_RGB==2)
-      channel_mean = IMAGENET_MEAN_B;
-
-    return channel_mean;
-  }
-
   // for now, one batch at a time. (later, can modify this to allocate & fill a >1 batch 4d array)
   // @param  jpeg = typically a plane from Patchwork, in packed JPEG<uint8_t> [RGB,RGB,RGB] format
   // @return numpy float array of jpeg, in unpacked [BBBBB..,GGGGG..,RRRRR..] format with channel mean subtracted
@@ -280,7 +263,9 @@ struct CaffeNet {
     //copy jpeg into jpeg_float_npy
     for(int ch_src=0; ch_src<depth; ch_src++){ //ch_src is in RGB
         int ch_dst = get_BGR(ch_src); //for Caffe BGR convention
-        float ch_mean = get_mean_RGB(ch_src); //mean of all imagenet pixels of this channel
+        //float ch_mean = get_mean_RGB(ch_src); //mean of all imagenet pixels of this channel
+        float ch_mean = IMAGENET_MEAN_RGB[ch_src];
+
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
                 //jpeg:           row-major, packed RGB, RGB, ...          uint8_t.

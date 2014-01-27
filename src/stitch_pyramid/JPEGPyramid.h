@@ -87,6 +87,12 @@ public:
     //upsampling/downsampling multipliers. (scales_[i] corresponds to levels_[i])
     vector<float> scales_;
 
+    //populate inout_lerp with a sliding range from val0 to val1 (for padding images)
+    void linear_interp(float val0, float val1, int n_elements, float* inout_lerp);
+
+    //fill an image's padding with linear interpolated data: [from edge of img to imagenet mean]
+    void AvgLerpPad(JPEGImage & image);
+
 private:
 	int padx_;
 	int pady_;
