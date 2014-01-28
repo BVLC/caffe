@@ -2,7 +2,7 @@
 // This program converts a set of images to a leveldb by storing them as Datum
 // proto buffers.
 // Usage:
-//    convert_dataset ROOTFOLDER LISTFILE DB_NAME [0/1]
+//    convert_imageset ROOTFOLDER/ LISTFILE DB_NAME [0/1]
 // where ROOTFOLDER is the root folder that holds all the images, and LISTFILE
 // should be a list of files as well as their labels, in the format as
 //   subfolder1/file1.JPEG 7
@@ -26,12 +26,17 @@
 using namespace caffe;
 using std::pair;
 using std::string;
-using std::stringstream;
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc < 4) {
-    LOG(ERROR) << "Usage: convert_imageset ROOTFOLDER LISTFILE DB_NAME [0/1]";
+    printf("Convert a set of images to the leveldb format used\n"
+        "as input for Caffe.\n"
+        "Usage:\n"
+        "    convert_imageset ROOTFOLDER/ LISTFILE DB_NAME"
+        " RANDOM_SHUFFLE_DATA[0 or 1]\n"
+        "The ImageNet dataset for the training demo is at\n"
+        "    http://www.image-net.org/download-images\n");
     return 0;
   }
   std::ifstream infile(argv[2]);
@@ -65,7 +70,7 @@ int main(int argc, char** argv) {
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first, lines[line_id].second,
-        &datum)) {
+                          &datum)) {
       continue;
     };
     // sequential
@@ -81,7 +86,13 @@ int main(int argc, char** argv) {
       batch = new leveldb::WriteBatch();
     }
   }
+  // write the last batch
+  if (count % 1000 != 0) {
+    db->Write(leveldb::WriteOptions(), batch);
+    LOG(ERROR) << "Processed " << count << " files.";
+  }
 
+  delete batch;
   delete db;
   return 0;
 }
