@@ -26,11 +26,17 @@
 using namespace caffe;
 using std::pair;
 using std::string;
-using std::stringstream;
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc < 4) {
+    printf("This script converts the ImageNet dataset to the leveldb format used\n"
+        "by caffe to perform classification.\n"
+        "Usage:\n"
+        "    convert_imageset ROOTFOLDER LISTFILE DB_NAME"
+        " RANDOME_SHUFFLE_DATA[0 or 1]\n"
+        "The ImageNet dataset could be downloaded at\n"
+        "    http://www.image-net.org/download-images\n");
     LOG(ERROR) << "Usage: convert_imageset ROOTFOLDER LISTFILE DB_NAME [0/1]";
     return 0;
   }
@@ -47,6 +53,7 @@ int main(int argc, char** argv) {
     std::random_shuffle(lines.begin(), lines.end());
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
+  printf("A total of %lu images.\n", lines.size());
 
   leveldb::DB* db;
   leveldb::Options options;
@@ -65,7 +72,7 @@ int main(int argc, char** argv) {
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first, lines[line_id].second,
-        &datum)) {
+                          &datum)) {
       continue;
     };
     // sequential
@@ -81,7 +88,12 @@ int main(int argc, char** argv) {
       batch = new leveldb::WriteBatch();
     }
   }
+  if (count % 1000 != 0) {
+    db->Write(leveldb::WriteOptions(), batch);
+    LOG(ERROR) << "Processed " << count << " files.";
+  }
 
+  delete batch;
   delete db;
   return 0;
 }
