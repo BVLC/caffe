@@ -16,10 +16,4 @@ inline float get_mean_RGB(int channel_RGB){
 }
 */
 
-template< typename T >
-inline std::string str(T const & i)	// convert T i to string
-{
-  std::stringstream s;
-  s << i;
-  return s.str();
-}
+template< typename T > inline std::string str(T const & i) { std::stringstream s; s << i; return s.str(); } // convert T i to string

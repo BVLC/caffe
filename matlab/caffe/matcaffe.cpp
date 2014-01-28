@@ -422,10 +422,8 @@ static handler_registry handlers[] = {
   { "END",                NULL            },
 };
 
-
 // building with mkoctfile
-// CXXFLAGS="-fpic -DNDEBUG -O2" mkoctfile --mex matlab/caffe/matcaffe.cpp libcaffe.a -pthread -I/usr/local/include -I/usr/include/python2.7 -I/usr/local/lib/python2.7/dist-packages/numpy/core/include -I./src -I./include -I/usr/local/cuda/include -I/opt/intel/mkl/include -Wall -L/usr/lib -L/usr/local/lib -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -L/opt/intel/mkl/lib -L/opt/intel/mkl/lib/intel64 -lcudart -lcublas -lcurand -lprotobuf -lopencv_core -lopencv_highgui -lglog -lmkl_rt -lmkl_intel_thread -lleveldb -lsnappy -lpthread -lboost_system -lopencv_imgproc -o matlab/caffe/caffe
-
+// cd ~/git_work/caffe ;  CXXFLAGS="-Wall -fpic -O2" mkoctfile --mex matlab/caffe/matcaffe.cpp libcaffe.a -pthread -I/usr/local/include -I/usr/include/python2.7 -I/usr/local/lib/python2.7/dist-packages/numpy/core/include -I./src -I./include -I/usr/local/cuda/include -I/opt/intel/mkl/include -Wall -L/usr/lib -L/usr/local/lib -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -L/opt/intel/mkl/lib -L/opt/intel/mkl/lib/intel64 -lcudart -lcublas -lcurand -lprotobuf -lopencv_core -lopencv_highgui -lglog -lmkl_rt -lmkl_intel_thread -lleveldb -lsnappy -lpthread -lboost_system -lopencv_imgproc -L/home/moskewcz/git_work/caffe/python/caffe/stitch_pyramid -lPyramidStitcher -I./python/caffe -o matlab/caffe/caffe
 
 /** -----------------------------------------------------------------
  ** matlab entry point: caffe(api_command, arg1, arg2, ...)

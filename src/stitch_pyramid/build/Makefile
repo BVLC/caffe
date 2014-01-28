@@ -10,7 +10,7 @@ all:	libPyramidStitcher.so test_stitch_pyramid
 
 # dynamic link option
 test_stitch_pyramid: test_stitch_pyramid.o libPyramidStitcher.so
-	$(CXX) -o test_stitch_pyramid test_stitch_pyramid.o -lPyramidStitcher $(LDLIBS)
+	$(CXX) -o test_stitch_pyramid test_stitch_pyramid.o -L. -lPyramidStitcher $(LDLIBS)
 
 # static link option (doesn't like static build w/ openmp)
 #test_stitch_pyramid: test_stitch_pyramid.o libPyramidStitcher.a
