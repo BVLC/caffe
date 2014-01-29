@@ -475,15 +475,17 @@ struct CaffeNet {
     //PyArrayObject* view_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, strides, (float*)PyArray_DATA(pyramid_float_npy_boost.ptr()) + sliceWidth_min, 0, 0, 0 ); 
 
 #if 0 //view of boost::object
+    PyArrayObject * const pyramid_float_npy = (PyArrayObject *)(pyramid_float_npy_boost.ptr());
     PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT, 
-                                                          PyArray_STRIDES(pyramid_float_npy_boost.ptr()), //dim of array that we're slicing
-                                                          (float *)PyArray_GETPTR4(pyramid_float_npy_boost.ptr(), 0, 0, sliceHeight_min, sliceWidth_min), //new dim 
+                                                          PyArray_STRIDES(pyramid_float_npy), //dim of array that we're slicing
+                                                          (float *)PyArray_GETPTR4(pyramid_float_npy, 0, 0, sliceHeight_min, sliceWidth_min), //new dim 
                                                           0, 0, 0 );
 #endif
 #if 1 //view of boost::list[0] 
+    PyArrayObject * const blobs_top_boost_0_npy = (PyArrayObject *)(((boost::python::object)blobs_top_boost[0]).ptr());
     PyArrayObject* view_npy = (PyArrayObject*)PyArray_New(&PyArray_Type, 4, view_dims, NPY_FLOAT,
-                                                          PyArray_STRIDES( ((boost::python::object)blobs_top_boost[0]).ptr() ), //dim of array that we're slicing
-                                                          (float *)PyArray_GETPTR4(((boost::python::object)blobs_top_boost[0]).ptr(), 0, 0, sliceHeight_min, sliceWidth_min), //new dim 
+                                                          PyArray_STRIDES(blobs_top_boost_0_npy), //dim of array that we're slicing
+                                                          (float *)PyArray_GETPTR4( blobs_top_boost_0_npy, 0, 0, sliceHeight_min, sliceWidth_min), //new dim
                                                           0, 0, 0 );
 #endif
 
