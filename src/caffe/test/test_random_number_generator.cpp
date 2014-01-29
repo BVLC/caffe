@@ -24,6 +24,15 @@ class RandomNumberGeneratorTest : public ::testing::Test {
       return sum / sample_size;
   }
 
+  Dtype sample_mean(const int* const seqs, const size_t sample_size)
+  {
+      Dtype sum = 0;
+      for (int i = 0; i < sample_size; ++i) {
+          sum += Dtype(seqs[i]);
+      }
+      return sum / sample_size;
+  }
+
   Dtype mean_bound(const Dtype std, const size_t sample_size)
   {
       return  std/sqrt((double)sample_size);
@@ -40,13 +49,16 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussian) {
   Caffe::set_random_seed(1701);
   TypeParam mu = 0;
   TypeParam sigma = 1;
-  caffe_vRngGaussian(sample_size, (TypeParam*)data_a.mutable_cpu_data(), mu, sigma);
+  caffe_vRngGaussian(sample_size,
+      (TypeParam*)data_a.mutable_cpu_data(), mu, sigma);
   TypeParam true_mean = mu;
   TypeParam true_std = sigma;
   TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam real_mean = this->sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
-  EXPECT_NEAR(real_mean, true_mean, bound);
+  TypeParam empirical_mean =
+      this->sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
+  EXPECT_NEAR(empirical_mean, true_mean, bound);
 }
+
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngUniform) {
   size_t sample_size = 10000;
@@ -54,14 +66,30 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniform) {
   Caffe::set_random_seed(1701);
   TypeParam lower = 0;
   TypeParam upper = 1;
-  caffe_vRngUniform(sample_size, (TypeParam*)data_a.mutable_cpu_data(), lower, upper);
+  caffe_vRngUniform(sample_size,
+      (TypeParam*)data_a.mutable_cpu_data(), lower, upper);
   TypeParam true_mean = (lower + upper) / 2;
   TypeParam true_std = (upper - lower) / sqrt(12);
   TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam real_mean = this->sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
-  EXPECT_NEAR(real_mean, true_mean, bound);
+  TypeParam empirical_mean =
+      this->sample_mean((TypeParam*)data_a.cpu_data(), sample_size);
+  EXPECT_NEAR(empirical_mean, true_mean, bound);
 }
 
+
+TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulli) {
+  size_t sample_size = 10000;
+  SyncedMemory data_a(sample_size * sizeof(int));
+  Caffe::set_random_seed(1701);
+  double p = 0.3;
+  caffe_vRngBernoulli(sample_size, (int*)data_a.mutable_cpu_data(), p);
+  TypeParam true_mean = p;
+  TypeParam true_std = sqrt(p * (1 - p));
+  TypeParam bound = this->mean_bound(true_std, sample_size);
+  TypeParam empirical_mean =
+      this->sample_mean((const int *)data_a.cpu_data(), sample_size);
+  EXPECT_NEAR(empirical_mean, true_mean, bound);
+}
 
 
 }  // namespace caffe
