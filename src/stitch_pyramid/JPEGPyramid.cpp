@@ -70,7 +70,7 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
     assert( padx_ == pady_ ); // corner padding assumes this (for now)
     float corner_lerp[padx_+1];
 
-    //top (& bottom?)
+    //top, bottom, left, right
     for(int ch=0; ch<3; ch++){
         float avgPx = IMAGENET_MEAN_RGB[ch];
         for(int x=padx_; x < width-padx_; x++){
@@ -108,44 +108,46 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
                 image.bits()[y*width*depth + imgX*depth + ch] = right_lerp[x];
             }
         }
-	// dim 0 --> - side of image
-	assert( padx_ == pady_ ); // corner padding assumes this (for now)
-	for( uint32_t dx = 0; dx != 2; ++ dx ) { 
-	  for( uint32_t dy = 0; dy != 2; ++ dy ) {
-	    // x,y is coord of dx,dy valid corner pixel of un-padded image
-	    uint32_t const x = dx ? (width-padx_-1) : padx_;
-	    uint32_t const y = dy ? (height-pady_-1) : pady_;
-	    for( uint32_t dd = 2; dd <= padx_; ++dd ) {
-	      uint32_t const cx = x + ( dx ? dd : -dd ); // cx,y is point on existing dx padding, dd outside image
-	      uint32_t const cy = y + ( dy ? dd : -dd ); // x,cy is point on existing dy padding, dd outside image
-	      assert( x < width ); assert( y < height );
-	      assert( cx < width ); assert( cy < height );
-	      float const cx_y_v = image.bits()[y*width*depth + cx*depth + ch];
-	      float const x_cy_v = image.bits()[cy*width*depth + x*depth + ch];
-	      linear_interp(cx_y_v, x_cy_v, dd+1, corner_lerp); // populate corner_lerp
-	      for( uint32_t ci = 1; ci < dd; ++ci ) { // fill in diagonal corner pixels
-		uint32_t const cix = x  + ( dx ?  ci : -ci );
-		uint32_t const ciy = cy + ( dy ? -ci :  ci );
-		//printf( "dx=%s x=%s cx=%s ci=%s cix=%s dd=%s\n", 
-		//	str(dx).c_str(), str(x).c_str(), str(cx).c_str(), str(ci).c_str(), str(cix).c_str(), str(dd).c_str() );
-		assert( cix < width ); assert( ciy < height );
-                image.bits()[ciy*width*depth + cix*depth + ch] = corner_lerp[ci];
-	      }
-	    }
-	    // fill in all-mean outer half of corner (a triangle)
-	    uint32_t const cor_x = dx ? (width-1) : 0;
-	    uint32_t const cor_y = dy ? (height-1) : 0;
-	    // cor_x,cor_y is coord of dx,dy corner pixel of image (including padding)
-	    for( uint32_t dd = 0; dd < padx_; ++dd ) {
-	      for( uint32_t ddi = 0; ddi < (padx_-dd); ++ddi ) {
-		uint32_t const tri_x = cor_x + ( dx ? -dd : dd );
-		uint32_t const tri_y = cor_y + ( dy ? -ddi : ddi );
-		assert( tri_x < width ); assert( tri_y < height );
-                image.bits()[tri_y*width*depth + tri_x*depth + ch] = avgPx;
-	      }
-	    }
-	  }
-	}
+
+        //corner padding...
+        // dim 0 --> - side of image
+        assert( padx_ == pady_ ); // corner padding assumes this (for now)
+        for( uint32_t dx = 0; dx != 2; ++ dx ) { 
+          for( uint32_t dy = 0; dy != 2; ++ dy ) {
+            // x,y is coord of dx,dy valid corner pixel of un-padded image
+            uint32_t const x = dx ? (width-padx_-1) : padx_;
+            uint32_t const y = dy ? (height-pady_-1) : pady_;
+            for( uint32_t dd = 2; dd <= padx_; ++dd ) {
+              uint32_t const cx = x + ( dx ? dd : -dd ); // cx,y is point on existing dx padding, dd outside image
+              uint32_t const cy = y + ( dy ? dd : -dd ); // x,cy is point on existing dy padding, dd outside image
+              assert( x < width ); assert( y < height );
+              assert( cx < width ); assert( cy < height );
+              float const cx_y_v = image.bits()[y*width*depth + cx*depth + ch];
+              float const x_cy_v = image.bits()[cy*width*depth + x*depth + ch];
+              linear_interp(cx_y_v, x_cy_v, dd+1, corner_lerp); // populate corner_lerp
+              for( uint32_t ci = 1; ci < dd; ++ci ) { // fill in diagonal corner pixels
+            uint32_t const cix = x  + ( dx ?  ci : -ci );
+            uint32_t const ciy = cy + ( dy ? -ci :  ci );
+            //printf( "dx=%s x=%s cx=%s ci=%s cix=%s dd=%s\n", 
+            //	str(dx).c_str(), str(x).c_str(), str(cx).c_str(), str(ci).c_str(), str(cix).c_str(), str(dd).c_str() );
+            assert( cix < width ); assert( ciy < height );
+                    image.bits()[ciy*width*depth + cix*depth + ch] = corner_lerp[ci];
+              }
+            }
+            // fill in all-mean outer half of corner (a triangle)
+            uint32_t const cor_x = dx ? (width-1) : 0;
+            uint32_t const cor_y = dy ? (height-1) : 0;
+            // cor_x,cor_y is coord of dx,dy corner pixel of image (including padding)
+            for( uint32_t dd = 0; dd < padx_; ++dd ) {
+              for( uint32_t ddi = 0; ddi < (padx_-dd); ++ddi ) {
+            uint32_t const tri_x = cor_x + ( dx ? -dd : dd );
+            uint32_t const tri_y = cor_y + ( dy ? -ddi : ddi );
+            assert( tri_x < width ); assert( tri_y < height );
+                    image.bits()[tri_y*width*depth + tri_x*depth + ch] = avgPx;
+              }
+            }
+          }
+        }
     }
 }
 
