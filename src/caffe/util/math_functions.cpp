@@ -458,11 +458,10 @@ void caffe_vRngBernoulli(const int n, Dtype* r, const double p) {
   CHECK(r);
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
-    // FIXME check if parameters are handled in the same way ?
-  boost::bernoulli_distribution<Dtype> random_distribution(p);
+  boost::bernoulli_distribution<double> random_distribution(p);
   Caffe::random_generator_t &generator = Caffe::vsl_stream();
   boost::variate_generator<Caffe::random_generator_t,
-      boost::bernoulli_distribution<Dtype> > variate_generator(
+      boost::bernoulli_distribution<double> > variate_generator(
       generator, random_distribution);
 
   for (int i = 0; i < n; ++i) {
