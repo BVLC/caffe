@@ -1,7 +1,5 @@
-function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
-% scores = matcaffe_demo(im, use_gpu)
-% 
-% Demo of the matlab wrapper using the ILSVRC network to produce a feature pyramid.
+
+% Demo of the matlab wrapper to construct ConvNet feature pyramids
 %
 % input
 %   imfn     image filename
@@ -21,27 +19,33 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
 %  imfn = '../../examples/cat.jpg';
 %  pyra = featpyramid_matcaffe_demo(imfn, 1);
 
-if ~exist('imfn', 'var') 
-   imfn = '/home/moskewcz/svn_work/boda/test/pascal/000001.jpg'
-end
+function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
+    if ~exist('imfn', 'var') 
+        imfn = './pascal_000001.jpg'
+        %imfn = '../../python/caffe/imagenet/pascal_009959.jpg';
+    end
 
-%model_def_file = '../../examples/imagenet_deploy.prototxt';
-model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt' 
-% NOTE: you'll have to get the pre-trained ILSVRC network
-model_file = '../../examples/alexnet_train_iter_470000';
+    %model_def_file = '../../examples/imagenet_deploy.prototxt';
+    model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt' 
+    % NOTE: you'll have to get the pre-trained ILSVRC network
+    model_file = '../../examples/alexnet_train_iter_470000';
 
-% init caffe network (spews logging info)
-caffe('init', model_def_file, model_file);
+    % init caffe network (spews logging info)
+    caffe('init', model_def_file, model_file);
 
-% set to use GPU or CPU
-if exist('use_gpu', 'var') && use_gpu
-  caffe('set_mode_gpu');
-else
-  caffe('set_mode_cpu');
-end
+    % set to use GPU or CPU
+    if exist('use_gpu', 'var') && use_gpu
+      caffe('set_mode_gpu');
+    else
+      caffe('set_mode_cpu');
+    end
 
-% put into test mode
-caffe('set_phase_test');
+    % put into test mode
+    caffe('set_phase_test');
 
-pyra = caffe('convnet_featpyramid', imfn );
+    pyra = caffe('convnet_featpyramid', imfn );
+
+    %visualize one scale:
+    colormap(gray)
+    imagesc(squeeze(sum(pyra(1).feats, 1)))
 
