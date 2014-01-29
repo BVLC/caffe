@@ -48,7 +48,7 @@ def load_image(filename):
     filename: string
 
   Output:
-    image: an image of size (IMAGE_DIM x IMAGE_DIM x 3) of type uint8.
+    image: an image of size (H x W x 3) of type uint8.
   """
   img = skimage.io.imread(filename)
   if img.ndim == 2:
@@ -63,7 +63,7 @@ def format_image(image, window=None, cropped_size=False):
   Input:
     image: (H x W x 3) ndarray
     window: (4) ndarray
-      (y, x, h, w) coordinates
+      (ymin, xmin, ymax, xmax) coordinates, 0-indexed
     cropped_size: bool
       Whether to output cropped size image or full size image.
 
@@ -75,7 +75,7 @@ def format_image(image, window=None, cropped_size=False):
   if window is not None:
     image = image[window[0]:window[2], window[1]:window[3]]
 
-  # Resize to input size, convert to BGR, subtract mean.
+  # Resize to input size, subtract mean, convert to BGR
   image = image[:, :, ::-1]
   if cropped_size:
     image = skimage.transform.resize(image, (CROPPED_DIM, CROPPED_DIM)) * 255
@@ -104,7 +104,7 @@ def _assemble_images_list(image_windows):
     image = load_image(image_fname)
     for window in windows:
       data.append({
-        'image': format_image(image, window, CROPPED_DIM)[np.newaxis, :],
+        'image': format_image(image, window, cropped_size=True)[np.newaxis, :],
         'window': window,
         'filename': image_fname
       })
@@ -198,7 +198,7 @@ def _assemble_images_selective_search(image_fnames):
     image = load_image(image_fname)
     for window in windows:
       data.append({
-        'image': format_image(image, window, CROPPED_DIM)[np.newaxis, :],
+        'image': format_image(image, window, cropped_size=True)[np.newaxis, :],
         'window': window,
         'filename': image_fname
       })
@@ -214,7 +214,7 @@ def assemble_batches(image_fnames, crop_mode='center_only'):
   Input:
     image_fnames: list of string
     mode: string
-      'list': the crops are lines in a (image_filename xmin ymin xmax ymax)
+      'list': the crops are lines in a (image_filename ymin xmin ymax xmax)
         format file. Set this mode by --crop_mode=list:/path/to/windows_file
       'center_only': the CROPPED_DIM middle of the image is taken as is
       'corners': take CROPPED_DIM-sized boxes at 4 corners and center of
