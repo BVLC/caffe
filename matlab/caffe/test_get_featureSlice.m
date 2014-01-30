@@ -4,6 +4,7 @@ function test_getFeatureSlice()
     %TODO: add voc-release5/features to path.
     addpath('../../voc-release5/bin')
     addpath('../../voc-release5/features')
+    addpath('../../voc-release5/vis')
 
     im = imread('./pascal_000001.jpg');
 
@@ -21,16 +22,28 @@ function test_getFeatureSlice()
 
     templateSize = [6 10]; 
     imageSize = size(im);
-    bbox.x1 = 10;   
-    bbox.x2 = 90;
+    bbox.x1 = 110;
+    bbox.x2 = 190;
     bbox.y1 = 100;
     bbox.y2 = 148;
 
     pyra.sbin = model.sbin; 
-    featureSlice = get_featureSlice(pyra, bbox, templateSize, imageSize);
+    [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize, imageSize);
 
+    % if using convnets...
+    %figure(1)
+    %colormap(gray);    
     %imagesc(sum(featureSlice,3))
- 
+
+    % if using HOG...
+    figure(2)
+    w = foldHOG(featureSlice);
+    visualizeHOG(w);
+
+    figure(3);
+    w = foldHOG(pyra.feat{scaleIdx});
+    visualizeHOG(w);
+
 end 
 
 
