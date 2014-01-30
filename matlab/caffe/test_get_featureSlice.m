@@ -19,15 +19,15 @@ function test_getFeatureSlice()
 
     pyra = featpyramid(im, model, model.padx, model.pady);
 
-
     templateSize = [6 10]; 
     imageSize = size(im);
     bbox.x1 = 10;   
     bbox.x2 = 90;
     bbox.y1 = 100;
     bbox.y2 = 148;
- 
-    %featureSlice = get_featureSlice(pyra, bbox, templateSize, imageSize);
+
+    pyra.sbin = model.sbin; 
+    featureSlice = get_featureSlice(pyra, bbox, templateSize, imageSize);
 
     %imagesc(sum(featureSlice,3))
  
