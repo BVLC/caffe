@@ -8,11 +8,14 @@ function test_getFeatureSlice()
     im = imread('./pascal_000001.jpg');
 
     %bare bones model to run DPM's HOG code
-    model.features.sbin = 4;
+    model.sbin = 4;
+    %model.features.sbin = model.sbin;
     model.padx = 8;
     model.pady = 8;
     model.interval = 10;    
     model.features.extra_octave = 0;
+    model.features.dim = 32;
+    model.features.truncation_dim = 32;
 
     pyra = featpyramid(im, model, model.padx, model.pady);
 
@@ -23,7 +26,7 @@ function test_getFeatureSlice()
     bbox.x2 = 90;
     bbox.y1 = 100;
     bbox.y2 = 148;
-  
+ 
     %featureSlice = get_featureSlice(pyra, bbox, templateSize, imageSize);
 
     %imagesc(sum(featureSlice,3))
