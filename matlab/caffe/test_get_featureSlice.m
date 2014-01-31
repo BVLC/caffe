@@ -28,7 +28,7 @@ function test_getFeatureSlice()
     bbox.y2 = 148;
 
     pyra.sbin = model.sbin; 
-    [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize, imageSize);
+    [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize);
 
     % if using convnets...
     %figure(1)

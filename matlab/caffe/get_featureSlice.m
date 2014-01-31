@@ -3,8 +3,7 @@
 % @param pyra... should contain 'sbin' and 'scales'
 % @param bbox.{x1 x2 y1 y2} -- in image coordinates. -- must be round numbers.
 % @param templateSize = desired shape of output in feature descriptor units (e.g. [6 10] root filter)
-% 
-% do we really need image_size? (and, imsize is typically in the pyra.)
+% (could pass in image_size ... though we currently don't use it, and imsize is typically in pyra)
 function [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize, imageSize)
 
 %experiment:
@@ -27,10 +26,9 @@ function [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize, i
 
   %2. rip out a slice from the appropriate scale
    
-    %TODO: round bbox_desc.{x1, y1} 
-    bbox_to_use.x1 = round(bbox_desc.x1 * scale_to_use + padx_desc_scaled); %TODO: add padx/sbin
+    bbox_to_use.x1 = round(bbox_desc.x1 * scale_to_use + padx_desc_scaled); 
     bbox_to_use.x2 = bbox_to_use.x1 + templateSize(2) - 1;
-    bbox_to_use.y1 = round(bbox_desc.y1 * scale_to_use + pady_desc_scaled); %TODO: add pady/sbin
+    bbox_to_use.y1 = round(bbox_desc.y1 * scale_to_use + pady_desc_scaled); 
     bbox_to_use.y2 = bbox_to_use.y1 + templateSize(1) - 1;
     bbox_to_use
     scale_to_use
