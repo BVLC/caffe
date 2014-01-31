@@ -29,8 +29,13 @@ are processed in batch mode.
 
 ## License
 
-Caffe is BSD 2-Clause licensed (refer to
+Caffe is BSD 2-Clause licensed (refer to the
 [LICENSE](http://caffe.berkeleyvision.org/license.html) for details).
+
+The pretrained models published by the BVLC, such as the
+[Caffe reference ImageNet model](https://www.dropbox.com/s/n3jups0gr7uj0dv/caffe_reference_imagenet_model)
+are licensed for academic research / non-commercial use only. However, Caffe is
+a full toolkit for model training, so start brewing your own Caffe model today!
 
 ## Citing Caffe
 
