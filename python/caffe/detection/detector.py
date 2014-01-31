@@ -276,11 +276,9 @@ def assemble_batches(image_fnames, crop_mode='center_only'):
 
 
 def compute_feats(images_df):
-  num = images_df.shape[0]
   input_blobs = [np.ascontiguousarray(
     np.concatenate(images_df['image'].values), dtype='float32')]
-  output_blobs = [np.empty((num, NUM_OUTPUT, 1, 1), dtype=np.float32)]
-  print(input_blobs[0].shape, output_blobs[0].shape)
+  output_blobs = [np.empty((BATCH_SIZE, NUM_OUTPUT, 1, 1), dtype=np.float32)]
 
   NET.Forward(input_blobs, output_blobs)
   feats = [output_blobs[0][i].flatten() for i in range(len(output_blobs[0]))]
