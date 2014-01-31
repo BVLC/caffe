@@ -4,7 +4,7 @@
 % @param bbox.{x1 x2 y1 y2} -- in image coordinates. -- must be round numbers.
 % @param templateSize = desired shape of output in feature descriptor units (e.g. [6 10] root filter)
 % (could pass in image_size ... though we currently don't use it, and imsize is typically in pyra)
-function [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize, imageSize)
+function [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize)
 
 %experiment:
 %pyra.sbin = 8;
