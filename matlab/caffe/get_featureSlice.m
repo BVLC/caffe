@@ -30,11 +30,11 @@ function [featureSlice, scaleIdx] = get_featureSlice(pyra, bbox, templateSize)
     bbox_to_use.x2 = bbox_to_use.x1 + templateSize(2) - 1;
     bbox_to_use.y1 = round(bbox_desc.y1 * scale_to_use + pady_desc_scaled); 
     bbox_to_use.y2 = bbox_to_use.y1 + templateSize(1) - 1;
-    bbox_to_use
-    scale_to_use
-    scaleIdx
+    %bbox_to_use
+    %scale_to_use
+    %scaleIdx
 
-    featureSlice = pyra.feat{scaleIdx}(bbox_to_use.y1 : bbox_to_use.y2, bbox_to_use.x1 : bbox_to_use.x2, :); %stub
+    featureSlice = pyra.feat{scaleIdx}(bbox_to_use.y1 : bbox_to_use.y2, bbox_to_use.x1 : bbox_to_use.x2, :); 
 end
 
 % divide a bbox.{x1 x2 y1 y2} by some value.
