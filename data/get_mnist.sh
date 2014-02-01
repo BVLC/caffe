@@ -17,7 +17,7 @@ gunzip t10k-labels-idx1-ubyte.gz
 
 echo "Creating leveldb..."
 
-../examples/convert_mnist_data.bin train-images-idx3-ubyte train-labels-idx1-ubyte mnist-train-leveldb
-../examples/convert_mnist_data.bin t10k-images-idx3-ubyte t10k-labels-idx1-ubyte mnist-test-leveldb
+../build/examples/convert_mnist_data.bin train-images-idx3-ubyte train-labels-idx1-ubyte mnist-train-leveldb
+../build/examples/convert_mnist_data.bin t10k-images-idx3-ubyte t10k-labels-idx1-ubyte mnist-test-leveldb
 
 echo "Done."
