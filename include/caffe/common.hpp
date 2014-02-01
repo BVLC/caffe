@@ -49,7 +49,12 @@ using boost::shared_ptr;
 
 
 // We will use 1024 threads per block, which requires cuda sm_2x or above.
-const int CAFFE_CUDA_NUM_THREADS = 1024;
+#if __CUDA_ARCH__ >= 200
+    const int CAFFE_CUDA_NUM_THREADS = 1024;
+#else
+    const int CAFFE_CUDA_NUM_THREADS = 512;
+#endif
+
 
 
 inline int CAFFE_GET_BLOCKS(const int N) {
