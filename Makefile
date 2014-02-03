@@ -69,9 +69,9 @@ MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
-LIBRARIES := cudart cublas curand protobuf opencv_core opencv_highgui \
-	glog mkl_rt mkl_intel_thread leveldb snappy pthread boost_system \
-	opencv_imgproc
+LIBRARIES := cudart cublas curand mkl_rt pthread \
+	glog protobuf leveldb snappy boost_system \
+	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
@@ -193,6 +193,7 @@ clean:
 	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)
 	@- $(RM) include/$(PROJECT)/proto/$(PROJECT).pb.h
 	@- $(RM) python/$(PROJECT)/proto/$(PROJECT)_pb2.py
+	@- $(RM) python/$(PROJECT)/*.so
 	@- $(RM) -rf $(BUILD_DIR)
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
 

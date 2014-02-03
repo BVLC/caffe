@@ -34,3 +34,6 @@ data/*
 
 # anything under distribute
 distribute/*
+
+# user's specified config
+Makefile.config
