@@ -2,12 +2,14 @@
 
 To build and test Caffe do
 
+    cp Makefile.config.example Makefile.config
     make
     make test
     make runtest
 
-You may need to minimally tinker with paths in `Makefile.config` and maybe the
+You will probably need to adust paths in `Makefile.config` and maybe the
 `Makefile` itself.
+Feel free to issue a pull request for a change that may help other people.
 
 Note that building and running CPU-only works, but GPU tests will naturally
 fail.
