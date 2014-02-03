@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 Sergio Guadarrama
 
 
 #include "caffe/common.hpp"
