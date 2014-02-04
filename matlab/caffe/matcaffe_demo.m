@@ -1,4 +1,4 @@
-function scores = matcaffe_demo(im, use_gpu)
+function [scores, layers] = matcaffe_demo(im, use_gpu)
 % scores = matcaffe_demo(im, use_gpu)
 %
 % Demo of the matlab wrapper using the ILSVRC network.
@@ -11,7 +11,7 @@ function scores = matcaffe_demo(im, use_gpu)
 %   scores   1000-dimensional ILSVRC score vector
 %
 % You may need to do the following before you start matlab:
-%  $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda/lib64
+%  $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda-5.5/lib64
 %  $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 % Or the equivalent based on where things are installed on your system
 %
@@ -20,12 +20,16 @@ function scores = matcaffe_demo(im, use_gpu)
 %  scores = matcaffe_demo(im, 1);
 %  [score, class] = max(scores);
 
-model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
-% NOTE: you'll have to get the pre-trained ILSVRC network
-model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
-
 % init caffe network (spews logging info)
-caffe('init', model_def_file, model_file);
+if caffe('is_initialized') == 0
+  model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
+  model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
+  if exist(model_file, 'file') == 0
+    % NOTE: you'll have to get the pre-trained ILSVRC network
+    error('You need a network model file');
+  end
+  caffe('init', model_def_file, model_file);
+end
 
 % set to use GPU or CPU
 if exist('use_gpu', 'var') && use_gpu
@@ -51,6 +55,8 @@ toc;
 scores = reshape(scores{1}, [1000 10]);
 scores = mean(scores, 2);
 
+% you can also get network weights by calling
+layers = caffe('get_weights');
 
 % ------------------------------------------------------------------------
 function images = prepare_image(im)
