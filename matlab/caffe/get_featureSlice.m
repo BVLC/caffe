@@ -16,7 +16,8 @@ function [featureSlice, scaleIdx, roundedBox_in_px] = get_featureSlice(pyra, bbo
 
     bbox_desc = bbox_mult(bbox, 1.0/single(pyra.sbin)); % unscaled image -> unscaled descriptor coords.
     bbox_desc_dim = [bbox_desc.y2 - bbox_desc.y1, bbox_desc.x2 - bbox_desc.x1]; %bbox dim in the space of scale=1 descriptors. 
-    bbox_desc_scale = templateSize / bbox_desc_dim; %scale factor from (scale=1) to a scale where bbox fits in templateSize
+    %bbox_desc_scale = templateSize / bbox_desc_dim; %scale factor from (scale=1) to a scale where bbox fits in templateSize
+    bbox_desc_scale = (templateSize-1) / bbox_desc_dim; %pretend that template size is slightly smaller... so featureSlice will be slightly outside orig bbox
 
     scale_to_use = mean(bbox_desc_scale); %avg of scale factors for x and y dims.
     [scale_to_use, scaleIdx] = findNearestScale(scale_to_use, pyra.scales); %best precomputed approx of scale_to_use
@@ -33,9 +34,9 @@ function [featureSlice, scaleIdx, roundedBox_in_px] = get_featureSlice(pyra, bbo
 
     bbox_desc_x_center = bbox_desc.x1 + (bbox_desc.x2 - bbox_desc.x1)/2.0;
     bbox_desc_y_center = bbox_desc.y1 + (bbox_desc.y2 - bbox_desc.y1)/2.0;
-    bbox_to_use.x1 = round(bbox_desc_x_center*scale_to_use - templateSize(2)/2.0 + padx_desc_scaled); %(center - templateWidth/2)
+    bbox_to_use.x1 = ceil(bbox_desc_x_center*scale_to_use - templateSize(2)/2.0 + padx_desc_scaled); %(center - templateWidth/2)
     bbox_to_use.x2 = bbox_to_use.x1 + templateSize(2) - 1;
-    bbox_to_use.y1 = round(bbox_desc_y_center*scale_to_use - templateSize(1)/2.0 + pady_desc_scaled); %(center - templateHeight/2)
+    bbox_to_use.y1 = ceil(bbox_desc_y_center*scale_to_use - templateSize(1)/2.0 + pady_desc_scaled); %(center - templateHeight/2)
     bbox_to_use.y2 = bbox_to_use.y1 + templateSize(1) - 1;
     %display('new...') 
     %bbox_to_use
