@@ -66,7 +66,8 @@ int main(int argc, char** argv) {
   string root_folder(argv[1]);
   Datum datum;
   int count = 0;
-  char key_cstr[100];
+  const int maxKeyLength = 256;
+  char key_cstr[maxKeyLength];
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first, lines[line_id].second,
@@ -74,7 +75,7 @@ int main(int argc, char** argv) {
       continue;
     };
     // sequential
-    sprintf(key_cstr, "%08d_%s", line_id, lines[line_id].first.c_str());
+    snprintf(key_cstr, maxKeyLength, "%08d_%s", line_id, lines[line_id].first.c_str());
     string value;
     // get the value
     datum.SerializeToString(&value);
