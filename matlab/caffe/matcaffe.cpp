@@ -216,27 +216,6 @@ static void forward(MEX_ARGS) {
 
 
 char const * fnames[] = { "scale", "feat" };
-static void test_io(MEX_ARGS) {
-  if (nrhs != 0) {
-    LOG(ERROR) << "Given " << nrhs << " arguments, expected 0.";
-    mexErrMsgTxt("Wrong number of arguments");
-  }
-  if (nlhs != 1) {
-    LOG(ERROR) << "Caller wanted " << nlhs << " outputs, but this function always produces 1.";
-    mexErrMsgTxt("Wrong number of outputs");
-  }
-  uint32_t const ret_rows = 5;
-  mxArray * ret = mxCreateStructMatrix( ret_rows, 1, 2, fnames );
-  for( uint32_t r = 0; r < ret_rows; ++r ) {
-    mxArray * const scale = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
-    float * const scale_ptr = (float*)(mxGetData(scale));
-    *scale_ptr = 0.5f + float(r);
-    mxSetFieldByNumber( ret, r, 0, scale );
-    mxArray * const feats = mxCreateNumericMatrix( 3, 3, mxSINGLE_CLASS, mxREAL );
-    mxSetFieldByNumber( ret, r, 1, feats );
-  }
-  plhs[0] = ret;
-}
 
 void check_dims_equal( uint32_t const num_dims, uint32_t const * const dims_a, uint32_t const * const dims_b ) {
   bool dims_eq = 1;
@@ -441,7 +420,6 @@ static handler_registry handlers[] = {
   { "set_phase_test",     set_phase_test  },
   { "set_device",         set_device      },
   // featpyramid functions 
-  { "test_io",            test_io         },
   { "convnet_featpyramid",convnet_featpyramid },
 
   // The end.
