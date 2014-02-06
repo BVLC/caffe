@@ -392,6 +392,8 @@ struct CaffeNet {
     //d["blobs_top"] = blobs_top; //for debugging -- stitched descriptors
     d["feat"] = unstitched_features;
     d["scales"] = scales_npy_boost;
+    d["imwidth"] = patchwork.imwidth_; //input image dims
+    d["imheight"] = patchwork.imheight_;
 
     return d;
   }

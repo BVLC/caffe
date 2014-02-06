@@ -91,9 +91,12 @@ public:
 	vector<std::pair<Rectangle, int> > rectangles_;
     vector<float> scales_;
 	
-	static int MaxRows_; //TODO: make these public.
+	static int MaxRows_; 
 	static int MaxCols_;
 	static int HalfCols_;
+
+    int imwidth_;
+    int imheight_;
 
 private:
     // Bottom-Left fill algorithm

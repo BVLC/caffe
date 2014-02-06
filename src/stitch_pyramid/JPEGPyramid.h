@@ -93,6 +93,9 @@ public:
     //fill an image's padding with linear interpolated data: [from edge of img to imagenet mean]
     void AvgLerpPad(JPEGImage & image);
 
+    int imwidth_;
+    int imheight_;
+
 private:
 	int padx_;
 	int pady_;

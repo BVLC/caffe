@@ -66,6 +66,7 @@ def test_featpyramid_allScales(caffenet, imgFname):
 
     print "\n pyra scales:"
     print pyra["scales"]
+    print "pyra[imwidth] = %d, pyra[imheight]=%d" % (pyra['imwidth'], pyra['imheight'])
 
 if __name__ == "__main__":
 

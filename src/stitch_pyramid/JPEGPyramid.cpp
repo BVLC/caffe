@@ -172,7 +172,7 @@ pady_(0), interval_(0)
 {
 	if (image.empty() || (padx < 1) || (pady < 1) || (interval < 1))
 		return;
-	
+
 	// Copmute the number of scales such that the smallest size of the last level is 5
 	const int numScales = ceil(log(min(image.width(), image.height()) / 40.0) / log(2.0)) * interval; //'max_scale' in voc5 featpyramid.m
 	
@@ -180,6 +180,8 @@ pady_(0), interval_(0)
 	if (numScales < interval)
 		return;
 
+    imwidth_ = image.width();
+    imheight_ = image.height();
 	padx_ = padx;
 	pady_ = pady;
 	interval_ = interval;
