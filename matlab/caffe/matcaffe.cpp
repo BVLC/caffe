@@ -99,9 +99,9 @@ T sz_from_dims( uint32_t const num_dims, T const * const dims ) {
 }
 
 typedef vector< mxArray * > vect_rp_mxArray;
-typedef vector< float > vect_float;
-typedef shared_ptr< vect_float > p_vect_float;
-typedef vector< p_vect_float > vect_p_vect_float;
+//typedef vector< float > vect_float; // now defined in featpyra_common.hpp
+//typedef shared_ptr< vect_float > p_vect_float;
+//typedef vector< p_vect_float > vect_p_vect_float;
 
 p_vect_float make_p_vect_float( size_t const num ) {
   p_vect_float ret( new vect_float );
@@ -109,7 +109,7 @@ p_vect_float make_p_vect_float( size_t const num ) {
   return ret;
 };
 
-
+/*
 static void raw_do_forward( vect_p_vect_float const & bottom ) {
   vector<Blob<float>*>& input_blobs = net_->input_blobs();
   CHECK_EQ(bottom.size(), input_blobs.size());
@@ -132,6 +132,7 @@ static void raw_do_forward( vect_p_vect_float const & bottom ) {
   //const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
   net_->ForwardPrefilled();
 }
+*/
 
 static p_vect_float copy_output_blob_data( uint32_t const output_blob_ix )
 {
@@ -372,7 +373,8 @@ static void convnet_featpyramid(MEX_ARGS) {
   for(int planeID=0; planeID<nbPlanes; planeID++){
     vect_p_vect_float blobs_bottom; //input buffer(s) for Caffe::Forward 
     blobs_bottom.push_back( JPEGImage_to_p_float(patchwork.planes_.at(planeID)) ); 
-    raw_do_forward( blobs_bottom ); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
+    //raw_do_forward( blobs_bottom ); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
+    raw_do_forward( net_, blobs_bottom ); 
     blobs_top.push_back( p_vect_float_from_output_blob_0() );
   }
 
