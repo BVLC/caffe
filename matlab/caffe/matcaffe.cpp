@@ -11,7 +11,7 @@
 #include "caffe/caffe.hpp"
 #include "stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
 #include "boost/shared_ptr.hpp"
-#include "featpyra_common.hpp"
+#include "caffe/featpyra_common.hpp"
 #include<stdexcept>
 
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs

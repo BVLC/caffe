@@ -15,6 +15,7 @@
 #include "caffe/caffe.hpp"
 #include "caffe/imagenet_mean.hpp"
 #include "stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
+#include "caffe/featpyra_common.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -231,22 +232,6 @@ struct CaffeNet {
     return pyramid_float_npy_boost;
   } 
 
-  //switch RGB to BGR indexing (for Caffe convention)
-  int get_BGR(int channel_RGB){
-    int channel_BGR; //output
-
-    if(channel_RGB == 0)
-      channel_BGR = 2;
-
-    if(channel_RGB == 1)
-      channel_BGR = 1;
-
-    if(channel_RGB == 2)
-      channel_BGR = 0;
-
-    return channel_BGR;
-  }
-
   // for now, one batch at a time. (later, can modify this to allocate & fill a >1 batch 4d array)
   // @param  jpeg = typically a plane from Patchwork, in packed JPEG<uint8_t> [RGB,RGB,RGB] format
   // @return numpy float array of jpeg, in unpacked [BBBBB..,GGGGG..,RRRRR..] format with channel mean subtracted
@@ -263,7 +248,6 @@ struct CaffeNet {
     //copy jpeg into jpeg_float_npy
     for(int ch_src=0; ch_src<depth; ch_src++){ //ch_src is in RGB
         int ch_dst = get_BGR(ch_src); //for Caffe BGR convention
-        //float ch_mean = get_mean_RGB(ch_src); //mean of all imagenet pixels of this channel
         float ch_mean = IMAGENET_MEAN_RGB[ch_src];
 
         for(int y=0; y<height; y++){
