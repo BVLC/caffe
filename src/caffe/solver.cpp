@@ -125,7 +125,7 @@ Dtype Solver<Dtype>::Test() {
         << test_score[i] / param_.test_iter();
   }
   //assumption: the first element of test_score is the accuracy
-  return test_score[0];
+  return test_score[0] / param_.test_iter();
 }
   
 
