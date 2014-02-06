@@ -50,7 +50,8 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     pyra = caffe('convnet_featpyramid', imfn, pyra_params ); % call with parameters ...
     % pyra = caffe('convnet_featpyramid', imfn ); % ... or with no parameters
 
+    %keyboard
     %visualize one scale:
-    colormap(gray)
-    imagesc(squeeze(sum(pyra(1).feats, 1)))
+    colormap(gray);
+    imagesc(squeeze(sum(pyra.feat{1}, 1)));
 

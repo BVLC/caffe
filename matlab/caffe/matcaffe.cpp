@@ -215,7 +215,7 @@ static void forward(MEX_ARGS) {
 }
 
 
-char const * fnames[] = { "scale", "feats" };
+char const * fnames[] = { "scale", "feat" };
 static void test_io(MEX_ARGS) {
   if (nrhs != 0) {
     LOG(ERROR) << "Given " << nrhs << " arguments, expected 0.";
@@ -299,12 +299,12 @@ p_vect_float JPEGImage_to_p_float( JPEGImage &jpeg ){
 // @param descriptor_planes -- each element of the list is a plane of Caffe descriptors
 //          typically, descriptor_planes = blobs_top.
 // @param depth = #channels (typically 256 for conv5)
-static void unstitch_planes(vect_rp_mxArray & out, vector<ScaleLocation> const & scaleLocs, vect_p_vect_float const & descriptor_planes, int depth) {
-  assert( out.empty() );
+static mxArray * unstitch_planes( vector<ScaleLocation> const & scaleLocs, vect_p_vect_float const & descriptor_planes, int depth) {
+  uint32_t const nbScales = scaleLocs.size();
+  mxArray * const ret = mxCreateCellMatrix( nbScales, 1 );
+  assert( ret );
 
-  int nbScales = scaleLocs.size();
-
-  for(int i=0; i<nbScales; i++) //go from largest to smallest scale
+  for(uint32_t i=0; i<nbScales; i++) //go from largest to smallest scale
   { 
     uint32_t depth = net_->output_blobs()[0]->channels();
     uint32_t width = net_->output_blobs()[0]->width();
@@ -320,8 +320,8 @@ static void unstitch_planes(vect_rp_mxArray & out, vector<ScaleLocation> const &
     // dims[3] = {depth, height, width}; 
 
     mwSize ret_dims[3] = {depth, scaleLocs[i].height, scaleLocs[i].width }; // desired column-major / F / matlab dims
-    mxArray * const ret = mxCreateNumericArray( 3, ret_dims, mxSINGLE_CLASS, mxREAL );
-    float * const ret_data = (float * )mxGetData( ret );
+    mxArray * const ret_scale = mxCreateNumericArray( 3, ret_dims, mxSINGLE_CLASS, mxREAL );
+    float * const ret_scale_data = (float * )mxGetData( ret_scale );
     mwSize ret_sz = sz_from_dims( 3, ret_dims );
     for( uint32_t x = 0; x < uint32_t(ret_dims[2]); ++x ) {
       for( uint32_t y = 0; y < uint32_t(ret_dims[1]); ++y ) {
@@ -331,13 +331,14 @@ static void unstitch_planes(vect_rp_mxArray & out, vector<ScaleLocation> const &
 	  uint32_t const dp_x = x + scaleLocs[i].xMin;
 	  uint32_t const dp_y = y + scaleLocs[i].yMin;
 	  uint32_t const dp_ix = dp_x + dp_y*dp_dims[0] + d*dp_dims[0]*dp_dims[1];
-	  //ret_data[rix] = float(d) + 1000.0*y + 1000000.0*x;
-	  ret_data[rix] = dp->at(dp_ix);
+	  //ret_scale_data[rix] = float(d) + 1000.0*y + 1000000.0*x;
+	  ret_scale_data[rix] = dp->at(dp_ix);
 	}
       }
     }
-    out.push_back(ret);
+    mxSetCell( ret, i, ret_scale );
   }
+  return ret;
 }
 
 
@@ -409,18 +410,14 @@ static void convnet_featpyramid(MEX_ARGS) {
   uint32_t const ret_rows = patchwork.scales_.size();
   assert( scaleLocations.size() == ret_rows );
 
-  vect_rp_mxArray feats;
-  unstitch_planes( feats, scaleLocations, blobs_top, resultDepth );
-  assert( feats.size() == ret_rows );
+  mxArray * const feats = unstitch_planes( scaleLocations, blobs_top, resultDepth );
+  mxArray * const scale = mxCreateNumericMatrix( ret_rows, 1, mxSINGLE_CLASS, mxREAL );
+  float * const scale_ptr = (float*)(mxGetData(scale));
+  for( uint32_t r = 0; r < ret_rows; ++r ) { scale_ptr[r] = patchwork.scales_[r]; }
 
-  mxArray * ret = mxCreateStructMatrix( ret_rows, 1, 2, fnames );
-  for( uint32_t r = 0; r < ret_rows; ++r ) {
-    mxArray * const scale = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
-    float * const scale_ptr = (float*)(mxGetData(scale));
-    *scale_ptr = patchwork.scales_[r];
-    mxSetFieldByNumber( ret, r, 0, scale );
-    mxSetFieldByNumber( ret, r, 1, feats[r] );
-  }
+  mxArray * ret = mxCreateStructMatrix( 1, 1, 2, fnames );
+  mxSetFieldByNumber( ret, 0, 0, scale );
+  mxSetFieldByNumber( ret, 0, 1, feats );
 
   plhs[0] = ret;
 }
