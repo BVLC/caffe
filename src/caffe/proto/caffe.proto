@@ -139,6 +139,8 @@ message SolverParameter {
   optional bool snapshot_diff = 16 [ default = false];
   // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
   optional int32 solver_mode = 17 [default = 1];
+  // the device_id will that be used in GPU mode. Use device_id=0 in default.
+  optional int32 device_id = 18 [default = 0];
 }
 
 // A message that stores the solver snapshots

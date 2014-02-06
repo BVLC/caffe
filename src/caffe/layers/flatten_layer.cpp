@@ -43,6 +43,7 @@ Dtype FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   caffe_copy(count_, top_diff, bottom_diff);
+  return Dtype(0.);
 }
 
 
@@ -52,6 +53,7 @@ Dtype FlattenLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   caffe_gpu_copy(count_, top_diff, bottom_diff);
+  return Dtype(0.);
 }
 
 INSTANTIATE_CLASS(FlattenLayer);

@@ -32,3 +32,8 @@
 # anything under data/ unless we force include them
 data/*
 
+# anything under distribute
+distribute/*
+
+# user's specified config
+Makefile.config

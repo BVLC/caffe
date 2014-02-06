@@ -94,6 +94,7 @@ void Caffe::DeviceQuery() {
     return;
   }
   CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
+  printf("Device id:                     %d\n", device);
   printf("Major revision number:         %d\n", prop.major);
   printf("Minor revision number:         %d\n", prop.minor);
   printf("Name:                          %s\n", prop.name);

@@ -46,7 +46,7 @@ TEST_F(SyncedMemoryTest, TestCPUWrite) {
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ(((char*)recovered_value)[i], 1);
   }
-  // do another round 
+  // do another round
   cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   memset(cpu_data, 2, mem.size());
@@ -73,7 +73,7 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
     EXPECT_EQ(((char*)cpu_data)[i], 1);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
-  
+
   gpu_data = mem.mutable_gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
   CUDA_CHECK(cudaMemset(gpu_data, 2, mem.size()));
