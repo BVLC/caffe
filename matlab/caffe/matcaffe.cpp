@@ -215,7 +215,7 @@ static void forward(MEX_ARGS) {
 }
 
 
-char const * fnames[] = { "scale", "feat" };
+char const * fnames[] = { "scales", "feat", "imwidth", "imheight" };
 
 void check_dims_equal( uint32_t const num_dims, uint32_t const * const dims_a, uint32_t const * const dims_b ) {
   bool dims_eq = 1;
@@ -394,9 +394,16 @@ static void convnet_featpyramid(MEX_ARGS) {
   float * const scale_ptr = (float*)(mxGetData(scale));
   for( uint32_t r = 0; r < ret_rows; ++r ) { scale_ptr[r] = patchwork.scales_[r]; }
 
-  mxArray * ret = mxCreateStructMatrix( 1, 1, 2, fnames );
+  mxArray * ret = mxCreateStructMatrix( 1, 1, 4, fnames );
   mxSetFieldByNumber( ret, 0, 0, scale );
   mxSetFieldByNumber( ret, 0, 1, feats );
+
+  mxArray * const imwidth = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
+  *(float*)(mxGetData(imwidth)) = (float)patchwork.imwidth_;
+  mxArray * const imheight = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
+  *(float*)(mxGetData(imheight)) = (float)patchwork.imheight_;
+  mxSetFieldByNumber( ret, 0, 2, imwidth );
+  mxSetFieldByNumber( ret, 0, 3, imheight );
 
   plhs[0] = ret;
 }
