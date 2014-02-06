@@ -58,7 +58,7 @@ interval_(pyramid.interval())
 	
 	// Build the patchwork planes
 	const int nbPlanes = BLF(rectangles_);
-    cout << "    nbPlanes = " << nbPlanes << endl;
+	//cout << "    nbPlanes = " << nbPlanes << endl;
 	
 	// Constructs an empty patchwork in case of error
 	if (nbPlanes <= 0)

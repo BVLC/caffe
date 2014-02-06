@@ -43,7 +43,12 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     % put into test mode
     caffe('set_phase_test');
 
-    pyra = caffe('convnet_featpyramid', imfn );
+    % optionally, pass parmeters as second argument to convnet_featpyramid (set here to the defaults)
+    pyra_params.interval = 10;
+    pyra_params.img_padding = 16;
+
+    pyra = caffe('convnet_featpyramid', imfn, pyra_params ); % call with parameters ...
+    % pyra = caffe('convnet_featpyramid', imfn ); % ... or with no parameters
 
     %visualize one scale:
     colormap(gray)

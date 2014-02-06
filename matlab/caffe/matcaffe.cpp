@@ -195,7 +195,6 @@ static void init(MEX_ARGS) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
   }
-
   char* param_file = mxArrayToString(prhs[0]);
   char* model_file = mxArrayToString(prhs[1]);
 
@@ -339,12 +338,19 @@ static void unstitch_planes(vect_rp_mxArray & out, vector<ScaleLocation> const &
     }
     out.push_back(ret);
   }
+}
 
+
+static uint32_t mx_to_u32( string const & err_str, mxArray const * const mxa ) {
+  if( !mxIsNumeric( mxa ) ) { mexErrMsgTxt( (err_str + ": expected a numeric value, got something else. ").c_str()); }
+  uint32_t const sz = mxGetNumberOfElements( mxa );
+  if( sz != 1 ) { mexErrMsgTxt( (err_str+": expected a single element, but got " + str(sz) + ".").c_str()); }
+  return uint32_t(mxGetScalar(mxa));
 }
 
 static void convnet_featpyramid(MEX_ARGS) {
-  if (nrhs != 1) {
-    LOG(ERROR) << "Given " << nrhs << " arguments, expected 1.";
+  if ( (nrhs < 1) || (nrhs > 2) ) {
+    LOG(ERROR) << "Given " << nrhs << " arguments, expected 1 or 2.";
     mexErrMsgTxt("Wrong number of arguments");
   }
   if (nlhs != 1) {
@@ -352,11 +358,32 @@ static void convnet_featpyramid(MEX_ARGS) {
     mexErrMsgTxt("Wrong number of outputs");
   }
   char *fn_cs = mxArrayToString(prhs[0]);
+  if( !fn_cs ) { mexErrMsgTxt("Could not convert first argument to a string."); }
   string const file( fn_cs );
   mxFree(fn_cs);
   
-  int padding = 16;
-  int interval = 10;
+  densenet_params_t params; // ctor sets params to defaults
+
+  if( nrhs > 1 ) { // (try to) parse second arg as params
+    mxArray const * const mx_params = prhs[1];
+    if( !mxIsStruct( mx_params ) ) { 
+      mexErrMsgTxt("Expected second argument to be a struct, but it was not."); }
+    uint32_t const npes = mxGetNumberOfElements( mx_params );
+    if( npes != 1 ) {
+      mexErrMsgTxt(("Expected second argument to be a struct with one element, but it had " + str(npes) + ".").c_str()); }
+    uint32_t const nf = mxGetNumberOfFields( mx_params );
+    for( uint32_t fi = 0; fi != nf; ++fi ) {
+      char const * const fn = mxGetFieldNameByNumber( mx_params, fi );
+      assert( fn );
+      mxArray const * const mx_f = mxGetFieldByNumber( mx_params, 0, fi );
+      assert( mx_f );
+      if( 0 ) { }
+      else if( !strcmp( fn, "interval" ) ) { params.interval = mx_to_u32( "for param interval", mx_f ); }
+      else if( !strcmp( fn, "img_padding" ) ) { params.img_padding = mx_to_u32( "for param img_padding", mx_f ); }
+      else { mexErrMsgTxt( ("unknown parameter " + string(fn) ).c_str() ); }
+    }
+  }
+
   int convnet_subsampling_ratio = 16; //for conv5 layer features
   int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
   int resultDepth = net_->output_blobs()[0]->channels();
@@ -365,7 +392,7 @@ static void convnet_featpyramid(MEX_ARGS) {
   assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
   //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-  Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
+  Patchwork patchwork = stitch_pyramid(file, params.img_padding, params.interval, planeDim); 
   int nbPlanes = patchwork.planes_.size();
 
   vect_p_vect_float blobs_top;
