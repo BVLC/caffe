@@ -38,16 +38,17 @@ Patchwork::Patchwork() : padx_(0), pady_(0), interval_(0)
 {
 }
 
-Patchwork::Patchwork(const JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyramid.pady()),
+Patchwork::Patchwork(JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyramid.pady()),
 interval_(pyramid.interval())
 {
     imwidth_ = pyramid.imwidth_;
     imheight_ = pyramid.imheight_;
     scales_ = pyramid.scales_; //keep track of pyra scales
-
     nbScales = pyramid.levels().size(); //Patchwork class variable
     //cout << "    nbScales = " << nbScales << endl;
     //printf("    MaxRows_ = %d, MaxCols_=%d \n", MaxRows_, MaxCols_);
+
+    prune_big_scales(pyramid); //remove scales that won't fit in (MaxRows, MaxCols)
 	
 	rectangles_.resize(nbScales);
 	
@@ -104,6 +105,29 @@ interval_(pyramid.interval())
                 }
             }
         }
+    }
+}
+
+//remove scales that are bigger than one Patchwork plane
+void Patchwork::prune_big_scales(JPEGPyramid & pyramid){
+
+    int first_valid_scale_idx = 0;
+
+    for(int i=0; i < pyramid.levels_.size(); i++){
+        if( (pyramid.levels_[i].width() > MaxCols_) || (pyramid.levels_[i].height() > MaxRows_) )
+        {
+            first_valid_scale_idx = i;
+            
+        }
+        printf("MaxCols_=%d, MaxRows_=%d, pyramid.levels__[%d].width()=%d, pyramid.levels__[%d].height()=%d \n", MaxCols_, MaxRows_, i, pyramid.levels_[i].width(), i, pyramid.levels_[i].height());
+
+    }
+
+    if(first_valid_scale_idx > 0){
+        scales_.erase( scales_.begin(), scales_.begin() + first_valid_scale_idx);
+        pyramid.levels_.erase( pyramid.levels_.begin(), pyramid.levels_.begin() + first_valid_scale_idx);
+        nbScales = nbScales - first_valid_scale_idx;
+        printf("had to remove first %d scales, because they didn't fit in Patchwork plane \n", first_valid_scale_idx);
     }
 }
 

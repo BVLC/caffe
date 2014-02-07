@@ -49,8 +49,11 @@ public:
 	/// the Patchwork will be empty.
 	/// @note Assumes that the features of the pyramid levels are zero in the padded regions but for
 	/// the last feature, which is assumed to be one.
-	Patchwork(const JPEGPyramid & pyramid);
-	
+	Patchwork(JPEGPyramid & pyramid);
+
+    //remove scales that don't fit in planes
+    void prune_big_scales(JPEGPyramid & pyramid);
+    	
 	/// Returns the amount of horizontal zero padding (in cells).
 	int padx() const;
 	
