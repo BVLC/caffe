@@ -53,7 +53,10 @@ public:
 
     //remove scales that don't fit in planes
     void prune_big_scales(JPEGPyramid & pyramid);
-    	
+    
+    //remove scales that are smaller than the template
+    void prune_small_scales(JPEGPyramid & pyramid, int templateWidth, int templateHeight);
+	
 	/// Returns the amount of horizontal zero padding (in cells).
 	int padx() const;
 	

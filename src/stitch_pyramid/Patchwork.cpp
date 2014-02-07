@@ -42,19 +42,22 @@ Patchwork::Patchwork() : padx_(0), pady_(0), interval_(0)
 Patchwork::Patchwork(JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyramid.pady()),
 interval_(pyramid.interval())
 {
+    int sbin = 16;  //convnet_downsampling_factor -- TODO: take as user input
+    int templateWidth = 5*sbin; //TODO: take as user input
+    int templateHeight = 15*sbin; 
+
     imwidth_ = pyramid.imwidth_;
     imheight_ = pyramid.imheight_;
     scales_ = pyramid.scales_; //keep track of pyra scales
     nbScales = pyramid.levels().size(); //Patchwork class variable
-    //printf("    MaxRows_ = %d, MaxCols_=%d \n", MaxRows_, MaxCols_);
 
     //printf("        before prune_big_scales(). scales_.size()=%ld, pyramid.levels_.size()=%ld \n", scales_.size(), pyramid.levels_.size());
-
     prune_big_scales(pyramid); //remove scales that won't fit in (MaxRows, MaxCols)
-
+    prune_small_scales(pyramid, templateWidth, templateHeight);
     cout << "    nbScales = " << nbScales << endl;
-	rectangles_.resize(nbScales);
     //printf("        after prune_big_scales(). scales_.size()=%ld, pyramid.levels_.size()=%ld \n", scales_.size(), pyramid.levels_.size());
+
+    rectangles_.resize(nbScales);
 	
 	for (int i = 0; i < nbScales; ++i) {
         rectangles_[i].first.setWidth(pyramid.levels()[i].width()); //stitching includes padding in the img size.
@@ -128,6 +131,31 @@ void Patchwork::prune_big_scales(JPEGPyramid & pyramid){
         pyramid.levels_.erase( pyramid.levels_.begin(), pyramid.levels_.begin() + first_valid_scale_idx);
         nbScales = nbScales - first_valid_scale_idx;
         printf("had to remove first %d scales, because they didn't fit in Patchwork plane \n", first_valid_scale_idx);
+    }
+}
+
+//remove scales that are smaller than the template
+void Patchwork::prune_small_scales(JPEGPyramid & pyramid, int templateWidth, int templateHeight){
+
+    int last_valid_scale_idx = 0;
+
+    //for(int i=0; i < pyramid.levels_.size(); i++){
+    for(int i = pyramid.levels_.size()-1; i >= 0; i--){
+//printf("pyramid.levels_[%d].width=%d, templateWidth=%d \n", i, pyramid.levels_[i].width(), templateWidth);
+        if( ((pyramid.levels_[i].width() >= templateWidth) && (pyramid.levels_[i].height() >= templateHeight)) )
+        {
+            last_valid_scale_idx = i;
+            break;
+        }
+    }
+printf(" last_valid_scale_idx = %d \n", last_valid_scale_idx);
+
+    if(last_valid_scale_idx < pyramid.levels_.size()){
+        scales_.erase( scales_.begin() + last_valid_scale_idx, scales_.end() );
+        pyramid.levels_.erase( pyramid.levels_.begin() + last_valid_scale_idx, pyramid.levels_.end());
+        int num_scales_to_remove = nbScales - last_valid_scale_idx;
+        nbScales = nbScales - num_scales_to_remove;
+        printf("had to remove last %d scales, because they were smaller than the template \n", num_scales_to_remove);
     }
 }
 
