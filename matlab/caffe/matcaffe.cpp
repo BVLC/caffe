@@ -310,6 +310,10 @@ static mxArray * unstitch_planes( vector<ScaleLocation> const & scaleLocs, vect_
           uint32_t const dp_y = y + scaleLocs[i].yMin;
           uint32_t const dp_ix = dp_x + dp_y*dp_dims[0] + d*dp_dims[0]*dp_dims[1];
           //ret_scale_data[rix] = float(d) + 1000.0*y + 1000000.0*x;
+	  if( dp_ix >= dp->size() ) {
+	    printf( "x=%s scaleLocs[i].xMin=%s y=%s scaleLocs[i].yMin=%s scaleLocs[i].height=%s scaleLocs[i].width=%s\n", str(x).c_str(), str(scaleLocs[i].xMin).c_str(), str(y).c_str(), str(scaleLocs[i].yMin).c_str(), str(scaleLocs[i].height).c_str(), str(scaleLocs[i].width).c_str() );
+	    printf( "dp_ix=%s dp->size()=%s dp_x=%s width=%s dp_y=%s height=%s d=%s depth=%s\n", str(dp_ix).c_str(), str(dp->size()).c_str(), str(dp_x).c_str(), str(width).c_str(), str(dp_y).c_str(), str(height).c_str(), str(d).c_str(), str(depth).c_str() );
+	  }
           assert(dp_ix < dp->size());
           ret_scale_data[rix] = dp->at(dp_ix);
         }
@@ -387,7 +391,7 @@ static void convnet_featpyramid(MEX_ARGS) {
   //prep input data for Caffe feature extraction    
   for(int planeID=0; planeID<nbPlanes; planeID++){
     vect_p_vect_float blobs_bottom; //input buffer(s) for Caffe::Forward
-assert(planeID < patchwork.planes_.size());  
+    assert((uint32_t)planeID < patchwork.planes_.size());  
     blobs_bottom.push_back( JPEGImage_to_p_float(patchwork.planes_.at(planeID)) ); 
     //raw_do_forward( blobs_bottom ); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
     raw_do_forward( net_, blobs_bottom ); 
