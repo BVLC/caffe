@@ -261,11 +261,12 @@ p_vect_float JPEGImage_to_p_float( JPEGImage &jpeg ){
     float const ch_mean = IMAGENET_MEAN_RGB[ch_src];
     for(int y=0; y<height; y++){
       for(int x=0; x<width; x++){
-	//jpeg:           row-major, packed RGB, RGB, ...          uint8_t.
-	//rp_float: row-major, unpacked BBBB..,GGGG..,RRRR.. float.
-	uint32_t const rix = ch_dst*height*width+y*width+x;
-	ret->at(rix) = jpeg.bits()[y*width*depth + x*depth + ch_src] - ch_mean;
-      }
+	    //jpeg:           row-major, packed RGB, RGB, ...          uint8_t.
+	    //rp_float: row-major, unpacked BBBB..,GGGG..,RRRR.. float.
+	    uint32_t const rix = ch_dst*height*width+y*width+x;
+        assert(rix < ret->size());
+	    ret->at(rix) = jpeg.bits()[y*width*depth + x*depth + ch_src] - ch_mean;
+        }
     }
   }
   return ret;
@@ -302,15 +303,16 @@ static mxArray * unstitch_planes( vector<ScaleLocation> const & scaleLocs, vect_
     mwSize ret_sz = sz_from_dims( 3, ret_dims );
     for( uint32_t x = 0; x < uint32_t(ret_dims[2]); ++x ) {
       for( uint32_t y = 0; y < uint32_t(ret_dims[1]); ++y ) {
-	for( uint32_t d = 0; d < uint32_t(ret_dims[0]); ++d ) {
-	  uint32_t const rix = d + y*ret_dims[0] + x*ret_dims[0]*ret_dims[1];
-	  assert( rix < uint32_t(ret_sz) );
-	  uint32_t const dp_x = x + scaleLocs[i].xMin;
-	  uint32_t const dp_y = y + scaleLocs[i].yMin;
-	  uint32_t const dp_ix = dp_x + dp_y*dp_dims[0] + d*dp_dims[0]*dp_dims[1];
-	  //ret_scale_data[rix] = float(d) + 1000.0*y + 1000000.0*x;
-	  ret_scale_data[rix] = dp->at(dp_ix);
-	}
+	    for( uint32_t d = 0; d < uint32_t(ret_dims[0]); ++d ) {
+          uint32_t const rix = d + y*ret_dims[0] + x*ret_dims[0]*ret_dims[1];
+          assert( rix < uint32_t(ret_sz) );
+          uint32_t const dp_x = x + scaleLocs[i].xMin;
+          uint32_t const dp_y = y + scaleLocs[i].yMin;
+          uint32_t const dp_ix = dp_x + dp_y*dp_dims[0] + d*dp_dims[0]*dp_dims[1];
+          //ret_scale_data[rix] = float(d) + 1000.0*y + 1000000.0*x;
+          assert(dp_ix < dp->size());
+          ret_scale_data[rix] = dp->at(dp_ix);
+        }
       }
     }
     mxSetCell( ret, i, ret_scale );
@@ -384,7 +386,8 @@ static void convnet_featpyramid(MEX_ARGS) {
   vect_p_vect_float blobs_top;
   //prep input data for Caffe feature extraction    
   for(int planeID=0; planeID<nbPlanes; planeID++){
-    vect_p_vect_float blobs_bottom; //input buffer(s) for Caffe::Forward 
+    vect_p_vect_float blobs_bottom; //input buffer(s) for Caffe::Forward
+assert(planeID < patchwork.planes_.size());  
     blobs_bottom.push_back( JPEGImage_to_p_float(patchwork.planes_.at(planeID)) ); 
     //raw_do_forward( blobs_bottom ); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
     raw_do_forward( net_, blobs_bottom ); 

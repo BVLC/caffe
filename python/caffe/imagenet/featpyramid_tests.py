@@ -81,9 +81,10 @@ def test_featpyramid_allScales(caffenet, imgFname):
 if __name__ == "__main__":
 
     #pretend that these flags came off the command line:
-    imgFname = './pascal_009959.jpg'
+    #imgFname = './pascal_009959.jpg'
+    imgFname = '/media/big_disk/datasets/INRIA_PASCAL_jpg/VOCdevkit/VOC2007/Images/crop001002.jpg'
     #model_def = '../../../examples/imagenet_deploy.prototxt'
-    model_def = './imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt' 
+    model_def = './imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
     pretrained_model = '../../../examples/alexnet_train_iter_470000'
     use_gpu = True
     

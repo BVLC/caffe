@@ -26,6 +26,7 @@
 #include <numeric>
 #include <set>
 #include <iostream>
+#include <assert.h>
 
 using namespace FFLD;
 using namespace std;
@@ -45,12 +46,15 @@ interval_(pyramid.interval())
     imheight_ = pyramid.imheight_;
     scales_ = pyramid.scales_; //keep track of pyra scales
     nbScales = pyramid.levels().size(); //Patchwork class variable
-    //cout << "    nbScales = " << nbScales << endl;
     //printf("    MaxRows_ = %d, MaxCols_=%d \n", MaxRows_, MaxCols_);
 
+    //printf("        before prune_big_scales(). scales_.size()=%ld, pyramid.levels_.size()=%ld \n", scales_.size(), pyramid.levels_.size());
+
     prune_big_scales(pyramid); //remove scales that won't fit in (MaxRows, MaxCols)
-	
+
+    cout << "    nbScales = " << nbScales << endl;
 	rectangles_.resize(nbScales);
+    //printf("        after prune_big_scales(). scales_.size()=%ld, pyramid.levels_.size()=%ld \n", scales_.size(), pyramid.levels_.size());
 	
 	for (int i = 0; i < nbScales; ++i) {
         rectangles_[i].first.setWidth(pyramid.levels()[i].width()); //stitching includes padding in the img size.
@@ -59,11 +63,9 @@ interval_(pyramid.interval())
 	
 	// Build the patchwork planes
 	const int nbPlanes = BLF(rectangles_);
-	//cout << "    nbPlanes = " << nbPlanes << endl;
+	cout << "    nbPlanes = " << nbPlanes << endl;
 	
-	// Constructs an empty patchwork in case of error
-	if (nbPlanes <= 0)
-		return;
+    assert(nbPlanes >= 0);
 	
 	planes_.resize(nbPlanes);
     #pragma omp parallel for
@@ -111,16 +113,14 @@ interval_(pyramid.interval())
 //remove scales that are bigger than one Patchwork plane
 void Patchwork::prune_big_scales(JPEGPyramid & pyramid){
 
-    int first_valid_scale_idx = 0;
+    int first_valid_scale_idx = pyramid.levels_.size();
 
     for(int i=0; i < pyramid.levels_.size(); i++){
-        if( (pyramid.levels_[i].width() > MaxCols_) || (pyramid.levels_[i].height() > MaxRows_) )
+        if( !((pyramid.levels_[i].width() > MaxCols_) || (pyramid.levels_[i].height() > MaxRows_)) )
         {
             first_valid_scale_idx = i;
-            
+            break;
         }
-        printf("MaxCols_=%d, MaxRows_=%d, pyramid.levels__[%d].width()=%d, pyramid.levels__[%d].height()=%d \n", MaxCols_, MaxRows_, i, pyramid.levels_[i].width(), i, pyramid.levels_[i].height());
-
     }
 
     if(first_valid_scale_idx > 0){

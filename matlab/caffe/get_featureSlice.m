@@ -22,15 +22,13 @@ function [featureSlice, scaleIdx, roundedBox_in_px] = get_featureSlice(pyra, bbo
     scale_to_use = mean(bbox_desc_scale); %avg of scale factors for x and y dims.
     [scale_to_use, scaleIdx] = findNearestScale(scale_to_use, pyra.scales); %best precomputed approx of scale_to_use
 
-    %padx_desc_scaled = (pyra.padx / pyra.sbin) * scale_to_use; %in descriptor coords, at scale_to_use.
-    %pady_desc_scaled = (pyra.pady / pyra.sbin) * scale_to_use;
-    padx_desc_scaled = pyra.padx; %AHA, this is really in HOG cells and not image pixels.
+    padx_desc_scaled = pyra.padx; %this is in descriptor cells and not image pixels.
     pady_desc_scaled = pyra.pady;
 
 
   %3. rip out a slice from the appropriate scale
   
-    %TODO: center it on (bbox_desc.x2 - bbox_desc.x1), (bbox_desc.y2 - bbox_desc.y1)
+    % center bbox_to_use on (bbox_desc.x2 - bbox_desc.x1), (bbox_desc.y2 - bbox_desc.y1)
 
     bbox_desc_x_center = bbox_desc.x1 + (bbox_desc.x2 - bbox_desc.x1)/2.0;
     bbox_desc_y_center = bbox_desc.y1 + (bbox_desc.y2 - bbox_desc.y1)/2.0;

@@ -304,10 +304,15 @@ struct CaffeNet {
     int nbScales = scaleLocs.size();
     int batchsize = 1; //TODO: assert that batchsize really is 1.
 
+printf("in unstitch planes \n");
+
     for(int i=0; i<nbScales; i++) //go from largest to smallest scale
     { 
 
       int planeID = scaleLocs[i].planeID;
+printf("planeID=%d, len(descriptor_planes)=%ld \n", planeID, len(descriptor_planes));
+
+      assert(planeID < len(descriptor_planes));
       PyArrayObject* currPlane_npy = (PyArrayObject*)((boost::python::object)descriptor_planes[planeID]).ptr();
       npy_intp view_dims[4] = {batchsize, depth, scaleLocs[i].height, scaleLocs[i].width}; //in floats
 
@@ -318,13 +323,16 @@ struct CaffeNet {
                                                                                      0, 0, scaleLocs[i].yMin, scaleLocs[i].xMin), 
                                                             0, 0, 0 );
       Py_INCREF(currPlane_npy); //PyArray_SetBaseObject steals a reference
-      assert( PyArray_SetBaseObject(view_npy, pyramid_float_npy_boost.ptr()) == 0); //==0 for success, 1 for failure
+      PyArray_SetBaseObject(view_npy, (PyObject*)currPlane_npy);
+      //int const ret = PyArray_SetBaseObject(view_npy, (PyObject*)currPlane_npy);
+      //assert(ret == 0); //==0 for success, 1 for failure
 
       boost::python::list blobs_top_boost_view;
       boost::python::object view_npy_boost(boost::python::handle<>((PyObject*)view_npy));
       unstitched_features.append(view_npy_boost);
     }
 
+printf("success in unstitch_planes \n");
     return unstitched_features;
   }
 

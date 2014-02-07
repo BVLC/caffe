@@ -100,7 +100,8 @@ LIBRARIES := cudart cublas curand \
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
-COMMON_FLAGS := -DNDEBUG -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+COMMON_FLAGS := -O2 -UNDEBUG $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
+#COMMON_FLAGS := -DNDEBUG -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
 NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
@@ -164,7 +165,7 @@ py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY) $(STITCHPYRAMID_SO)
 mat$(PROJECT): mat
 
 mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
-	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
+	$(MATLAB_DIR)/bin/mex -g $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
 		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" -I./python/caffe \
 		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -L./src/stitch_pyramid -lPyramidStitcher \
 		-o $(MAT$(PROJECT)_SO)
