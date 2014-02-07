@@ -332,7 +332,7 @@ static mxArray * u32_to_mx( uint32_t const val ) { // returned as float (i.e. sc
   return mxa;
 }
 
-char const * fnames[] = { "scales", "feat", "imwidth", "imheight", "feat_padx", "feat_pady" };
+char const * fnames[] = { "scales", "feat", "imwidth", "imheight", "feat_padx", "feat_pady", "sbin" };
 
 static void convnet_featpyramid(MEX_ARGS) {
   if ( (nrhs < 1) || (nrhs > 2) ) {
@@ -407,6 +407,7 @@ static void convnet_featpyramid(MEX_ARGS) {
   mxSetFieldByNumber( ret, 0, 3, u32_to_mx( patchwork.imheight_ ) );
   mxSetFieldByNumber( ret, 0, 4, u32_to_mx( 1 ) );
   mxSetFieldByNumber( ret, 0, 5, u32_to_mx( 1 ) );
+  mxSetFieldByNumber( ret, 0, 6, u32_to_mx( convnet_subsampling_ratio ) );
 
   plhs[0] = ret;
 }

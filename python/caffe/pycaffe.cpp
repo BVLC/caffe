@@ -29,6 +29,7 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using boost::python::extract;
 using boost::python::len;
 using boost::python::list;
+using boost::python::dict;
 using boost::python::object;
 using boost::python::handle;
 using boost::python::vector_indexing_suite;
@@ -328,10 +329,19 @@ struct CaffeNet {
   }
 
    //void extract_featpyramid(string file){
-  boost::python::dict extract_featpyramid(string file){
+  boost::python::dict extract_featpyramid(string file, dict params_dict = dict() ){
 
-    int padding = 16;
-    int interval = 10;
+    densenet_params_t params; // ctor sets params to defaults
+    list params_keys = params_dict.keys();
+    for( uint32_t i = 0; i < len(params_keys); ++i) {
+      string const fn = extract<string>(params_keys[i]);
+      object val = params_dict[params_keys[i]];
+      if( 0 ) { }
+      else if( fn == "interval" ) { params.interval = extract<uint32_t>(val); }
+      else if( fn == "img_padding" ) { params.img_padding = extract<uint32_t>(val); }
+      else { throw runtime_error("unknown parameter " + string(fn) ); }
+    }
+
     int convnet_subsampling_ratio = 16; //for conv5 layer features
     int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
     int resultDepth = net_->output_blobs()[0]->channels();
@@ -340,7 +350,7 @@ struct CaffeNet {
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
     //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-    Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
+    Patchwork patchwork = stitch_pyramid(file, params.img_padding, params.interval, planeDim); 
     int nbPlanes = patchwork.planes_.size();
 
     boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward 
@@ -378,6 +388,9 @@ struct CaffeNet {
     d["scales"] = scales_npy_boost;
     d["imwidth"] = patchwork.imwidth_; //input image dims
     d["imheight"] = patchwork.imheight_;
+    d["feat_padx"] = 1u; // placeholder
+    d["feat_pady"] = 1u; // placeholder
+    d["sbin"] = convnet_subsampling_ratio;
 
     return d;
   }
@@ -527,6 +540,7 @@ struct CaffeNet {
   shared_ptr<Net<float> > net_;
 };
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(CaffeNet_extract_featpyramid_overloads, CaffeNet::extract_featpyramid, 1, 2);
 
 
 // The boost python module definition.
@@ -545,7 +559,7 @@ BOOST_PYTHON_MODULE(pycaffe) {
       .def("testString",      &CaffeNet::testString)
       .def("test_return_dict", &CaffeNet::test_return_dict) 
       .def("testInt",         &CaffeNet::testInt)
-      .def("extract_featpyramid",         &CaffeNet::extract_featpyramid) //NEW
+      .def("extract_featpyramid",         &CaffeNet::extract_featpyramid, CaffeNet_extract_featpyramid_overloads()) //NEW
       .def("blobs",           &CaffeNet::blobs)
       .def("params",          &CaffeNet::params);
 

@@ -39,8 +39,13 @@ def test_pyramid_IO(caffenet, imgFname):
 
 def test_featpyramid_allScales(caffenet, imgFname):
 
+    densenet_params = dict()
+    densenet_params['interval'] = 10
+    densenet_params['img_padding'] = 16
+
     start_time = time.time()
-    pyra = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+    pyra = caffenet.extract_featpyramid(imgFname, densenet_params) # THE CRUX ...
+    # pyra = caffenet.extract_featpyramid(imgFname) # ... or THE CRUX without parameters
     pyra_time = time.time() - start_time
     print "    computed pyra in %f sec" %pyra_time
 
@@ -49,6 +54,11 @@ def test_featpyramid_allScales(caffenet, imgFname):
     # optional breakpoint...
     #from IPython import embed
     #embed()
+    output_dir = 'output_pyra'
+    try:
+        os.makedirs( output_dir )
+    except OSError, e:
+        pass
 
     for i in xrange(0, len(feat)):
         print 'feat[%d] shape: '%i
@@ -62,7 +72,7 @@ def test_featpyramid_allScales(caffenet, imgFname):
         pyplot.figure()
         pyplot.title('Welcome to deep learning land. You have arrived.')
         pyplot.imshow(flat_descriptor, cmap = cm.gray, interpolation='nearest')
-        pylab.savefig('output_pyra/flat_descriptor_scale%d.jpg' %i)
+        pylab.savefig( output_dir + '/flat_descriptor_scale%d.jpg' % i)
 
     print "\n pyra scales:"
     print pyra["scales"]
@@ -73,8 +83,8 @@ if __name__ == "__main__":
     #pretend that these flags came off the command line:
     imgFname = './pascal_009959.jpg'
     #model_def = '../../../examples/imagenet_deploy.prototxt'
-    model_def = './imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
-    pretrained_model = '../../../alexnet_train_iter_470000'
+    model_def = './imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt' 
+    pretrained_model = '../../../examples/alexnet_train_iter_470000'
     use_gpu = True
     
     caffenet = caffe.CaffeNet(model_def, pretrained_model)
