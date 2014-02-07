@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <assert.h>
 
 using namespace FFLD;
 using namespace std;
@@ -61,6 +62,8 @@ vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
 {
     int nbScales = patchwork.nbScales;
     vector<ScaleLocation> scaleLocations(nbScales);
+    int planeWidth = patchwork.MaxCols();
+    int planeHeight = patchwork.MaxRows();
 
     for(int i=0; i<nbScales; i++)
     {
@@ -74,6 +77,9 @@ vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
 
         scaleLocations[i].planeID = patchwork.rectangles_[i].second;
 
+
+        assert( (scaleLocations[i].xMin + scaleLocations[i].width) <= planeWidth );
+        assert( (scaleLocations[i].yMin + scaleLocations[i].height) <= planeHeight );
     }
 
     return scaleLocations;

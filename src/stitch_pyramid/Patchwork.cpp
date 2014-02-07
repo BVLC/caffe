@@ -148,8 +148,8 @@ void Patchwork::prune_small_scales(JPEGPyramid & pyramid, int templateWidth, int
             break;
         }
     }
-printf(" last_valid_scale_idx = %d \n", last_valid_scale_idx);
 
+    //printf(" last_valid_scale_idx = %d \n", last_valid_scale_idx);
     if(last_valid_scale_idx < pyramid.levels_.size()){
         scales_.erase( scales_.begin() + last_valid_scale_idx, scales_.end() );
         pyramid.levels_.erase( pyramid.levels_.begin() + last_valid_scale_idx, pyramid.levels_.end());
