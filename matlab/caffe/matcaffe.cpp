@@ -215,8 +215,6 @@ static void forward(MEX_ARGS) {
 }
 
 
-char const * fnames[] = { "scales", "feat", "imwidth", "imheight" };
-
 void check_dims_equal( uint32_t const num_dims, uint32_t const * const dims_a, uint32_t const * const dims_b ) {
   bool dims_eq = 1;
   for( uint32_t dim = 0; dim < num_dims; ++dim ) { if( dims_a[dim] != dims_b[dim] ) { dims_eq = 0; } }
@@ -328,6 +326,14 @@ static uint32_t mx_to_u32( string const & err_str, mxArray const * const mxa ) {
   return uint32_t(mxGetScalar(mxa));
 }
 
+static mxArray * u32_to_mx( uint32_t const val ) { // returned as float (i.e. scalar single)
+  mxArray * const mxa = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
+  *(float*)(mxGetData(mxa)) = (float)val;
+  return mxa;
+}
+
+char const * fnames[] = { "scales", "feat", "imwidth", "imheight", "feat_padx", "feat_pady" };
+
 static void convnet_featpyramid(MEX_ARGS) {
   if ( (nrhs < 1) || (nrhs > 2) ) {
     LOG(ERROR) << "Given " << nrhs << " arguments, expected 1 or 2.";
@@ -394,16 +400,13 @@ static void convnet_featpyramid(MEX_ARGS) {
   float * const scale_ptr = (float*)(mxGetData(scale));
   for( uint32_t r = 0; r < ret_rows; ++r ) { scale_ptr[r] = patchwork.scales_[r]; }
 
-  mxArray * ret = mxCreateStructMatrix( 1, 1, 4, fnames );
+  mxArray * ret = mxCreateStructMatrix( 1, 1, sizeof(fnames)/sizeof(char*), fnames ); // see fnames for field names
   mxSetFieldByNumber( ret, 0, 0, scale );
   mxSetFieldByNumber( ret, 0, 1, feats );
-
-  mxArray * const imwidth = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
-  *(float*)(mxGetData(imwidth)) = (float)patchwork.imwidth_;
-  mxArray * const imheight = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
-  *(float*)(mxGetData(imheight)) = (float)patchwork.imheight_;
-  mxSetFieldByNumber( ret, 0, 2, imwidth );
-  mxSetFieldByNumber( ret, 0, 3, imheight );
+  mxSetFieldByNumber( ret, 0, 2, u32_to_mx( patchwork.imwidth_ ) );
+  mxSetFieldByNumber( ret, 0, 3, u32_to_mx( patchwork.imheight_ ) );
+  mxSetFieldByNumber( ret, 0, 4, u32_to_mx( 1 ) );
+  mxSetFieldByNumber( ret, 0, 5, u32_to_mx( 1 ) );
 
   plhs[0] = ret;
 }
