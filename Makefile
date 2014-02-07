@@ -87,16 +87,15 @@ MKL_INCLUDE_DIR := $(MKL_DIR)/include
 MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
-LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR) /usr/lib/atlas-base
+LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
 LIBRARIES := cudart cublas curand \
-	atlas cblas \
+	openblas \
 	pthread \
 	glog protobuf \
 	leveldb snappy \
 	boost_system \
 	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
-	# mkl_rt mkl_intel_thread 
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
@@ -104,7 +103,7 @@ COMMON_FLAGS := -DNDEBUG -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
 NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
-		$(foreach library,$(LIBRARIES),-l$(library)) -Wl,-rpath=/usr/lib/atlas-base
+		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 
