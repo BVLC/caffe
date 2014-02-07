@@ -45,6 +45,12 @@ You will also need other packages, most of which can be installed via apt-get us
 
     sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev
 
+To enjoy a parallelization speed-up in CPU mode, install a multi-threaded BLAS library such as OpenBLAS:
+
+    sudo add-apt-repository ppa:marutter/rdev
+    sudo apt-get update
+    sudo apt-get install libopenblas-base
+
 The only exception being the google logging library, which does not exist in the Ubuntu 12.04 repository. To install it, do:
 
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
