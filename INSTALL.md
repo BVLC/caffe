@@ -23,6 +23,7 @@ We have also successfully compiled caffe on OS X 10.8.5, using homebrew-installe
 * CUDA
 * Boost
 * MKL (but see the boost-eigen branch for a boost/Eigen3 port)
+* A multi-threaded BLAS library such as OpenBLAS
 * OpenCV
 * glog, gflags, protobuf, leveldb, snappy
 * For the Python wrapper: python, numpy (>= 1.7 preferred), and boost_python
@@ -39,6 +40,12 @@ If you would like to compile the Matlab wrapper, you will need to install Matlab
 You will also need other packages, most of which can be installed via apt-get using:
 
     sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev
+
+With 8 or more CPU threads, Caffe runs as fast as on a decent GPU. If you would like to enjoy the speed-up brought by OpenBLAS:
+
+    sudo add-apt-repository ppa:marutter/rdev
+    sudo apt-get update
+    sudo apt-get install libopenblas-base
 
 The only exception being the google logging library, which does not exist in the Ubuntu 12.04 repository. To install it, do:
 
