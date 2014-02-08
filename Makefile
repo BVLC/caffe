@@ -68,21 +68,19 @@ MKL_INCLUDE_DIR := $(MKL_DIR)/include
 MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
-LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR) /usr/lib/atlas-base
-LIBRARIES := cudart cublas curand protobuf \
-        opencv_core opencv_highgui opencv_imgproc \
-	glog \
-	atlas cblas \
-	leveldb snappy pthread boost_system 
-	# mkl_rt mkl_intel_thread 
+LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
+LIBRARIES := cudart cublas curand pthread gomp \
+	glog protobuf leveldb snappy boost_system \
+	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
 COMMON_FLAGS := -DNDEBUG -O2 $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
+CXXFLAGS += -pthread -fPIC -fopenmp $(COMMON_FLAGS)
 NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
-		$(foreach library,$(LIBRARIES),-l$(library)) -Wl,-rpath=/usr/lib/atlas-base
+		$(foreach library,$(LIBRARIES),-l$(library))
+TEST_LDFLAGS += -lopenblas
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 
@@ -135,7 +133,7 @@ runtest: test
 	for testbin in $(TEST_BINS); do $$testbin $(TEST_GPUID); done
 
 $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
-	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(LDFLAGS) $(TEST_LDFLAGS) $(WARNINGS)
 
 $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
