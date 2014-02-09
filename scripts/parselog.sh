@@ -7,18 +7,6 @@ if [ "$#" -lt 1 ]
 then
 echo "Usage parselog.sh /path_to/caffe.log"
 fi
-if [ "$#" -gt 1 ]
-then
- INIT=$2
-else
- INIT=0
-fi
-if [ "$#" -gt 2 ]
-then
- INC=$3
-else
- INC=1000
-fi
 LOG=`basename $1`
 grep -B 2 'Test ' $1 > aux.txt
 grep 'Iteration ' aux.txt | awk -F ',| ' '{print $7}' > aux0.txt
