@@ -111,7 +111,7 @@ void Solver<Dtype>::Test() {
     }
   }
   for (int i = 0; i < test_score.size(); ++i) {
-    LOG(INFO) << "Test score #" << i << ": "
+    LOG(INFO) << "Iteration " << iter_ << ", Test score #" << i << ": "
         << test_score[i] / param_.test_iter();
   }
 }
