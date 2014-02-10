@@ -141,6 +141,12 @@ message SolverParameter {
   optional int32 solver_mode = 17 [default = 1];
   // the device_id will that be used in GPU mode. Use device_id=0 in default.
   optional int32 device_id = 18 [default = 0];
+  enum TerminationCriterion {
+    MAX_ITER = 0; // terminates after max_iter
+    TEST_ACCURACY = 1; // terminates when the test set accuracy doesn't improve for test_accuracy_stop_countdown iterations
+  }
+  optional TerminationCriterion termination_criterion = 19 [default = MAX_ITER]; // The condition that has to be met for the training to stop
+  optional int32 test_accuracy_stop_countdown = 20 [default = 10]; // the number of iterations of non-increasing test accuracy before stopping
 }
 
 // A message that stores the solver snapshots
