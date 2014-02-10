@@ -64,14 +64,47 @@ Now that you have compiled Caffe, check out the [MNIST demo](mnist.html) and the
 
 ## Compiling on OS X.
 
-OS X 10.9 (Mavericks) is currently not supported, because current (5.5) CUDA compilers link against libstdc++, while 10.9 compilers link against libc++.
-On 10.8, we have successfully compiled and run caffe on GPU-equipped Macbook Pros.
+On 10.8, we have successfully compiled and run caffe on GPU-equipped Macbook Pros. Caffe also runs on 10.9, but you need to do a few extra steps described below.
+
+
+### Install dependencies using Homebrew
 
 From a clean install of the OS (or from a wiped `/usr/local`), install [homebrew](http://brew.sh/), then `brew install python`, then `brew install boost --build_from_source`.
 The reason to build boost from source is so that it links against the homebrew python.
 Homebrew handles all the other dependencies as well: `opencv`, `leveldb`, etc.
 For python packages like `numpy` and `scipy`, we recommend doing `brew tap homebrew/python`, and then installing them with homebrew.
+
+#### 10.9 additional notes
+
+In OS X 10.9 Apple changed to clang as the default compiler. Clang uses libc++ as the standard library by default, while Nvidia CUDA currently works with libstdc++. This makes it necessary to change the compilation settings for each of the dependencies. We do this by modifying the homebrew formulas, before installing any package. Make sure homebrew doesn't install any software dependencies in the background.
+
+For each package that you install through homebrew do the following:
+
+1. Open formula in editor: `brew edit FORMULA`
+2. Make the following changes:
+```
+def install
+    ...
+
+    #ADD THE FOLLOWING:
+    ENV.append "CXXFLAGS", '-stdlib=libstdc++'
+    ENV.append "CFLAGS", '-stdlib=libstdc++'
+    ENV.append "LDFLAGS", '-stdlib=libstdc++ -lstdc++'
+    #The following is necessary because libtool liks to strip LDFLAGS:
+    ENV.cxx = "/usr/bin/clang -stdlib=libstdc++"
+
+    ...
+```
+3. Uninstall forumla in case it was already installed: `brew uninstall FORUMLA`
+4. Reinstall: `brew install --build-from-source --fresh -vd FORMULA`
+
+After you did this the rest of the installation is the same as under 10.8.
+
+### CUDA and MKL
+
 CUDA and MKL are very straightforward to install; download from NVIDIA and Intel websites.
+
+### Compiling caffe
 
 Here are the relevant parts of the Makefile.config after all this:
 
