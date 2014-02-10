@@ -84,7 +84,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 template <typename Dtype>
 void Solver<Dtype>::Test() {
-  LOG(INFO) << "Testing net";
+  LOG(INFO) << "Iteration " << iter_ << ", Testing net";
   NetParameter net_param;
   net_->ToProto(&net_param);
   CHECK_NOTNULL(test_net_.get())->CopyTrainedLayersFrom(net_param);
@@ -111,7 +111,7 @@ void Solver<Dtype>::Test() {
     }
   }
   for (int i = 0; i < test_score.size(); ++i) {
-    LOG(INFO) << "Iteration " << iter_ << ", Test score #" << i << ": "
+    LOG(INFO) << "Test score #" << i << ": "
         << test_score[i] / param_.test_iter();
   }
 }

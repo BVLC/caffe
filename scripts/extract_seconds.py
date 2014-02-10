@@ -30,7 +30,7 @@ def extract_seconds(input_file, output_file):
         if not start_time_found and line.find('Solving') != -1:
             start_time_found = True
             start_datetime = extract_datetime_from_line(line, log_created_year)
-        if line.find(', loss = ') != -1:
+        if line.find('Iteration') != -1:
             dt = extract_datetime_from_line(line, log_created_year)
             elapsed_seconds = (dt - start_datetime).total_seconds()
             out.write('%f\n' % elapsed_seconds)
