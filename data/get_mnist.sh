@@ -15,9 +15,7 @@ gunzip train-labels-idx1-ubyte.gz
 gunzip t10k-images-idx3-ubyte.gz
 gunzip t10k-labels-idx1-ubyte.gz
 
-echo "Creating leveldb..."
-
-../build/examples/convert_mnist_data.bin train-images-idx3-ubyte train-labels-idx1-ubyte mnist-train-leveldb
-../build/examples/convert_mnist_data.bin t10k-images-idx3-ubyte t10k-labels-idx1-ubyte mnist-test-leveldb
+# Creation is split out because leveldb sometimes causes segfault
+# and needs to be re-created.
 
 echo "Done."
