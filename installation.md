@@ -67,12 +67,12 @@ To use Caffe with python, you will need to add `/path/to/caffe/python` or `/path
 
 Now that you have compiled Caffe, check out the [MNIST demo](mnist.html) and the pretrained [ImageNet example](imagenet.html).
 
-## Compiling on OS X.
+### Compiling on OS X.
 
 OS X 10.9 (Mavericks) is currently not supported, because current (5.5) CUDA compilers link against libstdc++, while 10.9 compilers link against libc++.
 On 10.8, we have successfully compiled and run caffe on GPU-equipped Macbook Pros.
 
-From a clean install of the OS (or from a wiped `/usr/local`), install [homebrew](http://brew.sh/), then `brew install python`, then `brew install boost --build_from_source`.
+From a clean install of the OS (or from a wiped `/usr/local`), install [homebrew](http://brew.sh/), then `brew install python`, then `brew install boost --build-from-source`.
 The reason to build boost from source is so that it links against the homebrew python.
 Homebrew handles all the other dependencies as well: `opencv`, `leveldb`, etc.
 For python packages like `numpy` and `scipy`, we recommend doing `brew tap homebrew/python`, and then installing them with homebrew.
