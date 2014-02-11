@@ -69,11 +69,19 @@ int main(int argc, char** argv) {
   const int maxKeyLength = 256;
   char key_cstr[maxKeyLength];
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
+  int data_size;
+  bool data_size_initialized = false;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first, lines[line_id].second,
                           &datum)) {
       continue;
     };
+    if (!data_size_initialized) {
+      data_size = datum.channels() * datum.height() * datum.width();
+    } else {
+      const string& data = datum.data();
+      CHECK_EQ(data.size(), data_size) << "Incorrect data field size " << data.size();
+    }
     // sequential
     snprintf(key_cstr, maxKeyLength, "%08d_%s", line_id, lines[line_id].first.c_str());
     string value;
