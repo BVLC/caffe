@@ -36,7 +36,7 @@ Now, you can simply create a leveldb using commands as follows:
     GLOG_logtostderr=1 examples/convert_imageset.bin \
         /path/to/imagenet/train/ \
         python/caffe/imagenet/ilsvrc_2012_train.txt \
-        /path/to/imagenet-train-leveldb
+        /path/to/imagenet-train-leveldb 1
 
 Note that `/path/to/imagenet-train-leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
 
