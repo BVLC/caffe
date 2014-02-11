@@ -37,10 +37,6 @@ Caffe requires the CUDA NVCC compiler to compile its GPU code. To install CUDA, 
 
 Caffe also needs Intel MKL as the backend of its matrix computation and vectorized computations. We are in the process of removing MKL dependency, but for now you will need to have an MKL installation. You can obtain a [trial license](http://software.intel.com/en-us/intel-mkl) or an [academic license](http://software.intel.com/en-us/intel-education-offerings) (if you are a student).
 
-If you would like to compile the Python wrapper, you will need to install python, numpy and boost_python. You can either compile them from scratch or use a pre-packaged solution like [Anaconda](https://store.continuum.io/cshop/anaconda/) or [Enthought Canopy](https://www.enthought.com/products/canopy/). Note that if you use the Ubuntu default python, you will need to apt-install the `python-dev` package to have the python headers.
-
-If you would like to compile the Matlab wrapper, you will need to install Matlab.
-
 You will also need other packages, most of which can be installed via apt-get using:
 
     sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev
@@ -51,6 +47,12 @@ The only exception being the google logging library, which does not exist in the
     tar zxvf glog-0.3.3.tar.gz
     ./configure
     make && make install
+
+If you would like to compile the Python wrapper, you will need to install python, numpy and boost_python. You can either compile them from scratch or use a pre-packaged solution like [Anaconda](https://store.continuum.io/cshop/anaconda/) or [Enthought Canopy](https://www.enthought.com/products/canopy/). Note that if you use the Ubuntu default python, you will need to apt-install the `python-dev` package to have the python headers. You can install any remaining dependencies with
+
+    pip install -r /path/to/caffe/python/requirements.txt
+
+If you would like to compile the Matlab wrapper, you will need to install Matlab.
 
 After setting all the prerequisites, you should modify the `Makefile.config` file and change the paths to those on your computer.
 
