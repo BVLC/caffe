@@ -11,7 +11,7 @@
 # Now you have mnist.log.train and mnist.log.test.
 #     gnuplot mnist.gnuplot
 
-# The fields present in the data files that are usually proper to plot along 
+# The fields present in the data files that are usually proper to plot along
 # the y axis are test accuracy, test loss, training loss, and learning rate.
 # Those should plot along the x axis are training iterations and seconds.
 # Possible combinations:
