@@ -18,7 +18,7 @@ class ConstantFillerTest : public ::testing::Test {
   ConstantFillerTest()
       : blob_(new Blob<Dtype>(2, 3, 4, 5)),
         filler_param_() {
-    filler_param_.set_value(10.);
+    filler_param_.add_value(10.);
     filler_.reset(new ConstantFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
   };
@@ -35,7 +35,7 @@ TYPED_TEST(ConstantFillerTest, TestFill) {
   const int count = this->blob_->count();
   const TypeParam* data = this->blob_->cpu_data();
   for (int i = 0; i < count; ++i) {
-    EXPECT_GE(data[i], this->filler_param_.value());
+    EXPECT_EQ(data[i], this->filler_param_.value(0));
   }
 }
 
@@ -54,23 +54,23 @@ class ChannelConstantFillerTest : public ::testing::Test {
   virtual ~ChannelConstantFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
-  shared_ptr<ConstantFiller<Dtype> > filler_;
+  shared_ptr<ChannelConstantFiller<Dtype> > filler_;
 };
 
 TYPED_TEST_CASE(ChannelConstantFillerTest, Dtypes);
 
 TYPED_TEST(ChannelConstantFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
-  const int num = blob->num();
-  const int channels = blob->channels();
-  const int height = bottom[0]->height();
-  const int width = bottom[0]->width();
+  const int num = this->blob_->num();
+  const int channels = this->blob_->channels();
+  const int height = this->blob_->height();
+  const int width = this->blob_->width();
   const TypeParam* data = this->blob_->cpu_data();
   for (int c = 0; c < channels; ++c){
-      Dtype value = filler_param_.value(c);
+      TypeParam value = this->filler_param_.value(c);
       for (int n = 0; n < num; ++n) {
-        for (int i = 0; i < height*width; ++i) {
-        EXPECT_EQ(data.offset(n,c)[i], value); 
+        for (int i = this->blob_->offset(n,c); i < height*width; ++i) {
+          EXPECT_EQ(data[i], value); 
       };
     };
   };

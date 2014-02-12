@@ -9,7 +9,6 @@
 
 #include <mkl.h>
 #include <string>
-#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/blob.hpp"
@@ -38,7 +37,7 @@ class ConstantFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     const int count = blob->count();
-    const Dtype value = this->filler_param_.value();
+    const Dtype value = this->filler_param_.value(0);
     CHECK(count);
     for (int i = 0; i < count; ++i) {
       data[i] = value;
@@ -47,24 +46,26 @@ class ConstantFiller : public Filler<Dtype> {
 };
 
 template <typename Dtype>
-class ConstantFiller : public Filler<Dtype> {
+class ChannelConstantFiller : public Filler<Dtype> {
  public:
   explicit ChannelConstantFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
     const int num = blob->num();
     const int channels = blob->channels();
-    const int height = bottom[0]->height();
-    const int width = bottom[0]->width();
-    CHECK_EQ(filler_param_.value_size(),channels);
-    Dtype* data = blob->mutable_cpu_data();    
+    const int height = blob->height();
+    const int width = blob->width();
+    CHECK_EQ(this->filler_param_.value_size(),channels);
     CHECK(channels);
+    Dtype* data = blob->mutable_cpu_data();
     for (int c = 0; c < channels; ++c){
-      Dtype value = filler_param_.value(c);
+      Dtype value = this->filler_param_.value(c);
       for (int n = 0; n < num; ++n) {
-        fill(data.offset(n,c),height*width,value);  
-      }
-    }
+        for (int i= blob->offset(n,c); i < height*width; ++i) {
+          data[i] = value;  
+        };
+      };
+    };
   };
 };
 
