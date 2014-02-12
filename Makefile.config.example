@@ -27,6 +27,8 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/lib /usr/local/lib
 
 # For OS X, use clang++.
 CXX=/usr/bin/g++
+# For OS X 10.9, use libstdc++ instead of libc++ for CUDA compatibility.
+#CXXFLAGS=-stdlib=libstdc++
 
 BUILD_DIR=build
 DISTRIBUTE_DIR=distribute

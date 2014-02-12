@@ -121,7 +121,7 @@ mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
 	@echo
 
 $(NAME): init $(PROTO_OBJS) $(OBJS)
-	$(CXX) -shared -o $(NAME) $(OBJS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) -shared -o $(NAME) $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@echo
 
 $(STATIC_NAME): init $(PROTO_OBJS) $(OBJS)
@@ -132,10 +132,10 @@ runtest: test
 	for testbin in $(TEST_BINS); do $$testbin $(TEST_GPUID); done
 
 $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
-	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 
 $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
-	$(CXX) $< $(STATIC_NAME) -o $@ $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@echo
 
 $(OBJS): $(PROTO_GEN_CC) $(HXX_SRCS)
