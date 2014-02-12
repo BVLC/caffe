@@ -10,6 +10,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
+#include "caffe/filler.hpp"
 
 using std::string;
 
@@ -191,8 +192,14 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(data_mean_.height(), datum_height_);
     CHECK_EQ(data_mean_.width(), datum_width_);
   } else {
-    // Simply initialize an all-empty mean.
+    // Intialize the data_mean with zeros
     data_mean_.Reshape(1, datum_channels_, datum_height_, datum_width_);
+    // Or if there is a bias_filler use it to initialize the data_mean
+    if (this->layer_param_.has_bias_filler()) {
+      shared_ptr<Filler<Dtype> > bias_filler(
+        GetFiller<Dtype>(this->layer_param_.bias_filler()));
+      bias_filler->Fill(this->data_mean_.get());
+    }
   }
   // Now, start the prefetch thread. Before calling prefetch, we make two
   // cpu_data calls so that the prefetch thread does not accidentally make
