@@ -39,6 +39,43 @@ TYPED_TEST(ConstantFillerTest, TestFill) {
   }
 }
 
+template <typename Dtype>
+class ChannelConstantFillerTest : public ::testing::Test {
+ protected:
+  ChannelConstantFillerTest()
+      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+        filler_param_() {
+    filler_param_.add_value(1.);
+    filler_param_.add_value(6.);
+    filler_param_.add_value(10.);
+    filler_.reset(new ChannelConstantFiller<Dtype>(filler_param_));
+    filler_->Fill(blob_);
+  };
+  virtual ~ChannelConstantFillerTest() { delete blob_; }
+  Blob<Dtype>* const blob_;
+  FillerParameter filler_param_;
+  shared_ptr<ConstantFiller<Dtype> > filler_;
+};
+
+TYPED_TEST_CASE(ChannelConstantFillerTest, Dtypes);
+
+TYPED_TEST(ChannelConstantFillerTest, TestFill) {
+  EXPECT_TRUE(this->blob_);
+  const int num = blob->num();
+  const int channels = blob->channels();
+  const int height = bottom[0]->height();
+  const int width = bottom[0]->width();
+  const TypeParam* data = this->blob_->cpu_data();
+  for (int c = 0; c < channels; ++c){
+      Dtype value = filler_param_.value(c);
+      for (int n = 0; n < num; ++n) {
+        for (int i = 0; i < height*width; ++i) {
+        EXPECT_EQ(data.offset(n,c)[i], value); 
+      };
+    };
+  };
+};
+
 
 template <typename Dtype>
 class UniformFillerTest : public ::testing::Test {

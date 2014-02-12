@@ -9,6 +9,7 @@
 
 #include <mkl.h>
 #include <string>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/blob.hpp"
@@ -41,6 +42,28 @@ class ConstantFiller : public Filler<Dtype> {
     CHECK(count);
     for (int i = 0; i < count; ++i) {
       data[i] = value;
+    }
+  };
+};
+
+template <typename Dtype>
+class ConstantFiller : public Filler<Dtype> {
+ public:
+  explicit ChannelConstantFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    const int num = blob->num();
+    const int channels = blob->channels();
+    const int height = bottom[0]->height();
+    const int width = bottom[0]->width();
+    CHECK_EQ(filler_param_.value_size(),channels);
+    Dtype* data = blob->mutable_cpu_data();    
+    CHECK(channels);
+    for (int c = 0; c < channels; ++c){
+      Dtype value = filler_param_.value(c);
+      for (int n = 0; n < num; ++n) {
+        fill(data.offset(n,c),height*width,value);  
+      }
     }
   };
 };
@@ -128,6 +151,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
   const std::string& type = param.type();
   if (type == "constant") {
     return new ConstantFiller<Dtype>(param);
+  } else if (type == "channelconstant") {
+    return new ChannelConstantFiller<Dtype>(param);    
   } else if (type == "gaussian") {
     return new GaussianFiller<Dtype>(param);
   } else if (type == "positive_unitball") {
