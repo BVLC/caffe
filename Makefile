@@ -2,7 +2,27 @@
 PROJECT := caffe
 TEST_GPUID := 0
 
-include Makefile.config
+##############################
+# Derive include and lib directories
+##############################
+CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
+MKL_INCLUDE_DIR := $(MKL_DIR)/include
+
+# detect OS
+OSLOWER = $(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
+# 'linux' is output for Linux system, 'darwin' for OS X
+OSX = $(strip $(findstring darwin, $(OSLOWER)))
+LINUX = $(strip $(findstring linux, $(OSLOWER)))
+ifneq ($(DARWIN),)
+	include Makefile.config.mac
+	CUDA_LIB_DIR := $(CUDA_DIR)/lib
+	MKL_LIB_DIR := $(MKL_DIR)/lib
+endif
+ifneq ($(LINUX),)
+	include Makefile.config
+	CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
+	MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
+endif
 
 ##############################################################################
 # After this line, things should happen automatically.
@@ -59,13 +79,6 @@ GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
 
-##############################
-# Derive include and lib directories
-##############################
-CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
-CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
-MKL_INCLUDE_DIR := $(MKL_DIR)/include
-MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
