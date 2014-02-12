@@ -350,7 +350,7 @@ printf("success in unstitch_planes \n");
       else { throw runtime_error("unknown parameter " + string(fn) ); }
     }
 
-    int sbin = 16; //for conv5 layer features
+    int sbin = get_sbin(net_); //for conv5 layer features
     int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
     int resultDepth = net_->output_blobs()[0]->channels();
 
