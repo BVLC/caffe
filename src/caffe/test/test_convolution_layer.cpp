@@ -26,7 +26,7 @@ class ConvolutionLayerTest : public ::testing::Test {
     blob_bottom_->Reshape(2, 3, 6, 5);
     // fill the values
     FillerParameter filler_param;
-    filler_param.set_value(1.);
+    filler_param.add_value(1.);
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
@@ -69,7 +69,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   // We will simply see if the convolution layer carries out averaging well.
   FillerParameter filler_param;
-  filler_param.set_value(1.);
+  filler_param.add_value(1.);
   ConstantFiller<TypeParam> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   LayerParameter layer_param;
@@ -77,9 +77,9 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   layer_param.set_stride(2);
   layer_param.set_num_output(4);
   layer_param.mutable_weight_filler()->set_type("constant");
-  layer_param.mutable_weight_filler()->set_value(1);
+  layer_param.mutable_weight_filler()->add_value(1);
   layer_param.mutable_bias_filler()->set_type("constant");
-  layer_param.mutable_bias_filler()->set_value(0.1);
+  layer_param.mutable_bias_filler()->add_value(0.1);
   shared_ptr<Layer<TypeParam> > layer(
       new ConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -105,7 +105,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   // We will simply see if the convolution layer carries out averaging well.
   FillerParameter filler_param;
-  filler_param.set_value(1.);
+  filler_param.add_value(1.);
   ConstantFiller<TypeParam> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   TypeParam* bottom_data = this->blob_bottom_->mutable_cpu_data();
@@ -124,9 +124,9 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   layer_param.set_num_output(3);
   layer_param.set_group(3);
   layer_param.mutable_weight_filler()->set_type("constant");
-  layer_param.mutable_weight_filler()->set_value(1);
+  layer_param.mutable_weight_filler()->add_value(1);
   layer_param.mutable_bias_filler()->set_type("constant");
-  layer_param.mutable_bias_filler()->set_value(0.1);
+  layer_param.mutable_bias_filler()->add_value(0.1);
   shared_ptr<Layer<TypeParam> > layer(
       new ConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
