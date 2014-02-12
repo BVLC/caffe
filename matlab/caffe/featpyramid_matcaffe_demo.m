@@ -26,12 +26,18 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     end
 
     %model_def_file = '../../examples/imagenet_deploy.prototxt';
-    model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt' 
+    model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
     % NOTE: you'll have to get the pre-trained ILSVRC network
     model_file = '../../examples/alexnet_train_iter_470000';
 
+    %is_init = caffe('is_init');
+    %display(['    (before calling init) caffe is init? = ' num2str(is_init)]);
+
     % init caffe network (spews logging info)
     caffe('init', model_def_file, model_file);
+
+    %is_init = caffe('is_init');
+    %display(['    (after calling init) caffe is init? = ' num2str(is_init)]);
 
     % set to use GPU or CPU
     if exist('use_gpu', 'var') && use_gpu
@@ -54,4 +60,5 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     %visualize one scale:
     colormap(gray);
     imagesc(squeeze(sum(pyra.feat{1}, 1)));
+
 

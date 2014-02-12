@@ -3,11 +3,13 @@
 % provides some extra output params that you wouldn't get with caffe('convnet_featpyramid', ...)
 
 % YOU MUST CALL caffe('init', ...) BEFORE RUNNING THIS.
-function pyra = convnet_featpyramid(imgFname)
+function pyra = convnet_featpyramid(imgFname, pyra_params)
 
-    % override default params:
-    pyra_params.interval = 5;
-    pyra_params.img_padding = 16;
+    if(nargin < 2)
+        % use these as default params (more defaults are in the DenseNet C++ code)
+        pyra_params.interval = 5;
+        pyra_params.img_padding = 16;
+    end
 
     % compute the pyramid: 
     pyra = caffe('convnet_featpyramid', imgFname, pyra_params);
@@ -21,6 +23,7 @@ function pyra = convnet_featpyramid(imgFname)
 
     pyra.imsize = [pyra.imheight pyra.imwidth];
     pyra.feat = permute_feat(pyra.feat); % [d h w] -> [h w d]     
+    pyra.scales = double(pyra.scales); %get_detection_trees prefers double
 end
 
 % input:  pyra.feat{:}, with dims [d h w]

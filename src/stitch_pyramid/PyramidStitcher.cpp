@@ -70,16 +70,22 @@ vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
         scaleLocations[i].xMin  = patchwork.rectangles_[i].first.x() / convnet_subsampling_ratio;
         scaleLocations[i].width = patchwork.rectangles_[i].first.width() / convnet_subsampling_ratio;
         scaleLocations[i].xMax = scaleLocations[i].width + scaleLocations[i].xMin; //already accounts for subsampling ratio
+        //scaleLocations[i].xMin  = (patchwork.rectangles_[i].first.x() + patchwork.rectangles_[i].first.width()) / convnet_subsampling_ratio; 
 
         scaleLocations[i].yMin = patchwork.rectangles_[i].first.y() / convnet_subsampling_ratio; 
         scaleLocations[i].height = patchwork.rectangles_[i].first.height() / convnet_subsampling_ratio;
         scaleLocations[i].yMax = scaleLocations[i].height + scaleLocations[i].yMin; //already accounts for subsampling ratio
+        //scaleLocations[i].yMax = (patchwork.rectangles_[i].first.y() + patchwork.rectangles_[i].first.height()) / convnet_subsampling_ratio;
 
         scaleLocations[i].planeID = patchwork.rectangles_[i].second;
 
+        //printf(" scale idx = %d \n", i);
+        //printf("    image xMax = %d, planeWidth = %d \n", scaleLocations[i].xMax, planeWidth/convnet_subsampling_ratio);
+        //printf("    image yMax = %d, planeHeight = %d \n", scaleLocations[i].yMax, planeHeight/convnet_subsampling_ratio);
+        //printf("    yMax, in rgb space = %d \n", (patchwork.rectangles_[i].first.y() + patchwork.rectangles_[i].first.height()));
 
-        assert( (scaleLocations[i].xMin + scaleLocations[i].width) <= planeWidth );
-        assert( (scaleLocations[i].yMin + scaleLocations[i].height) <= planeHeight );
+        assert( scaleLocations[i].xMax < planeWidth/convnet_subsampling_ratio );
+        assert( scaleLocations[i].yMax < planeHeight/convnet_subsampling_ratio );
     }
 
     return scaleLocations;

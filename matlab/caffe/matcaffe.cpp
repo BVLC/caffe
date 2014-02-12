@@ -18,6 +18,19 @@
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
+ uint32_t mx_to_u32( string const & err_str, mxArray const * const mxa ) {
+  if( !mxIsNumeric( mxa ) ) { mexErrMsgTxt( (err_str + ": expected a numeric value, got something else. ").c_str()); }
+  uint32_t const sz = mxGetNumberOfElements( mxa );
+  if( sz != 1 ) { mexErrMsgTxt( (err_str+": expected a single element, but got " + str(sz) + ".").c_str()); }
+  return uint32_t(mxGetScalar(mxa));
+}
+
+static mxArray * u32_to_mx( uint32_t const val ) { // returned as float (i.e. scalar single)
+  mxArray * const mxa = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
+  *(float*)(mxGetData(mxa)) = (float)val;
+  return mxa;
+}
+
 // The pointer to the internal caffe::Net instance
 static shared_ptr<Net<float> > net_;
 
@@ -205,6 +218,21 @@ static void init(MEX_ARGS) {
   mxFree(model_file);
 }
 
+
+static void is_init(MEX_ARGS) {
+  if ( (nrhs != 0) ) {
+    LOG(ERROR) << "Given " << nrhs << " arguments, expected 0.";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+  if (nlhs != 1) {
+    LOG(ERROR) << "Caller wanted " << nlhs << " outputs, but this function always produces 1.";
+    mexErrMsgTxt("Wrong number of outputs");
+  }
+  bool ret = (bool)net_; //null check
+  plhs[0] = u32_to_mx(ret);
+}
+
+
 static void forward(MEX_ARGS) {
   if (nrhs != 1) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
@@ -325,22 +353,15 @@ static mxArray * unstitch_planes( vector<ScaleLocation> const & scaleLocs, vect_
 }
 
 
-static uint32_t mx_to_u32( string const & err_str, mxArray const * const mxa ) {
-  if( !mxIsNumeric( mxa ) ) { mexErrMsgTxt( (err_str + ": expected a numeric value, got something else. ").c_str()); }
-  uint32_t const sz = mxGetNumberOfElements( mxa );
-  if( sz != 1 ) { mexErrMsgTxt( (err_str+": expected a single element, but got " + str(sz) + ".").c_str()); }
-  return uint32_t(mxGetScalar(mxa));
-}
-
-static mxArray * u32_to_mx( uint32_t const val ) { // returned as float (i.e. scalar single)
-  mxArray * const mxa = mxCreateNumericMatrix( 1, 1, mxSINGLE_CLASS, mxREAL );
-  *(float*)(mxGetData(mxa)) = (float)val;
-  return mxa;
-}
 
 char const * fnames[] = { "scales", "feat", "imwidth", "imheight", "feat_padx", "feat_pady", "sbin" };
 
 static void convnet_featpyramid(MEX_ARGS) {
+
+  if ( !net_ ) {
+    LOG(ERROR) << "convnet was not initialized. please call 'init' and select CPU or GPU mode.";
+    mexErrMsgTxt("convnet was not initialized. please call 'init' and select CPU or GPU mode.");
+  }
   if ( (nrhs < 1) || (nrhs > 2) ) {
     LOG(ERROR) << "Given " << nrhs << " arguments, expected 1 or 2.";
     mexErrMsgTxt("Wrong number of arguments");
@@ -353,7 +374,8 @@ static void convnet_featpyramid(MEX_ARGS) {
   if( !fn_cs ) { mexErrMsgTxt("Could not convert first argument to a string."); }
   string const file( fn_cs );
   mxFree(fn_cs);
-  
+ 
+ 
   densenet_params_t params; // ctor sets params to defaults
 
   if( nrhs > 1 ) { // (try to) parse second arg as params
@@ -432,6 +454,7 @@ static handler_registry handlers[] = {
   // Public API functions
   { "forward",            forward         },
   { "init",               init            },
+  { "is_init",            is_init         },
   { "set_mode_cpu",       set_mode_cpu    },
   { "set_mode_gpu",       set_mode_gpu    },
   { "set_phase_train",    set_phase_train },

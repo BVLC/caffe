@@ -43,8 +43,8 @@ Patchwork::Patchwork(JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyram
 interval_(pyramid.interval())
 {
     int sbin = 16;  //convnet_downsampling_factor -- TODO: take as user input
-    int templateWidth = 5*sbin; //TODO: take as user input
-    int templateHeight = 15*sbin; 
+    int templateWidth = (3+1)*sbin; //TODO: take as user input
+    int templateHeight = (8+1)*sbin; 
 
     imwidth_ = pyramid.imwidth_;
     imheight_ = pyramid.imheight_;
@@ -278,7 +278,9 @@ int Patchwork::BLF(vector<pair<Rectangle, int> > & rectangles)
 		
 		for (int i = 0; (rect.second == -1) && (i < gaps.size()); ++i) {
 			for (g = gaps[i].begin(); g != gaps[i].end(); ++g) {
-				if ((g->width() >= rect.first.width()) && (g->height() >= rect.first.height())) {
+                if ((g->width() > rect.first.width()) && (g->height() > rect.first.height())) //Forrest -- avoid bizarre bounds error
+                //if ((g->width() >= rect.first.width()) && (g->height() >= rect.first.height()))
+                {
 					rect.second = i;
 					break;
 				}
@@ -297,7 +299,10 @@ int Patchwork::BLF(vector<pair<Rectangle, int> > & rectangles)
 		// Insert the rectangle in the gap
 		rect.first.setX(g->x());
 		rect.first.setY(g->y());
-		
+	
+        //printf("    put scale %d in this gap: xMin=%d, xMax=%d, yMin=%d, yMax=%d \n", i, g->x(), g->x() + rect.first.width(),
+        //                                                                                 g->y(), g->y() + rect.first.height());
+	
 		// Remove all the intersecting gaps, and add newly created gaps
 		for (g = gaps[rect.second].begin(); g != gaps[rect.second].end();) {
 			if (!((rect.first.right() < g->left()) || (rect.first.bottom() < g->top()) ||
