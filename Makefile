@@ -69,7 +69,7 @@ MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
-LIBRARIES := cudart cublas curand pthread openblas \
+LIBRARIES := cudart cublas curand pthread \
 	glog protobuf leveldb snappy boost_system \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
@@ -81,6 +81,14 @@ NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
+
+# MKL options
+ifdef USE_MKL
+  LIBRARIES += mkl_rt
+  COMMON_FLAGS += -DUSE_MKL
+else
+  LIBRARIES += atlas cblas
+endif
 
 
 ##############################
