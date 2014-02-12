@@ -198,7 +198,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     if (this->layer_param_.has_bias_filler()) {
       shared_ptr<Filler<Dtype> > bias_filler(
         GetFiller<Dtype>(this->layer_param_.bias_filler()));
-      bias_filler->Fill(this->data_mean_.get());
+      bias_filler->Fill(&this->data_mean_);
     }
   }
   // Now, start the prefetch thread. Before calling prefetch, we make two
