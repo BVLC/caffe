@@ -32,7 +32,9 @@ def extract_seconds(input_file, output_file):
             start_datetime = extract_datetime_from_line(line, log_created_year)
         if line.find('Iteration') != -1:
             dt = extract_datetime_from_line(line, log_created_year)
-            elapsed_seconds = (dt - start_datetime).total_seconds()
+            #elapsed_seconds = (dt - start_datetime).total_seconds()
+            elapsed = dt - start_datetime
+            elapsed_seconds = (elapsed.microseconds + (elapsed.seconds + elapsed.days*24*3600) * 1e6) / 1e6
             out.write('%f\n' % elapsed_seconds)
     out.close()
 
