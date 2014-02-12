@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
     };
     if (!data_size_initialized) {
       data_size = datum.channels() * datum.height() * datum.width();
+      data_size_initialized = true;
     } else {
       const string& data = datum.data();
       CHECK_EQ(data.size(), data_size) << "Incorrect data field size " << data.size();
