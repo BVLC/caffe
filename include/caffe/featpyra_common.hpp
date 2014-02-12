@@ -61,5 +61,15 @@ namespace caffe {
     net_->ForwardPrefilled();
   }
 
+  // get sbin as product of strides. note that a stride of 0 in the
+  // caffe strides vector indictes a layer has no stride. such layers
+  // are ignored in this calculation
+  static uint32_t get_sbin( shared_ptr<Net<float> > net_ ) {
+    vect_uint32_t const & strides = net_->layer_strides();
+    uint32_t ret = 1;
+    for( vect_uint32_t::const_iterator i = strides.begin(); i != strides.end(); ++i ) { if( *i ) { ret *= (*i); } }
+    return ret;
+  }
+
   template< typename T > inline std::string str(T const & i) { std::stringstream s; s << i; return s.str(); } // convert T i to string
 }

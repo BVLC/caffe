@@ -67,6 +67,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     const LayerParameter& layer_param = layer_connection.layer();
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
+    layer_strides_.push_back(layer_param.has_stride()?layer_param.stride():0);
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = param.force_backward();
     // Figure out this layer's input and output

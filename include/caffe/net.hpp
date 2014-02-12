@@ -62,6 +62,8 @@ class Net {
   inline const string& name() { return name_; }
   // returns the layer names
   inline const vector<string>& layer_names() { return layer_names_; }
+  // returns the layer strides
+  inline const vector<uint32_t>& layer_strides() { return layer_strides_; }
   // returns the blob names
   inline const vector<string>& blob_names() { return blob_names_; }
   // returns the blobs
@@ -91,6 +93,7 @@ class Net {
   // Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
+  vector<uint32_t> layer_strides_;
   vector<bool> layer_need_backward_;
   // blobs stores the blobs that store intermediate results between the
   // layers.
