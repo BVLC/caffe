@@ -350,7 +350,7 @@ printf("success in unstitch_planes \n");
       else { throw runtime_error("unknown parameter " + string(fn) ); }
     }
 
-    int convnet_subsampling_ratio = 16; //for conv5 layer features
+    int sbin = 16; //for conv5 layer features
     int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
     int resultDepth = net_->output_blobs()[0]->channels();
 
@@ -385,7 +385,7 @@ printf("success in unstitch_planes \n");
 
     printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
 
-    vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
+    vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, sbin);
     boost::python::list unstitched_features = unstitch_planes(scaleLocations, blobs_top, resultDepth);
     boost::python::object scales_npy_boost = get_scales_boost(patchwork);
 
@@ -398,7 +398,7 @@ printf("success in unstitch_planes \n");
     d["imheight"] = patchwork.imheight_;
     d["feat_padx"] = 1u; // placeholder
     d["feat_pady"] = 1u; // placeholder
-    d["sbin"] = convnet_subsampling_ratio;
+    d["sbin"] = sbin;
 
     return d;
   }

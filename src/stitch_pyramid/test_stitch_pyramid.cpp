@@ -167,9 +167,9 @@ int main(int argc, char * argv[]){
     //printScaleSizes(pyramid);
     writePatchworkToJPG(patchwork, output_stitched_dir, base_filename); //outputs to output_stitched_dir/base_filename_[planeID].jpg
 
-    int convnet_subsampling_ratio = 1; // we're not actually computing convnet features in this test, 
+    int sbin = 1; // we're not actually computing convnet features in this test, 
                                        // so there's no feature downsampling.
-    vector<ScaleLocation> scaleLocations =  unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
+    vector<ScaleLocation> scaleLocations =  unstitch_pyramid_locations(patchwork, sbin);
     //print_scaleLocations(scaleLocations);
     print_scales(patchwork);
 

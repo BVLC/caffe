@@ -398,7 +398,7 @@ static void convnet_featpyramid(MEX_ARGS) {
     }
   }
 
-  int convnet_subsampling_ratio = 16; //for conv5 layer features
+  int sbin = 16; //for conv5 layer features
   int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
   int resultDepth = net_->output_blobs()[0]->channels();
 
@@ -420,7 +420,7 @@ static void convnet_featpyramid(MEX_ARGS) {
     blobs_top.push_back( p_vect_float_from_output_blob_0() );
   }
 
-  vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, convnet_subsampling_ratio);
+  vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, sbin);
   uint32_t const ret_rows = patchwork.scales_.size();
   assert( scaleLocations.size() == ret_rows );
 
@@ -436,7 +436,7 @@ static void convnet_featpyramid(MEX_ARGS) {
   mxSetFieldByNumber( ret, 0, 3, u32_to_mx( patchwork.imheight_ ) );
   mxSetFieldByNumber( ret, 0, 4, u32_to_mx( 1 ) );
   mxSetFieldByNumber( ret, 0, 5, u32_to_mx( 1 ) );
-  mxSetFieldByNumber( ret, 0, 6, u32_to_mx( convnet_subsampling_ratio ) );
+  mxSetFieldByNumber( ret, 0, 6, u32_to_mx( sbin ) );
 
   plhs[0] = ret;
 }

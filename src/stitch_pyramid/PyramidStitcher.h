@@ -37,7 +37,7 @@ Patchwork stitch_pyramid(string file, int padding=8, int interval=10, int planeD
 //      sorted in descending order of size. 
 //        (well, Patchwork sorts in descending order of size, and that survives here.)
 vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
-                                                 int convnet_subsampling_ratio);
+                                                 int sbin);
 
 
 #endif
