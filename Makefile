@@ -2,27 +2,34 @@
 PROJECT := caffe
 TEST_GPUID := 0
 
-##############################
-# Derive include and lib directories
-##############################
-CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
-MKL_INCLUDE_DIR := $(MKL_DIR)/include
-
 # detect OS
 OSLOWER = $(shell uname -s 2>/dev/null | tr [:upper:] [:lower:])
 # 'linux' is output for Linux system, 'darwin' for OS X
 OSX = $(strip $(findstring darwin, $(OSLOWER)))
 LINUX = $(strip $(findstring linux, $(OSLOWER)))
 ifneq ($(DARWIN),)
+# Specific to OS X
 	include Makefile.config.mac
+##############################
+# Derive lib directories
+##############################
 	CUDA_LIB_DIR := $(CUDA_DIR)/lib
 	MKL_LIB_DIR := $(MKL_DIR)/lib
 endif
 ifneq ($(LINUX),)
+# Specific to Linux
 	include Makefile.config
+##############################
+# Derive lib directories
+##############################
 	CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
 	MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 endif
+##############################
+# Derive include directories
+##############################
+CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
+MKL_INCLUDE_DIR := $(MKL_DIR)/include
 
 ##############################################################################
 # After this line, things should happen automatically.
