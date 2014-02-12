@@ -71,25 +71,33 @@ Now that you have compiled Caffe, check out the [MNIST demo](mnist.html) and the
 
 ## OS X Installation
 
-On 10.8, we have successfully compiled and run caffe on GPU-equipped Macbook Pros. Caffe also runs on 10.9, but you need to do a few extra steps described below.
+On 10.8, we have successfully compiled and run Caffe on GPU-equipped Macbook Pros. Caffe also runs on 10.9, but you need to do a few extra steps described below.
 
-### Install dependencies using Homebrew
+### Install prerequisites using Homebrew
 
-From a clean install of the OS (or from a wiped `/usr/local`), install [homebrew](http://brew.sh/), then `brew install python`, then `brew install boost --build_from_source`.
-The reason to build boost from source is so that it links against the homebrew python.
-Homebrew handles all the other dependencies as well: `opencv`, `leveldb`, etc.
-For python packages like `numpy` and `scipy`, we recommend doing `brew tap homebrew/python`, and then installing them with homebrew.
+Install [homebrew](http://brew.sh/) to install most of the prerequisites. Starting from a clean install of the OS (or from a wiped `/usr/local`) is recommended to avoid conflicts. For python, [Anaconda](https://store.continuum.io/cshop/anaconda/) and homebrew python are confirmed to work.
+
+    # install python by (1) Anaconda or (2) brew install python
+    brew install --build-from-source boost
+    brew install snappy leveldb protobuf gflags glog
+    brew tap homebrew/science
+    brew install homebrew/science/opencv
+
+Building boost from source is needed to link against your local python.
+If using homebrew python, python packages like `numpy` and `scipy` are best installed by doing `brew tap homebrew/python`, and then installing them with homebrew.
 
 #### 10.9 additional notes
 
-In OS X 10.9 Apple changed to clang as the default compiler. Clang uses libc++ as the standard library by default, while Nvidia CUDA currently works with libstdc++. This makes it necessary to change the compilation settings for each of the dependencies. We do this by modifying the homebrew formulas, before installing any package. Make sure homebrew doesn't install any software dependencies in the background.
+In OS X 10.9 Apple changed to clang as the default compiler. Clang uses libc++ as the standard library by default, while Nvidia CUDA currently works with libstdc++. This makes it necessary to change the compilation settings for each of the dependencies. We do this by modifying the homebrew formulae before installing any packages. Make sure that homebrew doesn't install any software dependencies in the background; all packages must be linked to libstdc++.
+
+Only Anaconda python has been confirmed to work on 10.9.
 
 For each package that you install through homebrew do the following:
 
 1. Open formula in editor: `brew edit FORMULA`
 2. Add the ENV definitions as shown in the code block below.
-3. Uninstall forumla in case it was already installed: `brew uninstall FORUMLA`
-4. Reinstall: `brew install --build-from-source --fresh -vd FORMULA`
+3. Uninstall any formulae that were already installed: `brew uninstall FORMULA`
+4. Install / Reinstall: `brew install --build-from-source --fresh -vd FORMULA`
 
 ```
     def install
@@ -105,7 +113,13 @@ For each package that you install through homebrew do the following:
         ...
 ```
 
-After you did this the rest of the installation is the same as under 10.8.
+The prequesite homebrew formulae are
+
+    cmake boost snappy leveldb protobuf gflags glog homebrew/science/opencv
+
+so follow steps 1-4 for each.
+
+After this the rest of the installation is the same as under 10.8, as long as `clang++` is invoked with `-stdlib=libstdc++` and `-lstdc++` is linked.
 
 ### CUDA and MKL
 
