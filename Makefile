@@ -106,6 +106,14 @@ LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
+# MKL options
+ifdef USE_MKL
+  LIBRARIES += mkl_rt
+  COMMON_FLAGS += -DUSE_MKL
+else
+  LIBRARIES += atlas cblas
+endif
+
 
 ##############################
 # Define build targets
