@@ -84,7 +84,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 template <typename Dtype>
 void Solver<Dtype>::Test() {
-  LOG(INFO) << "Testing net";
+  LOG(INFO) << "Iteration " << iter_ << ", Testing net";
   NetParameter net_param;
   net_->ToProto(&net_param);
   CHECK_NOTNULL(test_net_.get())->CopyTrainedLayersFrom(net_param);
@@ -214,7 +214,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       // Compute the value to history, and then copy them to the blob's diff.
       Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
-      caffe_axpby(net_params[param_id]->count(), local_rate,
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
           net_params[param_id]->cpu_diff(), momentum,
           history_[param_id]->mutable_cpu_data());
       if (local_decay) {
