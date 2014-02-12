@@ -3,7 +3,8 @@
 #ifndef CAFFE_UTIL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
 
-#include <mkl.h>
+//#include <mkl.h>
+#include <cblas.h>
 #include <cublas_v2.h>
 
 namespace caffe {
@@ -85,11 +86,17 @@ template <typename Dtype>
 void caffe_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
 template <typename Dtype>
+Dtype caffe_nextafter(const Dtype b);
+
+template <typename Dtype>
 void caffe_vRngUniform(const int n, Dtype* r, const Dtype a, const Dtype b);
 
 template <typename Dtype>
 void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
     const Dtype sigma);
+
+template <typename Dtype>
+void caffe_vRngBernoulli(const int n, Dtype* r, const double p);
 
 template <typename Dtype>
 void caffe_exp(const int n, const Dtype* a, Dtype* y);
