@@ -84,8 +84,8 @@ vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
         //printf("    image yMax = %d, planeHeight = %d \n", scaleLocations[i].yMax, planeHeight/convnet_subsampling_ratio);
         //printf("    yMax, in rgb space = %d \n", (patchwork.rectangles_[i].first.y() + patchwork.rectangles_[i].first.height()));
 
-        assert( scaleLocations[i].xMax < planeWidth/convnet_subsampling_ratio );
-        assert( scaleLocations[i].yMax < planeHeight/convnet_subsampling_ratio );
+        assert( scaleLocations[i].xMax <= (planeWidth/convnet_subsampling_ratio) );
+	assert( scaleLocations[i].yMax <= (planeHeight/convnet_subsampling_ratio) );
     }
 
     return scaleLocations;
