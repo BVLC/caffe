@@ -10,6 +10,8 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
     -gencode arch=compute_30,code=sm_30 \
     -gencode arch=compute_35,code=sm_35
 
+# If not using MKL, comment out the following line.
+# USE_MKL=1
 # MKL directory contains include/ and lib/ directions that we need.
 MKL_DIR := /opt/intel/mkl
 
