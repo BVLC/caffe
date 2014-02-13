@@ -91,6 +91,12 @@ message LayerParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
+
+  // For the Reshape Layer one need to specify the new dimensions
+  optional int32 num = 54 [default = 0];
+  optional int32 channels = 55 [default = 0];
+  optional int32 height = 56 [default = 0];
+  optional int32 width = 57 [default = 0];
 }
 
 message LayerConnection {
