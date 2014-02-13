@@ -204,6 +204,7 @@ static void set_device(MEX_ARGS) {
 }
 
 static void init(MEX_ARGS) {
+  google::InitGoogleLogging("matcaffe");
   if (nrhs != 2) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
