@@ -117,9 +117,15 @@ void Net<Dtype>::Init(const NetParameter& param) {
           << top_vecs_[i][topid]->height() << " "
           << top_vecs_[i][topid]->width();
     }
-    // Check if this layer needs backward operation itself
-    for (int j = 0; j < layers_[i]->layer_param().blobs_lr_size(); ++j) {
-      need_backward |= (layers_[i]->layer_param().blobs_lr(j) > 0);
+    // catch: if a layer param does not specify blobs_lr, we should assume the
+    // learning rate to be 1. Thus we will need to perform backward.
+    if (layers_[i]->layer_param().blobs_lr_size()) {
+      // Check if this layer needs backward operation itself
+      for (int j = 0; j < layers_[i]->layer_param().blobs_lr_size(); ++j) {
+        need_backward |= (layers_[i]->layer_param().blobs_lr(j) > 0);
+      }
+    } else {
+      need_backward = true;
     }
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
