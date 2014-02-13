@@ -57,12 +57,9 @@ class ChannelConstantFiller : public Filler<Dtype> {
     const int width = blob->width();
     CHECK_EQ(this->filler_param_.value_size(),blob->channels());
     CHECK(channels);
-    Dtype value;
     Dtype* data = blob->mutable_cpu_data();
-    LOG(ERROR) << "value_size " << this->filler_param_.value_size();    
     for (int c = 0; c < blob->channels(); ++c) {
-      value = this->filler_param_.value(c);
-      LOG(ERROR) << value;
+      Dtype value = this->filler_param_.value(c);
       for (int n = 0; n < blob->num(); ++n) {
         for (int h = 0; h < blob->height(); ++h) {
           for (int w = 0; w < blob->width(); ++w) {
@@ -71,14 +68,6 @@ class ChannelConstantFiller : public Filler<Dtype> {
         }
       }
     }
-    // for (int n = 0; n < num; ++n) {
-    //   for (int c = 0; c < channels; ++c){
-    //     Dtype value = this->filler_param_.value(c);
-    //     for (int i= blob->offset(n,c); i < height*width; ++i) {
-    //       data[i] = value;  
-    //     };
-    //   };
-    // };
   };
 };
 

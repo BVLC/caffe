@@ -45,9 +45,9 @@ class ChannelConstantFillerTest : public ::testing::Test {
   ChannelConstantFillerTest()
       : blob_(new Blob<Dtype>(2, 3, 4, 5)),
         filler_param_() {
-    filler_param_.add_value(1.);
-    filler_param_.add_value(6.);
-    filler_param_.add_value(10.);
+    filler_param_.add_value(1.0);
+    filler_param_.add_value(-6.5);
+    filler_param_.add_value(10.1);
     filler_.reset(new ChannelConstantFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
   };
@@ -66,14 +66,16 @@ TYPED_TEST(ChannelConstantFillerTest, TestFill) {
   const int height = this->blob_->height();
   const int width = this->blob_->width();
   const TypeParam* data = this->blob_->cpu_data();
-  for (int c = 0; c < channels; ++c){
-      TypeParam value = this->filler_param_.value(c);
-      for (int n = 0; n < num; ++n) {
-        for (int i = this->blob_->offset(n,c); i < height*width; ++i) {
-          EXPECT_EQ(data[i], value); 
-      };
-    };
-  };
+  for (int c = 0; c < channels; ++c) {
+    TypeParam value = this->filler_param_.value(c);    
+    for (int n = 0; n < num; ++n) {
+      for (int h = 0; h < height; ++h) {
+        for (int w = 0; w < width; ++w) {
+          EXPECT_EQ(data[this->blob_->offset(n, c, h, w)],value);
+        }
+      }
+    }
+  }
 };
 
 
