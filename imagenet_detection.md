@@ -6,7 +6,7 @@ title: Caffe
 Running Windowed Detection with Caffe
 =====================================
 
-[View this page as an IPython Notebook](http://nbviewer.ipython.org/url/caffe.berkeleyvision.org/selective_search_demo.ipynb) (highly recommended!)
+[View this page as an IPython Notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/gh-pages/selective_search_demo.ipynb) (highly recommended!)
 
 ---
 
