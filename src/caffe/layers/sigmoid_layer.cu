@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 Tobias Domhan
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
