@@ -55,17 +55,30 @@ class ChannelConstantFiller : public Filler<Dtype> {
     const int channels = blob->channels();
     const int height = blob->height();
     const int width = blob->width();
-    CHECK_EQ(this->filler_param_.value_size(),channels);
+    CHECK_EQ(this->filler_param_.value_size(),blob->channels());
     CHECK(channels);
+    Dtype value;
     Dtype* data = blob->mutable_cpu_data();
-    for (int c = 0; c < channels; ++c){
-      Dtype value = this->filler_param_.value(c);
-      for (int n = 0; n < num; ++n) {
-        for (int i= blob->offset(n,c); i < height*width; ++i) {
-          data[i] = value;  
-        };
-      };
-    };
+    LOG(ERROR) << "value_size " << this->filler_param_.value_size();    
+    for (int c = 0; c < blob->channels(); ++c) {
+      value = this->filler_param_.value(c);
+      LOG(ERROR) << value;
+      for (int n = 0; n < blob->num(); ++n) {
+        for (int h = 0; h < blob->height(); ++h) {
+          for (int w = 0; w < blob->width(); ++w) {
+            data[blob->offset(n, c, h, w)] = value;
+          }
+        }
+      }
+    }
+    // for (int n = 0; n < num; ++n) {
+    //   for (int c = 0; c < channels; ++c){
+    //     Dtype value = this->filler_param_.value(c);
+    //     for (int i= blob->offset(n,c); i < height*width; ++i) {
+    //       data[i] = value;  
+    //     };
+    //   };
+    // };
   };
 };
 
