@@ -1,11 +1,10 @@
+#!/usr/bin/env python
 """wrapper.py implements an end-to-end wrapper that classifies an image read
 from disk, using the imagenet classifier.
 """
 
 import numpy as np
 import os
-from skimage import io
-from skimage import transform
 
 import caffe
 
@@ -52,6 +51,9 @@ def oversample(image, center_only=False):
 
 
 def prepare_image(filename, center_only=False):
+  # Move here from the global namespace to avoid overriding argparse help
+  from skimage import io
+  from skimage import transform
   img = io.imread(filename)
   if img.ndim == 2:
     img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
@@ -85,29 +87,20 @@ class ImageNetClassifier(object):
     return self._output_blobs[0].mean(0).flatten()
 
 
-def main(argv):
+def main(args):
   """
   The main function will carry out classification.
   """
-  import gflags
   import glob
   import time
-  gflags.DEFINE_string("root", "", "The folder that contains images.")
-  gflags.DEFINE_string("ext", "JPEG", "The image extension.")
-  gflags.DEFINE_string("model_def", "", "The model definition file.")
-  gflags.DEFINE_string("pretrained_model", "", "The pretrained model.")
-  gflags.DEFINE_string("output", "", "The output numpy file.")
-  gflags.DEFINE_boolean("gpu", True, "use gpu for computation")
-  FLAGS = gflags.FLAGS
-  FLAGS(argv)
+  
+  net = ImageNetClassifier(args.model_def, args.pretrained_model)
 
-  net = ImageNetClassifier(FLAGS.model_def, FLAGS.pretrained_model)
-
-  if FLAGS.gpu:
+  if args.gpu:
     print 'Use gpu.'
     net.caffenet.set_mode_gpu()
 
-  files = glob.glob(os.path.join(FLAGS.root, "*." + FLAGS.ext))
+  files = glob.glob(os.path.join(args.root, "*." + args.ext))
   files.sort()
   print 'A total of %d files' % len(files)
   output = np.empty((len(files), net._output_blobs[0].shape[1]),
@@ -118,10 +111,31 @@ def main(argv):
     if i % 1000 == 0 and i > 0:
       print 'Processed %d files, elapsed %.2f s' % (i, time.time() - start)
   # Finally, write the results
-  np.save(FLAGS.output, output)
-  print 'Done. Saved to %s.' % FLAGS.output
+  np.save(args.output, output)
+  print 'Done. Saved to %s.' % args.output
 
 
 if __name__ == "__main__":
-  import sys
-  main(sys.argv)
+  import argparse
+  parser = argparse.ArgumentParser(
+    'Image classifier',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument('-r', '--root',
+                   help='The folder that contains images.')
+  parser.add_argument('-e', '--ext', default='JPEG',
+                   help='The image extension.')
+  parser.add_argument('-m', '--model_def',
+                   help='The model definition file.')
+  parser.add_argument('-p', '--pretrained_model',
+                   help='The pretrained model.')
+  parser.add_argument('-o', '--output',
+                   help='The output numpy file.')
+  parser.add_argument('-g', '--gpu', action='store_true', default=True,
+                   help='Use gpu for computation.')
+  try:
+    args = parser.parse_args()
+    main(args)
+  except:
+    parser.print_help()
+    exit(1)
+
