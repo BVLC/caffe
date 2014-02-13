@@ -33,6 +33,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new EuclideanLossLayer<Dtype>(param);
   } else if (type == "flatten") {
     return new FlattenLayer<Dtype>(param);
+  } else if (type == "reshape") {
+    return new ReshapeLayer<Dtype>(param);
   } else if (type == "im2col") {
     return new Im2colLayer<Dtype>(param);
   } else if (type == "infogain_loss") {
