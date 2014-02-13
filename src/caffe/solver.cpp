@@ -64,7 +64,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   vector<Blob<Dtype>*> bottom_vec;
   do {
     iter_++;
-    termination_criterion_->NotifyIteration(iter_);
+    termination_criterion_->Notify(TerminationCriterionBase::TYPE_ITERATION, iter_);
 
     Dtype loss = net_->ForwardBackward(bottom_vec);
     ComputeUpdateValue();
@@ -77,7 +77,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       // We need to set phase to test before running.
       Caffe::set_phase(Caffe::TEST);
       test_accuracy = Test();
-      termination_criterion_->NotifyTestAccuracy(test_accuracy);
+      termination_criterion_->Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, test_accuracy);
       Caffe::set_phase(Caffe::TRAIN);
     }
     // Check if we need to do snapshot
@@ -289,12 +289,18 @@ void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
 }
 
 template <typename Dtype>
-void MaxIterTerminationCriterion<Dtype >::NotifyIteration(int iter) {
+void MaxIterTerminationCriterion<Dtype >::Notify(TerminationCriterionBase::NotificationType type, Dtype iter) {
+  if (type != TerminationCriterionBase::TYPE_ITERATION) {
+    return;
+  }
   this->criterion_met_ = iter >= max_iter_;
 }
   
 template <typename Dtype>
-void TestAccuracyTerminationCriterion<Dtype >::NotifyTestAccuracy(Dtype test_accuracy) {
+void TestAccuracyTerminationCriterion<Dtype >::Notify(TerminationCriterionBase::NotificationType type, Dtype test_accuracy) {
+  if (type != TerminationCriterionBase::TYPE_TEST_ACCURACY) {
+    return;
+  }
   if (test_accuracy > best_accuracy_) {
     //reset countdown
     count_down_ = test_accuracy_stop_countdown_;
@@ -309,6 +315,7 @@ void TestAccuracyTerminationCriterion<Dtype >::NotifyTestAccuracy(Dtype test_acc
     }
   }
 }
+
 
 INSTANTIATE_CLASS(Solver);
 INSTANTIATE_CLASS(SGDSolver);
