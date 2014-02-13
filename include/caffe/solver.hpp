@@ -69,16 +69,24 @@ class SGDSolver : public Solver<Dtype> {
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
 
+
+class TerminationCriterionBase {
+public:
+  enum NotificationType {
+      TYPE_TEST_ACCURACY = 0,
+      TYPE_ITERATION
+  };
+};
+
 template <typename Dtype>
-class TerminationCriterion {
+class TerminationCriterion : public TerminationCriterionBase {
 public:
   TerminationCriterion() : criterion_met_(false) {};
   
   virtual bool IsCriterionMet() {return criterion_met_;};
 
-  virtual void NotifyTestAccuracy(Dtype test_accuracy) = 0;
+  virtual void Notify(TerminationCriterionBase::NotificationType type, Dtype value) = 0;
 
-  virtual void NotifyIteration(int iteration) = 0;
 protected:
   bool criterion_met_;
 };
@@ -88,9 +96,8 @@ class MaxIterTerminationCriterion : public TerminationCriterion<Dtype> {
 public:
   MaxIterTerminationCriterion(int max_iter) : max_iter_(max_iter) {};
 
-  virtual void NotifyTestAccuracy(Dtype test_accuracy) {};
-  
-  virtual void NotifyIteration(int iteration);
+  virtual void Notify(TerminationCriterionBase::NotificationType type, Dtype value);
+
 private:
   int max_iter_;
 };
@@ -103,16 +110,14 @@ public:
     count_down_(test_accuracy_stop_countdown),
     best_accuracy_(0.) {};
   
-  virtual void NotifyTestAccuracy(Dtype test_accuracy);
-  
-  virtual void NotifyIteration(int iteration) {};
-  
+  virtual void Notify(TerminationCriterionBase::NotificationType type, Dtype value);
+
 private:
   const int test_accuracy_stop_countdown_;
   Dtype best_accuracy_;
   int count_down_;
 };
-  
+ 
 
 }  // namspace caffe
 

@@ -22,13 +22,13 @@ namespace caffe {
     MaxIterTerminationCriterion<Dtype> criterion(3);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
-    criterion.NotifyIteration(1);
+    criterion.Notify(TerminationCriterionBase::TYPE_ITERATION, 1);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
-    criterion.NotifyIteration(2);
+    criterion.Notify(TerminationCriterionBase::TYPE_ITERATION, 2);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
-    criterion.NotifyIteration(3);
+    criterion.Notify(TerminationCriterionBase::TYPE_ITERATION, 3);
     EXPECT_TRUE(criterion.IsCriterionMet());
   }
   
@@ -36,31 +36,31 @@ namespace caffe {
     TestAccuracyTerminationCriterion<Dtype> criterion(3);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
-    criterion.NotifyTestAccuracy(0.5);
+    criterion.Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, 0.5);
     EXPECT_FALSE(criterion.IsCriterionMet());
 
     //first countdown
-    criterion.NotifyTestAccuracy(0.5);
+    criterion.Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, 0.5);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
     //second countdown
-    criterion.NotifyTestAccuracy(0.5);
+    criterion.Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, 0.5);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
     //reset
-    criterion.NotifyTestAccuracy(0.6);
+    criterion.Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, 0.6);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
     //first countdown
-    criterion.NotifyTestAccuracy(0.5);
+    criterion.Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, 0.5);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
     //second countdown
-    criterion.NotifyTestAccuracy(0.5);
+    criterion.Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, 0.5);
     EXPECT_FALSE(criterion.IsCriterionMet());
     
     //third countdown
-    criterion.NotifyTestAccuracy(0.5);
+    criterion.Notify(TerminationCriterionBase::TYPE_TEST_ACCURACY, 0.5);
     
     EXPECT_TRUE(criterion.IsCriterionMet());
   }
