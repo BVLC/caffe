@@ -29,6 +29,9 @@
 # matlab binary
 *.mexa64
 
+# IPython notebook checkpoints
+.ipynb_checkpoints
+
 # anything under data/ unless we force include them
 data/*
 

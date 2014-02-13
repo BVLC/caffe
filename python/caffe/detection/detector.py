@@ -14,13 +14,13 @@ The selective_search_ijcv_with_python code is available at
 TODO:
 - batch up image filenames as well: don't want to load all of them into memory
 - refactor into class (without globals)
-- update demo notebook with new options
+- get rid of imagenet mean file and just use mean pixel value
 """
 import numpy as np
+import pandas as pd
 import os
 import sys
-import gflags
-import pandas as pd
+import argparse
 import time
 import skimage.io
 import skimage.transform
@@ -351,49 +351,73 @@ def config(model_def, pretrained_model, gpu, image_dim, image_mean_file):
 
 
 if __name__ == "__main__":
-  # Parse cmdline options
-  gflags.DEFINE_string(
-    "model_def", "", "Model definition file.")
-  gflags.DEFINE_string(
-    "pretrained_model", "", "Pretrained model weights file.")
-  gflags.DEFINE_boolean(
-    "gpu", False, "Switch for gpu computation.")
-  gflags.DEFINE_string(
-    "crop_mode", "center_only", "Crop mode, from {}".format(CROP_MODES))
-  gflags.DEFINE_string(
-    "input_file", "", "Input txt/csv filename.")
-  gflags.DEFINE_string(
-    "output_file", "", "Output h5/csv filename.")
-  gflags.DEFINE_string(
-    "images_dim", 256, "Canonical dimension of (square) images.")
-  gflags.DEFINE_string(
-    "images_mean_file",
-    os.path.join(os.path.dirname(__file__), '../imagenet/ilsvrc_2012_mean.npy'),
-    "Data set image mean (numpy array).")
-  FLAGS = gflags.FLAGS
-  FLAGS(sys.argv)
+  parser = argparse.ArgumentParser()
 
-  # Configure network, input, output
-  config(FLAGS.model_def, FLAGS.pretrained_model, FLAGS.gpu, FLAGS.images_dim,
-         FLAGS.images_mean_file)
+  # Required arguments: input and output.
+  parser.add_argument(
+    "input_file",
+    help="Input txt/csv filename. If .txt, must be list of filenames.\
+    If .csv, must be comma-separated file with header\
+    'filename, xmin, ymin, xmax, ymax'"
+  )
+  parser.add_argument(
+    "output_file",
+    help="Output h5/csv filename. Format depends on extension."
+  )
 
-  # Load input
-  # .txt = list of filenames
-  # .csv = dataframe that must include a header
-  #        with column names filename, ymin, xmin, ymax, xmax
+  # Optional arguments.
+  parser.add_argument(
+    "--model_def",
+    default="examples/imagenet_deploy.prototxt",
+    help="Model definition file."
+  )
+  parser.add_argument(
+    "--pretrained_model",
+    default="examples/caffe_reference_imagenet_model",
+    help="Trained model weights file."
+  )
+  parser.add_argument(
+    "--gpu",
+    default=False,
+    help="Switch for gpu computation."
+  )
+  parser.add_argument(
+    "--crop_mode",
+    default="center_only",
+    choices=CROP_MODES,
+    help="Image crop mode"
+  )
+  parser.add_argument(
+    "--images_dim",
+    default=256,
+    help="Canonical dimension of (square) images."
+  )
+  parser.add_argument(
+    "--images_mean_file",
+    default=os.path.join(
+      os.path.dirname(__file__), '../imagenet/ilsvrc_2012_mean.npy'),
+    help="Data set image mean (numpy array).")
+
+  args = parser.parse_args()
+
+  # Configure network, input, output.
+  config(args.model_def, args.pretrained_model, args.gpu, args.images_dim,
+         args.images_mean_file)
+
+  # Load input.
   t = time.time()
   print('Loading input and assembling batches...')
-  if FLAGS.input_file.lower().endswith('txt'):
-    with open(FLAGS.input_file) as f:
+  if args.input_file.lower().endswith('txt'):
+    with open(args.input_file) as f:
       inputs = [_.strip() for _ in f.readlines()]
-  elif FLAGS.input_file.lower().endswith('csv'):
-    inputs = pd.read_csv(FLAGS.input_file, sep=',', dtype={'filename': str})
+  elif args.input_file.lower().endswith('csv'):
+    inputs = pd.read_csv(args.input_file, sep=',', dtype={'filename': str})
     inputs.set_index('filename', inplace=True)
   else:
     raise Exception("Uknown input file type: not in txt or csv")
 
   # Assemble into batches
-  image_batches = assemble_batches(inputs, FLAGS.crop_mode)
+  image_batches = assemble_batches(inputs, args.crop_mode)
   print('{} batches assembled in {:.3f} s'.format(len(image_batches),
                                                   time.time() - t))
 
@@ -404,9 +428,8 @@ if __name__ == "__main__":
   dfs_with_feats = []
   for i in range(len(image_batches)):
     if i % 10 == 0:
-      print('Batch {}/{}, elapsed time: {:.3f} s'.format(i,
-                                                         len(image_batches),
-                                                         time.time() - t))
+      print('...on batch {}/{}, elapsed time: {:.3f} s'.format(
+        i, len(image_batches), time.time() - t))
     dfs_with_feats.append(compute_feats(image_batches[i]))
 
   # Concatenate, droppping the padding rows.
@@ -416,25 +439,21 @@ if __name__ == "__main__":
 
   # Label coordinates
   coord_cols = ['ymin', 'xmin', 'ymax', 'xmax']
-  df[coord_cols] = pd.DataFrame(data=np.vstack(df['window']),
-                                index=df.index,
-                                columns=coord_cols)
+  df[coord_cols] = pd.DataFrame(
+    data=np.vstack(df['window']), index=df.index, columns=coord_cols)
   del(df['window'])
 
   # Write out the results.
   t = time.time()
-  if FLAGS.output_file.lower().endswith('csv'):
+  if args.output_file.lower().endswith('csv'):
     # enumerate the class probabilities
     class_cols = ['class{}'.format(x) for x in range(NUM_OUTPUT)]
-    df[class_cols] = pd.DataFrame(data=np.vstack(df['feat']),
-                                  index=df.index,
-                                  columns=class_cols)
-    df.to_csv(FLAGS.output_file, sep=',',
-              cols=coord_cols + class_cols,
-              header=True)
+    df[class_cols] = pd.DataFrame(
+      data=np.vstack(df['feat']), index=df.index, columns=class_cols)
+    df.to_csv(args.output_file, cols=coord_cols + class_cols)
   else:
-    df.to_hdf(FLAGS.output_file, 'df', mode='w')
+    df.to_hdf(args.output_file, 'df', mode='w')
   print("Done. Saving to {} took {:.3f} s.".format(
-    FLAGS.output_file, time.time() - t))
+    args.output_file, time.time() - t))
 
   sys.exit()
