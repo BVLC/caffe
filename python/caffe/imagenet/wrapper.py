@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """wrapper.py implements an end-to-end wrapper that classifies an image read
 from disk, using the imagenet classifier.
 """
