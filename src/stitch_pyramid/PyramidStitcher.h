@@ -31,7 +31,8 @@ class ScaleLocation{
 
 
 //image -> multiscale pyramid -> stitch to same-sized planes for Caffe convnet
-Patchwork stitch_pyramid(string file, int padding=8, int interval=10, int planeDim=-1);
+Patchwork stitch_pyramid(string file, int img_minWidth=1, int img_minHeight=1, 
+                         int padding=8, int interval=10, int planeDim=-1);
 
 // coordinates for unstitching the feature descriptors from planes.
 //      sorted in descending order of size. 

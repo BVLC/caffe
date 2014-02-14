@@ -14,9 +14,13 @@ namespace caffe {
   struct densenet_params_t {
     uint32_t interval; // # scales per octave
     uint32_t img_padding; // in image pixels (at scale=1.0). could later allow per-dim img_padx/img_pady as alternative.
+    uint32_t feat_minWidth; //smallest desired output scale, in terms of descriptor dimensions
+    uint32_t feat_minHeight;
     densenet_params_t( void ) { // default values
       interval = 10;
       img_padding = 16;
+      feat_minWidth = 1;
+      feat_minHeight = 1;
     }
   };
 

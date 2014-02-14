@@ -55,7 +55,7 @@ public:
     void prune_big_scales(JPEGPyramid & pyramid);
     
     //remove scales that are smaller than the template
-    void prune_small_scales(JPEGPyramid & pyramid, int templateWidth, int templateHeight);
+    void prune_small_scales(JPEGPyramid & pyramid, int img_minWidth_, int img_minHeight_);
 	
 	/// Returns the amount of horizontal zero padding (in cells).
 	int padx() const;
@@ -78,9 +78,10 @@ public:
 	/// Initializes the data structures.
 	/// @param[in] maxRows Maximum number of rows of a pyramid level (including padding).
 	/// @param[in] maxCols Maximum number of columns of a pyramid level (including padding).
+    /// @param[in] img_minWidth, img_minHeight = size of smallest desired scale (in pixels)
 	/// @returns Whether the initialization was successful.
 	/// @note Must be called before any other method (including constructors).
-	static bool Init(int maxRows, int maxCols);
+	static bool Init(int maxRows, int maxCols, int img_minWidth, int img_minHeight);
 	
 	/// Returns the current maximum number of rows of a pyramid level (including padding).
 	static int MaxRows();
@@ -101,6 +102,11 @@ public:
 	static int MaxCols_;
 	static int HalfCols_;
 
+    //size of smallest image scale desired by user
+    static int img_minWidth_;
+    static int img_minHeight_;
+
+    //size of input image
     int imwidth_;
     int imheight_;
 

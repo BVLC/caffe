@@ -162,8 +162,10 @@ int main(int argc, char * argv[]){
     writePyraToJPG(pyramid);
 #endif
 
-    Patchwork patchwork = stitch_pyramid(file, padding, interval, 1000);
-    //Patchwork patchwork = stitch_pyramid(file, padding, interval, -1); //planeDim = -1 (use defaults)
+    int img_minWidth = 200; //just a test
+    int img_minHeight = 200;
+    Patchwork patchwork = stitch_pyramid(file, img_minWidth, img_minHeight, padding, interval, 1000);
+    //Patchwork patchwork = stitch_pyramid(file, img_minWidth, img_minHeight, padding, interval, -1); //planeDim = -1 (use defaults)
     //printScaleSizes(pyramid);
     writePatchworkToJPG(patchwork, output_stitched_dir, base_filename); //outputs to output_stitched_dir/base_filename_[planeID].jpg
 

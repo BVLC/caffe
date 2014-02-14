@@ -19,7 +19,8 @@ using namespace std;
 
 //  @param planeDim == width == height of planes to cover with images (optional)
 //            if planeDim <= 0, then ignore planeDim and compute plane size based on input image dims
-Patchwork stitch_pyramid(string file, int padding, int interval, int planeDim)
+Patchwork stitch_pyramid(string file, int img_minWidth, int img_minHeight, 
+                         int padding, int interval, int planeDim)
 {
 	JPEGImage image(file);
     if (image.empty()) {
@@ -48,7 +49,7 @@ Patchwork stitch_pyramid(string file, int padding, int interval, int planeDim)
         planeHeight = max(planeWidth, planeHeight);
     }
 
-    Patchwork::Init(planeHeight, planeWidth); 
+    Patchwork::Init(planeHeight, planeWidth, img_minWidth, img_minHeight); 
     const Patchwork patchwork(pyramid); //STITCH
 
     return patchwork;
@@ -85,7 +86,7 @@ vector<ScaleLocation> unstitch_pyramid_locations(Patchwork &patchwork,
         //printf("    yMax, in rgb space = %d \n", (patchwork.rectangles_[i].first.y() + patchwork.rectangles_[i].first.height()));
 
         assert( scaleLocations[i].xMax <= (planeWidth/sbin) );
-	assert( scaleLocations[i].yMax <= (planeHeight/sbin) );
+	    assert( scaleLocations[i].yMax <= (planeHeight/sbin) );
     }
 
     return scaleLocations;

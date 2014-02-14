@@ -31,9 +31,12 @@
 using namespace FFLD;
 using namespace std;
 
+//static vars (TODO: make these not static...)
 int Patchwork::MaxRows_(0);
 int Patchwork::MaxCols_(0);
 int Patchwork::HalfCols_(0);
+int Patchwork::img_minWidth_(0);
+int Patchwork::img_minHeight_(0);
 
 Patchwork::Patchwork() : padx_(0), pady_(0), interval_(0)
 {
@@ -42,9 +45,9 @@ Patchwork::Patchwork() : padx_(0), pady_(0), interval_(0)
 Patchwork::Patchwork(JPEGPyramid & pyramid) : padx_(pyramid.padx()), pady_(pyramid.pady()),
 interval_(pyramid.interval())
 {
-    int sbin = 16;  //convnet_downsampling_factor -- TODO: take as user input
-    int templateWidth = (3+1)*sbin; //TODO: take as user input
-    int templateHeight = (8+1)*sbin; 
+    //int sbin = 16;  //convnet_downsampling_factor -- TODO: take as user input
+    //int templateWidth = (6+1)*sbin; //TODO: take as user input
+    //int templateHeight = (16+1)*sbin; 
 
     imwidth_ = pyramid.imwidth_;
     imheight_ = pyramid.imheight_;
@@ -53,7 +56,7 @@ interval_(pyramid.interval())
 
     //printf("        before prune_big_scales(). scales_.size()=%ld, pyramid.levels_.size()=%ld \n", scales_.size(), pyramid.levels_.size());
     prune_big_scales(pyramid); //remove scales that won't fit in (MaxRows, MaxCols)
-    prune_small_scales(pyramid, templateWidth, templateHeight);
+    prune_small_scales(pyramid, img_minWidth_, img_minHeight_); //img_minWidth and img_minHeight are configured in Patchwork::Init()
     cout << "    nbScales = " << nbScales << endl;
     //printf("        after prune_big_scales(). scales_.size()=%ld, pyramid.levels_.size()=%ld \n", scales_.size(), pyramid.levels_.size());
 
@@ -130,19 +133,19 @@ void Patchwork::prune_big_scales(JPEGPyramid & pyramid){
         scales_.erase( scales_.begin(), scales_.begin() + first_valid_scale_idx);
         pyramid.levels_.erase( pyramid.levels_.begin(), pyramid.levels_.begin() + first_valid_scale_idx);
         nbScales = nbScales - first_valid_scale_idx;
-        printf("had to remove first %d scales, because they didn't fit in Patchwork plane \n", first_valid_scale_idx);
+        printf("    had to remove first %d scales, because they didn't fit in Patchwork plane \n", first_valid_scale_idx);
     }
 }
 
 //remove scales that are smaller than the template
-void Patchwork::prune_small_scales(JPEGPyramid & pyramid, int templateWidth, int templateHeight){
+void Patchwork::prune_small_scales(JPEGPyramid & pyramid, int img_minWidth_, int img_minHeight_){
 
     int last_valid_scale_idx = 0;
 
     //for(int i=0; i < pyramid.levels_.size(); i++){
     for(int i = pyramid.levels_.size()-1; i >= 0; i--){
-//printf("pyramid.levels_[%d].width=%d, templateWidth=%d \n", i, pyramid.levels_[i].width(), templateWidth);
-        if( ((pyramid.levels_[i].width() >= templateWidth) && (pyramid.levels_[i].height() >= templateHeight)) )
+//printf("pyramid.levels_[%d].width=%d, img_minWidth_=%d \n", i, pyramid.levels_[i].width(), img_minWidth_);
+        if( ((pyramid.levels_[i].width() >= img_minWidth_) && (pyramid.levels_[i].height() >= img_minHeight_)) )
         {
             last_valid_scale_idx = i;
             break;
@@ -155,7 +158,7 @@ void Patchwork::prune_small_scales(JPEGPyramid & pyramid, int templateWidth, int
         pyramid.levels_.erase( pyramid.levels_.begin() + last_valid_scale_idx, pyramid.levels_.end());
         int num_scales_to_remove = nbScales - last_valid_scale_idx;
         nbScales = nbScales - num_scales_to_remove;
-        printf("had to remove last %d scales, because they were smaller than the template \n", num_scales_to_remove);
+        printf("    had to remove last %d scales, because they were smaller than the minimum that you specified in (feat_minWidth, feat_minHeight) \n", num_scales_to_remove);
     }
 }
 
@@ -179,7 +182,7 @@ bool Patchwork::empty() const
 	return planes_.empty();
 }
 
-bool Patchwork::Init(int maxRows, int maxCols)
+bool Patchwork::Init(int maxRows, int maxCols, int img_minWidth, int img_minHeight)
 {
 	// It is an error if maxRows or maxCols are too small
 	if ((maxRows < 2) || (maxCols < 2))
@@ -188,10 +191,13 @@ bool Patchwork::Init(int maxRows, int maxCols)
 	// Temporary matrices
 	//JPEGPyramid::Matrix tmp(maxRows * JPEGPyramid::NbChannels, maxCols + 2);
 	
-	int dims[2] = {maxRows, maxCols};
+	//int dims[2] = {maxRows, maxCols};
     MaxRows_ = maxRows;
     MaxCols_ = maxCols;
     HalfCols_ = maxCols / 2 + 1;
+
+    img_minWidth_ = img_minWidth;
+    //img_minHeight_ = img_minHeight;
 }
 
 int Patchwork::MaxRows()

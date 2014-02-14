@@ -304,14 +304,9 @@ struct CaffeNet {
     int nbScales = scaleLocs.size();
     int batchsize = 1; //TODO: assert that batchsize really is 1.
 
-printf("in unstitch planes \n");
-
     for(int i=0; i<nbScales; i++) //go from largest to smallest scale
     { 
-
       int planeID = scaleLocs[i].planeID;
-printf("planeID=%d, len(descriptor_planes)=%ld \n", planeID, len(descriptor_planes));
-
       assert(planeID < len(descriptor_planes));
       PyArrayObject* currPlane_npy = (PyArrayObject*)((boost::python::object)descriptor_planes[planeID]).ptr();
       npy_intp view_dims[4] = {batchsize, depth, scaleLocs[i].height, scaleLocs[i].width}; //in floats
@@ -332,12 +327,15 @@ printf("planeID=%d, len(descriptor_planes)=%ld \n", planeID, len(descriptor_plan
       unstitched_features.append(view_npy_boost);
     }
 
-printf("success in unstitch_planes \n");
     return unstitched_features;
   }
 
    //void extract_featpyramid(string file){
   boost::python::dict extract_featpyramid(string file, dict params_dict = dict() ){
+
+    int sbin = get_sbin(net_); //for conv5 layer features
+    int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
+    int resultDepth = net_->output_blobs()[0]->channels();
 
     densenet_params_t params; // ctor sets params to defaults
     list params_keys = params_dict.keys();
@@ -347,18 +345,18 @@ printf("success in unstitch_planes \n");
       if( 0 ) { }
       else if( fn == "interval" ) { params.interval = extract<uint32_t>(val); }
       else if( fn == "img_padding" ) { params.img_padding = extract<uint32_t>(val); }
+      else if( fn == "feat_minHeight" ) { params.feat_minHeight = extract<uint32_t>(val); }
+      else if( fn == "feat_minWidth" ) { params.feat_minWidth = extract<uint32_t>(val); }
       else { throw runtime_error("unknown parameter " + string(fn) ); }
     }
-
-    int sbin = get_sbin(net_); //for conv5 layer features
-    int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
-    int resultDepth = net_->output_blobs()[0]->channels();
+    int img_minHeight = params.feat_minHeight * sbin;
+    int img_minWidth = params.feat_minWidth * sbin;
 
     assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
     //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-    Patchwork patchwork = stitch_pyramid(file, params.img_padding, params.interval, planeDim); 
+    Patchwork patchwork = stitch_pyramid(file, img_minHeight, img_minWidth, params.img_padding, params.interval, planeDim); 
     int nbPlanes = patchwork.planes_.size();
 
     boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward 
