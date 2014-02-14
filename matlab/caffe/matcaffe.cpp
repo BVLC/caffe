@@ -203,10 +203,13 @@ static void set_device(MEX_ARGS) {
   Caffe::SetDevice(device_id);
 }
 
+
 static void init(MEX_ARGS) {
-  //if(!google::IsGoogleLoggingInitialized()){
-  //  google::InitGoogleLogging("matcaffe");
-  //}
+  // this isn't good enough, but it's better than nothing. see 
+  // https://code.google.com/p/google-glog/issues/detail?id=113
+  static bool glog_is_init = 0; 
+  if( !glog_is_init ) { google::InitGoogleLogging("matcaffe"); glog_is_init=1; }
+
   if (nrhs != 2) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
