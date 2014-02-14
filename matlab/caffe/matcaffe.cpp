@@ -395,6 +395,8 @@ static void convnet_featpyramid(MEX_ARGS) {
       if( 0 ) { }
       else if( !strcmp( fn, "interval" ) ) { params.interval = mx_to_u32( "for param interval", mx_f ); }
       else if( !strcmp( fn, "img_padding" ) ) { params.img_padding = mx_to_u32( "for param img_padding", mx_f ); }
+      else if( !strcmp( fn, "feat_minHeight" ) ) { params.feat_minHeight = mx_to_u32( "for param feat_minHeight", mx_f ); }
+      else if( !strcmp( fn, "feat_minWidth" ) ) { params.feat_minWidth = mx_to_u32( "for param feat_minWidth", mx_f ); }
       else { mexErrMsgTxt( ("unknown parameter " + string(fn) ).c_str() ); }
     }
   }
@@ -403,11 +405,14 @@ static void convnet_featpyramid(MEX_ARGS) {
   int planeDim = net_->input_blobs()[0]->width(); //assume that all preallocated blobs are same size
   int resultDepth = net_->output_blobs()[0]->channels();
 
+  uint32_t const img_minHeight = params.feat_minHeight * sbin;
+  uint32_t const img_minWidth = params.feat_minWidth * sbin;
+
   assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
   assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
   //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-  Patchwork patchwork = stitch_pyramid(file, params.img_padding, params.interval, planeDim); 
+  Patchwork patchwork = stitch_pyramid(file, img_minHeight, img_minWidth, params.img_padding, params.interval, planeDim); 
   int nbPlanes = patchwork.planes_.size();
 
   vect_p_vect_float blobs_top;

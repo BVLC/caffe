@@ -349,8 +349,8 @@ struct CaffeNet {
       else if( fn == "feat_minWidth" ) { params.feat_minWidth = extract<uint32_t>(val); }
       else { throw runtime_error("unknown parameter " + string(fn) ); }
     }
-    int img_minHeight = params.feat_minHeight * sbin;
-    int img_minWidth = params.feat_minWidth * sbin;
+    uint32_t const img_minHeight = params.feat_minHeight * sbin;
+    uint32_t const img_minWidth = params.feat_minWidth * sbin;
 
     assert(net_->input_blobs()[0]->width() == net_->input_blobs()[0]->height()); //assume square planes in Caffe. (can relax this if necessary)
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)

@@ -52,6 +52,8 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     % optionally, pass parmeters as second argument to convnet_featpyramid (set here to the defaults)
     pyra_params.interval = 5;
     pyra_params.img_padding = 16;
+    pyra_params.feat_minWidth = 1;
+    pyra_params.feat_minHeight = 1;
 
     pyra = caffe('convnet_featpyramid', imfn, pyra_params ); % call with parameters ...
     % pyra = caffe('convnet_featpyramid', imfn ); % ... or with no parameters
