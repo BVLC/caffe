@@ -14,12 +14,12 @@ void ReshapeLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1) << "Reshape Layer takes a single blob as input.";
   CHECK_EQ(top->size(), 1) << "Reshape Layer takes a single blob as output.";
-  NUM_ = this->layer_param_.num();
-  CHANNEL_ =  this->layer_param_.channels();
-  HEIGHT_ = this->layer_param_.height();
-  WIDTH_ = this->layer_param_.width();
-  count_ = NUM_*CHANNEL_*HEIGHT_*WIDTH_;
-  (*top)[0]->Reshape(NUM_, CHANNEL_, HEIGHT_, WIDTH_);  
+  NUM_ = this->layer_param_.reshape_num();
+  CHANNELS_ =  this->layer_param_.reshape_channels();
+  HEIGHT_ = this->layer_param_.reshape_height();
+  WIDTH_ = this->layer_param_.reshape_width();
+  count_ = NUM_*CHANNELS_*HEIGHT_*WIDTH_;
+  (*top)[0]->Reshape(NUM_, CHANNELS_, HEIGHT_, WIDTH_);  
   CHECK_EQ(count_, bottom[0]->count());
   CHECK_EQ(count_, (*top)[0]->count());
 };

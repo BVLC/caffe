@@ -147,7 +147,7 @@ class ReshapeLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   int count_;
   int NUM_;
-  int CHANNEL_;
+  int CHANNELS_;
   int HEIGHT_;
   int WIDTH_;  
 };
