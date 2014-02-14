@@ -50,7 +50,7 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     caffe('set_phase_test');
 
     % optionally, pass parmeters as second argument to convnet_featpyramid (set here to the defaults)
-    pyra_params.interval = 5;
+    pyra_params.interval = 10;
     pyra_params.img_padding = 16;
     pyra_params.feat_minWidth = 1;
     pyra_params.feat_minHeight = 1;
