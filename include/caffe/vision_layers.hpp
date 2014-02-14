@@ -339,6 +339,33 @@ class DataLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
 };
 
+template <typename Dtype>
+class InputLayer : public Layer<Dtype> {
+ public:
+  explicit InputLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~InputLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int datum_channels_;
+  int datum_height_;
+  int datum_width_;
+  int datum_size_;
+  bool biasterm_;
+  bool has_data_mean_;
+};
+
 
 template <typename Dtype>
 class SoftmaxLayer : public Layer<Dtype> {
