@@ -204,7 +204,9 @@ static void set_device(MEX_ARGS) {
 }
 
 static void init(MEX_ARGS) {
-  google::InitGoogleLogging("matcaffe");
+  //if(!google::IsGoogleLoggingInitialized()){
+  //  google::InitGoogleLogging("matcaffe");
+  //}
   if (nrhs != 2) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
@@ -412,7 +414,7 @@ static void convnet_featpyramid(MEX_ARGS) {
   assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
   //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-  Patchwork patchwork = stitch_pyramid(file, img_minHeight, img_minWidth, params.img_padding, params.interval, planeDim); 
+  Patchwork patchwork = stitch_pyramid(file, img_minWidth, img_minHeight, params.img_padding, params.interval, planeDim); 
   int nbPlanes = patchwork.planes_.size();
 
   vect_p_vect_float blobs_top;

@@ -356,7 +356,7 @@ struct CaffeNet {
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
     //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-    Patchwork patchwork = stitch_pyramid(file, img_minHeight, img_minWidth, params.img_padding, params.interval, planeDim); 
+    Patchwork patchwork = stitch_pyramid(file, img_minWidth, img_minHeight, params.img_padding, params.interval, planeDim); 
     int nbPlanes = patchwork.planes_.size();
 
     boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward 
