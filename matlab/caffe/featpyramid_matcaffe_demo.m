@@ -26,7 +26,7 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     end
 
     %model_def_file = '../../examples/imagenet_deploy.prototxt';
-    model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
+    model_def_file = '../../python/caffe/imagenet/imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt' 
     % NOTE: you'll have to get the pre-trained ILSVRC network
     model_file = '../../examples/alexnet_train_iter_470000';
 
