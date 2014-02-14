@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """This script converts blobproto instances to numpy arrays.
 """
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Functions to draw a caffe NetParameter protobuffer.
 """
 
