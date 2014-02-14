@@ -5,10 +5,18 @@
 % YOU MUST CALL caffe('init', ...) BEFORE RUNNING THIS.
 function pyra = convnet_featpyramid(imgFname, pyra_params)
 
-    if(nargin < 2)
-        % use these as default params (more defaults are in the DenseNet C++ code)
+    %set defaults for params not passed by user
+    if( ~exist('pyra_params') || ~isfield(pyra_params, 'interval') )
         pyra_params.interval = 5;
+    end
+    if( ~exist('pyra_params') || ~isfield(pyra_params, 'img_padding') )
         pyra_params.img_padding = 16;
+    end
+    if( ~exist('pyra_params') || ~isfield(pyra_params, 'feat_minWidth') )
+        pyra_params.feat_minWidth = 1;
+    end
+    if( ~exist('pyra_params') || ~isfield(pyra_params, 'feat_minHeight') )
+        pyra_params.feat_minHeight = 1;
     end
 
     % compute the pyramid: 
