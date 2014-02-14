@@ -197,7 +197,7 @@ bool Patchwork::Init(int maxRows, int maxCols, int img_minWidth, int img_minHeig
     HalfCols_ = maxCols / 2 + 1;
 
     img_minWidth_ = img_minWidth;
-    //img_minHeight_ = img_minHeight;
+    img_minHeight_ = img_minHeight;
 }
 
 int Patchwork::MaxRows()
