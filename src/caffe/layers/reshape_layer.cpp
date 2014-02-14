@@ -1,6 +1,7 @@
 // Copyright 2014 Sergio Guadarama
 
 #include <vector>
+#include <string>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -14,11 +15,11 @@ void ReshapeLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom.size(), 1) << "Reshape Layer takes a single blob as input.";
   CHECK_EQ(top->size(), 1) << "Reshape Layer takes a single blob as output.";
   NUM_ = this->layer_param_.num();
-  CHANNELS_ =  this->layer_param_.channels();
-  HEIGHT_ = this->layer_param_height();
-  WIDTH_ = this->layer_param_width();
-  count_ = NUM_*CHANNELS_*HEIGHT_*WIDTH_;  
-  (*top)[0]->Reshape(NUM_, CHANNELS_, HEIGHT_, WIDTH_);  
+  CHANNEL_ =  this->layer_param_.channels();
+  HEIGHT_ = this->layer_param_.height();
+  WIDTH_ = this->layer_param_.width();
+  count_ = NUM_*CHANNEL_*HEIGHT_*WIDTH_;
+  (*top)[0]->Reshape(NUM_, CHANNEL_, HEIGHT_, WIDTH_);  
   CHECK_EQ(count_, bottom[0]->count());
   CHECK_EQ(count_, (*top)[0]->count());
 };
