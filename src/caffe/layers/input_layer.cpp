@@ -35,10 +35,10 @@ void* InputLayerPrefetch(void* layer_pointer) {
         << "set at the same time.";
   }
   // datum scales
-  const int channels = layer->datum_channels_;
-  const int height = layer->datum_height_;
-  const int width = layer->datum_width_;
-  const int size = layer->datum_size_;
+  const int channels = layer->bottom_channels_;
+  const int height = layer->bottom_height_;
+  const int width = layer->bottom_width_;
+  const int size = layer->bottom_size_;
   const Dtype* mean = layer->data_mean_.cpu_data();
   for (int itemid = 0; itemid < batchsize; ++itemid) {
     // get a blob
@@ -124,63 +124,26 @@ InputLayer<Dtype>::~InputLayer<Dtype>() {
 template <typename Dtype>
 void InputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 0) << "Data Layer takes no input blobs.";
-  CHECK_EQ(top->size(), 2) << "Data Layer takes two blobs as output.";
-  // Initialize the leveldb
-  leveldb::DB* db_temp;
-  leveldb::Options options;
-  options.create_if_missing = false;
-  LOG(INFO) << "Opening leveldb " << this->layer_param_.source();
-  leveldb::Status status = leveldb::DB::Open(
-      options, this->layer_param_.source(), &db_temp);
-  CHECK(status.ok()) << "Failed to open leveldb "
-      << this->layer_param_.source() << std::endl << status.ToString();
-  db_.reset(db_temp);
-  iter_.reset(db_->NewIterator(leveldb::ReadOptions()));
-  iter_->SeekToFirst();
-  // Check if we would need to randomly skip a few data points
-  if (this->layer_param_.rand_skip()) {
-    unsigned int skip = rand() % this->layer_param_.rand_skip();
-    LOG(INFO) << "Skipping first " << skip << " data points.";
-    while (skip-- > 0) {
-      iter_->Next();
-      if (!iter_->Valid()) {
-        iter_->SeekToFirst();
-      }
-    }
-  }
-  // Read a data point, and use it to initialize the top blob.
-  Datum datum;
-  datum.ParseFromString(iter_->value().ToString());
-  // image
+  CHECK_EQ(bottom.size(), 1) << "Input Layer takes a single blob as input.";
+  CHECK_EQ(top->size(), 1) << "Input Layer takes a single blob as output.";
   int cropsize = this->layer_param_.cropsize();
   if (cropsize > 0) {
     (*top)[0]->Reshape(
-        this->layer_param_.batchsize(), datum.channels(), cropsize, cropsize);
-    prefetch_data_.reset(new Blob<Dtype>(
-        this->layer_param_.batchsize(), datum.channels(), cropsize, cropsize));
+        this->layer_param_.batchsize(), bottom.channels(), cropsize, cropsize);
   } else {
     (*top)[0]->Reshape(
-        this->layer_param_.batchsize(), datum.channels(), datum.height(),
-        datum.width());
-    prefetch_data_.reset(new Blob<Dtype>(
-        this->layer_param_.batchsize(), datum.channels(), datum.height(),
-        datum.width()));
+        this->layer_param_.batchsize(), bottom.channels(), bottom.height(),
+        bottom.width());
   }
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
-  // label
-  (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
-  prefetch_label_.reset(
-      new Blob<Dtype>(this->layer_param_.batchsize(), 1, 1, 1));
-  // datum size
-  datum_channels_ = datum.channels();
-  datum_height_ = datum.height();
-  datum_width_ = datum.width();
-  datum_size_ = datum.channels() * datum.height() * datum.width();
-  CHECK_GT(datum_height_, cropsize);
-  CHECK_GT(datum_width_, cropsize);
+  bottom_channels_ = bottom.channels();
+  bottom_height_ = bottom.height();
+  bottom_width_ = bottom.width();
+  bottom_size_ = bottom.channels() * bottom.height() * bottom.width();
+  CHECK_GT(bottom_height_, cropsize);
+  CHECK_GT(boottom_width_, cropsize);
   // check if we want to have mean
   if (this->layer_param_.has_meanfile()) {
     BlobProto blob_proto;
@@ -188,12 +151,12 @@ void InputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     ReadProtoFromBinaryFile(this->layer_param_.meanfile().c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
     CHECK_EQ(data_mean_.num(), 1);
-    CHECK_EQ(data_mean_.channels(), datum_channels_);
-    CHECK_EQ(data_mean_.height(), datum_height_);
-    CHECK_EQ(data_mean_.width(), datum_width_);
+    CHECK_EQ(data_mean_.channels(), bottom_channels_);
+    CHECK_EQ(data_mean_.height(), bottom_height_);
+    CHECK_EQ(data_mean_.width(), boottom_width_);
   } else {
     // Intialize the data_mean with zeros
-    data_mean_.Reshape(1, datum_channels_, datum_height_, datum_width_);
+    data_mean_.Reshape(1, bottom_channels_, bottom_height_, boottom_width_);
     // Or if there is a bias_filler use it to initialize the data_mean
     if (this->layer_param_.has_bias_filler()) {
       shared_ptr<Filler<Dtype> > bias_filler(
