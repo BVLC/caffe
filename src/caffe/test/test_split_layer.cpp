@@ -92,6 +92,8 @@ TYPED_TEST(SplitLayerTest, TestCPUGradient) {
   SplitLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 TYPED_TEST(SplitLayerTest, TestGPUGradient) {
@@ -100,6 +102,8 @@ TYPED_TEST(SplitLayerTest, TestGPUGradient) {
   SplitLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 }
