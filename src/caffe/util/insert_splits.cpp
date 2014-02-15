@@ -54,12 +54,9 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
       const string& blob_name = layer_connection->bottom(j);
       const int split_count = blob_name_to_bottom_count[blob_name];
       if (split_count > 1) {
-        const int suffix_max_length = 16;
-        char split_suffix[suffix_max_length];
-        const int suffix_length = snprintf(split_suffix, suffix_max_length,
-            "_split_%d", blob_name_to_bottom_split_idx[blob_name]++);
-        CHECK_LT(suffix_length, suffix_max_length);
-        const string& split_blob_name = blob_name + split_suffix;
+        string split_blob_name;
+        get_split_blob_name(blob_name,
+            blob_name_to_bottom_split_idx[blob_name]++, &split_blob_name);
         layer_connection->set_bottom(j, split_blob_name);
       }
     }
@@ -86,14 +83,20 @@ void configure_split_layer(const string& blob_name,
   split_layer_param->set_name(blob_name + "_split");
   split_layer_param->set_type("split");
   for (int k = 0; k < split_count; ++k) {
-    const int suffix_max_length = 16;
-    char split_suffix[suffix_max_length];
-    const int suffix_length = snprintf(split_suffix, suffix_max_length,
-        "_split_%d", k);
-    CHECK_LT(suffix_length, suffix_max_length);
-    const string& split_blob_name = blob_name + split_suffix;
+    string split_blob_name;
+    get_split_blob_name(blob_name, k, &split_blob_name);
     split_layer_connection->add_top(split_blob_name);
   }
+}
+
+void get_split_blob_name(const string& blob_name, const int split_index,
+    string* split_blob_name) {
+  const int suffix_max_length = 16;
+  char split_suffix[suffix_max_length];
+  const int suffix_length = snprintf(split_suffix, suffix_max_length,
+      "_split_%d", split_index);
+  CHECK_LT(suffix_length, suffix_max_length);
+  *split_blob_name = blob_name + split_suffix;
 }
 
 }  // namespace caffe
