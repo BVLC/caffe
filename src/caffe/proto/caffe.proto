@@ -91,6 +91,8 @@ message LayerParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
+
+  optional bool shuffle_data = 61 [default = true];
 }
 
 message LayerConnection {

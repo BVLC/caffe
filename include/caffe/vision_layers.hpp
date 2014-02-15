@@ -339,8 +339,15 @@ class DataLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
 };
 
+// This function is used to create a pthread that prefetches the data.
+template <typename Dtype>
+void* InputLayerPrefetch(void* layer_pointer);
+
 template <typename Dtype>
 class InputLayer : public Layer<Dtype> {
+  // The function used to perform prefetching.
+ friend void* InputLayerPrefetch<Dtype>(void* layer_pointer);
+
  public:
   explicit InputLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
@@ -358,12 +365,16 @@ class InputLayer : public Layer<Dtype> {
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  vector<std::pair<std::string, int> > lines_;
+  int lines_id_;
   int datum_channels_;
   int datum_height_;
   int datum_width_;
   int datum_size_;
-  bool biasterm_;
-  bool has_data_mean_;
+  pthread_t thread_;
+  shared_ptr<Blob<Dtype> > prefetch_data_;
+  shared_ptr<Blob<Dtype> > prefetch_label_;
+  Blob<Dtype> data_mean_;
 };
 
 
