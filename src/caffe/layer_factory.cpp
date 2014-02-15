@@ -55,6 +55,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new PaddingLayer<Dtype>(param);
   } else if (type == "pool") {
     return new PoolingLayer<Dtype>(param);
+  } else if (type == "regularizer_as_loss") {
+    return new RegularizerAsLossLayer<Dtype>(param);
   } else if (type == "relu") {
     return new ReLULayer<Dtype>(param);
   } else if (type == "sigmoid") {

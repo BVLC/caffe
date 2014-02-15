@@ -14,6 +14,7 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/regularizer.hpp"
 
 #define HDF5_DATA_DATASET_NAME "data"
 #define HDF5_DATA_LABEL_NAME "label"
@@ -631,6 +632,35 @@ class EuclideanLossLayer : public Layer<Dtype> {
   Blob<Dtype> difference_;
 };
 
+// The most natural places should the Regularizer subclasses
+//   be used are in the Layer::Backward* methods.
+// The most beneficial use case is to succinctly test this layer
+//   following the practice in test_regularizer_as_loss_layer.cpp
+//   instead of testing the Regularizers for every other kind of layer
+//   which would be combination explosion.
+// If you do want to use this layer as an independent layer in a network model,
+//   be cautious that it may incur unnecessary extra memory usage compared
+//   with the recommended method.
+template <typename Dtype>
+class RegularizerAsLossLayer : public Layer<Dtype> {
+ public:
+  explicit RegularizerAsLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), regularizer_(GetRegularizer<Dtype>(param)) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  shared_ptr<Regularizer<Dtype> > regularizer_;
+};
 
 template <typename Dtype>
 class AccuracyLayer : public Layer<Dtype> {
