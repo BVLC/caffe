@@ -1,5 +1,6 @@
 // Copyright Yangqing Jia 2013
 
+#include <fstream>
 #include <map>
 #include <set>
 #include <string>
@@ -29,7 +30,10 @@ Net<Dtype>::Net(const string& param_file) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::Init(const NetParameter& param) {
+void Net<Dtype>::Init(const NetParameter& in_param) {
+  // Create a copy of in_param with splits added where necessary.
+  NetParameter param;
+  AddSplits(in_param, &param);
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -150,6 +154,72 @@ void Net<Dtype>::Init(const NetParameter& param) {
   }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
+}
+
+
+template <typename Dtype>
+void Net<Dtype>::AddSplits(const NetParameter& param,
+    NetParameter* param_split) {
+  // Initialize by copying from the input NetParameter.
+  param_split->CopyFrom(param);
+  param_split->clear_layers();
+  map<string, int> blob_name_to_bottom_count;
+  map<string, int> blob_name_to_bottom_split_idx;
+  // Determine for each top blob the number of times it's used as a bottom blob.
+  for (int i = 0; i < param.layers_size(); ++i) {
+    const LayerConnection& layer_connection = param.layers(i);
+    for (int j = 0; j < layer_connection.bottom_size(); ++j) {
+      const string& blob_name = layer_connection.bottom(j);
+      blob_name_to_bottom_count[blob_name]++;
+    }
+    for (int j = 0; j < layer_connection.top_size(); ++j) {
+      const string& blob_name = layer_connection.top(j);
+      blob_name_to_bottom_count[blob_name] = 0;
+      blob_name_to_bottom_split_idx[blob_name] = 0;
+    }
+  }
+  for (int i = 0; i < param.layers_size(); ++i) {
+    LayerConnection* layer_connection = param_split->add_layers();
+    layer_connection->CopyFrom(param.layers(i));
+    // Replace any shared bottom blobs with split layer outputs.
+    for (int j = 0; j < layer_connection->bottom_size(); ++j) {
+      const string& blob_name = layer_connection->bottom(j);
+      const int split_count = blob_name_to_bottom_count[blob_name];
+      if (split_count > 1) {
+        const int suffix_max_length = 16;
+        char split_suffix[suffix_max_length];
+        const int suffix_length = snprintf(split_suffix, suffix_max_length,
+            "_split_%d", blob_name_to_bottom_split_idx[blob_name]++);
+        CHECK_LT(suffix_length, suffix_max_length);
+        const string& split_blob_name = blob_name + split_suffix;
+        layer_connection->set_bottom(j, split_blob_name);
+      }
+    }
+    // Create split blob for any top blobs used by other layers as bottom
+    // blobs more than once.
+    for (int j = 0; j < layer_connection->top_size(); ++j) {
+      const string& blob_name = layer_connection->top(j);
+      const int split_count = blob_name_to_bottom_count[blob_name];
+      if (split_count > 1) {
+        LayerConnection* split_layer_connection = param_split->add_layers();
+        split_layer_connection->add_bottom(blob_name);
+        LayerParameter* split_layer_param =
+            split_layer_connection->mutable_layer();
+        split_layer_param->set_name(blob_name + "_split");
+        split_layer_param->set_type("split");
+        vector<Blob<Dtype>*> split_top_blobs(split_count);
+        for (int k = 0; k < split_count; ++k) {
+          const int suffix_max_length = 16;
+          char split_suffix[suffix_max_length];
+          const int suffix_length = snprintf(split_suffix, suffix_max_length,
+              "_split_%d", k);
+          CHECK_LT(suffix_length, suffix_max_length);
+          const string& split_blob_name = blob_name + split_suffix;
+          split_layer_connection->add_top(split_blob_name);
+        }
+      }
+    }
+  }
 }
 
 

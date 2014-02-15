@@ -28,6 +28,9 @@ class Net {
 
   // Initialize a network with the network parameter.
   void Init(const NetParameter& param);
+  // Copy NetParameters with SplitLayers added to replace any shared bottom
+  // blobs with unique bottom blobs provided by the SplitLayer.
+  void AddSplits(const NetParameter& param, NetParameter* param_split);
 
   // Run forward with the input blobs already fed separately. You can get the
   // input blobs using input_blobs().
