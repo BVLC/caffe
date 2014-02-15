@@ -26,9 +26,9 @@ INCLUDE_DIRS := $(PYTHON_INCLUDES) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/lib /usr/local/lib
 
 # For OS X, use clang++.
-CXX=/usr/bin/g++
+CXX := /usr/bin/g++
 # For OS X 10.9, use libstdc++ instead of libc++ for CUDA compatibility.
-#CXXFLAGS=-stdlib=libstdc++
+#CXXFLAGS := -stdlib=libstdc++
 
-BUILD_DIR=build
-DISTRIBUTE_DIR=distribute
+BUILD_DIR := build
+DISTRIBUTE_DIR := distribute
