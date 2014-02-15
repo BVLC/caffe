@@ -36,6 +36,8 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
       blob_name_to_bottom_split_idx[blob_name] = 0;
     }
   }
+  // Create split layer for any input blobs user by other layers as bottom
+  // blobs more than once.
   for (int i = 0; i < param.input_size(); ++i) {
     const string& blob_name = param.input(i);
     const int split_count = blob_name_to_bottom_count[blob_name];
@@ -61,7 +63,7 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
         layer_connection->set_bottom(j, split_blob_name);
       }
     }
-    // Create split blob for any top blobs used by other layers as bottom
+    // Create split layer for any top blobs used by other layers as bottom
     // blobs more than once.
     for (int j = 0; j < layer_connection->top_size(); ++j) {
       const string& blob_name = layer_connection->top(j);

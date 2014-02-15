@@ -1,6 +1,5 @@
 // Copyright Yangqing Jia 2013
 
-#include <fstream>
 #include <map>
 #include <set>
 #include <string>
