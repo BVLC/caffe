@@ -234,8 +234,8 @@ class Im2colLayer : public Layer<Dtype> {
   int CHANNELS_;
   int HEIGHT_;
   int WIDTH_;
+  int PAD_;
 };
-
 
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
@@ -288,6 +288,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int STRIDE_;
   int NUM_;
   int CHANNELS_;
+  int PAD_;
   int HEIGHT_;
   int WIDTH_;
   int NUM_OUTPUT_;
