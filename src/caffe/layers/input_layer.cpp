@@ -31,6 +31,7 @@ void* InputLayerPrefetch(void* layer_pointer) {
   const int batchsize = layer->layer_param_.batchsize();
   const int cropsize = layer->layer_param_.cropsize();
   const bool mirror = layer->layer_param_.mirror();
+  const int resize_image  = layer->layer_param_.resize_image();
 
   if (mirror && cropsize == 0) {
     LOG(FATAL) << "Current implementation requires mirror and cropsize to be "
@@ -46,8 +47,8 @@ void* InputLayerPrefetch(void* layer_pointer) {
   for (int itemid = 0; itemid < batchsize; ++itemid) {
     // get a blob
     CHECK_GT(lines_size,layer->lines_id_);
-    if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first, 
-      layer->lines_[layer->lines_id_].second, &datum)) {
+    if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first, layer->lines_[layer->lines_id_].second, 
+      resize_image, resize_image, &datum)) {
       continue;
     };    
     const string& data = datum.data();
@@ -114,6 +115,9 @@ void* InputLayerPrefetch(void* layer_pointer) {
       // We have reached the end. Restart from the first.
       DLOG(INFO) << "Restarting data prefetching from start.";
       layer->lines_id_=0;
+      if (layer->layer_param_.shuffle_data()) {
+        std::random_shuffle(layer->lines_.begin(), layer->lines_.end());
+      }
     }
   }
 
@@ -157,8 +161,9 @@ void InputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
+  const int resize_image  = this->layer_param_.resize_image();
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
-                          &datum));
+                         resize_image,resize_image,&datum));
   // image
   int cropsize = this->layer_param_.cropsize();
   if (cropsize > 0) {
