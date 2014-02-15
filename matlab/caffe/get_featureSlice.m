@@ -25,6 +25,8 @@ function [featureSlice, scaleIdx, roundedBox_in_px] = get_featureSlice(pyra, bbo
     padx_desc_scaled = pyra.padx; %this is in descriptor cells and not image pixels.
     pady_desc_scaled = pyra.pady;
 
+    scale_width_desc = size(pyra.feat{scaleIdx},2);
+    scale_height_desc = size(pyra.feat{scaleIdx},1);
 
   %3. rip out a slice from the appropriate scale
   
@@ -33,22 +35,34 @@ function [featureSlice, scaleIdx, roundedBox_in_px] = get_featureSlice(pyra, bbo
     bbox_desc_x_center = bbox_desc.x1 + (bbox_desc.x2 - bbox_desc.x1)/2.0;
     bbox_desc_y_center = bbox_desc.y1 + (bbox_desc.y2 - bbox_desc.y1)/2.0;
     bbox_to_use.x1 = ceil(bbox_desc_x_center*scale_to_use - templateSize(2)/2.0 + padx_desc_scaled); %(center - templateWidth/2)
+      bbox_to_use.x1 = max(1, bbox_to_use.x1); % make sure we didn't fall off the edge
     bbox_to_use.x2 = bbox_to_use.x1 + templateSize(2) - 1;
     bbox_to_use.y1 = ceil(bbox_desc_y_center*scale_to_use - templateSize(1)/2.0 + pady_desc_scaled); %(center - templateHeight/2)
+      bbox_to_use.y1 = max(1, bbox_to_use.y1); % make sure we didn't fall off the edge
     bbox_to_use.y2 = bbox_to_use.y1 + templateSize(1) - 1;
-    %display('new...') 
-    %bbox_to_use
 
-    %bbox_to_use.x1 = round(bbox_desc.x1 * scale_to_use + padx_desc_scaled); 
-    %bbox_to_use.x2 = bbox_to_use.x1 + templateSize(2) - 1;
-    %bbox_to_use.y1 = round(bbox_desc.y1 * scale_to_use + pady_desc_scaled); 
-    %bbox_to_use.y2 = bbox_to_use.y1 + templateSize(1) - 1;
-    %display('old...')
+  %4. make sure the slice fits into the overall space.
+
+    if(bbox_to_use.x2 > scale_width_desc) %if we fell off the edge...
+        x_offset = bbox_to_use.x2 - scale_width_desc; %amount by which we fell off the edge
+        bbox_to_use.x1 = bbox_to_use.x1 - x_offset;
+        bbox_to_use.x2 = bbox_to_use.x2 - x_offset;
+    end
+    if(bbox_to_use.y2 > scale_height_desc) %if we fell off the edge...
+        y_offset = bbox_to_use.y2 - scale_height_desc; %amount by which we fell off the edge
+        bbox_to_use.y1 = bbox_to_use.y1 - y_offset;
+        bbox_to_use.y2 = bbox_to_use.y2 - y_offset;
+    end
+
     %bbox_to_use
     %scale_to_use
     %scaleIdx
-
-    featureSlice = pyra.feat{scaleIdx}(bbox_to_use.y1 : bbox_to_use.y2, bbox_to_use.x1 : bbox_to_use.x2, :); 
+    try
+        featureSlice = pyra.feat{scaleIdx}(bbox_to_use.y1 : bbox_to_use.y2, bbox_to_use.x1 : bbox_to_use.x2, :); 
+    catch
+        display('problem with get_featureSlice... you can debug it') 
+        keyboard
+    end
 
   %4. project rounded box back to img space (approx) -- for debugging
     roundedBox_in_px = bbox_mult(bbox_to_use, (pyra.sbin / scale_to_use)); 
@@ -57,28 +71,6 @@ function [featureSlice, scaleIdx, roundedBox_in_px] = get_featureSlice(pyra, bbo
     roundedBox_in_px.x2 = roundedBox_in_px.x2 - pyra.padx*pyra.sbin/scale_to_use;
     roundedBox_in_px.y1 = roundedBox_in_px.y1 - pyra.pady*pyra.sbin/scale_to_use;
     roundedBox_in_px.y2 = roundedBox_in_px.y2 - pyra.pady*pyra.sbin/scale_to_use;
-end
-
-% @param gt_bbox = example bbox to slice out of pyramid (in pixel coords)
-% @param templateSize = shape desired in terms of HOG cells
-function gt_bbox_new = match_aspect_ratio(gt_bbox, templateSize)
-
-    aspect_ratio_template = templateSize(1)/templateSize(2) % height/width
-    aspect_ratio_gt = (gt_bbox.y2 - gt_bbox.y1) / (gt_bbox.x2 - gt_bbox.x1)
-
-    gt_bbox_new = gt_bbox; 
-    if(aspect_ratio_template < aspect_ratio_gt) %gt_bbox is too tall
-        %make gt_bbox wider (height stays unchanged)
-        gt_width = gt_bbox.x2 - gt_bbox.x1;
-        gt_new_width = gt_width * (aspect_ratio_gt / aspect_ratio_template); %wider
-        gt_bbox_new.x2 = gt_bbox.x2 - gt_width + gt_new_width;
-    
-    elseif(aspect_ratio_template > aspect_ratio_gt) %gt_bbox is too wide
-        %make gt_bbox taller (width stays unchanged)
-        gt_height = gt_bbox.y2 - gt_bbox.y1;
-        gt_new_height = gt_height * (aspect_ratio_template / aspect_ratio_gt); %taller
-        gt_bbox_new.y2 = gt_bbox.y2 - gt_height + gt_new_height;
-    end
 end
 
 % multiply a bbox.{x1 x2 y1 y2} by some value.
