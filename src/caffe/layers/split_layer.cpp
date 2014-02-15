@@ -44,12 +44,14 @@ void SplitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 Dtype SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  caffe_copy(count_, top_diff, bottom_diff);
-  for (int i = 1; i < top.size(); ++i) {
-    top_diff = top[i]->cpu_diff();
-    caffe_axpy(count_, Dtype(1.), top_diff, bottom_diff);
+  if (propagate_down) {
+    const Dtype* top_diff = top[0]->cpu_diff();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+    caffe_copy(count_, top_diff, bottom_diff);
+    for (int i = 1; i < top.size(); ++i) {
+      top_diff = top[i]->cpu_diff();
+      caffe_axpy(count_, Dtype(1.), top_diff, bottom_diff);
+    }
   }
   return Dtype(0.);
 }
@@ -58,12 +60,14 @@ Dtype SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 template <typename Dtype>
 Dtype SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  const Dtype* top_diff = top[0]->gpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-  caffe_gpu_copy(count_, top_diff, bottom_diff);
-  for (int i = 1; i < top.size(); ++i) {
-    top_diff = top[i]->gpu_diff();
-    caffe_gpu_axpy(count_, Dtype(1.), top_diff, bottom_diff);
+  if (propagate_down) {
+    const Dtype* top_diff = top[0]->gpu_diff();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+    caffe_gpu_copy(count_, top_diff, bottom_diff);
+    for (int i = 1; i < top.size(); ++i) {
+      top_diff = top[i]->gpu_diff();
+      caffe_gpu_axpy(count_, Dtype(1.), top_diff, bottom_diff);
+    }
   }
   return Dtype(0.);
 }
