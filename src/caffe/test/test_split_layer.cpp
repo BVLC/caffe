@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <cuda_runtime.h>
+#include <google/protobuf/text_format.h>
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -9,6 +10,7 @@
 #include "caffe/filler.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/insert_splits.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -104,6 +106,306 @@ TYPED_TEST(SplitLayerTest, TestGPUGradient) {
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
   checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+
+template <typename Dtype>
+class SplitLayerInsertionTest : public ::testing::Test {
+ protected:
+ SplitLayerInsertionTest() { };
+  void RunInsertionTest(
+      const string& input_param_string, const string& output_param_string) {
+    NetParameter input_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        input_param_string, &input_param));
+    NetParameter expected_output_param;
+    CHECK(google::protobuf::TextFormat::ParseFromString(
+        output_param_string, &expected_output_param));
+    NetParameter actual_output_param;
+    insert_splits(input_param, &actual_output_param);
+    CHECK_EQ(expected_output_param.DebugString(),
+        actual_output_param.DebugString());
+    EXPECT_EQ(expected_output_param.DebugString(),
+        actual_output_param.DebugString());
+  }
+};
+
+typedef ::testing::Types<float> InsertionDtypes;
+TYPED_TEST_CASE(SplitLayerInsertionTest, InsertionDtypes);
+
+TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion1) {
+  const string& input_proto =
+      "name: \"TestNetwork\"\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"data\"\n"
+      "    type: \"data\"\n"
+      "  }\n"
+      "  top: \"data\"\n"
+      "  top: \"label\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"innerprod\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"softmax_with_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod\"\n"
+      "  bottom: \"label\"\n"
+      "}\n";
+  this->RunInsertionTest(input_proto, input_proto);
+}
+
+TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion2) {
+  const string& input_proto =
+      "name: \"TestNetwork\"\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"data\"\n"
+      "    type: \"data\"\n"
+      "  }\n"
+      "  top: \"data\"\n"
+      "  top: \"label\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"data_split\"\n"
+      "    type: \"split\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"data_split_0\"\n"
+      "  top: \"data_split_1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod1\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data_split_0\"\n"
+      "  top: \"innerprod1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod2\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data_split_1\"\n"
+      "  top: \"innerprod2\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"euclidean_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod1\"\n"
+      "  bottom: \"innerprod2\"\n"
+      "}\n";
+  this->RunInsertionTest(input_proto, input_proto);
+}
+
+TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
+  const string& input_proto =
+      "name: \"TestNetwork\"\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"data\"\n"
+      "    type: \"data\"\n"
+      "  }\n"
+      "  top: \"data\"\n"
+      "  top: \"label\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod1\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"innerprod1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod2\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"innerprod2\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod3\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"innerprod3\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"euclidean_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod1\"\n"
+      "  bottom: \"innerprod2\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"euclidean_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod2\"\n"
+      "  bottom: \"innerprod3\"\n"
+      "}\n";
+  const string& expected_output_proto =
+      "name: \"TestNetwork\"\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"data\"\n"
+      "    type: \"data\"\n"
+      "  }\n"
+      "  top: \"data\"\n"
+      "  top: \"label\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"data_split\"\n"
+      "    type: \"split\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"data_split_0\"\n"
+      "  top: \"data_split_1\"\n"
+      "  top: \"data_split_2\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod1\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data_split_0\"\n"
+      "  top: \"innerprod1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod2\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data_split_1\"\n"
+      "  top: \"innerprod2\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod2_split\"\n"
+      "    type: \"split\"\n"
+      "  }\n"
+      "  bottom: \"innerprod2\"\n"
+      "  top: \"innerprod2_split_0\"\n"
+      "  top: \"innerprod2_split_1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod3\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data_split_2\"\n"
+      "  top: \"innerprod3\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"euclidean_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod1\"\n"
+      "  bottom: \"innerprod2_split_0\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"euclidean_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod2_split_1\"\n"
+      "  bottom: \"innerprod3\"\n"
+      "}\n";
+  this->RunInsertionTest(input_proto, expected_output_proto);
+}
+
+TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
+  const string& input_proto =
+      "name: \"TestNetwork\"\n"
+      "input: \"data\"\n"
+      "input_dim: 10\n"
+      "input_dim: 3\n"
+      "input_dim: 227\n"
+      "input_dim: 227\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod1\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"innerprod1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod2\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"innerprod2\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"euclidean_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod1\"\n"
+      "  bottom: \"innerprod2\"\n"
+      "}\n";
+  const string& expected_output_proto =
+      "name: \"TestNetwork\"\n"
+      "input: \"data\"\n"
+      "input_dim: 10\n"
+      "input_dim: 3\n"
+      "input_dim: 227\n"
+      "input_dim: 227\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"data_split\"\n"
+      "    type: \"split\"\n"
+      "  }\n"
+      "  bottom: \"data\"\n"
+      "  top: \"data_split_0\"\n"
+      "  top: \"data_split_1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod1\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data_split_0\"\n"
+      "  top: \"innerprod1\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"innerprod2\"\n"
+      "    type: \"inner_product\"\n"
+      "  }\n"
+      "  bottom: \"data_split_1\"\n"
+      "  top: \"innerprod2\"\n"
+      "}\n"
+      "layers: {\n"
+      "  layer {\n"
+      "    name: \"loss\"\n"
+      "    type: \"euclidean_loss\"\n"
+      "  }\n"
+      "  bottom: \"innerprod1\"\n"
+      "  bottom: \"innerprod2\"\n"
+      "}\n";
+  this->RunInsertionTest(input_proto, expected_output_proto);
 }
 
 }
