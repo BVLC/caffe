@@ -123,8 +123,6 @@ class SplitLayerInsertionTest : public ::testing::Test {
         output_param_string, &expected_output_param));
     NetParameter actual_output_param;
     insert_splits(input_param, &actual_output_param);
-    CHECK_EQ(expected_output_param.DebugString(),
-        actual_output_param.DebugString());
     EXPECT_EQ(expected_output_param.DebugString(),
         actual_output_param.DebugString());
   }
