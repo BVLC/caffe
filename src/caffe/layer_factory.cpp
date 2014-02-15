@@ -55,6 +55,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new SoftmaxLayer<Dtype>(param);
   } else if (type == "softmax_loss") {
     return new SoftmaxWithLossLayer<Dtype>(param);
+  } else if (type == "split") {
+    return new SplitLayer<Dtype>(param);
   } else if (type == "multinomial_logistic_loss") {
     return new MultinomialLogisticLossLayer<Dtype>(param);
   } else {
