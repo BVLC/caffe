@@ -123,6 +123,8 @@ class SplitLayerInsertionTest : public ::testing::Test {
         output_param_string, &expected_output_param));
     NetParameter actual_output_param;
     insert_splits(input_param, &actual_output_param);
+    CHECK_EQ(expected_output_param.DebugString(),
+        actual_output_param.DebugString());
     EXPECT_EQ(expected_output_param.DebugString(),
         actual_output_param.DebugString());
   }
@@ -275,7 +277,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
       "    type: \"split\" "
       "  } "
       "  bottom: \"data\" "
-      "  top: \"data_split_0\" "
+      "  top: \"data\" "
       "  top: \"data_split_1\" "
       "  top: \"data_split_2\" "
       "} "
@@ -284,7 +286,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
       "    name: \"innerprod1\" "
       "    type: \"inner_product\" "
       "  } "
-      "  bottom: \"data_split_0\" "
+      "  bottom: \"data\" "
       "  top: \"innerprod1\" "
       "} "
       "layers: { "
@@ -301,7 +303,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
       "    type: \"split\" "
       "  } "
       "  bottom: \"innerprod2\" "
-      "  top: \"innerprod2_split_0\" "
+      "  top: \"innerprod2\" "
       "  top: \"innerprod2_split_1\" "
       "} "
       "layers: { "
@@ -318,7 +320,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
       "    type: \"euclidean_loss\" "
       "  } "
       "  bottom: \"innerprod1\" "
-      "  bottom: \"innerprod2_split_0\" "
+      "  bottom: \"innerprod2\" "
       "} "
       "layers: { "
       "  layer { "
@@ -376,7 +378,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
       "    type: \"split\" "
       "  } "
       "  bottom: \"data\" "
-      "  top: \"data_split_0\" "
+      "  top: \"data\" "
       "  top: \"data_split_1\" "
       "} "
       "layers: { "
@@ -384,7 +386,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
       "    name: \"innerprod1\" "
       "    type: \"inner_product\" "
       "  } "
-      "  bottom: \"data_split_0\" "
+      "  bottom: \"data\" "
       "  top: \"innerprod1\" "
       "} "
       "layers: { "
