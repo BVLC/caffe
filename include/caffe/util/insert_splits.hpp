@@ -16,8 +16,7 @@ void insert_splits(const NetParameter& param, NetParameter* param_split);
 void configure_split_layer(const string& blob_name,
     const int split_count, LayerConnection* split_layer_connection);
 
-void get_split_blob_name(const string& blob_name, const int split_index,
-    string* split_blob_name);
+string get_split_blob_name(const string& blob_name, const int split_index);
 
 }  // namespace caffe
 
