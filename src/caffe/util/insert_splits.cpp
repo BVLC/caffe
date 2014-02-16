@@ -36,7 +36,7 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
       blob_name_to_bottom_split_idx[blob_name] = 0;
     }
   }
-  // Create split layer for any input blobs user by other layers as bottom
+  // Create split layer for any input blobs used by other layers as bottom
   // blobs more than once.
   for (int i = 0; i < param.input_size(); ++i) {
     const string& blob_name = param.input(i);
