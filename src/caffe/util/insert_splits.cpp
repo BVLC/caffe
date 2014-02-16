@@ -3,11 +3,12 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <sstream>
 
-#include "caffe/common.hpp"
 #include "caffe/util/insert_splits.hpp"
 
 using std::map;
+using std::ostringstream;
 
 namespace caffe {
 
@@ -88,11 +89,9 @@ string get_split_blob_name(const string& blob_name, const int split_index) {
   if (split_index == 0) {
     return blob_name;
   }
-  const int suffix_max_length = 16;
-  char split_suffix[suffix_max_length];
-  CHECK_LT(snprintf(split_suffix, suffix_max_length, "_split_%d", split_index),
-           suffix_max_length);
-  return blob_name + split_suffix;
+  ostringstream split_blob_name;
+  split_blob_name << blob_name << "_split_" << split_index;
+  return split_blob_name.str();
 }
 
 }  // namespace caffe
