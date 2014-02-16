@@ -67,7 +67,6 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
       const int split_count = blob_name_to_bottom_count[blob_name];
       if (split_count > 1) {
         LayerConnection* split_layer_connection = param_split->add_layers();
-        split_layer_connection->add_bottom(blob_name);
         configure_split_layer(blob_name, split_count, split_layer_connection);
       }
     }
