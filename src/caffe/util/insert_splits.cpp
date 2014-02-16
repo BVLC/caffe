@@ -91,12 +91,16 @@ void configure_split_layer(const string& blob_name,
 
 void get_split_blob_name(const string& blob_name, const int split_index,
     string* split_blob_name) {
-  const int suffix_max_length = 16;
-  char split_suffix[suffix_max_length];
-  const int suffix_length = snprintf(split_suffix, suffix_max_length,
-      "_split_%d", split_index);
-  CHECK_LT(suffix_length, suffix_max_length);
-  *split_blob_name = blob_name + split_suffix;
+  if (split_index == 0) {
+    *split_blob_name = blob_name;
+  } else {
+    const int suffix_max_length = 16;
+    char split_suffix[suffix_max_length];
+    const int suffix_length = snprintf(split_suffix, suffix_max_length,
+        "_split_%d", split_index);
+    CHECK_LT(suffix_length, suffix_max_length);
+    *split_blob_name = blob_name + split_suffix;
+  }
 }
 
 }  // namespace caffe
