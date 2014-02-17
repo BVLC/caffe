@@ -162,8 +162,8 @@ void ImagesLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
-  const int new_height  = layer->layer_param_.new_height();
-  const int new_width  = layer->layer_param_.new_height();
+  const int new_height  = this->layer_param_.new_height();
+  const int new_width  = this->layer_param_.new_height();
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
                          new_height,new_width,&datum));
   // image
