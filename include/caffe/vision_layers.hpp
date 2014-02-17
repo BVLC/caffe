@@ -145,7 +145,7 @@ class ReshapeLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  int count_;
+  int COUNT_;
   int NUM_;
   int CHANNELS_;
   int HEIGHT_;

@@ -41,10 +41,10 @@ TYPED_TEST_CASE(ReshapeLayerTest, Dtypes);
 
 TYPED_TEST(ReshapeLayerTest, TestSetup) {
   LayerParameter layer_param;
-  layer_param.set_reshape_num(1);
-  layer_param.set_reshape_channels(2 * 3);
-  layer_param.set_reshape_height(6);
-  layer_param.set_reshape_width(5);
+  layer_param.set_new_num(1);
+  layer_param.set_new_channels(2 * 3);
+  layer_param.set_new_height(6);
+  layer_param.set_new_width(5);
   ReshapeLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 1);
@@ -56,10 +56,10 @@ TYPED_TEST(ReshapeLayerTest, TestSetup) {
 TYPED_TEST(ReshapeLayerTest, TestSetup2) {
   // Reshape like flatten
   LayerParameter layer_param;
-  layer_param.set_reshape_num(2);
-  layer_param.set_reshape_channels(3 * 6 * 5);
-  layer_param.set_reshape_height(1);
-  layer_param.set_reshape_width(1);
+  layer_param.set_new_num(2);
+  layer_param.set_new_channels(3 * 6 * 5);
+  layer_param.set_new_height(1);
+  layer_param.set_new_width(1);
   ReshapeLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -70,10 +70,10 @@ TYPED_TEST(ReshapeLayerTest, TestSetup2) {
 
 TYPED_TEST(ReshapeLayerTest, TestCPU) {
   LayerParameter layer_param;
-  layer_param.set_reshape_num(1);
-  layer_param.set_reshape_channels(2 * 3);
-  layer_param.set_reshape_height(6);
-  layer_param.set_reshape_width(5);
+  layer_param.set_new_num(1);
+  layer_param.set_new_channels(2 * 3);
+  layer_param.set_new_height(6);
+  layer_param.set_new_width(5);
   ReshapeLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::CPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -90,10 +90,10 @@ TYPED_TEST(ReshapeLayerTest, TestCPU) {
 
 TYPED_TEST(ReshapeLayerTest, TestCPU2) {
   LayerParameter layer_param;
-  layer_param.set_reshape_num(2);
-  layer_param.set_reshape_channels(3 * 6 * 5);
-  layer_param.set_reshape_height(1);
-  layer_param.set_reshape_width(1);
+  layer_param.set_new_num(2);
+  layer_param.set_new_channels(3 * 6 * 5);
+  layer_param.set_new_height(1);
+  layer_param.set_new_width(1);
   ReshapeLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::CPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -110,10 +110,10 @@ TYPED_TEST(ReshapeLayerTest, TestCPU2) {
 
 TYPED_TEST(ReshapeLayerTest, TestGPU) {
   LayerParameter layer_param;
-  layer_param.set_reshape_num(1);
-  layer_param.set_reshape_channels(2 * 3);
-  layer_param.set_reshape_height(6);
-  layer_param.set_reshape_width(5);
+  layer_param.set_new_num(1);
+  layer_param.set_new_channels(2 * 3);
+  layer_param.set_new_height(6);
+  layer_param.set_new_width(5);
   ReshapeLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::GPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -130,10 +130,10 @@ TYPED_TEST(ReshapeLayerTest, TestGPU) {
 
 TYPED_TEST(ReshapeLayerTest, TestGPU2) {
   LayerParameter layer_param;
-  layer_param.set_reshape_num(2);
-  layer_param.set_reshape_channels(3 * 6 * 5);
-  layer_param.set_reshape_height(1);
-  layer_param.set_reshape_width(1);
+  layer_param.set_new_num(2);
+  layer_param.set_new_channels(3 * 6 * 5);
+  layer_param.set_new_height(1);
+  layer_param.set_new_width(1);
   ReshapeLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::GPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -148,10 +148,10 @@ TYPED_TEST(ReshapeLayerTest, TestGPU2) {
 
 TYPED_TEST(ReshapeLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_reshape_num(1);
-  layer_param.set_reshape_channels(2 * 3);
-  layer_param.set_reshape_height(6);
-  layer_param.set_reshape_width(5);
+  layer_param.set_new_num(1);
+  layer_param.set_new_channels(2 * 3);
+  layer_param.set_new_height(6);
+  layer_param.set_new_width(5);
   Caffe::set_mode(Caffe::CPU);
   ReshapeLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
@@ -160,10 +160,10 @@ TYPED_TEST(ReshapeLayerTest, TestCPUGradient) {
 
 TYPED_TEST(ReshapeLayerTest, TestGPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_reshape_num(1);
-  layer_param.set_reshape_channels(2 * 3);
-  layer_param.set_reshape_height(6);
-  layer_param.set_reshape_width(5);
+  layer_param.set_new_num(1);
+  layer_param.set_new_channels(2 * 3);
+  layer_param.set_new_height(6);
+  layer_param.set_new_width(5);
   Caffe::set_mode(Caffe::GPU);
   ReshapeLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
