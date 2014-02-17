@@ -47,3 +47,23 @@ Please kindly cite Caffe in your publications if it helps your research:
       Year  = {2013},
       Howpublished = {\url{http://caffe.berkeleyvision.org/}
     }
+
+## Contributing
+
+Caffe is developed with the community by the [Berkeley Vision and Learning
+Center](http://bvlc.eecs.berkeley.edu/). We welcome contributions!
+
+To join in, please note this policy:
+
+- Do your work in [feature
+  branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch).
+- Bring your work up-to-date by
+  [rebasing](http://git-scm.com/book/en/Git-Branching-Rebasing) onto the latest
+  `dev`. Polish your changes by [interactive
+  rebase](https://help.github.com/articles/interactive-rebase) if you like too.
+- [Pull request](https://help.github.com/articles/using-pull-requests) your
+  contribution to BVLC/caffe's `dev` branch for discussion and review.
+- `dev` is for new development, community contributions, and testing.
+- `master` is handled by BVLC, which will integrate changes from `dev`.
+
+Expect a more detailed contributing guide soon. Thank you.
