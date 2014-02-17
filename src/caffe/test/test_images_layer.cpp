@@ -80,7 +80,8 @@ TYPED_TEST(ImagesLayerTest, TestResize) {
   LayerParameter param;
   param.set_batchsize(5);
   param.set_source(this->filename);
-  param.set_resize_image(256);
+  param.set_new_height(256);
+  param.set_new_width(256);
   param.set_shuffle_images(false);
   ImagesLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);

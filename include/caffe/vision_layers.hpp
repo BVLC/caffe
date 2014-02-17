@@ -341,17 +341,17 @@ class DataLayer : public Layer<Dtype> {
 
 // This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
-void* InputLayerPrefetch(void* layer_pointer);
+void* ImagesLayerPrefetch(void* layer_pointer);
 
 template <typename Dtype>
-class InputLayer : public Layer<Dtype> {
+class ImagesLayer : public Layer<Dtype> {
   // The function used to perform prefetching.
- friend void* InputLayerPrefetch<Dtype>(void* layer_pointer);
+ friend void* ImagesLayerPrefetch<Dtype>(void* layer_pointer);
 
  public:
-  explicit InputLayer(const LayerParameter& param)
+  explicit ImagesLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual ~InputLayer();
+  virtual ~ImagesLayer();
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
