@@ -55,6 +55,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new SoftmaxWithLossLayer<Dtype>(param);
   } else if (type == "multinomial_logistic_loss") {
     return new MultinomialLogisticLossLayer<Dtype>(param);
+  } else if (type == "logistic_regression") {
+    return new LogisticRegressionLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Unknown layer name: " << type;
   }
