@@ -92,10 +92,10 @@ message LayerParameter {
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
 
-  // Used by Input_layer to shuffle the list of files at every epoch
-  optional bool shuffle_data = 61 [default = false];
-  // If >0 then it will resize input images to size given by resize_image using cv::resize
-  optional int32 resize_image = 62 [default = 0 ];
+  // Used by ImageLayer to shuffle the list of files at every epoch it will also
+  // resize images if new_height or new_width are not zero
+  optional bool shuffle_images = 64 [default = false];
+
 }
 
 message LayerConnection {
