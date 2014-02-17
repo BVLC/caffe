@@ -19,9 +19,9 @@ using std::pair;
 namespace caffe {
 
 template <typename Dtype>
-void* InputLayerPrefetch(void* layer_pointer) {
+void* ImagesLayerPrefetch(void* layer_pointer) {
   CHECK(layer_pointer);
-  InputLayer<Dtype>* layer = reinterpret_cast<InputLayer<Dtype>*>(layer_pointer);
+  ImagesLayer<Dtype>* layer = reinterpret_cast<ImagesLayer<Dtype>*>(layer_pointer);
   CHECK(layer);
   Datum datum;
   CHECK(layer->prefetch_data_);
@@ -31,7 +31,8 @@ void* InputLayerPrefetch(void* layer_pointer) {
   const int batchsize = layer->layer_param_.batchsize();
   const int cropsize = layer->layer_param_.cropsize();
   const bool mirror = layer->layer_param_.mirror();
-  const int resize_image  = layer->layer_param_.resize_image();
+  const int new_height  = layer->layer_param_.new_height();
+  const int new_width  = layer->layer_param_.new_height();
 
   if (mirror && cropsize == 0) {
     LOG(FATAL) << "Current implementation requires mirror and cropsize to be "
@@ -48,7 +49,7 @@ void* InputLayerPrefetch(void* layer_pointer) {
     // get a blob
     CHECK_GT(lines_size,layer->lines_id_);
     if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first, layer->lines_[layer->lines_id_].second, 
-      resize_image, resize_image, &datum)) {
+      new_height, new_width, &datum)) {
       continue;
     };    
     const string& data = datum.data();
@@ -115,7 +116,7 @@ void* InputLayerPrefetch(void* layer_pointer) {
       // We have reached the end. Restart from the first.
       DLOG(INFO) << "Restarting data prefetching from start.";
       layer->lines_id_=0;
-      if (layer->layer_param_.shuffle_data()) {
+      if (layer->layer_param_.shuffle_images()) {
         std::random_shuffle(layer->lines_.begin(), layer->lines_.end());
       }
     }
@@ -125,13 +126,13 @@ void* InputLayerPrefetch(void* layer_pointer) {
 }
 
 template <typename Dtype>
-InputLayer<Dtype>::~InputLayer<Dtype>() {
+ImagesLayer<Dtype>::~ImagesLayer<Dtype>() {
   // Finally, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
 }
 
 template <typename Dtype>
-void InputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void ImagesLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 0) << "Input Layer takes no input blobs.";
   CHECK_EQ(top->size(), 2) << "Input Layer takes two blobs as output.";
@@ -144,7 +145,7 @@ void InputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     lines_.push_back(std::make_pair(filename, label));
   }
 
-  if (this->layer_param_.shuffle_data()) {
+  if (this->layer_param_.shuffle_images()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
     std::random_shuffle(lines_.begin(), lines_.end());
@@ -161,9 +162,10 @@ void InputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
-  const int resize_image  = this->layer_param_.resize_image();
+  const int new_height  = layer->layer_param_.new_height();
+  const int new_width  = layer->layer_param_.new_height();
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
-                         resize_image,resize_image,&datum));
+                         new_height,new_width,&datum));
   // image
   int cropsize = this->layer_param_.cropsize();
   if (cropsize > 0) {
@@ -215,13 +217,13 @@ void InputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   prefetch_label_->mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
-  CHECK(!pthread_create(&thread_, NULL, InputLayerPrefetch<Dtype>,
+  CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
   DLOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>
-void InputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void ImagesLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
@@ -231,12 +233,12 @@ void InputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   memcpy((*top)[1]->mutable_cpu_data(), prefetch_label_->cpu_data(),
       sizeof(Dtype) * prefetch_label_->count());
   // Start a new prefetch thread
-  CHECK(!pthread_create(&thread_, NULL, InputLayerPrefetch<Dtype>,
+  CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
 }
 
 template <typename Dtype>
-void InputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void ImagesLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
@@ -248,23 +250,23 @@ void InputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       prefetch_label_->cpu_data(), sizeof(Dtype) * prefetch_label_->count(),
       cudaMemcpyHostToDevice));
   // Start a new prefetch thread
-  CHECK(!pthread_create(&thread_, NULL, InputLayerPrefetch<Dtype>,
+  CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
 }
 
 // The backward operations are dummy - they do not carry any computation.
 template <typename Dtype>
-Dtype InputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+Dtype ImagesLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype InputLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+Dtype ImagesLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   return Dtype(0.);
 }
 
-INSTANTIATE_CLASS(InputLayer);
+INSTANTIATE_CLASS(ImagesLayer);
 
 }  // namespace caffe
