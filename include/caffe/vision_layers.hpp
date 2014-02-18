@@ -313,6 +313,32 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
+template <typename Dtype>
+class ConcatLayer : public Layer<Dtype> {
+ public:
+  explicit ConcatLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  Blob<Dtype> col_bob_;
+
+  int COUNT_;
+  int NUM_;
+  int CHANNELS_;
+  int HEIGHT_;
+  int WIDTH_;
+  int concat_dim_;
+};
 
 // This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
