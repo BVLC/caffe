@@ -9,7 +9,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/insert_splits.hpp"
 
 using std::pair;
 using std::map;
@@ -30,10 +29,7 @@ Net<Dtype>::Net(const string& param_file) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::Init(const NetParameter& in_param) {
-  // Create a copy of in_param with splits added where necessary.
-  NetParameter param;
-  insert_splits(in_param, &param);
+void Net<Dtype>::Init(const NetParameter& param) {
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
