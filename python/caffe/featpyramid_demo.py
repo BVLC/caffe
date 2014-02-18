@@ -7,7 +7,7 @@ test cases for multiscale pyramids of Convnet features.
 import numpy as np
 import os
 import sys
-import gflags
+#import gflags
 import time
 import caffe
 import time 
@@ -58,9 +58,9 @@ def test_featpyramid_allScales(caffenet, imgFname):
 
 if __name__ == "__main__":
 
-    imgFname = './pascal_009959.jpg'
-    model_def = './imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
-    pretrained_model = '../../../examples/alexnet_train_iter_470000'
+    imgFname = './imagenet/pascal_009959.jpg'
+    model_def = './imagenet/imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
+    pretrained_model = '../../examples/alexnet_train_iter_470000'
     use_gpu = True
     
     caffenet = caffe.CaffeNet(model_def, pretrained_model)
