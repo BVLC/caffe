@@ -53,8 +53,8 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
   for (int i = 0; i < param.input_size(); ++i) {
     const int split_count = top_idx_to_bottom_count[make_pair(-1, i)];
     if (split_count > 1) {
-      const string& blob_name = param.input(i);
       const string& layer_name = layer_idx_to_layer_name[-1];
+      const string& blob_name = param.input(i);
       LayerConnection* split_layer_connection = param_split->add_layers();
       configure_split_layer(layer_name, blob_name, i, split_count,
           split_layer_connection);
@@ -65,12 +65,12 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
     layer_connection->CopyFrom(param.layers(i));
     // Replace any shared bottom blobs with split layer outputs.
     for (int j = 0; j < layer_connection->bottom_size(); ++j) {
-      const string& blob_name = layer_connection->bottom(j);
       const pair<int, int>& top_idx =
           bottom_idx_to_source_top_idx[make_pair(i, j)];
       const int split_count = top_idx_to_bottom_count[top_idx];
       if (split_count > 1) {
         const string& layer_name = layer_idx_to_layer_name[top_idx.first];
+        const string& blob_name = layer_connection->bottom(j);
         layer_connection->set_bottom(j, get_split_blob_name(layer_name,
             blob_name, top_idx.second, top_idx_to_bottom_split_idx[top_idx]++));
       }
@@ -78,10 +78,10 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
     // Create split layer for any top blobs used by other layers as bottom
     // blobs more than once.
     for (int j = 0; j < layer_connection->top_size(); ++j) {
-      const string& blob_name = layer_connection->top(j);
       const int split_count = top_idx_to_bottom_count[make_pair(i, j)];
       if (split_count > 1) {
         const string& layer_name = layer_idx_to_layer_name[i];
+        const string& blob_name = layer_connection->top(j);
         LayerConnection* split_layer_connection = param_split->add_layers();
         configure_split_layer(layer_name, blob_name, j, split_count,
             split_layer_connection);
