@@ -47,7 +47,7 @@ message RegularizerParameter {
   }
   optional RegularizerType type = 1;
   // Coefficent controls how strong to regularize
-  optional float coeff = 2;
+  optional float coeff = 2 [default = 0];
 }
   
 message LayerParameter {

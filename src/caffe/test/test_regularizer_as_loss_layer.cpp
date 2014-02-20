@@ -33,6 +33,11 @@ class RegularizationAsLossTest : public ::testing::Test {
   virtual ~RegularizationAsLossTest() {
     delete blob_bottom_data_;
   }
+
+  void TestSubroutine(const bool death_condition,
+                      const LayerParameter& layer_param, const Dtype step_size,
+                      const Dtype threshold, const unsigned int seed = 1701);
+
   Blob<Dtype>* const blob_bottom_data_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
@@ -41,104 +46,106 @@ class RegularizationAsLossTest : public ::testing::Test {
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(RegularizationAsLossTest, Dtypes);
 
-#define TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(device_mode, regularizer_type, coeff_type, coeff) \
-TYPED_TEST(RegularizationAsLossTest, TestGradient##device_mode##_##regularizer_type##_##coeff_type){ \
+// The death test only abort the current function
+// http://code.google.com/p/googletest/wiki/V1_6_AdvancedGuide#Propagating_Fatal_Failures
+// We want to test all the combinations of coefficients.
+// If this subroutine is place in the test cases directly,
+// the test cases cannot enumerate the combinations after the first failure.
+template<typename Dtype>
+void RegularizationAsLossTest<Dtype>::TestSubroutine(
+    const bool death_condition, const LayerParameter& layer_param,
+    const Dtype step_size, const Dtype threshold, const unsigned int seed) {
+  if (death_condition) {
+    ASSERT_DEATH(
+        RegularizerAsLossLayer<Dtype> layer(layer_param),
+        "Regularizer coefficient must be greater than or equal to zero");
+  } else {
+    RegularizerAsLossLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+    GradientChecker<Dtype> checker(step_size, threshold, seed);
+    for (int loop = 0; loop < 10; ++loop) {
+      checker.CheckGradientSingle(layer, this->blob_bottom_vec_,
+                                  this->blob_top_vec_, 0, -1, -1);
+    }
+  }
+}
+
+#define TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(device_mode, regularizer_type) \
+TYPED_TEST(RegularizationAsLossTest, TestGradient##device_mode##_##regularizer_type){ \
+  /* To suppress Google Test warning of death tests running in multiple threads */ \
+  /* http://code.google.com/p/googletest/wiki/AdvancedGuide#Death_Test_Styles */ \
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe"; \
   Caffe::set_mode(Caffe::device_mode); \
-  LayerParameter layer_param; \
-  RegularizerParameter* reg_param = layer_param.add_regularizer(); \
-  reg_param->set_type(REG_TYPE(regularizer_type)); \
-  reg_param->set_coeff(coeff); \
-  if (coeff < 0) { \
-    /* To suppress Google Test warning of death tests running in multiple threads */ \
-    /* http://code.google.com/p/googletest/wiki/AdvancedGuide#Death_Test_Styles */ \
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe"; \
-    ASSERT_DEATH(RegularizerAsLossLayer<TypeParam> layer(layer_param), \
-                 "Regularizer coefficient must be greater than or equal to zero"); \
-  } else { \
-    RegularizerAsLossLayer<TypeParam> layer(layer_param); \
-    layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_); \
-    /* The second argment is the threshold. The current value is set large enough to */ \
-    /*   ensure that all the following test cases instantiated with this macro pass. */ \
-    /* Although not all of them need so large a threshold to pass, */ \
-    /*   we have to let even the toughest ones to pass too. */ \
-    GradientChecker<TypeParam> checker(1e-2, 5e-2, 1701); \
-    for (int loop = 0; loop < 10; ++loop) { \
-      checker.CheckGradientSingle(layer, this->blob_bottom_vec_, \
-          this->blob_top_vec_, 0, -1, -1); \
-    } \
+  TypeParam coeff[] = {1, 0, -1}; \
+  int num_ceoff = 3; \
+  bool condition; \
+  for (int i = 0; i < 3; ++i) { \
+    LayerParameter layer_param; \
+    RegularizerParameter* reg_param = layer_param.add_regularizer(); \
+    reg_param->set_type(REG_TYPE(regularizer_type)); \
+    reg_param->set_coeff(coeff[i]); \
+    condition = coeff[i] < 0; \
+    this->TestSubroutine(condition, layer_param, 1e-2, 5e-2, 1701); \
   } \
 }
 
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L1, NEGA, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L1, POSI, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L1, ZERO, 0);
+TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, MAX_NORM);
 
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L2, NEGA, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L2, POSI, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L2, ZERO, 0);
-
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, MAX_NORM, NEGA, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, MAX_NORM, POSI, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, MAX_NORM, ZERO, 0);
-
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L1, NEGA, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L1, POSI, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L1, ZERO, 0);
-
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L2, NEGA, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L2, POSI, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L2, ZERO, 0);
-
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, MAX_NORM, NEGA, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, MAX_NORM, POSI, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, MAX_NORM, ZERO, 0);
-
+TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, MAX_NORM);
 
 #define TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(device_mode, regularizer_type_a, \
-    regularizer_type_b, coeff_type_a, coeff_type_b, coeff_a, coeff_b) \
+    regularizer_type_b) \
 TYPED_TEST(RegularizationAsLossTest, \
-    TestGradient##device_mode##_##regularizer_type_a##_##regularizer_type_b##_##coeff_type_a##_##coeff_type_b){ \
+    TestGradient##device_mode##_##regularizer_type_a##_##regularizer_type_b){ \
+  /* To suppress Google Test warning of death tests running in multiple threads */ \
+  /* http://code.google.com/p/googletest/wiki/AdvancedGuide#Death_Test_Styles */ \
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe"; \
   Caffe::set_mode(Caffe::device_mode); \
-  LayerParameter layer_param; \
-  RegularizerParameter* reg_param; \
-  reg_param = layer_param.add_regularizer(); \
-  reg_param->set_type(REG_TYPE(regularizer_type_a)); \
-  reg_param->set_coeff(coeff_a); \
-  reg_param = layer_param.add_regularizer(); \
-  reg_param->set_type(REG_TYPE(regularizer_type_b)); \
-  reg_param->set_coeff(coeff_b); \
-  if (coeff_a < 0 || coeff_b < 0) { \
-    /* To suppress Google Test warning of death tests running in multiple threads */ \
-    /* http://code.google.com/p/googletest/wiki/AdvancedGuide#Death_Test_Styles */ \
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe"; \
-    ASSERT_DEATH(RegularizerAsLossLayer<TypeParam> layer(layer_param), \
-                 "Regularizer coefficient must be greater than or equal to zero"); \
-  } else { \
-    RegularizerAsLossLayer<TypeParam> layer(layer_param); \
-    layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_); \
-    /* The second argment is the threshold. The current value is set large enough to */ \
-    /*   ensure that all the following test cases instantiated with this macro pass. */ \
-    /* Although not all of them need so large a threshold to pass, */ \
-    /*   we have to let even the toughest ones to pass too. */ \
-    GradientChecker<TypeParam> checker(1e-2, 5e-2, 1701); \
-    for (int loop = 0; loop < 10; ++loop) { \
-      checker.CheckGradientSingle(layer, this->blob_bottom_vec_, \
-          this->blob_top_vec_, 0, -1, -1); \
+  TypeParam coeff[] = {1, 0, -1}; \
+  int num_ceoff = 3; \
+  bool condition; \
+  for (int i = 0; i < 3; ++i) { \
+    for (int j = 0; j < 3; ++j) { \
+      LayerParameter layer_param; \
+      RegularizerParameter* reg_param; \
+      reg_param = layer_param.add_regularizer(); \
+      reg_param->set_type(REG_TYPE(regularizer_type_a)); \
+      reg_param->set_coeff(coeff[i]); \
+      reg_param = layer_param.add_regularizer(); \
+      reg_param->set_type(REG_TYPE(regularizer_type_b)); \
+      reg_param->set_coeff(coeff[j]); \
+      condition = coeff[i] < 0 || coeff[j] < 0; \
+      this->TestSubroutine(condition, layer_param, 1e-2, 5e-2, 1701); \
     } \
   } \
 }
 
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, NEGA, NEGA, -1, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, NEGA, POSI, -1, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, NEGA, ZERO, -1, 0);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, MAX_NORM);
 
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, POSI, NEGA, 1, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, POSI, POSI, 1, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, POSI, ZERO, 1, 0);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L2, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L2, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L2, MAX_NORM);
 
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, ZERO, NEGA, 0, -1);
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, ZERO, POSI, 0, 1);
-TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, L1, L2, ZERO, ZERO, 0, 0);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, MAX_NORM, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, MAX_NORM, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(CPU, MAX_NORM, MAX_NORM);
 
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, L1, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, L1, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, L1, MAX_NORM);
+
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, L2, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, L2, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, L2, MAX_NORM);
+
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, MAX_NORM, L1);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, MAX_NORM, L2);
+TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, MAX_NORM, MAX_NORM);
 
 }
