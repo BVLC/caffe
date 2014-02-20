@@ -100,15 +100,21 @@ class Layer {
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
+  Dtype ret;
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    return Forward_cpu(bottom, top);
+    ret = Forward_cpu(bottom, top);
   case Caffe::GPU:
-    return Forward_gpu(bottom, top);
+    ret = Forward_gpu(bottom, top);
   default:
     LOG(FATAL) << "Unknown caffe mode.";
-    return Dtype(0);
   }
+  if (layer_param_.regularizer_size() > 0) {
+    for (int i = 0; i < layer_param_.regularizer_size(); ++i) {
+      ret += regularizers_[i]->Regularize(bottom->at(0));
+    }
+  }
+  return ret;
 }
 
 template <typename Dtype>
@@ -125,7 +131,7 @@ inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
-}
+};
 
 template <typename Dtype>
 void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
