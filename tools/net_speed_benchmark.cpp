@@ -67,12 +67,21 @@ int main(int argc, char** argv) {
   vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
   vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
   LOG(ERROR) << "*** Benchmark begins ***";
+  if (Caffe::mode() == Caffe::GPU) {
+    cudaDeviceSynchronize();
+  }
   clock_t forward_start = clock();
   for (int i = 0; i < layers.size(); ++i) {
     const string& layername = layers[i]->layer_param().name();
+    if (Caffe::mode() == Caffe::GPU) {
+      cudaDeviceSynchronize();
+    }
     clock_t start = clock();
     for (int j = 0; j < total_iter; ++j) {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
+    }
+    if (Caffe::mode() == Caffe::GPU) {
+      cudaDeviceSynchronize();
     }
     LOG(ERROR) << layername << "\tforward: "
         << static_cast<float>(clock() - start) / CLOCKS_PER_SEC
@@ -84,9 +93,15 @@ int main(int argc, char** argv) {
   clock_t backward_start = clock();
   for (int i = layers.size() - 1; i >= 0; --i) {
     const string& layername = layers[i]->layer_param().name();
+    if (Caffe::mode() == Caffe::GPU) {
+      cudaDeviceSynchronize();
+    }
     clock_t start = clock();
     for (int j = 0; j < total_iter; ++j) {
       layers[i]->Backward(top_vecs[i], true, &bottom_vecs[i]);
+    }
+    if (Caffe::mode() == Caffe::GPU) {
+      cudaDeviceSynchronize();
     }
     LOG(ERROR) << layername << "\tbackward: "
         << static_cast<float>(clock() - start) / CLOCKS_PER_SEC
