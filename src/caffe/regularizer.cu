@@ -123,8 +123,8 @@ Dtype MaxNormRegularizer<Dtype>::Regularize_gpu(Blob<Dtype>* bottom) {
 }
 
 template<typename Dtype>
-Regularizer<Dtype>* GetRegularizer(const LayerParameter& param) {
-  const LayerParameter_RegularizerType type = param.regularizer();
+Regularizer<Dtype>* GetRegularizer(const RegularizerParameter& param) {
+  const RegularizerParameter_RegularizerType type = param.type();
   if (type == REG_TYPE(L1)) {
     return new L1Regularizer<Dtype>(param);
   } else if (type == REG_TYPE(L2)) {
@@ -138,9 +138,9 @@ Regularizer<Dtype>* GetRegularizer(const LayerParameter& param) {
   return (Regularizer<Dtype>*) (NULL);
 }
 
-template Regularizer<float>* GetRegularizer<float>(const LayerParameter& param);
+template Regularizer<float>* GetRegularizer<float>(const RegularizerParameter& param);
 template Regularizer<double>* GetRegularizer<double>(
-    const LayerParameter& param);
+    const RegularizerParameter& param);
 
 INSTANTIATE_CLASS (Regularizer);
 INSTANTIATE_CLASS (L1Regularizer);

@@ -12,6 +12,18 @@ namespace caffe {
 using std::vector;
 
 template<typename Dtype>
+RegularizerAsLossLayer<Dtype>::RegularizerAsLossLayer(
+    const LayerParameter& param)
+    : Layer<Dtype>(param) {
+  num_regularizers_ = param.regularizer_size();
+  for (int s = 0; s < num_regularizers_; ++s) {
+    regularizers_.push_back(
+        shared_ptr<Regularizer<Dtype> >(
+            GetRegularizer<Dtype>(param.regularizer(s))));
+  }
+}
+
+template<typename Dtype>
 void RegularizerAsLossLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
                                           vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1)<< "RegularizerAsLossLayer takes one blob as input.";
@@ -38,7 +50,10 @@ Dtype RegularizerAsLossLayer<Dtype>::Backward_cpu(
   } else {
     memset(bottom_ptr->mutable_cpu_diff(), 0,
            bottom_ptr->count() * sizeof(Dtype));
-    Dtype loss = regularizer_->Regularize_cpu(bottom_ptr);
+    Dtype loss = 0;
+    for (int s = 0; s < num_regularizers_; ++s) {
+      loss += regularizers_[s]->Regularize_cpu(bottom_ptr);
+    }
     int num = bottom_ptr->num();
     // Scale down gradient
     caffe_scal<Dtype>(bottom_ptr->count(), Dtype(1) / num,
@@ -58,7 +73,10 @@ Dtype RegularizerAsLossLayer<Dtype>::Backward_gpu(
     CUDA_CHECK(
         cudaMemset(bottom_ptr->mutable_gpu_diff(), 0,
                    bottom_ptr->count() * sizeof(Dtype)));
-    Dtype loss = regularizer_->Regularize_gpu(bottom_ptr);
+    Dtype loss = 0;
+    for (int s = 0; s < num_regularizers_; ++s) {
+      loss += regularizers_[s]->Regularize_cpu(bottom_ptr);
+    }
     int num = bottom_ptr->num();
     // Scale down gradient
     caffe_gpu_scal<Dtype>(bottom_ptr->count(), Dtype(1) / num,

@@ -644,8 +644,7 @@ class EuclideanLossLayer : public Layer<Dtype> {
 template <typename Dtype>
 class RegularizerAsLossLayer : public Layer<Dtype> {
  public:
-  explicit RegularizerAsLossLayer(const LayerParameter& param)
-      : Layer<Dtype>(param), regularizer_(GetRegularizer<Dtype>(param)) {}
+  explicit RegularizerAsLossLayer(const LayerParameter& param);
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
@@ -659,7 +658,8 @@ class RegularizerAsLossLayer : public Layer<Dtype> {
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  shared_ptr<Regularizer<Dtype> > regularizer_;
+  vector<shared_ptr<Regularizer<Dtype> > > regularizers_;
+  int num_regularizers_;
 };
 
 template <typename Dtype>

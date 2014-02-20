@@ -12,8 +12,8 @@ namespace caffe {
 template<typename Dtype>
 class Regularizer {
  public:
-  Regularizer(const LayerParameter& param)
-      : coeff_(Dtype(param.regularizer_coeff())) {
+  Regularizer(const RegularizerParameter& param)
+      : coeff_(Dtype(param.coeff())) {
     if (coeff_ < 0) {
       LOG(FATAL)<<
       "Regularizer coefficient must be greater than or equal to zero";
@@ -52,7 +52,7 @@ inline int sign(Dtype val) {
 template<typename Dtype> \
 class type##Regularizer : public Regularizer<Dtype> { \
  public: \
- type##Regularizer(const LayerParameter& param) \
+ type##Regularizer(const RegularizerParameter& param) \
       : Regularizer<Dtype>(param) { \
   } \
   \
@@ -71,10 +71,10 @@ MAKE_SIMPLE_REGULARIZER_CLASS(L2);
 MAKE_SIMPLE_REGULARIZER_CLASS(MaxNorm);
 
 #define REG_TYPE(type) REG_TYPE_PASTE(type)
-#define REG_TYPE_PASTE(type) LayerParameter_RegularizerType_##type
+#define REG_TYPE_PASTE(type) RegularizerParameter_RegularizerType_##type
 
 template<typename Dtype>
-Regularizer<Dtype>* GetRegularizer(const LayerParameter& param);
+Regularizer<Dtype>* GetRegularizer(const RegularizerParameter& param);
 
 }
   // namespace caffe
