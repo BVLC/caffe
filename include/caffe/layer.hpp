@@ -7,6 +7,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/regularizer.hpp"
 
 using std::vector;
 
@@ -26,6 +27,12 @@ class Layer {
         for (int i = 0; i < layer_param_.blobs_size(); ++i) {
           blobs_[i].reset(new Blob<Dtype>());
           blobs_[i]->FromProto(layer_param_.blobs(i));
+        }
+      }
+      if (layer_param_.regularizer_size() > 0) {
+        regularizers_.resize(layer_param_.regularizer_size());
+        for (int i = 0; i < layer_param_.regularizer_size(); ++i) {
+          regularizers_[i].reset(GetRegularizer<Dtype>(param.regularizer(i)));
         }
       }
     }
@@ -58,6 +65,8 @@ class Layer {
   LayerParameter layer_param_;
   // The vector that stores the parameters as a set of blobs.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
+  // The vector that stores the regularizers.
+  vector<shared_ptr<Regularizer<Dtype> > > regularizers_;
 
   // Forward functions
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,

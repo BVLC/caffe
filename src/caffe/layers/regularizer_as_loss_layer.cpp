@@ -14,12 +14,13 @@ using std::vector;
 template<typename Dtype>
 RegularizerAsLossLayer<Dtype>::RegularizerAsLossLayer(
     const LayerParameter& param)
-    : Layer<Dtype>(param) {
-  num_regularizers_ = param.regularizer_size();
-  for (int s = 0; s < num_regularizers_; ++s) {
-    regularizers_.push_back(
-        shared_ptr<Regularizer<Dtype> >(
-            GetRegularizer<Dtype>(param.regularizer(s))));
+    : Layer<Dtype>(param),
+      num_regularizers_(param.regularizer_size()) {
+  if (num_regularizers_ > 0) {
+    regularizers_.resize(num_regularizers_);
+    for (int i = 0; i < num_regularizers_; ++i) {
+      regularizers_[i].reset(GetRegularizer<Dtype>(param.regularizer(i)));
+    }
   }
 }
 
@@ -51,8 +52,8 @@ Dtype RegularizerAsLossLayer<Dtype>::Backward_cpu(
     memset(bottom_ptr->mutable_cpu_diff(), 0,
            bottom_ptr->count() * sizeof(Dtype));
     Dtype loss = 0;
-    for (int s = 0; s < num_regularizers_; ++s) {
-      loss += regularizers_[s]->Regularize_cpu(bottom_ptr);
+    for (int i = 0; i < num_regularizers_; ++i) {
+      loss += regularizers_[i]->Regularize_cpu(bottom_ptr);
     }
     int num = bottom_ptr->num();
     // Scale down gradient
@@ -74,8 +75,8 @@ Dtype RegularizerAsLossLayer<Dtype>::Backward_gpu(
         cudaMemset(bottom_ptr->mutable_gpu_diff(), 0,
                    bottom_ptr->count() * sizeof(Dtype)));
     Dtype loss = 0;
-    for (int s = 0; s < num_regularizers_; ++s) {
-      loss += regularizers_[s]->Regularize_cpu(bottom_ptr);
+    for (int i = 0; i < num_regularizers_; ++i) {
+      loss += regularizers_[i]->Regularize_gpu(bottom_ptr);
     }
     int num = bottom_ptr->num();
     // Scale down gradient
