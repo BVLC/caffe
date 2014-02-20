@@ -1,4 +1,4 @@
-function [scores, weights] = matcaffe_demo(im, use_gpu)
+function [scores, maxlabel] = matcaffe_demo(im, use_gpu)
 % scores = matcaffe_demo(im, use_gpu)
 %
 % Demo of the matlab wrapper using the ILSVRC network.
@@ -87,16 +87,12 @@ tic;
 scores = caffe('forward', input_data);
 toc;
 
-% One can permute back Width and Height.
 scores = scores{1};
 size(scores)
 scores = squeeze(scores);
 scores = mean(scores,2);
 
-% you can also get network weights by calling
-if nargout == 2
-  weights = caffe('get_weights');
-end
+[~,maxlabel] = max(scores);
 
 % ------------------------------------------------------------------------
 function images = prepare_image(im)
