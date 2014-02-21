@@ -59,5 +59,4 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     %imagesc(squeeze(sum(pyra.feat{1}, 1)));
     imagesc(squeeze(sum(pyra.feat{1}, 3)));
 
-keyboard
 
