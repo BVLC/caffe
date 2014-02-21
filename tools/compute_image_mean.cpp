@@ -52,12 +52,13 @@ int main(int argc, char** argv) {
     const string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(), datum.float_data_size());
     CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " << size_in_datum;
-        << data.size();
-    for (int i = 0; i < size_in_datum; ++i) {
-      if (data.size() != 0) {
-	sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
-      } else {
-	sum_blob.set_data(i, sum_blob.data(i) + (float)datum.float_data(i));
+    if (data.size() != 0) {
+      for (int i = 0; i < size_in_datum; ++i) {
+        sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
+      }
+    } else {
+      for (int i = 0; i < size_in_datum; ++i) {
+        sum_blob.set_data(i, sum_blob.data(i) + (float)datum.float_data(i));
       }
     }
     ++count;
