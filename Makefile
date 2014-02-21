@@ -141,27 +141,27 @@ $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 $(OBJS): $(PROTO_GEN_CC) $(HXX_SRCS)
 
 $(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
 $(BUILD_DIR)/src/$(PROJECT)/layers/%.o: src/$(PROJECT)/layers/%.cpp
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
 $(BUILD_DIR)/src/$(PROJECT)/proto/%.o: src/$(PROJECT)/proto/%.cc
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
 $(BUILD_DIR)/src/$(PROJECT)/test/%.o: src/test/%.cpp
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
 $(BUILD_DIR)/src/$(PROJECT)/util/%.o: src/$(PROJECT)/util/%.cpp
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
 $(BUILD_DIR)/src/gtest/%.o: src/gtest/%.cpp
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
 $(BUILD_DIR)/src/$(PROJECT)/layers/%.cuo: src/$(PROJECT)/layers/%.cu
