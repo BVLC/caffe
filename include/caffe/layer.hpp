@@ -100,21 +100,21 @@ class Layer {
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  Dtype ret;
+  Dtype loss;
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    ret = Forward_cpu(bottom, top);
+    loss = Forward_cpu(bottom, top);
   case Caffe::GPU:
-    ret = Forward_gpu(bottom, top);
+    loss = Forward_gpu(bottom, top);
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
   if (layer_param_.regularizer_size() > 0) {
     for (int i = 0; i < layer_param_.regularizer_size(); ++i) {
-      ret += regularizers_[i]->Regularize(bottom->at(0));
+      loss += regularizers_[i]->Regularize(bottom->at(0));
     }
   }
-  return ret;
+  return loss;
 }
 
 template <typename Dtype>

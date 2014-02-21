@@ -39,7 +39,7 @@ message FillerParameter {
 }
 
 message RegularizerParameter {
-// Weight regularizer type  
+// Weight regularizer type
   enum RegularizerType {
     L1 = 0;
     L2 = 1;
@@ -49,7 +49,7 @@ message RegularizerParameter {
   // Coefficent controls how strong to regularize
   optional float coeff = 2 [default = 0];
 }
-  
+
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the string to specify the layer type
