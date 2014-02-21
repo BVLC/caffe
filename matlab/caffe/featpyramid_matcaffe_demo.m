@@ -30,14 +30,8 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     % NOTE: you'll have to get the pre-trained ILSVRC network
     model_file = '../../examples/alexnet_train_iter_470000';
 
-    %is_init = caffe('is_init');
-    %display(['    (before calling init) caffe is init? = ' num2str(is_init)]);
-
     % init caffe network (spews logging info)
     caffe('init', model_def_file, model_file);
-
-    %is_init = caffe('is_init');
-    %display(['    (after calling init) caffe is init? = ' num2str(is_init)]);
 
     % set to use GPU or CPU
     if exist('use_gpu', 'var') && use_gpu
@@ -55,12 +49,15 @@ function pyra = featpyramid_matcaffe_demo(imfn, use_gpu)
     pyra_params.feat_minWidth = 1;
     pyra_params.feat_minHeight = 1;
 
-    pyra = caffe('convnet_featpyramid', imfn, pyra_params ); % call with parameters ...
+    pyra = convnet_featpyramid(imfn, pyra_params); 
+    %pyra = caffe('convnet_featpyramid', imfn, pyra_params ); % call with parameters ...
     % pyra = caffe('convnet_featpyramid', imfn ); % ... or with no parameters
 
     %keyboard
     %visualize one scale:
     colormap(gray);
-    imagesc(squeeze(sum(pyra.feat{1}, 1)));
+    %imagesc(squeeze(sum(pyra.feat{1}, 1)));
+    imagesc(squeeze(sum(pyra.feat{1}, 3)));
 
+keyboard
 
