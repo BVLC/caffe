@@ -105,7 +105,8 @@ def _image_coordinates(dims, window):
     image_window: (ymin, xmin, ymax, xmax) in the original image frame
   """
   h, w = dims
-  h_scale, w_scale = h / IMAGE_DIM, w / IMAGE_DIM
+  max_dim = float(IMAGE_DIM)
+  h_scale, w_scale = h / max_dim, w / max_dim
   image_window = window * np.array((1. / h_scale, 1. / w_scale,
                                    h_scale, w_scale))
   return image_window.round().astype(int)
