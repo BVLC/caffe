@@ -5,6 +5,12 @@ title: Caffe
 
 # Installation
 
+Prior to installing, it is best to read through this guide and take note of the details for your platform. We mostly develop and deploy on Ubuntu 12.04, although we have also installed on OS X 10.8 (and 10.9 with further effort) through homebrew.
+
+- [Prerequisites](#prequequisites)
+- [Compilation](#compilation)
+- [OS X installation](#os_x_installation)
+
 To build and test Caffe do
 
     cp Makefile.config.example Makefile.config
@@ -12,16 +18,11 @@ To build and test Caffe do
     make test
     make runtest
 
-You will probably need to adust paths in `Makefile.config` and maybe the
-`Makefile` itself.
-Feel free to issue a pull request for a change that may help other people.
+You will probably need to adust paths in `Makefile.config` and maybe the `Makefile` itself. Feel free to issue a pull request for a change that may help other people.
 
-Note that building and running CPU-only works, but GPU tests will naturally
-fail.
+Note that building and running CPU-only works, but GPU tests will naturally fail.
 
-We mostly used Ubuntu 12.04 for development, and here we describe the
-step-to-step guide on installing Caffe on Ubuntu.
-We have also successfully compiled caffe on OS X 10.8.5, using homebrew-installed libraries.
+The following sections detail prerequisites and installation on Ubuntu. For OS X notes, refer to the table of contents above to skip ahead.
 
 ## Prerequisites
 
@@ -63,7 +64,7 @@ After installing the prerequisites, simply do `make all` to compile Caffe. If yo
     make pycaffe
     make matcaffe
 
-Optionally, you can run `make distribute` to create a `build` directory that contains all the necessary files, including the headers, compiled shared libraries, and binary files that you can distribute over different machines.
+Optionally, you can run `make distribute` to create a `distribute` directory that contains all the necessary files, including the headers, compiled shared libraries, and binary files that you can distribute over different machines.
 
 To use Caffe with python, you will need to add `/path/to/caffe/python` or `/path/to/caffe/build/python` to your `PYTHONPATH`.
 
@@ -88,7 +89,7 @@ If using homebrew python, python packages like `numpy` and `scipy` are best inst
 
 #### 10.9 additional notes
 
-In OS X 10.9 Apple changed to clang as the default compiler. Clang uses libc++ as the standard library by default, while Nvidia CUDA currently works with libstdc++. This makes it necessary to change the compilation settings for each of the dependencies. We do this by modifying the homebrew formulae before installing any packages. Make sure that homebrew doesn't install any software dependencies in the background; all packages must be linked to libstdc++.
+In OS X 10.9 Apple changed to clang as the default compiler. Clang uses libc++ as the standard library by default, while NVIDIA CUDA currently works with libstdc++. This makes it necessary to change the compilation settings for each of the dependencies. We do this by modifying the homebrew formulae before installing any packages. Make sure that homebrew doesn't install any software dependencies in the background; all packages must be linked to libstdc++.
 
 Only Anaconda python has been confirmed to work on 10.9.
 
@@ -101,8 +102,6 @@ For each package that you install through homebrew do the following:
 
 ```
     def install
-        ...
-
         #ADD THE FOLLOWING:
         ENV.append "CXXFLAGS", '-stdlib=libstdc++'
         ENV.append "CFLAGS", '-stdlib=libstdc++'
@@ -113,7 +112,7 @@ For each package that you install through homebrew do the following:
         ...
 ```
 
-The prequesite homebrew formulae are
+The prerequisite homebrew formulae are
 
     cmake boost snappy leveldb protobuf gflags glog homebrew/science/opencv
 
@@ -123,7 +122,7 @@ After this the rest of the installation is the same as under 10.8, as long as `c
 
 ### CUDA and MKL
 
-CUDA and MKL are very straightforward to install; download from NVIDIA and Intel websites.
+CUDA and MKL are very straightforward to install; download from the NVIDIA and Intel websites.
 
 ### Compiling Caffe
 
@@ -131,14 +130,14 @@ Here are the relevant parts of the Makefile.config after all this:
 
     CUDA_DIR := /Developer/NVIDIA/CUDA-5.5
     MKL_DIR := /opt/intel/mkl
-    PYTHON_INCLUDES := /usr/local/Cellar/python/2.7.6/Frameworks/Python.framework/Versions/2.7/include/python2.7 /usr/local/lib/python2.7/site-packages/numpy/core/include
-    PYTHON_LIB := /usr/local/Cellar/python/2.7.6/Frameworks/Python.framework/Versions/2.7/lib
+    PYTHON_INCLUDES := /path/to/anaconda/include /path/to/anaconda/include/python2.7 /path/to/anaconda/lib/python2.7/site-packages/numpy/core/include
+    PYTHON_LIB := /path/to/anaconda/lib
     CXX=/usr/bin/clang++
 
 Don't forget to set `PATH` and `LD_LIBRARY_PATH`:
 
-    export PATH=/Developer/NVIDIA/CUDA-5.5/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin
-    export LD_LIBRARY_PATH=/Developer/NVIDIA/CUDA-5.5/lib:/opt/intel/composer_xe_2013_sp1.1.103/compiler/lib:/opt/intel/composer_xe_2013_sp1.1.103/mkl/lib:/usr/local/Cellar/python/2.7.6/Frameworks/Python.framework/Versions/2.7/lib:/usr/local/lib:/usr/lib:/lib
+    export PATH=/path/to/anaconda/bin:/Developer/NVIDIA/CUDA-5.5/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin
+    export LD_LIBRARY_PATH=/Developer/NVIDIA/CUDA-5.5/lib:/opt/intel/composer_xe_2013_sp1.1.103/compiler/lib:/opt/intel/composer_xe_2013_sp1.1.103/mkl/lib:/path/to/anaconda/lib:/usr/local/lib:/usr/lib:/lib
 
 Additionally, MKL requires `DYLD_LIBRARY_PATH` to be set:
 
@@ -146,3 +145,5 @@ Additionally, MKL requires `DYLD_LIBRARY_PATH` to be set:
     export DYLD_LIBRARY_PATH=$MKL_DIR/compiler/lib:$MKL_DIR/mkl/lib
 
 Note that we still need to include the MKL `compiler/lib` in our paths, although we do not explicitly link against this directory in the Makefile.
+
+Further note that these paths are for Anaconda python. For homebrew python, substitute `/usr/local/Cellar/python/2.7.6/Frameworks/Python.framework/Versions/2.7` for `/path/to/anaconda`.
