@@ -3,8 +3,10 @@
 % provides some extra output params that you wouldn't get with caffe('convnet_featpyramid', ...)
 % this 'cache' verison enables precomputing features once (not once per pascal category... REALLY ONCE.)
 
+% to enable caching, you simply define 'pyra_params.feature_dir'
+
 % YOU MUST CALL caffe('init', ...) BEFORE RUNNING THIS.
-function pyra = convnet_featpyramid(imgFname, pyra_params)
+function pyra = convnet_featpyramid(imgFname, pyra_params, feature_dir)
 
     %set defaults for params not passed by user
     if( ~exist('pyra_params') || ~isfield(pyra_params, 'interval') )
@@ -22,25 +24,55 @@ function pyra = convnet_featpyramid(imgFname, pyra_params)
         local_pyra_params.feat_minHeight = pyra_params.feat_minHeight;
     end 
 
-    %for 'cache' version, we compute all scales, then prune the too-small ones in Matlab.
-    pyra_params.feat_minWidth = 1;
-    pyra_params.feat_minHeight = 1;
+    % only use caching if user provided pyra_params.feature_dir.
+    if( exist('feature_dir') == 1 ) % ==1 means 'exists in workspace'
+        useCache = true;
+        [path basename ext] = fileparts(imgFname);
+        cache_location = [feature_dir '/' basename '.mat'];
+        pyra = try_cache(imgFname, pyra_params, cache_location); %returns [] if cached object does not exist
+    else
+        useCache = false;
+        cache_location = '';
+        pyra = [];
+    end
 
-    % compute the pyramid: 
-    pyra = caffe('convnet_featpyramid', imgFname, pyra_params);
+    if isempty(pyra) 
+        %for 'cache' version, we compute all scales, then prune the too-small ones in Matlab.
+        pyra_params.feat_minWidth = 1;
+        pyra_params.feat_minHeight = 1;
 
-    % add DPM-style fields:
-    pyra.sbin = 16;
-    pyra.padx = pyra.feat_padx; % for DPM conventions
-    pyra.pady = pyra.feat_pady;
-    pyra.num_levels = length(pyra.scales);
-    pyra.valid_levels = true(pyra.num_levels, 1);
+        % compute the pyramid: 
+        pyra = caffe('convnet_featpyramid', imgFname, pyra_params);
 
-    pyra.imsize = [pyra.imheight pyra.imwidth];
-    pyra.feat = permute_feat(pyra.feat); % [d h w] -> [h w d]     
-    pyra.scales = double(pyra.scales); %get_detection_trees prefers double
+        % add DPM-style fields:
+        pyra.sbin = 16;
+        pyra.padx = pyra.feat_padx; % for DPM conventions
+        pyra.pady = pyra.feat_pady;
+        pyra.num_levels = length(pyra.scales);
+        pyra.valid_levels = true(pyra.num_levels, 1);
+
+        pyra.imsize = [pyra.imheight pyra.imwidth];
+        pyra.feat = permute_feat(pyra.feat); % [d h w] -> [h w d]     
+        pyra.scales = double(pyra.scales); %get_detection_trees prefers double
+        pyra.im = imgFname;
+
+        if useCache == true
+            save(cache_location, 'pyra');
+        end
+    end
 
     pyra = prune_small_scales(pyra, local_pyra_params);
+end
+
+function pyra = try_cache(imgFname, pyra_params, cache_location)
+    try
+        load(cache_location); %contains pyra
+        assert( exist('pyra') == 1 ); %make sure we actually loaded the pyramid.
+        assert( strcmp(pyra.im, imgFname) == 1 ) %make sure we got the right pyramid
+        display('      found cached features');
+    catch
+        pyra = [];   
+    end
 end
 
 % input:  pyra.feat{:}, with dims [d h w]
@@ -63,15 +95,18 @@ function pyra = prune_small_scales(pyra, pyra_params)
     end
 
     num_scales = length(pyra.scales);
-    
+    num_pruned = 0;
+ 
     for scaleIdx = 1:num_scales
         [h w d] = size(pyra.feat{scaleIdx});
         if (h < pyra_params.feat_minHeight) || (w < pyra_params.feat_minWidth)
             %found a scale that's too small. prune it.
             pyra.valid_levels(scaleIdx) = false;
             pyra.feat{scaleIdx} = []; %clear the too-small scale, just to be safe.
+            num_pruned = num_pruned + 1;
         end 
     end
+    display(['    had to remove last ' int2str(num_pruned) ' scales, because they were smaller than the minimum that you specified in (feat_minWidth, feat_minHeight)'])
 end
 
 
