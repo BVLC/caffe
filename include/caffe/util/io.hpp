@@ -5,6 +5,10 @@
 
 #include <google/protobuf/message.h>
 
+#include <boost/scoped_ptr.hpp>
+#include "hdf5.h"
+#include "hdf5_hl.h"
+
 #include <string>
 
 #include "caffe/blob.hpp"
@@ -47,6 +51,11 @@ inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
+
+template <typename Dtype>
+void load_2d_dataset(
+  hid_t file_id, const char* dataset_name_,
+  boost::scoped_ptr<Dtype>* array, hsize_t* dims);
 
 }  // namespace caffe
 
