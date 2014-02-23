@@ -62,6 +62,8 @@ class Net {
   // Access intermediary computation layers, testing with centre image only
   bool HasBlob(const string& blob_name);
   const shared_ptr<Blob<Dtype> > GetBlob(const string& blob_name);
+  bool HasLayer(const string& layer_name);
+  const shared_ptr<Layer<Dtype> > GetLayerByName(const string& layer_name);
 
   // returns the network name.
   inline const string& name() { return name_; }
@@ -96,6 +98,7 @@ class Net {
   // Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
+  map<string, int> layer_names_index_;
   vector<bool> layer_need_backward_;
   // blobs stores the blobs that store intermediate results between the
   // layers.
