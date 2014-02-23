@@ -5,6 +5,9 @@
 
 #include <leveldb/db.h>
 #include <pthread.h>
+#include <boost/scoped_ptr.hpp>
+
+#include "hdf5.h"
 
 #include <vector>
 
@@ -348,6 +351,33 @@ class DataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
+};
+
+
+template <typename Dtype>
+class HDF5DataLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5DataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~HDF5DataLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  boost::scoped_ptr<Dtype> data;
+  boost::scoped_ptr<Dtype> label;
+  hsize_t data_dims[2];
+  hsize_t label_dims[2];
+  hsize_t current_row;
 };
 
 
