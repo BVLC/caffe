@@ -162,6 +162,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     LOG(INFO) << "This network produces output " << *it;
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
   }
+  for (size_t i = 0; i < blob_names_.size(); ++i) {
+    blob_names_index_[blob_names_[i]] = i;
+  }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for Data " << memory_used*sizeof(Dtype);
@@ -325,6 +328,26 @@ void Net<Dtype>::Update() {
   for (int i = 0; i < params_.size(); ++i) {
     params_[i]->Update();
   }
+}
+
+// HasBlob and GetBlob are inspired by
+// https://github.com/kencoken/caffe/commit/f36e71569455c9fbb4bf8a63c2d53224e32a4e7b
+// Access intermediary computation layers, testing with centre image only
+template <typename Dtype>
+bool Net<Dtype>::HasBlob(const string& blob_name) {
+  return blob_names_index_.find(blob_name) != blob_names_index_.end();
+}
+
+template <typename Dtype>
+const shared_ptr<Blob<Dtype> > Net<Dtype>::GetBlob(const string& blob_name) {
+  shared_ptr<Blob<Dtype> > blob_ptr;
+  if (HasBlob(blob_name)) {
+    blob_ptr = blobs_[blob_names_index_[blob_name]];
+  } else {
+    blob_ptr.reset(new Blob<Dtype>());
+    LOG(ERROR) << "Unknown blob name " << blob_name;
+  }
+  return blob_ptr;
 }
 
 INSTANTIATE_CLASS(Net);
