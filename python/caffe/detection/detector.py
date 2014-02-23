@@ -125,9 +125,10 @@ def _assemble_images_list(input_df):
       with 'image', 'window', 'filename' columns
   """
   # unpack sequence of (image filename, windows)
-  windows = input_df[['ymin', 'xmin', 'ymax', 'xmax']].values
+  coords = ['ymin', 'xmin', 'ymax', 'xmax']
   image_windows = (
-    (ix, windows[input_df.index.get_loc(ix)]) for ix in input_df.index.unique()
+    (ix, input_df.iloc[np.where(input_df.index == ix)][coords].values)
+    for ix in input_df.index.unique()
   )
 
   # extract windows
