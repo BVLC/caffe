@@ -272,6 +272,7 @@ class PoolingLayer : public Layer<Dtype> {
   int POOLED_HEIGHT_;
   int POOLED_WIDTH_;
   Blob<float> rand_idx_;
+  shared_ptr<SyncedMemory> max_idx_;
 };
 
 
