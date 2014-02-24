@@ -2,6 +2,7 @@
 
 #include <cuda_runtime.h>
 #include <leveldb/db.h>
+#include <leveldb/write_batch.h>
 
 #include <string>
 
@@ -33,6 +34,7 @@ class DataLayerTest : public ::testing::Test {
     filename = tmpnam(NULL); // get temp name
     LOG(INFO) << "Using temporary leveldb " << filename;
     leveldb::DB* db;
+    leveldb::WriteBatch* batch = new leveldb::WriteBatch();
     leveldb::Options options;
     options.error_if_exists = true;
     options.create_if_missing = true;
@@ -50,8 +52,10 @@ class DataLayerTest : public ::testing::Test {
       }
       stringstream ss;
       ss << i;
-      db->Put(leveldb::WriteOptions(), ss.str(), datum.SerializeAsString());
+      batch->Put(ss.str(), datum.SerializeAsString());
     }
+    db->Write(leveldb::WriteOptions(), batch);
+    delete batch;
     delete db;
   };
 

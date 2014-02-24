@@ -57,6 +57,13 @@ class Net {
   void CopyTrainedLayersFrom(const string trained_filename);
   // Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
+  // HasBlob and GetBlob are inspired by
+  // https://github.com/kencoken/caffe/commit/f36e71569455c9fbb4bf8a63c2d53224e32a4e7b
+  // Access intermediary computation layers, testing with centre image only
+  bool HasBlob(const string& blob_name);
+  const shared_ptr<Blob<Dtype> > GetBlob(const string& blob_name);
+  bool HasLayer(const string& layer_name);
+  const shared_ptr<Layer<Dtype> > GetLayerByName(const string& layer_name);
 
   // returns the network name.
   inline const string& name() { return name_; }
@@ -91,11 +98,13 @@ class Net {
   // Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
+  map<string, int> layer_names_index_;
   vector<bool> layer_need_backward_;
   // blobs stores the blobs that store intermediate results between the
   // layers.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
+  map<string, int> blob_names_index_;
   vector<bool> blob_need_backward_;
   // bottom_vecs stores the vectors containing the input for each layer.
   // They don't actually host the blobs (blobs_ does), so we simply store
