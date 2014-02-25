@@ -1,11 +1,11 @@
 // Copyright Yangqing Jia 2013
 //
-// This script converts the MNIST dataset to the leveldb format used
+// This script converts the CIFAR dataset to the leveldb format used
 // by caffe to perform classification.
 // Usage:
-//    convert_mnist_data input_image_file input_label_file output_db_file
-// The MNIST dataset could be downloaded at
-//    http://yann.lecun.com/exdb/mnist/
+//    convert_cifar_data input_image_file input_label_file output_db_file
+// The CIFAR dataset could be downloaded at
+//    http://www.cs.toronto.edu/~kriz/cifar.html
 
 #include <google/protobuf/text_format.h>
 #include <glog/logging.h>
