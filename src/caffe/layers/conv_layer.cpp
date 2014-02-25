@@ -18,6 +18,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   KSIZE_ = this->layer_param_.kernelsize();
   STRIDE_ = this->layer_param_.stride();
   GROUP_ = this->layer_param_.group();
+  PAD_ = this->layer_param_.pad();
   NUM_ = bottom[0]->num();
   CHANNELS_ = bottom[0]->channels();
   HEIGHT_ = bottom[0]->height();
@@ -27,8 +28,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(CHANNELS_ % GROUP_, 0);
   // The im2col result buffer would only hold one image at a time to avoid
   // overly large memory usage.
-  int height_out = (HEIGHT_ - KSIZE_) / STRIDE_ + 1;
-  int width_out = (WIDTH_ - KSIZE_) / STRIDE_ + 1;
+  int height_out = (HEIGHT_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
+  int width_out = (WIDTH_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1;
   col_buffer_.Reshape(1, CHANNELS_ * KSIZE_ * KSIZE_, height_out, width_out);
   // Set the parameters
   CHECK_EQ(NUM_OUTPUT_ % GROUP_, 0)
@@ -88,7 +89,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int n = 0; n < NUM_; ++n) {
     // First, im2col
     im2col_cpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
-        WIDTH_, KSIZE_, STRIDE_, col_data);
+                      WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // Second, innerproduct with groups
     for (int g = 0; g < GROUP_; ++g) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
@@ -118,7 +119,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   for (int n = 0; n < NUM_; ++n) {
     // First, im2col
     im2col_gpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
-        WIDTH_, KSIZE_, STRIDE_, col_data);
+                      WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // Second, innerproduct with groups
     for (int g = 0; g < GROUP_; ++g) {
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
@@ -167,7 +168,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
     im2col_cpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,
-        WIDTH_, KSIZE_, STRIDE_, col_data);
+                      WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // gradient w.r.t. weight. Note that we will accumulate diffs.
     for (int g = 0; g < GROUP_; ++g) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
@@ -185,7 +186,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
       // col2im back to the data
       col2im_cpu(col_diff, CHANNELS_, HEIGHT_,
-        WIDTH_, KSIZE_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
+                        WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
     }
   }
   return Dtype(0.);
@@ -225,7 +226,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
     im2col_gpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,
-        WIDTH_, KSIZE_, STRIDE_, col_data);
+                      WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // gradient w.r.t. weight. Note that we will accumulate diffs.
     for (int g = 0; g < GROUP_; ++g) {
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
@@ -243,7 +244,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       }
       // col2im back to the data
       col2im_gpu(col_diff, CHANNELS_, HEIGHT_,
-          WIDTH_, KSIZE_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
+                        WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
     }
   }
   return Dtype(0.);
