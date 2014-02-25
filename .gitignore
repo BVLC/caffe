@@ -40,3 +40,4 @@ distribute/*
 
 # user's specified config
 Makefile.config
+docs/_site
