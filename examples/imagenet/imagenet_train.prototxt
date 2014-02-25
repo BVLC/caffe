@@ -1,8 +1,17 @@
-input: "data"
-input_dim: 10
-input_dim: 3
-input_dim: 227
-input_dim: 227
+name: "CaffeNet"
+layers {
+  layer {
+    name: "data"
+    type: "data"
+    source: "/home/jiayq/Data/ILSVRC12/train-leveldb"
+    meanfile: "/home/jiayq/Data/ILSVRC12/image_mean.binaryproto"
+    batchsize: 256
+    cropsize: 227
+    mirror: true
+  }
+  top: "data"
+  top: "label"
+}
 layers {
   layer {
     name: "conv1"
@@ -347,9 +356,9 @@ layers {
 }
 layers {
   layer {
-    name: "prob"
-    type: "softmax"
+    name: "loss"
+    type: "softmax_loss"
   }
   bottom: "fc8"
-  top: "prob"
+  bottom: "label"
 }

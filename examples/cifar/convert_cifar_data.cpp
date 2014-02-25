@@ -3,7 +3,7 @@
 // This script converts the CIFAR dataset to the leveldb format used
 // by caffe to perform classification.
 // Usage:
-//    convert_cifar_data input_image_file input_label_file output_db_file
+//    convert_cifar_data input_folder output_db_file
 // The CIFAR dataset could be downloaded at
 //    http://www.cs.toronto.edu/~kriz/cifar.html
 
