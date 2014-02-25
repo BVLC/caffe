@@ -3,7 +3,7 @@ layers {
   layer {
     name: "mnist"
     type: "data"
-    source: "mnist-train-leveldb"
+    source: "../data/mnist-train-leveldb"
     batchsize: 64
     scale: 0.00390625
   }
