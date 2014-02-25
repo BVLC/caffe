@@ -66,7 +66,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     mask = (int*)max_idx_->mutable_cpu_data();
     for (int i = 0; i < top_count; ++i) {
       top_data[i] = -FLT_MAX;
-      mask[i] = 0;
+      mask[i] = -1;
     }
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
