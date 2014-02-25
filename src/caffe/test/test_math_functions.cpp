@@ -98,4 +98,25 @@ TYPED_TEST(MathFunctionsTest, TestAsumGPU){
   CHECK_LT((gpu_asum - std_asum) / std_asum, 1e-2);
 }
 
+TYPED_TEST(MathFunctionsTest, TestSignCPU){
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_cpu_sign<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* signs = this->blob_bottom_->cpu_diff();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestSignGPU){
+  int n = this->blob_bottom_->count();
+  caffe_gpu_sign<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                            this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* signs = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+  }
+}
+
 }
