@@ -1,7 +1,7 @@
 // Copyright 2014 kloudkl@github
 
-#include <stdint.h>  // for uint32_t & uint64_t
-#include <cmath>  // for std::fabs
+#include <stdint.h> // for uint32_t & uint64_t
+#include <cmath> // for std::fabs
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -67,7 +67,7 @@ REF_HAMMING_DIST(double, uint64_t);
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(MathFunctionsTest, Dtypes);
 
-TYPED_TEST(MathFunctionsTest, TestHammingDistance) {
+TYPED_TEST(MathFunctionsTest, TestHammingDistance){
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
@@ -98,4 +98,25 @@ TYPED_TEST(MathFunctionsTest, TestAsumGPU){
   CHECK_LT((gpu_asum - std_asum) / std_asum, 1e-2);
 }
 
-}  // namespace caffe
+TYPED_TEST(MathFunctionsTest, TestSignCPU){
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_cpu_sign<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* signs = this->blob_bottom_->cpu_diff();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestSignGPU){
+  int n = this->blob_bottom_->count();
+  caffe_gpu_sign<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                            this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* signs = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+  }
+}
+
+}
