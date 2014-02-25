@@ -90,8 +90,8 @@ TYPED_TEST(PoolingLayerTest, TestCPUGradientMax) {
   Caffe::set_mode(Caffe::CPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-4, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(PoolingLayerTest, TestGPUGradientMax) {
@@ -102,8 +102,8 @@ TYPED_TEST(PoolingLayerTest, TestGPUGradientMax) {
   Caffe::set_mode(Caffe::GPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-4, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 
@@ -115,8 +115,8 @@ TYPED_TEST(PoolingLayerTest, TestCPUGradientAve) {
   Caffe::set_mode(Caffe::CPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 
@@ -128,8 +128,8 @@ TYPED_TEST(PoolingLayerTest, TestGPUGradientAve) {
   Caffe::set_mode(Caffe::GPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 

@@ -139,8 +139,8 @@ TYPED_TEST(LRNLayerTest, TestCPUGradient) {
   //   std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i]
   //       << std::endl;
   // }
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(LRNLayerTest, TestGPUGradient) {
@@ -158,8 +158,8 @@ TYPED_TEST(LRNLayerTest, TestGPUGradient) {
   //   std::cout << "GPU diff " << this->blob_bottom_->cpu_diff()[i]
   //       << std::endl;
   // }
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 }  // namespace caffe

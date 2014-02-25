@@ -81,8 +81,8 @@ TYPED_TEST(FlattenLayerTest, TestCPUGradient) {
   Caffe::set_mode(Caffe::CPU);
   FlattenLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(FlattenLayerTest, TestGPUGradient) {
@@ -90,8 +90,8 @@ TYPED_TEST(FlattenLayerTest, TestGPUGradient) {
   Caffe::set_mode(Caffe::GPU);
   FlattenLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 

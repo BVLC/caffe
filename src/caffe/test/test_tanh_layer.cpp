@@ -70,8 +70,8 @@ TYPED_TEST(TanHLayerTest, TestGradientCPU) {
   Caffe::set_mode(Caffe::CPU);
   TanHLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(TanHLayerTest, TestForwardGPU) {
@@ -102,8 +102,8 @@ TYPED_TEST(TanHLayerTest, TestGradientGPU) {
   Caffe::set_mode(Caffe::GPU);
   TanHLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 }  // namespace caffe
