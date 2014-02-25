@@ -1,4 +1,5 @@
 // Copyright 2013 Yangqing Jia
+// Copyright 2014 kloudkl@github
 
 #include <mkl.h>
 #include <cublas_v2.h>
@@ -291,6 +292,28 @@ template <>
 void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
     double * out) {
   CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+}
+
+template <>
+int caffe_hamming_distance<float>(const int n, const float* x,
+                                  const float* y) {
+  int dist = 0;
+  for (int i = 0; i < n; ++i) {
+    dist += __builtin_popcount(static_cast<uint32_t>(x[i]) ^
+                               static_cast<uint32_t>(y[i]));
+  }
+  return dist;
+}
+
+template <>
+int caffe_hamming_distance<double>(const int n, const double* x,
+                                   const double* y) {
+  int dist = 0;
+  for (int i = 0; i < n; ++i) {
+    dist += __builtin_popcountl(static_cast<uint64_t>(x[i]) ^
+                                static_cast<uint64_t>(y[i]));
+  }
+  return dist;
 }
 
 }  // namespace caffe
