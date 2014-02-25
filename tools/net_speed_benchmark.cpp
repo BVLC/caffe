@@ -76,11 +76,9 @@ int main(int argc, char** argv) {
     for (int j = 0; j < total_iter; ++j) {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
     }
-    timer.Stop();
-    LOG(ERROR) << layername << "\tforward: " << timer.ElapsedSeconds() << " seconds.";
+    LOG(ERROR) << layername << "\tforward: " << timer.MilliSeconds() << " milli seconds.";
   }
-  forward_timer.Stop();
-  LOG(ERROR) << "Forward pass: " << forward_timer.ElapsedSeconds() << " seconds.";
+  LOG(ERROR) << "Forward pass: " << forward_timer.MilliSeconds() << " milli seconds.";
   Timer backward_timer;
   backward_timer.Start();
   for (int i = layers.size() - 1; i >= 0; --i) {
@@ -89,14 +87,11 @@ int main(int argc, char** argv) {
     for (int j = 0; j < total_iter; ++j) {
       layers[i]->Backward(top_vecs[i], true, &bottom_vecs[i]);
     }
-    timer.Stop();
     LOG(ERROR) << layername << "\tbackward: "
-        << timer.ElapsedSeconds() << " seconds.";
+        << timer.MilliSeconds() << " milli seconds.";
   }
-  backward_timer.Stop();
-  LOG(ERROR) << "Backward pass: " << backward_timer.ElapsedSeconds() << " seconds.";
-  total_timer.Stop();
-  LOG(ERROR) << "Total Time: " << total_timer.ElapsedSeconds() << " seconds.";
+  LOG(ERROR) << "Backward pass: " << backward_timer.MilliSeconds() << " milli seconds.";
+  LOG(ERROR) << "Total Time: " << total_timer.MilliSeconds() << " milli seconds.";
   LOG(ERROR) << "*** Benchmark ends ***";
   return 0;
 }
