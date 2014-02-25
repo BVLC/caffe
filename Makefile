@@ -110,6 +110,11 @@ init:
 linecount: clean
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
 
+lint:
+	./scripts/cpplint.py $(CXX_SRCS) $(HXX_SRCS) $(CU_SRCS) \
+		$(TEST_SRCS) $(TEST_HDRS) $(EXAMPLE_SRCS) \
+		$(PY$(PROJECT)_SRC) $(MAT$(PROJECT)_SRC)
+
 test: init $(TEST_BINS)
 
 tools: init $(TOOL_BINS)
