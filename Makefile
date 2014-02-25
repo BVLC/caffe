@@ -26,6 +26,8 @@ TEST_SRCS := $(shell find src/$(PROJECT) -name "test_*.cpp")
 GTEST_SRC := src/gtest/gtest-all.cpp
 # TEST_HDRS are the test header files
 TEST_HDRS := $(shell find src/$(PROJECT) -name "test_*.hpp")
+# TOOL_SRCS are the source files for the tool binaries
+TOOL_SRCS := $(shell find tools -name "*.cpp")
 # EXAMPLE_SRCS are the source files for the example binaries
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
@@ -46,16 +48,18 @@ PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
 # The objects corresponding to the source files
 # These objects will be linked into the final shared library, so we
-# exclude the test and example objects.
+# exclude the tool, example, and test objects.
 CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
 CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
 PROTO_OBJS := $(addprefix $(BUILD_DIR)/, ${PROTO_GEN_CC:.cc=.o})
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
-# program and test objects
+# tool, example, and test objects
+TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
 EXAMPLE_OBJS := $(addprefix $(BUILD_DIR)/, ${EXAMPLE_SRCS:.cpp=.o})
 TEST_OBJS := $(addprefix $(BUILD_DIR)/, ${TEST_SRCS:.cpp=.o})
 GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
-# program and test bins
+# tool, example, and test bins
+TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
 
@@ -86,13 +90,14 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 ##############################
 # Define build targets
 ##############################
-.PHONY: all init test clean linecount examples py mat distribute py$(PROJECT) mat$(PROJECT) proto
+.PHONY: all init test clean linecount tools examples py mat distribute py$(PROJECT) mat$(PROJECT) proto
 
-all: init $(NAME) $(STATIC_NAME) examples
+all: init $(NAME) $(STATIC_NAME) tools examples
 	@echo $(CXX_OBJS)
 
 init:
 	@ mkdir -p $(foreach obj,$(OBJS),$(dir $(obj)))
+	@ mkdir -p $(foreach obj,$(TOOL_OBJS),$(dir $(obj)))
 	@ mkdir -p $(foreach obj,$(EXAMPLE_OBJS),$(dir $(obj)))
 	@ mkdir -p $(foreach obj,$(TEST_OBJS),$(dir $(obj)))
 	@ mkdir -p $(foreach obj,$(GTEST_OBJ),$(dir $(obj)))
@@ -101,6 +106,8 @@ linecount: clean
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
 
 test: init $(TEST_BINS)
+
+tools: init $(TOOL_BINS)
 
 examples: init $(EXAMPLE_BINS)
 
@@ -133,6 +140,10 @@ runtest: test
 
 $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
 	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+
+$(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
+	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	@echo
 
 $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
@@ -172,6 +183,10 @@ $(BUILD_DIR)/src/$(PROJECT)/util/%.cuo: src/$(PROJECT)/util/%.cu
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@echo
 
+$(BUILD_DIR)/tools/%.o: tools/%.cpp
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	@echo
+
 $(BUILD_DIR)/examples/%.o: examples/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
@@ -201,8 +216,9 @@ distribute: all
 	mkdir $(DISTRIBUTE_DIR)
 	# add include
 	cp -r include $(DISTRIBUTE_DIR)/
-	# add example binaries
+	# add tool and example binaries
 	mkdir $(DISTRIBUTE_DIR)/bin
+	cp $(TOOL_BINS) $(DISTRIBUTE_DIR)/bin
 	cp $(EXAMPLE_BINS) $(DISTRIBUTE_DIR)/bin
 	# add libraries
 	mkdir $(DISTRIBUTE_DIR)/lib
