@@ -73,7 +73,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         bias_multiplier_data[i] = 1.;
     }
   }
-};
+}
 
 
 template <typename Dtype>

@@ -3,8 +3,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -55,4 +56,4 @@ TYPED_TEST(EuclideanLossLayerTest, TestGradientCPU) {
       this->blob_top_vec_, 0, -1, -1);
 }
 
-}
+}  // namespace caffe

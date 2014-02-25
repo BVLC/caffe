@@ -3,8 +3,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -31,6 +32,7 @@ class SoftmaxWithLossLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
     for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+      // NOLINT_NEXTLINE(runtime/threadsafe_fn)
       blob_bottom_label_->mutable_cpu_data()[i] = rand() % 5;
     }
     blob_bottom_vec_.push_back(blob_bottom_label_);
@@ -69,4 +71,4 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientGPU) {
       this->blob_top_vec_, 0, -1, -1);
 }
 
-}
+}  // namespace caffe

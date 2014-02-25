@@ -42,7 +42,7 @@ class ConstantFiller : public Filler<Dtype> {
     for (int i = 0; i < count; ++i) {
       data[i] = value;
     }
-  };
+  }
 };
 
 template <typename Dtype>

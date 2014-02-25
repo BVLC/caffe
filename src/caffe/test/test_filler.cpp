@@ -1,8 +1,8 @@
 // Copyright 2013 Yangqing Jia
 
 #include <cstring>
-#include <cuda_runtime.h>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/filler.hpp"
 
@@ -21,7 +21,7 @@ class ConstantFillerTest : public ::testing::Test {
     filler_param_.set_value(10.);
     filler_.reset(new ConstantFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
-  };
+  }
   virtual ~ConstantFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
@@ -50,7 +50,7 @@ class UniformFillerTest : public ::testing::Test {
     filler_param_.set_max(2.);
     filler_.reset(new UniformFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
-  };
+  }
   virtual ~UniformFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
@@ -77,7 +77,7 @@ class PositiveUnitballFillerTest : public ::testing::Test {
         filler_param_() {
     filler_.reset(new PositiveUnitballFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
-  };
+  }
   virtual ~PositiveUnitballFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
@@ -116,7 +116,7 @@ class GaussianFillerTest : public ::testing::Test {
     filler_param_.set_std(0.1);
     filler_.reset(new GaussianFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
-  };
+  }
   virtual ~GaussianFillerTest() { delete blob_; }
   Blob<Dtype>* const blob_;
   FillerParameter filler_param_;
@@ -146,4 +146,4 @@ TYPED_TEST(GaussianFillerTest, TestFill) {
   EXPECT_LE(var, target_var * 5.);
 }
 
-}
+}  // namespace caffe

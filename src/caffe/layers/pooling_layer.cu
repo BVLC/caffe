@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -144,12 +146,14 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int count = (*top)[0]->count();
   switch (this->layer_param_.pool()) {
   case LayerParameter_PoolMethod_MAX:
+    // NOLINT_NEXTLINE(whitespace/operators)
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), CHANNELS_,
         HEIGHT_, WIDTH_, POOLED_HEIGHT_, POOLED_WIDTH_, KSIZE_, STRIDE_,
         top_data);
     break;
   case LayerParameter_PoolMethod_AVE:
+    // NOLINT_NEXTLINE(whitespace/operators)
     AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), CHANNELS_,
         HEIGHT_, WIDTH_, POOLED_HEIGHT_, POOLED_WIDTH_, KSIZE_, STRIDE_,
@@ -160,12 +164,16 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       // We need to create the random index as well.
       CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(),
           rand_idx_.mutable_gpu_data(), count));
-      StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXTLINE(whitespace/operators)
+      StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count),
+                                   CAFFE_CUDA_NUM_THREADS>>>(
           count, bottom_data, bottom[0]->num(), CHANNELS_,
           HEIGHT_, WIDTH_, POOLED_HEIGHT_, POOLED_WIDTH_, KSIZE_, STRIDE_,
           rand_idx_.mutable_gpu_data(), top_data);
     } else {
-      StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXTLINE(whitespace/operators)
+      StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count),
+                                  CAFFE_CUDA_NUM_THREADS>>>(
           count, bottom_data, bottom[0]->num(), CHANNELS_,
           HEIGHT_, WIDTH_, POOLED_HEIGHT_, POOLED_WIDTH_, KSIZE_, STRIDE_,
           top_data);
@@ -267,7 +275,7 @@ __global__ void StoPoolBackward(const int nthreads,
     for (int ph = phstart; ph < phend; ++ph) {
       for (int pw = pwstart; pw < pwend; ++pw) {
         gradient += top_diff[ph * pooled_width + pw] *
-            (index == int(rand_idx[ph * pooled_width + pw]));
+            (index == static_cast<int>(rand_idx[ph * pooled_width + pw]));
       }
     }
     bottom_diff[index] = gradient;
@@ -286,18 +294,21 @@ Dtype PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int count = (*bottom)[0]->count();
   switch (this->layer_param_.pool()) {
   case LayerParameter_PoolMethod_MAX:
+    // NOLINT_NEXTLINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, (*bottom)[0]->gpu_data(), top[0]->gpu_data(), top_diff,
         top[0]->num(), CHANNELS_, HEIGHT_, WIDTH_, POOLED_HEIGHT_,
         POOLED_WIDTH_, KSIZE_, STRIDE_, bottom_diff);
     break;
   case LayerParameter_PoolMethod_AVE:
+    // NOLINT_NEXTLINE(whitespace/operators)
     AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, top[0]->num(), CHANNELS_,
         HEIGHT_, WIDTH_, POOLED_HEIGHT_, POOLED_WIDTH_, KSIZE_, STRIDE_,
         bottom_diff);
     break;
   case LayerParameter_PoolMethod_STOCHASTIC:
+    // NOLINT_NEXTLINE(whitespace/operators)
     StoPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, rand_idx_.gpu_data(), top_diff,
         top[0]->num(), CHANNELS_, HEIGHT_, WIDTH_, POOLED_HEIGHT_,

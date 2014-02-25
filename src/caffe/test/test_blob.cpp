@@ -1,8 +1,8 @@
 // Copyright 2013 Yangqing Jia
 
 #include <cstring>
-#include <cuda_runtime.h>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
 #include "caffe/blob.hpp"
@@ -17,7 +17,7 @@ class BlobSimpleTest : public ::testing::Test {
  protected:
   BlobSimpleTest()
       : blob_(new Blob<Dtype>()),
-        blob_preshaped_(new Blob<Dtype>(2, 3, 4, 5)) {};
+        blob_preshaped_(new Blob<Dtype>(2, 3, 4, 5)) {}
   virtual ~BlobSimpleTest() { delete blob_; delete blob_preshaped_; }
   Blob<Dtype>* const blob_;
   Blob<Dtype>* const blob_preshaped_;
@@ -57,4 +57,4 @@ TYPED_TEST(BlobSimpleTest, TestReshape) {
   EXPECT_EQ(this->blob_->count(), 120);
 }
 
-}
+}  // namespace caffe
