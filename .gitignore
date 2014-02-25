@@ -1,3 +1,5 @@
+## General
+
 # Compiled Object files
 *.slo
 *.lo
@@ -19,25 +21,38 @@
 *.pb.cc
 *_pb2.py
 
-# bin files
+# Compiled python
+*.pyc
+
+# Compiled MATLAB
+*.mex
+*.mexa64
+*.mexmaci64
+
+# build, distribute, and bins
+build/*
+distribute/*
 *.testbin
 *.bin
 
-# vim swp files
+# Editor temporaries
 *.swp
-
-# matlab binary
-*.mexa64
+*~
 
 # IPython notebook checkpoints
 .ipynb_checkpoints
 
-# anything under data/ unless we force include them
-data/*
+## Caffe
 
-# anything under distribute
-distribute/*
-
-# user's specified config
+# User's build configuration
 Makefile.config
+
+# Models, Data, and Examples are either
+# 1. reference, and not casually committed
+# 2. custom, and live on their own unless they're deliberated contributed
+models/*
+data/*
+examples/*
+
+# Don't version the generated documentation
 docs/_site
