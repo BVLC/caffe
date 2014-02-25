@@ -15,7 +15,7 @@ template <typename Dtype>
 __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int ksize, const int stride, Dtype* top_data) {
+    const int ksize, const int stride, Dtype* top_data, int* mask) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < nthreads) {
     int pw = index % pooled_width;
@@ -27,13 +27,19 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     int wstart = pw * stride;
     int wend = min(wstart + ksize, width);
     Dtype maxval = -FLT_MAX;
+    int maxidx = -1;
     bottom_data += (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
-        maxval = max(maxval, bottom_data[h * width + w]);
+        if (bottom_data[h * width + w] > maxval) {
+          maxidx = h * width + w;
+          maxval = bottom_data[maxidx];
+        }
+        
       }
     }
     top_data[index] = maxval;
+    mask[index] = maxidx;
   }  // (if index < nthreads)
 }
 
@@ -142,12 +148,14 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   int count = (*top)[0]->count();
+  int* mask;
   switch (this->layer_param_.pool()) {
   case LayerParameter_PoolMethod_MAX:
+    mask = (int*)max_idx_->mutable_gpu_data();
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), CHANNELS_,
         HEIGHT_, WIDTH_, POOLED_HEIGHT_, POOLED_WIDTH_, KSIZE_, STRIDE_,
-        top_data);
+        top_data, mask);
     break;
   case LayerParameter_PoolMethod_AVE:
     AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
@@ -182,7 +190,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* bottom_data,
     const Dtype* top_data, const Dtype* top_diff,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int ksize, const int stride, Dtype* bottom_diff) {
+    const int ksize, const int stride, Dtype* bottom_diff, int* mask) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < nthreads) {
     // find out the local index
@@ -200,6 +208,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* bottom_data,
         bottom_data[((n * channels + c) * height + h) * width + w];
     top_data += (n * channels + c) * pooled_height * pooled_width;
     top_diff += (n * channels + c) * pooled_height * pooled_width;
+    //bottom_diff[index] += top_diff[mask[index]];
     for (int ph = phstart; ph < phend; ++ph) {
       for (int pw = pwstart; pw < pwend; ++pw) {
         gradient += top_diff[ph * pooled_width + pw] *
@@ -284,12 +293,14 @@ Dtype PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   int count = (*bottom)[0]->count();
+  int* mask;
   switch (this->layer_param_.pool()) {
   case LayerParameter_PoolMethod_MAX:
+    mask = (int*)max_idx_->gpu_data();
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, (*bottom)[0]->gpu_data(), top[0]->gpu_data(), top_diff,
         top[0]->num(), CHANNELS_, HEIGHT_, WIDTH_, POOLED_HEIGHT_,
-        POOLED_WIDTH_, KSIZE_, STRIDE_, bottom_diff);
+        POOLED_WIDTH_, KSIZE_, STRIDE_, bottom_diff, mask);
     break;
   case LayerParameter_PoolMethod_AVE:
     AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
