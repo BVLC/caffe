@@ -88,7 +88,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int top_offset = M_ * N_;
   for (int n = 0; n < NUM_; ++n) {
     // First, im2col
-    padded_im2col_cpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
+    im2col_cpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
                       WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // Second, innerproduct with groups
     for (int g = 0; g < GROUP_; ++g) {
@@ -118,7 +118,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int top_offset = M_ * N_;
   for (int n = 0; n < NUM_; ++n) {
     // First, im2col
-    padded_im2col_gpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
+    im2col_gpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
                       WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // Second, innerproduct with groups
     for (int g = 0; g < GROUP_; ++g) {
@@ -167,7 +167,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int n = 0; n < NUM_; ++n) {
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
-    padded_im2col_cpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,
+    im2col_cpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,
                       WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // gradient w.r.t. weight. Note that we will accumulate diffs.
     for (int g = 0; g < GROUP_; ++g) {
@@ -185,7 +185,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           (Dtype)0., col_diff + col_offset * g);
       }
       // col2im back to the data
-      padded_col2im_cpu(col_diff, CHANNELS_, HEIGHT_,
+      col2im_cpu(col_diff, CHANNELS_, HEIGHT_,
                         WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
     }
   }
@@ -225,7 +225,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   for (int n = 0; n < NUM_; ++n) {
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
-    padded_im2col_gpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,
+    im2col_gpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,
                       WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
     // gradient w.r.t. weight. Note that we will accumulate diffs.
     for (int g = 0; g < GROUP_; ++g) {
@@ -243,7 +243,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           (Dtype)0., col_diff + col_offset * g);
       }
       // col2im back to the data
-      padded_col2im_gpu(col_diff, CHANNELS_, HEIGHT_,
+      col2im_gpu(col_diff, CHANNELS_, HEIGHT_,
                         WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
     }
   }
