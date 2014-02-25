@@ -6,7 +6,7 @@ ORIGIN=`git config --get remote.origin.url`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
 MSG=`git log --oneline -1`
 
-if [ $BRANCH='master' ]; then
+if [ $BRANCH = 'master' ]; then
     # Make sure that docs/_site tracks remote:gh-pages.
     # If not, then we make a new repo and check out just that branch.
     mkdir docs/_site
@@ -14,11 +14,15 @@ if [ $BRANCH='master' ]; then
     SITE_ORIGIN=`git config --get remote.origin.url`
     SITE_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
-    if [ $SITE_ORIGIN=$ORIGIN ] && [ $SITE_BRANCH='gh-pages' ]; then
+    echo $SITE_ORIGIN
+    echo $SITE_BRANCH
+    echo `pwd`
+
+    if [[ ( $SITE_ORIGIN == $ORIGIN ) && ( $SITE_BRANCH = 'gh-pages' ) ]]; then
         echo "Confirmed that docs/_site has same origin as main repo, and is on gh-pages."
     else
-        echo "Checking out origin:gh-pages into docs/_site."
-        git init
+        echo "Checking out origin:gh-pages into docs/_site (will take a little time)."
+        git init .
         git remote add -t gh-pages -f origin $ORIGIN
         git co gh-pages
     fi
