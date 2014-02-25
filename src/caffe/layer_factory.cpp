@@ -41,8 +41,6 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new InnerProductLayer<Dtype>(param);
   } else if (type == "lrn") {
     return new LRNLayer<Dtype>(param);
-  } else if (type == "padding") {
-    return new PaddingLayer<Dtype>(param);
   } else if (type == "pool") {
     return new PoolingLayer<Dtype>(param);
   } else if (type == "relu") {
