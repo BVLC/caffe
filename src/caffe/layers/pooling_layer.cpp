@@ -131,8 +131,6 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     return Dtype(0.);
   }
   const Dtype* top_diff = top[0]->cpu_diff();
-  const Dtype* top_data = top[0]->cpu_data();
-  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
@@ -147,23 +145,8 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         for (int ph = 0; ph < POOLED_HEIGHT_; ++ph) {
           for (int pw = 0; pw < POOLED_WIDTH_; ++pw) {
             bottom_diff[mask[ph * POOLED_WIDTH_ + pw]]+=top_diff[ph * POOLED_WIDTH_ + pw];
-            // int hstart = ph * STRIDE_;
-            // int wstart = pw * STRIDE_;
-            // int hend = min(hstart + KSIZE_, HEIGHT_);
-            // int wend = min(wstart + KSIZE_, WIDTH_);
-            // for (int h = hstart; h < hend; ++h) {
-            //   for (int w = wstart; w < wend; ++w) {
-            //     bottom_diff[h * WIDTH_ + w] +=
-            //         top_diff[ph * POOLED_WIDTH_ + pw] *
-            //         (bottom_data[h * WIDTH_ + w] ==
-            //             top_data[ph * POOLED_WIDTH_ + pw]);
-            //   }
-            // }
           }
         }
-        // offset
-        bottom_data += (*bottom)[0]->offset(0, 1);
-        top_data += top[0]->offset(0, 1);
         bottom_diff += (*bottom)[0]->offset(0, 1);
         top_diff += top[0]->offset(0, 1);
         mask += top[0]->offset(0, 1);
@@ -190,8 +173,6 @@ Dtype PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
         }
         // offset
-        bottom_data += (*bottom)[0]->offset(0, 1);
-        top_data += top[0]->offset(0, 1);
         bottom_diff += (*bottom)[0]->offset(0, 1);
         top_diff += top[0]->offset(0, 1);
       }
