@@ -1,5 +1,6 @@
 // Copyright 2014 kloudkl@github
 
+#include <cmath> // for std::signbit
 #include <cuda_runtime.h>
 #include <google/protobuf/text_format.h>
 
@@ -12,18 +13,8 @@
 
 using namespace caffe;
 
-// TODO: Replace this with caffe_sign after the PR #159 is merged
 template<typename Dtype>
-inline int sign(const Dtype val) {
-  return (Dtype(0) < val) - (val < Dtype(0));
-}
-
-template<typename Dtype>
-void binarize(const int n, const Dtype* real_valued_feature,
-              Dtype* binary_code);
-
-template<typename Dtype>
-void binarize(const shared_ptr<Blob<Dtype> > real_valued_features,
+void binarize(const vector<shared_ptr<Blob<Dtype> > >& feature_blob_vector,
               shared_ptr<Blob<Dtype> > binary_codes);
 
 template<typename Dtype>
@@ -97,61 +88,66 @@ int features_binarization_pipeline(int argc, char** argv) {
 
   LOG(ERROR)<< "Binarizing features";
   vector<Blob<Dtype>*> input_vec;
-  shared_ptr<Blob<Dtype> > feature_binary_codes(new Blob<Dtype>());
-  BlobProtoVector blob_proto_vector;
-  int num_features = 0;
+  vector<shared_ptr<Blob<Dtype> > > feature_blob_vector;
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     real_valued_feature_net->Forward(input_vec);
     const shared_ptr<Blob<Dtype> > feature_blob = real_valued_feature_net
         ->GetBlob(feature_blob_name);
-    binarize<Dtype>(feature_blob, feature_binary_codes);
-    num_features += feature_binary_codes->num();
-    feature_binary_codes->ToProto(blob_proto_vector.add_blobs());
-  }  //  for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
-  WriteProtoToBinaryFile(blob_proto_vector,
-                         save_binarized_feature_binaryproto_file);
-  LOG(ERROR)<< "Successfully binarized " << num_features << " features!";
+    feature_blob_vector.push_back(feature_blob);
+  }
+  shared_ptr<Blob<Dtype> > feature_binary_codes(new Blob<Dtype>());
+  binarize<Dtype>(feature_blob_vector, feature_binary_codes);
+  BlobProto blob_proto;
+  feature_binary_codes->ToProto(&blob_proto);
+  WriteProtoToBinaryFile(blob_proto, save_binarized_feature_binaryproto_file);
+  LOG(ERROR)<< "Successfully binarized " << feature_binary_codes->num() << " features!";
   return 0;
 }
 
+// http://scikit-learn.org/stable/modules/preprocessing.html#feature-binarization
 template<typename Dtype>
-void binarize(const int n, const Dtype* real_valued_feature,
-              Dtype* binary_codes) {
-  // TODO: more advanced binarization algorithm such as bilinear projection
-  // Yunchao Gong, Sanjiv Kumar, Henry A. Rowley, and Svetlana Lazebnik.
-  // Learning Binary Codes for High-Dimensional Data Using Bilinear Projections.
-  // In IEEE International Conference on Computer Vision and Pattern Recognition (CVPR), 2013.
-  // http://www.unc.edu/~yunchao/bpbc.htm
-  int size_of_code = sizeof(Dtype) * 8;
-  int num_binary_codes = (n + size_of_code - 1) / size_of_code;
-  uint64_t code;
-  int offset;
-  int count = 0;
-  for (int i = 0; i < num_binary_codes; ++i) {
-    offset = i * size_of_code;
-    int j = 0;
-    code = 0;
-    for (; j < size_of_code && count++ < n; ++j) {
-      code |= sign(real_valued_feature[offset + j]);
-      code << 1;
-    }
-    code << (size_of_code - j);
-    binary_codes[i] = static_cast<Dtype>(code);
-  }
-}
-
-template<typename Dtype>
-void binarize(const shared_ptr<Blob<Dtype> > real_valued_features,
+void binarize(const vector<shared_ptr<Blob<Dtype> > >& feature_blob_vector,
               shared_ptr<Blob<Dtype> > binary_codes) {
-  int num = real_valued_features->num();
-  int dim = real_valued_features->count() / num;
-  int size_of_code = sizeof(Dtype) * 8;
-  binary_codes->Reshape(num, (dim + size_of_code - 1) / size_of_code, 1, 1);
-  const Dtype* real_valued_features_data = real_valued_features->cpu_data();
-  Dtype* binary_codes_data = binary_codes->mutable_cpu_data();
-  for (int n = 0; n < num; ++n) {
-    binarize<Dtype>(dim,
-                    real_valued_features_data + real_valued_features->offset(n),
-                    binary_codes_data + binary_codes->offset(n));
+  CHECK_GT(feature_blob_vector.size(), 0);
+  Dtype sum;
+  size_t count = 0;
+  size_t num_features = 0;
+  for (int i = 0; i < feature_blob_vector.size(); ++i) {
+    num_features += feature_blob_vector[i]->num();
+    const Dtype* data = feature_blob_vector[i]->cpu_data();
+    for (int j = 0; j < feature_blob_vector[i]->count(); ++j) {
+      sum += data[j];
+      ++count;
+    }
   }
+  Dtype mean = sum / count;
+  int dim = feature_blob_vector[0]->count() / feature_blob_vector[0]->num();
+  int size_of_code = sizeof(Dtype) * 8;
+  binary_codes->Reshape(num_features, (dim + size_of_code - 1) / size_of_code,
+                        1, 1);
+  Dtype* binary_data = binary_codes->mutable_cpu_data();
+  int offset;
+  uint64_t code;
+  for (int i = 0; i < feature_blob_vector.size(); ++i) {
+    const Dtype* data = feature_blob_vector[i]->cpu_data();
+    for (int j = 0; j < feature_blob_vector[i]->num(); ++j) {
+      offset = j * dim;
+      code = 0;
+      int k;
+      for (k = 0; k < dim;) {
+        code |= std::signbit(mean - data[k]);
+        ++k;
+        if (k % size_of_code == 0) {
+          binary_data[(k + size_of_code - 1) / size_of_code] = code;
+          code = 0;
+        } else {
+          code <<= 1;
+        }
+      }  // for k
+      if (k % size_of_code != 0) {
+        code <<= (size_of_code - 1 - k % size_of_code);
+        binary_data[(k + size_of_code - 1) / size_of_code] = code;
+      }
+    }  // for j
+  }  // for i
 }
