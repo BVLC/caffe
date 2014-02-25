@@ -148,6 +148,7 @@ _ERROR_CATEGORIES = [
   'build/header_guard',
   'build/include',
   'build/include_alpha',
+  'build/include_dir',
   'build/include_order',
   'build/include_what_you_use',
   'build/namespaces',
@@ -207,7 +208,7 @@ _ERROR_CATEGORIES = [
 # flag. By default all errors are on, so only add here categories that should be
 # off by default (i.e., categories that must be enabled by the --filter= flags).
 # All entries here should start with a '-' or '+', as in the --filter= flag.
-_DEFAULT_FILTERS = ['-build/include_alpha']
+_DEFAULT_FILTERS = ['-build/include_alpha', '-build/include_dir']
 
 # We used to check for high-bit characters, but after much discussion we
 # decided those were OK, as long as they were in UTF-8 and didn't represent
@@ -3585,7 +3586,7 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
 
   # "include" should use the new style "foo/bar.h" instead of just "bar.h"
   if _RE_PATTERN_INCLUDE_NEW_STYLE.search(line):
-    error(filename, linenum, 'build/include', 4,
+    error(filename, linenum, 'build/include_dir', 4,
           'Include the directory when naming .h files')
 
   # we shouldn't include a file more than once. actually, there are a
