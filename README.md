@@ -1,7 +1,7 @@
 [Caffe: Convolutional Architecture for Fast Feature Extraction](http://caffe.berkeleyvision.org)
 
-Created by Yangqing Jia, Department of EECS, University of California, Berkeley.
-Maintained by the Berkeley Vision and Learning Center (BVLC).
+Created by [Yangqing Jia](http://daggerfs.com), UC Berkeley EECS department.
+In active development by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu/)).
 
 ## Introduction
 
@@ -48,22 +48,24 @@ Please kindly cite Caffe in your publications if it helps your research:
       Howpublished = {\url{http://caffe.berkeleyvision.org/}
     }
 
+## Building documentation
+
+Tutorials and general documentation is written in Markdown format in the `docs/` folder.
+While the format is quite easy to read directly, you may prefer to view the whole thing as a website.
+To do so, simply run `jekyll serve -s docs` and view the documentation website at `http://0.0.0.0:4000` (to get jekyll, you must have ruby and do `gem install jekyll`).
+
+We strive to provide provide lots of usage examples, and to document all code in docstrings.
+We'd appreciate your contribution to this effort!
+
 ## Contributing
 
-Caffe is developed with the community by the [Berkeley Vision and Learning
-Center](http://bvlc.eecs.berkeley.edu/). We welcome contributions!
+Caffe is developed with active participation of the community by the [Berkeley Vision and Learning Center](http://bvlc.eecs.berkeley.edu/).
+We welcome all contributions!
 
-To join in, please note this policy:
+Our workflow is this:
 
-- Do your work in [feature
-  branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch).
-- Bring your work up-to-date by
-  [rebasing](http://git-scm.com/book/en/Git-Branching-Rebasing) onto the latest
-  `dev`. Polish your changes by [interactive
-  rebase](https://help.github.com/articles/interactive-rebase) if you like too.
-- [Pull request](https://help.github.com/articles/using-pull-requests) your
-  contribution to BVLC/caffe's `dev` branch for discussion and review.
-- `dev` is for new development, community contributions, and testing.
-- `master` is handled by BVLC, which will integrate changes from `dev`.
-
-Expect a more detailed contributing guide soon. Thank you.
+- The `dev` branch is for new development, community contributions, and testing.
+- The `master` branch is handled by BVLC, which will integrate changes from `dev` on a roughly monthly schedule.
+- Do new development in [feature branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch) with decriptive names.
+- Bring your work up-to-date by [rebasing](http://git-scm.com/book/en/Git-Branching-Rebasing) onto the latest `dev`. (Polish your changes by [interactive rebase](https://help.github.com/articles/interactive-rebase), if you'd like.)
+- [Pull request](https://help.github.com/articles/using-pull-requests) your contribution to BVLC/caffe's `dev` branch for discussion and review.
