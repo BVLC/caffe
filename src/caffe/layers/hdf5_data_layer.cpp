@@ -1,7 +1,6 @@
 /*
 TODO:
 - only load parts of the file, in accordance with a prototxt param "max_mem"
-- How does Dtype affect the loading of the data, which is always float?
 */
 
 #include <iostream>
