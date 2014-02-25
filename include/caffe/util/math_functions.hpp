@@ -119,6 +119,23 @@ Dtype caffe_cpu_asum(const int n, const Dtype* x);
 template <typename Dtype>
 void caffe_gpu_asum(const int n, const Dtype* x, Dtype* y);
 
+// the branchless, type-safe version from
+// http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+template<typename Dtype>
+inline char caffe_sign(Dtype val) {
+  return (Dtype(0) < val) - (val < Dtype(0));
+}
+
+template<typename Dtype>
+void caffe_cpu_sign(const int n, const Dtype* x, Dtype* y) {
+  for (int i = 0; i < n; ++i) {
+    y[i] = caffe_sign<Dtype>(x[i]);
+  }
+}
+
+template<typename Dtype>
+void caffe_gpu_sign(const int n, const Dtype* x, Dtype* y);
+
 }  // namespace caffe
 
 
