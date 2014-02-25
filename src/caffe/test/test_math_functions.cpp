@@ -140,4 +140,30 @@ TYPED_TEST(MathFunctionsTest, TestFabsGPU){
   }
 }
 
+TYPED_TEST(MathFunctionsTest, TestScaleCPU){
+  int n = this->blob_bottom_->count();
+  TypeParam alpha = this->blob_bottom_->cpu_diff()[rand() %
+                                               this->blob_bottom_->count()];
+  caffe_cpu_scale<TypeParam>(n, alpha, this->blob_bottom_->cpu_data(),
+                             this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* scaled = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(scaled[i], x[i] * alpha);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestScaleGPU){
+  int n = this->blob_bottom_->count();
+  TypeParam alpha = this->blob_bottom_->cpu_diff()[rand() %
+                                               this->blob_bottom_->count()];
+  caffe_gpu_scale<TypeParam>(n, alpha, this->blob_bottom_->gpu_data(),
+                             this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* scaled = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(scaled[i], x[i] * alpha);
+  }
+}
+
 }
