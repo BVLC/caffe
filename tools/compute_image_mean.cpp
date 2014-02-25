@@ -14,7 +14,7 @@ using caffe::BlobProto;
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc != 3) {
-    LOG(ERROR) << "Usage: demo_compute_image_mean input_leveldb output_file";
+    LOG(ERROR) << "Usage: compute_image_mean input_leveldb output_file";
     return(0);
   }
 
