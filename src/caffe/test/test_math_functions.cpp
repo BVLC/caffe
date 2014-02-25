@@ -1,6 +1,7 @@
 // Copyright 2014 kloudkl@github
 
 #include <stdint.h>  // for uint32_t & uint64_t
+#include <cmath>  // for std::fabs
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -72,6 +73,29 @@ TYPED_TEST(MathFunctionsTest, TestHammingDistance) {
   const TypeParam* y = this->blob_top_->cpu_data();
   CHECK_EQ(this->ReferenceHammingDistance(n, x, y),
            caffe_hamming_distance<TypeParam>(n, x, y));
+}
+
+TYPED_TEST(MathFunctionsTest, TestAsumCPU){
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  TypeParam std_asum = 0;
+  for (int i = 0; i < n; ++i) {
+    std_asum += std::fabs(x[i]);
+  }
+  TypeParam cpu_asum = caffe_cpu_asum<TypeParam>(n, x);
+  CHECK_LT((cpu_asum - std_asum) / std_asum, 1e-2);
+}
+
+TYPED_TEST(MathFunctionsTest, TestAsumGPU){
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  TypeParam std_asum = 0;
+  for (int i = 0; i < n; ++i) {
+    std_asum += std::fabs(x[i]);
+  }
+  TypeParam gpu_asum;
+  caffe_gpu_asum<TypeParam>(n, this->blob_bottom_->gpu_data(), &gpu_asum);
+  CHECK_LT((gpu_asum - std_asum) / std_asum, 1e-2);
 }
 
 }  // namespace caffe

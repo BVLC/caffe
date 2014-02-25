@@ -390,4 +390,24 @@ int caffe_hamming_distance<double>(const int n, const double* x,
   return dist;
 }
 
+template <>
+float caffe_cpu_asum<float>(const int n, const float* x) {
+  return cblas_sasum(n, x, 1);
+}
+
+template <>
+double caffe_cpu_asum<double>(const int n, const double* x) {
+  return cblas_dasum(n, x, 1);
+}
+
+template <>
+void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
+  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
+}
+
+template <>
+void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
+  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
+}
+
 }  // namespace caffe
