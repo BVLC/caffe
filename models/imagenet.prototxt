@@ -59,20 +59,12 @@ layers {
 }
 layers {
   layer {
-    name: "pad2"
-    type: "padding"
-    pad: 2
-  }
-  bottom: "norm1"
-  top: "pad2"
-}
-layers {
-  layer {
     name: "conv2"
     type: "conv"
     num_output: 256
     group: 2
     kernelsize: 5
+    pad: 2
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -86,7 +78,7 @@ layers {
     weight_decay: 1.
     weight_decay: 0.
   }
-  bottom: "pad2"
+  bottom: "norm1"
   top: "conv2"
 }
 layers {
@@ -121,19 +113,11 @@ layers {
 }
 layers {
   layer {
-    name: "pad3"
-    type: "padding"
-    pad: 1
-  }
-  bottom: "norm2"
-  top: "pad3"
-}
-layers {
-  layer {
     name: "conv3"
     type: "conv"
     num_output: 384
     kernelsize: 3
+    pad: 1
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -147,7 +131,7 @@ layers {
     weight_decay: 1.
     weight_decay: 0.
   }
-  bottom: "pad3"
+  bottom: "norm2"
   top: "conv3"
 }
 layers {
@@ -160,20 +144,12 @@ layers {
 }
 layers {
   layer {
-    name: "pad4"
-    type: "padding"
-    pad: 1
-  }
-  bottom: "conv3"
-  top: "pad4"
-}
-layers {
-  layer {
     name: "conv4"
     type: "conv"
     num_output: 384
     group: 2
     kernelsize: 3
+    pad: 1
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -187,7 +163,7 @@ layers {
     weight_decay: 1.
     weight_decay: 0.
   }
-  bottom: "pad4"
+  bottom: "conv3"
   top: "conv4"
 }
 layers {
@@ -200,20 +176,12 @@ layers {
 }
 layers {
   layer {
-    name: "pad5"
-    type: "padding"
-    pad: 1
-  }
-  bottom: "conv4"
-  top: "pad5"
-}
-layers {
-  layer {
     name: "conv5"
     type: "conv"
     num_output: 256
     group: 2
     kernelsize: 3
+    pad: 1
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -227,7 +195,7 @@ layers {
     weight_decay: 1.
     weight_decay: 0.
   }
-  bottom: "pad5"
+  bottom: "conv4"
   top: "conv5"
 }
 layers {
