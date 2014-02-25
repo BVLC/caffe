@@ -15,12 +15,17 @@ MSG=`git log --oneline -1`
 
 if [ $CUR_BRANCH='master' ]; then
     jekyll build -s docs
-    git checkout -b gh-pages
-    git rm -qr .
-    cp -r _site/. .
-    rm -r _site
-    git add -A
-    git commit -m "$MSG"
-    git push origin gh-pages
-    git checkout master
+    git checkout gh-pages
+
+    # Need to make sure that gh-pages is a valid branch!
+    CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
+    if [ $CUR_BRANCH='gh-pages' ]; then
+        git rm -qr .
+        cp -r _site/. .
+        rm -r _site
+        git add -A
+        git commit -m "$MSG"
+        git push origin gh-pages
+        git checkout master
+    fi
 fi
