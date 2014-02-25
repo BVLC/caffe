@@ -314,6 +314,7 @@ Dtype PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     mask = (int*)max_idx_->gpu_data();
     // Since we have the mask we only need count top_diff
     count = top[0]->count(); 
+    caffe_gpu_memset(count,Dtype(0.),bottom_diff);
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, top[0]->num(), CHANNELS_, 
         HEIGHT_, WIDTH_, POOLED_HEIGHT_, POOLED_WIDTH_, KSIZE_, STRIDE_, 
