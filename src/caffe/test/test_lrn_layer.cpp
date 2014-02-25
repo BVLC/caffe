@@ -2,9 +2,9 @@
 
 #include <algorithm>
 #include <cstring>
-#include <cuda_runtime.h>
-#include <iostream>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -26,7 +26,7 @@ class LRNLayerTest : public ::testing::Test {
  protected:
   LRNLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
-        blob_top_(new Blob<Dtype>()) {};
+        blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 7, 3, 3);
@@ -36,7 +36,7 @@ class LRNLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
-  };
+  }
   virtual ~LRNLayerTest() { delete blob_bottom_; delete blob_top_; }
   void ReferenceLRNForward(const Blob<Dtype>& blob_bottom,
       const LayerParameter& layer_param, Blob<Dtype>* blob_top);
@@ -135,10 +135,12 @@ TYPED_TEST(LRNLayerTest, TestCPUGradient) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
-  //for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-  //  std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i] << std::endl;
-  //}
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  //   std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i]
+  //       << std::endl;
+  // }
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 TYPED_TEST(LRNLayerTest, TestGPUGradient) {
@@ -152,10 +154,12 @@ TYPED_TEST(LRNLayerTest, TestGPUGradient) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
-  //for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-  //  std::cout << "GPU diff " << this->blob_bottom_->cpu_diff()[i] << std::endl;
-  //}
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  //   std::cout << "GPU diff " << this->blob_bottom_->cpu_diff()[i]
+  //       << std::endl;
+  // }
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
-}
+}  // namespace caffe

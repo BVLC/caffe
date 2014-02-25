@@ -3,6 +3,7 @@
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
 
+#include <string>
 #include <vector>
 
 namespace caffe {
@@ -66,6 +67,6 @@ class SGDSolver : public Solver<Dtype> {
 };
 
 
-}  // namspace caffe
+}  // namespace caffe
 
 #endif  // CAFFE_OPTIMIZATION_SOLVER_HPP_

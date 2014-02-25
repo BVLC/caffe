@@ -1,9 +1,12 @@
 // Copyright 2014 Aravindh Mahendran
-// TanH neuron activation function layer. Adapted from ReLU layer code written by Yangqing Jia
+// TanH neuron activation function layer.
+// Adapted from ReLU layer code written by Yangqing Jia
+
+#include <algorithm>
+#include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
-#include <algorithm>
 
 namespace caffe {
 
@@ -55,11 +58,13 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
+  // NOLINT_NEXTLINE(whitespace/operators)
   TanHForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, top_data);
   CUDA_POST_KERNEL_CHECK;
   // << " count: " << count << " bottom_data: "
-  //     << (unsigned long)bottom_data << " top_data: " << (unsigned long)top_data
+  //     << (unsigned long)bottom_data
+  //     << " top_data: " << (unsigned long)top_data
   //     << " blocks: " << CAFFE_GET_BLOCKS(count)
   //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
 }
@@ -84,6 +89,7 @@ Dtype TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
     const int count = (*bottom)[0]->count();
+    // NOLINT_NEXTLINE(whitespace/operators)
     TanHBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, bottom_data, bottom_diff);
     CUDA_POST_KERNEL_CHECK;

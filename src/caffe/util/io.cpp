@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <string>
-#include <iostream>
 #include <fstream>
 
 #include "caffe/common.hpp"
@@ -82,9 +81,6 @@ bool ReadImageToDatum(const string& filename, const int label,
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
-  if (height > 0 && width > 0) {
-
-  }
   datum->set_channels(3);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
@@ -95,7 +91,8 @@ bool ReadImageToDatum(const string& filename, const int label,
   for (int c = 0; c < 3; ++c) {
     for (int h = 0; h < cv_img.rows; ++h) {
       for (int w = 0; w < cv_img.cols; ++w) {
-        datum_string->push_back(static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+        datum_string->push_back(
+            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
       }
     }
   }
