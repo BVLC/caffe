@@ -4,7 +4,7 @@
 #ifndef CAFFE_UTIL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
 
-
+#include <cmath> // for std::fabs
 #include <cublas_v2.h>
 
 #include "caffe/util/mkl_alternate.hpp"
@@ -135,6 +135,16 @@ void caffe_cpu_sign(const int n, const Dtype* x, Dtype* y) {
 
 template<typename Dtype>
 void caffe_gpu_sign(const int n, const Dtype* x, Dtype* y);
+
+template <typename Dtype>
+void caffe_cpu_fabs(const int n, const Dtype* x, Dtype* y) {
+  for (int i = 0; i < n; ++i) {
+    y[i] = std::fabs(x[i]);
+  }
+}
+
+template <typename Dtype>
+void caffe_gpu_fabs(const int n, const Dtype* x, Dtype* y);
 
 }  // namespace caffe
 

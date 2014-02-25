@@ -119,4 +119,25 @@ TYPED_TEST(MathFunctionsTest, TestSignGPU){
   }
 }
 
+TYPED_TEST(MathFunctionsTest, TestFabsCPU){
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_cpu_fabs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestFabsGPU){
+  int n = this->blob_bottom_->count();
+  caffe_gpu_fabs<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                            this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
+  }
+}
+
 }
