@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 # This scripts downloads the mnist data and unzips it.
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR
+
 echo "Downloading..."
 
 wget -q http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
