@@ -175,8 +175,8 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradient) {
   Caffe::set_mode(Caffe::CPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
@@ -190,8 +190,8 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
   Caffe::set_mode(Caffe::CPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestGPUGradient) {
@@ -204,8 +204,8 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUGradient) {
   Caffe::set_mode(Caffe::GPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestGPUGradientGroup) {
@@ -219,8 +219,8 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUGradientGroup) {
   Caffe::set_mode(Caffe::GPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 }  // namespace caffe
