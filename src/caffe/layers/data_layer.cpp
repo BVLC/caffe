@@ -50,12 +50,15 @@ void* DataLayerPrefetch(void* layer_pointer) {
       int h_off, w_off;
       // We only do random crop when we do training.
       if (Caffe::phase() == Caffe::TRAIN) {
+        // NOLINT_NEXTLINE(runtime/threadsafe_fn)
         h_off = rand() % (height - cropsize);
+        // NOLINT_NEXTLINE(runtime/threadsafe_fn)
         w_off = rand() % (width - cropsize);
       } else {
         h_off = (height - cropsize) / 2;
         w_off = (width - cropsize) / 2;
       }
+      // NOLINT_NEXTLINE(runtime/threadsafe_fn)
       if (mirror && rand() % 2) {
         // Copy mirrored version
         for (int c = 0; c < channels; ++c) {
@@ -111,7 +114,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
     }
   }
 
-  return (void*)NULL;
+  return reinterpret_cast<void*>(NULL);
 }
 
 template <typename Dtype>
@@ -140,6 +143,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   iter_->SeekToFirst();
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.rand_skip()) {
+    // NOLINT_NEXTLINE(runtime/threadsafe_fn)
     unsigned int skip = rand() % this->layer_param_.rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {

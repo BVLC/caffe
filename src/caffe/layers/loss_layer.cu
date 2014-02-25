@@ -1,7 +1,9 @@
 // Copyright 2013 Yangqing Jia
+
 #include <algorithm>
 #include <cmath>
 #include <cfloat>
+#include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -24,12 +26,12 @@ void MultinomialLogisticLossLayer<Dtype>::SetUp(
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-};
+}
 
 
 template <typename Dtype>
-Dtype MultinomialLogisticLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+Dtype MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top, const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
   const Dtype* bottom_label = (*bottom)[1]->cpu_data();
@@ -66,7 +68,7 @@ void InfogainLossLayer<Dtype>::SetUp(
   CHECK_EQ(infogain_.num(), 1);
   CHECK_EQ(infogain_.channels(), 1);
   CHECK_EQ(infogain_.height(), infogain_.width());
-};
+}
 
 
 template <typename Dtype>
@@ -154,10 +156,11 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         max_id = j;
       }
     }
-    if (max_id == (int)bottom_label[i]) {
+    if (max_id == static_cast<int>(bottom_label[i])) {
       ++accuracy;
     }
-    Dtype prob = max(bottom_data[i * dim + (int)bottom_label[i]], kLOG_THRESHOLD);
+    Dtype prob = max(bottom_data[i * dim + static_cast<int>(bottom_label[i])],
+                     kLOG_THRESHOLD);
     logprob -= log(prob);
   }
   // LOG(INFO) << "Accuracy: " << accuracy;

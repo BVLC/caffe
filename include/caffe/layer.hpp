@@ -67,7 +67,7 @@ class Layer {
       vector<Blob<Dtype>*>* top) {
     // LOG(WARNING) << "Using CPU code as backup.";
     Forward_cpu(bottom, top);
-  };
+  }
 
   // Backward functions: the backward function will compute the gradients for
   // any parameters and also for the bottom blobs if propagate_down is true.
@@ -80,7 +80,7 @@ class Layer {
       vector<Blob<Dtype>*>* bottom) {
     // LOG(WARNING) << "Using CPU code as backup.";
     return Backward_cpu(top, propagate_down, bottom);
-  };
+  }
 
   DISABLE_COPY_AND_ASSIGN(Layer);
 };  // class Layer
@@ -101,7 +101,7 @@ inline void Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
-};
+}
 
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
@@ -115,7 +115,7 @@ inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
-};
+}
 
 template <typename Dtype>
 void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {

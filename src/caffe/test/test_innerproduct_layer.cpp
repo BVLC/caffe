@@ -1,8 +1,9 @@
 // Copyright 2013 Yangqing Jia
 
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -28,7 +29,7 @@ class InnerProductLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
-  };
+  }
   virtual ~InnerProductLayerTest() { delete blob_bottom_; delete blob_top_; }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
@@ -43,7 +44,7 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   LayerParameter layer_param;
   layer_param.set_num_output(10);
   shared_ptr<InnerProductLayer<TypeParam> > layer(
-  	new InnerProductLayer<TypeParam>(layer_param));
+      new InnerProductLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->height(), 1);
@@ -60,37 +61,37 @@ TYPED_TEST(InnerProductLayerTest, TestCPU) {
   layer_param.mutable_bias_filler()->set_min(1);
   layer_param.mutable_bias_filler()->set_max(2);
   shared_ptr<InnerProductLayer<TypeParam> > layer(
-  	new InnerProductLayer<TypeParam>(layer_param));
+      new InnerProductLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   const TypeParam* data = this->blob_top_->cpu_data();
   const int count = this->blob_top_->count();
   for (int i = 0; i < count; ++i) {
-  	EXPECT_GE(data[i], 1.);
+    EXPECT_GE(data[i], 1.);
   }
 }
 
 TYPED_TEST(InnerProductLayerTest, TestGPU) {
-	if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
-	  LayerParameter layer_param;
-	  Caffe::set_mode(Caffe::GPU);
-	  layer_param.set_num_output(10);
-	  layer_param.mutable_weight_filler()->set_type("uniform");
-	  layer_param.mutable_bias_filler()->set_type("uniform");
-	  layer_param.mutable_bias_filler()->set_min(1);
-	  layer_param.mutable_bias_filler()->set_max(2);
-	  shared_ptr<InnerProductLayer<TypeParam> > layer(
-	  	new InnerProductLayer<TypeParam>(layer_param));
-	  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-	  layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-	  const TypeParam* data = this->blob_top_->cpu_data();
-	  const int count = this->blob_top_->count();
-	  for (int i = 0; i < count; ++i) {
-	  	EXPECT_GE(data[i], 1.);
-	  }
-	} else {
-		LOG(ERROR) << "Skipping test due to old architecture.";
-	}
+  if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
+    LayerParameter layer_param;
+    Caffe::set_mode(Caffe::GPU);
+    layer_param.set_num_output(10);
+    layer_param.mutable_weight_filler()->set_type("uniform");
+    layer_param.mutable_bias_filler()->set_type("uniform");
+    layer_param.mutable_bias_filler()->set_min(1);
+    layer_param.mutable_bias_filler()->set_max(2);
+    shared_ptr<InnerProductLayer<TypeParam> > layer(
+      new InnerProductLayer<TypeParam>(layer_param));
+    layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+    layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+    const TypeParam* data = this->blob_top_->cpu_data();
+    const int count = this->blob_top_->count();
+    for (int i = 0; i < count; ++i) {
+      EXPECT_GE(data[i], 1.);
+    }
+  } else {
+    LOG(ERROR) << "Skipping test due to old architecture.";
+  }
 }
 
 TYPED_TEST(InnerProductLayerTest, TestCPUGradient) {
@@ -103,7 +104,8 @@ TYPED_TEST(InnerProductLayerTest, TestCPUGradient) {
   layer_param.mutable_bias_filler()->set_max(2);
   InnerProductLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 TYPED_TEST(InnerProductLayerTest, TestGPUGradient) {
@@ -121,4 +123,4 @@ TYPED_TEST(InnerProductLayerTest, TestGPUGradient) {
   }
 }
 
-}
+}  // namespace caffe
