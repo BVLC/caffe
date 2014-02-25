@@ -410,16 +410,7 @@ void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
   CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
 }
 
-template <>
-void caffe_cpu_sign<float>(const int n, const float* x, float* y);
-
-template <>
-void caffe_cpu_sign<double>(const int n, const double* x, double* y);
-
-template <>
-void caffe_cpu_fabs<float>(const int n, const float* x, float* y);
-
-template <>
-void caffe_cpu_fabs<double>(const int n, const double* x, double* y);
+INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sign);
+INSTANTIATE_CAFFE_CPU_UNARY_FUNC(fabs);
 
 }  // namespace caffe
