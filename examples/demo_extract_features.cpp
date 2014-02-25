@@ -137,20 +137,16 @@ int feature_extraction_pipeline(int argc, char** argv) {
       datum.set_channels(1);
       datum.clear_data();
       datum.clear_float_data();
-      string* datum_string = datum.mutable_data();
       const Dtype* feature_blob_data = feature_blob->cpu_data();
       for (int d = 0; d < dim_features; ++d) {
-        const char* data_byte = reinterpret_cast<const char*>(feature_blob_data
-            + d);
-        for (int i = 0; i < num_bytes_of_binary_code; ++i) {
-          datum_string->push_back(data_byte[i]);
-        }
+        datum.add_float_data(feature_blob_data[d]);
       }
       string value;
       datum.SerializeToString(&value);
       snprintf(key_str, max_key_str_length, "%d", image_index);
       batch->Put(string(key_str), value);
-      if (++image_index % 1000 == 0) {
+      ++image_index;
+      if (image_index % 1000 == 0) {
         db->Write(leveldb::WriteOptions(), batch);
         LOG(ERROR)<< "Extracted features of " << image_index << " query images.";
         delete batch;
