@@ -12,14 +12,13 @@
 #include <leveldb/db.h>
 
 #include <stdint.h>
-#include <iostream>
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
+#include <string>
 
 #include "caffe/proto/caffe.pb.h"
 
-uint32_t swap_endian( uint32_t val )
-{
-    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF );
+uint32_t swap_endian(uint32_t val) {
+    val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
     return (val << 16) | (val >> 16);
 }
 
@@ -37,20 +36,20 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   uint32_t rows;
   uint32_t cols;
 
-  image_file.read((char*)(&magic), 4);
+  image_file.read(reinterpret_cast<char*>(&magic), 4);
   magic = swap_endian(magic);
   CHECK_EQ(magic, 2051) << "Incorrect image file magic.";
-  label_file.read((char*)(&magic), 4);
+  label_file.read(reinterpret_cast<char*>(&magic), 4);
   magic = swap_endian(magic);
   CHECK_EQ(magic, 2049) << "Incorrect label file magic.";
-  image_file.read((char*)(&num_items), 4);
+  image_file.read(reinterpret_cast<char*>(&num_items), 4);
   num_items = swap_endian(num_items);
-  label_file.read((char*)(&num_labels), 4);
+  label_file.read(reinterpret_cast<char*>(&num_labels), 4);
   num_labels = swap_endian(num_labels);
   CHECK_EQ(num_items, num_labels);
-  image_file.read((char*)(&rows), 4);
+  image_file.read(reinterpret_cast<char*>(&rows), 4);
   rows = swap_endian(rows);
-  image_file.read((char*)(&cols), 4);
+  image_file.read(reinterpret_cast<char*>(&cols), 4);
   cols = swap_endian(cols);
 
   // Open leveldb
@@ -65,7 +64,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
   char label;
   char* pixels = new char[rows * cols];
-  char key[10];
+  const int kMaxKeyLength = 10;
+  char key[kMaxKeyLength];
   std::string value;
 
   caffe::Datum datum;
@@ -80,7 +80,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     datum.set_data(pixels, rows*cols);
     datum.set_label(label);
     datum.SerializeToString(&value);
-    sprintf(key, "%08d", itemid);
+    snprintf(key, kMaxKeyLength, "%08d", itemid);
     db->Put(leveldb::WriteOptions(), std::string(key), value);
   }
 
@@ -88,7 +88,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   delete pixels;
 }
 
-int main (int argc, char** argv) {
+int main(int argc, char** argv) {
   if (argc != 4) {
     printf("This script converts the MNIST dataset to the leveldb format used\n"
            "by caffe to perform classification.\n"
