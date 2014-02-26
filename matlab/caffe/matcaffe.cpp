@@ -12,7 +12,7 @@
 
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs
 
-namespace caffe {
+using namespace caffe;  // NOLINT(build/namespaces)
 
 // The pointer to the internal caffe::Net instance
 static shared_ptr<Net<float> > net_;
@@ -189,5 +189,3 @@ void mexFunction(MEX_ARGS) {
     mxFree(cmd);
   }
 }
-
-}  // namespace caffe

@@ -20,6 +20,8 @@
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
 
+
+using namespace caffe;  // NOLINT(build/namespaces)
 using boost::python::extract;
 using boost::python::len;
 using boost::python::list;
@@ -27,7 +29,6 @@ using boost::python::object;
 using boost::python::handle;
 using boost::python::vector_indexing_suite;
 
-namespace caffe {
 
 // wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
 //  to Python
@@ -278,5 +279,3 @@ BOOST_PYTHON_MODULE(pycaffe) {
 
   import_array();
 }
-
-}  // namespace caffe
