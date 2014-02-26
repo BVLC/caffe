@@ -55,7 +55,8 @@ float Timer::MilliSeconds() {
     Stop();
   }
   if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_, stop_gpu_));
+    CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
+                                    stop_gpu_));
   } else {
     elapsed_milliseconds_ = (stop_cpu_ - start_cpu_).total_milliseconds();
   }

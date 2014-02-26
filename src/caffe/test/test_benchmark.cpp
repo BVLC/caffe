@@ -1,6 +1,6 @@
 // Copyright 2014 kloud@github
 
-#include <unistd.h> // for usleep
+#include <unistd.h>  // for usleep
 #include <cuda_runtime.h>
 #include <gtest/gtest.h>
 
