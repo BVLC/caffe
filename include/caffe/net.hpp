@@ -22,8 +22,8 @@ namespace caffe {
 template <typename Dtype>
 class Net {
  public:
-  Net(const NetParameter& param);
-  Net(const string& param_file);
+  explicit Net(const NetParameter& param);
+  explicit Net(const string& param_file);
   virtual ~Net() {}
 
   // Initialize a network with the network parameter.

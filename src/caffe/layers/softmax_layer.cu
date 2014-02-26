@@ -3,7 +3,8 @@
 #include <algorithm>
 #include <cfloat>
 #include <vector>
-#include <thrust/device_vector.h>
+
+#include "thrust/device_vector.h"
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -27,7 +28,7 @@ void SoftmaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     multiplier_data[i] = 1.;
   }
   scale_.Reshape(bottom[0]->num(), 1, 1, 1);
-};
+}
 
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -104,19 +105,23 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // we need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   // Compute max
+  // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_get_max<Dtype><<<CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS>>>(
       num, dim, bottom_data, scale_data);
   // subtraction
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
       scale_data, sum_multiplier_.gpu_data(), 1., top_data);
   // Perform exponentiation
+  // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(num * dim), CAFFE_CUDA_NUM_THREADS>>>(
       num * dim, top_data, top_data);
   // sum after exp
   caffe_gpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., top_data,
       sum_multiplier_.gpu_data(), 0., scale_data);
   // Do division
-  kernel_softmax_div<Dtype><<<CAFFE_GET_BLOCKS(num * dim), CAFFE_CUDA_NUM_THREADS>>>(
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  kernel_softmax_div<Dtype><<<CAFFE_GET_BLOCKS(num * dim),
+                              CAFFE_CUDA_NUM_THREADS>>>(
       num, dim, scale_data, top_data);
 }
 

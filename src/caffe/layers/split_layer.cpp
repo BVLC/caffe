@@ -25,7 +25,7 @@ void SplitLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
                        bottom[0]->height(), bottom[0]->width());
     CHECK_EQ(count_, (*top)[i]->count());
   }
-};
+}
 
 template <typename Dtype>
 void SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

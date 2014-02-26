@@ -19,7 +19,7 @@ void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   count_ = bottom[0]->num() * channels_out;
   CHECK_EQ(count_, bottom[0]->count());
   CHECK_EQ(count_, (*top)[0]->count());
-};
+}
 
 template <typename Dtype>
 void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

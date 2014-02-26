@@ -3,8 +3,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -51,8 +52,8 @@ TYPED_TEST(EuclideanLossLayerTest, TestGradientCPU) {
   EuclideanLossLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_, 0, -1, -1);
+  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_), 0, -1, -1);
 }
 
-}
+}  // namespace caffe

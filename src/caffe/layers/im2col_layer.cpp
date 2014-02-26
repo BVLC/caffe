@@ -21,8 +21,9 @@ void Im2colLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   HEIGHT_ = bottom[0]->height();
   WIDTH_ = bottom[0]->width();
   (*top)[0]->Reshape(bottom[0]->num(), CHANNELS_ * KSIZE_ * KSIZE_,
-      (HEIGHT_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1, (WIDTH_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1);
-};
+      (HEIGHT_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1,
+      (WIDTH_ + 2 * PAD_ - KSIZE_) / STRIDE_ + 1);
+}
 
 template <typename Dtype>
 void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -31,7 +32,7 @@ void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   for (int n = 0; n < bottom[0]->num(); ++n) {
     im2col_cpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
-                      WIDTH_, KSIZE_, PAD_, STRIDE_, top_data + (*top)[0]->offset(n));
+        WIDTH_, KSIZE_, PAD_, STRIDE_, top_data + (*top)[0]->offset(n));
   }
 }
 
@@ -42,7 +43,7 @@ void Im2colLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   for (int n = 0; n < bottom[0]->num(); ++n) {
     im2col_gpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
-                      WIDTH_, KSIZE_, PAD_, STRIDE_, top_data + (*top)[0]->offset(n));
+        WIDTH_, KSIZE_, PAD_, STRIDE_, top_data + (*top)[0]->offset(n));
   }
 }
 
@@ -53,7 +54,7 @@ Dtype Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   for (int n = 0; n < top[0]->num(); ++n) {
     col2im_cpu(top_diff + top[0]->offset(n), CHANNELS_, HEIGHT_,
-                      WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
+        WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
   }
   return Dtype(0.);
 }
@@ -66,7 +67,7 @@ Dtype Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   for (int n = 0; n < top[0]->num(); ++n) {
     col2im_gpu(top_diff + top[0]->offset(n), CHANNELS_, HEIGHT_,
-                      WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
+        WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
   }
   return Dtype(0.);
 }

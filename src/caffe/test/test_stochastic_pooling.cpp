@@ -1,8 +1,10 @@
 // Copyright 2013 Yangqing Jia
 
+#include <algorithm>
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -11,6 +13,8 @@
 #include "caffe/test/test_gradient_check_util.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+
+using std::min;
 
 namespace caffe {
 
@@ -21,7 +25,7 @@ class StochasticPoolingLayerTest : public ::testing::Test {
  protected:
   StochasticPoolingLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
-        blob_top_(new Blob<Dtype>()) {};
+        blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 3, 6, 5);
@@ -33,7 +37,7 @@ class StochasticPoolingLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
-  };
+  }
 
   virtual ~StochasticPoolingLayerTest() {
     delete blob_bottom_; delete blob_top_;
@@ -89,7 +93,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
           bool has_equal = false;
           for (int h = hstart; h < hend; ++h) {
             for (int w = wstart; w < wend; ++w) {
-              has_equal |= (pooled == bottom_data[this->blob_bottom_->offset(n, c, h, w)]);
+              has_equal |= (pooled == bottom_data[this->blob_bottom_->
+                  offset(n, c, h, w)]);
             }
           }
           EXPECT_TRUE(has_equal);
@@ -130,7 +135,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
           bool smaller_than_max = false;
           for (int h = hstart; h < hend; ++h) {
             for (int w = wstart; w < wend; ++w) {
-              smaller_than_max |= (pooled <= bottom_data[this->blob_bottom_->offset(n, c, h, w)]);
+              smaller_than_max |= (pooled <= bottom_data[this->blob_bottom_->
+                  offset(n, c, h, w)]);
             }
           }
           EXPECT_TRUE(smaller_than_max);
@@ -154,9 +160,10 @@ TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   // it is too expensive to call curand multiple times, so we don't do an
   // exhaustive gradient check.
-  checker.CheckGradient(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradient(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 
 
-}
+}  // namespace caffe

@@ -4,12 +4,15 @@
 // caffe::Caffe functions so that one could easily call it from matlab.
 // Note that for matlab, we will simply use float as the data type.
 
+#include <string>
+#include <vector>
+
 #include "mex.h"
 #include "caffe/caffe.hpp"
 
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs
 
-using namespace caffe;
+namespace caffe {
 
 // The pointer to the internal caffe::Net instance
 static shared_ptr<Net<float> > net_;
@@ -21,8 +24,8 @@ static shared_ptr<Net<float> > net_;
 //   matlab uses RGB color channel order
 //   images need to have the data mean subtracted
 //
-// Data coming in from matlab needs to be in the order 
-//   [batch_images, channels, height, width] 
+// Data coming in from matlab needs to be in the order
+//   [batch_images, channels, height, width]
 // where width is the fastest dimension.
 // Here is the rough matlab for putting image data into the correct
 // format:
@@ -38,14 +41,14 @@ static shared_ptr<Net<float> > net_;
 // If you have multiple images, cat them with cat(4, ...)
 //
 // The actual forward function. It takes in a cell array of 4-D arrays as
-// input and outputs a cell array. 
+// input and outputs a cell array.
 static mxArray* do_forward(const mxArray* const bottom) {
   vector<Blob<float>*>& input_blobs = net_->input_blobs();
-  CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(bottom)[0]), 
+  CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(bottom)[0]),
       input_blobs.size());
   for (unsigned int i = 0; i < input_blobs.size(); ++i) {
     const mxArray* const elem = mxGetCell(bottom, i);
-    const float* const data_ptr = 
+    const float* const data_ptr =
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {
     case Caffe::CPU:
@@ -63,7 +66,7 @@ static mxArray* do_forward(const mxArray* const bottom) {
   const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
   mxArray* mx_out = mxCreateCellMatrix(output_blobs.size(), 1);
   for (unsigned int i = 0; i < output_blobs.size(); ++i) {
-    mxArray* mx_blob = mxCreateNumericMatrix(output_blobs[i]->count(), 
+    mxArray* mx_blob = mxCreateNumericMatrix(output_blobs[i]->count(),
         1, mxSINGLE_CLASS, mxREAL);
     mxSetCell(mx_out, i, mx_blob);
     float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
@@ -85,30 +88,30 @@ static mxArray* do_forward(const mxArray* const bottom) {
 }
 
 // The caffe::Caffe utility functions.
-static void set_mode_cpu(MEX_ARGS) { 
-  Caffe::set_mode(Caffe::CPU); 
+static void set_mode_cpu(MEX_ARGS) {
+  Caffe::set_mode(Caffe::CPU);
 }
 
-static void set_mode_gpu(MEX_ARGS) { 
-  Caffe::set_mode(Caffe::GPU); 
+static void set_mode_gpu(MEX_ARGS) {
+  Caffe::set_mode(Caffe::GPU);
 }
 
-static void set_phase_train(MEX_ARGS) { 
-  Caffe::set_phase(Caffe::TRAIN); 
+static void set_phase_train(MEX_ARGS) {
+  Caffe::set_phase(Caffe::TRAIN);
 }
 
-static void set_phase_test(MEX_ARGS) { 
-  Caffe::set_phase(Caffe::TEST); 
+static void set_phase_test(MEX_ARGS) {
+  Caffe::set_phase(Caffe::TEST);
 }
 
-static void set_device(MEX_ARGS) { 
+static void set_device(MEX_ARGS) {
   if (nrhs != 1) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
   }
 
   int device_id = static_cast<int>(mxGetScalar(prhs[0]));
-  Caffe::SetDevice(device_id); 
+  Caffe::SetDevice(device_id);
 }
 
 static void init(MEX_ARGS) {
@@ -186,3 +189,5 @@ void mexFunction(MEX_ARGS) {
     mxFree(cmd);
   }
 }
+
+}  // namespace caffe

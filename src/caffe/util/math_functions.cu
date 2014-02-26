@@ -21,6 +21,7 @@ __global__ void mul_kernel(const int n, const Dtype* a,
 template <>
 void caffe_gpu_mul<float>(const int N, const float* a,
     const float* b, float* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
   mul_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
       N, a, b, y);
 }
@@ -28,6 +29,7 @@ void caffe_gpu_mul<float>(const int N, const float* a,
 template <>
 void caffe_gpu_mul<double>(const int N, const double* a,
     const double* b, double* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
   mul_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
       N, a, b, y);
 }

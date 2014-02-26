@@ -123,8 +123,9 @@ void Solver<Dtype>::Snapshot() {
   // For intermediate results, we will also dump the gradient values.
   net_->ToProto(&net_param, param_.snapshot_diff());
   string filename(param_.snapshot_prefix());
-  char iter_str_buffer[20];
-  sprintf(iter_str_buffer, "_iter_%d", iter_);
+  const int kBufferSize = 20;
+  char iter_str_buffer[kBufferSize];
+  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
   filename += iter_str_buffer;
   LOG(INFO) << "Snapshotting to " << filename;
   WriteProtoToBinaryFile(net_param, filename.c_str());

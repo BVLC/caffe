@@ -1,9 +1,10 @@
 // Copyright 2013 Yangqing Jia
 
-#include <cuda_runtime.h>
-#include <leveldb/db.h>
-
 #include <string>
+#include <vector>
+
+#include "cuda_runtime.h"
+#include "leveldb/db.h"
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -25,7 +26,7 @@ class HDF5DataLayerTest : public ::testing::Test {
   HDF5DataLayerTest()
       : blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
-        filename(NULL) {};
+        filename(NULL) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
@@ -33,16 +34,17 @@ class HDF5DataLayerTest : public ::testing::Test {
     // TODO: generate sample HDF5 file on the fly.
     // For now, use example HDF5 file.
     // TODO: how to best deal with the relativeness of the path?
-    filename = "src/caffe/test/test_data/sample_data.h5";
+    filename = new string("src/caffe/test/test_data/sample_data.h5");
     LOG(INFO) << "Using sample HDF5 data file " << filename;
-  };
+  }
 
   virtual ~HDF5DataLayerTest() {
     delete blob_top_data_;
     delete blob_top_label_;
+    delete filename;
   }
 
-  char* filename;
+  string* filename;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -59,7 +61,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   LayerParameter param;
   int batchsize = 5;
   param.set_batchsize(batchsize);
-  param.set_source(this->filename);
+  param.set_source(*(this->filename));
   int num_rows = 10;
   int num_cols = 8;
   HDF5DataLayer<TypeParam> layer(param);
@@ -127,4 +129,4 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   }
 }
 
-} // namespace caffe
+}  // namespace caffe
