@@ -121,7 +121,7 @@ linecount: clean
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
 
 lint:
-	./scripts/cpplint.py $(NONGEN_CXX_SRCS)
+	./scripts/cpp_lint.py $(NONGEN_CXX_SRCS)
 
 test: init $(TEST_BINS)
 

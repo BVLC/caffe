@@ -31,7 +31,7 @@ class MultinomialLogisticLossLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
     for (int i = 0; i < blob_bottom_label_->count(); ++i) {
-      // NOLINT_NEXTLINE(runtime/threadsafe_fn)
+      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
       blob_bottom_label_->mutable_cpu_data()[i] = rand() % 5;
     }
     blob_bottom_vec_.push_back(blob_bottom_label_);

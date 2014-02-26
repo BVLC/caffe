@@ -47,7 +47,7 @@ void im2col_gpu(const Dtype* data_im, const int channels,
   int height_col = (height + 2 * pad - ksize) / stride + 1;
   int width_col = (width + 2 * pad - ksize) / stride + 1;
   int num_kernels = channels * height_col * width_col;
-  // NOLINT_NEXTLINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   im2col_gpu_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels),
                              CAFFE_CUDA_NUM_THREADS>>>(
       num_kernels, data_im, height, width, ksize, pad, stride, height_col,
@@ -113,7 +113,7 @@ void col2im_gpu(const Dtype* data_col, const int channels,
   int num_kernels = channels * height * width;
   // To avoid involving atomic operations, we will launch one kernel per
   // bottom dimension, and then in the kernel add up the top dimensions.
-  // NOLINT_NEXTLINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   col2im_gpu_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels),
                              CAFFE_CUDA_NUM_THREADS>>>(
       num_kernels, data_col, height, width, channels, ksize, pad, stride,
