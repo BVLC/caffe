@@ -339,13 +339,14 @@ bool Net<Dtype>::has_blob(const string& blob_name) {
 }
 
 template <typename Dtype>
-const shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(const string& blob_name) {
+const shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(
+    const string& blob_name) {
   shared_ptr<Blob<Dtype> > blob_ptr;
   if (has_blob(blob_name)) {
     blob_ptr = blobs_[blob_names_index_[blob_name]];
   } else {
     blob_ptr.reset((Blob<Dtype>*)(NULL));
-    LOG(ERROR) << "Unknown blob name " << blob_name;
+    LOG(WARNING) << "Unknown blob name " << blob_name;
   }
   return blob_ptr;
 }
@@ -356,13 +357,14 @@ bool Net<Dtype>::has_layer(const string& layer_name) {
 }
 
 template <typename Dtype>
-const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(const string& layer_name) {
+const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
+    const string& layer_name) {
   shared_ptr<Layer<Dtype> > layer_ptr;
   if (has_layer(layer_name)) {
     layer_ptr = layers_[layer_names_index_[layer_name]];
   } else {
     layer_ptr.reset((Layer<Dtype>*)(NULL));
-    LOG(ERROR) << "Unknown layer name " << layer_name;
+    LOG(WARNING) << "Unknown layer name " << layer_name;
   }
   return layer_ptr;
 }
