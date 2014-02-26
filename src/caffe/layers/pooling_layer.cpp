@@ -34,7 +34,7 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     rand_idx_.Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
       POOLED_WIDTH_);
   }
-};
+}
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
 // case?

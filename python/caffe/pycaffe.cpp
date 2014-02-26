@@ -5,9 +5,12 @@
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-#include <boost/python.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <numpy/arrayobject.h>
+#include <string>
+#include <vector>
+
+#include "boost/python.hpp"
+#include "boost/python/suite/indexing/vector_indexing_suite.hpp"
+#include "numpy/arrayobject.h"
 #include "caffe/caffe.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -17,8 +20,6 @@
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
 
-
-using namespace caffe;
 using boost::python::extract;
 using boost::python::len;
 using boost::python::list;
@@ -26,16 +27,16 @@ using boost::python::object;
 using boost::python::handle;
 using boost::python::vector_indexing_suite;
 
+namespace caffe {
 
 // wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
 //  to Python
 class CaffeBlob {
  public:
-
   CaffeBlob(const shared_ptr<Blob<float> > &blob, const string& name)
       : blob_(blob), name_(name) {}
 
-  CaffeBlob(const shared_ptr<Blob<float> > &blob)
+  explicit CaffeBlob(const shared_ptr<Blob<float> > &blob)
       : blob_(blob) {}
 
   CaffeBlob()
@@ -48,8 +49,7 @@ class CaffeBlob {
   int width() const { return blob_->width(); }
   int count() const { return blob_->count(); }
 
-  bool operator == (const CaffeBlob &other)
-  {
+  bool operator == (const CaffeBlob &other) {
       return this->blob_ == other.blob_;
   }
 
@@ -64,14 +64,13 @@ class CaffeBlob {
 //  is not freed while still being used in Python
 class CaffeBlobWrap : public CaffeBlob {
  public:
-  CaffeBlobWrap(PyObject *p, shared_ptr<Blob<float> > &blob)
+  CaffeBlobWrap(PyObject *p, const shared_ptr<Blob<float> > &blob)
       : CaffeBlob(blob), self_(p) {}
 
   CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
       : CaffeBlob(blob), self_(p) {}
 
-  object get_data()
-  {
+  object get_data() {
       npy_intp dims[] = {num(), channels(), height(), width()};
 
       PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
@@ -83,8 +82,7 @@ class CaffeBlobWrap : public CaffeBlob {
       return object(h);
   }
 
-  object get_diff()
-  {
+  object get_diff() {
       npy_intp dims[] = {num(), channels(), height(), width()};
 
       PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
@@ -103,8 +101,7 @@ class CaffeBlobWrap : public CaffeBlob {
 
 
 // A simple wrapper over CaffeNet that runs the forward process.
-struct CaffeNet
-{
+struct CaffeNet {
   CaffeNet(string param_file, string pretrained_param_file) {
     net_.reset(new Net<float>(param_file));
     net_->CopyTrainedLayersFrom(pretrained_param_file);
@@ -126,7 +123,8 @@ struct CaffeNet
 
   // The actual forward function. It takes in a python list of numpy arrays as
   // input and a python list of numpy arrays as output. The input and output
-  // should all have correct shapes, are single-precisionabcdnt- and c contiguous.
+  // should all have correct shapes, are single-precisionabcdnt- and
+  // c contiguous.
   void Forward(list bottom, list top) {
     vector<Blob<float>*>& input_blobs = net_->input_blobs();
     CHECK_EQ(len(bottom), input_blobs.size());
@@ -149,9 +147,9 @@ struct CaffeNet
         LOG(FATAL) << "Unknown Caffe mode.";
       }  // switch (Caffe::mode())
     }
-    //LOG(INFO) << "Start";
+    // LOG(INFO) << "Start";
     const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
-    //LOG(INFO) << "End";
+    // LOG(INFO) << "End";
     for (int i = 0; i < output_blobs.size(); ++i) {
       object elem = top[i];
       PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
@@ -194,9 +192,9 @@ struct CaffeNet
         LOG(FATAL) << "Unknown Caffe mode.";
       }  // switch (Caffe::mode())
     }
-    //LOG(INFO) << "Start";
+    // LOG(INFO) << "Start";
     net_->Backward();
-    //LOG(INFO) << "End";
+    // LOG(INFO) << "End";
     for (int i = 0; i < input_blobs.size(); ++i) {
       object elem = bottom_diff[i];
       PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
@@ -236,7 +234,8 @@ struct CaffeNet
       int ix = 0;
       for (int i = 0; i < net_->layers().size(); ++i) {
         for (int j = 0; j < net_->layers()[i]->blobs().size(); ++j) {
-          result.push_back(CaffeBlob(net_->params()[ix], net_->layer_names()[i]));
+          result.push_back(
+              CaffeBlob(net_->params()[ix], net_->layer_names()[i]));
           ix++;
         }
       }
@@ -250,9 +249,7 @@ struct CaffeNet
 
 
 // The boost python module definition.
-BOOST_PYTHON_MODULE(pycaffe)
-{
-
+BOOST_PYTHON_MODULE(pycaffe) {
   boost::python::class_<CaffeNet>(
       "CaffeNet", boost::python::init<string, string>())
       .def("Forward",         &CaffeNet::Forward)
@@ -263,8 +260,7 @@ BOOST_PYTHON_MODULE(pycaffe)
       .def("set_phase_test",  &CaffeNet::set_phase_test)
       .def("set_device",      &CaffeNet::set_device)
       .def("blobs",           &CaffeNet::blobs)
-      .def("params",          &CaffeNet::params)
-  ;
+      .def("params",          &CaffeNet::params);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
       "CaffeBlob", boost::python::no_init)
@@ -275,12 +271,12 @@ BOOST_PYTHON_MODULE(pycaffe)
       .add_property("width",    &CaffeBlob::width)
       .add_property("count",    &CaffeBlob::count)
       .add_property("data",     &CaffeBlobWrap::get_data)
-      .add_property("diff",     &CaffeBlobWrap::get_diff)
-  ;
+      .add_property("diff",     &CaffeBlobWrap::get_diff);
 
   boost::python::class_<vector<CaffeBlob> >("BlobVec")
       .def(vector_indexing_suite<vector<CaffeBlob>, true>());
 
   import_array();
-
 }
+
+}  // namespace caffe

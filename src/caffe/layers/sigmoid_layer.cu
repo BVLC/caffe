@@ -1,9 +1,11 @@
 // Copyright 2014 Tobias Domhan
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
 #include <algorithm>
 #include <cmath>
+#include <vector>
+
+#include "caffe/layer.hpp"
+#include "caffe/vision_layers.hpp"
 
 using std::max;
 
@@ -63,11 +65,13 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
+  // NOLINT_NEXT_LINE(whitespace/operators)
   SigmoidForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, top_data);
   CUDA_POST_KERNEL_CHECK;
   // << " count: " << count << " bottom_data: "
-  //     << (unsigned long)bottom_data << " top_data: " << (unsigned long)top_data
+  //     << (unsigned long)bottom_data
+  //     << " top_data: " << (unsigned long)top_data
   //     << " blocks: " << CAFFE_GET_BLOCKS(count)
   //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
 }
@@ -91,6 +95,7 @@ Dtype SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
     const int count = (*bottom)[0]->count();
+    // NOLINT_NEXT_LINE(whitespace/operators)
     SigmoidBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, bottom_data, bottom_diff);
     CUDA_POST_KERNEL_CHECK;

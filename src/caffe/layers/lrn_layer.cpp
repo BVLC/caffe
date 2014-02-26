@@ -25,7 +25,7 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   pre_pad_ = (size_ - 1) / 2;
   alpha_ = this->layer_param_.alpha();
   beta_ = this->layer_param_.beta();
-};
+}
 
 template <typename Dtype>
 void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
