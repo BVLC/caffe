@@ -69,3 +69,31 @@ Our workflow is this:
 - Do new development in [feature branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch) with decriptive names.
 - Bring your work up-to-date by [rebasing](http://git-scm.com/book/en/Git-Branching-Rebasing) onto the latest `dev`. (Polish your changes by [interactive rebase](https://help.github.com/articles/interactive-rebase), if you'd like.)
 - [Pull request](https://help.github.com/articles/using-pull-requests) your contribution to BVLC/caffe's `dev` branch for discussion and review.
+
+#### [Shelhamer's](https://github.com/shelhamer) "life of a branch in four acts":
+
+Make the `feature` branch off of the latest `bvlc/dev`
+```
+git checkout dev
+git pull upstream dev
+git checkout -b feature
+# do your work, make commits
+```
+
+Prepare to merge by rebasing your branch on the latest `bvlc/dev`
+```
+# make sure dev is fresh
+git checkout dev
+git pull upstream dev
+# rebase your branch on the tip of dev
+git checkout feature
+git rebase --preserve-merges dev
+```
+
+Push your branch to pull request it into `dev`
+```
+git push origin feature
+# ...make pull request... you can do `git pull-request` if you install [hub](https://github.com/github/hub)
+```
+
+The pull request of feature into `dev` will be a clean merge, applause.
