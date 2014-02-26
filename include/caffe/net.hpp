@@ -57,13 +57,6 @@ class Net {
   void CopyTrainedLayersFrom(const string trained_filename);
   // Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
-  // HasBlob and GetBlob are inspired by
-  // https://github.com/kencoken/caffe/commit/f36e71569455c9fbb4bf8a63c2d53224e32a4e7b
-  // Access intermediary computation layers, testing with centre image only
-  bool HasBlob(const string& blob_name);
-  const shared_ptr<Blob<Dtype> > GetBlob(const string& blob_name);
-  bool HasLayer(const string& layer_name);
-  const shared_ptr<Layer<Dtype> > GetLayerByName(const string& layer_name);
 
   // returns the network name.
   inline const string& name() { return name_; }
@@ -89,6 +82,13 @@ class Net {
   inline int num_outputs() { return net_output_blobs_.size(); }
   inline vector<Blob<Dtype>*>& input_blobs() { return net_input_blobs_; }
   inline vector<Blob<Dtype>*>& output_blobs() { return net_output_blobs_; }
+  // has_blob and blob_by_name are inspired by
+  // https://github.com/kencoken/caffe/commit/f36e71569455c9fbb4bf8a63c2d53224e32a4e7b
+  // Access intermediary computation layers, testing with centre image only
+  bool has_blob(const string& blob_name);
+  const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name);
+  bool has_layer(const string& layer_name);
+  const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
 
  protected:
   // Function to get misc parameters, e.g. the learning rate multiplier and
