@@ -131,13 +131,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
         ->GetBlob(extract_feature_blob_name);
     int num_features = feature_blob->num();
     int dim_features = feature_blob->count() / num_features;
+    Dtype* feature_blob_data;
     for (int n = 0; n < num_features; ++n) {
       datum.set_height(dim_features);
       datum.set_width(1);
       datum.set_channels(1);
       datum.clear_data();
       datum.clear_float_data();
-      const Dtype* feature_blob_data = feature_blob->cpu_data();
+      feature_blob_data = feature_blob->mutable_cpu_data() + feature_blob->offset(n);
       for (int d = 0; d < dim_features; ++d) {
         datum.add_float_data(feature_blob_data[d]);
       }
@@ -152,7 +153,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         delete batch;
         batch = new leveldb::WriteBatch();
       }
-    }
+    }  // for (int n = 0; n < num_features; ++n)
   }  // for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
   // write the last batch
   if (image_index % 1000 != 0) {
