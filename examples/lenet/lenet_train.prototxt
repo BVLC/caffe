@@ -1,0 +1,122 @@
+name: "LeNet"
+layers {
+  layer {
+    name: "mnist"
+    type: "data"
+    source: "mnist-train-leveldb"
+    batchsize: 64
+    scale: 0.00390625
+  }
+  top: "data"
+  top: "label"
+}
+layers {
+  layer {
+    name: "conv1"
+    type: "conv"
+    num_output: 20
+    kernelsize: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+  }
+  bottom: "data"
+  top: "conv1"
+}
+layers {
+  layer {
+    name: "pool1"
+    type: "pool"
+    kernelsize: 2
+    stride: 2
+    pool: MAX
+  }
+  bottom: "conv1"
+  top: "pool1"
+}
+layers {
+  layer {
+    name: "conv2"
+    type: "conv"
+    num_output: 50
+    kernelsize: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+  }
+  bottom: "pool1"
+  top: "conv2"
+}
+layers {
+  layer {
+    name: "pool2"
+    type: "pool"
+    kernelsize: 2
+    stride: 2
+    pool: MAX
+  }
+  bottom: "conv2"
+  top: "pool2"
+}
+layers {
+  layer {
+    name: "ip1"
+    type: "innerproduct"
+    num_output: 500
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+  }
+  bottom: "pool2"
+  top: "ip1"
+}
+layers {
+  layer {
+    name: "relu1"
+    type: "relu"
+  }
+  bottom: "ip1"
+  top: "ip1"
+}
+layers {
+  layer {
+    name: "ip2"
+    type: "innerproduct"
+    num_output: 10
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+  }
+  bottom: "ip1"
+  top: "ip2"
+}
+layers {
+  layer {
+    name: "loss"
+    type: "softmax_loss"
+  }
+  bottom: "ip2"
+  bottom: "label"
+}
