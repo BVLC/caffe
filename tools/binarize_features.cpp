@@ -78,7 +78,7 @@ int features_binarization_pipeline(int argc, char** argv) {
       new Net<Dtype>(real_valued_feature_net_param));
 
   string feature_blob_name(argv[++arg_pos]);
-  CHECK(real_valued_feature_net->HasBlob(feature_blob_name))
+  CHECK(real_valued_feature_net->has_blob(feature_blob_name))
       << "Unknown feature blob name " << feature_blob_name << " in the network "
       << real_valued_feature_prototxt;
 
@@ -92,7 +92,7 @@ int features_binarization_pipeline(int argc, char** argv) {
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     real_valued_feature_net->Forward(input_vec);
     const shared_ptr<Blob<Dtype> > feature_blob = real_valued_feature_net
-        ->GetBlob(feature_blob_name);
+        ->blob_by_name(feature_blob_name);
     feature_blob_vector.push_back(feature_blob);
   }
   shared_ptr<Blob<Dtype> > feature_binary_codes(new Blob<Dtype>());

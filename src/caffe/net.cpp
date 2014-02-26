@@ -333,18 +333,15 @@ void Net<Dtype>::Update() {
   }
 }
 
-// HasBlob and GetBlob are inspired by
-// https://github.com/kencoken/caffe/commit/f36e71569455c9fbb4bf8a63c2d53224e32a4e7b
-// Access intermediary computation layers, testing with centre image only
 template <typename Dtype>
-bool Net<Dtype>::HasBlob(const string& blob_name) {
+bool Net<Dtype>::has_blob(const string& blob_name) {
   return blob_names_index_.find(blob_name) != blob_names_index_.end();
 }
 
 template <typename Dtype>
-const shared_ptr<Blob<Dtype> > Net<Dtype>::GetBlob(const string& blob_name) {
+const shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(const string& blob_name) {
   shared_ptr<Blob<Dtype> > blob_ptr;
-  if (HasBlob(blob_name)) {
+  if (has_blob(blob_name)) {
     blob_ptr = blobs_[blob_names_index_[blob_name]];
   } else {
     blob_ptr.reset((Blob<Dtype>*)(NULL));
@@ -354,21 +351,20 @@ const shared_ptr<Blob<Dtype> > Net<Dtype>::GetBlob(const string& blob_name) {
 }
 
 template <typename Dtype>
-bool Net<Dtype>::HasLayer(const string& layer_name) {
+bool Net<Dtype>::has_layer(const string& layer_name) {
   return layer_names_index_.find(layer_name) != layer_names_index_.end();
 }
 
 template <typename Dtype>
-const shared_ptr<Layer<Dtype> > Net<Dtype>::GetLayerByName(const string& layer_name) {
+const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(const string& layer_name) {
   shared_ptr<Layer<Dtype> > layer_ptr;
-  if (HasLayer(layer_name)) {
+  if (has_layer(layer_name)) {
     layer_ptr = layers_[layer_names_index_[layer_name]];
   } else {
     layer_ptr.reset((Layer<Dtype>*)(NULL));
     LOG(ERROR) << "Unknown layer name " << layer_name;
   }
   return layer_ptr;
-
 }
 
 INSTANTIATE_CLASS(Net);

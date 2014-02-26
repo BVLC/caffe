@@ -1,5 +1,6 @@
 // Copyright 2014 kloudkl@github
 
+#include <sstream>
 #include <google/protobuf/text_format.h>
 #include <leveldb/db.h>
 
@@ -38,7 +39,7 @@ class NetTest : public ::testing::Test {
       for (int j = 0; j < 24; ++j) {
         data->push_back((uint8_t)i);
       }
-      stringstream ss;
+      std::stringstream ss;
       ss << i;
       db->Put(leveldb::WriteOptions(), ss.str(), datum.SerializeAsString());
     }
@@ -106,10 +107,10 @@ TYPED_TEST(NetTest, TestHasBlob) {
   CHECK(google::protobuf::TextFormat::ParseFromString(this->proto,
                                                       &param));
   Net<TypeParam> net(param);
-  EXPECT_TRUE(net.HasBlob("data"));
-  EXPECT_TRUE(net.HasBlob("label"));
-  EXPECT_TRUE(net.HasBlob("innerproduct"));
-  EXPECT_FALSE(net.HasBlob("loss"));
+  EXPECT_TRUE(net.has_blob("data"));
+  EXPECT_TRUE(net.has_blob("label"));
+  EXPECT_TRUE(net.has_blob("innerproduct"));
+  EXPECT_FALSE(net.has_blob("loss"));
 }
 
 TYPED_TEST(NetTest, TestGetBlob) {
@@ -117,10 +118,10 @@ TYPED_TEST(NetTest, TestGetBlob) {
   CHECK(google::protobuf::TextFormat::ParseFromString(this->proto,
                                                       &param));
   Net<TypeParam> net(param);
-  EXPECT_EQ(net.GetBlob("data"), net.blobs()[0]);
-  EXPECT_EQ(net.GetBlob("label"), net.blobs()[1]);
-  EXPECT_EQ(net.GetBlob("innerproduct"), net.blobs()[2]);
-  EXPECT_FALSE(net.GetBlob("loss"));
+  EXPECT_EQ(net.blob_by_name("data"), net.blobs()[0]);
+  EXPECT_EQ(net.blob_by_name("label"), net.blobs()[1]);
+  EXPECT_EQ(net.blob_by_name("innerproduct"), net.blobs()[2]);
+  EXPECT_FALSE(net.blob_by_name("loss"));
 }
 
 TYPED_TEST(NetTest, TestHasLayer) {
@@ -128,10 +129,10 @@ TYPED_TEST(NetTest, TestHasLayer) {
   CHECK(google::protobuf::TextFormat::ParseFromString(this->proto,
                                                       &param));
   Net<TypeParam> net(param);
-  EXPECT_TRUE(net.HasLayer("data"));
-  EXPECT_TRUE(net.HasLayer("innerproduct"));
-  EXPECT_TRUE(net.HasLayer("loss"));
-  EXPECT_FALSE(net.HasLayer("label"));
+  EXPECT_TRUE(net.has_layer("data"));
+  EXPECT_TRUE(net.has_layer("innerproduct"));
+  EXPECT_TRUE(net.has_layer("loss"));
+  EXPECT_FALSE(net.has_layer("label"));
 }
 
 TYPED_TEST(NetTest, TestGetLayerByName) {
@@ -139,10 +140,10 @@ TYPED_TEST(NetTest, TestGetLayerByName) {
   CHECK(google::protobuf::TextFormat::ParseFromString(this->proto,
                                                       &param));
   Net<TypeParam> net(param);
-  EXPECT_EQ(net.GetLayerByName("data"), net.layers()[0]);
-  EXPECT_EQ(net.GetLayerByName("innerproduct"), net.layers()[1]);
-  EXPECT_EQ(net.GetLayerByName("loss"), net.layers()[2]);
-  EXPECT_FALSE(net.GetLayerByName("label"));
+  EXPECT_EQ(net.layer_by_name("data"), net.layers()[0]);
+  EXPECT_EQ(net.layer_by_name("innerproduct"), net.layers()[1]);
+  EXPECT_EQ(net.layer_by_name("loss"), net.layers()[2]);
+  EXPECT_FALSE(net.layer_by_name("label"));
 }
 
 

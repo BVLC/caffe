@@ -98,7 +98,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_net_param);
 
   string extract_feature_blob_name(argv[++arg_pos]);
-  CHECK(feature_extraction_net->HasBlob(extract_feature_blob_name))
+  CHECK(feature_extraction_net->has_blob(extract_feature_blob_name))
       << "Unknown feature blob name " << extract_feature_blob_name
       << " in the network " << feature_extraction_proto;
 
@@ -128,7 +128,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
     const shared_ptr<Blob<Dtype> > feature_blob = feature_extraction_net
-        ->GetBlob(extract_feature_blob_name);
+        ->blob_by_name(extract_feature_blob_name);
     int num_features = feature_blob->num();
     int dim_features = feature_blob->count() / num_features;
     Dtype* feature_blob_data;
