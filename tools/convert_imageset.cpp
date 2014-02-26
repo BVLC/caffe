@@ -16,14 +16,15 @@
 #include <leveldb/write_batch.h>
 
 #include <algorithm>
+#include <fstream>  // NOLINT(readability/streams)
 #include <string>
-#include <iostream>
-#include <fstream>
+#include <utility>
+#include <vector>
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using std::string;
 
@@ -66,25 +67,27 @@ int main(int argc, char** argv) {
   string root_folder(argv[1]);
   Datum datum;
   int count = 0;
-  const int maxKeyLength = 256;
-  char key_cstr[maxKeyLength];
+  const int kMaxKeyLength = 256;
+  char key_cstr[kMaxKeyLength];
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   int data_size;
   bool data_size_initialized = false;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
-    if (!ReadImageToDatum(root_folder + lines[line_id].first, lines[line_id].second,
-                          &datum)) {
+    if (!ReadImageToDatum(root_folder + lines[line_id].first,
+                          lines[line_id].second, &datum)) {
       continue;
-    };
+    }
     if (!data_size_initialized) {
       data_size = datum.channels() * datum.height() * datum.width();
       data_size_initialized = true;
     } else {
       const string& data = datum.data();
-      CHECK_EQ(data.size(), data_size) << "Incorrect data field size " << data.size();
+      CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
+          << data.size();
     }
     // sequential
-    snprintf(key_cstr, maxKeyLength, "%08d_%s", line_id, lines[line_id].first.c_str());
+    snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+        lines[line_id].first.c_str());
     string value;
     // get the value
     datum.SerializeToString(&value);

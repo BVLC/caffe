@@ -12,25 +12,23 @@
 #include <leveldb/db.h>
 
 #include <stdint.h>
-#include <iostream>
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
 
 using std::string;
 
+const int kCIFARSize = 32;
+const int kCIFARImageNBytes = 3072;
+const int kCIFARBatchSize = 10000;
+const int kCIFARTrainBatches = 5;
 
-const int kCIFAR_SIZE=32;
-const int kCIFAR_IMAGE_NBYTES=3072;
-const int kCIFAR_BATCHSIZE=10000;
-const int kCIFAR_TRAIN_BATCHES=5;
-
-void read_image(std::ifstream& file, int* label, char* buffer) {
+void read_image(std::ifstream* file, int* label, char* buffer) {
   char label_char;
-  file.read(&label_char, 1);
+  file->read(&label_char, 1);
   *label = label_char;
-  file.read(buffer, kCIFAR_IMAGE_NBYTES);
+  file->read(buffer, kCIFARImageNBytes);
   return;
 }
 
@@ -41,12 +39,12 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
   options.error_if_exists = true;
   // Data buffer
   int label;
-  char str_buffer[kCIFAR_IMAGE_NBYTES];
+  char str_buffer[kCIFARImageNBytes];
   string value;
   caffe::Datum datum;
   datum.set_channels(3);
-  datum.set_height(kCIFAR_SIZE);
-  datum.set_width(kCIFAR_SIZE);
+  datum.set_height(kCIFARSize);
+  datum.set_width(kCIFARSize);
 
   LOG(INFO) << "Writing Training data";
   leveldb::DB* train_db;
@@ -54,19 +52,20 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
   status = leveldb::DB::Open(options, output_folder + "/cifar-train-leveldb",
       &train_db);
   CHECK(status.ok()) << "Failed to open leveldb.";
-  for (int fileid = 0; fileid < kCIFAR_TRAIN_BATCHES; ++fileid) {
+  for (int fileid = 0; fileid < kCIFARTrainBatches; ++fileid) {
     // Open files
     LOG(INFO) << "Training Batch " << fileid + 1;
-    sprintf(str_buffer, "/data_batch_%d.bin", fileid + 1);
+    snprintf(str_buffer, kCIFARImageNBytes, "/data_batch_%d.bin", fileid + 1);
     std::ifstream data_file((input_folder + str_buffer).c_str(),
         std::ios::in | std::ios::binary);
     CHECK(data_file) << "Unable to open train file #" << fileid + 1;
-    for (int itemid = 0; itemid < kCIFAR_BATCHSIZE; ++itemid) {
-      read_image(data_file, &label, str_buffer);
+    for (int itemid = 0; itemid < kCIFARBatchSize; ++itemid) {
+      read_image(&data_file, &label, str_buffer);
       datum.set_label(label);
-      datum.set_data(str_buffer, kCIFAR_IMAGE_NBYTES);
+      datum.set_data(str_buffer, kCIFARImageNBytes);
       datum.SerializeToString(&value);
-      sprintf(str_buffer, "%05d", fileid * kCIFAR_BATCHSIZE + itemid);
+      snprintf(str_buffer, kCIFARImageNBytes, "%05d",
+          fileid * kCIFARBatchSize + itemid);
       train_db->Put(leveldb::WriteOptions(), string(str_buffer), value);
     }
   }
@@ -79,12 +78,12 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
   CHECK(data_file) << "Unable to open test file.";
-  for (int itemid = 0; itemid < kCIFAR_BATCHSIZE; ++itemid) {
-    read_image(data_file, &label, str_buffer);
+  for (int itemid = 0; itemid < kCIFARBatchSize; ++itemid) {
+    read_image(&data_file, &label, str_buffer);
     datum.set_label(label);
-    datum.set_data(str_buffer, kCIFAR_IMAGE_NBYTES);
+    datum.set_data(str_buffer, kCIFARImageNBytes);
     datum.SerializeToString(&value);
-    sprintf(str_buffer, "%05d", itemid);
+    snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
     test_db->Put(leveldb::WriteOptions(), string(str_buffer), value);
   }
 
@@ -92,7 +91,7 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
   delete test_db;
 }
 
-int main (int argc, char** argv) {
+int main(int argc, char** argv) {
   if (argc != 3) {
     printf("This script converts the CIFAR dataset to the leveldb format used\n"
            "by caffe to perform classification.\n"

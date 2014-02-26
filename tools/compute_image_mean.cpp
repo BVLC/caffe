@@ -48,7 +48,8 @@ int main(int argc, char** argv) {
     // just a dummy operation
     datum.ParseFromString(it->value().ToString());
     const string& data = datum.data();
-    CHECK_EQ(data.size(), data_size) << "Incorrect data field size " << data.size();
+    CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
+        << data.size();
     for (int i = 0; i < data.size(); ++i) {
       sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
     }

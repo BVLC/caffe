@@ -1,11 +1,12 @@
 // Copyright 2013 Yangqing Jia
 
-#include <cuda_runtime.h>
-#include <fcntl.h>
-#include <google/protobuf/text_format.h>
-
-#include <cstring>
 #include <ctime>
+#include <string>
+#include <vector>
+
+#include "cuda_runtime.h"
+#include "fcntl.h"
+#include "google/protobuf/text_format.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -15,14 +16,16 @@
 #include "caffe/util/io.hpp"
 #include "caffe/solver.hpp"
 
-using namespace caffe;
+using boost::shared_ptr;
+
+using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
-
   int total_iter = 50;
 
   if (argc < 2) {
-    LOG(ERROR) << "net_speed_benchmark net_proto [iterations=50] [CPU/GPU] [Device_id=0]";
+    LOG(ERROR) << "net_speed_benchmark net_proto [iterations=50] [CPU/GPU] "
+        << "[Device_id=0]";
     return 0;
   }
 
@@ -72,9 +75,12 @@ int main(int argc, char** argv) {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
     }
     LOG(ERROR) << layername << "\tforward: "
-        << float(clock() - start) / CLOCKS_PER_SEC << " seconds.";
+        << static_cast<float>(clock() - start) / CLOCKS_PER_SEC
+        << " seconds.";
   }
-  LOG(ERROR) << "Forward pass: " << float(clock() - forward_start) / CLOCKS_PER_SEC << " seconds.";
+  LOG(ERROR) << "Forward pass: "
+      << static_cast<float>(clock() - forward_start) / CLOCKS_PER_SEC
+      << " seconds.";
   clock_t backward_start = clock();
   for (int i = layers.size() - 1; i >= 0; --i) {
     const string& layername = layers[i]->layer_param().name();
@@ -83,10 +89,15 @@ int main(int argc, char** argv) {
       layers[i]->Backward(top_vecs[i], true, &bottom_vecs[i]);
     }
     LOG(ERROR) << layername << "\tbackward: "
-        << float(clock() - start) / CLOCKS_PER_SEC << " seconds.";
+        << static_cast<float>(clock() - start) / CLOCKS_PER_SEC
+        << " seconds.";
   }
-  LOG(ERROR) << "Backward pass: " << float(clock() - backward_start) / CLOCKS_PER_SEC << " seconds.";
-  LOG(ERROR) << "Total Time: " << float(clock() - forward_start) / CLOCKS_PER_SEC << " seconds.";
+  LOG(ERROR) << "Backward pass: "
+      << static_cast<float>(clock() - backward_start) / CLOCKS_PER_SEC
+      << " seconds.";
+  LOG(ERROR) << "Total Time: "
+      << static_cast<float>(clock() - forward_start) / CLOCKS_PER_SEC
+      << " seconds.";
   LOG(ERROR) << "*** Benchmark ends ***";
   return 0;
 }
