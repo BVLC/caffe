@@ -4,16 +4,18 @@
 // all the intermediate blobs produced by the net to individual binary
 // files stored in protobuffer binary formats.
 // Usage:
-//    dump_network input_net_param trained_net_param input_blob output_prefix 0/1
+//    dump_network input_net_param trained_net_param \
+//        input_blob output_prefix 0/1
 // if input_net_param is 'none', we will directly load the network from
 // trained_net_param. If the last argv is 1, we will do a forward-backward pass
 // before dumping everyting, and also dump the who network.
 
-#include <cuda_runtime.h>
-#include <fcntl.h>
-#include <google/protobuf/text_format.h>
+#include <string>
+#include <vector>
 
-#include <cstring>
+#include "cuda_runtime.h"
+#include "fcntl.h"
+#include "google/protobuf/text_format.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -23,7 +25,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/solver.hpp"
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   cudaSetDevice(1);
@@ -63,7 +65,8 @@ int main(int argc, char** argv) {
     // Dump the network
     NetParameter output_net_param;
     caffe_net->ToProto(&output_net_param, true);
-    WriteProtoToBinaryFile(output_net_param, output_prefix + output_net_param.name());
+    WriteProtoToBinaryFile(output_net_param,
+        output_prefix + output_net_param.name());
   }
   // Now, let's dump all the layers
 
@@ -74,7 +77,8 @@ int main(int argc, char** argv) {
     LOG(ERROR) << "Dumping " << blob_names[blobid];
     BlobProto output_blob_proto;
     blobs[blobid]->ToProto(&output_blob_proto);
-    WriteProtoToBinaryFile(output_blob_proto, output_prefix + blob_names[blobid]);
+    WriteProtoToBinaryFile(output_blob_proto,
+        output_prefix + blob_names[blobid]);
   }
 
   return 0;
