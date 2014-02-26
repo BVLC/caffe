@@ -97,6 +97,7 @@ int features_binarization_pipeline(int argc, char** argv) {
   }
   shared_ptr<Blob<Dtype> > feature_binary_codes(new Blob<Dtype>());
   binarize<Dtype>(feature_blob_vector, feature_binary_codes);
+
   BlobProto blob_proto;
   feature_binary_codes->ToProto(&blob_proto);
   WriteProtoToBinaryFile(blob_proto, save_binarized_feature_binaryproto_file);
@@ -125,13 +126,14 @@ void binarize(const vector<shared_ptr<Blob<Dtype> > >& feature_blob_vector,
   int size_of_code = sizeof(Dtype) * 8;
   binary_codes->Reshape(num_features, (dim + size_of_code - 1) / size_of_code,
                         1, 1);
-  Dtype* binary_data = binary_codes->mutable_cpu_data();
-  int offset;
   uint64_t code;
+  count = 0;
   for (int i = 0; i < feature_blob_vector.size(); ++i) {
-    const Dtype* data = feature_blob_vector[i]->cpu_data();
     for (int j = 0; j < feature_blob_vector[i]->num(); ++j) {
-      offset = j * dim;
+      const Dtype* data = feature_blob_vector[i]->cpu_data()
+          + feature_blob_vector[i]->offset(j);
+      Dtype* binary_data = binary_codes->mutable_cpu_data()
+          + binary_codes->offset(count++);
       code = 0;
       int k;
       for (k = 0; k < dim;) {
