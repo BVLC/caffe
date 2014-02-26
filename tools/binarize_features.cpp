@@ -1,8 +1,10 @@
 // Copyright 2014 kloudkl@github
 
-#include <cmath> // for std::signbit
 #include <cuda_runtime.h>
 #include <google/protobuf/text_format.h>
+#include <cmath>  // for std::signbit
+#include <string>
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -11,7 +13,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 template<typename Dtype>
 void binarize(const vector<shared_ptr<Blob<Dtype> > >& feature_blob_vector,
@@ -31,8 +33,9 @@ int features_binarization_pipeline(int argc, char** argv) {
   if (argc < num_required_args) {
     LOG(ERROR)<<
     "This program compresses real valued features into compact binary codes.\n"
-    "Usage: demo_binarize_features  real_valued_feature_prototxt  feature_blob_name"
-    "  save_binarized_feature_binaryproto_file  num_mini_batches  [CPU/GPU]  [DEVICE_ID=0]";
+    "Usage: demo_binarize_features  real_valued_feature_prototxt"
+    "  feature_blob_name  save_binarized_feature_binaryproto_file"
+    "  num_mini_batches  [CPU/GPU]  [DEVICE_ID=0]";
     return 1;
   }
   int arg_pos = num_required_args;
@@ -57,7 +60,8 @@ int features_binarization_pipeline(int argc, char** argv) {
 
   arg_pos = 0;  // the name of the executable
 
-  // Expected prototxt contains at least one data layer as the real valued features.
+  // Expected prototxt contains at least one data layer as the real valued
+  // features.
   /*
    layers {
    layer {
@@ -79,8 +83,8 @@ int features_binarization_pipeline(int argc, char** argv) {
 
   string feature_blob_name(argv[++arg_pos]);
   CHECK(real_valued_feature_net->has_blob(feature_blob_name))
-      << "Unknown feature blob name " << feature_blob_name << " in the network "
-      << real_valued_feature_prototxt;
+      << "Unknown feature blob name " << feature_blob_name
+      << " in the network " << real_valued_feature_prototxt;
 
   string save_binarized_feature_binaryproto_file(argv[++arg_pos]);
 
@@ -101,11 +105,13 @@ int features_binarization_pipeline(int argc, char** argv) {
   BlobProto blob_proto;
   feature_binary_codes->ToProto(&blob_proto);
   WriteProtoToBinaryFile(blob_proto, save_binarized_feature_binaryproto_file);
-  LOG(ERROR)<< "Successfully binarized " << feature_binary_codes->num() << " features!";
+  LOG(ERROR) << "Successfully binarized " << feature_binary_codes->num()
+      << " features!";
   return 0;
 }
 
-// http://scikit-learn.org/stable/modules/preprocessing.html#feature-binarization
+// http://scikit-learn.org/stable/modules/preprocessing.html
+//   #feature-binarization
 template<typename Dtype>
 void binarize(const vector<shared_ptr<Blob<Dtype> > >& feature_blob_vector,
               shared_ptr<Blob<Dtype> > binary_codes) {

@@ -1,8 +1,9 @@
 // Copyright 2014 kloudkl@github
 
-#include <sstream>
 #include <google/protobuf/text_format.h>
 #include <leveldb/db.h>
+#include <sstream>
+#include <string>
 
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
@@ -18,10 +19,10 @@ template <typename Dtype>
 class NetTest : public ::testing::Test {
  protected:
   NetTest() : filename(NULL) {
-  };
-  virtual void SetUp() {
-    // Create the leveldb
-    filename = tmpnam(NULL); // get temp name
+  }
+
+  virtual void SetUp() {  // Create the leveldb
+    filename = tmpnam(NULL);  // get temp name
     LOG(INFO) << "Using temporary leveldb " << filename;
     leveldb::DB* db;
     leveldb::Options options;
@@ -50,8 +51,7 @@ class NetTest : public ::testing::Test {
         "layers: { "
         "  layer { "
         "    name: 'data' "
-        "    type: 'data' "
-        ;
+        "    type: 'data' ";
     const string& proto_suffix =
         "    batchsize: 1 "
         "  } "
@@ -86,8 +86,7 @@ class NetTest : public ::testing::Test {
         "  } "
         "  bottom: 'innerproduct' "
         "  bottom: 'label' "
-        "} "
-        ;
+        "} ";
     proto = proto_prefix + "source: '" + string(this->filename) +
         "' " + proto_suffix;
   }
@@ -146,5 +145,4 @@ TYPED_TEST(NetTest, TestGetLayerByName) {
   EXPECT_FALSE(net.layer_by_name("label"));
 }
 
-
-}
+}  // namespace caffe

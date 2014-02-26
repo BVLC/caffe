@@ -1,6 +1,6 @@
 // Copyright 2014 kloudkl@github
 
-#include <stdint.h> // for uint32_t & uint64_t
+#include <stdint.h>  // for uint32_t & uint64_t
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -66,7 +66,7 @@ REF_HAMMING_DIST(double, uint64_t);
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(MathFunctionsTest, Dtypes);
 
-TYPED_TEST(MathFunctionsTest, TestHammingDistance){
+TYPED_TEST(MathFunctionsTest, TestHammingDistance) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
@@ -74,4 +74,4 @@ TYPED_TEST(MathFunctionsTest, TestHammingDistance){
            caffe_hamming_distance<TypeParam>(n, x, y));
 }
 
-}
+}  // namespace caffe

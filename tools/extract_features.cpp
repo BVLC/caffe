@@ -1,10 +1,12 @@
 // Copyright 2014 kloudkl@github
 
-#include <stdio.h> // for snprintf
+#include <stdio.h>  // for snprintf
 #include <cuda_runtime.h>
 #include <google/protobuf/text_format.h>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
+#include <string>
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -13,7 +15,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv);
@@ -89,7 +91,6 @@ int feature_extraction_pipeline(int argc, char** argv) {
    }
    */
   NetParameter feature_extraction_net_param;
-  ;
   string feature_extraction_proto(argv[++arg_pos]);
   ReadProtoFromTextFile(feature_extraction_proto,
                         &feature_extraction_net_param);
@@ -120,8 +121,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   Datum datum;
   leveldb::WriteBatch* batch = new leveldb::WriteBatch();
-  const int max_key_str_length = 100;
-  char key_str[max_key_str_length];
+  const int kMaxKeyStrLength = 100;
+  char key_str[kMaxKeyStrLength];
   int num_bytes_of_binary_code = sizeof(Dtype);
   vector<Blob<float>*> input_vec;
   int image_index = 0;
@@ -138,18 +139,20 @@ int feature_extraction_pipeline(int argc, char** argv) {
       datum.set_channels(1);
       datum.clear_data();
       datum.clear_float_data();
-      feature_blob_data = feature_blob->mutable_cpu_data() + feature_blob->offset(n);
+      feature_blob_data = feature_blob->mutable_cpu_data() +
+          feature_blob->offset(n);
       for (int d = 0; d < dim_features; ++d) {
         datum.add_float_data(feature_blob_data[d]);
       }
       string value;
       datum.SerializeToString(&value);
-      snprintf(key_str, max_key_str_length, "%d", image_index);
+      snprintf(key_str, kMaxKeyStrLength, "%d", image_index);
       batch->Put(string(key_str), value);
       ++image_index;
       if (image_index % 1000 == 0) {
         db->Write(leveldb::WriteOptions(), batch);
-        LOG(ERROR)<< "Extracted features of " << image_index << " query images.";
+        LOG(ERROR)<< "Extracted features of " << image_index <<
+            " query images.";
         delete batch;
         batch = new leveldb::WriteBatch();
       }
@@ -158,7 +161,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
   // write the last batch
   if (image_index % 1000 != 0) {
     db->Write(leveldb::WriteOptions(), batch);
-    LOG(ERROR)<< "Extracted features of " << image_index << " query images.";
+    LOG(ERROR)<< "Extracted features of " << image_index <<
+        " query images.";
     delete batch;
     batch = new leveldb::WriteBatch();
   }

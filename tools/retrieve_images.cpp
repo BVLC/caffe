@@ -1,9 +1,12 @@
 // Copyright 2014 kloudkl@github
 
-#include <fstream> // for std::ofstream
-#include <queue> // for std::priority_queue
 #include <cuda_runtime.h>
 #include <google/protobuf/text_format.h>
+#include <stdio.h>
+#include <queue>  // for std::priority_queue
+#include <string>
+#include <utility>  // for pair
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -13,7 +16,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 template<typename Dtype>
 void similarity_search(
@@ -92,8 +95,8 @@ int image_retrieval_pipeline(int argc, char** argv) {
 
   string save_retrieval_result_filename(argv[++arg_pos]);
   LOG(ERROR)<< "Opening result file " << save_retrieval_result_filename;
-  std::ofstream retrieval_result_ofs(save_retrieval_result_filename.c_str(),
-                                     std::ofstream::out);
+  FILE * result_fileid = fopen(save_retrieval_result_filename.c_str(),
+                                         "w");
 
   LOG(ERROR)<< "Retrieving images";
   vector<vector<std::pair<int, int> > > retrieval_results;
@@ -104,16 +107,18 @@ int image_retrieval_pipeline(int argc, char** argv) {
                            &retrieval_results);
   int num_results = retrieval_results.size();
   for (int i = 0; i < num_results; ++i) {
-    retrieval_result_ofs << query_image_index++;
+    fprintf(result_fileid, "%d", query_image_index++);
     for (int j = 0; j < retrieval_results[i].size(); ++j) {
-      retrieval_result_ofs << " " << retrieval_results[i][j].first << ":"
-                           << retrieval_results[i][j].second;
+      fprintf(result_fileid, " %d:%d", retrieval_results[i][j].first,
+              retrieval_results[i][j].second);
     }
-    retrieval_result_ofs << "\n";
+    fprintf(result_fileid, "\n");
   }
-
-  retrieval_result_ofs.close();
-  LOG(ERROR)<< "Successfully retrieved similar images for " << num_results << " queries!";
+  if (result_fileid != NULL) {
+    fclose(result_fileid);
+  }
+  LOG(ERROR) << "Successfully retrieved similar images for " << num_results
+      << " queries!";
   return 0;
 }
 
@@ -134,7 +139,8 @@ void similarity_search(
   int num_samples = sample_images_feature_blob->num();
   int num_queries = query_binary_feature_blob->num();
   int dim = query_binary_feature_blob->count() / num_queries;
-  LOG(ERROR)<< "num_samples " << num_samples << ", num_queries " << num_queries << ", dim " << dim;
+  LOG(ERROR)<< "num_samples " << num_samples << ", num_queries " <<
+  num_queries << ", dim " << dim;
   int hamming_dist;
   int neighbor_index;
   retrieval_results->resize(num_queries);
@@ -152,7 +158,8 @@ void similarity_search(
       hamming_dist = caffe_hamming_distance(dim, query_data, sample_data);
       if (results.size() < top_k_results) {
         results.push(std::make_pair(-hamming_dist, k));
-      } else if (-hamming_dist > results.top().first) {  // smaller hamming dist, nearer neighbor
+      } else if (-hamming_dist > results.top().first) {
+        // smaller hamming dist, nearer neighbor
         results.pop();
         results.push(std::make_pair(-hamming_dist, k));
       }
@@ -161,7 +168,8 @@ void similarity_search(
     for (int k = results.size() - 1; k >= 0; --k) {
       hamming_dist = -results.top().first;
       neighbor_index = results.top().second;
-      retrieval_results->at(i)[k] = std::make_pair<int, int>(neighbor_index, hamming_dist);
+      retrieval_results->at(i)[k] = std::make_pair(neighbor_index,
+                                                   hamming_dist);
       results.pop();
     }
   }  // for (int i = 0; i < num_queries; ++i) {
