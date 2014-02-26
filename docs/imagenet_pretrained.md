@@ -6,33 +6,23 @@ title: Caffe
 Running Pretrained ImageNet
 ===========================
 
-[View this page as an IPython Notebook](http://nbviewer.ipython.org/url/caffe.berkeleyvision.org/imagenet_pretrained_files/imagenet_pretrained.ipynb)
+[View this page as an IPython Notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/imagenet_pretrained.ipynb)
 
-For easier use of pretrained models, we provide a wrapper specifically written
-for the case of ImageNet, so one can take an image and directly compute features
-or predictions from them. Both Python and Matlab wrappers are provided. We will
-describe the use of the Python wrapper here, and the Matlab wrapper usage is
-very similar.
+For easier use of pretrained models, we provide a wrapper specifically written for the case of ImageNet, so one can take an image and directly compute features or predictions from them. Both Python and Matlab wrappers are provided. We will describe the use of the Python wrapper here, and the Matlab wrapper usage is very similar.
 
-We assume that you have successfully compiled Caffe and set the correct
-`PYTHONPATH`. If not, please refer to the [installation
-instructions](installation.html). You will use our pre-trained imagenet model,
-which you can
-[download here](https://www.dropbox.com/s/n3jups0gr7uj0dv/caffe_reference_imagenet_model)
-(232.57MB). Note that this pre-trained model is licensed for academic research /
-non-commercial use only.
+We assume that you have successfully compiled Caffe and set the correct `PYTHONPATH`. If not, please refer to the [installation instructions](installation.html). You will use our pre-trained imagenet model, which you can download (232.57MB) by running `models/get_caffe_reference_imagenet_model.sh`.Note that this pre-trained model is licensed for academic research / non-commercial use only.
 
 Ready? Let's start.
 
 
     from caffe import imagenet
     from matplotlib import pyplot
-    
+
     # Set the right path to your model file, pretrained model,
     # and the image you would like to classify.
-    MODEL_FILE = 'examples/imagenet_deploy.prototxt'
-    PRETRAINED = '/home/jiayq/Downloads/caffe_reference_imagenet_model'
-    IMAGE_FILE = '/home/jiayq/lena.png'
+    MODEL_FILE = 'models/imagenet.prototxt'
+    PRETRAINED = 'models/caffe_reference_imagenet_model'
+    IMAGE_FILE = '/path/to/lena.png'
 
 Loading a network is easy. imagenet.ImagenetClassifier wraps everything. In
 default, the classifier will crop the center and corners of an image, as well as
