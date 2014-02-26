@@ -3,13 +3,12 @@
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 
-#include <leveldb/db.h>
-#include <pthread.h>
-#include <boost/scoped_ptr.hpp>
-
-#include "hdf5.h"
-
 #include <vector>
+
+#include "leveldb/db.h"
+#include "pthread.h"
+#include "boost/scoped_ptr.hpp"
+#include "hdf5.h"
 
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
