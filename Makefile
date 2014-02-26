@@ -36,10 +36,11 @@ PROTO_SRCS := $(wildcard src/$(PROJECT)/proto/*.proto)
 # proto.
 NONGEN_CXX_SRCS := $(shell find \
 	src/$(PROJECT) \
-	examples \
 	include/$(PROJECT) \
 	python/$(PROJECT) \
 	matlab/$(PROJECT) \
+	examples \
+	tools \
 	-regex ".*\.\(cpp\|hpp\|cu\|cuh\)")
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/py$(PROJECT).cpp
