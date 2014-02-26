@@ -10,8 +10,8 @@ namespace caffe {
 shared_ptr<Caffe> Caffe::singleton_;
 
 
-long cluster_seedgen(void) {
-  long s, seed, pid;
+int64_t cluster_seedgen(void) {
+  int64_t s, seed, pid;
   pid = getpid();
   s = time(NULL);
   seed = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
