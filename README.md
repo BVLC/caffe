@@ -93,7 +93,9 @@ git rebase --preserve-merges dev
 Push your branch to pull request it into `dev`
 ```
 git push origin feature
-# ...make pull request... you can do `git pull-request` if you install [hub](https://github.com/github/hub)
+# ...make pull request...
 ```
+
+Now make a pull request! You can do this from the command line (`git pull-request`) if you install [hub](https://github.com/github/hub).
 
 The pull request of feature into `dev` will be a clean merge, applause.
