@@ -127,10 +127,10 @@ lint: $(LINT_REPORT)
 $(LINT_REPORT): $(NONGEN_CXX_SRCS)
 	@ mkdir -p $(BUILD_DIR)
 	@ (python ./scripts/cpp_lint.py $(NONGEN_CXX_SRCS) > $(LINT_REPORT) 2>&1 \
-		&& (rm -f $(FAILED_LINT_REPORT); echo "No linter errors!")) || ( \
+		&& (rm -f $(FAILED_LINT_REPORT); echo "No lint errors!")) || ( \
 			mv $(LINT_REPORT) $(FAILED_LINT_REPORT); \
 			grep -v "^Done processing " $(FAILED_LINT_REPORT); \
-			echo "Found 1 or more linter errors; see log at $(FAILED_LINT_REPORT)"; \
+			echo "Found 1 or more lint errors; see log at $(FAILED_LINT_REPORT)"; \
 			exit 1)
 
 test: init $(TEST_BINS)
