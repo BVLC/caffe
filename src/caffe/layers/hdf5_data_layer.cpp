@@ -1,9 +1,9 @@
+// Copyright Sergey Karayev 2014
 /*
 TODO:
 - only load parts of the file, in accordance with a prototxt param "max_mem"
 */
 
-#include <iostream>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -55,11 +55,11 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       current_row = 0;
     }
 
-    memcpy( &(*top)[0]->mutable_cpu_data()[i * data_dims[1]],
+    memcpy(&(*top)[0]->mutable_cpu_data()[i * data_dims[1]],
             &(data.get()[current_row * data_dims[1]]),
             sizeof(Dtype) * data_dims[1]);
 
-    memcpy( &(*top)[1]->mutable_cpu_data()[i * label_dims[1]],
+    memcpy(&(*top)[1]->mutable_cpu_data()[i * label_dims[1]],
             &(label.get()[current_row * label_dims[1]]),
             sizeof(Dtype) * label_dims[1]);
   }

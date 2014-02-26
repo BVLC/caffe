@@ -185,8 +185,8 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           (Dtype)0., col_diff + col_offset * g);
       }
       // col2im back to the data
-      col2im_cpu(col_diff, CHANNELS_, HEIGHT_,
-                        WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
+      col2im_cpu(col_diff, CHANNELS_, HEIGHT_, WIDTH_, KSIZE_, PAD_, STRIDE_,
+          bottom_diff + (*bottom)[0]->offset(n));
     }
   }
   return Dtype(0.);
@@ -243,8 +243,8 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           (Dtype)0., col_diff + col_offset * g);
       }
       // col2im back to the data
-      col2im_gpu(col_diff, CHANNELS_, HEIGHT_,
-                        WIDTH_, KSIZE_, PAD_, STRIDE_, bottom_diff + (*bottom)[0]->offset(n));
+      col2im_gpu(col_diff, CHANNELS_, HEIGHT_, WIDTH_, KSIZE_, PAD_, STRIDE_,
+          bottom_diff + (*bottom)[0]->offset(n));
     }
   }
   return Dtype(0.);
