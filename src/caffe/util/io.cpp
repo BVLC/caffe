@@ -12,7 +12,7 @@
 
 #include <algorithm>
 #include <string>
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
 
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
