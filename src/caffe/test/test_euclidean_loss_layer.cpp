@@ -80,7 +80,7 @@ TYPED_TEST(EuclideanLossLayerTest, TestCPU) {
     }
   }
   sum = sum /(10*2);
-  EXPECT_NEAR(this->blob_top_vec_[0]->data_at(0, 0, 0, 0), sum);
+  EXPECT_NEAR(this->blob_top_vec_[0]->data_at(0, 0, 0, 0), sum, 1e-4);
 }
 
 TYPED_TEST(EuclideanLossLayerTest, TestGPU) {
@@ -102,7 +102,7 @@ TYPED_TEST(EuclideanLossLayerTest, TestGPU) {
     }
   }
   sum = sum / (10*2);
-  EXPECT_NEAR(this->blob_top_vec_[0]->data_at(0, 0, 0, 0), sum);
+  EXPECT_NEAR(this->blob_top_vec_[0]->data_at(0, 0, 0, 0), sum, 1e-4);
 }
 
 TYPED_TEST(EuclideanLossLayerTest, TestGradientCPU) {
