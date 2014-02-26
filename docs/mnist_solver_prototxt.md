@@ -9,7 +9,7 @@ Define the MNIST Solver
 The page is under construction. For now, check out the comments in the solver prototxt file, which explains each line in the prototxt:
 
     # The training protocol buffer definition
-    train_net: "lenet.prototxt"
+    train_net: "lenet_train.prototxt"
     # The testing protocol buffer definition
     test_net: "lenet_test.prototxt"
     # test_iter specifies how many forward passes the test should carry out.

@@ -13,8 +13,10 @@ Prepare Datasets
 
 You will first need to download and convert the data format from the MNIST website. To do this, simply run the following commands:
 
-    cd $CAFFE_ROOT/data
+    cd $CAFFE_ROOT/data/mnist
     ./get_mnist.sh
+    cd $CAFFE_ROOT/examples/lenet
+    ./create_mnist.sh
 
 If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be two datasets, `CAFFE_ROOT/data/mnist-train-leveldb`, and `CAFFE_ROOT/data/mnist-test-leveldb`.
 
@@ -31,10 +33,10 @@ Training and Testing the Model
 
 Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_mnist.sh`, or the following command directly:
 
-    cd $CAFFE_ROOT/data
-    GLOG_logtostderr=1 ../examples/train_net.bin lenet_solver.prototxt
+    cd $CAFFE_ROOT/examples/lenet
+    ./train_lenet.sh
 
-A few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main executable for training is `examples/train_net.bin`, with the solver protobuf text file as its argument.
+`train_lenet.sh` is a simple script, but here are a few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `train_net.bin`, with the solver protobuf text file as its argument.
 
 When you run the code, you will see a lot of messages flying by like this:
 
@@ -79,7 +81,7 @@ which you can deploy as a trained model in your application, if you are training
 Um... How about GPU training?
 -----------------------------
 
-You just did! All the training were carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in `lenet_solver.prototxt`:
+You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in `lenet_solver.prototxt`:
 
     # solver mode: 0 for CPU and 1 for GPU
     solver_mode: 0
