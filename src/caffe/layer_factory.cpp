@@ -47,12 +47,16 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new PoolingLayer<Dtype>(param);
   } else if (type == "relu") {
     return new ReLULayer<Dtype>(param);
+  } else if (type == "tanh") {
+    return new TanHLayer<Dtype>(param);
   } else if (type == "sigmoid") {
     return new SigmoidLayer<Dtype>(param);
   } else if (type == "softmax") {
     return new SoftmaxLayer<Dtype>(param);
   } else if (type == "softmax_loss") {
     return new SoftmaxWithLossLayer<Dtype>(param);
+  } else if (type == "split") {
+    return new SplitLayer<Dtype>(param);
   } else if (type == "multinomial_logistic_loss") {
     return new MultinomialLogisticLossLayer<Dtype>(param);
   } else {
