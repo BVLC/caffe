@@ -1,4 +1,5 @@
 // Copyright 2013 Yangqing Jia
+// Modified by Sergio Guadarrama
 
 #include <cstring>
 #include <cuda_runtime.h>
@@ -54,32 +55,91 @@ TYPED_TEST(PoolingLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
-/*
-TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_MAX);
-  Caffe::set_mode(Caffe::GPU);
-  PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
-  }
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    cout << "top data " << i << " " << this->blob_top_->cpu_data()[i] << endl;
-  }
 
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    this->blob_top_->mutable_cpu_diff()[i] = 1.;
-  }
-  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    cout << "bottom diff " << i << " " << this->blob_bottom_->cpu_diff()[i] << endl;
-  }
-}
-*/
+// TYPED_TEST(PoolingLayerTest, PrintCPUForward) {
+//   LayerParameter layer_param;
+//   layer_param.set_kernelsize(3);
+//   layer_param.set_stride(2);
+//   layer_param.set_pool(LayerParameter_PoolMethod_MAX);
+//   Caffe::set_mode(Caffe::CPU);
+//   PoolingLayer<TypeParam> layer(layer_param);
+//   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+//   //   cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
+//   // }
+//   for (int i = 0; i < this->blob_top_->count(); ++i) {
+//     cout << "top data " << i << " " << this->blob_top_->cpu_data()[i] << endl;
+//   }
+// }
+
+// TYPED_TEST(PoolingLayerTest, PrintGPUForward) {
+//   LayerParameter layer_param;
+//   layer_param.set_kernelsize(3);
+//   layer_param.set_stride(2);
+//   layer_param.set_pool(LayerParameter_PoolMethod_MAX);
+//   Caffe::set_mode(Caffe::GPU);
+//   PoolingLayer<TypeParam> layer(layer_param);
+//   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+//   //   cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
+//   // }
+//   for (int i = 0; i < this->blob_top_->count(); ++i) {
+//     cout << "top data " << i << " " << this->blob_top_->cpu_data()[i] << endl;
+//   }
+// }
+
+// TYPED_TEST(PoolingLayerTest, PrintCPUBackward) {
+//   LayerParameter layer_param;
+//   layer_param.set_kernelsize(3);
+//   layer_param.set_stride(2);
+//   layer_param.set_pool(LayerParameter_PoolMethod_MAX);
+//   Caffe::set_mode(Caffe::CPU);
+//   PoolingLayer<TypeParam> layer(layer_param);
+//   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+//   //   cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
+//   // }
+//   // for (int i = 0; i < this->blob_top_->count(); ++i) {
+//   //   cout << "top data " << i << " " << this->blob_top_->cpu_data()[i] << endl;
+//   // }
+
+//   for (int i = 0; i < this->blob_top_->count(); ++i) {
+//     this->blob_top_->mutable_cpu_diff()[i] = i;
+//   }
+//   layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+//   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+//     cout << "bottom diff " << i << " " << this->blob_bottom_->cpu_diff()[i] << endl;
+//   }
+// }
+
+// TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
+//   LayerParameter layer_param;
+//   layer_param.set_kernelsize(3);
+//   layer_param.set_stride(2);
+//   layer_param.set_pool(LayerParameter_PoolMethod_MAX);
+//   Caffe::set_mode(Caffe::GPU);
+//   PoolingLayer<TypeParam> layer(layer_param);
+//   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+//   // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+//   //   cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
+//   // }
+
+//   for (int i = 0; i < this->blob_top_->count(); ++i) {
+//     this->blob_top_->mutable_cpu_diff()[i] = i;
+//   }
+//   for (int i = 0; i < this->blob_top_->count(); ++i) {
+//     cout << "top diff " << i << " " << this->blob_top_->mutable_cpu_diff()[i] << endl;
+//   }
+//   layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+//   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+//     cout << "bottom diff " << i << " " << this->blob_bottom_->cpu_diff()[i] << endl;
+//   }
+// }
+
 
 TYPED_TEST(PoolingLayerTest, TestCPUGradientMax) {
   LayerParameter layer_param;
