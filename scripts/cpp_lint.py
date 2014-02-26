@@ -437,8 +437,8 @@ _MATCH_ASM = re.compile(r'^\s*(?:asm|_asm|__asm|__asm__)'
 
 _regexp_compile_cache = {}
 
-# Finds occurrences of NOLINT[_NEXTLINE] or NOLINT[_NEXTLINE](...).
-_RE_SUPPRESSION = re.compile(r'\bNOLINT(_NEXTLINE)?\b(\([^)]*\))?')
+# Finds occurrences of NOLINT[_NEXT_LINE] or NOLINT[_NEXT_LINE](...).
+_RE_SUPPRESSION = re.compile(r'\bNOLINT(_NEXT_LINE)?\b(\([^)]*\))?')
 
 # {str, set(int)}: a map from error categories to sets of linenumbers
 # on which those errors are expected and should be suppressed.
@@ -472,7 +472,7 @@ def ParseNolintSuppressions(filename, raw_line, linenum, error):
   # FIXME(adonovan): "NOLINT(" is misparsed as NOLINT(*).
   matched = _RE_SUPPRESSION.search(raw_line)
   if matched:
-    if matched.group(1) == '_NEXTLINE':
+    if matched.group(1) == '_NEXT_LINE':
       linenum += 1
     category = matched.group(2)
     if category in (None, '(*)'):  # => "suppress all"

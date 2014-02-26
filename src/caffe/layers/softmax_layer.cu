@@ -105,21 +105,21 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // we need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   // Compute max
-  // NOLINT_NEXTLINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_get_max<Dtype><<<CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS>>>(
       num, dim, bottom_data, scale_data);
   // subtraction
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
       scale_data, sum_multiplier_.gpu_data(), 1., top_data);
   // Perform exponentiation
-  // NOLINT_NEXTLINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(num * dim), CAFFE_CUDA_NUM_THREADS>>>(
       num * dim, top_data, top_data);
   // sum after exp
   caffe_gpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., top_data,
       sum_multiplier_.gpu_data(), 0., scale_data);
   // Do division
-  // NOLINT_NEXTLINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_softmax_div<Dtype><<<CAFFE_GET_BLOCKS(num * dim),
                               CAFFE_CUDA_NUM_THREADS>>>(
       num, dim, scale_data, top_data);

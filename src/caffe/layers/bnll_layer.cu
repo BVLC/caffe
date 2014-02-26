@@ -59,7 +59,7 @@ void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
-  // NOLINT_NEXTLINE(whitespace/operators)
+  // NOLINT_NEXT_LINE(whitespace/operators)
   BNLLForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, top_data);
   CUDA_POST_KERNEL_CHECK;
@@ -84,7 +84,7 @@ Dtype BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
     const int count = (*bottom)[0]->count();
-    // NOLINT_NEXTLINE(whitespace/operators)
+    // NOLINT_NEXT_LINE(whitespace/operators)
     BNLLBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, bottom_data, bottom_diff);
     CUDA_POST_KERNEL_CHECK;
