@@ -6,6 +6,8 @@
 
 #include <cstring>
 #include <ctime>
+#include <string>
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -16,14 +18,13 @@
 #include "caffe/util/io.hpp"
 #include "caffe/solver.hpp"
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
-
   int total_iter = 50;
-
   if (argc < 2) {
-    LOG(ERROR) << "net_speed_benchmark net_proto [iterations=50] [CPU/GPU] [Device_id=0]";
+    LOG(ERROR) << "net_speed_benchmark net_proto [iterations=50]"
+        " [CPU/GPU] [Device_id=0]";
     return 0;
   }
 
@@ -76,9 +77,11 @@ int main(int argc, char** argv) {
     for (int j = 0; j < total_iter; ++j) {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
     }
-    LOG(ERROR) << layername << "\tforward: " << timer.MilliSeconds() << " milli seconds.";
+    LOG(ERROR) << layername << "\tforward: " << timer.MilliSeconds() <<
+        " milli seconds.";
   }
-  LOG(ERROR) << "Forward pass: " << forward_timer.MilliSeconds() << " milli seconds.";
+  LOG(ERROR) << "Forward pass: " << forward_timer.MilliSeconds() <<
+      " milli seconds.";
   Timer backward_timer;
   backward_timer.Start();
   for (int i = layers.size() - 1; i >= 0; --i) {
@@ -90,8 +93,10 @@ int main(int argc, char** argv) {
     LOG(ERROR) << layername << "\tbackward: "
         << timer.MilliSeconds() << " milli seconds.";
   }
-  LOG(ERROR) << "Backward pass: " << backward_timer.MilliSeconds() << " milli seconds.";
-  LOG(ERROR) << "Total Time: " << total_timer.MilliSeconds() << " milli seconds.";
+  LOG(ERROR) << "Backward pass: " << backward_timer.MilliSeconds() <<
+      " milli seconds.";
+  LOG(ERROR) << "Total Time: " << total_timer.MilliSeconds() <<
+      " milli seconds.";
   LOG(ERROR) << "*** Benchmark ends ***";
   return 0;
 }
