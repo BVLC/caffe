@@ -5,12 +5,13 @@
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-#include <string>
-#include <vector>
-
 #include "boost/python.hpp"
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 #include "numpy/arrayobject.h"
+
+#include <string>  // NOLINT(build/include_order)
+#include <vector>  // NOLINT(build/include_order)
+
 #include "caffe/caffe.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
