@@ -42,7 +42,7 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
   Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
-    Dtype prob = max(bottom_data[i * dim + label], kLOG_THRESHOLD);
+    Dtype prob = max(bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
     loss -= log(prob);
     bottom_diff[i * dim + label] = - 1. / prob / num;
   }
@@ -86,7 +86,7 @@ Dtype InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
     for (int j = 0; j < dim; ++j) {
-      Dtype prob = max(bottom_data[i * dim + j], kLOG_THRESHOLD);
+      Dtype prob = max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
       loss -= infogain_mat[label * dim + j] * log(prob);
       bottom_diff[i * dim + j] = - infogain_mat[label * dim + j] / prob / num;
     }
@@ -160,7 +160,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       ++accuracy;
     }
     Dtype prob = max(bottom_data[i * dim + static_cast<int>(bottom_label[i])],
-                     kLOG_THRESHOLD);
+                     Dtype(kLOG_THRESHOLD));
     logprob -= log(prob);
   }
   // LOG(INFO) << "Accuracy: " << accuracy;
