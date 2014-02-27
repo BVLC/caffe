@@ -105,7 +105,8 @@ def _image_coordinates(dims, window):
     image_window: (ymin, xmin, ymax, xmax) in the original image frame
   """
   h, w = dims
-  h_scale, w_scale = h / IMAGE_DIM, w / IMAGE_DIM
+  max_dim = float(IMAGE_DIM)
+  h_scale, w_scale = h / max_dim, w / max_dim
   image_window = window * np.array((1. / h_scale, 1. / w_scale,
                                    h_scale, w_scale))
   return image_window.round().astype(int)
@@ -124,9 +125,10 @@ def _assemble_images_list(input_df):
       with 'image', 'window', 'filename' columns
   """
   # unpack sequence of (image filename, windows)
-  windows = input_df[['ymin', 'xmin', 'ymax', 'xmax']].values
+  coords = ['ymin', 'xmin', 'ymax', 'xmax']
   image_windows = (
-    (ix, windows[input_df.index.get_loc(ix)]) for ix in input_df.index.unique()
+    (ix, input_df.iloc[np.where(input_df.index == ix)][coords].values)
+    for ix in input_df.index.unique()
   )
 
   # extract windows
