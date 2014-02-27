@@ -48,8 +48,10 @@
 
 <p>You will first need to download and convert the data format from the MNIST website. To do this, simply run the following commands:</p>
 
-<pre><code>cd $CAFFE_ROOT/data
-./get_mnist.sh</code></pre>
+<pre><code>cd $CAFFE_ROOT/data/mnist
+./get_mnist.sh
+cd $CAFFE_ROOT/examples/lenet
+./create_mnist.sh</code></pre>
 
 <p>If it complains that <code>wget</code> or <code>gunzip</code> are not installed, you need to install them respectively. After running the script there should be two datasets, <code>CAFFE_ROOT/data/mnist-train-leveldb</code>, and <code>CAFFE_ROOT/data/mnist-test-leveldb</code>.</p>
 
@@ -65,10 +67,10 @@
 
 <p>Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run <code>train_mnist.sh</code>, or the following command directly:</p>
 
-<pre><code>cd $CAFFE_ROOT/data
-GLOG_logtostderr=1 ../examples/train_net.bin lenet_solver.prototxt</code></pre>
+<pre><code>cd $CAFFE_ROOT/examples/lenet
+./train_lenet.sh</code></pre>
 
-<p>A few explanations: <code>GLOG_logtostderr=1</code> is the google logging flag that prints all the logging messages directly to stderr. The main executable for training is <code>examples/train_net.bin</code>, with the solver protobuf text file as its argument.</p>
+<p><code>train_lenet.sh</code> is a simple script, but here are a few explanations: <code>GLOG_logtostderr=1</code> is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is <code>train_net.bin</code>, with the solver protobuf text file as its argument.</p>
 
 <p>When you run the code, you will see a lot of messages flying by like this:</p>
 
@@ -112,7 +114,7 @@ I1203 solver.cpp:78] Optimization Done.</code></pre>
 
 <h2 id="um_how_about_gpu_training">Um… How about GPU training?</h2>
 
-<p>You just did! All the training were carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in <code>lenet_solver.prototxt</code>:</p>
+<p>You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in <code>lenet_solver.prototxt</code>:</p>
 
 <pre><code># solver mode: 0 for CPU and 1 for GPU
 solver_mode: 0</code></pre>
