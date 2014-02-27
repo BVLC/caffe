@@ -110,7 +110,8 @@ TYPED_TEST(ConcatLayerTest, TestCPUGradient) {
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   // it is too expensive to call curand multiple times, so we don't do an
   // exhaustive gradient check.
-  checker.CheckGradient(layer, this->blob_bottom_vec_0, this->blob_top_vec_);
+  checker.CheckGradient(&layer, &(this->blob_bottom_vec_0),
+    &(this->blob_top_vec_));
 }
 
 TYPED_TEST(ConcatLayerTest, TestGPUGradient) {
@@ -120,7 +121,8 @@ TYPED_TEST(ConcatLayerTest, TestGPUGradient) {
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   // it is too expensive to call curand multiple times, so we don't do an
   // exhaustive gradient check.
-  checker.CheckGradient(layer, this->blob_bottom_vec_0, this->blob_top_vec_);
+  checker.CheckGradient(&layer, &(this->blob_bottom_vec_0),
+    &(this->blob_top_vec_));
 }
 
 
