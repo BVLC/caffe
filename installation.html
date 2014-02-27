@@ -50,6 +50,8 @@
 <li><a href="#compilation">Compilation</a></li>
 
 <li><a href="#os_x_installation">OS X installation</a></li>
+
+<li><a href="#hardware_questions">Hardware questions</a></li>
 </ul>
 
 <p>To build and test Caffe do</p>
@@ -198,6 +200,14 @@ export DYLD_LIBRARY_PATH=$MKL_DIR/compiler/lib:$MKL_DIR/mkl/lib</code></pre>
 <p>Note that we still need to include the MKL <code>compiler/lib</code> in our paths, although we do not explicitly link against this directory in the Makefile.</p>
 
 <p>Further note that these paths are for Anaconda python. For homebrew python, substitute <code>/usr/local/Cellar/python/2.7.6/Frameworks/Python.framework/Versions/2.7</code> for <code>/path/to/anaconda</code>.</p>
+
+<h2 id="hardware_questions">Hardware Questions</h2>
+
+<p><strong>Laboratory Tested Hardware</strong>: Berkeley Vision runs Caffe with k40s, k20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability &gt;= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.</p>
+
+<p><strong>CUDA compute capability</strong>: devices with compute capability &lt;= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.</p>
+
+<p>Refer to the project’s issue tracker for <a href="https://github.com/BVLC/caffe/issues?labels=hardware%2Fcompatibility&page=1&state=open">hardware/compatibility</a>.</p>
 
       </section>
       <footer>
