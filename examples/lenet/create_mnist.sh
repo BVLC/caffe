@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 # This script converts the mnist data into leveldb format.
 
-$EXAMPLES=../../build/examples/lenet
-$DATA=../../data/mnist
+EXAMPLES=../../build/examples/lenet
+DATA=../../data/mnist
 
 echo "Creating leveldb..."
 

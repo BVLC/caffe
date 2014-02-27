@@ -2,8 +2,8 @@
 # Create the imagenet leveldb inputs
 # N.B. set the path to the imagenet train + val data dirs
 
-$TOOLS=../../build/tools
-$DATA=../../data/ilsvrc12
+TOOLS=../../build/tools
+DATA=../../data/ilsvrc12
 
 echo "Creating leveldb..."
 
