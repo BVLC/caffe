@@ -6,7 +6,7 @@ title: Caffe
 Running Windowed Detection with Caffe
 =====================================
 
-[View this page as an IPython Notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/gh-pages/selective_search_demo.ipynb) (highly recommended!)
+[View this page as an IPython Notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/selective_search_demo.ipynb) (highly recommended!)
 
 ---
 
@@ -32,9 +32,7 @@ learned model should be at `models/caffe_reference_imagenet_model`.
     !echo `pwd`/_temp/cat.jpg > _temp/cat.txt
     !python ../python/caffe/detection/detector.py --crop_mode=selective_search --pretrained_model=../models/caffe_reference_imagenet_model --model_def=../models/imagenet.prototxt _temp/cat.txt _temp/cat.h5
 
-      % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                     Dload  Upload   Total   Spent    Left  Speed
-      0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  212k  100  212k    0     0   166k      0  0:00:01  0:00:01 --:--:--  267k
+
     Loading Caffe model.
     WARNING: Logging before InitGoogleLogging() is written to STDERR
     I0213 01:19:34.836383 1959801216 net.cpp:66] Creating Layer conv1
@@ -198,7 +196,7 @@ ImageNet scores to an HDF5 file.
 
 
     import pandas as pd
-    
+
     df = pd.read_hdf('_temp/cat.h5', 'df')
     print(df.shape)
     print(df.iloc[0])
@@ -328,30 +326,30 @@ and thirteenth top detections correspond to the two cats.
 
     # Find, print, and display max detection.
     window_order = pd.Series(feats_df.values.max(1)).order(ascending=False)
-    
+
     i = window_order.index[3]
     j = window_order.index[13]
-    
+
     # Show top predictions for top detection.
     f = pd.Series(df['feat'].iloc[i], index=labels_df['name'])
     print('Top detection:')
     print(f.order(ascending=False)[:5])
     print('')
-    
+
     # Show top predictions for 10th top detection.
     f = pd.Series(df['feat'].iloc[j], index=labels_df['name'])
     print('10th detection:')
     print(f.order(ascending=False)[:5])
-    
+
     # Show top detection in red, 10th top detection in blue.
     im = imread('_temp/cat.jpg')
     imshow(im)
     currentAxis = plt.gca()
-    
+
     det = df.iloc[i]
     coords = (det['xmin'], det['ymin']), det['xmax'] - det['xmin'], det['ymax'] - det['ymin']
     currentAxis.add_patch(Rectangle(*coords, fill=False, edgecolor='r', linewidth=5))
-    
+
     det = df.iloc[j]
     coords = (det['xmin'], det['ymin']), det['xmax'] - det['xmin'], det['ymax'] - det['ymin']
     currentAxis.add_patch(Rectangle(*coords, fill=False, edgecolor='b', linewidth=5))
@@ -364,7 +362,7 @@ and thirteenth top detections correspond to the two cats.
     lynx            0.012947
     Egyptian cat    0.004409
     dtype: float32
-    
+
     10th detection:
     name
     tiger cat           0.681169
@@ -395,17 +393,17 @@ detections and NMS them to get rid of overlapping windows.
         Non-maximum suppression: Greedily select high-scoring detections and
         skip detections that are significantly covered by a previously
         selected detection.
-    
+
         This version is translated from Matlab code by Tomasz Malisiewicz,
         who sped up Pedro Felzenszwalb's code.
-    
+
         Parameters
         ----------
         dets: ndarray
             each row is ['xmin', 'ymin', 'xmax', 'ymax', 'score']
         overlap: float
             minimum overlap ratio (0.5 default)
-    
+
         Output
         ------
         dets: ndarray
@@ -413,19 +411,19 @@ detections and NMS them to get rid of overlapping windows.
         """
         if np.shape(dets)[0] < 1:
             return dets
-    
+
         x1 = dets[:, 0]
         y1 = dets[:, 1]
         x2 = dets[:, 2]
         y2 = dets[:, 3]
-    
+
         w = x2 - x1
         h = y2 - y1
         area = w * h
-    
+
         s = dets[:, 4]
         ind = np.argsort(s)
-    
+
         pick = []
         counter = 0
         while len(ind) > 0:
@@ -433,21 +431,21 @@ detections and NMS them to get rid of overlapping windows.
             i = ind[last]
             pick.append(i)
             counter += 1
-    
+
             xx1 = np.maximum(x1[i], x1[ind[:last]])
             yy1 = np.maximum(y1[i], y1[ind[:last]])
             xx2 = np.minimum(x2[i], x2[ind[:last]])
             yy2 = np.minimum(y2[i], y2[ind[:last]])
-    
+
             w = np.maximum(0., xx2 - xx1 + 1)
             h = np.maximum(0., yy2 - yy1 + 1)
-    
+
             o = w * h / area[ind[:last]]
-    
+
             to_delete = np.concatenate(
                 (np.nonzero(o > overlap)[0], np.array([last])))
             ind = np.delete(ind, to_delete)
-    
+
         return dets[pick, :]
 
 
