@@ -41,7 +41,7 @@ NONGEN_CXX_SRCS := $(shell find \
 	matlab/$(PROJECT) \
 	examples \
 	tools \
-	-regex ".*\.\(cpp\|hpp\|cu\|cuh\)")
+	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh")
 LINT_REPORT := $(BUILD_DIR)/cpp_lint.log
 FAILED_LINT_REPORT := $(BUILD_DIR)/cpp_lint.error_log
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
