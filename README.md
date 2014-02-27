@@ -69,6 +69,10 @@ Our workflow is this:
 - Do new development in [feature branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch) with decriptive names.
 - Bring your work up-to-date by [rebasing](http://git-scm.com/book/en/Git-Branching-Rebasing) onto the latest `dev`. (Polish your changes by [interactive rebase](https://help.github.com/articles/interactive-rebase), if you'd like.)
 - [Pull request](https://help.github.com/articles/using-pull-requests) your contribution to BVLC/caffe's `dev` branch for discussion and review.
+  * PRs should live fast, die young, and leave a beautiful merge. Pull
+    request sooner than later so that discussion can guide development.
+  * Code must be accompanied by documentation and tests at all times.
+  * Only fast-forward merges will be accepted.
 
 #### [Shelhamer's](https://github.com/shelhamer) "life of a branch in four acts":
 
@@ -87,15 +91,15 @@ git checkout dev
 git pull upstream dev
 # rebase your branch on the tip of dev
 git checkout feature
-git rebase --preserve-merges dev
+git rebase dev
 ```
 
 Push your branch to pull request it into `dev`
 ```
 git push origin feature
-# ...make pull request...
+# ...make pull request to dev...
 ```
 
-Now make a pull request! You can do this from the command line (`git pull-request`) if you install [hub](https://github.com/github/hub).
+Now make a pull request! You can do this from the command line (`git pull-request -b dev`) if you install [hub](https://github.com/github/hub).
 
-The pull request of feature into `dev` will be a clean merge, applause.
+The pull request of `feature` into `dev` will be a clean merge. Applause.
