@@ -91,6 +91,11 @@ message LayerParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
+
+  // Concat Layer need to specify the dimension along the concat will happen, 
+  // the other dimensions must be the same for all the bottom blobs
+  // By default it will concatenate blobs along channels dimension
+  optional uint32 concat_dim = 65 [ default = 1 ]; 
 }
 
 message LayerConnection {

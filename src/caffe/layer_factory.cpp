@@ -25,6 +25,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new BNLLLayer<Dtype>(param);
   } else if (type == "conv") {
     return new ConvolutionLayer<Dtype>(param);
+  } else if (type == "concat") {
+    return new ConcatLayer<Dtype>(param);
   } else if (type == "data") {
     return new DataLayer<Dtype>(param);
   } else if (type == "hdf5_data") {
