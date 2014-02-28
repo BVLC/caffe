@@ -1,0 +1,218 @@
+name: "CIFAR10_18pct_test"
+layers {
+ layer {
+   name: "cifar"
+   type: "data"
+   source: "cifar10_db/cifar-test-leveldb"
+   meanfile: "mean.binaryproto"
+   batchsize: 100
+ }
+ top: "data"
+ top: "label"
+}
+# ------------------------ layer 1 -----------------------------
+layers {
+ layer {
+   name: "pad1"
+   type: "padding"
+   pad: 2
+ }
+ bottom: "data"
+ top: "pad1"
+}
+layers {
+ layer {
+   name: "conv1"
+   type: "conv"
+   num_output: 32
+   kernelsize: 5
+   stride: 1
+   weight_filler {
+     type: "gaussian"
+     std: 0.0001
+   }
+   bias_filler {
+     type: "constant"
+   }
+   blobs_lr: 1.
+   blobs_lr: 2.
+ }
+ bottom: "pad1"
+ top: "conv1"
+}
+layers {
+ layer {
+   name: "pool1"
+   type: "pool"
+   kernelsize: 3
+   stride: 2
+   pool: MAX
+ }
+ bottom: "conv1"
+ top: "pool1"
+}
+layers {
+ layer {
+   name: "relu1"
+   type: "relu"
+ }
+ bottom: "pool1"
+ top: "pool1"
+}
+layers {
+  layer {
+    name: "norm1"
+    type: "lrn"
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+  }
+  bottom: "pool1"
+  top: "norm1"
+}
+# --------------------------- layer 2 ------------------------
+layers {
+ layer {
+   name: "pad2"
+   type: "padding"
+   pad: 2
+ }
+ bottom: "norm1"
+ top: "pad2"
+}
+layers {
+ layer {
+   name: "conv2"
+   type: "conv"
+   num_output: 32
+   kernelsize: 5
+   stride: 1
+   weight_filler {
+     type: "gaussian"
+     std: 0.01
+   }
+   bias_filler {
+     type: "constant"
+   }
+   blobs_lr: 1.
+   blobs_lr: 2.
+ }
+ bottom: "pad2"
+ top: "conv2"
+}
+layers {
+ layer {
+   name: "relu2"
+   type: "relu"
+ }
+ bottom: "conv2"
+ top: "conv2"
+}
+layers {
+ layer {
+   name: "pool2"
+   type: "pool"
+   kernelsize: 3
+   stride: 2
+   pool: AVE
+ }
+ bottom: "conv2"
+ top: "pool2"
+}
+layers {
+  layer {
+    name: "norm2"
+    type: "lrn"
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+  }
+  bottom: "pool2"
+  top: "norm2"
+}
+#-----------------------layer 3-------------------------
+layers {
+ layer {
+   name: "pad3"
+   type: "padding"
+   pad: 2
+ }
+ bottom: "norm2"
+ top: "pad3"
+}
+layers {
+ layer {
+   name: "conv3"
+   type: "conv"
+   num_output: 64
+   kernelsize: 5
+   stride: 1
+   weight_filler {
+     type: "gaussian"
+     std: 0.01
+   }
+   bias_filler {
+     type: "constant"
+   }
+ }
+ bottom: "pad3"
+ top: "conv3"
+}
+layers {
+ layer {
+   name: "relu3"
+   type: "relu"
+ }
+ bottom: "conv3"
+ top: "conv3"
+}
+layers {
+ layer {
+   name: "pool3"
+   type: "pool"
+   kernelsize: 3
+   stride: 2
+   pool: AVE
+ }
+ bottom: "conv3"
+ top: "pool3"
+}
+#--------------------------layer 4------------------------
+layers {
+ layer {
+   name: "ip1"
+   type: "innerproduct"
+   num_output: 10
+   weight_filler {
+     type: "gaussian"
+     std: 0.01
+   }
+   bias_filler {
+     type: "constant"
+   }
+   blobs_lr: 1.
+   blobs_lr: 2.
+   weight_decay: 250.
+   weight_decay: 0.
+ }
+ bottom: "pool3"
+ top: "ip1"
+}
+#-----------------------output------------------------
+layers {
+ layer {
+   name: "prob"
+   type: "softmax"
+ }
+ bottom: "ip1"
+ top: "prob"
+}
+layers {
+  layer {
+    name: "accuracy"
+    type: "accuracy"
+  }
+  bottom: "prob"
+  bottom: "label"
+  top: "accuracy"
+}
