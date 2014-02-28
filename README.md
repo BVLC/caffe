@@ -48,11 +48,11 @@ Please kindly cite Caffe in your publications if it helps your research:
       Howpublished = {\url{http://caffe.berkeleyvision.org/}
     }
 
-## Building documentation
+## Documentation
 
-Tutorials and general documentation is written in Markdown format in the `docs/` folder.
+Tutorials and general documentation are written in Markdown format in the `docs/` folder.
 While the format is quite easy to read directly, you may prefer to view the whole thing as a website.
-To do so, simply run `jekyll serve -s docs` and view the documentation website at `http://0.0.0.0:4000` (to get jekyll, you must have ruby and do `gem install jekyll`).
+To do so, simply run `jekyll serve -s docs` and view the documentation website at `http://0.0.0.0:4000` (to get [jekyll](http://jekyllrb.com/), you must have ruby and do `gem install jekyll`).
 
 We strive to provide provide lots of usage examples, and to document all code in docstrings.
 We'd appreciate your contribution to this effort!
@@ -74,7 +74,7 @@ Our workflow is this:
   * Code must be accompanied by documentation and tests at all times.
   * Only fast-forward merges will be accepted.
 
-#### [Shelhamer's](https://github.com/shelhamer) "life of a branch in four acts":
+#### [Shelhamer's](https://github.com/shelhamer) “life of a branch in four acts”
 
 Make the `feature` branch off of the latest `bvlc/dev`
 ```
