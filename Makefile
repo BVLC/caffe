@@ -32,6 +32,18 @@ TOOL_SRCS := $(shell find tools -name "*.cpp")
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRCS := $(wildcard src/$(PROJECT)/proto/*.proto)
+# NONGEN_CXX_SRCS includes all source/header files except those generated
+# automatically (e.g., by proto).
+NONGEN_CXX_SRCS := $(shell find \
+	src/$(PROJECT) \
+	include/$(PROJECT) \
+	python/$(PROJECT) \
+	matlab/$(PROJECT) \
+	examples \
+	tools \
+	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh")
+LINT_REPORT := $(BUILD_DIR)/cpp_lint.log
+FAILED_LINT_REPORT := $(BUILD_DIR)/cpp_lint.error_log
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/py$(PROJECT).cpp
 PY$(PROJECT)_SO := python/$(PROJECT)/py$(PROJECT).so
@@ -73,8 +85,13 @@ MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR) $(MKL_INCLUDE_DIR)
 LIBRARY_DIRS += $(CUDA_LIB_DIR) $(MKL_LIB_DIR)
-LIBRARIES := cudart cublas curand mkl_rt pthread \
-	glog protobuf leveldb snappy boost_system \
+LIBRARIES := cudart cublas curand \
+	mkl_rt \
+	pthread \
+	glog protobuf leveldb \
+	snappy \
+	boost_system \
+	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
@@ -90,7 +107,7 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 ##############################
 # Define build targets
 ##############################
-.PHONY: all init test clean linecount tools examples py mat distribute py$(PROJECT) mat$(PROJECT) proto
+.PHONY: all init test clean linecount lint tools examples py mat distribute py$(PROJECT) mat$(PROJECT) proto
 
 all: init $(NAME) $(STATIC_NAME) tools examples
 	@echo $(CXX_OBJS)
@@ -104,6 +121,17 @@ init:
 
 linecount: clean
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
+
+lint: $(LINT_REPORT)
+
+$(LINT_REPORT): $(NONGEN_CXX_SRCS)
+	@ mkdir -p $(BUILD_DIR)
+	@ (python ./scripts/cpp_lint.py $(NONGEN_CXX_SRCS) > $(LINT_REPORT) 2>&1 \
+		&& (rm -f $(FAILED_LINT_REPORT); echo "No lint errors!")) || ( \
+			mv $(LINT_REPORT) $(FAILED_LINT_REPORT); \
+			grep -v "^Done processing " $(FAILED_LINT_REPORT); \
+			echo "Found 1 or more lint errors; see log at $(FAILED_LINT_REPORT)"; \
+			exit 1)
 
 test: init $(TEST_BINS)
 

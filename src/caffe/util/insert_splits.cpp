@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <utility>
 
 #include "caffe/common.hpp"
 #include "caffe/util/insert_splits.hpp"

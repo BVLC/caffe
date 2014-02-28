@@ -3,12 +3,15 @@
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
-#include <google/protobuf/message.h>
-
 #include <string>
 
-#include "caffe/blob.hpp"
+#include "google/protobuf/message.h"
+#include "hdf5.h"
+#include "hdf5_hl.h"
 #include "caffe/proto/caffe.pb.h"
+
+#include "boost/scoped_ptr.hpp"
+#include "caffe/blob.hpp"
 
 using std::string;
 using ::google::protobuf::Message;
@@ -47,6 +50,11 @@ inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
+
+template <typename Dtype>
+void load_2d_dataset(
+  hid_t file_id, const char* dataset_name_,
+  boost::scoped_ptr<Dtype>* array, hsize_t* dims);
 
 }  // namespace caffe
 

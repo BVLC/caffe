@@ -12,8 +12,7 @@
 
 #include <algorithm>
 #include <string>
-#include <iostream>
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
 
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
@@ -82,9 +81,6 @@ bool ReadImageToDatum(const string& filename, const int label,
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
-  if (height > 0 && width > 0) {
-
-  }
   datum->set_channels(3);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
@@ -95,11 +91,50 @@ bool ReadImageToDatum(const string& filename, const int label,
   for (int c = 0; c < 3; ++c) {
     for (int h = 0; h < cv_img.rows; ++h) {
       for (int w = 0; w < cv_img.cols; ++w) {
-        datum_string->push_back(static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+        datum_string->push_back(
+            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
       }
     }
   }
   return true;
+}
+
+template <>
+void load_2d_dataset<float>(hid_t file_id, const char* dataset_name_,
+        boost::scoped_ptr<float>* array, hsize_t* dims) {
+    herr_t status;
+
+    int ndims;
+    status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
+    assert(ndims == 2);
+
+    H5T_class_t class_;
+    status = H5LTget_dataset_info(
+        file_id, dataset_name_, dims, &class_, NULL);
+    assert(class_ == H5T_NATIVE_FLOAT);
+
+    array->reset(new float[dims[0] * dims[1]]);
+    status = H5LTread_dataset_float(
+        file_id, dataset_name_, array->get());
+}
+
+template <>
+void load_2d_dataset<double>(hid_t file_id, const char* dataset_name_,
+        boost::scoped_ptr<double>* array, hsize_t* dims) {
+    herr_t status;
+
+    int ndims;
+    status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
+    assert(ndims == 2);
+
+    H5T_class_t class_;
+    status = H5LTget_dataset_info(
+        file_id, dataset_name_, dims, &class_, NULL);
+    assert(class_ == H5T_NATIVE_DOUBLE);
+
+    array->reset(new double[dims[0] * dims[1]]);
+    status = H5LTread_dataset_double(
+        file_id, dataset_name_, array->get());
 }
 
 }  // namespace caffe

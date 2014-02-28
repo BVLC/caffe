@@ -1,9 +1,11 @@
 // Copyright 2014 Jeff Donahue
 
 #include <cstring>
-#include <cuda_runtime.h>
-#include <google/protobuf/text_format.h>
+#include <string>
+#include <vector>
 
+#include "cuda_runtime.h"
+#include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -32,7 +34,7 @@ class SplitLayerTest : public ::testing::Test {
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_a_);
     blob_top_vec_.push_back(blob_top_b_);
-  };
+  }
   virtual ~SplitLayerTest() {
     delete blob_bottom_;
     delete blob_top_a_;
@@ -119,8 +121,8 @@ TYPED_TEST(SplitLayerTest, TestCPUGradient) {
   Caffe::set_mode(Caffe::CPU);
   SplitLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(SplitLayerTest, TestGPUGradient) {
@@ -128,8 +130,8 @@ TYPED_TEST(SplitLayerTest, TestGPUGradient) {
   Caffe::set_mode(Caffe::GPU);
   SplitLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(SplitLayerTest, TestCPUGradientInPlace) {
@@ -138,8 +140,8 @@ TYPED_TEST(SplitLayerTest, TestCPUGradientInPlace) {
   SplitLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   this->blob_top_vec_[0] = this->blob_bottom_vec_[0];
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(SplitLayerTest, TestGPUGradientInPlace) {
@@ -148,15 +150,14 @@ TYPED_TEST(SplitLayerTest, TestGPUGradientInPlace) {
   SplitLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   this->blob_top_vec_[0] = this->blob_bottom_vec_[0];
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 
 template <typename Dtype>
 class SplitLayerInsertionTest : public ::testing::Test {
  protected:
- SplitLayerInsertionTest() { };
   void RunInsertionTest(
       const string& input_param_string, const string& output_param_string) {
     // Test that insert_splits called on the proto specified by
@@ -1125,4 +1126,4 @@ TYPED_TEST(SplitLayerInsertionTest, TestWithInPlace) {
   this->RunInsertionTest(input_proto, expected_output_proto);
 }
 
-}
+}  // namespace caffe

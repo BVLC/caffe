@@ -3,10 +3,12 @@
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 
-#include <leveldb/db.h>
-#include <pthread.h>
-
 #include <vector>
+
+#include "leveldb/db.h"
+#include "pthread.h"
+#include "boost/scoped_ptr.hpp"
+#include "hdf5.h"
 
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -192,34 +194,6 @@ class InnerProductLayer : public Layer<Dtype> {
   shared_ptr<SyncedMemory> bias_multiplier_;
 };
 
-
-template <typename Dtype>
-class PaddingLayer : public Layer<Dtype> {
- public:
-  explicit PaddingLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  unsigned int PAD_;
-  int NUM_;
-  int CHANNEL_;
-  int HEIGHT_IN_;
-  int WIDTH_IN_;
-  int HEIGHT_OUT_;
-  int WIDTH_OUT_;
-};
-
-
 template <typename Dtype>
 class LRNLayer : public Layer<Dtype> {
  public:
@@ -272,8 +246,8 @@ class Im2colLayer : public Layer<Dtype> {
   int CHANNELS_;
   int HEIGHT_;
   int WIDTH_;
+  int PAD_;
 };
-
 
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
@@ -326,6 +300,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int STRIDE_;
   int NUM_;
   int CHANNELS_;
+  int PAD_;
   int HEIGHT_;
   int WIDTH_;
   int NUM_OUTPUT_;
@@ -375,6 +350,33 @@ class DataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
+};
+
+
+template <typename Dtype>
+class HDF5DataLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5DataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~HDF5DataLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  boost::scoped_ptr<Dtype> data;
+  boost::scoped_ptr<Dtype> label;
+  hsize_t data_dims[2];
+  hsize_t label_dims[2];
+  hsize_t current_row;
 };
 
 
@@ -525,4 +527,3 @@ class AccuracyLayer : public Layer<Dtype> {
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_
-

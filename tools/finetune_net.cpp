@@ -6,11 +6,11 @@
 
 #include <cuda_runtime.h>
 
-#include <cstring>
+#include <string>
 
 #include "caffe/caffe.hpp"
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);

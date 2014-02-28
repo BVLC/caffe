@@ -11,8 +11,9 @@
 
 #include <cstdlib>
 #include <cstdio>
-#include <iostream>
 
+using std::cout;
+using std::endl;
 
 namespace caffe {
 
@@ -20,8 +21,7 @@ cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 }  // namespace caffe
 
-using namespace caffe;
-using namespace std;
+using caffe::CAFFE_TEST_CUDA_PROP;
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import inspect
 import os
 import random
 import sys
@@ -9,7 +10,8 @@ import matplotlib.legend as lgd
 import matplotlib.markers as mks
 
 def get_log_parsing_script():
-    return './parselog.sh'
+    dirname = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    return dirname + '/parselog.sh'
 
 def get_log_file_suffix():
     return '.log'
@@ -22,7 +24,7 @@ def is_x_axis_field(field):
     return field in x_axis_fields
 
 def create_field_index():
-    train_key = 'Training'
+    train_key = 'Train'
     test_key = 'Test'
     field_index = {train_key:{'Iters':0, 'Seconds':1, train_key + ' loss':2,
                               train_key + ' learning rate':3},
@@ -59,7 +61,7 @@ def get_data_file_type(chart_type):
     return data_file_type
 
 def get_data_file(chart_type, path_to_log):
-    return path_to_log + '.' + get_data_file_type(chart_type).lower()
+    return os.path.basename(path_to_log) + '.' + get_data_file_type(chart_type).lower()
 
 def get_field_descriptions(chart_type):
     description = get_chart_type_description(chart_type).split(
