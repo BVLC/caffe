@@ -74,6 +74,8 @@ Our workflow is this:
   * Code must be accompanied by documentation and tests at all times.
   * Only fast-forward merges will be accepted.
 
+See our [development guidelines](http://caffe.berkeleyvision.org/development.html) for further details–the more closely these are followed, the sooner your work will be merged.
+
 #### [Shelhamer's](https://github.com/shelhamer) “life of a branch in four acts”
 
 Make the `feature` branch off of the latest `bvlc/dev`
