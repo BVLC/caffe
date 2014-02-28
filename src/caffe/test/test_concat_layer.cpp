@@ -1,8 +1,9 @@
 // Copyright 2014 Sergio Guadarrama
 
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -23,7 +24,7 @@ class ConcatLayerTest : public ::testing::Test {
       : blob_bottom_0(new Blob<Dtype>(2, 3, 6, 5)),
         blob_bottom_1(new Blob<Dtype>(2, 5, 6, 5)),
         blob_bottom_2(new Blob<Dtype>(5, 3, 6, 5)),
-        blob_top_(new Blob<Dtype>()) {};
+        blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
     FillerParameter filler_param;
@@ -39,17 +40,18 @@ class ConcatLayerTest : public ::testing::Test {
     blob_bottom_vec_1.push_back(blob_bottom_0);
     blob_bottom_vec_1.push_back(blob_bottom_2);
     blob_top_vec_.push_back(blob_top_);
-  };
+  }
 
   virtual ~ConcatLayerTest() {
-    delete blob_bottom_0; delete blob_bottom_1; delete blob_bottom_2; delete blob_top_;
+    delete blob_bottom_0; delete blob_bottom_1;
+    delete blob_bottom_2; delete blob_top_;
   }
 
   Blob<Dtype>* const blob_bottom_0;
   Blob<Dtype>* const blob_bottom_1;
   Blob<Dtype>* const blob_bottom_2;
   Blob<Dtype>* const blob_top_;
-  vector<Blob<Dtype>*> blob_bottom_vec_0,blob_bottom_vec_1;
+  vector<Blob<Dtype>*> blob_bottom_vec_0, blob_bottom_vec_1;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
@@ -61,7 +63,8 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
   layer_param.set_concat_dim(0);
   ConcatLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1, &(this->blob_top_vec_));
-  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0->num()+this->blob_bottom_2->num());
+  EXPECT_EQ(this->blob_top_->num(),
+    this->blob_bottom_0->num() + this->blob_bottom_2->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_0->channels());
   EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_0->height());
   EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_0->width());
@@ -72,7 +75,8 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
   ConcatLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0->num());
-  EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_0->channels()+this->blob_bottom_1->channels());
+  EXPECT_EQ(this->blob_top_->channels(),
+    this->blob_bottom_0->channels()+this->blob_bottom_1->channels());
   EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_0->height());
   EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_0->width());
 }
@@ -88,14 +92,16 @@ TYPED_TEST(ConcatLayerTest, TestCPUNum) {
     for (int c = 0; c < this->blob_bottom_0->channels(); ++c) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
         for (int w = 0; w < this->blob_top_->width(); ++w) {
-          EXPECT_EQ(this->blob_top_->data_at(n, c, h, w), this->blob_bottom_vec_0[0]->data_at(n, c, h, w));
+          EXPECT_EQ(this->blob_top_->data_at(n, c, h, w),
+            this->blob_bottom_vec_0[0]->data_at(n, c, h, w));
         }
       }
     }
     for (int c = 0; c < this->blob_bottom_1->channels(); ++c) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
         for (int w = 0; w < this->blob_top_->width(); ++w) {
-          EXPECT_EQ(this->blob_top_->data_at(n, c+3, h, w), this->blob_bottom_vec_0[1]->data_at(n, c, h, w));
+          EXPECT_EQ(this->blob_top_->data_at(n, c+3, h, w),
+            this->blob_bottom_vec_0[1]->data_at(n, c, h, w));
         }
       }
     }
@@ -108,8 +114,6 @@ TYPED_TEST(ConcatLayerTest, TestCPUGradient) {
   Caffe::set_mode(Caffe::CPU);
   ConcatLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  // it is too expensive to call curand multiple times, so we don't do an
-  // exhaustive gradient check.
   checker.CheckGradient(&layer, &(this->blob_bottom_vec_0),
     &(this->blob_top_vec_));
 }
@@ -119,11 +123,8 @@ TYPED_TEST(ConcatLayerTest, TestGPUGradient) {
   Caffe::set_mode(Caffe::GPU);
   ConcatLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  // it is too expensive to call curand multiple times, so we don't do an
-  // exhaustive gradient check.
   checker.CheckGradient(&layer, &(this->blob_bottom_vec_0),
     &(this->blob_top_vec_));
 }
 
-
-}
+}  // namespace caffe
