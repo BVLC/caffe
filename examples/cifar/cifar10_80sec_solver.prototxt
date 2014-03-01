@@ -25,5 +25,3 @@ snapshot: 4000
 snapshot_prefix: "cifar10_80sec"
 # solver mode: 0 for CPU and 1 for GPU
 solver_mode: 1
-
-device_id: 1
