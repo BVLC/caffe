@@ -3,7 +3,7 @@ layers {
  layer {
    name: "cifar"
    type: "data"
-   source: "cifar10_db/cifar-test-leveldb"
+   source: "cifar10-leveldb/cifar-test-leveldb"
    meanfile: "mean.binaryproto"
    batchsize: 100
  }
@@ -13,19 +13,11 @@ layers {
 # ------------------------ layer 1 -----------------------------
 layers {
  layer {
-   name: "pad1"
-   type: "padding"
-   pad: 2
- }
- bottom: "data"
- top: "pad1"
-}
-layers {
- layer {
    name: "conv1"
    type: "conv"
    num_output: 32
    kernelsize: 5
+   pad: 2
    stride: 1
    weight_filler {
      type: "gaussian"
@@ -37,7 +29,7 @@ layers {
    blobs_lr: 1.
    blobs_lr: 2.
  }
- bottom: "pad1"
+ bottom: "data"
  top: "conv1"
 }
 layers {
@@ -73,19 +65,11 @@ layers {
 # --------------------------- layer 2 ------------------------
 layers {
  layer {
-   name: "pad2"
-   type: "padding"
-   pad: 2
- }
- bottom: "norm1"
- top: "pad2"
-}
-layers {
- layer {
    name: "conv2"
    type: "conv"
    num_output: 32
    kernelsize: 5
+   pad: 2
    stride: 1
    weight_filler {
      type: "gaussian"
@@ -97,7 +81,7 @@ layers {
    blobs_lr: 1.
    blobs_lr: 2.
  }
- bottom: "pad2"
+ bottom: "norm1"
  top: "conv2"
 }
 layers {
@@ -133,19 +117,11 @@ layers {
 #-----------------------layer 3-------------------------
 layers {
  layer {
-   name: "pad3"
-   type: "padding"
-   pad: 2
- }
- bottom: "norm2"
- top: "pad3"
-}
-layers {
- layer {
    name: "conv3"
    type: "conv"
    num_output: 64
    kernelsize: 5
+   pad: 2
    stride: 1
    weight_filler {
      type: "gaussian"
@@ -155,7 +131,7 @@ layers {
      type: "constant"
    }
  }
- bottom: "pad3"
+ bottom: "norm2"
  top: "conv3"
 }
 layers {
