@@ -266,8 +266,9 @@ BOOST_PYTHON_MODULE(pycaffe) {
       .def("set_phase_train",  &CaffeNet::set_phase_train)
       .def("set_phase_test",   &CaffeNet::set_phase_test)
       .def("set_device",       &CaffeNet::set_device)
-      .def("blobs",            &CaffeNet::blobs)
-      .def("params",           &CaffeNet::params);
+      .add_property("blobs",   &CaffeNet::blobs)
+      .add_property("params",  &CaffeNet::params)
+  ;
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
       "CaffeBlob", boost::python::no_init)
