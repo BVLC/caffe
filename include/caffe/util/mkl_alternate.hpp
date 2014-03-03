@@ -9,7 +9,9 @@
 
 #else  // If use MKL, simply include the MKL header
 
+extern "C" {
 #include <cblas.h>
+}
 #include <math.h>
 
 // Functions that caffe uses but are not present if MKL is not linked.
