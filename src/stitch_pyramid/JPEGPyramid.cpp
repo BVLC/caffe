@@ -70,42 +70,44 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
     assert( padx_ == pady_ ); // corner padding assumes this (for now)
     float corner_lerp[padx_+1];
 
+    uint8_t* imagePtr = image.bits();
+
     //top, bottom, left, right
     for(int ch=0; ch<3; ch++){
         float avgPx = IMAGENET_MEAN_RGB[ch];
         for(int x=padx_; x < width-padx_; x++){
   
             //top
-            currPx = image.bits()[pady_*width*depth + x*depth + ch];
+            currPx = imagePtr[pady_*width*depth + x*depth + ch];
             linear_interp(currPx, avgPx, pady_+1, top_lerp); //populate top_lerp
             for(int y=0; y<pady_; y++){
-                image.bits()[y*width*depth + x*depth + ch] = top_lerp[pady_ - y];
+                imagePtr[y*width*depth + x*depth + ch] = top_lerp[pady_ - y];
             }
 
             //bottom
-            currPx = image.bits()[(height-pady_-1)*width*depth + x*depth + ch]; //TODO: or height-pady-1?
+            currPx = imagePtr[(height-pady_-1)*width*depth + x*depth + ch]; //TODO: or height-pady-1?
             linear_interp(currPx, avgPx, pady_+1, bottom_lerp); //populate bottom_lerp
             for(int y=0; y<pady_; y++){
                 int imgY = y + height - pady_; //TODO: or height-pady-1?
-                image.bits()[imgY*width*depth + x*depth + ch] = bottom_lerp[y];
+                imagePtr[imgY*width*depth + x*depth + ch] = bottom_lerp[y];
             }
         }
 
         for(int y=pady_; y < height-pady_; y++){
             
             //left
-            currPx = image.bits()[y*width*depth + padx_*depth + ch];
+            currPx = imagePtr[y*width*depth + padx_*depth + ch];
             linear_interp(currPx, avgPx, padx_+1, left_lerp); //populate top_lerp
             for(int x=0; x<padx_; x++){
-                image.bits()[y*width*depth + x*depth + ch] = left_lerp[padx_ - x];
+                imagePtr[y*width*depth + x*depth + ch] = left_lerp[padx_ - x];
             }
 
             //right
-            currPx = image.bits()[y*width*depth + (width-padx_-1)*depth + ch];
+            currPx = imagePtr[y*width*depth + (width-padx_-1)*depth + ch];
             linear_interp(currPx, avgPx, padx_+1, right_lerp); //populate top_lerp
             for(int x=0; x<padx_; x++){
                 int imgX = x + width - padx_;
-                image.bits()[y*width*depth + imgX*depth + ch] = right_lerp[x];
+                imagePtr[y*width*depth + imgX*depth + ch] = right_lerp[x];
             }
         }
 
@@ -122,8 +124,8 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
               uint32_t const cy = y + ( dy ? dd : -dd ); // x,cy is point on existing dy padding, dd outside image
               assert( x < width ); assert( y < height );
               assert( cx < width ); assert( cy < height );
-              float const cx_y_v = image.bits()[y*width*depth + cx*depth + ch];
-              float const x_cy_v = image.bits()[cy*width*depth + x*depth + ch];
+              float const cx_y_v = imagePtr[y*width*depth + cx*depth + ch];
+              float const x_cy_v = imagePtr[cy*width*depth + x*depth + ch];
               linear_interp(cx_y_v, x_cy_v, dd+1, corner_lerp); // populate corner_lerp
               for( uint32_t ci = 1; ci < dd; ++ci ) { // fill in diagonal corner pixels
             uint32_t const cix = x  + ( dx ?  ci : -ci );
@@ -131,7 +133,7 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
             //printf( "dx=%s x=%s cx=%s ci=%s cix=%s dd=%s\n", 
             //	str(dx).c_str(), str(x).c_str(), str(cx).c_str(), str(ci).c_str(), str(cix).c_str(), str(dd).c_str() );
             assert( cix < width ); assert( ciy < height );
-                    image.bits()[ciy*width*depth + cix*depth + ch] = corner_lerp[ci];
+                    imagePtr[ciy*width*depth + cix*depth + ch] = corner_lerp[ci];
               }
             }
             // fill in all-mean outer half of corner (a triangle)
@@ -143,7 +145,7 @@ void JPEGPyramid::AvgLerpPad(JPEGImage & image){
             uint32_t const tri_x = cor_x + ( dx ? -dd : dd );
             uint32_t const tri_y = cor_y + ( dy ? -ddi : ddi );
             assert( tri_x < width ); assert( tri_y < height );
-                    image.bits()[tri_y*width*depth + tri_x*depth + ch] = avgPx;
+                    imagePtr[tri_y*width*depth + tri_x*depth + ch] = avgPx;
               }
             }
           }

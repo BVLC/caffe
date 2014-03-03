@@ -62,12 +62,13 @@ void JPEGImage::fill_with_imagenet_mean(){
     int height = this->height();
     int width = this->width();
     int depth = this->depth();
+    uint8_t* imagePtr = this->bits();
 
     for (int ch = 0; ch < depth; ch++){
         uint8_t ch_mean = (uint8_t)IMAGENET_MEAN_RGB[ch];
         for (int y = 0; y < height; y++){
             for (int x = 0; x < width; x++){
-                this->bits()[y*width*depth + x*depth + ch] = ch_mean;
+                imagePtr[y*width*depth + x*depth + ch] = ch_mean;
                 //this->bits()[y*width*depth + x*depth + ch] = (uint8_t)uniform_distribution(0, 255);
             }
         }
