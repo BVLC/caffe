@@ -107,7 +107,7 @@ ifeq ($(USE_MKL), 1)
   INCLUDE_DIRS += $(MKL_INCLUDE_DIR)
   LIBRARY_DIRS += $(MKL_LIB_DIR)
 else
-  LIBRARIES += atlas cblas
+  LIBRARIES += cblas atlas
 endif
 
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
