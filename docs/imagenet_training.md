@@ -26,7 +26,7 @@ We assume that you already have downloaded the ImageNet training data and valida
 You will first need to prepare some auxiliary data for training. This data can be downloaded by:
 
     cd $CAFFE_ROOT/data/ilsvrc12/
-    ./get_ilsvrc12_aux.sh
+    ./get_ilsvrc_aux.sh
 
 The training and validation input are described in `train.txt` and `val.txt` as text listing all the files and their labels. Note that we use a different indexing for labels than the ILSVRC devkit: we sort the synset names in their ASCII order, and then label them from 0 to 999. See `synset_words.txt` for the synset/name mapping.
 
