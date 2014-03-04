@@ -165,7 +165,7 @@ py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY) $(STITCHPYRAMID_SO)
 
 mat$(PROJECT): mat
 
-mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
+mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC) $(STITCHPYRAMID_SO)
 	$(MATLAB_DIR)/bin/mex -g $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
 		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" -I./python/caffe \
 		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -L./src/stitch_pyramid -lPyramidStitcher \

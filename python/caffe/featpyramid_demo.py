@@ -61,11 +61,14 @@ if __name__ == "__main__":
     imgFname = './imagenet/pascal_009959.jpg'
     model_def = './imagenet/imagenet_rcnn_batch_1_input_2000x2000_output_conv5.prototxt' 
     pretrained_model = '../../examples/alexnet_train_iter_470000'
-    use_gpu = True
+    use_gpu = False
+    #use_gpu = True
     
     caffenet = caffe.CaffeNet(model_def, pretrained_model)
     caffenet.set_phase_test()
     if use_gpu:
         caffenet.set_mode_gpu()
+    else:
+        caffenet.set_mode_cpu()
 
     test_featpyramid_allScales(caffenet, imgFname)

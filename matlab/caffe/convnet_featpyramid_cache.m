@@ -19,9 +19,13 @@ function pyra = convnet_featpyramid(imgFname, pyra_params, feature_dir)
     %save the user's minWidth and minHeight (if it exists) 
     if( exist('pyra_params') && isfield(pyra_params, 'feat_minWidth') )
         local_pyra_params.feat_minWidth = pyra_params.feat_minWidth;
+    else
+        local_pyra_params.feat_minWidth = 1;
     end
     if( exist('pyra_params') && isfield(pyra_params, 'feat_minHeight') )
         local_pyra_params.feat_minHeight = pyra_params.feat_minHeight;
+    else
+        local_pyra_params.feat_minHeight = 1;
     end 
 
     % only use caching if user provided pyra_params.feature_dir.
@@ -103,6 +107,7 @@ function pyra = prune_small_scales(pyra, pyra_params)
             %found a scale that's too small. prune it.
             pyra.valid_levels(scaleIdx) = false;
             pyra.feat{scaleIdx} = []; %clear the too-small scale, just to be safe.
+            pyra.scales(scaleIdx) = NaN;
             num_pruned = num_pruned + 1;
         end 
     end
