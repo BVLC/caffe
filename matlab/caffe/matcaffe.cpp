@@ -287,7 +287,8 @@ p_vect_float JPEGImage_to_p_float( JPEGImage &jpeg ){
 
   uint32_t const ret_sz = sz_from_dims( 4U, dims );
   p_vect_float ret = make_p_vect_float( ret_sz );
-  
+  uint8_t* jpegPtr = jpeg.bits(); 
+ 
   //copy jpeg into jpeg_float_npy
   for(int ch_src=0; ch_src<depth; ch_src++){ //ch_src is in RGB
     int ch_dst = get_BGR(ch_src); //for Caffe BGR convention
@@ -299,7 +300,7 @@ p_vect_float JPEGImage_to_p_float( JPEGImage &jpeg ){
 	    //rp_float: row-major, unpacked BBBB..,GGGG..,RRRR.. float.
 	    uint32_t const rix = ch_dst*height*width+y*width+x;
         assert(rix < ret->size());
-	    ret->at(rix) = jpeg.bits()[y*width*depth + x*depth + ch_src] - ch_mean;
+	    ret->at(rix) = jpegPtr[y*width*depth + x*depth + ch_src] - ch_mean;
         }
     }
   }

@@ -7,6 +7,7 @@
 
 #include "boost/python.hpp"
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
+#include <sys/time.h>
 #include "numpy/arrayobject.h"
 
 #include <string>  // NOLINT(build/include_order)
@@ -34,6 +35,13 @@ using boost::python::object;
 using boost::python::handle;
 using boost::python::vector_indexing_suite;
 
+
+//TODO: remove... or agree on a good timer.
+double read_timer_forPycaffe(){
+    struct timeval start;
+    gettimeofday( &start, NULL );
+    return (double)((start.tv_sec) + 1.0e-6 * (start.tv_usec)); //in seconds
+}
 
 // wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
 //  to Python
@@ -246,16 +254,18 @@ struct CaffeNet {
 
     PyArrayObject* jpeg_float_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //numpy malloc
 
+    uint8_t* jpegPtr = jpeg.bits();
+
     //copy jpeg into jpeg_float_npy
     for(int ch_src=0; ch_src<depth; ch_src++){ //ch_src is in RGB
         int ch_dst = get_BGR(ch_src); //for Caffe BGR convention
         float ch_mean = IMAGENET_MEAN_RGB[ch_src];
-
+        
         for(int y=0; y<height; y++){
             for(int x=0; x<width; x++){
                 //jpeg:           row-major, packed RGB, RGB, ...          uint8_t.
                 //jpeg_float_npy: row-major, unpacked BBBB..,GGGG..,RRRR.. float.
-                *((float *)PyArray_GETPTR4( jpeg_float_npy, 0, ch_dst, y, x)) = jpeg.bits()[y*width*depth + x*depth + ch_src] - ch_mean;
+                *((float *)PyArray_GETPTR4( jpeg_float_npy, 0, ch_dst, y, x)) = jpegPtr[y*width*depth + x*depth + ch_src] - ch_mean;
             }
         }
     }
@@ -356,7 +366,11 @@ struct CaffeNet {
     assert(net_->input_blobs()[0]->num() == 1); //for now, one plane at a time.)
     //TODO: verify/assert that top-upsampled version of input img fits within planeDim
 
-    Patchwork patchwork = stitch_pyramid(file, img_minWidth, img_minHeight, params.img_padding, params.interval, planeDim); 
+double start_patchwork = read_timer_forPycaffe();
+    Patchwork patchwork = stitch_pyramid(file, img_minWidth, img_minHeight, params.img_padding, params.interval, planeDim);
+double time_patchwork = read_timer_forPycaffe() - start_patchwork;
+printf("      patchwork: %f sec \n", time_patchwork);
+ 
     int nbPlanes = patchwork.planes_.size();
 
     boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward 
@@ -365,7 +379,12 @@ struct CaffeNet {
     //prep input data for Caffe feature extraction    
     for(int planeID=0; planeID<nbPlanes; planeID++){
       JPEGImage* currPlane = &(patchwork.planes_[planeID]);
+
+double start_jpegToFloat = read_timer_forPycaffe();
       PyArrayObject* currPlane_npy = JPEGImage_to_numpy_float(*currPlane); //TODO: agree on dereference and/or pass-by-ref JPEGImage currPlane
+double time_jpegToFloat = read_timer_forPycaffe() - start_jpegToFloat;
+printf("      jpegToFloat: %f sec \n", time_jpegToFloat);
+
       boost::python::object currPlane_npy_boost(boost::python::handle<>((PyObject*)currPlane_npy)); //numpy -> wrap in boost
       boost::python::list blobs_bottom_tmp; //input to Caffe::Forward
       blobs_bottom_tmp.append(currPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
@@ -378,14 +397,20 @@ struct CaffeNet {
       blobs_top_tmp.append(resultPlane_npy_boost); //put the output array in list [list length = 1, because batchsize = 1]
       blobs_top.append(resultPlane_npy_boost); //for long-term keeping (return a list that might be longer than 1)
 
+double start_forward = read_timer_forPycaffe();
       Forward(blobs_bottom_tmp, blobs_top_tmp); //lists of blobs... bottom[0]=curr input planes, top_tmp[0]=curr output descriptors
+double time_forward = read_timer_forPycaffe() - start_forward;
+printf("      forward plane: %f sec \n\n", time_forward);
     }
 
     printf("\n\n    in pycaffe.cpp extract_featpyramid(). planeDim=%d\n", planeDim);
 
+//double start_unstitch = read_timer_forPycaffe();
     vector<ScaleLocation> scaleLocations = unstitch_pyramid_locations(patchwork, sbin);
     boost::python::list unstitched_features = unstitch_planes(scaleLocations, blobs_top, resultDepth);
     boost::python::object scales_npy_boost = get_scales_boost(patchwork);
+//double time_unstitch = read_timer_forPycaffe() - start_unstitch;
+//printf("      unstitch planes: %f sec \n", time_unstitch);
 
     boost::python::dict d; 
     //d["blobs_bottom"]    = blobs_bottom;    //for debugging -- stitched pyra in RGB

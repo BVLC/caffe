@@ -10,7 +10,6 @@ import sys
 #import gflags
 import time
 import caffe
-import time 
 
 #for visualization, can be removed easily:
 from matplotlib import cm, pyplot
