@@ -59,7 +59,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     available_blobs.insert(blob_name);
     memory_used += blob_pointer->count();
   }
-  LOG(INFO) << "Floats required " << memory_used;
+  DLOG(INFO) << "Memory required for Data" << memory_used*sizeof(Dtype);
   // For each layer, set up their input and output
   bottom_vecs_.resize(param.layers_size());
   top_vecs_.resize(param.layers_size());
@@ -130,7 +130,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       if (!in_place)
         memory_used += top_vecs_[i][topid]->count();
     }
-    LOG(INFO) << "Floats required " << memory_used;
+    DLOG(INFO) << "Memory  required for Data " << memory_used*sizeof(Dtype);
     int blobs_lr_size = layers_[i]->layer_param().blobs_lr_size();
     CHECK(blobs_lr_size == layers_[i]->blobs().size() || blobs_lr_size == 0)
         << "Incorrect blobs lr size: should be either 0 or the same as "
@@ -164,7 +164,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
-  LOG(INFO) << "Floats required " << memory_used;
+  LOG(INFO) << "Memory required for Data " << memory_used*sizeof(Dtype);
 }
 
 
