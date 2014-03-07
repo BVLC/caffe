@@ -17,7 +17,7 @@
 #define CUDA_CHECK(x) do { \
   cudaError_t res = (x); \
   if(res != cudaSuccess) { \
-    fprintf(stderr, "CUDART: %s = %d (%s) at (%s:%d)\n", #x, res, cudaGetErrorString(res),__FILE__,__LINE__); \
+    LOG(FATAL) << printf("CUDART: %s = %d (%s) at (%s:%d)\n", #x, res, cudaGetErrorString(res),__FILE__,__LINE__);\
     exit(1); \
   } \
 } while(0)
