@@ -11,9 +11,16 @@
 #include <driver_types.h>
 #include <glog/logging.h>
 #include <mkl_vsl.h>
+#include <stdio.h>
 
 // various checks for different function calls.
-#define CUDA_CHECK(condition) CHECK_EQ((condition), cudaSuccess)
+#define CUDA_CHECK(x) do { \
+  cudaError_t res = (x); \
+  if(res != cudaSuccess) { \
+    fprintf(stderr, "CUDART: %s = %d (%s) at (%s:%d)\n", #x, res, cudaGetErrorString(res),__FILE__,__LINE__); \
+    exit(1); \
+  } \
+} while(0)
 #define CUBLAS_CHECK(condition) CHECK_EQ((condition), CUBLAS_STATUS_SUCCESS)
 #define CURAND_CHECK(condition) CHECK_EQ((condition), CURAND_STATUS_SUCCESS)
 #define VSL_CHECK(condition) CHECK_EQ((condition), VSL_STATUS_OK)
