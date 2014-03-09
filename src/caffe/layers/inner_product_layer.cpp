@@ -66,10 +66,11 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, N_, K_, (Dtype)1.,
-      bottom_data, weight, (Dtype)0., top_data);
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, bottom[0]->num(), N_, K_,
+                        (Dtype)1., bottom_data, weight, (Dtype)0., top_data);
   if (biasterm_) {
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
+    caffe_cpu_gemm<Dtype>(
+        CblasNoTrans, CblasNoTrans, bottom[0]->num(), N_, 1, (Dtype)1.,
         reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
         this->blobs_[1]->cpu_data(), (Dtype)1., top_data);
   }
@@ -82,19 +83,21 @@ Dtype InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->cpu_diff();
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
   // Gradient with respect to weight
-  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
-      top_diff, bottom_data, (Dtype)0., this->blobs_[0]->mutable_cpu_diff());
+  caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, N_, K_, top[0]->num(),
+                        (Dtype)1., top_diff, bottom_data, (Dtype)0.,
+                        this->blobs_[0]->mutable_cpu_diff());
   if (biasterm_) {
     // Gradient with respect to bias
-    caffe_cpu_gemv<Dtype>(CblasTrans, M_, N_, (Dtype)1., top_diff,
-        reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), (Dtype)0.,
-        this->blobs_[1]->mutable_cpu_diff());
+    caffe_cpu_gemv<Dtype>(
+        CblasTrans, top[0]->num(), N_, (Dtype)1., top_diff,
+        reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
+        (Dtype)0., this->blobs_[1]->mutable_cpu_diff());
   }
   if (propagate_down) {
     // Gradient with respect to bottom data
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, K_, N_, (Dtype)1.,
-        top_diff, this->blobs_[0]->cpu_data(), (Dtype)0.,
-        (*bottom)[0]->mutable_cpu_diff());
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, top[0]->num(), K_, N_,
+                          (Dtype)1., top_diff, this->blobs_[0]->cpu_data(),
+                          (Dtype)0., (*bottom)[0]->mutable_cpu_diff());
   }
   return Dtype(0);
 }
