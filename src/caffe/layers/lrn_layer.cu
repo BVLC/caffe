@@ -78,8 +78,8 @@ void LRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int n_threads = bottom[0]->num() * height_ * width_;
   // NOLINT_NEXT_LINE(whitespace/operators)
   LRNFillScale<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
-      n_threads, bottom_data, bottom[0]->num(), channels_, height_, width_, size_,
-      alpha_ / size_, scale_data);
+      n_threads, bottom_data, bottom[0]->num(), channels_, height_, width_,
+      size_, alpha_ / size_, scale_data);
   CUDA_POST_KERNEL_CHECK;
   n_threads = bottom[0]->count();
   // NOLINT_NEXT_LINE(whitespace/operators)

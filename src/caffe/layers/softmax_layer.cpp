@@ -1,12 +1,15 @@
 // Copyright 2013 Yangqing Jia
 
+#include <algorithm>  // std::max
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
-using std::max;
-
 namespace caffe {
+using std::max;
+using std::vector;
 
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,

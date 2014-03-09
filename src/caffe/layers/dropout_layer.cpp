@@ -1,11 +1,14 @@
 // Copyright 2013 Yangqing Jia
 
+#include <vector>
+
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
+using std::vector;
 
 template <typename Dtype>
 void DropoutLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,

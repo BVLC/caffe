@@ -45,7 +45,8 @@ Dtype SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
     bottom_diff[i * dim + static_cast<int>(label[i])] -= 1;
-    loss += -log(max(prob_data[i * dim + static_cast<int>(label[i])], Dtype(FLT_MIN)));
+    loss += -log(max(prob_data[i * dim + static_cast<int>(label[i])],
+                     Dtype(FLT_MIN)));
   }
   // Scale down gradient
   caffe_scal(prob_.count(), Dtype(1) / num, bottom_diff);

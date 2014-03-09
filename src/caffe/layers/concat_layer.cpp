@@ -50,7 +50,8 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       const Dtype* bottom_data = bottom[i]->cpu_data();
       int num_elem = bottom[i]->count();
-      caffe_copy(num_elem, bottom_data, top_data + (*top)[0]->offset(offset_num));
+      caffe_copy(num_elem, bottom_data,
+                 top_data + (*top)[0]->offset(offset_num));
       offset_num += bottom[i]->num();
     }
   } else if (concat_dim_ == 1) {
