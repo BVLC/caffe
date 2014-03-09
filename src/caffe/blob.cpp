@@ -1,8 +1,8 @@
 // Copyright 2013 Yangqing Jia
 
-#include <algorithm>  // std::max
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#include <algorithm>  // std::max
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"

@@ -1,10 +1,11 @@
 // Copyright 2014 kloudkl@github
 
+
+#include <boost/lexical_cast.hpp>
+#include <cuda_runtime.h>
 #include <string>
 #include <vector>
-#include <boost/lexical_cast.hpp>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -89,8 +90,9 @@ class LayerTest : public ::testing::Test {
     delete blob_top_label_;
   }
 
-  void resize_batch_size(const LayerParameter& layer_param, const int batch_size,
-              Filler<Dtype>& filler, vector<Blob<Dtype>*>& blob_vec);
+  void resize_batch_size(const LayerParameter& layer_param,
+                         const int batch_size, Filler<Dtype>* filler,
+                         vector<Blob<Dtype>*>* blob_vec);
 
  protected:
   int max_batch_size_;
@@ -110,9 +112,9 @@ class LayerTest : public ::testing::Test {
 template<typename Dtype>
 void LayerTest<Dtype>::resize_batch_size(const LayerParameter& layer_param,
                                          const int batch_size,
-                                         Filler<Dtype>& filler,
-                                         vector<Blob<Dtype>*>& blob_vec) {
-  for (int j = 0; j < blob_vec.size(); ++j) {
+                                         Filler<Dtype>* filler,
+                                         vector<Blob<Dtype>*>* blob_vec) {
+  for (int j = 0; j < blob_vec->size(); ++j) {
     int channels = channels_;
     int height = height_;
     int width = width_;
@@ -122,17 +124,15 @@ void LayerTest<Dtype>::resize_batch_size(const LayerParameter& layer_param,
       height = 1;
       width = 1;
     }
-    blob_vec[j]->Reshape(batch_size, channels, height, width);
-//    LOG(ERROR) << "blob_vec " << j << " batch size " << batch_size <<
-//        " channels " << channels << " height " << height << " width " << width;
-    filler.Fill(blob_vec[j]);
+    blob_vec->at(j)->Reshape(batch_size, channels, height, width);
+    filler->Fill(blob_vec->at(j));
   }
 }
 
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(LayerTest, Dtypes);
 
-TYPED_TEST(LayerTest, TestDynamicBatchSize){
+TYPED_TEST(LayerTest, TestDynamicBatchSize) {
   Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
   for (int n_mode = 0; n_mode < 2; ++n_mode) {
     Caffe::set_mode(modes[n_mode]);
@@ -164,20 +164,24 @@ TYPED_TEST(LayerTest, TestDynamicBatchSize){
       for (int j = blob_top_vec.size(); j > layer->expected_top_size(); --j) {
         blob_top_vec.pop_back();
       }
-      this->resize_batch_size(layer_param, this->max_batch_size_, filler, blob_bottom_vec);
-      this->resize_batch_size(layer_param, this->max_batch_size_, filler, blob_top_vec);
+      this->resize_batch_size(layer_param, this->max_batch_size_, filler,
+                              blob_bottom_vec);
+      this->resize_batch_size(layer_param, this->max_batch_size_, filler,
+                              blob_top_vec);
       layer->SetUp(blob_bottom_vec, &blob_top_vec);
       for (int n = 1; n <= this->max_batch_size_; ++n) {
 //        LOG(ERROR) << "n " << n << " " << this->layer_types_[i];
 //        LOG(ERROR) << "blob_bottom_vec.size() " << blob_bottom_vec.size();
         bottom_batch_size = n;
-        this->resize_batch_size(layer_param, bottom_batch_size, filler, blob_bottom_vec);
+        this->resize_batch_size(layer_param, bottom_batch_size, filler,
+                                blob_bottom_vec);
 //        LOG(ERROR) << "blob_top_vec.size() " << blob_top_vec.size();
         top_batch_size = n;
         if (layer_param.type() == "concat") {
           top_batch_size = n * blob_bottom_vec.size();
         }
-        this->resize_batch_size(layer_param, top_batch_size, filler, blob_top_vec);
+        this->resize_batch_size(layer_param, top_batch_size, filler,
+                                blob_top_vec);
 //        LOG(ERROR) << "Forward " << this->layer_types_[i];
         layer->Forward(blob_bottom_vec, &blob_top_vec);
         if (layer_param.type() != "accuracy") {
