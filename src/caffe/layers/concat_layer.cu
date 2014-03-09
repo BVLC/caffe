@@ -25,10 +25,10 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       const Dtype* bottom_data = bottom[i]->gpu_data();
       int num_elem =
-        bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
-      for (int n = 0; n < NUM_; ++n) {
-        caffe_gpu_copy(num_elem, bottom_data+bottom[i]->offset(n),
-          top_data+(*top)[0]->offset(n, offset_channel));
+        bottom[i]->channels() * bottom[i]->height() * bottom[i]->width();
+      for (int n = 0; n < bottom[i]->num(); ++n) {
+        caffe_gpu_copy(num_elem, bottom_data + bottom[i]->offset(n),
+          top_data + (*top)[0]->offset(n, offset_channel));
       }
       offset_channel += bottom[i]->channels();
     }
@@ -56,10 +56,10 @@ Dtype ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < bottom->size(); ++i) {
       Blob<Dtype>* blob = (*bottom)[i];
       Dtype* bottom_diff = blob->mutable_gpu_diff();
-      int num_elem = blob->channels()*blob->height()*blob->width();
-      for (int n = 0; n < NUM_; ++n) {
-        caffe_gpu_copy(num_elem, top_diff+top[0]->offset(n, offset_channel),
-          bottom_diff+blob->offset(n));
+      int num_elem = blob->channels() * blob->height() * blob->width();
+      for (int n = 0; n < top[i]->num(); ++n) {
+        caffe_gpu_copy(num_elem, top_diff + top[0]->offset(n, offset_channel),
+          bottom_diff + blob->offset(n));
       }
       offset_channel += blob->channels();
     }
