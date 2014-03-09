@@ -378,7 +378,6 @@ class DataLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
 };
 
-
 template <typename Dtype>
 class HDF5DataLayer : public Layer<Dtype> {
  public:
@@ -405,6 +404,25 @@ class HDF5DataLayer : public Layer<Dtype> {
   hsize_t current_row;
 };
 
+template <typename Dtype>
+class MemoryDataLayer : public Layer<Dtype> {
+ public:
+  explicit MemoryDataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~MemoryDataLayer() {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
 
 template <typename Dtype>
 class SoftmaxLayer : public Layer<Dtype> {
