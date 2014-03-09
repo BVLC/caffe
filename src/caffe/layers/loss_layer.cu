@@ -122,6 +122,49 @@ Dtype EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   return loss;
 }
 
+
+template <typename Dtype>
+void LogisticRegressionLayer<Dtype>::SetUp(
+  const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  CHECK_EQ(bottom.size(), 2) << "Loss Layer takes two blobs as input.";
+  CHECK_EQ(top->size(), 0) << "Loss Layer takes no as output.";
+  CHECK_EQ(bottom[0]->num(), bottom[1]->num())
+      << "The data and label should have the same number.";
+  CHECK_EQ(bottom[0]->count(), bottom[1]->count())
+      << "The data and label should have the same count.";
+  CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
+  CHECK_EQ(bottom[0]->height(), bottom[1]->height());
+  CHECK_EQ(bottom[0]->width(), bottom[1]->width());
+}
+
+template <typename Dtype>
+Dtype LogisticRegressionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+  const Dtype* bottom_label = (*bottom)[1]->cpu_data();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  int num = (*bottom)[0]->num();
+  memset(bottom_diff, 0, sizeof(Dtype) * (*bottom)[0]->count());
+  Dtype loss = 0;
+  for (int i = 0; i < num; ++i) {
+    const Dtype target = (Dtype) bottom_label[i];
+    // check for valid target/label in [0,1]
+    CHECK( target >= 0. );
+    CHECK( target <= 1. );
+    // enforce valid prediction in [eps,1-eps]
+    const Dtype prob  = min(1.-kLOG_THRESHOLD, max(bottom_data[i], kLOG_THRESHOLD));
+    const Dtype probn = 1.-prob;
+    // logloss
+    const Dtype thisloss = target*log(prob) + (1.-target)*log(probn);
+    loss -= thisloss;
+    // and derivative
+    bottom_diff[i] = (prob - target) / (prob * probn * num);
+  }
+  return loss/num;
+}
+
+
+
 template <typename Dtype>
 void AccuracyLayer<Dtype>::SetUp(
   const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
@@ -168,6 +211,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
 INSTANTIATE_CLASS(InfogainLossLayer);
 INSTANTIATE_CLASS(EuclideanLossLayer);
+INSTANTIATE_CLASS(LogisticRegressionLayer);
 INSTANTIATE_CLASS(AccuracyLayer);
 
 }  // namespace caffe
