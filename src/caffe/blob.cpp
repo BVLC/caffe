@@ -1,5 +1,6 @@
 // Copyright 2013 Yangqing Jia
 
+#include <algorithm>  // std::max
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 
@@ -9,6 +10,7 @@
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+using std::max;
 
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
@@ -28,6 +30,16 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   } else {
     data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
     diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
+  }
+}
+
+template <typename Dtype>
+void Blob<Dtype>::ReshapeBigEnough(const int num, const int channels,
+                                   const int height, const int width) {
+  if (num_ < num || channels_ < channels || height_ < height ||
+      width_ < width) {
+    Reshape(max(num_, num), max(channels_, channels), max(height_, height),
+            max(width_, width));
   }
 }
 

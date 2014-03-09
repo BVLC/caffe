@@ -49,7 +49,30 @@ TYPED_TEST(BlobSimpleTest, TestPointers) {
 }
 
 TYPED_TEST(BlobSimpleTest, TestReshape) {
-  this->blob_->Reshape(2, 3, 4, 5);
+  this->blob_->Reshape(1, 2, 3, 4);
+  EXPECT_EQ(this->blob_->num(), 1);
+  EXPECT_EQ(this->blob_->channels(), 2);
+  EXPECT_EQ(this->blob_->height(), 3);
+  EXPECT_EQ(this->blob_->width(), 4);
+  EXPECT_EQ(this->blob_->count(), 24);
+}
+
+TYPED_TEST(BlobSimpleTest, TestReshapeBigEnough) {
+  this->blob_->ReshapeBigEnough(1, 2, 3, 4);
+  EXPECT_EQ(this->blob_->num(), 1);
+  EXPECT_EQ(this->blob_->channels(), 2);
+  EXPECT_EQ(this->blob_->height(), 3);
+  EXPECT_EQ(this->blob_->width(), 4);
+  EXPECT_EQ(this->blob_->count(), 24);
+
+  this->blob_->ReshapeBigEnough(2, 3, 4, 5);
+  EXPECT_EQ(this->blob_->num(), 2);
+  EXPECT_EQ(this->blob_->channels(), 3);
+  EXPECT_EQ(this->blob_->height(), 4);
+  EXPECT_EQ(this->blob_->width(), 5);
+  EXPECT_EQ(this->blob_->count(), 120);
+
+  this->blob_->ReshapeBigEnough(1, 2, 3, 4);
   EXPECT_EQ(this->blob_->num(), 2);
   EXPECT_EQ(this->blob_->channels(), 3);
   EXPECT_EQ(this->blob_->height(), 4);
