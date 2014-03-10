@@ -11,13 +11,12 @@
 #include <driver_types.h>
 #include <glog/logging.h>
 #include <mkl_vsl.h>
-#include <stdio.h>
 
 // various checks for different function calls.
-#define CUDA_CHECK(x) do { \
-  cudaError_t res = (x); \
+#define CUDA_CHECK(condition) do { \
+  cudaError_t res = (condition); \
   if(res != cudaSuccess) { \
-    LOG(FATAL) << printf("CUDART: %s = %d (%s) at (%s:%d)\n", #x, res, cudaGetErrorString(res),__FILE__,__LINE__);\
+    LOG(FATAL) << "CUDA: " << #condition << " = " << res << " (" << cudaGetErrorString(res) << ") " << "(" << __FILE__ << ":" << __LINE__ << ")";\
     exit(1); \
   } \
 } while(0)
