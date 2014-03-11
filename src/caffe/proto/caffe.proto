@@ -2,6 +2,12 @@
 
 package caffe;
 
+message DatumDimensions {
+  optional int32 channels = 1;
+  optional int32 height = 2;
+  optional int32 width = 3;
+}
+
 message BlobProto {
   optional int32 num = 1 [default = 0];
   optional int32 channels = 2 [default = 0];
@@ -96,6 +102,9 @@ message LayerParameter {
   // the other dimensions must be the same for all the bottom blobs
   // By default it will concatenate blobs along channels dimension
   optional uint32 concat_dim = 65 [ default = 1 ]; 
+  
+  // Memory data layer specify the expected dimensions of input datum blobs
+  repeated DatumDimensions datum_dims = 10000;
 }
 
 message LayerConnection {

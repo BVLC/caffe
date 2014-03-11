@@ -407,8 +407,7 @@ class HDF5DataLayer : public Layer<Dtype> {
 template <typename Dtype>
 class MemoryDataLayer : public Layer<Dtype> {
  public:
-  explicit MemoryDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+  explicit MemoryDataLayer(const LayerParameter& param);
   virtual ~MemoryDataLayer() {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -422,6 +421,8 @@ class MemoryDataLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  vector<DatumDimensions> datum_dims_;
+  size_t num_data_blobs_;
 };
 
 template <typename Dtype>

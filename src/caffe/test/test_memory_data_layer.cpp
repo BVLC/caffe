@@ -43,6 +43,8 @@ class MemoryDataLayerTest : public ::testing::Test {
     delete blob_top_label_;
   }
 
+  LayerParameter get_layer_parameter();
+
   int batch_size_;
   int channels_;
   int height_;
@@ -56,11 +58,26 @@ class MemoryDataLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
+template<typename Dtype>
+LayerParameter MemoryDataLayerTest<Dtype>::get_layer_parameter() {
+  LayerParameter param;
+  DatumDimensions* dim;
+  dim = param.add_datum_dims();
+  dim->set_channels(channels_);
+  dim->set_height(height_);
+  dim->set_width(width_);
+  dim = param.add_datum_dims();
+  dim->set_channels(num_labels_);
+  dim->set_height(1);
+  dim->set_width(1);
+  return param;
+}
+
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(MemoryDataLayerTest, Dtypes);
 
 TYPED_TEST(MemoryDataLayerTest, TestSetup){
-  LayerParameter param;
+  LayerParameter param = this->get_layer_parameter();
   MemoryDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), this->batch_size_);
@@ -74,7 +91,7 @@ TYPED_TEST(MemoryDataLayerTest, TestSetup){
 }
 
 TYPED_TEST(MemoryDataLayerTest, TestForward){
-  LayerParameter param;
+  LayerParameter param = this->get_layer_parameter();
   MemoryDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
 
@@ -83,7 +100,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward){
   Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
   for (int n_mode = 0; n_mode < 2; ++n_mode) {
     Caffe::set_mode(modes[n_mode]);
-    for (int iter = 0; iter < 100; ++iter) {
+    for (int iter = 0; iter < 10; ++iter) {
       filler.Fill(this->blob_bottom_data_);
       filler.Fill(this->blob_bottom_label_);
       layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
@@ -100,7 +117,7 @@ TYPED_TEST(MemoryDataLayerTest, TestForward){
 }
 
 TYPED_TEST(MemoryDataLayerTest, TestDynamicBatchSize){
-  LayerParameter param;
+  LayerParameter param = this->get_layer_parameter();
   MemoryDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
 
