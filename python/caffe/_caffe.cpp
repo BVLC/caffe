@@ -108,7 +108,11 @@ class CaffeLayer {
 
   string name() const { return name_; }
   vector<CaffeBlob> blobs() {
-    return vector<CaffeBlob>(layer_->blobs().begin(), layer_->blobs().end());
+    vector<CaffeBlob> result;
+    for (int i = 0; i < layer_->blobs().size(); ++i) {
+      result.push_back(CaffeBlob(layer_->blobs()[i], name_));
+    }
+    return result;
   }
 
   // this is here only to satisfy boost's vector_indexing_suite
