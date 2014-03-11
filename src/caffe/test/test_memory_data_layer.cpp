@@ -99,5 +99,33 @@ TYPED_TEST(MemoryDataLayerTest, TestForward){
   }
 }
 
+TYPED_TEST(MemoryDataLayerTest, TestDynamicBatchSize){
+  LayerParameter param;
+  MemoryDataLayer<TypeParam> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+
+  FillerParameter filler_param;
+  GaussianFiller<TypeParam> filler(filler_param);
+  Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
+  for (int n_mode = 0; n_mode < 2; ++n_mode) {
+    Caffe::set_mode(modes[n_mode]);
+    for (int batch_size = 1; batch_size <= this->batch_size_; ++batch_size) {
+      this->blob_bottom_data_->Reshape(batch_size, this->channels_,
+                                       this->height_, this->width_);
+      filler.Fill(this->blob_bottom_data_);
+      filler.Fill(this->blob_bottom_label_);
+      layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+      for (int i = 0; i < this->blob_bottom_data_->count(); ++i) {
+        EXPECT_EQ(this->blob_bottom_data_->cpu_data()[i],
+                  this->blob_bottom_data_->cpu_data()[i]);
+      }
+      for (int i = 0; i < this->blob_bottom_label_->count(); ++i) {
+        EXPECT_EQ(this->blob_bottom_label_->cpu_data()[i],
+                  this->blob_top_label_->cpu_data()[i]);
+      }
+    }
+  }
+}
+
 }
   // namespace caffe
