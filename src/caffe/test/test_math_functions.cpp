@@ -119,19 +119,19 @@ TYPED_TEST(MathFunctionsTest, TestSignGPU){
   }
 }
 
-TYPED_TEST(MathFunctionsTest, TestSignbitCPU){
+TYPED_TEST(MathFunctionsTest, TestSgnbitCPU){
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
-  caffe_cpu_signbit<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  caffe_cpu_sgnbit<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   for (int i = 0; i < n; ++i) {
     CHECK_EQ(signbits[i], x[i] < 0 ? 1 : 0);
   }
 }
 
-TYPED_TEST(MathFunctionsTest, TestSignbitGPU){
+TYPED_TEST(MathFunctionsTest, TestSgnbitGPU){
   int n = this->blob_bottom_->count();
-  caffe_gpu_signbit<TypeParam>(n, this->blob_bottom_->gpu_data(),
+  caffe_gpu_sgnbit<TypeParam>(n, this->blob_bottom_->gpu_data(),
                             this->blob_bottom_->mutable_gpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
