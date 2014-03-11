@@ -38,12 +38,6 @@ class CaffeBlob {
   CaffeBlob(const shared_ptr<Blob<float> > &blob, const string& name)
       : blob_(blob), name_(name) {}
 
-  explicit CaffeBlob(const shared_ptr<Blob<float> > &blob)
-      : blob_(blob) {}
-
-  CaffeBlob()
-  {}
-
   string name() const { return name_; }
   int num() const { return blob_->num(); }
   int channels() const { return blob_->channels(); }
@@ -66,9 +60,6 @@ class CaffeBlob {
 //  is not freed while still being used in Python
 class CaffeBlobWrap : public CaffeBlob {
  public:
-  CaffeBlobWrap(PyObject *p, const shared_ptr<Blob<float> > &blob)
-      : CaffeBlob(blob), self_(p) {}
-
   CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
       : CaffeBlob(blob), self_(p) {}
 
