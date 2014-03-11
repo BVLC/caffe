@@ -15,6 +15,9 @@ class Net(CaffeNet):
         super(Net, self).__init__(param_file, pretrained_param_file)
         self._blobs = OrderedDict([(bl.name, bl)
                                    for bl in super(Net, self).blobs])
+        self.params = OrderedDict([(lr.name, lr.blobs)
+                                   for lr in super(Net, self).layers
+                                   if len(lr.blobs) > 0])
 
     @property
     def blobs(self):
