@@ -1,1 +1,1 @@
-from .pycaffe import *
+from ._caffe import *
