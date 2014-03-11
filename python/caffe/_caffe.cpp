@@ -101,6 +101,26 @@ class CaffeBlobWrap : public CaffeBlob {
 };
 
 
+class CaffeLayer {
+ public:
+  CaffeLayer(const shared_ptr<Layer<float> > &layer, const string &name)
+    : layer_(layer), name_(name) {}
+
+  string name() const { return name_; }
+  vector<CaffeBlob> blobs() {
+    return vector<CaffeBlob>(layer_->blobs().begin(), layer_->blobs().end());
+  }
+
+  // this is here only to satisfy boost's vector_indexing_suite
+  bool operator == (const CaffeLayer &other) {
+      return this->layer_ == other.layer_;
+  }
+
+ protected:
+  shared_ptr<Layer<float> > layer_;
+  string name_;
+};
+
 
 // A simple wrapper over CaffeNet that runs the forward process.
 struct CaffeNet {
@@ -235,15 +255,10 @@ struct CaffeNet {
       return result;
   }
 
-  vector<CaffeBlob> params() {
-      vector<CaffeBlob> result;
-      int ix = 0;
+  vector<CaffeLayer> layers() {
+      vector<CaffeLayer> result;
       for (int i = 0; i < net_->layers().size(); ++i) {
-        for (int j = 0; j < net_->layers()[i]->blobs().size(); ++j) {
-          result.push_back(
-              CaffeBlob(net_->params()[ix], net_->layer_names()[i]));
-          ix++;
-        }
+        result.push_back(CaffeLayer(net_->layers()[i], net_->layer_names()[i]));
       }
       return result;
   }
@@ -267,7 +282,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("set_phase_test",   &CaffeNet::set_phase_test)
       .def("set_device",       &CaffeNet::set_device)
       .add_property("blobs",   &CaffeNet::blobs)
-      .add_property("params",  &CaffeNet::params)
+      .add_property("layers",  &CaffeNet::layers)
   ;
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
@@ -281,8 +296,16 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("data",     &CaffeBlobWrap::get_data)
       .add_property("diff",     &CaffeBlobWrap::get_diff);
 
+  boost::python::class_<CaffeLayer>(
+      "CaffeLayer", boost::python::no_init)
+      .add_property("name",  &CaffeLayer::name)
+      .add_property("blobs", &CaffeLayer::blobs);
+
   boost::python::class_<vector<CaffeBlob> >("BlobVec")
       .def(vector_indexing_suite<vector<CaffeBlob>, true>());
+
+  boost::python::class_<vector<CaffeLayer> >("LayerVec")
+      .def(vector_indexing_suite<vector<CaffeLayer>, true>());
 
   import_array();
 }
