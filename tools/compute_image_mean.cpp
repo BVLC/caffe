@@ -10,6 +10,7 @@
 
 using caffe::Datum;
 using caffe::BlobProto;
+using std::max;
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
@@ -40,7 +41,8 @@ int main(int argc, char** argv) {
   sum_blob.set_height(datum.height());
   sum_blob.set_width(datum.width());
   const int data_size = datum.channels() * datum.height() * datum.width();
-  for (int i = 0; i < datum.data().size(); ++i) {
+  int size_in_datum = std::max<int>(datum.data().size(), datum.float_data_size());
+  for (int i = 0; i < size_in_datum; ++i) {
     sum_blob.add_data(0.);
   }
   LOG(INFO) << "Starting Iteration";
@@ -48,10 +50,16 @@ int main(int argc, char** argv) {
     // just a dummy operation
     datum.ParseFromString(it->value().ToString());
     const string& data = datum.data();
-    CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
-        << data.size();
-    for (int i = 0; i < data.size(); ++i) {
-      sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
+    size_in_datum = std::max<int>(datum.data().size(), datum.float_data_size());
+    CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " << size_in_datum;
+    if (data.size() != 0) {
+      for (int i = 0; i < size_in_datum; ++i) {
+        sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
+      }
+    } else {
+      for (int i = 0; i < size_in_datum; ++i) {
+        sum_blob.set_data(i, sum_blob.data(i) + (float)datum.float_data(i));
+      }
     }
     ++count;
     if (count % 10000 == 0) {
