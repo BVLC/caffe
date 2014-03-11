@@ -411,7 +411,7 @@ void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
 }
 
 INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sign);
-INSTANTIATE_CAFFE_CPU_UNARY_FUNC(signbit);
+INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sgnbit);
 INSTANTIATE_CAFFE_CPU_UNARY_FUNC(fabs);
 
 template <>
