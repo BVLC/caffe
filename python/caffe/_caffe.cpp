@@ -255,7 +255,7 @@ struct CaffeNet {
 
 
 // The boost python module definition.
-BOOST_PYTHON_MODULE(pycaffe) {
+BOOST_PYTHON_MODULE(_caffe) {
   boost::python::class_<CaffeNet>(
       "CaffeNet", boost::python::init<string, string>())
       .def("Forward",          &CaffeNet::Forward)

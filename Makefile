@@ -45,8 +45,8 @@ NONGEN_CXX_SRCS := $(shell find \
 LINT_REPORT := $(BUILD_DIR)/cpp_lint.log
 FAILED_LINT_REPORT := $(BUILD_DIR)/cpp_lint.error_log
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
-PY$(PROJECT)_SRC := python/$(PROJECT)/py$(PROJECT).cpp
-PY$(PROJECT)_SO := python/$(PROJECT)/py$(PROJECT).so
+PY$(PROJECT)_SRC := python/$(PROJECT)/_$(PROJECT).cpp
+PY$(PROJECT)_SO := python/$(PROJECT)/_$(PROJECT).so
 # MAT$(PROJECT)_SRC is the matlab wrapper for $(PROJECT)
 MAT$(PROJECT)_SRC := matlab/$(PROJECT)/mat$(PROJECT).cpp
 MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT)
