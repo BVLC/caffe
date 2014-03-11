@@ -45,6 +45,7 @@ class CaffeBlob {
   int width() const { return blob_->width(); }
   int count() const { return blob_->count(); }
 
+  // this is here only to satisfy boost's vector_indexing_suite
   bool operator == (const CaffeBlob &other) {
       return this->blob_ == other.blob_;
   }
