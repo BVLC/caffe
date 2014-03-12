@@ -97,7 +97,7 @@ __global__ void StoPoolForwardTrain(const int nthreads,
         }
       }
     }
-	}
+  }
 }
 
 
