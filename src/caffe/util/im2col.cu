@@ -14,7 +14,7 @@ template <typename Dtype>
 __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
   const int height, const int width, const int ksize,
   const int stride, const int height_col, const int width_col, Dtype* data_col) {
-	CUDA_KERNEL_LOOP(index, n) {
+  CUDA_KERNEL_LOOP(index, n) {
     int w_out = index % width_col;
     index /= width_col;
     int h_out = index % height_col;
@@ -30,7 +30,7 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
         data_col += height_col * width_col;
       }
     }
-	}
+  }
 }
 
 template <typename Dtype>
@@ -61,7 +61,7 @@ template <typename Dtype>
 __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
   const int height, const int width, const int channels, const int ksize,
   const int stride, const int height_col, const int width_col, Dtype* data_im) {
-	CUDA_KERNEL_LOOP(index, n) {
+  CUDA_KERNEL_LOOP(index, n) {
     Dtype val = 0;
     int w = index % width;
     int h = (index / width) % height;
@@ -90,7 +90,7 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
       }
     }
     data_im[index] = val;
-	}
+  }
 }
 
 template <typename Dtype>

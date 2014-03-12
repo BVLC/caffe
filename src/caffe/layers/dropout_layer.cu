@@ -65,9 +65,9 @@ template <typename Dtype>
 __global__ void DropoutForward(const int n, const Dtype* in,
     const unsigned int* mask, const unsigned int threshold, const float scale,
     Dtype* out) {
-	CUDA_KERNEL_LOOP(index, n) {
-		out[index] = in[index] * (mask[index] > threshold) * scale;	
-	}
+  CUDA_KERNEL_LOOP(index, n) {
+    out[index] = in[index] * (mask[index] > threshold) * scale;	
+  }
 }
 
 template <typename Dtype>
@@ -94,9 +94,9 @@ template <typename Dtype>
 __global__ void DropoutBackward(const int n, const Dtype* in_diff,
     const unsigned int* mask, const unsigned int threshold, const float scale,
     Dtype* out_diff) {
-	CUDA_KERNEL_LOOP(index, n) {
-		out_diff[index] = in_diff[index] * scale * (mask[index] > threshold);  
-	}
+  CUDA_KERNEL_LOOP(index, n) {
+    out_diff[index] = in_diff[index] * scale * (mask[index] > threshold);  
+  }
 }
 
 template <typename Dtype>

@@ -69,7 +69,7 @@ template <typename Dtype>
 __global__ void PaddingForward(const int count, const Dtype* in, Dtype* out,
     const int num, const int channel, const int height_in, const int width_in,
     const int pad) {
-	CUDA_KERNEL_LOOP(index, count) {
+  CUDA_KERNEL_LOOP(index, count) {
     int height_out = height_in + pad + pad;
     int width_out = width_in + pad + pad;
     int w = index % width_in;
@@ -80,7 +80,7 @@ __global__ void PaddingForward(const int count, const Dtype* in, Dtype* out,
     index /= channel;
     out[((index * channel + c) * height_out + h + pad) * width_out + pad + w] =
         in[((index * channel + c) * height_in + h) * width_in + w];
-	}  
+  }  
 }
 
 template <typename Dtype>
@@ -101,7 +101,7 @@ template <typename Dtype>
 __global__ void PaddingBackward(const int count, const Dtype* in, Dtype* out,
     const int num, const int channel, const int height_in, const int width_in,
     const int pad) {
-	CUDA_KERNEL_LOOP(index, count) {
+  CUDA_KERNEL_LOOP(index, count) {
     int height_out = height_in + pad + pad;
     int width_out = width_in + pad + pad;
     int w = index % width_in;
@@ -111,9 +111,8 @@ __global__ void PaddingBackward(const int count, const Dtype* in, Dtype* out,
     int c = index % channel;
     index /= channel;
     out[((index * channel + c) * height_in + h) * width_in + w] =
-        in[((index * channel + c) * height_out + h + pad) * width_out + pad + w];
-	
-	}
+        in[((index * channel + c) * height_out + h + pad) * width_out + pad + w];	
+  }
 }
 
 template <typename Dtype>
