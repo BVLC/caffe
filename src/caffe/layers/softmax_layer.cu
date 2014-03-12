@@ -63,32 +63,29 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 __global__ void kernel_get_max(const int num, const int dim,
     const Dtype* data, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < num) {
+	CUDA_KERNEL_LOOP(index, num) {
     Dtype maxval = -FLT_MAX;
     for (int i = 0; i < dim; ++i) {
       maxval = max(data[index * dim + i], maxval);
     }
     out[index] = maxval;
-  }
+	}
 }
 
 template <typename Dtype>
 __global__ void kernel_softmax_div(const int num, const int dim,
     const Dtype* scale, Dtype* data) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < num * dim) {
-    int n = index / dim;
-    data[index] /= scale[n];
-  }
+	CUDA_KERNEL_LOOP(index, num * dim) {
+	  int n = index / dim;
+    data[index] /= scale[n];	
+	}
 }
 
 template <typename Dtype>
 __global__ void kernel_exp(const int num, const Dtype* data, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < num) {
-    out[index] = exp(data[index]);
-  }
+	CUDA_KERNEL_LOOP(index, num) {
+		out[index] = exp(data[index]);
+	}
 }
 
 template <typename Dtype>

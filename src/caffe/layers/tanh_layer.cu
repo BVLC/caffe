@@ -42,11 +42,10 @@ Dtype TanHLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 template <typename Dtype>
 __global__ void TanHForward(const int n, const Dtype* in, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+	CUDA_KERNEL_LOOP(index, n) {
     Dtype exp2x = exp(2*in[index]);
-    out[index] = (exp2x - Dtype(1))/(exp2x + Dtype(1));
-  }
+    out[index] = (exp2x - Dtype(1))/(exp2x + Dtype(1));	
+	}
 }
 
 template <typename Dtype>
@@ -67,12 +66,11 @@ void TanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 __global__ void TanHBackward(const int n, const Dtype* in_diff,
     const Dtype* in_data, Dtype* out_diff) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+	CUDA_KERNEL_LOOP(index, n) {
     Dtype exp2x = exp(2*in_data[index]);
     Dtype tanhx = (exp2x - Dtype(1))/(exp2x + Dtype(1));
     out_diff[index] = in_diff[index] * (1 - tanhx*tanhx);
-  }
+	}
 }
 
 template <typename Dtype>

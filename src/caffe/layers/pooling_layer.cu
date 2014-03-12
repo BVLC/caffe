@@ -16,8 +16,7 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, Dtype* top_data) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+	CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
@@ -34,7 +33,8 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
       }
     }
     top_data[index] = maxval;
-  }  // (if index < nthreads)
+
+	}
 }
 
 template <typename Dtype>
@@ -42,9 +42,8 @@ __global__ void AvePoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, Dtype* top_data) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
-    int pw = index % pooled_width;
+	CUDA_KERNEL_LOOP(index, nthreads) {
+  	int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
     int n = index / pooled_width / pooled_height / channels;
@@ -60,7 +59,8 @@ __global__ void AvePoolForward(const int nthreads, const Dtype* bottom_data,
       }
     }
     top_data[index] = aveval / (hend - hstart) / (wend - wstart);
-  }  // (if index < nthreads)
+		
+	}
 }
 
 template <typename Dtype>
@@ -69,8 +69,7 @@ __global__ void StoPoolForwardTrain(const int nthreads,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, float* rand_idx, Dtype* top_data) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+	CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
@@ -100,7 +99,7 @@ __global__ void StoPoolForwardTrain(const int nthreads,
         }
       }
     }
-  }  // (if index < nthreads)
+	}
 }
 
 
@@ -110,8 +109,7 @@ __global__ void StoPoolForwardTest(const int nthreads,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, Dtype* top_data) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+	CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
@@ -132,7 +130,8 @@ __global__ void StoPoolForwardTest(const int nthreads,
       }
     }
     top_data[index] = cumvalues / cumsum;
-  }  // (if index < nthreads)
+
+	}  
 }
 
 
@@ -183,8 +182,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, Dtype* bottom_diff) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+	CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
     int w = index % width;
@@ -207,7 +205,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* bottom_data,
       }
     }
     bottom_diff[index] = gradient;
-  }  // (if index < nthreads)
+	}
 }
 
 
@@ -216,8 +214,7 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, Dtype* bottom_diff) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+	CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
     int w = index % width;
@@ -239,7 +236,8 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
       }
     }
     bottom_diff[index] = gradient;
-  }  // (if index < nthreads)
+
+	}  
 }
 
 
@@ -249,9 +247,8 @@ __global__ void StoPoolBackward(const int nthreads,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, Dtype* bottom_diff) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
-    // find out the local index
+	CUDA_KERNEL_LOOP(index, nthreads) {
+		// find out the local index
     // find out the local offset
     int w = index % width;
     int h = (index / width) % height;
@@ -271,7 +268,7 @@ __global__ void StoPoolBackward(const int nthreads,
       }
     }
     bottom_diff[index] = gradient;
-  }  // (if index < nthreads)
+	}
 }
 
 
