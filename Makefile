@@ -44,6 +44,9 @@ NONGEN_CXX_SRCS := $(shell find \
 	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh")
 LINT_REPORT := $(BUILD_DIR)/cpp_lint.log
 FAILED_LINT_REPORT := $(BUILD_DIR)/cpp_lint.error_log
+# STITCHPYRAMID is for stitching multiresolution feature pyramids. (exclude test files)
+STITCHPYRAMID_SRC := $(shell find python/caffe/stitch_pyramid/build ! -name "test_*.cpp" -name "*.cpp")
+STITCHPYRAMID_HDRS := $(shell find python/caffe/stitch_pyramid/build -name "*.h")
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/py$(PROJECT).cpp
 PY$(PROJECT)_SO := python/$(PROJECT)/py$(PROJECT).so
