@@ -23,7 +23,7 @@ function pyra = convnet_featpyramid(imgFname, pyra_params)
     pyra = caffe('convnet_featpyramid', imgFname, pyra_params);
 
     % add DPM-style fields:
-    pyra.sbin = 16;
+    %pyra.sbin = 16;
     pyra.padx = pyra.feat_padx; % for DPM conventions
     pyra.pady = pyra.feat_pady;
     pyra.num_levels = length(pyra.scales);

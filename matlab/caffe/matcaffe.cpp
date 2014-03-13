@@ -441,13 +441,16 @@ static void convnet_featpyramid(MEX_ARGS) {
   float * const scale_ptr = (float*)(mxGetData(scale));
   for( uint32_t r = 0; r < ret_rows; ++r ) { scale_ptr[r] = patchwork.scales_[r]; }
 
+  int feat_padx = params.img_padding / sbin;
+  int feat_pady = params.img_padding / sbin;
+
   mxArray * ret = mxCreateStructMatrix( 1, 1, sizeof(fnames)/sizeof(char*), fnames ); // see fnames for field names
   mxSetFieldByNumber( ret, 0, 0, scale );
   mxSetFieldByNumber( ret, 0, 1, feats );
   mxSetFieldByNumber( ret, 0, 2, u32_to_mx( patchwork.imwidth_ ) );
   mxSetFieldByNumber( ret, 0, 3, u32_to_mx( patchwork.imheight_ ) );
-  mxSetFieldByNumber( ret, 0, 4, u32_to_mx( 1 ) );
-  mxSetFieldByNumber( ret, 0, 5, u32_to_mx( 1 ) );
+  mxSetFieldByNumber( ret, 0, 4, u32_to_mx( feat_padx ) );
+  mxSetFieldByNumber( ret, 0, 5, u32_to_mx( feat_pady ) );
   mxSetFieldByNumber( ret, 0, 6, u32_to_mx( sbin ) );
 
   plhs[0] = ret;

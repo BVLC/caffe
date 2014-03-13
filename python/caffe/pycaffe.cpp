@@ -419,8 +419,8 @@ printf("      forward plane: %f sec \n\n", time_forward);
     d["scales"] = scales_npy_boost;
     d["imwidth"] = patchwork.imwidth_; //input image dims
     d["imheight"] = patchwork.imheight_;
-    d["feat_padx"] = 1u; // placeholder
-    d["feat_pady"] = 1u; // placeholder
+    d["feat_padx"] = params.img_padding / sbin;
+    d["feat_pady"] = params.img_padding / sbin;
     d["sbin"] = sbin;
 
     return d;

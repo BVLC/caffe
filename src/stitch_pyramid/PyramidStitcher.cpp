@@ -28,6 +28,7 @@ Patchwork stitch_pyramid(string file, int img_minWidth, int img_minHeight,
     }
 
     int upsampleFactor = 2; //TODO: make this an input param?
+    //int upsampleFactor = 3;
 
   // Compute the downsample+stitch
     JPEGPyramid pyramid(image, padding, padding, interval, upsampleFactor); //multiscale DOWNSAMPLE with (padx == pady == padding)
