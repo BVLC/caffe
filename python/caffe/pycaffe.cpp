@@ -216,6 +216,10 @@ struct CaffeNet {
     }
   }
 
+  void ForwardPrefilled() {
+      net_->ForwardPrefilled();
+  }
+
   // The caffe::Caffe utility functions.
   void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
   void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
@@ -254,15 +258,16 @@ struct CaffeNet {
 BOOST_PYTHON_MODULE(pycaffe) {
   boost::python::class_<CaffeNet>(
       "CaffeNet", boost::python::init<string, string>())
-      .def("Forward",         &CaffeNet::Forward)
-      .def("Backward",        &CaffeNet::Backward)
-      .def("set_mode_cpu",    &CaffeNet::set_mode_cpu)
-      .def("set_mode_gpu",    &CaffeNet::set_mode_gpu)
-      .def("set_phase_train", &CaffeNet::set_phase_train)
-      .def("set_phase_test",  &CaffeNet::set_phase_test)
-      .def("set_device",      &CaffeNet::set_device)
-      .def("blobs",           &CaffeNet::blobs)
-      .def("params",          &CaffeNet::params);
+      .def("Forward",          &CaffeNet::Forward)
+      .def("ForwardPrefilled", &CaffeNet::ForwardPrefilled)
+      .def("Backward",         &CaffeNet::Backward)
+      .def("set_mode_cpu",     &CaffeNet::set_mode_cpu)
+      .def("set_mode_gpu",     &CaffeNet::set_mode_gpu)
+      .def("set_phase_train",  &CaffeNet::set_phase_train)
+      .def("set_phase_test",   &CaffeNet::set_phase_test)
+      .def("set_device",       &CaffeNet::set_device)
+      .def("blobs",            &CaffeNet::blobs)
+      .def("params",           &CaffeNet::params);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
       "CaffeBlob", boost::python::no_init)
