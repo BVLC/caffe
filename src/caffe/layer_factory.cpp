@@ -65,6 +65,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new SplitLayer<Dtype>(param);
   } else if (type == "tanh") {
     return new TanHLayer<Dtype>(param);
+  } else if (type == "window_data") {
+    return new WindowDataLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Unknown layer name: " << type;
   }
