@@ -91,6 +91,17 @@ message LayerParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
+
+  // For the Reshape Layer one need to specify the new dimensions
+  optional int32 new_num = 60 [default = 0];
+  optional int32 new_channels = 61 [default = 0];
+  optional int32 new_height = 62 [default = 0];
+  optional int32 new_width = 63 [default = 0];
+
+  // Used by ImageLayer to shuffle the list of files at every epoch it will also
+  // resize images if new_height or new_width are not zero
+  optional bool shuffle_images = 64 [default = false];
+
 }
 
 message LayerConnection {

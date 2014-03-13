@@ -377,6 +377,44 @@ class DataLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
 };
 
+// This function is used to create a pthread that prefetches the data.
+template <typename Dtype>
+void* ImagesLayerPrefetch(void* layer_pointer);
+
+template <typename Dtype>
+class ImagesLayer : public Layer<Dtype> {
+  // The function used to perform prefetching.
+ friend void* ImagesLayerPrefetch<Dtype>(void* layer_pointer);
+
+ public:
+  explicit ImagesLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~ImagesLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  vector<std::pair<std::string, int> > lines_;
+  int lines_id_;
+  int datum_channels_;
+  int datum_height_;
+  int datum_width_;
+  int datum_size_;
+  pthread_t thread_;
+  shared_ptr<Blob<Dtype> > prefetch_data_;
+  shared_ptr<Blob<Dtype> > prefetch_label_;
+  Blob<Dtype> data_mean_;
+};
+
 
 template <typename Dtype>
 class SoftmaxLayer : public Layer<Dtype> {
