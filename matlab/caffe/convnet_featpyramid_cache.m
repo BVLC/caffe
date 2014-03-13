@@ -6,8 +6,7 @@
 % to enable caching, you simply define 'pyra_params.feature_dir'
 
 % YOU MUST CALL caffe('init', ...) BEFORE RUNNING THIS.
-function pyra = convnet_featpyramid(imgFname, pyra_params, feature_dir)
-
+function pyra = convnet_featpyramid_cache(imgFname, pyra_params, feature_dir)
     %set defaults for params not passed by user
     if( ~exist('pyra_params') || ~isfield(pyra_params, 'interval') )
         pyra_params.interval = 5;
@@ -72,7 +71,11 @@ function pyra = try_cache(imgFname, pyra_params, cache_location)
     try
         load(cache_location); %contains pyra
         assert( exist('pyra') == 1 ); %make sure we actually loaded the pyramid.
-        assert( strcmp(pyra.im, imgFname) == 1 ) %make sure we got the right pyramid
+
+        [path basename_gold ext] = fileparts(imgFname);
+        [path basename_input ext] = fileparts(pyra.im);
+        assert( strcmp(basename_input, basename_gold) == 1 ) %make sure we got the right pyramid
+        %assert( strcmp(pyra.im, imgFname) == 1 ) %make sure we got the right pyramid
         display('      found cached features');
     catch
         pyra = [];   
