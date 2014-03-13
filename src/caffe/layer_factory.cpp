@@ -27,6 +27,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new ConvolutionLayer<Dtype>(param);
   } else if (type == "data") {
     return new DataLayer<Dtype>(param);
+  } else if (type == "images") {
+    return new ImagesLayer<Dtype>(param);
   } else if (type == "dropout") {
     return new DropoutLayer<Dtype>(param);
   } else if (type == "euclidean_loss") {
