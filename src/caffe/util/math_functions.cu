@@ -12,9 +12,8 @@ namespace caffe {
 template <typename Dtype>
 __global__ void mul_kernel(const int n, const Dtype* a,
     const Dtype* b, Dtype* y) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
-    y[index] = a[index] * b[index];
+  for(int i = blockIdx.x * blockDim.x + threadIdx.x; i < n; i += blockDim.x * gridDim.x) {
+    y[i] = a[i] * b[i];
   }
 }
 
