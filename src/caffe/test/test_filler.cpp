@@ -18,7 +18,7 @@ class ConstantFillerTest : public ::testing::Test {
   ConstantFillerTest()
       : blob_(new Blob<Dtype>(2, 3, 4, 5)),
         filler_param_() {
-    filler_param_.set_value(10.);
+    filler_param_.add_value(10.);
     filler_.reset(new ConstantFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
   };
@@ -35,9 +35,48 @@ TYPED_TEST(ConstantFillerTest, TestFill) {
   const int count = this->blob_->count();
   const TypeParam* data = this->blob_->cpu_data();
   for (int i = 0; i < count; ++i) {
-    EXPECT_GE(data[i], this->filler_param_.value());
+    EXPECT_EQ(data[i], this->filler_param_.value(0));
   }
 }
+
+template <typename Dtype>
+class ChannelConstantFillerTest : public ::testing::Test {
+ protected:
+  ChannelConstantFillerTest()
+      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+        filler_param_() {
+    filler_param_.add_value(1.0);
+    filler_param_.add_value(-6.5);
+    filler_param_.add_value(10.1);
+    filler_.reset(new ChannelConstantFiller<Dtype>(filler_param_));
+    filler_->Fill(blob_);
+  };
+  virtual ~ChannelConstantFillerTest() { delete blob_; }
+  Blob<Dtype>* const blob_;
+  FillerParameter filler_param_;
+  shared_ptr<ChannelConstantFiller<Dtype> > filler_;
+};
+
+TYPED_TEST_CASE(ChannelConstantFillerTest, Dtypes);
+
+TYPED_TEST(ChannelConstantFillerTest, TestFill) {
+  EXPECT_TRUE(this->blob_);
+  const int num = this->blob_->num();
+  const int channels = this->blob_->channels();
+  const int height = this->blob_->height();
+  const int width = this->blob_->width();
+  const TypeParam* data = this->blob_->cpu_data();
+  for (int c = 0; c < channels; ++c) {
+    TypeParam value = this->filler_param_.value(c);    
+    for (int n = 0; n < num; ++n) {
+      for (int h = 0; h < height; ++h) {
+        for (int w = 0; w < width; ++w) {
+          EXPECT_EQ(data[this->blob_->offset(n, c, h, w)],value);
+        }
+      }
+    }
+  }
+};
 
 
 template <typename Dtype>

@@ -37,10 +37,36 @@ class ConstantFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     const int count = blob->count();
-    const Dtype value = this->filler_param_.value();
+    const Dtype value = this->filler_param_.value(0);
     CHECK(count);
     for (int i = 0; i < count; ++i) {
       data[i] = value;
+    }
+  };
+};
+
+template <typename Dtype>
+class ChannelConstantFiller : public Filler<Dtype> {
+ public:
+  explicit ChannelConstantFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    const int num = blob->num();
+    const int channels = blob->channels();
+    const int height = blob->height();
+    const int width = blob->width();
+    CHECK_EQ(this->filler_param_.value_size(),blob->channels());
+    CHECK(channels);
+    Dtype* data = blob->mutable_cpu_data();
+    for (int c = 0; c < blob->channels(); ++c) {
+      Dtype value = this->filler_param_.value(c);
+      for (int n = 0; n < blob->num(); ++n) {
+        for (int h = 0; h < blob->height(); ++h) {
+          for (int w = 0; w < blob->width(); ++w) {
+            data[blob->offset(n, c, h, w)] = value;
+          }
+        }
+      }
     }
   };
 };
@@ -128,6 +154,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
   const std::string& type = param.type();
   if (type == "constant") {
     return new ConstantFiller<Dtype>(param);
+  } else if (type == "channelconstant") {
+    return new ChannelConstantFiller<Dtype>(param);    
   } else if (type == "gaussian") {
     return new GaussianFiller<Dtype>(param);
   } else if (type == "positive_unitball") {
