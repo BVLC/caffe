@@ -84,10 +84,10 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   }
   // go through the bottom and parameter blobs
   // LOG(ERROR) << "Checking " << blobs_to_check.size() << " blobs.";
-  for (int blobid = 0; blobid < blobs_to_check.size(); ++blobid) {
-    Blob<Dtype>* current_blob = blobs_to_check[blobid];
-    // LOG(ERROR) << "Blob " << blobid << ": checking " << current_blob->count()
-    //     << " parameters.";
+  for (int blob_id = 0; blob_id < blobs_to_check.size(); ++blob_id) {
+    Blob<Dtype>* current_blob = blobs_to_check[blob_id];
+    // LOG(ERROR) << "Blob " << blob_id << ": checking "
+    //     << current_blob->count() << " parameters.";
     // go through the values
     for (int feat_id = 0; feat_id < current_blob->count(); ++feat_id) {
       // First, obtain the original data
@@ -124,7 +124,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
             max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
         EXPECT_NEAR(computed_gradient, estimated_gradient, threshold_ * scale)
           << "debug: (top_id, top_data_id, blob_id, feat_id)="
-          << top_id << "," << top_data_id << "," << blobid << "," << feat_id;
+          << top_id << "," << top_data_id << "," << blob_id << "," << feat_id;
       }
       // LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
       // LOG(ERROR) << "computed gradient: " << computed_gradient
