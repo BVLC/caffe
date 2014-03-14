@@ -37,6 +37,8 @@ The following sections detail prerequisites and installation on Ubuntu. For OS X
 
 Caffe requires the CUDA NVCC compiler to compile its GPU code. To install CUDA, go to the [NVidia CUDA website](https://developer.nvidia.com/cuda-downloads) and follow installation instructions there. Caffe is verified to compile with both CUDA 5.0 and 5.5.
 
+N.B. one can install the CUDA libraries without the CUDA driver in order to build and run Caffe in CPU-only mode.
+
 Caffe also needs Intel MKL as the backend of its matrix computation and vectorized computations. We are in the process of removing MKL dependency, but for now you will need to have an MKL installation. You can obtain a [trial license](http://software.intel.com/en-us/intel-mkl) or an [academic license](http://software.intel.com/en-us/intel-education-offerings) (if you are a student).
 
 You will also need other packages, most of which can be installed via apt-get using:
