@@ -159,7 +159,7 @@ $(STITCHPYRAMID_SO): $(STITCHPYRAMID_HDRS) $(STITCHPYRAMID_SRC)
 py$(PROJECT): py
 
 py: init $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PROTO_GEN_PY) $(STITCHPYRAMID_SO) 
-	$(CXX) -shared -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) -L./src/stitch_pyramid -lPyramidStitcher -I./src/stitch_pyramid \
+	$(CXX) $(SHARED_LDFLAGS) -o $(PY$(PROJECT)_SO) $(PY$(PROJECT)_SRC) -L./src/stitch_pyramid -lPyramidStitcher -I./src/stitch_pyramid \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
 	@echo
 
