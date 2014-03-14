@@ -114,6 +114,43 @@ class CudaConvNetReader(object):
         pass
 
 
+class CudaConvNetWriter(object):
+    def __init__(self, net):
+        pass
+
+    def write_data(self, layer):
+        pass
+
+    def write_conv(self, layer):
+        pass
+
+    def write_pool(self, layer):
+        pass
+
+    def write_innerproduct(self, layer):
+        pass
+
+    def write_softmax_loss(self, layer):
+        pass
+
+    def write_softmax(self, layer):
+        pass
+
+    def write_multinomial_logistic_loss(self, layer):
+        pass
+
+    def write_relu(self, layer):
+        pass
+
+    def write_sigmoid(self, layer):
+        pass
+
+    def write_dropout(self, layer):
+        pass
+
+    def write_lrn(self, layer):
+        pass
+
 def cudaconv_to_prototxt(cudanet):
     netdict = CudaConvNetReader(cudanet, blobs=False).read()
     protobufnet = dict_to_protobuf(netdict)
