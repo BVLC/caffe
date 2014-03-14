@@ -103,13 +103,11 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       Caffe::set_random_seed(seed_);
       Dtype positive_objective = layer->Forward(*bottom, top);
       positive_objective += GetObjAndGradient(top, top_id, top_data_id);
-      layer->Backward(*top, true, bottom);
       // compute score by subtracting stepsize
       current_blob->mutable_cpu_data()[feat_id] -= stepsize_ * 2;
       Caffe::set_random_seed(seed_);
       Dtype negative_objective = layer->Forward(*bottom, top);
       negative_objective += GetObjAndGradient(top, top_id, top_data_id);
-      layer->Backward(*top, true, bottom);
       // Recover stepsize
       current_blob->mutable_cpu_data()[feat_id] += stepsize_;
       Dtype estimated_gradient = (positive_objective - negative_objective) /
