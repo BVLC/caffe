@@ -16,9 +16,7 @@ template <typename Dtype>
 Dtype SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   // The forward pass computes the softmax prob values.
-  softmax_bottom_vec_[0] = bottom[0];
-  softmax_layer_->Forward(softmax_bottom_vec_, &softmax_top_vec_);
-  return Dtype(0);
+  return Forward_cpu(bottom, top);
 }
 
 template <typename Dtype>
