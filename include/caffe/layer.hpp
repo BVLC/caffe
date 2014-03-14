@@ -34,12 +34,13 @@ class Layer {
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) = 0;
 
+
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
   // functions.
-  inline void Forward(const vector<Blob<Dtype>*>& bottom,
+  inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  inline Dtype Backward(const vector<Blob<Dtype>*>& top,
+  inline void Backward(const vector<Blob<Dtype>*>& top,
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
@@ -60,26 +61,26 @@ class Layer {
   vector<shared_ptr<Blob<Dtype> > > blobs_;
 
   // Forward functions
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) = 0;
   // If no gpu code is provided, we will simply use cpu code.
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
     // LOG(WARNING) << "Using CPU code as backup.";
-    Forward_cpu(bottom, top);
+    return Forward_cpu(bottom, top);
   }
 
   // Backward functions: the backward function will compute the gradients for
   // any parameters and also for the bottom blobs if propagate_down is true.
   // It will return the loss produced from this layer.
-  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom) = 0;
-  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom) {
     // LOG(WARNING) << "Using CPU code as backup.";
-    return Backward_cpu(top, propagate_down, bottom);
+    Backward_cpu(top, propagate_down, bottom);
   }
 
   DISABLE_COPY_AND_ASSIGN(Layer);
@@ -89,29 +90,30 @@ class Layer {
 // gpu specific implementations instead, and should not change these
 // functions.
 template <typename Dtype>
-inline void Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    Forward_cpu(bottom, top);
-    break;
+    return Forward_cpu(bottom, top);
   case Caffe::GPU:
-    Forward_gpu(bottom, top);
-    break;
+    return Forward_gpu(bottom, top);
   default:
     LOG(FATAL) << "Unknown caffe mode.";
+    return Dtype(0);
   }
 }
 
 template <typename Dtype>
-inline Dtype Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    return Backward_cpu(top, propagate_down, bottom);
+    Backward_cpu(top, propagate_down, bottom);
+    break;
   case Caffe::GPU:
-    return Backward_gpu(top, propagate_down, bottom);
+    Backward_gpu(top, propagate_down, bottom);
+    break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }

@@ -213,7 +213,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
@@ -225,12 +225,6 @@ void DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Start a new prefetch thread
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
-}
-
-// The backward operations are dummy - they do not carry any computation.
-template <typename Dtype>
-Dtype DataLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   return Dtype(0.);
 }
 
