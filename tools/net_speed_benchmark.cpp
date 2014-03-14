@@ -58,9 +58,11 @@ int main(int argc, char** argv) {
   LOG(ERROR) << "Performing Forward";
   // Note that for the speed benchmark, we will assume that the network does
   // not take any input blobs.
-  caffe_net.Forward(vector<Blob<float>*>());
+  float initial_loss;
+  caffe_net.Forward(vector<Blob<float>*>(), &initial_loss);
+  LOG(ERROR) << "Initial loss: " << initial_loss;
   LOG(ERROR) << "Performing Backward";
-  LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
+  caffe_net.Backward();
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
