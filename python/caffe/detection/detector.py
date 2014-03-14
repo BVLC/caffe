@@ -371,12 +371,12 @@ if __name__ == "__main__":
   # Optional arguments.
   parser.add_argument(
     "--model_def",
-    default="examples/imagenet_deploy.prototxt",
+    default="../../../models/imagenet.prototxt",
     help="Model definition file."
   )
   parser.add_argument(
     "--pretrained_model",
-    default="examples/caffe_reference_imagenet_model",
+    default="../../../models/caffe_reference_imagenet_model",
     help="Trained model weights file."
   )
   parser.add_argument(

@@ -1,6 +1,6 @@
 function scores = matcaffe_demo(im, use_gpu)
 % scores = matcaffe_demo(im, use_gpu)
-% 
+%
 % Demo of the matlab wrapper using the ILSVRC network.
 %
 % input
@@ -20,9 +20,9 @@ function scores = matcaffe_demo(im, use_gpu)
 %  scores = matcaffe_demo(im, 1);
 %  [score, class] = max(scores);
 
-model_def_file = '../../examples/imagenet_deploy.prototxt';
+model_def_file = '../../models/imagenet.prototxt';
 % NOTE: you'll have to get the pre-trained ILSVRC network
-model_file = '../../examples/alexnet_train_iter_470000';
+model_file = '../../models/caffe_reference_imagenet_model';
 
 % init caffe network (spews logging info)
 caffe('init', model_def_file, model_file);
