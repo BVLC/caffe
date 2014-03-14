@@ -48,8 +48,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // Compute the diff
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   const Dtype* prob_data = prob_.cpu_data();
-  const Dtype* label = (*bottom)[1]->cpu_data();
   memcpy(bottom_diff, prob_data, sizeof(Dtype) * prob_.count());
+  const Dtype* label = (*bottom)[1]->cpu_data();
   int num = prob_.num();
   int dim = prob_.count() / num;
   for (int i = 0; i < num; ++i) {
