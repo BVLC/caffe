@@ -7,8 +7,8 @@ message BlobProto {
   optional int32 channels = 2 [default = 0];
   optional int32 height = 3 [default = 0];
   optional int32 width = 4 [default = 0];
-  repeated float data = 5 [packed=true];
-  repeated float diff = 6 [packed=true];
+  repeated float data = 5 [packed = true];
+  repeated float diff = 6 [packed = true];
 }
 
 // The BlobProtoVector is simply a way to pass multiple blobproto instances
@@ -69,7 +69,7 @@ message LayerParameter {
   // For data pre-processing, we can do simple scaling and subtracting the
   // data mean, if provided. Note that the mean subtraction is always carried
   // out before scaling.
-  optional float scale = 17 [ default = 1 ];
+  optional float scale = 17 [default = 1];
   optional string meanfile = 18;
   // For data layers, specify the batch size.
   optional uint32 batchsize = 19;
@@ -90,7 +90,7 @@ message LayerParameter {
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
-  optional uint32 rand_skip = 53 [ default = 0 ];
+  optional uint32 rand_skip = 53 [default = 0];
 
   // Fields related to detection (det_*)
   // foreground (object) overlap threshold
@@ -151,16 +151,16 @@ message NetParameter {
   // Whether the network will force every layer to carry out backward operation.
   // If set False, then whether to carry out backward is determined
   // automatically according to the net structure and learning rates.
-  optional bool force_backward = 5 [ default = false ];
+  optional bool force_backward = 5 [default = false];
 }
 
 message SolverParameter {
   optional string train_net = 1; // The proto file for the training net.
   optional string test_net = 2; // The proto file for the testing net.
   // The number of iterations for each testing phase.
-  optional int32 test_iter = 3 [ default = 0 ];
+  optional int32 test_iter = 3 [default = 0];
   // The number of iterations between two testing phases.
-  optional int32 test_interval = 4 [ default = 0 ];
+  optional int32 test_interval = 4 [default = 0];
   optional float base_lr = 5; // The base learning rate
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
@@ -176,10 +176,10 @@ message SolverParameter {
   optional string snapshot_prefix = 15; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.
-  optional bool snapshot_diff = 16 [ default = false];
+  optional bool snapshot_diff = 16 [default = false];
   // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
   optional int32 solver_mode = 17 [default = 1];
-  // the device_id will that be used in GPU mode. Use device_id=0 in default.
+  // the device_id will that be used in GPU mode. Use device_id = 0 in default.
   optional int32 device_id = 18 [default = 0];
 }
 
