@@ -172,6 +172,18 @@ mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC) $(STITCHPYRAMID_SO)
 		-o $(MAT$(PROJECT)_SO)
 	@echo
 
+mkoctfile_mat$(PROJECT): mkoctfile_mat
+
+#	CXXFLAGS="-Wall -fpic -O2" mkoctfile --mex matlab/caffe/matcaffe.cpp libcaffe.a -pthread -I/usr/local/include -I/usr/include/python2.7 -I/usr/local/lib/python2.7/dist-packages/numpy/core/include -I./src -I./include -I/usr/local/cuda/include -I/opt/intel/mkl/include -Wall -L/usr/lib -L/usr/local/lib -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -L/opt/intel/mkl/lib -L/opt/intel/mkl/lib/intel64 -lcudart -lcublas -lcurand -lprotobuf -lopencv_core -lopencv_highgui -lglog -lmkl_rt -lmkl_intel_thread -lleveldb -lsnappy -lpthread -lboost_system -lopencv_imgproc -L/home/moskewcz/git_work/caffe/python/caffe/stitch_pyramid -lPyramidStitcher -I./python/caffe -o matlab/caffe/caffe
+
+
+mkoctfile_mat: init $(STATIC_NAME) $(MAT$(PROJECT)_SRC) $(STITCHPYRAMID_SO)
+	CXXFLAGS="$$CXXFLAGS $(CXXFLAGS)" \
+	DL_LDFLAGS="$$DL_LDFLAGS $(SHARED_LDFLAGS)" \
+	LFLAGS="$$LFLAGS $(LDFLAGS) -L./src/stitch_pyramid -lPyramidStitcher" \
+	mkoctfile --mex -g -v $(MAT$(PROJECT)_SRC) $(STATIC_NAME) -o $(MAT$(PROJECT)_SO)
+	@echo
+
 $(NAME): init $(PROTO_OBJS) $(OBJS)
 	$(CXX) -shared -o $(NAME) $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@echo
