@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../../python/')
+import os
 from caffe import pycaffe
 from caffe.proto import caffe_pb2
 from google.protobuf import text_format
@@ -8,6 +9,7 @@ import cPickle as pickle
 class CudaConvNetReader(object):
     def __init__(self, net, blobs=False):
         self.net = pickle.load(open(net))
+        self.name = os.path.basename(net)
 
     neurontypemap = {'relu': 'relu',
                      'logistic': 'sigmoid',
@@ -26,13 +28,13 @@ class CudaConvNetReader(object):
 
             layerconnection = {}
             layerconnection['layer'] = readfn(layer)
-            layerconnection['top'] = [""]
-            layerconnection['bottom'] = [""]
+            layerconnection['top'] = [layer['name']]
+            layerconnection['bottom'] = [l['name'] for l in layer.get('inputLayers', [])]
 
             layers.append(layerconnection)
 
-        return {'layers': layers}
-        return layers
+        return {'name': self.name, 
+                'layers': layers}
 
     def read_data(self, layer):
         return {'type': 'data',
@@ -111,6 +113,7 @@ class CudaConvNetReader(object):
     def read_cnorm(self, layer):
         pass
 
+
 def cudaconv_to_prototxt(cudanet):
     netdict = CudaConvNetReader(cudanet, blobs=False).read()
     protobufnet = dict_to_protobuf(netdict)
@@ -121,7 +124,9 @@ def cudaconv_to_prototxt(cudanet):
 
 def list_to_protobuf(values, message):
     '''parse list to protobuf message'''
-    if isinstance(values[0],dict):#value needs to be further parsed
+    if values == []:
+        pass
+    elif isinstance(values[0],dict):#value needs to be further parsed
         for v in values:
             cmd = message.add()
             dict_to_protobuf(v,cmd)
