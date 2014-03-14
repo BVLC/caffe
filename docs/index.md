@@ -30,7 +30,7 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 Quick Links
 -----------
 
-* [Presentation](https://docs.google.com/presentation/d/1lzyXMRQFlOYE2Jy0lCNaqltpcCIKuRzKJxQ7vCuPRc8/edit?usp=sharing): Presentation on Caffe at the UC Berkeley Vision Group meeting.
+* [Presentation](caffe-presentation.pdf): The Caffe presentation, *updated 03/14*.
 * [Installation](installation.html): Instructions on installing Caffe (tested on Ubuntu 12.04, but works on Red Hat, OS X, etc.).
 * [Development](development.html): Guidelines for development and contributing to Caffe.
 * [MNIST Demo](mnist.html): example of end-to-end training and testing on the MNIST data.
