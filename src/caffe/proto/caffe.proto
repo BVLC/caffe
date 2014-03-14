@@ -38,6 +38,63 @@ message FillerParameter {
   optional float std = 6 [default = 1]; // the std value in gaussian filler
 }
 
+message LayerConnection {
+  optional LayerParameter layer = 1; // the layer parameter
+  repeated string bottom = 2; // the name of the bottom blobs
+  repeated string top = 3; // the name of the top blobs
+}
+
+message NetParameter {
+  optional string name = 1; // consider giving the network a name
+  repeated LayerConnection layers = 2; // a bunch of layers.
+  // The input blobs to the network.
+  repeated string input = 3;
+  // The dim of the input blobs. For each input blob there should be four
+  // values specifying the num, channels, height and width of the input blob.
+  // Thus, there should be a total of (4 * #input) numbers.
+  repeated int32 input_dim = 4;
+  // Whether the network will force every layer to carry out backward operation.
+  // If set False, then whether to carry out backward is determined
+  // automatically according to the net structure and learning rates.
+  optional bool force_backward = 5 [default = false];
+}
+
+message SolverParameter {
+  optional string train_net = 1; // The proto file for the training net.
+  optional string test_net = 2; // The proto file for the testing net.
+  // The number of iterations for each testing phase.
+  optional int32 test_iter = 3 [default = 0];
+  // The number of iterations between two testing phases.
+  optional int32 test_interval = 4 [default = 0];
+  optional float base_lr = 5; // The base learning rate
+  // the number of iterations between displaying info. If display = 0, no info
+  // will be displayed.
+  optional int32 display = 6;
+  optional int32 max_iter = 7; // the maximum number of iterations
+  optional string lr_policy = 8; // The learning rate decay policy.
+  optional float gamma = 9; // The parameter to compute the learning rate.
+  optional float power = 10; // The parameter to compute the learning rate.
+  optional float momentum = 11; // The momentum value.
+  optional float weight_decay = 12; // The weight decay.
+  optional int32 stepsize = 13; // the stepsize for learning rate policy "step"
+  optional int32 snapshot = 14 [default = 0]; // The snapshot interval
+  optional string snapshot_prefix = 15; // The prefix for the snapshot.
+  // whether to snapshot diff in the results or not. Snapshotting diff will help
+  // debugging but the final protocol buffer size will be much larger.
+  optional bool snapshot_diff = 16 [default = false];
+  // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
+  optional int32 solver_mode = 17 [default = 1];
+  // the device_id will that be used in GPU mode. Use device_id = 0 in default.
+  optional int32 device_id = 18 [default = 0];
+}
+
+// A message that stores the solver snapshots
+message SolverState {
+  optional int32 iter = 1; // The current iteration
+  optional string learned_net = 2; // The file that stores the learned net.
+  repeated BlobProto history = 3; // The history for sgd solvers
+}
+
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the string to specify the layer type
@@ -68,9 +125,9 @@ message DataParameter {
   optional float scale = 2 [default = 1];
   optional string meanfile = 3;
   // Specify the batch size.
-  optional uint32 batchsize = 4;
+  optional uint32 batch_size = 4;
   // Specify if we would like to randomly crop an image.
-  optional uint32 cropsize = 5 [default = 0];
+  optional uint32 crop_size = 5 [default = 0];
   // Specify if we want to randomly mirror data.
   optional bool mirror = 6 [default = false];
   // The rand_skip variable is for the data layer to skip a few data points
@@ -143,61 +200,4 @@ message WindowDataParameter {
 
 message HDF5OutputParameter {
   optional string file_name = 1;
-}
-
-message LayerConnection {
-  optional LayerParameter layer = 1; // the layer parameter
-  repeated string bottom = 2; // the name of the bottom blobs
-  repeated string top = 3; // the name of the top blobs
-}
-
-message NetParameter {
-  optional string name = 1; // consider giving the network a name
-  repeated LayerConnection layers = 2; // a bunch of layers.
-  // The input blobs to the network.
-  repeated string input = 3;
-  // The dim of the input blobs. For each input blob there should be four
-  // values specifying the num, channels, height and width of the input blob.
-  // Thus, there should be a total of (4 * #input) numbers.
-  repeated int32 input_dim = 4;
-  // Whether the network will force every layer to carry out backward operation.
-  // If set False, then whether to carry out backward is determined
-  // automatically according to the net structure and learning rates.
-  optional bool force_backward = 5 [default = false];
-}
-
-message SolverParameter {
-  optional string train_net = 1; // The proto file for the training net.
-  optional string test_net = 2; // The proto file for the testing net.
-  // The number of iterations for each testing phase.
-  optional int32 test_iter = 3 [default = 0];
-  // The number of iterations between two testing phases.
-  optional int32 test_interval = 4 [default = 0];
-  optional float base_lr = 5; // The base learning rate
-  // the number of iterations between displaying info. If display = 0, no info
-  // will be displayed.
-  optional int32 display = 6;
-  optional int32 max_iter = 7; // the maximum number of iterations
-  optional string lr_policy = 8; // The learning rate decay policy.
-  optional float gamma = 9; // The parameter to compute the learning rate.
-  optional float power = 10; // The parameter to compute the learning rate.
-  optional float momentum = 11; // The momentum value.
-  optional float weight_decay = 12; // The weight decay.
-  optional int32 stepsize = 13; // the stepsize for learning rate policy "step"
-  optional int32 snapshot = 14 [default = 0]; // The snapshot interval
-  optional string snapshot_prefix = 15; // The prefix for the snapshot.
-  // whether to snapshot diff in the results or not. Snapshotting diff will help
-  // debugging but the final protocol buffer size will be much larger.
-  optional bool snapshot_diff = 16 [default = false];
-  // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
-  optional int32 solver_mode = 17 [default = 1];
-  // the device_id will that be used in GPU mode. Use device_id = 0 in default.
-  optional int32 device_id = 18 [default = 0];
-}
-
-// A message that stores the solver snapshots
-message SolverState {
-  optional int32 iter = 1; // The current iteration
-  optional string learned_net = 2; // The file that stores the learned net.
-  repeated BlobProto history = 3; // The history for sgd solvers
 }
