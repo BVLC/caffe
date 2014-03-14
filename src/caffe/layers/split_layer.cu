@@ -9,7 +9,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void SplitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype SplitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   for (int i = 0; i < top->size(); ++i) {
@@ -19,10 +19,11 @@ void SplitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* top_data = (*top)[i]->mutable_gpu_data();
     caffe_gpu_copy(count_, bottom_data, top_data);
   }
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
     const Dtype* top_diff = top[0]->gpu_diff();
@@ -39,7 +40,6 @@ Dtype SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       caffe_gpu_axpy(count_, Dtype(1.), top_diff, bottom_diff);
     }
   }
-  return Dtype(0.);
 }
 
 

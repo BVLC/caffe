@@ -23,7 +23,7 @@ void DropoutLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -39,10 +39,11 @@ void DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   } else {
     memcpy(top_data, bottom_data, bottom[0]->count() * sizeof(Dtype));
   }
+  return Dtype(0);
 }
 
 template <typename Dtype>
-Dtype DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   CHECK(Caffe::phase() == Caffe::TRAIN);
@@ -55,7 +56,6 @@ Dtype DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       bottom_diff[i] = top_diff[i] * mask[i] * scale_;
     }
   }
-  return Dtype(0);
 }
 
 
