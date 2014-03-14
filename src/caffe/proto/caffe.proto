@@ -38,15 +38,9 @@ message FillerParameter {
   optional float std = 6 [default = 1]; // the std value in gaussian filler
 }
 
-message LayerConnection {
-  optional LayerParameter layer = 1; // the layer parameter
-  repeated string bottom = 2; // the name of the bottom blobs
-  repeated string top = 3; // the name of the top blobs
-}
-
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  repeated LayerConnection layers = 2; // a bunch of layers.
+  repeated LayerParameter layers = 2; // a bunch of layers.
   // The input blobs to the network.
   repeated string input = 3;
   // The dim of the input blobs. For each input blob there should be four
@@ -98,22 +92,24 @@ message SolverState {
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the string to specify the layer type
+  repeated string bottom = 3; // the name of the bottom blobs
+  repeated string top = 4; // the name of the top blobs
 
   // The blobs containing the numeric parameters of the layer
-  repeated BlobProto blobs = 3;
+  repeated BlobProto blobs = 5;
   // The ratio that is multiplied on the global learning rate. If you want to
   // set the learning ratio for one blob, you need to set it for all blobs.
-  repeated float blobs_lr = 4;
+  repeated float blobs_lr = 6;
   // The weight decay that is multiplied on the global weight decay.
-  repeated float weight_decay = 5;
+  repeated float weight_decay = 7;
 
   // Parameters for particular layer types.
-  optional DataParameter data_param = 6;
-  optional InnerProductParameter inner_product_param = 7;
-  optional ConvolutionParameter convolution_param = 8;
-  optional PoolParameter pool_param = 9;
-  optional DropoutParameter dropout_param = 10;
-  optional LRNParameter lrn_param = 11;
+  optional DataParameter data_param = 8;
+  optional InnerProductParameter inner_product_param = 9;
+  optional ConvolutionParameter convolution_param = 10;
+  optional PoolParameter pool_param = 11;
+  optional DropoutParameter dropout_param = 12;
+  optional LRNParameter lrn_param = 13;
 }
 
 message DataParameter {
