@@ -87,6 +87,8 @@ make runtest</code></pre>
 
 <p>Caffe requires the CUDA NVCC compiler to compile its GPU code. To install CUDA, go to the <a href="https://developer.nvidia.com/cuda-downloads">NVidia CUDA website</a> and follow installation instructions there. Caffe is verified to compile with both CUDA 5.0 and 5.5.</p>
 
+<p>N.B. one can install the CUDA libraries without the CUDA driver in order to build and run Caffe in CPU-only mode.</p>
+
 <p>Caffe also needs Intel MKL as the backend of its matrix computation and vectorized computations. We are in the process of removing MKL dependency, but for now you will need to have an MKL installation. You can obtain a <a href="http://software.intel.com/en-us/intel-mkl">trial license</a> or an <a href="http://software.intel.com/en-us/intel-education-offerings">academic license</a> (if you are a student).</p>
 
 <p>You will also need other packages, most of which can be installed via apt-get using:</p>
