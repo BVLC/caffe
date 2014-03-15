@@ -207,26 +207,18 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 }
 
 template <typename Dtype>
-const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled() {
-  Dtype ignored_loss;
-  return ForwardPrefilled(&ignored_loss);
-}
-
-template <typename Dtype>
 const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled(Dtype* loss) {
-  *loss = Dtype(0.);
+  if (loss != NULL) {
+    *loss = Dtype(0.);
+  }
   for (int i = 0; i < layers_.size(); ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
-    *loss += layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
+    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
+    if (loss != NULL) {
+      *loss += layer_loss;
+    }
   }
   return net_output_blobs_;
-}
-
-template <typename Dtype>
-const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
-    const vector<Blob<Dtype>*> & bottom) {
-  Dtype ignored_loss;
-  return Forward(bottom, &ignored_loss);
 }
 
 template <typename Dtype>
