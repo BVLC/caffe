@@ -18,7 +18,7 @@ void insert_splits(const NetParameter& param, NetParameter* param_split);
 
 void configure_split_layer(const string& layer_name, const string& blob_name,
     const int blob_idx, const int split_count,
-    LayerConnection* split_layer_connection);
+    LayerParameter* split_layer_param);
 
 string get_split_layer_name(const string& layer_name, const string& blob_name,
     const int blob_idx);

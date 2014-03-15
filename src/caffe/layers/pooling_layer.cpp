@@ -18,8 +18,8 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1) << "PoolingLayer takes a single blob as input.";
   CHECK_EQ(top->size(), 1) << "PoolingLayer takes a single blob as output.";
-  KSIZE_ = this->layer_param_.kernelsize();
-  STRIDE_ = this->layer_param_.stride();
+  KSIZE_ = this->layer_param_.pooling_param().kernel_size();
+  STRIDE_ = this->layer_param_.pooling_param().stride();
   CHANNELS_ = bottom[0]->channels();
   HEIGHT_ = bottom[0]->height();
   WIDTH_ = bottom[0]->width();
@@ -30,7 +30,8 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   (*top)[0]->Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
       POOLED_WIDTH_);
   // If stochastic pooling, we will initialize the random index part.
-  if (this->layer_param_.pool() == LayerParameter_PoolMethod_STOCHASTIC) {
+  if (this->layer_param_.pooling_param().pool() ==
+      PoolingParameter_PoolMethod_STOCHASTIC) {
     rand_idx_.Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
       POOLED_WIDTH_);
   }
@@ -46,8 +47,8 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
   int top_count = (*top)[0]->count();
-  switch (this->layer_param_.pool()) {
-  case LayerParameter_PoolMethod_MAX:
+  switch (this->layer_param_.pooling_param().pool()) {
+  case PoolingParameter_PoolMethod_MAX:
     // Initialize
     for (int i = 0; i < top_count; ++i) {
       top_data[i] = -FLT_MAX;
@@ -76,7 +77,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
     break;
-  case LayerParameter_PoolMethod_AVE:
+  case PoolingParameter_PoolMethod_AVE:
     for (int i = 0; i < top_count; ++i) {
       top_data[i] = 0;
     }
@@ -105,7 +106,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
     break;
-  case LayerParameter_PoolMethod_STOCHASTIC:
+  case PoolingParameter_PoolMethod_STOCHASTIC:
     NOT_IMPLEMENTED;
     break;
   default:
@@ -127,8 +128,8 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
   memset(bottom_diff, 0, (*bottom)[0]->count() * sizeof(Dtype));
-  switch (this->layer_param_.pool()) {
-  case LayerParameter_PoolMethod_MAX:
+  switch (this->layer_param_.pooling_param().pool()) {
+  case PoolingParameter_PoolMethod_MAX:
     // The main loop
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < CHANNELS_; ++c) {
@@ -156,7 +157,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
     break;
-  case LayerParameter_PoolMethod_AVE:
+  case PoolingParameter_PoolMethod_AVE:
     // The main loop
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < CHANNELS_; ++c) {
@@ -183,7 +184,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
     break;
-  case LayerParameter_PoolMethod_STOCHASTIC:
+  case PoolingParameter_PoolMethod_STOCHASTIC:
     NOT_IMPLEMENTED;
     break;
   default:

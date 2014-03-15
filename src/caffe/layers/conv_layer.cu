@@ -31,7 +31,7 @@ Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
     }
     // third, add bias
-    if (biasterm_) {
+    if (bias_term_) {
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, NUM_OUTPUT_,
           N_, 1, (Dtype)1., this->blobs_[1]->gpu_data(),
           reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
@@ -54,7 +54,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
 
-  if (biasterm_) {
+  if (bias_term_) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
     CUDA_CHECK(cudaMemset(bias_diff, 0,
         sizeof(Dtype) * this->blobs_[1]->count()));

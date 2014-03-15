@@ -15,7 +15,7 @@ void ConcatLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     "Concat Layer takes at least two blobs as input.";
   CHECK_EQ(top->size(), 1) <<
     "Concat Layer takes a single blob as output.";
-  concat_dim_ = this->layer_param_.concat_dim();
+  concat_dim_ = this->layer_param_.concat_param().concat_dim();
   CHECK_GE(concat_dim_, 0) << "concat_dim should be >= 0";
   CHECK_LE(concat_dim_, 1) <<
     "For now concat_dim <=1, it can only concat num and channels";
