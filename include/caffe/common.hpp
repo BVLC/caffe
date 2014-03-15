@@ -18,8 +18,8 @@
 #define CURAND_CHECK(condition) CHECK_EQ((condition), CURAND_STATUS_SUCCESS)
 #define VSL_CHECK(condition) CHECK_EQ((condition), VSL_STATUS_OK)
 
-#define CUDA_KERNEL_LOOP(tid, nthreads) \
-  for(int tid = blockIdx.x * blockDim.x + threadIdx.x; tid < (nthreads);  tid += blockDim.x * gridDim.x)
+#define CUDA_KERNEL_LOOP(tid, ndata) \
+  for(int tid = blockIdx.x * blockDim.x + threadIdx.x; tid < (ndata);  tid += blockDim.x * gridDim.x)
   
 // After a kernel is executed, this will check the error and if there is one,
 // exit loudly.
