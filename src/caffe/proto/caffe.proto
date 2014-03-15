@@ -123,7 +123,7 @@ message DataParameter {
   // data mean, if provided. Note that the mean subtraction is always carried
   // out before scaling.
   optional float scale = 2 [default = 1];
-  optional string meanfile = 3;
+  optional string mean_file = 3;
   // Specify the batch size.
   optional uint32 batch_size = 4;
   // Specify if we would like to randomly crop an image.

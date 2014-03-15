@@ -253,14 +253,10 @@ $(PROTO_GEN_PY): $(PROTO_SRCS)
 
 proto: $(PROTO_GEN_CC) $(DEPRECATED_PROTO_GEN_CC)
 
-$(PROTO_GEN_CC): $(PROTO_SRCS)
-	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS)
+$(PROTO_GEN_CC): $(PROTO_SRCS) $(DEPRECATED_PROTO_SRCS)
+	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS) $(DEPRECATED_PROTO_SRCS)
 	mkdir -p include/$(PROJECT)/proto
 	cp $(PROTO_GEN_HEADER) include/$(PROJECT)/proto/
-	@echo
-
-$(DEPRECATED_PROTO_GEN_CC): $(DEPRECATED_PROTO_SRCS)
-	protoc --proto_path=src --cpp_out=src $(DEPRECATED_PROTO_SRCS)
 	mkdir -p include/$(PROJECT)/proto/deprecated
 	cp $(DEPRECATED_PROTO_GEN_HEADER) include/$(PROJECT)/proto/deprecated/
 	@echo
