@@ -51,6 +51,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       layer_param->set_name(v0_layer_param.name());
     }
     const string& type = v0_layer_param.type();
+    if (v0_layer_param.has_type()) {
+      layer_param->set_type(type);
+    }
     if (v0_layer_param.has_num_output()) {
       if (type == "conv") {
         layer_param->mutable_convolution_param()->set_num_output(
@@ -135,15 +138,15 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       if (type == "pool") {
         V0LayerParameter_PoolMethod pool = v0_layer_param.pool();
         switch (pool) {
-        V0LayerParameter_PoolMethod_MAX:
+        case V0LayerParameter_PoolMethod_MAX:
           layer_param->mutable_pooling_param()->set_pool(
               PoolingParameter_PoolMethod_MAX);
           break;
-        V0LayerParameter_PoolMethod_AVE:
+        case V0LayerParameter_PoolMethod_AVE:
           layer_param->mutable_pooling_param()->set_pool(
               PoolingParameter_PoolMethod_AVE);
           break;
-        V0LayerParameter_PoolMethod_STOCHASTIC:
+        case V0LayerParameter_PoolMethod_STOCHASTIC:
           layer_param->mutable_pooling_param()->set_pool(
               PoolingParameter_PoolMethod_STOCHASTIC);
           break;
