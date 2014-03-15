@@ -86,7 +86,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
-  for (int n = 0; n < NUM_; ++n) {
+  for (int n = 0; n < bottom[0]->num(); ++n) {
     // First, im2col
     im2col_cpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
                       WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
@@ -122,7 +122,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (biasterm_) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();
     memset(bias_diff, 0, sizeof(Dtype) * this->blobs_[1]->count());
-    for (int n = 0; n < NUM_; ++n) {
+    for (int n = 0; n < top[0]->num(); ++n) {
       caffe_cpu_gemv<Dtype>(CblasNoTrans, NUM_OUTPUT_, N_,
           1., top_diff + top[0]->offset(n),
           reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), 1.,
@@ -134,7 +134,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
   memset(weight_diff, 0, sizeof(Dtype) * this->blobs_[0]->count());
-  for (int n = 0; n < NUM_; ++n) {
+  for (int n = 0; n < top[0]->num(); ++n) {
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
     im2col_cpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,

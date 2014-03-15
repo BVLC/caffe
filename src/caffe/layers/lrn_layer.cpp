@@ -33,8 +33,9 @@ void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
+  size_t scale_count = scale_.count() / scale_.num() * bottom[0]->num();
   // start with the constant value
-  for (int i = 0; i < scale_.count(); ++i) {
+  for (int i = 0; i < scale_count; ++i) {
     scale_data[i] = 1.;
   }
   Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);
@@ -42,7 +43,7 @@ void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   memset(padded_square_data, 0, sizeof(Dtype) * padded_square.count());
   Dtype alpha_over_size = alpha_ / size_;
   // go through the images
-  for (int n = 0; n < num_; ++n) {
+  for (int n = 0; n < bottom[0]->num(); ++n) {
     // compute the padded square
     caffe_sqr(channels_ * height_ * width_,
         bottom_data + bottom[0]->offset(n),
@@ -70,8 +71,8 @@ void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // In the end, compute output
-  caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
-  caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
+  caffe_powx<Dtype>(scale_count, scale_data, -beta_, top_data);
+  caffe_mul<Dtype>(scale_count, top_data, bottom_data, top_data);
 }
 
 template <typename Dtype>
@@ -91,12 +92,13 @@ Dtype LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   memset(padded_ratio_data, 0, sizeof(Dtype) * padded_ratio.count());
   Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
 
-  caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
-  caffe_mul<Dtype>(scale_.count(), top_diff, bottom_diff, bottom_diff);
+  size_t scale_count = scale_.count() / scale_.num() * top[0]->num();
+  caffe_powx<Dtype>(scale_count, scale_data, -beta_, bottom_diff);
+  caffe_mul<Dtype>(scale_count, top_diff, bottom_diff, bottom_diff);
 
   // go through individual data
   int inverse_pre_pad = size_ - (size_ + 1) / 2;
-  for (int n = 0; n < num_; ++n) {
+  for (int n = 0; n < top[0]->num(); ++n) {
     int block_offset = scale_.offset(n);
     // first, compute diff_i * y_i / s_i
     caffe_mul<Dtype>(channels_ * height_ * width_,

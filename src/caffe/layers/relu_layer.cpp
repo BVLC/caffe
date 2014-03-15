@@ -1,12 +1,14 @@
 // Copyright 2013 Yangqing Jia
 
+#include <algorithm>
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
-#include <algorithm>
-
-using std::max;
 
 namespace caffe {
+using std::max;
+using std::vector;
 
 template <typename Dtype>
 void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

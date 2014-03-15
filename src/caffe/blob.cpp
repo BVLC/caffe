@@ -2,6 +2,7 @@
 
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
+#include <algorithm>  // std::max
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -9,6 +10,13 @@
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+using std::max;
+
+template <typename Dtype>
+Blob<Dtype>::Blob(const int num, const int channels, const int height,
+    const int width) {
+  Reshape(num, channels, height, width);
+}
 
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
@@ -22,19 +30,27 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
-  if (count_) {
-    data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-  } else {
-    data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
-    diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
-  }
+  Reserve(count_);
 }
 
 template <typename Dtype>
-Blob<Dtype>::Blob(const int num, const int channels, const int height,
-    const int width) {
-  Reshape(num, channels, height, width);
+void Blob<Dtype>::ReshapeNum(const int num) {
+  Reshape(num, channels_, height_, width_);
+}
+
+template <typename Dtype>
+void Blob<Dtype>::Reserve(const size_t capacity) {
+  if (capacity) {
+    if (capacity_ < capacity) {
+      capacity_ = capacity;
+      data_.reset(new SyncedMemory(capacity * sizeof(Dtype)));
+      diff_.reset(new SyncedMemory(capacity * sizeof(Dtype)));
+    }
+  } else {
+    capacity_ = 0;
+    data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
+    diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
+  }
 }
 
 template <typename Dtype>

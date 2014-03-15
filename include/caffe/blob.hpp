@@ -13,18 +13,23 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
-       diff_() {}
+       : data_(), diff_(), num_(0), channels_(0), height_(0), width_(0),
+         count_(0), capacity_(0) {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
   virtual ~Blob() {}
-  void Reshape(const int num, const int height,
-      const int width, const int channels);
+  void Reshape(const int num, const int channels, const int height,
+               const int width);
+  // Only reshape the num while keeping the other three dims intact
+  void ReshapeNum(const int num);
+  // Re-allocate memory if the current blob capacity is not big enough
+  void Reserve(const size_t capacity);
   inline int num() const { return num_; }
   inline int channels() const { return channels_; }
   inline int height() const { return height_; }
   inline int width() const { return width_; }
-  inline int count() const {return count_; }
+  inline int count() const { return count_; }
+  inline size_t capacity() const { return capacity_; }
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     return ((n * channels_ + c) * height_ + h) * width_ + w;
@@ -52,6 +57,20 @@ class Blob {
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
+  inline size_t data_size() const { return data_->size(); }
+  inline size_t diff_size() const { return diff_->size(); }
+  inline bool has_data() const {
+    if (data_) {
+      return true;
+    }
+    return false;
+  }
+  inline bool has_diff() const {
+    if (diff_) {
+      return true;
+    }
+    return false;
+  }
   void Update();
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
@@ -64,6 +83,7 @@ class Blob {
   int height_;
   int width_;
   int count_;
+  size_t capacity_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

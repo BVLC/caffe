@@ -18,7 +18,7 @@ void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   (*top)[0]->Reshape(bottom[0]->num(), channels_out, 1, 1);
   count_ = bottom[0]->num() * channels_out;
   CHECK_EQ(count_, bottom[0]->count());
-  CHECK_EQ(count_, (*top)[0]->count());
+  CHECK_LE(count_, (*top)[0]->count());
 }
 
 template <typename Dtype>

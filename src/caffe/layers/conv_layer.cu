@@ -20,7 +20,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
-  for (int n = 0; n < NUM_; ++n) {
+  for (int n = 0; n < bottom[0]->num(); ++n) {
     // First, im2col
     im2col_gpu(bottom_data + bottom[0]->offset(n), CHANNELS_, HEIGHT_,
                       WIDTH_, KSIZE_, PAD_, STRIDE_, col_data);
@@ -70,7 +70,7 @@ Dtype ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int top_offset = M_ * N_;
   CUDA_CHECK(cudaMemset(weight_diff, 0,
       sizeof(Dtype) * this->blobs_[0]->count()));
-  for (int n = 0; n < NUM_; ++n) {
+  for (int n = 0; n < top[0]->num(); ++n) {
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
     im2col_gpu(bottom_data + (*bottom)[0]->offset(n), CHANNELS_, HEIGHT_,

@@ -45,13 +45,13 @@ class SyncedMemory {
   void* mutable_gpu_data();
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
-  size_t size() { return size_; }
+  size_t size() const { return size_; }
  private:
   void to_cpu();
   void to_gpu();
   void* cpu_ptr_;
   void* gpu_ptr_;
-  size_t size_;
+  const size_t size_;
   SyncedHead head_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);

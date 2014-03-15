@@ -38,7 +38,7 @@ void ConcatLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }
   (*top)[0]->Reshape(NUM_, CHANNELS_, HEIGHT_, WIDTH_);
-  CHECK_EQ(COUNT_, (*top)[0]->count());
+  CHECK_LE(COUNT_, (*top)[0]->count());
 }
 
 template <typename Dtype>
@@ -50,7 +50,8 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       const Dtype* bottom_data = bottom[i]->cpu_data();
       int num_elem = bottom[i]->count();
-      caffe_copy(num_elem, bottom_data, top_data+(*top)[0]->offset(offset_num));
+      caffe_copy(num_elem, bottom_data,
+                 top_data + (*top)[0]->offset(offset_num));
       offset_num += bottom[i]->num();
     }
   } else if (concat_dim_ == 1) {
@@ -58,10 +59,10 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       const Dtype* bottom_data = bottom[i]->cpu_data();
       int num_elem =
-        bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
-      for (int n = 0; n < NUM_; ++n) {
-        caffe_copy(num_elem, bottom_data+bottom[i]->offset(n),
-          top_data+(*top)[0]->offset(n, offset_channel));
+        bottom[i]->channels() * bottom[i]->height() * bottom[i]->width();
+      for (int n = 0; n < bottom[i]->num(); ++n) {
+        caffe_copy(num_elem, bottom_data + bottom[i]->offset(n),
+          top_data + (*top)[0]->offset(n, offset_channel));
       }
       offset_channel += bottom[i]->channels();
     }
@@ -81,7 +82,7 @@ Dtype ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       Blob<Dtype>* blob = (*bottom)[i];
       Dtype* bottom_diff = blob->mutable_cpu_diff();
       caffe_copy(blob->count(),
-        top_diff+top[0]->offset(offset_num), bottom_diff);
+        top_diff + top[0]->offset(offset_num), bottom_diff);
       offset_num += blob->num();
     }
   } else if (concat_dim_ == 1) {
@@ -89,10 +90,10 @@ Dtype ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < bottom->size(); ++i) {
       Blob<Dtype>* blob = (*bottom)[i];
       Dtype* bottom_diff = blob->mutable_cpu_diff();
-      int num_elem = blob->channels()*blob->height()*blob->width();
-      for (int n = 0; n < NUM_; ++n) {
-        caffe_copy(num_elem, top_diff+top[0]->offset(n, offset_channel),
-          bottom_diff+blob->offset(n));
+      int num_elem = blob->channels() * blob->height() * blob->width();
+      for (int n = 0; n < top[i]->num(); ++n) {
+        caffe_copy(num_elem, top_diff + top[0]->offset(n, offset_channel),
+          bottom_diff + blob->offset(n));
       }
       offset_channel += blob->channels();
     }
