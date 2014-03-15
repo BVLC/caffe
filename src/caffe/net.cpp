@@ -38,7 +38,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   name_ = param.name();
   map<string, int> blob_name_to_idx;
   set<string> available_blobs;
-  int num_layers = param.layer_size();
+  int num_layers = param.layers_size();
   CHECK_EQ(param.input_size() * 4, param.input_dim_size())
       << "Incorrect bottom blob dimension specifications.";
   size_t memory_used = 0;
@@ -61,13 +61,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   DLOG(INFO) << "Memory required for Data" << memory_used*sizeof(Dtype);
   // For each layer, set up their input and output
-  bottom_vecs_.resize(param.layer_size());
-  top_vecs_.resize(param.layer_size());
-  bottom_id_vecs_.resize(param.layer_size());
-  top_id_vecs_.resize(param.layer_size());
-  for (int i = 0; i < param.layer_size(); ++i) {
+  bottom_vecs_.resize(param.layers_size());
+  top_vecs_.resize(param.layers_size());
+  bottom_id_vecs_.resize(param.layers_size());
+  top_id_vecs_.resize(param.layers_size());
+  for (int i = 0; i < param.layers_size(); ++i) {
     bool in_place = false;
-    const LayerParameter& layer_param = param.layer(i);
+    const LayerParameter& layer_param = param.layers(i);
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
@@ -269,9 +269,9 @@ void Net<Dtype>::Backward() {
 
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
-  int num_source_layers = param.layer_size();
+  int num_source_layers = param.layers_size();
   for (int i = 0; i < num_source_layers; ++i) {
-    const LayerParameter& source_layer = param.layer(i);
+    const LayerParameter& source_layer = param.layers(i);
     const string& source_layer_name = source_layer.name();
     int target_layer_id = 0;
     while (target_layer_id != layer_names_.size() &&
@@ -314,7 +314,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
   }
   DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
-    LayerParameter* layer_param = param->add_layer();
+    LayerParameter* layer_param = param->add_layers();
     for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {
       layer_param->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
     }

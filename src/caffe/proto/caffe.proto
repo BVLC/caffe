@@ -40,7 +40,7 @@ message FillerParameter {
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  repeated LayerParameter layer = 2; // a bunch of layers.
+  repeated LayerParameter layers = 2; // a bunch of layers.
   // The input blobs to the network.
   repeated string input = 3;
   // The dim of the input blobs. For each input blob there should be four
