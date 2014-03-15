@@ -1,0 +1,279 @@
+name: "DeepFaceNet"
+layers {
+  layer {
+    name: "data"
+    type: "data"
+    source: "ilvsrc12_val_leveldb"
+    meanfile: "../../data/ilsvrc12/imagenet_mean.binaryproto"
+    batchsize: 50
+    cropsize: 227
+    mirror: false
+  }
+  top: "data"
+  top: "label"
+}
+layers {
+  layer {
+    name: "conv1"
+    type: "conv"
+    num_output: 32
+    kernelsize: 11
+    stride: 4
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
+  }
+  bottom: "data"
+  top: "conv1"
+}
+layers {
+  layer {
+    name: "relu1"
+    type: "relu"
+  }
+  bottom: "conv1"
+  top: "conv1"
+}
+layers {
+  layer {
+    name: "pool2"
+    type: "pool"
+    pool: MAX
+    kernelsize: 3
+    stride: 2
+  }
+  bottom: "conv1"
+  top: "pool2"
+}
+layers {
+  layer {
+    name: "norm2"
+    type: "lrn"
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+  bottom: "pool2"
+  top: "norm2"
+}
+layers {
+  layer {
+    name: "conv3"
+    type: "conv"
+    num_output: 16
+    group: 2
+    kernelsize: 9
+    pad: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1.
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
+  }
+  bottom: "norm2"
+  top: "conv3"
+}
+layers {
+  layer {
+    name: "relu3"
+    type: "relu"
+  }
+  bottom: "conv3"
+  top: "conv3"
+}
+layers {
+  layer {
+    name: "norm3"
+    type: "lrn"
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+  bottom: "conv3"
+  top: "norm3"
+}
+layers {
+  layer {
+    name: "lc4"
+    type: "locally_connected"
+    num_output: 16
+    kernelsize: 9
+    pad: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
+  }
+  bottom: "norm3"
+  top: "lc4"
+}
+layers {
+  layer {
+    name: "relu4"
+    type: "relu"
+  }
+  bottom: "lc4"
+  top: "lc4"
+}
+layers {
+  layer {
+    name: "lc5"
+    type: "locally_connected"
+    num_output: 16
+    kernelsize: 7
+    pad: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
+  }
+  bottom: "lc4"
+  top: "lc5"
+}
+layers {
+  layer {
+    name: "relu5"
+    type: "relu"
+  }
+  bottom: "lc5"
+  top: "lc5"
+}
+layers {
+  layer {
+    name: "lc6"
+    type: "locally_connected"
+    num_output: 16
+    kernelsize: 5
+    pad: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
+  }
+  bottom: "lc5"
+  top: "lc6"
+}
+layers {
+  layer {
+    name: "relu6"
+    type: "relu"
+  }
+  bottom: "lc6"
+  top: "lc6"
+}
+layers {
+  layer {
+    name: "fc7"
+    type: "innerproduct"
+    num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1.
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
+  }
+  bottom: "lc6"
+  top: "fc7"
+}
+layers {
+  layer {
+    name: "relu7"
+    type: "relu"
+  }
+  bottom: "fc7"
+  top: "fc7"
+}
+layers {
+  layer {
+    name: "drop7"
+    type: "dropout"
+    dropout_ratio: 0.5
+  }
+  bottom: "fc7"
+  top: "fc7"
+}
+layers {
+  layer {
+    name: "fc8"
+    type: "innerproduct"
+    num_output: 1000
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+    weight_decay: 1.
+    weight_decay: 0.
+  }
+  bottom: "fc7"
+  top: "fc8"
+}
+layers {
+  layer {
+    name: "prob"
+    type: "softmax"
+  }
+  bottom: "fc8"
+  top: "prob"
+}
+layers {
+  layer {
+    name: "accuracy"
+    type: "accuracy"
+  }
+  bottom: "prob"
+  bottom: "label"
+  top: "accuracy"
+}
