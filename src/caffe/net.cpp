@@ -5,11 +5,14 @@
 #include <string>
 #include <vector>
 
+#include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/proto/deprecated/caffe_v0_to_v1_bridge.pb.h"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/insert_splits.hpp"
+#include "caffe/util/upgrade_proto.hpp"
 
 using std::pair;
 using std::map;
@@ -25,7 +28,21 @@ Net<Dtype>::Net(const NetParameter& param) {
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file) {
   NetParameter param;
-  ReadProtoFromTextFileOrDie(param_file, &param);
+  if (!ReadProtoFromTextFile(param_file, &param)) {
+    // Failed to parse file as NetParameter; try to parse as a V0NetParameter
+    // instead.
+    V0NetParameter v0_param;
+    CHECK(ReadProtoFromTextFile(param_file, &v0_param))
+        << "Failed to parse NetParameter file: " << param_file;
+    LOG(ERROR) << "Parsed file as V0NetParameter: " << param_file;
+    LOG(ERROR) << "Note that future Caffe releases will not support "
+        << "V0NetParameter; use tools/upgrade_net_param.testbin to upgrade "
+        << "this and any other network proto files to the new format.";
+    if (!UpgradeV0Net(v0_param, &param)) {
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+          << "V0NetParameter to NetParameter (see above); continuing anyway.";
+    }
+  }
   Init(param);
 }
 

@@ -1,43 +1,43 @@
 // Copyright 2014 Jeff Donahue
 
-#include <stdint.h>
-#include <fcntl.h>
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
 
-#include <algorithm>
 #include <string>
-#include <fstream>  // NOLINT(readability/streams)
 
 #include "caffe/common.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/proto/deprecated/caffe_v0_to_v1_bridge.pb.h"
 
-using std::fstream;
-using std::ios;
-using std::max;
 using std::string;
 
 namespace caffe {
 
 bool UpgradeV0Net(const V0NetParameter& v0_net_param,
                   NetParameter* net_param) {
-  bool full_compatibility = true;
+  bool is_fully_compatible = true;
   net_param->Clear();
   if (v0_net_param.has_name()) {
     net_param->set_name(v0_net_param.name());
   }
   for (int i = 0; i < v0_net_param.layers_size(); ++i) {
-    full_compatibility &= UpgradeV0LayerConnection(v0_net_param.layers(i),
+    is_fully_compatible &= UpgradeV0LayerConnection(v0_net_param.layers(i),
                                                     net_param->add_layers());
   }
+  for (int i = 0; i < v0_net_param.input_dim_size(); ++i) {
+    net_param->add_input_dim(v0_net_param.input_dim(i));
+  }
+  if (v0_net_param.has_force_backward()) {
+    net_param->set_force_backward(v0_net_param.force_backward());
+  }
+  return is_fully_compatible;
 }
 
 bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
                               LayerParameter* layer_param) {
-  bool full_compatibility = true;
+  bool is_fully_compatible = true;
   layer_param->Clear();
   for (int i = 0; i < v0_layer_connection.bottom_size(); ++i) {
     layer_param->add_bottom(v0_layer_connection.bottom(i));
@@ -60,7 +60,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.num_output());
       } else {
         LOG(ERROR) << "Unknown parameter num_output for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_biasterm()) {
@@ -72,7 +72,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.biasterm());
       } else {
         LOG(ERROR) << "Unknown parameter biasterm for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_weight_filler()) {
@@ -84,7 +84,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             mutable_weight_filler()->CopyFrom(v0_layer_param.weight_filler());
       } else {
         LOG(ERROR) << "Unknown parameter weight_filler for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_bias_filler()) {
@@ -96,7 +96,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             mutable_bias_filler()->CopyFrom(v0_layer_param.bias_filler());
       } else {
         LOG(ERROR) << "Unknown parameter bias_filler for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_pad()) {
@@ -104,7 +104,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         layer_param->mutable_convolution_param()->set_pad(v0_layer_param.pad());
       } else {
         LOG(ERROR) << "Unknown parameter pad for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_kernelsize()) {
@@ -116,7 +116,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.kernelsize());
       } else {
         LOG(ERROR) << "Unknown parameter kernelsize for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_stride()) {
@@ -128,7 +128,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.stride());
       } else {
         LOG(ERROR) << "Unknown parameter stride for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_pool()) {
@@ -149,11 +149,11 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
           break;
         default:
           LOG(ERROR) << "Unknown pool method " << pool;
-          full_compatibility = false;
+          is_fully_compatible = false;
         }
       } else {
         LOG(ERROR) << "Unknown parameter pool for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_dropout_ratio()) {
@@ -162,7 +162,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.dropout_ratio());
       } else {
         LOG(ERROR) << "Unknown parameter dropout_ratio for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_local_size()) {
@@ -171,7 +171,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.local_size());
       } else {
         LOG(ERROR) << "Unknown parameter local_size for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_alpha()) {
@@ -179,7 +179,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         layer_param->mutable_lrn_param()->set_alpha(v0_layer_param.alpha());
       } else {
         LOG(ERROR) << "Unknown parameter alpha for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_beta()) {
@@ -187,7 +187,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         layer_param->mutable_lrn_param()->set_beta(v0_layer_param.beta());
       } else {
         LOG(ERROR) << "Unknown parameter beta for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_source()) {
@@ -201,7 +201,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.source());
       } else {
         LOG(ERROR) << "Unknown parameter source for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_scale()) {
@@ -209,7 +209,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         layer_param->mutable_data_param()->set_scale(v0_layer_param.scale());
       } else {
         LOG(ERROR) << "Unknown parameter scale for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_meanfile()) {
@@ -217,7 +217,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         layer_param->mutable_data_param()->set_mean_file(v0_layer_param.meanfile());
       } else {
         LOG(ERROR) << "Unknown parameter meanfile for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_batchsize()) {
@@ -226,7 +226,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.batchsize());
       } else {
         LOG(ERROR) << "Unknown parameter batchsize for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_cropsize()) {
@@ -235,7 +235,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.cropsize());
       } else {
         LOG(ERROR) << "Unknown parameter cropsize for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_mirror()) {
@@ -243,7 +243,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         layer_param->mutable_data_param()->set_mirror(v0_layer_param.mirror());
       } else {
         LOG(ERROR) << "Unknown parameter mirror for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     for (int i = 0; i < v0_layer_param.blobs_size(); ++i) {
@@ -261,7 +261,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.rand_skip());
       } else {
         LOG(ERROR) << "Unknown parameter rand_skip for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
     if (v0_layer_param.has_concat_dim()) {
@@ -270,11 +270,11 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
             v0_layer_param.concat_dim());
       } else {
         LOG(ERROR) << "Unknown parameter concat_dim for layer type " << type;
-        full_compatibility = false;
+        is_fully_compatible = false;
       }
     }
   }
-  return full_compatibility;
+  return is_fully_compatible;
 }
 
 }  // namespace caffe

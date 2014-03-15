@@ -73,6 +73,7 @@ DEPRECATED_PROTO_GEN_PY := ${DEPRECATED_PROTO_SRCS:.proto=_pb2.py}
 CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
 CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
 PROTO_OBJS := $(addprefix $(BUILD_DIR)/, ${PROTO_GEN_CC:.cc=.o})
+PROTO_OBJS += $(addprefix $(BUILD_DIR)/, ${DEPRECATED_PROTO_GEN_CC:.cc=.o})
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
@@ -264,7 +265,6 @@ $(PROTO_GEN_CC): $(PROTO_SRCS) $(DEPRECATED_PROTO_SRCS)
 clean:
 	@- $(RM) $(NAME) $(STATIC_NAME)
 	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)
-	@- $(RM) $(DEPRECATED_PROTO_GEN_HEADER) $(DEPRECATED_PROTO_GEN_CC)
 	@- $(RM) include/$(PROJECT)/proto/$(PROJECT).pb.h
 	@- $(RM) python/$(PROJECT)/proto/$(PROJECT)_pb2.py
 	@- $(RM) python/$(PROJECT)/*.so

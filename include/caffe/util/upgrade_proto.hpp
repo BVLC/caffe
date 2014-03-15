@@ -3,16 +3,8 @@
 #ifndef CAFFE_UTIL_UPGRADE_PROTO_H_
 #define CAFFE_UTIL_UPGRADE_PROTO_H_
 
-#include <string>
-
-#include "google/protobuf/message.h"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/proto/deprecated/caffe_v0_to_v1_bridge.pb.h"
-
-#include "boost/scoped_ptr.hpp"
-#include "caffe/blob.hpp"
-
-using std::string;
 
 namespace caffe {
 
