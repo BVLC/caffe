@@ -22,6 +22,19 @@ using std::string;
 
 namespace caffe {
 
+bool UpgradeV0Net(const V0NetParameter& v0_net_param,
+                  NetParameter* net_param) {
+  bool full_compatibility = true;
+  net_param->Clear();
+  if (v0_net_param.has_name()) {
+    net_param->set_name(v0_net_param.name());
+  }
+  for (int i = 0; i < v0_net_param.layers_size(); ++i) {
+    full_compatibility &= UpgradeV0LayerConnection(v0_net_param.layers(i),
+                                                    net_param->add_layers());
+  }
+}
+
 bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
                               LayerParameter* layer_param) {
   bool full_compatibility = true;

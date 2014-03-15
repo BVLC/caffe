@@ -17,6 +17,8 @@ using std::string;
 
 namespace caffe {
 
+bool UpgradeV0Net(const V0NetParameter& v0_net_param, NetParameter* net_param);
+
 bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
                               LayerParameter* layer_param);
 
