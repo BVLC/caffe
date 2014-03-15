@@ -45,8 +45,9 @@ TYPED_TEST_CASE(PoolingLayerTest, Dtypes);
 
 TYPED_TEST(PoolingLayerTest, TestSetup) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
@@ -58,9 +59,10 @@ TYPED_TEST(PoolingLayerTest, TestSetup) {
 /*
 TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_MAX);
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   Caffe::set_mode(Caffe::GPU);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -84,9 +86,10 @@ TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
 
 TYPED_TEST(PoolingLayerTest, TestCPUGradientMax) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_MAX);
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   Caffe::set_mode(Caffe::CPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-4, 1e-2);
@@ -96,9 +99,10 @@ TYPED_TEST(PoolingLayerTest, TestCPUGradientMax) {
 
 TYPED_TEST(PoolingLayerTest, TestGPUGradientMax) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_MAX);
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   Caffe::set_mode(Caffe::GPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-4, 1e-2);
@@ -109,9 +113,10 @@ TYPED_TEST(PoolingLayerTest, TestGPUGradientMax) {
 
 TYPED_TEST(PoolingLayerTest, TestCPUGradientAve) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_AVE);
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
   Caffe::set_mode(Caffe::CPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
@@ -122,9 +127,10 @@ TYPED_TEST(PoolingLayerTest, TestCPUGradientAve) {
 
 TYPED_TEST(PoolingLayerTest, TestGPUGradientAve) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_AVE);
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
   Caffe::set_mode(Caffe::GPU);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);

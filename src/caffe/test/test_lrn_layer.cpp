@@ -54,9 +54,10 @@ void LRNLayerTest<Dtype>::ReferenceLRNForward(
       blob_bottom.height(), blob_bottom.width());
   const Dtype* bottom_data = blob_bottom.cpu_data();
   Dtype* top_data = blob_top->mutable_cpu_data();
-  Dtype alpha = layer_param.alpha();
-  Dtype beta = layer_param.beta();
-  int size = layer_param.local_size();
+  LRNParameter lrn_param = layer_param.lrn_param();
+  Dtype alpha = lrn_param.alpha();
+  Dtype beta = lrn_param.beta();
+  int size = lrn_param.local_size();
   for (int n = 0; n < blob_bottom.num(); ++n) {
     for (int c = 0; c < blob_bottom.channels(); ++c) {
       for (int h = 0; h < blob_bottom.height(); ++h) {
