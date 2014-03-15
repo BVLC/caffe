@@ -13,6 +13,12 @@ namespace caffe {
 using std::max;
 
 template <typename Dtype>
+Blob<Dtype>::Blob(const int num, const int channels, const int height,
+    const int width) {
+  Reshape(num, channels, height, width);
+}
+
+template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
     const int width) {
   CHECK_GE(num, 0);
@@ -24,29 +30,22 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
-  if (count_) {
-    data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+  Reserve(count_);
+}
+
+template <typename Dtype>
+void Blob<Dtype>::Reserve(const size_t capacity) {
+  if (capacity) {
+    if (capacity_ < capacity) {
+      capacity_ = capacity;
+      data_.reset(new SyncedMemory(capacity * sizeof(Dtype)));
+      diff_.reset(new SyncedMemory(capacity * sizeof(Dtype)));
+    }
   } else {
+    capacity_ = 0;
     data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
     diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
   }
-}
-
-template <typename Dtype>
-void Blob<Dtype>::ReshapeBigEnough(const int num, const int channels,
-                                   const int height, const int width) {
-  if (num_ < num || channels_ < channels || height_ < height ||
-      width_ < width) {
-    Reshape(max(num_, num), max(channels_, channels), max(height_, height),
-            max(width_, width));
-  }
-}
-
-template <typename Dtype>
-Blob<Dtype>::Blob(const int num, const int channels, const int height,
-    const int width) {
-  Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
