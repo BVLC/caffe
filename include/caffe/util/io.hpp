@@ -19,11 +19,18 @@ using ::google::protobuf::Message;
 
 namespace caffe {
 
-void ReadProtoFromTextFile(const char* filename,
-    Message* proto);
-inline void ReadProtoFromTextFile(const string& filename,
-    Message* proto) {
-  ReadProtoFromTextFile(filename.c_str(), proto);
+bool ReadProtoFromTextFile(const char* filename, Message* proto);
+
+inline bool ReadProtoFromTextFile(const string& filename, Message* proto) {
+  return ReadProtoFromTextFile(filename.c_str(), proto);
+}
+
+inline void ReadProtoFromTextFileOrDie(const char* filename, Message* proto) {
+  CHECK(ReadProtoFromTextFile(filename, proto));
+}
+
+inline void ReadProtoFromTextFileOrDie(const string& filename, Message* proto) {
+  ReadProtoFromTextFileOrDie(filename.c_str(), proto);
 }
 
 void WriteProtoToTextFile(const Message& proto, const char* filename);

@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   }
 
   NetParameter test_net_param;
-  ReadProtoFromTextFile(argv[1], &test_net_param);
+  ReadProtoFromTextFileOrDie(argv[1], &test_net_param);
   Net<float> caffe_test_net(test_net_param);
   NetParameter trained_net_param;
   ReadProtoFromBinaryFile(argv[2], &trained_net_param);

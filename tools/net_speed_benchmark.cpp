@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
   Caffe::set_phase(Caffe::TRAIN);
   NetParameter net_param;
-  ReadProtoFromTextFile(argv[1],
+  ReadProtoFromTextFileOrDie(argv[1],
       &net_param);
   Net<float> caffe_net(net_param);
 

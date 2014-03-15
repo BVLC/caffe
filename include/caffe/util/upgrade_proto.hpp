@@ -13,7 +13,6 @@
 #include "caffe/blob.hpp"
 
 using std::string;
-// using ::google::protobuf::Message;
 
 namespace caffe {
 
