@@ -34,6 +34,11 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
 }
 
 template <typename Dtype>
+void Blob<Dtype>::ReshapeNum(const int num) {
+  Reshape(num, channels_, height_, width_);
+}
+
+template <typename Dtype>
 void Blob<Dtype>::Reserve(const size_t capacity) {
   if (capacity) {
     if (capacity_ < capacity) {

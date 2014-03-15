@@ -19,7 +19,9 @@ class Blob {
     const int width);
   virtual ~Blob() {}
   void Reshape(const int num, const int channels, const int height,
-      const int width);
+               const int width);
+  // Only reshape the num while keeping the other three dims intact
+  void ReshapeNum(const int num);
   // Re-allocate memory if the current blob capacity is not big enough
   void Reserve(const size_t capacity);
   inline int num() const { return num_; }
