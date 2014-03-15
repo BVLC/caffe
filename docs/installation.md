@@ -31,7 +31,7 @@ The following sections detail prerequisites and installation on Ubuntu. For OS X
 * Boost
 * MKL (but see the [boost-eigen branch](https://github.com/BVLC/caffe/tree/boost-eigen) for a boost/Eigen3 port)
 * OpenCV
-* glog, gflags, protobuf, leveldb, snappy
+* glog, gflags, protobuf, leveldb, snappy, hdf5
 * For the Python wrapper: python, numpy (>= 1.7 preferred), and boost_python
 * For the Matlab wrapper: Matlab with mex
 
@@ -41,7 +41,7 @@ Caffe also needs Intel MKL as the backend of its matrix computation and vectoriz
 
 You will also need other packages, most of which can be installed via apt-get using:
 
-    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev
+    sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
 
 The only exception being the google logging library, which does not exist in the Ubuntu 12.04 repository. To install it, do:
 
@@ -83,6 +83,7 @@ Install [homebrew](http://brew.sh/) to install most of the prerequisites. Starti
     brew install --build-from-source boost
     brew install snappy leveldb protobuf gflags glog
     brew tap homebrew/science
+    brew install homebrew/science/hdf5
     brew install homebrew/science/opencv
 
 Building boost from source is needed to link against your local python.
