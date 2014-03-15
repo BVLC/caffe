@@ -233,7 +233,7 @@ struct CaffeNet {
   }
 
   void ForwardPrefilled() {
-      net_->ForwardPrefilled();
+    net_->ForwardPrefilled();
   }
 
   // The caffe::Caffe utility functions.
@@ -244,19 +244,19 @@ struct CaffeNet {
   void set_device(int device_id) { Caffe::SetDevice(device_id); }
 
   vector<CaffeBlob> blobs() {
-      vector<CaffeBlob> result;
-      for (int i = 0; i < net_->blobs().size(); ++i) {
-        result.push_back(CaffeBlob(net_->blobs()[i], net_->blob_names()[i]));
-      }
-      return result;
+    vector<CaffeBlob> result;
+    for (int i = 0; i < net_->blobs().size(); ++i) {
+      result.push_back(CaffeBlob(net_->blobs()[i], net_->blob_names()[i]));
+    }
+    return result;
   }
 
   vector<CaffeLayer> layers() {
-      vector<CaffeLayer> result;
-      for (int i = 0; i < net_->layers().size(); ++i) {
-        result.push_back(CaffeLayer(net_->layers()[i], net_->layer_names()[i]));
-      }
-      return result;
+    vector<CaffeLayer> result;
+    for (int i = 0; i < net_->layers().size(); ++i) {
+      result.push_back(CaffeLayer(net_->layers()[i], net_->layer_names()[i]));
+    }
+    return result;
   }
 
   // The pointer to the internal caffe::Net instant.
