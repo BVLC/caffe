@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   }
 
   SolverParameter solver_param;
-  ReadProtoFromTextFile(argv[1], &solver_param);
+  ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
   LOG(INFO) << "Starting Optimization";
   SGDSolver<float> solver(solver_param);

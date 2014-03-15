@@ -25,7 +25,7 @@ Net<Dtype>::Net(const NetParameter& param) {
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file) {
   NetParameter param;
-  ReadProtoFromTextFile(param_file, &param);
+  ReadProtoFromTextFileOrDie(param_file, &param);
   Init(param);
 }
 

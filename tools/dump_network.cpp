@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     // We directly load the net param from trained file
     ReadProtoFromBinaryFile(argv[2], &net_param);
   } else {
-    ReadProtoFromTextFile(argv[1], &net_param);
+    ReadProtoFromTextFileOrDie(argv[1], &net_param);
   }
   ReadProtoFromBinaryFile(argv[2], &trained_net_param);
 
