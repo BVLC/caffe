@@ -15,15 +15,15 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1) << "Conv Layer takes a single blob as input.";
   CHECK_EQ(top->size(), 1) << "Conv Layer takes a single blob as output.";
-  KSIZE_ = this->layer_param_.kernelsize();
-  STRIDE_ = this->layer_param_.stride();
-  GROUP_ = this->layer_param_.group();
-  PAD_ = this->layer_param_.pad();
+  KSIZE_ = this->layer_param_.convolution_param().kernel_size();
+  STRIDE_ = this->layer_param_.convolution_param().stride();
+  GROUP_ = this->layer_param_.convolution_param().group();
+  PAD_ = this->layer_param_.convolution_param().pad();
   NUM_ = bottom[0]->num();
   CHANNELS_ = bottom[0]->channels();
   HEIGHT_ = bottom[0]->height();
   WIDTH_ = bottom[0]->width();
-  NUM_OUTPUT_ = this->layer_param_.num_output();
+  NUM_OUTPUT_ = this->layer_param_.convolution_param().num_output();
   CHECK_GT(NUM_OUTPUT_, 0);
   CHECK_EQ(CHANNELS_ % GROUP_, 0);
   // The im2col result buffer would only hold one image at a time to avoid
@@ -34,7 +34,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Set the parameters
   CHECK_EQ(NUM_OUTPUT_ % GROUP_, 0)
       << "Number of output should be multiples of group.";
-  biasterm_ = this->layer_param_.biasterm();
+  bias_term_ = this->layer_param_.convolution_param().bias_term();
   // Figure out the dimensions for individual gemms.
   M_ = NUM_OUTPUT_ / GROUP_;
   K_ = CHANNELS_ * KSIZE_ * KSIZE_ / GROUP_;
@@ -44,7 +44,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
-    if (biasterm_) {
+    if (bias_term_) {
       this->blobs_.resize(2);
     } else {
       this->blobs_.resize(1);
@@ -53,19 +53,19 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     this->blobs_[0].reset(
         new Blob<Dtype>(NUM_OUTPUT_, CHANNELS_ / GROUP_, KSIZE_, KSIZE_));
     // fill the weights
-    shared_ptr<Filler<Dtype> > weight_filler(
-        GetFiller<Dtype>(this->layer_param_.weight_filler()));
+    shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+        this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, intiialize and fill the bias term
-    if (biasterm_) {
+    if (bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, NUM_OUTPUT_));
-      shared_ptr<Filler<Dtype> > bias_filler(
-          GetFiller<Dtype>(this->layer_param_.bias_filler()));
+      shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
+          this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
   // Set up the bias filler
-  if (biasterm_) {
+  if (bias_term_) {
     bias_multiplier_.reset(new SyncedMemory(N_ * sizeof(Dtype)));
     Dtype* bias_multiplier_data =
         reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());
@@ -97,7 +97,7 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
     }
     // third, add bias
-    if (biasterm_) {
+    if (bias_term_) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, NUM_OUTPUT_,
           N_, 1, (Dtype)1., this->blobs_[1]->cpu_data(),
           reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
@@ -120,7 +120,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
 
-  if (biasterm_) {
+  if (bias_term_) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();
     memset(bias_diff, 0, sizeof(Dtype) * this->blobs_[1]->count());
     for (int n = 0; n < NUM_; ++n) {

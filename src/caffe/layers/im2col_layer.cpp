@@ -14,9 +14,9 @@ void Im2colLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1) << "Im2col Layer takes a single blob as input.";
   CHECK_EQ(top->size(), 1) << "Im2col Layer takes a single blob as output.";
-  KSIZE_ = this->layer_param_.kernelsize();
-  STRIDE_ = this->layer_param_.stride();
-  PAD_ = this->layer_param_.pad();
+  KSIZE_ = this->layer_param_.convolution_param().kernel_size();
+  STRIDE_ = this->layer_param_.convolution_param().stride();
+  PAD_ = this->layer_param_.convolution_param().pad();
   CHANNELS_ = bottom[0]->channels();
   HEIGHT_ = bottom[0]->height();
   WIDTH_ = bottom[0]->width();

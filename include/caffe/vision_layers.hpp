@@ -197,7 +197,7 @@ class InnerProductLayer : public Layer<Dtype> {
   int M_;
   int K_;
   int N_;
-  bool biasterm_;
+  bool bias_term_;
   shared_ptr<SyncedMemory> bias_multiplier_;
 };
 
@@ -342,7 +342,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int GROUP_;
   Blob<Dtype> col_buffer_;
   shared_ptr<SyncedMemory> bias_multiplier_;
-  bool biasterm_;
+  bool bias_term_;
   int M_;
   int K_;
   int N_;
