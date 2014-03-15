@@ -1,9 +1,18 @@
 name: "CaffeNet"
-input: "data"
-input_dim: 10
-input_dim: 3
-input_dim: 227
-input_dim: 227
+# max batch size is determined by the num field of bottom blobs
+#   passed in the MemoryDataLayer::SetUp
+layers {
+  layer {
+    name: "data"
+    type: "memory_data"    
+    datum_dims: {
+      channels: 3
+      height: 227
+      width: 227
+    }
+  }
+  top: "data"
+}
 layers {
   layer {
     name: "conv1"
