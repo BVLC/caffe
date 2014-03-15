@@ -105,13 +105,16 @@ message LayerParameter {
 
   // Parameters for particular layer types.
   optional DataParameter data_param = 8;
-  optional InnerProductParameter inner_product_param = 9;
-  optional ConvolutionParameter convolution_param = 10;
-  optional PoolParameter pool_param = 11;
-  optional DropoutParameter dropout_param = 12;
-  optional LRNParameter lrn_param = 13;
+  optional HDF5DataParameter hdf5_data_param = 9;
+  optional InnerProductParameter inner_product_param = 10;
+  optional ConvolutionParameter convolution_param = 11;
+  optional PoolingParameter pooling_param = 12;
+  optional DropoutParameter dropout_param = 13;
+  optional LRNParameter lrn_param = 14;
+  optional ConcatParameter concat_param = 15;
 }
 
+// Message that stores parameters used by DataLayer
 message DataParameter {
   // Specify the data source.
   optional string source = 1;
@@ -133,6 +136,15 @@ message DataParameter {
   optional uint32 rand_skip = 7 [default = 0];
 }
 
+// Message that stores parameters used by HDF5DataLayer
+message HDF5DataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 2;
+}
+
+// Message that stores parameters used by InnerProductLayer
 message InnerProductParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
   optional bool biasterm = 2 [default = true]; // whether to have bias terms
@@ -140,6 +152,7 @@ message InnerProductParameter {
   optional FillerParameter bias_filler = 4; // The filler for the bias
 }
 
+// Message that stores parameters used by ConvolutionLayer
 message ConvolutionParameter {
   optional uint32 pad = 1 [default = 0]; // The padding size
   optional uint32 kernelsize = 2; // The kernel size
@@ -147,7 +160,8 @@ message ConvolutionParameter {
   optional uint32 stride = 4 [default = 1]; // The stride
 }
 
-message PoolParameter {
+// Message that stores parameters used by PoolingLayer
+message PoolingParameter {
   enum PoolMethod {
     MAX = 0;
     AVE = 1;
@@ -156,21 +170,16 @@ message PoolParameter {
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
 }
 
+// Message that stores parameters used by DropoutLayer
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
 }
 
+// Message that stores parameters used by LRNLayer
 message LRNParameter {
   optional uint32 local_size = 1 [default = 5]; // for local response norm
   optional float alpha = 2 [default = 1.]; // for local response norm
   optional float beta = 3 [default = 0.75]; // for local response norm
-}
-
-message ConcatParameter {
-  // Concat Layer needs to specify the dimension along the concat will happen,
-  // the other dimensions must be the same for all the bottom blobs
-  // By default it will concatenate blobs along channels dimension
-  optional uint32 concat_dim = 1 [default = 1];
 }
 
 message WindowDataParameter {
@@ -196,4 +205,28 @@ message WindowDataParameter {
 
 message HDF5OutputParameter {
   optional string file_name = 1;
+}
+
+// Message that stores parameters used by ConcatLayer
+message ConcatParameter {
+  // For ConcatLayer, one needs to specify the dimension for concatenation, and
+  // the other dimensions must be the same for all the bottom blobs.
+  // By default it will concatenate blobs along the channels dimension.
+  optional uint32 concat_dim = 1 [default = 1];
+}
+
+
+// Message that stores parameters used by ReshapeLayer
+message ReshapeParameter {
+  // For ReshapeLayer, one needs to specify the new dimensions.
+  optional int32 new_num = 1 [default = 0];
+  optional int32 new_channels = 2 [default = 0];
+  optional int32 new_height = 3 [default = 0];
+  optional int32 new_width = 4 [default = 0];
+}
+
+message ImageDataParameter {
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  // It will also resize images if new_height or new_width are not zero.
+  optional bool shuffle_images = 64 [default = false];
 }
