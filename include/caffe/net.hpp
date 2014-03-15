@@ -31,15 +31,13 @@ class Net {
 
   // Run forward with the input blobs already fed separately. You can get the
   // input blobs using input_blobs().
-  const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss);
-  const vector<Blob<Dtype>*>& ForwardPrefilled();
+  const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss = NULL);
   // Run forward using a set of bottom blobs, and return the result.
   const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom,
-      Dtype* loss);
-  const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom);
+      Dtype* loss = NULL);
   // Run forward using a serialized BlobProtoVector and return the result
   // as a serialized BlobProtoVector
-  string Forward(const string& input_blob_protos, Dtype* loss);
+  string Forward(const string& input_blob_protos, Dtype* loss = NULL);
 
   // The network backward should take no input and output, since it solely
   // computes the gradient w.r.t the parameters, and the data has already
