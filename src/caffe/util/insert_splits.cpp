@@ -18,7 +18,7 @@ namespace caffe {
 void insert_splits(const NetParameter& param, NetParameter* param_split) {
   // Initialize by copying from the input NetParameter.
   param_split->CopyFrom(param);
-  param_split->clear_layer();
+  param_split->clear_layers();
   map<string, pair<int, int> > blob_name_to_last_top_idx;
   map<pair<int, int>, pair<int, int> > bottom_idx_to_source_top_idx;
   map<pair<int, int>, int> top_idx_to_bottom_count;
@@ -30,8 +30,8 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
     const string& blob_name = param.input(i);
     blob_name_to_last_top_idx[blob_name] = make_pair(-1, i);
   }
-  for (int i = 0; i < param.layer_size(); ++i) {
-    const LayerParameter& layer_param = param.layer(i);
+  for (int i = 0; i < param.layers_size(); ++i) {
+    const LayerParameter& layer_param = param.layers(i);
     layer_idx_to_layer_name[i] = layer_param.name();
     for (int j = 0; j < layer_param.bottom_size(); ++j) {
       const string& blob_name = layer_param.bottom(j);
@@ -56,14 +56,14 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
     if (split_count > 1) {
       const string& layer_name = layer_idx_to_layer_name[-1];
       const string& blob_name = param.input(i);
-      LayerParameter* split_layer_param = param_split->add_layer();
+      LayerParameter* split_layer_param = param_split->add_layers();
       configure_split_layer(layer_name, blob_name, i, split_count,
           split_layer_param);
     }
   }
-  for (int i = 0; i < param.layer_size(); ++i) {
-    LayerParameter* layer_param = param_split->add_layer();
-    layer_param->CopyFrom(param.layer(i));
+  for (int i = 0; i < param.layers_size(); ++i) {
+    LayerParameter* layer_param = param_split->add_layers();
+    layer_param->CopyFrom(param.layers(i));
     // Replace any shared bottom blobs with split layer outputs.
     for (int j = 0; j < layer_param->bottom_size(); ++j) {
       const pair<int, int>& top_idx =
@@ -83,7 +83,7 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
       if (split_count > 1) {
         const string& layer_name = layer_idx_to_layer_name[i];
         const string& blob_name = layer_param->top(j);
-        LayerParameter* split_layer_param = param_split->add_layer();
+        LayerParameter* split_layer_param = param_split->add_layers();
         configure_split_layer(layer_name, blob_name, j, split_count,
             split_layer_param);
       }
