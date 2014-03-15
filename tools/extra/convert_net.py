@@ -10,6 +10,24 @@ class CudaConvNetReader(object):
     def __init__(self, net, blobs=False):
         self.net = pickle.load(open(net))
         self.name = os.path.basename(net)
+        try:
+            net = pickle.load(open(net))
+        except ImportError:
+            # It wants the 'options' module from cuda-convnet
+            # so we fake it by creating an object whose every member
+            # is a class that does nothing
+            faker = type('fake', (), {'__getattr__': lambda s,n: type(n, (), {})})()
+            sys.modules['options'] = faker
+            net = pickle.load(open(net))
+
+        # Support either the full pickled net state
+        # or just the layer list
+        if isinstance(net, dict) and 'model_state' in net:
+            self.net = net['model_state']['layers']
+        elif isinstance(net, list):
+            self.net = net
+        else:
+            raise Exception("Unknown cuda-convnet net type")
 
     neurontypemap = {'relu': 'relu',
                      'logistic': 'sigmoid',
