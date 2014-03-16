@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 #include <fstream>  // NOLINT(readability/streams)
 
 #include "caffe/common.hpp"
@@ -100,39 +101,59 @@ bool ReadImageToDatum(const string& filename, const int label,
 }
 
 template <>
-void load_2d_dataset<float>(hid_t file_id, const char* dataset_name_,
-        boost::scoped_ptr<float>* array, hsize_t* dims) {
+void hd5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
+        int min_dim, int max_dim,
+        boost::scoped_ptr<float>* array, std::vector<hsize_t>& out_dims) {
     herr_t status;
 
     int ndims;
     status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
-    assert(ndims == 2);
+    CHECK_GE(ndims, min_dim);
+    CHECK_LE(ndims, max_dim);
+
+    boost::scoped_ptr<hsize_t> dims(new hsize_t[ndims]);
 
     H5T_class_t class_;
     status = H5LTget_dataset_info(
-        file_id, dataset_name_, dims, &class_, NULL);
-    assert(class_ == H5T_NATIVE_FLOAT);
+        file_id, dataset_name_, dims.get(), &class_, NULL);
+    CHECK_EQ(class_, H5T_FLOAT) << "Epected float data";
 
-    array->reset(new float[dims[0] * dims[1]]);
+    int array_size = 1;
+    for (int i=0; i<ndims; ++i) {
+      out_dims.push_back(dims.get()[i]);
+      array_size *= dims.get()[i];
+    }
+
+    array->reset(new float[array_size]);
     status = H5LTread_dataset_float(
         file_id, dataset_name_, array->get());
 }
 
 template <>
-void load_2d_dataset<double>(hid_t file_id, const char* dataset_name_,
-        boost::scoped_ptr<double>* array, hsize_t* dims) {
+void hd5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
+        int min_dim, int max_dim,
+        boost::scoped_ptr<double>* array, std::vector<hsize_t>& out_dims) {
     herr_t status;
 
     int ndims;
     status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
-    assert(ndims == 2);
+    CHECK_GE(ndims, min_dim);
+    CHECK_LE(ndims, max_dim);
+
+    boost::scoped_ptr<hsize_t> dims(new hsize_t[ndims]);
 
     H5T_class_t class_;
     status = H5LTget_dataset_info(
-        file_id, dataset_name_, dims, &class_, NULL);
-    assert(class_ == H5T_NATIVE_DOUBLE);
+        file_id, dataset_name_, dims.get(), &class_, NULL);
+    CHECK_EQ(class_, H5T_FLOAT) << "Epected float data";
 
-    array->reset(new double[dims[0] * dims[1]]);
+    int array_size = 1;
+    for (int i=0; i<ndims; ++i) {
+      out_dims.push_back(dims.get()[i]);
+      array_size *= dims.get()[i];
+    }
+
+    array->reset(new double[array_size]);
     status = H5LTread_dataset_double(
         file_id, dataset_name_, array->get());
 }
