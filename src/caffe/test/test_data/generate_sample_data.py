@@ -7,7 +7,9 @@ import h5py
 
 num_cols = 8
 num_rows = 10
-data = np.arange(num_cols * num_rows).reshape(num_rows, num_cols)
+height = 5
+width = 5
+data = np.arange(num_cols * num_rows * height * width).reshape(num_rows, num_cols, height, width)
 label = np.arange(num_rows)[:, np.newaxis]
 print data
 print label

@@ -398,11 +398,11 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  boost::scoped_ptr<Dtype> data;
-  boost::scoped_ptr<Dtype> label;
-  hsize_t data_dims[2];
-  hsize_t label_dims[2];
-  hsize_t current_row;
+  boost::scoped_ptr<Dtype> data_;
+  boost::scoped_ptr<Dtype> label_;
+  std::vector<hsize_t> data_dims_;
+  std::vector<hsize_t> label_dims_;
+  hsize_t current_row_;
 };
 
 
