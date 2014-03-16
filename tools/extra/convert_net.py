@@ -1,22 +1,25 @@
 import sys
 sys.path.append('../../python/')
 import os
-from caffe import pycaffe
 from caffe.proto import caffe_pb2
+import caffe.convert
 from google.protobuf import text_format
 import cPickle as pickle
+import numpy as np
 
 class CudaConvNetReader(object):
-    def __init__(self, net, blobs=False):
-        self.net = pickle.load(open(net))
+    def __init__(self, net, readblobs=False):
         self.name = os.path.basename(net)
+        self.readblobs = readblobs
+
         try:
             net = pickle.load(open(net))
         except ImportError:
             # It wants the 'options' module from cuda-convnet
             # so we fake it by creating an object whose every member
             # is a class that does nothing
-            faker = type('fake', (), {'__getattr__': lambda s,n: type(n, (), {})})()
+            faker = type('fake', (), {'__getattr__':
+                                        lambda s, n: type(n, (), {})})()
             sys.modules['options'] = faker
             net = pickle.load(open(net))
 
@@ -39,15 +42,22 @@ class CudaConvNetReader(object):
     }
 
     def read(self):
+        """
+        Read the cuda-convnet file and convert it to a dict that has the
+        same structure as a caffe protobuf
+        """
         layers = []
-        for i, layer in enumerate(self.net):
+        for layer in self.net:
             layertype = layer['type'].split('.')[0]
             readfn = getattr(self, 'read_' + layertype)
 
+            convertedlayer = readfn(layer)
+
             layerconnection = {}
-            layerconnection['layer'] = readfn(layer)
+            layerconnection['layer'] = convertedlayer
             layerconnection['top'] = [layer['name']]
-            layerconnection['bottom'] = [l['name'] for l in layer.get('inputLayers', [])]
+            layerconnection['bottom'] = [l['name'] for l in 
+                                                   layer.get('inputLayers', [])]
 
             layers.append(layerconnection)
 
@@ -64,19 +74,37 @@ class CudaConvNetReader(object):
         assert layer['filters'] % layer['groups'][0] == 0
         assert layer['sharedBiases'] == True
 
-        return {'type': 'conv',
-                'name': layer['name'],
-                'num_output': layer['filters'],
-                'weight_filler': {'type': 'gaussian',
-                                  'std': layer['initW'][0]},
-                'bias_filler': {'type': 'constant',
-                                'value': layer['initB']},
-                'pad': -layer['padding'][0],
-                'kernelsize': layer['filterSize'][0],
-                'group': 1,
-                'stride': layer['stride'][0],
-                #'blobs': None
-                }
+        newlayer = {'type': 'conv',
+                    'name': layer['name'],
+                    'num_output': layer['filters'],
+                    'weight_filler': {'type': 'gaussian',
+                                      'std': layer['initW'][0]},
+                    'bias_filler': {'type': 'constant',
+                                    'value': layer['initB']},
+                    'pad': -layer['padding'][0],
+                    'kernelsize': layer['filterSize'][0],
+                    'group': layer['groups'][0],
+                    'stride': layer['stride'][0],
+                    }
+
+        if self.readblobs:
+            # shape is ((channels/group)*filterSize*filterSize, nfilters)
+            # want (nfilters, channels/group, height, width)
+
+            weights = layer['weights'][0].T
+            weights = weights.reshape(layer['filters'],
+                                      layer['channels'][0]/layer['groups'][0],
+                                      layer['filterSize'][0],
+                                      layer['filterSize'][0])
+
+            biases = layer['biases'][0]
+            biases = biases.reshape(1, 1, 1, len(layer['biases'][0]))
+
+            weightsblob = caffe.convert.array_to_blobproto(weights)
+            biasesblob = caffe.convert.array_to_blobproto(biases)
+            newlayer['blobs'] = [weightsblob, biasesblob]
+
+        return newlayer
 
     def read_pool(self, layer):
         return {'type': 'pool',
@@ -85,19 +113,34 @@ class CudaConvNetReader(object):
                 'pool': self.poolmethod[layer['pool']],
                 'kernelsize': layer['sizeX'],
                 'stride': layer['stride'],
-                #'blobs': None
                 }
 
     def read_fc(self, layer):
-        return {'type': 'innerproduct',
-                'name': layer['name'],
-                'num_output': layer['outputs'],
-                'weight_filler': {'type': 'gaussian',
-                                  'std': layer['initW'][0]},
-                'bias_filler': {'type': 'constant',
-                                'value': layer['initB']},
-                #'blobs': None
-                }
+        newlayer = {'type': 'innerproduct',
+                    'name': layer['name'],
+                    'num_output': layer['outputs'],
+                    'weight_filler': {'type': 'gaussian',
+                                      'std': layer['initW'][0]},
+                    'bias_filler': {'type': 'constant',
+                                    'value': layer['initB']},
+                    }
+
+        if self.readblobs:
+            # shape is (ninputs, noutputs)
+            # want (1, 1, noutputs, ninputs)
+            weights = layer['weights'][0].T
+            weights = weights.reshape(1, 1, layer['outputs'],
+                                      layer['numInputs'][0])
+
+            biases = layer['biases'][0]
+            biases = biases.reshape(1, 1, 1, len(layer['biases'][0]))
+
+            weightsblob = caffe.convert.array_to_blobproto(weights)
+            biasesblob = caffe.convert.array_to_blobproto(biases)
+
+            newlayer['blobs'] = [weightsblob, biasesblob]
+
+        return newlayer
 
     def read_softmax(self, layer):
         return {'type': 'softmax',
@@ -126,10 +169,11 @@ class CudaConvNetReader(object):
                 }
 
     def read_rnorm(self, layer):
-        pass
+        # return self.read_cmrnorm(layer)
+        raise NotImplementedError('rnorm not implemented')
 
     def read_cnorm(self, layer):
-        pass
+        raise NotImplementedError('cnorm not implemented')
 
 
 class CudaConvNetWriter(object):
@@ -170,34 +214,52 @@ class CudaConvNetWriter(object):
         pass
 
 def cudaconv_to_prototxt(cudanet):
-    netdict = CudaConvNetReader(cudanet, blobs=False).read()
+    """Convert the cuda-convnet layer definition to caffe prototxt.
+    Takes the filename of a pickled cuda-convnet snapshot and returns
+    a string.
+    """
+    netdict = CudaConvNetReader(cudanet, readblobs=False).read()
     protobufnet = dict_to_protobuf(netdict)
     return text_format.MessageToString(protobufnet)
 
+def cudaconv_to_proto(cudanet):
+    """Convert a cuda-convnet pickled network (including weights)
+    to a caffe protobuffer. Takes a filename of a pickled cuda-convnet
+    net and returns a NetParameter protobuffer python object,
+    which can then be serialized with the SerializeToString() method
+    and written to a file.
+    """
+    netdict = CudaConvNetReader(cudanet, readblobs=True).read()
+    protobufnet = dict_to_protobuf(netdict)
+    return protobufnet
 
 # adapted from https://github.com/davyzhang/dict-to-protobuf/
-
 def list_to_protobuf(values, message):
-    '''parse list to protobuf message'''
+    """parse list to protobuf message"""
     if values == []:
         pass
-    elif isinstance(values[0],dict):#value needs to be further parsed
-        for v in values:
+    elif isinstance(values[0], dict):
+        #value needs to be further parsed
+        for val in values:
             cmd = message.add()
-            dict_to_protobuf(v,cmd)
-    else:#value can be set
+            dict_to_protobuf(val, cmd)
+    else:
+        #value can be set
         message.extend(values)
 
 def dict_to_protobuf(values, message=None):
+    """convert dict to protobuf"""
     if message is None:
         message = caffe_pb2.NetParameter()
 
-    for k,v in values.iteritems():
-        if isinstance(v,dict):#value needs to be further parsed
-            dict_to_protobuf(v,getattr(message,k))
-        elif isinstance(v,list):
-            list_to_protobuf(v,getattr(message,k))
-        else:#value can be set
-            setattr(message, k, v)
+    for k, val in values.iteritems():
+        if isinstance(val, dict):
+            #value needs to be further parsed
+            dict_to_protobuf(val, getattr(message, k))
+        elif isinstance(val, list):
+            list_to_protobuf(val, getattr(message, k))
+        else:
+            #value can be set
+            setattr(message, k, val)
 
     return message
