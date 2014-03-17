@@ -40,13 +40,11 @@ Dtype HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
       current_row_ = 0;
     }
-
     CUDA_CHECK(cudaMemcpy(
             &(*top)[0]->mutable_gpu_data()[i * data_count],
             &data_blob_.cpu_data()[current_row_ * data_count],
             sizeof(Dtype) * data_count,
             cudaMemcpyHostToDevice));
-
     CUDA_CHECK(cudaMemcpy(
             &(*top)[1]->mutable_gpu_data()[i * label_data_count],
             &label_blob_.cpu_data()[current_row_ * label_data_count],
