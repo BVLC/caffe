@@ -66,13 +66,25 @@ void UpgradeV0PaddingLayers(const V0NetParameter& param,
         LOG(FATAL) << "Unknown blob input " << blob_name << " to layer " << j;
       }
       const int top_idx = blob_name_to_last_top_idx[blob_name];
-      V0LayerParameter source_layer = param.layers(top_idx).layer();
-      if (source_layer.type() == "padding") {
+      V0LayerConnection source_layer = param.layers(top_idx);
+      if (source_layer.layer().type() == "padding") {
+        // This layer has a padding layer as input -- check that it is a conv
+        // layer and takes only one input.  Also check that the padding layer
+        // input has only one input and one output.  Other cases have undefined
+        // behavior in Caffe.
         CHECK_EQ(layer_param.type(), "conv") << "Padding layer input to "
             "non-convolutional layer type " << layer_param.type();
+        CHECK_EQ(layer_connection.bottom_size(), 1)
+            << "Conv Layer takes a single blob as input.";
+        CHECK_EQ(source_layer.bottom_size(), 1)
+            << "Padding Layer takes a single blob as input.";
+        CHECK_EQ(source_layer.top_size(), 1)
+            << "Padding Layer produces a single blob as output.";
         int layer_index = param_upgraded_pad->layers_size() - 1;
         param_upgraded_pad->mutable_layers(layer_index)->mutable_layer()
-            ->set_pad(source_layer.pad());
+            ->set_pad(source_layer.layer().pad());
+        param_upgraded_pad->mutable_layers(layer_index)
+            ->set_bottom(j, source_layer.bottom(0));
       }
     }
     for (int j = 0; j < layer_connection.top_size(); ++j) {
