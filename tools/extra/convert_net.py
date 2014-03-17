@@ -97,8 +97,8 @@ class CudaConvNetReader(object):
                                       layer['filterSize'][0],
                                       layer['filterSize'][0])
 
-            biases = layer['biases'][0]
-            biases = biases.reshape(1, 1, 1, len(layer['biases'][0]))
+            biases = layer['biases'].flatten()
+            biases = biases.reshape(1, 1, 1, len(biases))
 
             weightsblob = caffe.convert.array_to_blobproto(weights)
             biasesblob = caffe.convert.array_to_blobproto(biases)
@@ -132,8 +132,8 @@ class CudaConvNetReader(object):
             weights = weights.reshape(1, 1, layer['outputs'],
                                       layer['numInputs'][0])
 
-            biases = layer['biases'][0]
-            biases = biases.reshape(1, 1, 1, len(layer['biases'][0]))
+            biases = layer['biases'].flatten()
+            biases = biases.reshape(1, 1, 1, len(biases))
 
             weightsblob = caffe.convert.array_to_blobproto(weights)
             biasesblob = caffe.convert.array_to_blobproto(biases)
