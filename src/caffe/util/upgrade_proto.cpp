@@ -4,6 +4,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
 
+#include <map>
 #include <string>
 
 #include "caffe/common.hpp"
@@ -66,6 +67,9 @@ void UpgradeV0PaddingLayers(const V0NetParameter& param,
         LOG(FATAL) << "Unknown blob input " << blob_name << " to layer " << j;
       }
       const int top_idx = blob_name_to_last_top_idx[blob_name];
+      if (top_idx == -1) {
+        continue;
+      }
       V0LayerConnection source_layer = param.layers(top_idx);
       if (source_layer.layer().type() == "padding") {
         // This layer has a padding layer as input -- check that it is a conv
@@ -285,7 +289,8 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     }
     if (v0_layer_param.has_meanfile()) {
       if (type == "data") {
-        layer_param->mutable_data_param()->set_mean_file(v0_layer_param.meanfile());
+        layer_param->mutable_data_param()->set_mean_file(
+            v0_layer_param.meanfile());
       } else {
         LOG(ERROR) << "Unknown parameter meanfile for layer type " << type;
         is_fully_compatible = false;
