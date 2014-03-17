@@ -64,9 +64,26 @@ class CudaConvNetReader(object):
 
             layerconnection = {}
             layerconnection['layer'] = convertedlayer
-            layerconnection['top'] = [layer['name']]
-            layerconnection['bottom'] = [l['name'] for l in 
-                                                   layer.get('inputLayers', [])]
+
+            # Add the top (our output) and bottom (input) links. Neuron layers
+            # operate "in place" so have the same top and bottom.
+            def get_non_neuron_inputs(layer):
+                """Find the upstream layers that are not neurons"""
+                out = []
+                for l in layer.get('inputLayers', []):
+                    if l['type'] == 'neuron':
+                        out += get_non_neuron_inputs(l)
+                    else:
+                        out += [l['name']]
+                return out
+
+            layerconnection['bottom'] = get_non_neuron_inputs(layer)
+
+            if layer['type'] == "neuron":
+                layerconnection['top'] = layerconnection['bottom']
+            else:
+                layerconnection['top'] = [layer['name']]
+
 
             layers.append(layerconnection)
 
