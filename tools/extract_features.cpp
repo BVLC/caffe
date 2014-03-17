@@ -163,8 +163,6 @@ int feature_extraction_pipeline(int argc, char** argv) {
     db->Write(leveldb::WriteOptions(), batch);
     LOG(ERROR)<< "Extracted features of " << image_index <<
         " query images.";
-    delete batch;
-    batch = new leveldb::WriteBatch();
   }
 
   delete batch;
