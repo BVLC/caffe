@@ -167,7 +167,7 @@ $(STATIC_NAME): init $(PROTO_OBJS) $(OBJS)
 	@echo
 
 runtest: $(TEST_ALL_BIN)
-	$(TEST_ALL_BIN)
+	$(TEST_ALL_BIN) $(TEST_GPUID)
 
 $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
 	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
