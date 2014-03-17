@@ -36,7 +36,7 @@ Net<Dtype>::Net(const string& param_file) {
         << "Failed to parse NetParameter file: " << param_file;
     LOG(ERROR) << "Parsed file as V0NetParameter: " << param_file;
     LOG(ERROR) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use tools/upgrade_net_param.testbin to upgrade "
+        << "V0NetParameter; use tools/upgrade_net_proto.testbin to upgrade "
         << "this and any other network proto files to the new format.";
     if (!UpgradeV0Net(v0_param, &param)) {
       LOG(ERROR) << "Warning: had one or more problems upgrading "
