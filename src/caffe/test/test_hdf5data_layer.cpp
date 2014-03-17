@@ -89,7 +89,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 
     // Go through the data 10 times (5 batches).
     const int data_size = num_cols * height * width;
-    for (int iter = 0; iter < 5; ++iter) {
+    for (int iter = 0; iter < 10; ++iter) {
       layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
 
       // On even iterations, we're reading the first half of the data.
