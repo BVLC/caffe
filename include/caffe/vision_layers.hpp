@@ -389,7 +389,6 @@ class HDF5DataLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
  protected:
-  virtual void load_hdf5_file(const char* filename);
 
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -400,15 +399,15 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  virtual void load_hdf5_file_data(const char* filename);
+
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;
   unsigned int current_file_;
   hsize_t current_row_;
 
-  boost::scoped_ptr<Dtype> data_;
-  boost::scoped_ptr<Dtype> label_;
-  std::vector<hsize_t> data_dims_;
-  std::vector<hsize_t> label_dims_;
+  Blob<Dtype> data_blob_;
+  Blob<Dtype> label_blob_;
 };
 
 
