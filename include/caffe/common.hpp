@@ -25,6 +25,9 @@
     LOG(FATAL) << "Cuda kernel failed. Error: " \
         << cudaGetErrorString(cudaPeekAtLastError())
 
+#define CUDA_KERNEL_LOOP(tid, nthreads) \
+        for(int tid = blockIdx.x * blockDim.x + threadIdx.x; tid < (nthreads);  tid += blockDim.x * gridDim.x)
+
 // Disable the copy and assignment operator for a class.
 #define DISABLE_COPY_AND_ASSIGN(classname) \
 private:\

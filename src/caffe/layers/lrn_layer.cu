@@ -11,8 +11,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* in,
     const int num, const int channels, const int height,
     const int width, const int size, const Dtype alpha_over_size,
     Dtype* scale) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     int w = index % width;
     int h = (index / width) % height;
@@ -58,8 +57,7 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* in,
 template <typename Dtype>
 __global__ void LRNComputeOutput(const int nthreads, const Dtype* in,
     const Dtype* scale, const Dtype negative_beta, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     out[index] = in[index] * pow(scale[index], negative_beta);
   }
 }
@@ -93,7 +91,7 @@ __global__ void LRNComputeDiff(const int nthreads, const Dtype* bottom_data,
     const Dtype cache_ratio,
     Dtype* bottom_diff) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     int w = index % width;
     int h = (index / width) % height;
