@@ -158,4 +158,23 @@ void hd5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
         file_id, dataset_name_, array->get());
 }
 
+template <>
+int WriteBlobToHDF5File<float>(
+    const Blob<float>& blob, const string& hdf5_file,
+      const string& hdf5_dataset_name, const PredType hdf5_data_type);
+template <>
+int WriteBlobToHDF5File<double>(
+    const Blob<double>& blob, const string& hdf5_file,
+      const string& hdf5_dataset_name, const PredType hdf5_data_type);
+
+template <>
+int ReadBlobFromHDF5File<float>(
+    const string& hdf5_file, const string& hdf5_dataset_name,
+    Blob<float>* blob);
+template <>
+int ReadBlobFromHDF5File<double>(
+    const string& hdf5_file, const string& hdf5_dataset_name,
+    Blob<double>* blob);
+
+
 }  // namespace caffe
