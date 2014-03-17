@@ -8,9 +8,10 @@ import cPickle as pickle
 import numpy as np
 
 class CudaConvNetReader(object):
-    def __init__(self, net, readblobs=False):
+    def __init__(self, net, readblobs=False, ignore_data_and_loss=True):
         self.name = os.path.basename(net)
         self.readblobs = readblobs
+        self.ignore_data_and_loss = ignore_data_and_loss
 
         try:
             net = pickle.load(open(net))
@@ -47,8 +48,16 @@ class CudaConvNetReader(object):
         same structure as a caffe protobuf
         """
         layers = []
+        datalayer = None
         for layer in self.net:
             layertype = layer['type'].split('.')[0]
+
+            if layer['name'] == 'data':
+                datalayer = layer
+
+            if self.ignore_data_and_loss and layertype in ['data', 'cost']:
+                continue
+
             readfn = getattr(self, 'read_' + layertype)
 
             convertedlayer = readfn(layer)
@@ -61,8 +70,18 @@ class CudaConvNetReader(object):
 
             layers.append(layerconnection)
 
-        return {'name': self.name, 
-                'layers': layers}
+        netdict = {'name': self.name, 
+                   'layers': layers}
+
+        # Add the hardcoded data dimensions instead of a data layer
+        # will assume that the data layer is called "data" (since otherwise)
+        # it is not trivial to distinguish it from a label layer)
+        if self.ignore_data_and_loss and datalayer is not None:
+            netdict['input'] = ["data"]
+            size = int(np.sqrt(datalayer['outputs']/3))
+            netdict['input_dim'] = [1, 3, size, size]
+
+        return netdict
 
     def read_data(self, layer):
         return {'type': 'data',
