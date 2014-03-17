@@ -23,21 +23,24 @@ template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const int batchsize = this->layer_param_.batchsize();
-  for (int i = 0; i < batchsize; ++i, ++current_row) {
-    if (current_row == data_dims[0]) {
-      current_row = 0;
+  const int data_count = (*top)[0]->count() / (*top)[0]->num();
+  const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
+
+  for (int i = 0; i < batchsize; ++i, ++current_row_) {
+    if (current_row_ == data_dims_[0]) {
+      current_row_ = 0;
     }
 
     CUDA_CHECK(cudaMemcpy(
-            &(*top)[0]->mutable_gpu_data()[i * data_dims[1]],
-            &(data.get()[current_row * data_dims[1]]),
-            sizeof(Dtype) * data_dims[1],
+            &(*top)[0]->mutable_gpu_data()[i * data_count],
+            &(data_.get()[current_row_ * data_count]),
+            sizeof(Dtype) * data_count,
             cudaMemcpyHostToDevice));
 
     CUDA_CHECK(cudaMemcpy(
-            &(*top)[1]->mutable_gpu_data()[i * label_dims[1]],
-            &(label.get()[current_row * label_dims[1]]),
-            sizeof(Dtype) * label_dims[1],
+            &(*top)[1]->mutable_gpu_data()[i * label_data_count],
+            &(label_.get()[current_row_ * label_data_count]),
+            sizeof(Dtype) * label_data_count,
             cudaMemcpyHostToDevice));
   }
 }

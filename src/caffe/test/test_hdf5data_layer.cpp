@@ -64,19 +64,23 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   param.set_source(*(this->filename));
   int num_rows = 10;
   int num_cols = 8;
+  int height = 5;
+  int width = 5;
   HDF5DataLayer<TypeParam> layer(param);
 
   // Test that the layer setup got the correct parameters.
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), batchsize);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
-  EXPECT_EQ(this->blob_top_data_->height(), 1);
-  EXPECT_EQ(this->blob_top_data_->width(), 1);
+  EXPECT_EQ(this->blob_top_data_->height(), height);
+  EXPECT_EQ(this->blob_top_data_->width(), width);
 
   EXPECT_EQ(this->blob_top_label_->num(), batchsize);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
+
+  const int data_size = num_cols * height * width;
 
   // Go through the data 100 times.
   for (int iter = 0; iter < 100; ++iter) {
@@ -85,7 +89,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
     // On even iterations, we're reading the first half of the data.
     // On odd iterations, we're reading the second half of the data.
     int label_offset = (iter % 2 == 0) ? 0 : batchsize;
-    int data_offset = (iter % 2 == 0) ? 0 : batchsize * num_cols;
+    int data_offset = (iter % 2 == 0) ? 0 : batchsize * data_size;
 
     for (int i = 0; i < batchsize; ++i) {
       EXPECT_EQ(
@@ -94,10 +98,15 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
     }
     for (int i = 0; i < batchsize; ++i) {
       for (int j = 0; j < num_cols; ++j) {
-        EXPECT_EQ(
-          data_offset + i * num_cols + j,
-          this->blob_top_data_->cpu_data()[i * num_cols + j])
-          << "debug: i " << i << " j " << j;
+        for (int h = 0; h < height; ++h) {
+          for (int w = 0; w < width; ++w) {
+            int idx = i * num_cols * height * width + j * height * width + h * width + w;
+            EXPECT_EQ(
+              data_offset + idx,
+              this->blob_top_data_->cpu_data()[idx])
+              << "debug: i " << i << " j " << j;
+          }
+        }
       }
     }
   }
@@ -111,7 +120,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
     // On even iterations, we're reading the first half of the data.
     // On odd iterations, we're reading the second half of the data.
     int label_offset = (iter % 2 == 0) ? 0 : batchsize;
-    int data_offset = (iter % 2 == 0) ? 0 : batchsize * num_cols;
+    int data_offset = (iter % 2 == 0) ? 0 : batchsize * data_size;
 
     for (int i = 0; i < batchsize; ++i) {
       EXPECT_EQ(
@@ -120,10 +129,15 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
     }
     for (int i = 0; i < batchsize; ++i) {
       for (int j = 0; j < num_cols; ++j) {
-        EXPECT_EQ(
-          data_offset + i * num_cols + j,
-          this->blob_top_data_->cpu_data()[i * num_cols + j])
-          << "debug: i " << i << " j " << j;
+        for (int h = 0; h < height; ++h) {
+          for (int w = 0; w < width; ++w) {
+            int idx = i * num_cols * height * width + j * height * width + h * width + w;
+            EXPECT_EQ(
+              data_offset + idx,
+              this->blob_top_data_->cpu_data()[idx])
+              << "debug: i " << i << " j " << j;
+          }
+        }
       }
     }
   }
