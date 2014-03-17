@@ -181,6 +181,15 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         is_fully_compatible = false;
       }
     }
+    if (v0_layer_param.has_group()) {
+      if (type == "conv") {
+        layer_param->mutable_convolution_param()->set_group(
+            v0_layer_param.group());
+      } else {
+        LOG(ERROR) << "Unknown parameter group for layer type " << type;
+        is_fully_compatible = false;
+      }
+    }
     if (v0_layer_param.has_stride()) {
       if (type == "conv") {
         layer_param->mutable_convolution_param()->set_stride(
@@ -219,7 +228,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       }
     }
     if (v0_layer_param.has_dropout_ratio()) {
-      if (type == "dropout_ratio") {
+      if (type == "dropout") {
         layer_param->mutable_dropout_param()->set_dropout_ratio(
             v0_layer_param.dropout_ratio());
       } else {
