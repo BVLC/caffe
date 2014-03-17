@@ -295,6 +295,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       if (type == "data") {
         layer_param->mutable_data_param()->set_batch_size(
             v0_layer_param.batchsize());
+      } else if (type == "hdf5_data") {
+        layer_param->mutable_hdf5_data_param()->set_batch_size(
+            v0_layer_param.batchsize());
       } else {
         LOG(ERROR) << "Unknown parameter batchsize for layer type " << type;
         is_fully_compatible = false;
