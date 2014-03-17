@@ -1107,8 +1107,6 @@ class V0UpgradeTest : public ::testing::Test {
         output_param_string, &expected_output_param));
     NetParameter actual_output_param;
     UpgradeV0Net(input_param, &actual_output_param);
-    CHECK_EQ(expected_output_param.DebugString(),
-        actual_output_param.DebugString());
     EXPECT_EQ(expected_output_param.DebugString(),
         actual_output_param.DebugString());
   }
@@ -1266,6 +1264,11 @@ TYPED_TEST(V0UpgradeTest, TestSimple) {
 TYPED_TEST(V0UpgradeTest, TestAllParams) {
   const string& input_proto =
       "name: 'CaffeNet' "
+      "input: 'input_data' "
+      "input_dim: 64 "
+      "input_dim: 3 "
+      "input_dim: 32 "
+      "input_dim: 32 "
       "layers { "
       "  layer { "
       "    name: 'data' "
@@ -1408,6 +1411,11 @@ TYPED_TEST(V0UpgradeTest, TestAllParams) {
       "} ";
   const string& expected_output_proto =
       "name: 'CaffeNet' "
+      "input: 'input_data' "
+      "input_dim: 64 "
+      "input_dim: 3 "
+      "input_dim: 32 "
+      "input_dim: 32 "
       "layers { "
       "  name: 'data' "
       "  type: 'data' "
