@@ -15,7 +15,7 @@ using std::make_pair;
 
 namespace caffe {
 
-void insert_splits(const NetParameter& param, NetParameter* param_split) {
+void InsertSplits(const NetParameter& param, NetParameter* param_split) {
   // Initialize by copying from the input NetParameter.
   param_split->CopyFrom(param);
   param_split->clear_layers();
@@ -57,7 +57,7 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
       const string& layer_name = layer_idx_to_layer_name[-1];
       const string& blob_name = param.input(i);
       LayerParameter* split_layer_param = param_split->add_layers();
-      configure_split_layer(layer_name, blob_name, i, split_count,
+      ConfigureSplitLayer(layer_name, blob_name, i, split_count,
           split_layer_param);
     }
   }
@@ -72,7 +72,7 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
       if (split_count > 1) {
         const string& layer_name = layer_idx_to_layer_name[top_idx.first];
         const string& blob_name = layer_param->bottom(j);
-        layer_param->set_bottom(j, get_split_blob_name(layer_name,
+        layer_param->set_bottom(j, SplitBlobName(layer_name,
             blob_name, top_idx.second, top_idx_to_bottom_split_idx[top_idx]++));
       }
     }
@@ -84,28 +84,27 @@ void insert_splits(const NetParameter& param, NetParameter* param_split) {
         const string& layer_name = layer_idx_to_layer_name[i];
         const string& blob_name = layer_param->top(j);
         LayerParameter* split_layer_param = param_split->add_layers();
-        configure_split_layer(layer_name, blob_name, j, split_count,
+        ConfigureSplitLayer(layer_name, blob_name, j, split_count,
             split_layer_param);
       }
     }
   }
 }
 
-void configure_split_layer(const string& layer_name, const string& blob_name,
+void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
     const int blob_idx, const int split_count,
     LayerParameter* split_layer_param) {
   split_layer_param->Clear();
   split_layer_param->add_bottom(blob_name);
-  split_layer_param->set_name(
-      get_split_layer_name(layer_name, blob_name, blob_idx));
+  split_layer_param->set_name(SplitLayerName(layer_name, blob_name, blob_idx));
   split_layer_param->set_type("split");
   for (int k = 0; k < split_count; ++k) {
     split_layer_param->add_top(
-        get_split_blob_name(layer_name, blob_name, blob_idx, k));
+        SplitBlobName(layer_name, blob_name, blob_idx, k));
   }
 }
 
-string get_split_layer_name(const string& layer_name, const string& blob_name,
+string SplitLayerName(const string& layer_name, const string& blob_name,
     const int blob_idx) {
   ostringstream split_layer_name;
   split_layer_name << blob_name << "_" << layer_name << "_" << blob_idx
@@ -113,7 +112,7 @@ string get_split_layer_name(const string& layer_name, const string& blob_name,
   return split_layer_name.str();
 }
 
-string get_split_blob_name(const string& layer_name, const string& blob_name,
+string SplitBlobName(const string& layer_name, const string& blob_name,
     const int blob_idx, const int split_idx) {
   // 0th split top blob is given the same name as the bottom blob so that
   // computation is done 'in-place', saving a bit of time and memory.
