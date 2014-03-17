@@ -118,7 +118,7 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     }
     const string& type = v0_layer_param.type();
     if (v0_layer_param.has_type()) {
-      layer_param->set_type(type);
+      layer_param->set_type(UpgradeV0LayerType(type));
     }
     if (v0_layer_param.has_num_output()) {
       if (type == "conv") {
@@ -357,6 +357,55 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     }
   }
   return is_fully_compatible;
+}
+
+LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
+  if (type == "accuracy") {
+    return LayerParameter_LayerType_ACCURACY;
+  } else if (type == "bnll") {
+    return LayerParameter_LayerType_BNLL;
+  } else if (type == "conv") {
+    return LayerParameter_LayerType_CONVOLUTION;
+  } else if (type == "concat") {
+    return LayerParameter_LayerType_CONCAT;
+  } else if (type == "data") {
+    return LayerParameter_LayerType_DATA;
+  } else if (type == "dropout") {
+    return LayerParameter_LayerType_DROPOUT;
+  } else if (type == "euclidean_loss") {
+    return LayerParameter_LayerType_EUCLIDEAN_LOSS;
+  } else if (type == "flatten") {
+    return LayerParameter_LayerType_FLATTEN;
+  } else if (type == "hdf5_data") {
+    return LayerParameter_LayerType_HDF5_DATA;
+  } else if (type == "im2col") {
+    return LayerParameter_LayerType_IM2COL;
+  } else if (type == "infogain_loss") {
+    return LayerParameter_LayerType_INFOGAIN_LOSS;
+  } else if (type == "innerproduct") {
+    return LayerParameter_LayerType_INNER_PRODUCT;
+  } else if (type == "lrn") {
+    return LayerParameter_LayerType_LRN;
+  } else if (type == "multinomial_logistic_loss") {
+    return LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS;
+  } else if (type == "pool") {
+    return LayerParameter_LayerType_POOLING;
+  } else if (type == "relu") {
+    return LayerParameter_LayerType_RELU;
+  } else if (type == "sigmoid") {
+    return LayerParameter_LayerType_SIGMOID;
+  } else if (type == "softmax") {
+    return LayerParameter_LayerType_SOFTMAX;
+  } else if (type == "softmax_loss") {
+    return LayerParameter_LayerType_SOFTMAX_LOSS;
+  } else if (type == "split") {
+    return LayerParameter_LayerType_SPLIT;
+  } else if (type == "tanh") {
+    return LayerParameter_LayerType_TANH;
+  } else {
+    LOG(FATAL) << "Unknown layer name: " << type;
+    return LayerParameter_LayerType(-1);
+  }
 }
 
 }  // namespace caffe

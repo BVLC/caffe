@@ -97,7 +97,7 @@ void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
   split_layer_param->Clear();
   split_layer_param->add_bottom(blob_name);
   split_layer_param->set_name(SplitLayerName(layer_name, blob_name, blob_idx));
-  split_layer_param->set_type("split");
+  split_layer_param->set_type(LayerParameter_LayerType_SPLIT);
   for (int k = 0; k < split_count; ++k) {
     split_layer_param->add_top(
         SplitBlobName(layer_name, blob_name, blob_idx, k));

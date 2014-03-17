@@ -91,7 +91,30 @@ message SolverState {
 
 message LayerParameter {
   optional string name = 1; // the layer name
-  optional string type = 2; // the string to specify the layer type
+  enum LayerType {
+    ACCURACY = 0;
+    BNLL = 1;
+    CONVOLUTION = 2;
+    CONCAT = 3;
+    DATA = 4;
+    DROPOUT = 5;
+    EUCLIDEAN_LOSS = 6;
+    FLATTEN = 7;
+    HDF5_DATA = 8;
+    IM2COL = 9;
+    INFOGAIN_LOSS = 10;
+    INNER_PRODUCT = 11;
+    LRN = 12;
+    MULTINOMIAL_LOGISTIC_LOSS = 13;
+    POOLING = 14;
+    RELU = 15;
+    SIGMOID = 16;
+    SOFTMAX = 17;
+    SOFTMAX_LOSS = 18;
+    SPLIT = 19;
+    TANH = 20;
+  }
+  optional LayerType type = 2; // the layer type from the enum above
   repeated string bottom = 3; // the name of the bottom blobs
   repeated string top = 4; // the name of the top blobs
 
