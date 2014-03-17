@@ -4,6 +4,7 @@
 #define CAFFE_VISION_LAYERS_HPP_
 
 #include <vector>
+#include <string>
 
 #include "leveldb/db.h"
 #include "pthread.h"
@@ -389,7 +390,6 @@ class HDF5DataLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
  protected:
-
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -398,7 +398,6 @@ class HDF5DataLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
   virtual void load_hdf5_file_data(const char* filename);
 
   std::vector<std::string> hdf_filenames_;

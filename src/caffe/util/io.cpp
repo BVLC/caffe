@@ -103,7 +103,8 @@ bool ReadImageToDatum(const string& filename, const int label,
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
-    hid_t file_id, const char* dataset_name_, int min_dim, int max_dim, Blob<Dtype>& blob) {
+    hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
+    Blob<Dtype>* blob) {
   // Verify that the number of dimensions is in the accepted range.
   herr_t status;
   int ndims;
@@ -118,28 +119,27 @@ void hdf5_load_nd_dataset_helper(
       file_id, dataset_name_, dims.data(), &class_, NULL);
   CHECK_EQ(class_, H5T_FLOAT) << "Expected float or double data";
 
-  blob.Reshape(
+  blob->Reshape(
     dims[0],
     (dims.size() > 1) ? dims[1] : 1,
     (dims.size() > 2) ? dims[2] : 1,
-    (dims.size() > 3) ? dims[3] : 1
-  );
+    (dims.size() > 3) ? dims[3] : 1);
 }
 
 template <>
 void hdf5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim, Blob<float>& blob) {
+        int min_dim, int max_dim, Blob<float>* blob) {
   hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
   herr_t status = H5LTread_dataset_float(
-    file_id, dataset_name_, blob.mutable_cpu_data());
+    file_id, dataset_name_, blob->mutable_cpu_data());
 }
 
 template <>
 void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim, Blob<double>& blob) {
+        int min_dim, int max_dim, Blob<double>* blob) {
   hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
   herr_t status = H5LTread_dataset_double(
-    file_id, dataset_name_, blob.mutable_cpu_data());
+    file_id, dataset_name_, blob->mutable_cpu_data());
 }
 
 }  // namespace caffe

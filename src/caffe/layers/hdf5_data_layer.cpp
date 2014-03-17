@@ -1,3 +1,4 @@
+// Copyright 2014 BVLC.
 /*
 Contributors:
 - Sergey Karayev, 2014.
@@ -8,11 +9,11 @@ TODO:
 - can be smarter about the memcpy call instead of doing it row-by-row
   :: use util functions caffe_copy, and Blob->offset()
   :: don't forget to update hdf5_daa_layer.cu accordingly
+- add ability to shuffle filenames if flag is set
 */
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <iostream>
 #include <fstream>
 
 #include "hdf5.h"
@@ -21,8 +22,6 @@ TODO:
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
-
-using std::string;
 
 namespace caffe {
 
@@ -42,12 +41,12 @@ void HDF5DataLayer<Dtype>::load_hdf5_file_data(const char* filename) {
   const int MIN_DATA_DIM = 2;
   const int MAX_DATA_DIM = 4;
   hdf5_load_nd_dataset(
-    file_id, "data",  MIN_DATA_DIM, MAX_DATA_DIM, data_blob_);
+    file_id, "data",  MIN_DATA_DIM, MAX_DATA_DIM, &data_blob_);
 
   const int MIN_LABEL_DIM = 1;
   const int MAX_LABEL_DIM = 2;
   hdf5_load_nd_dataset(
-    file_id, "label", MIN_LABEL_DIM, MAX_LABEL_DIM, label_blob_);
+    file_id, "label", MIN_LABEL_DIM, MAX_LABEL_DIM, &label_blob_);
 
   herr_t status = H5Fclose(file_id);
   CHECK_EQ(data_blob_.num(), label_blob_.num());
@@ -65,7 +64,7 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   hdf_filenames_.clear();
   std::ifstream myfile(this->layer_param_.source().c_str());
   if (myfile.is_open()) {
-    string line = "";
+    std::string line;
     while (myfile >> line) {
       hdf_filenames_.push_back(line);
     }

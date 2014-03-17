@@ -64,9 +64,9 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   int num_cols = 8;
   int height = 5;
   int width = 5;
-  HDF5DataLayer<TypeParam> layer(param);
 
   // Test that the layer setup got the correct parameters.
+  HDF5DataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), batchsize);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
@@ -78,16 +78,18 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
 
-  for (int t=0; t<2; ++t) {
+  for (int t = 0; t < 2; ++t) {
+    // TODO: make this a TypedTest instead of this silly loop.
     if (t == 0) {
       Caffe::set_mode(Caffe::CPU);
     } else {
       Caffe::set_mode(Caffe::GPU);
     }
+    layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
 
-    // Go through the data 100 times (50 batches).
+    // Go through the data 10 times (5 batches).
     const int data_size = num_cols * height * width;
-    for (int iter = 0; iter < 100; ++iter) {
+    for (int iter = 0; iter < 5; ++iter) {
       layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
 
       // On even iterations, we're reading the first half of the data.
@@ -109,11 +111,15 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
         for (int j = 0; j < num_cols; ++j) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
-              int idx = i * num_cols * height * width + j * height * width + h * width + w;
+              int idx = (
+                i * num_cols * height * width +
+                j * height * width +
+                h * width + w);
               EXPECT_EQ(
                 file_offset + data_offset + idx,
                 this->blob_top_data_->cpu_data()[idx])
-                << "debug: i " << i << " j " << j << " iter " << iter;
+                << "debug: i " << i << " j " << j
+                << " iter " << iter << " t " << t;
             }
           }
         }
