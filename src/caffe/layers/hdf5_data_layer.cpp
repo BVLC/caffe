@@ -4,11 +4,14 @@ Contributors:
 - Tobias Domhan, 2014.
 
 TODO:
-- only load parts of the file, in accordance with a prototxt param "max_mem"
+- load file in a separate thread ("prefetch")
+- can be smarter about the memcpy call instead of doing it row-by-row
 */
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 #include "hdf5.h"
 #include "hdf5_hl.h"
@@ -61,9 +64,23 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom.size(), 0) << "HDF5DataLayer takes no input blobs.";
   CHECK_EQ(top->size(), 2) << "HDF5DataLayer takes two blobs as output.";
 
-  // Load the HDF5 file and initialize the counter.
-  const char* hdf_filename = this->layer_param_.source().c_str();
-  load_hdf5_file(hdf_filename);
+  // Read the source to parse the filenames.
+  LOG(INFO) << "Loading filename from " << this->layer_param_.source();
+  hdf_filenames_.clear();
+  std::ifstream myfile(this->layer_param_.source().c_str());
+  if (myfile.is_open()) {
+    string line = "";
+    while (myfile >> line) {
+      hdf_filenames_.push_back(line);
+    }
+  }
+  myfile.close();
+  num_files_ = hdf_filenames_.size();
+  current_file_ = 0;
+  LOG(INFO) << "Number of files: " << num_files_;
+
+  // Load the first HDF5 file and initialize the line counter.
+  load_hdf5_file(hdf_filenames_[current_file_].c_str());
   current_row_ = 0;
 
   // Reshape blobs.
@@ -83,10 +100,18 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
   const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
 
-  //TODO: consolidate into a single memcpy call
-
   for (int i = 0; i < batchsize; ++i, ++current_row_) {
     if (current_row_ == data_dims_[0]) {
+      if (num_files_ > 1) {
+        current_file_ += 1;
+
+        if (current_file_ == num_files_) {
+          current_file_ = 0;
+          LOG(INFO) << "looping around to first file";
+        }
+
+        load_hdf5_file(hdf_filenames_[current_file_].c_str());
+      }
       current_row_ = 0;
     }
 
@@ -99,7 +124,6 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             sizeof(Dtype) * label_data_count);
   }
 }
-
 
 // The backward operations are dummy - they do not carry any computation.
 template <typename Dtype>

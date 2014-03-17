@@ -28,6 +28,16 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   for (int i = 0; i < batchsize; ++i, ++current_row_) {
     if (current_row_ == data_dims_[0]) {
+      if (num_files_ > 1) {
+        current_file_ += 1;
+
+        if (current_file_ == num_files_) {
+          current_file_ = 0;
+          LOG(INFO) << "looping around to first file";
+        }
+
+        load_hdf5_file(hdf_filenames_[current_file_].c_str());
+      }
       current_row_ = 0;
     }
 
