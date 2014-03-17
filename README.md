@@ -57,20 +57,28 @@ To do so, simply run `jekyll serve -s docs` and view the documentation website a
 We strive to provide provide lots of usage examples, and to document all code in docstrings.
 We'd appreciate your contribution to this effort!
 
-## Contributing
+## Development
 
 Caffe is developed with active participation of the community by the [Berkeley Vision and Learning Center](http://bvlc.eecs.berkeley.edu/).
 We welcome all contributions!
 
-Our workflow is this:
+### The release cycle
 
-- The `dev` branch is for new development, community contributions, and testing.
-- The `master` branch is handled by BVLC, which will integrate changes from `dev` on a roughly monthly schedule.
+- The `dev` branch is for new development, including community contributions. We aim to keep it in a functional state, but large changes may occur and things may get broken every now and then. Use this if you want the "bleeding edge".
+- The `master` branch is handled by BVLC, which will integrate changes from `dev` on a roughly monthly schedule, giving it a release tag. Use this if you want more stability.
+
+### Setting priorities
+
+- Make Github Issues for bugs, features you'd like to see, questions, etc.
+- Development work is guided by [milestones](https://github.com/BVLC/caffe/issues?milestone=1), which are sets of issues selected for concurrent release (integration from `dev` to `master`).
+- Please note that since the core developers are largely researchers, we may work on a feature in isolation from the open-source community for some time before releasing it, so as to claim honest academic contribution. We do release it as soon as a reasonable technical report may be written about the work, and we still aim to inform the community of ongoing development through Issues.
+
+### Contibuting
+
 - Do new development in [feature branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch) with decriptive names.
 - Bring your work up-to-date by [rebasing](http://git-scm.com/book/en/Git-Branching-Rebasing) onto the latest `dev`. (Polish your changes by [interactive rebase](https://help.github.com/articles/interactive-rebase), if you'd like.)
 - [Pull request](https://help.github.com/articles/using-pull-requests) your contribution to BVLC/caffe's `dev` branch for discussion and review.
-  * PRs should live fast, die young, and leave a beautiful merge. Pull
-    request sooner than later so that discussion can guide development.
+  * PRs should live fast, die young, and leave a beautiful merge. Pull request sooner than later so that discussion can guide development.
   * Code must be accompanied by documentation and tests at all times.
   * Only fast-forward merges will be accepted.
 
