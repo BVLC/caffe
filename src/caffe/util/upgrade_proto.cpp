@@ -11,12 +11,17 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/proto/deprecated/caffe_v0_to_v1_bridge.pb.h"
 
+using std::map;
 using std::string;
 
 namespace caffe {
 
-bool UpgradeV0Net(const V0NetParameter& v0_net_param,
+bool UpgradeV0Net(const V0NetParameter& v0_net_param_padding_layers,
                   NetParameter* net_param) {
+  // First upgrade padding layers to padded conv layers.
+  V0NetParameter v0_net_param;
+  UpgradeV0PaddingLayers(v0_net_param_padding_layers, &v0_net_param);
+  // Now upgrade layer parameters.
   bool is_fully_compatible = true;
   net_param->Clear();
   if (v0_net_param.has_name()) {
@@ -33,6 +38,48 @@ bool UpgradeV0Net(const V0NetParameter& v0_net_param,
     net_param->set_force_backward(v0_net_param.force_backward());
   }
   return is_fully_compatible;
+}
+
+void UpgradeV0PaddingLayers(const V0NetParameter& param,
+                            V0NetParameter* param_upgraded_pad) {
+  // Copy everything other than the layers from the original param.
+  param_upgraded_pad->Clear();
+  param_upgraded_pad->CopyFrom(param);
+  param_upgraded_pad->clear_layers();
+  // Figure out which layer each bottom blob comes from.
+  map<string, int> blob_name_to_last_top_idx;
+  for (int i = 0; i < param.input_size(); ++i) {
+    const string& blob_name = param.input(i);
+    blob_name_to_last_top_idx[blob_name] = -1;
+  }
+  for (int i = 0; i < param.layers_size(); ++i) {
+    const V0LayerConnection& layer_connection = param.layers(i);
+    const V0LayerParameter& layer_param = layer_connection.layer();
+    // Add the layer to the new net, unless it's a padding layer.
+    if (layer_param.type() != "padding") {
+      param_upgraded_pad->add_layers()->CopyFrom(layer_connection);
+    }
+    for (int j = 0; j < layer_connection.bottom_size(); ++j) {
+      const string& blob_name = layer_connection.bottom(j);
+      if (blob_name_to_last_top_idx.find(blob_name) ==
+          blob_name_to_last_top_idx.end()) {
+        LOG(FATAL) << "Unknown blob input " << blob_name << " to layer " << j;
+      }
+      const int top_idx = blob_name_to_last_top_idx[blob_name];
+      V0LayerParameter source_layer = param.layers(top_idx).layer();
+      if (source_layer.type() == "padding") {
+        CHECK_EQ(layer_param.type(), "conv") << "Padding layer input to "
+            "non-convolutional layer type " << layer_param.type();
+        int layer_index = param_upgraded_pad->layers_size() - 1;
+        param_upgraded_pad->mutable_layers(layer_index)->mutable_layer()
+            ->set_pad(source_layer.pad());
+      }
+    }
+    for (int j = 0; j < layer_connection.top_size(); ++j) {
+      const string& blob_name = layer_connection.top(j);
+      blob_name_to_last_top_idx[blob_name] = i;
+    }
+  }
 }
 
 bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
