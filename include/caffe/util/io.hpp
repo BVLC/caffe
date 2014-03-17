@@ -52,9 +52,14 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 }
 
 template <typename Dtype>
-void load_2d_dataset(
+void hd5_load_nd_dataset(
   hid_t file_id, const char* dataset_name_,
-  boost::scoped_ptr<Dtype>* array, hsize_t* dims);
+  int min_dim,//inclusive
+  int max_dim,//inclusive
+  //output:
+  boost::scoped_ptr<Dtype>* array,
+  std::vector<hsize_t>& dims
+  );
 
 }  // namespace caffe
 
