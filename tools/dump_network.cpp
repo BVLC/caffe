@@ -44,10 +44,10 @@ int main(int argc, char** argv) {
   ReadProtoFromBinaryFile(argv[2], &trained_net_param);
 
   vector<Blob<float>* > input_vec;
+  shared_ptr<Blob<float> > input_blob(new Blob<float>());
   if (strcmp(argv[3], "none") != 0) {
     BlobProto input_blob_proto;
     ReadProtoFromBinaryFile(argv[3], &input_blob_proto);
-    shared_ptr<Blob<float> > input_blob(new Blob<float>());
     input_blob->FromProto(input_blob_proto);
     input_vec.push_back(input_blob.get());
   }
