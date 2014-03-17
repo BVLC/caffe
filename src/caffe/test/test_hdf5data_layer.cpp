@@ -31,10 +31,8 @@ class HDF5DataLayerTest : public ::testing::Test {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
 
-    // TODO: generate sample HDF5 file on the fly.
-    // For now, use example HDF5 file.
-    // TODO: how to best deal with the relativeness of the path?
-    filename = new string("src/caffe/test/test_data/sample_data.h5");
+    // Check out generate_sample_data.py in the same directory.
+    filename = new string("src/caffe/test/test_data/sample_data_list.txt");
     LOG(INFO) << "Using sample HDF5 data file " << filename;
   }
 
@@ -80,62 +78,43 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
 
-  const int data_size = num_cols * height * width;
-
-  // Go through the data 100 times.
-  for (int iter = 0; iter < 100; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-
-    // On even iterations, we're reading the first half of the data.
-    // On odd iterations, we're reading the second half of the data.
-    int label_offset = (iter % 2 == 0) ? 0 : batchsize;
-    int data_offset = (iter % 2 == 0) ? 0 : batchsize * data_size;
-
-    for (int i = 0; i < batchsize; ++i) {
-      EXPECT_EQ(
-        label_offset + i,
-        this->blob_top_label_->cpu_data()[i]);
+  for (int t=0; t<2; ++t) {
+    if (t == 0) {
+      Caffe::set_mode(Caffe::CPU);
+    } else {
+      Caffe::set_mode(Caffe::GPU);
     }
-    for (int i = 0; i < batchsize; ++i) {
-      for (int j = 0; j < num_cols; ++j) {
-        for (int h = 0; h < height; ++h) {
-          for (int w = 0; w < width; ++w) {
-            int idx = i * num_cols * height * width + j * height * width + h * width + w;
-            EXPECT_EQ(
-              data_offset + idx,
-              this->blob_top_data_->cpu_data()[idx])
-              << "debug: i " << i << " j " << j;
-          }
-        }
+
+    // Go through the data 100 times (50 batches).
+    const int data_size = num_cols * height * width;
+    for (int iter = 0; iter < 100; ++iter) {
+      layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+
+      // On even iterations, we're reading the first half of the data.
+      // On odd iterations, we're reading the second half of the data.
+      int label_offset = (iter % 2 == 0) ? 0 : batchsize;
+      int data_offset = (iter % 2 == 0) ? 0 : batchsize * data_size;
+
+      // Every two iterations we are reading the second file,
+      // which has the same labels, but data is offset by total data size,
+      // which is 2000 (see generate_sample_data).
+      int file_offset = (iter % 4 < 2) ? 0 : 2000;
+
+      for (int i = 0; i < batchsize; ++i) {
+        EXPECT_EQ(
+          label_offset + i,
+          this->blob_top_label_->cpu_data()[i]);
       }
-    }
-  }
-
-  // Exact same test in GPU mode.
-  Caffe::set_mode(Caffe::GPU);
-  // Go through the data 100 times.
-  for (int iter = 0; iter < 100; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-
-    // On even iterations, we're reading the first half of the data.
-    // On odd iterations, we're reading the second half of the data.
-    int label_offset = (iter % 2 == 0) ? 0 : batchsize;
-    int data_offset = (iter % 2 == 0) ? 0 : batchsize * data_size;
-
-    for (int i = 0; i < batchsize; ++i) {
-      EXPECT_EQ(
-        label_offset + i,
-        this->blob_top_label_->cpu_data()[i]);
-    }
-    for (int i = 0; i < batchsize; ++i) {
-      for (int j = 0; j < num_cols; ++j) {
-        for (int h = 0; h < height; ++h) {
-          for (int w = 0; w < width; ++w) {
-            int idx = i * num_cols * height * width + j * height * width + h * width + w;
-            EXPECT_EQ(
-              data_offset + idx,
-              this->blob_top_data_->cpu_data()[idx])
-              << "debug: i " << i << " j " << j;
+      for (int i = 0; i < batchsize; ++i) {
+        for (int j = 0; j < num_cols; ++j) {
+          for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+              int idx = i * num_cols * height * width + j * height * width + h * width + w;
+              EXPECT_EQ(
+                file_offset + data_offset + idx,
+                this->blob_top_data_->cpu_data()[idx])
+                << "debug: i " << i << " j " << j << " iter " << iter;
+            }
           }
         }
       }
