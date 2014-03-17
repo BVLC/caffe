@@ -11,18 +11,6 @@ layers {
     num_output: 96
     kernelsize: 11
     stride: 4
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-    bias_filler {
-      type: "constant"
-      value: 0.
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "data"
   top: "conv1"
@@ -65,18 +53,6 @@ layers {
     group: 2
     kernelsize: 5
     pad: 2
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-    bias_filler {
-      type: "constant"
-      value: 1.
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "norm1"
   top: "conv2"
@@ -118,18 +94,6 @@ layers {
     num_output: 384
     kernelsize: 3
     pad: 1
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-    bias_filler {
-      type: "constant"
-      value: 0.
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "norm2"
   top: "conv3"
@@ -150,18 +114,6 @@ layers {
     group: 2
     kernelsize: 3
     pad: 1
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-    bias_filler {
-      type: "constant"
-      value: 1.
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "conv3"
   top: "conv4"
@@ -182,18 +134,6 @@ layers {
     group: 2
     kernelsize: 3
     pad: 1
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-    bias_filler {
-      type: "constant"
-      value: 1.
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "conv4"
   top: "conv5"
@@ -222,18 +162,6 @@ layers {
     name: "fc6"
     type: "innerproduct"
     num_output: 4096
-    weight_filler {
-      type: "gaussian"
-      std: 0.005
-    }
-    bias_filler {
-      type: "constant"
-      value: 1.
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "pool5"
   top: "fc6"
@@ -260,18 +188,6 @@ layers {
     name: "fc7"
     type: "innerproduct"
     num_output: 4096
-    weight_filler {
-      type: "gaussian"
-      std: 0.005
-    }
-    bias_filler {
-      type: "constant"
-      value: 1.
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "fc6"
   top: "fc7"
@@ -298,18 +214,6 @@ layers {
     name: "fc8"
     type: "innerproduct"
     num_output: 1000
-    weight_filler {
-      type: "gaussian"
-      std: 0.01
-    }
-    bias_filler {
-      type: "constant"
-      value: 0
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-    weight_decay: 1.
-    weight_decay: 0.
   }
   bottom: "fc7"
   top: "fc8"
