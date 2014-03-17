@@ -32,6 +32,9 @@ bool UpgradeV0Net(const V0NetParameter& v0_net_param_padding_layers,
     is_fully_compatible &= UpgradeV0LayerConnection(v0_net_param.layers(i),
                                                     net_param->add_layers());
   }
+  for (int i = 0; i < v0_net_param.input_size(); ++i) {
+    net_param->add_input(v0_net_param.input(i));
+  }
   for (int i = 0; i < v0_net_param.input_dim_size(); ++i) {
     net_param->add_input_dim(v0_net_param.input_dim(i));
   }
