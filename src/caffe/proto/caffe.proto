@@ -91,11 +91,16 @@ message SolverState {
 
 message LayerParameter {
   optional string name = 1; // the layer name
+
+  // Add new LayerTypes to the enum below in lexicographical order, starting
+  // with the next available ID in the comment line above the enum.
+  // Update the next available ID when you add a new LayerType.
+  // LayerType next available ID: 21
   enum LayerType {
     ACCURACY = 0;
     BNLL = 1;
-    CONVOLUTION = 2;
-    CONCAT = 3;
+    CONCAT = 2;
+    CONVOLUTION = 3;
     DATA = 4;
     DROPOUT = 5;
     EUCLIDEAN_LOSS = 6;
@@ -115,6 +120,7 @@ message LayerParameter {
     TANH = 20;
   }
   optional LayerType type = 2; // the layer type from the enum above
+
   repeated string bottom = 3; // the name of the bottom blobs
   repeated string top = 4; // the name of the top blobs
 
@@ -127,15 +133,35 @@ message LayerParameter {
   repeated float weight_decay = 7;
 
   // Parameters for particular layer types.
-  optional DataParameter data_param = 8;
-  optional HDF5DataParameter hdf5_data_param = 9;
-  optional InnerProductParameter inner_product_param = 10;
-  optional ConvolutionParameter convolution_param = 11;
-  optional PoolingParameter pooling_param = 12;
-  optional DropoutParameter dropout_param = 13;
-  optional LRNParameter lrn_param = 14;
-  optional ConcatParameter concat_param = 15;
-  optional InfogainLossParameter infogain_loss_param = 16;
+  optional ConcatParameter concat_param = 8;
+  optional ConvolutionParameter convolution_param = 9;
+  optional DataParameter data_param = 10;
+  optional DropoutParameter dropout_param = 11;
+  optional HDF5DataParameter hdf5_data_param = 12;
+  optional InfogainLossParameter infogain_loss_param = 13;
+  optional InnerProductParameter inner_product_param = 14;
+  optional LRNParameter lrn_param = 15;
+  optional PoolingParameter pooling_param = 16;
+}
+
+// Message that stores parameters used by ConcatLayer
+message ConcatParameter {
+  // Concat Layer needs to specify the dimension along the concat will happen,
+  // the other dimensions must be the same for all the bottom blobs
+  // By default it will concatenate blobs along channels dimension
+  optional uint32 concat_dim = 1 [default = 1];
+}
+
+// Message that stores parameters used by ConvolutionLayer
+message ConvolutionParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  optional bool bias_term = 2 [default = true]; // whether to have bias terms
+  optional uint32 pad = 3 [default = 0]; // The padding size
+  optional uint32 kernel_size = 4; // The kernel size
+  optional uint32 group = 5 [default = 1]; // The group size for group conv
+  optional uint32 stride = 6 [default = 1]; // The stride
+  optional FillerParameter weight_filler = 7; // The filler for the weight
+  optional FillerParameter bias_filler = 8; // The filler for the bias
 }
 
 // Message that stores parameters used by DataLayer
@@ -160,12 +186,23 @@ message DataParameter {
   optional uint32 rand_skip = 7 [default = 0];
 }
 
+// Message that stores parameters used by DropoutLayer
+message DropoutParameter {
+  optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
+}
+
 // Message that stores parameters used by HDF5DataLayer
 message HDF5DataParameter {
   // Specify the data source.
   optional string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 2;
+}
+
+// Message that stores parameters used by InfogainLossLayer
+message InfogainLossParameter {
+  // Specify the infogain matrix source.
+  optional string source = 1;
 }
 
 // Message that stores parameters used by InnerProductLayer
@@ -176,16 +213,11 @@ message InnerProductParameter {
   optional FillerParameter bias_filler = 4; // The filler for the bias
 }
 
-// Message that stores parameters used by ConvolutionLayer
-message ConvolutionParameter {
-  optional uint32 num_output = 1; // The number of outputs for the layer
-  optional bool bias_term = 2 [default = true]; // whether to have bias terms
-  optional uint32 pad = 3 [default = 0]; // The padding size
-  optional uint32 kernel_size = 4; // The kernel size
-  optional uint32 group = 5 [default = 1]; // The group size for group conv
-  optional uint32 stride = 6 [default = 1]; // The stride
-  optional FillerParameter weight_filler = 7; // The filler for the weight
-  optional FillerParameter bias_filler = 8; // The filler for the bias
+// Message that stores parameters used by LRNLayer
+message LRNParameter {
+  optional uint32 local_size = 1 [default = 5]; // for local response norm
+  optional float alpha = 2 [default = 1.]; // for local response norm
+  optional float beta = 3 [default = 0.75]; // for local response norm
 }
 
 // Message that stores parameters used by PoolingLayer

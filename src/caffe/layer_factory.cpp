@@ -24,10 +24,10 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new AccuracyLayer<Dtype>(param);
   case LayerParameter_LayerType_BNLL:
     return new BNLLLayer<Dtype>(param);
-  case LayerParameter_LayerType_CONVOLUTION:
-    return new ConvolutionLayer<Dtype>(param);
   case LayerParameter_LayerType_CONCAT:
     return new ConcatLayer<Dtype>(param);
+  case LayerParameter_LayerType_CONVOLUTION:
+    return new ConvolutionLayer<Dtype>(param);
   case LayerParameter_LayerType_DATA:
     return new DataLayer<Dtype>(param);
   case LayerParameter_LayerType_DROPOUT:
