@@ -1,9 +1,11 @@
-// Copyright Sergey Karayev 2014
 /*
+Contributors:
+- Sergey Karayev, 2014.
+- Tobias Domhan, 2014.
+
 TODO:
 - only load parts of the file, in accordance with a prototxt param "max_mem"
 */
-
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -23,6 +25,37 @@ template <typename Dtype>
 HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
 
 template <typename Dtype>
+void HDF5DataLayer<Dtype>::load_hdf5_file(const char* filename) {
+  LOG(INFO) << "Loading HDF5 file" << filename;
+  hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  if (file_id < 0) {
+    LOG(ERROR) << "Failed opening HDF5 file" << filename;
+    return;
+  }
+  const int MIN_DATA_DIM = 2;
+  const int MAX_DATA_DIM = 4;
+  const int MIN_LABEL_DIM = 1;
+  const int MAX_LABEL_DIM = 2;
+  hdf5_load_nd_dataset(file_id, "data",  MIN_DATA_DIM, MAX_DATA_DIM,
+                      &data_,  data_dims_);
+  hdf5_load_nd_dataset(file_id, "label", MIN_LABEL_DIM, MAX_LABEL_DIM,
+                      &label_, label_dims_);
+
+  // Add missing dimensions.
+  const int MAX_BLOB_DIM = 4;
+  while(data_dims_.size() < MAX_BLOB_DIM) {
+    data_dims_.push_back(1);
+  }
+  while(label_dims_.size() < MAX_BLOB_DIM) {
+    label_dims_.push_back(1);
+  }
+
+  herr_t status = H5Fclose(file_id);
+  CHECK_EQ(data_dims_[0], label_dims_[0]);
+  LOG(INFO) << "Successully loaded " << data_dims_[0] << " rows";
+}
+
+template <typename Dtype>
 void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 0) << "HDF5DataLayer takes no input blobs.";
@@ -30,31 +63,7 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Load the HDF5 file and initialize the counter.
   const char* hdf_filename = this->layer_param_.source().c_str();
-  LOG(INFO) << "Loading HDF5 file" << hdf_filename;
-  hid_t file_id = H5Fopen(hdf_filename, H5F_ACC_RDONLY, H5P_DEFAULT);
-  if (file_id < 0) {
-    LOG(ERROR) << "Failed opening HDF5 file" << hdf_filename;
-    return;
-  }
-  const int MAX_DATA_DIM = 4;
-  const int MAX_LABEL_DIM = 2;
-  const int MIN_DIM = 2;
-  hd5_load_nd_dataset(file_id, "data",  MIN_DIM, MAX_DATA_DIM,
-                      &data_,  data_dims_);
-  hd5_load_nd_dataset(file_id, "label", MIN_DIM, MAX_LABEL_DIM,
-                      &label_, label_dims_);
-
-  while(data_dims_.size() < MAX_DATA_DIM) {
-    data_dims_.push_back(1);
-  }
-
-  //add missing dimensions:
-  label_dims_.push_back(1);
-  label_dims_.push_back(1);
-
-  herr_t status = H5Fclose(file_id);
-  CHECK_EQ(data_dims_[0], label_dims_[0]);
-  LOG(INFO) << "Successully loaded " << data_dims_[0] << " rows";
+  load_hdf5_file(hdf_filename);
   current_row_ = 0;
 
   // Reshape blobs.
