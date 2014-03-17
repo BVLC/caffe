@@ -40,13 +40,13 @@ message FillerParameter {
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  repeated LayerParameter layers = 2; // a bunch of layers.
   // The input blobs to the network.
-  repeated string input = 3;
+  repeated string input = 2;
   // The dim of the input blobs. For each input blob there should be four
   // values specifying the num, channels, height and width of the input blob.
   // Thus, there should be a total of (4 * #input) numbers.
-  repeated int32 input_dim = 4;
+  repeated int32 input_dim = 3;
+  repeated LayerParameter layers = 4; // a bunch of layers.
   // Whether the network will force every layer to carry out backward operation.
   // If set False, then whether to carry out backward is determined
   // automatically according to the net structure and learning rates.
