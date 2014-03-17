@@ -50,7 +50,7 @@ template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   // Create a copy of in_param with splits added where necessary.
   NetParameter param;
-  insert_splits(in_param, &param);
+  InsertSplits(in_param, &param);
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
