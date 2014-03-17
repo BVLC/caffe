@@ -364,10 +364,10 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     return LayerParameter_LayerType_ACCURACY;
   } else if (type == "bnll") {
     return LayerParameter_LayerType_BNLL;
-  } else if (type == "conv") {
-    return LayerParameter_LayerType_CONVOLUTION;
   } else if (type == "concat") {
     return LayerParameter_LayerType_CONCAT;
+  } else if (type == "conv") {
+    return LayerParameter_LayerType_CONVOLUTION;
   } else if (type == "data") {
     return LayerParameter_LayerType_DATA;
   } else if (type == "dropout") {
