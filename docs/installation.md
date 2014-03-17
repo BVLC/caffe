@@ -43,6 +43,12 @@ You will also need other packages, most of which can be installed via apt-get us
 
     sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
 
+Note libhdf5-serial-dev does not include the C++ library. Download the latest source code from http://www.hdfgroup.org/HDF5/release/obtainsrc.html. Take the 1.8.12 version as an example, build the C++ library as follows.
+
+    axel -n 100 http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.12.tar.bz2
+    tar xvjf hdf5-1.8.12.tar.bz2  &&  cd hdf5-1.8.12  &&  mkdir build  &&  cd build
+    cmake -C ../config/cmake/cacheinit.cmake -G "Unix Makefiles" -DHDF5_ENABLE_SZIP_SUPPORT=OFF -DHDF5_ENABLE_Z_LIB_SUPPORT=OFF -DHDF5_BUILD_CPP_LIB=ON -DBUILD_SHARED_LIBS=ON ..
+
 The only exception being the google logging library, which does not exist in the Ubuntu 12.04 repository. To install it, do:
 
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
