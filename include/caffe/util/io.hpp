@@ -52,7 +52,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 }
 
 template <typename Dtype>
-void hd5_load_nd_dataset(
+void hdf5_load_nd_dataset(
   hid_t file_id, const char* dataset_name_,
   int min_dim,//inclusive
   int max_dim,//inclusive

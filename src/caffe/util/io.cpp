@@ -100,62 +100,56 @@ bool ReadImageToDatum(const string& filename, const int label,
   return true;
 }
 
-template <>
-void hd5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim,
-        boost::scoped_ptr<float>* array, std::vector<hsize_t>& out_dims) {
-    herr_t status;
+// Verifies format of data stored in the HDF5 file.
+// Returns the total size of the data in the file.
+int hdf5_verify_and_get_size_of_nd_dataset(
+    hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
+    std::vector<hsize_t>& out_dims) {
+  // Verify that the number of dimensions is in the accepted range.
+  herr_t status;
+  int ndims;
+  status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
+  CHECK_GE(ndims, min_dim);
+  CHECK_LE(ndims, max_dim);
 
-    int ndims;
-    status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
-    CHECK_GE(ndims, min_dim);
-    CHECK_LE(ndims, max_dim);
+  // Verify that the data format is what we expect: float or double.
+  boost::scoped_ptr<hsize_t> dims(new hsize_t[ndims]);
+  H5T_class_t class_;
+  status = H5LTget_dataset_info(
+      file_id, dataset_name_, dims.get(), &class_, NULL);
+  CHECK_EQ(class_, H5T_FLOAT) << "Expected float or double data";
 
-    boost::scoped_ptr<hsize_t> dims(new hsize_t[ndims]);
-
-    H5T_class_t class_;
-    status = H5LTget_dataset_info(
-        file_id, dataset_name_, dims.get(), &class_, NULL);
-    CHECK_EQ(class_, H5T_FLOAT) << "Epected float data";
-
-    int array_size = 1;
-    for (int i=0; i<ndims; ++i) {
-      out_dims.push_back(dims.get()[i]);
-      array_size *= dims.get()[i];
-    }
-
-    array->reset(new float[array_size]);
-    status = H5LTread_dataset_float(
-        file_id, dataset_name_, array->get());
+  // Establish and return the total data size.
+  int array_size = 1;
+  for (int i=0; i<ndims; ++i) {
+    out_dims.push_back(dims.get()[i]);
+    array_size *= dims.get()[i];
+  }
+  return array_size;
 }
 
+// Read float data from HDF5 file into array, storing dimensions in out_dims.
 template <>
-void hd5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
+void hdf5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
+        int min_dim, int max_dim,
+        boost::scoped_ptr<float>* array, std::vector<hsize_t>& out_dims) {
+  int array_size = hdf5_verify_and_get_size_of_nd_dataset(
+    file_id, dataset_name_, min_dim, max_dim, out_dims);
+  array->reset(new float[array_size]);
+  herr_t status = H5LTread_dataset_float(
+    file_id, dataset_name_, array->get());
+}
+
+// Read double data from HDF5 file into array, storing dimensions in out_dims.
+template <>
+void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
         int min_dim, int max_dim,
         boost::scoped_ptr<double>* array, std::vector<hsize_t>& out_dims) {
-    herr_t status;
-
-    int ndims;
-    status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
-    CHECK_GE(ndims, min_dim);
-    CHECK_LE(ndims, max_dim);
-
-    boost::scoped_ptr<hsize_t> dims(new hsize_t[ndims]);
-
-    H5T_class_t class_;
-    status = H5LTget_dataset_info(
-        file_id, dataset_name_, dims.get(), &class_, NULL);
-    CHECK_EQ(class_, H5T_FLOAT) << "Epected float data";
-
-    int array_size = 1;
-    for (int i=0; i<ndims; ++i) {
-      out_dims.push_back(dims.get()[i]);
-      array_size *= dims.get()[i];
-    }
-
-    array->reset(new double[array_size]);
-    status = H5LTread_dataset_double(
-        file_id, dataset_name_, array->get());
+  int array_size = hdf5_verify_and_get_size_of_nd_dataset(
+    file_id, dataset_name_, min_dim, max_dim, out_dims);
+  array->reset(new double[array_size]);
+  herr_t status = H5LTread_dataset_double(
+    file_id, dataset_name_, array->get());
 }
 
 }  // namespace caffe

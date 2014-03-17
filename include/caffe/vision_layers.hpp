@@ -389,6 +389,8 @@ class HDF5DataLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
  protected:
+  virtual void load_hdf5_file(const char* filename);
+
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
