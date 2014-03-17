@@ -279,11 +279,11 @@ static void init(MEX_ARGS) {
   }
 }
 
-static void end(MEX_ARGS) {
+static void reset(MEX_ARGS) {
   if (net_) {
     net_.reset();
     init_key = -2;
-    LOG(INFO) << "Network reset, now it needs to init before used again";
+    LOG(INFO) << "Network reset, call init before use it again";
   }
 }
 
@@ -334,8 +334,9 @@ static handler_registry handlers[] = {
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
   { "get_init_key",       get_init_key    },
+  { "reset",              reset           },
   // The end.
-  { "END",                end             },
+  { "END",                NULL            },
 };
 
 
