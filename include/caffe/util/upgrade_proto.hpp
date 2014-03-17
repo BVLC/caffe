@@ -3,6 +3,8 @@
 #ifndef CAFFE_UTIL_UPGRADE_PROTO_H_
 #define CAFFE_UTIL_UPGRADE_PROTO_H_
 
+#include <string>
+
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/proto/deprecated/caffe_v0_to_v1_bridge.pb.h"
 
