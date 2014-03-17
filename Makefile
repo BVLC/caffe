@@ -22,7 +22,9 @@ HXX_SRCS := $(shell find include/$(PROJECT) ! -name "*.hpp")
 # CU_SRCS are the cuda source files
 CU_SRCS := $(shell find src/$(PROJECT) -name "*.cu")
 # TEST_SRCS are the test source files
+TEST_MAIN_SRC := src/$(PROJECT)/test/test_caffe_main.cpp
 TEST_SRCS := $(shell find src/$(PROJECT) -name "test_*.cpp")
+TEST_SRCS := $(filter-out $(TEST_MAIN_SRC), $(TEST_SRCS))
 GTEST_SRC := src/gtest/gtest-all.cpp
 # TEST_HDRS are the test header files
 TEST_HDRS := $(shell find src/$(PROJECT) -name "test_*.hpp")
@@ -74,6 +76,7 @@ GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
 TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
+TEST_ALL_BIN := $(BUILD_DIR)/src/$(PROJECT)/test/test_all.testbin
 
 ##############################
 # Derive include and lib directories
@@ -133,7 +136,7 @@ $(LINT_REPORT): $(NONGEN_CXX_SRCS)
 			echo "Found 1 or more lint errors; see log at $(FAILED_LINT_REPORT)"; \
 			exit 1)
 
-test: init $(TEST_BINS)
+test: init $(TEST_BINS) $(TEST_ALL_BIN)
 
 tools: init $(TOOL_BINS)
 
@@ -163,11 +166,14 @@ $(STATIC_NAME): init $(PROTO_OBJS) $(OBJS)
 	ar rcs $(STATIC_NAME) $(PROTO_OBJS) $(OBJS)
 	@echo
 
-runtest: test
-	for testbin in $(TEST_BINS); do $$testbin $(TEST_GPUID); done
+runtest: $(TEST_ALL_BIN)
+	$(TEST_ALL_BIN)
 
 $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
-	$(CXX) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+
+$(TEST_ALL_BIN): $(TEST_OBJS)
+	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) -o $(TEST_ALL_BIN) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
