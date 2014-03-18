@@ -13,6 +13,7 @@
 #include <vector>  // NOLINT(build/include_order)
 
 #include "caffe/caffe.hpp"
+#include "caffe/imagenet_mean.hpp"
 #include "stitch_pyramid/PyramidStitcher.h" //also includes JPEGImage, Patchwork, etc
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -230,9 +231,43 @@ struct CaffeNet {
     return pyramid_float_npy_boost;
   } 
 
+  //switch RGB to BGR indexing (for Caffe convention)
+  int get_BGR(int channel_RGB){
+    int channel_BGR; //output
+
+    if(channel_RGB == 0)
+      channel_BGR = 2;
+
+    if(channel_RGB == 1)
+      channel_BGR = 1;
+
+    if(channel_RGB == 2)
+      channel_BGR = 0;
+
+    return channel_BGR;
+  }
+
+  // get avg value for imagenet pixels on particular channel
+  // these are defined in caffe/include/caffe/imagenet_mean.hpp
+  float get_mean_RGB(int channel_RGB){
+    float channel_mean; //output
+
+    if(channel_RGB==0)
+      channel_mean = IMAGENET_MEAN_R;
+
+    else if (channel_RGB==1)
+      channel_mean = IMAGENET_MEAN_G;
+
+    else if (channel_RGB==2)
+      channel_mean = IMAGENET_MEAN_B;
+
+    return channel_mean;
+  }
+
+
   // for now, one batch at a time. (later, can modify this to allocate & fill a >1 batch 4d array)
   // @param  jpeg = typically a plane from Patchwork, in packed JPEG<uint8_t> [RGB,RGB,RGB] format
-  // @return numpy float array of jpeg, in unpacked [RRRRR..,GGGGG..,BBBBB..] format
+  // @return numpy float array of jpeg, in unpacked [BBBBB..,GGGGG..,RRRRR..] format with channel mean subtracted
   PyArrayObject* JPEGImage_to_numpy_float(JPEGImage &jpeg){
 
     int depth = jpeg.depth();
@@ -243,15 +278,15 @@ struct CaffeNet {
 
     PyArrayObject* jpeg_float_npy = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //numpy malloc
 
-    //TODO: make sure of RGB vs BGR (just for documentation purposes)
-
     //copy jpeg into jpeg_float_npy
-    for(int y=0; y<height; y++){
-        for(int x=0; x<width; x++){
-            for(int ch=0; ch<depth; ch++){
+    for(int ch_src=0; ch_src<depth; ch_src++){ //ch_src is in RGB
+        int ch_dst = get_BGR(ch_src); //for Caffe BGR convention
+        float ch_mean = get_mean_RGB(ch_src); //mean of all imagenet pixels of this channel
+        for(int y=0; y<height; y++){
+            for(int x=0; x<width; x++){
                 //jpeg:           row-major, packed RGB, RGB, ...          uint8_t.
-                //jpeg_float_npy: row-major, unpacked RRRR..,GGGG..,BBBB.. float.
-                *((float *)PyArray_GETPTR4( jpeg_float_npy, 0, ch, y, x)) = jpeg.bits()[y*width*depth + x*depth + ch];
+                //jpeg_float_npy: row-major, unpacked BBBB..,GGGG..,RRRR.. float.
+                *((float *)PyArray_GETPTR4( jpeg_float_npy, 0, ch_dst, y, x)) = jpeg.bits()[y*width*depth + x*depth + ch_src] - ch_mean;
             }
         }
     }
@@ -269,7 +304,6 @@ struct CaffeNet {
     npy_intp dims[4] = {batchsize, depth, height, width};
     printf("    in allocate_resultPlane(). OUTPUT_BLOBS... batchsize=%d, depth=%d, width=%d, height=%d \n", batchsize, depth, width, height);
 
-    //PyArrayObject* resultPlane = NULL; //stub
     PyArrayObject* resultPlane = (PyArrayObject*)PyArray_New( &PyArray_Type, 4, dims, NPY_FLOAT, 0, 0, 0, 0, 0 ); //numpy malloc
     return resultPlane;
   }
@@ -328,8 +362,6 @@ struct CaffeNet {
  
     Patchwork patchwork = stitch_pyramid(file, padding, interval, planeDim); 
     int nbPlanes = patchwork.planes_.size();
-    //int planeID = 0; //TODO: append multiple blobs to blobs_{top,bottom}, iterating to planes_.size()
-                     //         then, run Forward() on the list of blobs.
 
     boost::python::list blobs_bottom; //input buffer(s) for Caffe::Forward 
     boost::python::list blobs_top; //output buffer(s) for Caffe::Forward

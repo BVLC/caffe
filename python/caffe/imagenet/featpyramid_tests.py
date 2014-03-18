@@ -51,7 +51,7 @@ def test_featpyramid_allScales(caffenet, imgFname):
         #visualization
         pyplot.figure()
         pyplot.title('Welcome to deep learning land. You have arrived.')
-        pyplot.imshow(flat_descriptor, cmap = cm.gray)
+        pyplot.imshow(flat_descriptor, cmap = cm.gray, interpolation='nearest')
         pylab.savefig('output_pyra/flat_descriptor_scale%d.jpg' %i)
 
 if __name__ == "__main__":
