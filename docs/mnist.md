@@ -18,7 +18,7 @@ You will first need to download and convert the data format from the MNIST websi
     cd $CAFFE_ROOT/examples/lenet
     ./create_mnist.sh
 
-If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be two datasets, `CAFFE_ROOT/data/mnist-train-leveldb`, and `CAFFE_ROOT/data/mnist-test-leveldb`.
+If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be two datasets, `mnist-train-leveldb`, and `mnist-test-leveldb`.
 
 LeNet: the MNIST Classification Model
 -------------------------------------

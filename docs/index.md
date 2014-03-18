@@ -33,7 +33,7 @@ Quick Links
 * [Presentation](caffe-presentation.pdf): The Caffe presentation, *updated 03/14*.
 * [Installation](installation.html): Instructions on installing Caffe (tested on Ubuntu 12.04, but works on Red Hat, OS X, etc.).
 * [Development](development.html): Guidelines for development and contributing to Caffe.
-* [MNIST Demo](mnist.html): example of end-to-end training and testing on the MNIST data.
+* [LeNet / MNIST Demo](mnist.html): example of end-to-end training and testing of LeNet on MNIST.
 * [CIFAR-10 Demo](cifar10.html): example of training and testing on the CIFAR-10 data.
 * [Training ImageNet](imagenet_training.html): tutorial on end-to-end training of an ImageNet classifier.
 * [Running Pretrained ImageNet](imagenet_pretrained.html): simply runs in Python!
