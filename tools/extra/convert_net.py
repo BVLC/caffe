@@ -49,6 +49,17 @@ class CudaConvNetReader(object):
         """
         layers = []
         datalayer = None
+
+        def find_non_neuron_ancestors(layer):
+            """Find the upstream layers that are not neurons"""
+            out = []
+            for l in layer.get('inputLayers', []):
+                if l['type'] == 'neuron':
+                    out += find_non_neuron_ancestors(l)
+                else:
+                    out += [l['name']]
+            return out
+
         for layer in self.net:
             layertype = layer['type'].split('.')[0]
 
@@ -67,17 +78,7 @@ class CudaConvNetReader(object):
 
             # Add the top (our output) and bottom (input) links. Neuron layers
             # operate "in place" so have the same top and bottom.
-            def get_non_neuron_inputs(layer):
-                """Find the upstream layers that are not neurons"""
-                out = []
-                for l in layer.get('inputLayers', []):
-                    if l['type'] == 'neuron':
-                        out += get_non_neuron_inputs(l)
-                    else:
-                        out += [l['name']]
-                return out
-
-            layerconnection['bottom'] = get_non_neuron_inputs(layer)
+            layerconnection['bottom'] = find_non_neuron_ancestors(layer)
 
             if layer['type'] == "neuron":
                 layerconnection['top'] = layerconnection['bottom']
