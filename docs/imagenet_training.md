@@ -52,7 +52,7 @@ which will make `data/ilsvrc12/imagenet_mean.binaryproto`.
 Network Definition
 ------------------
 
-The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at `examples/imagenet/imagenet.prototxt`. Note that the paths in the data layer - if you have not followed the exact paths in this guide you will need to change the following lines:
+The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at `examples/imagenet/imagenet_train.prototxt`. Note the paths in the data layer - if you have not followed the exact paths in this guide you will need to change the following lines:
 
     source: "ilvsrc12_train_leveldb"
     meanfile: "../../data/ilsvrc12/imagenet_mean.binaryproto"
