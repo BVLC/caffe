@@ -17,8 +17,7 @@ namespace caffe {
 template <typename Dtype>
 __global__ void kernel_get_max(const int num, const int dim,
     const Dtype* data, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < num) {
+  CUDA_KERNEL_LOOP(index, num) {
     Dtype maxval = -FLT_MAX;
     for (int i = 0; i < dim; ++i) {
       maxval = max(data[index * dim + i], maxval);
@@ -30,8 +29,7 @@ __global__ void kernel_get_max(const int num, const int dim,
 template <typename Dtype>
 __global__ void kernel_softmax_div(const int num, const int dim,
     const Dtype* scale, Dtype* data) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < num * dim) {
+  CUDA_KERNEL_LOOP(index, num * dim) {
     int n = index / dim;
     data[index] /= scale[n];
   }
@@ -39,8 +37,7 @@ __global__ void kernel_softmax_div(const int num, const int dim,
 
 template <typename Dtype>
 __global__ void kernel_exp(const int num, const Dtype* data, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < num) {
+  CUDA_KERNEL_LOOP(index, num) {
     out[index] = exp(data[index]);
   }
 }

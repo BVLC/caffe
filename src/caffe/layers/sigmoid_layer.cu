@@ -18,8 +18,7 @@ __device__ inline Dtype sigmoid_gpu(Dtype x) {
 
 template <typename Dtype>
 __global__ void SigmoidForward(const int n, const Dtype* in, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     out[index] = sigmoid_gpu(in[index]);
   }
 }
@@ -44,8 +43,7 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 __global__ void SigmoidBackward(const int n, const Dtype* in_diff,
     const Dtype* in_data, Dtype* out_diff) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     Dtype sigmoid_x = sigmoid_gpu(in_data[index]);
     out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);
   }
