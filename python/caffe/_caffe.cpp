@@ -9,6 +9,7 @@
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 #include "numpy/arrayobject.h"
 
+// these need to be included after boost on OS X
 #include <string>  // NOLINT(build/include_order)
 #include <vector>  // NOLINT(build/include_order)
 
