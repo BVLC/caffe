@@ -146,7 +146,6 @@ class CudaConvNetReader(object):
     def read_pool(self, layer):
         return {'type': 'pool',
                 'name': layer['name'],
-                'num_output': layer['outputs'],
                 'pool': self.poolmethod[layer['pool']],
                 'kernelsize': layer['sizeX'],
                 'stride': layer['stride'],
