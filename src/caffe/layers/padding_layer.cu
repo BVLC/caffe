@@ -57,8 +57,8 @@ __global__ void PaddingBackward(const int count, const Dtype* in, Dtype* out,
     int c = index % channel;
     index /= channel;
     out[((index * channel + c) * height_in + h) * width_in + w] =
-      in[((index * channel + c) * height_out + h + pad) *
-         width_out + pad + w];
+        in[((index * channel + c) * height_out + h + pad) *
+           width_out + pad + w];
   }
 }
 
