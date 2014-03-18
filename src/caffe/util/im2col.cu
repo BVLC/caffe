@@ -15,8 +15,7 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
     const int height, const int width, const int ksize, const int pad,
     const int stride, const int height_col, const int width_col,
     Dtype* data_col) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     int w_out = index % width_col;
     index /= width_col;
     int h_out = index % height_col;
@@ -69,8 +68,7 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
     const int height, const int width, const int channels, const int ksize,
     const int pad, const int stride, const int height_col, const int width_col,
     Dtype* data_im) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     Dtype val = 0;
     int w = index % width + pad;
     int h = (index / width) % height + pad;
