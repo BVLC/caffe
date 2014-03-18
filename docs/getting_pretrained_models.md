@@ -11,6 +11,6 @@ If you have any questions, please get in touch with us.
 This page will be updated as more models become available.
 
 ### ImageNet
-The AlexNet model trained on ILSVRC-2010 can be downloaded (232.57MB) by running `models/get_caffe_reference_imagenet_model.sh` from the Caffe root directory.
+Our reference implementation of the AlexNet model trained on ILSVRC-2010 can be downloaded (232.57MB) by running `models/get_caffe_reference_imagenet_model.sh` from the Caffe root directory.
 
 Additionally, you will probably eventually need some auxiliary data (mean image, synset list, etc.): run `data/ilsvrc12/get_ilsvrc_aux.sh` from the root directory to obtain it.

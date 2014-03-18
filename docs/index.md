@@ -11,7 +11,7 @@ Caffe is released under [the BSD 2-Clause license](https://github.com/BVLC/caffe
 
 ## Why Caffe?
 
-Caffe aims to provide computer vision practicioners with a **clean and modifiable implementation** of state-of-the-art deep learning algorithms.
+Caffe aims to provide computer vision scientists and practicioners with a **clean and modifiable implementation** of state-of-the-art deep learning algorithms.
 For example, network structure is easily specified in separate config files, with no mess of hard-coded parameters in the code.
 
 At the same time, Caffe fits industry needs, with blazing fast C++/Cuda code for GPU computation.
@@ -24,7 +24,7 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 
 * [Introductory slides](/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
 * [Installation](/installation.html): Instructions on installing Caffe (works on Ubuntu, Red Hat, OS X).
-* [Pre-trained models](/getting_pretrained_models.html): BVLC provides some pre-trained models for non-commercial use.
+* [Pre-trained models](/getting_pretrained_models.html): BVLC provides some pre-trained models for academic / non-commercial use.
 * [Development](/development.html): Guidelines for development and contributing to Caffe.
 
 ### Examples
