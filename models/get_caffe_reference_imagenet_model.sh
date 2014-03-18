@@ -23,6 +23,6 @@ fi
 
 echo "Downloading..."
 
-wget -q https://www.dropbox.com/s/n3jups0gr7uj0dv/$MODEL
+wget https://www.dropbox.com/s/n3jups0gr7uj0dv/$MODEL
 
-echo "Done. Please check that the checksum = $CHECKSUM."
+echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
