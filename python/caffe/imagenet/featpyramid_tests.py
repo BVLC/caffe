@@ -10,6 +10,7 @@ import sys
 import gflags
 import time
 import caffe
+import time 
 
 #for visualization, can be removed easily:
 from matplotlib import cm, pyplot
@@ -38,7 +39,11 @@ def test_pyramid_IO(caffenet, imgFname):
 
 def test_featpyramid_allScales(caffenet, imgFname):
 
+    start_time = time.time()
     pyra = caffenet.extract_featpyramid(imgFname) # THE CRUX 
+    pyra_time = time.time() - start_time
+    print "    computed pyra in %f sec" %pyra_time
+
     feat = pyra["feat"]
 
     # optional breakpoint...
