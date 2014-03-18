@@ -7,7 +7,12 @@ CHECKSUM=bf44bac4a59aa7792b296962fe483f2b
 
 if [ -f $MODEL ]; then
   echo "Model already exists. Checking md5..."
-  checksum=`md5sum $MODEL | awk '{ print $1 }'`
+  os=`uname -s`
+  if [ "$os" = "Linux" ]; then
+    checksum=`md5sum $MODEL | awk '{ print $1 }'`
+  elif [ "$os" = "Darwin" ]; then
+    checksum=`cat $MODEL | md5`
+  fi
   if [ "$checksum" = "$CHECKSUM" ]; then
     echo "Model checksum is correct. No need to download."
     exit 0
