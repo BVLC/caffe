@@ -12,8 +12,7 @@ namespace caffe {
 
 template <typename Dtype>
 __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] > 0 ? in[index] : 0;
   }
 }
@@ -38,8 +37,7 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 __global__ void ReLUBackward(const int n, const Dtype* in_diff,
     const Dtype* in_data, Dtype* out_diff) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     out_diff[index] = in_diff[index] * (in_data[index] > 0);
   }
 }

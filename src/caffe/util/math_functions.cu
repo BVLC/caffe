@@ -12,8 +12,7 @@ namespace caffe {
 template <typename Dtype>
 __global__ void mul_kernel(const int n, const Dtype* a,
     const Dtype* b, Dtype* y) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     y[index] = a[index] * b[index];
   }
 }
