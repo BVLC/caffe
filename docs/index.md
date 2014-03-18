@@ -37,6 +37,7 @@ Quick Links
 * [Training ImageNet](imagenet_training.html): tutorial on end-to-end training of an ImageNet classifier.
 * [Running Pretrained ImageNet](imagenet_pretrained.html): simply runs in Python!
 * [Running Detection](imagenet_detection.html): run a pretrained model as a detector.
+* [Visualizing Features and Filters](lena_imagenet.html): Lena viewed layer-by-layer.
 
 
 Citing Caffe
