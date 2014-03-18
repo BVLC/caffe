@@ -66,6 +66,9 @@ int main(int argc, char** argv) {
       LOG(ERROR) << "Processed " << count << " files.";
     }
   }
+  if (count % 10000 != 0) {
+    LOG(ERROR) << "Processed " << count << " files.";
+  }
   for (int i = 0; i < sum_blob.data_size(); ++i) {
     sum_blob.set_data(i, sum_blob.data(i) / count);
   }
