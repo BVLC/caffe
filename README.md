@@ -69,13 +69,13 @@ We welcome all contributions!
 
 ### Setting priorities
 
-- Make Github Issues for bugs, features you'd like to see, questions, etc.
+- Make GitHub Issues for bugs, features you'd like to see, questions, etc.
 - Development work is guided by [milestones](https://github.com/BVLC/caffe/issues?milestone=1), which are sets of issues selected for concurrent release (integration from `dev` to `master`).
 - Please note that since the core developers are largely researchers, we may work on a feature in isolation from the open-source community for some time before releasing it, so as to claim honest academic contribution. We do release it as soon as a reasonable technical report may be written about the work, and we still aim to inform the community of ongoing development through Issues.
 
 ### Contibuting
 
-- Do new development in [feature branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch) with decriptive names.
+- Do new development in [feature branches](https://www.atlassian.com/git/workflows#!workflow-feature-branch) with descriptive names.
 - Bring your work up-to-date by [rebasing](http://git-scm.com/book/en/Git-Branching-Rebasing) onto the latest `dev`. (Polish your changes by [interactive rebase](https://help.github.com/articles/interactive-rebase), if you'd like.)
 - [Pull request](https://help.github.com/articles/using-pull-requests) your contribution to BVLC/caffe's `dev` branch for discussion and review.
   * PRs should live fast, die young, and leave a beautiful merge. Pull request sooner than later so that discussion can guide development.
