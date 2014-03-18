@@ -31,6 +31,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new DataLayer<Dtype>(param);
   } else if (type == "hdf5_data") {
     return new HDF5DataLayer<Dtype>(param);
+  } else if (type == "images") {
+    return new ImagesLayer<Dtype>(param);
   } else if (type == "dropout") {
     return new DropoutLayer<Dtype>(param);
   } else if (type == "euclidean_loss") {
