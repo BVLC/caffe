@@ -27,19 +27,29 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
 
   for (int i = 0; i < batchsize; ++i, ++current_row_) {
-    if (current_row_ == data_dims_[0]) {
+    if (current_row_ == data_blob_.num()) {
+      if (num_files_ > 1) {
+        current_file_ += 1;
+
+        if (current_file_ == num_files_) {
+          current_file_ = 0;
+          LOG(INFO) << "looping around to first file";
+        }
+
+        load_hdf5_file_data(hdf_filenames_[current_file_].c_str());
+      }
       current_row_ = 0;
     }
 
     CUDA_CHECK(cudaMemcpy(
             &(*top)[0]->mutable_gpu_data()[i * data_count],
-            &(data_.get()[current_row_ * data_count]),
+            &data_blob_.cpu_data()[current_row_ * data_count],
             sizeof(Dtype) * data_count,
             cudaMemcpyHostToDevice));
 
     CUDA_CHECK(cudaMemcpy(
             &(*top)[1]->mutable_gpu_data()[i * label_data_count],
-            &(label_.get()[current_row_ * label_data_count]),
+            &label_blob_.cpu_data()[current_row_ * label_data_count],
             sizeof(Dtype) * label_data_count,
             cudaMemcpyHostToDevice));
   }
