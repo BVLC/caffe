@@ -9,7 +9,7 @@ Developing & Contributing
 Caffe is developed with active participation of the community by the [Berkeley Vision and Learning Center](http://bvlc.eecs.berkeley.edu/).
 We welcome all contributions!
 
-The [contributing workflow](https://github.com/BVLC/caffe#contributing) is explained in the README. These guidelines cover development practices in Caffe. This is a work-in-progress.
+The [contributing workflow](https://github.com/BVLC/caffe#development) is explained in the README. These guidelines cover development practices in Caffe. This is a work-in-progress.
 
 **Development Flow**
 
