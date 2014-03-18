@@ -1,0 +1,153 @@
+name: "CIFAR10_full_deploy"
+# N.B. input image must be in CIFAR-10 format
+# as described at http://www.cs.toronto.edu/~kriz/cifar.html
+input: "data"
+input_dim: 1
+input_dim: 3
+input_dim: 32
+input_dim: 32
+# ------------------------ layer 1 -----------------------------
+layers {
+ layer {
+   name: "conv1"
+   type: "conv"
+   num_output: 32
+   kernelsize: 5
+   pad: 2
+   stride: 1
+   blobs_lr: 1.0
+   blobs_lr: 2.0
+ }
+ bottom: "data"
+ top: "conv1"
+}
+layers {
+ layer {
+   name: "pool1"
+   type: "pool"
+   kernelsize: 3
+   stride: 2
+   pool: MAX
+ }
+ bottom: "conv1"
+ top: "pool1"
+}
+layers {
+ layer {
+   name: "relu1"
+   type: "relu"
+ }
+ bottom: "pool1"
+ top: "pool1"
+}
+layers {
+  layer {
+    name: "norm1"
+    type: "lrn"
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+  }
+  bottom: "pool1"
+  top: "norm1"
+}
+# --------------------------- layer 2 ------------------------
+layers {
+ layer {
+   name: "conv2"
+   type: "conv"
+   num_output: 32
+   kernelsize: 5
+   pad: 2
+   stride: 1
+   blobs_lr: 1.
+   blobs_lr: 2.
+ }
+ bottom: "norm1"
+ top: "conv2"
+}
+layers {
+ layer {
+   name: "relu2"
+   type: "relu"
+ }
+ bottom: "conv2"
+ top: "conv2"
+}
+layers {
+ layer {
+   name: "pool2"
+   type: "pool"
+   kernelsize: 3
+   stride: 2
+   pool: AVE
+ }
+ bottom: "conv2"
+ top: "pool2"
+}
+layers {
+  layer {
+    name: "norm2"
+    type: "lrn"
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+  }
+  bottom: "pool2"
+  top: "norm2"
+}
+#-----------------------layer 3-------------------------
+layers {
+ layer {
+   name: "conv3"
+   type: "conv"
+   num_output: 64
+   kernelsize: 5
+   pad: 2
+   stride: 1
+ }
+ bottom: "norm2"
+ top: "conv3"
+}
+layers {
+ layer {
+   name: "relu3"
+   type: "relu"
+ }
+ bottom: "conv3"
+ top: "conv3"
+}
+layers {
+ layer {
+   name: "pool3"
+   type: "pool"
+   kernelsize: 3
+   stride: 2
+   pool: AVE
+ }
+ bottom: "conv3"
+ top: "pool3"
+}
+#--------------------------layer 4------------------------
+layers {
+ layer {
+   name: "ip1"
+   type: "innerproduct"
+   num_output: 10
+   blobs_lr: 1.
+   blobs_lr: 2.
+   weight_decay: 250.
+   weight_decay: 0.
+ }
+ bottom: "pool3"
+ top: "ip1"
+}
+#-----------------------output------------------------
+layers {
+ layer {
+   name: "prob"
+   type: "softmax"
+ }
+ bottom: "ip1"
+ top: "prob"
+}
