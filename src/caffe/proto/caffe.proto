@@ -92,9 +92,19 @@ message LayerParameter {
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
 
-  // Concat Layer need to specify the dimension along the concat will happen, 
-  // the other dimensions must be the same for all the bottom blobs
-  // By default it will concatenate blobs along channels dimension
+  // For the Reshape Layer one need to specify the new dimensions
+  optional int32 new_num = 60 [ default = 0 ];
+  optional int32 new_channels = 61 [ default = 0 ];
+  optional int32 new_height = 62 [ default = 0 ];
+  optional int32 new_width = 63 [ default = 0 ];
+
+  // Used by ImageLayer to shuffle the list of files at every epoch.
+  // It will also resize images if new_height or new_width are not zero
+  optional bool shuffle_images = 64 [ default = false ];
+
+  // ConcatLayer needs the dimension along which to concatenate, and 
+  // the other dimensions must be the same for all the bottom blobs.
+  // By default it will concatenate blobs along the channels dimension.
   optional uint32 concat_dim = 65 [ default = 1 ]; 
 }
 
