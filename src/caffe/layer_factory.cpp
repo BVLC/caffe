@@ -9,6 +9,7 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+using std::string;
 
 namespace caffe {
 
@@ -18,6 +19,7 @@ namespace caffe {
 // but we will leave it this way for now.
 template <typename Dtype>
 Layer<Dtype>* GetLayer(const LayerParameter& param) {
+  const string& name = param.name();
   const LayerParameter_LayerType& type = param.type();
   switch (type) {
   case LayerParameter_LayerType_ACCURACY:
@@ -40,6 +42,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new HDF5DataLayer<Dtype>(param);
   case LayerParameter_LayerType_HDF5_OUTPUT:
     return new HDF5OutputLayer<Dtype>(param);
+  case LayerParameter_LayerType_IMAGE_DATA:
+    return new ImagesLayer<Dtype>(param);
   case LayerParameter_LayerType_IM2COL:
     return new Im2colLayer<Dtype>(param);
   case LayerParameter_LayerType_INFOGAIN_LOSS:
@@ -50,6 +54,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new LRNLayer<Dtype>(param);
   case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
     return new MultinomialLogisticLossLayer<Dtype>(param);
+  case LayerParameter_LayerType_PADDING:
+    return new PaddingLayer<Dtype>(param);
   case LayerParameter_LayerType_POOLING:
     return new PoolingLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
@@ -66,8 +72,10 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new TanHLayer<Dtype>(param);
   case LayerParameter_LayerType_WINDOW_DATA:
     return new WindowDataLayer<Dtype>(param);
+  case LayerParameter_LayerType_NONE:
+    LOG(FATAL) << "Layer " << name << " has unspecified type.";
   default:
-    LOG(FATAL) << "Unknown layer type: " << type;
+    LOG(FATAL) << "Layer " << name << " has unknown type " << type;
   }
   // just to suppress old compiler warnings.
   return (Layer<Dtype>*)(NULL);
