@@ -38,12 +38,6 @@ class CaffeBlob {
   CaffeBlob(const shared_ptr<Blob<float> > &blob, const string& name)
       : blob_(blob), name_(name) {}
 
-  explicit CaffeBlob(const shared_ptr<Blob<float> > &blob)
-      : blob_(blob) {}
-
-  CaffeBlob()
-  {}
-
   string name() const { return name_; }
   int num() const { return blob_->num(); }
   int channels() const { return blob_->channels(); }
@@ -51,6 +45,7 @@ class CaffeBlob {
   int width() const { return blob_->width(); }
   int count() const { return blob_->count(); }
 
+  // this is here only to satisfy boost's vector_indexing_suite
   bool operator == (const CaffeBlob &other) {
       return this->blob_ == other.blob_;
   }
@@ -66,9 +61,6 @@ class CaffeBlob {
 //  is not freed while still being used in Python
 class CaffeBlobWrap : public CaffeBlob {
  public:
-  CaffeBlobWrap(PyObject *p, const shared_ptr<Blob<float> > &blob)
-      : CaffeBlob(blob), self_(p) {}
-
   CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
       : CaffeBlob(blob), self_(p) {}
 
@@ -100,6 +92,30 @@ class CaffeBlobWrap : public CaffeBlob {
   PyObject *self_;
 };
 
+
+class CaffeLayer {
+ public:
+  CaffeLayer(const shared_ptr<Layer<float> > &layer, const string &name)
+    : layer_(layer), name_(name) {}
+
+  string name() const { return name_; }
+  vector<CaffeBlob> blobs() {
+    vector<CaffeBlob> result;
+    for (int i = 0; i < layer_->blobs().size(); ++i) {
+      result.push_back(CaffeBlob(layer_->blobs()[i], name_));
+    }
+    return result;
+  }
+
+  // this is here only to satisfy boost's vector_indexing_suite
+  bool operator == (const CaffeLayer &other) {
+      return this->layer_ == other.layer_;
+  }
+
+ protected:
+  shared_ptr<Layer<float> > layer_;
+  string name_;
+};
 
 
 // A simple wrapper over CaffeNet that runs the forward process.
@@ -217,7 +233,7 @@ struct CaffeNet {
   }
 
   void ForwardPrefilled() {
-      net_->ForwardPrefilled();
+    net_->ForwardPrefilled();
   }
 
   // The caffe::Caffe utility functions.
@@ -228,24 +244,19 @@ struct CaffeNet {
   void set_device(int device_id) { Caffe::SetDevice(device_id); }
 
   vector<CaffeBlob> blobs() {
-      vector<CaffeBlob> result;
-      for (int i = 0; i < net_->blobs().size(); ++i) {
-        result.push_back(CaffeBlob(net_->blobs()[i], net_->blob_names()[i]));
-      }
-      return result;
+    vector<CaffeBlob> result;
+    for (int i = 0; i < net_->blobs().size(); ++i) {
+      result.push_back(CaffeBlob(net_->blobs()[i], net_->blob_names()[i]));
+    }
+    return result;
   }
 
-  vector<CaffeBlob> params() {
-      vector<CaffeBlob> result;
-      int ix = 0;
-      for (int i = 0; i < net_->layers().size(); ++i) {
-        for (int j = 0; j < net_->layers()[i]->blobs().size(); ++j) {
-          result.push_back(
-              CaffeBlob(net_->params()[ix], net_->layer_names()[i]));
-          ix++;
-        }
-      }
-      return result;
+  vector<CaffeLayer> layers() {
+    vector<CaffeLayer> result;
+    for (int i = 0; i < net_->layers().size(); ++i) {
+      result.push_back(CaffeLayer(net_->layers()[i], net_->layer_names()[i]));
+    }
+    return result;
   }
 
   // The pointer to the internal caffe::Net instant.
@@ -255,7 +266,7 @@ struct CaffeNet {
 
 
 // The boost python module definition.
-BOOST_PYTHON_MODULE(pycaffe) {
+BOOST_PYTHON_MODULE(_caffe) {
   boost::python::class_<CaffeNet>(
       "CaffeNet", boost::python::init<string, string>())
       .def("Forward",          &CaffeNet::Forward)
@@ -266,8 +277,8 @@ BOOST_PYTHON_MODULE(pycaffe) {
       .def("set_phase_train",  &CaffeNet::set_phase_train)
       .def("set_phase_test",   &CaffeNet::set_phase_test)
       .def("set_device",       &CaffeNet::set_device)
-      .def("blobs",            &CaffeNet::blobs)
-      .def("params",           &CaffeNet::params);
+      .add_property("blobs",   &CaffeNet::blobs)
+      .add_property("layers",  &CaffeNet::layers);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
       "CaffeBlob", boost::python::no_init)
@@ -280,8 +291,16 @@ BOOST_PYTHON_MODULE(pycaffe) {
       .add_property("data",     &CaffeBlobWrap::get_data)
       .add_property("diff",     &CaffeBlobWrap::get_diff);
 
+  boost::python::class_<CaffeLayer>(
+      "CaffeLayer", boost::python::no_init)
+      .add_property("name",  &CaffeLayer::name)
+      .add_property("blobs", &CaffeLayer::blobs);
+
   boost::python::class_<vector<CaffeBlob> >("BlobVec")
       .def(vector_indexing_suite<vector<CaffeBlob>, true>());
+
+  boost::python::class_<vector<CaffeLayer> >("LayerVec")
+      .def(vector_indexing_suite<vector<CaffeLayer>, true>());
 
   import_array();
 }

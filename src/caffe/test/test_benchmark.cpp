@@ -111,8 +111,8 @@ TEST_F(BenchmarkTest, TestTimerMilliSecondsCPU) {
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
   usleep(300 * 1000);
-  CHECK_GE(timer.MilliSeconds(), 299);
-  CHECK_LE(timer.MilliSeconds(), 301);
+  CHECK_GE(timer.MilliSeconds(), 298);
+  CHECK_LE(timer.MilliSeconds(), 302);
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_TRUE(timer.has_run_at_least_once());
@@ -127,8 +127,8 @@ TEST_F(BenchmarkTest, TestTimerMilliSecondsGPU) {
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
   usleep(300 * 1000);
-  CHECK_GE(timer.MilliSeconds(), 299);
-  CHECK_LE(timer.MilliSeconds(), 301);
+  CHECK_GE(timer.MilliSeconds(), 298);
+  CHECK_LE(timer.MilliSeconds(), 302);
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_TRUE(timer.has_run_at_least_once());
@@ -143,8 +143,8 @@ TEST_F(BenchmarkTest, TestTimerSecondsCPU) {
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
   usleep(300 * 1000);
-  CHECK_GE(timer.Seconds(), 0.299);
-  CHECK_LE(timer.Seconds(), 0.301);
+  CHECK_GE(timer.Seconds(), 0.298);
+  CHECK_LE(timer.Seconds(), 0.302);
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_TRUE(timer.has_run_at_least_once());
@@ -159,8 +159,8 @@ TEST_F(BenchmarkTest, TestTimerSecondsGPU) {
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
   usleep(300 * 1000);
-  CHECK_GE(timer.Seconds(), 0.299);
-  CHECK_LE(timer.Seconds(), 0.301);
+  CHECK_GE(timer.Seconds(), 0.298);
+  CHECK_LE(timer.Seconds(), 0.302);
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_TRUE(timer.has_run_at_least_once());

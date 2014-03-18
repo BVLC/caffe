@@ -1,1 +1,1 @@
-from .pycaffe import *
+from .pycaffe import Net
