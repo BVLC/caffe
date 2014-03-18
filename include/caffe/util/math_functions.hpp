@@ -4,9 +4,9 @@
 #ifndef CAFFE_UTIL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
 
-#include <cmath> // for std::fabs
-#include <math.h> // for signbit
 #include <cublas_v2.h>
+#include <math.h>  // for signbit
+#include <cmath>  // for std::fabs
 
 #include "caffe/util/mkl_alternate.hpp"
 
@@ -159,11 +159,13 @@ __global__ void name##_kernel(const int n, const Dtype* x, Dtype* y) { \
 } \
 template <> \
 void caffe_gpu_##name<float>(const int n, const float* x, float* y) { \
+  /* NOLINT_NEXT_LINE(whitespace/operators) */ \
   name##_kernel<float><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
       n, x, y); \
 } \
 template <> \
 void caffe_gpu_##name<double>(const int n, const double* x, double* y) { \
+  /* NOLINT_NEXT_LINE(whitespace/operators) */ \
   name##_kernel<double><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
       n, x, y); \
 }
