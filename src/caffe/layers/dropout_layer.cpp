@@ -1,5 +1,7 @@
 // Copyright 2013 Yangqing Jia
 
+#include <vector>
+
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/syncedmem.hpp"

@@ -6,8 +6,8 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
-#include <fstream>
+#include <iostream>  // NOLINT(readability/streams)
+#include <fstream>  // NOLINT(readability/streams)
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
@@ -21,7 +21,8 @@ namespace caffe {
 template <typename Dtype>
 void* ImagesLayerPrefetch(void* layer_pointer) {
   CHECK(layer_pointer);
-  ImagesLayer<Dtype>* layer = reinterpret_cast<ImagesLayer<Dtype>*>(layer_pointer);
+  ImagesLayer<Dtype>* layer =
+      reinterpret_cast<ImagesLayer<Dtype>*>(layer_pointer);
   CHECK(layer);
   Datum datum;
   CHECK(layer->prefetch_data_);
@@ -42,16 +43,17 @@ void* ImagesLayerPrefetch(void* layer_pointer) {
   const int channels = layer->datum_channels_;
   const int height = layer->datum_height_;
   const int width = layer->datum_width_;
-  const int size = layer->datum_size_;  
+  const int size = layer->datum_size_;
   const int lines_size = layer->lines_.size();
   const Dtype* mean = layer->data_mean_.cpu_data();
   for (int itemid = 0; itemid < batchsize; ++itemid) {
     // get a blob
-    CHECK_GT(lines_size,layer->lines_id_);
-    if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first, layer->lines_[layer->lines_id_].second, 
-      new_height, new_width, &datum)) {
+    CHECK_GT(lines_size, layer->lines_id_);
+    if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first,
+          layer->lines_[layer->lines_id_].second,
+          new_height, new_width, &datum)) {
       continue;
-    };    
+    }
     const string& data = datum.data();
     if (cropsize) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
@@ -115,14 +117,14 @@ void* ImagesLayerPrefetch(void* layer_pointer) {
     if (layer->lines_id_ >= lines_size) {
       // We have reached the end. Restart from the first.
       DLOG(INFO) << "Restarting data prefetching from start.";
-      layer->lines_id_=0;
+      layer->lines_id_ = 0;
       if (layer->layer_param_.shuffle_images()) {
         std::random_shuffle(layer->lines_.begin(), layer->lines_.end());
       }
     }
   }
 
-  return (void*)NULL;
+  return reinterpret_cast<void*>(NULL);
 }
 
 template <typename Dtype>
@@ -136,13 +138,15 @@ void ImagesLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 0) << "Input Layer takes no input blobs.";
   CHECK_EQ(top->size(), 2) << "Input Layer takes two blobs as output.";
-  const int new_height  = this->layer_param_.new_height();
-  const int new_width  = this->layer_param_.new_height();
-  CHECK((new_height==0 && new_width==0)||(new_height>0 && new_width > 0)) << 
-  "Current implementation requires new_height and new_width to be set at the same time.";
+  const int new_height = this->layer_param_.new_height();
+  const int new_width = this->layer_param_.new_height();
+  CHECK((new_height == 0 && new_width == 0) ||
+      (new_height > 0 && new_width > 0)) <<
+  "Current implementation requires new_height and new_width to be set"
+  "at the same time.";
   // Read the file with filenames and labels
   LOG(INFO) << "Opening file " << this->layer_param_.source();
-  std::ifstream infile(this->layer_param_.source().c_str());  
+  std::ifstream infile(this->layer_param_.source().c_str());
   string filename;
   int label;
   while (infile >> filename >> label) {
@@ -161,13 +165,13 @@ void ImagesLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.rand_skip()) {
     unsigned int skip = rand() % this->layer_param_.rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
-    CHECK_GT(lines_.size(),skip) << "Not enought points to skip";
+    CHECK_GT(lines_.size(), skip) << "Not enought points to skip";
     lines_id_ = skip;
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
-                         new_height,new_width,&datum));
+                         new_height, new_width, &datum));
   // image
   int cropsize = this->layer_param_.cropsize();
   if (cropsize > 0) {
