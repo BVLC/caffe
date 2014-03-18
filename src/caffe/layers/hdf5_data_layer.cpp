@@ -14,7 +14,7 @@ TODO:
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
 
 #include "hdf5.h"
 #include "hdf5_hl.h"

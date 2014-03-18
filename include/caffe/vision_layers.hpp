@@ -3,8 +3,9 @@
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 
-#include <vector>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "leveldb/db.h"
 #include "pthread.h"
@@ -414,7 +415,7 @@ void* ImagesLayerPrefetch(void* layer_pointer);
 template <typename Dtype>
 class ImagesLayer : public Layer<Dtype> {
   // The function used to perform prefetching.
- friend void* ImagesLayerPrefetch<Dtype>(void* layer_pointer);
+  friend void* ImagesLayerPrefetch<Dtype>(void* layer_pointer);
 
  public:
   explicit ImagesLayer(const LayerParameter& param)

@@ -1,8 +1,10 @@
 // Copyright 2013 Yangqing Jia
 
+#include <algorithm>
+#include <vector>
+
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
-#include <algorithm>
 
 using std::max;
 
