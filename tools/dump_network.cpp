@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
   caffe_net->Forward(input_vec);
   if (argc > 5 && strcmp(argv[5], "1") == 0) {
     LOG(ERROR) << "Performing Backward";
+    Caffe::set_phase(Caffe::TRAIN);
     caffe_net->Backward();
     // Dump the network
     NetParameter output_net_param;
