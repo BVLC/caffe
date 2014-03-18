@@ -9,8 +9,10 @@
 #include "boost/python/suite/indexing/vector_indexing_suite.hpp"
 #include "numpy/arrayobject.h"
 
+// these need to be included after boost on OS X
 #include <string>  // NOLINT(build/include_order)
 #include <vector>  // NOLINT(build/include_order)
+#include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
 
@@ -121,6 +123,23 @@ class CaffeLayer {
 // A simple wrapper over CaffeNet that runs the forward process.
 struct CaffeNet {
   CaffeNet(string param_file, string pretrained_param_file) {
+    // for convenience, check that the input files can be opened, and raise
+    // an exception that boost will send to Python if not
+    // (this function could still crash if the input files are disturbed
+    //  before Net construction)
+    std::ifstream f(param_file.c_str());
+    if (!f.good()) {
+      f.close();
+      throw std::runtime_error("Could not open file " + param_file);
+    }
+    f.close();
+    f.open(pretrained_param_file.c_str());
+    if (!f.good()) {
+      f.close();
+      throw std::runtime_error("Could not open file " + pretrained_param_file);
+    }
+    f.close();
+
     net_.reset(new Net<float>(param_file));
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
