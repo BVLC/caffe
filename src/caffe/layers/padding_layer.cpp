@@ -16,7 +16,7 @@ void PaddingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
                   "convolutions and WILL BE REMOVED. Please update your model "
                   "prototxt to replace padding layers with pad fields. "
                   "See https://github.com/BVLC/caffe/pull/128.";
-  PAD_ = this->layer_param_.pad();
+  PAD_ = this->layer_param_.padding_param().pad();
   CHECK_EQ(bottom.size(), 1) << "Padding Layer takes a single blob as input.";
   CHECK_EQ(top->size(), 1) << "Padding Layer takes a single blob as output.";
   NUM_ = bottom[0]->num();

@@ -55,9 +55,10 @@ TYPED_TEST_CASE(ImagesLayerTest, Dtypes);
 
 TYPED_TEST(ImagesLayerTest, TestRead) {
   LayerParameter param;
-  param.set_batchsize(5);
-  param.set_source(this->filename);
-  param.set_shuffle_images(false);
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_source(this->filename);
+  image_data_param->set_shuffle(false);
   ImagesLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
@@ -79,11 +80,12 @@ TYPED_TEST(ImagesLayerTest, TestRead) {
 
 TYPED_TEST(ImagesLayerTest, TestResize) {
   LayerParameter param;
-  param.set_batchsize(5);
-  param.set_source(this->filename);
-  param.set_new_height(256);
-  param.set_new_width(256);
-  param.set_shuffle_images(false);
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_source(this->filename);
+  image_data_param->set_new_height(256);
+  image_data_param->set_new_width(256);
+  image_data_param->set_shuffle(false);
   ImagesLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
@@ -105,9 +107,10 @@ TYPED_TEST(ImagesLayerTest, TestResize) {
 
 TYPED_TEST(ImagesLayerTest, TestShuffle) {
   LayerParameter param;
-  param.set_batchsize(5);
-  param.set_source(this->filename);
-  param.set_shuffle_images(true);
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_source(this->filename);
+  image_data_param->set_shuffle(true);
   ImagesLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);

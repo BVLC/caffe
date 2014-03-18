@@ -92,32 +92,41 @@ message SolverState {
 message LayerParameter {
   optional string name = 1; // the layer name
 
-  // Add new LayerTypes to the enum below in lexicographical order, starting
-  // with the next available ID in the comment line above the enum.
-  // Update the next available ID when you add a new LayerType.
-  // LayerType next available ID: 21
+  // Add new LayerTypes to the enum below in lexicographical order (other than
+  // starting with NONE), starting with the next available ID in the comment
+  // line above the enum. Update the next available ID when you add a new
+  // LayerType.
+  //
+  // LayerType next available ID: 25
   enum LayerType {
-    ACCURACY = 0;
-    BNLL = 1;
-    CONCAT = 2;
-    CONVOLUTION = 3;
-    DATA = 4;
-    DROPOUT = 5;
-    EUCLIDEAN_LOSS = 6;
-    FLATTEN = 7;
-    HDF5_DATA = 8;
-    IM2COL = 9;
-    INFOGAIN_LOSS = 10;
-    INNER_PRODUCT = 11;
-    LRN = 12;
-    MULTINOMIAL_LOGISTIC_LOSS = 13;
-    POOLING = 14;
-    RELU = 15;
-    SIGMOID = 16;
-    SOFTMAX = 17;
-    SOFTMAX_LOSS = 18;
-    SPLIT = 19;
-    TANH = 20;
+    // "NONE" layer type is 0th enum element so that we don't cause confusion
+    // by defaulting to an existent LayerType (instead, should usually error if
+    // the type is unspecified).
+    NONE = 0;
+    ACCURACY = 1;
+    BNLL = 2;
+    CONCAT = 3;
+    CONVOLUTION = 4;
+    DATA = 5;
+    DROPOUT = 6;
+    EUCLIDEAN_LOSS = 7;
+    FLATTEN = 8;
+    HDF5_DATA = 9;
+    IM2COL = 10;
+    IMAGE_DATA = 11;
+    INFOGAIN_LOSS = 12;
+    INNER_PRODUCT = 13;
+    LRN = 14;
+    MULTINOMIAL_LOGISTIC_LOSS = 15;
+    PADDING = 16;
+    POOLING = 17;
+    RELU = 18;
+    SIGMOID = 19;
+    SOFTMAX = 20;
+    SOFTMAX_LOSS = 21;
+    SPLIT = 22;
+    TANH = 23;
+    WINDOW_DATA = 24;
   }
   optional LayerType type = 2; // the layer type from the enum above
 
@@ -138,10 +147,12 @@ message LayerParameter {
   optional DataParameter data_param = 10;
   optional DropoutParameter dropout_param = 11;
   optional HDF5DataParameter hdf5_data_param = 12;
-  optional InfogainLossParameter infogain_loss_param = 13;
-  optional InnerProductParameter inner_product_param = 14;
-  optional LRNParameter lrn_param = 15;
-  optional PoolingParameter pooling_param = 16;
+  optional ImageDataParameter image_data_param = 13;
+  optional InfogainLossParameter infogain_loss_param = 14;
+  optional InnerProductParameter inner_product_param = 15;
+  optional LRNParameter lrn_param = 16;
+  optional PaddingParameter padding_param = 17;
+  optional PoolingParameter pooling_param = 18;
 }
 
 // Message that stores parameters used by ConcatLayer
@@ -199,7 +210,34 @@ message HDF5DataParameter {
   optional uint32 batch_size = 2;
 }
 
-// Message that stores parameters used by InfogainLossLayer
+// Message that stores parameters used by ImageDataLayer
+message ImageDataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  // For data pre-processing, we can do simple scaling and subtracting the
+  // data mean, if provided. Note that the mean subtraction is always carried
+  // out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // Specify the batch size.
+  optional uint32 batch_size = 4;
+  // Specify if we would like to randomly crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // Specify if we want to randomly mirror data.
+  optional bool mirror = 6 [default = false];
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the leveldb.
+  optional uint32 rand_skip = 7 [default = 0];
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  optional bool shuffle = 8 [default = false];
+  // It will also resize images if new_height or new_width are not zero.
+  optional uint32 new_height = 9 [default = 0];
+  optional uint32 new_width = 10 [default = 0];
+}
+
+// Message that stores parameters InfogainLossLayer
 message InfogainLossParameter {
   // Specify the infogain matrix source.
   optional string source = 1;
@@ -220,6 +258,11 @@ message LRNParameter {
   optional float beta = 3 [default = 0.75]; // for local response norm
 }
 
+// Message that stores parameters used by PaddingLayer
+message PaddingParameter {
+  optional uint32 pad = 1 [default = 0]; // The padding size
+}
+
 // Message that stores parameters used by PoolingLayer
 message PoolingParameter {
   enum PoolMethod {
@@ -230,18 +273,6 @@ message PoolingParameter {
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   optional uint32 kernel_size = 2; // The kernel size
   optional uint32 stride = 3 [default = 1]; // The stride
-}
-
-// Message that stores parameters used by DropoutLayer
-message DropoutParameter {
-  optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
-}
-
-// Message that stores parameters used by LRNLayer
-message LRNParameter {
-  optional uint32 local_size = 1 [default = 5]; // for local response norm
-  optional float alpha = 2 [default = 1.]; // for local response norm
-  optional float beta = 3 [default = 0.75]; // for local response norm
 }
 
 message WindowDataParameter {
@@ -267,34 +298,4 @@ message WindowDataParameter {
 
 message HDF5OutputParameter {
   optional string file_name = 1;
-}
-
-// Message that stores parameters used by ConcatLayer
-message ConcatParameter {
-  // For ConcatLayer, one needs to specify the dimension for concatenation, and
-  // the other dimensions must be the same for all the bottom blobs.
-  // By default it will concatenate blobs along the channels dimension.
-  optional uint32 concat_dim = 1 [default = 1];
-}
-
-// Message that stores parameters used by ReshapeLayer
-message ReshapeParameter {
-  // For ReshapeLayer, one needs to specify the new dimensions.
-  optional int32 new_num = 1 [default = 0];
-  optional int32 new_channels = 2 [default = 0];
-  optional int32 new_height = 3 [default = 0];
-  optional int32 new_width = 4 [default = 0];
-}
-
-// Message that stores parameters used by ImageDataLayer
-message ImageDataParameter {
-  // Whether or not ImageLayer should shuffle the list of files at every epoch.
-  // It will also resize images if new_height or new_width are not zero.
-  optional bool shuffle_images = 64 [default = false];
-}
-
-// Message that stores parameters InfogainLossLayer
-message InfogainLossParameter {
-  // Specify the infogain matrix source.
-  optional string source = 1;
 }

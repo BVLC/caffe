@@ -42,7 +42,8 @@ TYPED_TEST_CASE(PaddingLayerTest, Dtypes);
 
 TYPED_TEST(PaddingLayerTest, TestCPU) {
   LayerParameter layer_param;
-  layer_param.set_pad(1);
+  PaddingParameter* padding_param = layer_param.mutable_padding_param();
+  padding_param->set_pad(1);
   Caffe::set_mode(Caffe::CPU);
   PaddingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -65,7 +66,8 @@ TYPED_TEST(PaddingLayerTest, TestCPU) {
 
 TYPED_TEST(PaddingLayerTest, TestCPUGrad) {
   LayerParameter layer_param;
-  layer_param.set_pad(1);
+  PaddingParameter* padding_param = layer_param.mutable_padding_param();
+  padding_param->set_pad(1);
   Caffe::set_mode(Caffe::CPU);
   PaddingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
@@ -76,7 +78,8 @@ TYPED_TEST(PaddingLayerTest, TestCPUGrad) {
 TYPED_TEST(PaddingLayerTest, TestGPU) {
   if (CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
-    layer_param.set_pad(1);
+    PaddingParameter* padding_param = layer_param.mutable_padding_param();
+    padding_param->set_pad(1);
     Caffe::set_mode(Caffe::GPU);
     PaddingLayer<TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -103,7 +106,8 @@ TYPED_TEST(PaddingLayerTest, TestGPU) {
 TYPED_TEST(PaddingLayerTest, TestGPUGrad) {
   if (CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
-    layer_param.set_pad(1);
+    PaddingParameter* padding_param = layer_param.mutable_padding_param();
+    padding_param->set_pad(1);
     Caffe::set_mode(Caffe::GPU);
     PaddingLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3);
