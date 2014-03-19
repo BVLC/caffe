@@ -38,6 +38,69 @@ message FillerParameter {
   optional float std = 6 [default = 1]; // the std value in gaussian filler
 }
 
+message DatumDimensions {
+  optional int32 channels = 1;
+  optional int32 height = 2;
+  optional int32 width = 3;
+}
+
+message MeanSubtractionParameter {
+  optional string mean_file = 1;
+}
+
+message ScalingParameter {
+  optional DatumDimensions input_dims = 1;
+  optional DatumDimensions output_dims = 2;
+}
+
+message MirroringParameter {
+  enum MirroringType {
+    NONE = 0;
+    LEFT_RIGHT = 1;
+    UP_DOWN = 2;
+  };
+  optional MirroringType type = 1;
+}
+
+message RotationParameter {
+  optional DatumDimensions dims = 1;
+}
+
+message MeanZeroingParameter {
+  optional DatumDimensions dims = 1;
+}
+
+message ResizingParameter {
+  optional DatumDimensions input_dims = 1;
+  optional DatumDimensions output_dims = 2;
+}
+
+message CroppingParameter {
+  optional DatumDimensions crop_dims = 2;
+}
+
+message DataProcessorParameter {
+  enum DataProcessorType {
+    NONE = 0;
+    MEAN_SUBTRACTION = 1;
+    SCALING = 2;
+    MIRRORING = 3;
+    ROTATION = 4;
+    MEAN_ZEROING = 5;
+    RESIZING = 6;
+    CROPPING = 7;
+  };
+  optional string name = 1;
+  optional DataProcessorType type = 2;
+  optional MeanSubtractionParameter mean_subtraction_param = 3;
+  optional ScalingParameter scaling_param = 4;
+  optional MirroringParameter mirroring_param = 5;
+  optional RotationParameter rotationing_param = 6;
+  optional MeanZeroingParameter mean_zeroing_param = 7;
+  optional ResizingParameter resizing_param = 8;
+  optional CroppingParameter cropping_param = 9;
+}
+
 message NetParameter {
   optional string name = 1; // consider giving the network a name
   repeated LayerParameter layers = 2; // a bunch of layers.
