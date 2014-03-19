@@ -4,7 +4,7 @@
 # another one caffe.log.loss that contains the loss computed during the training
 
 #get the dirname of the script
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(readlink -f $(dirname "$0"))"
 
 if [ "$#" -lt 1 ]
 then

@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # This scripts downloads the mnist data and unzips it.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(readlink -f $(dirname "$0"))"
 cd $DIR
 
 echo "Downloading..."
