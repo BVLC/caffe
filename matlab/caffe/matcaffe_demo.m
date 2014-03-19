@@ -16,7 +16,7 @@ function scores = matcaffe_demo(im, use_gpu)
 % Or the equivalent based on where things are installed on your system
 %
 % Usage:
-%  im = imread('../../examples/cat.jpg');
+%  im = imread('../../examples/images/cat.jpg');
 %  scores = matcaffe_demo(im, 1);
 %  [score, class] = max(scores);
 

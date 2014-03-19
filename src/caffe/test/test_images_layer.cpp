@@ -36,7 +36,7 @@ class ImagesLayerTest : public ::testing::Test {
     std::ofstream outfile(filename, std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename;
     for (int i = 0; i < 5; ++i) {
-      outfile << "data/cat.jpg " << i;
+      outfile << "examples/images/cat.jpg " << i;
     }
     outfile.close();
   }
