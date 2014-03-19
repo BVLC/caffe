@@ -6,7 +6,7 @@
 # - synset ids and words
 # - the training splits with labels
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(readlink -f $(dirname "$0"))"
 cd $DIR
 
 echo "Downloading..."
