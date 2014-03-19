@@ -4,7 +4,7 @@
 // format. Nothing special here and no actual code is being tested.
 #include <string>
 
-#include <google/protobuf/text_format.h>
+#include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -26,4 +26,4 @@ TEST_F(ProtoTest, TestSerialization) {
   EXPECT_TRUE(true);
 }
 
-}
+}  // namespace caffe

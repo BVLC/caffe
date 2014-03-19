@@ -56,3 +56,4 @@ examples/*
 
 # Don't version the generated documentation
 docs/_site
+_site

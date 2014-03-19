@@ -80,8 +80,8 @@ message LayerParameter {
 
   // The blobs containing the numeric parameters of the layer
   repeated BlobProto blobs = 50;
-  // The ratio that is multiplied on the global learning rate. If you want to set
-  // the learning ratio for one blob, you need to set it for all blobs.
+  // The ratio that is multiplied on the global learning rate. If you want to
+  // set the learning ratio for one blob, you need to set it for all blobs.
   repeated float blobs_lr = 51;
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 52;
@@ -92,16 +92,20 @@ message LayerParameter {
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
 
-  // For the Reshape Layer one need to specify the new dimensions
+  // For ReshapeLayer, one needs to specify the new dimensions.
   optional int32 new_num = 60 [default = 0];
   optional int32 new_channels = 61 [default = 0];
   optional int32 new_height = 62 [default = 0];
   optional int32 new_width = 63 [default = 0];
 
-  // Used by ImageLayer to shuffle the list of files at every epoch it will also
-  // resize images if new_height or new_width are not zero
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  // It will also resize images if new_height or new_width are not zero.
   optional bool shuffle_images = 64 [default = false];
 
+  // For ConcatLayer, one needs to specify the dimension for concatenation, and
+  // the other dimensions must be the same for all the bottom blobs.
+  // By default it will concatenate blobs along the channels dimension.
+  optional uint32 concat_dim = 65 [default = 1];
 }
 
 message LayerConnection {

@@ -10,8 +10,8 @@ namespace caffe {
 shared_ptr<Caffe> Caffe::singleton_;
 
 
-long cluster_seedgen(void) {
-  long s, seed, pid;
+int64_t cluster_seedgen(void) {
+  int64_t s, seed, pid;
   pid = getpid();
   s = time(NULL);
   seed = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
@@ -36,7 +36,8 @@ Caffe::Caffe()
   }
   // Try to create a vsl stream. This should almost always work, but we will
   // check it anyway.
-  if (vslNewStream(&vsl_stream_, VSL_BRNG_MT19937, cluster_seedgen()) != VSL_STATUS_OK) {
+  if (vslNewStream(&vsl_stream_, VSL_BRNG_MT19937,
+                   cluster_seedgen()) != VSL_STATUS_OK) {
     LOG(ERROR) << "Cannot create vsl stream. VSL random number generator "
         << "won't be available.";
   }
@@ -48,7 +49,7 @@ Caffe::~Caffe() {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
   if (vsl_stream_) VSL_CHECK(vslDeleteStream(&vsl_stream_));
-};
+}
 
 void Caffe::set_random_seed(const unsigned int seed) {
   // Curand seed

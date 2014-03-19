@@ -76,7 +76,7 @@ class ImageNetClassifier(object):
       num = 1
     else:
       num = 10
-    self.caffenet = caffe.CaffeNet(model_def_file, pretrained_model)
+    self.caffenet = caffe.Net(model_def_file, pretrained_model)
     self._output_blobs = [np.empty((num, num_output, 1, 1), dtype=np.float32)]
     self._center_only = center_only
 

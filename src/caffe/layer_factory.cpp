@@ -23,18 +23,22 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new AccuracyLayer<Dtype>(param);
   } else if (type == "bnll") {
     return new BNLLLayer<Dtype>(param);
+  } else if (type == "concat") {
+    return new ConcatLayer<Dtype>(param);
   } else if (type == "conv") {
     return new ConvolutionLayer<Dtype>(param);
   } else if (type == "data") {
     return new DataLayer<Dtype>(param);
-  } else if (type == "images") {
-    return new ImagesLayer<Dtype>(param);
   } else if (type == "dropout") {
     return new DropoutLayer<Dtype>(param);
   } else if (type == "euclidean_loss") {
     return new EuclideanLossLayer<Dtype>(param);
   } else if (type == "flatten") {
     return new FlattenLayer<Dtype>(param);
+  } else if (type == "hdf5_data") {
+    return new HDF5DataLayer<Dtype>(param);
+  } else if (type == "images") {
+    return new ImagesLayer<Dtype>(param);
   } else if (type == "im2col") {
     return new Im2colLayer<Dtype>(param);
   } else if (type == "infogain_loss") {
@@ -43,14 +47,14 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new InnerProductLayer<Dtype>(param);
   } else if (type == "lrn") {
     return new LRNLayer<Dtype>(param);
+  } else if (type == "multinomial_logistic_loss") {
+    return new MultinomialLogisticLossLayer<Dtype>(param);
   } else if (type == "padding") {
     return new PaddingLayer<Dtype>(param);
   } else if (type == "pool") {
     return new PoolingLayer<Dtype>(param);
   } else if (type == "relu") {
     return new ReLULayer<Dtype>(param);
-  } else if (type == "tanh") {
-    return new TanHLayer<Dtype>(param);
   } else if (type == "sigmoid") {
     return new SigmoidLayer<Dtype>(param);
   } else if (type == "softmax") {
@@ -59,8 +63,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new SoftmaxWithLossLayer<Dtype>(param);
   } else if (type == "split") {
     return new SplitLayer<Dtype>(param);
-  } else if (type == "multinomial_logistic_loss") {
-    return new MultinomialLogisticLossLayer<Dtype>(param);
+  } else if (type == "tanh") {
+    return new TanHLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Unknown layer name: " << type;
   }

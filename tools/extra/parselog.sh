@@ -3,6 +3,9 @@
 # It creates two files one caffe.log.test that contains the loss and test accuracy of the test and
 # another one caffe.log.loss that contains the loss computed during the training
 
+#get the dirname of the script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 if [ "$#" -lt 1 ]
 then
 echo "Usage parselog.sh /path/to/your.log"
@@ -18,7 +21,7 @@ grep 'Test score #1' aux.txt | awk '{print $8}' > aux2.txt
 # For extraction of time since this line constains the start time
 grep '] Solving ' $1 > aux3.txt
 grep 'Testing net' $1 >> aux3.txt
-./extract_seconds.py aux3.txt aux4.txt
+$DIR/extract_seconds.py aux3.txt aux4.txt
 
 # Generating
 echo '# Iters Seconds TestAccuracy TestLoss'> $LOG.test
@@ -33,7 +36,7 @@ grep ', loss = ' $1 | awk '{print $9}' > aux1.txt
 grep ', lr = ' $1 | awk '{print $9}' > aux2.txt
 
 # Extracting elpased seconds
-./extract_seconds.py aux.txt aux3.txt
+$DIR/extract_seconds.py aux.txt aux3.txt
 
 # Generating
 echo '# Iters Seconds TrainingLoss LearningRate'> $LOG.train

@@ -1,7 +1,8 @@
 // Copyright 2013 Yangqing Jia
 
-#include <cstring>
 #include <cuda_runtime.h>
+#include <cstring>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -28,7 +29,7 @@ class PaddingLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
-  };
+  }
   virtual ~PaddingLayerTest() { delete blob_bottom_; delete blob_top_; }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
@@ -68,7 +69,8 @@ TYPED_TEST(PaddingLayerTest, TestCPUGrad) {
   Caffe::set_mode(Caffe::CPU);
   PaddingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(PaddingLayerTest, TestGPU) {
@@ -105,10 +107,11 @@ TYPED_TEST(PaddingLayerTest, TestGPUGrad) {
     Caffe::set_mode(Caffe::GPU);
     PaddingLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3);
-    checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+    checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+        &(this->blob_top_vec_));
   } else {
     LOG(ERROR) << "Skipping test (gpu version too low).";
   }
 }
 
-}
+}  // namespace caffe
