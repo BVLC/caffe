@@ -27,7 +27,7 @@ Preprocess the Data
 
 Generate a list of the files to process. 
 
-    build/tools/generate_file_list.py /your/images/dir /your/images.txt
+    examples/feature_extraction/generate_file_list.py /your/images/dir /your/images.txt
 
 The network definition of the reference model only accepts 256*256 pixel images stored in the leveldb format. First, resize your images if they do not match the required size.
 
