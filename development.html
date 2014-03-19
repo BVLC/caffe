@@ -44,7 +44,7 @@
 
 <p>Caffe is developed with active participation of the community by the <a href="http://bvlc.eecs.berkeley.edu/">Berkeley Vision and Learning Center</a>. We welcome all contributions!</p>
 
-<p>The <a href="https://github.com/BVLC/caffe#contributing">contributing workflow</a> is explained in the README. These guidelines cover development practices in Caffe. This is a work-in-progress.</p>
+<p>The <a href="https://github.com/BVLC/caffe#development">contributing workflow</a> is explained in the README. These guidelines cover development practices in Caffe. This is a work-in-progress.</p>
 
 <p><strong>Development Flow</strong></p>
 
@@ -81,6 +81,18 @@
 <p>We’d appreciate your contribution to the documentation effort!</p>
 
 <p><strong>Testing</strong>: run <code>make runtest</code> to check the project tests. New code requires new tests. Pull requests that fail tests will not be accepted.</p>
+
+<p>The <code>googletest</code> framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is <code>--gtest_filter</code>, which allows you to filter tests by name:</p>
+
+<pre><code># run all tests with CPU in the name
+build/src/caffe/test/test_all.testbin --gtest_filter=&#39;*CPU*&#39;
+
+# run all tests without GPU in the name (note the leading minus sign)
+build/src/caffe/test/test_all.testbin --gtest_filter=-&#39;*GPU*&#39;</code></pre>
+
+<p>To get a list of all options <code>googletest</code> provides, simply pass the <code>--help</code> flag:</p>
+
+<pre><code>build/src/caffe/test/test_all.testbin --help</code></pre>
 
 <p><strong>Style</strong></p>
 

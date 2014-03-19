@@ -40,25 +40,17 @@
       </header>
       <section>
 
-      <h1 id="license">License</h1>
+      <h1 id="pretrained_models">Pre-trained models</h1>
 
-<p><a href="index.html">Return</a></p>
+<p><a href="http://bvlc.eecs.berkeley.edu">BVLC</a> aims to provide a variety of high quality pre-trained models. Note that unlike Caffe itself, these models are licensed for <strong>academic research / non-commercial use only</strong>. If you have any questions, please get in touch with us.</p>
 
-<p>Copyright (c) 2014, The Regents of the University of California (Regents) All rights reserved.</p>
+<p>This page will be updated as more models become available.</p>
 
-<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
+<h3 id="imagenet">ImageNet</h3>
 
-<ol>
-<li>
-<p>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</p>
-</li>
+<p>Our reference implementation of the AlexNet model trained on ILSVRC-2012 can be downloaded (232.57MB) by running <code>examples/imagenet/get_caffe_reference_imagenet_model.sh</code> from the Caffe root directory.</p>
 
-<li>
-<p>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</p>
-</li>
-</ol>
-
-<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+<p>Additionally, you will probably eventually need some auxiliary data (mean image, synset list, etc.): run <code>data/ilsvrc12/get_ilsvrc_aux.sh</code> from the root directory to obtain it.</p>
 
       </section>
       <footer>

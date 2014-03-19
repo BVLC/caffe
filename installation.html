@@ -78,7 +78,7 @@ make runtest</code></pre>
 
 <li>OpenCV</li>
 
-<li>glog, gflags, protobuf, leveldb, snappy</li>
+<li>glog, gflags, protobuf, leveldb, snappy, hdf5</li>
 
 <li>For the Python wrapper: python, numpy (&gt;= 1.7 preferred), and boost_python</li>
 
@@ -93,7 +93,7 @@ make runtest</code></pre>
 
 <p>You will also need other packages, most of which can be installed via apt-get using:</p>
 
-<pre><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev</code></pre>
+<pre><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev</code></pre>
 
 <p>The only exception being the google logging library, which does not exist in the Ubuntu 12.04 repository. To install it, do:</p>
 
@@ -135,6 +135,7 @@ make matcaffe</code></pre>
 brew install --build-from-source boost
 brew install snappy leveldb protobuf gflags glog
 brew tap homebrew/science
+brew install homebrew/science/hdf5
 brew install homebrew/science/opencv</code></pre>
 
 <p>Building boost from source is needed to link against your local python. If using homebrew python, python packages like <code>numpy</code> and <code>scipy</code> are best installed by doing <code>brew tap homebrew/python</code>, and then installing them with homebrew.</p>

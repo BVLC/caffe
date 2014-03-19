@@ -42,38 +42,42 @@
 
       <h1 id="welcome_to_caffe">Welcome to Caffe</h1>
 
-<p>Caffe is a framework for convolutional neural network algorithms, developed with speed in mind. It was created by <a href="http://www.eecs.berkeley.edu/~jiayq/">Yangqing Jia</a> as a replacement of <a href="http://decaf.berkeleyvision.org/">decaf</a>, Yangqing’s earlier Python implementation of CNNs. It is maintained by the <a href="http://bvlc.eecs.berkeley.edu">Berkeley Vision and Learning Center</a> and several Berkeley vision group members are actively contributing to the codebase.</p>
-
-<p>Caffe is released under <a href="license.html">the BSD 2-Clause license</a>.</p>
-
-<p>Decaf, the big brother of Caffe, has a cool <a href="http://decaf.berkeleyvision.org">demo</a>. Caffe’s own demo will come soon.</p>
-
+<p>Caffe is a framework for convolutional neural network algorithms, developed with speed in mind. It was created by <a href="http://daggerfs.com">Yangqing Jia</a>, and is in active development by the <a href="http://bvlc.eecs.berkeley.edu">Berkeley Vision and Learning Center</a>. Caffe is released under <a href="https://github.com/BVLC/caffe/blob/master/LICENSE">the BSD 2-Clause license</a>.</p>
+<!-- BVLC hosts a quick [classification demo](http://demo.caffe.berkeleyvision.org/) using Caffe. -->
 <h2 id="why_caffe">Why Caffe?</h2>
 
-<p>Caffe aims to provide computer vision scientists with a <strong>clean, modifiable implementation</strong> of state-of-the-art deep learning algorithms. For example, network structure is easily specified in separate config files, with no mess of hard-coded parameters in the code.</p>
+<p>Caffe aims to provide computer vision scientists and practitioners with a <strong>clean and modifiable implementation</strong> of state-of-the-art deep learning algorithms. For example, network structure is easily specified in separate config files, with no mess of hard-coded parameters in the code.</p>
 
-<p>At the same time, Caffe fits industry needs, with blazing fast C++/Cuda code for GPU computation. Caffe is currently the fastest GPU CNN implementation publicly available, and is able to process more than <strong>20 million images per day</strong> on a single Tesla K20 machine *.</p>
+<p>At the same time, Caffe fits industry needs, with blazing fast C++/CUDA code for GPU computation. Caffe is currently the fastest GPU CNN implementation publicly available, and is able to process more than <strong>20 million images per day</strong> on a single Tesla K20 machine *.</p>
 
-<p>Caffe also provides <strong>seamless switching between CPU and GPU</strong>, which allows one to train models with fast GPUs and then deploy them on non-GPU clusters with one line of code: <code>Caffe::set_mode(Caffe::CPU)</code>.</p>
+<p>Caffe also provides <strong>seamless switching between CPU and GPU</strong>, which allows one to train models with fast GPUs and then deploy them on non-GPU clusters with one line of code: <code>Caffe::set_mode(Caffe::CPU)</code>. Even in CPU mode, computing predictions on an image takes only 20 ms when images are processed in batch mode.</p>
 
-<p>Even in CPU mode, computing predictions on an image takes only 20 ms when images are processed in batch mode.</p>
-
-<h2 id="quick_links">Quick Links</h2>
+<h2 id="documentation">Documentation</h2>
 
 <ul>
-<li><a href="caffe-presentation.pdf">Presentation</a>: The Caffe presentation, <em>updated 03/14</em>.</li>
+<li><a href="https://www.dropbox.com/s/10fx16yp5etb8dv/caffe-presentation.pdf">Introductory slides</a>: slides about the Caffe architecture, <em>updated 03/14</em>.</li>
 
-<li><a href="installation.html">Installation</a>: Instructions on installing Caffe (tested on Ubuntu 12.04, but works on Red Hat, OS X, etc.).</li>
+<li><a href="/installation.html">Installation</a>: Instructions on installing Caffe (works on Ubuntu, Red Hat, OS X).</li>
 
-<li><a href="development.html">Development</a>: Guidelines for development and contributing to Caffe.</li>
+<li><a href="/getting_pretrained_models.html">Pre-trained models</a>: BVLC provides some pre-trained models for academic / non-commercial use.</li>
 
-<li><a href="mnist.html">MNIST Demo</a>: example of end-to-end training and testing on the MNIST data.</li>
+<li><a href="/development.html">Development</a>: Guidelines for development and contributing to Caffe.</li>
+</ul>
 
-<li><a href="imagenet_training.html">Training ImageNet</a>: tutorial on end-to-end training of an ImageNet classifier.</li>
+<h3 id="examples">Examples</h3>
 
-<li><a href="imagenet_pretrained.html">Running Pretrained ImageNet</a>: simply runs in Python!</li>
+<ul>
+<li><a href="/mnist.html">LeNet / MNIST Demo</a>: end-to-end training and testing of LeNet on MNIST.</li>
 
-<li><a href="imagenet_detection.html">Running Detection</a>: run a pretrained model as a detector.</li>
+<li><a href="/cifar10.html">CIFAR-10 Demo</a>: training and testing on the CIFAR-10 data.</li>
+
+<li><a href="/imagenet_training.html">Training ImageNet</a>: end-to-end training of an ImageNet classifier.</li>
+
+<li><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/imagenet_pretrained.ipynb">Running Pretrained ImageNet [notebook]</a>: run classification with the pretrained ImageNet model using the Python interface.</li>
+
+<li><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/selective_search_demo.ipynb">Running Detection [notebook]</a>: run a pretrained model as a detector.</li>
+
+<li><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb">Visualizing Features and Filters [notebook]</a>: trained filters and an example image, viewed layer-by-layer.</li>
 </ul>
 
 <h2 id="citing_caffe">Citing Caffe</h2>
@@ -89,9 +93,9 @@
 
 <h3 id="acknowledgements">Acknowledgements</h3>
 
-<p>Yangqing would like to thank the NVidia Academic program for providing a K20 GPU. The Caffe Matlab wrapper is courtesy of <a href="http://www.cs.berkeley.edu/~rbg/">Dr. Ross Girshick</a>. The detection module (<code>power_wrapper</code>) is courtesy of <a href="http://sergeykarayev.com/">Sergey Karayev</a>. Our thanks also go to <a href="http://jeffdonahue.com/">Jeff Donahue</a> and <a href="http://www1.icsi.berkeley.edu/~vinyals/">Oriol Vinyals</a> for various discussions along the journey.</p>
+<p>Yangqing would like to thank the NVidia Academic program for providing K20 GPUs. The Caffe Matlab wrapper is courtesy of <a href="http://www.cs.berkeley.edu/~rbg/">Dr. Ross Girshick</a>. The detection module (<code>power_wrapper</code>) is courtesy of <a href="http://sergeykarayev.com/">Sergey Karayev</a>. Our thanks also go to <a href="http://jeffdonahue.com/">Jeff Donahue</a> and <a href="http://www1.icsi.berkeley.edu/~vinyals/">Oriol Vinyals</a> for various discussions along the journey.</p>
 <hr />
-<p>*: When measured with the <a href="http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf">SuperVision</a> model that won the ImageNet Large Scale Visual Recognition Challenge 2012. More benchmarks coming soon.</p>
+<p>*: When measured with the <a href="http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf">SuperVision</a> model that won the ImageNet Large Scale Visual Recognition Challenge 2012.</p>
 
       </section>
       <footer>
