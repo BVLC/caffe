@@ -35,7 +35,7 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
       }
     }
     top_data[index] = maxval;
-  }  // (if index < nthreads)
+  }
 }
 
 template <typename Dtype>
@@ -43,8 +43,7 @@ __global__ void AvePoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, Dtype* top_data) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < nthreads) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
@@ -61,7 +60,7 @@ __global__ void AvePoolForward(const int nthreads, const Dtype* bottom_data,
       }
     }
     top_data[index] = aveval / (hend - hstart) / (wend - wstart);
-  }  // (if index < nthreads)
+  }
 }
 
 template <typename Dtype>
@@ -100,7 +99,7 @@ __global__ void StoPoolForwardTrain(const int nthreads,
         }
       }
     }
-  }  // (if index < nthreads)
+  }
 }
 
 
@@ -131,7 +130,7 @@ __global__ void StoPoolForwardTest(const int nthreads,
       }
     }
     top_data[index] = cumvalues / cumsum;
-  }  // (if index < nthreads)
+  }
 }
 
 
@@ -211,7 +210,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* bottom_data,
       }
     }
     bottom_diff[index] = gradient;
-  }  // (if index < nthreads)
+  }
 }
 
 
@@ -242,7 +241,7 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
       }
     }
     bottom_diff[index] = gradient;
-  }  // (if index < nthreads)
+  }
 }
 
 
@@ -273,7 +272,7 @@ __global__ void StoPoolBackward(const int nthreads,
       }
     }
     bottom_diff[index] = gradient;
-  }  // (if index < nthreads)
+  }
 }
 
 

@@ -12,8 +12,7 @@ template <typename Dtype>
 __global__ void PaddingForward(const int count, const Dtype* in, Dtype* out,
     const int num, const int channel, const int height_in, const int width_in,
     const int pad) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < count) {
+  CUDA_KERNEL_LOOP(index, count) {
     int height_out = height_in + pad + pad;
     int width_out = width_in + pad + pad;
     int w = index % width_in;
@@ -46,8 +45,7 @@ template <typename Dtype>
 __global__ void PaddingBackward(const int count, const Dtype* in, Dtype* out,
     const int num, const int channel, const int height_in, const int width_in,
     const int pad) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < count) {
+  CUDA_KERNEL_LOOP(index, count) {
     int height_out = height_in + pad + pad;
     int width_out = width_in + pad + pad;
     int w = index % width_in;
