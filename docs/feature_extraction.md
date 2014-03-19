@@ -38,7 +38,11 @@ Set the num_clients to be the number of CPU cores on your machine. Run "nproc" o
     build/tools/generate_file_list.py /your/resized/images/dir_256_256 /your/resized/images_256_256.txt
     build/tools/convert_imageset /your/resized/images/dir_256_256 /your/resized/images_256_256.txt /your/resized/images_256_256_leveldb 1
 
-In practice, subtracting the mean image from a dataset significantly improves classification accuracies.
+In practice, subtracting the mean image from a dataset significantly improves classification accuracies. Download the mean image of the ILSVRC dataset. 
+
+    data/ilsvrc12/get_ilsvrc_aux.sh
+
+You can directly use the imagenet_mean.binaryproto in the network definition proto. If you have a large number of images, you can also compute the mean of all the images.
 
     build/tools/compute_image_mean.bin /your/resized/images_256_256_leveldb /your/resized/images_256_256_mean.binaryproto
 
