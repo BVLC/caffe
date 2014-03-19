@@ -5,7 +5,7 @@
 #include "caffe/net.hpp"
 
 
-using namespace caffe;
+using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   if (argc > 2) {

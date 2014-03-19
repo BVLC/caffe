@@ -41,6 +41,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   int num_layers = param.layers_size();
   CHECK_EQ(param.input_size() * 4, param.input_dim_size())
       << "Incorrect bottom blob dimension specifications.";
+  size_t memory_used = 0;
   // set the input blobs
   for (int i = 0; i < param.input_size(); ++i) {
     const string& blob_name = param.input(i);
@@ -56,13 +57,16 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     net_input_blobs_.push_back(blob_pointer.get());
     blob_name_to_idx[blob_name] = i;
     available_blobs.insert(blob_name);
+    memory_used += blob_pointer->count();
   }
+  DLOG(INFO) << "Memory required for Data" << memory_used*sizeof(Dtype);
   // For each layer, set up their input and output
   bottom_vecs_.resize(param.layers_size());
   top_vecs_.resize(param.layers_size());
   bottom_id_vecs_.resize(param.layers_size());
   top_id_vecs_.resize(param.layers_size());
   for (int i = 0; i < param.layers_size(); ++i) {
+    bool in_place = false;
     const LayerConnection& layer_connection = param.layers(i);
     const LayerParameter& layer_param = layer_connection.layer();
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
@@ -92,6 +96,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           blob_name == layer_connection.bottom(j)) {
         // In-place computation
         LOG(INFO) << layer_param.name() << " -> " << blob_name << " (in-place)";
+        in_place = true;
         available_blobs.insert(blob_name);
         top_vecs_[i].push_back(
             blobs_[blob_name_to_idx[blob_name]].get());
@@ -117,10 +122,15 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // LOG(INFO) << "Setting up " << layer_names_[i];
     layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
     for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
-      LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->channels() << " "
+      LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->num() << " "
+          << top_vecs_[i][topid]->channels() << " "
           << top_vecs_[i][topid]->height() << " "
-          << top_vecs_[i][topid]->width();
+          << top_vecs_[i][topid]->width() << " ("
+          << top_vecs_[i][topid]->count() << ")";
+      if (!in_place)
+        memory_used += top_vecs_[i][topid]->count();
     }
+    DLOG(INFO) << "Memory  required for Data " << memory_used*sizeof(Dtype);
     int blobs_lr_size = layers_[i]->layer_param().blobs_lr_size();
     CHECK(blobs_lr_size == layers_[i]->blobs().size() || blobs_lr_size == 0)
         << "Incorrect blobs lr size: should be either 0 or the same as "
@@ -154,6 +164,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
+  LOG(INFO) << "Memory required for Data " << memory_used*sizeof(Dtype);
 }
 
 

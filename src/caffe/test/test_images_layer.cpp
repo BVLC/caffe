@@ -1,10 +1,11 @@
 // Copyright 2014 Sergio Guadarrama
 
 #include <cuda_runtime.h>
-#include <iostream>
-#include <fstream>
 
+#include <iostream>  // NOLINT(readability/streams)
+#include <fstream>  // NOLINT(readability/streams)
 #include <string>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -26,19 +27,19 @@ class ImagesLayerTest : public ::testing::Test {
   ImagesLayerTest()
       : blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
-        filename(NULL) {};
+        filename(NULL) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
     // Create a Vector of files with labels
-    filename = tmpnam(NULL); // get temp name
+    filename = tmpnam(NULL);  // get temp name
     std::ofstream outfile(filename, std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename;
     for (int i = 0; i < 5; ++i) {
-      outfile << "data/cat.jpg " << i;
+      outfile << "examples/images/cat.jpg " << i;
     }
     outfile.close();
-  };
+  }
 
   virtual ~ImagesLayerTest() { delete blob_top_data_; delete blob_top_label_; }
 
@@ -121,9 +122,10 @@ TYPED_TEST(ImagesLayerTest, TestShuffle) {
   for (int iter = 0; iter < 5; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
-      EXPECT_GE(this->blob_top_label_->cpu_data()[i],0);
-      EXPECT_LE(this->blob_top_label_->cpu_data()[i],5);
+      EXPECT_GE(this->blob_top_label_->cpu_data()[i], 0);
+      EXPECT_LE(this->blob_top_label_->cpu_data()[i], 5);
     }
   }
 }
-}
+
+}  // namespace caffe

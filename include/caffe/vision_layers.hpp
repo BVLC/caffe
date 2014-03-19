@@ -3,10 +3,14 @@
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 
-#include <leveldb/db.h>
-#include <pthread.h>
-
+#include <string>
+#include <utility>
 #include <vector>
+
+#include "leveldb/db.h"
+#include "pthread.h"
+#include "boost/scoped_ptr.hpp"
+#include "hdf5.h"
 
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -272,8 +276,8 @@ class Im2colLayer : public Layer<Dtype> {
   int CHANNELS_;
   int HEIGHT_;
   int WIDTH_;
+  int PAD_;
 };
-
 
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
@@ -326,6 +330,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int STRIDE_;
   int NUM_;
   int CHANNELS_;
+  int PAD_;
   int HEIGHT_;
   int WIDTH_;
   int NUM_OUTPUT_;
@@ -338,6 +343,32 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
+template <typename Dtype>
+class ConcatLayer : public Layer<Dtype> {
+ public:
+  explicit ConcatLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  Blob<Dtype> col_bob_;
+
+  int COUNT_;
+  int NUM_;
+  int CHANNELS_;
+  int HEIGHT_;
+  int WIDTH_;
+  int concat_dim_;
+};
 
 // This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
@@ -384,7 +415,7 @@ void* ImagesLayerPrefetch(void* layer_pointer);
 template <typename Dtype>
 class ImagesLayer : public Layer<Dtype> {
   // The function used to perform prefetching.
- friend void* ImagesLayerPrefetch<Dtype>(void* layer_pointer);
+  friend void* ImagesLayerPrefetch<Dtype>(void* layer_pointer);
 
  public:
   explicit ImagesLayer(const LayerParameter& param)
@@ -413,6 +444,36 @@ class ImagesLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
+};
+
+
+template <typename Dtype>
+class HDF5DataLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5DataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~HDF5DataLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual Dtype Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void load_hdf5_file_data(const char* filename);
+
+  std::vector<std::string> hdf_filenames_;
+  unsigned int num_files_;
+  unsigned int current_file_;
+  hsize_t current_row_;
+
+  Blob<Dtype> data_blob_;
+  Blob<Dtype> label_blob_;
 };
 
 
@@ -563,4 +624,3 @@ class AccuracyLayer : public Layer<Dtype> {
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_
-

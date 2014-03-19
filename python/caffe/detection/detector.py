@@ -332,7 +332,7 @@ def config(model_def, pretrained_model, gpu, image_dim, image_mean_file):
   # Initialize network by loading model definition and weights.
   t = time.time()
   print("Loading Caffe model.")
-  NET = caffe.CaffeNet(model_def, pretrained_model)
+  NET = caffe.Net(model_def, pretrained_model)
   NET.set_phase_test()
   if gpu:
     NET.set_mode_gpu()
@@ -340,7 +340,7 @@ def config(model_def, pretrained_model, gpu, image_dim, image_mean_file):
 
   # Configure for input/output data
   IMAGE_DIM = image_dim
-  CROPPED_DIM = NET.blobs()[0].width
+  CROPPED_DIM = NET.blobs.values()[0].width
   IMAGE_CENTER = int((IMAGE_DIM - CROPPED_DIM) / 2)
 
     # Load the data set mean file
@@ -349,8 +349,8 @@ def config(model_def, pretrained_model, gpu, image_dim, image_mean_file):
   CROPPED_IMAGE_MEAN = IMAGE_MEAN[IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
                                   IMAGE_CENTER:IMAGE_CENTER + CROPPED_DIM,
                                   :]
-  BATCH_SIZE = NET.blobs()[0].num  # network batch size
-  NUM_OUTPUT = NET.blobs()[-1].channels  # number of output classes
+  BATCH_SIZE = NET.blobs.values()[0].num  # network batch size
+  NUM_OUTPUT = NET.blobs.values()[-1].channels  # number of output classes
 
 
 if __name__ == "__main__":
@@ -371,12 +371,12 @@ if __name__ == "__main__":
   # Optional arguments.
   parser.add_argument(
     "--model_def",
-    default="examples/imagenet_deploy.prototxt",
+    default="../../../examples/imagenet/imagenet_deploy.prototxt",
     help="Model definition file."
   )
   parser.add_argument(
     "--pretrained_model",
-    default="examples/caffe_reference_imagenet_model",
+    default="../../../examples/imagenet/caffe_reference_imagenet_model",
     help="Trained model weights file."
   )
   parser.add_argument(

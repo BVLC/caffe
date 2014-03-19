@@ -1,10 +1,10 @@
 // Copyright 2013 Yangqing Jia
 
-#include <cuda_runtime.h>
-#include <leveldb/db.h>
-
 #include <string>
+#include <vector>
 
+#include "cuda_runtime.h"
+#include "leveldb/db.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -14,6 +14,7 @@
 #include "caffe/test/test_caffe_main.hpp"
 
 using std::string;
+using std::stringstream;
 
 namespace caffe {
 
@@ -25,12 +26,12 @@ class DataLayerTest : public ::testing::Test {
   DataLayerTest()
       : blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
-        filename(NULL) {};
+        filename(NULL) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
     // Create the leveldb
-    filename = tmpnam(NULL); // get temp name
+    filename = tmpnam(NULL);  // get temp name
     LOG(INFO) << "Using temporary leveldb " << filename;
     leveldb::DB* db;
     leveldb::Options options;
@@ -53,7 +54,7 @@ class DataLayerTest : public ::testing::Test {
       db->Put(leveldb::WriteOptions(), ss.str(), datum.SerializeAsString());
     }
     delete db;
-  };
+  }
 
   virtual ~DataLayerTest() { delete blob_top_data_; delete blob_top_label_; }
 
@@ -81,7 +82,23 @@ TYPED_TEST(DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
+
   // Go through the data 100 times
+  for (int iter = 0; iter < 100; ++iter) {
+    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+    for (int i = 0; i < 5; ++i) {
+      for (int j = 0; j < 24; ++j) {
+        EXPECT_EQ(i, this->blob_top_data_->cpu_data()[i * 24 + j])
+            << "debug: i " << i << " j " << j;
+      }
+    }
+  }
+
+  // Same test, in GPU mode.
+  Caffe::set_mode(Caffe::GPU);
   for (int iter = 0; iter < 100; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
@@ -96,4 +113,4 @@ TYPED_TEST(DataLayerTest, TestRead) {
   }
 }
 
-}
+}  // namespace caffe

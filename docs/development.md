@@ -9,7 +9,7 @@ Developing & Contributing
 Caffe is developed with active participation of the community by the [Berkeley Vision and Learning Center](http://bvlc.eecs.berkeley.edu/).
 We welcome all contributions!
 
-The [contributing workflow](https://github.com/BVLC/caffe#contributing) is explained in the README. These guidelines cover development practices in Caffe. This is a work-in-progress.
+The [contributing workflow](https://github.com/BVLC/caffe#development) is explained in the README. These guidelines cover development practices in Caffe. This is a work-in-progress.
 
 **Development Flow**
 
@@ -35,6 +35,18 @@ A PR is only ready for review when the code is committed, documented, linted, an
 We'd appreciate your contribution to the documentation effort!
 
 **Testing**: run `make runtest` to check the project tests. New code requires new tests. Pull requests that fail tests will not be accepted.
+
+The `googletest` framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is `--gtest_filter`, which allows you to filter tests by name:
+
+    # run all tests with CPU in the name
+    build/src/caffe/test/test_all.testbin --gtest_filter='*CPU*'
+
+    # run all tests without GPU in the name (note the leading minus sign)
+    build/src/caffe/test/test_all.testbin --gtest_filter=-'*GPU*'
+
+To get a list of all options `googletest` provides, simply pass the `--help` flag:
+
+    build/src/caffe/test/test_all.testbin --help
 
 **Style**
 

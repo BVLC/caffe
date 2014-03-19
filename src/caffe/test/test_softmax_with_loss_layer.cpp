@@ -3,8 +3,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -31,6 +32,7 @@ class SoftmaxWithLossLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
     for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
       blob_bottom_label_->mutable_cpu_data()[i] = rand() % 5;
     }
     blob_bottom_vec_.push_back(blob_bottom_label_);
@@ -55,8 +57,8 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientCPU) {
   SoftmaxWithLossLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_, 0, -1, -1);
+  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_), 0, -1, -1);
 }
 
 TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientGPU) {
@@ -65,8 +67,8 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientGPU) {
   SoftmaxWithLossLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(layer, this->blob_bottom_vec_,
-      this->blob_top_vec_, 0, -1, -1);
+  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_), 0, -1, -1);
 }
 
-}
+}  // namespace caffe
