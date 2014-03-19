@@ -70,7 +70,7 @@ __global__ void StoPoolForwardTrain(const int nthreads,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int ksize, const int stride, float* rand_idx, Dtype* top_data) {
-  CUDA_KERNEL_LLOP(index, nthreads) {
+  CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
