@@ -5,9 +5,9 @@
 # You had better check the data files before designing your own plots.
 
 # Please generate the neccessary data files with 
-# /path/to/caffe/scripts/parselog.sh before plotting.
+# /path/to/caffe/scripts/parse_log.sh before plotting.
 # Example usage: 
-#     ./parselog.sh mnist.log
+#     ./parse_log.sh mnist.log
 # Now you have mnist.log.train and mnist.log.test.
 #     gnuplot mnist.gnuplot
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
 # This scripts downloads the CIFAR10 (binary version) data and unzips it.
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="$(readlink -f $(dirname "$0"))"
 cd $DIR
 
 echo "Downloading..."
 
-wget -q http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
+wget http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
 
 echo "Unzipping..."
 
