@@ -6,7 +6,7 @@ cd $DIR
 
 echo "Downloading..."
 
-wget -q http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
+wget http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
 
 echo "Unzipping..."
 
