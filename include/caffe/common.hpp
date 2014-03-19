@@ -22,7 +22,7 @@
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
        i < (n); \
        i += blockDim.x * gridDim.x)
-       
+
 // After a kernel is executed, this will check the error and if there is one,
 // exit loudly.
 #define CUDA_POST_KERNEL_CHECK \
