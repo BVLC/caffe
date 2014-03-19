@@ -110,7 +110,8 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 ##############################
 # Define build targets
 ##############################
-.PHONY: all init test clean linecount lint tools examples py mat distribute py$(PROJECT) mat$(PROJECT) proto
+.PHONY: all init test clean linecount lint tools examples py mat distribute \
+        py$(PROJECT) mat$(PROJECT) proto runtest
 
 all: init $(NAME) $(STATIC_NAME) tools examples
 	@echo $(CXX_OBJS)
@@ -172,7 +173,7 @@ runtest: $(TEST_ALL_BIN)
 $(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
 	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 
-$(TEST_ALL_BIN): $(TEST_OBJS)
+$(TEST_ALL_BIN): $(GTEST_OBJ) $(STATIC_NAME) $(TEST_OBJS)
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) -o $(TEST_ALL_BIN) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
