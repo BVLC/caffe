@@ -1,4 +1,5 @@
 // Copyright 2013 Yangqing Jia
+// Copyright 2014 kloudkl@github
 
 #ifndef CAFFE_UTIL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
@@ -99,6 +100,9 @@ Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
+
+template <typename Dtype>
+int caffe_hamming_distance(const int n, const Dtype* x, const Dtype* y);
 
 }  // namespace caffe
 

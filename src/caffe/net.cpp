@@ -162,6 +162,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     LOG(INFO) << "This network produces output " << *it;
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
   }
+  for (size_t i = 0; i < blob_names_.size(); ++i) {
+    blob_names_index_[blob_names_[i]] = i;
+  }
+  for (size_t i = 0; i < layer_names_.size(); ++i) {
+    layer_names_index_[layer_names_[i]] = i;
+  }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for Data " << memory_used*sizeof(Dtype);
@@ -325,6 +331,42 @@ void Net<Dtype>::Update() {
   for (int i = 0; i < params_.size(); ++i) {
     params_[i]->Update();
   }
+}
+
+template <typename Dtype>
+bool Net<Dtype>::has_blob(const string& blob_name) {
+  return blob_names_index_.find(blob_name) != blob_names_index_.end();
+}
+
+template <typename Dtype>
+const shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(
+    const string& blob_name) {
+  shared_ptr<Blob<Dtype> > blob_ptr;
+  if (has_blob(blob_name)) {
+    blob_ptr = blobs_[blob_names_index_[blob_name]];
+  } else {
+    blob_ptr.reset((Blob<Dtype>*)(NULL));
+    LOG(WARNING) << "Unknown blob name " << blob_name;
+  }
+  return blob_ptr;
+}
+
+template <typename Dtype>
+bool Net<Dtype>::has_layer(const string& layer_name) {
+  return layer_names_index_.find(layer_name) != layer_names_index_.end();
+}
+
+template <typename Dtype>
+const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
+    const string& layer_name) {
+  shared_ptr<Layer<Dtype> > layer_ptr;
+  if (has_layer(layer_name)) {
+    layer_ptr = layers_[layer_names_index_[layer_name]];
+  } else {
+    layer_ptr.reset((Layer<Dtype>*)(NULL));
+    LOG(WARNING) << "Unknown layer name " << layer_name;
+  }
+  return layer_ptr;
 }
 
 INSTANTIATE_CLASS(Net);
