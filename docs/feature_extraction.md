@@ -3,59 +3,65 @@ layout: default
 title: Caffe
 ---
 
-Extracting Features Using Pre-trained Model
-===========================================
+Extracting Features
+===================
 
-CAFFE represents Convolution Architecture For Feature Extraction. Extracting features using pre-trained model is one of the strongest requirements users ask for.
+In this tutorial, we will extract features using a pre-trained model.
+Follow instructions for [setting up caffe](installation.html) and for [getting](getting_pretrained_models.html) the pre-trained ImageNet model.
+If you need detailed information about the tools below, please consult their source code, in which additional documentation is usually provided.
 
-Because of the record-breaking image classification accuracy and the flexible domain adaptability of [the network architecture proposed by Krizhevsky, Sutskever, and Hinton](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf), Caffe provides a pre-trained reference image model to save you from days of training. 
+Select data to run on
+---------------------
 
-If you need detailed usage help information of the involved tools, please read the source code of them which provide everything you need to know about.
+We'll make a temporary folder to store things into.
 
-Get the Reference Model
------------------------
+    mkdir examples/_temp
 
-Assume you are in the root directory of Caffe.
+Generate a list of the files to process.
+We're going to use the images that ship with caffe.
 
-    cd models
-    ./get_caffe_reference_imagenet_model.sh
+    find `pwd`/examples/images -type f -exec echo {} \; > examples/_temp/file_list.txt
 
-After the downloading is finished, you will have models/caffe_reference_imagenet_model.
+The `ImagesLayer` we'll use expects labels after each filenames, so let's add a 0 to the end of each line
 
-Preprocess the Data
--------------------
-
-Generate a list of the files to process. 
-
-    examples/feature_extraction/generate_file_list.py /your/images/dir /your/images.txt
-
-The network definition of the reference model only accepts 256*256 pixel images stored in the leveldb format. First, resize your images if they do not match the required size.
-
-    build/tools/resize_and_crop_images.py --num_clients=8 --image_lib=opencv --output_side_length=256 --input=/your/images.txt --input_folder=/your/images/dir --output_folder=/your/resized/images/dir_256_256
-
-Set the num_clients to be the number of CPU cores on your machine. Run "nproc" or "cat /proc/cpuinfo | grep processor | wc -l" to get the number on Linux.
-
-    build/tools/generate_file_list.py /your/resized/images/dir_256_256 /your/resized/images_256_256.txt
-    build/tools/convert_imageset /your/resized/images/dir_256_256 /your/resized/images_256_256.txt /your/resized/images_256_256_leveldb 1
-
-In practice, subtracting the mean image from a dataset significantly improves classification accuracies. Download the mean image of the ILSVRC dataset. 
-
-    data/ilsvrc12/get_ilsvrc_aux.sh
-
-You can directly use the imagenet_mean.binaryproto in the network definition proto. If you have a large number of images, you can also compute the mean of all the images.
-
-    build/tools/compute_image_mean.bin /your/resized/images_256_256_leveldb /your/resized/images_256_256_mean.binaryproto
+    sed "s/$/ 0/" examples/_temp/file_list.txt > examples/_temp/file_list.txt
 
 Define the Feature Extraction Network Architecture
 --------------------------------------------------
 
-If you do not want to change the reference model network architecture , simply copy examples/imagenet into examples/your_own_dir. Then point the source and meanfile field of the data layer in imagenet_val.prototxt to /your/resized/images_256_256_leveldb and /your/resized/images_256_256_mean.binaryproto respectively. 
+In practice, subtracting the mean image from a dataset significantly improves classification accuracies.
+Download the mean image of the ILSVRC dataset.
+
+    data/ilsvrc12/get_ilsvrc_aux.sh
+
+We will use `data/ilsvrc212/imagenet_mean.binaryproto` in the network definition prototxt.
+
+Let's copy and modify the network definition.
+We'll be using the `ImagesLayer`, which will load and resize images for us.
+
+    cp examples/feature_extraction/imagenet_val.prototxt examples/_temp
+
+Edit `examples/_temp/imagenet_val.prototxt` to use correct path for your setup (replace `$CAFFE_DIR`)
 
 Extract Features
 ----------------
 
 Now everything necessary is in place.
 
-    build/tools/extract_features.bin models/caffe_reference_imagenet_model examples/feature_extraction/imagenet_val.prototxt fc7 examples/feature_extraction/features 10
+    build/tools/extract_features.bin models/caffe_reference_imagenet_model examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10
 
-The name of feature blob that you extract is fc7 which represents the highest level feature of the reference model. Any other blob is also applicable. The last parameter above is the number of data mini-batches.
+The name of feature blob that you extract is `fc7`, which represents the highest level feature of the reference model.
+We can use any other layer, as well, such as `conv5` or `pool3`.
+
+The last parameter above is the number of data mini-batches.
+
+The features are stored to LevelDB `examples/_temp/features`, ready for access by some other code.
+
+If you'd like to use the Python wrapper for extracting features, check out the [layer visualization notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb).
+
+Clean Up
+--------
+
+Let's remove the temporary directory now.
+
+    rm -r examples/_temp

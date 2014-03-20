@@ -32,6 +32,7 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 * [LeNet / MNIST Demo](/mnist.html): end-to-end training and testing of LeNet on MNIST.
 * [CIFAR-10 Demo](/cifar10.html): training and testing on the CIFAR-10 data.
 * [Training ImageNet](/imagenet_training.html): end-to-end training of an ImageNet classifier.
+* [Feature extraction with C++](/feature_extraction.html): feature extraction using pre-trained model
 * [Running Pretrained ImageNet \[notebook\]][pretrained_imagenet]: run classification with the pretrained ImageNet model using the Python interface.
 * [Running Detection \[notebook\]][imagenet_detection]: run a pretrained model as a detector.
 * [Visualizing Features and Filters \[notebook\]][visualizing_filters]: trained filters and an example image, viewed layer-by-layer.
