@@ -6,12 +6,12 @@
 # - synset ids and words
 # - the training splits with labels
 
-DIR="$(readlink -f $(dirname "$0"))"
+DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 cd $DIR
 
 echo "Downloading..."
 
-wget https://www.dropbox.com/s/g5myor4y2scdv95/caffe_ilsvrc12.tar.gz
+wget --no-check-certificate https://www.dropbox.com/s/g5myor4y2scdv95/caffe_ilsvrc12.tar.gz
 
 echo "Unzipping..."
 

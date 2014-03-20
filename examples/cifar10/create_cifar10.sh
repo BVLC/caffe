@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # This script converts the cifar data into leveldb format.
 
-EXAMPLES=../../build/examples/cifar
+EXAMPLES=../../build/examples/cifar10
 DATA=../../data/cifar10
 TOOLS=../../build/tools
 
