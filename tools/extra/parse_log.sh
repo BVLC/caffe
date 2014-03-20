@@ -1,10 +1,10 @@
 #!/bin/bash
-# Usage parse_log.sh caffe.log 
+# Usage parse_log.sh caffe.log
 # It creates two files one caffe.log.test that contains the loss and test accuracy of the test and
 # another one caffe.log.loss that contains the loss computed during the training
 
-#get the dirname of the script
-DIR="$(readlink -f $(dirname "$0"))"
+# get the dirname of the script
+DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 
 if [ "$#" -lt 1 ]
 then

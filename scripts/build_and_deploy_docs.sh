@@ -15,7 +15,7 @@ MSG=`git log --oneline -1`
 
 if [[ $BRANCH = 'master' ]]; then
     # Find the docs dir, no matter where the script is called
-    DIR="$(readlink -f $(dirname "$0"))"
+    DIR="$( cd "$(dirname "$0")" ; pwd -P )"
     DOCS_SITE_DIR=$DIR/../docs/_site
 
     # Make sure that docs/_site tracks remote:gh-pages.
