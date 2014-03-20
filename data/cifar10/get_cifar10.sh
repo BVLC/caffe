@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # This scripts downloads the CIFAR10 (binary version) data and unzips it.
 
-DIR="$(readlink -f $(dirname "$0"))"
+DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 cd $DIR
 
 echo "Downloading..."
