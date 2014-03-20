@@ -25,7 +25,7 @@ static int init_key = -2;
 //   matlab uses RGB color channel order
 //   images need to have the data mean subtracted
 //
-// Data coming in from matlab needs to be in the order 
+// Data coming in from matlab needs to be in the order
 //   [width, height, channels, images]
 // where width is the fastest dimension.
 // Here is the rough matlab for putting image data into the correct
@@ -131,7 +131,7 @@ static mxArray* do_get_weights() {
         prev_layer_name = layer_names[i];
         const mwSize dims[2] = {layer_blobs.size(), 1};
         mx_layer_cells = mxCreateCellArray(2, dims);
-        mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_cells); 
+        mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_cells);
         mxSetField(mx_layers, mx_layer_index, "layer_names",
             mxCreateString(layer_names[i].c_str()));
         mx_layer_index++;
@@ -142,18 +142,19 @@ static mxArray* do_get_weights() {
         // where width is the fastest dimension
         mwSize dims[4] = {layer_blobs[j]->width(), layer_blobs[j]->height(),
             layer_blobs[j]->channels(), layer_blobs[j]->num()};
-        mxArray* mx_weights = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+        mxArray* mx_weights = mxCreateNumericArray(4, dims, mxSINGLE_CLASS,
+                                                   mxREAL);
         mxSetCell(mx_layer_cells, j, mx_weights);
         float* weights_ptr = reinterpret_cast<float*>(mxGetPr(mx_weights));
 
-//        mexPrintf("layer: %s (%d) blob: %d  %d: (%d, %d, %d) %d\n", 
-//            layer_names[i].c_str(), i, j, layer_blobs[j]->num(), 
-//            layer_blobs[j]->height(), layer_blobs[j]->width(), 
-//            layer_blobs[j]->channels(), layer_blobs[j]->count());
+        //  mexPrintf("layer: %s (%d) blob: %d  %d: (%d, %d, %d) %d\n",
+        //  layer_names[i].c_str(), i, j, layer_blobs[j]->num(),
+        //  layer_blobs[j]->height(), layer_blobs[j]->width(),
+        //  layer_blobs[j]->channels(), layer_blobs[j]->count());
 
         switch (Caffe::mode()) {
         case Caffe::CPU:
-          memcpy(weights_ptr, layer_blobs[j]->cpu_data(), 
+          memcpy(weights_ptr, layer_blobs[j]->cpu_data(),
               sizeof(float) * layer_blobs[j]->count());
           break;
         case Caffe::GPU:
@@ -219,6 +220,7 @@ static void init(MEX_ARGS) {
   mxFree(param_file);
   mxFree(model_file);
 
+  // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
   init_key = rand();
   if (nlhs == 1) {
     plhs[0] = mxCreateDoubleScalar(init_key);

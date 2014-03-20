@@ -5,18 +5,20 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <map>
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
+#include <utility>
+
+#include "opencv2/core/core.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 using std::string;
 using std::map;
@@ -30,7 +32,7 @@ namespace caffe {
 
 template <typename Dtype>
 void* WindowDataLayerPrefetch(void* layer_pointer) {
-  WindowDataLayer<Dtype>* layer = 
+  WindowDataLayer<Dtype>* layer =
       reinterpret_cast<WindowDataLayer<Dtype>*>(layer_pointer);
 
   // At each iteration, sample N windows where N*p are foreground (object)
@@ -56,7 +58,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   // zero out batch
   memset(top_data, 0, sizeof(Dtype)*layer->prefetch_data_->count());
 
-  const int num_fg = static_cast<int>(static_cast<float>(batchsize) 
+  const int num_fg = static_cast<int>(static_cast<float>(batchsize)
       * fg_fraction);
   const int num_samples[2] = { batchsize - num_fg, num_fg };
 
@@ -65,23 +67,26 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
       // sample a window
-      vector<float> window = (is_fg) 
+      vector<float> window = (is_fg)
+          // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
           ? layer->fg_windows_[rand() % layer->fg_windows_.size()]
+          // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
           : layer->bg_windows_[rand() % layer->bg_windows_.size()];
 
       bool do_mirror = false;
+      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
       if (mirror && rand() % 2) {
         do_mirror = true;
       }
 
       // load the image containing the window
-      pair<std::string, vector<int> > image = 
+      pair<std::string, vector<int> > image =
           layer->image_database_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
 
       cv::Mat cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
       if (!cv_img.data) {
         LOG(ERROR) << "Could not open or find file " << image.first;
-        return (void*)NULL;
+        return reinterpret_cast<void*>(NULL);
       }
       const int channels = cv_img.channels();
 
@@ -94,7 +99,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       int pad_w = 0;
       int pad_h = 0;
       if (context_pad > 0 || use_square) {
-        // scale factor by which to expand the original region 
+        // scale factor by which to expand the original region
         // such that after warping the expanded region to cropsize x cropsize
         // there's exactly context_pad amount of padding on each side
         Dtype context_scale = static_cast<Dtype>(cropsize) /
@@ -116,7 +121,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         x2 = static_cast<int>(round(center_x + half_width*context_scale));
         y1 = static_cast<int>(round(center_y - half_height*context_scale));
         y2 = static_cast<int>(round(center_y + half_height*context_scale));
-        
+
         // the expanded region may go outside of the image
         // so we compute the clipped (expanded) region and keep track of
         // the extent beyond the image
@@ -139,17 +144,17 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         int clipped_height = y2-y1+1;
         int clipped_width = x2-x1+1;
 
-        // scale factors that would be used to warp the unclipped 
+        // scale factors that would be used to warp the unclipped
         // expanded region
-        Dtype scale_x = 
+        Dtype scale_x =
             static_cast<Dtype>(cropsize)/static_cast<Dtype>(unclipped_width);
-        Dtype scale_y = 
+        Dtype scale_y =
             static_cast<Dtype>(cropsize)/static_cast<Dtype>(unclipped_height);
 
         // size to warp the clipped expanded region to
-        cv_crop_size.width = 
+        cv_crop_size.width =
             static_cast<int>(round(static_cast<Dtype>(clipped_width)*scale_x));
-        cv_crop_size.height = 
+        cv_crop_size.height =
             static_cast<int>(round(static_cast<Dtype>(clipped_height)*scale_y));
         pad_x1 = static_cast<int>(round(static_cast<Dtype>(pad_x1)*scale_x));
         pad_x2 = static_cast<int>(round(static_cast<Dtype>(pad_x2)*scale_x));
@@ -176,9 +181,9 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
 
       cv::Rect roi(x1, y1, x2-x1+1, y2-y1+1);
       cv::Mat cv_cropped_img = cv_img(roi);
-      cv::resize(cv_cropped_img, cv_cropped_img, 
+      cv::resize(cv_cropped_img, cv_cropped_img,
           cv_crop_size, 0, 0, cv::INTER_LINEAR);
-      
+
       // horizontal flip at random
       if (do_mirror) {
         cv::flip(cv_cropped_img, cv_cropped_img, 1);
@@ -188,12 +193,13 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       for (int c = 0; c < channels; ++c) {
         for (int h = 0; h < cv_cropped_img.rows; ++h) {
           for (int w = 0; w < cv_cropped_img.cols; ++w) {
-            Dtype pixel = 
+            Dtype pixel =
                 static_cast<Dtype>(cv_cropped_img.at<cv::Vec3b>(h, w)[c]);
 
-            top_data[((itemid * channels + c) * cropsize + h + pad_h) * cropsize + w + pad_w]
+            top_data[((itemid * channels + c) * cropsize + h + pad_h)
+                     * cropsize + w + pad_w]
                 = (pixel
-                    - mean[(c * mean_height + h + mean_off + pad_h) 
+                    - mean[(c * mean_height + h + mean_off + pad_h)
                            * mean_width + w + mean_off + pad_w])
                   * scale;
           }
@@ -207,11 +213,12 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       // useful debugging code for dumping transformed windows to disk
       string file_id;
       std::stringstream ss;
+      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
       ss << rand();
       ss >> file_id;
-      std::ofstream inf((string("dump/") + file_id + 
+      std::ofstream inf((string("dump/") + file_id +
           string("_info.txt")).c_str(), std::ofstream::out);
-      inf << image.first << std::endl 
+      inf << image.first << std::endl
           << window[WindowDataLayer<Dtype>::X1]+1 << std::endl
           << window[WindowDataLayer<Dtype>::Y1]+1 << std::endl
           << window[WindowDataLayer<Dtype>::X2]+1 << std::endl
@@ -220,15 +227,15 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
           << top_label[itemid] << std::endl
           << is_fg << std::endl;
       inf.close();
-      std::ofstream top_data_file((string("dump/") + file_id + 
-          string("_data.txt")).c_str(), 
+      std::ofstream top_data_file((string("dump/") + file_id +
+          string("_data.txt")).c_str(),
           std::ofstream::out | std::ofstream::binary);
       for (int c = 0; c < channels; ++c) {
         for (int h = 0; h < cropsize; ++h) {
           for (int w = 0; w < cropsize; ++w) {
-            top_data_file.write(
-                reinterpret_cast<char*>(&top_data[((itemid * channels + c) 
-                                                   * cropsize + h) * cropsize + w]),
+            top_data_file.write(reinterpret_cast<char*>(
+                &top_data[((itemid * channels + c) * cropsize + h)
+                          * cropsize + w]),
                 sizeof(Dtype));
           }
         }
@@ -240,7 +247,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
     }
   }
 
-  return (void*)NULL;
+  return reinterpret_cast<void*>(NULL);
 }
 
 template <typename Dtype>
@@ -251,9 +258,9 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 template <typename Dtype>
 void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  // SetUp runs through the window_file and creates two structures 
-  // that hold windows: one for foreground (object) windows and one 
-  // for background (non-object) windows. We use an overlap threshold 
+  // SetUp runs through the window_file and creates two structures
+  // that hold windows: one for foreground (object) windows and one
+  // for background (non-object) windows. We use an overlap threshold
   // to decide which is which.
 
   CHECK_EQ(bottom.size(), 0) << "Window data Layer takes no input blobs.";
@@ -270,15 +277,15 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   //    class_index overlap x1 y1 x2 y2
 
   LOG(INFO) << "Window data layer:" << std::endl
-      << "  foreground (object) overlap threshold: " 
+      << "  foreground (object) overlap threshold: "
       << this->layer_param_.det_fg_threshold() << std::endl
-      << "  background (non-object) overlap threshold: " 
+      << "  background (non-object) overlap threshold: "
       << this->layer_param_.det_bg_threshold() << std::endl
       << "  foreground sampling fraction: "
       << this->layer_param_.det_fg_fraction();
 
   std::ifstream infile(this->layer_param_.source().c_str());
-  CHECK(infile.good()) << "Failed to open window file " 
+  CHECK(infile.good()) << "Failed to open window file "
       << this->layer_param_.source() << std::endl;
 
   map<int, int> label_hist;
@@ -313,7 +320,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       window[WindowDataLayer::Y1] = y1;
       window[WindowDataLayer::X2] = x2;
       window[WindowDataLayer::Y2] = y2;
-      
+
       // add window to foreground list or background list
       if (overlap >= this->layer_param_.det_fg_threshold()) {
         int label = window[WindowDataLayer::LABEL];
@@ -332,7 +339,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
     if (image_index % 100 == 0) {
       LOG(INFO) << "num: " << image_index << " "
-          << image_path << " " 
+          << image_path << " "
           << image_size[0] << " "
           << image_size[1] << " "
           << image_size[2] << " "
@@ -342,12 +349,13 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   LOG(INFO) << "Number of images: " << image_index+1;
 
-  for (map<int,int>::iterator it = label_hist.begin(); 
+  for (map<int, int>::iterator it = label_hist.begin();
       it != label_hist.end(); ++it) {
-    LOG(INFO) << "class " << it->first << " has " << label_hist[it->first] << " samples";
+    LOG(INFO) << "class " << it->first << " has " << label_hist[it->first]
+              << " samples";
   }
 
-  LOG(INFO) << "Amount of context padding: " 
+  LOG(INFO) << "Amount of context padding: "
       << this->layer_param_.det_context_pad();
 
   LOG(INFO) << "Crop mode: " << this->layer_param_.det_crop_mode();
