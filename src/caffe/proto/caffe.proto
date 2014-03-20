@@ -92,6 +92,25 @@ message LayerParameter {
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [ default = 0 ];
 
+  // Fields related to detection (det_*)
+  // foreground (object) overlap threshold
+  optional float det_fg_threshold = 54 [default = 0.5];
+  // background (non-object) overlap threshold
+  optional float det_bg_threshold = 55 [default = 0.5];
+  // Fraction of batch that should be foreground objects
+  optional float det_fg_fraction = 56 [default = 0.25];
+
+  // optional bool OBSOLETE_can_clobber = 57 [ default = true ];
+
+  // Amount of contextual padding to add around a window
+  // (used only by the window_data_layer)
+  optional uint32 det_context_pad = 58 [default = 0];
+
+  // Mode for cropping out a detection window
+  // warp: cropped window is warped to a fixed size and aspect ratio
+  // square: the tightest square around the window is cropped
+  optional string det_crop_mode = 59 [default = "warp"];
+
   // For ReshapeLayer, one needs to specify the new dimensions.
   optional int32 new_num = 60 [default = 0];
   optional int32 new_channels = 61 [default = 0];
