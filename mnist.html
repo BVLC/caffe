@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Caffe</title>
+
+    <link rel="stylesheet" href="stylesheets/reset.css">
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="index.html">Caffe</a></h1>
+        <p class="header">Convolutional Architecture for Fast Feature Embedding</p>
+
+        <ul>
+          <!--<li class="download"><a class="buttons" href="https://github.com/BVLC/caffe/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/BVLC/caffe/tarball/master">Download TAR</a></li>-->
+          <li><a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a></li>
+        </ul>
+        <p class="header">Maintained by<br><a class="header name" href="http://ucbvlc.org/">BVLC</a></p>
+        <p class="header">Created by<br><a class="header name" href="http://daggerfs.com/">Yangqing Jia</a></p>
+
+      </header>
+      <section>
+
+      <h1 id="training_mnist_with_caffe">Training MNIST with Caffe</h1>
+
+<p>We will assume that you have caffe successfully compiled. If not, please refer to the <a href="installation.html">Installation page</a>. In this tutorial, we will assume that your caffe installation is located at <code>CAFFE_ROOT</code>.</p>
+
+<h2 id="prepare_datasets">Prepare Datasets</h2>
+
+<p>You will first need to download and convert the data format from the MNIST website. To do this, simply run the following commands:</p>
+
+<pre><code>cd $CAFFE_ROOT/data/mnist
+./get_mnist.sh
+cd $CAFFE_ROOT/examples/lenet
+./create_mnist.sh</code></pre>
+
+<p>If it complains that <code>wget</code> or <code>gunzip</code> are not installed, you need to install them respectively. After running the script there should be two datasets, <code>mnist-train-leveldb</code>, and <code>mnist-test-leveldb</code>.</p>
+
+<h2 id="lenet_the_mnist_classification_model">LeNet: the MNIST Classification Model</h2>
+
+<p>Before we actually run the training program, let’s explain what will happen. We will use the <a href="http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf">LeNet</a> network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.</p>
+
+<p>The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in <code>CAFFE_ROOT/data/lenet.prototxt</code>.</p>
+
+<p>If you would like to read about step-by-step instruction on how the protobuf definitions are written, see <a href="mnist_prototxt.html">MNIST: Define the Network</a> and <a href="mnist_solver_prototxt.html">MNIST: Define the Solver</a>?.</p>
+
+<h2 id="training_and_testing_the_model">Training and Testing the Model</h2>
+
+<p>Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run <code>train_mnist.sh</code>, or the following command directly:</p>
+
+<pre><code>cd $CAFFE_ROOT/examples/lenet
+./train_lenet.sh</code></pre>
+
+<p><code>train_lenet.sh</code> is a simple script, but here are a few explanations: <code>GLOG_logtostderr=1</code> is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is <code>train_net.bin</code>, with the solver protobuf text file as its argument.</p>
+
+<p>When you run the code, you will see a lot of messages flying by like this:</p>
+
+<pre><code>I1203 net.cpp:66] Creating Layer conv1
+I1203 net.cpp:76] conv1 &lt;- data
+I1203 net.cpp:101] conv1 -&gt; conv1
+I1203 net.cpp:116] Top shape: 20 24 24
+I1203 net.cpp:127] conv1 needs backward computation.</code></pre>
+
+<p>These messages tell you the details about each layer, its connections and its output shape, which may be helpful in debugging. After the initialization, the training will start:</p>
+
+<pre><code>I1203 net.cpp:142] Network initialization done.
+I1203 solver.cpp:36] Solver scaffolding done.
+I1203 solver.cpp:44] Solving LeNet</code></pre>
+
+<p>Based on the solver setting, we will print the training loss function every 100 iterations, and test the network every 1000 iterations. You will see messages like this:</p>
+
+<pre><code>I1203 solver.cpp:204] Iteration 100, lr = 0.00992565
+I1203 solver.cpp:66] Iteration 100, loss = 0.26044
+...
+I1203 solver.cpp:84] Testing net
+I1203 solver.cpp:111] Test score #0: 0.9785
+I1203 solver.cpp:111] Test score #1: 0.0606671</code></pre>
+
+<p>For each training iteration, <code>lr</code> is the learning rate of that iteration, and <code>loss</code> is the training function. For the output of the testing phase, score 0 is the accuracy, and score 1 is the testing loss function.</p>
+
+<p>And after a few minutes, you are done!</p>
+
+<pre><code>I1203 solver.cpp:84] Testing net
+I1203 solver.cpp:111] Test score #0: 0.9897
+I1203 solver.cpp:111] Test score #1: 0.0324599
+I1203 solver.cpp:126] Snapshotting to lenet_iter_10000
+I1203 solver.cpp:133] Snapshotting solver state to lenet_iter_10000.solverstate
+I1203 solver.cpp:78] Optimization Done.</code></pre>
+
+<p>The final model, stored as a binary protobuf file, is stored at</p>
+
+<pre><code>lenet_iter_10000</code></pre>
+
+<p>which you can deploy as a trained model in your application, if you are training on a real-world application dataset.</p>
+
+<h2 id="um_how_about_gpu_training">Um… How about GPU training?</h2>
+
+<p>You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in <code>lenet_solver.prototxt</code>:</p>
+
+<pre><code># solver mode: 0 for CPU and 1 for GPU
+solver_mode: 0</code></pre>
+
+<p>and you will be using CPU for training. Isn’t that easy?</p>
+
+<p>MNIST is a small dataset, so training with GPU does not really introduce too much benefit due to communication overheads. On larger datasets with more complex models, such as ImageNet, the computation speed difference will be more significant.</p>
+
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a>.</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>

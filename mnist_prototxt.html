@@ -1,0 +1,202 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Caffe</title>
+
+    <link rel="stylesheet" href="stylesheets/reset.css">
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="index.html">Caffe</a></h1>
+        <p class="header">Convolutional Architecture for Fast Feature Embedding</p>
+
+        <ul>
+          <!--<li class="download"><a class="buttons" href="https://github.com/BVLC/caffe/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/BVLC/caffe/tarball/master">Download TAR</a></li>-->
+          <li><a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a></li>
+        </ul>
+        <p class="header">Maintained by<br><a class="header name" href="http://ucbvlc.org/">BVLC</a></p>
+        <p class="header">Created by<br><a class="header name" href="http://daggerfs.com/">Yangqing Jia</a></p>
+
+      </header>
+      <section>
+
+      <h1 id="define_the_mnist_network">Define the MNIST Network</h1>
+
+<p>This page explains the prototxt file <code>lenet_train.prototxt</code> used in the MNIST demo. We assume that you are familiar with <a href="https://developers.google.com/protocol-buffers/docs/overview">Google Protobuf</a>, and assume that you have read the protobuf definitions used by Caffe, which can be found at <a href="https://github.com/Yangqing/caffe/blob/master/src/caffe/proto/caffe.proto">src/caffe/proto/caffe.proto</a>.</p>
+
+<p>Specifically, we will write a <code>caffe::NetParameter</code> (or in python, <code>caffe.proto.caffe_pb2.NetParameter</code>) protubuf. We will start by giving the network a name:</p>
+
+<pre><code>name: &quot;LeNet&quot;</code></pre>
+
+<h2 id="writing_the_data_layer">Writing the Data Layer</h2>
+
+<p>Currently, we will read the MNIST data from the leveldb we created earlier in the demo. This is defined by a data layer:</p>
+
+<pre><code>layers {
+  layer {
+    name: &quot;mnist&quot;
+    type: &quot;data&quot;
+    source: &quot;mnist-train-leveldb&quot;
+    batchsize: 64
+    scale: 0.00390625
+  }
+  top: &quot;data&quot;
+  top: &quot;label&quot;
+}</code></pre>
+
+<p>Specifically, this layer has name <code>mnist</code>, type <code>data</code>, and it reads the data from the given leveldb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range [0,1). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the <code>data</code> blob, and one is the <code>label</code> blob.</p>
+
+<h2 id="writing_the_convolution_layer">Writing the Convolution Layer</h2>
+
+<p>Let’s define the first convolution layer:</p>
+
+<pre><code>layers {
+  layer {
+    name: &quot;conv1&quot;
+    type: &quot;conv&quot;
+    num_output: 20
+    kernelsize: 5
+    stride: 1
+    weight_filler {
+      type: &quot;xavier&quot;
+    }
+    bias_filler {
+      type: &quot;constant&quot;
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+  }
+  bottom: &quot;data&quot;
+  top: &quot;conv1&quot;
+}</code></pre>
+
+<p>This layer takes the <code>data</code> blob (it is provided by the data layer), and produces the <code>conv1</code> layer. It produces outputs of 20 channels, with the convolutional kernel size 5 and carried out with stride 1.</p>
+
+<p>The fillers allow us to randomly initialize the value of the weights and bias. For the weight filler, we will use the <code>xavier</code> algorithm that automatically determines the scale of initialization based on the number of input and output neurons. For the bias filler, we will simply initialize it as constant, with the default filling value 0.</p>
+
+<p><code>blobs_lr</code> are the learning rate adjustments for the layer’s learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.</p>
+
+<h2 id="writing_the_pooling_layer">Writing the Pooling Layer</h2>
+
+<p>Phew. Pooling layers are actually much easier to define:</p>
+
+<pre><code>layers {
+  layer {
+    name: &quot;pool1&quot;
+    type: &quot;pool&quot;
+    kernelsize: 2
+    stride: 2
+    pool: MAX
+  }
+  bottom: &quot;conv1&quot;
+  top: &quot;pool1&quot;
+}</code></pre>
+
+<p>This says we will perform max pooling with a pool kernel size 2 and a stride of 2 (so no overlapping between neighboring pooling regions).</p>
+
+<p>Similarly, you can write up the second convolution and pooling layers. Check <code>data/lenet.prototxt</code> for details.</p>
+
+<h2 id="writing_the_fully_connected_layer">Writing the Fully Connected Layer</h2>
+
+<p>Writing a fully connected layers is also simple:</p>
+
+<pre><code>layers {
+  layer {
+    name: &quot;ip1&quot;
+    type: &quot;innerproduct&quot;
+    num_output: 500
+    weight_filler {
+      type: &quot;xavier&quot;
+    }
+    bias_filler {
+      type: &quot;constant&quot;
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+  }
+  bottom: &quot;pool2&quot;
+  top: &quot;ip1&quot;
+}</code></pre>
+
+<p>This defines a fully connected layer (for some legacy reason, Caffe calls it an <code>innerproduct</code> layer) with 500 outputs. All other lines look familiar, right?</p>
+
+<h2 id="writing_the_relu_layer">Writing the ReLU Layer</h2>
+
+<p>A ReLU Layer is also simple:</p>
+
+<pre><code>layers {
+  layer {
+    name: &quot;relu1&quot;
+    type: &quot;relu&quot;
+  }
+  bottom: &quot;ip1&quot;
+  top: &quot;ip1&quot;
+}</code></pre>
+
+<p>Since ReLU is an element-wise operation, we can do <em>in-place</em> operations to save some memory. This is achieved by simply giving the same name to the bottom and top blobs. Of course, do NOT use duplicated blob names for other layer types!</p>
+
+<p>After the ReLU layer, we will write another innerproduct layer:</p>
+
+<pre><code>layers {
+  layer {
+    name: &quot;ip2&quot;
+    type: &quot;innerproduct&quot;
+    num_output: 10
+    weight_filler {
+      type: &quot;xavier&quot;
+    }
+    bias_filler {
+      type: &quot;constant&quot;
+    }
+    blobs_lr: 1.
+    blobs_lr: 2.
+  }
+  bottom: &quot;ip1&quot;
+  top: &quot;ip2&quot;
+}</code></pre>
+
+<h2 id="writing_the_loss_layer">Writing the Loss Layer</h2>
+
+<p>Finally, we will write the loss!</p>
+
+<pre><code>layers {
+  layer {
+    name: &quot;loss&quot;
+    type: &quot;softmax_loss&quot;
+  }
+  bottom: &quot;ip2&quot;
+  bottom: &quot;label&quot;
+}</code></pre>
+
+<p>The <code>softmax_loss</code> layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the <code>label</code> provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to <code>ip2</code>. This is where all magic starts.</p>
+
+<p>Now that we have demonstrated how to write the MNIST layer definition prototxt, maybe check out <a href="mnist_solver_prototxt.html">how we write a solver prototxt</a>?</p>
+
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a>.</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>

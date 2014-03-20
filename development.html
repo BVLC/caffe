@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Caffe</title>
+
+    <link rel="stylesheet" href="stylesheets/reset.css">
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="index.html">Caffe</a></h1>
+        <p class="header">Convolutional Architecture for Fast Feature Embedding</p>
+
+        <ul>
+          <!--<li class="download"><a class="buttons" href="https://github.com/BVLC/caffe/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/BVLC/caffe/tarball/master">Download TAR</a></li>-->
+          <li><a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a></li>
+        </ul>
+        <p class="header">Maintained by<br><a class="header name" href="http://ucbvlc.org/">BVLC</a></p>
+        <p class="header">Created by<br><a class="header name" href="http://daggerfs.com/">Yangqing Jia</a></p>
+
+      </header>
+      <section>
+
+      <h1 id="developing__contributing">Developing &amp; Contributing</h1>
+
+<p>Caffe is developed with active participation of the community by the <a href="http://bvlc.eecs.berkeley.edu/">Berkeley Vision and Learning Center</a>. We welcome all contributions!</p>
+
+<p>The <a href="https://github.com/BVLC/caffe#development">contributing workflow</a> is explained in the README. These guidelines cover development practices in Caffe. This is a work-in-progress.</p>
+
+<p><strong>Development Flow</strong></p>
+
+<ul>
+<li><code>master</code> is golden.</li>
+
+<li><code>dev</code> is for new development: it is the branching point for features and the base of pull requests.
+<ul>
+<li>The history of <code>dev</code> is not rewritten.</li>
+
+<li>Contributions are shepherded from <code>dev</code> to <code>master</code> by BVLC by merge.</li>
+</ul>
+</li>
+
+<li>To err is human. Accidents are fixed by reverts.</li>
+
+<li>Releases are marked with tags on merge from <code>dev</code> to <code>master</code>.</li>
+</ul>
+
+<p><strong>Issues &amp; Pull Request Protocol</strong></p>
+
+<ol>
+<li>Make issues for <a href="https://github.com/BVLC/caffe/issues?labels=bug&page=1&state=open">bugs</a>, tentative proposals, and <a href="https://github.com/BVLC/caffe/issues?labels=question&page=1&state=open">questions</a>.</li>
+
+<li>Make PRs to signal development: a. Make PRs <em>as soon as development begins</em>. Create a feature branch, make your initial commit, push, and PR to let everyone know you are working on it and let discussion guide development instead of review development after-the-fact. b. When a proposal from the first step earns enough interest to warrant development, make a PR, and reference and close the old issue to direct the conversation to the PR.</li>
+
+<li>When a PR is ready, comment to request a maintainer be assigned to review and merge to <code>dev</code>.</li>
+</ol>
+
+<p>A PR is only ready for review when the code is committed, documented, linted, and tested!</p>
+
+<p><strong>Documentation</strong>: the documentation is bundled with Caffe in <code>docs/</code>. This includes the site you are reading now. Contributions should be documented both inline in code and through usage examples. New documentation is published by BVLC with each release and between releases as-needed.</p>
+
+<p>We’d appreciate your contribution to the documentation effort!</p>
+
+<p><strong>Testing</strong>: run <code>make runtest</code> to check the project tests. New code requires new tests. Pull requests that fail tests will not be accepted.</p>
+
+<p>The <code>googletest</code> framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is <code>--gtest_filter</code>, which allows you to filter tests by name:</p>
+
+<pre><code># run all tests with CPU in the name
+build/src/caffe/test/test_all.testbin --gtest_filter=&#39;*CPU*&#39;
+
+# run all tests without GPU in the name (note the leading minus sign)
+build/src/caffe/test/test_all.testbin --gtest_filter=-&#39;*GPU*&#39;</code></pre>
+
+<p>To get a list of all options <code>googletest</code> provides, simply pass the <code>--help</code> flag:</p>
+
+<pre><code>build/src/caffe/test/test_all.testbin --help</code></pre>
+
+<p><strong>Style</strong></p>
+
+<ul>
+<li>Follow <a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml">Google C++ style</a> and <a href="http://google-styleguide.googlecode.com/svn/trunk/pyguide.html">Google python style</a> + <a href="http://legacy.python.org/dev/peps/pep-0008/">PEP 8</a>.</li>
+
+<li>Wrap lines at 80 chars.</li>
+
+<li>Remember that “a foolish consistency is the hobgoblin of little minds,” so use your best judgement to write the clearest code for your particular case.</li>
+</ul>
+
+<p><strong>Lint</strong>: run <code>make lint</code> to check C++ code.</p>
+
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a>.</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+  </body>
+</html>
