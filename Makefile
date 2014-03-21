@@ -97,7 +97,11 @@ LIBRARIES := cudart cublas curand \
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
-COMMON_FLAGS := -DNDEBUG -O2
+ifdef DEBUG
+	COMMON_FLAGS := -DDEBUG -g -O0
+else
+	COMMON_FLAGS := -DNDEBUG -O2
+endif
 
 # MKL switch (default = non-MKL)
 USE_MKL ?= 0
