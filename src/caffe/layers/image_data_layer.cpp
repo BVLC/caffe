@@ -19,10 +19,10 @@ using std::pair;
 namespace caffe {
 
 template <typename Dtype>
-void* ImagesLayerPrefetch(void* layer_pointer) {
+void* ImageDataLayerPrefetch(void* layer_pointer) {
   CHECK(layer_pointer);
-  ImagesLayer<Dtype>* layer =
-      reinterpret_cast<ImagesLayer<Dtype>*>(layer_pointer);
+  ImageDataLayer<Dtype>* layer =
+      reinterpret_cast<ImageDataLayer<Dtype>*>(layer_pointer);
   CHECK(layer);
   Datum datum;
   CHECK(layer->prefetch_data_);
@@ -133,13 +133,13 @@ void* ImagesLayerPrefetch(void* layer_pointer) {
 }
 
 template <typename Dtype>
-ImagesLayer<Dtype>::~ImagesLayer<Dtype>() {
+ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
   // Finally, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
 }
 
 template <typename Dtype>
-void ImagesLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 0) << "Input Layer takes no input blobs.";
   CHECK_EQ(top->size(), 2) << "Input Layer takes two blobs as output.";
@@ -228,13 +228,13 @@ void ImagesLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   prefetch_label_->mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
-  CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
+  CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
   DLOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>
-Dtype ImagesLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
@@ -244,11 +244,11 @@ Dtype ImagesLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   memcpy((*top)[1]->mutable_cpu_data(), prefetch_label_->cpu_data(),
       sizeof(Dtype) * prefetch_label_->count());
   // Start a new prefetch thread
-  CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
+  CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
   return Dtype(0.);
 }
 
-INSTANTIATE_CLASS(ImagesLayer);
+INSTANTIATE_CLASS(ImageDataLayer);
 
 }  // namespace caffe

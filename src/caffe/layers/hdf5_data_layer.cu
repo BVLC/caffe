@@ -36,7 +36,7 @@ Dtype HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           LOG(INFO) << "looping around to first file";
         }
 
-        load_hdf5_file_data(hdf_filenames_[current_file_].c_str());
+        LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
       }
       current_row_ = 0;
     }

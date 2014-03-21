@@ -22,9 +22,9 @@ namespace caffe {
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
-class ImagesLayerTest : public ::testing::Test {
+class ImageDataLayerTest : public ::testing::Test {
  protected:
-  ImagesLayerTest()
+  ImageDataLayerTest()
       : blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
         filename(NULL) {}
@@ -41,7 +41,10 @@ class ImagesLayerTest : public ::testing::Test {
     outfile.close();
   }
 
-  virtual ~ImagesLayerTest() { delete blob_top_data_; delete blob_top_label_; }
+  virtual ~ImageDataLayerTest() {
+    delete blob_top_data_;
+    delete blob_top_label_;
+  }
 
   char* filename;
   Blob<Dtype>* const blob_top_data_;
@@ -51,15 +54,15 @@ class ImagesLayerTest : public ::testing::Test {
 };
 
 typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(ImagesLayerTest, Dtypes);
+TYPED_TEST_CASE(ImageDataLayerTest, Dtypes);
 
-TYPED_TEST(ImagesLayerTest, TestRead) {
+TYPED_TEST(ImageDataLayerTest, TestRead) {
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_source(this->filename);
   image_data_param->set_shuffle(false);
-  ImagesLayer<TypeParam> layer(param);
+  ImageDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -78,7 +81,7 @@ TYPED_TEST(ImagesLayerTest, TestRead) {
   }
 }
 
-TYPED_TEST(ImagesLayerTest, TestResize) {
+TYPED_TEST(ImageDataLayerTest, TestResize) {
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -86,7 +89,7 @@ TYPED_TEST(ImagesLayerTest, TestResize) {
   image_data_param->set_new_height(256);
   image_data_param->set_new_width(256);
   image_data_param->set_shuffle(false);
-  ImagesLayer<TypeParam> layer(param);
+  ImageDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -105,13 +108,13 @@ TYPED_TEST(ImagesLayerTest, TestResize) {
   }
 }
 
-TYPED_TEST(ImagesLayerTest, TestShuffle) {
+TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_source(this->filename);
   image_data_param->set_shuffle(true);
-  ImagesLayer<TypeParam> layer(param);
+  ImageDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
