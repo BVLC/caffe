@@ -1,8 +1,5 @@
 // Copyright 2013 Yangqing Jia
 
-
-//#include <mkl.h>
-
 #include <vector>
 
 #include "caffe/blob.hpp"

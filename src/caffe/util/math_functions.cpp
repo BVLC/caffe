@@ -2,7 +2,6 @@
 // Copyright 2014 kloudkl@github
 
 #include <limits>
-//#include <mkl.h>
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
@@ -284,14 +283,10 @@ void caffe_vRngUniform(const int n, Dtype* r,
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_LE(a, b);
-  //VSL_CHECK(vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffe::vsl_stream(),
-  //    n, r, a, b));
 
-  // FIXME check if boundaries are handled in the same way ?
-  // Fixed by caffe_nextafter
   boost::uniform_real<Dtype> random_distribution(
       a, caffe_nextafter<Dtype>(b));
-  Caffe::random_generator_t &generator = Caffe::vsl_stream();
+  Caffe::random_generator_t &generator = Caffe::rng_stream();
   boost::variate_generator<Caffe::random_generator_t,
       boost::uniform_real<Dtype> > variate_generator(
       generator, random_distribution);
@@ -314,17 +309,8 @@ void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GT(sigma, 0);
-  //VSL_CHECK(vsRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
-//      Caffe::vsl_stream(), n, r, a, sigma));
-
-    // FIXME check if parameters are handled in the same way ?
-    // http://www.boost.org/doc/libs/1_55_0/doc/html/boost/random/normal_distribution.html
-    // http://software.intel.com/sites/products/documentation/hpc/mkl/mklman/GUID-63196F25-5013-4038-8BCD-2613C4EF3DE4.htm
-    // The above two documents show that the probability density functions are different.
-    // But the unit tests still pass. Maybe their codes are the same or
-    // the tests are irrelevant to the random numbers.
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
-  Caffe::random_generator_t &generator = Caffe::vsl_stream();
+  Caffe::random_generator_t &generator = Caffe::rng_stream();
   boost::variate_generator<Caffe::random_generator_t,
       boost::normal_distribution<Dtype> > variate_generator(
       generator, random_distribution);
@@ -349,7 +335,7 @@ void caffe_vRngBernoulli(const int n, Dtype* r, const double p) {
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
   boost::bernoulli_distribution<double> random_distribution(p);
-  Caffe::random_generator_t &generator = Caffe::vsl_stream();
+  Caffe::random_generator_t &generator = Caffe::rng_stream();
   boost::variate_generator<Caffe::random_generator_t,
       boost::bernoulli_distribution<double> > variate_generator(
       generator, random_distribution);
