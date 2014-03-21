@@ -153,6 +153,7 @@ message LayerParameter {
   optional LRNParameter lrn_param = 16;
   optional PaddingParameter padding_param = 17;
   optional PoolingParameter pooling_param = 18;
+  optional WindowDataParameter window_data_param = 19;
 }
 
 // Message that stores parameters used by ConcatLayer
@@ -275,25 +276,34 @@ message PoolingParameter {
   optional uint32 stride = 3 [default = 1]; // The stride
 }
 
+// Message that stores parameters used by WindowDataLayer
 message WindowDataParameter {
-  // Fields related to detection (det_*)
-  // foreground (object) overlap threshold
-  optional float det_fg_threshold = 54 [default = 0.5];
-  // background (non-object) overlap threshold
-  optional float det_bg_threshold = 55 [default = 0.5];
+  // Specify the data source.
+  optional string source = 1;
+  // For data pre-processing, we can do simple scaling and subtracting the
+  // data mean, if provided. Note that the mean subtraction is always carried
+  // out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // Specify the batch size.
+  optional uint32 batch_size = 4;
+  // Specify if we would like to randomly crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // Specify if we want to randomly mirror data.
+  optional bool mirror = 6 [default = false];
+  // Foreground (object) overlap threshold
+  optional float fg_threshold = 7 [default = 0.5];
+  // Background (non-object) overlap threshold
+  optional float bg_threshold = 8 [default = 0.5];
   // Fraction of batch that should be foreground objects
-  optional float det_fg_fraction = 56 [default = 0.25];
-
-  // optional bool OBSOLETE_can_clobber = 57 [ default = true ];
-
+  optional float fg_fraction = 9 [default = 0.25];
   // Amount of contextual padding to add around a window
   // (used only by the window_data_layer)
-  optional uint32 det_context_pad = 58 [default = 0];
-
+  optional uint32 context_pad = 10 [default = 0];
   // Mode for cropping out a detection window
   // warp: cropped window is warped to a fixed size and aspect ratio
   // square: the tightest square around the window is cropped
-  optional string det_crop_mode = 59 [default = "warp"];
+  optional string crop_mode = 11 [default = "warp"];
 }
 
 message HDF5OutputParameter {
