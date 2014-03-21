@@ -5,6 +5,7 @@
  - kloudkl@github, 2014.
  */
 
+#include <numeric>  // std::accumulate
 #include <string>
 #include <vector>
 
@@ -227,6 +228,43 @@ MeanZeroingDataProcessor<Dtype>::MeanZeroingDataProcessor(
 
 template<typename Dtype>
 void MeanZeroingDataProcessor<Dtype>::Process(
+    const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
+  int num = input->num();
+  int channels = input->channels();
+  int height = input->height();
+  int width = input->width();
+  output->Reshape(num, channels, height, width);
+  const Dtype* input_data = input->cpu_data();
+  Dtype* output_data = output->mutable_cpu_data();
+  int dims_per_channel = height * width;
+  for (int n = 0; n < num; ++n) {
+    for (int c = 0; c < channels; ++c) {
+      const Dtype sum_per_channel = std::accumulate(
+          input_data + input->offset(n, c, 0, 0),
+          input_data + input->offset(n, c, 0, 0) + dims_per_channel, 0);
+      const Dtype mean_value_per_channel = sum_per_channel /
+          dims_per_channel;
+      for (int h = 0; h < height; ++h) {
+        for (int w = 0; w < width; ++w) {
+          output_data[((n * channels + c) * height + h) * width + w] =
+              input_data[((n * channels + c) * height + h) * width + w] -
+              mean_value_per_channel;
+        }
+      }
+    }
+  }
+}
+
+template<typename Dtype>
+ChannelConstantFillingDataProcessor<Dtype>::
+ChannelConstantFillingDataProcessor(
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param),
+      is_constant_per_channel_set_(false) {
+}
+
+template<typename Dtype>
+void ChannelConstantFillingDataProcessor<Dtype>::Process(
     const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
 }
 

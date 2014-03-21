@@ -47,7 +47,6 @@ class DataProcessor {
   }
   virtual ~DataProcessor() {
   }
-
   virtual void Process(const shared_ptr<Blob<Dtype> >& input,
                        shared_ptr<Blob<Dtype> > output) = 0;
  protected:
@@ -60,7 +59,6 @@ class CroppingDataProcessor : public DataProcessor<Dtype> {
   explicit CroppingDataProcessor(const DataProcessorParameter& param);
   virtual ~CroppingDataProcessor() {
   }
-
   virtual void Process(const shared_ptr<Blob<Dtype> >& input,
                        shared_ptr<Blob<Dtype> > output);
 
@@ -82,7 +80,6 @@ class MirroringDataProcessor : public DataProcessor<Dtype> {
   explicit MirroringDataProcessor(const DataProcessorParameter& param);
   virtual ~MirroringDataProcessor() {
   }
-
   virtual void Process(const shared_ptr<Blob<Dtype> >& input,
                        shared_ptr<Blob<Dtype> > output);
 
@@ -110,9 +107,9 @@ class MeanSubtractionDataProcessor : public DataProcessor<Dtype> {
   explicit MeanSubtractionDataProcessor(const DataProcessorParameter& param);
   virtual ~MeanSubtractionDataProcessor() {
   }
-
   virtual void Process(const shared_ptr<Blob<Dtype> >& input,
                        shared_ptr<Blob<Dtype> > output);
+
   inline string mean_file() const { return mean_file_; }
   void set_mean_file(const string& mean_file);
   inline const Dtype* mean_blob_data() const { return mean_blob_->cpu_data(); }
@@ -128,9 +125,9 @@ class ScalingDataProcessor : public DataProcessor<Dtype> {
   explicit ScalingDataProcessor(const DataProcessorParameter& param);
   virtual ~ScalingDataProcessor() {
   }
-
   virtual void Process(const shared_ptr<Blob<Dtype> >& input,
                        shared_ptr<Blob<Dtype> > output);
+
   inline Dtype scale() const { return scale_; }
   void set_scale(const Dtype scale) { scale_ = scale; }
  protected:
@@ -154,9 +151,37 @@ class MeanZeroingDataProcessor : public DataProcessor<Dtype> {
   explicit MeanZeroingDataProcessor(const DataProcessorParameter& param);
   virtual ~MeanZeroingDataProcessor() {
   }
-
   virtual void Process(const shared_ptr<Blob<Dtype> >& input,
                        shared_ptr<Blob<Dtype> > output);
+};
+
+template<typename Dtype>
+class ChannelConstantFillingDataProcessor : public DataProcessor<Dtype> {
+ public:
+  explicit ChannelConstantFillingDataProcessor(const DataProcessorParameter& param);
+  virtual ~ChannelConstantFillingDataProcessor() {
+  }
+  virtual void Process(const shared_ptr<Blob<Dtype> >& input,
+                       shared_ptr<Blob<Dtype> > output);
+
+  bool is_constant_per_channel_set() const {
+    return is_constant_per_channel_set_;
+  }
+  inline vector<Dtype> constant_per_channel() const {
+    return constant_per_channel_;
+  }
+  void set_constant_per_channel(
+      const vector<Dtype>& constant_per_channel) {
+    constant_per_channel_ = constant_per_channel;
+    if (constant_per_channel_.size()) {
+      is_constant_per_channel_set_ = true;
+    } else {
+      is_constant_per_channel_set_ = false;
+    }
+  }
+ protected:
+  bool is_constant_per_channel_set_;
+  vector<Dtype> constant_per_channel_;
 };
 
 template<typename Dtype>

@@ -73,6 +73,7 @@ message RotationParameter {
 
 message MeanZeroingParameter {
   optional DatumDimensions dims = 1;
+  repeated float mean_values_per_channel = 2;
 }
 
 message ResizingParameter {

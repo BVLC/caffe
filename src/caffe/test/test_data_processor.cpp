@@ -1,6 +1,7 @@
 // Copyright 2014 kloudkl@github
 
 #include <algorithm>  // std::count
+#include <numeric>  // std::accumulate
 #include <string>
 #include <vector>
 
@@ -238,6 +239,37 @@ TYPED_TEST(DataProcessorTest, TestScalingDataProcessor_Process){
     }  // for (int s = 0; s < 7; ++s) {
   }  // for (int m = 0; m < 2; ++m) {
 }
+
+TYPED_TEST(DataProcessorTest, TestMeanZeroingDataProcessor_Process){
+  DataProcessorParameter processor_param;
+  MeanZeroingDataProcessor<TypeParam> processor(processor_param);
+
+  shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
+  const TypeParam* data = this->blob_->cpu_data();
+  Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
+  for (int m = 0; m < 2; ++m) {
+    Caffe::set_mode(modes[m]);
+    shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
+    processor.Process(input_blob, blob);
+    EXPECT_EQ(input_blob->num(), blob->num());
+    EXPECT_EQ(input_blob->channels(), blob->channels());
+    EXPECT_EQ(input_blob->height(), blob->height());
+    EXPECT_EQ(input_blob->width(), blob->width());
+    const TypeParam* output_data = blob->cpu_data();
+    int dims_per_channel = blob->height() * blob->width();
+    for (int n = 0; n < blob->num(); ++n) {
+      for (int c = 0; c < blob->channels(); ++c) {
+        const TypeParam sum_per_channel = std::accumulate(
+            output_data + blob->offset(n, c, 0, 0),
+            output_data + blob->offset(n, c, 0, 0) + dims_per_channel, 0);
+        const TypeParam mean_value_per_channel = sum_per_channel /
+            dims_per_channel;
+        EXPECT_NEAR(mean_value_per_channel, 0, 5e-3);
+      }
+    }
+  }  // for (int m = 0; m < 2; ++m) {
+}
+
 
 }
   // namespace caffe
