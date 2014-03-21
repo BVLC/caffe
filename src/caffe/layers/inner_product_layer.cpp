@@ -61,7 +61,7 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -73,10 +73,11 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
         this->blobs_[1]->cpu_data(), (Dtype)1., top_data);
   }
+  return Dtype(0);
 }
 
 template <typename Dtype>
-Dtype InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
@@ -96,7 +97,6 @@ Dtype InnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         top_diff, this->blobs_[0]->cpu_data(), (Dtype)0.,
         (*bottom)[0]->mutable_cpu_diff());
   }
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(InnerProductLayer);

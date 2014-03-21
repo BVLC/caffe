@@ -20,7 +20,7 @@ using std::string;
 namespace caffe {
 
 template <typename Dtype>
-void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const int batchsize = this->layer_param_.batchsize();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
@@ -53,12 +53,12 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
             sizeof(Dtype) * label_data_count,
             cudaMemcpyHostToDevice));
   }
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype HDF5DataLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void HDF5DataLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  return Dtype(0.);
 }
 
 INSTANTIATE_CLASS(HDF5DataLayer);

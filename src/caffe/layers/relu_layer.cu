@@ -18,7 +18,7 @@ __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out) {
 }
 
 template <typename Dtype>
-void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -32,6 +32,7 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   //     << " top_data: " << (unsigned long)top_data
   //     << " blocks: " << CAFFE_GET_BLOCKS(count)
   //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
+  return Dtype(0);
 }
 
 template <typename Dtype>
@@ -43,7 +44,7 @@ __global__ void ReLUBackward(const int n, const Dtype* in_diff,
 }
 
 template <typename Dtype>
-Dtype ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
@@ -56,7 +57,6 @@ Dtype ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         count, top_diff, bottom_data, bottom_diff);
     CUDA_POST_KERNEL_CHECK;
   }
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(ReLULayer);

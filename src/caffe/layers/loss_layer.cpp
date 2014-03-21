@@ -28,9 +28,24 @@ void MultinomialLogisticLossLayer<Dtype>::SetUp(
   CHECK_EQ(bottom[1]->width(), 1);
 }
 
+template <typename Dtype>
+Dtype MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const Dtype* bottom_label = bottom[1]->cpu_data();
+  int num = bottom[0]->num();
+  int dim = bottom[0]->count() / bottom[0]->num();
+  Dtype loss = 0;
+  for (int i = 0; i < num; ++i) {
+    int label = static_cast<int>(bottom_label[i]);
+    Dtype prob = max(bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
+    loss -= log(prob);
+  }
+  return loss / num;
+}
 
 template <typename Dtype>
-Dtype MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
+void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top, const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
@@ -39,17 +54,12 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
   int num = (*bottom)[0]->num();
   int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
   memset(bottom_diff, 0, sizeof(Dtype) * (*bottom)[0]->count());
-  Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
     Dtype prob = max(bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
-    loss -= log(prob);
-    bottom_diff[i * dim + label] = - 1. / prob / num;
+    bottom_diff[i * dim + label] = -1. / prob / num;
   }
-  return loss / num;
 }
-
-// TODO: implement the GPU version for multinomial loss
 
 
 template <typename Dtype>
@@ -72,7 +82,27 @@ void InfogainLossLayer<Dtype>::SetUp(
 
 
 template <typename Dtype>
-Dtype InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+Dtype InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  const Dtype* bottom_label = bottom[1]->cpu_data();
+  const Dtype* infogain_mat = infogain_.cpu_data();
+  int num = bottom[0]->num();
+  int dim = bottom[0]->count() / bottom[0]->num();
+  CHECK_EQ(infogain_.height(), dim);
+  Dtype loss = 0;
+  for (int i = 0; i < num; ++i) {
+    int label = static_cast<int>(bottom_label[i]);
+    for (int j = 0; j < dim; ++j) {
+      Dtype prob = max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
+      loss -= infogain_mat[label * dim + j] * log(prob);
+    }
+  }
+  return loss / num;
+}
+
+template <typename Dtype>
+void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
@@ -82,16 +112,13 @@ Dtype InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   int num = (*bottom)[0]->num();
   int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
   CHECK_EQ(infogain_.height(), dim);
-  Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
     for (int j = 0; j < dim; ++j) {
       Dtype prob = max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
-      loss -= infogain_mat[label * dim + j] * log(prob);
       bottom_diff[i * dim + j] = - infogain_mat[label * dim + j] / prob / num;
     }
   }
-  return loss / num;
 }
 
 
@@ -110,18 +137,25 @@ void EuclideanLossLayer<Dtype>::SetUp(
 }
 
 template <typename Dtype>
-Dtype EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  int count = (*bottom)[0]->count();
-  int num = (*bottom)[0]->num();
-  caffe_sub(count, (*bottom)[0]->cpu_data(), (*bottom)[1]->cpu_data(),
+Dtype EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  int count = bottom[0]->count();
+  int num = bottom[0]->num();
+  caffe_sub(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(),
       difference_.mutable_cpu_data());
   Dtype loss = caffe_cpu_dot(
       count, difference_.cpu_data(), difference_.cpu_data()) / num / Dtype(2);
+  return loss;
+}
+
+template <typename Dtype>
+void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+  int count = (*bottom)[0]->count();
+  int num = (*bottom)[0]->num();
   // Compute the gradient
   caffe_axpby(count, Dtype(1) / num, difference_.cpu_data(), Dtype(0),
       (*bottom)[0]->mutable_cpu_diff());
-  return loss;
 }
 
 template <typename Dtype>
@@ -138,7 +172,7 @@ void AccuracyLayer<Dtype>::SetUp(
 }
 
 template <typename Dtype>
-void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype accuracy = 0;
   Dtype logprob = 0;
@@ -166,6 +200,8 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // LOG(INFO) << "Accuracy: " << accuracy;
   (*top)[0]->mutable_cpu_data()[0] = accuracy / num;
   (*top)[0]->mutable_cpu_data()[1] = logprob / num;
+  // Accuracy layer should not be used as a loss function.
+  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(MultinomialLogisticLossLayer);

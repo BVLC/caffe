@@ -233,7 +233,7 @@ void ImagesLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void ImagesLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ImagesLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
@@ -245,10 +245,11 @@ void ImagesLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Start a new prefetch thread
   CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-void ImagesLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ImagesLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
@@ -262,18 +263,6 @@ void ImagesLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // Start a new prefetch thread
   CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
-}
-
-// The backward operations are dummy - they do not carry any computation.
-template <typename Dtype>
-Dtype ImagesLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  return Dtype(0.);
-}
-
-template <typename Dtype>
-Dtype ImagesLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   return Dtype(0.);
 }
 
