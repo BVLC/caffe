@@ -87,7 +87,9 @@ class Caffe {
 
   // boost RNG
   typedef boost::mt19937 random_generator_t;
-  inline static random_generator_t &rng_stream() { return Get().random_generator_; }
+  inline static random_generator_t &rng_stream() {
+    return Get().random_generator_;
+  }
 
   // Returns the mode: running on CPU or GPU.
   inline static Brew mode() { return Get().mode_; }
