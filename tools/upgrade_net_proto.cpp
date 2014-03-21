@@ -24,14 +24,20 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  V0NetParameter v0_net_param;
-  CHECK(ReadProtoFromTextFile(argv[1], &v0_net_param))
-      << "Failed to parse input V0NetParameter file: " << argv[1];
+  bool success = true;
+  // First, check whether the input file is already in the new format.
   NetParameter upgraded_net_param;
-  bool success = UpgradeV0Net(v0_net_param, &upgraded_net_param);
-  if (!success) {
-    LOG(ERROR) << "Encountered one or more problems upgrading net param "
-        << "proto; see above.";
+  if (ReadProtoFromTextFile(argv[1], &upgraded_net_param)) {
+    LOG(ERROR) << "File already in new proto format: " << argv[1];
+  } else {
+    V0NetParameter v0_net_param;
+    CHECK(ReadProtoFromTextFile(argv[1], &v0_net_param))
+        << "Failed to parse input V0NetParameter file: " << argv[1];
+    success = UpgradeV0Net(v0_net_param, &upgraded_net_param);
+    if (!success) {
+      LOG(ERROR) << "Encountered one or more problems upgrading net param "
+          << "proto; see above.";
+    }
   }
   // TODO(jdonahue): figure out why WriteProtoToTextFile doesn't work
   // (no file is created).
