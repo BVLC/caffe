@@ -274,6 +274,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       } else if (type == "hdf5_data") {
         layer_param->mutable_hdf5_data_param()->set_source(
             v0_layer_param.source());
+      } else if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_source(
+            v0_layer_param.source());
       } else if (type == "infogain_loss") {
         layer_param->mutable_infogain_loss_param()->set_source(
             v0_layer_param.source());
@@ -294,6 +297,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       if (type == "data") {
         layer_param->mutable_data_param()->set_mean_file(
             v0_layer_param.meanfile());
+      } else if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_mean_file(
+            v0_layer_param.meanfile());
       } else {
         LOG(ERROR) << "Unknown parameter meanfile for layer type " << type;
         is_fully_compatible = false;
@@ -306,6 +312,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       } else if (type == "hdf5_data") {
         layer_param->mutable_hdf5_data_param()->set_batch_size(
             v0_layer_param.batchsize());
+      } else if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_batch_size(
+            v0_layer_param.batchsize());
       } else {
         LOG(ERROR) << "Unknown parameter batchsize for layer type " << type;
         is_fully_compatible = false;
@@ -315,6 +324,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       if (type == "data") {
         layer_param->mutable_data_param()->set_crop_size(
             v0_layer_param.cropsize());
+      } else if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_crop_size(
+            v0_layer_param.cropsize());
       } else {
         LOG(ERROR) << "Unknown parameter cropsize for layer type " << type;
         is_fully_compatible = false;
@@ -323,6 +335,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     if (v0_layer_param.has_mirror()) {
       if (type == "data") {
         layer_param->mutable_data_param()->set_mirror(v0_layer_param.mirror());
+      } else if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_mirror(
+            v0_layer_param.mirror());
       } else {
         LOG(ERROR) << "Unknown parameter mirror for layer type " << type;
         is_fully_compatible = false;
@@ -355,6 +370,56 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         is_fully_compatible = false;
       }
     }
+    if (v0_layer_param.has_det_fg_threshold()) {
+      if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_fg_threshold(
+            v0_layer_param.det_fg_threshold());
+      } else {
+        LOG(ERROR) << "Unknown parameter det_fg_threshold for layer type "
+                   << type;
+        is_fully_compatible = false;
+      }
+    }
+    if (v0_layer_param.has_det_bg_threshold()) {
+      if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_bg_threshold(
+            v0_layer_param.det_bg_threshold());
+      } else {
+        LOG(ERROR) << "Unknown parameter det_bg_threshold for layer type "
+                   << type;
+        is_fully_compatible = false;
+      }
+    }
+    if (v0_layer_param.has_det_fg_fraction()) {
+      if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_fg_fraction(
+            v0_layer_param.det_fg_fraction());
+      } else {
+        LOG(ERROR) << "Unknown parameter det_fg_fraction for layer type "
+                   << type;
+        is_fully_compatible = false;
+      }
+    }
+    if (v0_layer_param.has_det_context_pad()) {
+      if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_context_pad(
+            v0_layer_param.det_context_pad());
+      } else {
+        LOG(ERROR) << "Unknown parameter det_context_pad for layer type "
+                   << type;
+        is_fully_compatible = false;
+      }
+    }
+    if (v0_layer_param.has_det_crop_mode()) {
+      if (type == "window_data") {
+        layer_param->mutable_window_data_param()->set_crop_mode(
+            v0_layer_param.det_crop_mode());
+      } else {
+        LOG(ERROR) << "Unknown parameter det_crop_mode for layer type "
+                   << type;
+        is_fully_compatible = false;
+      }
+    }
   }
   return is_fully_compatible;
 }
@@ -380,6 +445,8 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     return LayerParameter_LayerType_HDF5_DATA;
   } else if (type == "im2col") {
     return LayerParameter_LayerType_IM2COL;
+  } else if (type == "images") {
+    return LayerParameter_LayerType_IMAGE_DATA;
   } else if (type == "infogain_loss") {
     return LayerParameter_LayerType_INFOGAIN_LOSS;
   } else if (type == "innerproduct") {
@@ -402,9 +469,11 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     return LayerParameter_LayerType_SPLIT;
   } else if (type == "tanh") {
     return LayerParameter_LayerType_TANH;
+  } else if (type == "window_data") {
+    return LayerParameter_LayerType_WINDOW_DATA;
   } else {
     LOG(FATAL) << "Unknown layer name: " << type;
-    return LayerParameter_LayerType(-1);
+    return LayerParameter_LayerType_NONE;
   }
 }
 
