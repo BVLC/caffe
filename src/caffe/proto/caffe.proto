@@ -44,6 +44,14 @@ message DatumDimensions {
   optional int32 width = 3;
 }
 
+message CroppingParameter {
+  optional uint32 crop_size = 1 [default = 0];
+}
+
+message MirroringParameter {
+  optional bool mirror = 1 [ default = false ];
+}
+
 message MeanSubtractionParameter {
   optional string mean_file = 1;
 }
@@ -51,15 +59,6 @@ message MeanSubtractionParameter {
 message ScalingParameter {
   optional DatumDimensions input_dims = 1;
   optional DatumDimensions output_dims = 2;
-}
-
-message MirroringParameter {
-  enum MirroringType {
-    NONE = 0;
-    LEFT_RIGHT = 1;
-    UP_DOWN = 2;
-  };
-  optional MirroringType type = 1;
 }
 
 message RotationParameter {
@@ -75,30 +74,27 @@ message ResizingParameter {
   optional DatumDimensions output_dims = 2;
 }
 
-message CroppingParameter {
-  optional DatumDimensions crop_dims = 2;
-}
-
 message DataProcessorParameter {
   enum DataProcessorType {
     NONE = 0;
-    MEAN_SUBTRACTION = 1;
-    SCALING = 2;
-    MIRRORING = 3;
-    ROTATION = 4;
-    MEAN_ZEROING = 5;
-    RESIZING = 6;
-    CROPPING = 7;
+    CROPPING = 1;
+    MIRRORING = 2;
+    MEAN_SUBTRACTION = 3;
+    SCALING = 4;
+    ROTATION = 5;
+    MEAN_ZEROING = 6;
+    RESIZING = 7;
   };
   optional string name = 1;
   optional DataProcessorType type = 2;
-  optional MeanSubtractionParameter mean_subtraction_param = 3;
-  optional ScalingParameter scaling_param = 4;
-  optional MirroringParameter mirroring_param = 5;
-  optional RotationParameter rotationing_param = 6;
-  optional MeanZeroingParameter mean_zeroing_param = 7;
-  optional ResizingParameter resizing_param = 8;
-  optional CroppingParameter cropping_param = 9;
+
+  optional CroppingParameter cropping_param = 101;
+  optional MirroringParameter mirroring_param = 102;
+  optional MeanSubtractionParameter mean_subtraction_param = 103;
+  optional ScalingParameter scaling_param = 104;
+  optional RotationParameter rotationing_param = 105;
+  optional MeanZeroingParameter mean_zeroing_param = 106;
+  optional ResizingParameter resizing_param = 107;
 }
 
 message NetParameter {
