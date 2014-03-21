@@ -43,7 +43,7 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   case LayerParameter_LayerType_HDF5_OUTPUT:
     return new HDF5OutputLayer<Dtype>(param);
   case LayerParameter_LayerType_IMAGE_DATA:
-    return new ImagesLayer<Dtype>(param);
+    return new ImageDataLayer<Dtype>(param);
   case LayerParameter_LayerType_IM2COL:
     return new Im2colLayer<Dtype>(param);
   case LayerParameter_LayerType_INFOGAIN_LOSS:

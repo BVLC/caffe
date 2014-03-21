@@ -22,7 +22,7 @@ We're going to use the images that ship with caffe.
 
     find `pwd`/examples/images -type f -exec echo {} \; > examples/_temp/temp.txt
 
-The `ImagesLayer` we'll use expects labels after each filenames, so let's add a 0 to the end of each line
+The `ImageDataLayer` we'll use expects labels after each filenames, so let's add a 0 to the end of each line
 
     sed "s/$/ 0/" examples/_temp/temp.txt > examples/_temp/file_list.txt
 
@@ -37,7 +37,7 @@ Download the mean image of the ILSVRC dataset.
 We will use `data/ilsvrc212/imagenet_mean.binaryproto` in the network definition prototxt.
 
 Let's copy and modify the network definition.
-We'll be using the `ImagesLayer`, which will load and resize images for us.
+We'll be using the `ImageDataLayer`, which will load and resize images for us.
 
     cp examples/feature_extraction/imagenet_val.prototxt examples/_temp
 

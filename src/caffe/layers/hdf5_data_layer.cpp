@@ -26,7 +26,7 @@ HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
 
 // Load data and label from HDF5 filename into the class property blobs.
 template <typename Dtype>
-void HDF5DataLayer<Dtype>::load_hdf5_file_data(const char* filename) {
+void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   LOG(INFO) << "Loading HDF5 file" << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
@@ -72,7 +72,7 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "Number of files: " << num_files_;
 
   // Load the first HDF5 file and initialize the line counter.
-  load_hdf5_file_data(hdf_filenames_[current_file_].c_str());
+  LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
   current_row_ = 0;
 
   // Reshape blobs.
@@ -101,7 +101,7 @@ Dtype HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           current_file_ = 0;
           LOG(INFO) << "looping around to first file";
         }
-        load_hdf5_file_data(hdf_filenames_[current_file_].c_str());
+        LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
       }
       current_row_ = 0;
     }

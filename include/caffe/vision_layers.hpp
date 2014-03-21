@@ -255,8 +255,6 @@ class EuclideanLossLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
  protected:
-  // The loss layer will do nothing during forward - all computation are
-  // carried out in the backward pass.
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -308,7 +306,7 @@ class HDF5DataLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void load_hdf5_file_data(const char* filename);
+  virtual void LoadHDF5FileData(const char* filename);
 
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;
@@ -346,17 +344,17 @@ class Im2colLayer : public Layer<Dtype> {
 
 // This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
-void* ImagesLayerPrefetch(void* layer_pointer);
+void* ImageDataLayerPrefetch(void* layer_pointer);
 
 template <typename Dtype>
-class ImagesLayer : public Layer<Dtype> {
+class ImageDataLayer : public Layer<Dtype> {
   // The function used to perform prefetching.
-  friend void* ImagesLayerPrefetch<Dtype>(void* layer_pointer);
+  friend void* ImageDataLayerPrefetch<Dtype>(void* layer_pointer);
 
  public:
-  explicit ImagesLayer(const LayerParameter& param)
+  explicit ImageDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual ~ImagesLayer();
+  virtual ~ImageDataLayer();
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
@@ -391,8 +389,6 @@ class InfogainLossLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
  protected:
-  // The loss layer will do nothing during forward - all computation are
-  // carried out in the backward pass.
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -495,8 +491,6 @@ class MultinomialLogisticLossLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
  protected:
-  // The loss layer will do nothing during forward - all computation are
-  // carried out in the backward pass.
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
