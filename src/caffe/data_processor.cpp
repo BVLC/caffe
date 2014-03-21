@@ -25,8 +25,8 @@ CroppingDataProcessor<Dtype>::CroppingDataProcessor(
 }
 
 /*
- * Adapted from the original implementation in the DataLayerPrefetch
- *   authored by Yangqing Jia
+ * Adapted from the original implementation in DataLayerPrefetch from
+ *   src/caffe/layers/data_layers.cpp authored by Yangqing Jia
  */
 template<typename Dtype>
 void CroppingDataProcessor<Dtype>::Process(
@@ -53,10 +53,9 @@ void CroppingDataProcessor<Dtype>::Process(
       for (int c = 0; c < channels; ++c) {
         for (int h = 0; h < crop_size_; ++h) {
           for (int w = 0; w < crop_size_; ++w) {
-            output_data[((
-                n * channels + c) * crop_size_ + h) * crop_size_ + w] =
-                    data[((n * channels + c) * height + h + height_offset_) *
-                            width + w + width_offset_];
+            output_data[((n * channels + c) * crop_size_ + h) * crop_size_ + w] =
+                data[((n * channels + c) * height + h + height_offset_) * width
+                    + w + width_offset_];
           }  // for (int w = 0; w < crop_size_; ++w) {
         }  // for (int h = 0; h < crop_size_; ++h) {
       }  // for (int c = 0; c < channels; ++c) {
@@ -68,12 +67,78 @@ template<typename Dtype>
 MirroringDataProcessor<Dtype>::MirroringDataProcessor(
     const DataProcessorParameter& param)
     : DataProcessor<Dtype>(param),
-      mirror_(this->processor_param_.mirroring_param().mirror()) {
+      filler_(filler_param_),
+      random_one_to_zero_(new Blob<Dtype>()),
+      type_(this->processor_param_.mirroring_param().type()),
+      random_sampling_ratio_(
+          this->processor_param_.mirroring_param().random_sampling_ratio()) {
+  CHECK_GE(random_sampling_ratio_, 0)<<
+  "Random sampling ration must be no less than 0";
+  CHECK_LE(random_sampling_ratio_, 1) <<
+  "Random sampling ration must be no greater than 1";
 }
 
+/*
+ * Adapted from the original implementation in DataLayerPrefetch from
+ *   src/caffe/layers/data_layers.cpp authored by Yangqing Jia
+ */
 template<typename Dtype>
 void MirroringDataProcessor<Dtype>::Process(
     const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
+  const Dtype* data = input->cpu_data();
+  int num = input->num();
+  int channels = input->channels();
+  int height = input->height();
+  int width = input->width();
+  int datum_dim = channels * height * width;
+  output->Reshape(num, channels, height, width);
+  Dtype* output_data = output->mutable_cpu_data();
+  random_one_to_zero_->Reshape(num, 1, 1, 1);
+  filler_.Fill(random_one_to_zero_);
+  is_mirrored_.resize(num);
+  for (int n = 0; n < num; ++n) {
+    // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
+    if (random_one_to_zero_->data_at(n, 0, 0, 0) <= random_sampling_ratio_) {
+      is_mirrored_[n] = true;
+      switch (type_) {
+      case MirroringParameter::UP_DOWN: {
+        BLOB_DATUM_DIMS_LOOP_BEGIN(channels, height, width)
+            output_data[((n * channels + c) * height + h) * width + w] =
+                data[((n * channels + c) * height + height - 1 - h) * width +
+                     w];
+        BLOB_DATUM_DIMS_LOOP_END
+        break;
+      }
+      case MirroringParameter::LEFT_RIGHT_AND_UP_DOWN: {
+        BLOB_DATUM_DIMS_LOOP_BEGIN(channels, height, width)
+            output_data[((n * channels + c) * height + h) * width + w] =
+                data[((n * channels + c) * height + height - 1 - h) * width +
+                     width - 1 - w];
+        BLOB_DATUM_DIMS_LOOP_END
+        break;
+      }
+      case MirroringParameter::LEFT_RIGHT: {
+        BLOB_DATUM_DIMS_LOOP_BEGIN(channels, height, width)
+            output_data[((n * channels + c) * height + h) * width + w] =
+                data[((n * channels + c) * height + h) * width +
+                     width - 1 - w];
+        BLOB_DATUM_DIMS_LOOP_END
+        break;
+      }
+      case MirroringParameter::NONE:
+      default: {
+        is_mirrored_[n] = false;
+        memcpy(output_data + output->offset(n), data + input->offset(n),
+               sizeof(Dtype) * datum_dim);
+        break;
+      }
+      }  // switch (type_) {
+    } else {
+      is_mirrored_[n] = false;
+      memcpy(output_data + output->offset(n), data + input->offset(n),
+             sizeof(Dtype) * datum_dim);
+    }  // if ((float) rand() / RAND_MAX < random_sampling_ratio_) {
+  }  // for (int n = 0; n < num; ++n) {
 }
 
 template<typename Dtype>
@@ -94,8 +159,8 @@ ScalingDataProcessor<Dtype>::ScalingDataProcessor(
 }
 
 template<typename Dtype>
-void ScalingDataProcessor<Dtype>::Process(
-    const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
+void ScalingDataProcessor<Dtype>::Process(const shared_ptr<Blob<Dtype> >& input,
+                                          shared_ptr<Blob<Dtype> > output) {
 }
 
 template<typename Dtype>

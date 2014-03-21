@@ -12,10 +12,20 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
-using std::vector;
+
+#define BLOB_DATUM_DIMS_LOOP_BEGIN(channels, height, width) \
+      for (int c = 0; c < channels; ++c) { \
+        for (int h = 0; h < height; ++h) { \
+          for (int w = 0; w < width; ++w) {
+
+#define BLOB_DATUM_DIMS_LOOP_END \
+          }  /* for (int w = 0; w < crop_size_; ++w) { */ \
+        }  /* for (int h = 0; h < crop_size_; ++h) { */ \
+      }  /* for (int c = 0; c < channels; ++c) { */
 
 template<typename Dtype>
 class DataProcessor {
@@ -60,8 +70,17 @@ class MirroringDataProcessor : public DataProcessor<Dtype> {
 
   virtual void Process(const shared_ptr<Blob<Dtype> >& input,
                        shared_ptr<Blob<Dtype> > output);
+
+  inline MirroringParameter::MirroringType type() { return type_; }
+  inline float random_sampling_ratio() { return random_sampling_ratio_; }
+  inline std::vector<bool> is_mirrored() { return is_mirrored_; }
  protected:
-  bool mirror_;
+  FillerParameter filler_param_;
+  UniformFiller<Dtype> filler_;
+  Blob<Dtype>* random_one_to_zero_;
+  MirroringParameter::MirroringType type_;
+  float random_sampling_ratio_;
+  std::vector<bool> is_mirrored_;
 };
 
 template<typename Dtype>

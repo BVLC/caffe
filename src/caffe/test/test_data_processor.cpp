@@ -1,5 +1,6 @@
 // Copyright 2014 kloudkl@github
 
+#include <algorithm>  // std::count
 #include <string>
 #include <vector>
 
@@ -12,21 +13,20 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/test/test_caffe_main.hpp"
 
-using std::string;
-using std::stringstream;
-
 namespace caffe {
+using std::string;
+using std::vector;
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template<typename Dtype>
-class CroppingDataProcessorTest : public ::testing::Test {
+class DataProcessorTest : public ::testing::Test {
  protected:
-  CroppingDataProcessorTest()
-      : batch_size_(10),
-        channels_(3),
-        original_size_(128),
-        crop_size_(117),
+  DataProcessorTest()
+      : batch_size_(16),
+        channels_(8),
+        original_size_(64),
+        crop_size_(55),
         blob_(new Blob<Dtype>()) {
   }
   virtual void SetUp() {
@@ -36,7 +36,7 @@ class CroppingDataProcessorTest : public ::testing::Test {
     filler.Fill(blob_);
   }
 
-  virtual ~CroppingDataProcessorTest() {
+  virtual ~DataProcessorTest() {
   }
 
   Blob<Dtype>* blob_;
@@ -47,47 +47,140 @@ class CroppingDataProcessorTest : public ::testing::Test {
 };
 
 typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(CroppingDataProcessorTest, Dtypes);
+TYPED_TEST_CASE(DataProcessorTest, Dtypes);
 
-TYPED_TEST(CroppingDataProcessorTest, TestProcess){
+TYPED_TEST(DataProcessorTest, TestCroppingDataProcessor_Process){
+DataProcessorParameter processor_param;
+processor_param.mutable_cropping_param()->set_crop_size(this->crop_size_);
+
+CroppingDataProcessor<TypeParam> processor(processor_param);
+EXPECT_EQ(this->crop_size_, processor.crop_size());
+
+shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
+const TypeParam* data = this->blob_->cpu_data();
+Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
+Caffe::Phase phases[] = {Caffe::TRAIN, Caffe::TEST};
+for (int i = 0; i < 2; ++i) {
+  Caffe::set_mode(modes[i]);
+  for (int j = 0; j < 2; ++j) {
+    Caffe::set_phase(phases[j]);
+    shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
+    processor.Process(input_blob, blob);
+    EXPECT_EQ(this->batch_size_, blob->num());
+    EXPECT_EQ(this->channels_, blob->channels());
+    EXPECT_EQ(this->crop_size_, blob->height());
+    EXPECT_EQ(this->crop_size_, blob->width());
+
+    const TypeParam* output_data = blob->cpu_data();
+    const uint32_t height_offset = processor.height_offset();
+    const uint32_t width_offset = processor.width_offset();
+    for (int n = 0; n < blob->num(); ++n) {
+      for (int c = 0; c < blob->channels(); ++c) {
+        for (int h = 0; h < this->crop_size_; ++h) {
+          for (int w = 0; w < this->crop_size_; ++w) {
+            EXPECT_EQ(data[this->blob_->offset(
+                    n, c, h + height_offset, w + width_offset)],
+                output_data[blob->offset(n, c, h, w)])
+            << "debug: n " << n << " c " << c << " h " << h << " w " << w;
+          }
+        }
+      }
+    }
+  }  // for (int j = 0; j < 2; ++j) {
+}  // for (int i = 0; i < 2; ++i) {
+}
+
+TYPED_TEST(DataProcessorTest, TestMirroringDataProcessor_Process){
   DataProcessorParameter processor_param;
-  processor_param.mutable_cropping_param()->set_crop_size(this->crop_size_);
-
-  CroppingDataProcessor<TypeParam> processor(processor_param);
-  EXPECT_EQ(this->crop_size_, processor.crop_size());
-
   shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
   const TypeParam* data = this->blob_->cpu_data();
   Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
   Caffe::Phase phases[] = {Caffe::TRAIN, Caffe::TEST};
-  for (int i = 0; i < 2; ++i) {
-    Caffe::set_mode(modes[i]);
-    for (int j = 0; j < 2; ++j) {
-      Caffe::set_phase(phases[j]);
-      shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
-      processor.Process(input_blob, blob);
-      EXPECT_EQ(this->batch_size_, blob->num());
-      EXPECT_EQ(this->channels_, blob->channels());
-      EXPECT_EQ(this->crop_size_, blob->height());
-      EXPECT_EQ(this->crop_size_, blob->width());
-
-      const TypeParam* output_data = blob->cpu_data();
-      const uint32_t height_offset = processor.height_offset();
-      const uint32_t width_offset = processor.width_offset();
-      for (int n = 0; n < blob->num(); ++n) {
-        for (int c = 0; c < blob->channels(); ++c) {
-          for (int h = 0; h < this->crop_size_; ++h) {
-            for (int w = 0; w < this->crop_size_; ++w) {
-              EXPECT_EQ(data[this->blob_->offset(
-                      n, c, h + height_offset, w + width_offset)],
-                  output_data[blob->offset(n, c, h, w)])
-              << "debug: n " << n << " c " << c << " h " << h << " w " << w;
+  MirroringParameter::MirroringType types[] = {MirroringParameter::LEFT_RIGHT,
+    MirroringParameter::UP_DOWN, MirroringParameter::LEFT_RIGHT_AND_UP_DOWN};
+  float random_sampling_ratios[] = {0, 0.5, 1};
+  int num_is_mirrored;
+  vector<bool> is_mirrored;
+  int batch_size = this->batch_size_;
+  int channels = this->channels_;
+  int height = this->original_size_;
+  int width = this->original_size_;
+  for (int m = 0; m < 2; ++m) {
+    Caffe::set_mode(modes[m]);
+    for (int p = 0; p < 2; ++p) {
+      Caffe::set_phase(phases[p]);
+      for (int t = 0; t < 3; ++t) {
+        processor_param.mutable_mirroring_param()->set_type(types[t]);
+        for (int r = 0; r < 2; ++r) {
+          processor_param.mutable_mirroring_param()->set_random_sampling_ratio(
+              random_sampling_ratios[r]);
+          MirroringDataProcessor<TypeParam> processor(processor_param);
+          shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
+          processor.Process(input_blob, blob);
+          EXPECT_EQ(batch_size, blob->num());
+          EXPECT_EQ(channels, blob->channels());
+          EXPECT_EQ(height, blob->height());
+          EXPECT_EQ(width, blob->width());
+          is_mirrored = processor.is_mirrored();
+          EXPECT_EQ(batch_size, is_mirrored.size());
+          num_is_mirrored = std::count(is_mirrored.begin(), is_mirrored.end(),
+                                       true);
+          const TypeParam* output_data = blob->cpu_data();
+          for (int n = 0; n < blob->num(); ++n) {
+            if (is_mirrored[n]) {
+              switch (types[t]) {
+              case MirroringParameter::UP_DOWN: {
+                BLOB_DATUM_DIMS_LOOP_BEGIN(channels,  height, width)
+                    EXPECT_EQ(
+                        data[this->blob_->offset(n, c, h, w)],
+                        output_data[blob->offset(n, c, height - 1 - h, w)]) <<
+                        "debug: n " << n << " c " << c << " h " << h <<
+                        " w " << w << " type " << types[t] <<
+                        " random_sampling_ratio " << random_sampling_ratios[r];
+                BLOB_DATUM_DIMS_LOOP_END
+                break;
+              }
+              case MirroringParameter::LEFT_RIGHT_AND_UP_DOWN: {
+                BLOB_DATUM_DIMS_LOOP_BEGIN(channels,  height, width)
+                    EXPECT_EQ(
+                        data[this->blob_->offset(n, c, h, w)],
+                        output_data[blob->offset(
+                            n, c, height - 1 - h, width - 1 - w)]) <<
+                            "debug: n " << n << " c " << c << " h " << h <<
+                            " w " << w << " type " << types[t] <<
+                            " random_sampling_ratio " <<
+                            random_sampling_ratios[r];
+                BLOB_DATUM_DIMS_LOOP_END
+                break;
+              }
+              case MirroringParameter::LEFT_RIGHT: {
+                BLOB_DATUM_DIMS_LOOP_BEGIN(channels,  height, width)
+                    EXPECT_EQ(
+                        data[this->blob_->offset(n, c, h, w)],
+                        output_data[blob->offset(n, c, h, width -1 - w)]) <<
+                            "debug: n " << n << " c " << c << " h " << h <<
+                            " w " << w << " type " << types[t] <<
+                            " random_sampling_ratio " <<
+                            random_sampling_ratios[r];
+                BLOB_DATUM_DIMS_LOOP_END
+                break;
+              }
+              }
+            } else {
+              BLOB_DATUM_DIMS_LOOP_BEGIN(channels,  height, width)
+                  EXPECT_EQ(
+                      data[this->blob_->offset(n, c, h, w)],
+                      output_data[blob->offset(n, c, h, w)]) <<
+                      "debug: n " << n << " c " << c << " h " << h <<
+                      " w " << w << " type " << types[t] <<
+                      " random_sampling_ratio " << random_sampling_ratios[r];
+              BLOB_DATUM_DIMS_LOOP_END
             }
           }
-        }
-      }
-    }  // for (int j = 0; j < 2; ++j) {
-  }  // for (int i = 0; i < 2; ++i) {
+        }  // for (int r = 0; r < 2; ++r) {
+      }  // for (int t = 0; t < 3; ++t) {
+    }  // for (int p = 0; p < 2; ++p) {
+  }  // for (int m = 0; m < 2; ++m) {
 }
 
 }

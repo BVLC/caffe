@@ -49,7 +49,14 @@ message CroppingParameter {
 }
 
 message MirroringParameter {
-  optional bool mirror = 1 [ default = false ];
+  enum MirroringType {
+    NONE = 0;
+    LEFT_RIGHT = 1;
+    UP_DOWN = 2;
+    LEFT_RIGHT_AND_UP_DOWN = 3;
+  };
+  optional MirroringType type = 1;
+  optional float random_sampling_ratio = 2 [ default = 0.5 ];
 }
 
 message MeanSubtractionParameter {
