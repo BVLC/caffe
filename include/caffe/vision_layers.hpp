@@ -34,60 +34,6 @@ class NeuronLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 };
 
-
-template <typename Dtype>
-class ReLULayer : public NeuronLayer<Dtype> {
- public:
-  explicit ReLULayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-};
-
-template <typename Dtype>
-class TanHLayer : public NeuronLayer<Dtype> {
- public:
-  explicit TanHLayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-};
-
-template <typename Dtype>
-class SigmoidLayer : public NeuronLayer<Dtype> {
- public:
-  explicit SigmoidLayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-};
-
-
 template <typename Dtype>
 class BNLLLayer : public NeuronLayer<Dtype> {
  public:
@@ -104,7 +50,6 @@ class BNLLLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
-
 
 template <typename Dtype>
 class DropoutLayer : public NeuronLayer<Dtype> {
@@ -130,11 +75,81 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   unsigned int uint_thres_;
 };
 
+template <typename Dtype>
+class ReLULayer : public NeuronLayer<Dtype> {
+ public:
+  explicit ReLULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
 
 template <typename Dtype>
-class SplitLayer : public Layer<Dtype> {
+class SigmoidLayer : public NeuronLayer<Dtype> {
  public:
-  explicit SplitLayer(const LayerParameter& param)
+  explicit SigmoidLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
+template <typename Dtype>
+class TanHLayer : public NeuronLayer<Dtype> {
+ public:
+  explicit TanHLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
+
+template <typename Dtype>
+class AccuracyLayer : public Layer<Dtype> {
+ public:
+  explicit AccuracyLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // The accuracy layer should not be used to compute backward operations.
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    NOT_IMPLEMENTED;
+  }
+};
+
+template <typename Dtype>
+class ConcatLayer : public Layer<Dtype> {
+ public:
+  explicit ConcatLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -149,144 +164,14 @@ class SplitLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  Blob<Dtype> col_bob_;
   int count_;
-};
-
-
-template <typename Dtype>
-class FlattenLayer : public Layer<Dtype> {
- public:
-  explicit FlattenLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  int count_;
-};
-
-
-template <typename Dtype>
-class InnerProductLayer : public Layer<Dtype> {
- public:
-  explicit InnerProductLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  int M_;
-  int K_;
-  int N_;
-  bool bias_term_;
-  shared_ptr<SyncedMemory> bias_multiplier_;
-};
-
-
-template <typename Dtype>
-class LRNLayer : public Layer<Dtype> {
- public:
-  explicit LRNLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  // scale_ stores the intermediate summing results
-  Blob<Dtype> scale_;
-  int size_;
-  int pre_pad_;
-  Dtype alpha_;
-  Dtype beta_;
   int num_;
   int channels_;
   int height_;
   int width_;
+  int concat_dim_;
 };
-
-
-template <typename Dtype>
-class Im2colLayer : public Layer<Dtype> {
- public:
-  explicit Im2colLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  int kernel_size_;
-  int stride_;
-  int channels_;
-  int height_;
-  int width_;
-  int pad_;
-};
-
-template <typename Dtype>
-class PoolingLayer : public Layer<Dtype> {
- public:
-  explicit PoolingLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  int kernel_size_;
-  int stride_;
-  int channels_;
-  int height_;
-  int width_;
-  int pooled_height_;
-  int pooled_width_;
-  Blob<float> rand_idx_;
-};
-
 
 template <typename Dtype>
 class ConvolutionLayer : public Layer<Dtype> {
@@ -321,33 +206,6 @@ class ConvolutionLayer : public Layer<Dtype> {
   int M_;
   int K_;
   int N_;
-};
-
-template <typename Dtype>
-class ConcatLayer : public Layer<Dtype> {
- public:
-  explicit ConcatLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  Blob<Dtype> col_bob_;
-  int count_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
-  int concat_dim_;
 };
 
 // This function is used to create a pthread that prefetches the data.
@@ -388,6 +246,104 @@ class DataLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
 };
 
+template <typename Dtype>
+class EuclideanLossLayer : public Layer<Dtype> {
+ public:
+  explicit EuclideanLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), difference_() {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  // The loss layer will do nothing during forward - all computation are
+  // carried out in the backward pass.
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //     vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  Blob<Dtype> difference_;
+};
+
+template <typename Dtype>
+class FlattenLayer : public Layer<Dtype> {
+ public:
+  explicit FlattenLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int count_;
+};
+
+template <typename Dtype>
+class HDF5DataLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5DataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~HDF5DataLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void load_hdf5_file_data(const char* filename);
+
+  std::vector<std::string> hdf_filenames_;
+  unsigned int num_files_;
+  unsigned int current_file_;
+  hsize_t current_row_;
+  Blob<Dtype> data_blob_;
+  Blob<Dtype> label_blob_;
+};
+
+template <typename Dtype>
+class Im2colLayer : public Layer<Dtype> {
+ public:
+  explicit Im2colLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int kernel_size_;
+  int stride_;
+  int channels_;
+  int height_;
+  int width_;
+  int pad_;
+};
+
 // This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
 void* ImagesLayerPrefetch(void* layer_pointer);
@@ -426,13 +382,34 @@ class ImagesLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
 };
 
+template <typename Dtype>
+class InfogainLossLayer : public Layer<Dtype> {
+ public:
+  explicit InfogainLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), infogain_() {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  // The loss layer will do nothing during forward - all computation are
+  // carried out in the backward pass.
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //     vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  Blob<Dtype> infogain_;
+};
 
 template <typename Dtype>
-class HDF5DataLayer : public Layer<Dtype> {
+class InnerProductLayer : public Layer<Dtype> {
  public:
-  explicit HDF5DataLayer(const LayerParameter& param)
+  explicit InnerProductLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual ~HDF5DataLayer();
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
@@ -445,16 +422,13 @@ class HDF5DataLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void load_hdf5_file_data(const char* filename);
 
-  std::vector<std::string> hdf_filenames_;
-  unsigned int num_files_;
-  unsigned int current_file_;
-  hsize_t current_row_;
-  Blob<Dtype> data_blob_;
-  Blob<Dtype> label_blob_;
+  int M_;
+  int K_;
+  int N_;
+  bool bias_term_;
+  shared_ptr<SyncedMemory> bias_multiplier_;
 };
-
 
 template <typename Dtype>
 class HDF5OutputLayer : public Layer<Dtype> {
@@ -482,6 +456,84 @@ class HDF5OutputLayer : public Layer<Dtype> {
   Blob<Dtype> label_blob_;
 };
 
+template <typename Dtype>
+class LRNLayer : public Layer<Dtype> {
+ public:
+  explicit LRNLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  // scale_ stores the intermediate summing results
+  Blob<Dtype> scale_;
+  int size_;
+  int pre_pad_;
+  Dtype alpha_;
+  Dtype beta_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
+};
+
+template <typename Dtype>
+class MultinomialLogisticLossLayer : public Layer<Dtype> {
+ public:
+  explicit MultinomialLogisticLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  // The loss layer will do nothing during forward - all computation are
+  // carried out in the backward pass.
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //     vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
+template <typename Dtype>
+class PoolingLayer : public Layer<Dtype> {
+ public:
+  explicit PoolingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int kernel_size_;
+  int stride_;
+  int channels_;
+  int height_;
+  int width_;
+  int pooled_height_;
+  int pooled_width_;
+  Blob<float> rand_idx_;
+};
 
 template <typename Dtype>
 class SoftmaxLayer : public Layer<Dtype> {
@@ -506,52 +558,6 @@ class SoftmaxLayer : public Layer<Dtype> {
   // scale is an intermediate blob to hold temporary results.
   Blob<Dtype> scale_;
 };
-
-
-template <typename Dtype>
-class MultinomialLogisticLossLayer : public Layer<Dtype> {
- public:
-  explicit MultinomialLogisticLossLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  // The loss layer will do nothing during forward - all computation are
-  // carried out in the backward pass.
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-  //     vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-};
-
-template <typename Dtype>
-class InfogainLossLayer : public Layer<Dtype> {
- public:
-  explicit InfogainLossLayer(const LayerParameter& param)
-      : Layer<Dtype>(param), infogain_() {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  // The loss layer will do nothing during forward - all computation are
-  // carried out in the backward pass.
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-  //     vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  Blob<Dtype> infogain_;
-};
-
 
 // SoftmaxWithLossLayer is a layer that implements softmax and then computes
 // the loss - it is preferred over softmax + multinomiallogisticloss in the
@@ -584,35 +590,10 @@ class SoftmaxWithLossLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> softmax_top_vec_;
 };
 
-
 template <typename Dtype>
-class EuclideanLossLayer : public Layer<Dtype> {
+class SplitLayer : public Layer<Dtype> {
  public:
-  explicit EuclideanLossLayer(const LayerParameter& param)
-      : Layer<Dtype>(param), difference_() {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  // The loss layer will do nothing during forward - all computation are
-  // carried out in the backward pass.
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-  //     vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  Blob<Dtype> difference_;
-};
-
-
-template <typename Dtype>
-class AccuracyLayer : public Layer<Dtype> {
- public:
-  explicit AccuracyLayer(const LayerParameter& param)
+  explicit SplitLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -620,11 +601,14 @@ class AccuracyLayer : public Layer<Dtype> {
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  // The accuracy layer should not be used to compute backward operations.
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-    NOT_IMPLEMENTED;
-  }
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int count_;
 };
 
 // This function is used to create a pthread that prefetches the window data.
