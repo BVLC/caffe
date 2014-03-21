@@ -61,8 +61,8 @@ message V0LayerParameter {
 
   // The blobs containing the numeric parameters of the layer
   repeated BlobProto blobs = 50;
-  // The ratio that is multiplied on the global learning rate. If you want to set
-  // the learning ratio for one blob, you need to set it for all blobs.
+  // The ratio that is multiplied on the global learning rate. If you want to
+  // set the learning ratio for one blob, you need to set it for all blobs.
   repeated float blobs_lr = 51;
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 52;
@@ -73,9 +73,38 @@ message V0LayerParameter {
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 53 [default = 0];
 
-  // Concat Layer needs to specify the dimension along the concat will happen,
-  // the other dimensions must be the same for all the bottom blobs
-  // By default it will concatenate blobs along channels dimension
+  // Fields related to detection (det_*)
+  // foreground (object) overlap threshold
+  optional float det_fg_threshold = 54 [default = 0.5];
+  // background (non-object) overlap threshold
+  optional float det_bg_threshold = 55 [default = 0.5];
+  // Fraction of batch that should be foreground objects
+  optional float det_fg_fraction = 56 [default = 0.25];
+
+  // optional bool OBSOLETE_can_clobber = 57 [default = true];
+
+  // Amount of contextual padding to add around a window
+  // (used only by the window_data_layer)
+  optional uint32 det_context_pad = 58 [default = 0];
+
+  // Mode for cropping out a detection window
+  // warp: cropped window is warped to a fixed size and aspect ratio
+  // square: the tightest square around the window is cropped
+  optional string det_crop_mode = 59 [default = "warp"];
+
+  // For ReshapeLayer, one needs to specify the new dimensions.
+  optional int32 new_num = 60 [default = 0];
+  optional int32 new_channels = 61 [default = 0];
+  optional int32 new_height = 62 [default = 0];
+  optional int32 new_width = 63 [default = 0];
+
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  // It will also resize images if new_height or new_width are not zero.
+  optional bool shuffle_images = 64 [default = false];
+
+  // For ConcatLayer, one needs to specify the dimension for concatenation, and
+  // the other dimensions must be the same for all the bottom blobs.
+  // By default it will concatenate blobs along the channels dimension.
   optional uint32 concat_dim = 65 [default = 1];
 }
 
