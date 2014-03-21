@@ -23,22 +23,23 @@ template<typename Dtype>
 class DataProcessorTest : public ::testing::Test {
  protected:
   DataProcessorTest()
-      : batch_size_(16),
+      : filler_(filler_param_),
+        batch_size_(16),
         channels_(8),
         original_size_(64),
         crop_size_(55),
         blob_(new Blob<Dtype>()) {
   }
   virtual void SetUp() {
-    FillerParameter filler_param;
-    GaussianFiller<Dtype> filler(filler_param);
     blob_->Reshape(batch_size_, channels_, original_size_, original_size_);
-    filler.Fill(blob_);
+    filler_.Fill(blob_);
   }
 
   virtual ~DataProcessorTest() {
   }
 
+  FillerParameter filler_param_;
+  GaussianFiller<Dtype> filler_;
   Blob<Dtype>* blob_;
   uint32_t batch_size_;
   uint32_t channels_;
@@ -50,44 +51,39 @@ typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(DataProcessorTest, Dtypes);
 
 TYPED_TEST(DataProcessorTest, TestCroppingDataProcessor_Process){
-DataProcessorParameter processor_param;
-processor_param.mutable_cropping_param()->set_crop_size(this->crop_size_);
+  DataProcessorParameter processor_param;
+  processor_param.mutable_cropping_param()->set_crop_size(this->crop_size_);
 
-CroppingDataProcessor<TypeParam> processor(processor_param);
-EXPECT_EQ(this->crop_size_, processor.crop_size());
+  CroppingDataProcessor<TypeParam> processor(processor_param);
+  EXPECT_EQ(this->crop_size_, processor.crop_size());
 
-shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
-const TypeParam* data = this->blob_->cpu_data();
-Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
-Caffe::Phase phases[] = {Caffe::TRAIN, Caffe::TEST};
-for (int i = 0; i < 2; ++i) {
-  Caffe::set_mode(modes[i]);
-  for (int j = 0; j < 2; ++j) {
-    Caffe::set_phase(phases[j]);
-    shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
-    processor.Process(input_blob, blob);
-    EXPECT_EQ(this->batch_size_, blob->num());
-    EXPECT_EQ(this->channels_, blob->channels());
-    EXPECT_EQ(this->crop_size_, blob->height());
-    EXPECT_EQ(this->crop_size_, blob->width());
+  shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
+  const TypeParam* data = this->blob_->cpu_data();
+  Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
+  Caffe::Phase phases[] = {Caffe::TRAIN, Caffe::TEST};
+  for (int i = 0; i < 2; ++i) {
+    Caffe::set_mode(modes[i]);
+    for (int j = 0; j < 2; ++j) {
+      Caffe::set_phase(phases[j]);
+      shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
+      processor.Process(input_blob, blob);
+      EXPECT_EQ(this->batch_size_, blob->num());
+      EXPECT_EQ(this->channels_, blob->channels());
+      EXPECT_EQ(this->crop_size_, blob->height());
+      EXPECT_EQ(this->crop_size_, blob->width());
 
-    const TypeParam* output_data = blob->cpu_data();
-    const uint32_t height_offset = processor.height_offset();
-    const uint32_t width_offset = processor.width_offset();
-    for (int n = 0; n < blob->num(); ++n) {
-      for (int c = 0; c < blob->channels(); ++c) {
-        for (int h = 0; h < this->crop_size_; ++h) {
-          for (int w = 0; w < this->crop_size_; ++w) {
+      const TypeParam* output_data = blob->cpu_data();
+      const uint32_t height_offset = processor.height_offset();
+      const uint32_t width_offset = processor.width_offset();
+      BLOB_ALL_DIMS_LOOP_BEGIN(blob->num(), blob->channels(),  blob->height(),
+                                 blob->width())
             EXPECT_EQ(data[this->blob_->offset(
                     n, c, h + height_offset, w + width_offset)],
                 output_data[blob->offset(n, c, h, w)])
             << "debug: n " << n << " c " << c << " h " << h << " w " << w;
-          }
-        }
-      }
-    }
-  }  // for (int j = 0; j < 2; ++j) {
-}  // for (int i = 0; i < 2; ++i) {
+      BLOB_ALL_DIMS_LOOP_END
+    }  // for (int j = 0; j < 2; ++j) {
+  }  // for (int i = 0; i < 2; ++i) {
 }
 
 TYPED_TEST(DataProcessorTest, TestMirroringDataProcessor_Process){
@@ -180,6 +176,37 @@ TYPED_TEST(DataProcessorTest, TestMirroringDataProcessor_Process){
         }  // for (int r = 0; r < 2; ++r) {
       }  // for (int t = 0; t < 3; ++t) {
     }  // for (int p = 0; p < 2; ++p) {
+  }  // for (int m = 0; m < 2; ++m) {
+}
+
+TYPED_TEST(DataProcessorTest, TestMeanSubtractionDataProcessor_Process){
+  DataProcessorParameter processor_param;
+  MeanSubtractionDataProcessor<TypeParam> processor(processor_param);
+
+  shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
+  const TypeParam* data = this->blob_->cpu_data();
+  Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
+  for (int m = 0; m < 2; ++m) {
+    Caffe::set_mode(modes[m]);
+    shared_ptr<Blob<TypeParam> > mean_blob(
+        new Blob<TypeParam>(this->blob_->num(), this->blob_->channels(),
+                            this->blob_->height(), this->blob_->width()));
+    this->filler_.Fill(mean_blob.get());
+    processor.set_mean_blob(mean_blob);
+    EXPECT_EQ(mean_blob->cpu_data(), processor.mean_blob_data());
+    shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
+    processor.Process(input_blob, blob);
+    EXPECT_EQ(this->batch_size_, blob->num());
+    EXPECT_EQ(this->channels_, blob->channels());
+    EXPECT_EQ(this->original_size_, blob->height());
+    EXPECT_EQ(this->original_size_, blob->width());
+    BLOB_ALL_DIMS_LOOP_BEGIN(blob->num(), blob->channels(), blob->height(),
+                             blob->width())
+    EXPECT_EQ(blob->data_at(n, c, h, w),
+              this->blob_->data_at(n, c, h, w) -
+              mean_blob->data_at(n, c, h, w))
+              << "debug: n " << n << " c " << c << " h " << h << " w " << w;
+    BLOB_ALL_DIMS_LOOP_END
   }  // for (int m = 0; m < 2; ++m) {
 }
 

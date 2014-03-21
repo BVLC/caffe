@@ -19,8 +19,8 @@ using std::vector;
 
 template<typename Dtype>
 CroppingDataProcessor<Dtype>::CroppingDataProcessor(
-    const DataProcessorParameter& param)
-    : DataProcessor<Dtype>(param),
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param),
       crop_size_(this->processor_param_.cropping_param().crop_size()) {
 }
 
@@ -65,8 +65,8 @@ void CroppingDataProcessor<Dtype>::Process(
 
 template<typename Dtype>
 MirroringDataProcessor<Dtype>::MirroringDataProcessor(
-    const DataProcessorParameter& param)
-    : DataProcessor<Dtype>(param),
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param),
       filler_(filler_param_),
       random_one_to_zero_(new Blob<Dtype>()),
       type_(this->processor_param_.mirroring_param().type()),
@@ -143,30 +143,51 @@ void MirroringDataProcessor<Dtype>::Process(
 
 template<typename Dtype>
 MeanSubtractionDataProcessor<Dtype>::MeanSubtractionDataProcessor(
-    const DataProcessorParameter& param)
-    : DataProcessor<Dtype>(param) {
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param) {
+  if (this->processor_param_.mean_subtraction_param().has_mean_file()) {
+    mean_file_ = this->processor_param_.mean_subtraction_param().mean_file();
+    BlobProto blob_proto;
+    LOG(INFO) << "Loading mean file from" << mean_file_;
+    ReadProtoFromBinaryFile(mean_file_.c_str(), &blob_proto);
+    mean_blob_->FromProto(blob_proto);
+  }
 }
 
 template<typename Dtype>
 void MeanSubtractionDataProcessor<Dtype>::Process(
     const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
+  CHECK(mean_blob_) << "Mean blob is not set";
+  const Dtype* mean_data = mean_blob_->cpu_data();
+  const Dtype* data = input->cpu_data();
+  int num = input->num();
+  int channels = input->channels();
+  int height = input->height();
+  int width = input->width();
+  output->Reshape(num, channels, height, width);
+  Dtype* output_data = output->mutable_cpu_data();
+  BLOB_ALL_DIMS_LOOP_BEGIN(num, channels, height, width)
+  output_data[((n * channels + c) * height + h) * width + w] =
+            data[((n * channels + c) * height + h) * width + w] -
+            mean_data[((n * channels + c) * height + h) * width + w];
+  BLOB_ALL_DIMS_LOOP_END
 }
 
 template<typename Dtype>
 ScalingDataProcessor<Dtype>::ScalingDataProcessor(
-    const DataProcessorParameter& param)
-    : DataProcessor<Dtype>(param) {
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param) {
 }
 
 template<typename Dtype>
-void ScalingDataProcessor<Dtype>::Process(const shared_ptr<Blob<Dtype> >& input,
-                                          shared_ptr<Blob<Dtype> > output) {
+void ScalingDataProcessor<Dtype>::Process(
+    const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
 }
 
 template<typename Dtype>
 RotationDataProcessor<Dtype>::RotationDataProcessor(
-    const DataProcessorParameter& param)
-    : DataProcessor<Dtype>(param) {
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param) {
 }
 
 template<typename Dtype>
@@ -176,8 +197,8 @@ void RotationDataProcessor<Dtype>::Process(
 
 template<typename Dtype>
 MeanZeroingDataProcessor<Dtype>::MeanZeroingDataProcessor(
-    const DataProcessorParameter& param)
-    : DataProcessor<Dtype>(param) {
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param) {
 }
 
 template<typename Dtype>
@@ -187,8 +208,8 @@ void MeanZeroingDataProcessor<Dtype>::Process(
 
 template<typename Dtype>
 ResizingDataProcessor<Dtype>::ResizingDataProcessor(
-    const DataProcessorParameter& param)
-    : DataProcessor<Dtype>(param) {
+    const DataProcessorParameter& processor_param)
+    : DataProcessor<Dtype>(processor_param) {
 }
 
 template<typename Dtype>
@@ -197,30 +218,32 @@ void ResizingDataProcessor<Dtype>::Process(
 }
 
 template<typename Dtype>
-DataProcessor<Dtype>* GetDataProcessor(const DataProcessorParameter& param) {
-  const string& name = param.name();
-  const DataProcessorParameter_DataProcessorType& type = param.type();
+DataProcessor<Dtype>* GetDataProcessor(
+    const DataProcessorParameter& processor_param) {
+  const string& name = processor_param.name();
+  const DataProcessorParameter_DataProcessorType& type =
+      processor_param.type();
   switch (type) {
     case DataProcessorParameter_DataProcessorType_CROPPING: {
-      return new CroppingDataProcessor<Dtype>(param);
+      return new CroppingDataProcessor<Dtype>(processor_param);
     }
     case DataProcessorParameter_DataProcessorType_MIRRORING: {
-      return new MirroringDataProcessor<Dtype>(param);
+      return new MirroringDataProcessor<Dtype>(processor_param);
     }
     case DataProcessorParameter_DataProcessorType_MEAN_SUBTRACTION: {
-      return new MeanSubtractionDataProcessor<Dtype>(param);
+      return new MeanSubtractionDataProcessor<Dtype>(processor_param);
     }
     case DataProcessorParameter_DataProcessorType_SCALING: {
-      return new ScalingDataProcessor<Dtype>(param);
+      return new ScalingDataProcessor<Dtype>(processor_param);
     }
     case DataProcessorParameter_DataProcessorType_ROTATION: {
-      return new RotationDataProcessor<Dtype>(param);
+      return new RotationDataProcessor<Dtype>(processor_param);
     }
     case DataProcessorParameter_DataProcessorType_MEAN_ZEROING: {
-      return new MeanZeroingDataProcessor<Dtype>(param);
+      return new MeanZeroingDataProcessor<Dtype>(processor_param);
     }
     case DataProcessorParameter_DataProcessorType_RESIZING: {
-      return new ResizingDataProcessor<Dtype>(param);
+      return new ResizingDataProcessor<Dtype>(processor_param);
     }
     case DataProcessorParameter_DataProcessorType_NONE: {
       LOG(FATAL)<< "Data processor " << name << " has unspecified type.";
@@ -235,9 +258,11 @@ DataProcessor<Dtype>* GetDataProcessor(const DataProcessorParameter& param) {
 }
 
 template
-DataProcessor<float>* GetDataProcessor(const DataProcessorParameter& param);
+DataProcessor<float>* GetDataProcessor(
+    const DataProcessorParameter& processor_param);
 template
-DataProcessor<double>* GetDataProcessor(const DataProcessorParameter& param);
+DataProcessor<double>* GetDataProcessor(
+    const DataProcessorParameter& processor_param);
 
 INSTANTIATE_CLASS(MeanSubtractionDataProcessor);
 INSTANTIATE_CLASS(ScalingDataProcessor);
