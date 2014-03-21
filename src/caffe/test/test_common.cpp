@@ -19,11 +19,6 @@ TEST_F(CommonTest, TestCublasHandler) {
   EXPECT_TRUE(Caffe::cublas_handle());
 }
 
-TEST_F(CommonTest, TestVslStream) {
-  //EXPECT_TRUE(Caffe::vsl_stream());
-    EXPECT_TRUE(true);
-}
-
 TEST_F(CommonTest, TestBrewMode) {
   Caffe::set_mode(Caffe::CPU);
   EXPECT_EQ(Caffe::mode(), Caffe::CPU);
@@ -41,13 +36,9 @@ TEST_F(CommonTest, TestRandSeedCPU) {
   SyncedMemory data_a(10 * sizeof(int));
   SyncedMemory data_b(10 * sizeof(int));
   Caffe::set_random_seed(1701);
-  //viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, Caffe::vsl_stream(),
-  //      10, (int*)data_a.mutable_cpu_data(), 0.5);
   caffe_vRngBernoulli(10, reinterpret_cast<int*>(data_a.mutable_cpu_data()), 0.5);
 
   Caffe::set_random_seed(1701);
-  //viRngBernoulli(VSL_RNG_METHOD_BERNOULLI_ICDF, Caffe::vsl_stream(),
-  //      10, (int*)data_b.mutable_cpu_data(), 0.5);
   caffe_vRngBernoulli(10, reinterpret_cast<int*>(data_b.mutable_cpu_data()), 0.5);
 
   for (int i = 0; i < 10; ++i) {
@@ -55,7 +46,6 @@ TEST_F(CommonTest, TestRandSeedCPU) {
         ((const int*)(data_b.cpu_data()))[i]);
   }
 }
-
 
 TEST_F(CommonTest, TestRandSeedGPU) {
   SyncedMemory data_a(10 * sizeof(unsigned int));
@@ -71,6 +61,5 @@ TEST_F(CommonTest, TestRandSeedGPU) {
         ((const unsigned int*)(data_b.cpu_data()))[i]);
   }
 }
-
 
 }  // namespace caffe

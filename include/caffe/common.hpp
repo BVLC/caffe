@@ -8,16 +8,13 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <curand.h>
-// cuda driver types
-#include <driver_types.h>
+#include <driver_types.h>  // cuda driver types
 #include <glog/logging.h>
-//#include <mkl_vsl.h>
 
 // various checks for different function calls.
 #define CUDA_CHECK(condition) CHECK_EQ((condition), cudaSuccess)
 #define CUBLAS_CHECK(condition) CHECK_EQ((condition), CUBLAS_STATUS_SUCCESS)
 #define CURAND_CHECK(condition) CHECK_EQ((condition), CURAND_STATUS_SUCCESS)
-#define VSL_CHECK(condition) CHECK_EQ((condition), VSL_STATUS_OK)
 
 #define CUDA_KERNEL_LOOP(i, n) \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
@@ -46,7 +43,6 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
-
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
@@ -60,7 +56,6 @@ using boost::shared_ptr;
 #else
     const int CAFFE_CUDA_NUM_THREADS = 512;
 #endif
-
 
 
 inline int CAFFE_GET_BLOCKS(const int N) {
@@ -90,11 +85,9 @@ class Caffe {
     return Get().curand_generator_;
   }
 
-  // Returns the MKL random stream.
-  //inline static VSLStreamStatePtr vsl_stream() { return Get().vsl_stream_; }
-
+  // boost RNG
   typedef boost::mt19937 random_generator_t;
-  inline static random_generator_t &vsl_stream() { return Get().random_generator_; }
+  inline static random_generator_t &rng_stream() { return Get().random_generator_; }
 
   // Returns the mode: running on CPU or GPU.
   inline static Brew mode() { return Get().mode_; }
@@ -108,7 +101,7 @@ class Caffe {
   inline static void set_mode(Brew mode) { Get().mode_ = mode; }
   // Sets the phase.
   inline static void set_phase(Phase phase) { Get().phase_ = phase; }
-  // Sets the random seed of both MKL and curand
+  // Sets the random seed of both boost and curand
   static void set_random_seed(const unsigned int seed);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
@@ -119,7 +112,6 @@ class Caffe {
  protected:
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
-  //VSLStreamStatePtr vsl_stream_;
   random_generator_t random_generator_;
 
   Brew mode_;

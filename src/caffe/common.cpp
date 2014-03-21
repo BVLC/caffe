@@ -22,7 +22,6 @@ int64_t cluster_seedgen(void) {
 Caffe::Caffe()
     : mode_(Caffe::CPU), phase_(Caffe::TRAIN), cublas_handle_(NULL),
       curand_generator_(NULL),
-      //vsl_stream_(NULL)
       random_generator_()
 {
   // Try to create a cublas handler, and report an error if failed (but we will
@@ -37,13 +36,6 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
-
-  // Try to create a vsl stream. This should almost always work, but we will
-  // check it anyway.
-  //if (vslNewStream(&vsl_stream_, VSL_BRNG_MT19937, cluster_seedgen()) != VSL_STATUS_OK) {
-  //  LOG(ERROR) << "Cannot create vsl stream. VSL random number generator "
-  //      << "won't be available.";
-  //}
 }
 
 Caffe::~Caffe() {
@@ -51,7 +43,6 @@ Caffe::~Caffe() {
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
-  //if (vsl_stream_) VSL_CHECK(vslDeleteStream(&vsl_stream_));
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -67,11 +58,8 @@ void Caffe::set_random_seed(const unsigned int seed) {
   } else {
     LOG(ERROR) << "Curand not available. Skipping setting the curand seed.";
   }
-  // VSL seed
-  //VSL_CHECK(vslDeleteStream(&(Get().vsl_stream_)));
-  //VSL_CHECK(vslNewStream(&(Get().vsl_stream_), VSL_BRNG_MT19937, seed));
+  // RNG seed
   Get().random_generator_ = random_generator_t(seed);
-
 }
 
 void Caffe::SetDevice(const int device_id) {
