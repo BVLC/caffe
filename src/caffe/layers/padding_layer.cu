@@ -27,7 +27,7 @@ __global__ void PaddingForward(const int count, const Dtype* in, Dtype* out,
 }
 
 template <typename Dtype>
-void PaddingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype PaddingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -39,6 +39,7 @@ void PaddingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       count, bottom_data, top_data, NUM_, CHANNEL_, HEIGHT_IN_, WIDTH_IN_,
       PAD_);
   CUDA_POST_KERNEL_CHECK;
+  return Dtype(0);
 }
 
 template <typename Dtype>
@@ -61,7 +62,7 @@ __global__ void PaddingBackward(const int count, const Dtype* in, Dtype* out,
 }
 
 template <typename Dtype>
-Dtype PaddingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void PaddingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
@@ -74,7 +75,6 @@ Dtype PaddingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         PAD_);
     CUDA_POST_KERNEL_CHECK;
   }
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(PaddingLayer);

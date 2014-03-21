@@ -42,7 +42,7 @@ void ConcatLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   if (concat_dim_== 0) {
@@ -69,10 +69,11 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
       " not implemented yet";
   }
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   if (concat_dim_ == 0) {
@@ -100,7 +101,6 @@ Dtype ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
       " not implemented yet";
   }
-  return Dtype(0.);
 }
 
 INSTANTIATE_CLASS(ConcatLayer);

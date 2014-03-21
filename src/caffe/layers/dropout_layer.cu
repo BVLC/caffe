@@ -24,7 +24,7 @@ __global__ void DropoutForward(const int n, const Dtype* in,
 }
 
 template <typename Dtype>
-void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -42,6 +42,7 @@ void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     CUDA_CHECK(cudaMemcpy(top_data, bottom_data,
         count * sizeof(Dtype), cudaMemcpyDeviceToDevice));
   }
+  return Dtype(0);
 }
 
 template <typename Dtype>
@@ -54,7 +55,7 @@ __global__ void DropoutBackward(const int n, const Dtype* in_diff,
 }
 
 template <typename Dtype>
-Dtype DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   CHECK(Caffe::phase() == Caffe::TRAIN);
@@ -68,7 +69,6 @@ Dtype DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         count, top_diff, mask, uint_thres_, scale_, bottom_diff);
     CUDA_POST_KERNEL_CHECK;
   }
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(DropoutLayer);

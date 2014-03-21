@@ -65,7 +65,7 @@ __global__ void LRNComputeOutput(const int nthreads, const Dtype* in,
 }
 
 template <typename Dtype>
-void LRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype LRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   // First, compute scale
   const Dtype* bottom_data = bottom[0]->gpu_data();
@@ -84,6 +84,7 @@ void LRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   LRNComputeOutput<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
       n_threads, bottom_data, scale_data, -beta_, top_data);
   CUDA_POST_KERNEL_CHECK;
+  return Dtype(0.);
 }
 
 
@@ -149,7 +150,7 @@ __global__ void LRNComputeDiff(const int nthreads, const Dtype* bottom_data,
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   int n_threads = num_ * height_ * width_;
   // NOLINT_NEXT_LINE(whitespace/operators)
@@ -158,7 +159,6 @@ Dtype LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       scale_.gpu_data(), top[0]->gpu_diff(), num_, channels_, height_, width_,
       size_, -beta_, Dtype(2. * alpha_ * beta_ / size_),
       (*bottom)[0]->mutable_gpu_diff());
-  return Dtype(0.);
 }
 
 

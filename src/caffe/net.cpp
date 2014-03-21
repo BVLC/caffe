@@ -213,27 +213,32 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 }
 
 template <typename Dtype>
-const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled() {
+const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled(Dtype* loss) {
+  if (loss != NULL) {
+    *loss = Dtype(0.);
+  }
   for (int i = 0; i < layers_.size(); ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
-    layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
+    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
+    if (loss != NULL) {
+      *loss += layer_loss;
+    }
   }
   return net_output_blobs_;
 }
 
 template <typename Dtype>
 const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
-    const vector<Blob<Dtype>*> & bottom) {
+    const vector<Blob<Dtype>*> & bottom, Dtype* loss) {
   // Copy bottom to internal bottom
   for (int i = 0; i < bottom.size(); ++i) {
     net_input_blobs_[i]->CopyFrom(*bottom[i]);
   }
-  return ForwardPrefilled();
+  return ForwardPrefilled(loss);
 }
 
-
 template <typename Dtype>
-string Net<Dtype>::Forward(const string& input_blob_protos) {
+string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
   BlobProtoVector blob_proto_vec;
   if (net_input_blobs_.size()) {
     blob_proto_vec.ParseFromString(input_blob_protos);
@@ -243,7 +248,7 @@ string Net<Dtype>::Forward(const string& input_blob_protos) {
       net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i));
     }
   }
-  ForwardPrefilled();
+  ForwardPrefilled(loss);
   blob_proto_vec.Clear();
   for (int i = 0; i < net_output_blobs_.size(); ++i) {
     net_output_blobs_[i]->ToProto(blob_proto_vec.add_blobs());
@@ -255,16 +260,12 @@ string Net<Dtype>::Forward(const string& input_blob_protos) {
 
 
 template <typename Dtype>
-Dtype Net<Dtype>::Backward() {
-  Dtype loss = 0;
+void Net<Dtype>::Backward() {
   for (int i = layers_.size() - 1; i >= 0; --i) {
     if (layer_need_backward_[i]) {
-      Dtype layer_loss = layers_[i]->Backward(
-          top_vecs_[i], true, &bottom_vecs_[i]);
-      loss += layer_loss;
+      layers_[i]->Backward(top_vecs_[i], true, &bottom_vecs_[i]);
     }
   }
-  return loss;
 }
 
 template <typename Dtype>

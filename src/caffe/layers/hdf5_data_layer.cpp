@@ -89,7 +89,7 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const int batchsize = this->layer_param_.batchsize();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
@@ -118,14 +118,13 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             &label_blob_.cpu_data()[current_row_ * label_data_count],
             sizeof(Dtype) * label_data_count);
   }
+  return Dtype(0.);
 }
 
 // The backward operations are dummy - they do not carry any computation.
 template <typename Dtype>
-Dtype HDF5DataLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  return Dtype(0.);
-}
+void HDF5DataLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { }
 
 INSTANTIATE_CLASS(HDF5DataLayer);
 
