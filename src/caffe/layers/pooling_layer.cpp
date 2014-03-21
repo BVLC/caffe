@@ -18,22 +18,22 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1) << "PoolingLayer takes a single blob as input.";
   CHECK_EQ(top->size(), 1) << "PoolingLayer takes a single blob as output.";
-  KSIZE_ = this->layer_param_.pooling_param().kernel_size();
-  STRIDE_ = this->layer_param_.pooling_param().stride();
-  CHANNELS_ = bottom[0]->channels();
-  HEIGHT_ = bottom[0]->height();
-  WIDTH_ = bottom[0]->width();
-  POOLED_HEIGHT_ = static_cast<int>(
-      ceil(static_cast<float>(HEIGHT_ - KSIZE_) / STRIDE_)) + 1;
-  POOLED_WIDTH_ = static_cast<int>(
-      ceil(static_cast<float>(WIDTH_ - KSIZE_) / STRIDE_)) + 1;
-  (*top)[0]->Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
-      POOLED_WIDTH_);
+  kernel_size_ = this->layer_param_.pooling_param().kernel_size();
+  stride_ = this->layer_param_.pooling_param().stride();
+  channels_ = bottom[0]->channels();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
+  pooled_height_ = static_cast<int>(
+      ceil(static_cast<float>(height_ - kernel_size_) / stride_)) + 1;
+  pooled_width_ = static_cast<int>(
+      ceil(static_cast<float>(width_ - kernel_size_) / stride_)) + 1;
+  (*top)[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
+      pooled_width_);
   // If stochastic pooling, we will initialize the random index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_STOCHASTIC) {
-    rand_idx_.Reshape(bottom[0]->num(), CHANNELS_, POOLED_HEIGHT_,
-      POOLED_WIDTH_);
+    rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
+      pooled_width_);
   }
 }
 
@@ -55,18 +55,18 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      for (int c = 0; c < CHANNELS_; ++c) {
-        for (int ph = 0; ph < POOLED_HEIGHT_; ++ph) {
-          for (int pw = 0; pw < POOLED_WIDTH_; ++pw) {
-            int hstart = ph * STRIDE_;
-            int wstart = pw * STRIDE_;
-            int hend = min(hstart + KSIZE_, HEIGHT_);
-            int wend = min(wstart + KSIZE_, WIDTH_);
+      for (int c = 0; c < channels_; ++c) {
+        for (int ph = 0; ph < pooled_height_; ++ph) {
+          for (int pw = 0; pw < pooled_width_; ++pw) {
+            int hstart = ph * stride_;
+            int wstart = pw * stride_;
+            int hend = min(hstart + kernel_size_, height_);
+            int wend = min(wstart + kernel_size_, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                top_data[ph * POOLED_WIDTH_ + pw] =
-                  max(top_data[ph * POOLED_WIDTH_ + pw],
-                      bottom_data[h * WIDTH_ + w]);
+                top_data[ph * pooled_width_ + pw] =
+                  max(top_data[ph * pooled_width_ + pw],
+                      bottom_data[h * width_ + w]);
               }
             }
           }
@@ -83,20 +83,20 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      for (int c = 0; c < CHANNELS_; ++c) {
-        for (int ph = 0; ph < POOLED_HEIGHT_; ++ph) {
-          for (int pw = 0; pw < POOLED_WIDTH_; ++pw) {
-            int hstart = ph * STRIDE_;
-            int wstart = pw * STRIDE_;
-            int hend = min(hstart + KSIZE_, HEIGHT_);
-            int wend = min(wstart + KSIZE_, WIDTH_);
+      for (int c = 0; c < channels_; ++c) {
+        for (int ph = 0; ph < pooled_height_; ++ph) {
+          for (int pw = 0; pw < pooled_width_; ++pw) {
+            int hstart = ph * stride_;
+            int wstart = pw * stride_;
+            int hend = min(hstart + kernel_size_, height_);
+            int wend = min(wstart + kernel_size_, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                top_data[ph * POOLED_WIDTH_ + pw] +=
-                    bottom_data[h * WIDTH_ + w];
+                top_data[ph * pooled_width_ + pw] +=
+                    bottom_data[h * width_ + w];
               }
             }
-            top_data[ph * POOLED_WIDTH_ + pw] /=
+            top_data[ph * pooled_width_ + pw] /=
                 (hend - hstart) * (wend - wstart);
           }
         }
@@ -132,19 +132,19 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
     for (int n = 0; n < top[0]->num(); ++n) {
-      for (int c = 0; c < CHANNELS_; ++c) {
-        for (int ph = 0; ph < POOLED_HEIGHT_; ++ph) {
-          for (int pw = 0; pw < POOLED_WIDTH_; ++pw) {
-            int hstart = ph * STRIDE_;
-            int wstart = pw * STRIDE_;
-            int hend = min(hstart + KSIZE_, HEIGHT_);
-            int wend = min(wstart + KSIZE_, WIDTH_);
+      for (int c = 0; c < channels_; ++c) {
+        for (int ph = 0; ph < pooled_height_; ++ph) {
+          for (int pw = 0; pw < pooled_width_; ++pw) {
+            int hstart = ph * stride_;
+            int wstart = pw * stride_;
+            int hend = min(hstart + kernel_size_, height_);
+            int wend = min(wstart + kernel_size_, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                bottom_diff[h * WIDTH_ + w] +=
-                    top_diff[ph * POOLED_WIDTH_ + pw] *
-                    (bottom_data[h * WIDTH_ + w] ==
-                        top_data[ph * POOLED_WIDTH_ + pw]);
+                bottom_diff[h * width_ + w] +=
+                    top_diff[ph * pooled_width_ + pw] *
+                    (bottom_data[h * width_ + w] ==
+                        top_data[ph * pooled_width_ + pw]);
               }
             }
           }
@@ -160,18 +160,18 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   case PoolingParameter_PoolMethod_AVE:
     // The main loop
     for (int n = 0; n < top[0]->num(); ++n) {
-      for (int c = 0; c < CHANNELS_; ++c) {
-        for (int ph = 0; ph < POOLED_HEIGHT_; ++ph) {
-          for (int pw = 0; pw < POOLED_WIDTH_; ++pw) {
-            int hstart = ph * STRIDE_;
-            int wstart = pw * STRIDE_;
-            int hend = min(hstart + KSIZE_, HEIGHT_);
-            int wend = min(wstart + KSIZE_, WIDTH_);
+      for (int c = 0; c < channels_; ++c) {
+        for (int ph = 0; ph < pooled_height_; ++ph) {
+          for (int pw = 0; pw < pooled_width_; ++pw) {
+            int hstart = ph * stride_;
+            int wstart = pw * stride_;
+            int hend = min(hstart + kernel_size_, height_);
+            int wend = min(wstart + kernel_size_, width_);
             int poolsize = (hend - hstart) * (wend - wstart);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                bottom_diff[h * WIDTH_ + w] +=
-                  top_diff[ph * POOLED_WIDTH_ + pw] / poolsize;
+                bottom_diff[h * width_ + w] +=
+                  top_diff[ph * pooled_width_ + pw] / poolsize;
               }
             }
           }

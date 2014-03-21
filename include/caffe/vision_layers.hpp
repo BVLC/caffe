@@ -64,7 +64,6 @@ class TanHLayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -82,7 +81,6 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -101,7 +99,6 @@ class BNLLLayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -122,11 +119,11 @@ class DropoutLayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   shared_ptr<SyncedMemory> rand_vec_;
   float threshold_;
   float scale_;
@@ -151,6 +148,7 @@ class SplitLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   int count_;
 };
 
@@ -172,6 +170,7 @@ class FlattenLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   int count_;
 };
 
@@ -194,6 +193,7 @@ class InnerProductLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   int M_;
   int K_;
   int N_;
@@ -219,6 +219,7 @@ class LRNLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   // scale_ stores the intermediate summing results
   Blob<Dtype> scale_;
   int size_;
@@ -249,12 +250,13 @@ class Im2colLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  int KSIZE_;
-  int STRIDE_;
-  int CHANNELS_;
-  int HEIGHT_;
-  int WIDTH_;
-  int PAD_;
+
+  int kernel_size_;
+  int stride_;
+  int channels_;
+  int height_;
+  int width_;
+  int pad_;
 };
 
 template <typename Dtype>
@@ -274,13 +276,14 @@ class PoolingLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  int KSIZE_;
-  int STRIDE_;
-  int CHANNELS_;
-  int HEIGHT_;
-  int WIDTH_;
-  int POOLED_HEIGHT_;
-  int POOLED_WIDTH_;
+
+  int kernel_size_;
+  int stride_;
+  int channels_;
+  int height_;
+  int width_;
+  int pooled_height_;
+  int pooled_width_;
   Blob<float> rand_idx_;
 };
 
@@ -302,17 +305,16 @@ class ConvolutionLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  Blob<Dtype> col_bob_;
 
-  int KSIZE_;
-  int STRIDE_;
-  int NUM_;
-  int CHANNELS_;
-  int PAD_;
-  int HEIGHT_;
-  int WIDTH_;
-  int NUM_OUTPUT_;
-  int GROUP_;
+  int kernel_size_;
+  int stride_;
+  int num_;
+  int channels_;
+  int pad_;
+  int height_;
+  int width_;
+  int num_output_;
+  int group_;
   Blob<Dtype> col_buffer_;
   shared_ptr<SyncedMemory> bias_multiplier_;
   bool bias_term_;
@@ -338,13 +340,13 @@ class ConcatLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  Blob<Dtype> col_bob_;
 
-  int COUNT_;
-  int NUM_;
-  int CHANNELS_;
-  int HEIGHT_;
-  int WIDTH_;
+  Blob<Dtype> col_bob_;
+  int count_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
   int concat_dim_;
 };
 
@@ -449,7 +451,6 @@ class HDF5DataLayer : public Layer<Dtype> {
   unsigned int num_files_;
   unsigned int current_file_;
   hsize_t current_row_;
-
   Blob<Dtype> data_blob_;
   Blob<Dtype> label_blob_;
 };
@@ -603,6 +604,7 @@ class EuclideanLossLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
   //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   Blob<Dtype> difference_;
 };
 
