@@ -210,5 +210,34 @@ TYPED_TEST(DataProcessorTest, TestMeanSubtractionDataProcessor_Process){
   }  // for (int m = 0; m < 2; ++m) {
 }
 
+TYPED_TEST(DataProcessorTest, TestScalingDataProcessor_Process){
+  DataProcessorParameter processor_param;
+  ScalingDataProcessor<TypeParam> processor(processor_param);
+
+  shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
+  const TypeParam* data = this->blob_->cpu_data();
+  Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
+  TypeParam scales[] = {-2, -1, -0.5, 0, 0.5, 1, 2};
+  for (int m = 0; m < 2; ++m) {
+    Caffe::set_mode(modes[m]);
+    for (int s = 0; s < 7; ++s) {
+      processor.set_scale(scales[s]);
+      EXPECT_EQ(scales[s], processor.scale());
+      shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
+      processor.Process(input_blob, blob);
+      EXPECT_EQ(input_blob->num(), blob->num());
+      EXPECT_EQ(input_blob->channels(), blob->channels());
+      EXPECT_EQ(input_blob->height(), blob->height());
+      EXPECT_EQ(input_blob->width(), blob->width());
+      BLOB_ALL_DIMS_LOOP_BEGIN(blob->num(), blob->channels(), blob->height(),
+                               blob->width())
+      EXPECT_EQ(blob->data_at(n, c, h, w),
+                input_blob->data_at(n, c, h, w) * scales[s])
+                << "debug: n " << n << " c " << c << " h " << h << " w " << w;
+      BLOB_ALL_DIMS_LOOP_END
+    }  // for (int s = 0; s < 7; ++s) {
+  }  // for (int m = 0; m < 2; ++m) {
+}
+
 }
   // namespace caffe

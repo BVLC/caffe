@@ -155,6 +155,16 @@ MeanSubtractionDataProcessor<Dtype>::MeanSubtractionDataProcessor(
 }
 
 template<typename Dtype>
+void MeanSubtractionDataProcessor<Dtype>::set_mean_file(
+    const string& mean_file) {
+  mean_file_ = mean_file;
+  BlobProto blob_proto;
+  LOG(INFO) << "Loading mean file from" << mean_file_;
+  ReadProtoFromBinaryFile(mean_file_.c_str(), &blob_proto);
+  mean_blob_->FromProto(blob_proto);
+}
+
+template<typename Dtype>
 void MeanSubtractionDataProcessor<Dtype>::Process(
     const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
   CHECK(mean_blob_) << "Mean blob is not set";
@@ -176,12 +186,26 @@ void MeanSubtractionDataProcessor<Dtype>::Process(
 template<typename Dtype>
 ScalingDataProcessor<Dtype>::ScalingDataProcessor(
     const DataProcessorParameter& processor_param)
-    : DataProcessor<Dtype>(processor_param) {
+    : DataProcessor<Dtype>(processor_param),
+      scale_(this->processor_param_.scaling_param().scale()){
 }
 
 template<typename Dtype>
 void ScalingDataProcessor<Dtype>::Process(
     const shared_ptr<Blob<Dtype> >& input, shared_ptr<Blob<Dtype> > output) {
+  int num = input->num();
+  int channels = input->channels();
+  int height = input->height();
+  int width = input->width();
+  output->Reshape(num, channels, height, width);
+  const Dtype* input_data = input->cpu_data();
+  Dtype* output_data = output->mutable_cpu_data();
+  // TODO:
+//  caffe_cpu_scale<Dtype>(input->count(), scale_, input_data, output_data);
+  BLOB_ALL_DIMS_LOOP_BEGIN(num, channels, height, width)
+  output_data[((n * channels + c) * height + h) * width + w] =
+      input_data[((n * channels + c) * height + h) * width + w] * scale_;
+  BLOB_ALL_DIMS_LOOP_END
 }
 
 template<typename Dtype>

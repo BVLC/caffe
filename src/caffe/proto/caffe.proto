@@ -64,8 +64,7 @@ message MeanSubtractionParameter {
 }
 
 message ScalingParameter {
-  optional DatumDimensions input_dims = 1;
-  optional DatumDimensions output_dims = 2;
+  optional float scale = 1 [ default = 1 ];
 }
 
 message RotationParameter {
