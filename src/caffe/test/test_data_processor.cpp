@@ -57,28 +57,37 @@ TYPED_TEST(CroppingDataProcessorTest, TestProcess){
   EXPECT_EQ(this->crop_size_, processor.crop_size());
 
   shared_ptr<Blob<TypeParam> > input_blob(this->blob_);
-  shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
-  processor.Process(input_blob, blob);
-  EXPECT_EQ(this->batch_size_, blob->num());
-  EXPECT_EQ(this->channels_, blob->channels());
-  EXPECT_EQ(this->crop_size_, blob->height());
-  EXPECT_EQ(this->crop_size_, blob->width());
-
   const TypeParam* data = this->blob_->cpu_data();
-  const TypeParam* output_data = blob->cpu_data();
-  const uint32_t height_offset = processor.height_offset();
-  const uint32_t width_offset = processor.width_offset();
-  for (int n = 0; n < blob->num(); ++n) {
-    for (int c = 0; c < blob->channels(); ++c) {
-      for (int h = 0; h < this->crop_size_; ++h) {
-        for (int w = 0; w < this->crop_size_; ++w) {
-          EXPECT_EQ(data[this->blob_->offset(
-              n, c, h + height_offset, w + width_offset)],
-                    output_data[blob->offset(n, c, h, w)])
+  Caffe::Brew modes[] = {Caffe::CPU, Caffe::GPU};
+  Caffe::Phase phases[] = {Caffe::TRAIN, Caffe::TEST};
+  for (int i = 0; i < 2; ++i) {
+    Caffe::set_mode(modes[i]);
+    for (int j = 0; j < 2; ++j) {
+      Caffe::set_phase(phases[j]);
+      shared_ptr<Blob<TypeParam> > blob(new Blob<TypeParam>());
+      processor.Process(input_blob, blob);
+      EXPECT_EQ(this->batch_size_, blob->num());
+      EXPECT_EQ(this->channels_, blob->channels());
+      EXPECT_EQ(this->crop_size_, blob->height());
+      EXPECT_EQ(this->crop_size_, blob->width());
+
+      const TypeParam* output_data = blob->cpu_data();
+      const uint32_t height_offset = processor.height_offset();
+      const uint32_t width_offset = processor.width_offset();
+      for (int n = 0; n < blob->num(); ++n) {
+        for (int c = 0; c < blob->channels(); ++c) {
+          for (int h = 0; h < this->crop_size_; ++h) {
+            for (int w = 0; w < this->crop_size_; ++w) {
+              EXPECT_EQ(data[this->blob_->offset(
+                      n, c, h + height_offset, w + width_offset)],
+                  output_data[blob->offset(n, c, h, w)])
               << "debug: n " << n << " c " << c << " h " << h << " w " << w;
-        }}
-    }
-  }
+            }
+          }
+        }
+      }
+    }  // for (int j = 0; j < 2; ++j) {
+  }  // for (int i = 0; i < 2; ++i) {
 }
 
 }
