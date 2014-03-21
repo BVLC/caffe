@@ -203,33 +203,6 @@ class InnerProductLayer : public Layer<Dtype> {
 
 
 template <typename Dtype>
-class PaddingLayer : public Layer<Dtype> {
- public:
-  explicit PaddingLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  unsigned int PAD_;
-  int NUM_;
-  int CHANNEL_;
-  int HEIGHT_IN_;
-  int WIDTH_IN_;
-  int HEIGHT_OUT_;
-  int WIDTH_OUT_;
-};
-
-
-template <typename Dtype>
 class LRNLayer : public Layer<Dtype> {
  public:
   explicit LRNLayer(const LayerParameter& param)

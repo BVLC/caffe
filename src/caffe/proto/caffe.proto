@@ -118,15 +118,14 @@ message LayerParameter {
     INNER_PRODUCT = 13;
     LRN = 14;
     MULTINOMIAL_LOGISTIC_LOSS = 15;
-    PADDING = 16;
-    POOLING = 17;
-    RELU = 18;
-    SIGMOID = 19;
-    SOFTMAX = 20;
-    SOFTMAX_LOSS = 21;
-    SPLIT = 22;
-    TANH = 23;
-    WINDOW_DATA = 24;
+    POOLING = 16;
+    RELU = 17;
+    SIGMOID = 18;
+    SOFTMAX = 19;
+    SOFTMAX_LOSS = 20;
+    SPLIT = 21;
+    TANH = 22;
+    WINDOW_DATA = 23;
   }
   optional LayerType type = 2; // the layer type from the enum above
 
@@ -151,9 +150,8 @@ message LayerParameter {
   optional InfogainLossParameter infogain_loss_param = 14;
   optional InnerProductParameter inner_product_param = 15;
   optional LRNParameter lrn_param = 16;
-  optional PaddingParameter padding_param = 17;
-  optional PoolingParameter pooling_param = 18;
-  optional WindowDataParameter window_data_param = 19;
+  optional PoolingParameter pooling_param = 17;
+  optional WindowDataParameter window_data_param = 18;
 }
 
 // Message that stores parameters used by ConcatLayer
@@ -257,11 +255,6 @@ message LRNParameter {
   optional uint32 local_size = 1 [default = 5]; // for local response norm
   optional float alpha = 2 [default = 1.]; // for local response norm
   optional float beta = 3 [default = 0.75]; // for local response norm
-}
-
-// Message that stores parameters used by PaddingLayer
-message PaddingParameter {
-  optional uint32 pad = 1 [default = 0]; // The padding size
 }
 
 // Message that stores parameters used by PoolingLayer
