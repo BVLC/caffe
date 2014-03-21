@@ -1,11 +1,12 @@
 // Copyright 2013 Yangqing Jia
 // Copyright 2014 kloudkl@github
 
-#include <limits>
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
-
 #include <cublas_v2.h>
+
+#include <limits>
+
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
