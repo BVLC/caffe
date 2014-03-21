@@ -20,25 +20,25 @@ void ConcatLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_LE(concat_dim_, 1) <<
     "For now concat_dim <=1, it can only concat num and channels";
   // Intialize with the first blob
-  COUNT_ = bottom[0]->count();
-  NUM_ = bottom[0]->num();
-  CHANNELS_ = bottom[0]->channels();
-  HEIGHT_ = bottom[0]->height();
-  WIDTH_ = bottom[0]->width();
+  count_ = bottom[0]->count();
+  num_ = bottom[0]->num();
+  channels_ = bottom[0]->channels();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
   for (int i = 1; i < bottom.size(); ++i) {
-    COUNT_ += bottom[i]->count();
+    count_ += bottom[i]->count();
     if (concat_dim_== 0) {
-      NUM_ += bottom[i]->num();
+      num_ += bottom[i]->num();
     } else if (concat_dim_ == 1) {
-      CHANNELS_ += bottom[i]->channels();
+      channels_ += bottom[i]->channels();
     } else if (concat_dim_ == 2) {
-      HEIGHT_ += bottom[i]->height();
+      height_ += bottom[i]->height();
     } else if (concat_dim_ == 3) {
-      WIDTH_ += bottom[i]->width();
+      width_ += bottom[i]->width();
     }
   }
-  (*top)[0]->Reshape(NUM_, CHANNELS_, HEIGHT_, WIDTH_);
-  CHECK_EQ(COUNT_, (*top)[0]->count());
+  (*top)[0]->Reshape(num_, channels_, height_, width_);
+  CHECK_EQ(count_, (*top)[0]->count());
 }
 
 template <typename Dtype>
@@ -59,7 +59,7 @@ Dtype ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const Dtype* bottom_data = bottom[i]->cpu_data();
       int num_elem =
         bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
-      for (int n = 0; n < NUM_; ++n) {
+      for (int n = 0; n < num_; ++n) {
         caffe_copy(num_elem, bottom_data+bottom[i]->offset(n),
           top_data+(*top)[0]->offset(n, offset_channel));
       }
@@ -91,7 +91,7 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       Blob<Dtype>* blob = (*bottom)[i];
       Dtype* bottom_diff = blob->mutable_cpu_diff();
       int num_elem = blob->channels()*blob->height()*blob->width();
-      for (int n = 0; n < NUM_; ++n) {
+      for (int n = 0; n < num_; ++n) {
         caffe_copy(num_elem, top_diff+top[0]->offset(n, offset_channel),
           bottom_diff+blob->offset(n));
       }

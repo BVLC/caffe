@@ -63,7 +63,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       * fg_fraction);
   const int num_samples[2] = { batch_size - num_fg, num_fg };
 
-  int itemid = 0;
+  int item_id = 0;
   // sample from bg set then fg set
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
@@ -197,7 +197,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
             Dtype pixel =
                 static_cast<Dtype>(cv_cropped_img.at<cv::Vec3b>(h, w)[c]);
 
-            top_data[((itemid * channels + c) * crop_size + h + pad_h)
+            top_data[((item_id * channels + c) * crop_size + h + pad_h)
                      * crop_size + w + pad_w]
                 = (pixel
                     - mean[(c * mean_height + h + mean_off + pad_h)
@@ -208,7 +208,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       }
 
       // get window label
-      top_label[itemid] = window[WindowDataLayer<Dtype>::LABEL];
+      top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
 
       #if 0
       // useful debugging code for dumping transformed windows to disk
@@ -225,7 +225,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
           << window[WindowDataLayer<Dtype>::X2]+1 << std::endl
           << window[WindowDataLayer<Dtype>::Y2]+1 << std::endl
           << do_mirror << std::endl
-          << top_label[itemid] << std::endl
+          << top_label[item_id] << std::endl
           << is_fg << std::endl;
       inf.close();
       std::ofstream top_data_file((string("dump/") + file_id +
@@ -235,7 +235,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         for (int h = 0; h < crop_size; ++h) {
           for (int w = 0; w < crop_size; ++w) {
             top_data_file.write(reinterpret_cast<char*>(
-                &top_data[((itemid * channels + c) * crop_size + h)
+                &top_data[((item_id * channels + c) * crop_size + h)
                           * crop_size + w]),
                 sizeof(Dtype));
           }
@@ -244,7 +244,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       top_data_file.close();
       #endif
 
-      itemid++;
+      item_id++;
     }
   }
 
