@@ -48,6 +48,7 @@ class SyncedMemory {
   inline size_t capacity() const { return capacity_; }
   void resize(const size_t size, const uint8_t default_value = 0);
   void reserve(const size_t capacity);
+
  private:
   void to_cpu();
   void to_gpu();

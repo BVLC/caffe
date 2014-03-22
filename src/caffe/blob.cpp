@@ -22,12 +22,19 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
-  if (count_) {
-    data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
+  if (capacity_ < count_) {
+    capacity_ = count_;
+  }
+  size_t space_requirement = capacity_ * sizeof(Dtype);
+  if (data_) {
+    data_->reserve(space_requirement);
   } else {
-    data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
-    diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
+    data_.reset(new SyncedMemory(space_requirement));
+  }
+  if (diff_) {
+    diff_->reserve(space_requirement);
+  } else {
+    diff_.reset(new SyncedMemory(space_requirement));
   }
 }
 
