@@ -1,32 +1,15 @@
 // Copyright 2013 Yangqing Jia
+// Copyright 2014 Evan Shelhamer
 
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
-#include <boost/random/mersenne_twister.hpp>
 #include <boost/shared_ptr.hpp>
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <curand.h>
 #include <driver_types.h>  // cuda driver types
 #include <glog/logging.h>
-
-// various checks for different function calls.
-#define CUDA_CHECK(condition) CHECK_EQ((condition), cudaSuccess)
-#define CUBLAS_CHECK(condition) CHECK_EQ((condition), CUBLAS_STATUS_SUCCESS)
-#define CURAND_CHECK(condition) CHECK_EQ((condition), CURAND_STATUS_SUCCESS)
-
-#define CUDA_KERNEL_LOOP(i, n) \
-  for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
-       i < (n); \
-       i += blockDim.x * gridDim.x)
-
-// After a kernel is executed, this will check the error and if there is one,
-// exit loudly.
-#define CUDA_POST_KERNEL_CHECK \
-  if (cudaSuccess != cudaPeekAtLastError()) \
-    LOG(FATAL) << "Cuda kernel failed. Error: " \
-        << cudaGetErrorString(cudaPeekAtLastError())
 
 // Disable the copy and assignment operator for a class.
 #define DISABLE_COPY_AND_ASSIGN(classname) \
@@ -43,24 +26,29 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
+// CUDA: various checks for different function calls.
+#define CUDA_CHECK(condition) CHECK_EQ((condition), cudaSuccess)
+#define CUBLAS_CHECK(condition) CHECK_EQ((condition), CUBLAS_STATUS_SUCCESS)
+#define CURAND_CHECK(condition) CHECK_EQ((condition), CURAND_STATUS_SUCCESS)
+
+// CUDA: grid stride looping
+#define CUDA_KERNEL_LOOP(i, n) \
+  for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
+       i < (n); \
+       i += blockDim.x * gridDim.x)
+
+// CUDA: check for error after kernel execution and exit loudly if there is one.
+#define CUDA_POST_KERNEL_CHECK \
+  if (cudaSuccess != cudaPeekAtLastError()) \
+    LOG(FATAL) << "Cuda kernel failed. Error: " \
+        << cudaGetErrorString(cudaPeekAtLastError())
+
+
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
-
-
-// We will use 1024 threads per block, which requires cuda sm_2x or above.
-#if __CUDA_ARCH__ >= 200
-    const int CAFFE_CUDA_NUM_THREADS = 1024;
-#else
-    const int CAFFE_CUDA_NUM_THREADS = 512;
-#endif
-
-
-inline int CAFFE_GET_BLOCKS(const int N) {
-  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
-}
 
 
 // A singleton class to hold common caffe stuff, such as the handler that
@@ -77,18 +65,30 @@ class Caffe {
   enum Brew { CPU, GPU };
   enum Phase { TRAIN, TEST };
 
-  // The getters for the variables.
-  // Returns the cublas handle.
+
+  // This random number generator facade hides boost and CUDA rng
+  // implementation from one another (for cross-platform compatibility).
+  class RNG {
+   public:
+    RNG();
+    explicit RNG(unsigned int seed);
+    ~RNG();
+    RNG(const RNG&);
+    RNG& operator=(const RNG&);
+    const void* generator() const;
+    void* generator();
+   private:
+    class Generator;
+    Generator* generator_;
+  };
+
+  // Getters for boost rng, curand, and cublas handles
+  inline static RNG &rng_stream() {
+    return Get().random_generator_;
+  }
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
-  // Returns the curand generator.
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
-  }
-
-  // boost RNG
-  typedef boost::mt19937 random_generator_t;
-  inline static random_generator_t &rng_stream() {
-    return Get().random_generator_;
   }
 
   // Returns the mode: running on CPU or GPU.
@@ -114,7 +114,7 @@ class Caffe {
  protected:
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
-  random_generator_t random_generator_;
+  RNG random_generator_;
 
   Brew mode_;
   Phase phase_;
@@ -126,6 +126,21 @@ class Caffe {
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
+
+
+// CUDA: thread number configuration.
+// Use 1024 threads per block, which requires cuda sm_2x or above,
+// or fall back to attempt compatibility (best of luck to you).
+#if __CUDA_ARCH__ >= 200
+    const int CAFFE_CUDA_NUM_THREADS = 1024;
+#else
+    const int CAFFE_CUDA_NUM_THREADS = 512;
+#endif
+
+// CUDA: number of blocks for threads.
+inline int CAFFE_GET_BLOCKS(const int N) {
+  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+}
 
 
 }  // namespace caffe
