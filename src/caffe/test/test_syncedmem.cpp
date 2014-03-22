@@ -15,11 +15,17 @@ namespace caffe {
 class SyncedMemoryTest : public ::testing::Test {};
 
 TEST_F(SyncedMemoryTest, TestInitialization) {
+  SyncedMemory empty;
+  EXPECT_EQ(empty.head(), SyncedMemory::UNINITIALIZED);
+  EXPECT_EQ(empty.size(), 0);
+  EXPECT_EQ(empty.capacity(), 0);
   SyncedMemory mem(10);
   EXPECT_EQ(mem.head(), SyncedMemory::UNINITIALIZED);
   EXPECT_EQ(mem.size(), 10);
+  EXPECT_EQ(mem.capacity(), 10);
   SyncedMemory* p_mem = new SyncedMemory(10 * sizeof(float));
   EXPECT_EQ(p_mem->size(), 10 * sizeof(float));
+  EXPECT_EQ(p_mem->capacity(), 10 * sizeof(float));
   delete p_mem;
 }
 
@@ -85,6 +91,69 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
     EXPECT_EQ((reinterpret_cast<const char*>(cpu_data))[i], 2);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
+}
+
+TEST_F(SyncedMemoryTest, TestResize) {
+  SyncedMemory mem;
+  mem.resize(20);
+  EXPECT_EQ(mem.head(), SyncedMemory::UNINITIALIZED);
+  EXPECT_EQ(mem.size(), 20);
+  EXPECT_EQ(mem.capacity(), 20);
+  mem.resize(0);
+  EXPECT_EQ(mem.head(), SyncedMemory::UNINITIALIZED);
+  EXPECT_EQ(mem.size(), 0);
+  EXPECT_EQ(mem.capacity(), 20);
+  mem.resize(5, 123);
+  const void* cpu_data = mem.cpu_data();
+  EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
+  EXPECT_EQ(mem.size(), 5);
+  for (int i = 0; i < 5; ++i) {
+    EXPECT_EQ(123, (reinterpret_cast<const uint8_t*>(cpu_data))[i]);
+  }
+  mem.resize(30, 234);
+  const void* gpu_data = mem.gpu_data();
+  EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
+  EXPECT_EQ(mem.size(), 30);
+  EXPECT_EQ(mem.capacity(), 30);
+  uint8_t* recovered_value = new uint8_t[30];
+  cudaMemcpy(reinterpret_cast<void*>(recovered_value), gpu_data, 30,
+             cudaMemcpyDeviceToHost);
+  for (int i = 0; i < 5; ++i) {
+    EXPECT_EQ(123, (reinterpret_cast<const uint8_t*>(recovered_value))[i]);
+  }
+  for (int i = 5; i < 30; ++i) {
+    EXPECT_EQ(234, (reinterpret_cast<const uint8_t*>(recovered_value))[i]);
+  }
+}
+
+TEST_F(SyncedMemoryTest, TestReserve) {
+  SyncedMemory mem(10);
+  mem.reserve(20);
+  EXPECT_EQ(mem.head(), SyncedMemory::UNINITIALIZED);
+  EXPECT_EQ(mem.size(), 10);
+  EXPECT_EQ(mem.capacity(), 20);
+  mem.reserve(0);
+  EXPECT_EQ(mem.head(), SyncedMemory::UNINITIALIZED);
+  EXPECT_EQ(mem.size(), 10);
+  EXPECT_EQ(mem.capacity(), 20);
+  const void* gpu_data = mem.gpu_data();
+  EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
+  EXPECT_EQ(mem.size(), 10);
+  EXPECT_EQ(mem.capacity(), 20);
+  uint8_t* recovered_value = new uint8_t[10];
+  cudaMemcpy(reinterpret_cast<void*>(recovered_value), gpu_data, 10,
+             cudaMemcpyDeviceToHost);
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(0, (reinterpret_cast<const uint8_t*>(recovered_value))[i]);
+  }
+  mem.reserve(30);
+  const void* cpu_data = mem.cpu_data();
+  EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
+  EXPECT_EQ(mem.size(), 10);
+  EXPECT_EQ(mem.capacity(), 30);
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(0, (reinterpret_cast<const uint8_t*>(cpu_data))[i]);
+  }
 }
 
 }  // namespace caffe
