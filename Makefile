@@ -331,6 +331,10 @@ $(GTEST_OBJ): $(GTEST_SRC) | $(GTEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
+$(BUILD_DIR)/src/$(PROJECT)/%.cuo: src/$(PROJECT)/%.cu
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	@ echo
+
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
