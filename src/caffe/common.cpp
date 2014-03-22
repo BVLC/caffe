@@ -1,15 +1,18 @@
 // Copyright 2013 Yangqing Jia
+// Copyright 2014 Evan Shelhamer
 
 #include <cstdio>
 #include <ctime>
 
 #include "caffe/common.hpp"
+#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
 
 
+// curand seeding
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;
   pid = getpid();
@@ -58,7 +61,7 @@ void Caffe::set_random_seed(const unsigned int seed) {
     LOG(ERROR) << "Curand not available. Skipping setting the curand seed.";
   }
   // RNG seed
-  Get().random_generator_ = random_generator_t(seed);
+  Get().random_generator_ = RNG(seed);
 }
 
 void Caffe::SetDevice(const int device_id) {
@@ -110,6 +113,39 @@ void Caffe::DeviceQuery() {
   printf("Kernel execution timeout:      %s\n",
       (prop.kernelExecTimeoutEnabled ? "Yes" : "No"));
   return;
+}
+
+
+class Caffe::RNG::Generator {
+ public:
+  caffe::rng_t rng;
+};
+
+Caffe::RNG::RNG()
+: generator_(new Generator) { }
+
+Caffe::RNG::RNG(unsigned int seed)
+: generator_(new Generator) {
+  generator_->rng = caffe::rng_t(seed);
+}
+
+Caffe::RNG::~RNG() { delete generator_; }
+
+Caffe::RNG::RNG(const RNG& other) : generator_(new Generator) {
+  *generator_ = *other.generator_;
+}
+
+Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
+  *generator_ = *other.generator_;
+  return *this;
+}
+
+void* Caffe::RNG::generator() {
+  return &generator_->rng;
+}
+
+const void* Caffe::RNG::generator() const {
+  return &generator_->rng;
 }
 
 }  // namespace caffe

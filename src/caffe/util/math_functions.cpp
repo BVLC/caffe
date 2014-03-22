@@ -1,5 +1,6 @@
 // Copyright 2013 Yangqing Jia
 // Copyright 2014 kloudkl@github
+// Copyright 2014 Evan Shelhamer
 
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
@@ -9,6 +10,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -287,10 +289,9 @@ void caffe_vRngUniform(const int n, Dtype* r,
 
   boost::uniform_real<Dtype> random_distribution(
       a, caffe_nextafter<Dtype>(b));
-  Caffe::random_generator_t &generator = Caffe::rng_stream();
-  boost::variate_generator<Caffe::random_generator_t,
+  boost::variate_generator<caffe::rng_t,
       boost::uniform_real<Dtype> > variate_generator(
-      generator, random_distribution);
+      caffe_rng(), random_distribution);
 
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -311,10 +312,9 @@ void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
   CHECK(r);
   CHECK_GT(sigma, 0);
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
-  Caffe::random_generator_t &generator = Caffe::rng_stream();
-  boost::variate_generator<Caffe::random_generator_t,
+  boost::variate_generator<caffe::rng_t,
       boost::normal_distribution<Dtype> > variate_generator(
-      generator, random_distribution);
+      caffe_rng(), random_distribution);
 
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -336,10 +336,9 @@ void caffe_vRngBernoulli(const int n, Dtype* r, const double p) {
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
   boost::bernoulli_distribution<double> random_distribution(p);
-  Caffe::random_generator_t &generator = Caffe::rng_stream();
-  boost::variate_generator<Caffe::random_generator_t,
+  boost::variate_generator<caffe::rng_t,
       boost::bernoulli_distribution<double> > variate_generator(
-      generator, random_distribution);
+      caffe_rng(), random_distribution);
 
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
