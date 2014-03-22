@@ -44,13 +44,18 @@ class SyncedMemory {
   void* mutable_gpu_data();
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
-  size_t size() { return size_; }
+  inline size_t size() const { return size_; }
+  inline size_t capacity() const { return capacity_; }
+  void resize(const size_t size, const uint8_t default_value = 0);
+  void reserve(const size_t capacity);
  private:
   void to_cpu();
   void to_gpu();
   thrust::host_vector<uint8_t> cpu_vector_;
   thrust::device_vector<uint8_t> gpu_vector_;
   size_t size_;
+  uint8_t resize_default_value_;
+  size_t capacity_;
   SyncedHead head_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
