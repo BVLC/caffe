@@ -9,28 +9,24 @@
 
 namespace caffe {
 
-SyncedMemory::~SyncedMemory() {
-  if (cpu_ptr_) {
-    CaffeFreeHost(cpu_ptr_);
-  }
+SyncedMemory::SyncedMemory(const size_t size) : cpu_vector_(0),
+    gpu_vector_(0), size_(size), head_(UNINITIALIZED) {
+}
 
-  if (gpu_ptr_) {
-    CUDA_CHECK(cudaFree(gpu_ptr_));
-  }
+SyncedMemory::~SyncedMemory() {
 }
 
 inline void SyncedMemory::to_cpu() {
   switch (head_) {
   case UNINITIALIZED:
-    CaffeMallocHost(&cpu_ptr_, size_);
-    memset(cpu_ptr_, 0, size_);
+    cpu_vector_.resize(size_, 0);
     head_ = HEAD_AT_CPU;
     break;
   case HEAD_AT_GPU:
-    if (cpu_ptr_ == NULL) {
-      CaffeMallocHost(&cpu_ptr_, size_);
+    if (cpu_vector_.size() < size_) {
+      cpu_vector_.resize(size_, 0);
     }
-    CUDA_CHECK(cudaMemcpy(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDeviceToHost));
+    cpu_vector_ = gpu_vector_;
     head_ = SYNCED;
     break;
   case HEAD_AT_CPU:
@@ -42,15 +38,14 @@ inline void SyncedMemory::to_cpu() {
 inline void SyncedMemory::to_gpu() {
   switch (head_) {
   case UNINITIALIZED:
-    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-    CUDA_CHECK(cudaMemset(gpu_ptr_, 0, size_));
+    gpu_vector_.resize(size_, 0);
     head_ = HEAD_AT_GPU;
     break;
   case HEAD_AT_CPU:
-    if (gpu_ptr_ == NULL) {
-      CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    if (gpu_vector_.size() < size_) {
+      gpu_vector_.resize(size_, 0);
     }
-    CUDA_CHECK(cudaMemcpy(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyHostToDevice));
+    gpu_vector_ = cpu_vector_;
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:
@@ -61,24 +56,24 @@ inline void SyncedMemory::to_gpu() {
 
 const void* SyncedMemory::cpu_data() {
   to_cpu();
-  return (const void*)cpu_ptr_;
+  return (const void*)thrust::raw_pointer_cast(cpu_vector_.data());
 }
 
 const void* SyncedMemory::gpu_data() {
   to_gpu();
-  return (const void*)gpu_ptr_;
+  return (const void*)thrust::raw_pointer_cast(gpu_vector_.data());
 }
 
 void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
-  return cpu_ptr_;
+  return (void*)thrust::raw_pointer_cast(cpu_vector_.data());
 }
 
 void* SyncedMemory::mutable_gpu_data() {
   to_gpu();
   head_ = HEAD_AT_GPU;
-  return gpu_ptr_;
+  return (void*)thrust::raw_pointer_cast(gpu_vector_.data());
 }
 
 

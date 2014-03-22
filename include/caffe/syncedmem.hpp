@@ -3,6 +3,8 @@
 #ifndef CAFFE_SYNCEDMEM_HPP_
 #define CAFFE_SYNCEDMEM_HPP_
 
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 #include <cstdlib>
 
 #include "caffe/common.hpp"
@@ -34,10 +36,7 @@ inline void CaffeFreeHost(void* ptr) {
 
 class SyncedMemory {
  public:
-  SyncedMemory()
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED) {}
-  explicit SyncedMemory(size_t size)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED) {}
+  explicit SyncedMemory(const size_t size = 0);
   ~SyncedMemory();
   const void* cpu_data();
   const void* gpu_data();
@@ -49,8 +48,8 @@ class SyncedMemory {
  private:
   void to_cpu();
   void to_gpu();
-  void* cpu_ptr_;
-  void* gpu_ptr_;
+  thrust::host_vector<uint8_t> cpu_vector_;
+  thrust::device_vector<uint8_t> gpu_vector_;
   size_t size_;
   SyncedHead head_;
 
