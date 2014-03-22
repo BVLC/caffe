@@ -1,5 +1,4 @@
-// Copyright 2013 Yangqing Jia
-// Copyright 2014 Evan Shelhamer
+// Copyright 2014 BVLC and contributors.
 
 #include <cstdio>
 #include <ctime>
