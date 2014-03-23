@@ -28,21 +28,7 @@ Net<Dtype>::Net(const NetParameter& param) {
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file) {
   NetParameter param;
-  if (!ReadProtoFromTextFile(param_file, &param)) {
-    // Failed to parse file as NetParameter; try to parse as a V0NetParameter
-    // instead.
-    V0NetParameter v0_param;
-    CHECK(ReadProtoFromTextFile(param_file, &v0_param))
-        << "Failed to parse NetParameter file: " << param_file;
-    LOG(ERROR) << "Parsed file as V0NetParameter: " << param_file;
-    LOG(ERROR) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use ./build/tools/upgrade_net_proto.bin to upgrade "
-        << "this and any other network proto files to the new format.";
-    if (!UpgradeV0Net(v0_param, &param)) {
-      LOG(ERROR) << "Warning: had one or more problems upgrading "
-          << "V0NetParameter to NetParameter (see above); continuing anyway.";
-    }
-  }
+  ReadParamsFromTextFile(param_file, &param);
   Init(param);
 }
 
@@ -317,8 +303,48 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
   NetParameter param;
-  ReadProtoFromBinaryFile(trained_filename, &param);
+  ReadParamsFromBinaryFile(trained_filename, &param);
   CopyTrainedLayersFrom(param);
+}
+
+template <typename Dtype>
+void Net<Dtype>::ReadParamsFromTextFile(const string& param_file,
+                                        NetParameter* param) {
+  if (!ReadProtoFromTextFile(param_file, param)) {
+    // Failed to parse file as NetParameter; try to parse as a V0NetParameter
+    // instead.
+    V0NetParameter v0_param;
+    CHECK(ReadProtoFromTextFile(param_file, &v0_param))
+        << "Failed to parse NetParameter file: " << param_file;
+    LOG(ERROR) << "Parsed file as V0NetParameter: " << param_file;
+    LOG(ERROR) << "Note that future Caffe releases will not support "
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto.bin to upgrade "
+        << "this and any other network proto files to the new format.";
+    if (!UpgradeV0Net(v0_param, param)) {
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+          << "V0NetParameter to NetParameter (see above); continuing anyway.";
+    }
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ReadParamsFromBinaryFile(const string& param_file,
+                                          NetParameter* param) {
+  if (!ReadProtoFromBinaryFile(param_file, param)) {
+    // Failed to parse file as NetParameter; try to parse as a V0NetParameter
+    // instead.
+    V0NetParameter v0_param;
+    CHECK(ReadProtoFromBinaryFile(param_file, &v0_param))
+        << "Failed to parse NetParameter file: " << param_file;
+    LOG(ERROR) << "Parsed file as V0NetParameter: " << param_file;
+    LOG(ERROR) << "Note that future Caffe releases will not support "
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto.bin to upgrade "
+        << "this and any other network proto files to the new format.";
+    if (!UpgradeV0Net(v0_param, param)) {
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+          << "V0NetParameter to NetParameter (see above); continuing anyway.";
+    }
+  }
 }
 
 template <typename Dtype>

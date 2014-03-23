@@ -34,9 +34,7 @@ int main(int argc, char** argv) {
     Caffe::set_mode(Caffe::CPU);
   }
 
-  NetParameter test_net_param;
-  ReadProtoFromTextFileOrDie(argv[1], &test_net_param);
-  Net<float> caffe_test_net(test_net_param);
+  Net<float> caffe_test_net(argv[1]);
   NetParameter trained_net_param;
   ReadProtoFromBinaryFile(argv[2], &trained_net_param);
   caffe_test_net.CopyTrainedLayersFrom(trained_net_param);

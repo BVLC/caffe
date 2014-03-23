@@ -190,11 +190,10 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(datum_width_, crop_size);
   // check if we want to have mean
   if (this->layer_param_.data_param().has_mean_file()) {
+    const string& mean_file = this->layer_param_.data_param().mean_file();
+    LOG(INFO) << "Loading mean file from" << mean_file;
     BlobProto blob_proto;
-    LOG(INFO) << "Loading mean file from"
-              << this->layer_param_.data_param().mean_file();
-    ReadProtoFromBinaryFile(this->layer_param_.data_param().mean_file().c_str(),
-                            &blob_proto);
+    ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
     CHECK_EQ(data_mean_.num(), 1);
     CHECK_EQ(data_mean_.channels(), datum_channels_);

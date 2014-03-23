@@ -388,7 +388,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         this->layer_param_.window_data_param().mean_file();
     LOG(INFO) << "Loading mean file from" << mean_file;
     BlobProto blob_proto;
-    ReadProtoFromBinaryFile(mean_file, &blob_proto);
+    ReadProtoFromBinaryFileOrDie(mean_file, &blob_proto);
     data_mean_.FromProto(blob_proto);
     CHECK_EQ(data_mean_.num(), 1);
     CHECK_EQ(data_mean_.width(), data_mean_.height());

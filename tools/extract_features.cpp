@@ -56,12 +56,8 @@ int feature_extraction_pipeline(int argc, char** argv) {
   }
   Caffe::set_phase(Caffe::TEST);
 
-  NetParameter pretrained_net_param;
-
   arg_pos = 0;  // the name of the executable
   string pretrained_binary_proto(argv[++arg_pos]);
-  ReadProtoFromBinaryFile(pretrained_binary_proto.c_str(),
-                          &pretrained_net_param);
 
   // Expected prototxt contains at least one data layer such as
   //  the layer data_layer_name and one feature blob such as the
@@ -90,13 +86,10 @@ int feature_extraction_pipeline(int argc, char** argv) {
    top: "fc7"
    }
    */
-  NetParameter feature_extraction_net_param;
   string feature_extraction_proto(argv[++arg_pos]);
-  ReadProtoFromTextFile(feature_extraction_proto,
-                        &feature_extraction_net_param);
   shared_ptr<Net<Dtype> > feature_extraction_net(
-      new Net<Dtype>(feature_extraction_net_param));
-  feature_extraction_net->CopyTrainedLayersFrom(pretrained_net_param);
+      new Net<Dtype>(feature_extraction_proto));
+  feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
   string extract_feature_blob_name(argv[++arg_pos]);
   CHECK(feature_extraction_net->has_blob(extract_feature_blob_name))

@@ -51,18 +51,19 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
   close(fd);
 }
 
-void ReadProtoFromBinaryFile(const char* filename, Message* proto) {
+bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
   int fd = open(filename, O_RDONLY);
   CHECK_NE(fd, -1) << "File not found: " << filename;
   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
   coded_input->SetTotalBytesLimit(536870912, 268435456);
 
-  CHECK(proto->ParseFromCodedStream(coded_input));
+  bool success = proto->ParseFromCodedStream(coded_input);
 
   delete coded_input;
   delete raw_input;
   close(fd);
+  return success;
 }
 
 void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
