@@ -1,10 +1,10 @@
 // Copyright 2014 BVLC and contributors
 
 #include <cuda_runtime.h>
-#include "gtest/gtest.h"
 
 #include <string>
 
+#include "gtest/gtest.h"
 #include "caffe/common.hpp"
 #include "caffe/blob.hpp"
 #include "caffe/filler.hpp"
@@ -28,7 +28,7 @@ typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(FormatTest, Dtypes);
 
 TYPED_TEST(FormatTest, TestOpenCVImageToDatum) {
-  cv::Mat cv_img = cv::imread(this->image_file_path_);
+  cv::Mat cv_img = cv::imread(this->image_file_path_, CV_LOAD_IMAGE_COLOR);
   Datum* datum;
   int label = 1001;
   string data;

@@ -1,7 +1,7 @@
 // Copyright 2014 BVLC and contributors
 
-#include <string>
 #include <opencv2/opencv.hpp>
+#include <string>
 
 #include "caffe/common.hpp"
 #include "caffe/util/format.hpp"
