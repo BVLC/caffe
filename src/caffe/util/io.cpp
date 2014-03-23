@@ -15,6 +15,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/format.hpp"
 #include "caffe/util/io.hpp"
 
 namespace caffe {
@@ -67,45 +68,14 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
-  cv::Mat cv_img;
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
-  if (height > 0 && width > 0) {
-    cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
-    cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
-  } else {
-    cv_img = cv::imread(filename, cv_read_flag);
-  }
+  cv::Mat cv_img = cv::imread(filename, cv_read_flag);
   if (!cv_img.data) {
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
-  int num_channels = (is_color ? 3 : 1);
-  datum->set_channels(num_channels);
-  datum->set_height(cv_img.rows);
-  datum->set_width(cv_img.cols);
-  datum->set_label(label);
-  datum->clear_data();
-  datum->clear_float_data();
-  string* datum_string = datum->mutable_data();
-  if (is_color) {
-    for (int c = 0; c < num_channels; ++c) {
-      for (int h = 0; h < cv_img.rows; ++h) {
-        for (int w = 0; w < cv_img.cols; ++w) {
-          datum_string->push_back(
-            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
-        }
-      }
-    }
-  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
-    for (int h = 0; h < cv_img.rows; ++h) {
-      for (int w = 0; w < cv_img.cols; ++w) {
-        datum_string->push_back(
-          static_cast<char>(cv_img.at<uchar>(h, w)));
-        }
-      }
-  }
-  return true;
+  return OpenCVImageToDatum(cv_img, label, height, width, datum);
 }
 
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
