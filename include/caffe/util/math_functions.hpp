@@ -4,8 +4,10 @@
 #ifndef CAFFE_UTIL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
 
-#include <mkl.h>
+
 #include <cublas_v2.h>
+
+#include "caffe/util/mkl_alternate.hpp"
 
 namespace caffe {
 
@@ -45,7 +47,7 @@ void caffe_gpu_axpy(const int N, const Dtype alpha, const Dtype* X,
     Dtype* Y);
 
 template <typename Dtype>
-void caffe_axpby(const int N, const Dtype alpha, const Dtype* X,
+void caffe_cpu_axpby(const int N, const Dtype alpha, const Dtype* X,
     const Dtype beta, Dtype* Y);
 
 template <typename Dtype>
@@ -86,11 +88,17 @@ template <typename Dtype>
 void caffe_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
 template <typename Dtype>
+Dtype caffe_nextafter(const Dtype b);
+
+template <typename Dtype>
 void caffe_vRngUniform(const int n, Dtype* r, const Dtype a, const Dtype b);
 
 template <typename Dtype>
 void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
     const Dtype sigma);
+
+template <typename Dtype>
+void caffe_vRngBernoulli(const int n, Dtype* r, const double p);
 
 template <typename Dtype>
 void caffe_exp(const int n, const Dtype* a, Dtype* y);

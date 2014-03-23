@@ -1,7 +1,5 @@
 // Copyright 2013 Yangqing Jia
 
-
-#include <mkl.h>
 #include <cublas_v2.h>
 
 #include <vector>
