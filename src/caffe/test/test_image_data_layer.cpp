@@ -172,11 +172,12 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   }
 }
 
-TYPED_TEST(ImagesLayerTest, TestAddImagesAndLabels) {
+TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabels) {
   LayerParameter param;
-  param.set_batchsize(5);
-  param.set_shuffle_images(false);
-  ImagesLayer<TypeParam> layer(param);
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_shuffle(true);
+  ImageDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
   EXPECT_EQ(this->blob_top_data_->channels(), 0);
@@ -211,13 +212,14 @@ TYPED_TEST(ImagesLayerTest, TestAddImagesAndLabels) {
   }
 }
 
-TYPED_TEST(ImagesLayerTest, TestAddImagesAndLabelsResize) {
+TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsResize) {
   LayerParameter param;
-  param.set_batchsize(5);
-  param.set_new_height(256);
-  param.set_new_width(256);
-  param.set_shuffle_images(false);
-  ImagesLayer<TypeParam> layer(param);
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_shuffle(false);
+  image_data_param->set_new_height(256);
+  image_data_param->set_new_width(256);
+  ImageDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
   EXPECT_EQ(this->blob_top_data_->channels(), 0);
@@ -232,8 +234,8 @@ TYPED_TEST(ImagesLayerTest, TestAddImagesAndLabelsResize) {
   layer.AddImagesAndLabels(images, this->labels_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), param.new_height());
-  EXPECT_EQ(this->blob_top_data_->width(), param.new_width());
+  EXPECT_EQ(this->blob_top_data_->height(), image_data_param->new_height());
+  EXPECT_EQ(this->blob_top_data_->width(), image_data_param->new_width());
   // Go through the data 50 times
   for (int iter = 0; iter < 5; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
@@ -244,11 +246,12 @@ TYPED_TEST(ImagesLayerTest, TestAddImagesAndLabelsResize) {
   }
 }
 
-TYPED_TEST(ImagesLayerTest, TestAddImagesAndLabelsShuffle) {
+TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsShuffle) {
   LayerParameter param;
-  param.set_batchsize(5);
-  param.set_shuffle_images(true);
-  ImagesLayer<TypeParam> layer(param);
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_shuffle(true);
+  ImageDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
   EXPECT_EQ(this->blob_top_data_->channels(), 0);

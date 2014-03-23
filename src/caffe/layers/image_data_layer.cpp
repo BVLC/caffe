@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
+#include "caffe/util/format.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -74,9 +75,9 @@ void ProcessImageDatum(
         top_data[item_id * size + j] = (datum.float_data(j) - mean[j]) * scale;
       }
     }
-  }
+  }  // if (crop_size > 0) {
 
-  return reinterpret_cast<void*>(NULL);
+  top_label[item_id] = datum.label();
 }
 
 // This function is used to create a pthread that prefetches the data.
@@ -113,62 +114,8 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
           new_height, new_width, &datum)) {
       continue;
     }
-    const string& data = datum.data();
-    if (crop_size) {
-      CHECK(data.size()) << "Image cropping only support uint8 data";
-      int h_off, w_off;
-      // We only do random crop when we do training.
-      if (phase_ == Caffe::TRAIN) {
-        h_off = PrefetchRand() % (height - crop_size);
-        w_off = PrefetchRand() % (width - crop_size);
-      } else {
-        h_off = (height - crop_size) / 2;
-        w_off = (width - crop_size) / 2;
-      }
-      if (mirror && PrefetchRand() % 2) {
-        // Copy mirrored version
-        for (int c = 0; c < channels; ++c) {
-          for (int h = 0; h < crop_size; ++h) {
-            for (int w = 0; w < crop_size; ++w) {
-              int top_index = ((item_id * channels + c) * crop_size + h)
-                              * crop_size + (crop_size - 1 - w);
-              int data_index = (c * height + h + h_off) * width + w + w_off;
-              Dtype datum_element =
-                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-              top_data[top_index] = (datum_element - mean[data_index]) * scale;
-            }
-          }
-        }
-      } else {
-        // Normal copy
-        for (int c = 0; c < channels; ++c) {
-          for (int h = 0; h < crop_size; ++h) {
-            for (int w = 0; w < crop_size; ++w) {
-              int top_index = ((item_id * channels + c) * crop_size + h)
-                              * crop_size + w;
-              int data_index = (c * height + h + h_off) * width + w + w_off;
-              Dtype datum_element =
-                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-              top_data[top_index] = (datum_element - mean[data_index]) * scale;
-            }
-          }
-        }
-      }
-    } else {
-      // Just copy the whole data
-      if (data.size()) {
-        for (int j = 0; j < size; ++j) {
-          Dtype datum_element =
-              static_cast<Dtype>(static_cast<uint8_t>(data[j]));
-          top_data[item_id * size + j] = (datum_element - mean[j]) * scale;
-        }
-      } else {
-        for (int j = 0; j < size; ++j) {
-          top_data[item_id * size + j] =
-              (datum.float_data(j) - mean[j]) * scale;
-        }
-      }
-    }
+    ProcessImageDatum(channels, height, width, size, crop_size, mirror, mean,
+                      scale, datum, item_id, top_data, top_label);
 
     top_label[item_id] = datum.label();
     // go to the next iter
@@ -241,13 +188,13 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     // image
     const int crop_size = this->layer_param_.image_data_param().crop_size();
     SetUpWithDatum(crop_size, datum, top);
-    DLOG(INFO) << "Initializing prefetch";
-    CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
-            reinterpret_cast<void*>(this))) << "Pthread execution failed.";
-    DLOG(INFO) << "Prefetch initialized.";
+    if (this->layer_param_.has_source()) {
+      DLOG(INFO) << "Initializing prefetch";
+      CreatePrefetchThread();
+      DLOG(INFO) << "Prefetch initialized.";
+    }
   }  // if (this->layer_param_.has_source()) {
 }
-
 
 template<typename Dtype>
 void ImagesLayer<Dtype>::SetUpWithDatum(
@@ -287,6 +234,7 @@ void ImagesLayer<Dtype>::SetUpWithDatum(
   // check if we want to have mean
   if (this->layer_param_.image_data_param().has_mean_file()) {
     BlobProto blob_proto;
+    string mean_file = image_data_param.mean_file();
     LOG(INFO) << "Loading mean file from" << mean_file;
     ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
@@ -305,11 +253,6 @@ void ImagesLayer<Dtype>::SetUpWithDatum(
   prefetch_data_.mutable_cpu_data();
   prefetch_label_.mutable_cpu_data();
   data_mean_.cpu_data();
-  if (this->layer_param_.has_source()) {
-    DLOG(INFO) << "Initializing prefetch";
-    CreatePrefetchThread();
-    DLOG(INFO) << "Prefetch initialized.";
-  }
 
   is_datum_set_up_ = true;
 }
@@ -404,7 +347,7 @@ void ImagesLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
 
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      vector<Blob<Dtype>*>* top) {  
   if (this->layer_param_.has_source()) {
     // First, join the thread
     JoinPrefetchThread();
