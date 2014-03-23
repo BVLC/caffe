@@ -120,6 +120,15 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     if (v0_layer_param.has_type()) {
       layer_param->set_type(UpgradeV0LayerType(type));
     }
+    for (int i = 0; i < v0_layer_param.blobs_size(); ++i) {
+      layer_param->add_blobs()->CopyFrom(v0_layer_param.blobs(i));
+    }
+    for (int i = 0; i < v0_layer_param.blobs_lr_size(); ++i) {
+      layer_param->add_blobs_lr(v0_layer_param.blobs_lr(i));
+    }
+    for (int i = 0; i < v0_layer_param.weight_decay_size(); ++i) {
+      layer_param->add_weight_decay(v0_layer_param.weight_decay(i));
+    }
     if (v0_layer_param.has_num_output()) {
       if (type == "conv") {
         layer_param->mutable_convolution_param()->set_num_output(
@@ -274,6 +283,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       } else if (type == "hdf5_data") {
         layer_param->mutable_hdf5_data_param()->set_source(
             v0_layer_param.source());
+      } else if (type == "images") {
+        layer_param->mutable_image_data_param()->set_source(
+            v0_layer_param.source());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_source(
             v0_layer_param.source());
@@ -288,6 +300,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     if (v0_layer_param.has_scale()) {
       if (type == "data") {
         layer_param->mutable_data_param()->set_scale(v0_layer_param.scale());
+      } else if (type == "images") {
+        layer_param->mutable_image_data_param()->set_scale(
+           v0_layer_param.scale());
       } else {
         LOG(ERROR) << "Unknown parameter scale for layer type " << type;
         is_fully_compatible = false;
@@ -296,6 +311,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     if (v0_layer_param.has_meanfile()) {
       if (type == "data") {
         layer_param->mutable_data_param()->set_mean_file(
+            v0_layer_param.meanfile());
+      } else if (type == "images") {
+        layer_param->mutable_image_data_param()->set_mean_file(
             v0_layer_param.meanfile());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_mean_file(
@@ -312,6 +330,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       } else if (type == "hdf5_data") {
         layer_param->mutable_hdf5_data_param()->set_batch_size(
             v0_layer_param.batchsize());
+      } else if (type == "images") {
+        layer_param->mutable_image_data_param()->set_batch_size(
+            v0_layer_param.batchsize());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_batch_size(
             v0_layer_param.batchsize());
@@ -324,6 +345,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
       if (type == "data") {
         layer_param->mutable_data_param()->set_crop_size(
             v0_layer_param.cropsize());
+      } else if (type == "images") {
+        layer_param->mutable_image_data_param()->set_crop_size(
+            v0_layer_param.cropsize());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_crop_size(
             v0_layer_param.cropsize());
@@ -335,6 +359,9 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
     if (v0_layer_param.has_mirror()) {
       if (type == "data") {
         layer_param->mutable_data_param()->set_mirror(v0_layer_param.mirror());
+      } else if (type == "images") {
+        layer_param->mutable_image_data_param()->set_mirror(
+            v0_layer_param.mirror());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_mirror(
             v0_layer_param.mirror());
@@ -343,21 +370,42 @@ bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
         is_fully_compatible = false;
       }
     }
-    for (int i = 0; i < v0_layer_param.blobs_size(); ++i) {
-      layer_param->add_blobs()->CopyFrom(v0_layer_param.blobs(i));
-    }
-    for (int i = 0; i < v0_layer_param.blobs_lr_size(); ++i) {
-      layer_param->add_blobs_lr(v0_layer_param.blobs_lr(i));
-    }
-    for (int i = 0; i < v0_layer_param.weight_decay_size(); ++i) {
-      layer_param->add_weight_decay(v0_layer_param.weight_decay(i));
-    }
     if (v0_layer_param.has_rand_skip()) {
       if (type == "data") {
         layer_param->mutable_data_param()->set_rand_skip(
             v0_layer_param.rand_skip());
+      } else if (type == "images") {
+        layer_param->mutable_image_data_param()->set_rand_skip(
+            v0_layer_param.rand_skip());
       } else {
         LOG(ERROR) << "Unknown parameter rand_skip for layer type " << type;
+        is_fully_compatible = false;
+      }
+    }
+    if (v0_layer_param.has_shuffle_images()) {
+      if (type == "images") {
+        layer_param->mutable_image_data_param()->set_shuffle(
+            v0_layer_param.shuffle_images());
+      } else {
+        LOG(ERROR) << "Unknown parameter shuffle for layer type " << type;
+        is_fully_compatible = false;
+      }
+    }
+    if (v0_layer_param.has_new_height()) {
+      if (type == "images") {
+        layer_param->mutable_image_data_param()->set_new_height(
+            v0_layer_param.new_height());
+      } else {
+        LOG(ERROR) << "Unknown parameter new_height for layer type " << type;
+        is_fully_compatible = false;
+      }
+    }
+    if (v0_layer_param.has_new_width()) {
+      if (type == "images") {
+        layer_param->mutable_image_data_param()->set_new_width(
+            v0_layer_param.new_width());
+      } else {
+        LOG(ERROR) << "Unknown parameter new_width for layer type " << type;
         is_fully_compatible = false;
       }
     }
