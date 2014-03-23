@@ -1,10 +1,14 @@
-// Copyright 2013 Yangqing Jia
-// Copyright 2014 kloudkl@github
+// Copyright 2014 BVLC and contributors.
 
-#include <mkl.h>
+#include <boost/math/special_functions/next.hpp>
+#include <boost/random.hpp>
 #include <cublas_v2.h>
+
+#include <limits>
+
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -104,7 +108,6 @@ template <>
 void caffe_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
 
-
 template <>
 void caffe_gpu_axpy<float>(const int N, const float alpha, const float* X,
     float* Y) {
@@ -115,18 +118,6 @@ template <>
 void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) {
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
-}
-
-template <>
-void caffe_axpby<float>(const int N, const float alpha, const float* X,
-    const float beta, float* Y) {
-  cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
-}
-
-template <>
-void caffe_axpby<double>(const int N, const double alpha, const double* X,
-    const double beta, double* Y) {
-  cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
 }
 
 template <>
@@ -184,6 +175,78 @@ void caffe_gpu_axpby<double>(const int N, const double alpha, const double* X,
 }
 
 template <>
+void caffe_cpu_axpby<float>(const int N, const float alpha, const float* X,
+                            const float beta, float* Y) {
+  cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
+}
+
+template <>
+void caffe_cpu_axpby<double>(const int N, const double alpha, const double* X,
+                             const double beta, double* Y) {
+  cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
+}
+
+template <>
+void caffe_add<float>(const int n, const float* a, const float* b,
+    float* y) {
+  vsAdd(n, a, b, y);
+}
+
+template <>
+void caffe_add<double>(const int n, const double* a, const double* b,
+    double* y) {
+  vdAdd(n, a, b, y);
+}
+
+template <>
+void caffe_sub<float>(const int n, const float* a, const float* b,
+    float* y) {
+  vsSub(n, a, b, y);
+}
+
+template <>
+void caffe_sub<double>(const int n, const double* a, const double* b,
+    double* y) {
+  vdSub(n, a, b, y);
+}
+
+template <>
+void caffe_mul<float>(const int n, const float* a, const float* b,
+    float* y) {
+  vsMul(n, a, b, y);
+}
+
+template <>
+void caffe_mul<double>(const int n, const double* a, const double* b,
+    double* y) {
+  vdMul(n, a, b, y);
+}
+
+template <>
+void caffe_div<float>(const int n, const float* a, const float* b,
+    float* y) {
+  vsDiv(n, a, b, y);
+}
+
+template <>
+void caffe_div<double>(const int n, const double* a, const double* b,
+    double* y) {
+  vdDiv(n, a, b, y);
+}
+
+template <>
+void caffe_powx<float>(const int n, const float* a, const float b,
+    float* y) {
+  vsPowx(n, a, b, y);
+}
+
+template <>
+void caffe_powx<double>(const int n, const double* a, const double b,
+    double* y) {
+  vdPowx(n, a, b, y);
+}
+
+template <>
 void caffe_sqr<float>(const int n, const float* a, float* y) {
   vsSqr(n, a, y);
 }
@@ -191,75 +254,6 @@ void caffe_sqr<float>(const int n, const float* a, float* y) {
 template <>
 void caffe_sqr<double>(const int n, const double* a, double* y) {
   vdSqr(n, a, y);
-}
-
-template <>
-void caffe_add<float>(const int n, const float* a, const float* b,
-    float* y) { vsAdd(n, a, b, y); }
-
-template <>
-void caffe_add<double>(const int n, const double* a, const double* b,
-    double* y) { vdAdd(n, a, b, y); }
-
-template <>
-void caffe_sub<float>(const int n, const float* a, const float* b,
-    float* y) { vsSub(n, a, b, y); }
-
-template <>
-void caffe_sub<double>(const int n, const double* a, const double* b,
-    double* y) { vdSub(n, a, b, y); }
-
-template <>
-void caffe_mul<float>(const int n, const float* a, const float* b,
-    float* y) { vsMul(n, a, b, y); }
-
-template <>
-void caffe_mul<double>(const int n, const double* a, const double* b,
-    double* y) { vdMul(n, a, b, y); }
-
-template <>
-void caffe_div<float>(const int n, const float* a, const float* b,
-    float* y) { vsDiv(n, a, b, y); }
-
-template <>
-void caffe_div<double>(const int n, const double* a, const double* b,
-    double* y) { vdDiv(n, a, b, y); }
-
-template <>
-void caffe_powx<float>(const int n, const float* a, const float b,
-    float* y) { vsPowx(n, a, b, y); }
-
-template <>
-void caffe_powx<double>(const int n, const double* a, const double b,
-    double* y) { vdPowx(n, a, b, y); }
-
-template <>
-void caffe_vRngUniform<float>(const int n, float* r,
-    const float a, const float b) {
-  VSL_CHECK(vsRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffe::vsl_stream(),
-      n, r, a, b));
-}
-
-template <>
-void caffe_vRngUniform<double>(const int n, double* r,
-    const double a, const double b) {
-  VSL_CHECK(vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, Caffe::vsl_stream(),
-      n, r, a, b));
-}
-
-template <>
-void caffe_vRngGaussian<float>(const int n, float* r, const float a,
-    const float sigma) {
-  VSL_CHECK(vsRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
-      Caffe::vsl_stream(), n, r, a, sigma));
-}
-
-
-template <>
-void caffe_vRngGaussian<double>(const int n, double* r, const double a,
-    const double sigma) {
-  VSL_CHECK(vdRngGaussian(VSL_RNG_METHOD_GAUSSIAN_BOXMULLER,
-      Caffe::vsl_stream(), n, r, a, sigma));
 }
 
 template <>
@@ -271,6 +265,86 @@ template <>
 void caffe_exp<double>(const int n, const double* a, double* y) {
   vdExp(n, a, y);
 }
+
+template <typename Dtype>
+Dtype caffe_nextafter(const Dtype b) {
+  return boost::math::nextafter<Dtype>(
+      b, std::numeric_limits<Dtype>::max());
+}
+
+template
+float caffe_nextafter(const float b);
+
+template
+double caffe_nextafter(const double b);
+
+template <typename Dtype>
+void caffe_vRngUniform(const int n, Dtype* r,
+    const Dtype a, const Dtype b) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_LE(a, b);
+
+  boost::uniform_real<Dtype> random_distribution(
+      a, caffe_nextafter<Dtype>(b));
+  boost::variate_generator<caffe::rng_t,
+      boost::uniform_real<Dtype> > variate_generator(
+      caffe_rng(), random_distribution);
+
+  for (int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
+  }
+}
+
+template
+void caffe_vRngUniform<float>(const int n, float* r,
+                                       const float a, const float b);
+template
+void caffe_vRngUniform<double>(const int n, double* r,
+                                       const double a, const double b);
+
+template <typename Dtype>
+void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
+    const Dtype sigma) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GT(sigma, 0);
+  boost::normal_distribution<Dtype> random_distribution(a, sigma);
+  boost::variate_generator<caffe::rng_t,
+      boost::normal_distribution<Dtype> > variate_generator(
+      caffe_rng(), random_distribution);
+
+  for (int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
+  }
+}
+
+template
+void caffe_vRngGaussian<float>(const int n, float* r, const float a,
+    const float sigma);
+
+template
+void caffe_vRngGaussian<double>(const int n, double* r, const double a,
+    const double sigma);
+
+template <typename Dtype>
+void caffe_vRngBernoulli(const int n, Dtype* r, const double p) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GE(p, 0);
+  CHECK_LE(p, 1);
+  boost::bernoulli_distribution<double> random_distribution(p);
+  boost::variate_generator<caffe::rng_t,
+      boost::bernoulli_distribution<double> > variate_generator(
+      caffe_rng(), random_distribution);
+
+  for (int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
+  }
+}
+
+template
+void caffe_vRngBernoulli<int>(const int n, int* r, const double p);
 
 template <>
 float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {
