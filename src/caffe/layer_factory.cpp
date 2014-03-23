@@ -37,6 +37,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new FlattenLayer<Dtype>(param);
   } else if (type == "hdf5_data") {
     return new HDF5DataLayer<Dtype>(param);
+  } else if (type == "hdf5_output") {
+    return new HDF5OutputLayer<Dtype>(param);
   } else if (type == "images") {
     return new ImagesLayer<Dtype>(param);
   } else if (type == "im2col") {
