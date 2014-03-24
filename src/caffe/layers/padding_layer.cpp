@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <iostream>  // NOLINT(readability/streams)
 #include <vector>

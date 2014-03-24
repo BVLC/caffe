@@ -1,4 +1,4 @@
-// Copyright 2014 kloudkl@github
+// Copyright 2014 BVLC and contributors.
 
 #include <stdint.h>  // for uint32_t & uint64_t
 #include <time.h>

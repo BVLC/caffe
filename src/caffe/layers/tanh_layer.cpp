@@ -1,4 +1,4 @@
-// Copyright 2014 Aravindh Mahendran
+// Copyright 2014 BVLC and contributors.
 // TanH neuron activation function layer.
 // Adapted from ReLU layer code written by Yangqing Jia
 

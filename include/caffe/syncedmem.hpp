@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #ifndef CAFFE_SYNCEDMEM_HPP_
 #define CAFFE_SYNCEDMEM_HPP_

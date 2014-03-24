@@ -1,4 +1,4 @@
-// Copyright Yangqing Jia 2013
+// Copyright 2014 BVLC and contributors.
 
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
