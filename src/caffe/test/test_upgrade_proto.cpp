@@ -1193,6 +1193,7 @@ TYPED_TEST(V0UpgradeTest, TestSimple) {
       "  bottom: 'label' "
       "} ";
   const string& expected_output_proto =
+      "version: 1 "
       "name: 'CaffeNet' "
       "layers { "
       "  name: 'data' "
@@ -1513,6 +1514,7 @@ TYPED_TEST(V0UpgradeTest, TestAllParams) {
       "  } "
       "} ";
   const string& expected_output_proto =
+      "version: 1 "
       "name: 'CaffeNet' "
       "input: 'input_data' "
       "input_dim: 64 "
@@ -2107,6 +2109,7 @@ TYPED_TEST(V0UpgradeTest, TestImageNet) {
       "  bottom: 'label' "
       "} ";
   const string& expected_output_proto =
+      "version: 1 "
       "name: 'CaffeNet' "
       "layers { "
       "  name: 'data' "

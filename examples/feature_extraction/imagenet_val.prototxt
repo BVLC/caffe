@@ -1,3 +1,4 @@
+version: 1
 name: "CaffeNet"
 layers {
   name: "data"

@@ -1,3 +1,4 @@
+version: 1
 name: "CIFAR10_full_deploy"
 # N.B. input image must be in CIFAR-10 format
 # as described at http://www.cs.toronto.edu/~kriz/cifar.html

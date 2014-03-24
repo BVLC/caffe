@@ -25,6 +25,7 @@ bool UpgradeV0Net(const V0NetParameter& v0_net_param_padding_layers,
   // Now upgrade layer parameters.
   bool is_fully_compatible = true;
   net_param->Clear();
+  net_param->set_version(1);
   if (v0_net_param.has_name()) {
     net_param->set_name(v0_net_param.name());
   }
