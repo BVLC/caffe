@@ -18,8 +18,6 @@ using std::pair;
 using std::map;
 using std::set;
 
-const int kNetParameterVersionNumber = 1;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -327,7 +325,6 @@ void Net<Dtype>::ReadParamsFromTextFile(const string& param_file,
           << "V0NetParameter to NetParameter (see above); continuing anyway.";
     }
   }
-  CHECK_EQ(param->version(), kNetParameterVersionNumber);
 }
 
 template <typename Dtype>
@@ -348,7 +345,6 @@ void Net<Dtype>::ReadParamsFromBinaryFile(const string& param_file,
           << "V0NetParameter to NetParameter (see above); continuing anyway.";
     }
   }
-  CHECK_EQ(param->version(), kNetParameterVersionNumber);
 }
 
 template <typename Dtype>

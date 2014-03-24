@@ -1,4 +1,3 @@
-version: 1
 name: "CaffeNet"
 input: "data"
 input_dim: 10

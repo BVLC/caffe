@@ -1,11 +1,9 @@
-version: 1
 name: "LeNet"
 input: "data"
 input_dim: 64
 input_dim: 1
 input_dim: 28
 input_dim: 28
-# N.B. input should be 0/1 = mnist raw data scaled by 0.00390625
 layers {
   name: "conv1"
   type: CONVOLUTION

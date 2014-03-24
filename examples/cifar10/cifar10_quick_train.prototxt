@@ -1,5 +1,3 @@
-# quick config
-version: 1
 name: "CIFAR10_quick_train"
 layers {
   name: "cifar"

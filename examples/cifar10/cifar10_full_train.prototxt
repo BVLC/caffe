@@ -1,4 +1,3 @@
-version: 1
 name: "CIFAR10_full_train"
 layers {
   name: "cifar"
