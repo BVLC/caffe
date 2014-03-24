@@ -44,6 +44,7 @@ class NetTest : public ::testing::Test {
     delete db;
 
     const string& proto_prefix =
+        "version: 1 "
         "name: 'TestNetwork' "
         "layers: { "
         "  name: 'data' "

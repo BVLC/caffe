@@ -1,3 +1,5 @@
+# quick config
+version: 1
 name: "CIFAR10_quick_test"
 layers {
   name: "cifar"
