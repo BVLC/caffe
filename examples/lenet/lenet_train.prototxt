@@ -1,4 +1,3 @@
-version: 1
 name: "LeNet"
 layers {
   name: "mnist"

@@ -186,7 +186,6 @@ TYPED_TEST_CASE(SplitLayerInsertionTest, InsertionDtypes);
 
 TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion1) {
   const string& input_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -211,7 +210,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion1) {
 
 TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion2) {
   const string& input_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -249,7 +247,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion2) {
 
 TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionImageNet) {
   const string& input_proto =
-      "version: 1 "
       "name: 'CaffeNet' "
       "layers { "
       "  name: 'data' "
@@ -571,7 +568,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionImageNet) {
 
 TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionWithInPlace) {
   const string& input_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -602,7 +598,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionWithInPlace) {
 
 TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
   const string& input_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -641,7 +636,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
       "  bottom: 'innerprod3' "
       "} ";
   const string& expected_output_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -699,7 +693,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
 
 TYPED_TEST(SplitLayerInsertionTest, TestInsertionTwoTop) {
   const string& input_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -744,7 +737,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertionTwoTop) {
       "  bottom: 'innerprod4' "
       "} ";
   const string& expected_output_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -807,7 +799,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertionTwoTop) {
 
 TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
   const string& input_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "input: 'data' "
       "input_dim: 10 "
@@ -833,7 +824,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
       "  bottom: 'innerprod2' "
       "} ";
   const string& expected_output_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "input: 'data' "
       "input_dim: 10 "
@@ -870,7 +860,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
 
 TYPED_TEST(SplitLayerInsertionTest, TestWithInPlace) {
   const string& input_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
@@ -909,7 +898,6 @@ TYPED_TEST(SplitLayerInsertionTest, TestWithInPlace) {
       "  bottom: 'data' "
       "} ";
   const string& expected_output_proto =
-      "version: 1 "
       "name: 'TestNetwork' "
       "layers: { "
       "  name: 'data' "
