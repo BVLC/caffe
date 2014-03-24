@@ -4,8 +4,9 @@
 #ifndef CAFFE_UTIL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
 
-
 #include <cublas_v2.h>
+#include <math.h>  // for signbit
+#include <cmath>  // for std::fabs
 
 #include "caffe/util/mkl_alternate.hpp"
 
@@ -111,6 +112,88 @@ void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
 
 template <typename Dtype>
 int caffe_hamming_distance(const int n, const Dtype* x, const Dtype* y);
+
+// Returns the sum of the absolute values of the elements of vector x
+template <typename Dtype>
+Dtype caffe_cpu_asum(const int n, const Dtype* x);
+
+template <typename Dtype>
+void caffe_gpu_asum(const int n, const Dtype* x, Dtype* y);
+
+// the branchless, type-safe version from
+// http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+template<typename Dtype>
+inline char caffe_sign(Dtype val) {
+  return (Dtype(0) < val) - (val < Dtype(0));
+}
+
+// The following two macros are modifications of DEFINE_VSL_UNARY_FUNC
+//   in include/caffe/util/mkl_alternate.hpp authored by @Rowland Depp.
+// Please refer to commit 7e8ef25c7 of the boost-eigen branch.
+// Git cherry picking that commit caused a conflict hard to resolve and
+//   copying that file in convenient for code reviewing.
+// So they have to be pasted here temporarily.
+#define DEFINE_CAFFE_CPU_UNARY_FUNC(name, operation) \
+  template<typename Dtype> \
+  void caffe_cpu_##name(const int n, const Dtype* x, Dtype* y) { \
+    CHECK_GT(n, 0); CHECK(x); CHECK(y); \
+    for (int i = 0; i < n; ++i) { \
+      operation; \
+    } \
+  }
+
+#define INSTANTIATE_CAFFE_CPU_UNARY_FUNC(name) \
+  template <> \
+  void caffe_cpu_##name<float>(const int n, const float* x, float* y); \
+  template <> \
+  void caffe_cpu_##name<double>(const int n, const double* x, double* y)
+
+
+#define DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(name, operation) \
+template<typename Dtype> \
+__global__ void name##_kernel(const int n, const Dtype* x, Dtype* y) { \
+  int index = threadIdx.x + blockIdx.x * blockDim.x; \
+  if (index < n) { \
+    operation; \
+  } \
+} \
+template <> \
+void caffe_gpu_##name<float>(const int n, const float* x, float* y) { \
+  /* NOLINT_NEXT_LINE(whitespace/operators) */ \
+  name##_kernel<float><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
+      n, x, y); \
+} \
+template <> \
+void caffe_gpu_##name<double>(const int n, const double* x, double* y) { \
+  /* NOLINT_NEXT_LINE(whitespace/operators) */ \
+  name##_kernel<double><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
+      n, x, y); \
+}
+
+// output is 1 for the positives, 0 for zero, and -1 for the negatives
+DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
+
+template<typename Dtype>
+void caffe_gpu_sign(const int n, const Dtype* x, Dtype* y);
+
+// This returns a nonzero value if the input has its sign bit set.
+// The name sngbit is meant to avoid conflicts with std::signbit in the macro
+using std::signbit;
+DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, y[i] = signbit(x[i]));
+
+template<typename Dtype>
+void caffe_gpu_sgnbit(const int n, const Dtype* x, Dtype* y);
+
+DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
+
+template <typename Dtype>
+void caffe_gpu_fabs(const int n, const Dtype* x, Dtype* y);
+
+template <typename Dtype>
+void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
 }  // namespace caffe
 

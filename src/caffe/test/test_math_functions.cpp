@@ -1,6 +1,10 @@
 // Copyright 2014 kloudkl@github
 
 #include <stdint.h>  // for uint32_t & uint64_t
+#include <time.h>
+#include <climits>
+#include <cmath>  // for std::fabs
+#include <cstdlib>  // for rand_r
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -22,8 +26,8 @@ class MathFunctionsTest : public ::testing::Test {
 
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    this->blob_bottom_->Reshape(100, 70, 50, 30);
-    this->blob_top_->Reshape(100, 70, 50, 30);
+    this->blob_bottom_->Reshape(11, 17, 19, 23);
+    this->blob_top_->Reshape(11, 17, 19, 23);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -72,6 +76,120 @@ TYPED_TEST(MathFunctionsTest, TestHammingDistance) {
   const TypeParam* y = this->blob_top_->cpu_data();
   CHECK_EQ(this->ReferenceHammingDistance(n, x, y),
            caffe_hamming_distance<TypeParam>(n, x, y));
+}
+
+TYPED_TEST(MathFunctionsTest, TestAsumCPU) {
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  TypeParam std_asum = 0;
+  for (int i = 0; i < n; ++i) {
+    std_asum += std::fabs(x[i]);
+  }
+  TypeParam cpu_asum = caffe_cpu_asum<TypeParam>(n, x);
+  CHECK_LT((cpu_asum - std_asum) / std_asum, 1e-2);
+}
+
+TYPED_TEST(MathFunctionsTest, TestAsumGPU) {
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  TypeParam std_asum = 0;
+  for (int i = 0; i < n; ++i) {
+    std_asum += std::fabs(x[i]);
+  }
+  TypeParam gpu_asum;
+  caffe_gpu_asum<TypeParam>(n, this->blob_bottom_->gpu_data(), &gpu_asum);
+  CHECK_LT((gpu_asum - std_asum) / std_asum, 1e-2);
+}
+
+TYPED_TEST(MathFunctionsTest, TestSignCPU) {
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_cpu_sign<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* signs = this->blob_bottom_->cpu_diff();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestSignGPU) {
+  int n = this->blob_bottom_->count();
+  caffe_gpu_sign<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                            this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* signs = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestSgnbitCPU) {
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_cpu_sgnbit<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* signbits = this->blob_bottom_->cpu_diff();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signbits[i], x[i] < 0 ? 1 : 0);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestSgnbitGPU) {
+  int n = this->blob_bottom_->count();
+  caffe_gpu_sgnbit<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                            this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* signbits = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(signbits[i], x[i] < 0 ? 1 : 0);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestFabsCPU) {
+  int n = this->blob_bottom_->count();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_cpu_fabs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestFabsGPU) {
+  int n = this->blob_bottom_->count();
+  caffe_gpu_fabs<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                            this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestScaleCPU) {
+  int n = this->blob_bottom_->count();
+  // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
+  TypeParam alpha = this->blob_bottom_->cpu_diff()[rand() %
+                                               this->blob_bottom_->count()];
+  caffe_cpu_scale<TypeParam>(n, alpha, this->blob_bottom_->cpu_data(),
+                             this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* scaled = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(scaled[i], x[i] * alpha);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestScaleGPU) {
+  int n = this->blob_bottom_->count();
+  // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
+  TypeParam alpha = this->blob_bottom_->cpu_diff()[rand() %
+                                               this->blob_bottom_->count()];
+  caffe_gpu_scale<TypeParam>(n, alpha, this->blob_bottom_->gpu_data(),
+                             this->blob_bottom_->mutable_gpu_diff());
+  const TypeParam* scaled = this->blob_bottom_->cpu_diff();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  for (int i = 0; i < n; ++i) {
+    CHECK_EQ(scaled[i], x[i] * alpha);
+  }
 }
 
 }  // namespace caffe
