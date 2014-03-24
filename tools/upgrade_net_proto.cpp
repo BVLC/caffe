@@ -25,27 +25,48 @@ int main(int argc, char** argv) {
   }
 
   bool success = true;
-  // First, check whether the input file is already in the new format.
   NetParameter upgraded_net_param;
+  bool is_binary = false;
+  bool is_already_upgraded = false;
+  // First, check whether the input file is already in the new format.
   if (ReadProtoFromTextFile(argv[1], &upgraded_net_param)) {
-    LOG(ERROR) << "File already in new proto format: " << argv[1];
+    is_already_upgraded = true;
+  } else if (ReadProtoFromBinaryFile(argv[1], &upgraded_net_param)) {
+    is_already_upgraded = true;
+    is_binary = true;
   } else {
     V0NetParameter v0_net_param;
-    CHECK(ReadProtoFromTextFile(argv[1], &v0_net_param))
-        << "Failed to parse input V0NetParameter file: " << argv[1];
+    if (ReadProtoFromTextFile(argv[1], &v0_net_param)) {
+      LOG(ERROR) << "Successfully parsed file as V0NetParameter prototxt: "
+                 << argv[1];
+    } else if (ReadProtoFromBinaryFile(argv[1], &v0_net_param)) {
+      LOG(ERROR) << "Successfully parsed file as V0NetParameter binary proto: "
+                 << argv[1];
+      is_binary = true;
+    } else {
+      LOG(FATAL) << "Failed to parse input V0NetParameter file: " << argv[1];
+      return 1;
+    }
     success = UpgradeV0Net(v0_net_param, &upgraded_net_param);
     if (!success) {
       LOG(ERROR) << "Encountered one or more problems upgrading net param "
           << "proto; see above.";
     }
   }
-  // TODO(jdonahue): figure out why WriteProtoToTextFile doesn't work
-  // (no file is created).
-  // WriteProtoToTextFile(upgraded_net_param, argv[2]);
-  ofstream output_proto;
-  output_proto.open(argv[2]);
-  output_proto << upgraded_net_param.DebugString();
-  output_proto.close();
+  if (is_already_upgraded) {
+    LOG(ERROR) << "File already in V1 proto format: " << argv[1];
+  }
+  if (is_binary) {
+    WriteProtoToBinaryFile(upgraded_net_param, argv[2]);
+  } else {
+    // TODO(jdonahue): figure out why WriteProtoToTextFile doesn't work
+    // (no file is created).
+    // WriteProtoToTextFile(upgraded_net_param, argv[2]);
+    ofstream output_proto;
+    output_proto.open(argv[2]);
+    output_proto << upgraded_net_param.DebugString();
+    output_proto.close();
+  }
   LOG(ERROR) << "Wrote upgraded NetParameter proto to " << argv[2];
   return !success;
 }
