@@ -1,4 +1,4 @@
-// Copyright 2014 Sergio Guadarrama
+// Copyright 2014 BVLC and contributors.
 
 
 #include "caffe/common.hpp"

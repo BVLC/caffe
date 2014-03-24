@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 //
 // This is a simple script that allows one to quickly finetune a network.
 // Usage:
