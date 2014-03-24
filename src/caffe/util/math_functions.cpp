@@ -390,4 +390,56 @@ int caffe_hamming_distance<double>(const int n, const double* x,
   return dist;
 }
 
+template <>
+float caffe_cpu_asum<float>(const int n, const float* x) {
+  return cblas_sasum(n, x, 1);
+}
+
+template <>
+double caffe_cpu_asum<double>(const int n, const double* x) {
+  return cblas_dasum(n, x, 1);
+}
+
+template <>
+void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
+  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
+}
+
+template <>
+void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
+  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
+}
+
+INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sign);
+INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sgnbit);
+INSTANTIATE_CAFFE_CPU_UNARY_FUNC(fabs);
+
+template <>
+void caffe_cpu_scale<float>(const int n, const float alpha, const float *x,
+                            float* y) {
+  cblas_scopy(n, x, 1, y, 1);
+  cblas_sscal(n, alpha, y, 1);
+}
+
+template <>
+void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
+                             double* y) {
+  cblas_dcopy(n, x, 1, y, 1);
+  cblas_dscal(n, alpha, y, 1);
+}
+
+template <>
+void caffe_gpu_scale<float>(const int n, const float alpha, const float *x,
+                            float* y) {
+  CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), n, x, 1, y, 1));
+  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), n, &alpha, y, 1));
+}
+
+template <>
+void caffe_gpu_scale<double>(const int n, const double alpha, const double *x,
+                             double* y) {
+  CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
+  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
+}
+
 }  // namespace caffe
