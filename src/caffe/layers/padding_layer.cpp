@@ -29,7 +29,7 @@ void PaddingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void PaddingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype PaddingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -47,10 +47,11 @@ void PaddingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype PaddingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void PaddingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
@@ -66,7 +67,6 @@ Dtype PaddingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
   }
-  return Dtype(0.);
 }
 
 INSTANTIATE_CLASS(PaddingLayer);

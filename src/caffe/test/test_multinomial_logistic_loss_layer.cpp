@@ -25,6 +25,7 @@ class MultinomialLogisticLossLayerTest : public ::testing::Test {
   MultinomialLogisticLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
         blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)) {
+    Caffe::set_random_seed(1701);
     // fill the values
     FillerParameter filler_param;
     PositiveUnitballFiller<Dtype> filler(filler_param);
@@ -55,7 +56,7 @@ TYPED_TEST(MultinomialLogisticLossLayerTest, TestGradientCPU) {
   Caffe::set_mode(Caffe::CPU);
   MultinomialLogisticLossLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701, 0, 0.05);
+  GradientChecker<TypeParam> checker(1e-2, 2*1e-2, 1701, 0, 0.05);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);
 }
