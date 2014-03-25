@@ -34,22 +34,10 @@ void RegularizerAsLossLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template<typename Dtype>
-void RegularizerAsLossLayer<Dtype>::Forward_cpu(
+Dtype RegularizerAsLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-}
-
-template<typename Dtype>
-void RegularizerAsLossLayer<Dtype>::Forward_gpu(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-}
-
-template<typename Dtype>
-Dtype RegularizerAsLossLayer<Dtype>::Backward_cpu(
-    const vector<Blob<Dtype>*>& top, const bool propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
   Blob<Dtype>* bottom_ptr = bottom->at(0);
   if (bottom_ptr->count() <= 0) {
-    return Dtype(0);
   } else {
     memset(bottom_ptr->mutable_cpu_diff(), 0,
            bottom_ptr->count() * sizeof(Dtype));
@@ -66,9 +54,8 @@ Dtype RegularizerAsLossLayer<Dtype>::Backward_cpu(
 }
 
 template<typename Dtype>
-Dtype RegularizerAsLossLayer<Dtype>::Backward_gpu(
-    const vector<Blob<Dtype>*>& top, const bool propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
+Dtype RegularizerAsLossLayer<Dtype>::Forward_gpu(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   Blob<Dtype>* bottom_ptr = bottom->at(0);
   if (bottom_ptr->count() <= 0) {
     return Dtype(0);
@@ -86,6 +73,20 @@ Dtype RegularizerAsLossLayer<Dtype>::Backward_gpu(
                           bottom_ptr->mutable_gpu_diff());
     return loss / num;
   }
+}
+
+template<typename Dtype>
+void RegularizerAsLossLayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top, const bool propagate_down,
+    vector<Blob<Dtype>*>* bottom) {
+  return;
+}
+
+template<typename Dtype>
+void RegularizerAsLossLayer<Dtype>::Backward_gpu(
+    const vector<Blob<Dtype>*>& top, const bool propagate_down,
+    vector<Blob<Dtype>*>* bottom) {
+  return;
 }
 
 INSTANTIATE_CLASS(RegularizerAsLossLayer);
