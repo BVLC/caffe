@@ -13,23 +13,22 @@ using std::vector;
 template<typename Dtype>
 Dtype RegularizerAsLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  Blob<Dtype>* bottom_ptr = bottom[0];
-  if (bottom_ptr->count() <= 0) {
-    return Dtype(0);
-  } else {
+  Blob<Dtype>* bottom_data = bottom[0];
+  if (bottom_data->count() > 0) {
     CUDA_CHECK(
-        cudaMemset(bottom_ptr->mutable_gpu_diff(), 0,
-                   bottom_ptr->count() * sizeof(Dtype)));
+        cudaMemset(bottom_data->mutable_gpu_diff(), 0,
+                   bottom_data->count() * sizeof(Dtype)));
     Dtype loss = 0;
     for (int i = 0; i < num_regularizers_; ++i) {
-      loss += regularizers_[i]->Regularize_gpu(bottom_ptr);
+      loss += regularizers_[i]->Regularize_gpu(bottom_data);
     }
-    int num = bottom_ptr->num();
+    int num = bottom_data->num();
     // Scale down gradient
-    caffe_gpu_scal<Dtype>(bottom_ptr->count(), Dtype(1) / num,
-                          bottom_ptr->mutable_gpu_diff());
+    caffe_gpu_scal<Dtype>(bottom_data->count(), Dtype(1) / num,
+                          bottom_data->mutable_gpu_diff());
     return loss / num;
   }
+  return Dtype(0);
 }
 
 template<typename Dtype>

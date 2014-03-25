@@ -35,7 +35,7 @@ class RegularizationAsLossTest : public ::testing::Test {
     delete blob_bottom_data_;
   }
 
-  void TestSubroutine(const bool death_condition,
+  void Check(const bool death_condition,
                       const LayerParameter& layer_param, const Dtype step_size,
                       const Dtype threshold, const unsigned int seed = 1701);
 
@@ -54,10 +54,10 @@ TYPED_TEST_CASE(RegularizationAsLossTest, Dtypes);
 // If this subroutine is place in the test cases directly,
 // the test cases cannot enumerate the combinations after the first failure.
 template<typename Dtype>
-void RegularizationAsLossTest<Dtype>::TestSubroutine(
-    const bool death_condition, const LayerParameter& layer_param,
+void RegularizationAsLossTest<Dtype>::Check(
+    const bool is_death_condition, const LayerParameter& layer_param,
     const Dtype step_size, const Dtype threshold, const unsigned int seed) {
-  if (death_condition) {
+  if (is_death_condition) {
     ASSERT_DEATH(
         RegularizerAsLossLayer<Dtype> layer(layer_param),
         "Regularizer coefficient must be greater than or equal to zero");
@@ -82,14 +82,14 @@ TYPED_TEST(RegularizationAsLossTest, TestGradient##mode##_##regularizer) { \
   TypeParam coeff[] = {1, 0, -1}; \
   /* Restart from failure crash is too slow. Do not test negative coeff. */ \
   int num_ceoff = 2; \
-  bool condition; \
+  bool is_death_condition; \
   for (int i = 0; i < num_ceoff; ++i) { \
     LayerParameter layer_param; \
     RegularizerParameter* reg_param = layer_param.add_regularizer(); \
     reg_param->set_type(REG_TYPE(regularizer)); \
     reg_param->set_coeff(coeff[i]); \
-    condition = coeff[i] < 0; \
-    this->TestSubroutine(condition, layer_param, 1e-2, 5e-2, 1701); \
+    is_death_condition = coeff[i] < 0; \
+    this->Check(is_death_condition, layer_param, 1e-2, 5e-2, 1701); \
   } \
 }
 
@@ -110,7 +110,7 @@ TYPED_TEST(RegularizationAsLossTest, \
   TypeParam coeff[] = {1, 0, -1}; \
   /* Restart from failure crash is too slow. Do not test negative coeff. */ \
   int num_ceoff = 2; \
-  bool condition; \
+  bool is_death_condition; \
   for (int i = 0; i < num_ceoff; ++i) { \
     for (int j = 0; j < num_ceoff; ++j) { \
       LayerParameter layer_param; \
@@ -121,8 +121,8 @@ TYPED_TEST(RegularizationAsLossTest, \
       reg_param = layer_param.add_regularizer(); \
       reg_param->set_type(REG_TYPE(regularizer_type_b)); \
       reg_param->set_coeff(coeff[j]); \
-      condition = coeff[i] < 0 || coeff[j] < 0; \
-      this->TestSubroutine(condition, layer_param, 1e-2, 5e-2, 1701); \
+      is_death_condition = coeff[i] < 0 || coeff[j] < 0; \
+      this->Check(is_death_condition, layer_param, 1e-2, 5e-2, 1701); \
     } \
   } \
 }

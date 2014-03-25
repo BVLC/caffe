@@ -38,7 +38,7 @@ Dtype L1Regularizer<Dtype>::Regularize_gpu(Blob<Dtype>* bottom) {
       count, this->coeff_, data, diff);
   CUDA_POST_KERNEL_CHECK;
   Dtype penalty = 0;
-  caffe_gpu_asum < Dtype > (count, data, &penalty);
+  caffe_gpu_asum<Dtype>(count, data, &penalty);
   return this->coeff_ * penalty;
 }
 
@@ -50,9 +50,9 @@ Dtype L2Regularizer<Dtype>::Regularize_gpu(Blob<Dtype>* bottom) {
   const Dtype* data = bottom->gpu_data();
   Dtype* diff = bottom->mutable_gpu_diff();
   int count = bottom->count();
-  caffe_gpu_axpy < Dtype > (count, this->coeff_ * 2., data, diff);
+  caffe_gpu_axpy<Dtype>(count, this->coeff_ * 2., data, diff);
   Dtype penalty = 0;
-  caffe_gpu_dot < Dtype > (count, data, data, &penalty);
+  caffe_gpu_dot<Dtype>(count, data, data, &penalty);
   return this->coeff_ * penalty;
 }
 

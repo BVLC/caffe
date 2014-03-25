@@ -16,7 +16,7 @@ Dtype Regularizer<Dtype>::Regularize(Blob<Dtype>* bottom) {
   } else if (Caffe::mode() == Caffe::GPU) {
     penalty = Regularize_gpu(bottom);
   } else {
-    LOG(FATAL) << "Unknown mode: " << Caffe::mode();
+    LOG(FATAL)<< "Unknown mode: " << Caffe::mode();
   }
   return penalty;
 }
@@ -24,16 +24,15 @@ Dtype Regularizer<Dtype>::Regularize(Blob<Dtype>* bottom) {
 template<typename Dtype>
 Dtype L1Regularizer<Dtype>::Regularize_cpu(Blob<Dtype>* bottom) {
   if (this->coeff_ == 0) {
-    return Dtype(0);
+    return Dtype(0.);
   }
   const Dtype* data = bottom->cpu_data();
   Dtype* diff = bottom->mutable_cpu_diff();
   int count = bottom->count();
-  Dtype penalty = 0;
   for (int c = 0; c < count; ++c) {
-    diff[c] += this->coeff_ * sign < Dtype > (data[c]);
-    penalty += std::abs(data[c]);
+    diff[c] += this->coeff_ * caffe_sign<Dtype>(data[c]);
   }
+  Dtype penalty = caffe_cpu_asum(count, data);
   return this->coeff_ * penalty;
 }
 
@@ -45,8 +44,8 @@ Dtype L2Regularizer<Dtype>::Regularize_cpu(Blob<Dtype>* bottom) {
   const Dtype* data = bottom->cpu_data();
   Dtype* diff = bottom->mutable_cpu_diff();
   int count = bottom->count();
-  caffe_axpy < Dtype > (count, this->coeff_ * 2., data, diff);
-  Dtype penalty = caffe_cpu_dot < Dtype > (count, data, data);
+  caffe_axpy<Dtype>(count, this->coeff_ * 2., data, diff);
+  Dtype penalty = caffe_cpu_dot<Dtype>(count, data, data);
   return this->coeff_ * penalty;
 }
 

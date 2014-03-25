@@ -40,14 +40,6 @@ class Regularizer {
   DISABLE_COPY_AND_ASSIGN(Regularizer);
 };
 
-// For computing the subgradient of L1 regularization
-// the branchless, type-safe version from
-// http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
-template<typename Dtype>
-inline int sign(Dtype val) {
-  return (Dtype(0) < val) - (val < Dtype(0));
-}
-
 #define MAKE_SIMPLE_REGULARIZER_CLASS(type) \
 template<typename Dtype> \
 class type##Regularizer : public Regularizer<Dtype> { \
