@@ -66,8 +66,8 @@ void RegularizationAsLossTest<Dtype>::TestSubroutine(
     layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
     GradientChecker<Dtype> checker(step_size, threshold, seed);
     for (int loop = 0; loop < 10; ++loop) {
-      checker.CheckGradientSingle(layer, this->blob_bottom_vec_,
-                                  this->blob_top_vec_, 0, -1, -1);
+      checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
+                                  &(this->blob_top_vec_), 0, -1, -1);
     }
   }
 }
