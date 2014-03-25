@@ -111,7 +111,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   }
   if (layer_param_.regularizer_size() > 0) {
     for (int i = 0; i < layer_param_.regularizer_size(); ++i) {
-      loss += regularizers_[i]->Regularize(bottom->at(0));
+      loss += regularizers_[i]->Regularize(bottom[0]);
     }
   }
   return loss;

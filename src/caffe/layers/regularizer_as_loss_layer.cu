@@ -13,7 +13,7 @@ using std::vector;
 template<typename Dtype>
 Dtype RegularizerAsLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  Blob<Dtype>* bottom_ptr = bottom->at(0);
+  Blob<Dtype>* bottom_ptr = bottom[0];
   if (bottom_ptr->count() <= 0) {
     return Dtype(0);
   } else {

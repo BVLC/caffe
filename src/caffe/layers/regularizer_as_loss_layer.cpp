@@ -35,7 +35,7 @@ void RegularizerAsLossLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 Dtype RegularizerAsLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  Blob<Dtype>* bottom_ptr = bottom->at(0);
+  Blob<Dtype>* bottom_ptr = bottom[0];
   if (bottom_ptr->count() <= 0) {
   } else {
     memset(bottom_ptr->mutable_cpu_diff(), 0,
