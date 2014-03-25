@@ -2,6 +2,7 @@
 
 #include <cmath>  // for std::abs
 
+#include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/regularizer.hpp"
 #include "caffe/util/math_functions.hpp"  // for caffe_gpu_asum
@@ -19,8 +20,7 @@ template __device__ int gpu_sign<double>(const double val);
 template <typename Dtype>
 __global__ void ScaleSign(const int n, const Dtype coeff, const Dtype* data,
                           Dtype* diff) {
-  int index = threadIdx.x + blockIdx.x * blockDim.x;
-  if (index < n) {
+  CUDA_KERNEL_LOOP(index, n) {
     diff[index] += coeff * gpu_sign<Dtype>(data[index]);
   }
 }
