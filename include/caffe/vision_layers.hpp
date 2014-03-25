@@ -12,6 +12,8 @@
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
 
+#include "caffe/blob.hpp"
+#include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
