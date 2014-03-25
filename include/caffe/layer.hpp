@@ -104,10 +104,12 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   switch (Caffe::mode()) {
   case Caffe::CPU:
     loss = Forward_cpu(bottom, top);
+    break;
   case Caffe::GPU:
     loss = Forward_gpu(bottom, top);
+    break;
   default:
-    LOG(FATAL) << "Unknown caffe mode.";
+    LOG(FATAL) << "Unknown caffe mode " << Caffe::mode();
   }
   if (layer_param_.regularizer_size() > 0) {
     for (int i = 0; i < layer_param_.regularizer_size(); ++i) {
