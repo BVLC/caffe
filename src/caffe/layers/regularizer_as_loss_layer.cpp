@@ -27,9 +27,11 @@ RegularizerAsLossLayer<Dtype>::RegularizerAsLossLayer(
 template<typename Dtype>
 void RegularizerAsLossLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
                                           vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1)<< "RegularizerAsLossLayer takes one blob as input.";
-  CHECK_EQ(top->size(), 0) << "RegularizerAsLossLayer takes no blob as output.";
-};
+  CHECK_EQ(bottom.size(), 1)<<
+      "RegularizerAsLossLayer takes one blob as input.";
+  CHECK_EQ(top->size(), 0) <<
+      "RegularizerAsLossLayer takes no blob as output.";
+}
 
 template<typename Dtype>
 void RegularizerAsLossLayer<Dtype>::Forward_cpu(

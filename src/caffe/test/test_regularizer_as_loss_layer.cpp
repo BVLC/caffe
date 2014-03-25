@@ -1,7 +1,8 @@
 // Copyright 2014 kloudkl@github
 
-#include <cstring> // for memset
 #include <cuda_runtime.h>
+#include <cstring>  // for memset
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -47,7 +48,8 @@ typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(RegularizationAsLossTest, Dtypes);
 
 // The death test only abort the current function
-// http://code.google.com/p/googletest/wiki/V1_6_AdvancedGuide#Propagating_Fatal_Failures
+// http://code.google.com/p/googletest/wiki/V1_6_AdvancedGuide
+//        #Propagating_Fatal_Failures
 // We want to test all the combinations of coefficients.
 // If this subroutine is place in the test cases directly,
 // the test cases cannot enumerate the combinations after the first failure.
@@ -70,12 +72,13 @@ void RegularizationAsLossTest<Dtype>::TestSubroutine(
   }
 }
 
-#define TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(device_mode, regularizer_type) \
-TYPED_TEST(RegularizationAsLossTest, TestGradient##device_mode##_##regularizer_type){ \
-  /* To suppress Google Test warning of death tests running in multiple threads */ \
-  /* http://code.google.com/p/googletest/wiki/AdvancedGuide#Death_Test_Styles */ \
+// ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+// To suppress Google Test warning of death tests running in multiple threads
+// http://code.google.com/p/googletest/wiki/AdvancedGuide#Death_Test_Styles
+#define TEST_REG_LOSS_LAYER_SINGLE_TYPE(mode, regularizer) \
+TYPED_TEST(RegularizationAsLossTest, TestGradient##mode##_##regularizer) { \
   ::testing::FLAGS_gtest_death_test_style = "threadsafe"; \
-  Caffe::set_mode(Caffe::device_mode); \
+  Caffe::set_mode(Caffe::mode); \
   TypeParam coeff[] = {1, 0, -1}; \
   /* Restart from failure crash is too slow. Do not test negative coeff. */ \
   int num_ceoff = 2; \
@@ -83,29 +86,27 @@ TYPED_TEST(RegularizationAsLossTest, TestGradient##device_mode##_##regularizer_t
   for (int i = 0; i < num_ceoff; ++i) { \
     LayerParameter layer_param; \
     RegularizerParameter* reg_param = layer_param.add_regularizer(); \
-    reg_param->set_type(REG_TYPE(regularizer_type)); \
+    reg_param->set_type(REG_TYPE(regularizer)); \
     reg_param->set_coeff(coeff[i]); \
     condition = coeff[i] < 0; \
     this->TestSubroutine(condition, layer_param, 1e-2, 5e-2, 1701); \
   } \
 }
 
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, L2);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(CPU, MAX_NORM);
+TEST_REG_LOSS_LAYER_SINGLE_TYPE(CPU, L1);
+TEST_REG_LOSS_LAYER_SINGLE_TYPE(CPU, L2);
+TEST_REG_LOSS_LAYER_SINGLE_TYPE(CPU, MAX_NORM);
 
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L1);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, L2);
-TEST_REGULARIZER_AS_LOSS_LAYER_SINGLE_TYPE(GPU, MAX_NORM);
+TEST_REG_LOSS_LAYER_SINGLE_TYPE(GPU, L1);
+TEST_REG_LOSS_LAYER_SINGLE_TYPE(GPU, L2);
+TEST_REG_LOSS_LAYER_SINGLE_TYPE(GPU, MAX_NORM);
 
-#define TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(device_mode, regularizer_type_a, \
+#define TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(mode, regularizer_type_a, \
     regularizer_type_b) \
 TYPED_TEST(RegularizationAsLossTest, \
-    TestGradient##device_mode##_##regularizer_type_a##_##regularizer_type_b){ \
-  /* To suppress Google Test warning of death tests running in multiple threads */ \
-  /* http://code.google.com/p/googletest/wiki/AdvancedGuide#Death_Test_Styles */ \
+    TestGradient##mode##_##regularizer_type_a##_##regularizer_type_b) { \
   ::testing::FLAGS_gtest_death_test_style = "threadsafe"; \
-  Caffe::set_mode(Caffe::device_mode); \
+  Caffe::set_mode(Caffe::mode); \
   TypeParam coeff[] = {1, 0, -1}; \
   /* Restart from failure crash is too slow. Do not test negative coeff. */ \
   int num_ceoff = 2; \
@@ -150,4 +151,4 @@ TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, MAX_NORM, L1);
 TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, MAX_NORM, L2);
 TEST_REGULARIZER_AS_LOSS_LAYER_TWO_TYPES(GPU, MAX_NORM, MAX_NORM);
 
-}
+}  // namespace caffe

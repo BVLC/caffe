@@ -12,7 +12,7 @@ namespace caffe {
 template<typename Dtype>
 class Regularizer {
  public:
-  Regularizer(const RegularizerParameter& param)
+  explicit Regularizer(const RegularizerParameter& param)
       : coeff_(Dtype(param.coeff())) {
     if (coeff_ < 0) {
       LOG(FATAL)<<
@@ -34,7 +34,7 @@ class Regularizer {
     coeff_ = coeff;
   }
 
-protected:
+ protected:
   // the weight regularization coefficient
   Dtype coeff_;
   DISABLE_COPY_AND_ASSIGN(Regularizer);
@@ -51,8 +51,9 @@ inline int sign(Dtype val) {
 #define MAKE_SIMPLE_REGULARIZER_CLASS(type) \
 template<typename Dtype> \
 class type##Regularizer : public Regularizer<Dtype> { \
+  /* NOLINT_NEXT_LINE(whitespace/indent) */ \
  public: \
- type##Regularizer(const RegularizerParameter& param) \
+  type##Regularizer(const RegularizerParameter& param) \
       : Regularizer<Dtype>(param) { \
   } \
   \
@@ -62,6 +63,7 @@ class type##Regularizer : public Regularizer<Dtype> { \
   virtual Dtype Regularize_cpu(Blob<Dtype>* bottom); \
   virtual Dtype Regularize_gpu(Blob<Dtype>* bottom); \
   \
+  /* NOLINT_NEXT_LINE(whitespace/indent) */ \
  protected: \
   DISABLE_COPY_AND_ASSIGN(type##Regularizer); \
 }
@@ -76,7 +78,6 @@ MAKE_SIMPLE_REGULARIZER_CLASS(MaxNorm);
 template<typename Dtype>
 Regularizer<Dtype>* GetRegularizer(const RegularizerParameter& param);
 
-}
-  // namespace caffe
+}  // namespace caffe
 
 #endif  // CAFFE_REGULARIZER_HPP_

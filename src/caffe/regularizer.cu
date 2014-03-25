@@ -1,10 +1,10 @@
 // Copyright 2014 kloudkl@github
 
-#include <cmath> // for std::abs
+#include <cmath>  // for std::abs
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/regularizer.hpp"
-#include "caffe/util/math_functions.hpp" // for caffe_gpu_asum
+#include "caffe/util/math_functions.hpp"  // for caffe_gpu_asum
 
 namespace caffe {
 
@@ -46,7 +46,8 @@ template __device__ int gpu_sign<float>(const float val);
 template __device__ int gpu_sign<double>(const double val);
 
 template <typename Dtype>
-__global__ void ScaleSign(const int n, const Dtype coeff, const Dtype* data, Dtype* diff) {
+__global__ void ScaleSign(const int n, const Dtype coeff, const Dtype* data,
+                          Dtype* diff) {
   int index = threadIdx.x + blockIdx.x * blockDim.x;
   if (index < n) {
     diff[index] += coeff * gpu_sign<Dtype>(data[index]);
@@ -61,6 +62,7 @@ Dtype L1Regularizer<Dtype>::Regularize_gpu(Blob<Dtype>* bottom) {
   const Dtype* data = bottom->gpu_data();
   Dtype* diff = bottom->mutable_gpu_diff();
   int count = bottom->count();
+  /* NOLINT_NEXT_LINE(whitespace/operators) */
   ScaleSign<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, this->coeff_, data, diff);
   CUDA_POST_KERNEL_CHECK;
@@ -138,13 +140,14 @@ Regularizer<Dtype>* GetRegularizer(const RegularizerParameter& param) {
   return (Regularizer<Dtype>*) (NULL);
 }
 
-template Regularizer<float>* GetRegularizer<float>(const RegularizerParameter& param);
+template Regularizer<float>* GetRegularizer<float>(
+    const RegularizerParameter& param);
 template Regularizer<double>* GetRegularizer<double>(
     const RegularizerParameter& param);
 
-INSTANTIATE_CLASS (Regularizer);
-INSTANTIATE_CLASS (L1Regularizer);
-INSTANTIATE_CLASS (L2Regularizer);
-INSTANTIATE_CLASS (MaxNormRegularizer);
+INSTANTIATE_CLASS(Regularizer);
+INSTANTIATE_CLASS(L1Regularizer);
+INSTANTIATE_CLASS(L2Regularizer);
+INSTANTIATE_CLASS(MaxNormRegularizer);
 
 }  // namespace caffe
