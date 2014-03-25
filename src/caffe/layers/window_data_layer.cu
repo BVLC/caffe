@@ -2,6 +2,7 @@
 //
 // Based on data_layer.cpp by Yangqing Jia.
 
+#include <cuda_runtime.h>
 #include <stdint.h>
 #include <pthread.h>
 
@@ -16,6 +17,8 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+#include "caffe/blob.hpp"
+#include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
