@@ -57,6 +57,10 @@ The last parameter above is the number of data mini-batches.
 
 The features are stored to LevelDB `examples/_temp/features`, ready for access by some other code.
 
+If you meet with the error "Check failed: status.ok() Failed to open leveldb examples/_temp/features", it is because the directory examples/_temp/features has been created the last time you run the command. Remove it and run again. 
+
+    rm -rf examples/_temp/features/
+
 If you'd like to use the Python wrapper for extracting features, check out the [layer visualization notebook](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb).
 
 Clean Up
