@@ -20,11 +20,11 @@ We'll make a temporary folder to store things into.
 Generate a list of the files to process.
 We're going to use the images that ship with caffe.
 
-    find `pwd`/examples/images -type f -exec echo {} \; > examples/_temp/file_list.txt
+    find `pwd`/examples/images -type f -exec echo {} \; > examples/_temp/temp.txt
 
 The `ImagesLayer` we'll use expects labels after each filenames, so let's add a 0 to the end of each line
 
-    sed "s/$/ 0/" examples/_temp/file_list.txt > examples/_temp/file_list.txt
+    sed "s/$/ 0/" examples/_temp/temp.txt > examples/_temp/file_list.txt
 
 Define the Feature Extraction Network Architecture
 --------------------------------------------------
@@ -48,7 +48,7 @@ Extract Features
 
 Now everything necessary is in place.
 
-    build/tools/extract_features.bin models/caffe_reference_imagenet_model examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10
+    build/tools/extract_features.bin examples/imagenet/caffe_reference_imagenet_model examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10
 
 The name of feature blob that you extract is `fc7`, which represents the highest level feature of the reference model.
 We can use any other layer, as well, such as `conv5` or `pool3`.
