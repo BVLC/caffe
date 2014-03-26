@@ -1,0 +1,15 @@
+
+list of the issues blocking the merge of the DenseNet feature branch:
+
+- critical
+-- replacement of GPL'd code (including removal from history)
+-- update build process / Makefile to match current practice 
+-- tests
+-- trivial: remove DenseNet README.md header
+-- trivial: remove this todo file
+
+- unclear neccessity, semantics, and/or priority
+-- general cleanup of commit sequence (probably mostly squashing)
+-- input interface changes (i.e. jpeg filname as input -> ?)
+-- output interface changes (?, but probably something: image support size, multiple layer output, alignment, etc.)
+-- if still reading image files after any iface changes and removal of GPL code, use XX instead of YY

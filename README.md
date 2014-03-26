@@ -1,3 +1,15 @@
+# -- WARNING: THIS IS AN FORK/FEATURE BRANCH OF [CAFFE](http://github.com/BVLC/caffe) (PR PENDING). --
+## DenseNet
+
+[DenseNet: Efficient Computation of Deep ConvNet Feature Pyramids](http://arxiv.org/densenet_paper_url_here)
+Forrest Iandola,Matt Moskewicz,Sergey Karayev,Ross Girshick,Kurt Keutzer,and Trevor Darrell
+
+Except where noted individual files, all new files / changes in this branch are:
+Copyright (c) 2013 Matthew Moskewicz and Forrest Iandola
+
+
+## Original Caffe README.md follows
+
 [Caffe: Convolutional Architecture for Fast Feature Extraction](http://caffe.berkeleyvision.org)
 
 Created by [Yangqing Jia](http://daggerfs.com), UC Berkeley EECS department.
