@@ -325,8 +325,8 @@ void Net<Dtype>::ReadParamsFromTextFile(const string& param_file,
                 << "V0LayerParameter";
     }
     LOG(ERROR) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use ./build/tools/upgrade_net_proto.bin to upgrade "
-        << "this and any other network proto files to the new format.";
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text.bin to "
+        << "upgrade this and any other network proto files to the new format.";
   }
 }
 
@@ -349,8 +349,8 @@ void Net<Dtype>::ReadParamsFromBinaryFile(const string& param_file,
                 << "V0LayerParameter";
     }
     LOG(ERROR) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use ./build/tools/upgrade_net_proto.bin to upgrade "
-        << "this and any other network proto files to the new format.";
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto_binary.bin to "
+        << "upgrade this and any other network proto files to the new format.";
   }
 }
 
