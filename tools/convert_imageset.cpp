@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 // This program converts a set of images to a leveldb by storing them as Datum
 // proto buffers.
 // Usage:

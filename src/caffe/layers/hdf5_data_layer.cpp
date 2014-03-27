@@ -1,9 +1,5 @@
-// Copyright 2014 BVLC.
+// Copyright 2014 BVLC and contributors.
 /*
-Contributors:
-- Sergey Karayev, 2014.
-- Tobias Domhan, 2014.
-
 TODO:
 - load file in a separate thread ("prefetch")
 - can be smarter about the memcpy call instead of doing it row-by-row

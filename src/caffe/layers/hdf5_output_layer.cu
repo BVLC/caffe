@@ -1,8 +1,4 @@
 // Copyright 2014 BVLC and contributors.
-/*
-Contributors:
-- kloudkl@github, 2014.
-*/
 
 #include <vector>
 

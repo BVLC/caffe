@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 // This is simply a script that tries serializing protocol buffer in text
 // format. Nothing special here and no actual code is being tested.

@@ -1,4 +1,4 @@
-// Copyright 2013 Ross Girshick
+// Copyright 2014 BVLC and contributors.
 //
 // Based on data_layer.cpp by Yangqing Jia.
 

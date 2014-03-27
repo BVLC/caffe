@@ -1,4 +1,4 @@
-// Copyright Sergey Karayev 2014
+// Copyright 2014 BVLC and contributors.
 /*
 TODO:
 - only load parts of the file, in accordance with a prototxt param "max_mem"
