@@ -22,7 +22,7 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   int total_iter = 50;
-  if (argc < 2) {
+  if (argc < 2 || argc > 5) {
     LOG(ERROR) << "net_speed_benchmark net_proto [iterations=50]"
         " [CPU/GPU] [Device_id=0]";
     return 0;

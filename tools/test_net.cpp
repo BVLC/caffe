@@ -17,7 +17,7 @@
 using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
-  if (argc < 4) {
+  if (argc < 4 || argc > 5) {
     LOG(ERROR) << "test_net net_proto pretrained_net_proto iterations "
         << "[CPU/GPU]";
     return 0;
