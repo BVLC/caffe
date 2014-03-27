@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
   if (argc < 2 || argc > 5) {
     LOG(ERROR) << "net_speed_benchmark net_proto [iterations=50]"
         " [CPU/GPU] [Device_id=0]";
-    return 0;
+    return 1;
   }
 
   if (argc >=3) {

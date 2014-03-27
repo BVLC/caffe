@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         " RANDOM_SHUFFLE_DATA[0 or 1]\n"
         "The ImageNet dataset for the training demo is at\n"
         "    http://www.image-net.org/download-images\n");
-    return 0;
+    return 1;
   }
   std::ifstream infile(argv[2]);
   std::vector<std::pair<string, int> > lines;
