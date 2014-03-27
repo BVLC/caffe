@@ -47,9 +47,9 @@ You will also need other packages, most of which can be installed via apt-get us
 
 On CentOS or RHEL, you can install via yum using:
 
-    sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel 
+    sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
 
-The only exception being the google logging library, which does not exist in the Ubuntu 12.04 or CentOS/RHEL repository. To install it, do:
+The only exception being the google logging library, which does not exist in the Ubuntu 12.04 or CentOS/RHEL repositories. To install it, do:
 
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
     tar zxvf glog-0.3.3.tar.gz
@@ -66,10 +66,12 @@ After setting all the prerequisites, you should modify the `Makefile.config` fil
 
 ## Compilation
 
-After installing the prerequisites, simply do `make all -j10` in which 10 is the number of parallel compilation threads to compile Caffe. If you would like to compile the Python and Matlab wrappers, do
+After installing the prerequisites, simply do `make all` to compile Caffe. If you would like to compile the Python and Matlab wrappers, do
 
     make pycaffe
     make matcaffe
+
+For a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation. A good choice for the number of threads is the number of cores in your machine.
 
 Optionally, you can run `make distribute` to create a `distribute` directory that contains all the necessary files, including the headers, compiled shared libraries, and binary files that you can distribute over different machines.
 
