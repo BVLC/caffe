@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc != 3) {
     LOG(ERROR) << "Usage: "
-        << "upgrade_net_proto v0_net_proto_file_in net_proto_file_out";
+        << "upgrade_net_proto_binary v0_net_proto_file_in net_proto_file_out";
     return 1;
   }
 
