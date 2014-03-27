@@ -6,26 +6,29 @@
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/proto/deprecated/caffe_v0_to_v1_bridge.pb.h"
 
 using std::string;
 
 namespace caffe {
 
+// Return true iff any layer contains parameters specified using
+// deprecated V0LayerParameter.
+bool NetNeedsUpgrade(const NetParameter& net_param);
+
 // Perform all necessary transformations to upgrade a V0NetParameter into a
 // NetParameter (including upgrading padding layers and LayerParameters).
-bool UpgradeV0Net(const V0NetParameter& v0_net_param, NetParameter* net_param);
+bool UpgradeV0Net(const NetParameter& v0_net_param, NetParameter* net_param);
 
-// Upgrade V0NetParameter with padding layers to pad-aware conv layers.
+// Upgrade NetParameter with padding layers to pad-aware conv layers.
 // For any padding layer, remove it and put its pad parameter in any layers
 // taking its top blob as input.
 // Error if any of these above layers are not-conv layers.
-void UpgradeV0PaddingLayers(const V0NetParameter& param,
-                            V0NetParameter* param_upgraded_pad);
+void UpgradeV0PaddingLayers(const NetParameter& param,
+                            NetParameter* param_upgraded_pad);
 
 // Upgrade a single V0LayerConnection to the new LayerParameter format.
-bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
-                              LayerParameter* layer_param);
+bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
+                           LayerParameter* layer_param);
 
 LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 

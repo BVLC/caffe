@@ -10,17 +10,25 @@
 #include "caffe/common.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/proto/deprecated/caffe_v0_to_v1_bridge.pb.h"
 
 using std::map;
 using std::string;
 
 namespace caffe {
 
-bool UpgradeV0Net(const V0NetParameter& v0_net_param_padding_layers,
+bool NetNeedsUpgrade(const NetParameter& net_param) {
+  for (int i = 0; i < net_param.layers_size(); ++i) {
+    if (net_param.layers(i).has_layer()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool UpgradeV0Net(const NetParameter& v0_net_param_padding_layers,
                   NetParameter* net_param) {
   // First upgrade padding layers to padded conv layers.
-  V0NetParameter v0_net_param;
+  NetParameter v0_net_param;
   UpgradeV0PaddingLayers(v0_net_param_padding_layers, &v0_net_param);
   // Now upgrade layer parameters.
   bool is_fully_compatible = true;
@@ -29,8 +37,8 @@ bool UpgradeV0Net(const V0NetParameter& v0_net_param_padding_layers,
     net_param->set_name(v0_net_param.name());
   }
   for (int i = 0; i < v0_net_param.layers_size(); ++i) {
-    is_fully_compatible &= UpgradeV0LayerConnection(v0_net_param.layers(i),
-                                                    net_param->add_layers());
+    is_fully_compatible &= UpgradeLayerParameter(v0_net_param.layers(i),
+                                                 net_param->add_layers());
   }
   for (int i = 0; i < v0_net_param.input_size(); ++i) {
     net_param->add_input(v0_net_param.input(i));
@@ -44,8 +52,8 @@ bool UpgradeV0Net(const V0NetParameter& v0_net_param_padding_layers,
   return is_fully_compatible;
 }
 
-void UpgradeV0PaddingLayers(const V0NetParameter& param,
-                            V0NetParameter* param_upgraded_pad) {
+void UpgradeV0PaddingLayers(const NetParameter& param,
+                            NetParameter* param_upgraded_pad) {
   // Copy everything other than the layers from the original param.
   param_upgraded_pad->Clear();
   param_upgraded_pad->CopyFrom(param);
@@ -57,7 +65,7 @@ void UpgradeV0PaddingLayers(const V0NetParameter& param,
     blob_name_to_last_top_idx[blob_name] = -1;
   }
   for (int i = 0; i < param.layers_size(); ++i) {
-    const V0LayerConnection& layer_connection = param.layers(i);
+    const LayerParameter& layer_connection = param.layers(i);
     const V0LayerParameter& layer_param = layer_connection.layer();
     // Add the layer to the new net, unless it's a padding layer.
     if (layer_param.type() != "padding") {
@@ -73,7 +81,7 @@ void UpgradeV0PaddingLayers(const V0NetParameter& param,
       if (top_idx == -1) {
         continue;
       }
-      V0LayerConnection source_layer = param.layers(top_idx);
+      LayerParameter source_layer = param.layers(top_idx);
       if (source_layer.layer().type() == "padding") {
         // This layer has a padding layer as input -- check that it is a conv
         // layer and takes only one input.  Also check that the padding layer
@@ -101,8 +109,8 @@ void UpgradeV0PaddingLayers(const V0NetParameter& param,
   }
 }
 
-bool UpgradeV0LayerConnection(const V0LayerConnection& v0_layer_connection,
-                              LayerParameter* layer_param) {
+bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
+                           LayerParameter* layer_param) {
   bool is_fully_compatible = true;
   layer_param->Clear();
   for (int i = 0; i < v0_layer_connection.bottom_size(); ++i) {
