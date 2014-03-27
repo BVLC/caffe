@@ -55,3 +55,9 @@ To get a list of all options `googletest` provides, simply pass the `--help` fla
 - Remember that “a foolish consistency is the hobgoblin of little minds,” so use your best judgement to write the clearest code for your particular case.
 
 **Lint**: run `make lint` to check C++ code.
+
+**Copyright**: assign copyright jointly to BVLC and contributors like so:
+
+    // Copyright 2014 BVLC and contributors.
+
+The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements). This method is impartial and always up-to-date.
