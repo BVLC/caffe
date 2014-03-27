@@ -1,4 +1,4 @@
-// Copyright 2014 kloud@github
+// Copyright 2014 BVLC and contributors.
 
 #include <unistd.h>  // for usleep
 #include <cuda_runtime.h>

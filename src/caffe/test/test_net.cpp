@@ -1,4 +1,4 @@
-// Copyright 2014 kloudkl@github
+// Copyright 2014 BVLC and contributors.
 
 #include <google/protobuf/text_format.h>
 #include <leveldb/db.h>

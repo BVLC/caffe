@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 //
 // This is a simple script that allows one to quickly test a network whose
 // structure is specified by text format protocol buffers, and whose parameter
