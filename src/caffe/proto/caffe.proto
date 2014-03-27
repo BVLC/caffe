@@ -154,7 +154,7 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 19;
   optional WindowDataParameter window_data_param = 20;
 
-  // The layer parameters specified as a deprecated V0LayerParameter.
+  // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
   // LayerParameter specification.
   optional V0LayerParameter layer = 1;
