@@ -64,26 +64,26 @@ int feature_extraction_pipeline(int argc, char** argv) {
   //  fc7 top blob to extract features.
   /*
    layers {
-   layer {
-   name: "data_layer_name"
-   type: "data"
-   source: "/path/to/your/images/to/extract/feature/images_leveldb"
-   meanfile: "/path/to/your/image_mean.binaryproto"
-   batchsize: 128
-   cropsize: 227
-   mirror: false
-   }
-   top: "data_blob_name"
-   top: "label_blob_name"
+     name: "data_layer_name"
+     type: DATA
+     data_param {
+       source: "/path/to/your/images/to/extract/feature/images_leveldb"
+       mean_file: "/path/to/your/image_mean.binaryproto"
+       batch_size: 128
+       crop_size: 227
+       mirror: false
+     }
+     top: "data_blob_name"
+     top: "label_blob_name"
    }
    layers {
-   layer {
-   name: "drop7"
-   type: "dropout"
-   dropout_ratio: 0.5
-   }
-   bottom: "fc7"
-   top: "fc7"
+     name: "drop7"
+     type: DROPOUT
+     dropout_param {
+       dropout_ratio: 0.5
+     }
+     bottom: "fc7"
+     top: "fc7"
    }
    */
   string feature_extraction_proto(argv[++arg_pos]);
