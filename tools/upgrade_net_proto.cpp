@@ -1,4 +1,4 @@
-// Copyright 2014 Jeff Donahue
+// Copyright 2014 BVLC and contributors.
 //
 // This is a script to upgrade "V0" network prototxts to the new format.
 // Usage:
