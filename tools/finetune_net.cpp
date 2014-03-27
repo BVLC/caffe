@@ -14,7 +14,7 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc < 2) {
+  if (argc != 3) {
     LOG(ERROR) << "Usage: finetune_net solver_proto_file pretrained_net";
     return 0;
   }
