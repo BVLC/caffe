@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc != 3) {
     LOG(ERROR) << "Usage: finetune_net solver_proto_file pretrained_net";
-    return 0;
+    return 1;
   }
 
   SolverParameter solver_param;

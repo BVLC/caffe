@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc < 2 || argc > 3) {
     LOG(ERROR) << "Usage: train_net solver_proto_file [resume_point_file]";
-    return 0;
+    return 1;
   }
 
   SolverParameter solver_param;
