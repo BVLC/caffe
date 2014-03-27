@@ -12,9 +12,10 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/test/test_caffe_main.hpp"
 
-namespace caffe {
 using std::string;
 using std::vector;
+
+namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
@@ -22,17 +23,14 @@ template <typename Dtype>
 class HDF5OutputLayerTest : public ::testing::Test {
  protected:
   HDF5OutputLayerTest()
-      : output_file_name_("/tmp/test_hdf5_output_layer-sample_data.hdf5"),
+      : output_file_name_(tmpnam(NULL)),
         input_file_name_("src/caffe/test/test_data/sample_data.h5"),
         blob_data_(new Blob<Dtype>()),
         blob_label_(new Blob<Dtype>()),
         num_(5),
         channels_(8),
         height_(5),
-        width_(5) {
-  }
-  virtual void SetUp() {
-  }
+        width_(5) {}
 
   virtual ~HDF5OutputLayerTest() {
     delete blob_data_;
