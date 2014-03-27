@@ -476,6 +476,16 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
         is_fully_compatible = false;
       }
     }
+    if (v0_layer_param.has_hdf5_output_param()) {
+      if (type == "hdf5_output") {
+        layer_param->mutable_hdf5_output_param()->CopyFrom(
+            v0_layer_param.hdf5_output_param());
+      } else {
+        LOG(ERROR) << "Unknown parameter hdf5_output_param for layer type "
+                   << type;
+        is_fully_compatible = false;
+      }
+    }
   }
   return is_fully_compatible;
 }
@@ -499,6 +509,8 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     return LayerParameter_LayerType_FLATTEN;
   } else if (type == "hdf5_data") {
     return LayerParameter_LayerType_HDF5_DATA;
+  } else if (type == "hdf5_output") {
+    return LayerParameter_LayerType_HDF5_OUTPUT;
   } else if (type == "im2col") {
     return LayerParameter_LayerType_IM2COL;
   } else if (type == "images") {
