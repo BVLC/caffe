@@ -34,9 +34,6 @@ TOOL_SRCS := $(shell find tools -name "*.cpp")
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRCS := $(wildcard src/$(PROJECT)/proto/*.proto)
-# DEPRECATED_PROTO_SRCS are protobuf definitions we no longer officially
-# support, but keep around for upgrades etc.
-DEPRECATED_PROTO_SRCS := $(wildcard src/$(PROJECT)/proto/deprecated/*.proto)
 # NONGEN_CXX_SRCS includes all source/header files except those generated
 # automatically (e.g., by proto).
 NONGEN_CXX_SRCS := $(shell find \
@@ -63,17 +60,12 @@ MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT)
 PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}
 PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
-# The generated files for deprecated protocol buffers
-DEPRECATED_PROTO_GEN_HEADER := ${DEPRECATED_PROTO_SRCS:.proto=.pb.h}
-DEPRECATED_PROTO_GEN_CC := ${DEPRECATED_PROTO_SRCS:.proto=.pb.cc}
-DEPRECATED_PROTO_GEN_PY := ${DEPRECATED_PROTO_SRCS:.proto=_pb2.py}
 # The objects corresponding to the source files
 # These objects will be linked into the final shared library, so we
 # exclude the tool, example, and test objects.
 CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
 CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
 PROTO_OBJS := $(addprefix $(BUILD_DIR)/, ${PROTO_GEN_CC:.cc=.o})
-PROTO_OBJS += $(addprefix $(BUILD_DIR)/, ${DEPRECATED_PROTO_GEN_CC:.cc=.o})
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
@@ -252,14 +244,12 @@ $(PROTO_GEN_PY): $(PROTO_SRCS)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
 	@echo
 
-proto: $(PROTO_GEN_CC) $(DEPRECATED_PROTO_GEN_CC)
+proto: $(PROTO_GEN_CC)
 
-$(PROTO_GEN_CC): $(PROTO_SRCS) $(DEPRECATED_PROTO_SRCS)
-	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS) $(DEPRECATED_PROTO_SRCS)
+$(PROTO_GEN_CC): $(PROTO_SRCS)
+	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS)
 	mkdir -p include/$(PROJECT)/proto
 	cp $(PROTO_GEN_HEADER) include/$(PROJECT)/proto/
-	mkdir -p include/$(PROJECT)/proto/deprecated
-	cp $(DEPRECATED_PROTO_GEN_HEADER) include/$(PROJECT)/proto/deprecated/
 	@echo
 
 clean:

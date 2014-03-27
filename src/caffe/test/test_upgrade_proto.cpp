@@ -25,18 +25,18 @@ class PaddingLayerUpgradeTest : public ::testing::Test {
     // Test that UpgradeV0PaddingLayers called on the proto specified by
     // input_param_string results in the proto specified by
     // output_param_string.
-    V0NetParameter input_param;
+    NetParameter input_param;
     CHECK(google::protobuf::TextFormat::ParseFromString(
         input_param_string, &input_param));
-    V0NetParameter expected_output_param;
+    NetParameter expected_output_param;
     CHECK(google::protobuf::TextFormat::ParseFromString(
         output_param_string, &expected_output_param));
-    V0NetParameter actual_output_param;
+    NetParameter actual_output_param;
     UpgradeV0PaddingLayers(input_param, &actual_output_param);
     EXPECT_EQ(expected_output_param.DebugString(),
         actual_output_param.DebugString());
     // Also test idempotence.
-    V0NetParameter double_pad_upgrade_param;
+    NetParameter double_pad_upgrade_param;
     UpgradeV0PaddingLayers(actual_output_param, &double_pad_upgrade_param);
     EXPECT_EQ(actual_output_param.DebugString(),
        double_pad_upgrade_param.DebugString());
@@ -1096,10 +1096,10 @@ class V0UpgradeTest : public ::testing::Test {
  protected:
   void RunV0UpgradeTest(
       const string& input_param_string, const string& output_param_string) {
-    // Test that UpgradeV0Net called on the V0NetParameter proto specified by
+    // Test that UpgradeV0Net called on the NetParameter proto specified by
     // input_param_string results in the NetParameter proto specified by
     // output_param_string.
-    V0NetParameter input_param;
+    NetParameter input_param;
     CHECK(google::protobuf::TextFormat::ParseFromString(
         input_param_string, &input_param));
     NetParameter expected_output_param;
