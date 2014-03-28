@@ -39,12 +39,17 @@ int main(int argc, char** argv) {
     LOG(ERROR) << "File already in V1 proto format: " << argv[1];
   }
 
+  // Convert to a NetParameterPrettyPrint to print fields in desired
+  // order.
+  NetParameterPrettyPrint net_param_pretty;
+  NetParameterToPrettyPrint(net_param, &net_param_pretty);
+
   // TODO(jdonahue): figure out why WriteProtoToTextFile doesn't work
   // (no file is created).
-  // WriteProtoToTextFile(upgraded_net_param, argv[2]);
+  // WriteProtoToTextFile(net_param_pretty, argv[2]);
   ofstream output_proto;
   output_proto.open(argv[2]);
-  output_proto << net_param.DebugString();
+  output_proto << net_param_pretty.DebugString();
   output_proto.close();
 
   LOG(ERROR) << "Wrote upgraded NetParameter text proto to " << argv[2];

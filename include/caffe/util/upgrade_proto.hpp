@@ -6,6 +6,7 @@
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/proto/caffe_pretty_print.pb.h"
 
 using std::string;
 
@@ -31,6 +32,11 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
                            LayerParameter* layer_param);
 
 LayerParameter_LayerType UpgradeV0LayerType(const string& type);
+
+// Convert a NetParameter to NetParameterPrettyPrint used for dumping to
+// proto text files.
+void NetParameterToPrettyPrint(const NetParameter& param,
+                               NetParameterPrettyPrint* pretty_param);
 
 }  // namespace caffe
 
