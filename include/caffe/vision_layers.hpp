@@ -76,6 +76,30 @@ class DropoutLayer : public NeuronLayer<Dtype> {
 };
 
 template <typename Dtype>
+class PowerLayer : public NeuronLayer<Dtype> {
+ public:
+  explicit PowerLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  Dtype power_;
+  Dtype scale_;
+  Dtype shift_;
+  Dtype diff_scale_;
+};
+
+template <typename Dtype>
 class ReLULayer : public NeuronLayer<Dtype> {
  public:
   explicit ReLULayer(const LayerParameter& param)
@@ -244,6 +268,30 @@ class DataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
+};
+
+template <typename Dtype>
+class EltwiseProductLayer : public Layer<Dtype> {
+ public:
+  explicit EltwiseProductLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
 };
 
 template <typename Dtype>
@@ -480,6 +528,41 @@ class LRNLayer : public Layer<Dtype> {
   int channels_;
   int height_;
   int width_;
+};
+
+template <typename Dtype>
+class LRNMapLayer : public Layer<Dtype> {
+ public:
+  explicit LRNMapLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  shared_ptr<PowerLayer<Dtype> > square_layer_;
+  Blob<Dtype> square_input_;
+  Blob<Dtype> square_output_;
+  vector<Blob<Dtype>*> square_bottom_vec_;
+  vector<Blob<Dtype>*> square_top_vec_;
+  shared_ptr<ConvolutionLayer<Dtype> > conv_layer_;
+  Blob<Dtype> conv_output_;
+  vector<Blob<Dtype>*> conv_top_vec_;
+  shared_ptr<PowerLayer<Dtype> > power_layer_;
+  Blob<Dtype> power_output_;
+  vector<Blob<Dtype>*> power_top_vec_;
+  shared_ptr<EltwiseProductLayer<Dtype> > product_layer_;
+  Blob<Dtype> product_data_input_;
+  vector<Blob<Dtype>*> product_bottom_vec_;
+  vector<Blob<Dtype>*> product_top_vec_;
 };
 
 template <typename Dtype>
