@@ -1,0 +1,18 @@
+// Copyright 2014 BVLC and contributors.
+
+package caffe;
+
+import "caffe/proto/caffe.proto";
+
+// A near-duplicate of NetParameter with fields re-numbered to beautify
+// automatic prototext dumps.  The main practical purpose is to print inputs
+// before layers, because having inputs at the end looks weird.
+// NetParameterPrettyPrint should never be used in code except for conversion
+// FROM NetParameter and subsequent dumping to proto text file.
+message NetParameterPrettyPrint {
+  optional string name = 1;
+  optional bool force_backward = 2 [default = false];
+  repeated string input = 3;
+  repeated int32 input_dim = 4;
+  repeated LayerParameter layers = 5;
+}

@@ -545,4 +545,24 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
   }
 }
 
+void NetParameterToPrettyPrint(const NetParameter& param,
+                               NetParameterPrettyPrint* pretty_param) {
+  pretty_param->Clear();
+  if (param.has_name()) {
+    pretty_param->set_name(param.name());
+  }
+  if (param.has_force_backward()) {
+    pretty_param->set_force_backward(param.force_backward());
+  }
+  for (int i = 0; i < param.input_size(); ++i) {
+    pretty_param->add_input(param.input(i));
+  }
+  for (int i = 0; i < param.input_dim_size(); ++i) {
+    pretty_param->add_input_dim(param.input_dim(i));
+  }
+  for (int i = 0; i < param.layers_size(); ++i) {
+    pretty_param->add_layers()->CopyFrom(param.layers(i));
+  }
+}
+
 }  // namespace caffe
