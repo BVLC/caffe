@@ -30,7 +30,7 @@ using std::string;
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc < 4) {
+  if (argc < 4 || argc > 5) {
     printf("Convert a set of images to the leveldb format used\n"
         "as input for Caffe.\n"
         "Usage:\n"
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         " RANDOM_SHUFFLE_DATA[0 or 1]\n"
         "The ImageNet dataset for the training demo is at\n"
         "    http://www.image-net.org/download-images\n");
-    return 0;
+    return 1;
   }
   std::ifstream infile(argv[2]);
   std::vector<std::pair<string, int> > lines;
