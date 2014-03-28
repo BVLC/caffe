@@ -1,49 +1,23 @@
 name: "LeNet-test"
 layers {
-  layer {
-    name: "mnist"
-    type: "data"
-    source: "mnist-test-leveldb"
-    batchsize: 100
-    scale: 0.00390625
-  }
+  name: "mnist"
+  type: DATA
   top: "data"
   top: "label"
+  data_param {
+    source: "mnist-test-leveldb"
+    scale: 0.00390625
+    batch_size: 100
+  }
 }
 layers {
-  layer {
-    name: "conv1"
-    type: "conv"
-    num_output: 20
-    kernelsize: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
+  name: "conv1"
+  type: CONVOLUTION
   bottom: "data"
   top: "conv1"
-}
-layers {
-  layer {
-    name: "pool1"
-    type: "pool"
-    kernelsize: 2
-    stride: 2
-    pool: MAX
-  }
-  bottom: "conv1"
-  top: "pool1"
-}
-layers {
-  layer {
-    name: "conv2"
-    type: "conv"
-    num_output: 50
-    kernelsize: 5
+  convolution_param {
+    num_output: 20
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "xavier"
@@ -52,24 +26,52 @@ layers {
       type: "constant"
     }
   }
+}
+layers {
+  name: "pool1"
+  type: POOLING
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layers {
+  name: "conv2"
+  type: CONVOLUTION
   bottom: "pool1"
   top: "conv2"
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
 }
 layers {
-  layer {
-    name: "pool2"
-    type: "pool"
-    kernelsize: 2
-    stride: 2
-    pool: MAX
-  }
+  name: "pool2"
+  type: POOLING
   bottom: "conv2"
   top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
 }
 layers {
-  layer {
-    name: "ip1"
-    type: "innerproduct"
+  name: "ip1"
+  type: INNER_PRODUCT
+  bottom: "pool2"
+  top: "ip1"
+  inner_product_param {
     num_output: 500
     weight_filler {
       type: "xavier"
@@ -78,21 +80,19 @@ layers {
       type: "constant"
     }
   }
-  bottom: "pool2"
-  top: "ip1"
 }
 layers {
-  layer {
-    name: "relu1"
-    type: "relu"
-  }
+  name: "relu1"
+  type: RELU
   bottom: "ip1"
   top: "ip1"
 }
 layers {
-  layer {
-    name: "ip2"
-    type: "innerproduct"
+  name: "ip2"
+  type: INNER_PRODUCT
+  bottom: "ip1"
+  top: "ip2"
+  inner_product_param {
     num_output: 10
     weight_filler {
       type: "xavier"
@@ -101,22 +101,16 @@ layers {
       type: "constant"
     }
   }
-  bottom: "ip1"
-  top: "ip2"
 }
 layers {
-  layer {
-    name: "prob"
-    type: "softmax"
-  }
+  name: "prob"
+  type: SOFTMAX
   bottom: "ip2"
   top: "prob"
 }
 layers {
-  layer {
-    name: "accuracy"
-    type: "accuracy"
-  }
+  name: "accuracy"
+  type: ACCURACY
   bottom: "prob"
   bottom: "label"
   top: "accuracy"

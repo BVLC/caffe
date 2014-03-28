@@ -21,10 +21,10 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   width_ = bottom[0]->width();
   (*top)[0]->Reshape(num_, channels_, height_, width_);
   scale_.Reshape(num_, channels_, height_, width_);
-  size_ = this->layer_param_.local_size();
+  size_ = this->layer_param_.lrn_param().local_size();
   pre_pad_ = (size_ - 1) / 2;
-  alpha_ = this->layer_param_.alpha();
-  beta_ = this->layer_param_.beta();
+  alpha_ = this->layer_param_.lrn_param().alpha();
+  beta_ = this->layer_param_.lrn_param().beta();
 }
 
 template <typename Dtype>

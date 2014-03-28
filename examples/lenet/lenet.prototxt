@@ -4,43 +4,16 @@ input_dim: 64
 input_dim: 1
 input_dim: 28
 input_dim: 28
-# N.B. input should be 0/1 = mnist raw data scaled by 0.00390625
 layers {
-  layer {
-    name: "conv1"
-    type: "conv"
-    num_output: 20
-    kernelsize: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-    blobs_lr: 1.
-    blobs_lr: 2.
-  }
+  name: "conv1"
+  type: CONVOLUTION
   bottom: "data"
   top: "conv1"
-}
-layers {
-  layer {
-    name: "pool1"
-    type: "pool"
-    kernelsize: 2
-    stride: 2
-    pool: MAX
-  }
-  bottom: "conv1"
-  top: "pool1"
-}
-layers {
-  layer {
-    name: "conv2"
-    type: "conv"
-    num_output: 50
-    kernelsize: 5
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: 20
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "xavier"
@@ -48,27 +21,57 @@ layers {
     bias_filler {
       type: "constant"
     }
-    blobs_lr: 1.
-    blobs_lr: 2.
   }
+}
+layers {
+  name: "pool1"
+  type: POOLING
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layers {
+  name: "conv2"
+  type: CONVOLUTION
   bottom: "pool1"
   top: "conv2"
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
 }
 layers {
-  layer {
-    name: "pool2"
-    type: "pool"
-    kernelsize: 2
-    stride: 2
-    pool: MAX
-  }
+  name: "pool2"
+  type: POOLING
   bottom: "conv2"
   top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
 }
 layers {
-  layer {
-    name: "ip1"
-    type: "innerproduct"
+  name: "ip1"
+  type: INNER_PRODUCT
+  bottom: "pool2"
+  top: "ip1"
+  blobs_lr: 1
+  blobs_lr: 2
+  inner_product_param {
     num_output: 500
     weight_filler {
       type: "xavier"
@@ -76,24 +79,22 @@ layers {
     bias_filler {
       type: "constant"
     }
-    blobs_lr: 1.
-    blobs_lr: 2.
   }
-  bottom: "pool2"
-  top: "ip1"
 }
 layers {
-  layer {
-    name: "relu1"
-    type: "relu"
-  }
+  name: "relu1"
+  type: RELU
   bottom: "ip1"
   top: "ip1"
 }
 layers {
-  layer {
-    name: "ip2"
-    type: "innerproduct"
+  name: "ip2"
+  type: INNER_PRODUCT
+  bottom: "ip1"
+  top: "ip2"
+  blobs_lr: 1
+  blobs_lr: 2
+  inner_product_param {
     num_output: 10
     weight_filler {
       type: "xavier"
@@ -101,17 +102,11 @@ layers {
     bias_filler {
       type: "constant"
     }
-    blobs_lr: 1.
-    blobs_lr: 2.
   }
-  bottom: "ip1"
-  top: "ip2"
 }
 layers {
-  layer {
-    name: "prob"
-    type: "softmax"
-  }
+  name: "prob"
+  type: SOFTMAX
   bottom: "ip2"
   top: "prob"
 }

@@ -46,9 +46,11 @@ TYPED_TEST_CASE(ConvolutionLayerTest, Dtypes);
 
 TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_num_output(4);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(4);
   shared_ptr<Layer<TypeParam> > layer(
       new ConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -57,8 +59,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->height(), 2);
   EXPECT_EQ(this->blob_top_->width(), 2);
   // setting group should not change the shape
-  layer_param.set_num_output(3);
-  layer_param.set_group(3);
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
   layer.reset(new ConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -74,13 +76,15 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   ConstantFiller<TypeParam> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_num_output(4);
-  layer_param.mutable_weight_filler()->set_type("constant");
-  layer_param.mutable_weight_filler()->set_value(1);
-  layer_param.mutable_bias_filler()->set_type("constant");
-  layer_param.mutable_bias_filler()->set_value(0.1);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(4);
+  convolution_param->mutable_weight_filler()->set_type("constant");
+  convolution_param->mutable_weight_filler()->set_value(1);
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<TypeParam> > layer(
       new ConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -120,14 +124,16 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
     }
   }
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_num_output(3);
-  layer_param.set_group(3);
-  layer_param.mutable_weight_filler()->set_type("constant");
-  layer_param.mutable_weight_filler()->set_value(1);
-  layer_param.mutable_bias_filler()->set_type("constant");
-  layer_param.mutable_bias_filler()->set_value(0.1);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+  convolution_param->mutable_weight_filler()->set_type("constant");
+  convolution_param->mutable_weight_filler()->set_value(1);
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<TypeParam> > layer(
       new ConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -167,11 +173,13 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
 
 TYPED_TEST(ConvolutionLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_num_output(2);
-  layer_param.mutable_weight_filler()->set_type("gaussian");
-  layer_param.mutable_bias_filler()->set_type("gaussian");
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::CPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
@@ -181,12 +189,14 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradient) {
 
 TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_num_output(3);
-  layer_param.set_group(3);
-  layer_param.mutable_weight_filler()->set_type("gaussian");
-  layer_param.mutable_bias_filler()->set_type("gaussian");
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::CPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
@@ -196,11 +206,13 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
 
 TYPED_TEST(ConvolutionLayerTest, TestGPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_num_output(2);
-  layer_param.mutable_weight_filler()->set_type("gaussian");
-  layer_param.mutable_bias_filler()->set_type("gaussian");
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::GPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
@@ -210,12 +222,14 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUGradient) {
 
 TYPED_TEST(ConvolutionLayerTest, TestGPUGradientGroup) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_num_output(3);
-  layer_param.set_group(3);
-  layer_param.mutable_weight_filler()->set_type("gaussian");
-  layer_param.mutable_bias_filler()->set_type("gaussian");
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(3);
+  convolution_param->set_group(3);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::GPU);
   ConvolutionLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);

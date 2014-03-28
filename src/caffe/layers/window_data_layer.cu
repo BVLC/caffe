@@ -16,9 +16,9 @@ using std::string;
 using std::map;
 using std::pair;
 
-// caffe.proto > LayerParameter
+// caffe.proto > LayerParameter > WindowDataParameter
 //   'source' field specifies the window_file
-//   'cropsize' indicates the desired warped size
+//   'crop_size' indicates the desired warped size
 
 namespace caffe {
 

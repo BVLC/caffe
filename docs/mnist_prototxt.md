@@ -17,11 +17,11 @@ Writing the Data Layer
 Currently, we will read the MNIST data from the leveldb we created earlier in the demo. This is defined by a data layer:
 
     layers {
-      layer {
-        name: "mnist"
-        type: "data"
+      name: "mnist"
+      type: DATA
+      data_param {
         source: "mnist-train-leveldb"
-        batchsize: 64
+        batch_size: 64
         scale: 0.00390625
       }
       top: "data"
@@ -35,9 +35,11 @@ Writing the Convolution Layer
 Let's define the first convolution layer:
 
     layers {
-      layer {
-        name: "conv1"
-        type: "conv"
+      name: "conv1"
+      type: CONVOLUTION
+      blobs_lr: 1.
+      blobs_lr: 2.
+      convolution_param {
         num_output: 20
         kernelsize: 5
         stride: 1
@@ -47,8 +49,6 @@ Let's define the first convolution layer:
         bias_filler {
           type: "constant"
         }
-        blobs_lr: 1.
-        blobs_lr: 2.
       }
       bottom: "data"
       top: "conv1"
@@ -65,10 +65,10 @@ Writing the Pooling Layer
 Phew. Pooling layers are actually much easier to define:
 
     layers {
-      layer {
-        name: "pool1"
-        type: "pool"
-        kernelsize: 2
+      name: "pool1"
+      type: POOLING
+      pooling_param {
+        kernel_size: 2
         stride: 2
         pool: MAX
       }
@@ -82,12 +82,14 @@ Similarly, you can write up the second convolution and pooling layers. Check `da
 
 Writing the Fully Connected Layer
 ----------------------------------
-Writing a fully connected layers is also simple:
+Writing a fully connected layer is also simple:
 
     layers {
-      layer {
-        name: "ip1"
-        type: "innerproduct"
+      name: "ip1"
+      type: INNER_PRODUCT
+      blobs_lr: 1.
+      blobs_lr: 2.
+      inner_product_param {
         num_output: 500
         weight_filler {
           type: "xavier"
@@ -95,8 +97,6 @@ Writing a fully connected layers is also simple:
         bias_filler {
           type: "constant"
         }
-        blobs_lr: 1.
-        blobs_lr: 2.
       }
       bottom: "pool2"
       top: "ip1"
@@ -109,10 +109,8 @@ Writing the ReLU Layer
 A ReLU Layer is also simple:
 
     layers {
-      layer {
-        name: "relu1"
-        type: "relu"
-      }
+      name: "relu1"
+      type: RELU
       bottom: "ip1"
       top: "ip1"
     }
@@ -122,9 +120,11 @@ Since ReLU is an element-wise operation, we can do *in-place* operations to save
 After the ReLU layer, we will write another innerproduct layer:
 
     layers {
-      layer {
-        name: "ip2"
-        type: "innerproduct"
+      name: "ip2"
+      type: INNER_PRODUCT
+      blobs_lr: 1.
+      blobs_lr: 2.
+      inner_product_param {
         num_output: 10
         weight_filler {
           type: "xavier"
@@ -132,8 +132,6 @@ After the ReLU layer, we will write another innerproduct layer:
         bias_filler {
           type: "constant"
         }
-        blobs_lr: 1.
-        blobs_lr: 2.
       }
       bottom: "ip1"
       top: "ip2"
@@ -144,10 +142,8 @@ Writing the Loss Layer
 Finally, we will write the loss!
 
     layers {
-      layer {
-        name: "loss"
-        type: "softmax_loss"
-      }
+      name: "loss"
+      type: SOFTMAX_LOSS
       bottom: "ip2"
       bottom: "label"
     }

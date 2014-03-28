@@ -73,7 +73,8 @@ void InfogainLossLayer<Dtype>::SetUp(
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
   BlobProto blob_proto;
-  ReadProtoFromBinaryFile(this->layer_param_.source(), &blob_proto);
+  ReadProtoFromBinaryFile(this->layer_param_.infogain_loss_param().source(),
+                          &blob_proto);
   infogain_.FromProto(blob_proto);
   CHECK_EQ(infogain_.num(), 1);
   CHECK_EQ(infogain_.channels(), 1);

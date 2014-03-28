@@ -70,8 +70,9 @@ TYPED_TEST_CASE(DataLayerTest, Dtypes);
 
 TYPED_TEST(DataLayerTest, TestRead) {
   LayerParameter param;
-  param.set_batchsize(5);
-  param.set_source(this->filename);
+  DataParameter* data_param = param.mutable_data_param();
+  data_param->set_batch_size(5);
+  data_param->set_source(this->filename);
   DataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);

@@ -60,7 +60,7 @@ TYPED_TEST_CASE(ConcatLayerTest, Dtypes);
 
 TYPED_TEST(ConcatLayerTest, TestSetupNum) {
   LayerParameter layer_param;
-  layer_param.set_concat_dim(0);
+  layer_param.mutable_concat_param()->set_concat_dim(0);
   ConcatLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(),
