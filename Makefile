@@ -224,6 +224,10 @@ $(BUILD_DIR)/src/gtest/%.o: src/gtest/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
+$(BUILD_DIR)/src/$(PROJECT)/%.cuo: src/$(PROJECT)/%.cu
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	@echo
+
 $(BUILD_DIR)/src/$(PROJECT)/layers/%.cuo: src/$(PROJECT)/layers/%.cu
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@echo

@@ -38,6 +38,18 @@ message FillerParameter {
   optional float std = 6 [default = 1]; // the std value in gaussian filler
 }
 
+message RegularizerParameter {
+// Weight regularizer type
+  enum RegularizerType {
+    L1 = 0;
+    L2 = 1;
+    MAX_NORM = 2; // not fully implemented yet
+  }
+  optional RegularizerType type = 1;
+  // Coefficent controls how strong to regularize
+  optional float coeff = 2 [default = 0];
+}
+
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the string to specify the layer type
@@ -127,6 +139,8 @@ message LayerParameter {
   optional uint32 concat_dim = 65 [default = 1];
 
   optional HDF5OutputParameter hdf5_output_param = 1001;
+
+  repeated RegularizerParameter regularizer = 2001;
 }
 
 message HDF5OutputParameter {
