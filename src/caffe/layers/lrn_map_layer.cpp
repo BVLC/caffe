@@ -38,28 +38,19 @@ void LRNMapLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(square_output_.channels(), channels);
   CHECK_EQ(square_output_.height(), height);
   CHECK_EQ(square_output_.width(), width);
-  // Set up conv layer to have N filters with N groups, all of which are 1's.
-  // (With #filters == #groups, each filter looks at exactly 1 input channel,
-  // which is what we want for this layer type.)
-  // Output of conv layer gives us the neighborhood response.
-  conv_top_vec_.clear();
-  conv_top_vec_.push_back(&conv_output_);
-  LayerParameter conv_param;
-  conv_param.mutable_convolution_param()->set_pad(pre_pad);
-  conv_param.mutable_convolution_param()->set_kernel_size(size_);
-  conv_param.mutable_convolution_param()->set_num_output(channels);
-  conv_param.mutable_convolution_param()->set_group(channels);
-  conv_param.mutable_convolution_param()->set_bias_term(false);
-  conv_layer_.reset(new ConvolutionLayer<Dtype>(conv_param));
-  conv_layer_->SetUp(square_top_vec_, &conv_top_vec_);
-  CHECK_EQ(conv_output_.num(), num);
-  CHECK_EQ(conv_output_.channels(), channels);
-  CHECK_EQ(conv_output_.height(), height);
-  CHECK_EQ(conv_output_.width(), width);
-  FillerParameter one_filler_param;
-  one_filler_param.set_value(1);
-  ConstantFiller<Dtype> one_filler(one_filler_param);
-  one_filler.Fill(conv_layer_->blobs()[0].get());
+  // Output of pool layer gives us the neighborhood response.
+  pool_top_vec_.clear();
+  pool_top_vec_.push_back(&pool_output_);
+  LayerParameter pool_param;
+  pool_param.mutable_pooling_param()->set_pool(PoolingParameter_PoolMethod_AVE);
+  pool_param.mutable_pooling_param()->set_pad(pre_pad);
+  pool_param.mutable_pooling_param()->set_kernel_size(size_);
+  pool_layer_.reset(new PoolingLayer<Dtype>(pool_param));
+  pool_layer_->SetUp(square_top_vec_, &pool_top_vec_);
+  CHECK_EQ(pool_output_.num(), num);
+  CHECK_EQ(pool_output_.channels(), channels);
+  CHECK_EQ(pool_output_.height(), height);
+  CHECK_EQ(pool_output_.width(), width);
   // Set up power layer to compute (1 + alpha/N^2 s)^-beta, where s is the sum
   // of a squared neighborhood (as output by the conv layer).
   power_top_vec_.clear();
@@ -69,7 +60,7 @@ void LRNMapLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   power_param.mutable_power_param()->set_scale(alpha / (size_ * size_));
   power_param.mutable_power_param()->set_shift(Dtype(1));
   power_layer_.reset(new PowerLayer<Dtype>(power_param));
-  power_layer_->SetUp(conv_top_vec_, &power_top_vec_);
+  power_layer_->SetUp(pool_top_vec_, &power_top_vec_);
   CHECK_EQ(power_output_.num(), num);
   CHECK_EQ(power_output_.channels(), channels);
   CHECK_EQ(power_output_.height(), height);
@@ -97,8 +88,8 @@ Dtype LRNMapLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* square_bottom_data = square_input_.mutable_cpu_data();
   caffe_copy(count, bottom_data, square_bottom_data);
   square_layer_->Forward(square_bottom_vec_, &square_top_vec_);
-  conv_layer_->Forward(square_top_vec_, &conv_top_vec_);
-  power_layer_->Forward(conv_top_vec_, &power_top_vec_);
+  pool_layer_->Forward(square_top_vec_, &pool_top_vec_);
+  power_layer_->Forward(pool_top_vec_, &power_top_vec_);
   product_layer_->Forward(product_bottom_vec_, &product_top_vec_);
   return Dtype(0.);
 }
@@ -108,8 +99,8 @@ void LRNMapLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
     product_layer_->Backward(product_top_vec_, true, &product_bottom_vec_);
-    power_layer_->Backward(power_top_vec_, true, &conv_top_vec_);
-    conv_layer_->Backward(conv_top_vec_, true, &square_top_vec_);
+    power_layer_->Backward(power_top_vec_, true, &pool_top_vec_);
+    pool_layer_->Backward(pool_top_vec_, true, &square_top_vec_);
     square_layer_->Backward(square_top_vec_, true, &square_bottom_vec_);
     const int count = (*bottom)[0]->count();
     const Dtype* scale_diff = square_input_.cpu_diff();

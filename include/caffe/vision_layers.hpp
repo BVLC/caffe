@@ -531,6 +531,9 @@ class LRNLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
+class PoolingLayer;
+
+template <typename Dtype>
 class LRNMapLayer : public Layer<Dtype> {
  public:
   explicit LRNMapLayer(const LayerParameter& param)
@@ -553,9 +556,9 @@ class LRNMapLayer : public Layer<Dtype> {
   Blob<Dtype> square_output_;
   vector<Blob<Dtype>*> square_bottom_vec_;
   vector<Blob<Dtype>*> square_top_vec_;
-  shared_ptr<ConvolutionLayer<Dtype> > conv_layer_;
-  Blob<Dtype> conv_output_;
-  vector<Blob<Dtype>*> conv_top_vec_;
+  shared_ptr<PoolingLayer<Dtype> > pool_layer_;
+  Blob<Dtype> pool_output_;
+  vector<Blob<Dtype>*> pool_top_vec_;
   shared_ptr<PowerLayer<Dtype> > power_layer_;
   Blob<Dtype> power_output_;
   vector<Blob<Dtype>*> power_top_vec_;
@@ -604,6 +607,7 @@ class PoolingLayer : public Layer<Dtype> {
 
   int kernel_size_;
   int stride_;
+  int pad_;
   int channels_;
   int height_;
   int width_;
