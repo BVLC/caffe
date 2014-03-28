@@ -10,7 +10,7 @@ using namespace caffe;  // NOLINT(build/namespaces)
 int main(int argc, char** argv) {
   if (argc > 2) {
     LOG(ERROR) << "device_query [device_id=0]";
-    return 0;
+    return 1;
   }
   if (argc == 2) {
     LOG(INFO) << "Querying device_id=" << argv[1];
