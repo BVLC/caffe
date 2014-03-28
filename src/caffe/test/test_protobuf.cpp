@@ -16,7 +16,7 @@ class ProtoTest : public ::testing::Test {};
 TEST_F(ProtoTest, TestSerialization) {
   LayerParameter param;
   param.set_name("test");
-  param.set_type("dummy");
+  param.set_type(LayerParameter_LayerType_NONE);
   std::cout << "Printing in binary format." << std::endl;
   std::cout << param.SerializeAsString() << std::endl;
   std::cout << "Printing in text format." << std::endl;

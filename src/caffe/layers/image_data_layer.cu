@@ -22,7 +22,7 @@ using std::pair;
 namespace caffe {
 
 template <typename Dtype>
-Dtype ImagesLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ImageDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
@@ -34,11 +34,11 @@ Dtype ImagesLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       prefetch_label_->cpu_data(), sizeof(Dtype) * prefetch_label_->count(),
       cudaMemcpyHostToDevice));
   // Start a new prefetch thread
-  CHECK(!pthread_create(&thread_, NULL, ImagesLayerPrefetch<Dtype>,
+  CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
   return Dtype(0.);
 }
 
-INSTANTIATE_CLASS(ImagesLayer);
+INSTANTIATE_CLASS(ImageDataLayer);
 
 }  // namespace caffe

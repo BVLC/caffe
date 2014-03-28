@@ -24,9 +24,9 @@ using std::string;
 using std::map;
 using std::pair;
 
-// caffe.proto > LayerParameter
+// caffe.proto > LayerParameter > WindowDataParameter
 //   'source' field specifies the window_file
-//   'cropsize' indicates the desired warped size
+//   'crop_size' indicates the desired warped size
 
 namespace caffe {
 
@@ -40,29 +40,30 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
 
   Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
   Dtype* top_label = layer->prefetch_label_->mutable_cpu_data();
-  const Dtype scale = layer->layer_param_.scale();
-  const int batchsize = layer->layer_param_.batchsize();
-  const int cropsize = layer->layer_param_.cropsize();
-  const int context_pad = layer->layer_param_.det_context_pad();
-  const bool mirror = layer->layer_param_.mirror();
-  const float fg_fraction = layer->layer_param_.det_fg_fraction();
+  const Dtype scale = layer->layer_param_.window_data_param().scale();
+  const int batch_size = layer->layer_param_.window_data_param().batch_size();
+  const int crop_size = layer->layer_param_.window_data_param().crop_size();
+  const int context_pad = layer->layer_param_.window_data_param().context_pad();
+  const bool mirror = layer->layer_param_.window_data_param().mirror();
+  const float fg_fraction =
+      layer->layer_param_.window_data_param().fg_fraction();
   const Dtype* mean = layer->data_mean_.cpu_data();
-  const int mean_off = (layer->data_mean_.width() - cropsize) / 2;
+  const int mean_off = (layer->data_mean_.width() - crop_size) / 2;
   const int mean_width = layer->data_mean_.width();
   const int mean_height = layer->data_mean_.height();
-  cv::Size cv_crop_size(cropsize, cropsize);
-  const string& crop_mode = layer->layer_param_.det_crop_mode();
+  cv::Size cv_crop_size(crop_size, crop_size);
+  const string& crop_mode = layer->layer_param_.window_data_param().crop_mode();
 
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
   memset(top_data, 0, sizeof(Dtype)*layer->prefetch_data_->count());
 
-  const int num_fg = static_cast<int>(static_cast<float>(batchsize)
+  const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
-  const int num_samples[2] = { batchsize - num_fg, num_fg };
+  const int num_samples[2] = { batch_size - num_fg, num_fg };
 
-  int itemid = 0;
+  int item_id = 0;
   // sample from bg set then fg set
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
@@ -100,10 +101,10 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       int pad_h = 0;
       if (context_pad > 0 || use_square) {
         // scale factor by which to expand the original region
-        // such that after warping the expanded region to cropsize x cropsize
+        // such that after warping the expanded region to crop_size x crop_size
         // there's exactly context_pad amount of padding on each side
-        Dtype context_scale = static_cast<Dtype>(cropsize) /
-            static_cast<Dtype>(cropsize - 2*context_pad);
+        Dtype context_scale = static_cast<Dtype>(crop_size) /
+            static_cast<Dtype>(crop_size - 2*context_pad);
 
         // compute the expanded region
         Dtype half_height = static_cast<Dtype>(y2-y1+1)/2.0;
@@ -147,9 +148,9 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         // scale factors that would be used to warp the unclipped
         // expanded region
         Dtype scale_x =
-            static_cast<Dtype>(cropsize)/static_cast<Dtype>(unclipped_width);
+            static_cast<Dtype>(crop_size)/static_cast<Dtype>(unclipped_width);
         Dtype scale_y =
-            static_cast<Dtype>(cropsize)/static_cast<Dtype>(unclipped_height);
+            static_cast<Dtype>(crop_size)/static_cast<Dtype>(unclipped_height);
 
         // size to warp the clipped expanded region to
         cv_crop_size.width =
@@ -169,13 +170,13 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
           pad_w = pad_x1;
         }
 
-        // ensure that the warped, clipped region plus the padding
-        // fits in the cropsize x cropsize image (it might not due to rounding)
-        if (pad_h + cv_crop_size.height > cropsize) {
-          cv_crop_size.height = cropsize - pad_h;
+        // ensure that the warped, clipped region plus the padding fits in the
+        // crop_size x crop_size image (it might not due to rounding)
+        if (pad_h + cv_crop_size.height > crop_size) {
+          cv_crop_size.height = crop_size - pad_h;
         }
-        if (pad_w + cv_crop_size.width > cropsize) {
-          cv_crop_size.width = cropsize - pad_w;
+        if (pad_w + cv_crop_size.width > crop_size) {
+          cv_crop_size.width = crop_size - pad_w;
         }
       }
 
@@ -196,8 +197,8 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
             Dtype pixel =
                 static_cast<Dtype>(cv_cropped_img.at<cv::Vec3b>(h, w)[c]);
 
-            top_data[((itemid * channels + c) * cropsize + h + pad_h)
-                     * cropsize + w + pad_w]
+            top_data[((item_id * channels + c) * crop_size + h + pad_h)
+                     * crop_size + w + pad_w]
                 = (pixel
                     - mean[(c * mean_height + h + mean_off + pad_h)
                            * mean_width + w + mean_off + pad_w])
@@ -207,7 +208,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       }
 
       // get window label
-      top_label[itemid] = window[WindowDataLayer<Dtype>::LABEL];
+      top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
 
       #if 0
       // useful debugging code for dumping transformed windows to disk
@@ -224,18 +225,18 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
           << window[WindowDataLayer<Dtype>::X2]+1 << std::endl
           << window[WindowDataLayer<Dtype>::Y2]+1 << std::endl
           << do_mirror << std::endl
-          << top_label[itemid] << std::endl
+          << top_label[item_id] << std::endl
           << is_fg << std::endl;
       inf.close();
       std::ofstream top_data_file((string("dump/") + file_id +
           string("_data.txt")).c_str(),
           std::ofstream::out | std::ofstream::binary);
       for (int c = 0; c < channels; ++c) {
-        for (int h = 0; h < cropsize; ++h) {
-          for (int w = 0; w < cropsize; ++w) {
+        for (int h = 0; h < crop_size; ++h) {
+          for (int w = 0; w < crop_size; ++w) {
             top_data_file.write(reinterpret_cast<char*>(
-                &top_data[((itemid * channels + c) * cropsize + h)
-                          * cropsize + w]),
+                &top_data[((item_id * channels + c) * crop_size + h)
+                          * crop_size + w]),
                 sizeof(Dtype));
           }
         }
@@ -243,7 +244,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       top_data_file.close();
       #endif
 
-      itemid++;
+      item_id++;
     }
   }
 
@@ -278,15 +279,15 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   LOG(INFO) << "Window data layer:" << std::endl
       << "  foreground (object) overlap threshold: "
-      << this->layer_param_.det_fg_threshold() << std::endl
+      << this->layer_param_.window_data_param().fg_threshold() << std::endl
       << "  background (non-object) overlap threshold: "
-      << this->layer_param_.det_bg_threshold() << std::endl
+      << this->layer_param_.window_data_param().bg_threshold() << std::endl
       << "  foreground sampling fraction: "
-      << this->layer_param_.det_fg_fraction();
+      << this->layer_param_.window_data_param().fg_fraction();
 
-  std::ifstream infile(this->layer_param_.source().c_str());
+  std::ifstream infile(this->layer_param_.window_data_param().source().c_str());
   CHECK(infile.good()) << "Failed to open window file "
-      << this->layer_param_.source() << std::endl;
+      << this->layer_param_.window_data_param().source() << std::endl;
 
   map<int, int> label_hist;
   label_hist.insert(std::make_pair(0, 0));
@@ -307,6 +308,10 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     // read each box
     int num_windows;
     infile >> num_windows;
+    const float fg_threshold =
+        this->layer_param_.window_data_param().fg_threshold();
+    const float bg_threshold =
+        this->layer_param_.window_data_param().bg_threshold();
     for (int i = 0; i < num_windows; ++i) {
       int label, x1, y1, x2, y2;
       float overlap;
@@ -322,13 +327,13 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       window[WindowDataLayer::Y2] = y2;
 
       // add window to foreground list or background list
-      if (overlap >= this->layer_param_.det_fg_threshold()) {
+      if (overlap >= fg_threshold) {
         int label = window[WindowDataLayer::LABEL];
         CHECK_GT(label, 0);
         fg_windows_.push_back(window);
         label_hist.insert(std::make_pair(label, 0));
         label_hist[label]++;
-      } else if (overlap < this->layer_param_.det_bg_threshold()) {
+      } else if (overlap < bg_threshold) {
         // background window, force label and overlap to 0
         window[WindowDataLayer::LABEL] = 0;
         window[WindowDataLayer::OVERLAP] = 0;
@@ -356,38 +361,41 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   LOG(INFO) << "Amount of context padding: "
-      << this->layer_param_.det_context_pad();
+      << this->layer_param_.window_data_param().context_pad();
 
-  LOG(INFO) << "Crop mode: " << this->layer_param_.det_crop_mode();
+  LOG(INFO) << "Crop mode: "
+      << this->layer_param_.window_data_param().crop_mode();
 
   // image
-  int cropsize = this->layer_param_.cropsize();
-  CHECK_GT(cropsize, 0);
-  (*top)[0]->Reshape(
-      this->layer_param_.batchsize(), channels, cropsize, cropsize);
-  prefetch_data_.reset(new Blob<Dtype>(
-      this->layer_param_.batchsize(), channels, cropsize, cropsize));
+  int crop_size = this->layer_param_.window_data_param().crop_size();
+  CHECK_GT(crop_size, 0);
+  const int batch_size = this->layer_param_.window_data_param().batch_size();
+  (*top)[0]->Reshape(batch_size, channels, crop_size, crop_size);
+  prefetch_data_.reset(
+      new Blob<Dtype>(batch_size, channels, crop_size, crop_size));
 
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
   // label
-  (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
+  (*top)[1]->Reshape(batch_size, 1, 1, 1);
   prefetch_label_.reset(
-      new Blob<Dtype>(this->layer_param_.batchsize(), 1, 1, 1));
+      new Blob<Dtype>(batch_size, 1, 1, 1));
 
   // check if we want to have mean
-  if (this->layer_param_.has_meanfile()) {
+  if (this->layer_param_.window_data_param().has_mean_file()) {
+    const string& mean_file =
+        this->layer_param_.window_data_param().mean_file();
+    LOG(INFO) << "Loading mean file from" << mean_file;
     BlobProto blob_proto;
-    LOG(INFO) << "Loading mean file from" << this->layer_param_.meanfile();
-    ReadProtoFromBinaryFile(this->layer_param_.meanfile().c_str(), &blob_proto);
+    ReadProtoFromBinaryFileOrDie(mean_file, &blob_proto);
     data_mean_.FromProto(blob_proto);
     CHECK_EQ(data_mean_.num(), 1);
     CHECK_EQ(data_mean_.width(), data_mean_.height());
     CHECK_EQ(data_mean_.channels(), channels);
   } else {
     // Simply initialize an all-empty mean.
-    data_mean_.Reshape(1, channels, cropsize, cropsize);
+    data_mean_.Reshape(1, channels, crop_size, crop_size);
   }
   // Now, start the prefetch thread. Before calling prefetch, we make two
   // cpu_data calls so that the prefetch thread does not accidentally make

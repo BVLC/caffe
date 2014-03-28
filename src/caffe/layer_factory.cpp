@@ -9,6 +9,7 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+using std::string;
 
 namespace caffe {
 
@@ -18,59 +19,61 @@ namespace caffe {
 // but we will leave it this way for now.
 template <typename Dtype>
 Layer<Dtype>* GetLayer(const LayerParameter& param) {
-  const std::string& type = param.type();
-  if (type == "accuracy") {
+  const string& name = param.name();
+  const LayerParameter_LayerType& type = param.type();
+  switch (type) {
+  case LayerParameter_LayerType_ACCURACY:
     return new AccuracyLayer<Dtype>(param);
-  } else if (type == "bnll") {
+  case LayerParameter_LayerType_BNLL:
     return new BNLLLayer<Dtype>(param);
-  } else if (type == "concat") {
+  case LayerParameter_LayerType_CONCAT:
     return new ConcatLayer<Dtype>(param);
-  } else if (type == "conv") {
+  case LayerParameter_LayerType_CONVOLUTION:
     return new ConvolutionLayer<Dtype>(param);
-  } else if (type == "data") {
+  case LayerParameter_LayerType_DATA:
     return new DataLayer<Dtype>(param);
-  } else if (type == "dropout") {
+  case LayerParameter_LayerType_DROPOUT:
     return new DropoutLayer<Dtype>(param);
-  } else if (type == "euclidean_loss") {
+  case LayerParameter_LayerType_EUCLIDEAN_LOSS:
     return new EuclideanLossLayer<Dtype>(param);
-  } else if (type == "flatten") {
+  case LayerParameter_LayerType_FLATTEN:
     return new FlattenLayer<Dtype>(param);
-  } else if (type == "hdf5_data") {
+  case LayerParameter_LayerType_HDF5_DATA:
     return new HDF5DataLayer<Dtype>(param);
-  } else if (type == "hdf5_output") {
+  case LayerParameter_LayerType_HDF5_OUTPUT:
     return new HDF5OutputLayer<Dtype>(param);
-  } else if (type == "images") {
-    return new ImagesLayer<Dtype>(param);
-  } else if (type == "im2col") {
+  case LayerParameter_LayerType_IMAGE_DATA:
+    return new ImageDataLayer<Dtype>(param);
+  case LayerParameter_LayerType_IM2COL:
     return new Im2colLayer<Dtype>(param);
-  } else if (type == "infogain_loss") {
+  case LayerParameter_LayerType_INFOGAIN_LOSS:
     return new InfogainLossLayer<Dtype>(param);
-  } else if (type == "innerproduct") {
+  case LayerParameter_LayerType_INNER_PRODUCT:
     return new InnerProductLayer<Dtype>(param);
-  } else if (type == "lrn") {
+  case LayerParameter_LayerType_LRN:
     return new LRNLayer<Dtype>(param);
-  } else if (type == "multinomial_logistic_loss") {
+  case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
     return new MultinomialLogisticLossLayer<Dtype>(param);
-  } else if (type == "padding") {
-    return new PaddingLayer<Dtype>(param);
-  } else if (type == "pool") {
+  case LayerParameter_LayerType_POOLING:
     return new PoolingLayer<Dtype>(param);
-  } else if (type == "relu") {
+  case LayerParameter_LayerType_RELU:
     return new ReLULayer<Dtype>(param);
-  } else if (type == "sigmoid") {
+  case LayerParameter_LayerType_SIGMOID:
     return new SigmoidLayer<Dtype>(param);
-  } else if (type == "softmax") {
+  case LayerParameter_LayerType_SOFTMAX:
     return new SoftmaxLayer<Dtype>(param);
-  } else if (type == "softmax_loss") {
+  case LayerParameter_LayerType_SOFTMAX_LOSS:
     return new SoftmaxWithLossLayer<Dtype>(param);
-  } else if (type == "split") {
+  case LayerParameter_LayerType_SPLIT:
     return new SplitLayer<Dtype>(param);
-  } else if (type == "tanh") {
+  case LayerParameter_LayerType_TANH:
     return new TanHLayer<Dtype>(param);
-  } else if (type == "window_data") {
+  case LayerParameter_LayerType_WINDOW_DATA:
     return new WindowDataLayer<Dtype>(param);
-  } else {
-    LOG(FATAL) << "Unknown layer name: " << type;
+  case LayerParameter_LayerType_NONE:
+    LOG(FATAL) << "Layer " << name << " has unspecified type.";
+  default:
+    LOG(FATAL) << "Layer " << name << " has unknown type " << type;
   }
   // just to suppress old compiler warnings.
   return (Layer<Dtype>*)(NULL);

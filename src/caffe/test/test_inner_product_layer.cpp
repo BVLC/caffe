@@ -42,7 +42,9 @@ TYPED_TEST_CASE(InnerProductLayerTest, Dtypes);
 
 TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   LayerParameter layer_param;
-  layer_param.set_num_output(10);
+  InnerProductParameter* inner_product_param =
+      layer_param.mutable_inner_product_param();
+  inner_product_param->set_num_output(10);
   shared_ptr<InnerProductLayer<TypeParam> > layer(
       new InnerProductLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -54,12 +56,14 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
 
 TYPED_TEST(InnerProductLayerTest, TestCPU) {
   LayerParameter layer_param;
+  InnerProductParameter* inner_product_param =
+      layer_param.mutable_inner_product_param();
   Caffe::set_mode(Caffe::CPU);
-  layer_param.set_num_output(10);
-  layer_param.mutable_weight_filler()->set_type("uniform");
-  layer_param.mutable_bias_filler()->set_type("uniform");
-  layer_param.mutable_bias_filler()->set_min(1);
-  layer_param.mutable_bias_filler()->set_max(2);
+  inner_product_param->set_num_output(10);
+  inner_product_param->mutable_weight_filler()->set_type("uniform");
+  inner_product_param->mutable_bias_filler()->set_type("uniform");
+  inner_product_param->mutable_bias_filler()->set_min(1);
+  inner_product_param->mutable_bias_filler()->set_max(2);
   shared_ptr<InnerProductLayer<TypeParam> > layer(
       new InnerProductLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -74,12 +78,14 @@ TYPED_TEST(InnerProductLayerTest, TestCPU) {
 TYPED_TEST(InnerProductLayerTest, TestGPU) {
   if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
+    InnerProductParameter* inner_product_param =
+        layer_param.mutable_inner_product_param();
     Caffe::set_mode(Caffe::GPU);
-    layer_param.set_num_output(10);
-    layer_param.mutable_weight_filler()->set_type("uniform");
-    layer_param.mutable_bias_filler()->set_type("uniform");
-    layer_param.mutable_bias_filler()->set_min(1);
-    layer_param.mutable_bias_filler()->set_max(2);
+    inner_product_param->set_num_output(10);
+    inner_product_param->mutable_weight_filler()->set_type("uniform");
+    inner_product_param->mutable_bias_filler()->set_type("uniform");
+    inner_product_param->mutable_bias_filler()->set_min(1);
+    inner_product_param->mutable_bias_filler()->set_max(2);
     shared_ptr<InnerProductLayer<TypeParam> > layer(
       new InnerProductLayer<TypeParam>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -96,12 +102,14 @@ TYPED_TEST(InnerProductLayerTest, TestGPU) {
 
 TYPED_TEST(InnerProductLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
+  InnerProductParameter* inner_product_param =
+      layer_param.mutable_inner_product_param();
   Caffe::set_mode(Caffe::CPU);
-  layer_param.set_num_output(10);
-  layer_param.mutable_weight_filler()->set_type("gaussian");
-  layer_param.mutable_bias_filler()->set_type("gaussian");
-  layer_param.mutable_bias_filler()->set_min(1);
-  layer_param.mutable_bias_filler()->set_max(2);
+  inner_product_param->set_num_output(10);
+  inner_product_param->mutable_weight_filler()->set_type("gaussian");
+  inner_product_param->mutable_bias_filler()->set_type("gaussian");
+  inner_product_param->mutable_bias_filler()->set_min(1);
+  inner_product_param->mutable_bias_filler()->set_max(2);
   InnerProductLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
@@ -111,10 +119,12 @@ TYPED_TEST(InnerProductLayerTest, TestCPUGradient) {
 TYPED_TEST(InnerProductLayerTest, TestGPUGradient) {
   if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
+    InnerProductParameter* inner_product_param =
+        layer_param.mutable_inner_product_param();
     Caffe::set_mode(Caffe::GPU);
-    layer_param.set_num_output(10);
-    layer_param.mutable_weight_filler()->set_type("gaussian");
-    layer_param.mutable_bias_filler()->set_type("gaussian");
+    inner_product_param->set_num_output(10);
+    inner_product_param->mutable_weight_filler()->set_type("gaussian");
+    inner_product_param->mutable_bias_filler()->set_type("gaussian");
     InnerProductLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-2);
     checker.CheckGradient(&layer, &(this->blob_bottom_vec_),

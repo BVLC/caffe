@@ -42,8 +42,10 @@ TYPED_TEST_CASE(Im2colLayerTest, Dtypes);
 
 TYPED_TEST(Im2colLayerTest, TestSetup) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Im2colLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -54,8 +56,10 @@ TYPED_TEST(Im2colLayerTest, TestSetup) {
 
 TYPED_TEST(Im2colLayerTest, TestCPU) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Im2colLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::CPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -69,8 +73,10 @@ TYPED_TEST(Im2colLayerTest, TestCPU) {
 
 TYPED_TEST(Im2colLayerTest, TestGPU) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Im2colLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::GPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -84,8 +90,10 @@ TYPED_TEST(Im2colLayerTest, TestGPU) {
 
 TYPED_TEST(Im2colLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Caffe::set_mode(Caffe::CPU);
   Im2colLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
@@ -95,8 +103,10 @@ TYPED_TEST(Im2colLayerTest, TestCPUGradient) {
 
 TYPED_TEST(Im2colLayerTest, TestGPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Caffe::set_mode(Caffe::GPU);
   Im2colLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);

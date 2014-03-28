@@ -5,11 +5,13 @@
 #include <string>
 #include <vector>
 
+#include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/insert_splits.hpp"
+#include "caffe/util/upgrade_proto.hpp"
 
 using std::pair;
 using std::map;
@@ -25,7 +27,7 @@ Net<Dtype>::Net(const NetParameter& param) {
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file) {
   NetParameter param;
-  ReadProtoFromTextFile(param_file, &param);
+  ReadNetParamsFromTextFileOrDie(param_file, &param);
   Init(param);
 }
 
@@ -33,7 +35,7 @@ template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   // Create a copy of in_param with splits added where necessary.
   NetParameter param;
-  insert_splits(in_param, &param);
+  InsertSplits(in_param, &param);
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -67,15 +69,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   top_id_vecs_.resize(param.layers_size());
   for (int i = 0; i < param.layers_size(); ++i) {
     bool in_place = false;
-    const LayerConnection& layer_connection = param.layers(i);
-    const LayerParameter& layer_param = layer_connection.layer();
+    const LayerParameter& layer_param = param.layers(i);
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = param.force_backward();
     // Figure out this layer's input and output
-    for (int j = 0; j < layer_connection.bottom_size(); ++j) {
-      const string& blob_name = layer_connection.bottom(j);
+    for (int j = 0; j < layer_param.bottom_size(); ++j) {
+      const string& blob_name = layer_param.bottom(j);
       const int blob_id = blob_name_to_idx[blob_name];
       if (available_blobs.find(blob_name) == available_blobs.end()) {
         LOG(FATAL) << "Unknown blob input " << blob_name <<
@@ -89,11 +90,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       need_backward |= blob_need_backward_[blob_id];
       available_blobs.erase(blob_name);
     }
-    for (int j = 0; j < layer_connection.top_size(); ++j) {
-      const string& blob_name = layer_connection.top(j);
+    for (int j = 0; j < layer_param.top_size(); ++j) {
+      const string& blob_name = layer_param.top(j);
       // Check if we are doing in-place computation
-      if (layer_connection.bottom_size() > j &&
-          blob_name == layer_connection.bottom(j)) {
+      if (layer_param.bottom_size() > j &&
+          blob_name == layer_param.bottom(j)) {
         // In-place computation
         LOG(INFO) << layer_param.name() << " -> " << blob_name << " (in-place)";
         in_place = true;
@@ -272,7 +273,7 @@ template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
   int num_source_layers = param.layers_size();
   for (int i = 0; i < num_source_layers; ++i) {
-    const LayerParameter& source_layer = param.layers(i).layer();
+    const LayerParameter& source_layer = param.layers(i);
     const string& source_layer_name = source_layer.name();
     int target_layer_id = 0;
     while (target_layer_id != layer_names_.size() &&
@@ -301,7 +302,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
   NetParameter param;
-  ReadProtoFromBinaryFile(trained_filename, &param);
+  ReadNetParamsFromBinaryFileOrDie(trained_filename, &param);
   CopyTrainedLayersFrom(param);
 }
 
@@ -315,15 +316,14 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
   }
   DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
-    LayerConnection* layer_connection = param->add_layers();
+    LayerParameter* layer_param = param->add_layers();
     for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {
-      layer_connection->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
+      layer_param->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
     }
     for (int j = 0; j < top_id_vecs_[i].size(); ++j) {
-      layer_connection->add_top(blob_names_[top_id_vecs_[i][j]]);
+      layer_param->add_top(blob_names_[top_id_vecs_[i][j]]);
     }
-    LayerParameter* layer_parameter = layer_connection->mutable_layer();
-    layers_[i]->ToProto(layer_parameter, write_diff);
+    layers_[i]->ToProto(layer_param, write_diff);
   }
 }
 

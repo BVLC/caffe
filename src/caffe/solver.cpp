@@ -21,15 +21,11 @@ template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
     : param_(param), net_(), test_net_() {
   // Scaffolding code
-  NetParameter train_net_param;
-  ReadProtoFromTextFile(param_.train_net(), &train_net_param);
   LOG(INFO) << "Creating training net.";
-  net_.reset(new Net<Dtype>(train_net_param));
+  net_.reset(new Net<Dtype>(param_.train_net()));
   if (param_.has_test_net()) {
     LOG(INFO) << "Creating testing net.";
-    NetParameter test_net_param;
-    ReadProtoFromTextFile(param_.test_net(), &test_net_param);
-    test_net_.reset(new Net<Dtype>(test_net_param));
+    test_net_.reset(new Net<Dtype>(param_.test_net()));
     CHECK_GT(param_.test_iter(), 0);
     CHECK_GT(param_.test_interval(), 0);
   }
