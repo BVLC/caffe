@@ -38,6 +38,12 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 void NetParameterToPrettyPrint(const NetParameter& param,
                                NetParameterPrettyPrint* pretty_param);
 
+// Read parameters from a file into a NetParameter proto message.
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param);
+void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
+                                      NetParameter* param);
+
 }  // namespace caffe
 
 #endif   // CAFFE_UTIL_UPGRADE_PROTO_H_

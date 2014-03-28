@@ -58,9 +58,6 @@ class Net {
   // trained layers from another net parameter instance.
   void CopyTrainedLayersFrom(const NetParameter& param);
   void CopyTrainedLayersFrom(const string trained_filename);
-  // Read parameters from a file into a NetParameter proto message.
-  void ReadParamsFromTextFile(const string& param_file, NetParameter* param);
-  void ReadParamsFromBinaryFile(const string& param_file, NetParameter* param);
   // Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
 
