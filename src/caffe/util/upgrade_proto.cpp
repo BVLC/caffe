@@ -8,6 +8,7 @@
 #include <string>
 
 #include "caffe/common.hpp"
+#include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -562,6 +563,52 @@ void NetParameterToPrettyPrint(const NetParameter& param,
   }
   for (int i = 0; i < param.layers_size(); ++i) {
     pretty_param->add_layers()->CopyFrom(param.layers(i));
+  }
+}
+
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  if (NetNeedsUpgrade(*param)) {
+    // NetParameter was specified using the old style (V0LayerParameter); try to
+    // upgrade it.
+    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
+               << "V0LayerParameter: " << param_file;
+    NetParameter original_param(*param);
+    if (!UpgradeV0Net(original_param, param)) {
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+          << "V0NetParameter to NetParameter (see above); continuing anyway.";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "V0LayerParameter";
+    }
+    LOG(ERROR) << "Note that future Caffe releases will not support "
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text.bin to "
+        << "upgrade this and any other network proto files to the new format.";
+  }
+}
+
+void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
+                                      NetParameter* param) {
+  CHECK(ReadProtoFromBinaryFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  if (NetNeedsUpgrade(*param)) {
+    // NetParameter was specified using the old style (V0LayerParameter); try to
+    // upgrade it.
+    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
+               << "V0LayerParameter: " << param_file;
+    NetParameter original_param(*param);
+    if (!UpgradeV0Net(original_param, param)) {
+      LOG(ERROR) << "Warning: had one or more problems upgrading "
+          << "V0NetParameter to NetParameter (see above); continuing anyway.";
+    } else {
+      LOG(INFO) << "Successfully upgraded file specified using deprecated "
+                << "V0LayerParameter";
+    }
+    LOG(ERROR) << "Note that future Caffe releases will not support "
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto_binary.bin to "
+        << "upgrade this and any other network proto files to the new format.";
   }
 }
 
