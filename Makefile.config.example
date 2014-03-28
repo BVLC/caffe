@@ -45,3 +45,6 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/lib /usr/local/lib
 
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute
+
+# uncomment for debugging
+#DEBUG := 1
