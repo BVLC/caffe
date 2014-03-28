@@ -112,6 +112,7 @@ message LayerParameter {
     DATA = 5;
     DROPOUT = 6;
     EUCLIDEAN_LOSS = 7;
+    ELTWISE_PRODUCT = 1000;
     FLATTEN = 8;
     HDF5_DATA = 9;
     HDF5_OUTPUT = 10;
@@ -120,8 +121,10 @@ message LayerParameter {
     INFOGAIN_LOSS = 13;
     INNER_PRODUCT = 14;
     LRN = 15;
+    LRN_MAP = 1001;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
+    POWER = 1002;
     RELU = 18;
     SIGMOID = 19;
     SOFTMAX = 20;
@@ -151,7 +154,9 @@ message LayerParameter {
   optional InfogainLossParameter infogain_loss_param = 16;
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
+  optional LRNMapParameter lrn_map_param = 1000;
   optional PoolingParameter pooling_param = 19;
+  optional PowerParameter power_param = 1001;
   optional WindowDataParameter window_data_param = 20;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
@@ -263,9 +268,16 @@ message InnerProductParameter {
 
 // Message that stores parameters used by LRNLayer
 message LRNParameter {
-  optional uint32 local_size = 1 [default = 5]; // for local response norm
-  optional float alpha = 2 [default = 1.]; // for local response norm
-  optional float beta = 3 [default = 0.75]; // for local response norm
+  optional uint32 local_size = 1 [default = 5];
+  optional float alpha = 2 [default = 1.];
+  optional float beta = 3 [default = 0.75];
+}
+
+// Message that stores parameters used by LRNMapLayer
+message LRNMapParameter {
+  optional uint32 local_size = 1 [default = 5];
+  optional float alpha = 2 [default = 1.];
+  optional float beta = 3 [default = 0.75];
 }
 
 // Message that stores parameters used by PoolingLayer
@@ -278,6 +290,13 @@ message PoolingParameter {
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   optional uint32 kernel_size = 2; // The kernel size
   optional uint32 stride = 3 [default = 1]; // The stride
+}
+
+// Message that stores parameters used by PowerLayer
+message PowerParameter {
+  optional float power = 1 [default = 1.0];
+  optional float scale = 2 [default = 1.0];
+  optional float shift = 3 [default = 0.0];
 }
 
 // Message that stores parameters used by WindowDataLayer
