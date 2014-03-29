@@ -56,6 +56,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new MultinomialLogisticLossLayer<Dtype>(param);
   case LayerParameter_LayerType_POOLING:
     return new PoolingLayer<Dtype>(param);
+  case LayerParameter_LayerType_RBM:
+    return new RBMLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
     return new ReLULayer<Dtype>(param);
   case LayerParameter_LayerType_SIGMOID:
