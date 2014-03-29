@@ -530,8 +530,8 @@ class LRNLayer : public Layer<Dtype> {
   int width_;
 };
 
-template <typename Dtype>
-class PoolingLayer;
+template <typename Dtype> class PoolingLayer;
+template <typename Dtype> class SplitLayer;
 
 template <typename Dtype>
 class LRNMapLayer : public Layer<Dtype> {
@@ -551,6 +551,8 @@ class LRNMapLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
+  shared_ptr<SplitLayer<Dtype> > split_layer_;
+  vector<Blob<Dtype>*> split_top_vec_;
   shared_ptr<PowerLayer<Dtype> > square_layer_;
   Blob<Dtype> square_input_;
   Blob<Dtype> square_output_;
@@ -565,7 +567,6 @@ class LRNMapLayer : public Layer<Dtype> {
   shared_ptr<EltwiseProductLayer<Dtype> > product_layer_;
   Blob<Dtype> product_data_input_;
   vector<Blob<Dtype>*> product_bottom_vec_;
-  vector<Blob<Dtype>*> product_top_vec_;
 };
 
 template <typename Dtype>
