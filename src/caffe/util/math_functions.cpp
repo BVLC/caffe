@@ -4,6 +4,7 @@
 #include <boost/random.hpp>
 #include <cublas_v2.h>
 
+#include <cmath>  // std::exp for sigmoid
 #include <limits>
 
 #include "caffe/common.hpp"
@@ -441,5 +442,17 @@ void caffe_gpu_scale<double>(const int n, const double alpha, const double *x,
   CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
   CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
 }
+
+template <typename Dtype>
+void caffe_cpu_sigmoid(const int n, const Dtype* x, Dtype* y) {
+  for (int i = 0; i < n; ++i) {
+    y[i] = 1.0 / (1 + std::exp(-x[i]));
+  }
+}
+
+template
+void caffe_cpu_sigmoid<float>(const int n, const float* x, float* y);
+template
+void caffe_cpu_sigmoid<double>(const int n, const double* x, double* y);
 
 }  // namespace caffe

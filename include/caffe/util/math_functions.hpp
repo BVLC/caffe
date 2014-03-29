@@ -194,6 +194,12 @@ void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 template <typename Dtype>
 void caffe_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
+template <typename Dtype>
+void caffe_cpu_sigmoid(const int n, const Dtype* x, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_sigmoid(const int n, const Dtype* x, Dtype* y);
+
 }  // namespace caffe
 
 
