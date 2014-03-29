@@ -110,7 +110,7 @@ template <typename Dtype>
 void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
 
 template <typename Dtype>
-int caffe_hamming_distance(const int n, const Dtype* x, const Dtype* y);
+int caffe_cpu_hamming_distance(const int n, const Dtype* x, const Dtype* y);
 
 // Returns the sum of the absolute values of the elements of vector x
 template <typename Dtype>
