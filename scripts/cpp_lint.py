@@ -444,6 +444,9 @@ _RE_SUPPRESSION = re.compile(r'\bNOLINT(_NEXT_LINE)?\b(\([^)]*\))?')
 # on which those errors are expected and should be suppressed.
 _error_suppressions = {}
 
+# Finds Copyright.
+_RE_COPYRIGHT = re.compile(r'Copyright \d\d\d\d BVLC and contributors.')
+
 # The root directory used for deriving header guard CPP variable.
 # This is set by --root flag.
 _root = None
@@ -1370,11 +1373,11 @@ def CheckForCopyright(filename, lines, error):
   # We'll say it should occur by line 10. Don't forget there's a
   # dummy line at the front.
   for line in xrange(1, min(len(lines), 11)):
-    if re.search(r'Copyright', lines[line], re.I): break
+    if _RE_COPYRIGHT.search(lines[line], re.I): break
   else:                       # means no copyright line was found
     error(filename, 0, 'legal/copyright', 5,
-          'No copyright message found.  '
-          'You should have a line: "Copyright [year] <Copyright Owner>"')
+          'BVLC copyright message not found.  '
+          'You should have a line: "Copyright [year] BVLC and contributors."')
 
 
 def GetHeaderGuardCPPVariable(filename):
