@@ -103,9 +103,9 @@ Dtype LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    return Forward_cpu_cross_channel(bottom, top);
+    return CrossChannelForward_cpu(bottom, top);
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    return Forward_within_channel(bottom, top);
+    return WithinChannelForward(bottom, top);
   default:
     LOG(FATAL) << "Unknown normalization region.";
     return Dtype(0);
@@ -113,7 +113,7 @@ Dtype LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::Forward_cpu_cross_channel(
+Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -162,7 +162,7 @@ Dtype LRNLayer<Dtype>::Forward_cpu_cross_channel(
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::Forward_within_channel(
+Dtype LRNLayer<Dtype>::WithinChannelForward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   split_layer_->Forward(bottom, &split_top_vec_);
   square_layer_->Forward(square_bottom_vec_, &square_top_vec_);
@@ -177,10 +177,10 @@ void LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    Backward_cpu_cross_channel(top, propagate_down, bottom);
+    CrossChannelBackward_cpu(top, propagate_down, bottom);
     break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    Backward_within_channel(top, propagate_down, bottom);
+    WithinChannelBackward(top, propagate_down, bottom);
     break;
   default:
     LOG(FATAL) << "Unknown normalization region.";
@@ -188,7 +188,7 @@ void LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
-void LRNLayer<Dtype>::Backward_cpu_cross_channel(
+void LRNLayer<Dtype>::CrossChannelBackward_cpu(
     const vector<Blob<Dtype>*>& top, const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
@@ -243,7 +243,7 @@ void LRNLayer<Dtype>::Backward_cpu_cross_channel(
 }
 
 template <typename Dtype>
-void LRNLayer<Dtype>::Backward_within_channel(
+void LRNLayer<Dtype>::WithinChannelBackward(
     const vector<Blob<Dtype>*>& top, const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
