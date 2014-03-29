@@ -292,6 +292,7 @@ message PoolingParameter {
 
 // Message that stores parameters used by PowerLayer
 message PowerParameter {
+  // PowerLayer computes outputs y = (shift + scale * x) ^ power.
   optional float power = 1 [default = 1.0];
   optional float scale = 2 [default = 1.0];
   optional float shift = 3 [default = 0.0];

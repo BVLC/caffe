@@ -31,14 +31,14 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
     {
       const Dtype pre_pad = (size_ - 1) / 2;
-      // Set up split layer to use inputs in the num_erator and denominator.
+      // Set up split_layer_ to use inputs in the numerator and denominator.
       split_top_vec_.clear();
       split_top_vec_.push_back(bottom[0]);
       split_top_vec_.push_back(&square_input_);
       LayerParameter split_param;
       split_layer_.reset(new SplitLayer<Dtype>(split_param));
       split_layer_->SetUp(bottom, &split_top_vec_);
-      // Set up square layer to square the inputs.
+      // Set up square_layer_ to square the inputs.
       square_input_.Reshape(num_, channels_, height_, width_);
       square_bottom_vec_.clear();
       square_top_vec_.clear();
@@ -52,7 +52,7 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_EQ(square_output_.channels(), channels_);
       CHECK_EQ(square_output_.height(), height_);
       CHECK_EQ(square_output_.width(), width_);
-      // Output of pool layer gives us the neighborhood response.
+      // Set up pool_layer_ to sum over square neighborhoods of the input.
       pool_top_vec_.clear();
       pool_top_vec_.push_back(&pool_output_);
       LayerParameter pool_param;
@@ -66,8 +66,8 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_EQ(pool_output_.channels(), channels_);
       CHECK_EQ(pool_output_.height(), height_);
       CHECK_EQ(pool_output_.width(), width_);
-      // Set up power layer to compute (1 + alpha_/N^2 s)^-beta_, where s is the
-      // sum of a squared neighborhood (as output by pool_layer_).
+      // Set up power_layer_ to compute (1 + alpha_/N^2 s)^-beta_, where s is the
+      // sum of a squared neighborhood (the output of pool_layer_).
       power_top_vec_.clear();
       power_top_vec_.push_back(&power_output_);
       LayerParameter power_param;
@@ -80,8 +80,8 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_EQ(power_output_.channels(), channels_);
       CHECK_EQ(power_output_.height(), height_);
       CHECK_EQ(power_output_.width(), width_);
-      // Set up a product layer to compute outputs by multiplying inputs by the
-      // demoninator computed by the power layer.
+      // Set up a product_layer_ to compute outputs by multiplying inputs by the
+      // inverse demoninator computed by the power layer.
       product_bottom_vec_.clear();
       product_bottom_vec_.push_back(bottom[0]);
       product_bottom_vec_.push_back(&power_output_);
