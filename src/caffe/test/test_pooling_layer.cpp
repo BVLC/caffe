@@ -151,7 +151,7 @@ TYPED_TEST(PoolingLayerTest, TestCPUForwardAve) {
   EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4.0 / 3, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[2], 8.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4.0 / 3, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 2.0, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 2.0    , epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4.0 / 3, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[6], 8.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4.0 / 3, epsilon);
@@ -184,7 +184,7 @@ TYPED_TEST(PoolingLayerTest, TestGPUForwardAve) {
   EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4.0 / 3, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[2], 8.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4.0 / 3, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 2.0, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 2.0    , epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4.0 / 3, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[6], 8.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4.0 / 3, epsilon);
