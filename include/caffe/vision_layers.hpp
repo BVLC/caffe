@@ -14,6 +14,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
@@ -527,6 +528,43 @@ class PoolingLayer : public Layer<Dtype> {
   int pooled_height_;
   int pooled_width_;
   Blob<float> rand_idx_;
+};
+
+// Restricted Boltzmann Machine
+template <typename Dtype>
+class RBMLayer : public Layer<Dtype> {
+ public:
+  explicit RBMLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  size_t visible_dim_;
+  size_t hidden_dim_;
+  shared_ptr<Blob<Dtype> > visible_hidden_weight_;
+  shared_ptr<Blob<Dtype> > visible_bias_;
+  shared_ptr<Blob<Dtype> > hidden_bias_;
+  shared_ptr<Filler<Dtype> > hidden_unit_sampling_filler_;
+  shared_ptr<Blob<Dtype> > pos_hidden_activations_;
+  shared_ptr<Blob<Dtype> > pos_hidden_probs_;
+  shared_ptr<Blob<Dtype> > pos_hidden_states_;
+  shared_ptr<Blob<Dtype> > pos_association_;
+  shared_ptr<Blob<Dtype> > random_threshold_;
+  shared_ptr<Blob<Dtype> > neg_visible_activations_;
+  shared_ptr<Blob<Dtype> > neg_visible_probs_;
+  shared_ptr<Blob<Dtype> > neg_hidden_activations_;
+  shared_ptr<Blob<Dtype> > neg_hidden_probs_;
+  shared_ptr<Blob<Dtype> > neg_associations_;
 };
 
 template <typename Dtype>
