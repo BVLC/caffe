@@ -287,11 +287,6 @@ class EltwiseProductLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
 };
 
 template <typename Dtype>
