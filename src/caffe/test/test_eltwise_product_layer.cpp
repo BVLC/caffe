@@ -107,16 +107,12 @@ TYPED_TEST(EltwiseProductLayerTest, TestCPUGradient) {
 }
 
 TYPED_TEST(EltwiseProductLayerTest, TestGPUGradient) {
-  if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
-    Caffe::set_mode(Caffe::GPU);
-    LayerParameter layer_param;
-    EltwiseProductLayer<TypeParam> layer(layer_param);
-    GradientChecker<TypeParam> checker(1e-2, 1e-2);
-    checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-        &(this->blob_top_vec_));
-  } else {
-    LOG(ERROR) << "Skipping test due to old architecture.";
-  }
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  EltwiseProductLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 }  // namespace caffe

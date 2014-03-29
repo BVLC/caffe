@@ -60,8 +60,7 @@ TYPED_TEST(PowerLayerTest, TestPowerCPU) {
     if (isnan(expected_value)) {
       EXPECT_TRUE(isnan(top_data[i]));
     } else {
-      TypeParam precision = expected_value * 0.0001;
-      precision *= (precision < 0) ? -1 : 1;
+      TypeParam precision = abs(expected_value * 0.0001);
       EXPECT_NEAR(expected_value, top_data[i], precision);
     }
   }
@@ -103,7 +102,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGradientShiftZeroCPU) {
   // Flip negative values in bottom vector as x < 0 -> x^0.37 = nan
   TypeParam* bottom_data = this->blob_bottom_->mutable_cpu_data();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    bottom_data[i] *= (bottom_data[i] < 0) ? -1 : 1;
+    bottom_data[i] = abs(bottom_data[i]);
   }
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701, 0., 0.01);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
@@ -253,8 +252,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGPU) {
     if (isnan(expected_value)) {
       EXPECT_TRUE(isnan(top_data[i]));
     } else {
-      TypeParam precision = expected_value * 0.0001;
-      precision *= (precision < 0) ? -1 : 1;
+      TypeParam precision = abs(expected_value * 0.0001);
       EXPECT_NEAR(expected_value, top_data[i], precision);
     }
   }
@@ -296,7 +294,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGradientShiftZeroGPU) {
   // Flip negative values in bottom vector as x < 0 -> x^0.37 = nan
   TypeParam* bottom_data = this->blob_bottom_->mutable_cpu_data();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    bottom_data[i] *= (bottom_data[i] < 0) ? -1 : 1;
+    bottom_data[i] = abs(bottom_data[i]);
   }
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701, 0., 0.01);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
