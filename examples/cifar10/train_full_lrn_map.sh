@@ -3,8 +3,7 @@
 TOOLS=../../build/tools
 
 GLOG_logtostderr=1 $TOOLS/train_net.bin \
-    cifar10_full_lrn_map_solver.prototxt \
-    cifar10_full_lrn_map_iter_60000.solverstate
+    cifar10_full_lrn_map_solver.prototxt
 
 #reduce learning rate by factor of 10
 GLOG_logtostderr=1 $TOOLS/train_net.bin \

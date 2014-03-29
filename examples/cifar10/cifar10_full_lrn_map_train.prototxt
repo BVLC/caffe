@@ -53,7 +53,7 @@ layers {
   type: LRN_MAP
   bottom: "pool1"
   top: "norm1"
-  lrn_param {
+  lrn_map_param {
     local_size: 3
     alpha: 5e-05
     beta: 0.75
@@ -102,7 +102,7 @@ layers {
   type: LRN_MAP
   bottom: "pool2"
   top: "norm2"
-  lrn_param {
+  lrn_map_param {
     local_size: 3
     alpha: 5e-05
     beta: 0.75
