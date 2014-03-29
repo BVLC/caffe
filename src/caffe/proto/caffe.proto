@@ -290,7 +290,8 @@ message PoolingParameter {
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   optional uint32 kernel_size = 2; // The kernel size
   optional uint32 stride = 3 [default = 1]; // The stride
-  optional uint32 pad = 4 [default = 0]; // The padding size
+  // The padding size -- currently implemented only for average pooling.
+  optional uint32 pad = 4 [default = 0];
 }
 
 // Message that stores parameters used by PowerLayer
