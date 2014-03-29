@@ -151,8 +151,7 @@ inline char caffe_sign(Dtype val) {
 #define DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(name, operation) \
 template<typename Dtype> \
 __global__ void name##_kernel(const int n, const Dtype* x, Dtype* y) { \
-  int index = threadIdx.x + blockIdx.x * blockDim.x; \
-  if (index < n) { \
+  CUDA_KERNEL_LOOP(index, n) { \
     operation; \
   } \
 } \
