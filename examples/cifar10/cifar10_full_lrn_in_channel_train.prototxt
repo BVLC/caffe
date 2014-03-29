@@ -50,10 +50,11 @@ layers {
 }
 layers {
   name: "norm1"
-  type: LRN_MAP
+  type: LRN
   bottom: "pool1"
   top: "norm1"
-  lrn_map_param {
+  lrn_param {
+    norm_region: WITHIN_CHANNEL
     local_size: 3
     alpha: 5e-05
     beta: 0.75
@@ -99,10 +100,11 @@ layers {
 }
 layers {
   name: "norm2"
-  type: LRN_MAP
+  type: LRN
   bottom: "pool2"
   top: "norm2"
-  lrn_map_param {
+  lrn_param {
+    norm_region: WITHIN_CHANNEL
     local_size: 3
     alpha: 5e-05
     beta: 0.75

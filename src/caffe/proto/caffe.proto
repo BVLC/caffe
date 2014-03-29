@@ -121,10 +121,9 @@ message LayerParameter {
     INFOGAIN_LOSS = 13;
     INNER_PRODUCT = 14;
     LRN = 15;
-    LRN_MAP = 1001;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
-    POWER = 1002;
+    POWER = 1001;
     RELU = 18;
     SIGMOID = 19;
     SOFTMAX = 20;
@@ -154,9 +153,8 @@ message LayerParameter {
   optional InfogainLossParameter infogain_loss_param = 16;
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
-  optional LRNMapParameter lrn_map_param = 1000;
   optional PoolingParameter pooling_param = 19;
-  optional PowerParameter power_param = 1001;
+  optional PowerParameter power_param = 1000;
   optional WindowDataParameter window_data_param = 20;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
@@ -271,13 +269,11 @@ message LRNParameter {
   optional uint32 local_size = 1 [default = 5];
   optional float alpha = 2 [default = 1.];
   optional float beta = 3 [default = 0.75];
-}
-
-// Message that stores parameters used by LRNMapLayer
-message LRNMapParameter {
-  optional uint32 local_size = 1 [default = 5];
-  optional float alpha = 2 [default = 1.];
-  optional float beta = 3 [default = 0.75];
+  enum NormRegion {
+    ACROSS_CHANNELS = 0;
+    WITHIN_CHANNEL = 1;
+  }
+  optional NormRegion norm_region = 4 [default = ACROSS_CHANNELS];
 }
 
 // Message that stores parameters used by PoolingLayer
