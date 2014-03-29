@@ -70,12 +70,12 @@ REF_HAMMING_DIST(double, uint64_t);
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(MathFunctionsTest, Dtypes);
 
-TYPED_TEST(MathFunctionsTest, TestHammingDistance) {
+TYPED_TEST(MathFunctionsTest, TestHammingDistanceCPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
   CHECK_EQ(this->ReferenceHammingDistance(n, x, y),
-           caffe_hamming_distance<TypeParam>(n, x, y));
+           caffe_cpu_hamming_distance<TypeParam>(n, x, y));
 }
 
 TYPED_TEST(MathFunctionsTest, TestAsumCPU) {

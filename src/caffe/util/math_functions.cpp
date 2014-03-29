@@ -369,7 +369,7 @@ void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
 }
 
 template <>
-int caffe_hamming_distance<float>(const int n, const float* x,
+int caffe_cpu_hamming_distance<float>(const int n, const float* x,
                                   const float* y) {
   int dist = 0;
   for (int i = 0; i < n; ++i) {
@@ -380,7 +380,7 @@ int caffe_hamming_distance<float>(const int n, const float* x,
 }
 
 template <>
-int caffe_hamming_distance<double>(const int n, const double* x,
+int caffe_cpu_hamming_distance<double>(const int n, const double* x,
                                    const double* y) {
   int dist = 0;
   for (int i = 0; i < n; ++i) {
