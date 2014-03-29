@@ -30,7 +30,6 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
     {
-      const Dtype pre_pad = (size_ - 1) / 2;
       // Set up split_layer_ to use inputs in the numerator and denominator.
       split_top_vec_.clear();
       split_top_vec_.push_back(bottom[0]);
@@ -58,7 +57,7 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       LayerParameter pool_param;
       pool_param.mutable_pooling_param()->set_pool(
           PoolingParameter_PoolMethod_AVE);
-      pool_param.mutable_pooling_param()->set_pad(pre_pad);
+      pool_param.mutable_pooling_param()->set_pad(pre_pad_);
       pool_param.mutable_pooling_param()->set_kernel_size(size_);
       pool_layer_.reset(new PoolingLayer<Dtype>(pool_param));
       pool_layer_->SetUp(square_top_vec_, &pool_top_vec_);
@@ -66,8 +65,8 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       CHECK_EQ(pool_output_.channels(), channels_);
       CHECK_EQ(pool_output_.height(), height_);
       CHECK_EQ(pool_output_.width(), width_);
-      // Set up power_layer_ to compute (1 + alpha_/N^2 s)^-beta_, where s is the
-      // sum of a squared neighborhood (the output of pool_layer_).
+      // Set up power_layer_ to compute (1 + alpha_/N^2 s)^-beta_, where s is
+      // the sum of a squared neighborhood (the output of pool_layer_).
       power_top_vec_.clear();
       power_top_vec_.push_back(&power_output_);
       LayerParameter power_param;
