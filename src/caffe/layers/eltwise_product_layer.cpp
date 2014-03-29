@@ -15,17 +15,17 @@ void EltwiseProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       "Eltwise Product Layer takes at least 2 blobs as input.";
   CHECK_EQ(top->size(), 1) <<
       "Eltwise Product Layer takes a single blob as output.";
-  num_ = bottom[0]->num();
-  channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
+  const int num = bottom[0]->num();
+  const int channels = bottom[0]->channels();
+  const int height = bottom[0]->height();
+  const int width = bottom[0]->width();
   for (int i = 1; i < bottom.size(); ++i) {
-    CHECK_EQ(num_, bottom[i]->num());
-    CHECK_EQ(channels_, bottom[i]->channels());
-    CHECK_EQ(height_, bottom[i]->height());
-    CHECK_EQ(width_, bottom[i]->width());
+    CHECK_EQ(num, bottom[i]->num());
+    CHECK_EQ(channels, bottom[i]->channels());
+    CHECK_EQ(height, bottom[i]->height());
+    CHECK_EQ(width, bottom[i]->width());
   }
-  (*top)[0]->Reshape(num_, channels_, height_, width_);
+  (*top)[0]->Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
