@@ -57,7 +57,7 @@ void LRNMapLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   power_top_vec_.push_back(&power_output_);
   LayerParameter power_param;
   power_param.mutable_power_param()->set_power(-beta);
-  power_param.mutable_power_param()->set_scale(alpha / (size_ * size_));
+  power_param.mutable_power_param()->set_scale(alpha);
   power_param.mutable_power_param()->set_shift(Dtype(1));
   power_layer_.reset(new PowerLayer<Dtype>(power_param));
   power_layer_->SetUp(pool_top_vec_, &power_top_vec_);
