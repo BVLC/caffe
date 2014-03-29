@@ -1,4 +1,4 @@
-// Copyright 2014 Jeff Donahue
+// Copyright 2014 BVLC and contributors.
 
 #include <algorithm>
 #include <vector>
