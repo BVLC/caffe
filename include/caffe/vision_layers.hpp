@@ -500,6 +500,10 @@ class InnerProductLayer : public Layer<Dtype> {
   shared_ptr<SyncedMemory> bias_multiplier_;
 };
 
+// Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
+template <typename Dtype> class PoolingLayer;
+template <typename Dtype> class SplitLayer;
+
 template <typename Dtype>
 class LRNLayer : public Layer<Dtype> {
  public:
@@ -518,8 +522,19 @@ class LRNLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  // scale_ stores the intermediate summing results
-  Blob<Dtype> scale_;
+  virtual Dtype Forward_cpu_cross_channel(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu_cross_channel(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_within_channel(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu_cross_channel(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu_cross_channel(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_within_channel(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   int size_;
   int pre_pad_;
   Dtype alpha_;
@@ -528,29 +543,12 @@ class LRNLayer : public Layer<Dtype> {
   int channels_;
   int height_;
   int width_;
-};
 
-template <typename Dtype> class PoolingLayer;
-template <typename Dtype> class SplitLayer;
+  // Fields used for normalization ACROSS_CHANNELS
+  // scale_ stores the intermediate summing results
+  Blob<Dtype> scale_;
 
-template <typename Dtype>
-class LRNMapLayer : public Layer<Dtype> {
- public:
-  explicit LRNMapLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
+  // Fields used for normalization WITHIN_CHANNEL
   shared_ptr<SplitLayer<Dtype> > split_layer_;
   vector<Blob<Dtype>*> split_top_vec_;
   shared_ptr<PowerLayer<Dtype> > square_layer_;
