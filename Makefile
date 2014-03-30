@@ -8,8 +8,9 @@ include Makefile.config
 ##############################################################################
 
 # The target static library and shared library name
-NAME := lib$(PROJECT).so
-STATIC_NAME := lib$(PROJECT).a
+LIB_BUILD_DIR := $(BUILD_DIR)/lib
+NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
+STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
 
 ##############################
 # Get all source files
@@ -133,7 +134,7 @@ ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
 		DIST_ALIASES += distribute
 endif
 
-ALL_BUILD_DIRS := $(BUILD_DIR) $(OBJ_BUILD_DIR) \
+ALL_BUILD_DIRS := $(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
 		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIRS) \
 		$(TEST_BUILD_DIR) $(TEST_LINK_DIR) $(GTEST_BUILD_DIR) \
 		$(EXAMPLE_BUILD_DIRS) \
@@ -232,11 +233,11 @@ runtest: $(TEST_ALL_BIN)
 $(ALL_BUILD_DIRS):
 	@ mkdir -p $@
 
-$(NAME): $(PROTO_OBJS) $(OBJS)
+$(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
 	$(CXX) -shared -o $(NAME) $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
 
-$(STATIC_NAME): $(PROTO_OBJS) $(OBJS)
+$(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
 	ar rcs $(STATIC_NAME) $(PROTO_OBJS) $(OBJS)
 	@ echo
 
