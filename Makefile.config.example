@@ -48,3 +48,6 @@ DISTRIBUTE_DIR := distribute
 
 # uncomment for debugging
 #DEBUG := 1
+
+# The ID of the GPU that 'make runtest' will use to run unit tests.
+TEST_GPUID := 0

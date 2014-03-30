@@ -1,6 +1,5 @@
 # The makefile for caffe. Extremely hacky.
 PROJECT := caffe
-TEST_GPUID := 0
 
 include Makefile.config
 
