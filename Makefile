@@ -218,11 +218,12 @@ $(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC)
 
 mat$(PROJECT): mat
 
-mat: $(STATIC_NAME) $(MAT$(PROJECT)_SRC)
+mat: $(MAT$(PROJECT)_SO)
+
+$(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
-		CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
-		CXXLIBS="\$$CXXLIBS $(LDFLAGS)" \
-		-o $(MAT$(PROJECT)_SO)
+			CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
+			CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -o $@
 	@ echo
 
 runtest: $(TEST_ALL_BIN)
@@ -232,7 +233,7 @@ $(ALL_BUILD_DIRS):
 	@ mkdir -p $@
 
 $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
-	$(CXX) -shared -o $(NAME) $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) -shared -o $@ $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
 
 $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
@@ -247,7 +248,7 @@ $(TEST_BUILD_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME)
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
-		-o $(TEST_ALL_BIN) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
 
 $(TEST_LINK_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.testbin | $(TEST_LINK_DIR)
@@ -272,7 +273,8 @@ $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
-$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) | $(TEST_BUILD_DIR)
+$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
+		| $(TEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
@@ -306,10 +308,6 @@ $(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
-$(PROTO_GEN_PY): $(PROTO_SRCS)
-	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
-	@ echo
-
 proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
 
 $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
@@ -322,6 +320,10 @@ $(PROTO_BUILD_INCLUDE_DIR)/%.pb.h: $(PROTO_BUILD_DIR)/%.pb.h \
 	@ $(RM) $(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
 	@ ln -s ../../../../$(PROTO_BUILD_DIR)/$(*F).pb.h \
 			$(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
+
+$(PROTO_GEN_PY): $(PROTO_SRCS)
+	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
+	@ echo
 
 clean:
 	@- $(RM) $(NAME) $(STATIC_NAME)
