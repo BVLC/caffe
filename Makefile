@@ -75,7 +75,11 @@ GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
 TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
 TEST_BINS := ${TEST_OBJS:.o=.testbin}
-TEST_ALL_BIN := $(BUILD_DIR)/src/$(PROJECT)/test/test_all.testbin
+TEST_BUILD_SUB_DIR := src/$(PROJECT)/test
+TEST_DIR = $(BUILD_DIR)/$(TEST_BUILD_SUB_DIR)
+TEST_ALL_BIN := $(TEST_DIR)/test_all.testbin
+# A shortcut to the directory of test binaries for convenience.
+TEST_DIR_LINK := $(BUILD_DIR)/test
 
 ##############################
 # Derive include and lib directories
@@ -123,9 +127,10 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 ##############################
 # Define build targets
 ##############################
-.PHONY: all init test clean linecount lint tools examples py mat distribute \
-        py$(PROJECT) mat$(PROJECT) proto runtest \
-	superclean supercleanlist supercleanfiles
+.PHONY: all init test clean linecount lint tools examples distribute \
+	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
+	superclean supercleanlist supercleanfiles \
+	testshortcut
 
 all: init $(NAME) $(STATIC_NAME) tools examples
 	@echo $(CXX_OBJS)
@@ -184,11 +189,21 @@ $(STATIC_NAME): init $(PROTO_OBJS) $(OBJS)
 runtest: $(TEST_ALL_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID)
 
-$(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS)
-	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+$(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS) testshortcut
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
+		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 
-$(TEST_ALL_BIN): $(GTEST_OBJ) $(STATIC_NAME) $(TEST_OBJS)
-	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) -o $(TEST_ALL_BIN) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+$(TEST_ALL_BIN): $(GTEST_OBJ) $(STATIC_NAME) $(TEST_OBJS) testshortcut
+	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
+		-o $(TEST_ALL_BIN) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+
+testshortcut: $(TEST_DIR_LINK)
+
+$(TEST_DIR_LINK): $(TEST_DIR)
+	@ln -s $(TEST_BUILD_SUB_DIR) $(TEST_DIR_LINK)
+
+$(TEST_DIR):
+	@mkdir -p $(TEST_DIR)
 
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
