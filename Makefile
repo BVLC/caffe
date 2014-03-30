@@ -215,6 +215,7 @@ py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 $(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC)
 	$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
 		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+	@ echo
 
 mat$(PROJECT): mat
 
@@ -233,18 +234,22 @@ $(ALL_BUILD_DIRS):
 
 $(NAME): $(PROTO_OBJS) $(OBJS)
 	$(CXX) -shared -o $(NAME) $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	@ echo
 
 $(STATIC_NAME): $(PROTO_OBJS) $(OBJS)
 	ar rcs $(STATIC_NAME) $(PROTO_OBJS) $(OBJS)
+	@ echo
 
 $(TEST_BUILD_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BUILD_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	@ echo
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME)
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $(TEST_ALL_BIN) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	@ echo
 
 $(TEST_LINK_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.testbin | $(TEST_LINK_DIR)
 	@ $(RM) $@
@@ -261,6 +266,7 @@ $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 $(LAYER_BUILD_DIR)/%.o: \
 		src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) | $(LAYER_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
+	@ echo
 
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc \
 		$(PROTO_GEN_HEADER) | $(PROTO_BUILD_DIR)
@@ -269,6 +275,7 @@ $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc \
 
 $(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) | $(TEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
+	@ echo
 
 $(UTIL_BUILD_DIR)/%.o: src/$(PROJECT)/util/%.cpp $(HXX_SRCS) | $(UTIL_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
@@ -309,6 +316,7 @@ proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
 $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR)
 	protoc --proto_path=src --cpp_out=build/src $<
+	@ echo
 
 $(PROTO_BUILD_INCLUDE_DIR)/%.pb.h: $(PROTO_BUILD_DIR)/%.pb.h \
 		| $(PROTO_BUILD_INCLUDE_DIR)
