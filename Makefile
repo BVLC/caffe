@@ -31,8 +31,15 @@ TEST_HDRS := $(shell find src/$(PROJECT) -name "test_*.hpp")
 TOOL_SRCS := $(shell find tools -name "*.cpp")
 # EXAMPLE_SRCS are the source files for the example binaries
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
+# BUILD_INCLUDE_DIR contains any generated header files we want to include.
+BUILD_INCLUDE_DIR := $(BUILD_DIR)/include
 # PROTO_SRCS are the protocol buffer definitions
-PROTO_SRCS := $(wildcard src/$(PROJECT)/proto/*.proto)
+PROTO_SRC_DIR := src/$(PROJECT)/proto
+PROTO_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto)
+# PROTO_BUILD_DIR will contain the .cc and obj files generated from
+# PROTO_SRCS; PROTO_BUILD_INCLUDE_DIR will contain the .h header files
+PROTO_BUILD_DIR := $(BUILD_DIR)/$(PROTO_SRC_DIR)
+PROTO_BUILD_INCLUDE_DIR := $(BUILD_INCLUDE_DIR)/$(PROJECT)/proto
 # NONGEN_CXX_SRCS includes all source/header files except those generated
 # automatically (e.g., by proto).
 NONGEN_CXX_SRCS := $(shell find \
@@ -56,15 +63,15 @@ MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT)
 # Derive generated files
 ##############################
 # The generated files for protocol buffers
-PROTO_GEN_HEADER := ${PROTO_SRCS:.proto=.pb.h}
-PROTO_GEN_CC := ${PROTO_SRCS:.proto=.pb.cc}
+PROTO_GEN_HEADER := $(addprefix $(BUILD_DIR)/, ${PROTO_SRCS:.proto=.pb.h})
+PROTO_GEN_CC := $(addprefix $(BUILD_DIR)/, ${PROTO_SRCS:.proto=.pb.cc})
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
 # The objects corresponding to the source files
 # These objects will be linked into the final shared library, so we
 # exclude the tool, example, and test objects.
 CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
 CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
-PROTO_OBJS := $(addprefix $(BUILD_DIR)/, ${PROTO_GEN_CC:.cc=.o})
+PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
@@ -90,6 +97,7 @@ MKL_INCLUDE_DIR := $(MKL_DIR)/include
 MKL_LIB_DIR := $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR)
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR)
 LIBRARY_DIRS += $(CUDA_LIB_DIR)
 LIBRARIES := cudart cublas curand \
 	pthread \
@@ -200,10 +208,10 @@ $(TEST_ALL_BIN): $(GTEST_OBJ) $(STATIC_NAME) $(TEST_OBJS) testshortcut
 testshortcut: $(TEST_DIR_LINK)
 
 $(TEST_DIR_LINK): $(TEST_DIR)
-	@ln -s $(TEST_BUILD_SUB_DIR) $(TEST_DIR_LINK)
+	ln -s $(TEST_BUILD_SUB_DIR) $(TEST_DIR_LINK)
 
 $(TEST_DIR):
-	@mkdir -p $(TEST_DIR)
+	mkdir -p $(TEST_DIR)
 
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
@@ -259,13 +267,18 @@ $(PROTO_GEN_PY): $(PROTO_SRCS)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
 	@echo
 
-proto: $(PROTO_GEN_CC)
+proto: init $(PROTO_GEN_CC)
 
-$(PROTO_GEN_CC): $(PROTO_SRCS)
-	protoc --proto_path=src --cpp_out=src $(PROTO_SRCS)
-	mkdir -p include/$(PROJECT)/proto
-	cp $(PROTO_GEN_HEADER) include/$(PROJECT)/proto/
+$(PROTO_GEN_CC): $(PROTO_SRCS) $(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR)
+	protoc --proto_path=src --cpp_out=build/src $(PROTO_SRCS)
+	cp $(PROTO_GEN_HEADER) $(PROTO_BUILD_INCLUDE_DIR)
 	@echo
+
+$(PROTO_BUILD_DIR):
+	mkdir -p $(PROTO_BUILD_DIR)
+
+$(PROTO_BUILD_INCLUDE_DIR):
+	mkdir -p $(PROTO_BUILD_INCLUDE_DIR)
 
 clean:
 	@- $(RM) $(NAME) $(STATIC_NAME)
