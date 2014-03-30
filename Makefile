@@ -70,8 +70,10 @@ PROTO_GEN_HEADER := $(addprefix $(PROTO_BUILD_INCLUDE_DIR)/, \
 		$(notdir ${PROTO_SRCS:.proto=.pb.h}))
 HXX_SRCS += $(PROTO_GEN_HEADER)
 PROTO_GEN_CC := $(addprefix $(BUILD_DIR)/, ${PROTO_SRCS:.proto=.pb.cc})
+PY_PROTO_BUILD_DIR := python/$(PROJECT)/proto
+PY_PROTO_INIT := python/$(PROJECT)/proto/__init__.py
 PROTO_GEN_PY := $(foreach file,${PROTO_SRCS:.proto=_pb2.py}, \
-		python/$(PROJECT)/proto/$(notdir $(file)))
+		$(PY_PROTO_BUILD_DIR)/$(notdir $(file)))
 # The objects corresponding to the source files
 # These objects will be linked into the final shared library, so we
 # exclude the tool, example, and test objects.
@@ -137,7 +139,7 @@ ALL_BUILD_DIRS := $(sort \
 		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
 		$(TEST_BUILD_DIR) $(TEST_BIN_DIR) $(GTEST_BUILD_DIR) \
 		$(EXAMPLE_BUILD_DIRS) \
-		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) \
+		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) $(PY_PROTO_BUILD_DIR) \
 		$(DISTRIBUTE_SUBDIRS))
 
 DEBUG ?= 0
@@ -279,8 +281,8 @@ $(GTEST_OBJ): $(GTEST_SRC) | $(GTEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
-$(LAYER_BUILD_DIR)/%.cuo: \
-		src/$(PROJECT)/layers/%.cu $(HXX_SRCS) | $(LAYER_BUILD_DIR)
+$(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
+		| $(LAYER_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@ echo
 
@@ -312,18 +314,19 @@ $(PROTO_BUILD_INCLUDE_DIR)/%.pb.h: $(PROTO_BUILD_DIR)/%.pb.h \
 		| $(PROTO_BUILD_INCLUDE_DIR)
 	@ cp $(PROTO_BUILD_DIR)/$(*F).pb.h $(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
 
-$(PROTO_GEN_PY): $(PROTO_SRCS)
-	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
+$(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
+		$(PY_PROTO_INIT) | $(PY_PROTO_BUILD_DIR)
+	protoc --proto_path=src --python_out=python $<
 	@ echo
 
+$(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
+	touch $(PY_PROTO_INIT)
+
 clean:
-	@- $(RM) $(NAME) $(STATIC_NAME)
-	@- $(RM) $(PROTO_GEN_HEADER) $(PROTO_GEN_CC) $(PROTO_GEN_PY)
-	@- $(RM) include/$(PROJECT)/proto/$(PROJECT).pb.h
-	@- $(RM) python/$(PROJECT)/proto/$(PROJECT)_pb2.py
-	@- $(RM) python/$(PROJECT)/*.so
-	@- $(RM) -rf $(BUILD_DIR)
+	@- $(RM) -rf $(ALL_BUILD_DIRS)
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
+	@- $(RM) $(PY$(PROJECT)_SO)
+	@- $(RM) $(MAT$(PROJECT)_SO)
 
 supercleanfiles:
 	$(eval SUPERCLEAN_FILES := $(strip \
