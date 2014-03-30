@@ -124,7 +124,8 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 # Define build targets
 ##############################
 .PHONY: all init test clean linecount lint tools examples py mat distribute \
-        py$(PROJECT) mat$(PROJECT) proto runtest
+        py$(PROJECT) mat$(PROJECT) proto runtest \
+	superclean supercleanlist supercleanfiles
 
 all: init $(NAME) $(STATIC_NAME) tools examples
 	@echo $(CXX_OBJS)
@@ -259,6 +260,40 @@ clean:
 	@- $(RM) python/$(PROJECT)/*.so
 	@- $(RM) -rf $(BUILD_DIR)
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
+
+# make superclean recursively* deletes all files ending with an extension
+# suggesting that Caffe built them.  This may be useful if you've built older
+# versions of Caffe that do not place all generated files in a location known
+# to make clean.
+#
+# make supercleanlist will list the files to be deleted by make superclean.
+#
+# * Recursive with the exception that symbolic links are never followed, per the
+# default behavior of 'find'.
+SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
+
+supercleanfiles:
+	$(eval SUPERCLEAN_FILES := \
+		$(strip $(foreach ext,$(SUPERCLEAN_EXTS), \
+		$(shell find . -name '*$(ext)'))))
+
+supercleanlist: supercleanfiles
+	@ \
+	if [ -z "$(SUPERCLEAN_FILES)" ]; then \
+	  echo "No generated files found."; \
+	else \
+	  echo $(SUPERCLEAN_FILES); \
+	fi
+
+superclean: clean supercleanfiles
+	@ \
+	if [ -z "$(SUPERCLEAN_FILES)" ]; then \
+	  echo "No generated files found."; \
+	else \
+	  echo "Deleting the following generated files:"; \
+	  echo $(SUPERCLEAN_FILES); \
+	  $(RM) $(SUPERCLEAN_FILES); \
+	fi
 
 distribute: all
 	mkdir $(DISTRIBUTE_DIR)
