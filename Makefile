@@ -63,7 +63,9 @@ MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT)
 # Derive generated files
 ##############################
 # The generated files for protocol buffers
-PROTO_GEN_HEADER := $(addprefix $(BUILD_DIR)/, ${PROTO_SRCS:.proto=.pb.h})
+PROTO_GEN_HEADER := $(addprefix $(PROTO_BUILD_INCLUDE_DIR)/, \
+	$(notdir ${PROTO_SRCS:.proto=.pb.h}))
+HXX_SRCS += $(PROTO_GEN_HEADER)
 PROTO_GEN_CC := $(addprefix $(BUILD_DIR)/, ${PROTO_SRCS:.proto=.pb.cc})
 PROTO_GEN_PY := ${PROTO_SRCS:.proto=_pb2.py}
 # The objects corresponding to the source files
@@ -166,7 +168,7 @@ $(LINT_REPORT): $(NONGEN_CXX_SRCS)
 
 test: init $(TEST_BINS) $(TEST_ALL_BIN)
 
-tools: init $(TOOL_BINS)
+tools: init proto $(TOOL_BINS)
 
 examples: init $(EXAMPLE_BINS)
 
@@ -197,7 +199,9 @@ $(STATIC_NAME): init $(PROTO_OBJS) $(OBJS)
 runtest: $(TEST_ALL_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID)
 
-$(TEST_BINS): %.testbin : %.o $(GTEST_OBJ) $(STATIC_NAME) $(TEST_HDRS) testshortcut
+$(BUILD_DIR)/src/$(PROJECT)/test/%.testbin: \
+		$(BUILD_DIR)/src/$(PROJECT)/test/%.o \
+		$(GTEST_OBJ) $(STATIC_NAME) testshortcut
 	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 
@@ -205,9 +209,9 @@ $(TEST_ALL_BIN): $(GTEST_OBJ) $(STATIC_NAME) $(TEST_OBJS) testshortcut
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $(TEST_ALL_BIN) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 
-testshortcut: $(TEST_DIR_LINK)
+testshortcut: | $(TEST_DIR_LINK)
 
-$(TEST_DIR_LINK): $(TEST_DIR)
+$(TEST_DIR_LINK): | $(TEST_DIR)
 	ln -s $(TEST_BUILD_SUB_DIR) $(TEST_DIR_LINK)
 
 $(TEST_DIR):
@@ -221,23 +225,29 @@ $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@echo
 
-$(OBJS): $(PROTO_GEN_CC) $(HXX_SRCS)
-
 $(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
-$(BUILD_DIR)/src/$(PROJECT)/layers/%.o: src/$(PROJECT)/layers/%.cpp
+$(OBJS): $(PROTO_GEN_HEADER) $(HXX_SRCS)
+	@echo matched the first objs!!
+
+
+LAYERS_DIR := $(BUILD_DIR)/src/$(PROJECT)/layers
+$(LAYERS_DIR):
+	@ mkdir -p $(LAYERS_DIR)
+
+$(BUILD_DIR)/src/$(PROJECT)/layers/%.o: \
+		src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) | $(LAYERS_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
-$(BUILD_DIR)/src/$(PROJECT)/proto/%.o: src/$(PROJECT)/proto/%.cc
+$(BUILD_DIR)/src/$(PROJECT)/proto/%.o: src/$(PROJECT)/proto/%.cc src/$(PROJECT)/proto/%.h
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@echo
 
-$(BUILD_DIR)/src/$(PROJECT)/test/%.o: src/test/%.cpp
+$(BUILD_DIR)/src/$(PROJECT)/test/%.o: $(PROTO_GEN_HEADER) src/$(PROJECT)/test/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@
-	@echo
 
 $(BUILD_DIR)/src/$(PROJECT)/util/%.o: src/$(PROJECT)/util/%.cpp
 	$(CXX) $< $(CXXFLAGS) -c -o $@
@@ -255,11 +265,11 @@ $(BUILD_DIR)/src/$(PROJECT)/util/%.cuo: src/$(PROJECT)/util/%.cu
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@echo
 
-$(BUILD_DIR)/tools/%.o: tools/%.cpp
+$(BUILD_DIR)/tools/%.o: tools/%.cpp $(PROTO_GEN_HEADER)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
 
-$(BUILD_DIR)/examples/%.o: examples/%.cpp
+$(BUILD_DIR)/examples/%.o: examples/%.cpp $(PROTO_GEN_HEADER)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@echo
 
@@ -267,12 +277,16 @@ $(PROTO_GEN_PY): $(PROTO_SRCS)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
 	@echo
 
-proto: init $(PROTO_GEN_CC)
+proto: init $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
+	@echo PROTO_GEN_CC: $(PROTO_GEN_CC)
+	@echo PROTO_GEN_HEADER: $(PROTO_GEN_HEADER)
+	@echo PROTO_OBJS: $(PROTO_OBJS)
 
-$(PROTO_GEN_CC): $(PROTO_SRCS) $(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR)
-	protoc --proto_path=src --cpp_out=build/src $(PROTO_SRCS)
-	cp $(PROTO_GEN_HEADER) $(PROTO_BUILD_INCLUDE_DIR)
-	@echo
+$(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h \
+		$(PROTO_BUILD_INCLUDE_DIR)/%.pb.h: \
+		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR)
+	protoc --proto_path=src --cpp_out=build/src $<
+	cp $(PROTO_BUILD_DIR)/$(*F).pb.h $(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
 
 $(PROTO_BUILD_DIR):
 	mkdir -p $(PROTO_BUILD_DIR)
