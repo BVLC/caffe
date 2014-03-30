@@ -65,12 +65,13 @@ MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT)
 ##############################
 # The generated files for protocol buffers
 PROTO_GEN_HEADER_SRCS := $(addprefix $(PROTO_BUILD_DIR)/, \
-	$(notdir ${PROTO_SRCS:.proto=.pb.h}))
+		$(notdir ${PROTO_SRCS:.proto=.pb.h}))
 PROTO_GEN_HEADER := $(addprefix $(PROTO_BUILD_INCLUDE_DIR)/, \
-	$(notdir ${PROTO_SRCS:.proto=.pb.h}))
+		$(notdir ${PROTO_SRCS:.proto=.pb.h}))
 HXX_SRCS += $(PROTO_GEN_HEADER)
 PROTO_GEN_CC := $(addprefix $(BUILD_DIR)/, ${PROTO_SRCS:.proto=.pb.cc})
-PROTO_GEN_PY := $(foreach file,${PROTO_SRCS:.proto=_pb2.py},python/$(PROJECT)/proto/$(notdir $(file)))
+PROTO_GEN_PY := $(foreach file,${PROTO_SRCS:.proto=_pb2.py}, \
+		python/$(PROJECT)/proto/$(notdir $(file)))
 # The objects corresponding to the source files
 # These objects will be linked into the final shared library, so we
 # exclude the tool, example, and test objects.
@@ -95,13 +96,11 @@ EXAMPLE_BUILD_DIRS += $(foreach obj,$(EXAMPLE_OBJS),$(dir $(obj)))
 # tool, example, and test bins
 TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
-TEST_BINS := ${TEST_OBJS:.o=.testbin}
-TEST_ALL_BIN := $(TEST_BUILD_DIR)/test_all.testbin
-TEST_ALL_BINS := $(TEST_ALL_BIN) $(TEST_BINS)
 # A shortcut to the directory of test binaries for convenience.
-TEST_LINK_DIR := $(BUILD_DIR)/test
-TEST_ALL_BIN_LINKS := $(foreach \
-		bin,$(TEST_ALL_BINS),$(TEST_LINK_DIR)/$(notdir $(bin)))
+TEST_BIN_DIR := $(BUILD_DIR)/test
+TEST_BINS := $(addprefix $(TEST_BIN_DIR)/, \
+		$(foreach obj,$(TEST_OBJS),$(notdir $(obj))))
+TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 
 ##############################
 # Derive include and lib directories
@@ -136,7 +135,7 @@ endif
 ALL_BUILD_DIRS := $(sort \
 		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
 		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
-		$(TEST_BUILD_DIR) $(TEST_LINK_DIR) $(GTEST_BUILD_DIR) \
+		$(TEST_BUILD_DIR) $(TEST_BIN_DIR) $(GTEST_BUILD_DIR) \
 		$(EXAMPLE_BUILD_DIRS) \
 		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) \
 		$(DISTRIBUTE_SUBDIRS))
@@ -184,8 +183,6 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles
 
-.SECONDARY: $(PROTO_GEN_HEADER_SRCS) $(TEST_BINS)
-
 all: $(NAME) $(STATIC_NAME) tools examples
 
 linecount: clean
@@ -201,7 +198,7 @@ $(LINT_REPORT): $(NONGEN_CXX_SRCS) | $(BUILD_DIR)
 			echo "Found 1 or more lint errors; see log at $(FAILED_LINT_REPORT)"; \
 			exit 1)
 
-test: $(TEST_ALL_BIN_LINKS)
+test: $(TEST_ALL_BIN) $(TEST_BINS)
 
 tools: $(TOOL_BINS)
 
@@ -237,13 +234,12 @@ $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo
 
 $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
-	ar rcs $(STATIC_NAME) $(PROTO_OBJS) $(OBJS)
+	ar rcs $@ $(PROTO_OBJS) $(OBJS)
 	@ echo
 
-$(TEST_BUILD_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
+$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
 		| $(TEST_BUILD_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
-		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME)
@@ -251,9 +247,11 @@ $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME)
 		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
 
-$(TEST_LINK_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.testbin | $(TEST_LINK_DIR)
-	@ $(RM) $@
-	@ ln -s ../../$(TEST_BUILD_DIR)/$(@F) $@
+$(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
+		| $(TEST_BIN_DIR)
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
+		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	@ echo
 
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
@@ -270,11 +268,6 @@ $(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \
 
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		| $(PROTO_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
-	@ echo
-
-$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
-		| $(TEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
@@ -317,9 +310,7 @@ $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 
 $(PROTO_BUILD_INCLUDE_DIR)/%.pb.h: $(PROTO_BUILD_DIR)/%.pb.h \
 		| $(PROTO_BUILD_INCLUDE_DIR)
-	@ $(RM) $(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
-	@ ln -s ../../../../$(PROTO_BUILD_DIR)/$(*F).pb.h \
-			$(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
+	@ cp $(PROTO_BUILD_DIR)/$(*F).pb.h $(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
 
 $(PROTO_GEN_PY): $(PROTO_SRCS)
 	protoc --proto_path=src --python_out=python $(PROTO_SRCS)
