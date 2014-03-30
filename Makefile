@@ -34,7 +34,7 @@ TOOL_SRCS := $(shell find tools -name "*.cpp")
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # BUILD_INCLUDE_DIR contains any generated header files we want to include.
 BUILD_INCLUDE_DIR := $(BUILD_DIR)/include
-# PROTO_SRCS are the protocol buffer defions
+# PROTO_SRCS are the protocol buffer definitions
 PROTO_SRC_DIR := src/$(PROJECT)/proto
 PROTO_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto)
 # PROTO_BUILD_DIR will contain the .cc and obj files generated from
@@ -98,10 +98,10 @@ EXAMPLE_BUILD_DIRS += $(foreach obj,$(EXAMPLE_OBJS),$(dir $(obj)))
 # tool, example, and test bins
 TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
-# A shortcut to the directory of test binaries for convenience.
+# Put the test binaries in build/test for convenience.
 TEST_BIN_DIR := $(BUILD_DIR)/test
-TEST_BINS := $(addprefix $(TEST_BIN_DIR)/, \
-		$(foreach obj,$(TEST_OBJS),$(notdir $(obj))))
+TEST_BINS := $(addsuffix .testbin,$(addprefix $(TEST_BIN_DIR)/, \
+		$(foreach obj,$(TEST_OBJS),$(basename $(notdir $(obj))))))
 TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 
 ##############################
@@ -168,9 +168,9 @@ LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
 # 'superclean' target recursively* deletes all files ending with an extension
-# suggesting that Caffe built them.  This may be useful if you've built older
+# in $(SUPERCLEAN_EXTS) below.  This may be useful if you've built older
 # versions of Caffe that do not place all generated files in a location known
-# to make clean.
+# to the 'clean' target.
 #
 # 'supercleanlist' will list the files to be deleted by make superclean.
 #
@@ -181,7 +181,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 ##############################
 # Define build targets
 ##############################
-.PHONY: all test clean linecount lint tools examples dist \
+.PHONY: all test clean linecount lint tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles
 
@@ -244,7 +244,8 @@ $(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
-$(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME)
+$(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
+		| $(TEST_BIN_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
