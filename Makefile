@@ -301,16 +301,15 @@ clean:
 SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 
 supercleanfiles:
-	$(eval SUPERCLEAN_FILES := \
-		$(strip $(foreach ext,$(SUPERCLEAN_EXTS), \
-		$(shell find . -name '*$(ext)'))))
+	$(eval SUPERCLEAN_FILES := $(strip \
+		$(foreach ext,$(SUPERCLEAN_EXTS), $(shell find . -name '*$(ext)'))))
 
 supercleanlist: supercleanfiles
 	@ \
 	if [ -z "$(SUPERCLEAN_FILES)" ]; then \
 	  echo "No generated files found."; \
 	else \
-	  echo $(SUPERCLEAN_FILES); \
+	  echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
 	fi
 
 superclean: clean supercleanfiles
@@ -319,7 +318,7 @@ superclean: clean supercleanfiles
 	  echo "No generated files found."; \
 	else \
 	  echo "Deleting the following generated files:"; \
-	  echo $(SUPERCLEAN_FILES); \
+	  echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
 	  $(RM) $(SUPERCLEAN_FILES); \
 	fi
 
