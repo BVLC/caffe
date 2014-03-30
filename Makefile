@@ -84,7 +84,6 @@ OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
 TOOL_BUILD_DIR := $(BUILD_DIR)/tools
-TOOL_BUILD_DIRS := $(sort $(foreach obj,$(TOOL_OBJS),$(dir $(obj))))
 TEST_BUILD_DIR := $(BUILD_DIR)/src/$(PROJECT)/test
 TEST_OBJS := $(addprefix $(BUILD_DIR)/, ${TEST_SRCS:.cpp=.o})
 GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
@@ -134,14 +133,13 @@ ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
 		DIST_ALIASES += distribute
 endif
 
-ALL_BUILD_DIRS := $(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
-		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIRS) \
+ALL_BUILD_DIRS := $(sort \
+		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
+		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
 		$(TEST_BUILD_DIR) $(TEST_LINK_DIR) $(GTEST_BUILD_DIR) \
 		$(EXAMPLE_BUILD_DIRS) \
 		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) \
-		$(DISTRIBUTE_SUBDIRS)
-
-ALL_BUILD_DIRS := $(sort $(ALL_BUILD_DIRS))
+		$(DISTRIBUTE_SUBDIRS))
 
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
@@ -197,7 +195,7 @@ lint: $(LINT_REPORT)
 
 $(LINT_REPORT): $(NONGEN_CXX_SRCS) | $(BUILD_DIR)
 	@ (python ./scripts/cpp_lint.py $(NONGEN_CXX_SRCS) > $(LINT_REPORT) 2>&1 \
-		&& (rm -f $(FAILED_LINT_REPORT); echo "No lint errors!")) || ( \
+		&& ($(RM) $(FAILED_LINT_REPORT); echo "No lint errors!")) || ( \
 			mv $(LINT_REPORT) $(FAILED_LINT_REPORT); \
 			grep -v "^Done processing " $(FAILED_LINT_REPORT); \
 			echo "Found 1 or more lint errors; see log at $(FAILED_LINT_REPORT)"; \
@@ -264,13 +262,13 @@ $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
 
-$(LAYER_BUILD_DIR)/%.o: \
-		src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) | $(LAYER_BUILD_DIR)
+$(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \
+		| $(LAYER_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
-$(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc \
-		$(PROTO_GEN_HEADER) | $(PROTO_BUILD_DIR)
+$(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
+		| $(PROTO_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
