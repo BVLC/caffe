@@ -38,7 +38,12 @@ private:\
     cublasStatus_t status = condition; \
     CHECK_EQ(status, CUBLAS_STATUS_SUCCESS) << cublasGetErrorString(status); \
   } while(0)
-#define CURAND_CHECK(condition) CHECK_EQ((condition), CURAND_STATUS_SUCCESS)
+
+#define CURAND_CHECK(condition) \
+  do { \
+    curandStatus_t status = condition; \
+    CHECK_EQ(status, CURAND_STATUS_SUCCESS) << curandGetErrorString(status); \
+  } while(0)
 
 // CUDA: grid stride looping
 #define CUDA_KERNEL_LOOP(i, n) \
@@ -135,6 +140,7 @@ class Caffe {
 
 // NVIDIA_CUDA-5.5_Samples/common/inc/helper_cuda.h
 const char* cublasGetErrorString(cublasStatus_t& error);
+const char* curandGetErrorString(curandStatus_t error);
 
 // CUDA: thread number configuration.
 // Use 1024 threads per block, which requires cuda sm_2x or above,
