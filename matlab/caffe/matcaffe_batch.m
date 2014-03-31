@@ -16,14 +16,20 @@ function [scores,list_im] = matcaffe_batch(list_im, use_gpu)
 % Or the equivalent based on where things are installed on your system
 %
 % Usage:
-%  scores = matcaffe_batch({'peppers.png','onion.png'}, 0);
+%  scores = matcaffe_batch({'peppers.png','onion.png'});
 %  scores = matcaffe_batch('list_images.txt', 1);
+if nargin < 1
+  % For test purposes
+  list_im = {'peppers.png','onions.png'};
+end
 if ischar(list_im)
     %Assume it is a file contaning the list of images
     filename = list_im;
     list_im = read_cell(filename);
 end
+% Adjust the batch size to match with imagenet_deploy.prototxt
 batch_size = 10;
+% Adjust dim to the output size of imagenet_deploy.prototxt
 dim = 1000;
 disp(list_im)
 if mod(length(list_im),batch_size)
