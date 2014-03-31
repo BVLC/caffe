@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // Copyright 2014 BVLC and contributors.
 //
 // matcaffe.cpp provides a wrapper of the caffe::Net class as well as some
@@ -94,11 +93,63 @@ static mxArray* do_forward(const mxArray* const bottom) {
   return mx_out;
 }
 
+static mxArray* do_backward(const mxArray* const top_diff) {
+  vector<Blob<float>*>& output_blobs = net_->output_blobs();
+  vector<Blob<float>*>& input_blobs = net_->input_blobs();
+  CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(top_diff)[0]), 
+      output_blobs.size());
+  // First, copy the output diff
+  for (unsigned int i = 0; i < output_blobs.size(); ++i) {
+    const mxArray* const elem = mxGetCell(top_diff, i);
+    const float* const data_ptr = 
+        reinterpret_cast<const float* const>(mxGetPr(elem));
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(output_blobs[i]->mutable_cpu_diff(), data_ptr,
+        sizeof(float) * output_blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      cudaMemcpy(output_blobs[i]->mutable_gpu_diff(), data_ptr,
+        sizeof(float) * output_blobs[i]->count(), cudaMemcpyHostToDevice);
+      break;
+    default:
+      LOG(FATAL) << "Unknown Caffe mode.";
+    }  // switch (Caffe::mode())
+  }
+  //LOG(INFO) << "Start";
+  net_->Backward();
+  //LOG(INFO) << "End";
+  mxArray* mx_out = mxCreateCellMatrix(input_blobs.size(), 1);
+  for (unsigned int i = 0; i < input_blobs.size(); ++i) {
+    // internally data is stored as (width, height, channels, num)
+    // where width is the fastest dimension
+    mwSize dims[4] = {input_blobs[i]->width(), input_blobs[i]->height(),
+      input_blobs[i]->channels(), input_blobs[i]->num()};
+    mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+    mxSetCell(mx_out, i, mx_blob);
+    float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(data_ptr, input_blobs[i]->cpu_diff(),
+          sizeof(float) * input_blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      cudaMemcpy(data_ptr, input_blobs[i]->gpu_diff(),
+          sizeof(float) * input_blobs[i]->count(), cudaMemcpyDeviceToHost);
+      break;
+    default:
+      LOG(FATAL) << "Unknown Caffe mode.";
+    }  // switch (Caffe::mode())
+  }
+
+  return mx_out;
+}
+
 static mxArray* do_get_weights() {
   const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
   const vector<string>& layer_names = net_->layer_names();
 
-  // Step 1: count the number of layers
+  // Step 1: count the number of layers with weights
   int num_layers = 0;
   {
     string prev_layer_name = "";
@@ -237,10 +288,10 @@ static void end(MEX_ARGS){
   if (net_) {
     net_.reset();
     init_key = -2;
-    LOG(INFO) << "Network deleted, now it needs to init before used again";
+    LOG(INFO) << "Network reset, now it needs to init before used again";
   }
-
 }
+
 static void forward(MEX_ARGS) {
   if (nrhs != 1) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
@@ -248,6 +299,15 @@ static void forward(MEX_ARGS) {
   }
 
   plhs[0] = do_forward(prhs[0]);
+}
+
+static void backward(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+
+  plhs[0] = do_backward(prhs[0]);
 }
 
 static void is_initialized(MEX_ARGS) {
@@ -269,6 +329,7 @@ struct handler_registry {
 static handler_registry handlers[] = {
   // Public API functions
   { "forward",            forward         },
+  { "backward",           backward        },
   { "init",               init            },
   { "is_initialized",     is_initialized  },
   { "set_mode_cpu",       set_mode_cpu    },
