@@ -17,7 +17,7 @@ function [scores,list_im] = matcaffe_batch(list_im, use_gpu)
 %
 % Usage:
 %  scores = matcaffe_batch({'peppers.png','onion.png'}, 0);
-%  scores = matcaffe_batch('list_images.txt', 0);
+%  scores = matcaffe_batch('list_images.txt', 1);
 if ischar(list_im)
     %Assume it is a file contaning the list of images
     filename = list_im;
@@ -30,32 +30,12 @@ if mod(length(list_im),batch_size)
     warning(['Assuming batches of ' num2str(batch_size) ' images rest will be filled with zeros'])
 end
 
-if caffe('is_initialized') == 0
-  model_def_file = '../../examples/imagenet_deploy.prototxt';
-  model_file = '../../models/alexnet_train_iter_470000';
-  if exist(model_file, 'file') == 0
-    % NOTE: you'll have to get the pre-trained ILSVRC network
-    error('You need a network model file');
-  end
-  if ~exist(model_def_file,'file')
-    % NOTE: you'll have to get network definition
-    error('You need the network prototxt definition');
-  end
-  caffe('init', model_def_file, model_file);
-end
-
-
 % init caffe network (spews logging info)
-
-% set to use GPU or CPU
-if exist('use_gpu', 'var') && use_gpu
-    caffe('set_mode_gpu');
+if exist('use_gpu', 'var')
+  matcaffe_init(use_gpu);
 else
-    caffe('set_mode_cpu');
+  matcaffe_init();
 end
-
-% put into test mode
-caffe('set_phase_test');
 
 d = load('ilsvrc_2012_mean');
 IMAGE_MEAN = d.image_mean;
