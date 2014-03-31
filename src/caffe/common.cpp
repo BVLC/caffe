@@ -147,7 +147,7 @@ const void* Caffe::RNG::generator() const {
   return &generator_->rng;
 }
 
-const char* cublasGetErrorString(cublasStatus_t& error) {
+const char* cublasGetErrorString(cublasStatus_t error) {
   switch (error) {
   case CUBLAS_STATUS_SUCCESS:
     return "CUBLAS_STATUS_SUCCESS";
