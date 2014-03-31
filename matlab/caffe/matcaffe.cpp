@@ -273,7 +273,7 @@ static void init(MEX_ARGS) {
   mxFree(model_file);
 
   init_key = random();
-  
+
   if (nlhs == 1) {
     plhs[0] = mxCreateDoubleScalar(init_key);
   }
