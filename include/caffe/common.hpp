@@ -42,10 +42,7 @@ private:\
        i += blockDim.x * gridDim.x)
 
 // CUDA: check for error after kernel execution and exit loudly if there is one.
-#define CUDA_POST_KERNEL_CHECK \
-  if (cudaSuccess != cudaPeekAtLastError()) \
-    LOG(FATAL) << "Cuda kernel failed. Error: " \
-        << cudaGetErrorString(cudaPeekAtLastError())
+#define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
 
 
 namespace caffe {
