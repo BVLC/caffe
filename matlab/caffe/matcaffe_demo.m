@@ -29,8 +29,6 @@ function [scores, layers] = matcaffe_demo(im, use_gpu)
 % Data coming in from matlab needs to be in the order 
 %   [width, height, channels, images]
 % where width is the fastest dimension.
-% Data coming out from matcaffe is 
-%  [height, width, channels, images]
 % Here is the rough matlab for putting image data into the correct
 % format:
 %   % convert from uint8 to single
@@ -95,7 +93,7 @@ toc;
 scores = scores{1};
 size(scores)
 scores = squeeze(scores);
-scores = mean(squeeze,2);
+scores = mean(scores,2);
 
 % you can also get network weights by calling
 if nargout == 2
