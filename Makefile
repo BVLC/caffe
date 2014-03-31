@@ -1,11 +1,8 @@
 # The makefile for caffe. Pretty hacky.
 PROJECT := caffe
 
-include Makefile.config
-
-##############################################################################
-# After this line, things should happen automatically.
-##############################################################################
+CONFIG_FILE := Makefile.config
+include $(CONFIG_FILE)
 
 # The target static library and shared library name
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
@@ -58,7 +55,10 @@ PY$(PROJECT)_SRC := python/$(PROJECT)/_$(PROJECT).cpp
 PY$(PROJECT)_SO := python/$(PROJECT)/_$(PROJECT).so
 # MAT$(PROJECT)_SRC is the matlab wrapper for $(PROJECT)
 MAT$(PROJECT)_SRC := matlab/$(PROJECT)/mat$(PROJECT).cpp
-MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT)
+ifneq ($(MATLAB_DIR),)
+	MAT_SO_EXT := $(shell $(MATLAB_DIR)/bin/mexext)
+endif
+MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT).$(MAT_SO_EXT)
 
 ##############################
 # Derive generated files
@@ -220,6 +220,11 @@ mat$(PROJECT): mat
 mat: $(MAT$(PROJECT)_SO)
 
 $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
+	@ if [ -z "$(MATLAB_DIR)" ]; then \
+		echo "MATLAB_DIR must be specified in $(CONFIG_FILE)" \
+			"to build mat$(PROJECT)."; \
+		exit 1; \
+	fi
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
 			CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
 			CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -o $@
