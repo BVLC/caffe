@@ -42,8 +42,7 @@ static int init_key = -2;
 // If you have multiple images, cat them with cat(4, ...)
 //
 // The actual forward function. It takes in a cell array of 4-D arrays as
-
-// input and outputs a cell array. 
+// input and outputs a cell array.
 
 static mxArray* do_forward(const mxArray* const bottom) {
   vector<Blob<float>*>& input_blobs = net_->input_blobs();
@@ -96,12 +95,12 @@ static mxArray* do_forward(const mxArray* const bottom) {
 static mxArray* do_backward(const mxArray* const top_diff) {
   vector<Blob<float>*>& output_blobs = net_->output_blobs();
   vector<Blob<float>*>& input_blobs = net_->input_blobs();
-  CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(top_diff)[0]), 
+  CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(top_diff)[0]),
       output_blobs.size());
   // First, copy the output diff
   for (unsigned int i = 0; i < output_blobs.size(); ++i) {
     const mxArray* const elem = mxGetCell(top_diff, i);
-    const float* const data_ptr = 
+    const float* const data_ptr =
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {
     case Caffe::CPU:
@@ -116,9 +115,9 @@ static mxArray* do_backward(const mxArray* const top_diff) {
       LOG(FATAL) << "Unknown Caffe mode.";
     }  // switch (Caffe::mode())
   }
-  //LOG(INFO) << "Start";
+  // LOG(INFO) << "Start";
   net_->Backward();
-  //LOG(INFO) << "End";
+  // LOG(INFO) << "End";
   mxArray* mx_out = mxCreateCellMatrix(input_blobs.size(), 1);
   for (unsigned int i = 0; i < input_blobs.size(); ++i) {
     // internally data is stored as (width, height, channels, num)
@@ -199,15 +198,11 @@ static mxArray* do_get_weights() {
         // where width is the fastest dimension
         mwSize dims[4] = {layer_blobs[j]->width(), layer_blobs[j]->height(),
             layer_blobs[j]->channels(), layer_blobs[j]->num()};
-        mxArray* mx_weights = mxCreateNumericArray(4, dims, mxSINGLE_CLASS,
-                                                   mxREAL);
+
+        mxArray* mx_weights =
+          mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
         mxSetCell(mx_layer_cells, j, mx_weights);
         float* weights_ptr = reinterpret_cast<float*>(mxGetPr(mx_weights));
-
-        //  mexPrintf("layer: %s (%d) blob: %d  %d: (%d, %d, %d) %d\n",
-        //  layer_names[i].c_str(), i, j, layer_blobs[j]->num(),
-        //  layer_blobs[j]->height(), layer_blobs[j]->width(),
-        //  layer_blobs[j]->channels(), layer_blobs[j]->count());
 
         switch (Caffe::mode()) {
         case Caffe::CPU:
@@ -277,14 +272,14 @@ static void init(MEX_ARGS) {
   mxFree(param_file);
   mxFree(model_file);
 
-  // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-  init_key = rand();
+  init_key = random();
+  
   if (nlhs == 1) {
     plhs[0] = mxCreateDoubleScalar(init_key);
   }
 }
 
-static void end(MEX_ARGS){
+static void end(MEX_ARGS) {
   if (net_) {
     net_.reset();
     init_key = -2;
