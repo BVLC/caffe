@@ -30,7 +30,7 @@ TOOL_SRCS := $(shell find tools -name "*.cpp")
 # EXAMPLE_SRCS are the source files for the example binaries
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # BUILD_INCLUDE_DIR contains any generated header files we want to include.
-BUILD_INCLUDE_DIR := $(BUILD_DIR)/include
+BUILD_INCLUDE_DIR := $(BUILD_DIR)/src
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRC_DIR := src/$(PROJECT)/proto
 PROTO_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto)
@@ -315,10 +315,6 @@ $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR)
 	protoc --proto_path=src --cpp_out=build/src $<
 	@ echo
-
-$(PROTO_BUILD_INCLUDE_DIR)/%.pb.h: $(PROTO_BUILD_DIR)/%.pb.h \
-		| $(PROTO_BUILD_INCLUDE_DIR)
-	@ cp $(PROTO_BUILD_DIR)/$(*F).pb.h $(PROTO_BUILD_INCLUDE_DIR)/$(*F).pb.h
 
 $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 		$(PY_PROTO_INIT) | $(PY_PROTO_BUILD_DIR)
