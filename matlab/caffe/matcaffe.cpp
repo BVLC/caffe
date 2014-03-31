@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Copyright 2014 BVLC and contributors.
 //
 // matcaffe.cpp provides a wrapper of the caffe::Net class as well as some
@@ -42,7 +43,9 @@ static int init_key = -2;
 // If you have multiple images, cat them with cat(4, ...)
 //
 // The actual forward function. It takes in a cell array of 4-D arrays as
-// input and outputs a cell array.
+
+// input and outputs a cell array. 
+
 static mxArray* do_forward(const mxArray* const bottom) {
   vector<Blob<float>*>& input_blobs = net_->input_blobs();
   CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(bottom)[0]),
@@ -67,8 +70,11 @@ static mxArray* do_forward(const mxArray* const bottom) {
   const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
   mxArray* mx_out = mxCreateCellMatrix(output_blobs.size(), 1);
   for (unsigned int i = 0; i < output_blobs.size(); ++i) {
-    mxArray* mx_blob = mxCreateNumericMatrix(output_blobs[i]->count(),
-        1, mxSINGLE_CLASS, mxREAL);
+    // internally data is stored as (width, height, channels, num)
+    // where width is the fastest dimension
+    mwSize dims[4] = {output_blobs[i]->width(), output_blobs[i]->height(),
+      output_blobs[i]->channels(), output_blobs[i]->num()};
+    mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
     mxSetCell(mx_out, i, mx_blob);
     float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
     switch (Caffe::mode()) {
@@ -227,6 +233,14 @@ static void init(MEX_ARGS) {
   }
 }
 
+static void end(MEX_ARGS){
+  if (net_) {
+    net_.reset();
+    init_key = -2;
+    LOG(INFO) << "Network deleted, now it needs to init before used again";
+  }
+
+}
 static void forward(MEX_ARGS) {
   if (nrhs != 1) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
@@ -265,7 +279,7 @@ static handler_registry handlers[] = {
   { "get_weights",        get_weights     },
   { "get_init_key",       get_init_key    },
   // The end.
-  { "END",                NULL            },
+  { "END",                end             },
 };
 
 
