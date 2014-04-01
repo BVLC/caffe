@@ -121,7 +121,9 @@ class Caffe::RNG::Generator {
 };
 
 Caffe::RNG::RNG()
-: generator_(new Generator) { }
+: generator_(new Generator) {
+  generator_->rng = caffe::rng_t(cluster_seedgen());
+}
 
 Caffe::RNG::RNG(unsigned int seed)
 : generator_(new Generator) {
