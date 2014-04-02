@@ -282,6 +282,24 @@ struct CaffeNet {
   shared_ptr<Net<float> > net_;
 };
 
+class CaffeSGDSolver {
+ public:
+  CaffeSGDSolver(const string& param_file) {
+    // as in CaffeNet, (as a convenience, not a guarantee), create a Python
+    // exception if param_file can't be opened
+    std::ifstream f(param_file.c_str());
+    if (!f.good()) {
+      f.close();
+      throw std::runtime_error("Could not open file " + param_file);
+    }
+    f.close();
+
+    solver_.reset(new SGDSolver<float>(param_file));
+  }
+
+ protected:
+  shared_ptr<SGDSolver<float> > solver_;
+};
 
 
 // The boost python module definition.
@@ -314,6 +332,9 @@ BOOST_PYTHON_MODULE(_caffe) {
       "CaffeLayer", boost::python::no_init)
       .add_property("name",  &CaffeLayer::name)
       .add_property("blobs", &CaffeLayer::blobs);
+
+  boost::python::class_<CaffeSGDSolver, boost::noncopyable>(
+      "SGDSolver", boost::python::init<string>());
 
   boost::python::class_<vector<CaffeBlob> >("BlobVec")
       .def(vector_indexing_suite<vector<CaffeBlob>, true>());

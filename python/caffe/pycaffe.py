@@ -3,7 +3,7 @@ Wrap the internal caffe C++ module (_caffe.so) with a clean, Pythonic
 interface.
 """
 
-from ._caffe import CaffeNet
+from ._caffe import CaffeNet, SGDSolver
 from collections import OrderedDict
 
 class Net(CaffeNet):
