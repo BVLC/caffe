@@ -19,7 +19,7 @@ class Solver {
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   virtual ~Solver() {}
-  inline Net<Dtype>* net() { return net_.get(); }
+  inline shared_ptr<Net<Dtype> > net() { return net_; }
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
