@@ -144,6 +144,9 @@ struct CaffeNet {
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
 
+  CaffeNet(shared_ptr<Net<float> > net)
+      : net_(net) {}
+
   virtual ~CaffeNet() {}
 
   inline void check_array_against_blob(
@@ -297,6 +300,8 @@ class CaffeSGDSolver {
     solver_.reset(new SGDSolver<float>(param_file));
   }
 
+  CaffeNet net() { return CaffeNet(solver_->net()); }
+
  protected:
   shared_ptr<SGDSolver<float> > solver_;
 };
@@ -335,7 +340,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("blobs", &CaffeLayer::blobs);
 
   boost::python::class_<CaffeSGDSolver, boost::noncopyable>(
-      "SGDSolver", boost::python::init<string>());
+      "SGDSolver", boost::python::init<string>())
+      .add_property("net", &CaffeSGDSolver::net);
 
   boost::python::class_<vector<CaffeBlob> >("BlobVec")
       .def(vector_indexing_suite<vector<CaffeBlob>, true>());
