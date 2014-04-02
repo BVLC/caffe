@@ -12,6 +12,8 @@ template <typename Dtype>
 class Solver {
  public:
   explicit Solver(const SolverParameter& param);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param);
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
@@ -53,6 +55,8 @@ class SGDSolver : public Solver<Dtype> {
  public:
   explicit SGDSolver(const SolverParameter& param)
       : Solver<Dtype>(param) {}
+  explicit SGDSolver(const string& param_file)
+      : Solver<Dtype>(param_file) {}
 
  protected:
   virtual void PreSolve();

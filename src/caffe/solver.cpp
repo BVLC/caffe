@@ -19,7 +19,21 @@ namespace caffe {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : param_(param), net_(), test_net_() {
+    : net_(), test_net_() {
+  Init(param);
+}
+
+template <typename Dtype>
+Solver<Dtype>::Solver(const string& param_file)
+    : net_(), test_net_() {
+  SolverParameter param;
+  ReadProtoFromTextFile(param_file, &param);
+  Init(param);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Init(const SolverParameter& param) {
+  param_ = param;
   // Scaffolding code
   LOG(INFO) << "Creating training net.";
   net_.reset(new Net<Dtype>(param_.train_net()));
