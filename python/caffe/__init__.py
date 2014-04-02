@@ -1,1 +1,1 @@
-from .pycaffe import Net
+from .pycaffe import Net, SGDSolver
