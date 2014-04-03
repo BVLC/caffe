@@ -18,8 +18,8 @@ class Blob {
   explicit Blob(const int num, const int channels, const int height,
     const int width);
   virtual ~Blob() {}
-  void Reshape(const int num, const int height,
-      const int width, const int channels);
+  void Reshape(const int num, const int channels, const int height,
+    const int width);
   inline int num() const { return num_; }
   inline int channels() const { return channels_; }
   inline int height() const { return height_; }
