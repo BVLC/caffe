@@ -50,9 +50,9 @@
 
 <p>Caffe aims to provide computer vision scientists and practitioners with a <strong>clean and modifiable implementation</strong> of state-of-the-art deep learning algorithms. For example, network structure is easily specified in separate config files, with no mess of hard-coded parameters in the code.</p>
 
-<p>At the same time, Caffe fits industry needs, with blazing fast C++/CUDA code for GPU computation. Caffe is currently the fastest GPU CNN implementation publicly available, and is able to process more than <strong>20 million images per day</strong> on a single Tesla K20 machine *.</p>
+<p>At the same time, Caffe fits industry needs, with blazing fast C++/CUDA code for GPU computation. Caffe is currently the fastest GPU CNN implementation publicly available, and is able to process more than <strong>40 million images per day</strong> with a single NVIDIA K40 or Titan GPU (or 20 million images per day on a K20 GPU)*. That’s 192 images per second during training and 500 images per second during test.</p>
 
-<p>Caffe also provides <strong>seamless switching between CPU and GPU</strong>, which allows one to train models with fast GPUs and then deploy them on non-GPU clusters with one line of code: <code>Caffe::set_mode(Caffe::CPU)</code>. Even in CPU mode, computing predictions on an image takes only 20 ms when images are processed in batch mode.</p>
+<p>Caffe also provides <strong>seamless switching between CPU and GPU</strong>, which allows one to train models with fast GPUs and then deploy them on non-GPU clusters with one line of code: <code>Caffe::set_mode(Caffe::CPU)</code>. Even in CPU mode, computing predictions on an image takes only 20 ms when images are processed in batch mode. While in GPU mode, computing predictions on an image takes only 2 ms when images are processed in batch mode.</p>
 
 <h2 id="documentation">Documentation</h2>
 
@@ -90,12 +90,12 @@
    Author = {Yangqing Jia},
    Title = { {Caffe}: An Open Source Convolutional Architecture for Fast Feature Embedding},
    Year  = {2013},
-   Howpublished = {\url{http://caffe.berkeleyvision.org/}}
+   Howpublished = {\url{http://caffe.berkeleyvision.org/}
 }</code></pre>
 
 <h3 id="acknowledgements">Acknowledgements</h3>
 
-<p>Yangqing would like to thank the NVidia Academic program for providing K20 GPUs, and <a href="http://www1.icsi.berkeley.edu/~vinyals/">Oriol Vinyals</a> for various discussions along the journey.</p>
+<p>Yangqing would like to thank the NVIDIA Academic program for providing K20 GPUs, and <a href="http://www1.icsi.berkeley.edu/~vinyals/">Oriol Vinyals</a> for various discussions along the journey.</p>
 
 <p>A core set of BVLC members have contributed lots of new functionality and fixes since the original release (alphabetical by first name):</p>
 
@@ -117,7 +117,7 @@
 
 <p>Additionally, the open-source community plays a large and growing role in Caffe’s development. Check out the Github <a href="https://github.com/BVLC/caffe/pulse">project pulse</a> for recent activity, and the <a href="https://github.com/BVLC/caffe/graphs/contributors">contributors</a> for an ordered list (by commit activity). We sincerely appreciate your interest and contributions! If you’d like to contribute, read <a href="development.html">this</a>.</p>
 <hr />
-<p>*: When measured with the <a href="http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf">SuperVision</a> model that won the ImageNet Large Scale Visual Recognition Challenge 2012.</p>
+<p>*: When measured with the <a href="http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf">SuperVision</a> model that won the ImageNet Large Scale Visual Recognition Challenge 2012. See <a href="/performance_hardware.html">performance and hardware configuration details</a>.</p>
 
       </section>
       <footer>
