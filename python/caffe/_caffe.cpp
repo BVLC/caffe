@@ -321,5 +321,6 @@ BOOST_PYTHON_MODULE(_caffe) {
   boost::python::class_<vector<CaffeLayer> >("LayerVec")
       .def(vector_indexing_suite<vector<CaffeLayer>, true>());
 
+  Py_Initialize();
   import_array();
 }
