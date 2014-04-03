@@ -63,6 +63,13 @@ def prepare_image(filename, center_only=False):
   # subtract main
   img_reshape -= IMAGENET_MEAN
   return oversample(img_reshape, center_only)
+<<<<<<< HEAD
+=======
+  
+def prepare_image(filename, center_only=False):
+  img = io.imread(filename)
+  return prepare_image_array(img, center_only=center_only)
+>>>>>>> 71be013... fix argument passing
 
 
 class ImageNetClassifier(object):
