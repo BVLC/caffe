@@ -64,7 +64,7 @@ def prepare_image_array(img, center_only=False):
   
 def prepare_image(filename, center_only=False):
   img = io.imread(filename)
-  return prepare_image_array(img, center_only=False)
+  return prepare_image_array(img, center_only=center_only)
 
 
 class ImageNetClassifier(object):
