@@ -12,8 +12,8 @@ parameters in the code. Python and Matlab wrappers are provided.
 
 At the same time, Caffe fits industry needs, with blazing fast C++/Cuda code for
 GPU computation. Caffe is currently the fastest GPU CNN implementation publicly
-available, and is able to process more than **20 million images per day** on a
-single Tesla K20 machine \*.
+available, and is able to process more than **40 million images per day** on a
+single NVIDIA K40 GPU (or 20 million per day on a K20)\*.
 
 Caffe also provides **seamless switching between CPU and GPU**, which allows one
 to train models with fast GPUs and then deploy them on non-GPU clusters with one
