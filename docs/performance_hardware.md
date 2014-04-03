@@ -3,40 +3,56 @@ layout: default
 title: Caffe
 ---
 
-# Performance, Hardware tips
+# Performance and Hardware Configuration
 
-To measure the performance of different Nvidia cards we use the reference imagenet model provided in Caffe.
+To measure performance on different NVIDIA GPUs we use the Caffe reference ImageNet model.
 
-## K40 Nvidia \*
- 
-### With ECC on
+For training, each time point is 20 iterations/minibatches of 256 images for 5,120 images total. For testing, a 50,000 image validation set is classified.
 
-K40 ecc on max speed 26.7 secs / 20 training iterations (256*20 images), 101 secs / validation test (50000 images)
-K40 ecc on default speed 31 secs / 20 training iterations (256*20 images), 117 secs / validation test (50000 images)
+**Acknowledgements**: BVLC members are very grateful to NVIDIA for providing several GPUs to conduct this research.
 
-### With ECC off
+## NVIDIA K40
 
-K40 ecc off max speed 26.5 secs / 20 training iterations (256*20 images), 100 secs / validation test (50000 images)
-K40 ecc off default speed 31 secs / 20 training iterations (256*20 images), 118 secs / validation test (50000 images)
+Performance is best with ECC off and boost clock enabled. While ECC makes a negligible difference in speed, disabling it frees ~1 GB of GPU memory.
 
-### K40 Performance tip
+Best settings with ECC off and maximum clock speed:
 
-To get the maximum performance of K40 NVidia one can adjust clock speed and dissable ecc (at your own risk).
+* Training is 26.5 secs / 20 iterations (5,120 images)
+* Testing is 100 secs / validation set (50,000 images)
 
-To turn off ECC and reboot
-	sudo nvidia-smi -e 0
-Active permance flag
-	sudo nvidia-smi -pm 1
-and then set clocks speed
-	sudo nvidia-smi -i 0 -ac 3004,875 
+Other settings:
+
+* ECC on, max speed: training 26.7 secs / 20 iterations, test 101 secs / validation set
+* ECC on, default speed: training 31 secs / 20 iterations, test 117 secs / validation set
+* ECC off, default speed: training 31 secs / 20 iterations, test 118 secs / validation set
+
+### K40 configuration tips
+
+For maximum K40 performance, turn off ECC and boost the clock speed (at your own risk).
+
+To turn off ECC, do
+
+    sudo nvidia-smi -i 0 --ecc-config=0    # repeat with -i x for each GPU ID
+
+then reboot.
+
+Set the "persistence" mode of the GPU settings by
+
+    sudo nvidia-smi -pm 1
+
+and then set the clock speed with
+
+    sudo nvidia-smi -i 0 -ac 3004,875    # repeat with -i x for each GPU ID
+
+but note that this configuration resets across driver reloading / rebooting. Include these commands in a boot script to intialize these settings.
 
 
-## Titan Nvidia \*
+## NVIDIA Titan
 
-Titan 26.26 secs / 20 training iterations (256*20 images), 100 secs / validation test (50000 images)
+Training: 26.26 secs / 20 iterations (5,120 images).
+Testing: 100 secs / validation set (50,000 images).
 
-## K20 Nvidia \*
+## NVIDIA K20
 
-Titan 36.0 secs / 20 training iterations (256*20 images), 133 secs / validation test (50000 images)
-
-\* BVLC members are very gratefull to Nvidia for providing several GPU cards for conducting this research.
+Training: 36.0 secs / 20 iterations (5,120 images).
+Testing: 133 secs / validation set (50,000 images)

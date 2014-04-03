@@ -16,7 +16,7 @@ Caffe aims to provide computer vision scientists and practitioners with a **clea
 For example, network structure is easily specified in separate config files, with no mess of hard-coded parameters in the code.
 
 At the same time, Caffe fits industry needs, with blazing fast C++/CUDA code for GPU computation.
-Caffe is currently the fastest GPU CNN implementation publicly available, and is able to process more than **40 million images per day** with a single K40 or Titan NVidia Card (20 million images per day on a single Tesla K20 NVidia Card)\*. Currently, caffe can process 192 images per second during training and 500 images per second during test (using K40 or Titan) (see [Performance, Hardware tips](/perfomance_hardware.html))\*.
+Caffe is currently the fastest GPU CNN implementation publicly available, and is able to process more than **40 million images per day** with a single NVIDIA K40 or Titan GPU (or 20 million images per day on a K20 GPU)\*. That's 192 images per second during training and 500 images per second during test.
 
 Caffe also provides **seamless switching between CPU and GPU**, which allows one to train models with fast GPUs and then deploy them on non-GPU clusters with one line of code: `Caffe::set_mode(Caffe::CPU)`.
 Even in CPU mode, computing predictions on an image takes only 20 ms when images are processed in batch mode. While in GPU mode, computing predictions on an image takes only 2 ms when images are processed in batch mode.
@@ -54,7 +54,7 @@ Please kindly cite Caffe in your publications if it helps your research:
 
 ### Acknowledgements
 
-Yangqing would like to thank the NVidia Academic program for providing K20 GPUs, and [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for various discussions along the journey.
+Yangqing would like to thank the NVIDIA Academic program for providing K20 GPUs, and [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for various discussions along the journey.
 
 A core set of BVLC members have contributed lots of new functionality and fixes since the original release (alphabetical by first name):
 
@@ -73,4 +73,4 @@ If you'd like to contribute, read [this](development.html).
 
 ---
 
-\*: When measured with the [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model that won the ImageNet Large Scale Visual Recognition Challenge 2012.
+\*: When measured with the [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model that won the ImageNet Large Scale Visual Recognition Challenge 2012. See [performance and hardware configuration details](/performance_hardware.html).
