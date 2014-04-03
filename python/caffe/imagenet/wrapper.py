@@ -51,9 +51,7 @@ def oversample(image, center_only=False):
     images[5:] = images[:5, :, :, ::-1]
     return images
 
-
-def prepare_image(filename, center_only=False):
-  img = io.imread(filename)
+def prepare_image_array(img, center_only=False):
   if img.ndim == 2:
     img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
   elif img.shape[2] == 4:
@@ -63,6 +61,10 @@ def prepare_image(filename, center_only=False):
   # subtract main
   img_reshape -= IMAGENET_MEAN
   return oversample(img_reshape, center_only)
+  
+def prepare_image(filename, center_only=False):
+  img = io.imread(filename)
+  return prepare_image_array(img, center_only=False)
 
 
 class ImageNetClassifier(object):
@@ -81,7 +83,11 @@ class ImageNetClassifier(object):
     self._center_only = center_only
 
   def predict(self, filename):
-    input_blob = [prepare_image(filename, self._center_only)]
+    """ Predict on a filename or numpy array """
+    if isinstance(filename, str):
+        input_blob = [prepare_image(filename, self._center_only)]
+    else:
+        input_blob = [prepare_image_array(filename, self._center_only)]
     self.caffenet.Forward(input_blob, self._output_blobs)
     return self._output_blobs[0].mean(0).flatten()
 
