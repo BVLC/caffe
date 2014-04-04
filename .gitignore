@@ -34,6 +34,7 @@ build/*
 distribute/*
 *.testbin
 *.bin
+python/caffe/proto/
 
 # Editor temporaries
 *.swp

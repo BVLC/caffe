@@ -332,7 +332,8 @@ clean:
 
 supercleanfiles:
 	$(eval SUPERCLEAN_FILES := $(strip \
-			$(foreach ext,$(SUPERCLEAN_EXTS), $(shell find . -name '*$(ext)'))))
+			$(foreach ext,$(SUPERCLEAN_EXTS), $(shell find . -name '*$(ext)' \
+			-not -path './data/*'))))
 
 supercleanlist: supercleanfiles
 	@ \
