@@ -625,6 +625,33 @@ class LRNLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
+class MemoryDataLayer : public Layer<Dtype> {
+ public:
+  explicit MemoryDataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // Reset should accept const pointers, but can't, because the memory
+  //  will be given to Blob, which is mutable
+  void Reset(Dtype* data, Dtype* label, int n);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+
+  Dtype* data_;
+  Dtype* labels_;
+  int datum_size_;
+  int batch_size_;
+  int n_;
+  int pos_;
+};
+
+template <typename Dtype>
 class MultinomialLogisticLossLayer : public Layer<Dtype> {
  public:
   explicit MultinomialLogisticLossLayer(const LayerParameter& param)

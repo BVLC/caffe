@@ -56,6 +56,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new InnerProductLayer<Dtype>(param);
   case LayerParameter_LayerType_LRN:
     return new LRNLayer<Dtype>(param);
+  case LayerParameter_LayerType_MEMORY_DATA:
+    return new MemoryDataLayer<Dtype>(param);
   case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
     return new MultinomialLogisticLossLayer<Dtype>(param);
   case LayerParameter_LayerType_POOLING:
