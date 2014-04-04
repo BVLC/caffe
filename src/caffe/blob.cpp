@@ -11,6 +11,14 @@
 namespace caffe {
 
 template <typename Dtype>
+Blob<Dtype>::Blob(const int num, const int channels, const int height,
+    const int width) : data_(), diff_(), num_(num), channels_(channels),
+    height_(height), width_(width), count_(num * channels * height * width),
+    capacity_(count_) {
+  Reshape(num, channels, height, width);
+}
+
+template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
     const int width) {
   CHECK_GE(num, 0);
