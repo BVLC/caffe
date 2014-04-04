@@ -634,6 +634,10 @@ class MemoryDataLayer : public Layer<Dtype> {
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
+  int datum_channels() { return datum_channels_; }
+  int datum_height() { return datum_height_; }
+  int datum_width() { return datum_width_; }
+  int batch_size() { return batch_size_; }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -645,6 +649,9 @@ class MemoryDataLayer : public Layer<Dtype> {
 
   Dtype* data_;
   Dtype* labels_;
+  int datum_channels_;
+  int datum_height_;
+  int datum_width_;
   int datum_size_;
   int batch_size_;
   int n_;
