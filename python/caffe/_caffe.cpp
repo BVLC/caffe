@@ -305,7 +305,7 @@ class CaffeSGDSolver {
 // The boost python module definition.
 BOOST_PYTHON_MODULE(_caffe) {
   boost::python::class_<CaffeNet>(
-      "CaffeNet", boost::python::init<string, string>())
+      "Net", boost::python::init<string, string>())
       .def("Forward",          &CaffeNet::Forward)
       .def("ForwardPrefilled", &CaffeNet::ForwardPrefilled)
       .def("Backward",         &CaffeNet::Backward)
@@ -314,11 +314,12 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("set_phase_train",  &CaffeNet::set_phase_train)
       .def("set_phase_test",   &CaffeNet::set_phase_test)
       .def("set_device",       &CaffeNet::set_device)
-      .add_property("blobs",   &CaffeNet::blobs)
+      // rename blobs here since the pycaffe.py wrapper will replace it
+      .add_property("_blobs",  &CaffeNet::blobs)
       .add_property("layers",  &CaffeNet::layers);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
-      "CaffeBlob", boost::python::no_init)
+      "Blob", boost::python::no_init)
       .add_property("name",     &CaffeBlob::name)
       .add_property("num",      &CaffeBlob::num)
       .add_property("channels", &CaffeBlob::channels)
@@ -329,7 +330,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("diff",     &CaffeBlobWrap::get_diff);
 
   boost::python::class_<CaffeLayer>(
-      "CaffeLayer", boost::python::no_init)
+      "Layer", boost::python::no_init)
       .add_property("name",  &CaffeLayer::name)
       .add_property("blobs", &CaffeLayer::blobs);
 
