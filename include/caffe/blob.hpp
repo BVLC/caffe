@@ -12,11 +12,8 @@ namespace caffe {
 template <typename Dtype>
 class Blob {
  public:
-  Blob()
-       : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
-       diff_() {}
-  explicit Blob(const int num, const int channels, const int height,
-    const int width);
+  explicit Blob(const int num = 0, const int channels = 0,
+      const int height = 0, const int width = 0);
   void Reshape(const int num, const int channels, const int height,
     const int width);
   void ReshapeLike(const Blob& other);
