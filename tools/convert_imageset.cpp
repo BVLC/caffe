@@ -9,7 +9,6 @@
 //   ....
 // if the last argument is 1, a random shuffle will be carried out before we
 // process the file lines.
-// You are responsible for shuffling the files yourself.
 
 #include <glog/logging.h>
 #include <leveldb/db.h>
