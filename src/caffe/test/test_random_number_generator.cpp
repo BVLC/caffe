@@ -317,4 +317,103 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
 }
 
 
+TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
+  size_t sample_size = 10000;
+  SyncedMemory bernoulli1_data(sample_size * sizeof(int));
+  SyncedMemory bernoulli2_data(sample_size * sizeof(int));
+  Caffe::set_random_seed(1701);
+  double p1 = 0.5;
+  caffe_vRngBernoulli(sample_size, reinterpret_cast<int*>(
+      bernoulli1_data.mutable_cpu_data()), p1);
+  TypeParam empirical_mean = this->sample_mean(
+      reinterpret_cast<const int*>(bernoulli1_data.cpu_data()),
+      sample_size);
+  int bernoulli1_num_zeros = 0;
+  int num_ones = 0;
+  int num_other = 0;
+  int* bernoulli_samples =
+      reinterpret_cast<int*>(bernoulli1_data.mutable_cpu_data());
+  for (int i = 0; i < sample_size; ++i) {
+    if (bernoulli_samples[i] == 0) {
+      ++bernoulli1_num_zeros;
+    } else if (bernoulli_samples[i] == 1) {
+      ++num_ones;
+    } else {
+      ++num_other;
+    }
+  }
+  TypeParam true_mean = p1;
+  TypeParam true_std = sqrt(p1 * (1 - p1));
+  TypeParam bound = this->mean_bound(true_std, sample_size);
+  TypeParam expected_num_zeros = sample_size * (1 - true_mean);
+  TypeParam expected_num_ones = sample_size * true_mean;
+  LOG(INFO) << "Bernoulli1: Expected mean = " << true_mean
+            << "; sample mean = " << empirical_mean;
+  LOG(INFO) << "Bernoulli1: zeros: "  << bernoulli1_num_zeros
+            << "; ones: " << num_ones << "; other: " << num_other;
+  empirical_mean =
+      this->sample_mean((const int *)bernoulli2_data.cpu_data(), sample_size);
+  EXPECT_NEAR(empirical_mean, true_mean, bound);
+  EXPECT_EQ(num_other, 0);
+  // Sample from Bernoulli with p = 0.3
+  double p = 0.3;
+  caffe_vRngBernoulli(sample_size,
+      reinterpret_cast<int*>(bernoulli2_data.mutable_cpu_data()), p);
+  true_mean = p;
+  true_std = sqrt(p * (1 - p));
+  bound = this->mean_bound(true_std, sample_size);
+  empirical_mean =
+      this->sample_mean((const int *)bernoulli2_data.cpu_data(), sample_size);
+  LOG(INFO) << "Bernoulli2: Expected mean = " << true_mean
+            << "; sample mean = " << empirical_mean;
+  EXPECT_NEAR(empirical_mean, true_mean, bound);
+  int bernoulli2_num_zeros = 0;
+  num_ones = 0;
+  num_other = 0;
+  const int* bernoulli2_samples =
+      reinterpret_cast<const int*>(bernoulli2_data.cpu_data());
+  for (int i = 0; i < sample_size; ++i) {
+    if (bernoulli2_samples[i] == 0) {
+      ++bernoulli2_num_zeros;
+    } else if (bernoulli2_samples[i] == 1) {
+      ++num_ones;
+    } else {
+      ++num_other;
+    }
+  }
+  LOG(INFO) << "Bernoulli2: zeros: "  << bernoulli2_num_zeros
+            << "; ones: " << num_ones << "; other: " << num_other;
+  EXPECT_EQ(0, num_other);
+  EXPECT_EQ(sample_size * empirical_mean, num_ones);
+  EXPECT_EQ(sample_size * (1.0 - empirical_mean), bernoulli2_num_zeros);
+  // Multiply Bernoulli1 by Bernoulli2
+  for (int i = 0; i < sample_size; ++i) {
+    bernoulli_samples[i] *= bernoulli2_samples[i];
+  }
+  bernoulli1_num_zeros = 0;
+  num_ones = 0;
+  num_other = 0;
+  for (int i = 0; i < sample_size; ++i) {
+    if (bernoulli_samples[i] == 0) {
+      ++bernoulli1_num_zeros;
+    } else if (bernoulli_samples[i] == 1) {
+      ++num_ones;
+    } else {
+      ++num_other;
+    }
+  }
+  // Check that we have as many zeros as Bernoulli, and roughly half positives
+  // and half negatives (with bound computed from a Bernoulli with p = 0.5).
+  p *= p1;
+  true_mean = p;
+  true_std = sqrt(p * (1 - p));
+  empirical_mean =
+      this->sample_mean((const int *)bernoulli2_data.cpu_data(), sample_size);
+  bound = this->mean_bound(true_std, sample_size);
+  LOG(INFO) << "Bernoulli1*Bernoulli2: Expected mean = " << true_mean
+            << "; sample mean = " << empirical_mean;
+  EXPECT_NEAR(empirical_mean, true_mean, bound);
+}
+
+
 }  // namespace caffe
