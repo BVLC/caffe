@@ -197,10 +197,10 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   int sub_sample_size = sample_size - bernoulli_num_zeros;
   bound = this->mean_bound(true_std, sub_sample_size);
   expected_num_each_sign = sub_sample_size * p;
-  LOG(INFO) << "Gaussian: Expected " << expected_num_each_sign << " positives"
-            << "; got " << num_pos;
-  LOG(INFO) << "Gaussian: Expected " << expected_num_each_sign << " negatives"
-            << "; got " << num_neg;
+  LOG(INFO) << "Gaussian*Bernoulli: Expected " << expected_num_each_sign
+            << " positives; got " << num_pos;
+  LOG(INFO) << "Gaussian*Bernoulli: Expected " << expected_num_each_sign
+            << " negatives; got " << num_neg;
   EXPECT_NEAR(expected_num_each_sign, num_pos, sample_size * bound);
   EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
 }
@@ -308,10 +308,10 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   int sub_sample_size = sample_size - bernoulli_num_zeros;
   bound = this->mean_bound(true_std, sub_sample_size);
   expected_num_each_sign = sub_sample_size * p;
-  LOG(INFO) << "Uniform: Expected " << expected_num_each_sign << " positives"
-            << "; got " << num_pos;
-  LOG(INFO) << "Uniform: Expected " << expected_num_each_sign << " negatives"
-            << "; got " << num_neg;
+  LOG(INFO) << "Uniform*Bernoulli: Expected " << expected_num_each_sign
+            << " positives; got " << num_pos;
+  LOG(INFO) << "Uniform*Bernoulli: Expected " << expected_num_each_sign
+            << " negatives; got " << num_neg;
   EXPECT_NEAR(expected_num_each_sign, num_pos, sample_size * bound);
   EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
 }
