@@ -1,5 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
+#include <boost/uuid/seed_rng.hpp>
 #include <cuda_runtime.h>
 #include <cmath>
 #include <cstring>
@@ -34,7 +35,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   }
 
   Dtype mean_bound(const Dtype std, const size_t sample_size) {
-      return  std/sqrt(static_cast<double>(sample_size));
+      return  2 * std / sqrt(static_cast<double>(sample_size));
   }
 };
 
@@ -99,7 +100,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   size_t sample_size = 10000;
   SyncedMemory gaussian_data(sample_size * sizeof(TypeParam));
   SyncedMemory bernoulli_data(sample_size * sizeof(int));
-  Caffe::set_random_seed(1701);
+  int seed = time(NULL) * getpid();
+  Caffe::set_random_seed(seed);
   // Sample from 0 mean Gaussian
   TypeParam mu = 0;
   TypeParam sigma = 1;
@@ -143,6 +145,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
   // Sample from Bernoulli with p = 0.3
   p = 0.3;
+  seed = boost::uuids::detail::seed_rng()();
+  Caffe::set_random_seed(seed);
   caffe_vRngBernoulli(sample_size,
       reinterpret_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
   true_mean = p;
@@ -170,8 +174,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   LOG(INFO) << "Bernoulli: zeros: "  << bernoulli_num_zeros
             << "; ones: " << num_ones << "; other: " << num_other;
   EXPECT_EQ(0, num_other);
-  EXPECT_EQ(sample_size * empirical_mean, num_ones);
-  EXPECT_EQ(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros);
+  EXPECT_NEAR(sample_size * empirical_mean, num_ones, 1);
+  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros, 1);
   // Multiply Gaussian by Bernoulli
   for (int i = 0; i < sample_size; ++i) {
     samples[i] *= bernoulli_samples[i];
@@ -210,7 +214,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   size_t sample_size = 10000;
   SyncedMemory uniform_data(sample_size * sizeof(TypeParam));
   SyncedMemory bernoulli_data(sample_size * sizeof(int));
-  Caffe::set_random_seed(1701);
+  int seed = time(NULL) * getpid();
+  Caffe::set_random_seed(seed);
   // Sample from Uniform on [-1, 1]
   TypeParam a = -1;
   TypeParam b = 1;
@@ -254,6 +259,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
   // Sample from Bernoulli with p = 0.3
   p = 0.3;
+  seed = boost::uuids::detail::seed_rng()();
+  Caffe::set_random_seed(seed);
   caffe_vRngBernoulli(sample_size,
       reinterpret_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
   true_mean = p;
@@ -281,8 +288,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   LOG(INFO) << "Bernoulli: zeros: "  << bernoulli_num_zeros
             << "; ones: " << num_ones << "; other: " << num_other;
   EXPECT_EQ(0, num_other);
-  EXPECT_EQ(sample_size * empirical_mean, num_ones);
-  EXPECT_EQ(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros);
+  EXPECT_NEAR(sample_size * empirical_mean, num_ones, 1);
+  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros, 1);
   // Multiply Uniform by Bernoulli
   for (int i = 0; i < sample_size; ++i) {
     samples[i] *= bernoulli_samples[i];
