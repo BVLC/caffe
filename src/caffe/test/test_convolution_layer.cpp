@@ -24,7 +24,7 @@ class ConvolutionLayerTest : public ::testing::Test {
       : blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
-    blob_bottom_->Reshape(2, 3, 6, 5);
+    blob_bottom_->Reshape(2, 3, 6, 4);
     // fill the values
     FillerParameter filler_param;
     filler_param.set_value(1.);
@@ -57,7 +57,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 4);
   EXPECT_EQ(this->blob_top_->height(), 2);
-  EXPECT_EQ(this->blob_top_->width(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 1);
   // setting group should not change the shape
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
@@ -66,7 +66,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3);
   EXPECT_EQ(this->blob_top_->height(), 2);
-  EXPECT_EQ(this->blob_top_->width(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 1);
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
