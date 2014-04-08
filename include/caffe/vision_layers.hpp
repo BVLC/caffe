@@ -70,8 +70,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
   shared_ptr<SyncedMemory> rand_vec_;
-  float threshold_;
-  float scale_;
+  Dtype threshold_;
+  Dtype scale_;
   unsigned int uint_thres_;
 };
 

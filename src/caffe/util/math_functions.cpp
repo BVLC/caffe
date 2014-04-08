@@ -320,16 +320,13 @@ void caffe_vRngUniform(const int n, Dtype* r,
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_LE(a, b);
-
-  boost::uniform_real<Dtype> random_distribution(
-      a, caffe_nextafter<Dtype>(b));
-  boost::variate_generator<caffe::rng_t,
-      boost::uniform_real<Dtype> > variate_generator(
-      caffe_rng(), random_distribution);
-
+  boost::uniform_real<Dtype> random_distribution(a, caffe_nextafter<Dtype>(b));
+  boost::variate_generator<caffe::rng_t, boost::uniform_real<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+  caffe_set_rng(variate_generator.engine());
 }
 
 template
@@ -346,13 +343,12 @@ void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
   CHECK(r);
   CHECK_GT(sigma, 0);
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
-  boost::variate_generator<caffe::rng_t,
-      boost::normal_distribution<Dtype> > variate_generator(
-      caffe_rng(), random_distribution);
-
+  boost::variate_generator<caffe::rng_t, boost::normal_distribution<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+  caffe_set_rng(variate_generator.engine());
 }
 
 template
@@ -364,23 +360,25 @@ void caffe_vRngGaussian<double>(const int n, double* r, const double a,
     const double sigma);
 
 template <typename Dtype>
-void caffe_vRngBernoulli(const int n, Dtype* r, const double p) {
+void caffe_vRngBernoulli(const int n, int* r, const Dtype p) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
-  boost::bernoulli_distribution<double> random_distribution(p);
-  boost::variate_generator<caffe::rng_t,
-      boost::bernoulli_distribution<double> > variate_generator(
-      caffe_rng(), random_distribution);
-
+  boost::bernoulli_distribution<Dtype> random_distribution(p);
+  boost::variate_generator<caffe::rng_t, boost::bernoulli_distribution<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+  caffe_set_rng(variate_generator.engine());
 }
 
 template
-void caffe_vRngBernoulli<int>(const int n, int* r, const double p);
+void caffe_vRngBernoulli<double>(const int n, int* r, const double p);
+
+template
+void caffe_vRngBernoulli<float>(const int n, int* r, const float p);
 
 template <>
 float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {

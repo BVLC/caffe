@@ -116,7 +116,7 @@ void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
     const Dtype sigma);
 
 template <typename Dtype>
-void caffe_vRngBernoulli(const int n, Dtype* r, const double p);
+void caffe_vRngBernoulli(const int n, int* r, const Dtype p);
 
 template <typename Dtype>
 void caffe_exp(const int n, const Dtype* a, Dtype* y);
