@@ -89,6 +89,9 @@ message SolverState {
   repeated BlobProto history = 3; // The history for sgd solvers
 }
 
+// Update the next available ID when you add a new LayerParameter field.
+//
+// LayerParameter next available ID: 22
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -99,7 +102,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 25
+  // LayerType next available ID: 27
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -112,7 +115,7 @@ message LayerParameter {
     DATA = 5;
     DROPOUT = 6;
     EUCLIDEAN_LOSS = 7;
-    ELTWISE_PRODUCT = 1000;
+    ELTWISE_PRODUCT = 25;
     FLATTEN = 8;
     HDF5_DATA = 9;
     HDF5_OUTPUT = 10;
@@ -123,7 +126,7 @@ message LayerParameter {
     LRN = 15;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
-    POWER = 1001;
+    POWER = 26;
     RELU = 18;
     SIGMOID = 19;
     SOFTMAX = 20;
@@ -154,7 +157,7 @@ message LayerParameter {
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
   optional PoolingParameter pooling_param = 19;
-  optional PowerParameter power_param = 1000;
+  optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
