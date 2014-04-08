@@ -76,6 +76,30 @@ class DropoutLayer : public NeuronLayer<Dtype> {
 };
 
 template <typename Dtype>
+class PowerLayer : public NeuronLayer<Dtype> {
+ public:
+  explicit PowerLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  Dtype power_;
+  Dtype scale_;
+  Dtype shift_;
+  Dtype diff_scale_;
+};
+
+template <typename Dtype>
 class ReLULayer : public NeuronLayer<Dtype> {
  public:
   explicit ReLULayer(const LayerParameter& param)
@@ -244,6 +268,25 @@ class DataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
+};
+
+template <typename Dtype>
+class EltwiseProductLayer : public Layer<Dtype> {
+ public:
+  explicit EltwiseProductLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
 template <typename Dtype>
@@ -452,6 +495,10 @@ class InnerProductLayer : public Layer<Dtype> {
   shared_ptr<SyncedMemory> bias_multiplier_;
 };
 
+// Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
+template <typename Dtype> class PoolingLayer;
+template <typename Dtype> class SplitLayer;
+
 template <typename Dtype>
 class LRNLayer : public Layer<Dtype> {
  public:
@@ -470,8 +517,19 @@ class LRNLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  // scale_ stores the intermediate summing results
-  Blob<Dtype> scale_;
+  virtual Dtype CrossChannelForward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype CrossChannelForward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype WithinChannelForward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void CrossChannelBackward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void CrossChannelBackward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void WithinChannelBackward(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   int size_;
   int pre_pad_;
   Dtype alpha_;
@@ -480,6 +538,28 @@ class LRNLayer : public Layer<Dtype> {
   int channels_;
   int height_;
   int width_;
+
+  // Fields used for normalization ACROSS_CHANNELS
+  // scale_ stores the intermediate summing results
+  Blob<Dtype> scale_;
+
+  // Fields used for normalization WITHIN_CHANNEL
+  shared_ptr<SplitLayer<Dtype> > split_layer_;
+  vector<Blob<Dtype>*> split_top_vec_;
+  shared_ptr<PowerLayer<Dtype> > square_layer_;
+  Blob<Dtype> square_input_;
+  Blob<Dtype> square_output_;
+  vector<Blob<Dtype>*> square_bottom_vec_;
+  vector<Blob<Dtype>*> square_top_vec_;
+  shared_ptr<PoolingLayer<Dtype> > pool_layer_;
+  Blob<Dtype> pool_output_;
+  vector<Blob<Dtype>*> pool_top_vec_;
+  shared_ptr<PowerLayer<Dtype> > power_layer_;
+  Blob<Dtype> power_output_;
+  vector<Blob<Dtype>*> power_top_vec_;
+  shared_ptr<EltwiseProductLayer<Dtype> > product_layer_;
+  Blob<Dtype> product_data_input_;
+  vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
 template <typename Dtype>
@@ -521,6 +601,7 @@ class PoolingLayer : public Layer<Dtype> {
 
   int kernel_size_;
   int stride_;
+  int pad_;
   int channels_;
   int height_;
   int width_;

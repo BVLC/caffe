@@ -54,6 +54,7 @@ layers {
   bottom: "pool1"
   top: "norm1"
   lrn_param {
+    norm_region: WITHIN_CHANNEL
     local_size: 3
     alpha: 5e-05
     beta: 0.75
@@ -103,6 +104,7 @@ layers {
   bottom: "pool2"
   top: "norm2"
   lrn_param {
+    norm_region: WITHIN_CHANNEL
     local_size: 3
     alpha: 5e-05
     beta: 0.75
