@@ -44,6 +44,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new HDF5DataLayer<Dtype>(param);
   case LayerParameter_LayerType_HDF5_OUTPUT:
     return new HDF5OutputLayer<Dtype>(param);
+  case LayerParameter_LayerType_HINGE_LOSS:
+    return new HingeLossLayer<Dtype>(param);
   case LayerParameter_LayerType_IMAGE_DATA:
     return new ImageDataLayer<Dtype>(param);
   case LayerParameter_LayerType_IM2COL:
