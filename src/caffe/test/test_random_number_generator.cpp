@@ -50,12 +50,12 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussian) {
   TypeParam mu = 0;
   TypeParam sigma = 1;
   caffe_vRngGaussian(sample_size,
-      reinterpret_cast<TypeParam*>(data_a.mutable_cpu_data()), mu, sigma);
+      static_cast<TypeParam*>(data_a.mutable_cpu_data()), mu, sigma);
   TypeParam true_mean = mu;
   TypeParam true_std = sigma;
   TypeParam bound = this->mean_bound(true_std, sample_size);
   TypeParam empirical_mean =
-      this->sample_mean(reinterpret_cast<const TypeParam*>(data_a.cpu_data()),
+      this->sample_mean(static_cast<const TypeParam*>(data_a.cpu_data()),
           sample_size);
   EXPECT_NEAR(empirical_mean, true_mean, bound);
 }
@@ -68,12 +68,12 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniform) {
   TypeParam lower = 0;
   TypeParam upper = 1;
   caffe_vRngUniform(sample_size,
-      reinterpret_cast<TypeParam*>(data_a.mutable_cpu_data()), lower, upper);
+      static_cast<TypeParam*>(data_a.mutable_cpu_data()), lower, upper);
   TypeParam true_mean = (lower + upper) / 2;
   TypeParam true_std = (upper - lower) / sqrt(12);
   TypeParam bound = this->mean_bound(true_std, sample_size);
   TypeParam empirical_mean =
-      this->sample_mean(reinterpret_cast<const TypeParam*>(data_a.cpu_data()),
+      this->sample_mean(static_cast<const TypeParam*>(data_a.cpu_data()),
           sample_size);
   EXPECT_NEAR(empirical_mean, true_mean, bound);
 }
@@ -103,13 +103,13 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   // Sample from 0 mean Gaussian
   TypeParam mu = 0;
   TypeParam sigma = 1;
-  caffe_vRngGaussian(sample_size, reinterpret_cast<TypeParam*>(
+  caffe_vRngGaussian(sample_size, static_cast<TypeParam*>(
       gaussian_data.mutable_cpu_data()), mu, sigma);
   TypeParam true_mean = mu;
   TypeParam true_std = sigma;
   TypeParam bound = this->mean_bound(true_std, sample_size);
   TypeParam empirical_mean = this->sample_mean(
-      reinterpret_cast<const TypeParam*>(gaussian_data.cpu_data()),
+      static_cast<const TypeParam*>(gaussian_data.cpu_data()),
       sample_size);
   EXPECT_NEAR(empirical_mean, true_mean, bound);
   int num_pos = 0;
@@ -144,7 +144,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   // Sample from Bernoulli with p = 0.3
   p = 0.3;
   caffe_vRngBernoulli(sample_size,
-      reinterpret_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
+      static_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
   true_mean = p;
   true_std = sqrt(p * (1 - p));
   bound = this->mean_bound(true_std, sample_size);
@@ -157,7 +157,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   int num_ones = 0;
   int num_other = 0;
   const int* bernoulli_samples =
-      reinterpret_cast<const int*>(bernoulli_data.cpu_data());
+      static_cast<const int*>(bernoulli_data.cpu_data());
   for (int i = 0; i < sample_size; ++i) {
     if (bernoulli_samples[i] == 0) {
       ++bernoulli_num_zeros;
@@ -170,8 +170,10 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
   LOG(INFO) << "Bernoulli: zeros: "  << bernoulli_num_zeros
             << "; ones: " << num_ones << "; other: " << num_other;
   EXPECT_EQ(0, num_other);
-  EXPECT_EQ(sample_size * empirical_mean, num_ones);
-  EXPECT_EQ(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros);
+  TypeParam epsilon = 1e-4;
+  EXPECT_NEAR(sample_size * empirical_mean, num_ones, epsilon);
+  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros,
+              epsilon);
   // Multiply Gaussian by Bernoulli
   for (int i = 0; i < sample_size; ++i) {
     samples[i] *= bernoulli_samples[i];
@@ -214,13 +216,13 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   // Sample from Uniform on [-1, 1]
   TypeParam a = -1;
   TypeParam b = 1;
-  caffe_vRngUniform(sample_size, reinterpret_cast<TypeParam*>(
+  caffe_vRngUniform(sample_size, static_cast<TypeParam*>(
       uniform_data.mutable_cpu_data()), a, b);
   TypeParam true_mean = (a + b) / 2;
   TypeParam true_std = (b - a) / sqrt(12);
   TypeParam bound = this->mean_bound(true_std, sample_size);
   TypeParam empirical_mean = this->sample_mean(
-      reinterpret_cast<const TypeParam*>(uniform_data.cpu_data()),
+      static_cast<const TypeParam*>(uniform_data.cpu_data()),
       sample_size);
   EXPECT_NEAR(empirical_mean, true_mean, bound);
   int num_pos = 0;
@@ -241,7 +243,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   // improbable), and roughly half positives and half negatives (with bound
   // computed from a Bernoulli with p = 0.5).
   EXPECT_EQ(0, num_zeros);
-  double p = 0.5;
+  TypeParam p = 0.5;
   true_mean = p;
   true_std = sqrt(p * (1 - p));
   bound = this->mean_bound(true_std, sample_size);
@@ -255,7 +257,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   // Sample from Bernoulli with p = 0.3
   p = 0.3;
   caffe_vRngBernoulli(sample_size,
-      reinterpret_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
+      static_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
   true_mean = p;
   true_std = sqrt(p * (1 - p));
   bound = this->mean_bound(true_std, sample_size);
@@ -268,7 +270,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   int num_ones = 0;
   int num_other = 0;
   const int* bernoulli_samples =
-      reinterpret_cast<const int*>(bernoulli_data.cpu_data());
+      static_cast<const int*>(bernoulli_data.cpu_data());
   for (int i = 0; i < sample_size; ++i) {
     if (bernoulli_samples[i] == 0) {
       ++bernoulli_num_zeros;
@@ -281,8 +283,10 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
   LOG(INFO) << "Bernoulli: zeros: "  << bernoulli_num_zeros
             << "; ones: " << num_ones << "; other: " << num_other;
   EXPECT_EQ(0, num_other);
-  EXPECT_EQ(sample_size * empirical_mean, num_ones);
-  EXPECT_EQ(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros);
+  TypeParam epsilon = 1e-4;
+  EXPECT_NEAR(sample_size * empirical_mean, num_ones, epsilon);
+  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros,
+              epsilon);
   // Multiply Uniform by Bernoulli
   for (int i = 0; i < sample_size; ++i) {
     samples[i] *= bernoulli_samples[i];
@@ -322,17 +326,17 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   SyncedMemory bernoulli1_data(sample_size * sizeof(int));
   SyncedMemory bernoulli2_data(sample_size * sizeof(int));
   Caffe::set_random_seed(1701);
-  double p1 = 0.5;
-  caffe_vRngBernoulli(sample_size, reinterpret_cast<int*>(
+  TypeParam p1 = 0.5;
+  caffe_vRngBernoulli(sample_size, static_cast<int*>(
       bernoulli1_data.mutable_cpu_data()), p1);
   TypeParam empirical_mean = this->sample_mean(
-      reinterpret_cast<const int*>(bernoulli1_data.cpu_data()),
+      static_cast<const int*>(bernoulli1_data.cpu_data()),
       sample_size);
   int bernoulli1_num_zeros = 0;
   int num_ones = 0;
   int num_other = 0;
   int* bernoulli_samples =
-      reinterpret_cast<int*>(bernoulli1_data.mutable_cpu_data());
+      static_cast<int*>(bernoulli1_data.mutable_cpu_data());
   for (int i = 0; i < sample_size; ++i) {
     if (bernoulli_samples[i] == 0) {
       ++bernoulli1_num_zeros;
@@ -351,19 +355,19 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
             << "; sample mean = " << empirical_mean;
   LOG(INFO) << "Bernoulli1: zeros: "  << bernoulli1_num_zeros
             << "; ones: " << num_ones << "; other: " << num_other;
-  empirical_mean =
-      this->sample_mean((const int *)bernoulli2_data.cpu_data(), sample_size);
+  empirical_mean = this->sample_mean(
+      static_cast<const int*>(bernoulli1_data.cpu_data()), sample_size);
   EXPECT_NEAR(empirical_mean, true_mean, bound);
   EXPECT_EQ(num_other, 0);
   // Sample from Bernoulli with p = 0.3
-  double p = 0.3;
-  caffe_vRngBernoulli(sample_size,
-      reinterpret_cast<int*>(bernoulli2_data.mutable_cpu_data()), p);
+  TypeParam p = 0.3;
+  caffe_vRngBernoulli(sample_size, static_cast<int*>(
+      bernoulli2_data.mutable_cpu_data()), p);
   true_mean = p;
   true_std = sqrt(p * (1 - p));
   bound = this->mean_bound(true_std, sample_size);
-  empirical_mean =
-      this->sample_mean((const int *)bernoulli2_data.cpu_data(), sample_size);
+  empirical_mean = this->sample_mean(
+      static_cast<const int*>(bernoulli2_data.cpu_data()), sample_size);
   LOG(INFO) << "Bernoulli2: Expected mean = " << true_mean
             << "; sample mean = " << empirical_mean;
   EXPECT_NEAR(empirical_mean, true_mean, bound);
@@ -371,7 +375,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   num_ones = 0;
   num_other = 0;
   const int* bernoulli2_samples =
-      reinterpret_cast<const int*>(bernoulli2_data.cpu_data());
+      static_cast<const int*>(bernoulli2_data.cpu_data());
   for (int i = 0; i < sample_size; ++i) {
     if (bernoulli2_samples[i] == 0) {
       ++bernoulli2_num_zeros;
@@ -384,8 +388,10 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   LOG(INFO) << "Bernoulli2: zeros: "  << bernoulli2_num_zeros
             << "; ones: " << num_ones << "; other: " << num_other;
   EXPECT_EQ(0, num_other);
-  EXPECT_EQ(sample_size * empirical_mean, num_ones);
-  EXPECT_EQ(sample_size * (1.0 - empirical_mean), bernoulli2_num_zeros);
+  TypeParam epsilon = 1e-4;
+  EXPECT_NEAR(sample_size * empirical_mean, num_ones, epsilon);
+  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli2_num_zeros,
+              epsilon);
   // Multiply Bernoulli1 by Bernoulli2
   for (int i = 0; i < sample_size; ++i) {
     bernoulli_samples[i] *= bernoulli2_samples[i];
@@ -407,8 +413,8 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   p *= p1;
   true_mean = p;
   true_std = sqrt(p * (1 - p));
-  empirical_mean =
-      this->sample_mean((const int *)bernoulli2_data.cpu_data(), sample_size);
+  empirical_mean = this->sample_mean(
+      static_cast<const int *>(bernoulli2_data.cpu_data()), sample_size);
   bound = this->mean_bound(true_std, sample_size);
   LOG(INFO) << "Bernoulli1*Bernoulli2: Expected mean = " << true_mean
             << "; sample mean = " << empirical_mean;
