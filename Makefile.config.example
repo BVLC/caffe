@@ -17,7 +17,7 @@ MKL_DIR := /opt/intel/mkl
 
 # This is required only if you will compile the matlab interface.
 # MATLAB directory should contain the mex binary in /bin.
-MATLAB_DIR := /usr/local
+# MATLAB_DIR := /usr/local
 # MATLAB_DIR := /Applications/MATLAB_R2012b.app
 
 # NOTE: this is required only if you will compile the python interface.
