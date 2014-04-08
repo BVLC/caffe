@@ -142,6 +142,33 @@ ALL_BUILD_DIRS := $(sort \
 		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) $(PY_PROTO_BUILD_DIR) \
 		$(DISTRIBUTE_SUBDIRS))
 
+##############################
+# Configure build
+##############################
+
+# Determine platform
+UNAME := $(shell uname -s)
+ifeq ($(UNAME), Linux)
+	LINUX := 1
+else ifeq ($(UNAME), Darwin)
+	OSX := 1
+endif
+
+ifeq ($(LINUX), 1)
+	CXX := /usr/bin/g++
+endif
+
+# OS X:
+# clang++ instead of g++
+# libstdc++ instead of libc++ for CUDA compatibility on 10.9
+ifeq ($(OSX), 1)
+	CXX := /usr/bin/clang++
+	ifneq ($(findstring $(shell sw_vers -productVersion), 10.9),)
+		CXXFLAGS += -stdlib=libstdc++
+	endif
+endif
+
+# Debugging
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS := -DDEBUG -g -O0
@@ -149,15 +176,22 @@ else
 	COMMON_FLAGS := -DNDEBUG -O2
 endif
 
-# MKL switch (default = non-MKL)
+# MKL switch (default = non-MKL = ATLAS)
 USE_MKL ?= 0
 ifeq ($(USE_MKL), 1)
-  LIBRARIES += mkl_rt
-  COMMON_FLAGS += -DUSE_MKL
-  INCLUDE_DIRS += $(MKL_INCLUDE_DIR)
-  LIBRARY_DIRS += $(MKL_LIB_DIR)
+	LIBRARIES += mkl_rt
+	COMMON_FLAGS += -DUSE_MKL
+	INCLUDE_DIRS += $(MKL_INCLUDE_DIR)
+	LIBRARY_DIRS += $(MKL_LIB_DIR)
 else
-  LIBRARIES += cblas atlas
+	ifeq ($(LINUX), 1)
+		# Linux simply has cblas and atlas
+		LIBRARIES += cblas atlas
+	else ifeq ($(OSX), 1)
+		# OS X packages atlas as the vecLib framework
+		LIBRARIES += cblas
+		LDFLAGS += -framework vecLib
+	endif
 endif
 
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))

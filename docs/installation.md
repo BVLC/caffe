@@ -152,7 +152,6 @@ Here are the relevant parts of the Makefile.config after all this:
     MKL_DIR := /opt/intel/mkl  # only needed for MKL
     PYTHON_INCLUDES := /path/to/anaconda/include /path/to/anaconda/include/python2.7 /path/to/anaconda/lib/python2.7/site-packages/numpy/core/include
     PYTHON_LIB := /path/to/anaconda/lib
-    CXX=/usr/bin/clang++
 
 Don't forget to set `PATH` and `LD_LIBRARY_PATH`:
 
