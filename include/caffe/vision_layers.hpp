@@ -607,7 +607,7 @@ class PoolingLayer : public Layer<Dtype> {
   int width_;
   int pooled_height_;
   int pooled_width_;
-  Blob<float> rand_idx_;
+  Blob<Dtype> rand_idx_;
 };
 
 template <typename Dtype>

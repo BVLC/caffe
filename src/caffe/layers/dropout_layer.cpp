@@ -20,7 +20,7 @@ void DropoutLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   DCHECK(threshold_ > 0.);
   DCHECK(threshold_ < 1.);
   scale_ = 1. / (1. - threshold_);
-  uint_thres_ = (unsigned int)(UINT_MAX * threshold_);
+  uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
 }
 
 template <typename Dtype>
@@ -37,7 +37,7 @@ Dtype DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data[i] = bottom_data[i] * mask[i] * scale_;
     }
   } else {
-    memcpy(top_data, bottom_data, bottom[0]->count() * sizeof(Dtype));
+    caffe_copy(bottom[0]->count(), bottom_data, top_data);
   }
   return Dtype(0);
 }
