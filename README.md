@@ -1,14 +1,72 @@
 # -- WARNING: THIS IS AN FORK/FEATURE BRANCH OF [CAFFE](http://github.com/BVLC/caffe) (PR PENDING). --
 ## DenseNet
 
-[DenseNet: Implementing Efficient ConvNet Descriptor Pyramids](http://arxiv.org/abs/1404.1869)
-Forrest Iandola, Matt Moskewicz, Sergey Karayev, Ross Girshick, Trevor Darrell, and Kurt Keutzer
+[DenseNet: Implementing Efficient ConvNet Descriptor Pyramids](http://arxiv.org/abs/1404.1869)<br>
+Forrest Iandola, Matt Moskewicz, Sergey Karayev, Ross Girshick, Trevor Darrell, and Kurt Keutzer.<br>
+Arxiv technical report, April 2014.
 
+<b>Licensing</b><br>
 Except where noted in individual files, all new code files / changes in this branch are:
 Copyright (c) 2013 Matthew Moskewicz and Forrest Iandola
 and are BSD 2-Clause licensed with the same as the original source (see [LICENSE](LICENSE)).
 
 The two example images are taken from the PASCAL vision benchmark set.
+
+<b>DenseNet APIs in Matlab and Python</b><br>
+The DenseNet API is fairly similar to the popular `featpyramid.m` HOG extraction API from the [voc-release5 Deformable Parts Model code](https://github.com/rbgirshick/voc-dpm/blob/master/features/featpyramid.m). Our primary API function is called `convnet_featpyramid()`.
+
+<b>Running DenseNet in Matlab</b><br>
+`caffe/matlab/caffe/featpyramid_matcaffe_demo.m` is a good example to start with. Or, we can walk through it together here:
+
+```matlab
+    %Caffe setup:
+    model_def_file = 'CAFFE_ROOT/python/caffe/imagenet/imagenet_rcnn_batch_1_input_1100x1100_output_conv5.prototxt'
+    % NOTE: you'll have to get the pre-trained ILSVRC network
+    model_file = 'path/to/alexnet_train_iter_470000';
+    caffe('init', model_def_file, model_file);
+    caffe('set_mode_gpu') %CPU mode works too
+    caffe('set_phase_test')
+
+    %using DenseNet: 
+     image = 'myImage.jpg' %must be JPEG
+     pyra = convnet_featpyramid(image)
+```
+
+<b>Running DenseNet in Matlab (advanced users)</b><br>
+```matlab
+    % (you need to do Caffe setup first, as shown in above example)
+    image = 'myImage.jpg'
+    
+    %optional parameters (code will still run with incomplete or nonexistant pyra_params):
+    pyra_params.interval = 5; %octaves per pyramid scale
+    pyra_params.img_padding = 16 %padding around image (in pixels)
+    pyra_params.feat_minWidth = 6; %select smallest scale in pyramid (in output feature dimensions)
+    pyra_params.feat_minHeight = 6; %in output feature dimensions
+    pyra = convnet_featpyramid(image, pyra_params)
+
+    %taking a look at the output pyramid:
+          scales: [40x1 double] %resolution of each pyramid scale
+            feat: {40x1 cell} %descriptors (one cell array per scale)
+         imwidth: 353 %input image size in pixels
+        imheight: 500
+       feat_padx: 1 %border padding around descriptors (img_padding/sbin)
+       feat_pady: 1
+            sbin: 16 %approx. downsampling factor from pixels to descriptors
+            padx: 1 %extra copy of feat_pad{x,y}. silly...should remove?
+            pady: 1
+      num_levels: 40 %num scales in pyramid
+    valid_levels: [40x1 logical]
+```
+
+<b>Running DenseNet in Python</b><br>
+The Python API is similar to the Matlab API described above. 
+`caffe/python/caffe/featpyramid_demo.py` is a good starting point for using DenseNet in Python.
+
+
+Other notes:
+- As with many other operations in Caffe, you'll need to download a pretrained Alexnet CNN prior to running our DenseNet demo.
+- For most of our default examples, we use the 'Alexnet' network and output descriptors from the conv5 layer. You can adjust these decisions by editing the 'prototxt' files used at setup time.
+
 
 ## Original Caffe README.md follows
 
