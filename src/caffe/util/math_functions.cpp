@@ -121,6 +121,42 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
 }
 
 template <>
+void caffe_set(const int N, const float alpha, float* Y) {
+  if (alpha == 0) {
+    memset(Y, 0, sizeof(float) * N);
+    return;
+  }
+  for (int i = 0; i < N; ++i) {
+    Y[i] = alpha;
+  }
+}
+
+template <>
+void caffe_set(const int N, const double alpha, double* Y) {
+  if (alpha == 0) {
+    memset(Y, 0, sizeof(double) * N);
+    return;
+  }
+  for (int i = 0; i < N; ++i) {
+    Y[i] = alpha;
+  }
+}
+
+template <>
+void caffe_add_scalar(const int N, const float alpha, float* Y) {
+  for (int i = 0; i < N; ++i) {
+    Y[i] += alpha;
+  }
+}
+
+template <>
+void caffe_add_scalar(const int N, const double alpha, double* Y) {
+  for (int i = 0; i < N; ++i) {
+    Y[i] += alpha;
+  }
+}
+
+template <>
 void caffe_copy<float>(const int N, const float* X, float* Y) {
   cblas_scopy(N, X, 1, Y, 1);
 }

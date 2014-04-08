@@ -58,7 +58,19 @@ template <typename Dtype>
 void caffe_copy(const int N, const Dtype *X, Dtype *Y);
 
 template <typename Dtype>
+void caffe_set(const int N, const Dtype alpha, Dtype *X);
+
+template <typename Dtype>
+void caffe_gpu_set(const int N, const Dtype alpha, Dtype *X);
+
+template <typename Dtype>
 void caffe_gpu_copy(const int N, const Dtype *X, Dtype *Y);
+
+template <typename Dtype>
+void caffe_add_scalar(const int N, const Dtype alpha, Dtype *X);
+
+template <typename Dtype>
+void caffe_gpu_add_scalar(const int N, const Dtype alpha, Dtype *X);
 
 template <typename Dtype>
 void caffe_scal(const int N, const Dtype alpha, Dtype *X);
@@ -85,7 +97,13 @@ template <typename Dtype>
 void caffe_div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
+void caffe_gpu_div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+template <typename Dtype>
 void caffe_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
 template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b);
