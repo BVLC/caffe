@@ -421,6 +421,25 @@ class HDF5DataLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
+class HingeLossLayer : public Layer<Dtype> {
+ public:
+  explicit HingeLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  //     vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  // virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+  //     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
+template <typename Dtype>
 class Im2colLayer : public Layer<Dtype> {
  public:
   explicit Im2colLayer(const LayerParameter& param)
