@@ -73,7 +73,7 @@ __global__ void StoPoolForwardTrain(const int nthreads,
     const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int kernel_size, const int stride, float* rand_idx, Dtype* top_data) {
+    const int kernel_size, const int stride, Dtype* rand_idx, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
@@ -163,8 +163,8 @@ Dtype PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   case PoolingParameter_PoolMethod_STOCHASTIC:
     if (Caffe::phase() == Caffe::TRAIN) {
       // We need to create the random index as well.
-      CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(),
-          rand_idx_.mutable_gpu_data(), count));
+      caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
+                            rand_idx_.mutable_gpu_data());
       // NOLINT_NEXT_LINE(whitespace/operators)
       StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count),
                                    CAFFE_CUDA_NUM_THREADS>>>(
@@ -257,7 +257,7 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
 
 template <typename Dtype>
 __global__ void StoPoolBackward(const int nthreads,
-    const float* rand_idx, const Dtype* top_diff,
+    const Dtype* rand_idx, const Dtype* top_diff,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int kernel_size, const int stride, Dtype* bottom_diff) {
