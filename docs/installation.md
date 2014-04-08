@@ -68,7 +68,7 @@ Now that you have the prerequisites, edit your `Makefile.config` to change the p
 
 With the prerequisites installed, do `make all` to compile Caffe.
 
-To compile the python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
+To compile the python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively. Be sure to set your MATLAB and python paths in `Makefile.config` first!
 
 *Distribution*: run `make distribute` to create a `distribute` directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.
 
