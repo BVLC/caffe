@@ -5,7 +5,7 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "ilvsrc12_train_leveldb"
+    source: "ilsvrc12_train_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
     batch_size: 256
     crop_size: 227
