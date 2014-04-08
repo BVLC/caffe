@@ -1,12 +1,14 @@
 # -- WARNING: THIS IS AN FORK/FEATURE BRANCH OF [CAFFE](http://github.com/BVLC/caffe) (PR PENDING). --
 ## DenseNet
 
-[DenseNet: Efficient Computation of Deep ConvNet Feature Pyramids](http://arxiv.org/densenet_paper_url_here)
-Forrest Iandola,Matt Moskewicz,Sergey Karayev,Ross Girshick,Kurt Keutzer,and Trevor Darrell
+[DenseNet: Implementing Efficient ConvNet Descriptor Pyramids](http://arxiv.org/abs/1404.1869)
+Forrest Iandola, Matt Moskewicz, Sergey Karayev, Ross Girshick, Trevor Darrell, and Kurt Keutzer
 
-Except where noted individual files, all new files / changes in this branch are:
+Except where noted in individual files, all new code files / changes in this branch are:
 Copyright (c) 2013 Matthew Moskewicz and Forrest Iandola
+and are BSD 2-Clause licensed with the same as the original source (see [LICENSE](LICENSE)).
 
+The two example images are taken from the PASCAL vision benchmark set.
 
 ## Original Caffe README.md follows
 
