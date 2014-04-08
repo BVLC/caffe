@@ -14,28 +14,137 @@ namespace caffe {
 
 template <typename Dtype>
 class RandomNumberGeneratorTest : public ::testing::Test {
- public:
-  virtual ~RandomNumberGeneratorTest() {}
+ protected:
+  RandomNumberGeneratorTest()
+     : sample_size_(10000),
+       seed_(1701),
+       data_(new SyncedMemory(sample_size_ * sizeof(Dtype))),
+       int_data_(new SyncedMemory(sample_size_ * sizeof(int))),
+       int_data_2_(new SyncedMemory(sample_size_ * sizeof(int))) {}
 
-  Dtype sample_mean(const Dtype* const seqs, const size_t sample_size) {
-      double sum = 0;
-      for (int i = 0; i < sample_size; ++i) {
-          sum += seqs[i];
+  virtual void SetUp() {
+    Caffe::set_random_seed(this->seed_);
+  }
+
+  Dtype sample_mean(const Dtype* const seqs, const int sample_size) {
+    Dtype sum = 0;
+    for (int i = 0; i < sample_size; ++i) {
+      sum += seqs[i];
+    }
+    return sum / sample_size;
+  }
+
+  Dtype sample_mean(const Dtype* const seqs) {
+    return sample_mean(seqs, sample_size_);
+  }
+
+  Dtype sample_mean(const int* const seqs, const int sample_size) {
+    Dtype sum = 0;
+    for (int i = 0; i < sample_size; ++i) {
+      sum += Dtype(seqs[i]);
+    }
+    return sum / sample_size;
+  }
+
+  Dtype sample_mean(const int* const seqs) {
+    return sample_mean(seqs, sample_size_);
+  }
+
+  Dtype mean_bound(const Dtype std, const int sample_size) {
+    return std / sqrt(static_cast<Dtype>(sample_size));
+  }
+
+  Dtype mean_bound(const Dtype std) {
+    return mean_bound(std, sample_size_);
+  }
+
+  void RngGaussianTest(const Dtype mu, const Dtype sigma, void* cpu_data) {
+    Dtype* rng_data = static_cast<Dtype*>(cpu_data);
+    caffe_vRngGaussian(sample_size_, rng_data, mu, sigma);
+    const Dtype true_mean = mu;
+    const Dtype true_std = sigma;
+    // Check that sample mean roughly matches true mean.
+    const Dtype bound = this->mean_bound(true_std);
+    const Dtype sample_mean = this->sample_mean(
+        static_cast<const Dtype*>(cpu_data));
+    EXPECT_NEAR(sample_mean, true_mean, bound);
+    // Check that roughly half the samples are above the true mean.
+    int num_above_mean = 0;
+    int num_below_mean = 0;
+    for (int i = 0; i < sample_size_; ++i) {
+      if (rng_data[i] > true_mean) {
+        ++num_above_mean;
+      } else if (rng_data[i] < true_mean) {
+        ++num_below_mean;
       }
-      return sum / sample_size;
+    }
+    EXPECT_EQ(sample_size_, num_above_mean + num_below_mean);
+    const Dtype sample_p_above_mean =
+        static_cast<Dtype>(num_above_mean) / sample_size_;
+    const Dtype bernoulli_p = 0.5;
+    const Dtype bernoulli_std = sqrt(bernoulli_p * (1 - bernoulli_p));
+    const Dtype bernoulli_bound = this->mean_bound(true_std);
+    EXPECT_NEAR(bernoulli_p, sample_p_above_mean, bernoulli_bound);
   }
 
-  Dtype sample_mean(const int* const seqs, const size_t sample_size) {
-      Dtype sum = 0;
-      for (int i = 0; i < sample_size; ++i) {
-          sum += Dtype(seqs[i]);
+  void RngUniformTest(const Dtype lower, const Dtype upper, void* cpu_data) {
+    CHECK_GE(upper, lower);
+    Dtype* rng_data = static_cast<Dtype*>(cpu_data);
+    caffe_vRngUniform(sample_size_, rng_data, lower, upper);
+    const Dtype true_mean = (lower + upper) / 2;
+    const Dtype true_std = (upper - lower) / sqrt(12);
+    // Check that sample mean roughly matches true mean.
+    const Dtype bound = this->mean_bound(true_std);
+    const Dtype sample_mean = this->sample_mean(rng_data);
+    EXPECT_NEAR(sample_mean, true_mean, bound);
+    // Check that roughly half the samples are above the true mean, and none are
+    // above upper or below lower.
+    int num_above_mean = 0;
+    int num_below_mean = 0;
+    int num_above_upper = 0;
+    int num_below_lower = 0;
+    for (int i = 0; i < sample_size_; ++i) {
+      if (rng_data[i] > true_mean) {
+        ++num_above_mean;
+      } else if (rng_data[i] < true_mean) {
+        ++num_below_mean;
       }
-      return sum / sample_size;
+      if (rng_data[i] > upper) {
+        ++num_above_upper;
+      } else if (rng_data[i] < lower) {
+        ++num_below_lower;
+      }
+    }
+    EXPECT_EQ(0, num_above_upper);
+    EXPECT_EQ(0, num_below_lower);
+    EXPECT_EQ(sample_size_, num_above_mean + num_below_mean);
+    const Dtype sample_p_above_mean =
+        static_cast<Dtype>(num_above_mean) / sample_size_;
+    const Dtype bernoulli_p = 0.5;
+    const Dtype bernoulli_std = sqrt(bernoulli_p * (1 - bernoulli_p));
+    const Dtype bernoulli_bound = this->mean_bound(true_std);
+    EXPECT_NEAR(bernoulli_p, sample_p_above_mean, bernoulli_bound);
   }
 
-  Dtype mean_bound(const Dtype std, const size_t sample_size) {
-      return  std/sqrt(static_cast<double>(sample_size));
+  void RngBernoulliTest(const Dtype p, void* cpu_data) {
+    int* rng_data = static_cast<int*>(cpu_data);
+    caffe_vRngBernoulli(sample_size_, rng_data, p);
+    const Dtype true_mean = p;
+    const Dtype true_std = sqrt(p * (1 - p));
+    const Dtype bound = this->mean_bound(true_std);
+    const Dtype sample_mean = this->sample_mean(rng_data);
+    EXPECT_NEAR(sample_mean, true_mean, bound);
   }
+
+  int num_above_mean;
+  int num_below_mean;
+
+  size_t sample_size_;
+  uint32_t seed_;
+
+  shared_ptr<SyncedMemory> data_;
+  shared_ptr<SyncedMemory> int_data_;
+  shared_ptr<SyncedMemory> int_data_2_;
 };
 
 
@@ -44,382 +153,172 @@ TYPED_TEST_CASE(RandomNumberGeneratorTest, Dtypes);
 
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussian) {
-  size_t sample_size = 10000;
-  SyncedMemory data_a(sample_size * sizeof(TypeParam));
-  Caffe::set_random_seed(1701);
-  TypeParam mu = 0;
-  TypeParam sigma = 1;
-  caffe_vRngGaussian(sample_size,
-      static_cast<TypeParam*>(data_a.mutable_cpu_data()), mu, sigma);
-  TypeParam true_mean = mu;
-  TypeParam true_std = sigma;
-  TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam empirical_mean =
-      this->sample_mean(static_cast<const TypeParam*>(data_a.cpu_data()),
-          sample_size);
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
+  const TypeParam mu = 0;
+  const TypeParam sigma = 1;
+  void* gaussian_data = this->data_->mutable_cpu_data();
+  this->RngGaussianTest(mu, sigma, gaussian_data);
+}
+
+
+TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussian2) {
+  const TypeParam mu = -2;
+  const TypeParam sigma = 3;
+  void* gaussian_data = this->data_->mutable_cpu_data();
+  this->RngGaussianTest(mu, sigma, gaussian_data);
 }
 
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngUniform) {
-  size_t sample_size = 10000;
-  SyncedMemory data_a(sample_size * sizeof(TypeParam));
-  Caffe::set_random_seed(1701);
-  TypeParam lower = 0;
-  TypeParam upper = 1;
-  caffe_vRngUniform(sample_size,
-      static_cast<TypeParam*>(data_a.mutable_cpu_data()), lower, upper);
-  TypeParam true_mean = (lower + upper) / 2;
-  TypeParam true_std = (upper - lower) / sqrt(12);
-  TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam empirical_mean =
-      this->sample_mean(static_cast<const TypeParam*>(data_a.cpu_data()),
-          sample_size);
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
+  const TypeParam lower = 0;
+  const TypeParam upper = 1;
+  void* uniform_data = this->data_->mutable_cpu_data();
+  this->RngUniformTest(lower, upper, uniform_data);
+}
+
+
+TYPED_TEST(RandomNumberGeneratorTest, TestRngUniform2) {
+  const TypeParam lower = -7.3;
+  const TypeParam upper = -2.3;
+  void* uniform_data = this->data_->mutable_cpu_data();
+  this->RngUniformTest(lower, upper, uniform_data);
 }
 
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulli) {
-  size_t sample_size = 10000;
-  SyncedMemory data_a(sample_size * sizeof(int));
-  Caffe::set_random_seed(1701);
-  double p = 0.3;
-  caffe_vRngBernoulli(sample_size,
-      static_cast<int*>(data_a.mutable_cpu_data()), p);
-  TypeParam true_mean = p;
-  TypeParam true_std = sqrt(p * (1 - p));
-  TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam empirical_mean =
-      this->sample_mean((const int *)data_a.cpu_data(), sample_size);
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
+  const TypeParam p = 0.3;
+  void* bernoulli_data = this->int_data_->mutable_cpu_data();
+  this->RngBernoulliTest(p, bernoulli_data);
+}
+
+
+TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulli2) {
+  const TypeParam p = 0.9;
+  void* bernoulli_data = this->int_data_->mutable_cpu_data();
+  this->RngBernoulliTest(p, bernoulli_data);
 }
 
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesBernoulli) {
-  size_t sample_size = 10000;
-  SyncedMemory gaussian_data(sample_size * sizeof(TypeParam));
-  SyncedMemory bernoulli_data(sample_size * sizeof(int));
-  Caffe::set_random_seed(1701);
-  // Sample from 0 mean Gaussian
-  TypeParam mu = 0;
-  TypeParam sigma = 1;
-  caffe_vRngGaussian(sample_size, static_cast<TypeParam*>(
-      gaussian_data.mutable_cpu_data()), mu, sigma);
-  TypeParam true_mean = mu;
-  TypeParam true_std = sigma;
-  TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam empirical_mean = this->sample_mean(
-      static_cast<const TypeParam*>(gaussian_data.cpu_data()),
-      sample_size);
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
+  // Sample from 0 mean Gaussian.
+  const TypeParam mu = 0;
+  const TypeParam sigma = 1;
+  TypeParam* gaussian_data =
+      static_cast<TypeParam*>(this->data_->mutable_cpu_data());
+  this->RngGaussianTest(mu, sigma, gaussian_data);
+
+  // Sample from Bernoulli with p = 0.3.
+  const TypeParam bernoulli_p = 0.3;
+  int* bernoulli_data =
+      static_cast<int*>(this->int_data_->mutable_cpu_data());
+  this->RngBernoulliTest(bernoulli_p, bernoulli_data);
+
+  // Multiply Gaussian by Bernoulli.
+  for (int i = 0; i < this->sample_size_; ++i) {
+    gaussian_data[i] *= bernoulli_data[i];
+  }
   int num_pos = 0;
   int num_neg = 0;
-  int num_zeros = 0;
-  TypeParam* samples =
-      static_cast<TypeParam*>(gaussian_data.mutable_cpu_data());
-  for (int i = 0; i < sample_size; ++i) {
-    if (samples[i] == TypeParam(0)) {
-      ++num_zeros;
-    } else if (samples[i] > TypeParam(0)) {
-      ++num_pos;
-    } else if (samples[i] < TypeParam(0)) {
-      ++num_neg;
-    }
-  }
-  // Check that we have no zeros (possible to generate 0s, but highly
-  // improbable), and roughly half positives and half negatives (with bound
-  // computed from a Bernoulli with p = 0.5).
-  EXPECT_EQ(0, num_zeros);
-  double p = 0.5;
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  bound = this->mean_bound(true_std, sample_size);
-  TypeParam expected_num_each_sign = sample_size * p;
-  LOG(INFO) << "Gaussian: Expected " << expected_num_each_sign << " positives"
-            << "; got " << num_pos;
-  LOG(INFO) << "Gaussian: Expected " << expected_num_each_sign << " negatives"
-            << "; got " << num_neg;
-  EXPECT_NEAR(expected_num_each_sign, num_pos, sample_size * bound);
-  EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
-  // Sample from Bernoulli with p = 0.3
-  p = 0.3;
-  caffe_vRngBernoulli(sample_size,
-      static_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  bound = this->mean_bound(true_std, sample_size);
-  empirical_mean =
-      this->sample_mean((const int *)bernoulli_data.cpu_data(), sample_size);
-  LOG(INFO) << "Bernoulli: Expected mean = " << true_mean
-            << "; sample mean = " << empirical_mean;
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
-  int bernoulli_num_zeros = 0;
-  int num_ones = 0;
-  int num_other = 0;
-  const int* bernoulli_samples =
-      static_cast<const int*>(bernoulli_data.cpu_data());
-  for (int i = 0; i < sample_size; ++i) {
-    if (bernoulli_samples[i] == 0) {
-      ++bernoulli_num_zeros;
-    } else if (bernoulli_samples[i] == 1) {
-      ++num_ones;
+  for (int i = 0; i < this->sample_size_; ++i) {
+    if (gaussian_data[i] == TypeParam(0)) {
+      EXPECT_EQ(TypeParam(0), bernoulli_data[i]);
     } else {
-      ++num_other;
+      EXPECT_EQ(TypeParam(1), bernoulli_data[i]);
+      if (gaussian_data[i] > TypeParam(0)) {
+        ++num_pos;
+      } else if (gaussian_data[i] < TypeParam(0)) {
+        ++num_neg;
+      }
     }
   }
-  LOG(INFO) << "Bernoulli: zeros: "  << bernoulli_num_zeros
-            << "; ones: " << num_ones << "; other: " << num_other;
-  EXPECT_EQ(0, num_other);
-  TypeParam epsilon = 1e-4;
-  EXPECT_NEAR(sample_size * empirical_mean, num_ones, epsilon);
-  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros,
-              epsilon);
-  // Multiply Gaussian by Bernoulli
-  for (int i = 0; i < sample_size; ++i) {
-    samples[i] *= bernoulli_samples[i];
-  }
-  num_pos = 0;
-  num_neg = 0;
-  num_zeros = 0;
-  for (int i = 0; i < sample_size; ++i) {
-    if (samples[i] == TypeParam(0)) {
-      ++num_zeros;
-    } else if (samples[i] > TypeParam(0)) {
-      ++num_pos;
-    } else if (samples[i] < TypeParam(0)) {
-      ++num_neg;
-    }
-  }
-  // Check that we have as many zeros as Bernoulli, and roughly half positives
-  // and half negatives (with bound computed from a Bernoulli with p = 0.5).
-  EXPECT_EQ(bernoulli_num_zeros, num_zeros);
-  p = 0.5;
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  int sub_sample_size = sample_size - bernoulli_num_zeros;
-  bound = this->mean_bound(true_std, sub_sample_size);
-  expected_num_each_sign = sub_sample_size * p;
-  LOG(INFO) << "Gaussian*Bernoulli: Expected " << expected_num_each_sign
-            << " positives; got " << num_pos;
-  LOG(INFO) << "Gaussian*Bernoulli: Expected " << expected_num_each_sign
-            << " negatives; got " << num_neg;
-  EXPECT_NEAR(expected_num_each_sign, num_pos, sample_size * bound);
-  EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
+
+  // Check that Gaussian still has roughly half positives and half negatives
+  // (with bound computed from a Bernoulli with p = 0.5).
+  const int num_non_zero = num_pos + num_neg;
+  const TypeParam sample_p = num_pos / static_cast<TypeParam>(num_non_zero);
+  const TypeParam p = 0.5;
+  const TypeParam true_mean = p;
+  const TypeParam true_std = sqrt(p * (1 - p));
+  const TypeParam bound = this->mean_bound(true_std, num_non_zero);
+  EXPECT_NEAR(true_mean, sample_p, bound);
 }
 
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesBernoulli) {
-  size_t sample_size = 10000;
-  SyncedMemory uniform_data(sample_size * sizeof(TypeParam));
-  SyncedMemory bernoulli_data(sample_size * sizeof(int));
-  Caffe::set_random_seed(1701);
-  // Sample from Uniform on [-1, 1]
-  TypeParam a = -1;
-  TypeParam b = 1;
-  caffe_vRngUniform(sample_size, static_cast<TypeParam*>(
-      uniform_data.mutable_cpu_data()), a, b);
-  TypeParam true_mean = (a + b) / 2;
-  TypeParam true_std = (b - a) / sqrt(12);
-  TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam empirical_mean = this->sample_mean(
-      static_cast<const TypeParam*>(uniform_data.cpu_data()),
-      sample_size);
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
+  // Sample from Uniform on [-1, 1].
+  const TypeParam lower = -1;
+  const TypeParam upper = 1;
+  TypeParam* uniform_data =
+      static_cast<TypeParam*>(this->data_->mutable_cpu_data());
+  this->RngUniformTest(lower, upper, uniform_data);
+
+  // Sample from Bernoulli with p = 0.3.
+  const TypeParam bernoulli_p = 0.3;
+  int* bernoulli_data =
+      static_cast<int*>(this->int_data_->mutable_cpu_data());
+  this->RngBernoulliTest(bernoulli_p, bernoulli_data);
+
+  // Multiply Uniform by Bernoulli.
+  for (int i = 0; i < this->sample_size_; ++i) {
+    uniform_data[i] *= bernoulli_data[i];
+  }
   int num_pos = 0;
   int num_neg = 0;
-  int num_zeros = 0;
-  TypeParam* samples =
-      static_cast<TypeParam*>(uniform_data.mutable_cpu_data());
-  for (int i = 0; i < sample_size; ++i) {
-    if (samples[i] == TypeParam(0)) {
-      ++num_zeros;
-    } else if (samples[i] > TypeParam(0)) {
-      ++num_pos;
-    } else if (samples[i] < TypeParam(0)) {
-      ++num_neg;
-    }
-  }
-  // Check that we have no zeros (possible to generate 0s, but highly
-  // improbable), and roughly half positives and half negatives (with bound
-  // computed from a Bernoulli with p = 0.5).
-  EXPECT_EQ(0, num_zeros);
-  TypeParam p = 0.5;
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  bound = this->mean_bound(true_std, sample_size);
-  TypeParam expected_num_each_sign = sample_size * p;
-  LOG(INFO) << "Uniform: Expected " << expected_num_each_sign << " positives"
-            << "; got " << num_pos;
-  LOG(INFO) << "Uniform: Expected " << expected_num_each_sign << " negatives"
-            << "; got " << num_neg;
-  EXPECT_NEAR(expected_num_each_sign, num_pos, sample_size * bound);
-  EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
-  // Sample from Bernoulli with p = 0.3
-  p = 0.3;
-  caffe_vRngBernoulli(sample_size,
-      static_cast<int*>(bernoulli_data.mutable_cpu_data()), p);
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  bound = this->mean_bound(true_std, sample_size);
-  empirical_mean =
-      this->sample_mean((const int *)bernoulli_data.cpu_data(), sample_size);
-  LOG(INFO) << "Bernoulli: Expected mean = " << true_mean
-            << "; sample mean = " << empirical_mean;
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
-  int bernoulli_num_zeros = 0;
-  int num_ones = 0;
-  int num_other = 0;
-  const int* bernoulli_samples =
-      static_cast<const int*>(bernoulli_data.cpu_data());
-  for (int i = 0; i < sample_size; ++i) {
-    if (bernoulli_samples[i] == 0) {
-      ++bernoulli_num_zeros;
-    } else if (bernoulli_samples[i] == 1) {
-      ++num_ones;
+  for (int i = 0; i < this->sample_size_; ++i) {
+    if (uniform_data[i] == TypeParam(0)) {
+      EXPECT_EQ(TypeParam(0), bernoulli_data[i]);
     } else {
-      ++num_other;
+      EXPECT_EQ(TypeParam(1), bernoulli_data[i]);
+      if (uniform_data[i] > TypeParam(0)) {
+        ++num_pos;
+      } else if (uniform_data[i] < TypeParam(0)) {
+        ++num_neg;
+      }
     }
   }
-  LOG(INFO) << "Bernoulli: zeros: "  << bernoulli_num_zeros
-            << "; ones: " << num_ones << "; other: " << num_other;
-  EXPECT_EQ(0, num_other);
-  TypeParam epsilon = 1e-4;
-  EXPECT_NEAR(sample_size * empirical_mean, num_ones, epsilon);
-  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli_num_zeros,
-              epsilon);
-  // Multiply Uniform by Bernoulli
-  for (int i = 0; i < sample_size; ++i) {
-    samples[i] *= bernoulli_samples[i];
-  }
-  num_pos = 0;
-  num_neg = 0;
-  num_zeros = 0;
-  for (int i = 0; i < sample_size; ++i) {
-    if (samples[i] == TypeParam(0)) {
-      ++num_zeros;
-    } else if (samples[i] > TypeParam(0)) {
-      ++num_pos;
-    } else if (samples[i] < TypeParam(0)) {
-      ++num_neg;
-    }
-  }
-  // Check that we have as many zeros as Bernoulli, and roughly half positives
-  // and half negatives (with bound computed from a Bernoulli with p = 0.5).
-  EXPECT_EQ(bernoulli_num_zeros, num_zeros);
-  p = 0.5;
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  int sub_sample_size = sample_size - bernoulli_num_zeros;
-  bound = this->mean_bound(true_std, sub_sample_size);
-  expected_num_each_sign = sub_sample_size * p;
-  LOG(INFO) << "Uniform*Bernoulli: Expected " << expected_num_each_sign
-            << " positives; got " << num_pos;
-  LOG(INFO) << "Uniform*Bernoulli: Expected " << expected_num_each_sign
-            << " negatives; got " << num_neg;
-  EXPECT_NEAR(expected_num_each_sign, num_pos, sample_size * bound);
-  EXPECT_NEAR(expected_num_each_sign, num_neg, sample_size * bound);
+
+  // Check that Uniform still has roughly half positives and half negatives
+  // (with bound computed from a Bernoulli with p = 0.5).
+  const int num_non_zero = num_pos + num_neg;
+  const TypeParam sample_p = num_pos / static_cast<TypeParam>(num_non_zero);
+  const TypeParam p = 0.5;
+  const TypeParam true_mean = p;
+  const TypeParam true_std = sqrt(p * (1 - p));
+  const TypeParam bound = this->mean_bound(true_std, num_non_zero);
+  EXPECT_NEAR(true_mean, sample_p, bound);
 }
 
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
-  size_t sample_size = 10000;
-  SyncedMemory bernoulli1_data(sample_size * sizeof(int));
-  SyncedMemory bernoulli2_data(sample_size * sizeof(int));
-  Caffe::set_random_seed(1701);
-  // Sample from Bernoulli with p = 0.5
-  TypeParam p1 = 0.5;
-  caffe_vRngBernoulli(sample_size, static_cast<int*>(
-      bernoulli1_data.mutable_cpu_data()), p1);
-  TypeParam empirical_mean = this->sample_mean(
-      static_cast<const int*>(bernoulli1_data.cpu_data()),
-      sample_size);
-  int bernoulli1_num_zeros = 0;
+  // Sample from Bernoulli with p = 0.5.
+  const TypeParam p_a = 0.5;
+  int* bernoulli_data_a =
+      static_cast<int*>(this->int_data_->mutable_cpu_data());
+  this->RngBernoulliTest(p_a, bernoulli_data_a);
+
+  // Sample from Bernoulli with p = 0.3.
+  const TypeParam p_b = 0.3;
+  int* bernoulli_data_b =
+      static_cast<int*>(this->int_data_2_->mutable_cpu_data());
+  this->RngBernoulliTest(p_b, bernoulli_data_b);
+
+  // Multiply Bernoullis.
+  for (int i = 0; i < this->sample_size_; ++i) {
+    bernoulli_data_a[i] *= bernoulli_data_b[i];
+  }
   int num_ones = 0;
-  int num_other = 0;
-  int* bernoulli_samples =
-      static_cast<int*>(bernoulli1_data.mutable_cpu_data());
-  for (int i = 0; i < sample_size; ++i) {
-    if (bernoulli_samples[i] == 0) {
-      ++bernoulli1_num_zeros;
-    } else if (bernoulli_samples[i] == 1) {
+  for (int i = 0; i < this->sample_size_; ++i) {
+    if (bernoulli_data_a[i] != TypeParam(0)) {
+      EXPECT_EQ(TypeParam(1), bernoulli_data_a[i]);
       ++num_ones;
-    } else {
-      ++num_other;
     }
   }
-  TypeParam true_mean = p1;
-  TypeParam true_std = sqrt(p1 * (1 - p1));
-  TypeParam bound = this->mean_bound(true_std, sample_size);
-  TypeParam expected_num_zeros = sample_size * (1 - true_mean);
-  TypeParam expected_num_ones = sample_size * true_mean;
-  LOG(INFO) << "Bernoulli1: Expected mean = " << true_mean
-            << "; sample mean = " << empirical_mean;
-  LOG(INFO) << "Bernoulli1: zeros: "  << bernoulli1_num_zeros
-            << "; ones: " << num_ones << "; other: " << num_other;
-  empirical_mean = this->sample_mean(
-      static_cast<const int*>(bernoulli1_data.cpu_data()), sample_size);
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
-  EXPECT_EQ(num_other, 0);
-  // Sample from Bernoulli with p = 0.3
-  TypeParam p = 0.3;
-  caffe_vRngBernoulli(sample_size, static_cast<int*>(
-      bernoulli2_data.mutable_cpu_data()), p);
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  bound = this->mean_bound(true_std, sample_size);
-  empirical_mean = this->sample_mean(
-      static_cast<const int*>(bernoulli2_data.cpu_data()), sample_size);
-  LOG(INFO) << "Bernoulli2: Expected mean = " << true_mean
-            << "; sample mean = " << empirical_mean;
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
-  int bernoulli2_num_zeros = 0;
-  num_ones = 0;
-  num_other = 0;
-  const int* bernoulli2_samples =
-      static_cast<const int*>(bernoulli2_data.cpu_data());
-  for (int i = 0; i < sample_size; ++i) {
-    if (bernoulli2_samples[i] == 0) {
-      ++bernoulli2_num_zeros;
-    } else if (bernoulli2_samples[i] == 1) {
-      ++num_ones;
-    } else {
-      ++num_other;
-    }
-  }
-  LOG(INFO) << "Bernoulli2: zeros: "  << bernoulli2_num_zeros
-            << "; ones: " << num_ones << "; other: " << num_other;
-  EXPECT_EQ(0, num_other);
-  TypeParam epsilon = 1e-4;
-  EXPECT_NEAR(sample_size * empirical_mean, num_ones, epsilon);
-  EXPECT_NEAR(sample_size * (1.0 - empirical_mean), bernoulli2_num_zeros,
-              epsilon);
-  // Multiply Bernoulli1 by Bernoulli2
-  for (int i = 0; i < sample_size; ++i) {
-    bernoulli_samples[i] *= bernoulli2_samples[i];
-  }
-  bernoulli1_num_zeros = 0;
-  num_ones = 0;
-  num_other = 0;
-  for (int i = 0; i < sample_size; ++i) {
-    if (bernoulli_samples[i] == 0) {
-      ++bernoulli1_num_zeros;
-    } else if (bernoulli_samples[i] == 1) {
-      ++num_ones;
-    } else {
-      ++num_other;
-    }
-  }
-  // Check that we have as many zeros as Bernoulli, and roughly half positives
-  // and half negatives (with bound computed from a Bernoulli with p = 0.5).
-  p *= p1;
-  true_mean = p;
-  true_std = sqrt(p * (1 - p));
-  empirical_mean = this->sample_mean(
-      static_cast<const int *>(bernoulli1_data.cpu_data()), sample_size);
-  bound = this->mean_bound(true_std, sample_size);
-  LOG(INFO) << "Bernoulli1*Bernoulli2: Expected mean = " << true_mean
-            << "; sample mean = " << empirical_mean;
-  EXPECT_NEAR(empirical_mean, true_mean, bound);
+
+  // Check that resulting product has roughly p_a * p_b ones.
+  const TypeParam sample_p = this->sample_mean(bernoulli_data_a);
+  const TypeParam true_mean = p_a * p_b;
+  const TypeParam true_std = sqrt(true_mean * (1 - true_mean));
+  const TypeParam bound = this->mean_bound(true_std);
+  EXPECT_NEAR(true_mean, sample_p, bound);
 }
 
 
