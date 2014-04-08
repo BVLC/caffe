@@ -60,7 +60,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
   void RngGaussianTest(const Dtype mu, const Dtype sigma, void* cpu_data) {
     Dtype* rng_data = static_cast<Dtype*>(cpu_data);
-    caffe_rng_gaussian(sample_size_, rng_data, mu, sigma);
+    caffe_rng_gaussian(sample_size_, mu, sigma, rng_data);
     const Dtype true_mean = mu;
     const Dtype true_std = sigma;
     // Check that sample mean roughly matches true mean.
@@ -90,7 +90,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   void RngUniformTest(const Dtype lower, const Dtype upper, void* cpu_data) {
     CHECK_GE(upper, lower);
     Dtype* rng_data = static_cast<Dtype*>(cpu_data);
-    caffe_rng_uniform(sample_size_, rng_data, lower, upper);
+    caffe_rng_uniform(sample_size_, lower, upper, rng_data);
     const Dtype true_mean = (lower + upper) / 2;
     const Dtype true_std = (upper - lower) / sqrt(12);
     // Check that sample mean roughly matches true mean.
@@ -128,7 +128,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
   void RngBernoulliTest(const Dtype p, void* cpu_data) {
     int* rng_data = static_cast<int*>(cpu_data);
-    caffe_rng_bernoulli(sample_size_, rng_data, p);
+    caffe_rng_bernoulli(sample_size_, p, rng_data);
     const Dtype true_mean = p;
     const Dtype true_std = sqrt(p * (1 - p));
     const Dtype bound = this->mean_bound(true_std);
