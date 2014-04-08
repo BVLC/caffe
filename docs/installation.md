@@ -118,7 +118,7 @@ For each package that you install through homebrew do the following:
 
 The prerequisite homebrew formulae are
 
-    cmake boost snappy leveldb protobuf gflags glog homebrew/science/opencv
+    boost snappy leveldb protobuf gflags glog szip homebrew/science/hdf5 homebrew/science/opencv
 
 so follow steps 1-4 for each.
 
