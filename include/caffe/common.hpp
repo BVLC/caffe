@@ -96,6 +96,9 @@ class Caffe {
 
   // Getters for boost rng, curand, and cublas handles
   inline static const RNG& rng_stream() {
+    if (!Get().random_generator_) {
+      Get().random_generator_.reset(new RNG());
+    }
     return *(Get().random_generator_);
   }
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
