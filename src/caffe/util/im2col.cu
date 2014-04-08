@@ -29,7 +29,7 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
       for (int j = 0; j < ksize; ++j) {
         int h = h_in + i;
         int w = w_in + j;
-        *data_col = (h >= 0 && w >= 0 && h < width && w < height) ?
+        *data_col = (h >= 0 && w >= 0 && h < height && w < width) ?
             data_im[i * width + j] : 0;
         data_col += height_col * width_col;
       }
