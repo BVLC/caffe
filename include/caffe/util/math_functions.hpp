@@ -109,14 +109,14 @@ template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b);
 
 template <typename Dtype>
-void caffe_vRngUniform(const int n, Dtype* r, const Dtype a, const Dtype b);
+void caffe_rng_uniform(const int n, Dtype* r, const Dtype a, const Dtype b);
 
 template <typename Dtype>
-void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
+void caffe_rng_gaussian(const int n, Dtype* r, const Dtype a,
     const Dtype sigma);
 
 template <typename Dtype>
-void caffe_vRngBernoulli(const int n, int* r, const Dtype p);
+void caffe_rng_bernoulli(const int n, int* r, const Dtype p);
 
 template <typename Dtype>
 void caffe_exp(const int n, const Dtype* a, Dtype* y);

@@ -315,7 +315,7 @@ template
 double caffe_nextafter(const double b);
 
 template <typename Dtype>
-void caffe_vRngUniform(const int n, Dtype* r,
+void caffe_rng_uniform(const int n, Dtype* r,
     const Dtype a, const Dtype b) {
   CHECK_GE(n, 0);
   CHECK(r);
@@ -330,14 +330,14 @@ void caffe_vRngUniform(const int n, Dtype* r,
 }
 
 template
-void caffe_vRngUniform<float>(const int n, float* r,
+void caffe_rng_uniform<float>(const int n, float* r,
                                        const float a, const float b);
 template
-void caffe_vRngUniform<double>(const int n, double* r,
+void caffe_rng_uniform<double>(const int n, double* r,
                                        const double a, const double b);
 
 template <typename Dtype>
-void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
+void caffe_rng_gaussian(const int n, Dtype* r, const Dtype a,
     const Dtype sigma) {
   CHECK_GE(n, 0);
   CHECK(r);
@@ -352,15 +352,15 @@ void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
 }
 
 template
-void caffe_vRngGaussian<float>(const int n, float* r, const float a,
+void caffe_rng_gaussian<float>(const int n, float* r, const float a,
     const float sigma);
 
 template
-void caffe_vRngGaussian<double>(const int n, double* r, const double a,
+void caffe_rng_gaussian<double>(const int n, double* r, const double a,
     const double sigma);
 
 template <typename Dtype>
-void caffe_vRngBernoulli(const int n, int* r, const Dtype p) {
+void caffe_rng_bernoulli(const int n, int* r, const Dtype p) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GE(p, 0);
@@ -375,10 +375,10 @@ void caffe_vRngBernoulli(const int n, int* r, const Dtype p) {
 }
 
 template
-void caffe_vRngBernoulli<double>(const int n, int* r, const double p);
+void caffe_rng_bernoulli<double>(const int n, int* r, const double p);
 
 template
-void caffe_vRngBernoulli<float>(const int n, int* r, const float p);
+void caffe_rng_bernoulli<float>(const int n, int* r, const float p);
 
 template <>
 float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {
