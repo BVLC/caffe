@@ -338,19 +338,19 @@ supercleanfiles:
 supercleanlist: supercleanfiles
 	@ \
 	if [ -z "$(SUPERCLEAN_FILES)" ]; then \
-	  echo "No generated files found."; \
+		echo "No generated files found."; \
 	else \
-	  echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
+		echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
 	fi
 
 superclean: clean supercleanfiles
 	@ \
 	if [ -z "$(SUPERCLEAN_FILES)" ]; then \
-	  echo "No generated files found."; \
+		echo "No generated files found."; \
 	else \
-	  echo "Deleting the following generated files:"; \
-	  echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
-	  $(RM) $(SUPERCLEAN_FILES); \
+		echo "Deleting the following generated files:"; \
+		echo $(SUPERCLEAN_FILES) | tr ' ' '\n'; \
+		$(RM) $(SUPERCLEAN_FILES); \
 	fi
 
 $(DIST_ALIASES): $(DISTRIBUTE_DIR)
