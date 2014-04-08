@@ -70,28 +70,28 @@ make runtest</code></pre>
 <h2 id="prerequisites">Prerequisites</h2>
 
 <ul>
-<li>CUDA (5.0 or 5.5)</li>
+<li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> 5.0 or 5.5</li>
 
-<li>Boost</li>
+<li><a href="http://www.boost.org/">boost</a> (1.55 preferred)</li>
 
-<li>MKL (but see the <a href="https://github.com/BVLC/caffe/tree/boost-eigen">boost-eigen branch</a> for a boost/Eigen3 port)</li>
+<li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> by <a href="http://software.intel.com/en-us/intel-mkl">MKL</a> (though the <code>dev</code> branch supports ATLAS as an alternative)</li>
 
-<li>OpenCV</li>
+<li><a href="http://opencv.org/">OpenCV</a></li>
 
 <li>glog, gflags, protobuf, leveldb, snappy, hdf5</li>
 
-<li>For the Python wrapper: python, numpy (&gt;= 1.7 preferred), and boost_python</li>
+<li>For the python wrapper: python, numpy (&gt;= 1.7 preferred), and boost_python</li>
 
-<li>For the Matlab wrapper: Matlab with mex</li>
+<li>For the MATLAB wrapper: MATLAB with mex</li>
 </ul>
 
-<p>Caffe requires the CUDA NVCC compiler to compile its GPU code. To install CUDA, go to the <a href="https://developer.nvidia.com/cuda-downloads">NVidia CUDA website</a> and follow installation instructions there. Caffe is verified to compile with both CUDA 5.0 and 5.5.</p>
+<p><strong>CUDA</strong>: Caffe requires the CUDA NVCC compiler to compile its GPU code. To install CUDA, go to the <a href="https://developer.nvidia.com/cuda-downloads">NVIDIA CUDA website</a> and follow installation instructions there. Caffe compiles with both CUDA 5.0 and 5.5.</p>
 
 <p>N.B. one can install the CUDA libraries without the CUDA driver in order to build and run Caffe in CPU-only mode.</p>
 
-<p>Caffe also needs Intel MKL as the backend of its matrix computation and vectorized computations. We are in the process of removing MKL dependency, but for now you will need to have an MKL installation. You can obtain a <a href="http://software.intel.com/en-us/intel-mkl">trial license</a> or an <a href="http://software.intel.com/en-us/intel-education-offerings">academic license</a> (if you are a student).</p>
+<p><strong>MKL</strong>: Caffe needs Intel MKL as the backend of its matrix and vector computations. We are working on support for alternative BLAS libraries, but for now you need to have MKL. You can obtain a <a href="http://software.intel.com/en-us/intel-mkl">trial license</a> or an <a href="http://software.intel.com/en-us/intel-education-offerings">academic license</a> (if you are a student).</p>
 
-<p>You will also need other packages, most of which can be installed via apt-get using:</p>
+<p><strong>The Rest</strong>: you will also need other packages, most of which can be installed via apt-get using:</p>
 
 <pre><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev</code></pre>
 
@@ -102,26 +102,27 @@ tar zxvf glog-0.3.3.tar.gz
 ./configure
 make &amp;&amp; make install</code></pre>
 
-<p>If you would like to compile the Python wrapper, you will need to install python, numpy and boost_python. You can either compile them from scratch or use a pre-packaged solution like <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> or <a href="https://www.enthought.com/products/canopy/">Enthought Canopy</a>. Note that if you use the Ubuntu default python, you will need to apt-install the <code>python-dev</code> package to have the python headers. You can install any remaining dependencies with</p>
+<p><strong>Python</strong>: If you would like to have the python wrapper, install python, numpy and boost_python. You can either compile them from scratch or use a pre-packaged solution like <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> or <a href="https://www.enthought.com/products/canopy/">Enthought Canopy</a>. Note that if you use the Ubuntu default python, you will need to apt-install the <code>python-dev</code> package to have the python headers. You can install any remaining dependencies with</p>
 
 <pre><code>pip install -r /path/to/caffe/python/requirements.txt</code></pre>
 
-<p>If you would like to compile the Matlab wrapper, you will need to install Matlab.</p>
+<p><strong>MATLAB</strong>: if you would like to have the MATLAB wrapper, install MATLAB with the mex compiler.</p>
 
-<p>After setting all the prerequisites, you should modify the <code>Makefile.config</code> file and change the paths to those on your computer.</p>
+<p>Now that you have the prerequisites, edit your <code>Makefile.config</code> to change the paths for your setup.</p>
 
 <h2 id="compilation">Compilation</h2>
 
-<p>After installing the prerequisites, simply do <code>make all</code> to compile Caffe. If you would like to compile the Python and Matlab wrappers, do</p>
+<p>With the prerequisites installed, do <code>make all</code> to compile Caffe.</p>
 
-<pre><code>make pycaffe
-make matcaffe</code></pre>
+<p>To compile the python and MATLAB wrappers do <code>make pycaffe</code> and <code>make matcaffe</code> respectively.</p>
 
-<p>Optionally, you can run <code>make distribute</code> to create a <code>distribute</code> directory that contains all the necessary files, including the headers, compiled shared libraries, and binary files that you can distribute over different machines.</p>
+<p><em>Distribution</em>: run <code>make distribute</code> to create a <code>distribute</code> directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.</p>
 
-<p>To use Caffe with python, you will need to add <code>/path/to/caffe/python</code> or <code>/path/to/caffe/build/python</code> to your <code>PYTHONPATH</code>.</p>
+<p><em>Speed</em>: for a faster build, compile in parallel by doing <code>make all -j8</code> where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).</p>
 
-<p>Now that you have compiled Caffe, check out the <a href="mnist.html">MNIST demo</a> and the pretrained <a href="imagenet.html">ImageNet example</a>.</p>
+<p><em>Python Module</em>: for python support, you must add the compiled module to your <code>PYTHONPATH</code> (as <code>/path/to/caffe/python</code> or the like).</p>
+
+<p>Now that you have installed Caffe, check out the <a href="mnist.html">MNIST demo</a> and the pretrained <a href="imagenet.html">ImageNet example</a>.</p>
 
 <h2 id="os_x_installation">OS X Installation</h2>
 
@@ -138,7 +139,7 @@ brew tap homebrew/science
 brew install homebrew/science/hdf5
 brew install homebrew/science/opencv</code></pre>
 
-<p>Building boost from source is needed to link against your local python. If using homebrew python, python packages like <code>numpy</code> and <code>scipy</code> are best installed by doing <code>brew tap homebrew/python</code>, and then installing them with homebrew.</p>
+<p>Building boost from source is needed to link against your local python (exceptions might be raised during some OS X installs, but ignore these and continue). If using homebrew python, python packages like <code>numpy</code> and <code>scipy</code> are best installed by doing <code>brew tap homebrew/python</code>, and then installing them with homebrew.</p>
 
 <h4 id="109_additional_notes">10.9 additional notes</h4>
 
@@ -178,7 +179,7 @@ brew install homebrew/science/opencv</code></pre>
 
 <h3 id="cuda_and_mkl">CUDA and MKL</h3>
 
-<p>CUDA and MKL are very straightforward to install; download from the NVIDIA and Intel websites.</p>
+<p>CUDA and MKL are straightforward to install; download from the NVIDIA and Intel links under “Prerequisites.”</p>
 
 <h3 id="compiling_caffe">Compiling Caffe</h3>
 
