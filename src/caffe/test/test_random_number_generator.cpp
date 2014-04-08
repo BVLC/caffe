@@ -326,6 +326,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   SyncedMemory bernoulli1_data(sample_size * sizeof(int));
   SyncedMemory bernoulli2_data(sample_size * sizeof(int));
   Caffe::set_random_seed(1701);
+  // Sample from Bernoulli with p = 0.5
   TypeParam p1 = 0.5;
   caffe_vRngBernoulli(sample_size, static_cast<int*>(
       bernoulli1_data.mutable_cpu_data()), p1);
@@ -414,7 +415,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   true_mean = p;
   true_std = sqrt(p * (1 - p));
   empirical_mean = this->sample_mean(
-      static_cast<const int *>(bernoulli2_data.cpu_data()), sample_size);
+      static_cast<const int *>(bernoulli1_data.cpu_data()), sample_size);
   bound = this->mean_bound(true_std, sample_size);
   LOG(INFO) << "Bernoulli1*Bernoulli2: Expected mean = " << true_mean
             << "; sample mean = " << empirical_mean;
