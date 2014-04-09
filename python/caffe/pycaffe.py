@@ -14,30 +14,35 @@ from ._caffe import Net, SGDSolver
 
 @property
 def _Net_blobs(self):
-    """
-    An OrderedDict (bottom to top, i.e., input to output) of network
-    blobs indexed by name
-    """
-    return OrderedDict([(bl.name, bl) for bl in self._blobs])
+  """
+  An OrderedDict (bottom to top, i.e., input to output) of network
+  blobs indexed by name
+  """
+  return OrderedDict([(bl.name, bl) for bl in self._blobs])
 
 Net.blobs = _Net_blobs
 
+
 @property
 def _Net_params(self):
-    """
-    An OrderedDict (bottom to top, i.e., input to output) of network
-    parameters indexed by name; each is a list of multiple blobs (e.g.,
-    weights and biases)
-    """
-    return OrderedDict([(lr.name, lr.blobs) for lr in self.layers
-                                            if len(lr.blobs) > 0])
+  """
+  An OrderedDict (bottom to top, i.e., input to output) of network
+  parameters indexed by name; each is a list of multiple blobs (e.g.,
+  weights and biases)
+  """
+  return OrderedDict([(lr.name, lr.blobs) for lr in self.layers
+                                          if len(lr.blobs) > 0])
 
 Net.params = _Net_params
 
 def _Net_set_input_arrays(self, data, labels):
-    if labels.ndim == 1:
-        labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
-                                             np.newaxis])
-    return self._set_input_arrays(data, labels)
+  """
+  Set input arrays of the in-memory MemoryDataLayer.
+  (Note: this is only for networks declared with the memory data layer.)
+  """
+  if labels.ndim == 1:
+    labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
+                                         np.newaxis])
+  return self._set_input_arrays(data, labels)
 
 Net.set_input_arrays = _Net_set_input_arrays
