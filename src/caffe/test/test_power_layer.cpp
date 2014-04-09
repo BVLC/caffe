@@ -14,6 +14,8 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
+using std::isnan;
+
 namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
@@ -95,7 +97,7 @@ TYPED_TEST(PowerLayerTest, TestPowerCPU) {
   TypeParam power = 0.37;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerGradientCPU) {
@@ -103,7 +105,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGradientCPU) {
   TypeParam power = 0.37;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerGradientShiftZeroCPU) {
@@ -111,7 +113,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGradientShiftZeroCPU) {
   TypeParam power = 0.37;
   TypeParam scale = 0.83;
   TypeParam shift = 0.0;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerZeroCPU) {
@@ -119,7 +121,7 @@ TYPED_TEST(PowerLayerTest, TestPowerZeroCPU) {
   TypeParam power = 0.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerZeroGradientCPU) {
@@ -127,7 +129,7 @@ TYPED_TEST(PowerLayerTest, TestPowerZeroGradientCPU) {
   TypeParam power = 0.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerOneCPU) {
@@ -135,7 +137,7 @@ TYPED_TEST(PowerLayerTest, TestPowerOneCPU) {
   TypeParam power = 1.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerOneGradientCPU) {
@@ -143,7 +145,7 @@ TYPED_TEST(PowerLayerTest, TestPowerOneGradientCPU) {
   TypeParam power = 1.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerTwoCPU) {
@@ -151,7 +153,7 @@ TYPED_TEST(PowerLayerTest, TestPowerTwoCPU) {
   TypeParam power = 2.0;
   TypeParam scale = 0.34;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerTwoGradientCPU) {
@@ -159,7 +161,7 @@ TYPED_TEST(PowerLayerTest, TestPowerTwoGradientCPU) {
   TypeParam power = 2.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerTwoScaleHalfGradientCPU) {
@@ -167,7 +169,7 @@ TYPED_TEST(PowerLayerTest, TestPowerTwoScaleHalfGradientCPU) {
   TypeParam power = 2.0;
   TypeParam scale = 0.5;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerGPU) {
@@ -175,7 +177,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGPU) {
   TypeParam power = 0.37;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerGradientGPU) {
@@ -183,7 +185,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGradientGPU) {
   TypeParam power = 0.37;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerGradientShiftZeroGPU) {
@@ -191,7 +193,7 @@ TYPED_TEST(PowerLayerTest, TestPowerGradientShiftZeroGPU) {
   TypeParam power = 0.37;
   TypeParam scale = 0.83;
   TypeParam shift = 0.0;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerZeroGPU) {
@@ -199,7 +201,7 @@ TYPED_TEST(PowerLayerTest, TestPowerZeroGPU) {
   TypeParam power = 0.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerZeroGradientGPU) {
@@ -207,7 +209,7 @@ TYPED_TEST(PowerLayerTest, TestPowerZeroGradientGPU) {
   TypeParam power = 0.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerOneGPU) {
@@ -215,7 +217,7 @@ TYPED_TEST(PowerLayerTest, TestPowerOneGPU) {
   TypeParam power = 1.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerOneGradientGPU) {
@@ -223,7 +225,7 @@ TYPED_TEST(PowerLayerTest, TestPowerOneGradientGPU) {
   TypeParam power = 1.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerTwoGPU) {
@@ -231,7 +233,7 @@ TYPED_TEST(PowerLayerTest, TestPowerTwoGPU) {
   TypeParam power = 2.0;
   TypeParam scale = 0.34;
   TypeParam shift = -2.4;
-  TestForward(power, scale, shift);
+  this->TestForward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerTwoGradientGPU) {
@@ -239,7 +241,7 @@ TYPED_TEST(PowerLayerTest, TestPowerTwoGradientGPU) {
   TypeParam power = 2.0;
   TypeParam scale = 0.83;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 TYPED_TEST(PowerLayerTest, TestPowerTwoScaleHalfGradientGPU) {
@@ -247,7 +249,7 @@ TYPED_TEST(PowerLayerTest, TestPowerTwoScaleHalfGradientGPU) {
   TypeParam power = 2.0;
   TypeParam scale = 0.5;
   TypeParam shift = -2.4;
-  TestBackward(power, scale, shift);
+  this->TestBackward(power, scale, shift);
 }
 
 }  // namespace caffe
