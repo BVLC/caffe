@@ -104,7 +104,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
         static_cast<Dtype>(num_above_mean) / sample_size_;
     const Dtype bernoulli_p = (1 - sparse_p) * 0.5;
     const Dtype bernoulli_std = sqrt(bernoulli_p * (1 - bernoulli_p));
-    const Dtype bernoulli_bound = this->mean_bound(true_std);
+    const Dtype bernoulli_bound = this->mean_bound(bernoulli_std);
     EXPECT_NEAR(bernoulli_p, sample_p_above_mean, bernoulli_bound);
   }
 
@@ -170,7 +170,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
         static_cast<Dtype>(num_above_mean) / sample_size_;
     const Dtype bernoulli_p = (1 - sparse_p) * 0.5;
     const Dtype bernoulli_std = sqrt(bernoulli_p * (1 - bernoulli_p));
-    const Dtype bernoulli_bound = this->mean_bound(true_std);
+    const Dtype bernoulli_bound = this->mean_bound(bernoulli_std);
     EXPECT_NEAR(bernoulli_p, sample_p_above_mean, bernoulli_bound);
   }
 
