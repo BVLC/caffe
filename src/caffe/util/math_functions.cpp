@@ -315,72 +315,70 @@ template
 double caffe_nextafter(const double b);
 
 template <typename Dtype>
-void caffe_vRngUniform(const int n, Dtype* r,
-    const Dtype a, const Dtype b) {
+void caffe_rng_uniform(const int n, const Dtype a, const Dtype b, Dtype* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_LE(a, b);
-
-  boost::uniform_real<Dtype> random_distribution(
-      a, caffe_nextafter<Dtype>(b));
-  boost::variate_generator<caffe::rng_t,
-      boost::uniform_real<Dtype> > variate_generator(
-      caffe_rng(), random_distribution);
-
+  boost::uniform_real<Dtype> random_distribution(a, caffe_nextafter<Dtype>(b));
+  boost::variate_generator<caffe::rng_t, boost::uniform_real<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+  caffe_set_rng(variate_generator.engine());
 }
 
 template
-void caffe_vRngUniform<float>(const int n, float* r,
-                                       const float a, const float b);
+void caffe_rng_uniform<float>(const int n, const float a, const float b,
+                              float* r);
+
 template
-void caffe_vRngUniform<double>(const int n, double* r,
-                                       const double a, const double b);
+void caffe_rng_uniform<double>(const int n, const double a, const double b,
+                               double* r);
 
 template <typename Dtype>
-void caffe_vRngGaussian(const int n, Dtype* r, const Dtype a,
-    const Dtype sigma) {
+void caffe_rng_gaussian(const int n, const Dtype a,
+                        const Dtype sigma, Dtype* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GT(sigma, 0);
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
-  boost::variate_generator<caffe::rng_t,
-      boost::normal_distribution<Dtype> > variate_generator(
-      caffe_rng(), random_distribution);
-
+  boost::variate_generator<caffe::rng_t, boost::normal_distribution<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+  caffe_set_rng(variate_generator.engine());
 }
 
 template
-void caffe_vRngGaussian<float>(const int n, float* r, const float a,
-    const float sigma);
+void caffe_rng_gaussian<float>(const int n, const float mu,
+                               const float sigma, float* r);
 
 template
-void caffe_vRngGaussian<double>(const int n, double* r, const double a,
-    const double sigma);
+void caffe_rng_gaussian<double>(const int n, const double mu,
+                                const double sigma, double* r);
 
 template <typename Dtype>
-void caffe_vRngBernoulli(const int n, Dtype* r, const double p) {
+void caffe_rng_bernoulli(const int n, const Dtype p, int* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
-  boost::bernoulli_distribution<double> random_distribution(p);
-  boost::variate_generator<caffe::rng_t,
-      boost::bernoulli_distribution<double> > variate_generator(
-      caffe_rng(), random_distribution);
-
+  boost::bernoulli_distribution<Dtype> random_distribution(p);
+  boost::variate_generator<caffe::rng_t, boost::bernoulli_distribution<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
+  caffe_set_rng(variate_generator.engine());
 }
 
 template
-void caffe_vRngBernoulli<int>(const int n, int* r, const double p);
+void caffe_rng_bernoulli<double>(const int n, const double p, int* r);
+
+template
+void caffe_rng_bernoulli<float>(const int n, const float p, int* r);
 
 template <>
 float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {

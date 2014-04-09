@@ -70,8 +70,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
   shared_ptr<SyncedMemory> rand_vec_;
-  float threshold_;
-  float scale_;
+  Dtype threshold_;
+  Dtype scale_;
   unsigned int uint_thres_;
 };
 
@@ -607,7 +607,7 @@ class PoolingLayer : public Layer<Dtype> {
   int width_;
   int pooled_height_;
   int pooled_width_;
-  Blob<float> rand_idx_;
+  Blob<Dtype> rand_idx_;
 };
 
 template <typename Dtype>
