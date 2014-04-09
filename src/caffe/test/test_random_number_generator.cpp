@@ -241,57 +241,56 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulli2) {
 }
 
 
-TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianPlusGaussian) {
+TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesGaussian) {
+  const TypeParam mu = 0;
   const TypeParam sigma = 1;
 
-  // Sample from -3 mean Gaussian.
-  const TypeParam mu_1 = -3;
+  // Sample from 0 mean Gaussian.
   TypeParam* gaussian_data_1 =
       static_cast<TypeParam*>(this->data_->mutable_cpu_data());
-  this->RngGaussianFill(mu_1, sigma, gaussian_data_1);
+  this->RngGaussianFill(mu, sigma, gaussian_data_1);
 
-  // Sample from -2 mean Gaussian.
-  const TypeParam mu_2 = -2;
+  // Sample from 0 mean Gaussian again.
   TypeParam* gaussian_data_2 =
       static_cast<TypeParam*>(this->data_2_->mutable_cpu_data());
-  this->RngGaussianFill(mu_2, sigma, gaussian_data_2);
+  this->RngGaussianFill(mu, sigma, gaussian_data_2);
 
-  // Add Gaussians.
+  // Multiply Gaussians.
   for (int i = 0; i < this->sample_size_; ++i) {
-    gaussian_data_1[i] += gaussian_data_2[i];
+    gaussian_data_1[i] *= gaussian_data_2[i];
   }
 
-  // Check that result is Gaussian with mean mu_1 + mu_2.
-  this->RngGaussianChecks(mu_1 + mu_2, sqrt(2 * pow(sigma, 2)),
-                          gaussian_data_1);
+  // Check that result has mean 0.
+  TypeParam mu_product = pow(mu, 2);
+  TypeParam sigma_product = sqrt(pow(sigma, 2) / 2);
+  this->RngGaussianChecks(mu_product, sigma_product, gaussian_data_1);
 }
 
 
-TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformPlusUniform) {
-  const TypeParam sigma = 1;
-
-  // Sample from Uniform on [-4, -2].
-  const TypeParam lower_1 = -4;
-  const TypeParam upper_1 = -2;
+TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesUniform) {
+  // Sample from Uniform on [-2, 2].
+  const TypeParam lower_1 = -2;
+  const TypeParam upper_1 = -lower_1;
   TypeParam* uniform_data_1 =
       static_cast<TypeParam*>(this->data_->mutable_cpu_data());
   this->RngUniformFill(lower_1, upper_1, uniform_data_1);
 
-  // Sample from Uniform on [-3, -1].
+  // Sample from Uniform on [-3, 3].
   const TypeParam lower_2 = -3;
-  const TypeParam upper_2 = -1;
+  const TypeParam upper_2 = -lower_2;
   TypeParam* uniform_data_2 =
       static_cast<TypeParam*>(this->data_2_->mutable_cpu_data());
   this->RngUniformFill(lower_2, upper_2, uniform_data_2);
 
-  // Add Uniforms.
+  // Multiply Uniforms.
   for (int i = 0; i < this->sample_size_; ++i) {
-    uniform_data_1[i] += uniform_data_2[i];
+    uniform_data_1[i] *= uniform_data_2[i];
   }
 
-  // Check that result does not violate properties of Uniform on [-7, -3].
-  this->RngUniformChecks(lower_1 + lower_2, upper_1 + upper_2,
-                         uniform_data_1);
+  // Check that result does not violate properties of Uniform on [-6, 6].
+  const TypeParam lower_prod = lower_1 * upper_2;
+  const TypeParam upper_prod = -lower_prod;
+  this->RngUniformChecks(lower_prod, upper_prod, uniform_data_1);
 }
 
 
@@ -476,65 +475,64 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformIntGPU) {
 }
 
 
-TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianPlusGaussianGPU) {
+TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesGaussianGPU) {
+  const TypeParam mu = 0;
   const TypeParam sigma = 1;
 
-  // Sample from -3 mean Gaussian.
-  const TypeParam mu_1 = -3;
+  // Sample from 0 mean Gaussian.
   TypeParam* gaussian_gpu_data_1 =
       static_cast<TypeParam*>(this->data_->mutable_gpu_data());
-  this->RngGaussianFillGPU(mu_1, sigma, gaussian_gpu_data_1);
+  this->RngGaussianFillGPU(mu, sigma, gaussian_gpu_data_1);
 
-  // Sample from -2 mean Gaussian.
-  const TypeParam mu_2 = -2;
+  // Sample from 0 mean Gaussian again.
   TypeParam* gaussian_gpu_data_2 =
       static_cast<TypeParam*>(this->data_2_->mutable_gpu_data());
-  this->RngGaussianFillGPU(mu_2, sigma, gaussian_gpu_data_2);
+  this->RngGaussianFillGPU(mu, sigma, gaussian_gpu_data_2);
 
-  // Add Gaussians.
+  // Multiply Gaussians.
   TypeParam* gaussian_data_1 =
       static_cast<TypeParam*>(this->data_->mutable_cpu_data());
   const TypeParam* gaussian_data_2 =
       static_cast<const TypeParam*>(this->data_2_->cpu_data());
   for (int i = 0; i < this->sample_size_; ++i) {
-    gaussian_data_1[i] += gaussian_data_2[i];
+    gaussian_data_1[i] *= gaussian_data_2[i];
   }
 
-  // Check that result is Gaussian with mean mu_1 + mu_2.
-  this->RngGaussianChecks(mu_1 + mu_2, sqrt(2 * pow(sigma, 2)),
-                          gaussian_data_1);
+  // Check that result has mean 0.
+  TypeParam mu_product = pow(mu, 2);
+  TypeParam sigma_product = sqrt(pow(sigma, 2) / 2);
+  this->RngGaussianChecks(mu_product, sigma_product, gaussian_data_1);
 }
 
 
-TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformPlusUniformGPU) {
-  const TypeParam sigma = 1;
-
-  // Sample from Uniform on [-4, -2].
-  const TypeParam lower_1 = -4;
-  const TypeParam upper_1 = -2;
+TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesUniformGPU) {
+  // Sample from Uniform on [-2, 2].
+  const TypeParam lower_1 = -2;
+  const TypeParam upper_1 = -lower_1;
   TypeParam* uniform_gpu_data_1 =
       static_cast<TypeParam*>(this->data_->mutable_gpu_data());
   this->RngUniformFillGPU(lower_1, upper_1, uniform_gpu_data_1);
 
-  // Sample from Uniform on [-3, -1].
+  // Sample from Uniform on [-3, 3].
   const TypeParam lower_2 = -3;
-  const TypeParam upper_2 = -1;
+  const TypeParam upper_2 = -lower_2;
   TypeParam* uniform_gpu_data_2 =
       static_cast<TypeParam*>(this->data_2_->mutable_gpu_data());
   this->RngUniformFillGPU(lower_2, upper_2, uniform_gpu_data_2);
 
-  // Add Uniforms.
+  // Multiply Uniforms.
   TypeParam* uniform_data_1 =
       static_cast<TypeParam*>(this->data_->mutable_cpu_data());
   const TypeParam* uniform_data_2 =
       static_cast<const TypeParam*>(this->data_2_->cpu_data());
   for (int i = 0; i < this->sample_size_; ++i) {
-    uniform_data_1[i] += uniform_data_2[i];
+    uniform_data_1[i] *= uniform_data_2[i];
   }
 
   // Check that result does not violate properties of Uniform on [-7, -3].
-  this->RngUniformChecks(lower_1 + lower_2, upper_1 + upper_2,
-                         uniform_data_1);
+  const TypeParam lower_prod = lower_1 * upper_2;
+  const TypeParam upper_prod = -lower_prod;
+  this->RngUniformChecks(lower_prod, upper_prod, uniform_data_1);
 }
 
 
