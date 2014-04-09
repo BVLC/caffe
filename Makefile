@@ -163,7 +163,7 @@ endif
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
-	ifneq ($(findstring $(shell sw_vers -productVersion), 10.9),)
+	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
 		CXXFLAGS += -stdlib=libstdc++
 	endif
 endif
