@@ -29,7 +29,7 @@ The following sections detail prerequisites and installation on Ubuntu. For OS X
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) 5.0 or 5.5
 * [boost](http://www.boost.org/) (1.55 preferred)
-* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) by [MKL](http://software.intel.com/en-us/intel-mkl) (though the `dev` branch supports ATLAS as an alternative)
+* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) by MKL / ATLAS / OpenBLAS
 * [OpenCV](http://opencv.org/)
 * glog, gflags, protobuf, leveldb, snappy, hdf5
 * For the python wrapper: python, numpy (>= 1.7 preferred), and boost_python
@@ -39,7 +39,16 @@ The following sections detail prerequisites and installation on Ubuntu. For OS X
 
 N.B. one can install the CUDA libraries without the CUDA driver in order to build and run Caffe in CPU-only mode.
 
-**MKL**: Caffe needs Intel MKL as the backend of its matrix and vector computations. We are working on support for alternative BLAS libraries, but for now you need to have MKL. You can obtain a [trial license](http://software.intel.com/en-us/intel-mkl) or an [academic license](http://software.intel.com/en-us/intel-education-offerings) (if you are a student).
+**BLAS**: Caffe requires BLAS as the backend of its matrix and vector computations. Pick one of:
+
+* [ATLAS](http://math-atlas.sourceforge.net/): free and open source and the Caffe default.
+    + Ubuntu: `sudo apt-get install libatlas-base-dev`
+    + CentOS/RHEL: `sudo yum install libatlas-devel`
+    + OS X: already installed as the [Accelerate / vecLib Framework](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html).
+* [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial; however free trial or [student](http://software.intel.com/en-us/intel-education-offerings) licenses are available. Caffe was originally developed with MKL.
+    1. Install MKL
+    2. Set `USE_MKL := 1` in `Makefile.config`
+* [OpenBLAS](http://www.openblas.net/): free and open source; this optimized BLAS is left as an exercise because it requires more effort to install, although it might offer a speedup.
 
 **The Rest**: you will also need other packages, most of which can be installed via apt-get using:
 
@@ -129,33 +138,35 @@ so follow steps 1-4 for each.
 
 After this the rest of the installation is the same as under 10.8, as long as `clang++` is invoked with `-stdlib=libstdc++` and `-lstdc++` is linked.
 
-### CUDA and MKL
+### CUDA and BLAS
 
-CUDA and MKL are straightforward to install; download from the NVIDIA and Intel links under "Prerequisites."
+CUDA is straightforward to install: download it from the [NVIDIA CUDA website](https://developer.nvidia.com/cuda-downloads).
+
+BLAS is included in OS X as the [vecLib framework](https://developer.apple.com/library/mac/documentation/Performance/Conceptual/vecLib/Reference/reference.html#//apple_ref/doc/uid/TP40002498). This is Apple's handtuned BLAS and the default for Caffe on OS X. As an alternative one can install MKL (and set `USE_MKL := 1` in `Makefile.config`) but there's no need.
 
 ### Compiling Caffe
 
 Here are the relevant parts of the Makefile.config after all this:
 
     CUDA_DIR := /Developer/NVIDIA/CUDA-5.5
-    MKL_DIR := /opt/intel/mkl
+    MKL_DIR := /opt/intel/mkl  # only needed for MKL
     PYTHON_INCLUDES := /path/to/anaconda/include /path/to/anaconda/include/python2.7 /path/to/anaconda/lib/python2.7/site-packages/numpy/core/include
     PYTHON_LIB := /path/to/anaconda/lib
-    CXX=/usr/bin/clang++
 
 Don't forget to set `PATH` and `LD_LIBRARY_PATH`:
 
-    export PATH=/path/to/anaconda/bin:/Developer/NVIDIA/CUDA-5.5/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin
-    export LD_LIBRARY_PATH=/Developer/NVIDIA/CUDA-5.5/lib:/opt/intel/composer_xe_2013_sp1.1.103/compiler/lib:/opt/intel/composer_xe_2013_sp1.1.103/mkl/lib:/path/to/anaconda/lib:/usr/local/lib:/usr/lib:/lib
+    export PATH=/PATH/TO/ANACONDA/BIN:/Developer/NVIDIA/CUDA-5.5/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin
+    export LD_LIBRARY_PATH=/Developer/NVIDIA/CUDA-5.5/lib:/PATH/TO/ANACONDA/LIB:/usr/local/lib:/usr/lib:/lib
 
-Additionally, MKL requires `DYLD_LIBRARY_PATH` to be set:
+Note that these paths are for Anaconda python. For homebrew python, substitute `/usr/local/Cellar/python/2.7.6/Frameworks/Python.framework/Versions/2.7` for `/path/to/anaconda`.
+
+If installing with MKL, set both `LD_LIBRARY_PATH` and `DYLD_LIBRARY_PATH`:
 
     export MKL_DIR=/opt/intel/composer_xe_2013_sp1.1.103
     export DYLD_LIBRARY_PATH=$MKL_DIR/compiler/lib:$MKL_DIR/mkl/lib
+    export LD_LIBRARY_PATH=$MKL_DIR/compiler/lib:$MKL_DIR/mkl/lib:$LD_LIBRARY_PATH
 
 Note that we still need to include the MKL `compiler/lib` in our paths, although we do not explicitly link against this directory in the Makefile.
-
-Further note that these paths are for Anaconda python. For homebrew python, substitute `/usr/local/Cellar/python/2.7.6/Frameworks/Python.framework/Versions/2.7` for `/path/to/anaconda`.
 
 ## Hardware Questions
 
