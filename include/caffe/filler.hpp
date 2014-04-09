@@ -51,9 +51,8 @@ class UniformFiller : public Filler<Dtype> {
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    caffe_vRngUniform<Dtype>(blob->count(), blob->mutable_cpu_data(),
-        Dtype(this->filler_param_.min()),
-        Dtype(this->filler_param_.max()));
+    caffe_rng_uniform<Dtype>(blob->count(), Dtype(this->filler_param_.min()),
+        Dtype(this->filler_param_.max()), blob->mutable_cpu_data());
   }
 };
 
@@ -65,9 +64,8 @@ class GaussianFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     CHECK(blob->count());
-    caffe_vRngGaussian<Dtype>(blob->count(), blob->mutable_cpu_data(),
-        Dtype(this->filler_param_.mean()),
-        Dtype(this->filler_param_.std()));
+    caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
+        Dtype(this->filler_param_.std()), blob->mutable_cpu_data());
   }
 };
 
@@ -79,7 +77,7 @@ class PositiveUnitballFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     DCHECK(blob->count());
-    caffe_vRngUniform<Dtype>(blob->count(), blob->mutable_cpu_data(), 0, 1);
+    caffe_rng_uniform<Dtype>(blob->count(), 0, 1, blob->mutable_cpu_data());
     // We expect the filler to not be called very frequently, so we will
     // just use a simple implementation
     int dim = blob->count() / blob->num();
@@ -113,8 +111,8 @@ class XavierFiller : public Filler<Dtype> {
     CHECK(blob->count());
     int fan_in = blob->count() / blob->num();
     Dtype scale = sqrt(Dtype(3) / fan_in);
-    caffe_vRngUniform<Dtype>(blob->count(), blob->mutable_cpu_data(),
-        -scale, scale);
+    caffe_rng_uniform<Dtype>(blob->count(), -scale, scale,
+        blob->mutable_cpu_data());
   }
 };
 

@@ -60,7 +60,11 @@ void Caffe::set_random_seed(const unsigned int seed) {
     LOG(ERROR) << "Curand not available. Skipping setting the curand seed.";
   }
   // RNG seed
-  Get().random_generator_ = RNG(seed);
+  Get().random_generator_.reset(new RNG(seed));
+}
+
+void Caffe::set_generator(const void* other_rng) {
+  Get().random_generator_->set_generator(other_rng);
 }
 
 void Caffe::SetDevice(const int device_id) {
@@ -117,36 +121,34 @@ void Caffe::DeviceQuery() {
 
 class Caffe::RNG::Generator {
  public:
-  caffe::rng_t rng;
+  Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
+  explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
+  explicit Generator(const caffe::rng_t& other) :
+      rng_(new caffe::rng_t(other)) {}
+  const caffe::rng_t& rng() const { return *rng_; }
+ private:
+  shared_ptr<caffe::rng_t> rng_;
 };
 
-Caffe::RNG::RNG()
-: generator_(new Generator) {
-  generator_->rng = caffe::rng_t(cluster_seedgen());
-}
+Caffe::RNG::RNG() : generator_(new Generator) { }
 
-Caffe::RNG::RNG(unsigned int seed)
-: generator_(new Generator) {
-  generator_->rng = caffe::rng_t(seed);
-}
+Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) { }
 
-Caffe::RNG::~RNG() { delete generator_; }
-
-Caffe::RNG::RNG(const RNG& other) : generator_(new Generator) {
-  *generator_ = *other.generator_;
-}
+Caffe::RNG::RNG(const RNG& other) : generator_(new Generator(*other.generator_))
+    { }
 
 Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
-  *generator_ = *other.generator_;
+  generator_.reset(other.generator_.get());
   return *this;
 }
 
-void* Caffe::RNG::generator() {
-  return &generator_->rng;
+const void* Caffe::RNG::generator() const {
+  return static_cast<const void*>(&generator_->rng());
 }
 
-const void* Caffe::RNG::generator() const {
-  return &generator_->rng;
+void Caffe::RNG::set_generator(const void* other_rng) {
+  const caffe::rng_t& rng = *static_cast<const caffe::rng_t*>(other_rng);
+  return generator_.reset(new Generator(rng));
 }
 
 const char* cublasGetErrorString(cublasStatus_t error) {

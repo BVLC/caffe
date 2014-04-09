@@ -8,6 +8,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/vision_layers.hpp"
+#include "caffe/util/math_functions.hpp"
 
 using std::max;
 
@@ -30,17 +31,16 @@ Dtype DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
   if (Caffe::phase() == Caffe::TRAIN) {
-    CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
-        (unsigned int*)(rand_vec_->mutable_gpu_data()), count));
+    unsigned int* mask =
+        static_cast<unsigned int*>(rand_vec_->mutable_gpu_data());
+    caffe_gpu_rng_uniform(count, mask);
     // set thresholds
     // NOLINT_NEXT_LINE(whitespace/operators)
     DropoutForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, (unsigned int*)rand_vec_->gpu_data(), uint_thres_,
-        scale_, top_data);
+        count, bottom_data, mask, uint_thres_, scale_, top_data);
     CUDA_POST_KERNEL_CHECK;
   } else {
-    CUDA_CHECK(cudaMemcpy(top_data, bottom_data,
-        count * sizeof(Dtype), cudaMemcpyDeviceToDevice));
+    caffe_gpu_copy(count, bottom_data, top_data);
   }
   return Dtype(0);
 }
@@ -62,7 +62,8 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down) {
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-    const unsigned int* mask = (unsigned int*)rand_vec_->gpu_data();
+    const unsigned int* mask =
+        static_cast<const unsigned int*>(rand_vec_->gpu_data());
     const int count = (*bottom)[0]->count();
     // NOLINT_NEXT_LINE(whitespace/operators)
     DropoutBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
