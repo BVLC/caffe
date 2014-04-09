@@ -189,6 +189,7 @@ else
 		LIBRARIES += cblas atlas
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
+		INCLUDE_DIRS += /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
 		LIBRARIES += cblas
 		LDFLAGS += -framework vecLib
 	endif
