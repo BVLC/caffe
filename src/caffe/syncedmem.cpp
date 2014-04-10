@@ -91,7 +91,7 @@ inline void SyncedMemory::to_gpu() {
 
 const void* SyncedMemory::cpu_data() {
   to_cpu();
-  return reinterpret_cast<const void*>(thrust::raw_pointer_cast(
+  return static_cast<const void*>(thrust::raw_pointer_cast(
       cpu_vector_.data()));
 }
 
@@ -107,20 +107,20 @@ void SyncedMemory::set_cpu_data(void* data) {
 
 const void* SyncedMemory::gpu_data() {
   to_gpu();
-  return reinterpret_cast<const void*>(thrust::raw_pointer_cast(
+  return static_cast<const void*>(thrust::raw_pointer_cast(
       gpu_vector_.data()));
 }
 
 void* SyncedMemory::mutable_cpu_data() {
   to_cpu();
   head_ = HEAD_AT_CPU;
-  return reinterpret_cast<void*>(thrust::raw_pointer_cast(cpu_vector_.data()));
+  return static_cast<void*>(thrust::raw_pointer_cast(cpu_vector_.data()));
 }
 
 void* SyncedMemory::mutable_gpu_data() {
   to_gpu();
   head_ = HEAD_AT_GPU;
-  return reinterpret_cast<void*>(thrust::raw_pointer_cast(gpu_vector_.data()));
+  return static_cast<void*>(thrust::raw_pointer_cast(gpu_vector_.data()));
 }
 
 
