@@ -1,6 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 // pycaffe provides a wrapper of the caffe::Net class as well as some
-// caffe::Caffe functions so that one could easily call it from Python.
+// caffe::Caffe functions so that one could easily call it from python.
 // Note that for python, we will simply use float as the data type.
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -33,7 +33,7 @@ using boost::python::handle;
 using boost::python::vector_indexing_suite;
 
 // for convenience, check that input files can be opened, and raise an
-// exception that boost will send to Python if not (caffe could still crash
+// exception that boost will send to python if not (caffe could still crash
 // later if the input files are disturbed before they are actually used, but
 // this saves frustration in most cases)
 static void CheckFile(const string& filename) {
@@ -46,7 +46,7 @@ static void CheckFile(const string& filename) {
 }
 
 // wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
-//  to Python
+// to python
 class CaffeBlob {
  public:
   CaffeBlob(const shared_ptr<Blob<float> > &blob, const string& name)
@@ -70,9 +70,9 @@ class CaffeBlob {
 };
 
 
-// we need another wrapper (used as boost::python's HeldType) that receives a
-//  self PyObject * which we can use as ndarray.base, so that data/diff memory
-//  is not freed while still being used in Python
+// We need another wrapper (used as boost::python's HeldType) that receives a
+// self PyObject * which we can use as ndarray.base, so that data/diff memory
+// is not freed while still being used in python.
 class CaffeBlobWrap : public CaffeBlob {
  public:
   CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
@@ -142,8 +142,9 @@ struct CaffeNet {
   }
 
   CaffeNet(string param_file, string pretrained_param_file) {
-    Init(param_file);
+    CheckFile(param_file);
     CheckFile(pretrained_param_file);
+    net_.reset(new Net<float>(param_file));
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
 
@@ -158,8 +159,8 @@ struct CaffeNet {
 
   virtual ~CaffeNet() {}
 
-  // this function is mostly redundant with the one below, but should go away
-  // with new pycaffe
+  // Check that an array is acceptable for blob assignment
+  // as described in the preface to Forward().
   inline void check_array_against_blob(
       PyArrayObject* arr, Blob<float>* blob) {
     CHECK(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS);
@@ -197,8 +198,7 @@ struct CaffeNet {
 
   // The actual forward function. It takes in a python list of numpy arrays as
   // input and a python list of numpy arrays as output. The input and output
-  // should all have correct shapes, are single-precisionabcdnt- and
-  // c contiguous.
+  // should all have correct shapes, be single-precision, and be C-contiguous.
   void Forward(list bottom, list top) {
     vector<Blob<float>*>& input_blobs = net_->input_blobs();
     CHECK_EQ(len(bottom), input_blobs.size());
