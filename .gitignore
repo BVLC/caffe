@@ -5,7 +5,6 @@
 *.lo
 *.o
 *.cuo
-*.pyc
 
 # Compiled Dynamic libraries
 *.so
@@ -25,9 +24,7 @@
 *.pyc
 
 # Compiled MATLAB
-*.mex
-*.mexa64
-*.mexmaci64
+*.mex*
 
 # build, distribute, and bins
 build/*
@@ -48,13 +45,12 @@ python/caffe/proto/
 # User's build configuration
 Makefile.config
 
-# Models, Data, and Examples are either
+# Data and examples are either
 # 1. reference, and not casually committed
 # 2. custom, and live on their own unless they're deliberated contributed
-models/*
 data/*
 examples/*
 
-# Don't version the generated documentation
+# Generated documentation
 docs/_site
 _site
