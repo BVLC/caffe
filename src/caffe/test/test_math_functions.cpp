@@ -207,4 +207,26 @@ TYPED_TEST(MathFunctionsTest, TestScaleGPU) {
   }
 }
 
+TYPED_TEST(MathFunctionsTest, TestCopyCPU) {
+  const int n = this->blob_bottom_->count();
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  TypeParam* top_data = this->blob_top_->mutable_cpu_data();
+  caffe_copy(n, bottom_data, top_data);
+  for (int i = 0; i < n; ++i) {
+    EXPECT_EQ(bottom_data[i], top_data[i]);
+  }
+}
+
+TYPED_TEST(MathFunctionsTest, TestCopyGPU) {
+  const int n = this->blob_bottom_->count();
+  const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
+  TypeParam* top_data = this->blob_top_->mutable_gpu_data();
+  caffe_gpu_copy(n, bottom_data, top_data);
+  bottom_data = this->blob_bottom_->cpu_data();
+  top_data = this->blob_top_->mutable_cpu_data();
+  for (int i = 0; i < n; ++i) {
+    EXPECT_EQ(bottom_data[i], top_data[i]);
+  }
+}
+
 }  // namespace caffe
