@@ -142,7 +142,7 @@ struct CaffeNet {
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
 
-  CaffeNet(shared_ptr<Net<float> > net)
+  explicit CaffeNet(shared_ptr<Net<float> > net)
       : net_(net) {}
 
   virtual ~CaffeNet() {}
@@ -285,7 +285,7 @@ struct CaffeNet {
 
 class CaffeSGDSolver {
  public:
-  CaffeSGDSolver(const string& param_file) {
+  explicit CaffeSGDSolver(const string& param_file) {
     // as in CaffeNet, (as a convenience, not a guarantee), create a Python
     // exception if param_file can't be opened
     CheckFile(param_file);
