@@ -86,13 +86,13 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::AdoptData(const Blob& other) {
+void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
 }
 
 template <typename Dtype>
-void Blob<Dtype>::AdoptDiff(const Blob& other) {
+void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();
 }
