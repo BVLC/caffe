@@ -24,18 +24,14 @@ void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 Dtype FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  caffe_copy(count_, bottom_data, top_data);
+  (*top)[0]->AdoptData(*bottom[0]);
   return Dtype(0.);
 }
 
 template <typename Dtype>
 void FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  caffe_copy(count_, top_diff, bottom_diff);
+  (*bottom)[0]->AdoptDiff(*top[0]);
 }
 
 INSTANTIATE_CLASS(FlattenLayer);
