@@ -17,7 +17,6 @@ using std::string;
 
 namespace caffe {
 
-template <typename Dtype>
 class PaddingLayerUpgradeTest : public ::testing::Test {
  protected:
   void RunPaddingUpgradeTest(
@@ -43,10 +42,7 @@ class PaddingLayerUpgradeTest : public ::testing::Test {
   }
 };
 
-typedef ::testing::Types<float> PaddingUpgradeDtypes;
-TYPED_TEST_CASE(PaddingLayerUpgradeTest, PaddingUpgradeDtypes);
-
-TYPED_TEST(PaddingLayerUpgradeTest, TestSimple) {
+TEST_F(PaddingLayerUpgradeTest, TestSimple) {
   const string& input_proto =
       "name: 'CaffeNet' "
       "layers { "
@@ -194,7 +190,7 @@ TYPED_TEST(PaddingLayerUpgradeTest, TestSimple) {
   this->RunPaddingUpgradeTest(input_proto, expected_output_proto);
 }
 
-TYPED_TEST(PaddingLayerUpgradeTest, TestTwoTops) {
+TEST_F(PaddingLayerUpgradeTest, TestTwoTops) {
   const string& input_proto =
       "name: 'CaffeNet' "
       "layers { "
@@ -389,7 +385,7 @@ TYPED_TEST(PaddingLayerUpgradeTest, TestTwoTops) {
   this->RunPaddingUpgradeTest(input_proto, expected_output_proto);
 }
 
-TYPED_TEST(PaddingLayerUpgradeTest, TestImageNet) {
+TEST_F(PaddingLayerUpgradeTest, TestImageNet) {
   const string& input_proto =
       "name: 'CaffeNet' "
       "layers { "
@@ -1091,7 +1087,6 @@ TYPED_TEST(PaddingLayerUpgradeTest, TestImageNet) {
   this->RunPaddingUpgradeTest(input_proto, expected_output_proto);
 }
 
-template <typename Dtype>
 class V0UpgradeTest : public ::testing::Test {
  protected:
   void RunV0UpgradeTest(
@@ -1112,10 +1107,7 @@ class V0UpgradeTest : public ::testing::Test {
   }
 };
 
-typedef ::testing::Types<float> V0UpgradeDtypes;
-TYPED_TEST_CASE(V0UpgradeTest, V0UpgradeDtypes);
-
-TYPED_TEST(V0UpgradeTest, TestSimple) {
+TEST_F(V0UpgradeTest, TestSimple) {
   const string& input_proto =
       "name: 'CaffeNet' "
       "layers { "
@@ -1262,7 +1254,7 @@ TYPED_TEST(V0UpgradeTest, TestSimple) {
 }
 
 // Test any layer or parameter upgrades not covered by other tests.
-TYPED_TEST(V0UpgradeTest, TestAllParams) {
+TEST_F(V0UpgradeTest, TestAllParams) {
   const string& input_proto =
       "name: 'CaffeNet' "
       "input: 'input_data' "
@@ -1756,7 +1748,7 @@ TYPED_TEST(V0UpgradeTest, TestAllParams) {
   this->RunV0UpgradeTest(input_proto, expected_output_proto);
 }
 
-TYPED_TEST(V0UpgradeTest, TestImageNet) {
+TEST_F(V0UpgradeTest, TestImageNet) {
   const string& input_proto =
       "name: 'CaffeNet' "
       "layers { "
