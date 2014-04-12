@@ -155,7 +155,6 @@ TYPED_TEST(SplitLayerTest, TestGPUGradientInPlace) {
 }
 
 
-template <typename Dtype>
 class SplitLayerInsertionTest : public ::testing::Test {
  protected:
   void RunInsertionTest(
@@ -181,10 +180,7 @@ class SplitLayerInsertionTest : public ::testing::Test {
   }
 };
 
-typedef ::testing::Types<float> InsertionDtypes;
-TYPED_TEST_CASE(SplitLayerInsertionTest, InsertionDtypes);
-
-TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion1) {
+TEST_F(SplitLayerInsertionTest, TestNoInsertion1) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layers: { "
@@ -208,7 +204,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion1) {
   this->RunInsertionTest(input_proto, input_proto);
 }
 
-TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion2) {
+TEST_F(SplitLayerInsertionTest, TestNoInsertion2) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layers: { "
@@ -245,7 +241,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertion2) {
   this->RunInsertionTest(input_proto, input_proto);
 }
 
-TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionImageNet) {
+TEST_F(SplitLayerInsertionTest, TestNoInsertionImageNet) {
   const string& input_proto =
       "name: 'CaffeNet' "
       "layers { "
@@ -566,7 +562,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionImageNet) {
   this->RunInsertionTest(input_proto, input_proto);
 }
 
-TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionWithInPlace) {
+TEST_F(SplitLayerInsertionTest, TestNoInsertionWithInPlace) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layers: { "
@@ -596,7 +592,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestNoInsertionWithInPlace) {
   this->RunInsertionTest(input_proto, input_proto);
 }
 
-TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
+TEST_F(SplitLayerInsertionTest, TestInsertion) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layers: { "
@@ -691,7 +687,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertion) {
   this->RunInsertionTest(input_proto, expected_output_proto);
 }
 
-TYPED_TEST(SplitLayerInsertionTest, TestInsertionTwoTop) {
+TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layers: { "
@@ -797,7 +793,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInsertionTwoTop) {
   this->RunInsertionTest(input_proto, expected_output_proto);
 }
 
-TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
+TEST_F(SplitLayerInsertionTest, TestInputInsertion) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "input: 'data' "
@@ -858,7 +854,7 @@ TYPED_TEST(SplitLayerInsertionTest, TestInputInsertion) {
   this->RunInsertionTest(input_proto, expected_output_proto);
 }
 
-TYPED_TEST(SplitLayerInsertionTest, TestWithInPlace) {
+TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
   const string& input_proto =
       "name: 'TestNetwork' "
       "layers: { "
