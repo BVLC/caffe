@@ -11,14 +11,14 @@ namespace caffe {
 template <typename Dtype>
 Dtype FlattenLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  (*top)[0]->AdoptData(*bottom[0]);
+  (*top)[0]->ShareData(*bottom[0]);
   return Dtype(0.);
 }
 
 template <typename Dtype>
 void FlattenLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  (*bottom)[0]->AdoptDiff(*top[0]);
+  (*bottom)[0]->ShareDiff(*top[0]);
 }
 
 INSTANTIATE_CLASS(FlattenLayer);

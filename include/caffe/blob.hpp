@@ -73,8 +73,13 @@ class Blob {
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
 
-  void AdoptData(const Blob& other);
-  void AdoptDiff(const Blob& other);
+  // Set the data_/diff_ shared_ptr to point to the SyncedMemory holding the
+  // data_/diff_ of Blob other -- useful in layers which simply perform a copy
+  // in their forward or backward pass.
+  // This deallocates the SyncedMemory holding this blob's data/diff, as
+  // shared_ptr calls its destructor when reset with the = operator.
+  void ShareData(const Blob& other);
+  void ShareDiff(const Blob& other);
 
  protected:
   shared_ptr<SyncedMemory> data_;
