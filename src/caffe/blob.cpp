@@ -11,6 +11,14 @@
 namespace caffe {
 
 template <typename Dtype>
+Blob<Dtype>::Blob(const int num, const int channels, const int height,
+    const int width) : data_(), diff_(), num_(num), channels_(channels),
+    height_(height), width_(width), count_(num * channels * height * width),
+    capacity_(count_) {
+  Reshape(num, channels, height, width);
+}
+
+template <typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
     const int width) {
   CHECK_GE(num, 0);
@@ -22,19 +30,20 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
-  if (count_) {
-    data_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(count_ * sizeof(Dtype)));
-  } else {
-    data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
-    diff_.reset(reinterpret_cast<SyncedMemory*>(NULL));
+  if (capacity_ < count_) {
+    capacity_ = count_;
   }
-}
-
-template <typename Dtype>
-Blob<Dtype>::Blob(const int num, const int channels, const int height,
-    const int width) {
-  Reshape(num, channels, height, width);
+  size_t space_requirement = capacity_ * sizeof(Dtype);
+  if (data_) {
+    data_->reserve(space_requirement);
+  } else {
+    data_.reset(new SyncedMemory(space_requirement));
+  }
+  if (diff_) {
+    diff_->reserve(space_requirement);
+  } else {
+    diff_.reset(new SyncedMemory(space_requirement));
+  }
 }
 
 template <typename Dtype>

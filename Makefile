@@ -322,6 +322,10 @@ $(GTEST_OBJ): $(GTEST_SRC) | $(GTEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
+$(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu | $(OBJ_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	@ echo
+
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
@@ -340,7 +344,7 @@ $(EXAMPLE_BUILD_DIR)/%.o: examples/%.cpp $(PROTO_GEN_HEADER) \
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@ echo
 
-$(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS)
+$(OBJ_BUILD_DIR)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
