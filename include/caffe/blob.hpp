@@ -17,7 +17,6 @@ class Blob {
        diff_() {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
-  virtual ~Blob() {}
   void Reshape(const int num, const int channels, const int height,
     const int width);
   inline int num() const { return num_; }
@@ -52,6 +51,16 @@ class Blob {
     return *(cpu_diff() + offset(n, c, h, w));
   }
 
+  inline const shared_ptr<SyncedMemory>& data() const {
+    CHECK(data_);
+    return data_;
+  }
+
+  inline const shared_ptr<SyncedMemory>& diff() const {
+    CHECK(diff_);
+    return diff_;
+  }
+
   const Dtype* cpu_data() const;
   const Dtype* gpu_data() const;
   const Dtype* cpu_diff() const;
@@ -63,6 +72,14 @@ class Blob {
   void Update();
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
+
+  // Set the data_/diff_ shared_ptr to point to the SyncedMemory holding the
+  // data_/diff_ of Blob other -- useful in layers which simply perform a copy
+  // in their forward or backward pass.
+  // This deallocates the SyncedMemory holding this blob's data/diff, as
+  // shared_ptr calls its destructor when reset with the = operator.
+  void ShareData(const Blob& other);
+  void ShareDiff(const Blob& other);
 
  protected:
   shared_ptr<SyncedMemory> data_;

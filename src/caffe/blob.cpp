@@ -86,6 +86,18 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::ShareData(const Blob& other) {
+  CHECK_EQ(count_, other.count());
+  data_ = other.data();
+}
+
+template <typename Dtype>
+void Blob<Dtype>::ShareDiff(const Blob& other) {
+  CHECK_EQ(count_, other.count());
+  diff_ = other.diff();
+}
+
+template <typename Dtype>
 void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
   switch (data_->head()) {
