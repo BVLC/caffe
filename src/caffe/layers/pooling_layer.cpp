@@ -38,7 +38,7 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   (*top)[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
   // If max pooling, we will initialize the vector index part.
-  if (this->layer_param_.pool() == LayerParameter_PoolMethod_MAX) {
+  if (this->layer_param_.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
     max_idx_.reset(new SyncedMemory((*top)[0]->count() * sizeof(int)));
   }
   // If stochastic pooling, we will initialize the random index part.
