@@ -43,10 +43,11 @@ TYPED_TEST_CASE(MaxPoolingDropoutTest, Dtypes);
 
 TYPED_TEST(MaxPoolingDropoutTest, TestSetup) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  PoolingLayer<TypeParam> max_layer(layer_param);
+  max_layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   DropoutLayer<TypeParam> dropout_layer(layer_param);
   dropout_layer.SetUp(this->blob_top_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
@@ -57,10 +58,11 @@ TYPED_TEST(MaxPoolingDropoutTest, TestSetup) {
 
 
 TYPED_TEST(MaxPoolingDropoutTest, CPUForward) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
   Caffe::set_mode(Caffe::CPU);
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -75,7 +77,7 @@ TYPED_TEST(MaxPoolingDropoutTest, CPUForward) {
   dropout_layer.SetUp(this->blob_top_vec_, &(this->blob_top_vec_));
   dropout_layer.Forward(this->blob_top_vec_, &(this->blob_top_vec_));
   sum = 0.;
-  TypeParam scale = 1. / (1. - layer_param.dropout_ratio());
+  TypeParam scale = 1. / (1. - layer_param.dropout_param().dropout_ratio());
   top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
   	sum += top_data[i];
@@ -85,10 +87,11 @@ TYPED_TEST(MaxPoolingDropoutTest, CPUForward) {
 }
 
 TYPED_TEST(MaxPoolingDropoutTest, GPUForward) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
   Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -103,7 +106,7 @@ TYPED_TEST(MaxPoolingDropoutTest, GPUForward) {
   dropout_layer.SetUp(this->blob_top_vec_, &(this->blob_top_vec_));
   dropout_layer.Forward(this->blob_top_vec_, &(this->blob_top_vec_));
   sum = 0.;
-  TypeParam scale = 1. / (1. - layer_param.dropout_ratio());
+  TypeParam scale = 1. / (1. - layer_param.dropout_param().dropout_ratio());
   top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
   	sum += top_data[i];
@@ -113,11 +116,12 @@ TYPED_TEST(MaxPoolingDropoutTest, GPUForward) {
 }
 
 TYPED_TEST(MaxPoolingDropoutTest, CPUBackward) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
   Caffe::set_mode(Caffe::CPU);
   Caffe::set_phase(Caffe::TRAIN);
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -146,11 +150,12 @@ TYPED_TEST(MaxPoolingDropoutTest, CPUBackward) {
 }
 
 TYPED_TEST(MaxPoolingDropoutTest, GPUBackward) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
   Caffe::set_mode(Caffe::GPU);
   Caffe::set_phase(Caffe::TRAIN);
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
