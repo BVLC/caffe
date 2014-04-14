@@ -195,7 +195,7 @@ Dtype PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   return Dtype(0.);
 }
 
-/*
+
 template <typename Dtype>
 __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     const int num, const int channels, const int height,
@@ -225,8 +225,8 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     bottom_diff[index] = gradient;
   }  
 }
-*/
 
+/*
 __device__ double atomicAdd(double* address, double val)
 {
     unsigned long long int* address_as_ull =
@@ -275,6 +275,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     // bottom_diff[mask[index]] = cache[mask[index]];
   }  // (if index < nthreads)
 }
+*/
 
 template <typename Dtype>
 __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
