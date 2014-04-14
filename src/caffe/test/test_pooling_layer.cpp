@@ -25,7 +25,7 @@ class PoolingLayerTest : public ::testing::Test {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    blob_bottom_->Reshape(2, 3, 6, 5);
+    blob_bottom_->Reshape(1, 1, 6, 5);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -82,6 +82,7 @@ TYPED_TEST(PoolingLayerTest, PrintGPUBackward) {
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
   }
