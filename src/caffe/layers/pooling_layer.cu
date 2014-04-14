@@ -195,6 +195,7 @@ Dtype PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   return Dtype(0.);
 }
 
+/*
 template <typename Dtype>
 __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     const int num, const int channels, const int height,
@@ -224,21 +225,56 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     bottom_diff[index] = gradient;
   }  
 }
+*/
 
-// template <typename Dtype>
-// __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
-//     const int num, const int channels, const int height,
-//     const int width, const int pooled_height, const int pooled_width,
-//     const int ksize, const int stride, Dtype* bottom_diff, int* mask) {
-//   CUDA_KERNEL_LOOP(index, nthreads) {
-//     // find out the local index
-//     // find out the local offset
-//     int c = (index / pooled_width / pooled_height) % channels;
-//     int n = index / pooled_width / pooled_height / channels;
-//     bottom_diff += (n * channels + c) * height * width;
-//     bottom_diff[mask[index]] += top_diff[index];
-//   } 
-// }
+__device__ double atomicAdd(double* address, double val)
+{
+    unsigned long long int* address_as_ull =
+                              (unsigned long long int*)address;
+    unsigned long long int old = *address_as_ull, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __double_as_longlong(val +
+                               __longlong_as_double(assumed)));
+    } while (assumed != old);
+    return __longlong_as_double(old);
+}
+
+__device__ float atomicAdd(float* address, float val)
+{
+    unsigned int* address_as_ull = (unsigned int*)address;
+    unsigned int old = *address_as_ull, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_ull, assumed,
+                        __float_as_int(val +
+                               __int_as_float(assumed)));
+    } while (assumed != old);
+    return __int_as_float(old);
+}
+
+template <typename Dtype>
+__global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
+    const int num, const int channels, const int height,
+    const int width, const int pooled_height, const int pooled_width,
+    const int ksize, const int stride, Dtype* bottom_diff, int* mask) {
+  // __shared__ Dtype cache[CAFFE_CUDA_NUM_THREADS];
+  // cache[threadIdx.x] = Dtype(0.);
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    // find out the local index
+    // find out the local offset
+    int c = (index / pooled_width / pooled_height) % channels;
+    int n = index / pooled_width / pooled_height / channels;
+    bottom_diff += (n * channels + c) * height * width;
+    // read from global bottom_diff into cache
+    // atomicAdd(cache + mask[index],bottom_diff[mask[index]]);
+    atomicAdd(bottom_diff + mask[index],top_diff[index]);
+    // __syncthreads();
+    // write from cache to global bottom_diff
+    // bottom_diff[mask[index]] = cache[mask[index]];
+  }  // (if index < nthreads)
+}
 
 template <typename Dtype>
 __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
