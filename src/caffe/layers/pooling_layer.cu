@@ -320,13 +320,17 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   int count = (*bottom)[0]->count();
   int* mask;
+  
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
+    mask = (int*)max_idx_->gpu_data();
+    // Since we have the mask we only need count top_diff
+    count = top[0]->count(); 
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, (*bottom)[0]->gpu_data(), top[0]->gpu_data(), top_diff,
-        top[0]->num(), channels_, height_, width_, pooled_height_,
-        pooled_width_, kernel_size_, stride_, bottom_diff, mask);
+        count, top_diff, top[0]->num(), channels_,
+        height_, width_, pooled_height_, pooled_width_,
+        kernel_size_, stride_, bottom_diff, mask);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
