@@ -319,6 +319,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   int count = (*bottom)[0]->count();
+  CUDA_CHECK(cudaMemset(bottom_diff, 0, sizeof(Dtype) * count));
   int* mask;
   
   switch (this->layer_param_.pooling_param().pool()) {
