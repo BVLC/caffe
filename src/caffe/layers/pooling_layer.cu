@@ -208,9 +208,9 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     int h = (index / width) % height;
     int c = (index / width / height) % channels;
     int n = index / width / height / channels;
-    int phstart = (h < ksize) ? 0 : (h - ksize) / stride + 1;
+    int phstart = (h < kernel_size) ? 0 : (h - kernel_size) / stride + 1;
     int phend = min(h / stride + 1, pooled_height);
-    int pwstart = (w < ksize) ? 0 : (w - ksize) / stride + 1;
+    int pwstart = (w < kernel_size) ? 0 : (w - kernel_size) / stride + 1;
     int pwend = min(w / stride + 1, pooled_width);
     Dtype gradient = 0;
     top_diff += (n * channels + c) * pooled_height * pooled_width;
@@ -361,7 +361,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // Since we have the mask we only need count top_diff
     count = top[0]->count(); 
     // NOLINT_NEXT_LINE(whitespace/operators)
-    caffe_gpu_memset(count,Dtype(0.),bottom_diff);
+    caffe_gpu_set(count,Dtype(0.),bottom_diff);
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, top[0]->num(), channels_,
         height_, width_, pooled_height_, pooled_width_,
