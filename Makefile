@@ -109,8 +109,6 @@ TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 ##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
-BLAS_INCLUDE_DIR := $(BLAS_DIR)/include
-BLAS_LIB_DIR := $(BLAS_DIR)/lib 
 
 INCLUDE_DIRS += $(BUILD_INCLUDE_DIR)
 INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR)
@@ -176,31 +174,36 @@ else
 	COMMON_FLAGS := -DNDEBUG -O2
 endif
 
-# MKL switch (default = ATLAS)
-BLAS ?= 0
-ifeq ($(BLAS), 1)
+# BLAS configuration (default = ATLAS)
+BLAS ?= atlas
+ifeq ($(BLAS), mkl)
+	# MKL
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
-	INCLUDE_DIRS += $(BLAS_INCLUDE_DIR)
-	LIBRARY_DIRS += $(BLAS_LIB_DIR) $(BLAS_DIR)/lib/intel64
+	MKL_DIR = /opt/intel/mkl
+	BLAS_INCLUDE ?= $(MKL_DIR)/include
+	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
+else ifeq ($(BLAS), open)
+	# OpenBLAS
+	LIBRARIES += openblas
 else
+	# ATLAS
 	ifeq ($(LINUX), 1)
-              ifeq ($(BLAS), 0)
-		# Linux simply has cblas and atlas
-		LIBRARIES += cblas atlas
-              else ifeq ($(BLAS), 2)
-                LIBRARIES += openblas
-              endif
-        INCLUDE_DIRS += $(BLAS_INCLUDE_DIR)
-	LIBRARY_DIRS += $(BLAS_LIB_DIR) 
+		ifeq ($(BLAS), atlas)
+			# Linux simply has cblas and atlas
+			LIBRARIES += cblas atlas
+		endif
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
-		INCLUDE_DIRS += /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
+		BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
 		LIBRARIES += cblas
 		LDFLAGS += -framework vecLib
 	endif
 endif
+INCLUDE_DIRS += $(BLAS_INCLUDE)
+LIBRARY_DIRS += $(BLAS_LIB)
 
+# Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
 NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
