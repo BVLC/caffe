@@ -1,7 +1,6 @@
 name: "MNISTAutoencoder"
 layers {
   top: "data"
-  top: "label"
   name: "data"
   type: DATA
   data_param {
