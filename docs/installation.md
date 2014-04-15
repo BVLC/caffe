@@ -47,8 +47,10 @@ N.B. one can install the CUDA libraries without the CUDA driver in order to buil
     + OS X: already installed as the [Accelerate / vecLib Framework](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html).
 * [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial; however free trial or [student](http://software.intel.com/en-us/intel-education-offerings) licenses are available. Caffe was originally developed with MKL.
     1. Install MKL
-    2. Set `USE_MKL := 1` in `Makefile.config`
-* [OpenBLAS](http://www.openblas.net/): free and open source; this optimized BLAS is left as an exercise because it requires more effort to install, although it might offer a speedup.
+    2. Set `BLAS := mkl` in `Makefile.config`
+* [OpenBLAS](http://www.openblas.net/): free and open source; this optimized and parallel BLAS could require more effort to install, although it might offer a speedup.
+    1. Install OpenBLAS
+    2. Set `BLAS := open` in `Makefile.config`
 
 **The Rest**: you will also need other packages, most of which can be installed via apt-get using:
 
