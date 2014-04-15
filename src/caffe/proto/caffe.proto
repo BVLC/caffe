@@ -63,6 +63,7 @@ message SolverParameter {
   optional int32 test_iter = 3 [default = 0];
   // The number of iterations between two testing phases.
   optional int32 test_interval = 4 [default = 0];
+  optional bool test_compute_loss = 19 [default = false];
   optional float base_lr = 5; // The base learning rate
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
