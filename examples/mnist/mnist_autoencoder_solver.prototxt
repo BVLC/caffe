@@ -2,6 +2,7 @@ train_net: "mnist_autoencoder_train.prototxt"
 test_net: "mnist_autoencoder_test.prototxt"
 test_iter: 50
 test_interval: 100
+test_compute_loss: true
 base_lr: 0.0001
 lr_policy: "fixed"
 display: 20

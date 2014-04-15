@@ -20,10 +20,6 @@ layers {
   top: "encode1"
   name: "encode1"
   type: INNER_PRODUCT
-  blobs_lr: 1
-  blobs_lr: 1
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 1000
   }
@@ -39,10 +35,6 @@ layers {
   top: "encode2"
   name: "encode2"
   type: INNER_PRODUCT
-  blobs_lr: 1
-  blobs_lr: 1
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 500
   }
@@ -58,10 +50,6 @@ layers {
   top: "encode3"
   name: "encode3"
   type: INNER_PRODUCT
-  blobs_lr: 1
-  blobs_lr: 1
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 250
   }
@@ -109,10 +97,6 @@ layers {
   top: "decode3"
   name: "decode3"
   type: INNER_PRODUCT
-  blobs_lr: 1
-  blobs_lr: 1
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 500
   }
@@ -128,10 +112,6 @@ layers {
   top: "decode2"
   name: "decode2"
   type: INNER_PRODUCT
-  blobs_lr: 1
-  blobs_lr: 1
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 1000
   }
