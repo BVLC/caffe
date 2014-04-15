@@ -147,16 +147,18 @@ layers {
   top: "decode1"
   name: "decode1"
   type: INNER_PRODUCT
-  blobs_lr: 1
-  blobs_lr: 1
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 784
   }
 }
 layers {
   bottom: "decode1"
+  top: "decode1neuron"
+  name: "decode1neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "decode1neuron"
   bottom: "flatdata"
   name: "loss"
   type: EUCLIDEAN_LOSS
