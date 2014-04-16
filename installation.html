@@ -74,7 +74,7 @@ make runtest</code></pre>
 
 <li><a href="http://www.boost.org/">boost</a> (1.55 preferred)</li>
 
-<li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> by <a href="http://software.intel.com/en-us/intel-mkl">MKL</a> (though the <code>dev</code> branch supports ATLAS as an alternative)</li>
+<li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> by <a href="http://software.intel.com/en-us/intel-mkl">MKL</a> (though the <code>dev</code> branch supports ATLAS and OpenBLAS as alternatives)</li>
 
 <li><a href="http://opencv.org/">OpenCV</a></li>
 
@@ -89,7 +89,7 @@ make runtest</code></pre>
 
 <p>N.B. one can install the CUDA libraries without the CUDA driver in order to build and run Caffe in CPU-only mode.</p>
 
-<p><strong>MKL</strong>: Caffe needs Intel MKL as the backend of its matrix and vector computations. We are working on support for alternative BLAS libraries, but for now you need to have MKL. You can obtain a <a href="http://software.intel.com/en-us/intel-mkl">trial license</a> or an <a href="http://software.intel.com/en-us/intel-education-offerings">academic license</a> (if you are a student).</p>
+<p><strong>MKL/BLAS</strong>: the current stable release of Caffe needs Intel MKL as the backend of its matrix and vector computations. The <a href="https://github.com/BVLC/caffe/tree/dev">development version</a> supports ATLAS and OpenBLAS backends as alternatives (while retaining MKL support). For MKL, you can obtain a <a href="http://software.intel.com/en-us/intel-mkl">trial license</a> or an <a href="http://software.intel.com/en-us/intel-education-offerings">academic license</a> (if you are a student).</p>
 
 <p><strong>The Rest</strong>: you will also need other packages, most of which can be installed via apt-get using:</p>
 
