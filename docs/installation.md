@@ -29,7 +29,7 @@ The following sections detail prerequisites and installation on Ubuntu. For OS X
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) 5.0 or 5.5
 * [boost](http://www.boost.org/) (1.55 preferred)
-* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) by [MKL](http://software.intel.com/en-us/intel-mkl) (though the `dev` branch supports ATLAS as an alternative)
+* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) by [MKL](http://software.intel.com/en-us/intel-mkl) (though the `dev` branch supports ATLAS and OpenBLAS as alternatives)
 * [OpenCV](http://opencv.org/)
 * glog, gflags, protobuf, leveldb, snappy, hdf5
 * For the python wrapper: python, numpy (>= 1.7 preferred), and boost_python
@@ -39,7 +39,7 @@ The following sections detail prerequisites and installation on Ubuntu. For OS X
 
 N.B. one can install the CUDA libraries without the CUDA driver in order to build and run Caffe in CPU-only mode.
 
-**MKL**: Caffe needs Intel MKL as the backend of its matrix and vector computations. We are working on support for alternative BLAS libraries, but for now you need to have MKL. You can obtain a [trial license](http://software.intel.com/en-us/intel-mkl) or an [academic license](http://software.intel.com/en-us/intel-education-offerings) (if you are a student).
+**MKL/BLAS**: the current stable release of Caffe needs Intel MKL as the backend of its matrix and vector computations. The [development version](https://github.com/BVLC/caffe/tree/dev) supports ATLAS and OpenBLAS backends as alternatives (while retaining MKL support). For MKL, you can obtain a [trial license](http://software.intel.com/en-us/intel-mkl) or an [academic license](http://software.intel.com/en-us/intel-education-offerings) (if you are a student).
 
 **The Rest**: you will also need other packages, most of which can be installed via apt-get using:
 
