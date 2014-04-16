@@ -34,8 +34,11 @@ message FillerParameter {
   optional float value = 2 [default = 0]; // the value in constant filler
   optional float min = 3 [default = 0]; // the min value in uniform filler
   optional float max = 4 [default = 1]; // the max value in uniform filler
-  optional float mean = 5 [default = 0]; // the mean value in gaussian filler
-  optional float std = 6 [default = 1]; // the std value in gaussian filler
+  optional float mean = 5 [default = 0]; // the mean value in Gaussian filler
+  optional float std = 6 [default = 1]; // the std value in Gaussian filler
+  // The expected number of non-zero input weights for a given output in
+  // Gaussian filler -- the default -1 means don't perform sparsification.
+  optional int32 sparse = 7 [default = -1];
 }
 
 message NetParameter {
@@ -60,6 +63,7 @@ message SolverParameter {
   optional int32 test_iter = 3 [default = 0];
   // The number of iterations between two testing phases.
   optional int32 test_interval = 4 [default = 0];
+  optional bool test_compute_loss = 19 [default = false];
   optional float base_lr = 5; // The base learning rate
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
@@ -102,7 +106,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 27
+  // LayerType next available ID: 28
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -129,6 +133,7 @@ message LayerParameter {
     POWER = 26;
     RELU = 18;
     SIGMOID = 19;
+    SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SOFTMAX = 20;
     SOFTMAX_LOSS = 21;
     SPLIT = 22;
