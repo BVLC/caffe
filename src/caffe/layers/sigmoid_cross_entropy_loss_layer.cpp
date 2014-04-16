@@ -21,6 +21,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::SetUp(
       "SigmoidCrossEntropyLoss Layer takes no blob as output.";
   sigmoid_bottom_vec_.clear();
   sigmoid_bottom_vec_.push_back(bottom[0]);
+  sigmoid_top_vec_.clear();
   sigmoid_top_vec_.push_back(sigmoid_output_.get());
   sigmoid_layer_->SetUp(sigmoid_bottom_vec_, &sigmoid_top_vec_);
 }
