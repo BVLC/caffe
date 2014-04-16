@@ -157,7 +157,7 @@ class SigmoidCrossEntropyLossLayer : public Layer<Dtype> {
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
   // sigmoid_output stores the output of the sigmoid layer.
   shared_ptr<Blob<Dtype> > sigmoid_output_;
-  // Vector holders to call the underlying softmax layer forward and backward.
+  // Vector holders to call the underlying sigmoid layer forward and backward.
   vector<Blob<Dtype>*> sigmoid_bottom_vec_;
   vector<Blob<Dtype>*> sigmoid_top_vec_;
 };
