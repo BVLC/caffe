@@ -135,6 +135,34 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
 };
 
 template <typename Dtype>
+class SigmoidCrossEntropyLossLayer : public Layer<Dtype> {
+ public:
+  explicit SigmoidCrossEntropyLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param),
+          sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
+          sigmoid_output_(new Blob<Dtype>()) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
+  // sigmoid_output stores the output of the sigmoid layer.
+  shared_ptr<Blob<Dtype> > sigmoid_output_;
+  // Vector holders to call the underlying sigmoid layer forward and backward.
+  vector<Blob<Dtype>*> sigmoid_bottom_vec_;
+  vector<Blob<Dtype>*> sigmoid_top_vec_;
+};
+
+template <typename Dtype>
 class TanHLayer : public NeuronLayer<Dtype> {
  public:
   explicit TanHLayer(const LayerParameter& param)
@@ -268,6 +296,7 @@ class DataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
+  bool output_labels_;
 };
 
 template <typename Dtype>

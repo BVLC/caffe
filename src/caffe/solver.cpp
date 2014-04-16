@@ -100,9 +100,14 @@ void Solver<Dtype>::Test() {
   CHECK_NOTNULL(test_net_.get())->CopyTrainedLayersFrom(net_param);
   vector<Dtype> test_score;
   vector<Blob<Dtype>*> bottom_vec;
+  Dtype loss = 0;
   for (int i = 0; i < param_.test_iter(); ++i) {
+    Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
-        test_net_->Forward(bottom_vec);
+        test_net_->Forward(bottom_vec, &iter_loss);
+    if (param_.test_compute_loss()) {
+      loss += iter_loss;
+    }
     if (i == 0) {
       for (int j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
@@ -119,6 +124,10 @@ void Solver<Dtype>::Test() {
         }
       }
     }
+  }
+  if (param_.test_compute_loss()) {
+    loss /= param_.test_iter();
+    LOG(INFO) << "Test loss: " << loss;
   }
   for (int i = 0; i < test_score.size(); ++i) {
     LOG(INFO) << "Test score #" << i << ": "
