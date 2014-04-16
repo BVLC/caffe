@@ -6,10 +6,9 @@ test_compute_loss: true
 base_lr: 0.0001
 lr_policy: "fixed"
 display: 20
-max_iter: 4500000
+max_iter: 4000000
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "alexnet_train"
+snapshot_prefix: "mnist_autoencoder_train"
 momentum: 0.9
 solver_mode: 1
-device_id: 1
