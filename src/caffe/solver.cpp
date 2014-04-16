@@ -95,9 +95,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 template <typename Dtype>
 void Solver<Dtype>::Test() {
   LOG(INFO) << "Iteration " << iter_ << ", Testing net";
-  NetParameter net_param;
-  net_->ToProto(&net_param);
-  CHECK_NOTNULL(test_net_.get())->CopyTrainedLayersFrom(net_param);
+  CHECK_NOTNULL(test_net_.get())->ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<Blob<Dtype>*> bottom_vec;
   Dtype loss = 0;
