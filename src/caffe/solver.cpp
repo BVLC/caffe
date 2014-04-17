@@ -34,6 +34,9 @@ Solver<Dtype>::Solver(const string& param_file)
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
   param_ = param;
+  if (param_.random_seed() >= 0) {
+    Caffe::set_random_seed(param_.random_seed());
+  }
   // Scaffolding code
   LOG(INFO) << "Creating training net.";
   net_.reset(new Net<Dtype>(param_.train_net()));
