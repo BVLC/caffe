@@ -63,10 +63,6 @@ void Caffe::set_random_seed(const unsigned int seed) {
   Get().random_generator_.reset(new RNG(seed));
 }
 
-void Caffe::set_generator(const void* other_rng) {
-  Get().random_generator_->set_generator(other_rng);
-}
-
 void Caffe::SetDevice(const int device_id) {
   int current_device;
   CUDA_CHECK(cudaGetDevice(&current_device));
@@ -123,8 +119,6 @@ class Caffe::RNG::Generator {
  public:
   Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
   explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
-  explicit Generator(const caffe::rng_t& other) :
-      rng_(new caffe::rng_t(other)) {}
   caffe::rng_t* rng() { return rng_.get(); }
  private:
   shared_ptr<caffe::rng_t> rng_;
@@ -134,9 +128,6 @@ Caffe::RNG::RNG() : generator_(new Generator) { }
 
 Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) { }
 
-Caffe::RNG::RNG(const RNG& other) : generator_(new Generator(*other.generator_))
-    { }
-
 Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
   generator_.reset(other.generator_.get());
   return *this;
@@ -144,11 +135,6 @@ Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
 
 void* Caffe::RNG::generator() {
   return static_cast<void*>(generator_->rng());
-}
-
-void Caffe::RNG::set_generator(const void* other_rng) {
-  const caffe::rng_t& rng = *static_cast<const caffe::rng_t*>(other_rng);
-  generator_.reset(new Generator(rng));
 }
 
 const char* cublasGetErrorString(cublasStatus_t error) {

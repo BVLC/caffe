@@ -14,10 +14,6 @@ namespace caffe {
     return static_cast<caffe::rng_t*>(Caffe::rng_stream().generator());
   }
 
-  inline void caffe_set_rng(const caffe::rng_t& other) {
-    Caffe::set_generator(static_cast<const void*>(&other));
-  }
-
 }  // namespace caffe
 
 #endif  // CAFFE_RNG_HPP_
