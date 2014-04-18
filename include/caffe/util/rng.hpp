@@ -10,8 +10,8 @@ namespace caffe {
 
   typedef boost::mt19937 rng_t;
 
-  inline const rng_t& caffe_rng() {
-    return *static_cast<const caffe::rng_t*>(Caffe::rng_stream().generator());
+  inline rng_t* caffe_rng() {
+    return static_cast<caffe::rng_t*>(Caffe::rng_stream().generator());
   }
 
   inline void caffe_set_rng(const caffe::rng_t& other) {

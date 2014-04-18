@@ -87,7 +87,7 @@ class Caffe {
     explicit RNG(unsigned int seed);
     explicit RNG(const RNG&);
     RNG& operator=(const RNG&);
-    const void* generator() const;
+    void* generator();
     void set_generator(const void* other_rng);
    private:
     class Generator;
@@ -95,7 +95,7 @@ class Caffe {
   };
 
   // Getters for boost rng, curand, and cublas handles
-  inline static const RNG& rng_stream() {
+  inline static RNG& rng_stream() {
     if (!Get().random_generator_) {
       Get().random_generator_.reset(new RNG());
     }
