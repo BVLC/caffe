@@ -125,7 +125,7 @@ class Caffe::RNG::Generator {
   explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
   explicit Generator(const caffe::rng_t& other) :
       rng_(new caffe::rng_t(other)) {}
-  const caffe::rng_t& rng() const { return *rng_; }
+  caffe::rng_t* rng() { return rng_.get(); }
  private:
   shared_ptr<caffe::rng_t> rng_;
 };
@@ -142,8 +142,8 @@ Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
   return *this;
 }
 
-const void* Caffe::RNG::generator() const {
-  return static_cast<const void*>(&generator_->rng());
+void* Caffe::RNG::generator() {
+  return static_cast<void*>(generator_->rng());
 }
 
 void Caffe::RNG::set_generator(const void* other_rng) {
