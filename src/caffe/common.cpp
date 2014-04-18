@@ -148,7 +148,7 @@ const void* Caffe::RNG::generator() const {
 
 void Caffe::RNG::set_generator(const void* other_rng) {
   const caffe::rng_t& rng = *static_cast<const caffe::rng_t*>(other_rng);
-  return generator_.reset(new Generator(rng));
+  generator_.reset(new Generator(rng));
 }
 
 const char* cublasGetErrorString(cublasStatus_t error) {
