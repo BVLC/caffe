@@ -54,6 +54,10 @@ class Net {
   // Updates the network weights based on the diff values computed.
   void Update();
 
+  // For an already initialized net, ShareTrainedLayersWith() implicitly copies
+  // (i.e., using no additional memory) the already trained layers from another
+  // Net.
+  void ShareTrainedLayersWith(Net* other);
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
   void CopyTrainedLayersFrom(const NetParameter& param);

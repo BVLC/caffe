@@ -270,6 +270,37 @@ void Net<Dtype>::Backward() {
 }
 
 template <typename Dtype>
+void Net<Dtype>::ShareTrainedLayersWith(Net* other) {
+  int num_source_layers = other->layers().size();
+  for (int i = 0; i < num_source_layers; ++i) {
+    Layer<Dtype>* source_layer = other->layers()[i].get();
+    const string& source_layer_name = other->layer_names()[i];
+    int target_layer_id = 0;
+    while (target_layer_id != layer_names_.size() &&
+        layer_names_[target_layer_id] != source_layer_name) {
+      ++target_layer_id;
+    }
+    if (target_layer_id == layer_names_.size()) {
+      DLOG(INFO) << "Ignoring source layer " << source_layer_name;
+      continue;
+    }
+    DLOG(INFO) << "Copying source layer " << source_layer_name;
+    vector<shared_ptr<Blob<Dtype> > >& target_blobs =
+        layers_[target_layer_id]->blobs();
+    CHECK_EQ(target_blobs.size(), source_layer->blobs().size())
+        << "Incompatible number of blobs for layer " << source_layer_name;
+    for (int j = 0; j < target_blobs.size(); ++j) {
+      Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
+      CHECK_EQ(target_blobs[j]->num(), source_blob->num());
+      CHECK_EQ(target_blobs[j]->channels(), source_blob->channels());
+      CHECK_EQ(target_blobs[j]->height(), source_blob->height());
+      CHECK_EQ(target_blobs[j]->width(), source_blob->width());
+      target_blobs[j]->ShareData(*source_blob);
+    }
+  }
+}
+
+template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
   int num_source_layers = param.layers_size();
   for (int i = 0; i < num_source_layers; ++i) {
