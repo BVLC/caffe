@@ -87,15 +87,14 @@ class Caffe {
     explicit RNG(unsigned int seed);
     explicit RNG(const RNG&);
     RNG& operator=(const RNG&);
-    const void* generator() const;
-    void set_generator(const void* other_rng);
+    void* generator();
    private:
     class Generator;
     shared_ptr<Generator> generator_;
   };
 
   // Getters for boost rng, curand, and cublas handles
-  inline static const RNG& rng_stream() {
+  inline static RNG& rng_stream() {
     if (!Get().random_generator_) {
       Get().random_generator_.reset(new RNG());
     }
@@ -120,9 +119,6 @@ class Caffe {
   inline static void set_phase(Phase phase) { Get().phase_ = phase; }
   // Sets the random seed of both boost and curand
   static void set_random_seed(const unsigned int seed);
-  // Sets the boost RNG engine from another RNG engine to maintain state across
-  // variate_generator calls.
-  static void set_generator(const void* other_rng);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
