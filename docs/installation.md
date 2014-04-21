@@ -19,7 +19,7 @@ To build and test Caffe do
     make test
     make runtest
 
-You will probably need to adust paths in `Makefile.config` and maybe the `Makefile` itself. Feel free to issue a pull request for a change that may help other people.
+You will probably need to adjust paths in `Makefile.config` and maybe the `Makefile` itself. Feel free to issue a pull request for a change that may help other people.
 
 Note that building and running CPU-only works, but GPU tests will naturally fail.
 
