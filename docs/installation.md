@@ -84,7 +84,7 @@ The only exception being the google logging library, which does not exist in the
 On **OS X**, we highly recommend using the [homebrew](http://brew.sh/) package manager, and ideally starting from a clean install of the OS (or from a wiped `/usr/local`) to avoid conflicts.
 In the following, we assume that you're using Anaconda Python and Homebrew.
 
-To install OpenCV dependency, we'll need to provide an additional source for Homebrew:
+To install the OpenCV dependency, we'll need to provide an additional source for Homebrew:
 
     brew tap homebrew/science
 
@@ -94,7 +94,7 @@ Do `brew edit opencv` and change the lines that look like the two lines below to
       -DPYTHON_LIBRARY=#{py_prefix}/lib/libpython2.7.dylib
       -DPYTHON_INCLUDE_DIR=#{py_prefix}/include/python2.7
 
-**NOTE**: We find that everything compiles successfuly if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
+**NOTE**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
 In other `ENV` settings, things may not work as expected.
 
 #### 10.8-specific Instructions
@@ -109,7 +109,7 @@ Building boost from source is needed to link against your local python (exceptio
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
 
-#### 10.9 additional notes
+#### 10.9-specific Instructions
 
 In OS X 10.9, clang is the default compiler and uses `libc++` as the standard library.
 However, NVIDIA CUDA (even version 6.0) currently links only with `libstdc++`.
@@ -153,7 +153,7 @@ The defaults should work, but uncomment the relevant lines if using Anaconda Pyt
     make test
     make runtest
 
-Note that there is no GPU in your machine, building and running CPU-only works, but GPU tests will naturally fail.
+Note that if there is no GPU in your machine, building and running CPU-only works, but GPU tests will naturally fail.
 
 To compile the python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
 Be sure to set your MATLAB and python paths in `Makefile.config` first!
