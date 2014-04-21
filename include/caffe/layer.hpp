@@ -59,7 +59,8 @@ class Layer {
   // The vector that stores the parameters as a set of blobs.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
 
-  // Forward functions
+  // Forward functions: compute the layer output
+  // (and loss layers return the loss; other layers return the dummy value 0.)
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) = 0;
   // If no gpu code is provided, we will simply use cpu code.
@@ -69,9 +70,8 @@ class Layer {
     return Forward_cpu(bottom, top);
   }
 
-  // Backward functions: the backward function will compute the gradients for
-  // any parameters and also for the bottom blobs if propagate_down is true.
-  // It will return the loss produced from this layer.
+  // Backward functions: compute the gradients for any parameters and
+  // for the bottom blobs if propagate_down is true.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down,
       vector<Blob<Dtype>*>* bottom) = 0;
@@ -118,6 +118,7 @@ inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   }
 }
 
+// Serialize LayerParameter to protocol buffer
 template <typename Dtype>
 void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
   param->Clear();
