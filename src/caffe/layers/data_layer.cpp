@@ -10,6 +10,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
 using std::string;
@@ -19,7 +20,7 @@ namespace caffe {
 template <typename Dtype>
 void* DataLayerPrefetch(void* layer_pointer) {
   CHECK(layer_pointer);
-  DataLayer<Dtype>* layer = reinterpret_cast<DataLayer<Dtype>*>(layer_pointer);
+  DataLayer<Dtype>* layer = static_cast<DataLayer<Dtype>*>(layer_pointer);
   CHECK(layer);
   Datum datum;
   CHECK(layer->prefetch_data_);
@@ -54,27 +55,23 @@ void* DataLayerPrefetch(void* layer_pointer) {
       int h_off, w_off;
       // We only do random crop when we do training.
       if (layer->phase_ == Caffe::TRAIN) {
-        // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-        h_off = rand() % (height - crop_size);
-        // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-        w_off = rand() % (width - crop_size);
+        h_off = layer->PrefetchRand() % (height - crop_size);
+        w_off = layer->PrefetchRand() % (width - crop_size);
       } else {
         h_off = (height - crop_size) / 2;
         w_off = (width - crop_size) / 2;
       }
-      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-      if (mirror && rand() % 2) {
+      if (mirror && layer->PrefetchRand() % 2) {
         // Copy mirrored version
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < crop_size; ++h) {
             for (int w = 0; w < crop_size; ++w) {
-              top_data[((item_id * channels + c) * crop_size + h) * crop_size
-                       + crop_size - 1 - w] =
-                  (static_cast<Dtype>(
-                      (uint8_t)data[(c * height + h + h_off) * width
-                                    + w + w_off])
-                    - mean[(c * height + h + h_off) * width + w + w_off])
-                  * scale;
+              int top_index = ((item_id * channels + c) * crop_size + h)
+                              * crop_size + (crop_size - 1 - w);
+              int data_index = (c * height + h + h_off) * width + w + w_off;
+              Dtype datum_element =
+                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
+              top_data[top_index] = (datum_element - mean[data_index]) * scale;
             }
           }
         }
@@ -83,13 +80,12 @@ void* DataLayerPrefetch(void* layer_pointer) {
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < crop_size; ++h) {
             for (int w = 0; w < crop_size; ++w) {
-              top_data[((item_id * channels + c) * crop_size + h) * crop_size
-                       + w]
-                  = (static_cast<Dtype>(
-                      (uint8_t)data[(c * height + h + h_off) * width
-                                    + w + w_off])
-                     - mean[(c * height + h + h_off) * width + w + w_off])
-                  * scale;
+              int top_index = ((item_id * channels + c) * crop_size + h)
+                              * crop_size + w;
+              int data_index = (c * height + h + h_off) * width + w + w_off;
+              Dtype datum_element =
+                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
+              top_data[top_index] = (datum_element - mean[data_index]) * scale;
             }
           }
         }
@@ -98,8 +94,9 @@ void* DataLayerPrefetch(void* layer_pointer) {
       // we will prefer to use data() first, and then try float_data()
       if (data.size()) {
         for (int j = 0; j < size; ++j) {
-          top_data[item_id * size + j] =
-              (static_cast<Dtype>((uint8_t)data[j]) - mean[j]) * scale;
+          Dtype datum_element =
+              static_cast<Dtype>(static_cast<uint8_t>(data[j]));
+          top_data[item_id * size + j] = (datum_element - mean[j]) * scale;
         }
       } else {
         for (int j = 0; j < size; ++j) {
@@ -121,13 +118,12 @@ void* DataLayerPrefetch(void* layer_pointer) {
     }
   }
 
-  return reinterpret_cast<void*>(NULL);
+  return static_cast<void*>(NULL);
 }
 
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
-  // Finally, join the thread
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  JoinPrefetchThread();
 }
 
 template <typename Dtype>
@@ -157,8 +153,8 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   iter_->SeekToFirst();
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.data_param().rand_skip()) {
-    // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-    unsigned int skip = rand() % this->layer_param_.data_param().rand_skip();
+    unsigned int skip = caffe_rng_rand() %
+                        this->layer_param_.data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       iter_->Next();
@@ -227,17 +223,44 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
-  phase_ = Caffe::phase();
-  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
-      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  CreatePrefetchThread();
   DLOG(INFO) << "Prefetch initialized.";
+}
+
+template <typename Dtype>
+void DataLayer<Dtype>::CreatePrefetchThread() {
+  phase_ = Caffe::phase();
+  const bool prefetch_needs_rand = (phase_ == Caffe::TRAIN) &&
+      (this->layer_param_.data_param().mirror() ||
+       this->layer_param_.data_param().crop_size());
+  if (prefetch_needs_rand) {
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+  } else {
+    prefetch_rng_.reset();
+  }
+  // Create the thread.
+  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
+        static_cast<void*>(this))) << "Pthread execution failed.";
+}
+
+template <typename Dtype>
+void DataLayer<Dtype>::JoinPrefetchThread() {
+  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+}
+
+template <typename Dtype>
+unsigned int DataLayer<Dtype>::PrefetchRand() {
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  return (*prefetch_rng)();
 }
 
 template <typename Dtype>
 Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  JoinPrefetchThread();
   // Copy the data
   caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
              (*top)[0]->mutable_cpu_data());
@@ -246,9 +269,7 @@ Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                (*top)[1]->mutable_cpu_data());
   }
   // Start a new prefetch thread
-  phase_ = Caffe::phase();
-  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
-      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  CreatePrefetchThread();
   return Dtype(0.);
 }
 

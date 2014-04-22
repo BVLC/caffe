@@ -302,6 +302,10 @@ void caffe_exp<double>(const int n, const double* a, double* y) {
   vdExp(n, a, y);
 }
 
+unsigned int caffe_rng_rand() {
+  return (*caffe_rng())();
+}
+
 template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b) {
   return boost::math::nextafter<Dtype>(

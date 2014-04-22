@@ -249,6 +249,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededCPU) {
 
   // Get crop sequence with Caffe seed 1701 (done in SetUp), srand seed 1701.
   srand(this->seed_);
+  Caffe::set_random_seed(this->seed_);
   vector<vector<TypeParam> > crop_sequence;
   for (int iter = 0; iter < 2; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
