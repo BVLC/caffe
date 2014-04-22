@@ -135,6 +135,7 @@ template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientExhaustive(Layer<Dtype>* layer,
     vector<Blob<Dtype>*>* bottom, vector<Blob<Dtype>*>* top, int check_bottom) {
   layer->SetUp(*bottom, top);
+  CHECK_GT(top->size(), 0) << "Exhaustive mode requires at least one top blob.";
   // LOG(ERROR) << "Exhaustive Mode.";
   for (int i = 0; i < top->size(); ++i) {
     // LOG(ERROR) << "Exhaustive: blob " << i << " size " << top[i]->count();
