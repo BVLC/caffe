@@ -80,9 +80,11 @@ TYPED_TEST(DataLayerTest, TestReadCPU) {
   Caffe::set_mode(Caffe::CPU);
   const bool unique_pixels = false;  // all pixels the same; images different
   this->FillLevelDB(unique_pixels);
+  const TypeParam scale = 3;
   LayerParameter param;
   DataParameter* data_param = param.mutable_data_param();
   data_param->set_batch_size(5);
+  data_param->set_scale(scale);
   data_param->set_source(this->filename_->c_str());
   DataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
@@ -102,8 +104,8 @@ TYPED_TEST(DataLayerTest, TestReadCPU) {
     }
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 24; ++j) {
-        EXPECT_EQ(i, this->blob_top_data_->cpu_data()[i * 24 + j])
-            << "debug: i " << i << " j " << j;
+        EXPECT_EQ(scale * i, this->blob_top_data_->cpu_data()[i * 24 + j])
+            << "debug: iter " << iter << " i " << i << " j " << j;
       }
     }
   }
@@ -113,9 +115,11 @@ TYPED_TEST(DataLayerTest, TestReadGPU) {
   Caffe::set_mode(Caffe::GPU);
   const bool unique_pixels = false;  // all pixels the same; images different
   this->FillLevelDB(unique_pixels);
+  const TypeParam scale = 3;
   LayerParameter param;
   DataParameter* data_param = param.mutable_data_param();
   data_param->set_batch_size(5);
+  data_param->set_scale(scale);
   data_param->set_source(this->filename_->c_str());
   DataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
@@ -135,8 +139,8 @@ TYPED_TEST(DataLayerTest, TestReadGPU) {
     }
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 24; ++j) {
-        EXPECT_EQ(i, this->blob_top_data_->cpu_data()[i * 24 + j])
-            << "debug: i " << i << " j " << j;
+        EXPECT_EQ(scale * i, this->blob_top_data_->cpu_data()[i * 24 + j])
+            << "debug: iter " << iter << " i " << i << " j " << j;
       }
     }
   }
@@ -147,9 +151,11 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainCPU) {
   Caffe::set_mode(Caffe::CPU);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->FillLevelDB(unique_pixels);
+  const TypeParam scale = 3;
   LayerParameter param;
   DataParameter* data_param = param.mutable_data_param();
   data_param->set_batch_size(5);
+  data_param->set_scale(scale);
   data_param->set_crop_size(1);
   data_param->set_source(this->filename_->c_str());
   DataLayer<TypeParam> layer(param);
@@ -171,7 +177,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainCPU) {
     int num_with_center_value = 0;
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 2; ++j) {
-        const TypeParam center_value = j ? 17 : 5;
+        const TypeParam center_value = scale * (j ? 17 : 5);
         num_with_center_value +=
             (center_value == this->blob_top_data_->cpu_data()[i * 2 + j]);
       }
@@ -187,9 +193,11 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainGPU) {
   Caffe::set_mode(Caffe::GPU);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->FillLevelDB(unique_pixels);
+  const TypeParam scale = 3;
   LayerParameter param;
   DataParameter* data_param = param.mutable_data_param();
   data_param->set_batch_size(5);
+  data_param->set_scale(scale);
   data_param->set_crop_size(1);
   data_param->set_source(this->filename_->c_str());
   DataLayer<TypeParam> layer(param);
@@ -211,7 +219,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainGPU) {
     int num_with_center_value = 0;
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 2; ++j) {
-        const TypeParam center_value = j ? 17 : 5;
+        const TypeParam center_value = scale * (j ? 17 : 5);
         num_with_center_value +=
             (center_value == this->blob_top_data_->cpu_data()[i * 2 + j]);
       }
@@ -337,9 +345,11 @@ TYPED_TEST(DataLayerTest, TestReadCropTestCPU) {
   Caffe::set_mode(Caffe::CPU);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->FillLevelDB(unique_pixels);
+  const TypeParam scale = 3;
   LayerParameter param;
   DataParameter* data_param = param.mutable_data_param();
   data_param->set_batch_size(5);
+  data_param->set_scale(scale);
   data_param->set_crop_size(1);
   data_param->set_source(this->filename_->c_str());
   DataLayer<TypeParam> layer(param);
@@ -360,9 +370,9 @@ TYPED_TEST(DataLayerTest, TestReadCropTestCPU) {
     }
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 2; ++j) {
-        const TypeParam center_value = j ? 17 : 5;
+        const TypeParam center_value = scale * (j ? 17 : 5);
         EXPECT_EQ(center_value, this->blob_top_data_->cpu_data()[i * 2 + j])
-            << "debug: i " << i << " j " << j;
+            << "debug: iter " << iter << " i " << i << " j " << j;
       }
     }
   }
@@ -373,9 +383,11 @@ TYPED_TEST(DataLayerTest, TestReadCropTestGPU) {
   Caffe::set_mode(Caffe::GPU);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->FillLevelDB(unique_pixels);
+  const TypeParam scale = 3;
   LayerParameter param;
   DataParameter* data_param = param.mutable_data_param();
   data_param->set_batch_size(5);
+  data_param->set_scale(scale);
   data_param->set_crop_size(1);
   data_param->set_source(this->filename_->c_str());
   DataLayer<TypeParam> layer(param);
@@ -396,9 +408,9 @@ TYPED_TEST(DataLayerTest, TestReadCropTestGPU) {
     }
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 2; ++j) {
-        const TypeParam center_value = j ? 17 : 5;
+        const TypeParam center_value = scale * (j ? 17 : 5);
         EXPECT_EQ(center_value, this->blob_top_data_->cpu_data()[i * 2 + j])
-            << "debug: i " << i << " j " << j;
+            << "debug: iter " << iter << " i " << i << " j " << j;
       }
     }
   }
