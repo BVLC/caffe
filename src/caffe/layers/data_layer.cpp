@@ -53,7 +53,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
       int h_off, w_off;
       // We only do random crop when we do training.
-      if (Caffe::phase() == Caffe::TRAIN) {
+      if (layer->phase_ == Caffe::TRAIN) {
         // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
         h_off = rand() % (height - crop_size);
         // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
@@ -227,6 +227,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
+  phase_ = Caffe::phase();
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
   DLOG(INFO) << "Prefetch initialized.";
@@ -245,6 +246,7 @@ Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                (*top)[1]->mutable_cpu_data());
   }
   // Start a new prefetch thread
+  phase_ = Caffe::phase();
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
   return Dtype(0.);

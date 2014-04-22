@@ -297,6 +297,7 @@ class DataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
   bool output_labels_;
+  Caffe::Phase phase_;
 };
 
 template <typename Dtype>
@@ -476,6 +477,7 @@ class ImageDataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_data_;
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
+  Caffe::Phase phase_;
 };
 
 template <typename Dtype>
