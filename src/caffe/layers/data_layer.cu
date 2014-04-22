@@ -30,6 +30,7 @@ Dtype DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         cudaMemcpyHostToDevice));
   }
   // Start a new prefetch thread
+  phase_ = Caffe::phase();
   CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
       reinterpret_cast<void*>(this))) << "Pthread execution failed.";
   return Dtype(0.);
