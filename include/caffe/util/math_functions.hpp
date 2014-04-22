@@ -105,6 +105,8 @@ void caffe_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 template <typename Dtype>
 void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
+unsigned int caffe_rng_rand();
+
 template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b);
 
