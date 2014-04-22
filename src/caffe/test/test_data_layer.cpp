@@ -284,11 +284,121 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededCPU) {
   }
 }
 
+// Test that the sequence of random crops is consistent when using
+// Caffe::set_random_seed.
+TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededGPU) {
+  Caffe::set_phase(Caffe::TRAIN);
+  Caffe::set_mode(Caffe::GPU);
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->FillLevelDB(unique_pixels);
+  LayerParameter param;
+  DataParameter* data_param = param.mutable_data_param();
+  data_param->set_batch_size(5);
+  data_param->set_crop_size(1);
+  data_param->set_mirror(true);
+  data_param->set_source(this->filename_->c_str());
+
+  // Get crop sequence with Caffe seed 1701.
+  Caffe::set_random_seed(this->seed_);
+  DataLayer<TypeParam> layer1(param);
+  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  vector<vector<TypeParam> > crop_sequence;
+  for (int iter = 0; iter < 2; ++iter) {
+    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+    vector<TypeParam> iter_crop_sequence;
+    for (int i = 0; i < 5; ++i) {
+      for (int j = 0; j < 2; ++j) {
+        iter_crop_sequence.push_back(
+            this->blob_top_data_->cpu_data()[i * 2 + j]);
+      }
+    }
+    crop_sequence.push_back(iter_crop_sequence);
+  }
+
+  // Get crop sequence after reseeding Caffe with 1701.
+  // Check that the sequence is the same as the original.
+  Caffe::set_random_seed(this->seed_);
+  DataLayer<TypeParam> layer2(param);
+  layer2.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  for (int iter = 0; iter < 2; ++iter) {
+    layer2.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+    for (int i = 0; i < 5; ++i) {
+      for (int j = 0; j < 2; ++j) {
+        EXPECT_EQ(crop_sequence[iter][i * 2 + j],
+                  this->blob_top_data_->cpu_data()[i * 2 + j])
+            << "debug: iter " << iter << " i " << i << " j " << j;
+      }
+    }
+  }
+}
+
 // Test that the sequence of random crops differs across iterations when
 // Caffe::set_random_seed isn't called (and seeds from srand are ignored).
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededCPU) {
   Caffe::set_phase(Caffe::TRAIN);
   Caffe::set_mode(Caffe::CPU);
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->FillLevelDB(unique_pixels);
+  LayerParameter param;
+  DataParameter* data_param = param.mutable_data_param();
+  data_param->set_batch_size(5);
+  data_param->set_crop_size(1);
+  data_param->set_mirror(true);
+  data_param->set_source(this->filename_->c_str());
+
+  // Get crop sequence with Caffe seed 1701, srand seed 1701.
+  Caffe::set_random_seed(this->seed_);
+  srand(this->seed_);
+  DataLayer<TypeParam> layer1(param);
+  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  vector<vector<TypeParam> > crop_sequence;
+  for (int iter = 0; iter < 2; ++iter) {
+    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+    vector<TypeParam> iter_crop_sequence;
+    for (int i = 0; i < 5; ++i) {
+      for (int j = 0; j < 2; ++j) {
+        iter_crop_sequence.push_back(
+            this->blob_top_data_->cpu_data()[i * 2 + j]);
+      }
+    }
+    crop_sequence.push_back(iter_crop_sequence);
+  }
+
+  // Get crop sequence continuing from previous Caffe RNG state;
+  // reseed srand with 1701. Check that the sequence differs from the original.
+  srand(this->seed_);
+  DataLayer<TypeParam> layer2(param);
+  layer2.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  for (int iter = 0; iter < 2; ++iter) {
+    layer2.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+    int num_sequence_matches = 0;
+    for (int i = 0; i < 5; ++i) {
+      for (int j = 0; j < 2; ++j) {
+        num_sequence_matches += (crop_sequence[iter][i * 2 + j] ==
+                                 this->blob_top_data_->cpu_data()[i * 2 + j]);
+      }
+    }
+    EXPECT_LT(num_sequence_matches, 10);
+  }
+}
+
+// Test that the sequence of random crops differs across iterations when
+// Caffe::set_random_seed isn't called (and seeds from srand are ignored).
+TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededGPU) {
+  Caffe::set_phase(Caffe::TRAIN);
+  Caffe::set_mode(Caffe::GPU);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->FillLevelDB(unique_pixels);
   LayerParameter param;

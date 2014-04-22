@@ -251,6 +251,7 @@ void DataLayer<Dtype>::JoinPrefetchThread() {
 
 template <typename Dtype>
 unsigned int DataLayer<Dtype>::PrefetchRand() {
+  CHECK(prefetch_rng_);
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   return (*prefetch_rng)();
