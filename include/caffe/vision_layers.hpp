@@ -472,6 +472,11 @@ class ImageDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
 
+  virtual void CreatePrefetchThread();
+  virtual void JoinPrefetchThread();
+  virtual unsigned int PrefetchRand();
+
+  shared_ptr<Caffe::RNG> prefetch_rng_;
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
   int datum_channels_;
