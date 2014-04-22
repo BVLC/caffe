@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>  // NOLINT(readability/streams)
 #include <fstream>  // NOLINT(readability/streams)
+#include <utility>
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
@@ -15,6 +16,7 @@
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
+using std::iterator;
 using std::string;
 using std::pair;
 
@@ -122,7 +124,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       DLOG(INFO) << "Restarting data prefetching from start.";
       layer->lines_id_ = 0;
       if (layer->layer_param_.image_data_param().shuffle()) {
-        std::random_shuffle(layer->lines_.begin(), layer->lines_.end());
+        layer->ShuffleImages();
       }
     }
   }
@@ -158,7 +160,9 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
-    std::random_shuffle(lines_.begin(), lines_.end());
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+    ShuffleImages();
   }
   LOG(INFO) << "A total of " << lines_.size() << " images.";
 
@@ -231,9 +235,11 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   phase_ = Caffe::phase();
-  const bool prefetch_needs_rand = (phase_ == Caffe::TRAIN) &&
-      (this->layer_param_.data_param().mirror() ||
-       this->layer_param_.data_param().crop_size());
+  const bool prefetch_needs_rand =
+      this->layer_param_.image_data_param().shuffle() ||
+          ((phase_ == Caffe::TRAIN) &&
+           (this->layer_param_.image_data_param().mirror() ||
+            this->layer_param_.image_data_param().crop_size()));
   if (prefetch_needs_rand) {
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
@@ -243,6 +249,18 @@ void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   // Create the thread.
   CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
         static_cast<void*>(this))) << "Pthread execution failed.";
+}
+
+template <typename Dtype>
+void ImageDataLayer<Dtype>::ShuffleImages() {
+  const int num_images = lines_.size();
+  for (int i = 0; i < num_images; ++i) {
+    const int max_rand_index = num_images - i;
+    const int rand_index = PrefetchRand() % max_rand_index;
+    pair<string, int> item = lines_[rand_index];
+    lines_.erase(lines_.begin() + rand_index);
+    lines_.push_back(item);
+  }
 }
 
 template <typename Dtype>

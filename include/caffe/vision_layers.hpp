@@ -472,6 +472,8 @@ class ImageDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
 
+  virtual void ShuffleImages();
+
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
   virtual unsigned int PrefetchRand();
