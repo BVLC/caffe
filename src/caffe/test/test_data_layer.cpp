@@ -31,7 +31,6 @@ class DataLayerTest : public ::testing::Test {
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
-    Caffe::set_random_seed(seed_);
   }
 
   // Fill the LevelDB with data: if unique_pixels, each pixel is unique but
@@ -236,23 +235,14 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededCPU) {
   data_param->set_crop_size(1);
   data_param->set_mirror(true);
   data_param->set_source(this->filename_->c_str());
-  DataLayer<TypeParam> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 5);
-  EXPECT_EQ(this->blob_top_data_->channels(), 2);
-  EXPECT_EQ(this->blob_top_data_->height(), 1);
-  EXPECT_EQ(this->blob_top_data_->width(), 1);
-  EXPECT_EQ(this->blob_top_label_->num(), 5);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
-  EXPECT_EQ(this->blob_top_label_->height(), 1);
-  EXPECT_EQ(this->blob_top_label_->width(), 1);
 
-  // Get crop sequence with Caffe seed 1701 (done in SetUp), srand seed 1701.
-  srand(this->seed_);
+  // Get crop sequence with Caffe seed 1701.
   Caffe::set_random_seed(this->seed_);
+  DataLayer<TypeParam> layer1(param);
+  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   vector<vector<TypeParam> > crop_sequence;
   for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
@@ -269,15 +259,18 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededCPU) {
   // Get crop sequence after reseeding Caffe with 1701.
   // Check that the sequence is the same as the original.
   Caffe::set_random_seed(this->seed_);
+  DataLayer<TypeParam> layer2(param);
+  layer2.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer2.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 2; ++j) {
         EXPECT_EQ(crop_sequence[iter][i * 2 + j],
-                  this->blob_top_data_->cpu_data()[i * 2 + j]);
+                  this->blob_top_data_->cpu_data()[i * 2 + j])
+            << "debug: iter " << iter << " i " << i << " j " << j;
       }
     }
   }
@@ -296,22 +289,15 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededCPU) {
   data_param->set_crop_size(1);
   data_param->set_mirror(true);
   data_param->set_source(this->filename_->c_str());
-  DataLayer<TypeParam> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 5);
-  EXPECT_EQ(this->blob_top_data_->channels(), 2);
-  EXPECT_EQ(this->blob_top_data_->height(), 1);
-  EXPECT_EQ(this->blob_top_data_->width(), 1);
-  EXPECT_EQ(this->blob_top_label_->num(), 5);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
-  EXPECT_EQ(this->blob_top_label_->height(), 1);
-  EXPECT_EQ(this->blob_top_label_->width(), 1);
 
-  // Get crop sequence with Caffe seed 1701 (done in SetUp), srand seed 1701.
+  // Get crop sequence with Caffe seed 1701, srand seed 1701.
+  Caffe::set_random_seed(this->seed_);
   srand(this->seed_);
+  DataLayer<TypeParam> layer1(param);
+  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   vector<vector<TypeParam> > crop_sequence;
   for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
@@ -325,11 +311,13 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededCPU) {
     crop_sequence.push_back(iter_crop_sequence);
   }
 
-  // Get crop sequence continuing from Caffe seed 1701; reseed srand with 1701.
-  // Check that the sequence differs from the original.
+  // Get crop sequence continuing from previous Caffe RNG state;
+  // reseed srand with 1701. Check that the sequence differs from the original.
   srand(this->seed_);
+  DataLayer<TypeParam> layer2(param);
+  layer2.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer2.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
