@@ -14,6 +14,7 @@ class Blob {
  public:
   explicit Blob(const int num = 0, const int channels = 0,
                 const int height = 0, const int width = 0);
+  explicit Blob(Blob* memory_share_blob);
   void Reshape(const int num, const int channels,
                const int height, const int width);
   void ReshapeLike(const Blob& other);
@@ -90,6 +91,7 @@ class Blob {
   int width_;
   int count_;
   size_t capacity_;
+  size_t space_requirement_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

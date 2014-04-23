@@ -13,8 +13,15 @@ namespace caffe {
 template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels,
                   const int height, const int width) :
-    count_(0), capacity_(0), data_(), diff_() {
+    count_(0), space_requirement_(0), data_(), diff_() {
   Reshape(num, channels, height, width);
+}
+
+template <typename Dtype>
+Blob<Dtype>::Blob(Blob* memory_share_blob) :
+    count_(0), space_requirement_(0), data_(), diff_() {
+  ShareData(*memory_share_blob);
+  ShareDiff(*memory_share_blob);
 }
 
 template <typename Dtype>
@@ -29,19 +36,16 @@ void Blob<Dtype>::Reshape(const int num, const int channels,
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
-  if (capacity_ < count_) {
-    capacity_ = count_;
-  }
-  size_t space_requirement = capacity_ * sizeof(Dtype);
+  space_requirement_ = count_ * sizeof(Dtype);
   if (data_) {
-    data_->set_size(space_requirement);
+    data_->set_size(space_requirement_);
   } else {
-    data_.reset(new SyncedMemory(space_requirement));
+    data_.reset(new SyncedMemory(space_requirement_));
   }
   if (diff_) {
-    diff_->set_size(space_requirement);
+    diff_->set_size(space_requirement_);
   } else {
-    diff_.reset(new SyncedMemory(space_requirement));
+    diff_.reset(new SyncedMemory(space_requirement_));
   }
 }
 
@@ -59,6 +63,7 @@ Blob<Dtype>::Blob(const int num, const int channels, const int height,
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
+  data_->set_size(space_requirement_);
   return static_cast<const Dtype*>(data_->cpu_data());
 }
 
@@ -71,55 +76,62 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_data() const {
   CHECK(data_);
+  data_->set_size(space_requirement_);
   return static_cast<const Dtype*>(data_->gpu_data());
 }
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
+  diff_->set_size(space_requirement_);
   return static_cast<const Dtype*>(diff_->cpu_data());
 }
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);
+  diff_->set_size(space_requirement_);
   return static_cast<const Dtype*>(diff_->gpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
+  data_->set_size(space_requirement_);
   return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
+  data_->set_size(space_requirement_);
   return static_cast<Dtype*>(data_->mutable_gpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
+  diff_->set_size(space_requirement_);
   return static_cast<Dtype*>(diff_->mutable_cpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
+  diff_->set_size(space_requirement_);
   return static_cast<Dtype*>(diff_->mutable_gpu_data());
 }
 
 template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
-  CHECK_EQ(count_, other.count());
   data_ = other.data();
+  CHECK(data_);
 }
 
 template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
-  CHECK_EQ(count_, other.count());
   diff_ = other.diff();
+  CHECK(diff_);
 }
 
 template <typename Dtype>

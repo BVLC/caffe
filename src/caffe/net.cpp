@@ -20,19 +20,20 @@ using std::set;
 namespace caffe {
 
 template <typename Dtype>
-Net<Dtype>::Net(const NetParameter& param) {
-  Init(param);
+Net<Dtype>::Net(const NetParameter& param, Net<Dtype>* memory_share_net) {
+  Init(param, memory_share_net);
 }
 
 template <typename Dtype>
-Net<Dtype>::Net(const string& param_file) {
+Net<Dtype>::Net(const string& param_file, Net<Dtype>* memory_share_net) {
   NetParameter param;
   ReadNetParamsFromTextFileOrDie(param_file, &param);
-  Init(param);
+  Init(param, memory_share_net);
 }
 
 template <typename Dtype>
-void Net<Dtype>::Init(const NetParameter& in_param) {
+void Net<Dtype>::Init(const NetParameter& in_param,
+                      Net<Dtype>* memory_share_net) {
   // Create a copy of in_param with splits added where necessary.
   NetParameter param;
   InsertSplits(in_param, &param);
@@ -61,7 +62,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     available_blobs.insert(blob_name);
     memory_used += blob_pointer->count();
   }
-  DLOG(INFO) << "Memory required for Data" << memory_used*sizeof(Dtype);
+  DLOG(INFO) << "Memory required for data: " << memory_used * sizeof(Dtype);
   // For each layer, set up their input and output
   bottom_vecs_.resize(param.layers_size());
   top_vecs_.resize(param.layers_size());
@@ -109,7 +110,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       } else {
         // Normal output.
         LOG(INFO) << layer_param.name() << " -> " << blob_name;
-        shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+        shared_ptr<Blob<Dtype> > blob_pointer;
+        if (memory_share_net && memory_share_net->has_blob(blob_name)) {
+          shared_ptr<Blob<Dtype> > memory_share_blob =
+              memory_share_net->blob_by_name(blob_name);
+          blob_pointer.reset(new Blob<Dtype>(memory_share_blob.get()));
+        } else {
+          blob_pointer.reset(new Blob<Dtype>());
+        }
         blobs_.push_back(blob_pointer);
         blob_names_.push_back(blob_name);
         blob_need_backward_.push_back(param.force_backward());
@@ -131,7 +139,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       if (!in_place)
         memory_used += top_vecs_[i][topid]->count();
     }
-    DLOG(INFO) << "Memory  required for Data " << memory_used*sizeof(Dtype);
+    DLOG(INFO) << "Memory required for data: " << memory_used * sizeof(Dtype);
     int blobs_lr_size = layers_[i]->layer_param().blobs_lr_size();
     CHECK(blobs_lr_size == layers_[i]->blobs().size() || blobs_lr_size == 0)
         << "Incorrect blobs lr size: should be either 0 or the same as "
@@ -171,7 +179,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
-  LOG(INFO) << "Memory required for Data " << memory_used*sizeof(Dtype);
+  LOG(INFO) << "Memory required for data: " << memory_used * sizeof(Dtype);
 }
 
 
