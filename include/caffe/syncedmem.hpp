@@ -3,8 +3,6 @@
 #ifndef CAFFE_SYNCEDMEM_HPP_
 #define CAFFE_SYNCEDMEM_HPP_
 
-#include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
 #include <cstdlib>
 
 #include "caffe/common.hpp"
@@ -29,6 +27,10 @@ inline void CaffeMallocHost(void** ptr, size_t size) {
   *ptr = malloc(size);
 }
 
+inline void CaffeReallocHost(void** ptr, size_t size) {
+  *ptr = realloc(*ptr, size);
+}
+
 inline void CaffeFreeHost(void* ptr) {
   free(ptr);
 }
@@ -36,12 +38,9 @@ inline void CaffeFreeHost(void* ptr) {
 
 class SyncedMemory {
  public:
-  SyncedMemory()
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
-  explicit SyncedMemory(size_t size)
-      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
+  explicit SyncedMemory(const size_t size = 0)
+      : cpu_data_(NULL), gpu_data_(NULL), size_(size),
+        cpu_capacity_(0), gpu_capacity_(0), head_(UNINITIALIZED) {}
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
@@ -51,18 +50,18 @@ class SyncedMemory {
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   inline size_t size() const { return size_; }
-  inline size_t capacity() const { return capacity_; }
-  void resize(const size_t size, const uint8_t default_value = 0);
-  void reserve(const size_t capacity);
+  inline void set_size(const size_t size) { size_ = size; }
 
  private:
+  size_t size_;
+  size_t cpu_capacity_;
+  size_t gpu_capacity_;
+  void* cpu_data_;
+  void* gpu_data_;
   void to_cpu();
   void to_gpu();
-  thrust::host_vector<uint8_t> cpu_vector_;
-  thrust::device_vector<uint8_t> gpu_vector_;
-  size_t size_;
-  uint8_t resize_default_value_;
-  size_t capacity_;
+  void cpu_resize();
+  void gpu_resize();
   SyncedHead head_;
   bool own_cpu_data_;
 

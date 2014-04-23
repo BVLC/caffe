@@ -12,7 +12,8 @@ namespace caffe {
 
 template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels,
-                  const int height, const int width) {
+                  const int height, const int width) :
+    count_(0), capacity_(0), data_(), diff_() {
   Reshape(num, channels, height, width);
 }
 
@@ -33,12 +34,12 @@ void Blob<Dtype>::Reshape(const int num, const int channels,
   }
   size_t space_requirement = capacity_ * sizeof(Dtype);
   if (data_) {
-    data_->reserve(space_requirement);
+    data_->set_size(space_requirement);
   } else {
     data_.reset(new SyncedMemory(space_requirement));
   }
   if (diff_) {
-    diff_->reserve(space_requirement);
+    diff_->set_size(space_requirement);
   } else {
     diff_.reset(new SyncedMemory(space_requirement));
   }
