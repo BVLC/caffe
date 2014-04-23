@@ -13,9 +13,9 @@ template <typename Dtype>
 class Blob {
  public:
   explicit Blob(const int num = 0, const int channels = 0,
-      const int height = 0, const int width = 0);
-  void Reshape(const int num, const int channels, const int height,
-    const int width);
+                const int height = 0, const int width = 0);
+  void Reshape(const int num, const int channels,
+               const int height, const int width);
   void ReshapeLike(const Blob& other);
   inline int num() const { return num_; }
   inline int channels() const { return channels_; }
