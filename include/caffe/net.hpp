@@ -22,12 +22,12 @@ namespace caffe {
 template <typename Dtype>
 class Net {
  public:
-  explicit Net(const NetParameter& param);
-  explicit Net(const string& param_file);
+  explicit Net(const NetParameter& param, Net<Dtype>* memory_share_net = NULL);
+  explicit Net(const string& param_file, Net<Dtype>* memory_share_net = NULL);
   virtual ~Net() {}
 
   // Initialize a network with the network parameter.
-  void Init(const NetParameter& param);
+  void Init(const NetParameter& param, Net<Dtype>* memory_share_net = NULL);
 
   // Run forward with the input blobs already fed separately. You can get the
   // input blobs using input_blobs().
