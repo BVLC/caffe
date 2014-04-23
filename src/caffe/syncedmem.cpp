@@ -21,9 +21,9 @@ SyncedMemory::~SyncedMemory() {
 /*
  * http://thrust.github.io/doc/classthrust_1_1host__vector.html
  * http://thrust.github.io/doc/classthrust_1_1device__vector.html
- * thrust::host_vector and thrust::device_vector will resize this vector to 
- *   the specified number of elements. If the number is smaller than this 
- *   vector's current size this vector is truncated, otherwise this vector 
+ * thrust::host_vector and thrust::device_vector will resize this vector to
+ *   the specified number of elements. If the number is smaller than this
+ *   vector's current size this vector is truncated, otherwise this vector
  *   is extended and new elements are populated with given data.
  */
 void SyncedMemory::resize(const size_t size, const uint8_t default_value) {
@@ -35,8 +35,8 @@ void SyncedMemory::resize(const size_t size, const uint8_t default_value) {
 /*
  * http://thrust.github.io/doc/classthrust_1_1host__vector.html
  * http://thrust.github.io/doc/classthrust_1_1device__vector.html
- * If n is less than or equal to capacity(), this call has no effect. 
- * Otherwise, this method is a request for allocation of additional memory. 
+ * If n is less than or equal to capacity(), this call has no effect.
+ * Otherwise, this method is a request for allocation of additional memory.
  * If the request is successful, then capacity() is greater than or equal to n;
  *   otherwise, capacity() is unchanged. In either case, size() is unchanged.
  */
@@ -91,8 +91,7 @@ inline void SyncedMemory::to_gpu() {
 
 const void* SyncedMemory::cpu_data() {
   to_cpu();
-  return static_cast<const void*>(thrust::raw_pointer_cast(
-      cpu_vector_.data()));
+  return static_cast<const void*>(thrust::raw_pointer_cast(cpu_vector_.data()));
 }
 
 void SyncedMemory::set_cpu_data(void* data) {
@@ -107,8 +106,7 @@ void SyncedMemory::set_cpu_data(void* data) {
 
 const void* SyncedMemory::gpu_data() {
   to_gpu();
-  return static_cast<const void*>(thrust::raw_pointer_cast(
-      gpu_vector_.data()));
+  return static_cast<const void*>(thrust::raw_pointer_cast(gpu_vector_.data()));
 }
 
 void* SyncedMemory::mutable_cpu_data() {
@@ -125,4 +123,3 @@ void* SyncedMemory::mutable_gpu_data() {
 
 
 }  // namespace caffe
-

@@ -11,16 +11,14 @@
 namespace caffe {
 
 template <typename Dtype>
-Blob<Dtype>::Blob(const int num, const int channels, const int height,
-    const int width) : data_(), diff_(), num_(num), channels_(channels),
-    height_(height), width_(width), count_(num * channels * height * width),
-    capacity_(count_) {
+Blob<Dtype>::Blob(const int num, const int channels,
+                  const int height, const int width) {
   Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
-void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
-    const int width) {
+void Blob<Dtype>::Reshape(const int num, const int channels,
+                          const int height, const int width) {
   CHECK_GE(num, 0);
   CHECK_GE(channels, 0);
   CHECK_GE(height, 0);
@@ -60,7 +58,7 @@ Blob<Dtype>::Blob(const int num, const int channels, const int height,
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
-  return (const Dtype*)data_->cpu_data();
+  return static_cast<const Dtype*>(data_->cpu_data());
 }
 
 template <typename Dtype>
@@ -72,43 +70,43 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_data() const {
   CHECK(data_);
-  return (const Dtype*)data_->gpu_data();
+  return static_cast<const Dtype*>(data_->gpu_data());
 }
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
-  return (const Dtype*)diff_->cpu_data();
+  return static_cast<const Dtype*>(diff_->cpu_data());
 }
 
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);
-  return (const Dtype*)diff_->gpu_data();
+  return static_cast<const Dtype*>(diff_->gpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
-  return reinterpret_cast<Dtype*>(data_->mutable_cpu_data());
+  return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
-  return reinterpret_cast<Dtype*>(data_->mutable_gpu_data());
+  return static_cast<Dtype*>(data_->mutable_gpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
-  return reinterpret_cast<Dtype*>(diff_->mutable_cpu_data());
+  return static_cast<Dtype*>(diff_->mutable_cpu_data());
 }
 
 template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
-  return reinterpret_cast<Dtype*>(diff_->mutable_gpu_data());
+  return static_cast<Dtype*>(diff_->mutable_gpu_data());
 }
 
 template <typename Dtype>
@@ -130,15 +128,15 @@ void Blob<Dtype>::Update() {
   case SyncedMemory::HEAD_AT_CPU:
     // perform computation on CPU
     caffe_axpy<Dtype>(count_, Dtype(-1),
-        reinterpret_cast<const Dtype*>(diff_->cpu_data()),
-        reinterpret_cast<Dtype*>(data_->mutable_cpu_data()));
+        static_cast<const Dtype*>(diff_->cpu_data()),
+        static_cast<Dtype*>(data_->mutable_cpu_data()));
     break;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
     // perform computation on GPU
     caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
-        reinterpret_cast<const Dtype*>(diff_->gpu_data()),
-        reinterpret_cast<Dtype*>(data_->mutable_gpu_data()));
+        static_cast<const Dtype*>(diff_->gpu_data()),
+        static_cast<Dtype*>(data_->mutable_gpu_data()));
     break;
   default:
     LOG(FATAL) << "Syncedmem not initialized.";
