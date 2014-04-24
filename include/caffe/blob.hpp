@@ -23,7 +23,6 @@ class Blob {
   inline int height() const { return height_; }
   inline int width() const { return width_; }
   inline int count() const { return count_; }
-  inline size_t capacity() const { return capacity_; }
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     CHECK_GE(n, 0);
@@ -90,7 +89,6 @@ class Blob {
   int height_;
   int width_;
   int count_;
-  size_t capacity_;
   size_t space_requirement_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);

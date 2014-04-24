@@ -50,30 +50,22 @@ class SyncedMemory {
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   inline size_t size() const { return size_; }
+  inline void set_size(const size_t size) { size_ = size; }
   inline size_t cpu_capacity() const { return cpu_capacity_; }
   inline size_t gpu_capacity() const { return gpu_capacity_; }
-  inline void set_size(const size_t size) { size_ = size; }
 
  private:
-  size_t size_;
-  size_t cpu_capacity_;
-  size_t gpu_capacity_;
-  void* cpu_data_;
-  void* gpu_data_;
   void to_cpu();
   void to_gpu();
+  size_t cpu_resize();
+  size_t gpu_resize();
+  void* cpu_data_;
+  void* gpu_data_;
+  size_t cpu_capacity_;
+  size_t gpu_capacity_;
+  size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
-
-  // If CPU memory is uninitialized or cpu_capacity_ < size_, allocate
-  // the appropriate amount of additional CPU memory and return true. Otherwise,
-  // do nothing and return false.
-  bool cpu_resize();
-
-  // If GPU memory is uninitialized or gpu_capacity_ < size_, allocate
-  // the appropriate amount of additional GPU memory and return true. Otherwise,
-  // do nothing and return false.
-  bool gpu_resize();
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

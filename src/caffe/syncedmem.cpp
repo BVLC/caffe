@@ -101,42 +101,48 @@ void* SyncedMemory::mutable_gpu_data() {
   return gpu_data_;
 }
 
-bool SyncedMemory::cpu_resize() {
+// If host (CPU) memory is uninitialized or cpu_capacity_ < size_, allocate the
+// appropriate amount of additional host memory. Otherwise, do nothing.
+// Returns the number of extra bytes allocated.
+size_t SyncedMemory::cpu_resize() {
   if (!cpu_data_) {
     CaffeMallocHost(&cpu_data_, size_);
-    memset(cpu_data_, 0, size_);
-    cpu_capacity_ = size_;
   } else if (size_ > cpu_capacity_) {
     CaffeReallocHost(&cpu_data_, size_);
-    const size_t num_new_bytes = size_ - cpu_capacity_;
-    memset(static_cast<uint8_t*>(cpu_data_) + cpu_capacity_, 0, num_new_bytes);
-    cpu_capacity_ = size_;
   } else {
-    return false;
+    return 0;
   }
-  return true;
+  size_t num_new_bytes = size_ - cpu_capacity_;
+  // Zero-fill memory starting from offset cpu_capacity_ (i.e., don't overwrite
+  // current data).
+  memset(static_cast<uint8_t*>(cpu_data_) + cpu_capacity_, 0, num_new_bytes);
+  cpu_capacity_ = size_;
+  return num_new_bytes;
 }
 
-bool SyncedMemory::gpu_resize() {
+// If GPU device memory is uninitialized or gpu_capacity_ < size_, allocate the
+// appropriate amount of additional GPU memory. Otherwise, do nothing.
+// Returns the number of extra bytes allocated.
+size_t SyncedMemory::gpu_resize() {
   if (!gpu_data_) {
     CUDA_CHECK(cudaMalloc(&gpu_data_, size_));
-    CUDA_CHECK(cudaMemset(gpu_data_, 0, size_));
-    gpu_capacity_ = size_;
   } else if (size_ > gpu_capacity_) {
-    void* new_gpu_data_;
-    CUDA_CHECK(cudaMalloc(&new_gpu_data_, size_));
-    CUDA_CHECK(cudaMemcpy(new_gpu_data_, gpu_data_, gpu_capacity_,
+    void* new_gpu_data;
+    CUDA_CHECK(cudaMalloc(&new_gpu_data, size_));
+    CUDA_CHECK(cudaMemcpy(new_gpu_data, gpu_data_, gpu_capacity_,
                           cudaMemcpyDeviceToDevice));
     CUDA_CHECK(cudaFree(gpu_data_));
-    gpu_data_ = new_gpu_data_;
-    const size_t num_new_bytes = size_ - gpu_capacity_;
-    CUDA_CHECK(cudaMemset(
-        static_cast<uint8_t*>(gpu_data_) + gpu_capacity_, 0, num_new_bytes));
-    gpu_capacity_ = size_;
+    gpu_data_ = new_gpu_data;
   } else {
-    return false;
+    return 0;
   }
-  return true;
+  size_t num_new_bytes = size_ - gpu_capacity_;
+  // Zero-fill memory starting from offset gpu_capacity_ (i.e., don't overwrite
+  // current data).
+  CUDA_CHECK(cudaMemset(
+      static_cast<uint8_t*>(gpu_data_) + gpu_capacity_, 0, num_new_bytes));
+  gpu_capacity_ = size_;
+  return num_new_bytes;
 }
 
 }  // namespace caffe
