@@ -63,6 +63,14 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     Restore(resume_file);
   }
 
+  // Run a test pass before doing any training to avoid waiting a potentially
+  // very long time (param_.test_interval() training iterations) to report that
+  // there's not enough memory to run the test net and crash, etc.; and to gauge
+  // the effect of the first training iterations.
+  if (param_.test_interval()) {
+    Test();
+  }
+
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
@@ -75,10 +83,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
     if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
-      // We need to set phase to test before running.
-      Caffe::set_phase(Caffe::TEST);
       Test();
-      Caffe::set_phase(Caffe::TRAIN);
     }
     // Check if we need to do snapshot
     if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
@@ -94,7 +99,13 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 template <typename Dtype>
 void Solver<Dtype>::Test() {
-  LOG(INFO) << "Iteration " << iter_ << ", Testing net";
+  if (iter_) {
+    LOG(INFO) << "Iteration " << iter_ << ", Testing net";
+  } else {
+    LOG(INFO) << "Testing net from initial parameters.";
+  }
+  // We need to set phase to test before running.
+  Caffe::set_phase(Caffe::TEST);
   CHECK_NOTNULL(test_net_.get())->ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<Blob<Dtype>*> bottom_vec;
@@ -131,6 +142,7 @@ void Solver<Dtype>::Test() {
     LOG(INFO) << "Test score #" << i << ": "
         << test_score[i] / param_.test_iter();
   }
+  Caffe::set_phase(Caffe::TRAIN);
 }
 
 
