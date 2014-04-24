@@ -84,6 +84,10 @@ message SolverParameter {
   optional int32 solver_mode = 17 [default = 1];
   // the device_id will that be used in GPU mode. Use device_id = 0 in default.
   optional int32 device_id = 18 [default = 0];
+  // If non-negative, the seed with which the Solver will initialize the Caffe
+  // random number generator -- useful for reproducible results. Otherwise,
+  // (and by default) initialize using a seed derived from the system clock.
+  optional int64 random_seed = 20 [default = -1];
 }
 
 // A message that stores the solver snapshots
