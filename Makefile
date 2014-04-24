@@ -305,6 +305,10 @@ $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
 
+$(GTEST_OBJ): $(GTEST_SRC) | $(GTEST_BUILD_DIR)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
+	@ echo
+
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
 	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
 	@ echo
@@ -327,33 +331,29 @@ $(UTIL_BUILD_DIR)/%.o: src/$(PROJECT)/util/%.cpp $(HXX_SRCS) | $(UTIL_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
-$(GTEST_OBJ): $(GTEST_SRC) | $(GTEST_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
-	@ echo
-
-$(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu | $(OBJ_BUILD_DIR)
-	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
-	@ echo
-
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@ echo
 
-$(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
+$(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu $(HXX_SRCS) \
+		| $(UTIL_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 	@ echo
 
-$(TOOL_BUILD_DIR)/%.o: tools/%.cpp $(PROTO_GEN_HEADER) | $(TOOL_BUILD_DIR)
+$(OBJ_BUILD_DIR)/%.cuo: src/$(PROJECT)/%.cu $(HXX_SRCS) | $(OBJ_BUILD_DIR)
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	@ echo
+
+$(TOOL_BUILD_DIR)/%.o: tools/%.cpp $(HXX_SRCS) | $(TOOL_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@ echo
 
-$(EXAMPLE_BUILD_DIR)/%.o: examples/%.cpp $(PROTO_GEN_HEADER) \
-		| $(EXAMPLE_BUILD_DIRS)
+$(EXAMPLE_BUILD_DIR)/%.o: examples/%.cpp $(HXX_SRCS) | $(EXAMPLE_BUILD_DIRS)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@ echo
 
-$(OBJ_BUILD_DIR)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS)
+$(OBJ_BUILD_DIR)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS) | $(OBJ_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
