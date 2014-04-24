@@ -36,7 +36,12 @@ inline void SyncedMemory::to_cpu() {
     head_ = SYNCED;
     break;
   case HEAD_AT_CPU:
+    cpu_resize();
+    break;
   case SYNCED:
+    if (cpu_resize()) {
+      head_ = HEAD_AT_CPU;
+    }
     break;
   }
 }
@@ -54,7 +59,12 @@ inline void SyncedMemory::to_gpu() {
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:
+    gpu_resize();
+    break;
   case SYNCED:
+    if (gpu_resize()) {
+      head_ = HEAD_AT_GPU;
+    }
     break;
   }
 }
@@ -91,7 +101,7 @@ void* SyncedMemory::mutable_gpu_data() {
   return gpu_data_;
 }
 
-void SyncedMemory::cpu_resize() {
+bool SyncedMemory::cpu_resize() {
   if (!cpu_data_) {
     CaffeMallocHost(&cpu_data_, size_);
     memset(cpu_data_, 0, size_);
@@ -101,10 +111,13 @@ void SyncedMemory::cpu_resize() {
     const size_t num_new_bytes = size_ - cpu_capacity_;
     memset(static_cast<uint8_t*>(cpu_data_) + cpu_capacity_, 0, num_new_bytes);
     cpu_capacity_ = size_;
+  } else {
+    return false;
   }
+  return true;
 }
 
-void SyncedMemory::gpu_resize() {
+bool SyncedMemory::gpu_resize() {
   if (!gpu_data_) {
     CUDA_CHECK(cudaMalloc(&gpu_data_, size_));
     CUDA_CHECK(cudaMemset(gpu_data_, 0, size_));
@@ -120,7 +133,10 @@ void SyncedMemory::gpu_resize() {
     CUDA_CHECK(cudaMemset(
         static_cast<uint8_t*>(gpu_data_) + gpu_capacity_, 0, num_new_bytes));
     gpu_capacity_ = size_;
+  } else {
+    return false;
   }
+  return true;
 }
 
 }  // namespace caffe
