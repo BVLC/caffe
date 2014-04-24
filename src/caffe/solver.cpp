@@ -42,6 +42,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   net_.reset(new Net<Dtype>(param_.train_net()));
   if (param_.has_test_net()) {
     LOG(INFO) << "Creating testing net.";
+    // Instantiate test net with a pointer to the train net (net_.get()) to
+    // reuse memory occupied by correspondingly-named blobs in the train net.
     test_net_.reset(new Net<Dtype>(param_.test_net(), net_.get()));
     CHECK_GT(param_.test_iter(), 0);
     CHECK_GT(param_.test_interval(), 0);
