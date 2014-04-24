@@ -7,7 +7,7 @@ layers {
   data_param {
     source: "ilsvrc12_val_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
-    batch_size: 50
+    batch_size: 250
     crop_size: 227
     mirror: false
   }
