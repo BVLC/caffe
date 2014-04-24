@@ -25,7 +25,7 @@ template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  JoinPrefetchThread();
   // Copy the data
   CUDA_CHECK(cudaMemcpy((*top)[0]->mutable_gpu_data(),
       prefetch_data_->cpu_data(), sizeof(Dtype) * prefetch_data_->count(),
@@ -34,9 +34,7 @@ Dtype ImageDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       prefetch_label_->cpu_data(), sizeof(Dtype) * prefetch_label_->count(),
       cudaMemcpyHostToDevice));
   // Start a new prefetch thread
-  phase_ = Caffe::phase();
-  CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
-      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  CreatePrefetchThread();
   return Dtype(0.);
 }
 

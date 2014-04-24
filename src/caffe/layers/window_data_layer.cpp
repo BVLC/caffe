@@ -18,6 +18,8 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/math_functions.hpp"
+#include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
 using std::string;
@@ -68,15 +70,13 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
       // sample a window
-      vector<float> window = (is_fg)
-          // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-          ? layer->fg_windows_[rand() % layer->fg_windows_.size()]
-          // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-          : layer->bg_windows_[rand() % layer->bg_windows_.size()];
+      const unsigned int rand_index = layer->PrefetchRand();
+      vector<float> window = (is_fg) ?
+          layer->fg_windows_[rand_index % layer->fg_windows_.size()] :
+          layer->bg_windows_[rand_index % layer->bg_windows_.size()];
 
       bool do_mirror = false;
-      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-      if (mirror && rand() % 2) {
+      if (mirror && layer->PrefetchRand() % 2) {
         do_mirror = true;
       }
 
@@ -214,8 +214,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
       // useful debugging code for dumping transformed windows to disk
       string file_id;
       std::stringstream ss;
-      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-      ss << rand();
+      ss << layer->PrefetchRand();
       ss >> file_id;
       std::ofstream inf((string("dump/") + file_id +
           string("_info.txt")).c_str(), std::ofstream::out);
@@ -253,7 +252,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
 
 template <typename Dtype>
 WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  JoinPrefetchThread();
 }
 
 template <typename Dtype>
@@ -405,24 +404,51 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   prefetch_label_->mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
-  CHECK(!pthread_create(&thread_, NULL, WindowDataLayerPrefetch<Dtype>,
-      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  CreatePrefetchThread();
   DLOG(INFO) << "Prefetch initialized.";
+}
+
+template <typename Dtype>
+void WindowDataLayer<Dtype>::CreatePrefetchThread() {
+  const bool prefetch_needs_rand =
+      this->layer_param_.window_data_param().mirror() ||
+      this->layer_param_.window_data_param().crop_size();
+  if (prefetch_needs_rand) {
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+  } else {
+    prefetch_rng_.reset();
+  }
+  // Create the thread.
+  CHECK(!pthread_create(&thread_, NULL, WindowDataLayerPrefetch<Dtype>,
+        static_cast<void*>(this))) << "Pthread execution failed.";
+}
+
+template <typename Dtype>
+void WindowDataLayer<Dtype>::JoinPrefetchThread() {
+  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+}
+
+template <typename Dtype>
+unsigned int WindowDataLayer<Dtype>::PrefetchRand() {
+  CHECK(prefetch_rng_);
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  return (*prefetch_rng)();
 }
 
 template <typename Dtype>
 Dtype WindowDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  JoinPrefetchThread();
   // Copy the data
-  memcpy((*top)[0]->mutable_cpu_data(), prefetch_data_->cpu_data(),
-      sizeof(Dtype) * prefetch_data_->count());
-  memcpy((*top)[1]->mutable_cpu_data(), prefetch_label_->cpu_data(),
-      sizeof(Dtype) * prefetch_label_->count());
+  caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
+             (*top)[0]->mutable_cpu_data());
+  caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
+             (*top)[1]->mutable_cpu_data());
   // Start a new prefetch thread
-  CHECK(!pthread_create(&thread_, NULL, WindowDataLayerPrefetch<Dtype>,
-      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  CreatePrefetchThread();
   return Dtype(0.);
 }
 

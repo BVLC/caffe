@@ -8,11 +8,15 @@
 #include <vector>
 #include <iostream>  // NOLINT(readability/streams)
 #include <fstream>  // NOLINT(readability/streams)
+#include <utility>
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/math_functions.hpp"
+#include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
+using std::iterator;
 using std::string;
 using std::pair;
 
@@ -61,27 +65,23 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       int h_off, w_off;
       // We only do random crop when we do training.
       if (layer->phase_ == Caffe::TRAIN) {
-        // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-        h_off = rand() % (height - crop_size);
-        // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-        w_off = rand() % (width - crop_size);
+        h_off = layer->PrefetchRand() % (height - crop_size);
+        w_off = layer->PrefetchRand() % (width - crop_size);
       } else {
         h_off = (height - crop_size) / 2;
         w_off = (width - crop_size) / 2;
       }
-      // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-      if (mirror && rand() % 2) {
+      if (mirror && layer->PrefetchRand() % 2) {
         // Copy mirrored version
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < crop_size; ++h) {
             for (int w = 0; w < crop_size; ++w) {
-              top_data[((item_id * channels + c) * crop_size + h) * crop_size
-                       + crop_size - 1 - w] =
-                  (static_cast<Dtype>(
-                      (uint8_t)data[(c * height + h + h_off) * width
-                                    + w + w_off])
-                    - mean[(c * height + h + h_off) * width + w + w_off])
-                  * scale;
+              int top_index = ((item_id * channels + c) * crop_size + h)
+                              * crop_size + (crop_size - 1 - w);
+              int data_index = (c * height + h + h_off) * width + w + w_off;
+              Dtype datum_element =
+                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
+              top_data[top_index] = (datum_element - mean[data_index]) * scale;
             }
           }
         }
@@ -90,13 +90,12 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < crop_size; ++h) {
             for (int w = 0; w < crop_size; ++w) {
-              top_data[((item_id * channels + c) * crop_size + h)
-                       * crop_size + w]
-                  = (static_cast<Dtype>(
-                      (uint8_t)data[(c * height + h + h_off) * width
-                                    + w + w_off])
-                     - mean[(c * height + h + h_off) * width + w + w_off])
-                  * scale;
+              int top_index = ((item_id * channels + c) * crop_size + h)
+                              * crop_size + w;
+              int data_index = (c * height + h + h_off) * width + w + w_off;
+              Dtype datum_element =
+                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
+              top_data[top_index] = (datum_element - mean[data_index]) * scale;
             }
           }
         }
@@ -105,8 +104,9 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       // Just copy the whole data
       if (data.size()) {
         for (int j = 0; j < size; ++j) {
-          top_data[item_id * size + j] =
-              (static_cast<Dtype>((uint8_t)data[j]) - mean[j]) * scale;
+          Dtype datum_element =
+              static_cast<Dtype>(static_cast<uint8_t>(data[j]));
+          top_data[item_id * size + j] = (datum_element - mean[j]) * scale;
         }
       } else {
         for (int j = 0; j < size; ++j) {
@@ -124,7 +124,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       DLOG(INFO) << "Restarting data prefetching from start.";
       layer->lines_id_ = 0;
       if (layer->layer_param_.image_data_param().shuffle()) {
-        std::random_shuffle(layer->lines_.begin(), layer->lines_.end());
+        layer->ShuffleImages();
       }
     }
   }
@@ -134,8 +134,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
 
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
-  // Finally, join the thread
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  JoinPrefetchThread();
 }
 
 template <typename Dtype>
@@ -161,18 +160,19 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
-    std::random_shuffle(lines_.begin(), lines_.end());
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+    ShuffleImages();
   }
   LOG(INFO) << "A total of " << lines_.size() << " images.";
 
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.image_data_param().rand_skip()) {
-    // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-    unsigned int skip = rand() %
+    unsigned int skip = caffe_rng_rand() %
         this->layer_param_.image_data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
-    CHECK_GT(lines_.size(), skip) << "Not enought points to skip";
+    CHECK_GT(lines_.size(), skip) << "Not enough points to skip";
     lines_id_ = skip;
   }
   // Read a data point, and use it to initialize the top blob.
@@ -228,26 +228,65 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   prefetch_label_->mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
-  phase_ = Caffe::phase();
-  CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
-      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  CreatePrefetchThread();
   DLOG(INFO) << "Prefetch initialized.";
+}
+
+template <typename Dtype>
+void ImageDataLayer<Dtype>::CreatePrefetchThread() {
+  phase_ = Caffe::phase();
+  const bool prefetch_needs_rand =
+      this->layer_param_.image_data_param().shuffle() ||
+          ((phase_ == Caffe::TRAIN) &&
+           (this->layer_param_.image_data_param().mirror() ||
+            this->layer_param_.image_data_param().crop_size()));
+  if (prefetch_needs_rand) {
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+  } else {
+    prefetch_rng_.reset();
+  }
+  // Create the thread.
+  CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
+        static_cast<void*>(this))) << "Pthread execution failed.";
+}
+
+template <typename Dtype>
+void ImageDataLayer<Dtype>::ShuffleImages() {
+  const int num_images = lines_.size();
+  for (int i = 0; i < num_images; ++i) {
+    const int max_rand_index = num_images - i;
+    const int rand_index = PrefetchRand() % max_rand_index;
+    pair<string, int> item = lines_[rand_index];
+    lines_.erase(lines_.begin() + rand_index);
+    lines_.push_back(item);
+  }
+}
+
+template <typename Dtype>
+void ImageDataLayer<Dtype>::JoinPrefetchThread() {
+  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+}
+
+template <typename Dtype>
+unsigned int ImageDataLayer<Dtype>::PrefetchRand() {
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  return (*prefetch_rng)();
 }
 
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  JoinPrefetchThread();
   // Copy the data
-  memcpy((*top)[0]->mutable_cpu_data(), prefetch_data_->cpu_data(),
-      sizeof(Dtype) * prefetch_data_->count());
-  memcpy((*top)[1]->mutable_cpu_data(), prefetch_label_->cpu_data(),
-      sizeof(Dtype) * prefetch_label_->count());
+  caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
+             (*top)[0]->mutable_cpu_data());
+  caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
+             (*top)[1]->mutable_cpu_data());
   // Start a new prefetch thread
-  phase_ = Caffe::phase();
-  CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
-      reinterpret_cast<void*>(this))) << "Pthread execution failed.";
+  CreatePrefetchThread();
   return Dtype(0.);
 }
 
