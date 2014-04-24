@@ -25,10 +25,14 @@ namespace caffe {
 
 inline void CaffeMallocHost(void** ptr, size_t size) {
   *ptr = malloc(size);
+  CHECK(*ptr) << "malloc failed when attempting to allocate "
+              << size << " bytes of host memory.";
 }
 
 inline void CaffeReallocHost(void** ptr, size_t size) {
   *ptr = realloc(*ptr, size);
+  CHECK(*ptr) << "realloc failed when attempting to allocate "
+              << size << " bytes of host memory.";
 }
 
 inline void CaffeFreeHost(void* ptr) {
