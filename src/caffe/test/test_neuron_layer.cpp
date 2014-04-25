@@ -61,7 +61,7 @@ TYPED_TEST(NeuronLayerTest, TestReLUGradientCPU) {
   Caffe::set_mode(Caffe::CPU);
   ReLULayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -87,7 +87,7 @@ TYPED_TEST(NeuronLayerTest, TestReLUGradientGPU) {
   Caffe::set_mode(Caffe::GPU);
   ReLULayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -115,7 +115,7 @@ TYPED_TEST(NeuronLayerTest, TestSigmoidGradientCPU) {
   Caffe::set_mode(Caffe::CPU);
   SigmoidLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -142,7 +142,7 @@ TYPED_TEST(NeuronLayerTest, TestSigmoidGradientGPU) {
   Caffe::set_mode(Caffe::GPU);
   SigmoidLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -172,7 +172,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradientCPU) {
   Caffe::set_mode(Caffe::CPU);
   DropoutLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -271,7 +271,7 @@ TYPED_TEST(NeuronLayerTest, TestBNLLGradientCPU) {
   Caffe::set_mode(Caffe::CPU);
   BNLLLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -297,7 +297,7 @@ TYPED_TEST(NeuronLayerTest, TestBNLLGradientGPU) {
   Caffe::set_mode(Caffe::GPU);
   BNLLLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 

@@ -102,7 +102,7 @@ TYPED_TEST(EltwiseProductLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
   EltwiseProductLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -111,7 +111,7 @@ TYPED_TEST(EltwiseProductLayerTest, TestGPUGradient) {
   LayerParameter layer_param;
   EltwiseProductLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
