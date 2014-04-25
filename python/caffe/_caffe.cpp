@@ -301,9 +301,12 @@ class CaffeSGDSolver {
     // exception if param_file can't be opened
     CheckFile(param_file);
     solver_.reset(new SGDSolver<float>(param_file));
+    // we need to explicitly store the net wrapper, rather than constructing
+    // it on the fly, so that it can hold references to Python objects
+    net_.reset(new CaffeNet(solver_->net()));
   }
 
-  CaffeNet net() { return CaffeNet(solver_->net()); }
+  shared_ptr<CaffeNet> net() { return net_; }
   void Solve() { return solver_->Solve(); }
   void SolveResume(const string& resume_file) {
     CheckFile(resume_file);
@@ -311,6 +314,7 @@ class CaffeSGDSolver {
   }
 
  protected:
+  shared_ptr<CaffeNet> net_;
   shared_ptr<SGDSolver<float> > solver_;
 };
 
