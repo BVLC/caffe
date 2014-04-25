@@ -317,7 +317,7 @@ class CaffeSGDSolver {
 
 // The boost python module definition.
 BOOST_PYTHON_MODULE(_caffe) {
-  boost::python::class_<CaffeNet>(
+  boost::python::class_<CaffeNet, shared_ptr<CaffeNet> >(
       "Net", boost::python::init<string, string>())
       .def(boost::python::init<string>())
       .def("Forward",          &CaffeNet::Forward)
