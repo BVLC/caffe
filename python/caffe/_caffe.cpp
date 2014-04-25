@@ -134,16 +134,27 @@ class CaffeLayer {
 
 // A simple wrapper over CaffeNet that runs the forward process.
 struct CaffeNet {
-  CaffeNet(string param_file, string pretrained_param_file) {
-    CheckFile(param_file);
-    CheckFile(pretrained_param_file);
+  // For cases where parameters will be determined later by the Python user,
+  // create a Net with unallocated parameters (which will not be zero-filled
+  // when accessed).
+  explicit CaffeNet(string param_file) {
+    Init(param_file);
+  }
 
-    net_.reset(new Net<float>(param_file));
+  CaffeNet(string param_file, string pretrained_param_file) {
+    Init(param_file);
+    CheckFile(pretrained_param_file);
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
 
   explicit CaffeNet(shared_ptr<Net<float> > net)
       : net_(net) {}
+
+  void Init(string param_file) {
+    CheckFile(param_file);
+    net_.reset(new Net<float>(param_file));
+  }
+
 
   virtual ~CaffeNet() {}
 
@@ -308,6 +319,7 @@ class CaffeSGDSolver {
 BOOST_PYTHON_MODULE(_caffe) {
   boost::python::class_<CaffeNet>(
       "Net", boost::python::init<string, string>())
+      .def(boost::python::init<string>())
       .def("Forward",          &CaffeNet::Forward)
       .def("ForwardPrefilled", &CaffeNet::ForwardPrefilled)
       .def("Backward",         &CaffeNet::Backward)
