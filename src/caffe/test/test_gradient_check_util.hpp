@@ -22,6 +22,9 @@ namespace caffe {
 template <typename Dtype>
 class GradientChecker {
  public:
+  // kink and kink_range specify an ignored nonsmooth region of the form
+  // kink - kink_range <= |feature value| <= kink + kink_range,
+  // which accounts for all nonsmoothness in use by caffe
   GradientChecker(const Dtype stepsize, const Dtype threshold,
       const unsigned int seed = 1701, const Dtype kink = 0.,
       const Dtype kink_range = -1)
@@ -151,7 +154,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       Dtype feature = current_blob->cpu_data()[feat_id];
       // LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
       //     << current_blob->cpu_diff()[feat_id];
-      if (kink_ - kink_range_ > feature || feature > kink_ + kink_range_) {
+      if (kink_ - kink_range_ > fabs(feature)
+          || fabs(feature) > kink_ + kink_range_) {
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
         Dtype scale = max(
