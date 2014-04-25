@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-"""Functions to draw a caffe NetParameter protobuffer.
+"""
+Caffe network visualization: draw the NetParameter protobuffer.
+
+NOTE: this requires pydot>=1.0.2, which is not included in requirements.txt
+since it requires graphviz and other prerequisites outside the scope of the
+Caffe.
 """
 
 from caffe.proto import caffe_pb2
