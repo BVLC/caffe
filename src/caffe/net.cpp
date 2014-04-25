@@ -114,7 +114,7 @@ void Net<Dtype>::Init(const NetParameter& in_param,
         if (memory_share_net && memory_share_net->has_blob(blob_name)) {
           shared_ptr<Blob<Dtype> > memory_share_blob =
               memory_share_net->blob_by_name(blob_name);
-          blob_pointer.reset(new Blob<Dtype>(memory_share_blob.get()));
+          blob_pointer.reset(new Blob<Dtype>(*memory_share_blob));
         } else {
           blob_pointer.reset(new Blob<Dtype>());
         }

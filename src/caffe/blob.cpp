@@ -18,10 +18,10 @@ Blob<Dtype>::Blob(const int num, const int channels,
 }
 
 template <typename Dtype>
-Blob<Dtype>::Blob(Blob* memory_share_blob) :
+Blob<Dtype>::Blob(const Blob& memory_share_blob) :
     count_(0), space_requirement_(0), data_(), diff_() {
-  ShareData(*memory_share_blob);
-  ShareDiff(*memory_share_blob);
+  ShareData(memory_share_blob);
+  ShareDiff(memory_share_blob);
 }
 
 template <typename Dtype>
