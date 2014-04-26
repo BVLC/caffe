@@ -275,7 +275,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	@ echo
 
 runtest: $(TEST_ALL_BIN)
-	$(TEST_ALL_BIN) $(TEST_GPUID)
+	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle
 
 $(ALL_BUILD_DIRS):
 	@ mkdir -p $@
