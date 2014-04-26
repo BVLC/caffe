@@ -39,9 +39,7 @@ int main(int argc, char** argv) {
   }
 
   Net<float> caffe_test_net(argv[1]);
-  NetParameter trained_net_param;
-  ReadProtoFromBinaryFile(argv[2], &trained_net_param);
-  caffe_test_net.CopyTrainedLayersFrom(trained_net_param);
+  caffe_test_net.CopyTrainedLayersFrom(argv[2]);
 
   int total_iter = atoi(argv[3]);
   LOG(ERROR) << "Running " << total_iter << " iterations.";
