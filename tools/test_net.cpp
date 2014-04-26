@@ -43,18 +43,16 @@ int main(int argc, char** argv) {
   caffe_test_net.CopyTrainedLayersFrom(trained_net_param);
 
   int total_iter = atoi(argv[3]);
-  LOG(ERROR) << "Running " << total_iter << "Iterations.";
+  LOG(ERROR) << "Running " << total_iter << " iterations.";
 
   double test_accuracy = 0;
-  vector<Blob<float>*> dummy_blob_input_vec;
   for (int i = 0; i < total_iter; ++i) {
-    const vector<Blob<float>*>& result =
-        caffe_test_net.Forward(dummy_blob_input_vec);
+    const vector<Blob<float>*>& result = caffe_test_net.ForwardPrefilled();
     test_accuracy += result[0]->cpu_data()[0];
     LOG(ERROR) << "Batch " << i << ", accuracy: " << result[0]->cpu_data()[0];
   }
   test_accuracy /= total_iter;
-  LOG(ERROR) << "Test accuracy:" << test_accuracy;
+  LOG(ERROR) << "Test accuracy: " << test_accuracy;
 
   return 0;
 }
