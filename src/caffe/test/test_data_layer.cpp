@@ -246,23 +246,25 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededCPU) {
 
   // Get crop sequence with Caffe seed 1701.
   Caffe::set_random_seed(this->seed_);
-  DataLayer<TypeParam> layer1(param);
-  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   vector<vector<TypeParam> > crop_sequence;
-  for (int iter = 0; iter < 2; ++iter) {
-    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i) {
-      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
-    }
-    vector<TypeParam> iter_crop_sequence;
-    for (int i = 0; i < 5; ++i) {
-      for (int j = 0; j < 2; ++j) {
-        iter_crop_sequence.push_back(
-            this->blob_top_data_->cpu_data()[i * 2 + j]);
+  {
+    DataLayer<TypeParam> layer1(param);
+    layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int iter = 0; iter < 2; ++iter) {
+      layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+      for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
       }
+      vector<TypeParam> iter_crop_sequence;
+      for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 2; ++j) {
+          iter_crop_sequence.push_back(
+              this->blob_top_data_->cpu_data()[i * 2 + j]);
+        }
+      }
+      crop_sequence.push_back(iter_crop_sequence);
     }
-    crop_sequence.push_back(iter_crop_sequence);
-  }
+  }  // destroy 1st data layer and unlock the leveldb
 
   // Get crop sequence after reseeding Caffe with 1701.
   // Check that the sequence is the same as the original.
@@ -300,23 +302,25 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededGPU) {
 
   // Get crop sequence with Caffe seed 1701.
   Caffe::set_random_seed(this->seed_);
-  DataLayer<TypeParam> layer1(param);
-  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   vector<vector<TypeParam> > crop_sequence;
-  for (int iter = 0; iter < 2; ++iter) {
-    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i) {
-      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
-    }
-    vector<TypeParam> iter_crop_sequence;
-    for (int i = 0; i < 5; ++i) {
-      for (int j = 0; j < 2; ++j) {
-        iter_crop_sequence.push_back(
-            this->blob_top_data_->cpu_data()[i * 2 + j]);
+  {
+    DataLayer<TypeParam> layer1(param);
+    layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int iter = 0; iter < 2; ++iter) {
+      layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+      for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
       }
+      vector<TypeParam> iter_crop_sequence;
+      for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 2; ++j) {
+          iter_crop_sequence.push_back(
+              this->blob_top_data_->cpu_data()[i * 2 + j]);
+        }
+      }
+      crop_sequence.push_back(iter_crop_sequence);
     }
-    crop_sequence.push_back(iter_crop_sequence);
-  }
+  }  // destroy 1st data layer and unlock the leveldb
 
   // Get crop sequence after reseeding Caffe with 1701.
   // Check that the sequence is the same as the original.
@@ -355,23 +359,25 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededCPU) {
   // Get crop sequence with Caffe seed 1701, srand seed 1701.
   Caffe::set_random_seed(this->seed_);
   srand(this->seed_);
-  DataLayer<TypeParam> layer1(param);
-  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   vector<vector<TypeParam> > crop_sequence;
-  for (int iter = 0; iter < 2; ++iter) {
-    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i) {
-      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
-    }
-    vector<TypeParam> iter_crop_sequence;
-    for (int i = 0; i < 5; ++i) {
-      for (int j = 0; j < 2; ++j) {
-        iter_crop_sequence.push_back(
-            this->blob_top_data_->cpu_data()[i * 2 + j]);
+  {
+    DataLayer<TypeParam> layer1(param);
+    layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int iter = 0; iter < 2; ++iter) {
+      layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+      for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
       }
+      vector<TypeParam> iter_crop_sequence;
+      for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 2; ++j) {
+          iter_crop_sequence.push_back(
+              this->blob_top_data_->cpu_data()[i * 2 + j]);
+        }
+      }
+      crop_sequence.push_back(iter_crop_sequence);
     }
-    crop_sequence.push_back(iter_crop_sequence);
-  }
+  }  // destroy 1st data layer and unlock the leveldb
 
   // Get crop sequence continuing from previous Caffe RNG state;
   // reseed srand with 1701. Check that the sequence differs from the original.
@@ -411,23 +417,25 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededGPU) {
   // Get crop sequence with Caffe seed 1701, srand seed 1701.
   Caffe::set_random_seed(this->seed_);
   srand(this->seed_);
-  DataLayer<TypeParam> layer1(param);
-  layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   vector<vector<TypeParam> > crop_sequence;
-  for (int iter = 0; iter < 2; ++iter) {
-    layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i) {
-      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
-    }
-    vector<TypeParam> iter_crop_sequence;
-    for (int i = 0; i < 5; ++i) {
-      for (int j = 0; j < 2; ++j) {
-        iter_crop_sequence.push_back(
-            this->blob_top_data_->cpu_data()[i * 2 + j]);
+  {
+    DataLayer<TypeParam> layer1(param);
+    layer1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int iter = 0; iter < 2; ++iter) {
+      layer1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+      for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
       }
+      vector<TypeParam> iter_crop_sequence;
+      for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 2; ++j) {
+          iter_crop_sequence.push_back(
+              this->blob_top_data_->cpu_data()[i * 2 + j]);
+        }
+      }
+      crop_sequence.push_back(iter_crop_sequence);
     }
-    crop_sequence.push_back(iter_crop_sequence);
-  }
+  }  // destroy 1st data layer and unlock the leveldb
 
   // Get crop sequence continuing from previous Caffe RNG state;
   // reseed srand with 1701. Check that the sequence differs from the original.
