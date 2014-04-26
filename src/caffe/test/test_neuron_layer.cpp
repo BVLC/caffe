@@ -170,6 +170,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutCPU) {
 TYPED_TEST(NeuronLayerTest, TestDropoutGradientCPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
+  Caffe::set_phase(Caffe::TRAIN);
   DropoutLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
@@ -219,6 +220,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
   if (CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
     Caffe::set_mode(Caffe::GPU);
+    Caffe::set_phase(Caffe::TRAIN);
     DropoutLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-3);
     // it is too expensive to call curand multiple times, so we don't do an
