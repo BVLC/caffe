@@ -27,6 +27,7 @@ TEST_F(CommonTest, TestBrewMode) {
 }
 
 TEST_F(CommonTest, TestPhase) {
+  Caffe::set_phase(Caffe::TRAIN);
   EXPECT_EQ(Caffe::phase(), Caffe::TRAIN);
   Caffe::set_phase(Caffe::TEST);
   EXPECT_EQ(Caffe::phase(), Caffe::TEST);
