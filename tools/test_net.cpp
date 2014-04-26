@@ -26,12 +26,13 @@ int main(int argc, char** argv) {
   Caffe::set_phase(Caffe::TEST);
 
   if (argc >= 5 && strcmp(argv[4], "GPU") == 0) {
-    LOG(ERROR) << "Using GPU";
     Caffe::set_mode(Caffe::GPU);
+    int device_id = 0;
     if (argc == 6) {
-      int device_id = atoi(argv[5]);
-      Caffe::SetDevice(device_id);
+      device_id = atoi(argv[5]);
     }
+    Caffe::SetDevice(device_id);
+    LOG(ERROR) << "Using GPU #" << device_id;
   } else {
     LOG(ERROR) << "Using CPU";
     Caffe::set_mode(Caffe::CPU);
