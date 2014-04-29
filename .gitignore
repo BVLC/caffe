@@ -54,3 +54,8 @@ examples/*
 # Generated documentation
 docs/_site
 _site
+
+# Sublime Text settings
+*.sublime-workspace
+*.sublime-project
+
