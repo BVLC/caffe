@@ -22,7 +22,10 @@
 
 namespace caffe {
 
-// NeuronLayer is an interface for layers that work on single elements.
+/* NeuronLayer
+  An interface for layers that take one blob as input (x),
+  and produce one blob as output (y).
+*/
 template <typename Dtype>
 class NeuronLayer : public Layer<Dtype> {
  public:
@@ -32,7 +35,13 @@ class NeuronLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
 };
 
-// BNLLLayer
+/* BNLLLayer
+
+  y = x + log(1 + exp(-x))  if x > 0
+  y = log(1 + exp(x))       if x <= 0
+
+  y' = exp(x) / (exp(x) + 1)
+*/
 template <typename Dtype>
 class BNLLLayer : public NeuronLayer<Dtype> {
  public:
@@ -50,7 +59,16 @@ class BNLLLayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
-// DropoutLayer sets random portion of its input to 0.
+/* DropoutLayer
+  During training only, sets some portion of x to 0, adjusting the
+  vector magnitude accordingly.
+
+  mask = bernoulli(1 - threshold)
+  scale = 1 / (1 - threshold)
+  y = x * mask * scale
+
+  y' = mask * scale
+*/
 template <typename Dtype>
 class DropoutLayer : public NeuronLayer<Dtype> {
  public:
@@ -75,7 +93,12 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   unsigned int uint_thres_;
 };
 
-// PowerLayer computes y = (shift + scale * x)^power
+/* PowerLayer
+  y = (shift + scale * x) ^ power
+
+  y' = scale * power * (shift + scale * x) ^ (power - 1)
+     = scale * power * y / (shift + scale * x)
+*/
 template <typename Dtype>
 class PowerLayer : public NeuronLayer<Dtype> {
  public:
@@ -100,7 +123,13 @@ class PowerLayer : public NeuronLayer<Dtype> {
   Dtype diff_scale_;
 };
 
-// ReLULayer computes y = max(0, x).
+/* ReLULayer
+  Rectified Linear Unit non-linearity: fast and stable.
+
+  y = max(0, x).
+
+  y' = x > 0
+*/
 template <typename Dtype>
 class ReLULayer : public NeuronLayer<Dtype> {
  public:
@@ -119,7 +148,13 @@ class ReLULayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
-// SigmoidLayer computes y = 1. / (1 + exp(-x))
+/* SigmoidLayer
+  Sigmoid function non-linearity: a classic.
+
+  y = 1. / (1 + exp(-x))
+
+  y' = y * (1 - y)
+*/
 template <typename Dtype>
 class SigmoidLayer : public NeuronLayer<Dtype> {
  public:
@@ -137,7 +172,13 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
-// TanHLayer: computes y = 1. * (exp(2 * x) - 1) / (exp(2 * x) + 1)
+/* TanHLayer
+  Hyperbolic tangent non-linearity.
+
+  y = 1. * (exp(2x) - 1) / (exp(2x) + 1)
+
+  y' = 1 - [(exp(2x) - 1) / (exp(2x) + 1)] ^ 2
+*/
 template <typename Dtype>
 class TanHLayer : public NeuronLayer<Dtype> {
  public:
