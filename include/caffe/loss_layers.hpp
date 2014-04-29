@@ -20,6 +20,8 @@
 
 namespace caffe {
 
+const float kLOG_THRESHOLD = 1e-20;
+
 // LossLayer takes two inputs of same num, and has no output.
 template <typename Dtype>
 class LossLayer : public Layer<Dtype> {
@@ -29,7 +31,7 @@ class LossLayer : public Layer<Dtype> {
   virtual void SetUp(
       const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top);
   virtual void FurtherSetUp(
-      const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {}
 };
 
 // SigmoidCrossEntropyLossLayer
