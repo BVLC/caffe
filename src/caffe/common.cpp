@@ -155,6 +155,8 @@ const char* cublasGetErrorString(cublasStatus_t error) {
     return "CUBLAS_STATUS_EXECUTION_FAILED";
   case CUBLAS_STATUS_INTERNAL_ERROR:
     return "CUBLAS_STATUS_INTERNAL_ERROR";
+  case CUBLAS_STATUS_NOT_SUPPORTED:
+    return "CUBLAS_STATUS_NOT_SUPPORTED";
   }
   return "Unknown cublas status";
 }
