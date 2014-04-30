@@ -99,7 +99,7 @@ message SolverState {
 
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 22
+// LayerParameter next available ID: 22 (last added: power_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -110,7 +110,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 29
+  // LayerType next available ID: 29 (last added: HINGE_LOSS)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
