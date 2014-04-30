@@ -102,11 +102,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 template <typename Dtype>
 void Solver<Dtype>::Test() {
-  if (iter_) {
-    LOG(INFO) << "Iteration " << iter_ << ", Testing net";
-  } else {
-    LOG(INFO) << "Testing net from initial parameters.";
-  }
+  LOG(INFO) << "Iteration " << iter_ << ", Testing net";
   // We need to set phase to test before running.
   Caffe::set_phase(Caffe::TEST);
   CHECK_NOTNULL(test_net_.get())->ShareTrainedLayersWith(net_.get());
