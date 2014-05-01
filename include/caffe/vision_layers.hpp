@@ -557,6 +557,34 @@ class InnerProductLayer : public Layer<Dtype> {
   shared_ptr<SyncedMemory> bias_multiplier_;
 };
 
+template <typename Dtype>
+class ReconstructionInnerProductLayer : public Layer<Dtype> {
+ public:
+  explicit ReconstructionInnerProductLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), difference_() {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int M_;
+  int K_;
+  int N_;
+  
+  Blob<Dtype> difference_;
+  Blob<Dtype> x_Tx_;
+  Blob<Dtype> w_Tw_;
+  Blob<Dtype> x_Txw_Tw_;
+};
+
 // Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
 template <typename Dtype> class PoolingLayer;
 template <typename Dtype> class SplitLayer;

@@ -99,7 +99,7 @@ message SolverState {
 
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 22 (last added: power_param)
+// LayerParameter next available ID: 23 (last added: reconstruction_inner_product_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -110,7 +110,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 29 (last added: HINGE_LOSS)
+  // LayerType next available ID: 30 (last added: RECONSTRUCTION_INNER_PRODUCT)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -132,6 +132,7 @@ message LayerParameter {
     IMAGE_DATA = 12;
     INFOGAIN_LOSS = 13;
     INNER_PRODUCT = 14;
+    RECONSTRUCTION_INNER_PRODUCT = 29;
     LRN = 15;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
@@ -165,6 +166,7 @@ message LayerParameter {
   optional ImageDataParameter image_data_param = 15;
   optional InfogainLossParameter infogain_loss_param = 16;
   optional InnerProductParameter inner_product_param = 17;
+  optional ReconstructionInnerProductParameter reconstruction_inner_product_param = 22;
   optional LRNParameter lrn_param = 18;
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
@@ -275,6 +277,12 @@ message InnerProductParameter {
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
   optional FillerParameter weight_filler = 3; // The filler for the weight
   optional FillerParameter bias_filler = 4; // The filler for the bias
+}
+
+// Message that stores parameters used by ReconstructionInnerProductLayer
+message ReconstructionInnerProductParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  optional FillerParameter weight_filler = 3; // The filler for the weight
 }
 
 // Message that stores parameters used by LRNLayer
