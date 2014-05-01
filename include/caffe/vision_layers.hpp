@@ -578,7 +578,7 @@ class ReconstructionInnerProductLayer : public Layer<Dtype> {
   int M_;
   int K_;
   int N_;
-  
+
   Blob<Dtype> difference_;
   Blob<Dtype> x_Tx_;
   Blob<Dtype> w_Tw_;

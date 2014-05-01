@@ -30,7 +30,8 @@ class ReconstructionInnerProductLayerTest : public ::testing::Test {
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~ReconstructionInnerProductLayerTest() { delete blob_bottom_; delete blob_top_; }
+  virtual ~ReconstructionInnerProductLayerTest() {
+    delete blob_bottom_; delete blob_top_; }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -60,7 +61,8 @@ TYPED_TEST(ReconstructionInnerProductLayerTest, TestCPU) {
       layer_param.mutable_reconstruction_inner_product_param();
   Caffe::set_mode(Caffe::CPU);
   reconstruction_inner_product_param->set_num_output(10);
-  reconstruction_inner_product_param->mutable_weight_filler()->set_type("uniform");
+  reconstruction_inner_product_param->mutable_weight_filler()
+                                    ->set_type("uniform");
   shared_ptr<ReconstructionInnerProductLayer<TypeParam> > layer(
       new ReconstructionInnerProductLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -79,7 +81,8 @@ TYPED_TEST(ReconstructionInnerProductLayerTest, TestGPU) {
         layer_param.mutable_reconstruction_inner_product_param();
     Caffe::set_mode(Caffe::GPU);
     reconstruction_inner_product_param->set_num_output(10);
-    reconstruction_inner_product_param->mutable_weight_filler()->set_type("uniform");
+    reconstruction_inner_product_param->mutable_weight_filler()
+                                      ->set_type("uniform");
     shared_ptr<ReconstructionInnerProductLayer<TypeParam> > layer(
       new ReconstructionInnerProductLayer<TypeParam>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -100,7 +103,8 @@ TYPED_TEST(ReconstructionInnerProductLayerTest, TestCPUGradient) {
       layer_param.mutable_reconstruction_inner_product_param();
   Caffe::set_mode(Caffe::CPU);
   reconstruction_inner_product_param->set_num_output(10);
-  reconstruction_inner_product_param->mutable_weight_filler()->set_type("gaussian");
+  reconstruction_inner_product_param->mutable_weight_filler()
+                                    ->set_type("gaussian");
   ReconstructionInnerProductLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
@@ -114,7 +118,8 @@ TYPED_TEST(ReconstructionInnerProductLayerTest, TestGPUGradient) {
         layer_param.mutable_reconstruction_inner_product_param();
     Caffe::set_mode(Caffe::GPU);
     reconstruction_inner_product_param->set_num_output(10);
-    reconstruction_inner_product_param->mutable_weight_filler()->set_type("gaussian");
+    reconstruction_inner_product_param->mutable_weight_filler()
+                                      ->set_type("gaussian");
     ReconstructionInnerProductLayer<TypeParam> layer(layer_param);
     GradientChecker<TypeParam> checker(1e-2, 1e-2);
     checker.CheckGradient(&layer, &(this->blob_bottom_vec_),
