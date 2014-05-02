@@ -63,6 +63,7 @@ class Blob {
   }
 
   const Dtype* cpu_data() const;
+  void set_cpu_data(Dtype* data);
   const Dtype* gpu_data() const;
   const Dtype* cpu_diff() const;
   const Dtype* gpu_diff() const;

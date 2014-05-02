@@ -3,8 +3,10 @@ Wrap the internal caffe C++ module (_caffe.so) with a clean, Pythonic
 interface.
 """
 
-from ._caffe import Net, SGDSolver
 from collections import OrderedDict
+import numpy as np
+
+from ._caffe import Net, SGDSolver
 
 # we directly update methods from Net here (rather than using composition or
 # inheritance) so that nets created by caffe (e.g., by SGDSolver) will
@@ -31,3 +33,11 @@ def _Net_params(self):
                                             if len(lr.blobs) > 0])
 
 Net.params = _Net_params
+
+def _Net_set_input_arrays(self, data, labels):
+    if labels.ndim == 1:
+        labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
+                                             np.newaxis])
+    return self._set_input_arrays(data, labels)
+
+Net.set_input_arrays = _Net_set_input_arrays
