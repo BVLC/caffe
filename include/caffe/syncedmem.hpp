@@ -44,7 +44,8 @@ class SyncedMemory {
  public:
   explicit SyncedMemory(const size_t size = 0)
       : cpu_data_(NULL), gpu_data_(NULL), size_(size),
-        cpu_capacity_(0), gpu_capacity_(0), head_(UNINITIALIZED) {}
+        cpu_capacity_(0), gpu_capacity_(0), head_(UNINITIALIZED),
+        own_cpu_data_(false) {}
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);

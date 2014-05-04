@@ -10,8 +10,8 @@
 namespace caffe {
 
 SyncedMemory::~SyncedMemory() {
-  if (cpu_ptr_ && own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_);
+  if (cpu_data_ && own_cpu_data_) {
+    CaffeFreeHost(cpu_data_);
   }
   if (gpu_data_) {
     CUDA_CHECK(cudaFree(gpu_data_));
@@ -23,16 +23,11 @@ inline void SyncedMemory::to_cpu() {
   case UNINITIALIZED:
     cpu_resize();
     head_ = HEAD_AT_CPU;
-    own_cpu_data_ = true;
     break;
   case HEAD_AT_GPU:
     gpu_resize();
     cpu_resize();
     CUDA_CHECK(cudaMemcpy(cpu_data_, gpu_data_, size_, cudaMemcpyDeviceToHost));
-    if (cpu_ptr_ == NULL) {
-      CaffeMallocHost(&cpu_ptr_, size_);
-      own_cpu_data_ = true;
-    }
     head_ = SYNCED;
     break;
   case HEAD_AT_CPU:
@@ -77,9 +72,9 @@ const void* SyncedMemory::cpu_data() {
 void SyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
   if (own_cpu_data_) {
-    CaffeFreeHost(cpu_ptr_);
+    CaffeFreeHost(cpu_data_);
   }
-  cpu_ptr_ = data;
+  cpu_data_ = data;
   head_ = HEAD_AT_CPU;
   own_cpu_data_ = false;
 }
@@ -107,7 +102,8 @@ void* SyncedMemory::mutable_gpu_data() {
 size_t SyncedMemory::cpu_resize() {
   if (!cpu_data_) {
     CaffeMallocHost(&cpu_data_, size_);
-  } else if (size_ > cpu_capacity_) {
+    own_cpu_data_ = true;
+  } else if (size_ > cpu_capacity_ && own_cpu_data_) {
     CaffeReallocHost(&cpu_data_, size_);
   } else {
     return 0;

@@ -64,6 +64,7 @@ const Dtype* Blob<Dtype>::cpu_data() const {
 template <typename Dtype>
 void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
+  data_->set_size(space_requirement_);
   data_->set_cpu_data(data);
 }
 
