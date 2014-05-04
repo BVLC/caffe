@@ -55,6 +55,14 @@ class SyncedMemory {
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   inline size_t size() const { return size_; }
+  // set_size sets the "size_" variable.  The current size_ is checked whenever
+  // a data accessor/mutator method (cpu_data, gpu_data, mutable_cpu_data, ...)
+  // is called and if the current CPU or GPU memory is insufficient to hold the
+  // size_, extra space is allocated.  If the current allocation on the device/
+  // host (depending on whether cpu_* or gpu_data was called) is sufficient
+  // (i.e., capacity >= size_), no action is taken as a result of the set_size
+  // call.  Therefore, the actual allocation can only grow, never shrinking
+  // (until the SyncedMemory itself is freed/deleted).
   inline void set_size(const size_t size) { size_ = size; }
   inline size_t cpu_capacity() const { return cpu_capacity_; }
   inline size_t gpu_capacity() const { return gpu_capacity_; }
