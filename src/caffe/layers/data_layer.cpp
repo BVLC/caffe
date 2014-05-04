@@ -44,11 +44,12 @@ void* DataLayerPrefetch(void* layer_pointer) {
   const int width = layer->datum_width_;
   const int size = layer->datum_size_;
   const Dtype* mean = layer->data_mean_.cpu_data();
+  MDB_val key, value;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
-    CHECK(layer->iter_);
-    CHECK(layer->iter_->Valid());
-    datum.ParseFromString(layer->iter_->value().ToString());
+    CHECK_EQ(mdb_cursor_get(layer->cursor_, &key, &value, MDB_NEXT),
+        MDB_SUCCESS);
+    datum.ParseFromArray(value.mv_data, value.mv_size);
     const string& data = datum.data();
     if (crop_size) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
@@ -110,11 +111,11 @@ void* DataLayerPrefetch(void* layer_pointer) {
       top_label[item_id] = datum.label();
     }
     // go to the next iter
-    layer->iter_->Next();
-    if (!layer->iter_->Valid()) {
+    if (mdb_cursor_get(layer->cursor_, &key, &value, MDB_NEXT) != MDB_SUCCESS) {
       // We have reached the end. Restart from the first.
       DLOG(INFO) << "Restarting data prefetching from start.";
-      layer->iter_->SeekToFirst();
+      CHECK_EQ(mdb_cursor_get(layer->cursor_, &key, &value, MDB_FIRST),
+          MDB_SUCCESS);
     }
   }
 
@@ -124,6 +125,10 @@ void* DataLayerPrefetch(void* layer_pointer) {
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   JoinPrefetchThread();
+  mdb_cursor_close(cursor_);
+  mdb_close(env_, dbi_);
+  mdb_txn_abort(txn_);
+  mdb_env_close(env_);
 }
 
 template <typename Dtype>
@@ -137,35 +142,35 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     output_labels_ = true;
   }
-  // Initialize the leveldb
-  leveldb::DB* db_temp;
-  leveldb::Options options;
-  options.create_if_missing = false;
-  options.max_open_files = 100;
-  LOG(INFO) << "Opening leveldb " << this->layer_param_.data_param().source();
-  leveldb::Status status = leveldb::DB::Open(
-      options, this->layer_param_.data_param().source(), &db_temp);
-  CHECK(status.ok()) << "Failed to open leveldb "
-      << this->layer_param_.data_param().source() << std::endl
-      << status.ToString();
-  db_.reset(db_temp);
-  iter_.reset(db_->NewIterator(leveldb::ReadOptions()));
-  iter_->SeekToFirst();
+  // Initialize the lmdb
+  MDB_val key, value;
+  CHECK_EQ(mdb_env_create(&env_), MDB_SUCCESS) << "mdb_env_create failed";
+  CHECK_EQ(mdb_env_set_mapsize(env_, 1099511627776), MDB_SUCCESS); // 1TB
+  CHECK_EQ(mdb_env_open(env_, this->layer_param_.data_param().source().c_str(),
+          MDB_RDONLY, 0664),
+      MDB_SUCCESS) << "mdb_env_open failed";
+  CHECK_EQ(mdb_txn_begin(env_, NULL, MDB_RDONLY, &txn_), MDB_SUCCESS)
+      << "mdb_txn_begin failed";
+  CHECK_EQ(mdb_open(txn_, NULL, 0, &dbi_), MDB_SUCCESS) << "mdb_open failed";
+  CHECK_EQ(mdb_cursor_open(txn_, dbi_, &cursor_), MDB_SUCCESS)
+      << "mdb_cursor_open failed";
+  LOG(INFO) << "Opening lmdb " << this->layer_param_.data_param().source();
+  CHECK_EQ(mdb_cursor_get(cursor_, &key, &value, MDB_FIRST), MDB_SUCCESS)
+      << "mdb_cursor_get failed";
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.data_param().rand_skip()) {
     unsigned int skip = caffe_rng_rand() %
                         this->layer_param_.data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
-      iter_->Next();
-      if (!iter_->Valid()) {
-        iter_->SeekToFirst();
+      if(mdb_cursor_get(cursor_, &key, &value, MDB_NEXT) != MDB_SUCCESS) {
+        CHECK_EQ(mdb_cursor_get(cursor_, &key, &value, MDB_FIRST), MDB_SUCCESS);
       }
     }
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
-  datum.ParseFromString(iter_->value().ToString());
+  datum.ParseFromArray(value.mv_data, value.mv_size);
   // image
   int crop_size = this->layer_param_.data_param().crop_size();
   if (crop_size > 0) {
