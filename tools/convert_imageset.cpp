@@ -11,8 +11,7 @@
 // process the file lines.
 
 #include <glog/logging.h>
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
+#include <lmdb.h>
 
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
@@ -53,22 +52,25 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
-  leveldb::DB* db;
-  leveldb::Options options;
-  options.error_if_exists = true;
-  options.create_if_missing = true;
-  options.write_buffer_size = 268435456;
-  LOG(INFO) << "Opening leveldb " << argv[3];
-  leveldb::Status status = leveldb::DB::Open(
-      options, argv[3], &db);
-  CHECK(status.ok()) << "Failed to open leveldb " << argv[3];
+  MDB_env *env;
+  MDB_dbi dbi;
+  MDB_val key, data;
+  MDB_txn *txn;
+
+  LOG(INFO) << "Opening lmdb " << argv[3];
+  CHECK_EQ(mdb_env_create(&env), MDB_SUCCESS) << "mdb_env_create failed";
+  CHECK_EQ(mdb_env_set_mapsize(env, 1099511627776), MDB_SUCCESS) // 1TB
+      << "mdb_env_set_mapsize failed";
+  CHECK_EQ(mdb_env_open(env, argv[3], 0, 0664), MDB_SUCCESS)
+      << "mdb_env_open failed";
+  CHECK_EQ(mdb_txn_begin(env, NULL, 0, &txn), MDB_SUCCESS) << "mdb_txn_begin failed";
+  CHECK_EQ(mdb_open(txn, NULL, 0, &dbi), MDB_SUCCESS) << "mdb_open failed";
 
   string root_folder(argv[1]);
   Datum datum;
   int count = 0;
   const int kMaxKeyLength = 256;
   char key_cstr[kMaxKeyLength];
-  leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   int data_size;
   bool data_size_initialized = false;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
@@ -90,21 +92,27 @@ int main(int argc, char** argv) {
     string value;
     // get the value
     datum.SerializeToString(&value);
-    batch->Put(string(key_cstr), value);
+    data.mv_size = value.size();
+    data.mv_data = reinterpret_cast<void*>(&value[0]);
+    string keystr(key_cstr);
+    key.mv_size = keystr.size();
+    key.mv_data = reinterpret_cast<void*>(&keystr[0]);
+    CHECK_EQ(mdb_put(txn, dbi, &key, &data, 0), MDB_SUCCESS)
+        << "mdb_put failed";
     if (++count % 1000 == 0) {
-      db->Write(leveldb::WriteOptions(), batch);
+      CHECK_EQ(mdb_txn_commit(txn), MDB_SUCCESS) << "mdb_txn_commit failed";
+      CHECK_EQ(mdb_txn_begin(env, NULL, 0, &txn), MDB_SUCCESS)
+          << "mdb_txn_begin failed";
       LOG(ERROR) << "Processed " << count << " files.";
-      delete batch;
-      batch = new leveldb::WriteBatch();
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
-    db->Write(leveldb::WriteOptions(), batch);
+    CHECK_EQ(mdb_txn_commit(txn), MDB_SUCCESS) << "mdb_txn_commit failed";
     LOG(ERROR) << "Processed " << count << " files.";
   }
+  mdb_close(env, dbi);
+  mdb_env_close(env);
 
-  delete batch;
-  delete db;
   return 0;
 }

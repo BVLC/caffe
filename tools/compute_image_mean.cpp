@@ -1,7 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <glog/logging.h>
-#include <leveldb/db.h>
+#include <lmdb.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -21,23 +21,28 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  leveldb::DB* db;
-  leveldb::Options options;
-  options.create_if_missing = false;
+  MDB_env* env;
+  MDB_dbi dbi;
+  MDB_val key, value;
+  MDB_txn* txn;
+  MDB_cursor* cursor;
+
+  CHECK_EQ(mdb_env_create(&env), MDB_SUCCESS) << "mdb_env_create failed";
+  CHECK_EQ(mdb_env_set_mapsize(env, 1099511627776), MDB_SUCCESS); // 1TB
+  CHECK_EQ(mdb_env_open(env, argv[1], MDB_RDONLY, 0664),
+      MDB_SUCCESS) << "mdb_env_open failed";
+  CHECK_EQ(mdb_txn_begin(env, NULL, MDB_RDONLY, &txn), MDB_SUCCESS)
+      << "mdb_txn_begin failed";
+  CHECK_EQ(mdb_open(txn, NULL, 0, &dbi), MDB_SUCCESS) << "mdb_open failed";
+  CHECK_EQ(mdb_cursor_open(txn, dbi, &cursor), MDB_SUCCESS)
+      << "mdb_cursor_open failed";
 
   LOG(INFO) << "Opening leveldb " << argv[1];
-  leveldb::Status status = leveldb::DB::Open(
-      options, argv[1], &db);
-  CHECK(status.ok()) << "Failed to open leveldb " << argv[1];
-
-  leveldb::ReadOptions read_options;
-  read_options.fill_cache = false;
-  leveldb::Iterator* it = db->NewIterator(read_options);
-  it->SeekToFirst();
+  CHECK_EQ(mdb_cursor_get(cursor, &key, &value, MDB_FIRST), MDB_SUCCESS);
   Datum datum;
   BlobProto sum_blob;
   int count = 0;
-  datum.ParseFromString(it->value().ToString());
+  datum.ParseFromArray(value.mv_data, value.mv_size);
   sum_blob.set_num(1);
   sum_blob.set_channels(datum.channels());
   sum_blob.set_height(datum.height());
@@ -49,9 +54,10 @@ int main(int argc, char** argv) {
     sum_blob.add_data(0.);
   }
   LOG(INFO) << "Starting Iteration";
-  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+  CHECK_EQ(mdb_cursor_get(cursor, &key, &value, MDB_FIRST), MDB_SUCCESS);
+  do {
     // just a dummy operation
-    datum.ParseFromString(it->value().ToString());
+    datum.ParseFromArray(value.mv_data, value.mv_size);
     const string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(), datum.float_data_size());
     CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " <<
@@ -70,7 +76,7 @@ int main(int argc, char** argv) {
     if (count % 10000 == 0) {
       LOG(ERROR) << "Processed " << count << " files.";
     }
-  }
+  } while (mdb_cursor_get(cursor, &key, &value, MDB_NEXT) == MDB_SUCCESS);
   if (count % 10000 != 0) {
     LOG(ERROR) << "Processed " << count << " files.";
   }
@@ -80,7 +86,10 @@ int main(int argc, char** argv) {
   // Write to disk
   LOG(INFO) << "Write to " << argv[2];
   WriteProtoToBinaryFile(sum_blob, argv[2]);
-
-  delete db;
+  // Clean up the shit
+  mdb_cursor_close(cursor);
+  mdb_close(env, dbi);
+  mdb_txn_abort(txn);
+  mdb_env_close(env);
   return 0;
 }
