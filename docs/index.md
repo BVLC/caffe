@@ -23,7 +23,7 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 
 ## Documentation
 
-* [Introductory slides](https://www.dropbox.com/s/10fx16yp5etb8dv/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
+* [Introductory slides](http://caffe.berkeleyvision.org/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
 * [Installation](/installation.html): Instructions on installing Caffe (works on Ubuntu, Red Hat, OS X).
 * [Pre-trained models](/getting_pretrained_models.html): BVLC provides some pre-trained models for academic / non-commercial use.
 * [Development](/development.html): Guidelines for development and contributing to Caffe.
