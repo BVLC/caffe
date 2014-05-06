@@ -22,7 +22,7 @@ line of code: `Caffe::set_mode(Caffe::CPU)`.
 Even in CPU mode, computing predictions on an image takes only 20 ms when images
 are processed in batch mode.
 
-* [Caffe introductory presentation](https://www.dropbox.com/s/10fx16yp5etb8dv/caffe-presentation.pdf)
+* [Caffe introductory presentation](http://berkeleyvision.org/caffe-presentation.pdf)
 * [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
 
 \* When measured with the [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model that won the ImageNet Large Scale Visual Recognition Challenge 2012.
