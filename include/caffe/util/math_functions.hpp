@@ -4,8 +4,10 @@
 #define CAFFE_UTIL_MATH_FUNCTIONS_H_
 
 #include <cublas_v2.h>
-#include <math.h>  // for signbit
-#include <cmath>  // for std::fabs
+#include <stdint.h>
+#include <cmath>  // for std::fabs and std::signbit
+
+#include "glog/logging.h"
 
 #include "caffe/util/mkl_alternate.hpp"
 
