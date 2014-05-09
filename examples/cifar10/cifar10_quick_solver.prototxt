@@ -23,5 +23,5 @@ max_iter: 4000
 # snapshot intermediate results
 snapshot: 4000
 snapshot_prefix: "cifar10_quick"
-# solver mode: 0 for CPU and 1 for GPU
-solver_mode: 1
+# solver mode: CPU or GPU
+solver_mode: GPU

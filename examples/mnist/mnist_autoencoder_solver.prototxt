@@ -11,4 +11,5 @@ weight_decay: 0.0005
 snapshot: 10000
 snapshot_prefix: "mnist_autoencoder_train"
 momentum: 0.9
-solver_mode: 1
+# solver mode: CPU or GPU
+solver_mode: GPU
