@@ -81,7 +81,11 @@ message SolverParameter {
   // debugging but the final protocol buffer size will be much larger.
   optional bool snapshot_diff = 16 [default = false];
   // the mode solver will use: 0 for CPU and 1 for GPU. Use GPU in default.
-  optional int32 solver_mode = 17 [default = 1];
+  enum SolverMode {
+    CPU = 0;
+    GPU = 1;
+  }
+  optional SolverMode solver_mode = 17 [default = GPU];
   // the device_id will that be used in GPU mode. Use device_id = 0 in default.
   optional int32 device_id = 18 [default = 0];
   // If non-negative, the seed with which the Solver will initialize the Caffe
