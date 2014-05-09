@@ -83,8 +83,8 @@ Um... How about GPU training?
 
 You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in `lenet_solver.prototxt`:
 
-    # solver mode: 0 for CPU and 1 for GPU
-    solver_mode: 0
+    # solver mode: CPU or GPU
+    solver_mode: CPU
 
 and you will be using CPU for training. Isn't that easy?
 
