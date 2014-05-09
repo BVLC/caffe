@@ -23,5 +23,5 @@ max_iter: 10000
 # snapshot intermediate results
 snapshot: 5000
 snapshot_prefix: "lenet"
-# solver mode: 0 for CPU and 1 for GPU
-solver_mode: 1
+# solver mode: CPU or GPU
+solver_mode: GPU
