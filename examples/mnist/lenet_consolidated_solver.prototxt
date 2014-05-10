@@ -6,10 +6,6 @@
 # (specify NetParameters directly in the solver, specify multiple test nets)
 # if desired.
 # 
-# test_iter specifies how many forward passes the test should carry out.
-# In the case of MNIST, we have test batch size 100 and 100 test iterations,
-# covering the full 10,000 testing images.
-test_iter: 100
 # Carry out testing every 500 training iterations.
 test_interval: 500
 # The base learning rate, momentum and the weight decay of the network.
@@ -33,6 +29,7 @@ snapshot_prefix: "lenet"
 random_seed: 1701
 # solver mode: CPU or GPU
 solver_mode: GPU
+
 # The training protocol buffer definition
 train_net_param {
   name: "LeNet"
@@ -154,6 +151,11 @@ train_net_param {
     bottom: "label"
   }
 }
+
+# test_iter specifies how many forward passes the test should carry out.
+# In the case of MNIST, we have test batch size 100 and 100 test iterations,
+# covering the full 10,000 testing images.
+test_iter: 100
 # The testing protocol buffer definition
 test_net_param {
   name: "LeNet-test"
@@ -274,6 +276,9 @@ test_net_param {
     top: "accuracy"
   }
 }
+
+# The train set has 60K images, so we run 600 test iters (600 * 100 = 60K).
+test_iter: 600
 # The protocol buffer definition to test on the train set
 test_net_param {
   name: "LeNet-test-on-train"
