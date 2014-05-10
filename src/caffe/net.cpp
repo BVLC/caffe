@@ -33,6 +33,8 @@ Net<Dtype>::Net(const string& param_file) {
 
 template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
+  LOG(INFO) << "Initializing net from parameters: " << std::endl
+            << in_param.DebugString();
   // Create a copy of in_param with splits added where necessary.
   NetParameter param;
   InsertSplits(in_param, &param);
