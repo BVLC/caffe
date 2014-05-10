@@ -68,7 +68,7 @@ message SolverParameter {
   optional NetParameter train_net_param = 21; // Full params for the train net.
   repeated NetParameter test_net_param = 22; // Full params for the test nets.
   // The number of iterations for each testing phase.
-  optional int32 test_iter = 3 [default = 0];
+  repeated int32 test_iter = 3;
   // The number of iterations between two testing phases.
   optional int32 test_interval = 4 [default = 0];
   optional bool test_compute_loss = 19 [default = false];
