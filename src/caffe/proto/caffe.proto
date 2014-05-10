@@ -64,9 +64,9 @@ message SolverParameter {
   // If {train,test}_net is specified, {train,test}_net_param should not be,
   // and vice versa.
   optional string train_net = 1; // The proto filename for the train net.
-  optional string test_net = 2; // The proto filename for the test net.
+  repeated string test_net = 2; // The proto filenames for the test nets.
   optional NetParameter train_net_param = 21; // Full params for the train net.
-  optional NetParameter test_net_param = 22; // Full params for the test net.
+  repeated NetParameter test_net_param = 22; // Full params for the test nets.
   // The number of iterations for each testing phase.
   optional int32 test_iter = 3 [default = 0];
   // The number of iterations between two testing phases.
