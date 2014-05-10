@@ -46,6 +46,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     LOG(INFO) << "Creating training net specified in SolverParameter.";
     net_.reset(new Net<Dtype>(param_.train_net_param()));
   } else {
+    CHECK(param_.has_train_net())
+        << "Neither train_net nor train_net_param were specified.";
     LOG(INFO) << "Creating training net from file: " << param_.train_net();
     net_.reset(new Net<Dtype>(param_.train_net()));
   }
