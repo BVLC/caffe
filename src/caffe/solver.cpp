@@ -33,6 +33,8 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
+  LOG(INFO) << "Initializing solver from parameters: " << std::endl
+            << param.DebugString();
   param_ = param;
   if (param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
