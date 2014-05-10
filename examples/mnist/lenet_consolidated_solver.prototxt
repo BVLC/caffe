@@ -2,10 +2,10 @@
 # and lenet_test prototxts into a single file.  It also adds an additional test
 # net which runs on the training set, e.g., for the purpose of comparing
 # train/test accuracy (accuracy is computed only on the test set in the included
-# LeNet example.  This is mainly included as an example of using these features
+# LeNet example).  This is mainly included as an example of using these features
 # (specify NetParameters directly in the solver, specify multiple test nets)
 # if desired.
-# 
+#
 # Carry out testing every 500 training iterations.
 test_interval: 500
 # The base learning rate, momentum and the weight decay of the network.
@@ -399,3 +399,54 @@ test_net_param {
     top: "accuracy"
   }
 }
+
+# Expected results for first and last 500 iterations:
+# (with portions of log omitted for brevity)
+#
+# Iteration 0, Testing net (#0)
+# Test score #0: 0.067
+# Test score #1: 2.30256
+# Iteration 0, Testing net (#1)
+# Test score #0: 0.0670334
+# Test score #1: 2.30258
+# Iteration 100, lr = 0.00992565
+# Iteration 100, loss = 0.280585
+# Iteration 200, lr = 0.00985258
+# Iteration 200, loss = 0.345601
+# Iteration 300, lr = 0.00978075
+# Iteration 300, loss = 0.172217
+# Iteration 400, lr = 0.00971013
+# Iteration 400, loss = 0.261836
+# Iteration 500, lr = 0.00964069
+# Iteration 500, loss = 0.157803
+# Iteration 500, Testing net (#0)
+# Test score #0: 0.968
+# Test score #1: 0.0993772
+# Iteration 500, Testing net (#1)
+# Test score #0: 0.965883
+# Test score #1: 0.109374
+#
+# [...]
+#
+# Iteration 9500, Testing net (#0)
+# Test score #0: 0.9899
+# Test score #1: 0.0308299
+# Iteration 9500, Testing net (#1)
+# Test score #0: 0.996816
+# Test score #1: 0.0118238
+# Iteration 9600, lr = 0.00603682
+# Iteration 9600, loss = 0.0126215
+# Iteration 9700, lr = 0.00601382
+# Iteration 9700, loss = 0.00579304
+# Iteration 9800, lr = 0.00599102
+# Iteration 9800, loss = 0.00500633
+# Iteration 9900, lr = 0.00596843
+# Iteration 9900, loss = 0.00796607
+# Iteration 10000, lr = 0.00594604
+# Iteration 10000, loss = 0.00271736
+# Iteration 10000, Testing net (#0)
+# Test score #0: 0.9914
+# Test score #1: 0.0276671
+# Iteration 10000, Testing net (#1)
+# Test score #0: 0.997782
+# Test score #1: 0.00908085
