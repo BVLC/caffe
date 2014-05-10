@@ -61,8 +61,11 @@ message SolverParameter {
   // parameters; {train,test}_net_param specify the net parameters directly
   // inside the SolverParameter.
   //
-  // If {train,test}_net is specified, {train,test}_net_param should not be,
-  // and vice versa.
+  // Only either train_net or train_net_param (not both) should be specified.
+  // You may specify 0 or more test_net and/or test_net_param.  All
+  // nets specified using test_net_param will be tested first, followed by all
+  // nets specified using test_net (each processed in the order specified in
+  // the prototxt).
   optional string train_net = 1; // The proto filename for the train net.
   repeated string test_net = 2; // The proto filenames for the test nets.
   optional NetParameter train_net_param = 21; // Full params for the train net.
