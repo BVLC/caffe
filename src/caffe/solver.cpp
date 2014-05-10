@@ -38,11 +38,29 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
-  LOG(INFO) << "Creating training net.";
-  net_.reset(new Net<Dtype>(param_.train_net()));
-  if (param_.has_test_net()) {
-    LOG(INFO) << "Creating testing net.";
+  if (param_.has_train_net_param()) {
+    CHECK(!param_.has_train_net()) << "Either train_net_param or train_net may "
+                                   << "be specified, but not both.";
+    LOG(INFO) << "Creating training net specified in SolverParameter.";
+    net_.reset(new Net<Dtype>(param_.train_net_param()));
+  } else {
+    LOG(INFO) << "Creating training net from file: " << param_.train_net();
+    net_.reset(new Net<Dtype>(param_.train_net()));
+  }
+  bool has_test_net = false;
+  NetParameter test_net_param;
+  if (param_.has_test_net_param()) {
+    CHECK(!param_.has_test_net()) << "Either test_net_param or test_net may be "
+                                  << "specified, but not both.";
+    LOG(INFO) << "Creating testing net specified in SolverParameter.";
+    test_net_.reset(new Net<Dtype>(param_.test_net_param()));
+    has_test_net = true;
+  } else if (param_.has_test_net()) {
+    LOG(INFO) << "Creating testing net from file: " << param_.test_net();
     test_net_.reset(new Net<Dtype>(param_.test_net()));
+    has_test_net = true;
+  }
+  if (has_test_net) {
     CHECK_GT(param_.test_iter(), 0);
     CHECK_GT(param_.test_interval(), 0);
   }
