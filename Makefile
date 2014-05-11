@@ -15,7 +15,7 @@ STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
 # CXX_SRCS are the source files excluding the test ones.
 CXX_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cpp" -name "*.cpp")
 # HXX_SRCS are the header files
-HXX_SRCS := $(shell find include/$(PROJECT) ! -name "*.hpp")
+HXX_SRCS := $(shell find include/$(PROJECT) -name "*.hpp")
 # CU_SRCS are the cuda source files
 CU_SRCS := $(shell find src/$(PROJECT) -name "*.cu")
 # TEST_SRCS are the test source files
