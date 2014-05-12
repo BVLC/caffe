@@ -85,7 +85,7 @@ public:
 		// wait until the signal is consumed
 		this->destroy_signal_ = true;
 		loading_need_.Post();
-		loader_thread_.Join();
+		boost::thread_joiner joiner(*loader_thread_);
 		loading_need_.Destroy();
 		loading_end_.Destroy();
 
@@ -151,14 +151,8 @@ private:
 			loading_end_.Post();
 		}
 	}
-	/*!\brief entry point of loader thread */
-	inline static CXXNET_THREAD_PREFIX LoaderEntry(void *pthread) {
-		static_cast<DataFetcher<Elem, ElemFactory>*>(pthread)->RunLoader();
-		ThreadExit (NULL);
-		return NULL;
-	}
 	/*!\brief start loader thread */
-	inline void StartLoader() {
+	inline void StartLoaderThread() {
 		destroy_signal_ = false;
 		// set param
 		current_buf_ = 1;
@@ -167,7 +161,8 @@ private:
 		loading_end_.Init(0);
 		// reset terminate limit
 		endA_ = endB_ = buf_size;
-		loader_thread_.Start(LoaderEntry, this);
+		loader_thread_ = new boost::thread(
+				boost::bind(&DataFetcher::RunLoader, this));
 		// wait until first part of data is loaded
 		loading_end_.Wait();
 		// set current buf to right value
@@ -210,7 +205,7 @@ private:
 	// signal to kill the thread
 	bool destroy_signal_;
 	// thread object
-	Thread loader_thread_;
+	boost::thread* loader_thread_;
 	// signal of the buffer
 	Semaphore loading_end_, loading_need_;
 };
