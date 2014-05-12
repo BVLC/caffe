@@ -27,18 +27,17 @@ template<typename Elem, typename ElemFactory>
 class DataFetcher {
 public:
 	/*!\brief constructor */
-	DataFetcher() {
-		this->init_end_ = false;
-		this->buf_size = 30;
-	}
+	DataFetcher(): buf_size(30), init_end_(false), data_loaded_(false) ()
 	~DataFetcher(void) {
-		if (init_end_)
+		if (init_end_) {
 			this->Destroy();
+		}
 	}
 	/*!\brief set parameter, will also pass the parameter to factory_ */
 	inline void SetParam(const char *name, const char *val) {
-		if (!strcmp(name, "buffer_size"))
+		if (!strcmp(name, "buffer_size")) {
 			buf_size = atoi(val);
+		}
 		factory_.SetParam(name, val);
 	}
 	/*!
@@ -47,35 +46,35 @@ public:
 	 * \return false if the initlization can't be done, e.g. buffer file hasn't been created
 	 */
 	inline bool Init(void) {
-		if (!factory_.Init())
+		if (!factory_.Init()) {
 			return false;
+		}
 		for (int i = 0; i < buf_size; i++) {
 			bufA_.push_back(factory_.Create());
 			bufB_.push_back(factory_.Create());
 		}
 		this->init_end_ = true;
-		this->StartLoader();
+		this->StartLoaderThread();
 		return true;
 	}
 
 	/*!\brief place the iterator before first value */
 	inline void BeforeFirst(void) {
 		// wait till last loader end
-		loading_end_.Wait();
+		loading_end_wait();
 		// critcal zone
 		current_buf_ = 1;
 		factory_.BeforeFirst();
 		// reset terminate limit
 		endA_ = endB_ = buf_size;
 		// wake up loader for first part
-		loading_need_.Post();
+		loading_need_notify();
 		// wait til first part is loaded
-		loading_end_.Wait();
+		loading_end_wait();
 		// set current buf to right value
 		current_buf_ = 0;
 		// wake loader for next part
-		data_loaded_ = false;
-		loading_need_.Post();
+		loading_need_notify();
 		// set buffer value
 		buf_index_ = 0;
 	}
@@ -84,10 +83,8 @@ public:
 	inline void Destroy(void) {
 		// wait until the signal is consumed
 		this->destroy_signal_ = true;
-		loading_need_.Post();
+		loading_need_.notify_one();
 		boost::thread_joiner joiner(*loader_thread_);
-		loading_need_.Destroy();
-		loading_end_.Destroy();
 
 		for (size_t i = 0; i < bufA_.size(); i++) {
 			factory_.FreeSpace(bufA_[i]);
@@ -104,7 +101,7 @@ public:
 	/*!
 	 * \brief get the next element needed in buffer
 	 * \param elem element to store into
-	 * \return whether reaches end of data
+	 * \return whether reaches end of databuf_size
 	 */
 	inline bool HasNext(Elem &elem) {
 		// end of buffer try to switch
@@ -133,9 +130,7 @@ private:
 	 */
 	inline void RunLoader() {
 		while (!destroy_signal_) {
-			// sleep until loading is needed
-			loading_need_.Wait();
-
+			loading_need_wait();
 			std::vector<Elem> &buf = current_buf_ ? bufB_ : bufA_;
 			int i;
 			for (i = 0; i < buf_size; i++) {
@@ -145,10 +140,7 @@ private:
 					break;
 				}
 			}
-
-			// signal that loading is done
-			data_loaded_ = true;
-			loading_end_.Post();
+			loading_end_notify();
 		}
 	}
 	/*!\brief start loader thread */
@@ -156,31 +148,48 @@ private:
 		destroy_signal_ = false;
 		// set param
 		current_buf_ = 1;
-
-		loading_need_.Init(1);
-		loading_end_.Init(0);
 		// reset terminate limit
 		endA_ = endB_ = buf_size;
 		loader_thread_ = new boost::thread(
 				boost::bind(&DataFetcher::RunLoader, this));
 		// wait until first part of data is loaded
-		loading_end_.Wait();
+		loading_end_wait();
 		// set current buf to right value
 		current_buf_ = 0;
 		// wake loader for next part
-		data_loaded_ = false;
-		loading_need_.Post();
-
+		loading_need_notify();
 		buf_index_ = 0;
 	}
 	/*!\brief switch double buffer */
 	inline void SwitchBuffer() {
-		loading_end_.Wait();
+		loading_end_wait();
 		// loader shall be sleep now, critcal zone!
 		current_buf_ = !current_buf_;
 		// wake up loader
+		loading_need_notify();
+	}
+	void loading_need_wait() {
+		// sleep until loading is needed
+		boost::mutex::scoped_lock lock(mutex_);
+		while (data_loaded_) {
+			loading_need_.wait(lock);
+		}
+	}
+	void loading_need_notify() {
 		data_loaded_ = false;
-		loading_need_.Post();
+		loading_need_.notify_one();
+	}
+	void loading_end_wait() {
+		// sleep until loading is needed
+		boost::mutex::scoped_lock lock(mutex_);
+		while (!data_loaded_) {
+			loading_end_.wait(lock);
+		}
+	}
+	void loading_end_notify() {
+		// signal that loading is done
+		data_loaded_ = true;
+		loading_end_.notify_one();
 	}
 public:
 	// size of buffer
@@ -206,8 +215,9 @@ private:
 	bool destroy_signal_;
 	// thread object
 	boost::thread* loader_thread_;
+	boost::mutex mutex_;
 	// signal of the buffer
-	Semaphore loading_end_, loading_need_;
+	boost::condition_variable loading_end_, loading_need_;
 };
 
 }  // namespace caffe
