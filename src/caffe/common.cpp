@@ -6,6 +6,9 @@
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 
+// openmp
+#define MAX_NUM_THREADS 32
+
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
@@ -37,6 +40,30 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
+  // openmp
+  num_threads_ = 0;
+#ifdef _OPENMP
+  const char *pValue=getenv ("OMP_NUM_THREADS");
+  num_threads_ = 1;
+  if (pValue!=NULL) {
+      num_threads_= atoi(pValue);
+      if (num_threads_ < 1) {
+	num_threads_ = 1;
+	LOG(WARNING) << "OMP_NUM_THREADS < 1, set to 1";
+      }
+      else if (num_threads_ > MAX_NUM_THREADS ) {
+	num_threads_ = MAX_NUM_THREADS;
+	LOG(WARNING)<<"OMP_NUM_THREADS > limit, set to "<< MAX_NUM_THREADS;
+      }
+      else
+	LOG(INFO) << "OMP_NUM_THREADS = "<< num_threads_;
+  }
+  else{
+     num_threads_ = omp_get_max_threads();
+     LOG(WARNING)<<"OMP_NUM_THREADS is not defined, set to "<< num_threads_;
+  }
+#endif
+
 }
 
 Caffe::~Caffe() {

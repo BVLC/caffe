@@ -56,12 +56,16 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // Initialize
+#pragma simd
     for (int i = 0; i < top_count; ++i) {
       top_data[i] = -FLT_MAX;
     }
     // The main loop
+#pragma omp parallel for
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+    	const Dtype*  bottom_data = bottom[0]->cpu_data() + bottom[0]-> offset(n,c);
+    	Dtype* top_data = (*top)[0]->mutable_cpu_data() + (*top)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_;
@@ -78,18 +82,22 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           }
         }
         // compute offset
-        bottom_data += bottom[0]->offset(0, 1);
-        top_data += (*top)[0]->offset(0, 1);
+//        bottom_data += bottom[0]->offset(0, 1);
+//        top_data += (*top)[0]->offset(0, 1);
       }
     }
     break;
   case PoolingParameter_PoolMethod_AVE:
+#pragma simd
     for (int i = 0; i < top_count; ++i) {
       top_data[i] = 0;
     }
     // The main loop
+#pragma omp parallel for
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+     	const Dtype*  bottom_data = bottom[0]->cpu_data() + bottom[0]-> offset(n,c);
+      	Dtype* top_data = (*top)[0]->mutable_cpu_data() + (*top)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_ - pad_;
@@ -111,8 +119,8 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           }
         }
         // compute offset
-        bottom_data += bottom[0]->offset(0, 1);
-        top_data += (*top)[0]->offset(0, 1);
+//        bottom_data += bottom[0]->offset(0, 1);
+//        top_data += (*top)[0]->offset(0, 1);
       }
     }
     break;
@@ -141,8 +149,13 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
+#pragma omp parallel for
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+    	const Dtype* top_diff = top[0]->cpu_diff()+top[0]->offset(n, c);
+    	const Dtype* top_data = top[0]->cpu_data()+ top[0]->offset(n,c);
+    	const Dtype* bottom_data = (*bottom)[0]->cpu_data()+ (*bottom)[0]->offset(n, c);
+    	Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff()+(*bottom)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_;
@@ -160,17 +173,22 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
         }
         // offset
-        bottom_data += (*bottom)[0]->offset(0, 1);
-        top_data += top[0]->offset(0, 1);
-        bottom_diff += (*bottom)[0]->offset(0, 1);
-        top_diff += top[0]->offset(0, 1);
+//        bottom_data += (*bottom)[0]->offset(0, 1);
+//        top_data += top[0]->offset(0, 1);
+//        bottom_diff += (*bottom)[0]->offset(0, 1);
+//        top_diff += top[0]->offset(0, 1);
       }
     }
     break;
   case PoolingParameter_PoolMethod_AVE:
     // The main loop
+#pragma omp parallel for
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+	const Dtype* top_diff = top[0]->cpu_diff()+top[0]->offset(n, c);
+	const Dtype* top_data = top[0]->cpu_data()+ top[0]->offset(n,c);
+	const Dtype* bottom_data = (*bottom)[0]->cpu_data()+ (*bottom)[0]->offset(n, c);
+	Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff()+(*bottom)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_ - pad_;
@@ -191,10 +209,10 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
         }
         // offset
-        bottom_data += (*bottom)[0]->offset(0, 1);
-        top_data += top[0]->offset(0, 1);
-        bottom_diff += (*bottom)[0]->offset(0, 1);
-        top_diff += top[0]->offset(0, 1);
+//        bottom_data += (*bottom)[0]->offset(0, 1);
+//        top_data += top[0]->offset(0, 1);
+//        bottom_diff += (*bottom)[0]->offset(0, 1);
+//        top_diff += top[0]->offset(0, 1);
       }
     }
     break;

@@ -156,6 +156,13 @@ ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
 endif
 
+# openmp
+OPENMP ?= 0
+ifeq ($(OPENMP), 1)
+	CXX := /opt/intel/bin/icc
+	CXXFLAGS := -xavx -m64 -std=c++11 -openmp -no-prec-div
+endif
+
 # OS X:
 # clang++ instead of g++
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9

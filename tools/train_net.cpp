@@ -8,6 +8,7 @@
 #include <cuda_runtime.h>
 
 #include <cstring>
+#include <time.h>
 
 #include "caffe/caffe.hpp"
 
@@ -23,6 +24,9 @@ int main(int argc, char** argv) {
   SolverParameter solver_param;
   ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
+  time_t start,end;
+  time (&start);
+
   LOG(INFO) << "Starting Optimization";
   SGDSolver<float> solver(solver_param);
   if (argc == 3) {
@@ -32,6 +36,10 @@ int main(int argc, char** argv) {
     solver.Solve();
   }
   LOG(INFO) << "Optimization Done.";
+
+  time (&end); 
+  double elapsed = difftime (end,start); 
+  LOG(INFO) << "Elapsed time, sec: " << elapsed;
 
   return 0;
 }

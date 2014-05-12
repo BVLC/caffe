@@ -16,6 +16,7 @@ Dtype ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
+#pragma omp parallel for simd
   for (int i = 0; i < count; ++i) {
     top_data[i] = max(bottom_data[i], Dtype(0));
   }
@@ -31,6 +32,7 @@ void ReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const int count = (*bottom)[0]->count();
+#pragma omp parallel for simd
     for (int i = 0; i < count; ++i) {
       bottom_diff[i] = top_diff[i] * (bottom_data[i] > 0);
     }
