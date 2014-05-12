@@ -5,45 +5,28 @@
 #ifndef CAFFE_UTIL_DATA_H_
 #define CAFFE_UTIL_DATA_H_
 
+#include <string>
 #include <vector>
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/blob.hpp"
 
 namespace caffe {
+using std::string;
 using std::vector;
-
-template<typename DataBatchType>
-class DataIterator {
- public:
-  DataIterator(const DataIteratorParameter& param) {}
-  virtual ~DataIterator() {}
-  virtual void Init() = 0;
-  virtual void BeforeFirst() = 0;
-  virtual bool Next() = 0;
-  virtual const DataBatchType& Value() const = 0;
-};
-
-template<typename Dtype>
-class DataInstance {
- public:
-  float label;
-  uint32_t index;
-  Blob<Dtype> data;
-};
 
 template<typename Dtype>
 class DataBatch {
  public:
-  DataBatch(): labels(), indices(), batch_size(0) {
+  DataBatch(): data(), label(), batch_size(0) {
   }
 
   inline void AllocSpace(const int batch_size, const int channels,
-                         const int height, const int width) {
-    data.Reshape(batch_size, channels, height, width);
-    labels.resize(batch_size);
-    indices.resize(batch_size);
-    this->batch_size = batch_size;
+                         const int height, const int width,
+                         const int max_labels) {
+	this->batch_size = batch_size;
+	data.Reshape(batch_size, channels, height, width);
+	label.Reshape(batch_size, max_labels, 1, 1);
   }
 
   inline void FreeSpace() {
@@ -51,80 +34,94 @@ class DataBatch {
 
   inline void CopyFrom(const DataBatch& src) {
     CHECK_EQ(batch_size, src.batch_size);
-    labels = src.labels;
-    indices = src.indices;
     data.CopyFrom(src.data, false, true);
+    label.CopyFrom(src.label, false, true);
   }
 
  public:
- vector<float> labels;
- vector<uint32_t> indices;
- size_t batch_size;
- Blob<Dtype> data;
+  size_t batch_size;
+  Blob<Dtype> data;
+  Blob<Dtype> label;
 };
 
-template<typename DataBatchType>
-class HDF5DataIterator: public DataIterator<DataBatchType> {
+template<typename Dtype>
+class DataIterator {
+ public:
+  DataIterator(const DataIteratorParameter& param):
+	  data_iterator_param_(param) {}
+  virtual ~DataIterator() {}
+  virtual void Init() = 0;
+  virtual bool HasNext() = 0;
+  virtual void Shuffle();
+  virtual const DataBatch<Dtype>& Next() const = 0;
+ protected:
+  DataIteratorParameter data_iterator_param_;
+};
+
+template<typename Dtype>
+class HDF5DataIterator: public DataIterator<Dtype> {
 public:
  HDF5DataIterator(const DataIteratorParameter& param):
-	 DataIterator<DataBatchType>(param) {}
+	 DataIterator<Dtype>(param) {}
  virtual ~HDF5DataIterator() {}
  virtual void Init() {}
- virtual void BeforeFirst() {}
- virtual bool Next() {}
- virtual const DataBatchType& Value() const {}
+ virtual bool HasNext();
+ virtual void Shuffle();
+ virtual const DataBatch<Dtype>& Next() const;
 };
 
-template<typename DataBatchType>
-class ImageDataIterator: public DataIterator<DataBatchType> {
+template<typename Dtype>
+class ImageDataIterator: public DataIterator<Dtype> {
 public:
- ImageDataIterator(const DataIteratorParameter& param):
-	 DataIterator<DataBatchType>(param) {}
+ ImageDataIterator(const DataIteratorParameter& param);
  virtual ~ImageDataIterator() {}
- virtual void Init() {}
- virtual void BeforeFirst() {}
- virtual bool Next() {}
- virtual const DataBatchType& Value() const {}
+ virtual void Init();
+ virtual bool HasNext();
+ virtual void Shuffle();
+ virtual const DataBatch<Dtype>& Next() const;
+private:
+ string base_path_;
+ vector<std::pair<string, int> > lines_;
 };
 
-template<typename DataBatchType>
-class LeveldbDataIterator: public DataIterator<DataBatchType> {
+template<typename Dtype>
+class LeveldbDataIterator: public DataIterator<Dtype> {
 public:
  LeveldbDataIterator(const DataIteratorParameter& param):
-	 DataIterator<DataBatchType>(param) {}
+	 DataIterator<Dtype>(param) {}
  virtual ~LeveldbDataIterator() {}
  virtual void Init() {}
- virtual void BeforeFirst() {}
- virtual bool Next() {}
- virtual const DataBatchType& Value() const {}
+ virtual bool HasNext();
+ virtual void Shuffle();
+ virtual const DataBatch<Dtype>& Next() const;
 };
 
-template<typename DataBatchType>
-class MemoryDataIterator: public DataIterator<DataBatchType> {
+template<typename Dtype>
+class MemoryDataIterator: public DataIterator<Dtype> {
 public:
  MemoryDataIterator(const DataIteratorParameter& param):
-	 DataIterator<DataBatchType>(param) {}
+	 DataIterator<Dtype>(param) {}
  virtual ~MemoryDataIterator() {}
  virtual void Init() {}
- virtual void BeforeFirst() {}
- virtual bool Next() {}
- virtual const DataBatchType& Value() const {}
+ virtual bool HasNext();
+ virtual void Shuffle();
+ virtual const DataBatch<Dtype>& Next() const;
 };
 
-template<typename DataBatchType>
-class WindowDataIterator: public DataIterator<DataBatchType> {
+template<typename Dtype>
+class WindowDataIterator: public DataIterator<Dtype> {
 public:
  WindowDataIterator(const DataIteratorParameter& param):
-	 DataIterator<DataBatchType>(param) {}
+	 DataIterator<Dtype>(param) {}
  virtual ~WindowDataIterator() {}
  virtual void Init() {}
- virtual void BeforeFirst() {}
- virtual bool Next() {}
- virtual const DataBatchType& Value() const {}
+ virtual bool HasNext();
+ virtual void Shuffle();
+ virtual const DataBatch<Dtype>& Next() const;
 };
 
 template <typename Dtype>
-DataIterator<DataBatch<Dtype> >* GetDataIterator(const DataIteratorParameter& param);
+DataIterator<Dtype>* GetDataIterator(const DataIteratorParameter& param);
 
 }  // namespace caffe
 
