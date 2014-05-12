@@ -6,7 +6,6 @@
 #define CAFFE_UTIL_DATA_H_
 
 #include <vector>
-#include "mshadow/tensor.h"
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/blob.hpp"
@@ -32,17 +31,16 @@ class DataInstance {
   Blob<Dtype> data;
 };
 
-TensorShape
-
 template<typename Dtype>
 class DataBatch {
  public:
   DataBatch(): labels(), indices(), batch_size(0) {
   }
 
-  inline void AllocSpace(mshadow::Shape<4> shape, const size_t batch_size) {
-    data = Blob::NewBlob(shape);
-    labele.resize(batch_size);
+  inline void AllocSpace(const int batch_size, const int channels,
+                         const int height, const int width) {
+    data.Reshape(num, channels, height, width);
+    labels.resize(batch_size);
     indices.resize(batch_size);
     this->batch_size = batch_size;
   }
@@ -54,7 +52,7 @@ class DataBatch {
     CHECK_EQ(batch_size, src.batch_size);
     labels = src.labels;
     indices = src.indices;
-    data = src.data;
+    data.CopyFrom(src.data, false, true);
   }
 
  public:
