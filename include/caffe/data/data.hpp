@@ -39,7 +39,7 @@ class DataBatch {
 
   inline void AllocSpace(const int batch_size, const int channels,
                          const int height, const int width) {
-    data.Reshape(num, channels, height, width);
+    data.Reshape(batch_size, channels, height, width);
     labels.resize(batch_size);
     indices.resize(batch_size);
     this->batch_size = batch_size;

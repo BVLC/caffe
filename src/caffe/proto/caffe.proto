@@ -28,6 +28,18 @@ message Datum {
   repeated float float_data = 6;
 }
 
+message DataIteratorParameter {
+  enum DataIteratorType {
+    HDF5 = 0;
+    IMAGE = 1;
+    LEVELDB = 2;
+    MEMORY = 3;
+    WINDOW = 4;
+  }
+  optional string name = 1;
+  optional DataIteratorType type = 2;
+}
+
 message FillerParameter {
   // The filler type.
   optional string type = 1 [default = 'constant'];
