@@ -9,30 +9,32 @@ namespace caffe {
 using std::string;
 
 template <typename Dtype>
-DataIterator<DataBatch>* GetDataIterator(const DataIteratorParameter& param) {
+DataIterator<DataBatch<Dtype> >* GetDataIterator(const DataIteratorParameter& param) {
   const string& name = param.name();
   const DataIteratorParameter_DataIteratorType& type = param.type();
   switch (type) {
     case DataIteratorParameter_DataIteratorType_HDF5:
-      return new HDF5DataIterator<Dtype>(param);
+      return new HDF5DataIterator<DataBatch<Dtype> >(param);
   case DataIteratorParameter_DataIteratorType_IMAGE:
-    return new ImageDataIterator<Dtype>(param);
+    return new ImageDataIterator<DataBatch<Dtype> >(param);
   case DataIteratorParameter_DataIteratorType_LEVELDB:
-    return new LeveldbDataIterator<Dtype>(param);
+    return new LeveldbDataIterator<DataBatch<Dtype> >(param);
   case DataIteratorParameter_DataIteratorType_MEMORY:
-    return new MemoryDataIterator<Dtype>(param);
+    return new MemoryDataIterator<DataBatch<Dtype> >(param);
   case DataIteratorParameter_DataIteratorType_WINDOW:
-    return new WindowDataIterator<Dtype>(param);
+    return new WindowDataIterator<DataBatch<Dtype> >(param);
   default:
     LOG(FATAL) << "DataIterator " << name << " has unknown type " << type;
   }
-  return (DataIterator<Dtype>*)(NULL);
+  return (DataIterator<DataBatch<Dtype> >*)(NULL);
 }
 
 template
-DataIterator<float>* GetDataIterator(const DataIteratorParameter& param);
+DataIterator<DataBatch<float> >* GetDataIterator(
+    const DataIteratorParameter& param);
 template
-DataIterator<double>* GetDataIterator(const DataIteratorParameter& param);
+DataIterator<DataBatch<double> >* GetDataIterator(
+    const DataIteratorParameter& param);
 
 
 }  // namespace caffe

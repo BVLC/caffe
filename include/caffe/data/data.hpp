@@ -13,14 +13,15 @@
 namespace caffe {
 using std::vector;
 
-template<typename Dtype>
+template<typename DataBatchType>
 class DataIterator {
  public:
+  DataIterator(const DataIteratorParameter& param) {}
   virtual ~DataIterator() {}
   virtual void Init() = 0;
   virtual void BeforeFirst() = 0;
   virtual bool Next() = 0;
-  virtual const Dtype& Value() const = 0;
+  virtual const DataBatchType& Value() const = 0;
 };
 
 template<typename Dtype>
@@ -62,8 +63,68 @@ class DataBatch {
  Blob<Dtype> data;
 };
 
+template<typename DataBatchType>
+class HDF5DataIterator: public DataIterator<DataBatchType> {
+public:
+ HDF5DataIterator(const DataIteratorParameter& param):
+	 DataIterator<DataBatchType>(param) {}
+ virtual ~HDF5DataIterator() {}
+ virtual void Init() {}
+ virtual void BeforeFirst() {}
+ virtual bool Next() {}
+ virtual const DataBatchType& Value() const {}
+};
+
+template<typename DataBatchType>
+class ImageDataIterator: public DataIterator<DataBatchType> {
+public:
+ ImageDataIterator(const DataIteratorParameter& param):
+	 DataIterator<DataBatchType>(param) {}
+ virtual ~ImageDataIterator() {}
+ virtual void Init() {}
+ virtual void BeforeFirst() {}
+ virtual bool Next() {}
+ virtual const DataBatchType& Value() const {}
+};
+
+template<typename DataBatchType>
+class LeveldbDataIterator: public DataIterator<DataBatchType> {
+public:
+ LeveldbDataIterator(const DataIteratorParameter& param):
+	 DataIterator<DataBatchType>(param) {}
+ virtual ~LeveldbDataIterator() {}
+ virtual void Init() {}
+ virtual void BeforeFirst() {}
+ virtual bool Next() {}
+ virtual const DataBatchType& Value() const {}
+};
+
+template<typename DataBatchType>
+class MemoryDataIterator: public DataIterator<DataBatchType> {
+public:
+ MemoryDataIterator(const DataIteratorParameter& param):
+	 DataIterator<DataBatchType>(param) {}
+ virtual ~MemoryDataIterator() {}
+ virtual void Init() {}
+ virtual void BeforeFirst() {}
+ virtual bool Next() {}
+ virtual const DataBatchType& Value() const {}
+};
+
+template<typename DataBatchType>
+class WindowDataIterator: public DataIterator<DataBatchType> {
+public:
+ WindowDataIterator(const DataIteratorParameter& param):
+	 DataIterator<DataBatchType>(param) {}
+ virtual ~WindowDataIterator() {}
+ virtual void Init() {}
+ virtual void BeforeFirst() {}
+ virtual bool Next() {}
+ virtual const DataBatchType& Value() const {}
+};
+
 template <typename Dtype>
-DataIterator<DataBatch>* GetDataIterator(const DataIteratorParameter& param);
+DataIterator<DataBatch<Dtype> >* GetDataIterator(const DataIteratorParameter& param);
 
 }  // namespace caffe
 
