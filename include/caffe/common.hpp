@@ -56,6 +56,10 @@ private:\
 // CUDA: check for error after kernel execution and exit loudly if there is one.
 #define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
 
+// Define not supported status for pre-6.0 compatibility.
+#if CUDA_VERSION < 6000
+#define CUBLAS_STATUS_NOT_SUPPORTED 831486
+#endif
 
 namespace caffe {
 
