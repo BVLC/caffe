@@ -77,31 +77,11 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // openmp
   num_of_threads_ = Caffe::get_num_threads();
   LOG(INFO) << "Conv layer: num threads =" << num_of_threads_;
-  col_buffer_mt_=NULL;
-  weight_diff_buffer_mt_=NULL;
   if (num_of_threads_>0) {
-    col_buffer_mt_=(Dtype **)malloc(num_of_threads_*sizeof(Dtype *));
-    weight_diff_buffer_mt_=(Dtype **)malloc(num_of_threads_*sizeof(Dtype *));
-    for (int tid =0; tid <   num_of_threads_; tid++){
-      col_buffer_mt_[tid]= (Dtype *) calloc(
-          channels_* kernel_size_*kernel_size_ * height_out* width_out,
-	  sizeof(Dtype));
-    weight_diff_buffer_mt_[tid]= (Dtype *) calloc(
-         num_output_*channels_*kernel_size_*kernel_size_ ,
-	 sizeof(Dtype));
-    }
-  }
-}
-// openmp
-template <typename Dtype>
-ConvolutionLayer<Dtype>::~ ConvolutionLayer<Dtype>() {
-  if (num_of_threads_> 0) {
-    for (int tid =0; tid <   num_of_threads_; tid++){
-	free(col_buffer_mt_[tid]);
-	free(weight_diff_buffer_mt_[tid]) ;
-    }
-    free(col_buffer_mt_) ;
-    free(weight_diff_buffer_mt_) ;
+    col_buffer_mt_.resize( num_of_threads_ * 
+          channels_ * kernel_size_ * kernel_size_ * height_out * width_out , 0.);
+    weight_diff_mt_.resize(num_of_threads_ * 
+          num_output_ *  (channels_ / group_ )*  kernel_size_ *  kernel_size_ , 0.);  
   }
 }
 
@@ -116,21 +96,27 @@ void ConvolutionLayer<Dtype>::Forward_cpu_task(
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
+  int height_out = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
+  int width_out  = (width_  + 2 * pad_ - kernel_size_) / stride_ + 1;
   int tid=0;
 #ifdef _OPENMP
   tid= omp_get_thread_num();
   if (tid >= num_of_threads_)
     LOG(FATAL) << "ConvLayer::Forward_cpu: omp_thread_num() =" << tid 
-               << " > OMP_NUM_THREADS = " << num_of_threads_;
+               << " > OMP_num_THREADS = " << num_of_threads_;
   tid = tid % num_of_threads_; //just to be sure
 #endif
+  int col_data_buffer_size= channels_ * kernel_size_ * kernel_size_ * height_out * width_out;
+  Dtype*  col_data  = & col_buffer_mt_[ tid* col_data_buffer_size];
+  memset(col_data, 0., (col_data_buffer_size * sizeof(Dtype)));
+
   // First, im2col
   im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
-		  width_, kernel_size_, pad_, stride_, col_buffer_mt_[tid]);
+			  width_, kernel_size_, pad_, stride_, col_data);
   // Second, innerproduct with groups
   for (int g = 0; g < group_; ++g) {
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,  (Dtype)1., 
-        weight + weight_offset * g, col_buffer_mt_[tid] + col_offset * g,
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
+	(Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
 	(Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
   }
   // third, add bias
@@ -140,7 +126,6 @@ void ConvolutionLayer<Dtype>::Forward_cpu_task(
 	  reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
 	  (Dtype)1., top_data + (*top)[0]->offset(n));
   }
-  return;
 }
 
 // openmp
@@ -200,37 +185,44 @@ void ConvolutionLayer<Dtype>::Backward_cpu_task(
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
+  int height_out = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
+  int width_out  = (width_  + 2 * pad_ - kernel_size_) / stride_ + 1;
 
   int tid=0;
 #ifdef _OPENMP
   tid= omp_get_thread_num();
   if (tid >= num_of_threads_)
     LOG(FATAL) << "ConvLayer::Backward_cpu: omp_thread_num() =" << tid 
-               << " > OMP_NUM_THREADS = " << num_of_threads_;
+               << " > OMP_num_THREADS = " << num_of_threads_;
   tid = tid % num_of_threads_;//just to be sure
 #endif
+  Dtype* col_data = & col_buffer_mt_[ tid * 
+            (channels_ * kernel_size_ * kernel_size_ * height_out * width_out)];
+  Dtype* weight_diff_data= & weight_diff_mt_ [tid * 
+         (num_output_ * (channels_ / group_) *  kernel_size_ * kernel_size_) ] ;
+
   // since we saved memory in the forward pass by not storing all col data,
   // we will need to recompute them.
   im2col_cpu(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
-	     width_, kernel_size_, pad_, stride_, col_buffer_mt_[tid]);
+		  width_, kernel_size_, pad_, stride_, col_data);
   // gradient w.r.t. weight. Note that we will accumulate diffs.
   for (int g = 0; g < group_; ++g) {
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
 	(Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
-	col_buffer_mt_[tid] + col_offset * g, (Dtype)1.,
-	weight_diff_buffer_mt_[tid] + weight_offset * g);
-  }
+	col_data + col_offset * g, (Dtype)1.,
+	weight_diff_data + weight_offset * g);
+   }
   // gradient w.r.t. bottom data, if necessary
   if (propagate_down) {
     for (int g = 0; g < group_; ++g) {
-      caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
-	(Dtype)1., weight + weight_offset * g,
-	top_diff + top[0]->offset(n) + top_offset * g,
-	(Dtype)0., col_buffer_mt_[tid] + col_offset * g);
+	caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
+		(Dtype)1., weight + weight_offset * g,
+		top_diff + top[0]->offset(n) + top_offset * g,
+		(Dtype)0., col_data + col_offset * g);
     }
     // col2im back to the data
-    col2im_cpu(col_buffer_mt_[tid], channels_, height_, width_, kernel_size_,
-	 pad_, stride_, bottom_diff + (*bottom)[0]->offset(n));
+    col2im_cpu(col_data, channels_, height_, width_, kernel_size_, pad_, stride_,
+      bottom_diff + (*bottom)[0]->offset(n));
   }//end of propagate_down
 }
 
@@ -245,7 +237,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu_omp(
   Dtype* bias_diff = NULL;
   if (bias_term_) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();
-    memset(bias_diff, 0, sizeof(Dtype) * this->blobs_[1]->count());
+    memset(bias_diff, 0., sizeof(Dtype) * this->blobs_[1]->count());
     for (int n = 0; n < num_; ++n) {
       caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
           1., top_diff + top[0]->offset(n),
@@ -254,24 +246,23 @@ void ConvolutionLayer<Dtype>::Backward_cpu_omp(
     }
   }// end of bias_term_
 
-  //---clean weight_diff_buffers before back propagation
-  for (int tid=0; tid < num_of_threads_;tid++)
-    memset(weight_diff_buffer_mt_[tid], 0, 
-           (channels_*num_output_* kernel_size_* kernel_size_* sizeof(Dtype)));
-  
+ //---clean weight_diff_buffers before back propagation
+  memset(& weight_diff_mt_[0], 0., (num_of_threads_ * num_output_ * (channels_/ group_)* kernel_size_ * kernel_size_ * sizeof(Dtype)));
   //do back propagation
 #pragma omp parallel for
   for (int n = 0; n < num_; ++n ){
-    Backward_cpu_task(top, propagate_down, bottom, n);
+	Backward_cpu_task(top, propagate_down, bottom, n);
   }
   //---merge weights_diff_buffers--------------------
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  int weight_diff_size= channels_*  num_output_ *kernel_size_*kernel_size_;
-  memset(weight_diff, 0, ( weight_diff_size*sizeof(Dtype)));
+  int weight_diff_size= num_output_ * (channels_ / group_) * kernel_size_*kernel_size_ ;
+  memset(weight_diff, 0., ( weight_diff_size*sizeof(Dtype)));
+  int j=0;
   for (int tid=0; tid < num_of_threads_;tid++){
 #pragma simd
-    for (int i=0; i < weight_diff_size; i++ )
-      weight_diff[i]+=weight_diff_buffer_mt_[tid][i];
+    for (int i=0; i < weight_diff_size; i++, j++ ){
+      weight_diff[i] += weight_diff_mt_[j];
+    }
   }//end of tid
 }
 

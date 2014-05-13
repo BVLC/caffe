@@ -82,7 +82,6 @@ class ConvolutionLayer : public Layer<Dtype> {
  public:
   explicit ConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual  ~ConvolutionLayer<Dtype>(); // openmp
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
@@ -114,16 +113,17 @@ class ConvolutionLayer : public Layer<Dtype> {
 
   // openmp
   virtual void Forward_cpu_omp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+	vector<Blob<Dtype>*>* top);
   virtual void Forward_cpu_task(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top, int n);
+	vector<Blob<Dtype>*>* top, int n);
   virtual void Backward_cpu_omp(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+	const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_cpu_task(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom, int n);
+	const bool propagate_down, vector<Blob<Dtype>*>* bottom, int n);
+
   int num_of_threads_;
-  Dtype** col_buffer_mt_;
-  Dtype** weight_diff_buffer_mt_;
+  std::vector<Dtype> col_buffer_mt_;
+  std::vector<Dtype> weight_diff_mt_;
 };
 
 /* EltwiseProductLayer
