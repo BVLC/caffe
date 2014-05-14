@@ -217,7 +217,7 @@ public:
 template<typename Dtype>
 class MathBackendFactory {
 public:
-	MathBackend<Dtype>* GetInstance();
+	static MathBackend<Dtype>* GetMathBackend();
 private:
 	static MathBackend<Dtype>* cpu_math_backend_;
 	static MathBackend<Dtype>* gpu_math_backend_;
