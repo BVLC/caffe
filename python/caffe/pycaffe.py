@@ -52,9 +52,8 @@ def _Net_forward(self, **kwargs):
             If None, input is taken from data layers by ForwardPrefilled().
 
   Give
-    out: {output blob name: list of output blobs} dict.
+    outs: {output blob name: list of output blobs} dict.
   """
-  outs = {}
   if not kwargs:
     # Carry out prefilled forward pass and unpack output.
     self.ForwardPrefilled()
@@ -70,12 +69,46 @@ def _Net_forward(self, **kwargs):
     self.Forward(in_blobs, out_blobs)
 
   # Unpack output blobs
+  outs = {}
   for out, out_blob in zip(self.outputs, out_blobs):
     outs[out] = [out_blob[ix, :, :, :].squeeze()
                   for ix in range(out_blob.shape[0])]
   return outs
 
 Net.forward = _Net_forward
+
+
+def _Net_backward(self, **kwargs):
+  """
+  Backward pass: prepare diffs and run the net backward.
+
+  Take
+    kwargs: Keys are output blob names and values are lists of diffs.
+            If None, input is taken from data layers by BackwardPrefilled().
+
+  Give
+    bottom_diffs: {input blob name: list of diffs} dict.
+  """
+  if not kwargs:
+    self.BackwardPrefilled()
+    bottom_diffs = [self.blobs[in_].diff for in_ in self.inputs]
+  else:
+    # Create top and bottom diffs according to net defined shapes
+    # and make arrays single and C-contiguous as Caffe expects.
+    top_diffs = [np.ascontiguousarray(np.concatenate(kwargs[out]),
+                                      dtype=np.float32) for out in self.outputs]
+    bottom_diffs = [np.empty(self.blobs[bottom].data.shape, dtype=np.float32)
+                    for bottom in self.inputs]
+    self.Backward(top_diffs, bottom_diffs)
+
+  # Unpack bottom diffs
+  bottom_diffs = {}
+  for bottom, bottom_diff in zip(self.inputs, bottom_diffs):
+    bottom_diffs[bottom] = [bottom_diff[ix, :, :, :].squeeze()
+                             for ix in range(bottom_diff.shape[0])]
+  return bottom_diffs
+
+Net.backward = _Net_backward
 
 
 def _Net_set_mean(self, input_, mean_f, mode='image'):
