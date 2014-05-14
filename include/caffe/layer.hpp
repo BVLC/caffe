@@ -9,6 +9,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/math_backends.hpp"
 
 using std::string;
 using std::vector;
@@ -22,7 +23,7 @@ class Layer {
   // to SetUp(), where the dimensions of the bottom blobs are provided to the
   // layer.
   explicit Layer(const LayerParameter& param)
-    : layer_param_(param) {
+    : layer_param_(param), math_(MathBackendFactory<Dtype>::GetMathBackend()) {
       // The only thing we do is to copy blobs if there are any.
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());
@@ -97,6 +98,9 @@ class Layer {
   LayerParameter layer_param_;
   // The vector that stores the parameters as a set of blobs.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
+  // The math backend abstracts the CPU and the GPU specific
+  // implementation details
+  MathBackend<Dtype>* math_;
 
   // Forward functions: compute the layer output
   // (and loss layers return the loss; other layers return the dummy value 0.)

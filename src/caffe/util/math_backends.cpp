@@ -6,7 +6,7 @@
 namespace caffe {
 
 template<typename Dtype>
-MathBackend<Dtype>* MathBackendFactory<Dtype>::GetInstance() {
+MathBackend<Dtype>* MathBackendFactory<Dtype>::GetMathBackend() {
 	switch (Caffe::mode()) {
 	case Caffe::CPU:
 		return cpu_math_backend_;

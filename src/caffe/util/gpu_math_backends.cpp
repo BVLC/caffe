@@ -103,7 +103,8 @@ void GPUMathBackend<Dtype>::rng_gaussian(const int N, const Dtype mu,
 
 template<typename Dtype>
 void GPUMathBackend<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
-	caffe_gpu_rng_bernoulli<Dtype>(N, p, r);
+	NOT_IMPLEMENTED;
+//	caffe_gpu_rng_bernoulli<Dtype>(N, p, r);
 }
 
 template<typename Dtype>
