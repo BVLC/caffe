@@ -162,6 +162,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       it != available_blobs.end(); ++it) {
     LOG(INFO) << "This network produces output " << *it;
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
+    net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
   }
   for (size_t i = 0; i < blob_names_.size(); ++i) {
     blob_names_index_[blob_names_[i]] = i;
