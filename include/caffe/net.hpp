@@ -123,6 +123,7 @@ class Net {
   vector<vector<int> > top_id_vecs_;
   // blob indices for the input and the output of the net
   vector<int> net_input_blob_indices_;
+  vector<int> net_output_blob_indices_;
   vector<Blob<Dtype>*> net_input_blobs_;
   vector<Blob<Dtype>*> net_output_blobs_;
   string name_;
