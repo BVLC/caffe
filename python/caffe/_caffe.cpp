@@ -350,6 +350,24 @@ struct CaffeNet {
     return result;
   }
 
+  list inputs() {
+    list input_blob_names;
+    for (vector<int>::iterator it = net_->input_blob_indices().begin();
+        it != net_->input_blob_indices().end(); ++it) {
+      input_blob_names.append(net_->blob_names()[*it]);
+    }
+    return input_blob_names;
+  }
+
+  list outputs() {
+    list output_blob_names;
+    for (vector<int>::iterator it = net_->output_blob_indices().begin();
+        it != net_->output_blob_indices().end(); ++it) {
+      output_blob_names.append(net_->blob_names()[*it]);
+    }
+    return output_blob_names;
+  }
+
   // The pointer to the internal caffe::Net instant.
   shared_ptr<Net<float> > net_;
   // if taking input from an ndarray, we need to hold references
@@ -399,6 +417,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("set_device",        &CaffeNet::set_device)
       .add_property("_blobs",   &CaffeNet::blobs)
       .add_property("layers",   &CaffeNet::layers)
+      .add_property("inputs",    &CaffeNet::inputs)
+      .add_property("outputs",   &CaffeNet::outputs)
       .def("_set_input_arrays", &CaffeNet::set_input_arrays);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
