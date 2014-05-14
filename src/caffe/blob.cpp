@@ -94,6 +94,58 @@ Dtype* Blob<Dtype>::mutable_gpu_diff() {
 }
 
 template <typename Dtype>
+const Dtype* Blob<Dtype>::const_data() const {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return cpu_data();
+  case Caffe::GPU:
+    return gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(NULL);
+  }
+}
+
+template <typename Dtype>
+const Dtype* Blob<Dtype>::const_diff() const {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return cpu_diff();
+  case Caffe::GPU:
+    return gpu_diff();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(NULL);
+  }
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_data() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_data();
+  case Caffe::GPU:
+    return mutable_gpu_data();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(NULL);
+  }
+}
+
+template <typename Dtype>
+Dtype* Blob<Dtype>::mutable_diff() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    return mutable_cpu_diff();
+  case Caffe::GPU:
+    return mutable_gpu_diff();
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+    return static_cast<Dtype*>(NULL);
+  }
+}
+
+template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();

@@ -72,6 +72,12 @@ class Blob {
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
+
+  const Dtype* const_data() const;
+  const Dtype* const_diff() const;
+  Dtype* mutable_data();
+  Dtype* mutable_diff();
+
   void Update();
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
