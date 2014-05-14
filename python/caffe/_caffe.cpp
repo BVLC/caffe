@@ -293,6 +293,10 @@ struct CaffeNet {
     net_->ForwardPrefilled();
   }
 
+  void BackwardPrefilled() {
+    net_->Backward();
+  }
+
   void set_input_arrays(object data_obj, object labels_obj) {
     // check that this network has an input MemoryDataLayer
     shared_ptr<MemoryDataLayer<float> > md_layer =
@@ -411,6 +415,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("Forward",           &CaffeNet::Forward)
       .def("ForwardPrefilled",  &CaffeNet::ForwardPrefilled)
       .def("Backward",          &CaffeNet::Backward)
+      .def("BackwardPrefilled", &CaffeNet::BackwardPrefilled)
       .def("set_mode_cpu",      &CaffeNet::set_mode_cpu)
       .def("set_mode_gpu",      &CaffeNet::set_mode_gpu)
       .def("set_phase_train",   &CaffeNet::set_phase_train)
