@@ -1,12 +1,11 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <algorithm>
 #include <vector>
+#include <cfloat>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::max;
 
 namespace caffe {
 
