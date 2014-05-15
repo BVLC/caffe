@@ -4,6 +4,7 @@ interface.
 """
 
 from collections import OrderedDict
+from itertools import izip_longest
 import numpy as np
 
 from ._caffe import Net, SGDSolver
@@ -125,6 +126,76 @@ def _Net_backward(self, diffs=None, **kwargs):
 Net.backward = _Net_backward
 
 
+def _Net_forward_all(self, blobs=None, **kwargs):
+  """
+  Run net forward in batches.
+
+  Take
+    blobs: list of blobs to extract as in forward()
+    kwargs: Keys are input blob names and values are lists of blobs.
+            Refer to forward().
+
+  Give
+    all_outs: {blob name: list of blobs} dict.
+  """
+  # Collect outputs from batches
+  all_outs = {out: [] for out in self.outputs + blobs}
+  for batch in self._batch(kwargs):
+    outs = self.forward(blobs=blobs, **batch)
+    for out, out_blobs in outs.items():
+      all_outs[out].extend(out_blobs)
+  # Discard padding at the end.
+  pad = len(all_outs.itervalues().next()) - len(kwargs.itervalues().next())
+  if pad:
+    for out in all_outs:
+      del all_outs[out][-pad:]
+  return all_outs
+
+Net.forward_all = _Net_forward_all
+
+
+def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
+  """
+  Run net forward + backward in batches.
+
+  Take
+    blobs: list of blobs to extract as in forward()
+    diffs: list of diffs to extract as in backward()
+    kwargs: Keys are input (for forward) and output (for backward) blob names
+            and values are lists of blobs. Refer to forward() and backward().
+            Prefilled variants are called for lack of input or output blobs.
+
+  Give
+    all_blobs: {blob name: list of blobs} dict.
+    all_diffs: {blob name: list of diffs} dict.
+  """
+  # Batch blobs and diffs.
+  all_outs = {out: [] for out in self.outputs + (blobs or [])}
+  all_diffs = {diff: [] for diff in self.inputs + (diffs or [])}
+  forward_batches = self._batch({in_: kwargs[in_]
+                                 for in_ in self.inputs if in_ in kwargs})
+  backward_batches = self._batch({out: kwargs[out]
+                                  for out in self.outputs if out in kwargs})
+  # Collect outputs from batches (and heed lack of forward/backward batches).
+  for fb, bb in izip_longest(forward_batches, backward_batches, fillvalue={}):
+    batch_blobs = self.forward(blobs=blobs, **fb)
+    batch_diffs = self.backward(diffs=diffs, **bb)
+    for out, out_blobs in batch_blobs.items():
+      all_outs[out].extend(out_blobs)
+    for diff, out_diffs in batch_diffs.items():
+      all_diffs[diff].extend(out_diffs)
+  # Discard padding at the end.
+  pad = len(all_outs.itervalues().next()) - len(kwargs.itervalues().next())
+  if pad:
+    for out in all_outs:
+      del all_outs[out][-pad:]
+    for diff in all_diffs:
+      del all_diffs[diff][-pad:]
+  return all_outs, all_diffs
+
+Net.forward_backward_all = _Net_forward_backward_all
+
+
 def _Net_set_mean(self, input_, mean_f, mode='image'):
   """
   Set the mean to subtract for data centering.
@@ -244,3 +315,32 @@ def _Net_set_input_arrays(self, data, labels):
   return self._set_input_arrays(data, labels)
 
 Net.set_input_arrays = _Net_set_input_arrays
+
+
+def _Net_batch(self, blobs):
+  """
+  Batch blob lists according to net's batch size.
+
+  Take
+    blobs: Keys blob names and values are lists of blobs (of any length).
+           Naturally, all the lists should have the same length.
+
+  Give (yield)
+    batch: {blob name: list of blobs} dict for a single batch.
+  """
+  num = len(blobs.itervalues().next())
+  batch_size = self.blobs.itervalues().next().num
+  remainder = num % batch_size
+  num_batches = (num + remainder) / batch_size
+
+  # Yield full batches.
+  for b in range(num_batches-1):
+    for i in [b * batch_size]:
+      yield {name: blobs[name][i:i + batch_size] for name in blobs}
+
+  # Yield last padded batch, if any.
+  if remainder > 0:
+    yield {name: blobs[name][-remainder:] +
+                 [np.zeros_like(blobs[name][0])] * remainder for name in blobs}
+
+Net._batch = _Net_batch

@@ -30,7 +30,6 @@ def oversample(image, center_only=False):
   Output:
       images: the output of size (10 x 3 x 227 x 227)
   """
-  image = image.swapaxes(1, 2).swapaxes(0, 1)
   indices = [0, IMAGE_DIM - CROPPED_DIM]
   center = int(indices[1] / 2)
   if center_only:
@@ -58,8 +57,9 @@ def prepare_image(filename, center_only=False):
     img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
   elif img.shape[2] == 4:
     img = img[:, :, :3]
-  # Resize and convert to BGR
+  # Resize, convert to BGR, and permute axes to caffe order
   img_reshape = (transform.resize(img, (IMAGE_DIM,IMAGE_DIM)) * 255)[:, :, ::-1]
+  img_reshape = img_reshape.swapaxes(1, 2).swapaxes(0, 1)
   # subtract main
   img_reshape -= IMAGENET_MEAN
   return oversample(img_reshape, center_only)
