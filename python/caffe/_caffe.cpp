@@ -1,7 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 // pycaffe provides a wrapper of the caffe::Net class as well as some
-// caffe::Caffe functions so that one could easily call it from python.
-// Note that for python, we will simply use float as the data type.
+// caffe::Caffe functions so that one could easily call it from Python.
+// Note that for Python, we will simply use float as the data type.
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -33,7 +33,7 @@ using boost::python::handle;
 using boost::python::vector_indexing_suite;
 
 // for convenience, check that input files can be opened, and raise an
-// exception that boost will send to python if not (caffe could still crash
+// exception that boost will send to Python if not (caffe could still crash
 // later if the input files are disturbed before they are actually used, but
 // this saves frustration in most cases)
 static void CheckFile(const string& filename) {
@@ -46,7 +46,7 @@ static void CheckFile(const string& filename) {
 }
 
 // wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
-// to python
+// to Python
 class CaffeBlob {
  public:
   CaffeBlob(const shared_ptr<Blob<float> > &blob, const string& name)
@@ -72,7 +72,7 @@ class CaffeBlob {
 
 // We need another wrapper (used as boost::python's HeldType) that receives a
 // self PyObject * which we can use as ndarray.base, so that data/diff memory
-// is not freed while still being used in python.
+// is not freed while still being used in Python.
 class CaffeBlobWrap : public CaffeBlob {
  public:
   CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
@@ -192,8 +192,8 @@ struct CaffeNet {
     }
   }
 
-  // The actual forward function. It takes in a python list of numpy arrays as
-  // input and a python list of numpy arrays as output. The input and output
+  // The actual forward function. It takes in a Python list of numpy arrays as
+  // input and a Python list of numpy arrays as output. The input and output
   // should all have correct shapes, be single-precision, and be C-contiguous.
   void Forward(list bottom, list top) {
     vector<Blob<float>*>& input_blobs = net_->input_blobs();
@@ -404,10 +404,10 @@ class CaffeSGDSolver {
 };
 
 
-// The boost python module definition.
+// The boost_python module definition.
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
-  //  in Python
+  // in Python
   boost::python::class_<CaffeNet, shared_ptr<CaffeNet> >(
       "Net", boost::python::init<string, string>())
       .def(boost::python::init<string>())
@@ -422,8 +422,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("set_device",        &CaffeNet::set_device)
       .add_property("_blobs",   &CaffeNet::blobs)
       .add_property("layers",   &CaffeNet::layers)
-      .add_property("inputs",    &CaffeNet::inputs)
-      .add_property("outputs",   &CaffeNet::outputs)
+      .add_property("inputs",   &CaffeNet::inputs)
+      .add_property("outputs",  &CaffeNet::outputs)
       .def("_set_input_arrays", &CaffeNet::set_input_arrays);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
