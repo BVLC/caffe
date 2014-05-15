@@ -59,7 +59,7 @@ TYPED_TEST(ThresholdLayerTest, TestCPU) {
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  const TypeParam threshold_ = layer.theshold_;
+  const TypeParam threshold_ = layer.threshold_;
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
