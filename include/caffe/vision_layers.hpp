@@ -61,6 +61,11 @@ class ConcatLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down,
+      vector<Blob<Dtype>*>* bottom);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_CONCAT;
@@ -77,6 +82,12 @@ class ConcatLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  virtual Dtype Forward_xpu(const vector<Blob<Dtype>*>& bottom,
+                            vector<Blob<Dtype>*>* top);
+  virtual void Backward_xpu(const vector<Blob<Dtype>*>& top,
+                            const bool propagate_down,
+                            vector<Blob<Dtype>*>* bottom);
 
   Blob<Dtype> col_bob_;
   int count_;
