@@ -45,7 +45,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetup) {
   LayerParameter layer_param;
   ThresholdLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  EXPECT_EQ(this->blob_top_->num(), this->bottom_top_->num());
+  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), 1);
 }
 
@@ -55,7 +55,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetupMaxVal) {
   argmax_param->set_out_max_val(true);
   ThresholdLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  EXPECT_EQ(this->blob_top_->num(), this->bottom_top_->num());
+  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), 2);
 }
 
