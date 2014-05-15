@@ -356,18 +356,18 @@ struct CaffeNet {
 
   list inputs() {
     list input_blob_names;
-    for (vector<int>::iterator it = net_->input_blob_indices().begin();
-        it != net_->input_blob_indices().end(); ++it) {
-      input_blob_names.append(net_->blob_names()[*it]);
+    for (int i = 0; i < net_->input_blob_indices().size(); ++i) {
+      input_blob_names.append(
+          net_->blob_names()[net_->input_blob_indices()[i]]);
     }
     return input_blob_names;
   }
 
   list outputs() {
     list output_blob_names;
-    for (vector<int>::iterator it = net_->output_blob_indices().begin();
-        it != net_->output_blob_indices().end(); ++it) {
-      output_blob_names.append(net_->blob_names()[*it]);
+    for (int i = 0; i < net_->output_blob_indices().size(); ++i) {
+      output_blob_names.append(
+          net_->blob_names()[net_->output_blob_indices()[i]]);
     }
     return output_blob_names;
   }
