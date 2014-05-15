@@ -45,10 +45,10 @@ TYPED_TEST(ThresholdLayerTest, TestSetup) {
   LayerParameter layer_param;
   ThresholdLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  EXPECT_EQ(this->blob_top_->num(), this->bottom_top_->num());
-  EXPECT_EQ(this->blob_top_->channels(), this->bottom_top_->channels());
-  EXPECT_EQ(this->blob_top_->height(), this->bottom_top_->height());
-  EXPECT_EQ(this->blob_top_->width(), this->bottom_top_->width());
+  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
+  EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
+  EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height());
+  EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_->width());
 }
 TYPED_TEST(ThresholdLayerTest, TestCPU) {
   LayerParameter layer_param;
