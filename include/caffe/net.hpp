@@ -22,12 +22,16 @@ namespace caffe {
 template <typename Dtype>
 class Net {
  public:
-  explicit Net(const NetParameter& param);
-  explicit Net(const string& param_file);
+  explicit Net(const NetParameter& param, Net<Dtype>* memory_share_net = NULL);
+  explicit Net(const string& param_file, Net<Dtype>* memory_share_net = NULL);
   virtual ~Net() {}
 
-  // Initialize a network with the network parameter.
-  void Init(const NetParameter& param);
+  // Initialize a network with the network parameter.  If memory_share_net is
+  // non-null, any top/bottom blob in this net with an identically-named blob
+  // in memory_share_net will share its memory location to save on memory, using
+  // memory proportional to max(net_a_blob_size, net_b_blob_size) rather than
+  // (net_a_blob_size + net_b_blob_size).
+  void Init(const NetParameter& param, Net<Dtype>* memory_share_net = NULL);
 
   // Run forward with the input blobs already fed separately. You can get the
   // input blobs using input_blobs().

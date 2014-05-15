@@ -16,6 +16,11 @@ private:\
   classname(const classname&);\
   classname& operator=(const classname&)
 
+// Disable just the assignment operator for a class.
+#define DISABLE_ASSIGN(classname) \
+private:\
+  classname& operator=(const classname&)
+
 // Instantiate a class with float and double specifications.
 #define INSTANTIATE_CLASS(classname) \
   template class classname<float>; \

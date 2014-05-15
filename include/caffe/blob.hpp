@@ -12,19 +12,17 @@ namespace caffe {
 template <typename Dtype>
 class Blob {
  public:
-  Blob()
-       : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
-       diff_() {}
-  explicit Blob(const int num, const int channels, const int height,
-    const int width);
-  void Reshape(const int num, const int channels, const int height,
-    const int width);
+  explicit Blob(const int num = 0, const int channels = 0,
+                const int height = 0, const int width = 0);
+  explicit Blob(const Blob& memory_share_blob);
+  void Reshape(const int num, const int channels,
+               const int height, const int width);
   void ReshapeLike(const Blob& other);
   inline int num() const { return num_; }
   inline int channels() const { return channels_; }
   inline int height() const { return height_; }
   inline int width() const { return width_; }
-  inline int count() const {return count_; }
+  inline int count() const { return count_; }
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     CHECK_GE(n, 0);
@@ -91,8 +89,9 @@ class Blob {
   int height_;
   int width_;
   int count_;
+  size_t space_requirement_;
 
-  DISABLE_COPY_AND_ASSIGN(Blob);
+  DISABLE_ASSIGN(Blob);
 };  // class Blob
 
 }  // namespace caffe
