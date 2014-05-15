@@ -142,9 +142,8 @@ struct CaffeNet {
   }
 
   CaffeNet(string param_file, string pretrained_param_file) {
-    CheckFile(param_file);
+    Init(param_file);
     CheckFile(pretrained_param_file);
-    net_.reset(new Net<float>(param_file));
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
 
