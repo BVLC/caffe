@@ -51,7 +51,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetup) {
 
 TYPED_TEST(ArgMaxLayerTest, TestSetupMaxVal) {
   LayerParameter layer_param;
-  ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
+  ArgMaxLayerParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_out_max_val(true);
   ThresholdLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -86,7 +86,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPU) {
 TYPED_TEST(ArgMaxLayerTest, TestCPUMaxVal) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
-  ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
+  ArgMaxLayerParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_out_max_val(true);
   ArgMaxLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
