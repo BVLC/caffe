@@ -6,6 +6,7 @@ interface.
 from collections import OrderedDict
 from itertools import izip_longest
 import numpy as np
+from scipy.ndimage import zoom
 
 from ._caffe import Net, SGDSolver
 
@@ -242,6 +243,7 @@ def _Net_format_image(self, input_, image):
     """
     Format image for input to Caffe:
     - convert to single
+    - resize to input dimensions (preserving number of channels)
     - scale feature
     - reorder channels (for instance color to BGR)
     - subtract mean
@@ -257,6 +259,11 @@ def _Net_format_image(self, input_, image):
     input_scale = self.input_scale.get(input_)
     channel_order = self.channel_swap.get(input_)
     mean = self.mean.get(input_)
+    in_dims = self.blobs[input_].data.shape[2:]
+    if caf_image.shape[:2] != in_dims:
+        scale_h = in_dims[0] / float(caf_image.shape[0])
+        scale_w = in_dims[1] / float(caf_image.shape[1])
+        caf_image = zoom(caf_image, (scale_h, scale_w, 1), order=1)
     if input_scale:
         caf_image *= input_scale
     if channel_order:
