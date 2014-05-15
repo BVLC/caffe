@@ -124,7 +124,7 @@ class Layer {
   // Forward functions: compute the layer output
   // (and loss layers return the loss; other layers return the dummy value 0.)
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) = 0;
+      vector<Blob<Dtype>*>* top) { return static_cast<Dtype>(0); }
   // If no gpu code is provided, we will simply use cpu code.
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -136,7 +136,7 @@ class Layer {
   // for the bottom blobs if propagate_down is true.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
-      vector<Blob<Dtype>*>* bottom) = 0;
+      vector<Blob<Dtype>*>* bottom) { return; }
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) {
