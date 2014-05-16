@@ -50,6 +50,7 @@ TYPED_TEST(ThresholdLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height());
   EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_->width());
 }
+
 TYPED_TEST(ThresholdLayerTest, TestCPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
@@ -59,7 +60,7 @@ TYPED_TEST(ThresholdLayerTest, TestCPU) {
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  const TypeParam threshold_ = layer.threshold_;
+  const TypeParam threshold_ = layer_param.threshold_param().threshold();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
@@ -68,4 +69,24 @@ TYPED_TEST(ThresholdLayerTest, TestCPU) {
   }
 }
 
+TYPED_TEST(ThresholdLayerTest, TestCPU2) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  ThresholdLayerParameter* threshold_param =
+    layer_param.mutable_threshold_param();
+  threshold_param->set_threshold(0.5);
+  ThresholdLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  const TypeParam threshold_ = layer_param.threshold_param().threshold();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_LE(top_data[i], 1.);
+    EXPECT_TRUE(top_data[i] == 0 && bottom_data[i] <= threshold_);
+    EXPECT_TRUE(top_data[i] == 1 && bottom_data[i] > threshold_);
+  }
+}
 }  // namespace caffe
