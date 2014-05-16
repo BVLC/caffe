@@ -160,6 +160,7 @@ message LayerParameter {
     SPLIT = 22;
     TANH = 23;
     WINDOW_DATA = 24;
+    ARGMAX = 30;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -186,12 +187,18 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
+  optional ArgMaxLayer argmax_param = 23;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
   // LayerParameter specification.
   optional V0LayerParameter layer = 1;
 }
+
+// Message that stores parameters used by ArgMaxLayer
+message ArgMaxLayer {
+  // If true produce pairs (argmax, maxval) 
+  optional bool out_max_val = 1 [default = false]; 
 
 // Message that stores parameters used by ConcatLayer
 message ConcatParameter {

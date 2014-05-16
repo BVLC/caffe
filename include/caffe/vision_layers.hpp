@@ -23,6 +23,25 @@ ConcatLayer
   channel dim, outputting the result.
 */
 template <typename Dtype>
+class ArgMaxLayer : public Layer<Dtype> {
+ public:
+  explicit ArgMaxLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  // For now ArgMax layer should not be used to compute backward operations.
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    NOT_IMPLEMENTED;
+  }
+  bool out_max_val_;
+};
+
+template <typename Dtype>
 class ConcatLayer : public Layer<Dtype> {
  public:
   explicit ConcatLayer(const LayerParameter& param)
