@@ -15,7 +15,7 @@ from ._caffe import Net, SGDSolver
 # automatically have the improved interface.
 
 # Input preprocessing
-Net.mean = {}       # image mean (ndarray, input dimensional or broadcastable)
+Net.mean = {}       # input mean (ndarray, input dimensional or broadcastable)
 Net.input_scale = {}    # for a model that expects data = input * input_scale
 Net.channel_swap = {}  # for RGB -> BGR and the like
 
@@ -47,7 +47,7 @@ def _Net_forward(self, blobs=None, **kwargs):
     Take
     blobs: list of blobs to return in addition to output blobs.
     kwargs: Keys are input blob names and values are blob ndarrays.
-            For turning images into input blobs, see caffeinate()().
+            For formatting inputs for Caffe, see Net.preprocess().
             If None, input is taken from data layers.
 
     Give
@@ -181,27 +181,27 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
     return all_outs, all_diffs
 
 
-def _Net_set_mean(self, input_, mean_f, mode='image'):
+def _Net_set_mean(self, input_, mean_f, mode='elementwise'):
     """
     Set the mean to subtract for data centering.
 
     Take
     input_: which input to assign this mean.
     mean_f: path to mean .npy
-    mode: image = use the whole-image mean (and check dimensions)
-          channel = channel constant (i.e. mean pixel instead of mean image)
+    mode: elementwise = use the whole mean (and check dimensions)
+          channel = channel constant (e.g. mean pixel instead of mean image)
     """
     if input_ not in self.inputs:
         raise Exception('Input not in {}'.format(self.inputs))
     mean = np.load(mean_f)
-    if mode == 'image':
+    if mode == 'elementwise':
         if mean.shape != self.input.data.shape[1:]:
             raise Exception('The mean shape does not match the input shape.')
         self.mean[input_] = mean
     elif mode == 'channel':
         self.mean[input_] = mean.mean(1).mean(1)
     else:
-        raise Exception('Mode not in {}'.format(['image', 'channel']))
+        raise Exception('Mode not in {}'.format(['elementwise', 'channel']))
 
 
 
@@ -233,9 +233,9 @@ def _Net_set_channel_swap(self, input_, order):
     self.channel_swap[input_] = order
 
 
-def _Net_caffeinate(self, input_, images):
+def _Net_preprocess(self, input_name, inputs):
     """
-    Format image for input to Caffe:
+    Format inputs for Caffe:
     - convert to single
     - resize to input dimensions (preserving number of channels)
     - scale feature
@@ -244,52 +244,53 @@ def _Net_caffeinate(self, input_, images):
     - transpose dimensions to K x H x W
 
     Take
-    image: list of (H' x W' x K) ndarray
+    input_name: name of input blob
+    inputs: list of (H' x W' x K) ndarray
 
     Give
-    image: (K x H x W) ndarray
+    caffe_inputs: (K x H x W) ndarray
     """
-    caffe_images = []
-    for im in images:
-        caffe_im = im.astype(np.float32)
-        input_scale = self.input_scale.get(input_)
-        channel_order = self.channel_swap.get(input_)
-        mean = self.mean.get(input_)
-        in_dims = self.blobs[input_].data.shape[2:]
-        if caffe_im.shape[:2] != in_dims:
-            scale_h = in_dims[0] / float(caffe_im.shape[0])
-            scale_w = in_dims[1] / float(caffe_im.shape[1])
-            caffe_im = zoom(caffe_im, (scale_h, scale_w, 1), order=1)
+    caffe_inputs = []
+    for in_ in inputs:
+        caffe_in = in_.astype(np.float32)
+        input_scale = self.input_scale.get(input_name)
+        channel_order = self.channel_swap.get(input_name)
+        mean = self.mean.get(input_name)
+        in_dims = self.blobs[input_name].data.shape[2:]
+        if caffe_in.shape[:2] != in_dims:
+            scale_h = in_dims[0] / float(caffe_in.shape[0])
+            scale_w = in_dims[1] / float(caffe_in.shape[1])
+            caffe_in = zoom(caffe_in, (scale_h, scale_w, 1), order=1)
         if input_scale:
-            caffe_im *= input_scale
+            caffe_in *= input_scale
         if channel_order:
-            caffe_im = caffe_im[:, :, channel_order]
+            caffe_in = caffe_in[:, :, channel_order]
         if mean:
-            caffe_im -= mean
-        caffe_im = caffe_im.transpose((2, 0, 1))
-        caffe_images.append(caffe_im)
-    return np.asarray(caffe_images)
+            caffe_in -= mean
+        caffe_in = caffe_in.transpose((2, 0, 1))
+        caffe_inputs.append(caffe_in)
+    return np.asarray(caffe_inputs)
 
 
-def _Net_decaffeinate(self, input_, images):
+def _Net_deprocess(self, input_name, inputs):
     """
-    Invert Caffe formatting; see _Net_caffeinate().
+    Invert Caffe formatting; see Net.preprocess().
     """
-    decaf_images = []
-    for im in images:
-        decaf_im = image.squeeze()
-        decaf_im = decaf_im.transpose((1,2,0))
-        input_scale = self.input_scale.get(input_)
-        channel_order = self.channel_swap.get(input_)
-        mean = self.mean.get(input_)
+    decaf_inputs = []
+    for in_ in inputs:
+        decaf_in = in_.squeeze()
+        decaf_in = decaf_in.transpose((1,2,0))
+        input_scale = self.input_scale.get(input_name)
+        channel_order = self.channel_swap.get(input_name)
+        mean = self.mean.get(input_name)
         if mean:
-            decaf_im += mean
+            decaf_in += mean
         if channel_order:
-            decaf_im = decaf_im[:, :, channel_order[::-1]]
+            decaf_in = decaf_in[:, :, channel_order[::-1]]
         if input_scale:
-            decaf_im /= input_scale
-        decaf_images.append(decaf_im)
-    return np.asarray(decaf_images)
+            decaf_in /= input_scale
+        decaf_inputs.append(decaf_in)
+    return np.asarray(decaf_inputs)
 
 
 def _Net_set_input_arrays(self, data, labels):
@@ -344,7 +345,7 @@ Net.forward_backward_all = _Net_forward_backward_all
 Net.set_mean = _Net_set_mean
 Net.set_input_scale = _Net_set_input_scale
 Net.set_channel_swap = _Net_set_channel_swap
-Net.caffeinate = _Net_caffeinate
-Net.decaffeinate= _Net_decaffeinate
+Net.preprocess = _Net_preprocess
+Net.deprocess = _Net_deprocess
 Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
