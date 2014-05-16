@@ -72,7 +72,7 @@ TYPED_TEST(ThresholdLayerTest, TestCPU) {
 TYPED_TEST(ThresholdLayerTest, TestCPU2) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
-  ThresholdLayerParameter* threshold_param =
+  ThresholdParameter* threshold_param =
     layer_param.mutable_threshold_param();
   threshold_param->set_threshold(0.5);
   ThresholdLayer<TypeParam> layer(layer_param);
@@ -82,6 +82,7 @@ TYPED_TEST(ThresholdLayerTest, TestCPU2) {
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
   const TypeParam threshold_ = layer_param.threshold_param().threshold();
+  EXPECT_FLOAT_EQ(threshold_,0.5);
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
