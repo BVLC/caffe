@@ -158,18 +158,7 @@ struct CaffeNet {
 
   virtual ~CaffeNet() {}
 
-  // Check that an array is acceptable for blob assignment
-  // as described in the preface to Forward().
-  inline void check_array_against_blob(
-      PyArrayObject* arr, Blob<float>* blob, string name) {
-    check_contiguous_array(arr, name, blob->channels(), blob->height(),
-        blob->width());
-    if (PyArray_DIMS(arr)[0] != blob->num()) {
-      throw std::runtime_error(name + " has wrong batch size");
-    }
-  }
-
-  // generate Python exceptions for badly shaped or discontiguous arrays
+  // Generate Python exceptions for badly shaped or discontiguous arrays.
   inline void check_contiguous_array(PyArrayObject* arr, string name,
       int channels, int height, int width) {
     if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
@@ -192,107 +181,11 @@ struct CaffeNet {
     }
   }
 
-  // The actual forward function. It takes in a Python list of numpy arrays as
-  // input and a Python list of numpy arrays as output. The input and output
-  // should all have correct shapes, be single-precision, and be C-contiguous.
-  void Forward(list bottom, list top) {
-    vector<Blob<float>*>& input_blobs = net_->input_blobs();
-    CHECK_EQ(len(bottom), input_blobs.size());
-    CHECK_EQ(len(top), net_->num_outputs());
-    // First, copy the input
-    for (int i = 0; i < input_blobs.size(); ++i) {
-      object elem = bottom[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, input_blobs[i],
-          net_->blob_names()[net_->input_blob_indices()[i]]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(input_blobs[i]->mutable_cpu_data(), PyArray_DATA(arr),
-            sizeof(float) * input_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(input_blobs[i]->mutable_gpu_data(), PyArray_DATA(arr),
-            sizeof(float) * input_blobs[i]->count(), cudaMemcpyHostToDevice);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-    // LOG(INFO) << "Start";
-    const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
-    // LOG(INFO) << "End";
-    for (int i = 0; i < output_blobs.size(); ++i) {
-      object elem = top[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, output_blobs[i],
-          net_->blob_names()[net_->input_blob_indices()[i]]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(PyArray_DATA(arr), output_blobs[i]->cpu_data(),
-            sizeof(float) * output_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(PyArray_DATA(arr), output_blobs[i]->gpu_data(),
-            sizeof(float) * output_blobs[i]->count(), cudaMemcpyDeviceToHost);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-  }
-
-  void Backward(list top_diff, list bottom_diff) {
-    vector<Blob<float>*>& output_blobs = net_->output_blobs();
-    vector<Blob<float>*>& input_blobs = net_->input_blobs();
-    CHECK_EQ(len(bottom_diff), input_blobs.size());
-    CHECK_EQ(len(top_diff), output_blobs.size());
-    // First, copy the output diff
-    for (int i = 0; i < output_blobs.size(); ++i) {
-      object elem = top_diff[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, output_blobs[i],
-          net_->blob_names()[net_->input_blob_indices()[i]]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(output_blobs[i]->mutable_cpu_diff(), PyArray_DATA(arr),
-            sizeof(float) * output_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(output_blobs[i]->mutable_gpu_diff(), PyArray_DATA(arr),
-            sizeof(float) * output_blobs[i]->count(), cudaMemcpyHostToDevice);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-    // LOG(INFO) << "Start";
-    net_->Backward();
-    // LOG(INFO) << "End";
-    for (int i = 0; i < input_blobs.size(); ++i) {
-      object elem = bottom_diff[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, input_blobs[i],
-          net_->blob_names()[net_->input_blob_indices()[i]]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(PyArray_DATA(arr), input_blobs[i]->cpu_diff(),
-            sizeof(float) * input_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(PyArray_DATA(arr), input_blobs[i]->gpu_diff(),
-            sizeof(float) * input_blobs[i]->count(), cudaMemcpyDeviceToHost);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-  }
-
-  void ForwardPrefilled() {
+  void Forward() {
     net_->ForwardPrefilled();
   }
 
-  void BackwardPrefilled() {
+  void Backward() {
     net_->Backward();
   }
 
@@ -411,10 +304,8 @@ BOOST_PYTHON_MODULE(_caffe) {
   boost::python::class_<CaffeNet, shared_ptr<CaffeNet> >(
       "Net", boost::python::init<string, string>())
       .def(boost::python::init<string>())
-      .def("Forward",           &CaffeNet::Forward)
-      .def("ForwardPrefilled",  &CaffeNet::ForwardPrefilled)
-      .def("Backward",          &CaffeNet::Backward)
-      .def("BackwardPrefilled", &CaffeNet::BackwardPrefilled)
+      .def("_forward",          &CaffeNet::Forward)
+      .def("_backward",         &CaffeNet::Backward)
       .def("set_mode_cpu",      &CaffeNet::set_mode_cpu)
       .def("set_mode_gpu",      &CaffeNet::set_mode_gpu)
       .def("set_phase_train",   &CaffeNet::set_phase_train)
