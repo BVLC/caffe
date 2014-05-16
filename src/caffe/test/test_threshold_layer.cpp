@@ -64,8 +64,12 @@ TYPED_TEST(ThresholdLayerTest, TestCPU) {
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
-    EXPECT_TRUE(top_data[i] == 0 && bottom_data[i] <= threshold_);
-    EXPECT_TRUE(top_data[i] == 1 && bottom_data[i] > threshold_);
+    if (top_data[i] == 0) {
+	EXPECT_LE(bottom_data[i],threshold_);
+    }
+    if (top_data[i] == 1) {
+	EXPECT_GT(bottom_data[i],threshold_);
+    }
   }
 }
 
@@ -86,8 +90,12 @@ TYPED_TEST(ThresholdLayerTest, TestCPU2) {
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
-    EXPECT_TRUE(top_data[i] == 0 && bottom_data[i] <= threshold_);
-    EXPECT_TRUE(top_data[i] == 1 && bottom_data[i] > threshold_);
+    if (top_data[i] == 0) {
+	EXPECT_LE(bottom_data[i],threshold_);
+    }
+    if (top_data[i] == 1) {
+	EXPECT_TRUE(bottom_data[i] > threshold_); 
+    }
   }
 }
 
