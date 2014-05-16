@@ -47,7 +47,7 @@ def _Net_forward(self, blobs=None, **kwargs):
     Take
     blobs: list of blobs to return in addition to output blobs.
     kwargs: Keys are input blob names and values are blob ndarrays.
-            For turning images into input blobs, see format_image().
+            For turning images into input blobs, see caffeinate()().
             If None, input is taken from data layers.
 
     Give
@@ -233,7 +233,7 @@ def _Net_set_channel_swap(self, input_, order):
     self.channel_swap[input_] = order
 
 
-def _Net_format_image(self, input_, image):
+def _Net_caffeinate(self, input_, images):
     """
     Format image for input to Caffe:
     - convert to single
@@ -241,50 +241,55 @@ def _Net_format_image(self, input_, image):
     - scale feature
     - reorder channels (for instance color to BGR)
     - subtract mean
-    - reshape to 1 x K x H x W
+    - transpose dimensions to K x H x W
 
     Take
-    image: (H x W x K) ndarray
+    image: list of (H' x W' x K) ndarray
 
     Give
-    image: (1 x K x H x W) ndarray
+    image: (K x H x W) ndarray
     """
-    caf_image = image.astype(np.float32)
-    input_scale = self.input_scale.get(input_)
-    channel_order = self.channel_swap.get(input_)
-    mean = self.mean.get(input_)
-    in_dims = self.blobs[input_].data.shape[2:]
-    if caf_image.shape[:2] != in_dims:
-        scale_h = in_dims[0] / float(caf_image.shape[0])
-        scale_w = in_dims[1] / float(caf_image.shape[1])
-        caf_image = zoom(caf_image, (scale_h, scale_w, 1), order=1)
-    if input_scale:
-        caf_image *= input_scale
-    if channel_order:
-        caf_image = caf_image[:, :, channel_order]
-    if mean:
-        caf_image -= mean
-    caf_image = caf_image.transpose((2, 0, 1))
-    caf_image = caf_image[np.newaxis, :, :, :]
-    return caf_image
+    caffe_images = []
+    for im in images:
+        caffe_im = im.astype(np.float32)
+        input_scale = self.input_scale.get(input_)
+        channel_order = self.channel_swap.get(input_)
+        mean = self.mean.get(input_)
+        in_dims = self.blobs[input_].data.shape[2:]
+        if caffe_im.shape[:2] != in_dims:
+            scale_h = in_dims[0] / float(caffe_im.shape[0])
+            scale_w = in_dims[1] / float(caffe_im.shape[1])
+            caffe_im = zoom(caffe_im, (scale_h, scale_w, 1), order=1)
+        if input_scale:
+            caffe_im *= input_scale
+        if channel_order:
+            caffe_im = caffe_im[:, :, channel_order]
+        if mean:
+            caffe_im -= mean
+        caffe_im = caffe_im.transpose((2, 0, 1))
+        caffe_images.append(caffe_im)
+    return np.asarray(caffe_images)
 
 
-def _Net_decaffeinate_image(self, input_, image):
+def _Net_decaffeinate(self, input_, images):
     """
-    Invert Caffe formatting; see _Net_format_image().
+    Invert Caffe formatting; see _Net_caffeinate().
     """
-    decaf_image = image.squeeze()
-    decaf_image = decaf_image.transpose((1,2,0))
-    input_scale = self.input_scale.get(input_)
-    channel_order = self.channel_swap.get(input_)
-    mean = self.mean.get(input_)
-    if mean:
-        decaf_image += mean
-    if channel_order:
-        decaf_image = decaf_image[:, :, channel_order[::-1]]
-    if input_scale:
-        decaf_image /= input_scale
-    return decaf_image
+    decaf_images = []
+    for im in images:
+        decaf_im = image.squeeze()
+        decaf_im = decaf_im.transpose((1,2,0))
+        input_scale = self.input_scale.get(input_)
+        channel_order = self.channel_swap.get(input_)
+        mean = self.mean.get(input_)
+        if mean:
+            decaf_im += mean
+        if channel_order:
+            decaf_im = decaf_im[:, :, channel_order[::-1]]
+        if input_scale:
+            decaf_im /= input_scale
+        decaf_images.append(decaf_im)
+    return np.asarray(decaf_images)
 
 
 def _Net_set_input_arrays(self, data, labels):
@@ -339,7 +344,7 @@ Net.forward_backward_all = _Net_forward_backward_all
 Net.set_mean = _Net_set_mean
 Net.set_input_scale = _Net_set_input_scale
 Net.set_channel_swap = _Net_set_channel_swap
-Net.format_image = _Net_format_image
-Net.decaffeinate_image = _Net_decaffeinate_image
+Net.caffeinate = _Net_caffeinate
+Net.decaffeinate= _Net_decaffeinate
 Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
