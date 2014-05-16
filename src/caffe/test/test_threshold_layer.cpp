@@ -89,4 +89,5 @@ TYPED_TEST(ThresholdLayerTest, TestCPU2) {
     EXPECT_TRUE(top_data[i] == 1 && bottom_data[i] > threshold_);
   }
 }
+
 }  // namespace caffe
