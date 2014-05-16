@@ -782,6 +782,39 @@ class SplitLayer : public Layer<Dtype> {
   int count_;
 };
 
+/*
+ * Weighted Approximate-Rank Pairwise loss for image retrieval/annotation etc.
+ * References:
+ * [1] Yunchao Gong, Yangqing Jia, Sergey Ioffe, Alexander Toshev, Thomas
+ *     Leung. Deep Convolutional Ranking for Multilabel Image Annotation.
+ *     arXiv:1312.4894 [cs.CV]
+ * [2] Jason Weston, Samy Bengio, and Nicolas Usunier. Wsabie: Scaling up
+ *     to large vocabulary image annotation. In IJCAI, 2011.
+ */
+template <typename Dtype>
+class WARPLossLayer : public Layer<Dtype> {
+ public:
+  explicit WARPLossLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+  // In image retrieval or annotations, results or labels form ranked list
+  //   based on their scores.
+  // Weighted Approximate-Rank Pairwise loss uses a function to
+  //   set weight for different ranks, e.g. 1 / j for the j-th rank.
+  Blob<Dtype> rank_weights_;
+};
+
 // This function is used to create a pthread that prefetches the window data.
 template <typename Dtype>
 void* WindowDataLayerPrefetch(void* layer_pointer);
