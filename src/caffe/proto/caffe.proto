@@ -187,7 +187,8 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
-  optional ArgMaxLayer argmax_param = 23;
+  optional ArgMaxParameter argmax_param = 23;
+
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -196,9 +197,10 @@ message LayerParameter {
 }
 
 // Message that stores parameters used by ArgMaxLayer
-message ArgMaxLayer {
+message ArgMaxParameter {
   // If true produce pairs (argmax, maxval) 
   optional bool out_max_val = 1 [default = false]; 
+}
 
 // Message that stores parameters used by ConcatLayer
 message ConcatParameter {
