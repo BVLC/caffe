@@ -189,7 +189,6 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 20;
   optional ArgMaxParameter argmax_param = 23;
 
-
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
   // LayerParameter specification.
@@ -197,6 +196,7 @@ message LayerParameter {
 }
 
 // Message that stores parameters used by ArgMaxLayer
+
 message ArgMaxParameter {
   // If true produce pairs (argmax, maxval) 
   optional bool out_max_val = 1 [default = false]; 
