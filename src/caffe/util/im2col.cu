@@ -17,9 +17,9 @@ __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
     Dtype* data_col) {
   CUDA_KERNEL_LOOP(index, n) {
     int w_out = index % width_col;
-    index /= width_col;
-    int h_out = index % height_col;
-    int channel_in = index / height_col;
+    int h_index = index / width_col;
+    int h_out = h_index % height_col;
+    int channel_in = h_index / height_col;
     int channel_out = channel_in * ksize * ksize;
     int h_in = h_out * stride - pad;
     int w_in = w_out * stride - pad;
