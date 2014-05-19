@@ -124,11 +124,13 @@ class PowerLayer : public NeuronLayer<Dtype> {
 };
 
 /* ReLULayer
-  Rectified Linear Unit non-linearity: fast and stable.
+  Rectified Linear Unit non-linearity.
+  The simple max is fast to compute, and the function does not saturate.
 
   y = max(0, x).
 
-  y' = x > 0
+  y' = 0  if x < 0
+  y' = 1 if x > 0
 */
 template <typename Dtype>
 class ReLULayer : public NeuronLayer<Dtype> {
@@ -149,10 +151,14 @@ class ReLULayer : public NeuronLayer<Dtype> {
 };
 
 /* SigmoidLayer
-  Sigmoid function non-linearity: a classic.
+  Sigmoid function non-linearity, a classic choice in neural networks.
+  Note that the gradient vanishes as the values move away from 0.
+  The ReLULayer is often a better choice for this reason.
 
   y = 1. / (1 + exp(-x))
 
+  y ' = exp(x) / (1 + exp(x))^2
+  or
   y' = y * (1 - y)
 */
 template <typename Dtype>
@@ -173,11 +179,11 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
 };
 
 /* TanHLayer
-  Hyperbolic tangent non-linearity.
+  Hyperbolic tangent non-linearity, popular in auto-encoders.
 
   y = 1. * (exp(2x) - 1) / (exp(2x) + 1)
 
-  y' = 1 - [(exp(2x) - 1) / (exp(2x) + 1)] ^ 2
+  y' = 1 - ( (exp(2x) - 1) / (exp(2x) + 1) ) ^ 2
 */
 template <typename Dtype>
 class TanHLayer : public NeuronLayer<Dtype> {
