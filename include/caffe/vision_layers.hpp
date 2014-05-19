@@ -17,6 +17,11 @@
 
 namespace caffe {
 
+/*
+ConcatLayer
+  Takes at least two blobs and concatenates them along either num or
+  channel dim, outputting the result.
+*/
 template <typename Dtype>
 class ConcatLayer : public Layer<Dtype> {
  public:
@@ -44,6 +49,8 @@ class ConcatLayer : public Layer<Dtype> {
   int concat_dim_;
 };
 
+/* ConvolutionLayer
+*/
 template <typename Dtype>
 class ConvolutionLayer : public Layer<Dtype> {
  public:
@@ -79,7 +86,8 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
-
+/* EltwiseProductLayer
+*/
 template <typename Dtype>
 class EltwiseProductLayer : public Layer<Dtype> {
  public:
@@ -120,6 +128,8 @@ class FlattenLayer : public Layer<Dtype> {
   int count_;
 };
 
+/* Im2colLayer
+*/
 template <typename Dtype>
 class Im2colLayer : public Layer<Dtype> {
  public:
@@ -146,6 +156,8 @@ class Im2colLayer : public Layer<Dtype> {
   int pad_;
 };
 
+/* InnerProductLayer
+*/
 template <typename Dtype>
 class InnerProductLayer : public Layer<Dtype> {
  public:
@@ -175,6 +187,9 @@ class InnerProductLayer : public Layer<Dtype> {
 template <typename Dtype> class PoolingLayer;
 template <typename Dtype> class SplitLayer;
 
+/* LRNLayer
+  Local Response Normalization
+*/
 template <typename Dtype>
 class LRNLayer : public Layer<Dtype> {
  public:
@@ -238,6 +253,8 @@ class LRNLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
+/* PoolingLayer
+*/
 template <typename Dtype>
 class MemoryDataLayer : public Layer<Dtype> {
  public:
@@ -301,6 +318,8 @@ class PoolingLayer : public Layer<Dtype> {
   Blob<Dtype> rand_idx_;
 };
 
+/* SoftmaxLayer
+*/
 template <typename Dtype>
 class SoftmaxLayer : public Layer<Dtype> {
  public:
@@ -325,11 +344,14 @@ class SoftmaxLayer : public Layer<Dtype> {
   Blob<Dtype> scale_;
 };
 
-// SoftmaxWithLossLayer is a layer that implements softmax and then computes
-// the loss - it is preferred over softmax + multinomiallogisticloss in the
-// sense that during training, this will produce more numerically stable
-// gradients. During testing this layer could be replaced by a softmax layer
-// to generate probability outputs.
+/* SoftmaxWithLossLayer
+  Implements softmax and computes the loss.
+
+  It is preferred over separate softmax + multinomiallogisticloss
+  layers due to more numerically stable gradients.
+
+  In test, this layer could be replaced by simple softmax layer.
+*/
 template <typename Dtype>
 class SoftmaxWithLossLayer : public Layer<Dtype> {
  public:
@@ -356,6 +378,8 @@ class SoftmaxWithLossLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> softmax_top_vec_;
 };
 
+/* SplitLayer
+*/
 template <typename Dtype>
 class SplitLayer : public Layer<Dtype> {
  public:
