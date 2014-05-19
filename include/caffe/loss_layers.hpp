@@ -22,7 +22,10 @@ namespace caffe {
 
 const float kLOG_THRESHOLD = 1e-20;
 
-// LossLayer takes two inputs of same num, and has no output.
+/* LossLayer
+  Takes two inputs of same num (a and b), and has no output.
+  The gradient is propagated to a.
+*/
 template <typename Dtype>
 class LossLayer : public Layer<Dtype> {
  public:
@@ -34,7 +37,8 @@ class LossLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {}
 };
 
-// SigmoidCrossEntropyLossLayer
+/* SigmoidCrossEntropyLossLayer
+*/
 template <typename Dtype>
 class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
  public:
@@ -63,12 +67,17 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_top_vec_;
 };
 
-// EuclideanLossLayer: compute y = 1/2 \sum_i (x_i - x'_i)^2
+/* EuclideanLossLayer
+  Compute the L_2 distance between the two inputs.
+
+  loss = (1/2 \sum_i (a_i - b_i)^2)
+  a' = 1/I (a - b)
+*/
 template <typename Dtype>
 class EuclideanLossLayer : public LossLayer<Dtype> {
  public:
   explicit EuclideanLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param), difference_() {}
+      : LossLayer<Dtype>(param), diff_() {}
   virtual void FurtherSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
@@ -78,10 +87,11 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  Blob<Dtype> difference_;
+  Blob<Dtype> diff_;
 };
 
-
+/* InfogainLossLayer
+*/
 template <typename Dtype>
 class InfogainLossLayer : public LossLayer<Dtype> {
  public:
@@ -99,6 +109,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> infogain_;
 };
 
+/* HingeLossLayer
+*/
 template <typename Dtype>
 class HingeLossLayer : public LossLayer<Dtype> {
  public:
@@ -112,6 +124,8 @@ class HingeLossLayer : public LossLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
+/* MultinomialLogisticLossLayer
+*/
 template <typename Dtype>
 class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
  public:
@@ -127,8 +141,10 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
-// AccuracyLayer: not an actual loss layer;
-// computes the accuracy and logprob of x with respect to y'.
+/* AccuracyLayer
+  Note: not an actual loss layer! Does not implement backwards step.
+  Computes the accuracy and logprob of a with respect to b.
+*/
 template <typename Dtype>
 class AccuracyLayer : public Layer<Dtype> {
  public:
@@ -140,12 +156,15 @@ class AccuracyLayer : public Layer<Dtype> {
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  // The accuracy layer should not be used to compute backward operations.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
     NOT_IMPLEMENTED;
   }
 };
+
+/* Also see
+- SoftmaxWithLossLayer in vision_layers.hpp
+*/
 
 }  // namespace caffe
 

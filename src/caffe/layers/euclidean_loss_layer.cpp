@@ -20,7 +20,7 @@ void EuclideanLossLayer<Dtype>::FurtherSetUp(
   CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
   CHECK_EQ(bottom[0]->height(), bottom[1]->height());
   CHECK_EQ(bottom[0]->width(), bottom[1]->width());
-  difference_.Reshape(bottom[0]->num(), bottom[0]->channels(),
+  diff_.Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
 }
 
@@ -28,22 +28,25 @@ template <typename Dtype>
 Dtype EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   int count = bottom[0]->count();
-  int num = bottom[0]->num();
-  caffe_sub(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(),
-      difference_.mutable_cpu_data());
-  Dtype loss = caffe_cpu_dot(
-      count, difference_.cpu_data(), difference_.cpu_data()) / num / Dtype(2);
+  caffe_sub(
+      count,
+      bottom[0]->cpu_data(),
+      bottom[1]->cpu_data(),
+      diff_.mutable_cpu_data());
+  Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
+  Dtype loss = dot / bottom[0]->num() / Dtype(2);
   return loss;
 }
 
 template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  int count = (*bottom)[0]->count();
-  int num = (*bottom)[0]->num();
-  // Compute the gradient
-  caffe_cpu_axpby(count, Dtype(1) / num, difference_.cpu_data(), Dtype(0),
-      (*bottom)[0]->mutable_cpu_diff());
+  caffe_cpu_axpby(
+      (*bottom)[0]->count(),              // count
+      Dtype(1) / (*bottom)[0]->num(),     // alpha
+      diff_.cpu_data(),                   // a
+      Dtype(0),                           // beta
+      (*bottom)[0]->mutable_cpu_diff());  // b
 }
 
 INSTANTIATE_CLASS(EuclideanLossLayer);
