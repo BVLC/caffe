@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Caffe network visualization: draw the NetParameter protobuffer.
 
@@ -10,8 +9,6 @@ Caffe.
 from caffe.proto import caffe_pb2
 from google.protobuf import text_format
 import pydot
-import os
-import sys
 
 # Internal layer and blob styles.
 LAYER_STYLE = {'shape': 'record', 'fillcolor': '#6495ED',
@@ -77,15 +74,3 @@ def draw_net_to_file(caffe_net, filename):
   ext = filename[filename.rfind('.')+1:]
   with open(filename, 'wb') as fid:
     fid.write(draw_net(caffe_net, ext))
-
-if __name__ == '__main__':
-  if len(sys.argv) != 3:
-    print 'Usage: %s input_net_proto_file output_image_file' % \
-        os.path.basename(sys.argv[0])
-  else:
-    net = caffe_pb2.NetParameter()
-    text_format.Merge(open(sys.argv[1]).read(), net)
-    print 'Drawing net to %s' % sys.argv[2]
-    draw_net_to_file(net, sys.argv[2])
-
-
