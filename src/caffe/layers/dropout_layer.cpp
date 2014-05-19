@@ -1,5 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
+// TODO (sergeyk): effect should not be dependent on phase. wasted memcpy.
+
 #include <vector>
 
 #include "caffe/common.hpp"
