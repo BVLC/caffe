@@ -6,9 +6,9 @@ interface.
 from collections import OrderedDict
 from itertools import izip_longest
 import numpy as np
-from scipy.ndimage import zoom
 
 from ._caffe import Net, SGDSolver
+import caffe.io
 
 # We directly update methods from Net here (rather than using composition or
 # inheritance) so that nets created by caffe (e.g., by SGDSolver) will
@@ -197,8 +197,11 @@ def _Net_set_mean(self, input_, mean_f, mode='elementwise'):
     mean = np.load(mean_f)
     if mode == 'elementwise':
         if mean.shape != in_shape[1:]:
-            mean = caffe.io.resize_image(mean.transpose((1,2,0)),
-                    in_shape[2:]).transpose((2,0,1))
+            # Resize mean (which requires H x W x K input in range [0,1]).
+            m_min, m_max = mean.min(), mean.max()
+            normal_mean = (mean - m_min) / (m_max - m_min)
+            mean = caffe.io.resize_image(normal_mean.transpose((1,2,0)),
+                    in_shape[2:]).transpose((2,0,1)) * (m_max - m_min) + m_min
         self.mean[input_] = mean
     elif mode == 'channel':
         self.mean[input_] = mean.mean(1).mean(1).reshape((in_shape[1], 1, 1))
@@ -258,11 +261,9 @@ def _Net_preprocess(self, input_name, inputs):
         input_scale = self.input_scale.get(input_name)
         channel_order = self.channel_swap.get(input_name)
         mean = self.mean.get(input_name)
-        in_dims = self.blobs[input_name].data.shape[2:]
-        if caffe_in.shape[:2] != in_dims:
-            scale_h = in_dims[0] / float(caffe_in.shape[0])
-            scale_w = in_dims[1] / float(caffe_in.shape[1])
-            caffe_in = zoom(caffe_in, (scale_h, scale_w, 1), order=1)
+        in_size = self.blobs[input_name].data.shape[2:]
+        if caffe_in.shape[:2] != in_size:
+            caffe_in = caffe.io.resize_image(caffe_in, in_size)
         if input_scale:
             caffe_in *= input_scale
         if channel_order:
