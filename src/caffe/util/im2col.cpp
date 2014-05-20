@@ -7,7 +7,7 @@
 #include "caffe/util/im2col.hpp"
 
 namespace caffe {
-//
+
 template <typename Dtype>
 void im2col_cpu(const Dtype* data_im, const int channels,
     const int height, const int width, const int ksize, const int pad,
