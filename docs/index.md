@@ -39,7 +39,7 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 * [Feature extraction with C++](/feature_extraction.html): feature extraction using pre-trained model.
 
 [imagenet_classification]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/imagenet_classification.ipynb
-[detection]:   http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection_search_demo.ipynb
+[detection]:   http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection.ipynb
 [visualizing_filters]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb
 
 ## Citing Caffe
