@@ -15,7 +15,7 @@ You will first need to download and convert the data format from the MNIST websi
 
     cd $CAFFE_ROOT/data/mnist
     ./get_mnist.sh
-    cd $CAFFE_ROOT/examples/lenet
+    cd $CAFFE_ROOT/examples/mnist
     ./create_mnist.sh
 
 If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be two datasets, `mnist-train-leveldb`, and `mnist-test-leveldb`.
@@ -33,7 +33,7 @@ Training and Testing the Model
 
 Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_mnist.sh`, or the following command directly:
 
-    cd $CAFFE_ROOT/examples/lenet
+    cd $CAFFE_ROOT/examples/mnist
     ./train_lenet.sh
 
 `train_lenet.sh` is a simple script, but here are a few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `train_net.bin`, with the solver protobuf text file as its argument.
@@ -83,8 +83,8 @@ Um... How about GPU training?
 
 You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in `lenet_solver.prototxt`:
 
-    # solver mode: 0 for CPU and 1 for GPU
-    solver_mode: 0
+    # solver mode: CPU or GPU
+    solver_mode: CPU
 
 and you will be using CPU for training. Isn't that easy?
 

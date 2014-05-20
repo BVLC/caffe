@@ -1,9 +1,8 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <cstring>
 
 #include "cuda_runtime.h"
-#include "mkl.h"
 #include "cublas_v2.h"
 
 #include "gtest/gtest.h"

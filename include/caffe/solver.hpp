@@ -1,4 +1,4 @@
-// Copyright Yangqing Jia 2013
+// Copyright 2014 BVLC and contributors.
 
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
@@ -12,12 +12,14 @@ template <typename Dtype>
 class Solver {
  public:
   explicit Solver(const SolverParameter& param);
+  explicit Solver(const string& param_file);
+  void Init(const SolverParameter& param);
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   virtual ~Solver() {}
-  inline Net<Dtype>* net() { return net_.get(); }
+  inline shared_ptr<Net<Dtype> > net() { return net_; }
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
@@ -53,6 +55,8 @@ class SGDSolver : public Solver<Dtype> {
  public:
   explicit SGDSolver(const SolverParameter& param)
       : Solver<Dtype>(param) {}
+  explicit SGDSolver(const string& param_file)
+      : Solver<Dtype>(param_file) {}
 
  protected:
   virtual void PreSolve();

@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
@@ -32,6 +32,11 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
 }
 
 template <typename Dtype>
+void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
+  Reshape(other.num(), other.channels(), other.height(), other.width());
+}
+
+template <typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
     const int width) {
   Reshape(num, channels, height, width);
@@ -41,6 +46,12 @@ template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
   return (const Dtype*)data_->cpu_data();
+}
+
+template <typename Dtype>
+void Blob<Dtype>::set_cpu_data(Dtype* data) {
+  CHECK(data);
+  data_->set_cpu_data(data);
 }
 
 template <typename Dtype>
@@ -83,6 +94,18 @@ template <typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
   return reinterpret_cast<Dtype*>(diff_->mutable_gpu_data());
+}
+
+template <typename Dtype>
+void Blob<Dtype>::ShareData(const Blob& other) {
+  CHECK_EQ(count_, other.count());
+  data_ = other.data();
+}
+
+template <typename Dtype>
+void Blob<Dtype>::ShareDiff(const Blob& other) {
+  CHECK_EQ(count_, other.count());
+  diff_ = other.diff();
 }
 
 template <typename Dtype>

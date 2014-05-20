@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <algorithm>
 #include <cfloat>
@@ -43,7 +43,7 @@ __global__ void kernel_exp(const int num, const Dtype* data, Dtype* out) {
 }
 
 template <typename Dtype>
-void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+Dtype SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -73,11 +73,12 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   kernel_softmax_div<Dtype><<<CAFFE_GET_BLOCKS(num * dim),
                               CAFFE_CUDA_NUM_THREADS>>>(
       num, dim, scale_data, top_data);
+  return Dtype(0);
 }
 
 // TODO(Yangqing): implement the GPU version of softmax.
 template <typename Dtype>
-Dtype SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
@@ -103,7 +104,6 @@ Dtype SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       scale_.gpu_data(), sum_multiplier_.gpu_data(), 1., bottom_diff);
   // elementwise multiplication
   caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(SoftmaxLayer);

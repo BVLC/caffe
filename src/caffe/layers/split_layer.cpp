@@ -1,4 +1,4 @@
-// Copyright 2014 Jeff Donahue
+// Copyright 2014 BVLC and contributors.
 
 #include <vector>
 
@@ -28,37 +28,26 @@ void SplitLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
   for (int i = 0; i < top->size(); ++i) {
-    if (i == 0 && (*top)[i] == bottom[0]) {
-      continue;
-    }
-    Dtype* top_data = (*top)[i]->mutable_cpu_data();
-    caffe_copy(count_, bottom_data, top_data);
+    (*top)[i]->ShareData(*bottom[0]);
   }
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
-    const Dtype* top_diff = top[0]->cpu_diff();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-    // Initialize by copying first top blob diff to our diff, unless we're
-    // doing in-place computation for the first blob, in which case the diff is
-    // already initialized.
-    if (top[0] != (*bottom)[0]) {
-      caffe_copy(count_, top_diff, bottom_diff);
-    }
+    (*bottom)[0]->ShareDiff(*top[0]);
     // Add remaining top blob diffs.
+    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     for (int i = 1; i < top.size(); ++i) {
-      top_diff = top[i]->cpu_diff();
+      const Dtype* top_diff = top[i]->cpu_diff();
       caffe_axpy(count_, Dtype(1.), top_diff, bottom_diff);
     }
   }
-  return Dtype(0.);
 }
 
 

@@ -1,4 +1,4 @@
-// Copyright 2014 Sergio Guadarrama
+// Copyright 2014 BVLC and contributors.
 
 #include <vector>
 
@@ -12,37 +12,40 @@ template <typename Dtype>
 void ConcatLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_GT(bottom.size(), 1) <<
-    "Concat Layer takes at least two blobs as input.";
+    "ConcatLayer takes at least two blobs as input.";
   CHECK_EQ(top->size(), 1) <<
-    "Concat Layer takes a single blob as output.";
-  concat_dim_ = this->layer_param_.concat_dim();
-  CHECK_GE(concat_dim_, 0) << "concat_dim should be >= 0";
+    "ConcatLayer takes a single blob as output.";
+
+  concat_dim_ = this->layer_param_.concat_param().concat_dim();
+  CHECK_GE(concat_dim_, 0) <<
+    "concat_dim should be >= 0";
   CHECK_LE(concat_dim_, 1) <<
     "For now concat_dim <=1, it can only concat num and channels";
-  // Intialize with the first blob
-  COUNT_ = bottom[0]->count();
-  NUM_ = bottom[0]->num();
-  CHANNELS_ = bottom[0]->channels();
-  HEIGHT_ = bottom[0]->height();
-  WIDTH_ = bottom[0]->width();
+
+  // Initialize with the first blob.
+  count_ = bottom[0]->count();
+  num_ = bottom[0]->num();
+  channels_ = bottom[0]->channels();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
   for (int i = 1; i < bottom.size(); ++i) {
-    COUNT_ += bottom[i]->count();
+    count_ += bottom[i]->count();
     if (concat_dim_== 0) {
-      NUM_ += bottom[i]->num();
+      num_ += bottom[i]->num();
     } else if (concat_dim_ == 1) {
-      CHANNELS_ += bottom[i]->channels();
+      channels_ += bottom[i]->channels();
     } else if (concat_dim_ == 2) {
-      HEIGHT_ += bottom[i]->height();
+      height_ += bottom[i]->height();
     } else if (concat_dim_ == 3) {
-      WIDTH_ += bottom[i]->width();
+      width_ += bottom[i]->width();
     }
   }
-  (*top)[0]->Reshape(NUM_, CHANNELS_, HEIGHT_, WIDTH_);
-  CHECK_EQ(COUNT_, (*top)[0]->count());
+  (*top)[0]->Reshape(num_, channels_, height_, width_);
+  CHECK_EQ(count_, (*top)[0]->count());
 }
 
 template <typename Dtype>
-void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   if (concat_dim_== 0) {
@@ -59,20 +62,18 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const Dtype* bottom_data = bottom[i]->cpu_data();
       int num_elem =
         bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
-      for (int n = 0; n < NUM_; ++n) {
+      for (int n = 0; n < num_; ++n) {
         caffe_copy(num_elem, bottom_data+bottom[i]->offset(n),
           top_data+(*top)[0]->offset(n, offset_channel));
       }
       offset_channel += bottom[i]->channels();
-    }
-  } else {
-    LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
-      " not implemented yet";
+    }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
   }
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   if (concat_dim_ == 0) {
@@ -90,17 +91,13 @@ Dtype ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       Blob<Dtype>* blob = (*bottom)[i];
       Dtype* bottom_diff = blob->mutable_cpu_diff();
       int num_elem = blob->channels()*blob->height()*blob->width();
-      for (int n = 0; n < NUM_; ++n) {
+      for (int n = 0; n < num_; ++n) {
         caffe_copy(num_elem, top_diff+top[0]->offset(n, offset_channel),
           bottom_diff+blob->offset(n));
       }
       offset_channel += blob->channels();
     }
-  } else {
-    LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
-      " not implemented yet";
-  }
-  return Dtype(0.);
+  }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
 }
 
 INSTANTIATE_CLASS(ConcatLayer);

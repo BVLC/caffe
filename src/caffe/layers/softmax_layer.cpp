@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 //
 #include <algorithm>
 #include <vector>
@@ -28,7 +28,7 @@ void SoftmaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -56,10 +56,11 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num; ++i) {
     caffe_scal<Dtype>(dim, Dtype(1.) / scale_data[i], top_data + i * dim);
   }
+  return Dtype(0);
 }
 
 template <typename Dtype>
-Dtype SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
@@ -79,7 +80,6 @@ Dtype SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       scale_data, sum_multiplier_.cpu_data(), 1., bottom_diff);
   // elementwise multiplication
   caffe_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
-  return Dtype(0);
 }
 
 

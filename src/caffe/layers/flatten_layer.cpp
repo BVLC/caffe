@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <vector>
 
@@ -22,20 +22,16 @@ void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  caffe_copy(count_, bottom_data, top_data);
+  (*top)[0]->ShareData(*bottom[0]);
+  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  caffe_copy(count_, top_diff, bottom_diff);
-  return Dtype(0.);
+  (*bottom)[0]->ShareDiff(*top[0]);
 }
 
 INSTANTIATE_CLASS(FlattenLayer);

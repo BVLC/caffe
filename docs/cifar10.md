@@ -89,7 +89,7 @@ CIFAR-10, while still small, has enough data to make GPU training attractive.
 
 To compare CPU vs. GPU training speed, simply change one line in all the `cifar*solver.prototxt`:
 
-    # solver mode: 0 for CPU and 1 for GPU
-    solver_mode: 0
+    # solver mode: CPU or GPU
+    solver_mode: CPU
 
 and you will be using CPU for training.

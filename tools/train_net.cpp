@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 //
 // This is a simple script that allows one to quickly train a network whose
 // parameters are specified by text format protocol buffers.
@@ -15,13 +15,13 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc < 2) {
+  if (argc < 2 || argc > 3) {
     LOG(ERROR) << "Usage: train_net solver_proto_file [resume_point_file]";
-    return 0;
+    return 1;
   }
 
   SolverParameter solver_param;
-  ReadProtoFromTextFile(argv[1], &solver_param);
+  ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
   LOG(INFO) << "Starting Optimization";
   SGDSolver<float> solver(solver_param);

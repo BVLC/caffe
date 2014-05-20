@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <cstring>
 #include <vector>
@@ -23,6 +23,7 @@ class FlattenLayerTest : public ::testing::Test {
   FlattenLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
         blob_top_(new Blob<Dtype>()) {
+    Caffe::set_random_seed(1701);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -73,6 +74,8 @@ TYPED_TEST(FlattenLayerTest, TestGPU) {
   for (int c = 0; c < 3 * 6 * 5; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
         this->blob_bottom_->data_at(0, c / (6 * 5), (c / 5) % 6, c % 5));
+    EXPECT_EQ(this->blob_top_->data_at(1, c, 0, 0),
+        this->blob_bottom_->data_at(1, c / (6 * 5), (c / 5) % 6, c % 5));
   }
 }
 
@@ -81,7 +84,7 @@ TYPED_TEST(FlattenLayerTest, TestCPUGradient) {
   Caffe::set_mode(Caffe::CPU);
   FlattenLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
@@ -90,7 +93,7 @@ TYPED_TEST(FlattenLayerTest, TestGPUGradient) {
   Caffe::set_mode(Caffe::GPU);
   FlattenLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 

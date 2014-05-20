@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <algorithm>
 #include <vector>
@@ -13,7 +13,7 @@ namespace caffe {
 const float kBNLL_THRESHOLD = 50.;
 
 template <typename Dtype>
-void BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -23,10 +23,11 @@ void BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         bottom_data[i] + log(1. + exp(-bottom_data[i])) :
         log(1. + exp(bottom_data[i]));
   }
+  return Dtype(0);
 }
 
 template <typename Dtype>
-Dtype BNLLLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void BNLLLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
@@ -40,7 +41,6 @@ Dtype BNLLLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       bottom_diff[i] = top_diff[i] * expval / (expval + 1.);
     }
   }
-  return Dtype(0);
 }
 
 

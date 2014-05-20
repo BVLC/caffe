@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <string>
 #include <vector>
@@ -57,9 +57,10 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   // The data file we are reading has 10 rows and 8 columns,
   // with values from 0 to 10*8 reshaped in row-major order.
   LayerParameter param;
-  int batchsize = 5;
-  param.set_batchsize(batchsize);
-  param.set_source(*(this->filename));
+  HDF5DataParameter* hdf5_data_param = param.mutable_hdf5_data_param();
+  int batch_size = 5;
+  hdf5_data_param->set_batch_size(batch_size);
+  hdf5_data_param->set_source(*(this->filename));
   int num_rows = 10;
   int num_cols = 8;
   int height = 5;
@@ -68,12 +69,12 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   // Test that the layer setup got the correct parameters.
   HDF5DataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), batchsize);
+  EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);
   EXPECT_EQ(this->blob_top_data_->width(), width);
 
-  EXPECT_EQ(this->blob_top_label_->num(), batchsize);
+  EXPECT_EQ(this->blob_top_label_->num(), batch_size);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
@@ -94,20 +95,20 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 
       // On even iterations, we're reading the first half of the data.
       // On odd iterations, we're reading the second half of the data.
-      int label_offset = (iter % 2 == 0) ? 0 : batchsize;
-      int data_offset = (iter % 2 == 0) ? 0 : batchsize * data_size;
+      int label_offset = (iter % 2 == 0) ? 0 : batch_size;
+      int data_offset = (iter % 2 == 0) ? 0 : batch_size * data_size;
 
       // Every two iterations we are reading the second file,
       // which has the same labels, but data is offset by total data size,
       // which is 2000 (see generate_sample_data).
       int file_offset = (iter % 4 < 2) ? 0 : 2000;
 
-      for (int i = 0; i < batchsize; ++i) {
+      for (int i = 0; i < batch_size; ++i) {
         EXPECT_EQ(
           label_offset + i,
           this->blob_top_label_->cpu_data()[i]);
       }
-      for (int i = 0; i < batchsize; ++i) {
+      for (int i = 0; i < batch_size; ++i) {
         for (int j = 0; j < num_cols; ++j) {
           for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
