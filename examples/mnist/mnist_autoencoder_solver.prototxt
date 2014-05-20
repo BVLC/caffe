@@ -1,0 +1,15 @@
+train_net: "mnist_autoencoder_train.prototxt"
+test_net: "mnist_autoencoder_test.prototxt"
+test_iter: 50
+test_interval: 100
+test_compute_loss: true
+base_lr: 0.0001
+lr_policy: "fixed"
+display: 20
+max_iter: 4000000
+weight_decay: 0.0005
+snapshot: 10000
+snapshot_prefix: "mnist_autoencoder_train"
+momentum: 0.9
+# solver mode: CPU or GPU
+solver_mode: GPU

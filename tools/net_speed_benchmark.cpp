@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <cuda_runtime.h>
 #include <fcntl.h>
@@ -22,10 +22,10 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   int total_iter = 50;
-  if (argc < 2) {
+  if (argc < 2 || argc > 5) {
     LOG(ERROR) << "net_speed_benchmark net_proto [iterations=50]"
         " [CPU/GPU] [Device_id=0]";
-    return 0;
+    return 1;
   }
 
   if (argc >=3) {
@@ -49,18 +49,17 @@ int main(int argc, char** argv) {
   }
 
   Caffe::set_phase(Caffe::TRAIN);
-  NetParameter net_param;
-  ReadProtoFromTextFile(argv[1],
-      &net_param);
-  Net<float> caffe_net(net_param);
+  Net<float> caffe_net(argv[1]);
 
   // Run the network without training.
   LOG(ERROR) << "Performing Forward";
   // Note that for the speed benchmark, we will assume that the network does
   // not take any input blobs.
-  caffe_net.Forward(vector<Blob<float>*>());
+  float initial_loss;
+  caffe_net.Forward(vector<Blob<float>*>(), &initial_loss);
+  LOG(ERROR) << "Initial loss: " << initial_loss;
   LOG(ERROR) << "Performing Backward";
-  LOG(ERROR) << "Initial loss: " << caffe_net.Backward();
+  caffe_net.Backward();
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();

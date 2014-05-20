@@ -1,15 +1,17 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <cstdio>
 #include <ctime>
 
 #include "caffe/common.hpp"
+#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
 
 
+// curand seeding
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;
   pid = getpid();
@@ -21,7 +23,8 @@ int64_t cluster_seedgen(void) {
 
 Caffe::Caffe()
     : mode_(Caffe::CPU), phase_(Caffe::TRAIN), cublas_handle_(NULL),
-      curand_generator_(NULL), vsl_stream_(NULL) {
+      curand_generator_(NULL),
+      random_generator_() {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
@@ -34,13 +37,6 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
-  // Try to create a vsl stream. This should almost always work, but we will
-  // check it anyway.
-  if (vslNewStream(&vsl_stream_, VSL_BRNG_MT19937,
-                   cluster_seedgen()) != VSL_STATUS_OK) {
-    LOG(ERROR) << "Cannot create vsl stream. VSL random number generator "
-        << "won't be available.";
-  }
 }
 
 Caffe::~Caffe() {
@@ -48,7 +44,6 @@ Caffe::~Caffe() {
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
-  if (vsl_stream_) VSL_CHECK(vslDeleteStream(&vsl_stream_));
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -64,9 +59,8 @@ void Caffe::set_random_seed(const unsigned int seed) {
   } else {
     LOG(ERROR) << "Curand not available. Skipping setting the curand seed.";
   }
-  // VSL seed
-  VSL_CHECK(vslDeleteStream(&(Get().vsl_stream_)));
-  VSL_CHECK(vslNewStream(&(Get().vsl_stream_), VSL_BRNG_MT19937, seed));
+  // RNG seed
+  Get().random_generator_.reset(new RNG(seed));
 }
 
 void Caffe::SetDevice(const int device_id) {
@@ -118,6 +112,85 @@ void Caffe::DeviceQuery() {
   printf("Kernel execution timeout:      %s\n",
       (prop.kernelExecTimeoutEnabled ? "Yes" : "No"));
   return;
+}
+
+
+class Caffe::RNG::Generator {
+ public:
+  Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
+  explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
+  caffe::rng_t* rng() { return rng_.get(); }
+ private:
+  shared_ptr<caffe::rng_t> rng_;
+};
+
+Caffe::RNG::RNG() : generator_(new Generator) { }
+
+Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) { }
+
+Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
+  generator_.reset(other.generator_.get());
+  return *this;
+}
+
+void* Caffe::RNG::generator() {
+  return static_cast<void*>(generator_->rng());
+}
+
+const char* cublasGetErrorString(cublasStatus_t error) {
+  switch (error) {
+  case CUBLAS_STATUS_SUCCESS:
+    return "CUBLAS_STATUS_SUCCESS";
+  case CUBLAS_STATUS_NOT_INITIALIZED:
+    return "CUBLAS_STATUS_NOT_INITIALIZED";
+  case CUBLAS_STATUS_ALLOC_FAILED:
+    return "CUBLAS_STATUS_ALLOC_FAILED";
+  case CUBLAS_STATUS_INVALID_VALUE:
+    return "CUBLAS_STATUS_INVALID_VALUE";
+  case CUBLAS_STATUS_ARCH_MISMATCH:
+    return "CUBLAS_STATUS_ARCH_MISMATCH";
+  case CUBLAS_STATUS_MAPPING_ERROR:
+    return "CUBLAS_STATUS_MAPPING_ERROR";
+  case CUBLAS_STATUS_EXECUTION_FAILED:
+    return "CUBLAS_STATUS_EXECUTION_FAILED";
+  case CUBLAS_STATUS_INTERNAL_ERROR:
+    return "CUBLAS_STATUS_INTERNAL_ERROR";
+  case CUBLAS_STATUS_NOT_SUPPORTED:
+    return "CUBLAS_STATUS_NOT_SUPPORTED";
+  }
+  return "Unknown cublas status";
+}
+
+const char* curandGetErrorString(curandStatus_t error) {
+  switch (error) {
+  case CURAND_STATUS_SUCCESS:
+    return "CURAND_STATUS_SUCCESS";
+  case CURAND_STATUS_VERSION_MISMATCH:
+    return "CURAND_STATUS_VERSION_MISMATCH";
+  case CURAND_STATUS_NOT_INITIALIZED:
+    return "CURAND_STATUS_NOT_INITIALIZED";
+  case CURAND_STATUS_ALLOCATION_FAILED:
+    return "CURAND_STATUS_ALLOCATION_FAILED";
+  case CURAND_STATUS_TYPE_ERROR:
+    return "CURAND_STATUS_TYPE_ERROR";
+  case CURAND_STATUS_OUT_OF_RANGE:
+    return "CURAND_STATUS_OUT_OF_RANGE";
+  case CURAND_STATUS_LENGTH_NOT_MULTIPLE:
+    return "CURAND_STATUS_LENGTH_NOT_MULTIPLE";
+  case CURAND_STATUS_DOUBLE_PRECISION_REQUIRED:
+    return "CURAND_STATUS_DOUBLE_PRECISION_REQUIRED";
+  case CURAND_STATUS_LAUNCH_FAILURE:
+    return "CURAND_STATUS_LAUNCH_FAILURE";
+  case CURAND_STATUS_PREEXISTING_FAILURE:
+    return "CURAND_STATUS_PREEXISTING_FAILURE";
+  case CURAND_STATUS_INITIALIZATION_FAILED:
+    return "CURAND_STATUS_INITIALIZATION_FAILED";
+  case CURAND_STATUS_ARCH_MISMATCH:
+    return "CURAND_STATUS_ARCH_MISMATCH";
+  case CURAND_STATUS_INTERNAL_ERROR:
+    return "CURAND_STATUS_INTERNAL_ERROR";
+  }
+  return "Unknown curand status";
 }
 
 }  // namespace caffe

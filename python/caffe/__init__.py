@@ -1,1 +1,4 @@
-from .pycaffe import Net
+from .pycaffe import Net, SGDSolver
+from .classifier import Classifier
+from .detector import Detector
+import io

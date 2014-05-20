@@ -154,6 +154,7 @@ _ERROR_CATEGORIES = [
   'build/namespaces',
   'build/printf_format',
   'build/storage_class',
+  'caffe/random_fn',
   'legal/copyright',
   'readability/alt_tokens',
   'readability/braces',
@@ -443,6 +444,9 @@ _RE_SUPPRESSION = re.compile(r'\bNOLINT(_NEXT_LINE)?\b(\([^)]*\))?')
 # {str, set(int)}: a map from error categories to sets of linenumbers
 # on which those errors are expected and should be suppressed.
 _error_suppressions = {}
+
+# Finds Copyright.
+_RE_COPYRIGHT = re.compile(r'Copyright \d\d\d\d BVLC and contributors.')
 
 # The root directory used for deriving header guard CPP variable.
 # This is set by --root flag.
@@ -1370,11 +1374,11 @@ def CheckForCopyright(filename, lines, error):
   # We'll say it should occur by line 10. Don't forget there's a
   # dummy line at the front.
   for line in xrange(1, min(len(lines), 11)):
-    if re.search(r'Copyright', lines[line], re.I): break
+    if _RE_COPYRIGHT.search(lines[line], re.I): break
   else:                       # means no copyright line was found
     error(filename, 0, 'legal/copyright', 5,
-          'No copyright message found.  '
-          'You should have a line: "Copyright [year] <Copyright Owner>"')
+          'BVLC copyright message not found.  '
+          'You should have a line: "Copyright [year] BVLC and contributors."')
 
 
 def GetHeaderGuardCPPVariable(filename):
@@ -1557,6 +1561,38 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
           'Use C++11 raw strings or concatenation instead.')
 
 
+c_random_function_list = (
+    'rand(',
+    'rand_r(',
+    'random(',
+    )
+
+def CheckCaffeRandom(filename, clean_lines, linenum, error):
+  """Checks for calls to C random functions (rand, rand_r, random, ...).
+
+  Caffe code should (almost) always use the caffe_rng_* functions rather
+  than these, as the internal state of these C functions is independent of the
+  native Caffe RNG system which should produce deterministic results for a
+  fixed Caffe seed set using Caffe::set_random_seed(...).
+
+  Args:
+    filename: The name of the current file.
+    clean_lines: A CleansedLines instance containing the file.
+    linenum: The number of the line to check.
+    error: The function to call with any errors found.
+  """
+  line = clean_lines.elided[linenum]
+  for function in c_random_function_list:
+    ix = line.find(function)
+    # Comparisons made explicit for clarity -- pylint: disable=g-explicit-bool-comparison
+    if ix >= 0 and (ix == 0 or (not line[ix - 1].isalnum() and
+                                line[ix - 1] not in ('_', '.', '>'))):
+      error(filename, linenum, 'caffe/random_fn', 2,
+            'Use caffe_rng_rand() (or other caffe_rng_* function) instead of '
+            + function +
+            ') to ensure results are deterministic for a fixed Caffe seed.')
+
+
 threading_list = (
     ('asctime(', 'asctime_r('),
     ('ctime(', 'ctime_r('),
@@ -1567,7 +1603,6 @@ threading_list = (
     ('getpwuid(', 'getpwuid_r('),
     ('gmtime(', 'gmtime_r('),
     ('localtime(', 'localtime_r('),
-    ('rand(', 'rand_r('),
     ('strtok(', 'strtok_r('),
     ('ttyname(', 'ttyname_r('),
     )
@@ -4527,6 +4562,7 @@ def ProcessLine(filename, file_extension, clean_lines, line,
   CheckForNonStandardConstructs(filename, clean_lines, line,
                                 nesting_state, error)
   CheckVlogArguments(filename, clean_lines, line, error)
+  CheckCaffeRandom(filename, clean_lines, line, error)
   CheckPosixThreading(filename, clean_lines, line, error)
   CheckInvalidIncrement(filename, clean_lines, line, error)
   CheckMakePairUsesDeduction(filename, clean_lines, line, error)

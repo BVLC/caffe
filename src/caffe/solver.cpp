@@ -1,4 +1,4 @@
-// Copyright Yangqing Jia 2013
+// Copyright 2014 BVLC and contributors.
 
 #include <cstdio>
 
@@ -19,17 +19,30 @@ namespace caffe {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : param_(param), net_(), test_net_() {
+    : net_(), test_net_() {
+  Init(param);
+}
+
+template <typename Dtype>
+Solver<Dtype>::Solver(const string& param_file)
+    : net_(), test_net_() {
+  SolverParameter param;
+  ReadProtoFromTextFile(param_file, &param);
+  Init(param);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Init(const SolverParameter& param) {
+  param_ = param;
+  if (param_.random_seed() >= 0) {
+    Caffe::set_random_seed(param_.random_seed());
+  }
   // Scaffolding code
-  NetParameter train_net_param;
-  ReadProtoFromTextFile(param_.train_net(), &train_net_param);
   LOG(INFO) << "Creating training net.";
-  net_.reset(new Net<Dtype>(train_net_param));
+  net_.reset(new Net<Dtype>(param_.train_net()));
   if (param_.has_test_net()) {
     LOG(INFO) << "Creating testing net.";
-    NetParameter test_net_param;
-    ReadProtoFromTextFile(param_.test_net(), &test_net_param);
-    test_net_.reset(new Net<Dtype>(test_net_param));
+    test_net_.reset(new Net<Dtype>(param_.test_net()));
     CHECK_GT(param_.test_iter(), 0);
     CHECK_GT(param_.test_interval(), 0);
   }
@@ -40,7 +53,8 @@ Solver<Dtype>::Solver(const SolverParameter& param)
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
   Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
-  if (param_.solver_mode() && param_.has_device_id()) {
+  if (param_.solver_mode() == SolverParameter_SolverMode_GPU &&
+      param_.has_device_id()) {
     Caffe::SetDevice(param_.device_id());
   }
   Caffe::set_phase(Caffe::TRAIN);
@@ -51,6 +65,14 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
+  }
+
+  // Run a test pass before doing any training to avoid waiting a potentially
+  // very long time (param_.test_interval() training iterations) to report that
+  // there's not enough memory to run the test net and crash, etc.; and to gauge
+  // the effect of the first training iterations.
+  if (param_.test_interval()) {
+    Test();
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
@@ -65,10 +87,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
     if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
-      // We need to set phase to test before running.
-      Caffe::set_phase(Caffe::TEST);
       Test();
-      Caffe::set_phase(Caffe::TRAIN);
     }
     // Check if we need to do snapshot
     if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
@@ -85,14 +104,19 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 template <typename Dtype>
 void Solver<Dtype>::Test() {
   LOG(INFO) << "Iteration " << iter_ << ", Testing net";
-  NetParameter net_param;
-  net_->ToProto(&net_param);
-  CHECK_NOTNULL(test_net_.get())->CopyTrainedLayersFrom(net_param);
+  // We need to set phase to test before running.
+  Caffe::set_phase(Caffe::TEST);
+  CHECK_NOTNULL(test_net_.get())->ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<Blob<Dtype>*> bottom_vec;
+  Dtype loss = 0;
   for (int i = 0; i < param_.test_iter(); ++i) {
+    Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
-        test_net_->Forward(bottom_vec);
+        test_net_->Forward(bottom_vec, &iter_loss);
+    if (param_.test_compute_loss()) {
+      loss += iter_loss;
+    }
     if (i == 0) {
       for (int j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
@@ -110,10 +134,15 @@ void Solver<Dtype>::Test() {
       }
     }
   }
+  if (param_.test_compute_loss()) {
+    loss /= param_.test_iter();
+    LOG(INFO) << "Test loss: " << loss;
+  }
   for (int i = 0; i < test_score.size(); ++i) {
     LOG(INFO) << "Test score #" << i << ": "
         << test_score[i] / param_.test_iter();
   }
+  Caffe::set_phase(Caffe::TRAIN);
 }
 
 
@@ -215,7 +244,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       // Compute the value to history, and then copy them to the blob's diff.
       Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
-      caffe_axpby(net_params[param_id]->count(), local_rate,
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
           net_params[param_id]->cpu_diff(), momentum,
           history_[param_id]->mutable_cpu_data());
       if (local_decay) {

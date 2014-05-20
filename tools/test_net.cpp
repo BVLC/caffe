@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 //
 // This is a simple script that allows one to quickly test a network whose
 // structure is specified by text format protocol buffers, and whose parameter
@@ -17,43 +17,41 @@
 using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
-  if (argc < 4) {
+  if (argc < 4 || argc > 6) {
     LOG(ERROR) << "test_net net_proto pretrained_net_proto iterations "
-        << "[CPU/GPU]";
-    return 0;
+        << "[CPU/GPU] [Device ID]";
+    return 1;
   }
 
-  cudaSetDevice(0);
   Caffe::set_phase(Caffe::TEST);
 
-  if (argc == 5 && strcmp(argv[4], "GPU") == 0) {
-    LOG(ERROR) << "Using GPU";
+  if (argc >= 5 && strcmp(argv[4], "GPU") == 0) {
     Caffe::set_mode(Caffe::GPU);
+    int device_id = 0;
+    if (argc == 6) {
+      device_id = atoi(argv[5]);
+    }
+    Caffe::SetDevice(device_id);
+    LOG(ERROR) << "Using GPU #" << device_id;
   } else {
     LOG(ERROR) << "Using CPU";
     Caffe::set_mode(Caffe::CPU);
   }
 
-  NetParameter test_net_param;
-  ReadProtoFromTextFile(argv[1], &test_net_param);
-  Net<float> caffe_test_net(test_net_param);
-  NetParameter trained_net_param;
-  ReadProtoFromBinaryFile(argv[2], &trained_net_param);
-  caffe_test_net.CopyTrainedLayersFrom(trained_net_param);
+  Net<float> caffe_test_net(argv[1]);
+  caffe_test_net.CopyTrainedLayersFrom(argv[2]);
 
   int total_iter = atoi(argv[3]);
-  LOG(ERROR) << "Running " << total_iter << "Iterations.";
+  LOG(ERROR) << "Running " << total_iter << " iterations.";
 
   double test_accuracy = 0;
-  vector<Blob<float>*> dummy_blob_input_vec;
   for (int i = 0; i < total_iter; ++i) {
-    const vector<Blob<float>*>& result =
-        caffe_test_net.Forward(dummy_blob_input_vec);
+    const vector<Blob<float>*>& result = caffe_test_net.ForwardPrefilled();
     test_accuracy += result[0]->cpu_data()[0];
     LOG(ERROR) << "Batch " << i << ", accuracy: " << result[0]->cpu_data()[0];
   }
   test_accuracy /= total_iter;
-  LOG(ERROR) << "Test accuracy:" << test_accuracy;
+  LOG(ERROR) << "Test accuracy: " << test_accuracy;
 
   return 0;
 }

@@ -1,9 +1,5 @@
-// Copyright 2014 BVLC.
+// Copyright 2014 BVLC and contributors.
 /*
-Contributors:
-- Sergey Karayev, 2014.
-- Tobias Domhan, 2014.
-
 TODO:
 - load file in a separate thread ("prefetch")
 - can be smarter about the memcpy call instead of doing it row-by-row
@@ -30,7 +26,7 @@ HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
 
 // Load data and label from HDF5 filename into the class property blobs.
 template <typename Dtype>
-void HDF5DataLayer<Dtype>::load_hdf5_file_data(const char* filename) {
+void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   LOG(INFO) << "Loading HDF5 file" << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
@@ -60,28 +56,30 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(top->size(), 2) << "HDF5DataLayer takes two blobs as output.";
 
   // Read the source to parse the filenames.
-  LOG(INFO) << "Loading filename from " << this->layer_param_.source();
+  const string& source = this->layer_param_.hdf5_data_param().source();
+  LOG(INFO) << "Loading filename from " << source;
   hdf_filenames_.clear();
-  std::ifstream myfile(this->layer_param_.source().c_str());
-  if (myfile.is_open()) {
+  std::ifstream source_file(source.c_str());
+  if (source_file.is_open()) {
     std::string line;
-    while (myfile >> line) {
+    while (source_file >> line) {
       hdf_filenames_.push_back(line);
     }
   }
-  myfile.close();
+  source_file.close();
   num_files_ = hdf_filenames_.size();
   current_file_ = 0;
   LOG(INFO) << "Number of files: " << num_files_;
 
   // Load the first HDF5 file and initialize the line counter.
-  load_hdf5_file_data(hdf_filenames_[current_file_].c_str());
+  LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
   current_row_ = 0;
 
   // Reshape blobs.
-  (*top)[0]->Reshape(this->layer_param_.batchsize(), data_blob_.channels(),
+  const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
+  (*top)[0]->Reshape(batch_size, data_blob_.channels(),
                      data_blob_.width(), data_blob_.height());
-  (*top)[1]->Reshape(this->layer_param_.batchsize(), label_blob_.channels(),
+  (*top)[1]->Reshape(batch_size, label_blob_.channels(),
                      label_blob_.width(), label_blob_.height());
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
@@ -89,43 +87,38 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  const int batchsize = this->layer_param_.batchsize();
+  const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
   const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
 
-  for (int i = 0; i < batchsize; ++i, ++current_row_) {
+  for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == data_blob_.num()) {
       if (num_files_ > 1) {
         current_file_ += 1;
-
         if (current_file_ == num_files_) {
           current_file_ = 0;
           LOG(INFO) << "looping around to first file";
         }
-
-        load_hdf5_file_data(hdf_filenames_[current_file_].c_str());
+        LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
       }
       current_row_ = 0;
     }
-
     memcpy(&(*top)[0]->mutable_cpu_data()[i * data_count],
            &data_blob_.cpu_data()[current_row_ * data_count],
            sizeof(Dtype) * data_count);
-
     memcpy(&(*top)[1]->mutable_cpu_data()[i * label_data_count],
             &label_blob_.cpu_data()[current_row_ * label_data_count],
             sizeof(Dtype) * label_data_count);
   }
+  return Dtype(0.);
 }
 
 // The backward operations are dummy - they do not carry any computation.
 template <typename Dtype>
-Dtype HDF5DataLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  return Dtype(0.);
-}
+void HDF5DataLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { }
 
 INSTANTIATE_CLASS(HDF5DataLayer);
 

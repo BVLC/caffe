@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <algorithm>
 #include <vector>
@@ -11,7 +11,7 @@ using std::max;
 namespace caffe {
 
 template <typename Dtype>
-void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -19,10 +19,11 @@ void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < count; ++i) {
     top_data[i] = max(bottom_data[i], Dtype(0));
   }
+  return Dtype(0);
 }
 
 template <typename Dtype>
-Dtype ReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void ReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
@@ -34,7 +35,6 @@ Dtype ReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       bottom_diff[i] = top_diff[i] * (bottom_data[i] > 0);
     }
   }
-  return Dtype(0);
 }
 
 

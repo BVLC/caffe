@@ -1,4 +1,4 @@
-// Copyright 2014 Tobias Domhan
+// Copyright 2014 BVLC and contributors.
 
 #include <algorithm>
 #include <cmath>
@@ -15,7 +15,7 @@ inline Dtype sigmoid(Dtype x) {
 }
 
 template <typename Dtype>
-void SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -23,23 +23,23 @@ void SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < count; ++i) {
     top_data[i] = sigmoid(bottom_data[i]);
   }
+  return Dtype(0);
 }
 
 template <typename Dtype>
-Dtype SigmoidLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void SigmoidLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
-    const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+    const Dtype* top_data = top[0]->cpu_data();
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const int count = (*bottom)[0]->count();
     for (int i = 0; i < count; ++i) {
-      Dtype sigmoid_x = sigmoid(bottom_data[i]);
+      const Dtype sigmoid_x = top_data[i];
       bottom_diff[i] = top_diff[i] * sigmoid_x * (1. - sigmoid_x);
     }
   }
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(SigmoidLayer);

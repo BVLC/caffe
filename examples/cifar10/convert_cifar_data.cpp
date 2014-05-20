@@ -1,4 +1,4 @@
-// Copyright Yangqing Jia 2013
+// Copyright 2014 BVLC and contributors.
 //
 // This script converts the CIFAR dataset to the leveldb format used
 // by caffe to perform classification.
