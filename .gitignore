@@ -60,4 +60,6 @@ _site
 # Sublime Text settings
 *.sublime-workspace
 *.sublime-project
+
+# Eclipse Project settings
 *.*project

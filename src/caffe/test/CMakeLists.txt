@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project( Test )
+enable_testing()
 
 include_directories(
         ${gtest_SOURCE_DIR}
@@ -7,10 +8,13 @@ include_directories(
         ${Caffe_SOURCE_DIR}
 )
 
-add_executable(caffe_test
+set(Test_MAIN 
+         test_caffe_main.cpp
+)
+
+set(Test_SOURCES
         test_benchmark.cpp
-        test_blob.cpp
-        test_caffe_main.cpp
+        test_blob.cpp       
         test_common.cpp
         test_concat_layer.cpp
         test_convolution_layer.cpp
@@ -47,7 +51,14 @@ add_executable(caffe_test
         test_util_blas.cpp
 )
 
-target_link_libraries(caffe_test
-        gtest 
-        caffe  
-)
+foreach(source ${Test_SOURCES})
+
+    get_filename_component(name ${source} NAME_WE)
+    add_executable(${name}.test ${Test_MAIN} ${source} ../blob.cpp)
+    target_link_libraries(${name}.test gtest caffe)
+    add_test(${name} ${name}.test)    
+    
+endforeach()
+
+add_executable(test EXCLUDE_FROM_ALL ${Test_SOURCES} ${Test_MAIN})
+target_link_libraries(test gtest caffe)

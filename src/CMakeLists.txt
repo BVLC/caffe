@@ -13,8 +13,9 @@ if(NOT BLAS)
 endif()
 
 ###    Configuration    ###########################################################################
-
-set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall -fPIC)
+set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
+set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} -O3)
 
 set(${PROJECT_NAME}_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/../include)
 include_directories(${${PROJECT_NAME}_INCLUDE_DIR})

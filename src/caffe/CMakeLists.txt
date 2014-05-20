@@ -9,7 +9,7 @@ find_package(Glog REQUIRED)
 include_directories(${GLOG_INCLUDE_DIRS})
 
 #    CUDA
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} 
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
         -gencode arch=compute_20,code=sm_20
 		-gencode arch=compute_20,code=sm_21
 		-gencode arch=compute_30,code=sm_30
