@@ -1,7 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 // pycaffe provides a wrapper of the caffe::Net class as well as some
 // caffe::Caffe functions so that one could easily call it from Python.
-// Note that for python, we will simply use float as the data type.
+// Note that for Python, we will simply use float as the data type.
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
@@ -46,7 +46,7 @@ static void CheckFile(const string& filename) {
 }
 
 // wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
-//  to Python
+// to Python
 class CaffeBlob {
  public:
   CaffeBlob(const shared_ptr<Blob<float> > &blob, const string& name)
@@ -70,9 +70,9 @@ class CaffeBlob {
 };
 
 
-// we need another wrapper (used as boost::python's HeldType) that receives a
-//  self PyObject * which we can use as ndarray.base, so that data/diff memory
-//  is not freed while still being used in Python
+// We need another wrapper (used as boost::python's HeldType) that receives a
+// self PyObject * which we can use as ndarray.base, so that data/diff memory
+// is not freed while still being used in Python.
 class CaffeBlobWrap : public CaffeBlob {
  public:
   CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
@@ -158,21 +158,7 @@ struct CaffeNet {
 
   virtual ~CaffeNet() {}
 
-  // this function is mostly redundant with the one below, but should go away
-  // with new pycaffe
-  inline void check_array_against_blob(
-      PyArrayObject* arr, Blob<float>* blob) {
-    CHECK(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS);
-    CHECK_EQ(PyArray_NDIM(arr), 4);
-    CHECK_EQ(PyArray_ITEMSIZE(arr), 4);
-    npy_intp* dims = PyArray_DIMS(arr);
-    CHECK_EQ(dims[0], blob->num());
-    CHECK_EQ(dims[1], blob->channels());
-    CHECK_EQ(dims[2], blob->height());
-    CHECK_EQ(dims[3], blob->width());
-  }
-
-  // generate Python exceptions for badly shaped or discontiguous arrays
+  // Generate Python exceptions for badly shaped or discontiguous arrays.
   inline void check_contiguous_array(PyArrayObject* arr, string name,
       int channels, int height, int width) {
     if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
@@ -195,101 +181,12 @@ struct CaffeNet {
     }
   }
 
-  // The actual forward function. It takes in a python list of numpy arrays as
-  // input and a python list of numpy arrays as output. The input and output
-  // should all have correct shapes, are single-precisionabcdnt- and
-  // c contiguous.
-  void Forward(list bottom, list top) {
-    vector<Blob<float>*>& input_blobs = net_->input_blobs();
-    CHECK_EQ(len(bottom), input_blobs.size());
-    CHECK_EQ(len(top), net_->num_outputs());
-    // First, copy the input
-    for (int i = 0; i < input_blobs.size(); ++i) {
-      object elem = bottom[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, input_blobs[i]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(input_blobs[i]->mutable_cpu_data(), PyArray_DATA(arr),
-            sizeof(float) * input_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(input_blobs[i]->mutable_gpu_data(), PyArray_DATA(arr),
-            sizeof(float) * input_blobs[i]->count(), cudaMemcpyHostToDevice);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-    // LOG(INFO) << "Start";
-    const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled();
-    // LOG(INFO) << "End";
-    for (int i = 0; i < output_blobs.size(); ++i) {
-      object elem = top[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, output_blobs[i]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(PyArray_DATA(arr), output_blobs[i]->cpu_data(),
-            sizeof(float) * output_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(PyArray_DATA(arr), output_blobs[i]->gpu_data(),
-            sizeof(float) * output_blobs[i]->count(), cudaMemcpyDeviceToHost);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-  }
-
-  void Backward(list top_diff, list bottom_diff) {
-    vector<Blob<float>*>& output_blobs = net_->output_blobs();
-    vector<Blob<float>*>& input_blobs = net_->input_blobs();
-    CHECK_EQ(len(bottom_diff), input_blobs.size());
-    CHECK_EQ(len(top_diff), output_blobs.size());
-    // First, copy the output diff
-    for (int i = 0; i < output_blobs.size(); ++i) {
-      object elem = top_diff[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, output_blobs[i]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(output_blobs[i]->mutable_cpu_diff(), PyArray_DATA(arr),
-            sizeof(float) * output_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(output_blobs[i]->mutable_gpu_diff(), PyArray_DATA(arr),
-            sizeof(float) * output_blobs[i]->count(), cudaMemcpyHostToDevice);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-    // LOG(INFO) << "Start";
-    net_->Backward();
-    // LOG(INFO) << "End";
-    for (int i = 0; i < input_blobs.size(); ++i) {
-      object elem = bottom_diff[i];
-      PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(elem.ptr());
-      check_array_against_blob(arr, input_blobs[i]);
-      switch (Caffe::mode()) {
-      case Caffe::CPU:
-        memcpy(PyArray_DATA(arr), input_blobs[i]->cpu_diff(),
-            sizeof(float) * input_blobs[i]->count());
-        break;
-      case Caffe::GPU:
-        cudaMemcpy(PyArray_DATA(arr), input_blobs[i]->gpu_diff(),
-            sizeof(float) * input_blobs[i]->count(), cudaMemcpyDeviceToHost);
-        break;
-      default:
-        LOG(FATAL) << "Unknown Caffe mode.";
-      }  // switch (Caffe::mode())
-    }
-  }
-
-  void ForwardPrefilled() {
+  void Forward() {
     net_->ForwardPrefilled();
+  }
+
+  void Backward() {
+    net_->Backward();
   }
 
   void set_input_arrays(object data_obj, object labels_obj) {
@@ -350,6 +247,24 @@ struct CaffeNet {
     return result;
   }
 
+  list inputs() {
+    list input_blob_names;
+    for (int i = 0; i < net_->input_blob_indices().size(); ++i) {
+      input_blob_names.append(
+          net_->blob_names()[net_->input_blob_indices()[i]]);
+    }
+    return input_blob_names;
+  }
+
+  list outputs() {
+    list output_blob_names;
+    for (int i = 0; i < net_->output_blob_indices().size(); ++i) {
+      output_blob_names.append(
+          net_->blob_names()[net_->output_blob_indices()[i]]);
+    }
+    return output_blob_names;
+  }
+
   // The pointer to the internal caffe::Net instant.
   shared_ptr<Net<float> > net_;
   // if taking input from an ndarray, we need to hold references
@@ -382,16 +297,15 @@ class CaffeSGDSolver {
 };
 
 
-// The boost python module definition.
+// The boost_python module definition.
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
-  //  in Python
+  // in Python
   boost::python::class_<CaffeNet, shared_ptr<CaffeNet> >(
       "Net", boost::python::init<string, string>())
       .def(boost::python::init<string>())
-      .def("Forward",           &CaffeNet::Forward)
-      .def("ForwardPrefilled",  &CaffeNet::ForwardPrefilled)
-      .def("Backward",          &CaffeNet::Backward)
+      .def("_forward",          &CaffeNet::Forward)
+      .def("_backward",         &CaffeNet::Backward)
       .def("set_mode_cpu",      &CaffeNet::set_mode_cpu)
       .def("set_mode_gpu",      &CaffeNet::set_mode_gpu)
       .def("set_phase_train",   &CaffeNet::set_phase_train)
@@ -399,6 +313,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("set_device",        &CaffeNet::set_device)
       .add_property("_blobs",   &CaffeNet::blobs)
       .add_property("layers",   &CaffeNet::layers)
+      .add_property("inputs",   &CaffeNet::inputs)
+      .add_property("outputs",  &CaffeNet::outputs)
       .def("_set_input_arrays", &CaffeNet::set_input_arrays);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(

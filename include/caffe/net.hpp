@@ -89,6 +89,8 @@ class Net {
   inline int num_outputs() { return net_output_blobs_.size(); }
   inline vector<Blob<Dtype>*>& input_blobs() { return net_input_blobs_; }
   inline vector<Blob<Dtype>*>& output_blobs() { return net_output_blobs_; }
+  inline vector<int>& input_blob_indices() { return net_input_blob_indices_; }
+  inline vector<int>& output_blob_indices() { return net_output_blob_indices_; }
   // has_blob and blob_by_name are inspired by
   // https://github.com/kencoken/caffe/commit/f36e71569455c9fbb4bf8a63c2d53224e32a4e7b
   // Access intermediary computation layers, testing with centre image only

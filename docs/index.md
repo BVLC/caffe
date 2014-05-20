@@ -30,16 +30,16 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 
 ### Examples
 
+* [Image Classification \[notebook\]][imagenet_classification]: classify images with the pretrained ImageNet model by the Python interface.
+* [Detection \[notebook\]][detection]: run a pretrained model as a detector in Python.
+* [Visualizing Features and Filters \[notebook\]][visualizing_filters]: extracting features and visualizing trained filters with an example image, viewed layer-by-layer.
 * [LeNet / MNIST Demo](/mnist.html): end-to-end training and testing of LeNet on MNIST.
 * [CIFAR-10 Demo](/cifar10.html): training and testing on the CIFAR-10 data.
-* [Training ImageNet](/imagenet_training.html): end-to-end training of an ImageNet classifier.
-* [Feature extraction with C++](/feature_extraction.html): feature extraction using pre-trained model
-* [Running Pretrained ImageNet \[notebook\]][pretrained_imagenet]: run classification with the pretrained ImageNet model using the Python interface.
-* [Running Detection \[notebook\]][imagenet_detection]: run a pretrained model as a detector.
-* [Visualizing Features and Filters \[notebook\]][visualizing_filters]: trained filters and an example image, viewed layer-by-layer.
+* [Training ImageNet](/imagenet_training.html): recipe for end-to-end training of an ImageNet classifier.
+* [Feature extraction with C++](/feature_extraction.html): feature extraction using pre-trained model.
 
-[pretrained_imagenet]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/imagenet_pretrained.ipynb
-[imagenet_detection]:   http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/selective_search_demo.ipynb
+[imagenet_classification]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/imagenet_classification.ipynb
+[detection]:   http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection_search_demo.ipynb
 [visualizing_filters]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb
 
 ## Citing Caffe
