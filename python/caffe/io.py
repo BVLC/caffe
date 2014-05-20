@@ -1,9 +1,84 @@
-#!/usr/bin/env python
-"""This script converts blobproto instances to numpy arrays.
-"""
+import numpy as np
+import skimage.io
+import skimage.transform
 
 from caffe.proto import caffe_pb2
-import numpy as np
+
+
+def load_image(filename):
+    """
+    Load an image converting from grayscale or alpha as needed.
+
+    Take
+    filename: string
+
+    Give
+    image: an image of size (H x W x 3) with RGB channels of type uint8.
+    """
+    img = skimage.img_as_float(skimage.io.imread(filename)).astype(np.float32)
+    if img.ndim == 2:
+        img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
+    elif img.shape[2] == 4:
+        img = img[:, :, :3]
+    return img
+
+
+def resize_image(im, new_dims, interp_order=1):
+    """
+    Resize an image array with interpolation.
+
+    Take
+    im: (H x W x K) ndarray
+    new_dims: (height, width) tuple of new dimensions.
+    interp_order: interpolation order, default is linear.
+
+    Give
+    im: resized ndarray with shape (new_dims[0], new_dims[1], K)
+    """
+    return skimage.transform.resize(im, new_dims, order=interp_order)
+
+
+def oversample(images, crop_dims):
+    """
+    Crop images into the four corners, center, and their mirrored versions.
+
+    Take
+    image: iterable of (H x W x K) ndarrays
+    crop_dims: (height, width) tuple for the crops.
+
+    Give
+    crops: (10*N x H x W x K) ndarray of crops for number of inputs N.
+    """
+    # Dimensions and center.
+    im_shape = np.array(images[0].shape)
+    crop_dims = np.array(crop_dims)
+    im_center = im_shape[:2] / 2.0
+
+    # Make crop coordinates
+    h_indices = (0, im_shape[0] - crop_dims[0])
+    w_indices = (0, im_shape[1] - crop_dims[1])
+    crops_ix = np.empty((5, 4), dtype=int)
+    curr = 0
+    for i in h_indices:
+        for j in w_indices:
+            crops_ix[curr] = (i, j, i + crop_dims[0], j + crop_dims[1])
+            curr += 1
+    crops_ix[4] = np.tile(im_center, (1, 2)) + np.concatenate([
+        -crop_dims / 2.0,
+         crop_dims / 2.0
+    ])
+    crops_ix = np.tile(crops_ix, (2, 1))
+
+    # Extract crops
+    crops = np.empty((10 * len(images), crop_dims[0], crop_dims[1],
+                            im_shape[-1]), dtype=np.float32)
+    ix = 0
+    for im in images:
+        for crop in crops_ix:
+            crops[ix] = im[crop[0]:crop[2], crop[1]:crop[3], :]
+            ix += 1
+        crops[ix-5:ix] = crops[ix-5:ix, :, ::-1, :]  # flip for mirrors
+    return crops
 
 
 def blobproto_to_array(blob, return_diff=False):
