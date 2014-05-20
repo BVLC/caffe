@@ -60,4 +60,4 @@ _site
 # Sublime Text settings
 *.sublime-workspace
 *.sublime-project
-
+*.*project
