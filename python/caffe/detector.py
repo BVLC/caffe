@@ -72,7 +72,8 @@ class Detector(caffe.Net):
                                            window[1]:window[3]])
 
         # Run through the net (warping windows to input dimensions).
-        caffe_in = self.preprocess(self.inputs[0], window_inputs)
+        caffe_in = np.asarray([self.preprocess(self.inputs[0], window_in)
+                    for window_in in window_inputs])
         out = self.forward_all(**{self.inputs[0]: caffe_in})
         predictions = out[self.outputs[0]].squeeze(axis=(2,3))
 

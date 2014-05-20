@@ -238,9 +238,9 @@ def _Net_set_channel_swap(self, input_, order):
     self.channel_swap[input_] = order
 
 
-def _Net_preprocess(self, input_name, inputs):
+def _Net_preprocess(self, input_name, input_):
     """
-    Format inputs for Caffe:
+    Format input for Caffe:
     - convert to single
     - resize to input dimensions (preserving number of channels)
     - scale feature
@@ -249,51 +249,45 @@ def _Net_preprocess(self, input_name, inputs):
     - transpose dimensions to K x H x W
 
     Take
-    input_name: name of input blob
-    inputs: list of (H' x W' x K) ndarray
+    input_name: name of input blob to preprocess for
+    input_: (H' x W' x K) ndarray
 
     Give
     caffe_inputs: (K x H x W) ndarray
     """
-    caffe_inputs = []
-    for in_ in inputs:
-        caffe_in = in_.astype(np.float32)
-        input_scale = self.input_scale.get(input_name)
-        channel_order = self.channel_swap.get(input_name)
-        mean = self.mean.get(input_name)
-        in_size = self.blobs[input_name].data.shape[2:]
-        if caffe_in.shape[:2] != in_size:
-            caffe_in = caffe.io.resize_image(caffe_in, in_size)
-        if input_scale:
-            caffe_in *= input_scale
-        if channel_order:
-            caffe_in = caffe_in[:, :, channel_order]
-        caffe_in = caffe_in.transpose((2, 0, 1))
-        if mean is not None:
-            caffe_in -= mean
-        caffe_inputs.append(caffe_in)
-    return np.asarray(caffe_inputs)
+    caffe_in = input_.astype(np.float32)
+    input_scale = self.input_scale.get(input_name)
+    channel_order = self.channel_swap.get(input_name)
+    mean = self.mean.get(input_name)
+    in_size = self.blobs[input_name].data.shape[2:]
+    if caffe_in.shape[:2] != in_size:
+        caffe_in = caffe.io.resize_image(caffe_in, in_size)
+    if input_scale:
+        caffe_in *= input_scale
+    if channel_order:
+        caffe_in = caffe_in[:, :, channel_order]
+    caffe_in = caffe_in.transpose((2, 0, 1))
+    if mean is not None:
+        caffe_in -= mean
+    return caffe_in
 
 
-def _Net_deprocess(self, input_name, inputs):
+def _Net_deprocess(self, input_name, input_):
     """
     Invert Caffe formatting; see Net.preprocess().
     """
-    decaf_inputs = []
-    for in_ in inputs:
-        decaf_in = in_.squeeze()
-        input_scale = self.input_scale.get(input_name)
-        channel_order = self.channel_swap.get(input_name)
-        mean = self.mean.get(input_name)
-        if mean is not None:
-            decaf_in += mean
-        decaf_in = decaf_in.transpose((1,2,0))
-        if channel_order:
-            decaf_in = decaf_in[:, :, channel_order[::-1]]
-        if input_scale:
-            decaf_in /= input_scale
-        decaf_inputs.append(decaf_in)
-    return np.asarray(decaf_inputs)
+    decaf_in = input_.copy().squeeze()
+    input_scale = self.input_scale.get(input_name)
+    channel_order = self.channel_swap.get(input_name)
+    mean = self.mean.get(input_name)
+    if mean is not None:
+        decaf_in += mean
+    decaf_in = decaf_in.transpose((1,2,0))
+    if channel_order:
+        decaf_in = decaf_in[:, :, channel_order[::-1]]
+    if input_scale:
+        decaf_in /= input_scale
+    return decaf_in
 
 
 def _Net_set_input_arrays(self, data, labels):
