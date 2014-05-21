@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 2.8)
 project( Test )
 enable_testing()
 
+
+#    Set CUDA Device number
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cuda_test_device.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/cuda_test_device.h
+)
+
 include_directories(
         ${gtest_SOURCE_DIR}
         ${gtest_SOURCE_DIR}/include
@@ -60,5 +67,5 @@ foreach(source ${Test_SOURCES})
     
 endforeach()
 
-add_executable(test EXCLUDE_FROM_ALL ${Test_SOURCES} ${Test_MAIN})
+add_executable(test ${Test_SOURCES} ${Test_MAIN})
 target_link_libraries(test gtest caffe)

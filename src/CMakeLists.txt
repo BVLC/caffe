@@ -12,6 +12,10 @@ if(NOT BLAS)
     set(BLAS atlas)
 endif()
 
+if(NOT CUDA_TEST_DEVICE)
+    set(CUDA_TEST_DEVICE -1)
+endif()
+
 ###    Configuration    ###########################################################################
 set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
