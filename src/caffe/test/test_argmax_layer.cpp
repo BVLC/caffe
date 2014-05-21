@@ -22,7 +22,7 @@ class ArgMaxLayerTest : public ::testing::Test {
   ArgMaxLayerTest()
       : blob_bottom_(new Blob<Dtype>(20, 10, 1, 1)),
         blob_top_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(this->seed_);
+    Caffe::set_random_seed(1701);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
