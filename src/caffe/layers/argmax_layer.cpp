@@ -15,11 +15,11 @@ void ArgMaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom.size(), 1) << "ArgMaxLayer Layer takes 1 input.";
   CHECK_EQ(top->size(), 1) << "ArgMaxLayer Layer takes 1 output.";
   out_max_val_ = this->layer_param_.argmax_param().out_max_val();
-  // Produces max_ind and max_val
-  if (out_max_val_) { 
+  if (out_max_val_) {
+    // Produces max_ind and max_val
     (*top)[0]->Reshape(bottom[0]->num(), 2, 1, 1);
-  } // Produces only max_ind
-  else {
+  } else {
+    // Produces only max_ind
     (*top)[0]->Reshape(bottom[0]->num(), 1, 1, 1);
   }
 }
@@ -44,8 +44,7 @@ Dtype ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (out_max_val_) {
       top_data[i * 2] = max_ind;
       top_data[i * 2 + 1] = max_val;
-    }
-    else {
+    } else {
       top_data[i] = max_ind;
     }
   }
