@@ -112,26 +112,29 @@ message SolverState {
   repeated BlobProto history = 3; // The history for sgd solvers
 }
 
+// NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 23 (last added: memory_data_param)
+// LayerParameter next available ID: 24 (last added: argmax_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
   optional string name = 4; // the layer name
 
+  // NOTE
   // Add new LayerTypes to the enum below in lexicographical order (other than
   // starting with NONE), starting with the next available ID in the comment
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 30 (last added: MEMORY_DATA)
+  // LayerType next available ID: 31 (last added: ARGMAX)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
     // the type is unspecified).
     NONE = 0;
     ACCURACY = 1;
+    ARGMAX = 30;
     BNLL = 2;
     CONCAT = 3;
     CONVOLUTION = 4;
@@ -160,7 +163,6 @@ message LayerParameter {
     SPLIT = 22;
     TANH = 23;
     WINDOW_DATA = 24;
-    ARGMAX = 30;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -173,6 +175,7 @@ message LayerParameter {
   repeated float weight_decay = 8;
 
   // Parameters for particular layer types.
+  optional ArgMaxParameter argmax_param = 23;
   optional ConcatParameter concat_param = 9;
   optional ConvolutionParameter convolution_param = 10;
   optional DataParameter data_param = 11;
@@ -187,7 +190,6 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
-  optional ArgMaxParameter argmax_param = 23;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -196,10 +198,9 @@ message LayerParameter {
 }
 
 // Message that stores parameters used by ArgMaxLayer
-
 message ArgMaxParameter {
-  // If true produce pairs (argmax, maxval) 
-  optional bool out_max_val = 1 [default = false]; 
+  // If true produce pairs (argmax, maxval)
+  optional bool out_max_val = 1 [default = false];
 }
 
 // Message that stores parameters used by ConcatLayer
