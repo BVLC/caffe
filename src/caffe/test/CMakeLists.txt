@@ -3,11 +3,17 @@ project( Test )
 enable_testing()
 
 
-#    Set CUDA Device number
+#    Set CUDA Device number and CMAKE_SOURCE_DIR
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cuda_test_device.h.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/cuda_test_device.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_caffe_main.hpp.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_caffe_main.hpp
 )
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt
+)
+
 
 include_directories(
         ${gtest_SOURCE_DIR}

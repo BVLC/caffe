@@ -5,8 +5,6 @@
 
 #include "test_caffe_main.hpp"
 
-#include "cuda_test_device.h"
-
 namespace caffe {
   cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 }

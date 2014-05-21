@@ -15,8 +15,8 @@
 using std::cout;
 using std::endl;
 
-#define CUDA_TEST_DEVICE -1
-#define CMAKE_SOURCE_DIR "/home/adam/workspace/caffe/src/"
+#define CUDA_TEST_DEVICE @CUDA_TEST_DEVICE@
+#define CMAKE_SOURCE_DIR "@CMAKE_SOURCE_DIR@/"
 
 int main(int argc, char** argv);
 
