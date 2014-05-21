@@ -17,8 +17,34 @@
 
 namespace caffe {
 
-/*
-ConcatLayer
+/* ArgmaxLayer
+  Compute the index of the max value across all (channels x height x width).
+  [In the future, can take specific dimension.]
+  Intended for use after a classification layer to produce prediction.
+  If parameter out_max_val is set to true, then output is a vector of pairs
+  (max_ind, max_val) for each image.
+
+  NOTE: does not implement Backwards operation.
+*/
+template <typename Dtype>
+class ArgMaxLayer : public Layer<Dtype> {
+ public:
+  explicit ArgMaxLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    NOT_IMPLEMENTED;
+  }
+  bool out_max_val_;
+};
+
+/* ConcatLayer
   Takes at least two blobs and concatenates them along either num or
   channel dim, outputting the result.
 */
@@ -107,6 +133,8 @@ class EltwiseProductLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
+/* FlattenLayer
+*/
 template <typename Dtype>
 class FlattenLayer : public Layer<Dtype> {
  public:
@@ -289,6 +317,8 @@ class MemoryDataLayer : public Layer<Dtype> {
   int pos_;
 };
 
+/* PoolingLayer
+*/
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
  public:
