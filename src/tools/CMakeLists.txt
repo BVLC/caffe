@@ -18,4 +18,11 @@ foreach(source ${Tools_SOURCES})
     get_filename_component(name ${source} NAME_WE)  
     add_executable(${name} ${source} ../caffe/blob.cpp)
     target_link_libraries(${name} caffe)
+    
+###    Install    #################################################################################
+
+    install(TARGETS ${name} DESTINATION tools)
+
+
 endforeach(source)
+

@@ -10,3 +10,9 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 add_library(pycaffe SHARED caffe/_caffe.cpp)
 target_link_libraries(pycaffe caffe ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
+
+###    Install    #################################################################################
+
+install(DIRECTORY caffe DESTINATION python)
+install(FILES requirements.txt DESTINATION python)
+install(TARGETS pycaffe DESTINATION python/caffe)

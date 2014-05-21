@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 project( Test )
-enable_testing()
-
 
 #    Set CUDA Device number and CMAKE_SOURCE_DIR
 configure_file(

@@ -80,3 +80,8 @@ target_link_libraries(caffe layers proto util
 )
 
 add_subdirectory(test)
+
+
+###    Install    #################################################################################
+
+install(TARGETS caffe DESTINATION lib)
