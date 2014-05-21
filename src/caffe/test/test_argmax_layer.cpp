@@ -103,7 +103,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxVal) {
     EXPECT_LE(top_data[i], dim);
     max_ind = top_data[i * 2];
     max_val = top_data[i * 2 + 1];
-    EXPECT_EQ(bottom_data[i * dim + max_ind],max_val);
+    EXPECT_EQ(bottom_data[i * dim + max_ind], max_val);
     for (int j = 0; j < dim; ++j) {
       EXPECT_LE(bottom_data[i * dim + j], max_val);
     }
