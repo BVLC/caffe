@@ -75,9 +75,10 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }
   // openmp
-   num_of_threads_ = Caffe::get_num_threads();
+    num_of_threads_ = Caffe::get_num_threads();
+//  num_of_threads_ = 4;
 //  num_of_threads_ = omp_get_num_procs();
-//  LOG(INFO) << "Conv layer: num threads =" << num_of_threads_;
+  LOG(INFO) << "Conv layer: num threads =" << num_of_threads_;
   if (num_of_threads_>0) {
     col_buffer_mt_.resize( num_of_threads_ * 
           channels_ * kernel_size_ * kernel_size_ * height_out * width_out );
@@ -103,9 +104,8 @@ void ConvolutionLayer<Dtype>::Forward_cpu_task(
   if (tid >= num_of_threads_)
     LOG(FATAL) << "ConvLayer::Forward_cpu: omp_thread_num() =" << tid 
                << " > OMP_num_THREADS = " << num_of_threads_;
-//  tid = tid % num_of_threads_; //just to be sure
+  tid = tid % num_of_threads_; //just to be sure
 #endif
-
   int col_data_buffer_size= channels_ * kernel_size_ * kernel_size_ * height_out * width_out;
   Dtype*  col_data  = & col_buffer_mt_[ tid* col_data_buffer_size];
   int input_data_size= channels_* height_* width_;
@@ -146,7 +146,6 @@ void ConvolutionLayer<Dtype>::Forward_cpu_omp(
 template <typename Dtype>
 Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-// openmp
   if (num_of_threads_ > 0)
      Forward_cpu_omp(bottom,top);
 // single thread version 
@@ -191,21 +190,18 @@ void ConvolutionLayer<Dtype>::Backward_cpu_task(
   int width_out  = (width_  + 2 * pad_ - kernel_size_) / stride_ + 1;
 
   int tid=0;
+  // tid=n%num_of_threads_;
 #ifdef _OPENMP
   tid= omp_get_thread_num();
   if (tid >= num_of_threads_)
     LOG(FATAL) << "ConvLayer::Backward_cpu: omp_thread_num() =" << tid 
                << " > OMP_num_THREADS = " << num_of_threads_;
   tid = tid % num_of_threads_;//just to be sure
-  //openmp debug
-  tid=n%num_of_threads_;
-  //borisg
 #endif
   Dtype* col_data = & col_buffer_mt_[ tid * 
             (channels_ * kernel_size_ * kernel_size_ * height_out * width_out)];
   Dtype* weight_diff_data= & weight_diff_mt_ [tid * 
          (num_output_ * (channels_ / group_) *  kernel_size_ * kernel_size_) ] ;
-
   // since we saved memory in the forward pass by not storing all col data,
   // we will need to recompute them.
   int bottom_offset = channels_ * height_ * width_;
@@ -277,7 +273,6 @@ void ConvolutionLayer<Dtype>::Backward_cpu_omp(const vector<Blob<Dtype>*>& top,
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-//	if (num_of_threads_ > 10)
   if (num_of_threads_ > 0)
    Backward_cpu_omp(top,propagate_down, bottom);
  else {
@@ -290,7 +285,6 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* col_diff = col_buffer_.mutable_cpu_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
-
   if (bias_term_) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();
     memset(bias_diff, 0, sizeof(Dtype) * this->blobs_[1]->count());
@@ -301,7 +295,6 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           bias_diff);
     }
   }
-
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
