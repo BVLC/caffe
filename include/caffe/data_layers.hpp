@@ -323,6 +323,8 @@ class WindowDataLayer : public Layer<Dtype> {
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
+  bool multi_label_;
+  int num_classes_;
 };
 
 }  // namespace caffe

@@ -55,6 +55,8 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   const int mean_height = layer->data_mean_.height();
   cv::Size cv_crop_size(crop_size, crop_size);
   const string& crop_mode = layer->layer_param_.window_data_param().crop_mode();
+  const bool multi_label_ = layer->multi_label_;
+  const int num_classes_ = layer->num_classes_;
 
   bool use_square = (crop_mode == "square") ? true : false;
 
@@ -207,8 +209,22 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         }
       }
 
-      // get window label
-      top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
+      if (multi_label_) {
+        // get window multi_label
+        // If it is background, then label==0 and it is negative for all classes
+        int label = window[WindowDataLayer<Dtype>::LABEL];
+        for (int l = 0; l < num_classes_; ++l) {
+          top_label[item_id * num_classes_ + l] = 0;
+        }
+        if (label > 0) {
+          // If it is foreground, then label > 0 and it is positive
+          // only the appropiate class, and should be ignored by the other classes
+          top_label[item_id * num_classes_ + label - 1] = 1;
+        }
+      } else {
+        // Just copy the window label
+        top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
+      }
 
       #if 0
       // useful debugging code for dumping transformed windows to disk
@@ -280,7 +296,10 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << "  background (non-object) overlap threshold: "
       << this->layer_param_.window_data_param().bg_threshold() << std::endl
       << "  foreground sampling fraction: "
-      << this->layer_param_.window_data_param().fg_fraction();
+      << this->layer_param_.window_data_param().fg_fraction() << std::endl
+      << "  produce multi-label: "
+      << this->layer_param_.window_data_param().multi_label();
+
 
   std::ifstream infile(this->layer_param_.window_data_param().source().c_str());
   CHECK(infile.good()) << "Failed to open window file "
@@ -288,6 +307,8 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   map<int, int> label_hist;
   label_hist.insert(std::make_pair(0, 0));
+
+  multi_label_ = this->layer_param_.window_data_param().multi_label();
 
   string hashtag;
   int image_index, channels;
@@ -354,6 +375,10 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   LOG(INFO) << "Number of images: " << image_index+1;
 
+  // background doesn't count in num_classes
+  num_classes_ = label_hist.size() - 1;
+  LOG(INFO) << "Number of foreground classes: " << num_classes_;
+
   for (map<int, int>::iterator it = label_hist.begin();
       it != label_hist.end(); ++it) {
     LOG(INFO) << "class " << it->first << " has " << label_hist[it->first]
@@ -377,10 +402,18 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
-  // label
-  (*top)[1]->Reshape(batch_size, 1, 1, 1);
-  prefetch_label_.reset(
-      new Blob<Dtype>(batch_size, 1, 1, 1));
+
+  if (multi_label_) {
+    // multi_label per window, background doesn't count in num_classes
+    (*top)[1]->Reshape(batch_size, num_classes_, 1, 1);
+    prefetch_label_.reset(
+        new Blob<Dtype>(batch_size, num_classes_, 1, 1));
+  } else {
+    // One label per window
+    (*top)[1]->Reshape(batch_size, 1, 1, 1);
+    prefetch_label_.reset(
+        new Blob<Dtype>(batch_size, 1, 1, 1));
+  } 
 
   // check if we want to have mean
   if (this->layer_param_.window_data_param().has_mean_file()) {
