@@ -255,6 +255,7 @@ message DropoutParameter {
 message EltwiseParameter {
   enum EltwiseOp {
     PROD = 0;
+    SUM = 1;
   }
   optional EltwiseOp operation = 1; // element-wise operation to compute
 }

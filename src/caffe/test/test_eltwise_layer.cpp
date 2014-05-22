@@ -65,7 +65,7 @@ TYPED_TEST(EltwiseLayerTest, TestSetUp) {
   EXPECT_EQ(this->blob_top_->width(), 5);
 }
 
-TYPED_TEST(EltwiseLayerTest, TestCPU) {
+TYPED_TEST(EltwiseLayerTest, TestProdCPU) {
   Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
@@ -84,7 +84,26 @@ TYPED_TEST(EltwiseLayerTest, TestCPU) {
   }
 }
 
-TYPED_TEST(EltwiseLayerTest, TestGPU) {
+TYPED_TEST(EltwiseLayerTest, TestSumCPU) {
+  Caffe::set_mode(Caffe::CPU);
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
+  shared_ptr<EltwiseLayer<TypeParam> > layer(
+      new EltwiseLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  const TypeParam* data = this->blob_top_->cpu_data();
+  const int count = this->blob_top_->count();
+  const TypeParam* in_data_a = this->blob_bottom_a_->cpu_data();
+  const TypeParam* in_data_b = this->blob_bottom_b_->cpu_data();
+  const TypeParam* in_data_c = this->blob_bottom_c_->cpu_data();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_EQ(data[i], in_data_a[i] + in_data_b[i] + in_data_c[i]);
+  }
+}
+
+TYPED_TEST(EltwiseLayerTest, TestProdGPU) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
@@ -103,7 +122,26 @@ TYPED_TEST(EltwiseLayerTest, TestGPU) {
   }
 }
 
-TYPED_TEST(EltwiseLayerTest, TestCPUGradient) {
+TYPED_TEST(EltwiseLayerTest, TestSumGPU) {
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
+  shared_ptr<EltwiseLayer<TypeParam> > layer(
+      new EltwiseLayer<TypeParam>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  const TypeParam* data = this->blob_top_->cpu_data();
+  const int count = this->blob_top_->count();
+  const TypeParam* in_data_a = this->blob_bottom_a_->cpu_data();
+  const TypeParam* in_data_b = this->blob_bottom_b_->cpu_data();
+  const TypeParam* in_data_c = this->blob_bottom_c_->cpu_data();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_EQ(data[i], in_data_a[i] + in_data_b[i] + in_data_c[i]);
+  }
+}
+
+TYPED_TEST(EltwiseLayerTest, TestProdCPUGradient) {
   Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
@@ -114,11 +152,22 @@ TYPED_TEST(EltwiseLayerTest, TestCPUGradient) {
       &(this->blob_top_vec_));
 }
 
-TYPED_TEST(EltwiseLayerTest, TestGPUGradient) {
+TYPED_TEST(EltwiseLayerTest, TestSumCPUGradient) {
+  Caffe::set_mode(Caffe::CPU);
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
+  EltwiseLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
+TYPED_TEST(EltwiseLayerTest, TestSumGPUGradient) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
-  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
   EltwiseLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
