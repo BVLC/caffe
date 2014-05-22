@@ -9,7 +9,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void EltwiseProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void EltwiseLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_GE(bottom.size(), 2) <<
       "Eltwise Product Layer takes at least 2 blobs as input.";
@@ -26,22 +26,29 @@ void EltwiseProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(width, bottom[i]->width());
   }
   (*top)[0]->Reshape(num, channels, height, width);
+  op_ = this->layer_param_.eltwise_param().operation();
 }
 
 template <typename Dtype>
-Dtype EltwiseProductLayer<Dtype>::Forward_cpu(
+Dtype EltwiseLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  caffe_mul(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(), top_data);
-  for (int i = 2; i < bottom.size(); ++i) {
-    caffe_mul(count, top_data, bottom[i]->cpu_data(), top_data);
+  switch (op_) {
+  case EltwiseParameter_EltwiseOp_PROD:
+    caffe_mul(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(), top_data);
+    for (int i = 2; i < bottom.size(); ++i) {
+      caffe_mul(count, top_data, bottom[i]->cpu_data(), top_data);
+    }
+    break;
+  default:
+    LOG(FATAL) << "Unknown elementwise operation.";
   }
   return Dtype(0.);
 }
 
 template <typename Dtype>
-void EltwiseProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
     const int count = top[0]->count();
@@ -50,13 +57,19 @@ void EltwiseProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < bottom->size(); ++i) {
       const Dtype* bottom_data = (*bottom)[i]->cpu_data();
       Dtype* bottom_diff = (*bottom)[i]->mutable_cpu_diff();
-      caffe_div(count, top_data, bottom_data, bottom_diff);
-      caffe_mul(count, bottom_diff, top_diff, bottom_diff);
+      switch (op_) {
+      case EltwiseParameter_EltwiseOp_PROD:
+        caffe_div(count, top_data, bottom_data, bottom_diff);
+        caffe_mul(count, bottom_diff, top_diff, bottom_diff);
+        break;
+      default:
+        LOG(FATAL) << "Unknown elementwise operation.";
+      }
     }
   }
 }
 
-INSTANTIATE_CLASS(EltwiseProductLayer);
+INSTANTIATE_CLASS(EltwiseLayer);
 
 
 }  // namespace caffe

@@ -85,7 +85,9 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       product_bottom_vec_.push_back(bottom[0]);
       product_bottom_vec_.push_back(&power_output_);
       LayerParameter product_param;
-      product_layer_.reset(new EltwiseProductLayer<Dtype>(product_param));
+      EltwiseParameter* eltwise_param = product_param.mutable_eltwise_param();
+      eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+      product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
       product_layer_->SetUp(product_bottom_vec_, top);
       CHECK_EQ((*top)[0]->num(), num_);
       CHECK_EQ((*top)[0]->channels(), channels_);

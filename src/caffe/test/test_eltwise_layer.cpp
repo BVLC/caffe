@@ -17,9 +17,9 @@ namespace caffe {
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
-class EltwiseProductLayerTest : public ::testing::Test {
+class EltwiseLayerTest : public ::testing::Test {
  protected:
-  EltwiseProductLayerTest()
+  EltwiseLayerTest()
       : blob_bottom_a_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_bottom_b_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_bottom_c_(new Blob<Dtype>(2, 3, 4, 5)),
@@ -35,7 +35,7 @@ class EltwiseProductLayerTest : public ::testing::Test {
     blob_bottom_vec_.push_back(blob_bottom_c_);
     blob_top_vec_.push_back(blob_top_);
   }
-  virtual ~EltwiseProductLayerTest() {
+  virtual ~EltwiseLayerTest() {
     delete blob_bottom_a_;
     delete blob_bottom_b_;
     delete blob_bottom_c_;
@@ -50,12 +50,14 @@ class EltwiseProductLayerTest : public ::testing::Test {
 };
 
 typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(EltwiseProductLayerTest, Dtypes);
+TYPED_TEST_CASE(EltwiseLayerTest, Dtypes);
 
-TYPED_TEST(EltwiseProductLayerTest, TestSetUp) {
+TYPED_TEST(EltwiseLayerTest, TestSetUp) {
   LayerParameter layer_param;
-  shared_ptr<EltwiseProductLayer<TypeParam> > layer(
-      new EltwiseProductLayer<TypeParam>(layer_param));
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  shared_ptr<EltwiseLayer<TypeParam> > layer(
+      new EltwiseLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3);
@@ -63,11 +65,13 @@ TYPED_TEST(EltwiseProductLayerTest, TestSetUp) {
   EXPECT_EQ(this->blob_top_->width(), 5);
 }
 
-TYPED_TEST(EltwiseProductLayerTest, TestCPU) {
+TYPED_TEST(EltwiseLayerTest, TestCPU) {
   Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
-  shared_ptr<EltwiseProductLayer<TypeParam> > layer(
-      new EltwiseProductLayer<TypeParam>(layer_param));
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  shared_ptr<EltwiseLayer<TypeParam> > layer(
+      new EltwiseLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   const TypeParam* data = this->blob_top_->cpu_data();
@@ -80,11 +84,13 @@ TYPED_TEST(EltwiseProductLayerTest, TestCPU) {
   }
 }
 
-TYPED_TEST(EltwiseProductLayerTest, TestGPU) {
+TYPED_TEST(EltwiseLayerTest, TestGPU) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
-  shared_ptr<EltwiseProductLayer<TypeParam> > layer(
-      new EltwiseProductLayer<TypeParam>(layer_param));
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  shared_ptr<EltwiseLayer<TypeParam> > layer(
+      new EltwiseLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   const TypeParam* data = this->blob_top_->cpu_data();
@@ -97,19 +103,23 @@ TYPED_TEST(EltwiseProductLayerTest, TestGPU) {
   }
 }
 
-TYPED_TEST(EltwiseProductLayerTest, TestCPUGradient) {
+TYPED_TEST(EltwiseLayerTest, TestCPUGradient) {
   Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
-  EltwiseProductLayer<TypeParam> layer(layer_param);
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  EltwiseLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
-TYPED_TEST(EltwiseProductLayerTest, TestGPUGradient) {
+TYPED_TEST(EltwiseLayerTest, TestGPUGradient) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
-  EltwiseProductLayer<TypeParam> layer(layer_param);
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  EltwiseLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
