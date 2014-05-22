@@ -112,12 +112,12 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
-/* EltwiseProductLayer
+/* EltwiseLayer
 */
 template <typename Dtype>
-class EltwiseProductLayer : public Layer<Dtype> {
+class EltwiseLayer : public Layer<Dtype> {
  public:
-  explicit EltwiseProductLayer(const LayerParameter& param)
+  explicit EltwiseLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -131,6 +131,8 @@ class EltwiseProductLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  EltwiseParameter_EltwiseOp op_;
 };
 
 /* FlattenLayer
@@ -276,7 +278,7 @@ class LRNLayer : public Layer<Dtype> {
   shared_ptr<PowerLayer<Dtype> > power_layer_;
   Blob<Dtype> power_output_;
   vector<Blob<Dtype>*> power_top_vec_;
-  shared_ptr<EltwiseProductLayer<Dtype> > product_layer_;
+  shared_ptr<EltwiseLayer<Dtype> > product_layer_;
   Blob<Dtype> product_data_input_;
   vector<Blob<Dtype>*> product_bottom_vec_;
 };

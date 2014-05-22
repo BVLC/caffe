@@ -38,8 +38,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new DropoutLayer<Dtype>(param);
   case LayerParameter_LayerType_EUCLIDEAN_LOSS:
     return new EuclideanLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_ELTWISE_PRODUCT:
-    return new EltwiseProductLayer<Dtype>(param);
+  case LayerParameter_LayerType_ELTWISE:
+    return new EltwiseLayer<Dtype>(param);
   case LayerParameter_LayerType_FLATTEN:
     return new FlattenLayer<Dtype>(param);
   case LayerParameter_LayerType_HDF5_DATA:
