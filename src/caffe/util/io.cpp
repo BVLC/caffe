@@ -1,7 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 #include <stdint.h>
 #include <fcntl.h>
-#include <io.h>
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -19,7 +18,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #include <io.h>
 #endif
 
