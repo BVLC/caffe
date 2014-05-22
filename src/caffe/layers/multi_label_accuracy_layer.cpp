@@ -25,14 +25,17 @@ void MultiLabelAccuracyLayer<Dtype>::SetUp(
     << "The data and label should have the same number of channels";
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  (*top)[0]->Reshape(1, 2, 1, 1);
+  (*top)[0]->Reshape(1, 4, 1, 1);
 }
 
 template <typename Dtype>
 Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  Dtype accuracy = 0;
+  Dtype accuracy_pos = 0;
+  Dtype accuracy_neg = 0;
   Dtype logloss = 0;
+  int count_pos = 0;
+  int count_neg = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
   // Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -47,18 +50,32 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
     for (int j = 0; j < dim; ++j) {
       int ind = i * dim + j;
       int label = static_cast<int>(bottom_label[ind]);
-      if (label >= 0) {
-        accuracy += ((bottom_data[ind] >= 0) == label);
-        logloss -= bottom_data[ind] * (label - (bottom_data[ind] >= 0)) -
-          log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
-          (bottom_data[ind] >= 0)));
+      // if (label == 0) {
+      //   //Ignore
+      //   continue;
+      // }
+      if (label == 1) { 
+      // Positive
+        accuracy_pos += (bottom_data[ind] >= 0);
+        count_pos++;
       }
+      if (label == 0) {
+      // Negative
+        accuracy_neg += (bottom_data[ind] < 0);
+        count_neg++;        
+      }
+      logloss -= bottom_data[ind] * (label - (bottom_data[ind] >= 0)) -
+        log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
+        (bottom_data[ind] >= 0)));
     }
   }
-  LOG(INFO) << "Accuracy: " << accuracy;
+  LOG(INFO) << "Accuracy: " << accuracy_pos << " " << accuracy_neg;
   LOG(INFO) << "Logloss: " << logloss;
-  (*top)[0]->mutable_cpu_data()[0] = accuracy / count;
-  (*top)[0]->mutable_cpu_data()[1] = logloss / count;
+  (*top)[0]->mutable_cpu_data()[0] = accuracy_pos / count_pos;
+  (*top)[0]->mutable_cpu_data()[1] = accuracy_neg / count_neg;
+  (*top)[0]->mutable_cpu_data()[2] = (accuracy_pos / count_pos +
+    accuracy_neg / count_neg) / 2;
+  (*top)[0]->mutable_cpu_data()[3] = logloss / num;
   // Accuracy layer should not be used as a loss function.
   return Dtype(0);
 }
