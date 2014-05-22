@@ -41,6 +41,7 @@ Caffe::Caffe()
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
   // openmp
+  /*
   num_threads_ = 0;
 #ifdef _OPENMP
   const char *pValue=getenv ("OMP_NUM_THREADS");
@@ -63,6 +64,7 @@ Caffe::Caffe()
      LOG(WARNING)<<"OMP_NUM_THREADS is not defined, set to "<< num_threads_;
   }
 #endif
+*/
 
 }
 

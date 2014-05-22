@@ -112,15 +112,16 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 
   //--- openmp
-  virtual void Forward_cpu_omp(const vector<Blob<Dtype>*>& bottom,
-	vector<Blob<Dtype>*>* top);
+  //  virtual void Forward_cpu_omp(const vector<Blob<Dtype>*>& bottom,
+  //	vector<Blob<Dtype>*>* top);
+  //  virtual void Backward_cpu_omp(const vector<Blob<Dtype>*>& top,
+  //	const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+
   virtual void Forward_cpu_task(const Dtype *bottom_data, Dtype* top_data,
-		  const Dtype* weight, int n);
-  virtual void Backward_cpu_omp(const vector<Blob<Dtype>*>& top,
-	const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+	  const Dtype* weight, int n);
   virtual void Backward_cpu_task(const Dtype* top_diff,
-		  const Dtype* bottom_data, Dtype* bottom_diff,
-	      const Dtype* weight, const bool propagate_down, int n);
+	  const Dtype* bottom_data, Dtype* bottom_diff, const Dtype* weight,
+	  const bool propagate_down, int n);
   int num_of_threads_;
   std::vector<Dtype> col_buffer_mt_;
   std::vector<Dtype> weight_diff_mt_;

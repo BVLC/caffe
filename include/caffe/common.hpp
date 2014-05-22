@@ -130,10 +130,6 @@ class Caffe {
   // Prints the current GPU status.
   static void DeviceQuery();
 
-  // openmp
-  inline static void set_num_threads(int num_threads) {Get().num_threads_ = num_threads;}
-  inline static int  get_num_threads() { return Get().num_threads_; }
-
  protected:
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
@@ -144,7 +140,9 @@ class Caffe {
   static shared_ptr<Caffe> singleton_;
 
   // openmp
-  int num_threads_;
+  // inline static void set_num_threads(int num_threads) {Get().num_threads_ = num_threads;}
+  // inline static int  get_num_threads() { return Get().num_threads_; }
+  // int num_threads_;
 
  private:
   // The private constructor to avoid duplicate instantiation.

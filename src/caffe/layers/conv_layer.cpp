@@ -74,23 +74,25 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         bias_multiplier_data[i] = 1.;
     }
   }
-  // openmp
-    num_of_threads_ = Caffe::get_num_threads();
-//  num_of_threads_ = 4;
-//  num_of_threads_ = omp_get_num_procs();
-  LOG(INFO) << "Conv layer: num threads =" << num_of_threads_;
-  if (num_of_threads_>0) {
-    col_buffer_mt_.resize( num_of_threads_ * 
-          channels_ * kernel_size_ * kernel_size_ * height_out * width_out );
-    weight_diff_mt_.resize(num_of_threads_ * 
-          num_output_ *  (channels_ / group_ )*  kernel_size_ *  kernel_size_ );
+//-- openmp
+  num_of_threads_ = 1;
+#ifdef _OPENMP
+  num_of_threads_ = omp_get_max_threads( ); //omp_get_num_procs();
+  if (num_of_threads_ < 1) {
+	  LOG(WARNING) << "Conv layer: omp_get_max_threads() =" << num_of_threads_;
+	  num_of_threads_ = 1;
   }
+#endif
+  // LOG(INFO) << "Conv layer: num threads_=" << num_of_threads_;
+  col_buffer_mt_.resize( num_of_threads_ *
+      channels_ * kernel_size_ * kernel_size_ * height_out * width_out );
+  weight_diff_mt_.resize(num_of_threads_ *
+      num_output_ *  (channels_ / group_ )*  kernel_size_ *  kernel_size_ );
 }
 
-// openmp
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu_task(
-      const Dtype* bottom_data, Dtype* top_data, const Dtype* weight, int n) {
+      const Dtype* bottom_data, Dtype* top_data, const Dtype* weight, int n){
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
@@ -106,7 +108,9 @@ void ConvolutionLayer<Dtype>::Forward_cpu_task(
                << " > OMP_num_THREADS = " << num_of_threads_;
   tid = tid % num_of_threads_; //just to be sure
 #endif
-  int col_data_buffer_size= channels_ * kernel_size_ * kernel_size_ * height_out * width_out;
+  int col_data_buffer_size= channels_ * kernel_size_ * kernel_size_ *
+		  height_out * width_out;
+
   Dtype*  col_data  = & col_buffer_mt_[ tid* col_data_buffer_size];
   int input_data_size= channels_* height_* width_;
   int bottom_offset= n * input_data_size;
@@ -131,8 +135,8 @@ void ConvolutionLayer<Dtype>::Forward_cpu_task(
 }
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Forward_cpu_omp(
-		const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* top_data= (*top)[0]->mutable_cpu_data();
@@ -141,14 +145,111 @@ void ConvolutionLayer<Dtype>::Forward_cpu_omp(
   {
     Forward_cpu_task(bottom_data,top_data, weight, n);
   }
+  return Dtype(0.);
 }
 
+template <typename Dtype>
+void ConvolutionLayer<Dtype>::Backward_cpu_task(
+      const Dtype* top_diff, const Dtype* bottom_data, Dtype* bottom_diff,
+      const Dtype* weight, const bool propagate_down, int n){
+  int weight_offset = M_ * K_;
+  int col_offset = K_ * N_;
+  int top_offset = M_ * N_;
+  int height_out = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
+  int width_out  = (width_  + 2 * pad_ - kernel_size_) / stride_ + 1;
+
+  int tid=0;
+  // tid=n%num_of_threads_;
+#ifdef _OPENMP
+  tid= omp_get_thread_num();
+  if (tid >= num_of_threads_)
+    LOG(FATAL) << "ConvLayer::Backward_cpu: omp_thread_num() =" << tid 
+               << " > OMP_num_THREADS = " << num_of_threads_;
+  tid = tid % num_of_threads_;//just to be sure
+#endif
+  Dtype* col_data = & col_buffer_mt_[ tid * 
+         (channels_ * kernel_size_ * kernel_size_ * height_out * width_out)];
+  Dtype* weight_diff_data= & weight_diff_mt_ [tid * 
+         (num_output_ * (channels_ / group_) *  kernel_size_ * kernel_size_)];
+  // since we saved memory in the forward pass by not storing all col data,
+  // we will need to recompute them.
+  int bottom_offset = channels_ * height_ * width_;
+  im2col_cpu(bottom_data + bottom_offset * n, channels_, height_,
+		  width_, kernel_size_, pad_, stride_, col_data);
+  // gradient w.r.t. weight. Note that we will accumulate diffs.
+  int top_offset_n =  num_output_ * height_out * width_out ;
+  for (int g = 0; g < group_; ++g) {
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
+	(Dtype)1., top_diff + top_offset_n *n  + top_offset * g,
+	col_data + col_offset * g, (Dtype)1.,
+	weight_diff_data + weight_offset * g);
+   }
+  // gradient w.r.t. bottom data, if necessary
+  if (propagate_down) {
+    for (int g = 0; g < group_; ++g) {
+	caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
+		(Dtype)1., weight + weight_offset * g,
+		top_diff + top_offset_n *n + top_offset * g,
+		(Dtype)0., col_data + col_offset * g);
+    }
+    // col2im back to the data
+    col2im_cpu(col_data, channels_,height_,width_,kernel_size_,pad_,stride_,
+      bottom_diff + bottom_offset * n);
+  }//end of propagate_down
+}
+
+template <typename Dtype>
+void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const bool propagate_down, vector<Blob<Dtype>*>* bottom){
+  const Dtype* top_diff = top[0]->cpu_diff();
+  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  const Dtype* weight = this->blobs_[0]->cpu_data();
+  // bias gradient if necessary
+  Dtype* bias_diff = NULL;
+  if (bias_term_) {
+    bias_diff = this->blobs_[1]->mutable_cpu_diff();
+    memset(bias_diff, 0., sizeof(Dtype) * this->blobs_[1]->count());
+    for (int n = 0; n < num_; ++n) {
+      caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
+          1., top_diff + top[0]->offset(n),
+          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), 1.,
+          bias_diff);
+    }
+  }// end of bias_term_
+ //---clean weight_diff_buffers before back propagation
+  memset(& weight_diff_mt_[0], 0., (num_of_threads_ * num_output_ *
+		  (channels_/ group_)* kernel_size_ * kernel_size_ * sizeof(Dtype)));
+
+  //do back propagation
+#pragma omp parallel for
+  for (int n = 0; n < num_; ++n )
+  {
+	Backward_cpu_task(top_diff, bottom_data, bottom_diff, weight,
+			propagate_down, n);
+  }
+//#pragma omp barrier
+  //---merge weights_diff_buffers--------------------
+  Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
+  int weight_diff_size= num_output_ *
+		  (channels_ / group_) * kernel_size_*kernel_size_ ;
+  memset(weight_diff, 0., ( weight_diff_size*sizeof(Dtype)));
+  int j=0;
+  for (int tid=0; tid < num_of_threads_;tid++){
+#pragma simd
+    for (int i=0; i < weight_diff_size; i++, j++ ){
+      weight_diff[i] += weight_diff_mt_[j];
+    }
+  }
+}
+
+/*
 template <typename Dtype>
 Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   if (num_of_threads_ > 0)
      Forward_cpu_omp(bottom,top);
-// single thread version 
+// single thread version
  else {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -177,97 +278,6 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
  }
   return Dtype(0.);
-}
-
-template <typename Dtype>
-void ConvolutionLayer<Dtype>::Backward_cpu_task(
-      const Dtype* top_diff, const Dtype* bottom_data, Dtype* bottom_diff,
-      const Dtype* weight, const bool propagate_down, int n){
-  int weight_offset = M_ * K_;
-  int col_offset = K_ * N_;
-  int top_offset = M_ * N_;
-  int height_out = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
-  int width_out  = (width_  + 2 * pad_ - kernel_size_) / stride_ + 1;
-
-  int tid=0;
-  // tid=n%num_of_threads_;
-#ifdef _OPENMP
-  tid= omp_get_thread_num();
-  if (tid >= num_of_threads_)
-    LOG(FATAL) << "ConvLayer::Backward_cpu: omp_thread_num() =" << tid 
-               << " > OMP_num_THREADS = " << num_of_threads_;
-  tid = tid % num_of_threads_;//just to be sure
-#endif
-  Dtype* col_data = & col_buffer_mt_[ tid * 
-            (channels_ * kernel_size_ * kernel_size_ * height_out * width_out)];
-  Dtype* weight_diff_data= & weight_diff_mt_ [tid * 
-         (num_output_ * (channels_ / group_) *  kernel_size_ * kernel_size_) ] ;
-  // since we saved memory in the forward pass by not storing all col data,
-  // we will need to recompute them.
-  int bottom_offset = channels_ * height_ * width_;
-  im2col_cpu(bottom_data + bottom_offset * n, channels_, height_,
-		  width_, kernel_size_, pad_, stride_, col_data);
-  // gradient w.r.t. weight. Note that we will accumulate diffs.
-  int top_offset_n =  num_output_ * height_out * width_out ;
-  for (int g = 0; g < group_; ++g) {
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
-	(Dtype)1., top_diff + top_offset_n *n  + top_offset * g,
-	col_data + col_offset * g, (Dtype)1.,
-	weight_diff_data + weight_offset * g);
-   }
-  // gradient w.r.t. bottom data, if necessary
-  if (propagate_down) {
-    for (int g = 0; g < group_; ++g) {
-	caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
-		(Dtype)1., weight + weight_offset * g,
-		top_diff + top_offset_n *n + top_offset * g,
-		(Dtype)0., col_data + col_offset * g);
-    }
-    // col2im back to the data
-    col2im_cpu(col_data, channels_, height_, width_, kernel_size_, pad_, stride_,
-      bottom_diff + bottom_offset * n);
-  }//end of propagate_down
-}
-
-template <typename Dtype>
-void ConvolutionLayer<Dtype>::Backward_cpu_omp(const vector<Blob<Dtype>*>& top,
-		const bool propagate_down, vector<Blob<Dtype>*>* bottom){
-  const Dtype* top_diff = top[0]->cpu_diff();
-  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  const Dtype* weight = this->blobs_[0]->cpu_data();
-  // bias gradient if necessary
-  Dtype* bias_diff = NULL;
-  if (bias_term_) {
-    bias_diff = this->blobs_[1]->mutable_cpu_diff();
-    memset(bias_diff, 0., sizeof(Dtype) * this->blobs_[1]->count());
-    for (int n = 0; n < num_; ++n) {
-      caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
-          1., top_diff + top[0]->offset(n),
-          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), 1.,
-          bias_diff);
-    }
-  }// end of bias_term_
- //---clean weight_diff_buffers before back propagation
-  memset(& weight_diff_mt_[0], 0., (num_of_threads_ * num_output_ * (channels_/ group_)* kernel_size_ * kernel_size_ * sizeof(Dtype)));
-  //do back propagation
-#pragma omp parallel for
-  for (int n = 0; n < num_; ++n )
-  {
-	Backward_cpu_task(top_diff, bottom_data, bottom_diff, weight, propagate_down, n);
-  }
-//#pragma omp barrier
-  //---merge weights_diff_buffers--------------------
-  Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  int weight_diff_size= num_output_ * (channels_ / group_) * kernel_size_*kernel_size_ ;
-  memset(weight_diff, 0., ( weight_diff_size*sizeof(Dtype)));
-  int j=0;
-  for (int tid=0; tid < num_of_threads_;tid++){
-#pragma simd
-    for (int i=0; i < weight_diff_size; i++, j++ ){
-      weight_diff[i] += weight_diff_mt_[j];
-    }
-  }//end of tid
 }
 
 template <typename Dtype>
@@ -326,7 +336,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
  }
 }
-
+*/
 INSTANTIATE_CLASS(ConvolutionLayer);
 
 }  // namespace caffe
