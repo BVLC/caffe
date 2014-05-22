@@ -154,20 +154,16 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
-	CXXFLAGS += -mavx -m64
-	ifeq ($(OPENMP), 1)
-		CXXFLAGS += -fopenmp
-	endif
+#	CXXFLAGS += -mavx -m64 
+#	CXXFLAGS += -mavx -m64 
+	CXXFLAGS += -mavx -m64 -fopenmp
 endif
 
 # icc
 ICC ?= 0
 ifeq ($(ICC), 1)
 	CXX := /opt/intel/bin/icc
-	CXXFLAGS := -xavx -m64 -std=c++11 -no-prec-div
-	ifeq ($(OPENMP),1)
-		CXXFLAGS += --openmp
-	endif
+	CXXFLAGS := -xavx -m64 -std=c++11 -no-prec-div --openmp
 endif
 
 # OS X:
