@@ -9,19 +9,25 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype EltwiseProductLayer<Dtype>::Forward_gpu(
+Dtype EltwiseLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
-  caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(), top_data);
-  for (int i = 2; i < bottom.size(); ++i) {
-    caffe_gpu_mul(count, top_data, bottom[i]->gpu_data(), top_data);
+  switch (op_) {
+  case EltwiseParameter_EltwiseOp_PROD:
+    caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(), top_data);
+    for (int i = 2; i < bottom.size(); ++i) {
+      caffe_gpu_mul(count, top_data, bottom[i]->gpu_data(), top_data);
+    }
+    break;
+  default:
+    LOG(FATAL) << "Unknown elementwise operation.";
   }
   return Dtype(0.);
 }
 
 template <typename Dtype>
-void EltwiseProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down) {
     const int count = top[0]->count();
@@ -30,13 +36,19 @@ void EltwiseProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < bottom->size(); ++i) {
       const Dtype* bottom_data = (*bottom)[i]->gpu_data();
       Dtype* bottom_diff = (*bottom)[i]->mutable_gpu_diff();
-      caffe_gpu_div(count, top_data, bottom_data, bottom_diff);
-      caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
+      switch (op_) {
+      case EltwiseParameter_EltwiseOp_PROD:
+        caffe_gpu_div(count, top_data, bottom_data, bottom_diff);
+        caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
+        break;
+      default:
+        LOG(FATAL) << "Unknown elementwise operation.";
+      }
     }
   }
 }
 
-INSTANTIATE_CLASS(EltwiseProductLayer);
+INSTANTIATE_CLASS(EltwiseLayer);
 
 
 }  // namespace caffe
