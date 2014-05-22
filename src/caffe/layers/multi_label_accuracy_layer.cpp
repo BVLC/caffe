@@ -35,21 +35,21 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
   Dtype logloss = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
-  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  // Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   int count = bottom[0]->count();
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
 
-  caffe_copy(count, bottom_data, bottom_diff);
-  caffe_cpu_sign(count, bottom_diff, bottom_diff);
+  // caffe_copy(count, bottom_data, bottom_diff);
+  // caffe_cpu_sign(count, bottom_diff, bottom_diff);
   for (int i = 0; i < num; ++i) {
     // Accuracy
     for (int j = 0; j < dim; ++j) {
       int ind = i * dim + j;
       int label = static_cast<int>(bottom_label[ind]);
-      if (label != 0) {
-        accuracy += (bottom_diff[ind] == label);
-        logloss -= bottom_data[ind] * ((label >= 0) - (bottom_data[ind] >= 0)) -
+      if (label >= 0) {
+        accuracy += ((bottom_data[ind] >= 0) == label);
+        logloss -= bottom_data[ind] * (label - (bottom_data[ind] >= 0)) -
           log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
           (bottom_data[ind] >= 0)));
       }
