@@ -113,6 +113,7 @@ class ConvolutionLayer : public Layer<Dtype> {
 };
 
 /* EltwiseLayer
+  Compute elementwise operations like product or sum.
 */
 template <typename Dtype>
 class EltwiseLayer : public Layer<Dtype> {
