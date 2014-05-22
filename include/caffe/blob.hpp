@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #ifndef CAFFE_BLOB_HPP_
 #define CAFFE_BLOB_HPP_
@@ -17,9 +17,9 @@ class Blob {
        diff_() {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
-  virtual ~Blob() {}
-  void Reshape(const int num, const int height,
-      const int width, const int channels);
+  void Reshape(const int num, const int channels, const int height,
+    const int width);
+  void ReshapeLike(const Blob& other);
   inline int num() const { return num_; }
   inline int channels() const { return channels_; }
   inline int height() const { return height_; }
@@ -27,6 +27,14 @@ class Blob {
   inline int count() const {return count_; }
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
+    CHECK_GE(n, 0);
+    CHECK_LE(n, num_);
+    CHECK_GE(channels_, 0);
+    CHECK_LE(c, channels_);
+    CHECK_GE(height_, 0);
+    CHECK_LE(h, height_);
+    CHECK_GE(width_, 0);
+    CHECK_LE(w, width_);
     return ((n * channels_ + c) * height_ + h) * width_ + w;
   }
   // Copy from source. If copy_diff is false, we copy the data; if copy_diff
@@ -44,7 +52,18 @@ class Blob {
     return *(cpu_diff() + offset(n, c, h, w));
   }
 
+  inline const shared_ptr<SyncedMemory>& data() const {
+    CHECK(data_);
+    return data_;
+  }
+
+  inline const shared_ptr<SyncedMemory>& diff() const {
+    CHECK(diff_);
+    return diff_;
+  }
+
   const Dtype* cpu_data() const;
+  void set_cpu_data(Dtype* data);
   const Dtype* gpu_data() const;
   const Dtype* cpu_diff() const;
   const Dtype* gpu_diff() const;
@@ -55,6 +74,14 @@ class Blob {
   void Update();
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
+
+  // Set the data_/diff_ shared_ptr to point to the SyncedMemory holding the
+  // data_/diff_ of Blob other -- useful in layers which simply perform a copy
+  // in their forward or backward pass.
+  // This deallocates the SyncedMemory holding this blob's data/diff, as
+  // shared_ptr calls its destructor when reset with the = operator.
+  void ShareData(const Blob& other);
+  void ShareDiff(const Blob& other);
 
  protected:
   shared_ptr<SyncedMemory> data_;

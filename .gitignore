@@ -1,9 +1,10 @@
+## General
+
 # Compiled Object files
 *.slo
 *.lo
 *.o
 *.cuo
-*.pyc
 
 # Compiled Dynamic libraries
 *.so
@@ -19,16 +20,42 @@
 *.pb.cc
 *_pb2.py
 
-# bin files
+# Compiled python
+*.pyc
+
+# Compiled MATLAB
+*.mex*
+
+# build, distribute, and bins
+build/*
+distribute/*
 *.testbin
 *.bin
+python/caffe/proto/
 
-# vim swp files
+# Editor temporaries
 *.swp
+*~
 
-# matlab binary
-*.mexa64
+# IPython notebook checkpoints
+.ipynb_checkpoints
 
-# anything under data/ unless we force include them
+## Caffe
+
+# User's build configuration
+Makefile.config
+
+# Data and examples are either
+# 1. reference, and not casually committed
+# 2. custom, and live on their own unless they're deliberated contributed
 data/*
+examples/*
+
+# Generated documentation
+docs/_site
+_site
+
+# Sublime Text settings
+*.sublime-workspace
+*.sublime-project
 

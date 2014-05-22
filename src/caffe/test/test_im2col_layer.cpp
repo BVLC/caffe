@@ -1,8 +1,9 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
 
+#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -28,7 +29,7 @@ class Im2colLayerTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
-  };
+  }
   virtual ~Im2colLayerTest() { delete blob_bottom_; delete blob_top_; }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
@@ -41,8 +42,10 @@ TYPED_TEST_CASE(Im2colLayerTest, Dtypes);
 
 TYPED_TEST(Im2colLayerTest, TestSetup) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Im2colLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -53,8 +56,10 @@ TYPED_TEST(Im2colLayerTest, TestSetup) {
 
 TYPED_TEST(Im2colLayerTest, TestCPU) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Im2colLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::CPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -68,8 +73,10 @@ TYPED_TEST(Im2colLayerTest, TestCPU) {
 
 TYPED_TEST(Im2colLayerTest, TestGPU) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Im2colLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::GPU);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -83,23 +90,29 @@ TYPED_TEST(Im2colLayerTest, TestGPU) {
 
 TYPED_TEST(Im2colLayerTest, TestCPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Caffe::set_mode(Caffe::CPU);
   Im2colLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(Im2colLayerTest, TestGPUGradient) {
   LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
   Caffe::set_mode(Caffe::GPU);
   Im2colLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientExhaustive(layer, this->blob_bottom_vec_, this->blob_top_vec_);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 
-}
+}  // namespace caffe

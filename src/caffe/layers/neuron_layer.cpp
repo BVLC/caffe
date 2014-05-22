@@ -1,4 +1,4 @@
-// Copyright 2013 Yangqing Jia
+// Copyright 2014 BVLC and contributors.
 
 #include <vector>
 
@@ -18,7 +18,7 @@ void NeuronLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
         bottom[0]->height(), bottom[0]->width());
   }
-};
+}
 
 INSTANTIATE_CLASS(NeuronLayer);
 

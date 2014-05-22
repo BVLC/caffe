@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 # This scripts downloads the mnist data and unzips it.
 
+
 echo "Downloading..."
 
 wget -q http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
