@@ -20,6 +20,12 @@ Dtype EltwiseLayer<Dtype>::Forward_gpu(
       caffe_gpu_mul(count, top_data, bottom[i]->gpu_data(), top_data);
     }
     break;
+  case EltwiseParameter_EltwiseOp_SUM:
+    caffe_gpu_add(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(), top_data);
+    for (int i = 2; i < bottom.size(); ++i) {
+      caffe_gpu_add(count, top_data, bottom[i]->gpu_data(), top_data);
+    }
+    break;
   default:
     LOG(FATAL) << "Unknown elementwise operation.";
   }
@@ -40,6 +46,9 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       case EltwiseParameter_EltwiseOp_PROD:
         caffe_gpu_div(count, top_data, bottom_data, bottom_diff);
         caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
+        break;
+      case EltwiseParameter_EltwiseOp_SUM:
+        caffe_gpu_copy(count, top_diff, bottom_diff);
         break;
       default:
         LOG(FATAL) << "Unknown elementwise operation.";

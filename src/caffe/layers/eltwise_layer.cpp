@@ -41,6 +41,12 @@ Dtype EltwiseLayer<Dtype>::Forward_cpu(
       caffe_mul(count, top_data, bottom[i]->cpu_data(), top_data);
     }
     break;
+  case EltwiseParameter_EltwiseOp_SUM:
+    caffe_add(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(), top_data);
+    for (int i = 2; i < bottom.size(); ++i) {
+      caffe_add(count, top_data, bottom[i]->cpu_data(), top_data);
+    }
+    break;
   default:
     LOG(FATAL) << "Unknown elementwise operation.";
   }
@@ -61,6 +67,9 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       case EltwiseParameter_EltwiseOp_PROD:
         caffe_div(count, top_data, bottom_data, bottom_diff);
         caffe_mul(count, bottom_diff, top_diff, bottom_diff);
+        break;
+      case EltwiseParameter_EltwiseOp_SUM:
+        caffe_copy(count, top_diff, bottom_diff);
         break;
       default:
         LOG(FATAL) << "Unknown elementwise operation.";
