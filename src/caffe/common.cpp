@@ -65,7 +65,6 @@ Caffe::Caffe()
   }
 #endif
 */
-
 }
 
 Caffe::~Caffe() {

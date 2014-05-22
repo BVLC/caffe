@@ -6,10 +6,8 @@
 //    train_net net_proto_file solver_proto_file [resume_point_file]
 
 #include <cuda_runtime.h>
-
-#include <cstring>
 #include <time.h>
-
+#include <cstring>
 #include "caffe/caffe.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
@@ -20,12 +18,11 @@ int main(int argc, char** argv) {
     LOG(ERROR) << "Usage: train_net solver_proto_file [resume_point_file]";
     return 1;
   }
-
   SolverParameter solver_param;
   ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
-  time_t start,end;
-  time (&start);
+  time_t start, end;
+  time(&start);
 
   LOG(INFO) << "Starting Optimization";
   SGDSolver<float> solver(solver_param);
@@ -37,8 +34,8 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "Optimization Done.";
 
-  time (&end); 
-  double elapsed = difftime (end,start); 
+  time(&end);
+  double elapsed = difftime(end, start);
   LOG(INFO) << "Elapsed time, sec: " << elapsed;
 
   return 0;

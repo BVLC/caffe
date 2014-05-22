@@ -64,8 +64,10 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 #pragma omp parallel for
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
-    	const Dtype*  bottom_data = bottom[0]->cpu_data() + bottom[0]-> offset(n,c);
-    	Dtype* top_data = (*top)[0]->mutable_cpu_data() + (*top)[0]->offset(n, c);
+        const Dtype* bottom_data = bottom[0]->cpu_data() +
+                                   bottom[0]->offset(n, c);
+        Dtype* top_data = (*top)[0]->mutable_cpu_data() +
+                          (*top)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_;
@@ -96,8 +98,10 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 #pragma omp parallel for
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
-     	const Dtype*  bottom_data = bottom[0]->cpu_data() + bottom[0]-> offset(n,c);
-      	Dtype* top_data = (*top)[0]->mutable_cpu_data() + (*top)[0]->offset(n, c);
+        const Dtype* bottom_data = bottom[0]->cpu_data() +
+                                   bottom[0]->offset(n, c);
+        Dtype* top_data = (*top)[0]->mutable_cpu_data() +
+                          (*top)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_ - pad_;
@@ -152,10 +156,12 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 #pragma omp parallel for
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
-    	const Dtype* top_diff = top[0]->cpu_diff()+top[0]->offset(n, c);
-    	const Dtype* top_data = top[0]->cpu_data()+ top[0]->offset(n,c);
-    	const Dtype* bottom_data = (*bottom)[0]->cpu_data()+ (*bottom)[0]->offset(n, c);
-    	Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff()+(*bottom)[0]->offset(n, c);
+        const Dtype* top_diff = top[0]->cpu_diff()+top[0]->offset(n, c);
+        const Dtype* top_data = top[0]->cpu_data()+ top[0]->offset(n, c);
+        const Dtype* bottom_data = (*bottom)[0]->cpu_data() +
+                     (*bottom)[0]->offset(n, c);
+        Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff()+
+                     (*bottom)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_;
@@ -185,10 +191,12 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 #pragma omp parallel for
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
-	const Dtype* top_diff = top[0]->cpu_diff()+top[0]->offset(n, c);
-	const Dtype* top_data = top[0]->cpu_data()+ top[0]->offset(n,c);
-	const Dtype* bottom_data = (*bottom)[0]->cpu_data()+ (*bottom)[0]->offset(n, c);
-	Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff()+(*bottom)[0]->offset(n, c);
+        const Dtype* top_diff = top[0]->cpu_diff()+top[0]->offset(n, c);
+        const Dtype* top_data = top[0]->cpu_data()+ top[0]->offset(n, c);
+        const Dtype* bottom_data = (*bottom)[0]->cpu_data() +
+                                   (*bottom)[0]->offset(n, c);
+        Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff() +
+                             (*bottom)[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_ - pad_;

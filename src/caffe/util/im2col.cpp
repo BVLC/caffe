@@ -15,21 +15,21 @@ void im2col_cpu(const Dtype* data_im, const int channels,
   int height_col = (height + 2 * pad - ksize) / stride + 1;
   int width_col = (width + 2 * pad - ksize) / stride + 1;
   int channels_col = channels * ksize * ksize;
-  int c=0;
+  int c = 0;
   for (int c_im = 0; c_im < channels; ++c_im) {
     for (int h_offset = 0; h_offset < ksize; ++h_offset) {
       for (int w_offset = 0; w_offset < ksize; ++w_offset) {
-	c=c_im * ksize * ksize + h_offset * ksize + w_offset;
-	for (int h = 0; h < height_col; ++h) {
-	  int h_pad = h * stride - pad + h_offset;
-	  if ((h_pad >= 0) && (h_pad < height)){
-	    for (int w = 0; w < width_col; ++w) {
-	      int w_pad = w * stride - pad + w_offset;
-	      if ( (w_pad >= 0) && (w_pad < width))
-		data_col[(c * height_col + h) * width_col + w] =
-		data_im[(c_im * height + h_pad) * width + w_pad] ;
-//	      else data_col[(c * height_col + h) * width_col + w] = 0. ;
-	    }
+        c = c_im * ksize * ksize + h_offset * ksize + w_offset;
+        for (int h = 0; h < height_col; ++h) {
+        int h_pad = h * stride - pad + h_offset;
+          if ((h_pad >= 0) && (h_pad < height)) {
+            for (int w = 0; w < width_col; ++w) {
+              int w_pad = w * stride - pad + w_offset;
+              if ((w_pad >= 0) && (w_pad < width))
+                 data_col[(c * height_col + h) * width_col + w] =
+                    data_im[(c_im * height + h_pad) * width + w_pad];
+                //  else data_col[(c * height_col + h) * width_col + w] = 0. ;
+            }
           }
         }
       }
@@ -45,22 +45,22 @@ void col2im_cpu(const Dtype* data_col, const int channels,
   int height_col = (height + 2 * pad - ksize) / stride + 1;
   int width_col  = (width  + 2 * pad - ksize) / stride + 1;
   int channels_col = channels * ksize * ksize;
-  int c=0;
+  int c = 0;
   for (int c_im = 0; c_im < channels; ++c_im) {
     for (int h_offset = 0; h_offset < ksize; ++h_offset) {
       for (int w_offset = 0; w_offset < ksize; ++w_offset) {
-	c=c_im * ksize * ksize + h_offset * ksize + w_offset;
-	for (int h = 0; h < height_col; ++h) {
-	  int h_pad = h * stride - pad + h_offset;
-	  if ((h_pad >= 0 ) && (h_pad < height)) {
-	    for (int w = 0; w < width_col; ++w) {
-	      int w_pad = w * stride - pad + w_offset;
-	      if ((w_pad >= 0 ) && (w_pad < width))
-		data_im[(c_im * height + h_pad) * width + w_pad] +=
-		  data_col[(c * height_col + h) * width_col + w];
-	    }
-	  }
-	}
+        c = c_im * ksize * ksize + h_offset * ksize + w_offset;
+        for (int h = 0; h < height_col; ++h) {
+          int h_pad = h * stride - pad + h_offset;
+          if ((h_pad >= 0) && (h_pad < height)) {
+            for (int w = 0; w < width_col; ++w) {
+              int w_pad = w * stride - pad + w_offset;
+              if ((w_pad >= 0 ) && (w_pad < width))
+                 data_im[(c_im * height + h_pad) * width + w_pad] +=
+                      data_col[(c * height_col + h) * width_col + w];
+            }
+          }
+        }
       }
     }
   }
