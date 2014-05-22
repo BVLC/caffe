@@ -3,7 +3,7 @@
 # for ilsvrc image classification and deep feature extraction
 
 MODEL=caffe_alexnet_model
-CHECKSUM=91df0e19290ef78324de9eecb258a77f
+CHECKSUM=29eb495b11613825c1900382f5286963
 
 if [ -f $MODEL ]; then
   echo "Model already exists. Checking md5..."
