@@ -134,6 +134,7 @@ class EltwiseLayer : public Layer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 
   EltwiseParameter_EltwiseOp op_;
+  vector<Dtype> coeffs_;
 };
 
 /* FlattenLayer
