@@ -2,7 +2,8 @@
 // This program converts a set of images to a leveldb by storing them as Datum
 // proto buffers.
 // Usage:
-//    convert_imageset ROOTFOLDER/ LISTFILE DB_NAME [0/1]
+//    convert_imageset ROOTFOLDER/ LISTFILE DB_NAME [0/1] \
+//                     [resize_height] [resize_width]
 // where ROOTFOLDER is the root folder that holds all the images, and LISTFILE
 // should be a list of files as well as their labels, in the format as
 //   subfolder1/file1.JPEG 7
@@ -29,12 +30,12 @@ using std::string;
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc < 4 || argc > 5) {
+  if (argc < 4 || argc > 7) {
     printf("Convert a set of images to the leveldb format used\n"
         "as input for Caffe.\n"
         "Usage:\n"
         "    convert_imageset ROOTFOLDER/ LISTFILE DB_NAME"
-        " RANDOM_SHUFFLE_DATA[0 or 1]\n"
+        " RANDOM_SHUFFLE_DATA[0 or 1] [resize_height] [resize_width]\n"
         "The ImageNet dataset for the training demo is at\n"
         "    http://www.image-net.org/download-images\n");
     return 1;
@@ -46,12 +47,20 @@ int main(int argc, char** argv) {
   while (infile >> filename >> label) {
     lines.push_back(std::make_pair(filename, label));
   }
-  if (argc == 5 && argv[4][0] == '1') {
+  if (argc >= 5 && argv[4][0] == '1') {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
     std::random_shuffle(lines.begin(), lines.end());
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
+  int resize_height = 0;
+  int resize_width = 0;
+  if (argc >= 6) {
+    resize_height = atoi(argv[5]);
+  }
+  if (argc >= 7) {
+    resize_width = atoi(argv[6]);
+  }
 
   leveldb::DB* db;
   leveldb::Options options;
@@ -73,7 +82,7 @@ int main(int argc, char** argv) {
   bool data_size_initialized = false;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first,
-                          lines[line_id].second, &datum)) {
+        lines[line_id].second, resize_height, resize_width, &datum)) {
       continue;
     }
     if (!data_size_initialized) {
