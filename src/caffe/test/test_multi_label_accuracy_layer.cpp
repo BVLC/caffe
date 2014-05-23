@@ -66,8 +66,8 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       loss -= (target[i] > 0) * log(prediction + (target[i] <= Dtype(0)));
       loss -= (target[i] < 0) * log(1 - prediction + (target[i] >= Dtype(0)));
     }
-    LOG(INFO) << "positives " << count_pos << " negatives " << count_neg <<
-      " zeros " << count_zeros;
+    // LOG(INFO) << "positives " << count_pos << " negatives " << count_neg <<
+    //  " zeros " << count_zeros;
     return loss / num;
   }
 
