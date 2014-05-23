@@ -258,7 +258,7 @@ message EltwiseParameter {
     SUM = 1;
   }
   optional EltwiseOp operation = 1 [default = SUM]; // element-wise operation
-  repeated float coeff = 2; // blob-wise coefficient
+  repeated float coeff = 2; // blob-wise coefficient for SUM operation
 }
 
 // Message that stores parameters used by HDF5DataLayer
