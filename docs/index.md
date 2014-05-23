@@ -8,6 +8,8 @@ It was created by [Yangqing Jia](http://daggerfs.com), and is in active developm
 
 Caffe is released under [the BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
+Check out the [classification demo](http://demo.caffe.berkeleyvision.org/)!
+
 <!-- BVLC hosts a quick [classification demo](http://demo.caffe.berkeleyvision.org/) using Caffe. -->
 
 ## Why Caffe?
