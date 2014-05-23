@@ -32,10 +32,13 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
     blob_bottom_vec_.push_back(blob_bottom_data_);
     // Fill the targets vector
     FillerParameter targets_filler_param;
-    targets_filler_param.set_min(0);
+    targets_filler_param.set_min(-1);
     targets_filler_param.set_max(1);
     UniformFiller<Dtype> targets_filler(targets_filler_param);
     targets_filler.Fill(blob_bottom_targets_);
+    int count = blob_bottom_targets_->count();
+    caffe_cpu_sign(count, this->blob_bottom_targets_->cpu_data(),
+      this->blob_bottom_targets_->mutable_cpu_data());
     blob_bottom_vec_.push_back(blob_bottom_targets_);
   }
   virtual ~MultiLabelAccuracyLayerTest() {
@@ -76,11 +79,14 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       data_filler.Fill(this->blob_bottom_data_);
       // Fill the targets vector
       targets_filler.Fill(this->blob_bottom_targets_);
+      // Make negatives into -1 and positives into 1
+      const int count = this->blob_bottom_data_->count();      
+      caffe_cpu_sign(count, this->blob_bottom_targets_->cpu_data(),
+        this->blob_bottom_targets_->mutable_cpu_data());
       MultiLabelAccuracyLayer<Dtype> layer(layer_param);
       layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
       Dtype layer_loss =
-          layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-      const int count = this->blob_bottom_data_->count();
+          layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));      
       const int num = this->blob_bottom_data_->num();
       const Dtype* blob_bottom_data = this->blob_bottom_data_->cpu_data();
       const Dtype* blob_bottom_targets =

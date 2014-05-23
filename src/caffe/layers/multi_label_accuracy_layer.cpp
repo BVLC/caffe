@@ -77,8 +77,8 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
 
     }
   }
-  // LOG(INFO) << "Accuracy: " << accuracy_pos << " " << accuracy_neg;
-  // LOG(INFO) << "Logloss: " << logloss;
+  LOG(INFO) << "Accuracy: " << accuracy_pos << " " << accuracy_neg;
+  LOG(INFO) << "Logloss: " << logloss;
   if ((top->size() == 1)) {
     (*top)[0]->mutable_cpu_data()[0] = accuracy_pos / count_pos;
     (*top)[0]->mutable_cpu_data()[1] = accuracy_neg / count_neg;
