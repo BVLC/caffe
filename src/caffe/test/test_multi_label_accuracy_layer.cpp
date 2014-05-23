@@ -124,17 +124,27 @@ TYPED_TEST_CASE(MultiLabelAccuracyLayerTest, Dtypes);
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithoutZeros) {
   Caffe::set_mode(Caffe::CPU);
-  this->TestForward();
+  // Should use all the samples, since no label = 0
+  // The loss should be positive and greater than 1
+  TypeParam loss = this->TestForward(TypeParam(0));
+  CHECK_GE(loss,1) << "loss should positive and greater than 1";
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithHalfZeros) {
   Caffe::set_mode(Caffe::CPU);
-  this->TestForward(TypeParam(0.5));
+  // Should use half of the samples, since half of labels are 0
+  TypeParam loss = this->TestForward(TypeParam(0.5));
+  CHECK_GE(loss,0) << "loss should positive";
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithAllZeros) {
   Caffe::set_mode(Caffe::CPU);
-  this->TestForward(TypeParam(1));
+  // Should ignore all the samples, since all labels 0
+  // The loss should be 0 when we ignore all the labels
+  TypeParam eps = 2e-2;
+  TypeParam loss = this->TestForward(TypeParam(1));
+  CHECK_GE(loss,0) << "loss should positive";
+  EXPECT_NEAR(loss,eps) << "loss should be close to 0";
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPU) {
