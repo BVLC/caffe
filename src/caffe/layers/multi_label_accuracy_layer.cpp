@@ -60,16 +60,16 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
       int label = static_cast<int>(bottom_label[ind]);
       if (label != 0) { 
       //Update the loss only if it is not 0
-        logloss -= bottom_data[ind] * (label - (bottom_data[ind] >= 0)) -
+        logloss -= bottom_data[ind] * ((label > 0) - (bottom_data[ind] >= 0)) -
           log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
           (bottom_data[ind] >= 0)));
       }
-      if (label == 1) { 
+      if (label > 0) { 
       // Update Positive accuracy and count
         accuracy_pos += (bottom_data[ind] >= 0);
         count_pos++;
       }
-      if (label == -1) {
+      if (label < 0) {
       // Update Negative accuracy and count
         accuracy_neg += (bottom_data[ind] < 0);
         count_neg++;        
