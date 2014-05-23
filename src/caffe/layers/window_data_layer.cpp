@@ -213,10 +213,11 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
         // get window multi_label
         // If it is background, then label==0 and it is negative for all classes
         int label = window[WindowDataLayer<Dtype>::LABEL];
-        for (int l = 0; l < num_classes_; ++l) {
-          top_label[item_id * num_classes_ + l] = 0;
-        }
-        if (label > 0) {
+        if (label == 0) {
+          for (int l = 0; l < num_classes_; ++l) {
+            top_label[item_id * num_classes_ + l] = -1;
+          }
+        } else {
           // If it is foreground, then label > 0 and it is positive
           // only the appropiate class, and should be ignored by the other classes
           top_label[item_id * num_classes_ + label - 1] = 1;

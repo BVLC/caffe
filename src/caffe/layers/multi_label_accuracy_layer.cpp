@@ -12,20 +12,28 @@
 
 using std::max;
 
+
 namespace caffe {
+
+template <typename Dtype>
+inline Dtype sigmoid(Dtype x) {
+  return 1. / (1. + exp(-x));
+}
 
 template <typename Dtype>
 void MultiLabelAccuracyLayer<Dtype>::SetUp(
   const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 2) << "MultiLabelAccuracy Layer takes two blobs as input.";
-  CHECK_EQ(top->size(), 1) << "MultiLabelAccuracy Layer takes 1 output.";
+  CHECK_LE(top->size(), 1) << "MultiLabelAccuracy Layer takes 0/1 output.";
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number of instances";
   CHECK_EQ(bottom[1]->channels(), bottom[1]->channels())
     << "The data and label should have the same number of channels";
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  (*top)[0]->Reshape(1, 4, 1, 1);
+  if (top->size() == 1) {
+    (*top)[0]->Reshape(1, 4, 1, 1);
+  }
 }
 
 template <typename Dtype>
@@ -50,35 +58,58 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
     for (int j = 0; j < dim; ++j) {
       int ind = i * dim + j;
       int label = static_cast<int>(bottom_label[ind]);
-      // if (label == 0) {
-      //   //Ignore
-      //   continue;
-      // }
+      if (label != 0) { 
+      //Update the loss only if it is not 0
+        logloss -= bottom_data[ind] * (label - (bottom_data[ind] >= 0)) -
+          log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
+          (bottom_data[ind] >= 0)));
+      }
       if (label == 1) { 
-      // Positive
+      // Update Positive accuracy and count
         accuracy_pos += (bottom_data[ind] >= 0);
         count_pos++;
       }
-      if (label == 0) {
-      // Negative
+      if (label == -1) {
+      // Update Negative accuracy and count
         accuracy_neg += (bottom_data[ind] < 0);
         count_neg++;        
       }
-      logloss -= bottom_data[ind] * (label - (bottom_data[ind] >= 0)) -
-        log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
-        (bottom_data[ind] >= 0)));
+
     }
   }
-  LOG(INFO) << "Accuracy: " << accuracy_pos << " " << accuracy_neg;
-  LOG(INFO) << "Logloss: " << logloss;
-  (*top)[0]->mutable_cpu_data()[0] = accuracy_pos / count_pos;
-  (*top)[0]->mutable_cpu_data()[1] = accuracy_neg / count_neg;
-  (*top)[0]->mutable_cpu_data()[2] = (accuracy_pos / count_pos +
-    accuracy_neg / count_neg) / 2;
-  (*top)[0]->mutable_cpu_data()[3] = logloss / num;
-  // Accuracy layer should not be used as a loss function.
-  return Dtype(0);
+  // LOG(INFO) << "Accuracy: " << accuracy_pos << " " << accuracy_neg;
+  // LOG(INFO) << "Logloss: " << logloss;
+  if ((top->size() == 1)) {
+    (*top)[0]->mutable_cpu_data()[0] = accuracy_pos / count_pos;
+    (*top)[0]->mutable_cpu_data()[1] = accuracy_neg / count_neg;
+    (*top)[0]->mutable_cpu_data()[2] = 
+      (accuracy_pos / count_pos + accuracy_neg / count_neg) / 2;
+    (*top)[0]->mutable_cpu_data()[3] = logloss / num;
+  }
+  // MultiLabelAccuracy can be used as a loss function.
+  return Dtype(logloss / num);
 }
+
+template <typename Dtype>
+void MultiLabelAccuracyLayer<Dtype>::Backward_cpu(
+    const vector<Blob<Dtype>*>& top, const bool propagate_down,
+    vector<Blob<Dtype>*>* bottom) {
+  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+  const Dtype* bottom_label = (*bottom)[1]->cpu_data();
+  const int count = (*bottom)[0]->count();
+  const int num = (*bottom)[0]->num();    
+  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  for (int i = 0; i < count; ++i) {    
+    if (bottom_label[i] != 0) {
+      bottom_diff[i] = sigmoid(bottom_data[i]) - (bottom_label[i] > 0);
+    } else {
+      bottom_diff[i] = 0;
+    }
+  }
+  // Scale down gradient
+  caffe_scal(count, Dtype(1) / num, bottom_diff);
+}
+
 
 INSTANTIATE_CLASS(MultiLabelAccuracyLayer);
 
