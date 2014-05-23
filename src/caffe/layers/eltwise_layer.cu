@@ -15,7 +15,8 @@ Dtype EltwiseLayer<Dtype>::Forward_gpu(
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
-    caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(), top_data);
+    caffe_gpu_mul(count, bottom[0]->gpu_data(),
+        bottom[1]->gpu_data(), top_data);
     for (int i = 2; i < bottom.size(); ++i) {
       caffe_gpu_mul(count, top_data, bottom[i]->gpu_data(), top_data);
     }
