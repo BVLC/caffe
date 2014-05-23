@@ -115,7 +115,7 @@ message SolverState {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 24 (last added: argmax_param)
+// LayerParameter next available ID: 25 (last added: eltwise_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -141,7 +141,7 @@ message LayerParameter {
     DATA = 5;
     DROPOUT = 6;
     EUCLIDEAN_LOSS = 7;
-    ELTWISE_PRODUCT = 25;
+    ELTWISE = 25;
     FLATTEN = 8;
     HDF5_DATA = 9;
     HDF5_OUTPUT = 10;
@@ -180,6 +180,7 @@ message LayerParameter {
   optional ConvolutionParameter convolution_param = 10;
   optional DataParameter data_param = 11;
   optional DropoutParameter dropout_param = 12;
+  optional EltwiseParameter eltwise_param = 24;
   optional HDF5DataParameter hdf5_data_param = 13;
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional ImageDataParameter image_data_param = 15;
@@ -248,6 +249,16 @@ message DataParameter {
 // Message that stores parameters used by DropoutLayer
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
+}
+
+// Message that stores parameters used by EltwiseLayer
+message EltwiseParameter {
+  enum EltwiseOp {
+    PROD = 0;
+    SUM = 1;
+  }
+  optional EltwiseOp operation = 1 [default = SUM]; // element-wise operation
+  repeated float coeff = 2; // blob-wise coefficient for SUM operation
 }
 
 // Message that stores parameters used by HDF5DataLayer
