@@ -71,7 +71,7 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
     return loss / num;
   }
 
-  void TestForward(Dtype threshold_ = Dtype(0)) {
+  Dtype TestForward(Dtype threshold_ = Dtype(0)) {
     const int count = this->blob_bottom_data_->count(); 
     this->rand_vec_.reset(new SyncedMemory(count * sizeof(int)));    
     int* mask = reinterpret_cast<int*>(this->rand_vec_->mutable_cpu_data());    
@@ -84,8 +84,10 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
     targets_filler_param.set_max(1.0);
     UniformFiller<Dtype> targets_filler(targets_filler_param);
     Dtype eps = 2e-2;
+    Dtype mean_loss = 0;
     int num_inf = 0;
-    for (int i = 0; i < 100; ++i) {
+    int num_repetitions = 100;
+    for (int i = 0; i < num_repetitions; ++i) {
       // Fill the data vector
       data_filler.Fill(this->blob_bottom_data_);
       // Fill the targets vector
@@ -109,7 +111,9 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       Dtype reference_loss = this->SigmoidCrossEntropyLossReference(
           count, num, blob_bottom_data, blob_bottom_targets);
       EXPECT_NEAR(reference_loss, layer_loss, eps) << "debug: trial #" << i;
+      mean_loss += layer_loss;
     }
+    return mean_loss/num_repetitions;
   }
   shared_ptr<SyncedMemory> rand_vec_;
   Blob<Dtype>* const blob_bottom_data_;
