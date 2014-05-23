@@ -63,15 +63,18 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       if (target[i] > 0) count_pos++;
       if (target[i] < 0) count_neg++;
       if (target[i] == 0) count_zeros++;
-      loss -= (target[i] > 0) * log(prediction);// + (target[i] <= Dtype(0)));
-      loss -= (target[i] < 0) * log(1 - prediction);// + (target[i] >= Dtype(0)));
+      loss -= (target[i] > 0) * log(prediction + (target[i] <= Dtype(0)));
+      loss -= (target[i] < 0) * log(1 - prediction + (target[i] >= Dtype(0)));
     }
     LOG(INFO) << "positives " << count_pos << " negatives " << count_neg <<
       " zeros " << count_zeros;
     return loss / num;
   }
 
-  void TestForward() {
+  void TestForward(Dtype threshold_ = Dtype(0)) {
+    const int count = this->blob_bottom_data_->count(); 
+    this->rand_vec_.reset(new SyncedMemory(count * sizeof(int)));    
+    int* mask = reinterpret_cast<int*>(this->rand_vec_->mutable_cpu_data());    
     LayerParameter layer_param;
     FillerParameter data_filler_param;
     data_filler_param.set_std(1);
@@ -88,9 +91,13 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       // Fill the targets vector
       targets_filler.Fill(this->blob_bottom_targets_);
       // Make negatives into -1 and positives into 1
-      const int count = this->blob_bottom_data_->count();      
-      caffe_cpu_sign(count, this->blob_bottom_targets_->cpu_data(),
-        this->blob_bottom_targets_->mutable_cpu_data());
+      Dtype* targets = this->blob_bottom_targets_->mutable_cpu_data();          
+      caffe_cpu_sign(count, targets, targets);
+      // Add some 0s as in dropout
+      caffe_rng_bernoulli(count, 1. - threshold_, mask);
+      for (int j = 0; j < count; ++j) {
+        targets[j] = targets[j] * mask[j];
+      }
       MultiLabelAccuracyLayer<Dtype> layer(layer_param);
       layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
       Dtype layer_loss =
@@ -104,7 +111,7 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       EXPECT_NEAR(reference_loss, layer_loss, eps) << "debug: trial #" << i;
     }
   }
-
+  shared_ptr<SyncedMemory> rand_vec_;
   Blob<Dtype>* const blob_bottom_data_;
   Blob<Dtype>* const blob_bottom_targets_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -115,9 +122,19 @@ typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(MultiLabelAccuracyLayerTest, Dtypes);
 
 
-TYPED_TEST(MultiLabelAccuracyLayerTest, TestMultiLabelAccuracyCPU) {
+TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithoutZeros) {
   Caffe::set_mode(Caffe::CPU);
   this->TestForward();
+}
+
+TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithHalfZeros) {
+  Caffe::set_mode(Caffe::CPU);
+  this->TestForward(TypeParam(0.5));
+}
+
+TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithAllZeros) {
+  Caffe::set_mode(Caffe::CPU);
+  this->TestForward(TypeParam(1));
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPU) {
