@@ -50,16 +50,24 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
                                          const Dtype* input,
                                          const Dtype* target) {
     Dtype loss = 0;
+    int count_pos = 0;
+    int count_neg = 0;
+    int count_zeros = 0;
     for (int i = 0; i < count; ++i) {
       // It assumes -1 is negative, 1 is positive and 0 is ignore it.
       const Dtype prediction = 1 / (1 + exp(-input[i]));
       EXPECT_LE(prediction, 1);
       EXPECT_GE(prediction, 0);
       EXPECT_LE(target[i], 1);
-      EXPECT_GE(target[i], -1);      
-      loss -= (target[i] > 0) * log(prediction + (target[i] <= Dtype(0)));
-      loss -= (target[i] < 0) * log(1 - prediction + (target[i] >= Dtype(0)));
+      EXPECT_GE(target[i], -1);
+      if (target[i] > 0) count_pos++;
+      if (target[i] < 0) count_neg++;
+      if (target[i] == 0) count_zeros++;
+      loss -= (target[i] > 0) * log(prediction);// + (target[i] <= Dtype(0)));
+      loss -= (target[i] < 0) * log(1 - prediction);// + (target[i] >= Dtype(0)));
     }
+    LOG(INFO) << "positives " << count_pos << " negatives " << count_neg <<
+      " zeros " << count_zeros;
     return loss / num;
   }
 
