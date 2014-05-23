@@ -284,7 +284,8 @@ def _Net_deprocess(self, input_name, input_):
         decaf_in += mean
     decaf_in = decaf_in.transpose((1,2,0))
     if channel_order:
-        channel_order_inverse = tuple([channel_order.index(i) for i in (0,1,2)])
+        channel_order_inverse = [channel_order.index(i)
+                                 for i in range(decaf_in.shape[2])]
         decaf_in = decaf_in[:, :, channel_order_inverse]
     if input_scale:
         decaf_in /= input_scale
