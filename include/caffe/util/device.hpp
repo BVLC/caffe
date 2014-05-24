@@ -13,9 +13,9 @@
 namespace caffe {
 
 template<typename Dtype>
-class MathBackend {
+class Device {
  public:
-  virtual ~MathBackend() {
+  virtual ~Device() {
   }
   virtual void gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
                     const int M, const int N, const int K, const Dtype alpha,
@@ -81,11 +81,11 @@ class MathBackend {
 };
 
 template<typename Dtype>
-class CPUMathBackend : public MathBackend<Dtype> {
+class CPUDevice : public Device<Dtype> {
  public:
-  CPUMathBackend() {
+  CPUDevice() {
   }
-  virtual ~CPUMathBackend() {
+  virtual ~CPUDevice() {
   }
   virtual void gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
                     const int M, const int N, const int K, const Dtype alpha,
@@ -147,11 +147,11 @@ class CPUMathBackend : public MathBackend<Dtype> {
 };
 
 template<typename Dtype>
-class GPUMathBackend : public MathBackend<Dtype> {
+class GPUDevice : public Device<Dtype> {
  public:
-  GPUMathBackend() {
+  GPUDevice() {
   }
-  virtual ~GPUMathBackend() {
+  virtual ~GPUDevice() {
   }
   virtual void gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
                     const int M, const int N, const int K, const Dtype alpha,
@@ -213,12 +213,12 @@ class GPUMathBackend : public MathBackend<Dtype> {
 };
 
 template<typename Dtype>
-class MathBackendFactory {
+class DeviceFactory {
  public:
-  static MathBackend<Dtype>* GetMathBackend();
+  static Device<Dtype>* GetDevice();
  private:
-  static MathBackend<Dtype>* cpu_math_backend_;
-  static MathBackend<Dtype>* gpu_math_backend_;
+  static Device<Dtype>* cpu_device_;
+  static Device<Dtype>* gpu_device_;
 };
 
 }  // namespace caffe
