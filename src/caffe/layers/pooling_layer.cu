@@ -12,7 +12,7 @@ using std::max;
 using std::min;
 
 namespace caffe {
- 
+
 template <typename Dtype>
 __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
@@ -36,7 +36,6 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
           maxidx = h * width + w;
           maxval = bottom_data[maxidx];
         }
-        
       }
     }
     top_data[index] = maxval;
@@ -154,8 +153,8 @@ Dtype PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int* mask;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
+    mask = static_cast<int*>(max_idx_->mutable_gpu_data());
     // NOLINT_NEXT_LINE(whitespace/operators)
-    mask = (int*)max_idx_->mutable_gpu_data();
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), channels_,
         height_, width_, pooled_height_, pooled_width_, kernel_size_, stride_,
@@ -215,7 +214,6 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     Dtype gradient = 0;
     top_diff += (n * channels + c) * pooled_height * pooled_width;
     mask += (n * channels + c) * pooled_height * pooled_width;
-    //bottom_diff[index] += top_diff[mask[index]];
     for (int ph = phstart; ph < phend; ++ph) {
       for (int pw = pwstart; pw < pwend; ++pw) {
         if (mask[ph * pooled_width + pw] == h * width + w)
@@ -223,7 +221,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
       }
     }
     bottom_diff[index] = gradient;
-  }  
+  }
 }
 
 /*
@@ -354,14 +352,13 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int count = (*bottom)[0]->count();
   CUDA_CHECK(cudaMemset(bottom_diff, 0, sizeof(Dtype) * count));
   int* mask;
-  
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
-    mask = (int*)max_idx_->gpu_data();
+    mask = static_cast<int*>(max_idx_->mutable_gpu_data());
     // Since we have the mask we only need count top_diff
-    count = top[0]->count(); 
+    count = top[0]->count();
+    caffe_gpu_set(count, Dtype(0.), bottom_diff);
     // NOLINT_NEXT_LINE(whitespace/operators)
-    caffe_gpu_set(count,Dtype(0.),bottom_diff);
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, top[0]->num(), channels_,
         height_, width_, pooled_height_, pooled_width_,
