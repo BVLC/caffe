@@ -1,7 +1,9 @@
-// Copyright 2014 Sergio Guadarrama
+// Copyright 2014 BVLC and contributors.
 
 #include <cstring>
-#include <cuda_runtime.h>
+#include <vector>
+
+#include "cuda_runtime.h"
 
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -19,7 +21,7 @@ class MaxPoolingDropoutTest : public ::testing::Test {
  protected:
   MaxPoolingDropoutTest()
       : blob_bottom_(new Blob<Dtype>()),
-        blob_top_(new Blob<Dtype>()) {};
+        blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1703);
     blob_bottom_->Reshape(2, 3, 6, 5);
@@ -30,7 +32,7 @@ class MaxPoolingDropoutTest : public ::testing::Test {
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
-  };
+  }
   virtual ~MaxPoolingDropoutTest() { delete blob_bottom_; delete blob_top_; }
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_top_;
@@ -69,7 +71,7 @@ TYPED_TEST(MaxPoolingDropoutTest, CPUForward) {
   const TypeParam* top_data = this->blob_top_->cpu_data();
   TypeParam sum = 0.;
   for (int i = 0; i < this->blob_top_->count(); ++i) {
-  	sum += top_data[i];
+    sum += top_data[i];
   }
   EXPECT_EQ(sum, this->blob_top_->count());
   // Dropout in-place
@@ -80,7 +82,7 @@ TYPED_TEST(MaxPoolingDropoutTest, CPUForward) {
   TypeParam scale = 1. / (1. - layer_param.dropout_param().dropout_ratio());
   top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
-  	sum += top_data[i];
+    sum += top_data[i];
   }
   EXPECT_GE(sum, 0);
   EXPECT_LE(sum, this->blob_top_->count()*scale);
@@ -98,7 +100,7 @@ TYPED_TEST(MaxPoolingDropoutTest, GPUForward) {
   const TypeParam* top_data = this->blob_top_->cpu_data();
   TypeParam sum = 0.;
   for (int i = 0; i < this->blob_top_->count(); ++i) {
-  	sum += top_data[i];
+    sum += top_data[i];
   }
   EXPECT_EQ(sum, this->blob_top_->count());
 
@@ -109,7 +111,7 @@ TYPED_TEST(MaxPoolingDropoutTest, GPUForward) {
   TypeParam scale = 1. / (1. - layer_param.dropout_param().dropout_ratio());
   top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
-  	sum += top_data[i];
+    sum += top_data[i];
   }
   EXPECT_GE(sum, 0);
   EXPECT_LE(sum, this->blob_top_->count()*scale);
@@ -127,12 +129,12 @@ TYPED_TEST(MaxPoolingDropoutTest, CPUBackward) {
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
-  }  
+  }
   layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
   const TypeParam* bottom_diff = this->blob_bottom_->cpu_diff();
   TypeParam sum = 0.;
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-  	sum += bottom_diff[i];
+    sum += bottom_diff[i];
   }
   EXPECT_EQ(sum, this->blob_top_->count());
   // Dropout in-place
@@ -144,7 +146,7 @@ TYPED_TEST(MaxPoolingDropoutTest, CPUBackward) {
   TypeParam sum_with_dropout = 0.;
   bottom_diff = this->blob_bottom_->cpu_diff();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-  	sum_with_dropout += bottom_diff[i];
+    sum_with_dropout += bottom_diff[i];
   }
   EXPECT_GE(sum_with_dropout, sum);
 }
@@ -161,12 +163,12 @@ TYPED_TEST(MaxPoolingDropoutTest, GPUBackward) {
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
-  }  
+  }
   layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
   const TypeParam* bottom_diff = this->blob_bottom_->cpu_diff();
   TypeParam sum = 0.;
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-  	sum += bottom_diff[i];
+    sum += bottom_diff[i];
   }
   EXPECT_EQ(sum, this->blob_top_->count());
   // Dropout in-place
@@ -178,9 +180,9 @@ TYPED_TEST(MaxPoolingDropoutTest, GPUBackward) {
   TypeParam sum_with_dropout = 0.;
   bottom_diff = this->blob_bottom_->cpu_diff();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-  	sum_with_dropout += bottom_diff[i];
+    sum_with_dropout += bottom_diff[i];
   }
   EXPECT_GE(sum_with_dropout, sum);
 }
 
-}
+}  // namespace caffe

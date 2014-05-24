@@ -38,7 +38,8 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   (*top)[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
   // If max pooling, we will initialize the vector index part.
-  if (this->layer_param_.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
+  if (this->layer_param_.pooling_param().pool() ==
+      PoolingParameter_PoolMethod_MAX) {
     max_idx_.reset(new SyncedMemory((*top)[0]->count() * sizeof(int)));
   }
   // If stochastic pooling, we will initialize the random index part.
@@ -63,7 +64,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
   // Initialize
-    mask = (int*)max_idx_->mutable_cpu_data();
+    mask = static_cast<int*>(max_idx_->mutable_cpu_data());
     for (int i = 0; i < top_count; ++i) {
       top_data[i] = -FLT_MAX;
       mask[i] = -1;
@@ -77,11 +78,13 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             int wstart = pw * stride_;
             int hend = min(hstart + kernel_size_, height_);
             int wend = min(wstart + kernel_size_, width_);
+            const int pool_index = ph * pooled_width_ + pw;
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                if (bottom_data[h * width_ + w] > top_data[ph * pooled_width_ + pw]) {
-                  top_data[ph * pooled_width_ + pw] = bottom_data[h * width_ + w];
-                  mask[ph * pooled_width_ + pw] = h * width_ + w;
+                const int index = h * width_ + w;
+                if (bottom_data[index] > top_data[pool_index]) {
+                  top_data[pool_index] = bottom_data[index];
+                  mask[pool_index] = index;
                 }
               }
             }
@@ -147,16 +150,17 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
   memset(bottom_diff, 0, (*bottom)[0]->count() * sizeof(Dtype));
-  int* mask;
+  const int* mask;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
-    mask = (int*)max_idx_->cpu_data();
+    mask = static_cast<const int*>(max_idx_->cpu_data());
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
-            bottom_diff[mask[ph * pooled_width_ + pw]]+=top_diff[ph * pooled_width_ + pw];
+            const int index = ph * pooled_width_ + pw;
+            bottom_diff[mask[index]] += top_diff[index];
           }
         }
         bottom_diff += (*bottom)[0]->offset(0, 1);
