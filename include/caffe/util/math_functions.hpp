@@ -145,6 +145,9 @@ template <typename Dtype>
 void caffe_rng_bernoulli(const int n, const Dtype p, int* r);
 
 template <typename Dtype>
+void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r);
+
+template <typename Dtype>
 void caffe_gpu_rng_bernoulli(const int n, const Dtype p, int* r);
 
 template <typename Dtype>
