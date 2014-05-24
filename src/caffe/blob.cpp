@@ -108,6 +108,14 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
   diff_ = other.diff();
 }
 
+template <>
+void Blob<int>::Update() {
+  // The "update" method is used for parameter blobs in a Net, which are stored
+  // as Blob<float>s or Blob<double>s -- hence we do not define it for
+  // Blob<int>s.
+  NOT_IMPLEMENTED;
+}
+
 template <typename Dtype>
 void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
@@ -201,6 +209,7 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
 }
 
 INSTANTIATE_CLASS(Blob);
+template class Blob<int>;
 
 }  // namespace caffe
 
