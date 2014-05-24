@@ -381,6 +381,26 @@ void caffe_rng_bernoulli<double>(const int n, const double p, int* r);
 template
 void caffe_rng_bernoulli<float>(const int n, const float p, int* r);
 
+template <typename Dtype>
+void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GE(p, 0);
+  CHECK_LE(p, 1);
+  boost::bernoulli_distribution<Dtype> random_distribution(p);
+  boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
+  for (int i = 0; i < n; ++i) {
+    r[i] = static_cast<unsigned int>(variate_generator());
+  }
+}
+
+template
+void caffe_rng_bernoulli<double>(const int n, const double p, unsigned int* r);
+
+template
+void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
+
 template <>
 float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {
   return cblas_sdot(n, x, 1, y, 1);
