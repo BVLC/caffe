@@ -40,7 +40,8 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX) {
-    max_idx_.reset(new SyncedMemory((*top)[0]->count() * sizeof(int)));
+    max_idx_.reset(new Blob<int>(bottom[0]->num(), channels_,
+                                 pooled_height_, pooled_width_));
   }
   // If stochastic pooling, we will initialize the random index part.
   if (this->layer_param_.pooling_param().pool() ==
@@ -64,7 +65,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
   // Initialize
-    mask = static_cast<int*>(max_idx_->mutable_cpu_data());
+    mask = max_idx_->mutable_cpu_data();
     for (int i = 0; i < top_count; ++i) {
       top_data[i] = -FLT_MAX;
       mask[i] = -1;
@@ -154,7 +155,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
-    mask = static_cast<const int*>(max_idx_->cpu_data());
+    mask = max_idx_->cpu_data();
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         for (int ph = 0; ph < pooled_height_; ++ph) {
