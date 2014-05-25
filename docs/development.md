@@ -39,14 +39,14 @@ We'd appreciate your contribution to the documentation effort!
 The `googletest` framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is `--gtest_filter`, which allows you to filter tests by name:
 
     # run all tests with CPU in the name
-    build/src/caffe/test/test_all.testbin --gtest_filter='*CPU*'
+    build/test/test_all.testbin --gtest_filter='*CPU*'
 
     # run all tests without GPU in the name (note the leading minus sign)
-    build/src/caffe/test/test_all.testbin --gtest_filter=-'*GPU*'
+    build/test/test_all.testbin --gtest_filter=-'*GPU*'
 
 To get a list of all options `googletest` provides, simply pass the `--help` flag:
 
-    build/src/caffe/test/test_all.testbin --help
+    build/test/test_all.testbin --help
 
 **Style**
 
