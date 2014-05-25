@@ -8,6 +8,8 @@ It was created by [Yangqing Jia](http://daggerfs.com), and is in active developm
 
 Caffe is released under [the BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
+Check out the [classification demo](http://demo.caffe.berkeleyvision.org/)!
+
 <!-- BVLC hosts a quick [classification demo](http://demo.caffe.berkeleyvision.org/) using Caffe. -->
 
 ## Why Caffe?
@@ -23,7 +25,7 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 
 ## Documentation
 
-* [Introductory slides](http://caffe.berkeleyvision.org/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
+* [Introductory slides](https://www.dropbox.com/s/10fx16yp5etb8dv/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
 * [Installation](/installation.html): Instructions on installing Caffe (works on Ubuntu, Red Hat, OS X).
 * [Pre-trained models](/getting_pretrained_models.html): BVLC provides some pre-trained models for academic / non-commercial use.
 * [Development](/development.html): Guidelines for development and contributing to Caffe.
