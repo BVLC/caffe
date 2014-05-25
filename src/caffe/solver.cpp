@@ -19,13 +19,13 @@ namespace caffe {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_(), test_net_() {
+    : net_() {
   Init(param);
 }
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file)
-    : net_(), test_net_() {
+    : net_() {
   SolverParameter param;
   ReadProtoFromTextFile(param_file, &param);
   Init(param);
@@ -33,18 +33,43 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
+  LOG(INFO) << "Initializing solver from parameters: " << std::endl
+            << param.DebugString();
   param_ = param;
   if (param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
-  LOG(INFO) << "Creating training net.";
-  net_.reset(new Net<Dtype>(param_.train_net()));
-  if (param_.has_test_net()) {
-    LOG(INFO) << "Creating testing net.";
-    test_net_.reset(new Net<Dtype>(param_.test_net()));
-    CHECK_GT(param_.test_iter(), 0);
+  if (param_.has_train_net_param()) {
+    CHECK(!param_.has_train_net()) << "Either train_net_param or train_net may "
+                                   << "be specified, but not both.";
+    LOG(INFO) << "Creating training net specified in SolverParameter.";
+    net_.reset(new Net<Dtype>(param_.train_net_param()));
+  } else {
+    CHECK(param_.has_train_net())
+        << "Neither train_net nor train_net_param were specified.";
+    LOG(INFO) << "Creating training net from file: " << param_.train_net();
+    net_.reset(new Net<Dtype>(param_.train_net()));
+  }
+  const int num_test_net_params = param_.test_net_param_size();
+  const int num_test_net_files = param_.test_net_size();
+  const int num_test_nets = num_test_net_params + num_test_net_files;
+  if (num_test_nets) {
+    CHECK_EQ(param_.test_iter_size(), num_test_nets)
+        << "test_iter must be specified for each test network.";
     CHECK_GT(param_.test_interval(), 0);
+  }
+  test_nets_.resize(num_test_nets);
+  for (int i = 0; i < num_test_net_params; ++i) {
+      LOG(INFO) << "Creating testing net (#" << i
+                << ") specified in SolverParameter.";
+      test_nets_[i].reset(new Net<Dtype>(param_.test_net_param(i)));
+  }
+  for (int i = 0, test_net_id = num_test_net_params;
+       i < num_test_net_files; ++i, ++test_net_id) {
+      LOG(INFO) << "Creating testing net (#" << test_net_id
+                << ") from file: " << param.test_net(i);
+      test_nets_[test_net_id].reset(new Net<Dtype>(param_.test_net(i)));
   }
   LOG(INFO) << "Solver scaffolding done.";
 }
@@ -72,7 +97,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // there's not enough memory to run the test net and crash, etc.; and to gauge
   // the effect of the first training iterations.
   if (param_.test_interval()) {
-    Test();
+    TestAll();
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
@@ -87,7 +112,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
     if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
-      Test();
+      TestAll();
     }
     // Check if we need to do snapshot
     if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
@@ -102,18 +127,28 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
 
 template <typename Dtype>
-void Solver<Dtype>::Test() {
-  LOG(INFO) << "Iteration " << iter_ << ", Testing net";
+void Solver<Dtype>::TestAll() {
+  for (int test_net_id = 0; test_net_id < test_nets_.size(); ++test_net_id) {
+    Test(test_net_id);
+  }
+}
+
+
+template <typename Dtype>
+void Solver<Dtype>::Test(const int test_net_id) {
+  LOG(INFO) << "Iteration " << iter_
+            << ", Testing net (#" << test_net_id << ")";
   // We need to set phase to test before running.
   Caffe::set_phase(Caffe::TEST);
-  CHECK_NOTNULL(test_net_.get())->ShareTrainedLayersWith(net_.get());
+  CHECK_NOTNULL(test_nets_[test_net_id].get())->
+      ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<Blob<Dtype>*> bottom_vec;
   Dtype loss = 0;
-  for (int i = 0; i < param_.test_iter(); ++i) {
+  for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
     Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
-        test_net_->Forward(bottom_vec, &iter_loss);
+        test_nets_[test_net_id]->Forward(bottom_vec, &iter_loss);
     if (param_.test_compute_loss()) {
       loss += iter_loss;
     }
@@ -135,12 +170,12 @@ void Solver<Dtype>::Test() {
     }
   }
   if (param_.test_compute_loss()) {
-    loss /= param_.test_iter();
+    loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
   for (int i = 0; i < test_score.size(); ++i) {
     LOG(INFO) << "Test score #" << i << ": "
-        << test_score[i] / param_.test_iter();
+        << test_score[i] / param_.test_iter(test_net_id);
   }
   Caffe::set_phase(Caffe::TRAIN);
 }

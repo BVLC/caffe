@@ -9,6 +9,7 @@
 #include <curand.h>
 #include <driver_types.h>  // cuda driver types
 #include <glog/logging.h>
+#include <omp.h>
 
 // Disable the copy and assignment operator for a class.
 #define DISABLE_COPY_AND_ASSIGN(classname) \
@@ -137,6 +138,13 @@ class Caffe {
   Brew mode_;
   Phase phase_;
   static shared_ptr<Caffe> singleton_;
+
+  // openmp
+  // inline static void set_num_threads(int num_threads) {
+  //    Get().num_threads_ = num_threads;}
+  // inline static int  get_num_threads() {
+  //    return Get().num_threads_; }
+  // int num_threads_;
 
  private:
   // The private constructor to avoid duplicate instantiation.

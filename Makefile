@@ -154,6 +154,16 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
+#	CXXFLAGS += -mavx -m64 
+#	CXXFLAGS += -mavx -m64 
+	CXXFLAGS += -mavx -m64 -fopenmp
+endif
+
+# icc
+ICC ?= 0
+ifeq ($(ICC), 1)
+	CXX := /opt/intel/bin/icc
+	CXXFLAGS := -xavx -m64 -std=c++11 -no-prec-div --openmp
 endif
 
 # OS X:
@@ -171,7 +181,7 @@ DEBUG ?= 0
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS := -DDEBUG -g -O0
 else
-	COMMON_FLAGS := -DNDEBUG -O2
+	COMMON_FLAGS := -DNDEBUG -g -O2
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -206,7 +216,7 @@ LIBRARY_DIRS += $(BLAS_LIB)
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
-NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+NVCCFLAGS := -ccbin=$(CXX) -w -Xcompiler -fPIC  $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
