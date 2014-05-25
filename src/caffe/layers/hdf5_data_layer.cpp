@@ -86,7 +86,7 @@ void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype HDF5DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
@@ -104,12 +104,13 @@ Dtype HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
       current_row_ = 0;
     }
-    memcpy(&(*top)[0]->mutable_cpu_data()[i * data_count],
-           &data_blob_.cpu_data()[current_row_ * data_count],
-           sizeof(Dtype) * data_count);
-    memcpy(&(*top)[1]->mutable_cpu_data()[i * label_data_count],
-            &label_blob_.cpu_data()[current_row_ * label_data_count],
-            sizeof(Dtype) * label_data_count);
+    this->device_->copy_from_cpu(
+        data_count, &data_blob_.cpu_data()[current_row_ * data_count],
+        &(*top)[0]->mutable_cpu_data()[i * data_count]);
+    this->device_->copy_from_cpu(
+        label_data_count,
+        &label_blob_.cpu_data()[current_row_ * label_data_count],
+        &(*top)[1]->mutable_cpu_data()[i * label_data_count]);
   }
   return Dtype(0.);
 }
