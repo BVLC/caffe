@@ -120,10 +120,10 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
-template <>
-void caffe_set(const int N, const float alpha, float* Y) {
+template <typename Dtype>
+void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
-    memset(Y, 0, sizeof(float) * N);
+    memset(Y, 0, sizeof(Dtype) * N);
     return;
   }
   for (int i = 0; i < N; ++i) {
@@ -131,16 +131,9 @@ void caffe_set(const int N, const float alpha, float* Y) {
   }
 }
 
-template <>
-void caffe_set(const int N, const double alpha, double* Y) {
-  if (alpha == 0) {
-    memset(Y, 0, sizeof(double) * N);
-    return;
-  }
-  for (int i = 0; i < N; ++i) {
-    Y[i] = alpha;
-  }
-}
+template void caffe_set<int>(const int N, const int alpha, int* Y);
+template void caffe_set<float>(const int N, const float alpha, float* Y);
+template void caffe_set<double>(const int N, const double alpha, double* Y);
 
 template <>
 void caffe_add_scalar(const int N, const float alpha, float* Y) {
