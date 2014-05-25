@@ -33,6 +33,7 @@ class Device {
                      const Dtype beta, Dtype* Y) = 0;
 
   virtual void copy(const int N, const Dtype *X, Dtype *Y) = 0;
+  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y) = 0;
 
   virtual void set(const int N, const Dtype alpha, Dtype *X) = 0;
 
@@ -101,6 +102,7 @@ class CPUDevice : public Device<Dtype> {
                      const Dtype beta, Dtype* Y);
 
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
+  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
 
   virtual void set(const int N, const Dtype alpha, Dtype *X);
 
@@ -167,6 +169,7 @@ class GPUDevice : public Device<Dtype> {
                      const Dtype beta, Dtype* Y);
 
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
+  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
 
   virtual void set(const int N, const Dtype alpha, Dtype *X);
 
