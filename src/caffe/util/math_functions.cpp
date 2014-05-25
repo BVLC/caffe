@@ -120,10 +120,10 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
-template <>
-void caffe_set(const int N, const float alpha, float* Y) {
+template <typename Dtype>
+void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
-    memset(Y, 0, sizeof(float) * N);
+    memset(Y, 0, sizeof(Dtype) * N);
     return;
   }
   for (int i = 0; i < N; ++i) {
@@ -131,16 +131,9 @@ void caffe_set(const int N, const float alpha, float* Y) {
   }
 }
 
-template <>
-void caffe_set(const int N, const double alpha, double* Y) {
-  if (alpha == 0) {
-    memset(Y, 0, sizeof(double) * N);
-    return;
-  }
-  for (int i = 0; i < N; ++i) {
-    Y[i] = alpha;
-  }
-}
+template void caffe_set<int>(const int N, const int alpha, int* Y);
+template void caffe_set<float>(const int N, const float alpha, float* Y);
+template void caffe_set<double>(const int N, const double alpha, double* Y);
 
 template <>
 void caffe_add_scalar(const int N, const float alpha, float* Y) {
@@ -380,6 +373,26 @@ void caffe_rng_bernoulli<double>(const int n, const double p, int* r);
 
 template
 void caffe_rng_bernoulli<float>(const int n, const float p, int* r);
+
+template <typename Dtype>
+void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GE(p, 0);
+  CHECK_LE(p, 1);
+  boost::bernoulli_distribution<Dtype> random_distribution(p);
+  boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
+  for (int i = 0; i < n; ++i) {
+    r[i] = static_cast<unsigned int>(variate_generator());
+  }
+}
+
+template
+void caffe_rng_bernoulli<double>(const int n, const double p, unsigned int* r);
+
+template
+void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
 
 template <>
 float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {
