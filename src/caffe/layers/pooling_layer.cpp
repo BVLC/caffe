@@ -84,9 +84,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       caffe_set(top_count, Dtype(-1), top_mask);
     } else {
       mask = max_idx_->mutable_cpu_data();
-      for (int i = 0; i < top_count; ++i) {
-        mask[i] = -1;
-      }
+      caffe_set(top_count, -1, mask);
     }
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
