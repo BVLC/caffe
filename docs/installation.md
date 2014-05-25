@@ -124,16 +124,14 @@ The prerequisite homebrew formulae are
 
 For each of these formulas, `brew edit FORMULA`, and add the ENV definitions as shown:
 
-```
-    def install
-        # ADD THE FOLLOWING:
-        ENV.append "CXXFLAGS", "-stdlib=libstdc++"
-        ENV.append "CFLAGS", "-stdlib=libstdc++"
-        ENV.append "LDFLAGS", "-stdlib=libstdc++ -lstdc++"
-        # The following is necessary because libtool likes to strip LDFLAGS:
-        ENV["CXX"] = "/usr/bin/clang -stdlib=libstdc++"
-        ...
-```
+      def install
+          # ADD THE FOLLOWING:
+          ENV.append "CXXFLAGS", "-stdlib=libstdc++"
+          ENV.append "CFLAGS", "-stdlib=libstdc++"
+          ENV.append "LDFLAGS", "-stdlib=libstdc++ -lstdc++"
+          # The following is necessary because libtool likes to strip LDFLAGS:
+          ENV["CXX"] = "/usr/bin/clang -stdlib=libstdc++"
+          ...
 
 To edit the formulae in turn, run
 
