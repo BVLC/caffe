@@ -41,7 +41,15 @@ void HDF5OutputLayer<Dtype>::SaveBlobs() {
 }
 
 template <typename Dtype>
-Dtype HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void HDF5OutputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  // TODO: no limit on the number of blobs
+  CHECK_EQ(bottom.size(), 2) << "HDF5OutputLayer takes two blobs as input.";
+  CHECK_EQ(top->size(), 0) << "HDF5OutputLayer takes no output blobs.";
+}
+
+template <typename Dtype>
+Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_GE(bottom.size(), 2);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
@@ -53,9 +61,11 @@ Dtype HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
 
   for (int i = 0; i < bottom[0]->num(); ++i) {
-    caffe_copy(data_datum_dim, &bottom[0]->cpu_data()[i * data_datum_dim],
+    this->device_->copy_from_cpu(
+        data_datum_dim, &bottom[0]->cpu_data()[i * data_datum_dim],
         &data_blob_.mutable_cpu_data()[i * data_datum_dim]);
-    caffe_copy(label_datum_dim, &bottom[0]->cpu_data()[i * label_datum_dim],
+    this->device_->copy_from_cpu(
+        label_datum_dim, &bottom[1]->cpu_data()[i * label_datum_dim],
         &label_blob_.mutable_cpu_data()[i * label_datum_dim]);
   }
   SaveBlobs();
