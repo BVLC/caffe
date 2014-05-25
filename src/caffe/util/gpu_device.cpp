@@ -38,6 +38,11 @@ void GPUDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
 }
 
 template<typename Dtype>
+void GPUDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
+  CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyHostToDevice));
+}
+
+template<typename Dtype>
 void GPUDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
   caffe_gpu_set<Dtype>(N, alpha, X);
 }
