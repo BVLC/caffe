@@ -21,14 +21,14 @@ void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype FlattenLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   (*top)[0]->ShareData(*bottom[0]);
   return Dtype(0.);
 }
 
 template <typename Dtype>
-void FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void FlattenLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   (*bottom)[0]->ShareDiff(*top[0]);
 }
