@@ -17,7 +17,8 @@ template <typename Dtype>
 __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int kernel_size, const int stride, Dtype* top_data, int* mask) {
+    const int kernel_size, const int stride, Dtype* top_data,
+    int* mask, Dtype* top_mask) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
@@ -39,7 +40,11 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
       }
     }
     top_data[index] = maxval;
-    mask[index] = maxidx;
+    if (mask) {
+      mask[index] = maxidx;
+    } else {
+      top_mask[index] = maxidx;
+    }
   }
 }
 
@@ -150,15 +155,22 @@ Dtype PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   int count = (*top)[0]->count();
-  int* mask;
+  // We'll output the mask to top[1] if it's of size >1.
+  const bool use_top_mask = top->size() > 1;
+  int* mask = NULL;
+  Dtype* top_mask = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
-    mask = max_idx_->mutable_gpu_data();
+    if (use_top_mask) {
+      top_mask = (*top)[1]->mutable_gpu_data();
+    } else {
+      mask = max_idx_->mutable_gpu_data();
+    }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom_data, bottom[0]->num(), channels_,
         height_, width_, pooled_height_, pooled_width_, kernel_size_, stride_,
-        top_data, mask);
+        top_data, mask, top_mask);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
@@ -197,9 +209,10 @@ Dtype PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
-    const int* mask, const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_size, const int stride, Dtype* bottom_diff) {
+    const int* mask, const Dtype* top_mask, const int num, const int channels,
+    const int height, const int width, const int pooled_height,
+    const int pooled_width, const int kernel_size, const int stride,
+    Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
@@ -212,12 +225,25 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     int pwstart = (w < kernel_size) ? 0 : (w - kernel_size) / stride + 1;
     int pwend = min(w / stride + 1, pooled_width);
     Dtype gradient = 0;
-    top_diff += (n * channels + c) * pooled_height * pooled_width;
-    mask += (n * channels + c) * pooled_height * pooled_width;
-    for (int ph = phstart; ph < phend; ++ph) {
-      for (int pw = pwstart; pw < pwend; ++pw) {
-        if (mask[ph * pooled_width + pw] == h * width + w)
-          gradient += top_diff[ph * pooled_width + pw];
+    int offset = (n * channels + c) * pooled_height * pooled_width;
+    top_diff += offset;
+    if (mask) {
+      mask += offset;
+      for (int ph = phstart; ph < phend; ++ph) {
+        for (int pw = pwstart; pw < pwend; ++pw) {
+          if (mask[ph * pooled_width + pw] == h * width + w) {
+            gradient += top_diff[ph * pooled_width + pw];
+          }
+        }
+      }
+    } else {
+      top_mask += offset;
+      for (int ph = phstart; ph < phend; ++ph) {
+        for (int pw = pwstart; pw < pwend; ++pw) {
+          if (top_mask[ph * pooled_width + pw] == h * width + w) {
+            gradient += top_diff[ph * pooled_width + pw];
+          }
+        }
       }
     }
     bottom_diff[index] = gradient;
@@ -300,14 +326,21 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   int count = (*bottom)[0]->count();
   CUDA_CHECK(cudaMemset(bottom_diff, 0, sizeof(Dtype) * count));
-  const int* mask;
+  // We'll output the mask to top[1] if it's of size >1.
+  const bool use_top_mask = top.size() > 1;
+  const int* mask = NULL;
+  const Dtype* top_mask = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
-    mask = max_idx_->gpu_data();
+    if (use_top_mask) {
+      top_mask = top[1]->gpu_data();
+    } else {
+      mask = max_idx_->gpu_data();
+    }
     caffe_gpu_set(count, Dtype(0.), bottom_diff);
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, mask, top[0]->num(), channels_,
+        count, top_diff, mask, top_mask, top[0]->num(), channels_,
         height_, width_, pooled_height_, pooled_width_,
         kernel_size_, stride_, bottom_diff);
     break;
