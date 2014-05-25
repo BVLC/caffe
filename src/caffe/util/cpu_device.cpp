@@ -38,6 +38,11 @@ void CPUDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
 }
 
 template<typename Dtype>
+void CPUDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
+  caffe_copy<Dtype>(N, X, Y);
+}
+
+template<typename Dtype>
 void CPUDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
   caffe_set<Dtype>(N, alpha, X);
 }
