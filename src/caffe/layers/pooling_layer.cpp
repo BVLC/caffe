@@ -19,7 +19,15 @@ template <typename Dtype>
 void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom.size(), 1) << "PoolingLayer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) << "PoolingLayer takes a single blob as output.";
+  if (this->layer_param_.pooling_param().pool() ==
+      PoolingParameter_PoolMethod_MAX) {
+    CHECK_GE(top->size(), 1)
+        << "MaxPoolingLayer takes at least one blob as output.";
+    CHECK_LE(top->size(), 2)
+        << "MaxPoolingLayer takes at most two blobs as output.";
+  } else {
+    CHECK_EQ(top->size(), 1) << "PoolingLayer takes a single blob as output.";
+  }
   kernel_size_ = this->layer_param_.pooling_param().kernel_size();
   stride_ = this->layer_param_.pooling_param().stride();
   pad_ = this->layer_param_.pooling_param().pad();
@@ -37,9 +45,12 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       width_ + 2 * pad_ - kernel_size_) / stride_)) + 1;
   (*top)[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
+  if (top->size() > 1) {
+    (*top)[1]->ReshapeLike(*(*top)[0]);
+  }
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
-      PoolingParameter_PoolMethod_MAX) {
+      PoolingParameter_PoolMethod_MAX && top->size() == 1) {
     max_idx_.reset(new Blob<int>(bottom[0]->num(), channels_,
                                  pooled_height_, pooled_width_));
   }
@@ -61,15 +72,23 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
   int top_count = (*top)[0]->count();
+  // We'll output the mask to top[1] if it's of size >1.
+  const bool use_top_mask = top->size() > 1;
   int* mask;
+  Dtype* top_mask;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
-  // Initialize
-    mask = max_idx_->mutable_cpu_data();
-    for (int i = 0; i < top_count; ++i) {
-      top_data[i] = -FLT_MAX;
-      mask[i] = -1;
+    // Initialize
+    if (use_top_mask) {
+      top_mask = (*top)[1]->mutable_cpu_data();
+      caffe_set(top_count, Dtype(-1), top_mask);
+    } else {
+      mask = max_idx_->mutable_cpu_data();
+      for (int i = 0; i < top_count; ++i) {
+        mask[i] = -1;
+      }
     }
+    caffe_set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
@@ -85,7 +104,11 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                 const int index = h * width_ + w;
                 if (bottom_data[index] > top_data[pool_index]) {
                   top_data[pool_index] = bottom_data[index];
-                  mask[pool_index] = index;
+                  if (use_top_mask) {
+                    top_mask[pool_index] = static_cast<Dtype>(index);
+                  } else {
+                    mask[pool_index] = index;
+                  }
                 }
               }
             }
@@ -94,7 +117,11 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         // compute offset
         bottom_data += bottom[0]->offset(0, 1);
         top_data += (*top)[0]->offset(0, 1);
-        mask += (*top)[0]->offset(0, 1);
+        if (use_top_mask) {
+          top_mask += (*top)[0]->offset(0, 1);
+        } else {
+          mask += (*top)[0]->offset(0, 1);
+        }
       }
     }
     break;
@@ -150,23 +177,36 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
-  memset(bottom_diff, 0, (*bottom)[0]->count() * sizeof(Dtype));
+  caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
+  // We'll output the mask to top[1] if it's of size >1.
+  const bool use_top_mask = top.size() > 1;
   const int* mask;
+  const Dtype* top_mask;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
-    mask = max_idx_->cpu_data();
+    if (use_top_mask) {
+      top_mask = top[1]->cpu_data();
+    } else {
+      mask = max_idx_->cpu_data();
+    }
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             const int index = ph * pooled_width_ + pw;
-            bottom_diff[mask[index]] += top_diff[index];
+            const int bottom_index =
+                use_top_mask ? top_mask[index] : mask[index];
+            bottom_diff[bottom_index] += top_diff[index];
           }
         }
         bottom_diff += (*bottom)[0]->offset(0, 1);
         top_diff += top[0]->offset(0, 1);
-        mask += top[0]->offset(0, 1);
+        if (use_top_mask) {
+          top_mask += top[0]->offset(0, 1);
+        } else {
+          mask += top[0]->offset(0, 1);
+        }
       }
     }
     break;
