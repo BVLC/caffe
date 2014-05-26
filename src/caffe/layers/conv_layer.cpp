@@ -82,7 +82,7 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
+  //Dtype* col_data = col_buffer_.mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
@@ -90,11 +90,11 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int n = 0; n < num_; ++n) {
     // First, im2col
     im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
-                      width_, kernel_size_, pad_, stride_, col_data);
+                      width_, kernel_size_, pad_, stride_, col_buffer_.mutable_cpu_data());
     // Second, innerproduct with groups
     for (int g = 0; g < group_; ++g) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-        (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+        (Dtype)1., weight + weight_offset * g, col_buffer_.mutable_cpu_data() + col_offset * g,
         (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
     }
     // third, add bias
@@ -116,7 +116,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
+  //Dtype* col_data = col_buffer_.mutable_cpu_data();
   Dtype* col_diff = col_buffer_.mutable_cpu_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
@@ -139,13 +139,13 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int n = 0; n < num_; ++n) {
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
-    im2col_cpu(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
-                      width_, kernel_size_, pad_, stride_, col_data);
+    //im2col_cpu(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
+      //                width_, kernel_size_, pad_, stride_, col_data);
     // gradient w.r.t. weight. Note that we will accumulate diffs.
     for (int g = 0; g < group_; ++g) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
         (Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
-        col_data + col_offset * g, (Dtype)1.,
+        col_buffer_.mutable_cpu_data() + col_offset * g, (Dtype)1.,
         weight_diff + weight_offset * g);
     }
     // gradient w.r.t. bottom data, if necessary
