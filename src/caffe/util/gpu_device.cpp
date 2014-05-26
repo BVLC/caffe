@@ -157,6 +157,22 @@ void GPUDevice<Dtype>::scale(const int N, const Dtype alpha,
   caffe_gpu_scale<Dtype>(N, alpha, x, y);
 }
 
+template<typename Dtype>
+void GPUDevice<Dtype>::im2col(const Dtype* data_im, const int channels,
+    const int height, const int width, const int ksize, const int pad,
+    const int stride, Dtype* data_col) {
+  im2col_gpu(data_im, channels, height, width, ksize, pad, stride,
+             data_col);
+}
+
+template<typename Dtype>
+void GPUDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
+    const int height, const int width, const int psize, const int pad,
+    const int stride, Dtype* data_im) {
+  col2im_gpu(data_col, channels, height, width, psize, pad, stride,
+             data_im);
+}
+
 INSTANTIATE_CLASS(GPUDevice);
 
 }  // namespace caffe
