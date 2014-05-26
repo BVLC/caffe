@@ -20,7 +20,7 @@ Caffe depends on several software packages.
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
 * [OpenCV](http://opencv.org/).
 * [Boost](http://www.boost.org/) (we have only tested 1.55)
-* `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`
+* `glog`, `gflags`, `protobuf` (suggest use 2.4.1), `leveldb`, `snappy`, `hdf5`
 * For the python wrapper
     * `python`, `numpy (>= 1.7)`, Boost-provided `boost.python`
 * For the MATLAB wrapper
