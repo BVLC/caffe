@@ -67,15 +67,13 @@ void GPUDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
 template<typename Dtype>
 void GPUDevice<Dtype>::add(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-  NOT_IMPLEMENTED;
-//	caffe_gpu_add<Dtype>(N, a, b, y);
+	caffe_gpu_add<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void GPUDevice<Dtype>::sub(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-  NOT_IMPLEMENTED;
-//	caffe_gpu_sub<Dtype>(N, a, b, y);
+	caffe_gpu_sub<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
