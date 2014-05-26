@@ -324,6 +324,7 @@ class WindowDataLayer : public Layer<Dtype> {
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
   bool multi_label_;
+  bool one_vs_all_;
   int num_classes_;
 };
 

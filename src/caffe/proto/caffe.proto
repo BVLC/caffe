@@ -474,6 +474,12 @@ message WindowDataParameter {
 >>>>>>> # This is a combination of 2 commits.
   // instead of labels = batch_size x 1 x 1 x 1
   optional bool multi_label = 12 [default = false];
+  // If true a positive foreground example for one class
+  //  is negative for the others label = -1
+  // If false a positive foreground example for one class
+  //  is ignored for the others label = 0
+  // Background examples are negative for all foreground classes
+  optional bool one_vs_all = 13 [default = true];
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters

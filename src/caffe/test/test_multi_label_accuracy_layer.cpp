@@ -72,9 +72,9 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
   }
 
   Dtype TestForward(Dtype threshold_ = Dtype(0)) {
-    const int count = this->blob_bottom_data_->count(); 
-    this->rand_vec_.reset(new SyncedMemory(count * sizeof(int)));    
-    int* mask = reinterpret_cast<int*>(this->rand_vec_->mutable_cpu_data());    
+    const int count = this->blob_bottom_data_->count();
+    this->rand_vec_.reset(new SyncedMemory(count * sizeof(int)));
+    int* mask = reinterpret_cast<int*>(this->rand_vec_->mutable_cpu_data());
     LayerParameter layer_param;
     FillerParameter data_filler_param;
     data_filler_param.set_std(1);
@@ -93,7 +93,7 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       // Fill the targets vector
       targets_filler.Fill(this->blob_bottom_targets_);
       // Make negatives into -1 and positives into 1
-      Dtype* targets = this->blob_bottom_targets_->mutable_cpu_data();          
+      Dtype* targets = this->blob_bottom_targets_->mutable_cpu_data();
       caffe_cpu_sign(count, targets, targets);
       // Add some 0s as in dropout
       caffe_rng_bernoulli(count, 1. - threshold_, mask);
@@ -103,7 +103,7 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       MultiLabelAccuracyLayer<Dtype> layer(layer_param);
       layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
       Dtype layer_loss =
-          layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));      
+          layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
       const int num = this->blob_bottom_data_->num();
       const Dtype* blob_bottom_data = this->blob_bottom_data_->cpu_data();
       const Dtype* blob_bottom_targets =
@@ -131,14 +131,14 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithoutZeros) {
   // Should use all the samples, since no label = 0
   // The loss should be positive and greater than 1
   TypeParam loss = this->TestForward(TypeParam(0));
-  CHECK_GE(loss,1) << "loss should positive and greater than 1";
+  CHECK_GE(loss, 1) << "loss should positive and greater than 1";
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithHalfZeros) {
   Caffe::set_mode(Caffe::CPU);
   // Should use half of the samples, since half of labels are 0
   TypeParam loss = this->TestForward(TypeParam(0.5));
-  CHECK_GE(loss,0) << "loss should positive";
+  CHECK_GE(loss, 0) << "loss should positive";
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithAllZeros) {
@@ -147,8 +147,8 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithAllZeros) {
   // The loss should be 0 when we ignore all the labels
   TypeParam eps = 2e-2;
   TypeParam loss = this->TestForward(TypeParam(1));
-  CHECK_GE(loss,0) << "loss should positive";
-  EXPECT_NEAR(loss,eps) << "loss should be close to 0";
+  CHECK_GE(loss, 0) << "loss should positive";
+  EXPECT_NEAR(loss, eps) << "loss should be close to 0";
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPU) {

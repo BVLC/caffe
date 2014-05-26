@@ -56,12 +56,14 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   cv::Size cv_crop_size(crop_size, crop_size);
   const string& crop_mode = layer->layer_param_.window_data_param().crop_mode();
   const bool multi_label_ = layer->multi_label_;
+  const bool one_vs_all_ = layer->one_vs_all_;
   const int num_classes_ = layer->num_classes_;
 
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
   memset(top_data, 0, sizeof(Dtype)*layer->prefetch_data_->count());
+  memset(top_label, 0, sizeof(Dtype)*layer->prefetch_label_->count());
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
@@ -218,8 +220,17 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
             top_label[item_id * num_classes_ + l] = -1;
           }
         } else {
-          // If it is foreground, then label > 0 and it is positive
-          // only the appropiate class, and should be ignored by the other classes
+          CHECK_GT(label, 0) << "label should be greater than 0";
+          CHECK_LE(label, num_classes_) <<
+            "label should be smaller than num_classes";
+          // If it is foreground, then label > 0
+          if (one_vs_all_) {
+            // It should be negative for the other classes
+            for (int l = 0; l < num_classes_; ++l) {
+              top_label[item_id * num_classes_ + l] = -1;
+            }
+          }
+          // It is positive only forthe appropiate class
           top_label[item_id * num_classes_ + label - 1] = 1;
         }
       } else {
@@ -299,7 +310,9 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << "  foreground sampling fraction: "
       << this->layer_param_.window_data_param().fg_fraction() << std::endl
       << "  produce multi-label: "
-      << this->layer_param_.window_data_param().multi_label();
+      << this->layer_param_.window_data_param().multi_label() << std::endl
+      << "  one_vs_all: "
+      << this->layer_param_.window_data_param().one_vs_all();
 
 
   std::ifstream infile(this->layer_param_.window_data_param().source().c_str());
@@ -310,7 +323,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   label_hist.insert(std::make_pair(0, 0));
 
   multi_label_ = this->layer_param_.window_data_param().multi_label();
-
+  one_vs_all_ = this->layer_param_.window_data_param().one_vs_all();
   string hashtag;
   int image_index, channels;
   if (!(infile >> hashtag >> image_index)) {
@@ -414,7 +427,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     (*top)[1]->Reshape(batch_size, 1, 1, 1);
     prefetch_label_.reset(
         new Blob<Dtype>(batch_size, 1, 1, 1));
-  } 
+  }
 
   // check if we want to have mean
   if (this->layer_param_.window_data_param().has_mean_file()) {
