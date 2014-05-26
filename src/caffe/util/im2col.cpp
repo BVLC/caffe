@@ -10,7 +10,12 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
-#define THREAD_NUM 4
+
+#ifdef THREADS
+#define THREAD_NUM THREADS
+#else 
+#define THREAD_NUM 1
+#endif
 
 template <typename Dtype>
 struct im2col_data
