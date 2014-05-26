@@ -341,12 +341,12 @@ $(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
 	@ echo
 
 $(TOOL_BUILD_DIR)/%.o: tools/%.cpp $(PROTO_GEN_HEADER) | $(TOOL_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
 $(EXAMPLE_BUILD_DIR)/%.o: examples/%.cpp $(PROTO_GEN_HEADER) \
 		| $(EXAMPLE_BUILD_DIRS)
-	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
 $(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS)
