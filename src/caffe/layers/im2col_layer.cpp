@@ -30,7 +30,8 @@ Dtype Im2colLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->const_data();
   Dtype* top_data = (*top)[0]->mutable_data();
   for (int n = 0; n < bottom[0]->num(); ++n) {
-    im2col(bottom_data + bottom[0]->offset(n), channels_, height_,
+    this->device_->im2col(
+        bottom_data + bottom[0]->offset(n), channels_, height_,
         width_, kernel_size_, pad_, stride_, top_data + (*top)[0]->offset(n));
   }
   return Dtype(0.);
@@ -42,7 +43,8 @@ void Im2colLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->const_diff();
   Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
   for (int n = 0; n < top[0]->num(); ++n) {
-    col2im(top_diff + top[0]->offset(n), channels_, height_, width_,
+    this->device_->col2im(
+        top_diff + top[0]->offset(n), channels_, height_, width_,
         kernel_size_, pad_, stride_, bottom_diff + (*bottom)[0]->offset(n));
   }
 }
