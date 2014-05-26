@@ -105,12 +105,12 @@ Dtype HDF5DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       current_row_ = 0;
     }
     this->device_->copy_from_cpu(
-        data_count, &data_blob_.cpu_data()[current_row_ * data_count],
-        &(*top)[0]->mutable_cpu_data()[i * data_count]);
+        data_count, &data_blob_.const_data()[current_row_ * data_count],
+        &(*top)[0]->mutable_data()[i * data_count]);
     this->device_->copy_from_cpu(
         label_data_count,
-        &label_blob_.cpu_data()[current_row_ * label_data_count],
-        &(*top)[1]->mutable_cpu_data()[i * label_data_count]);
+        &label_blob_.const_data()[current_row_ * label_data_count],
+        &(*top)[1]->mutable_data()[i * label_data_count]);
   }
   return Dtype(0.);
 }
