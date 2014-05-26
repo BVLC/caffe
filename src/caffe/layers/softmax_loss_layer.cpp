@@ -32,13 +32,13 @@ void SoftmaxWithLossLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype SoftmaxWithLossLayer<Dtype>::Forward_cpu(
+Dtype SoftmaxWithLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   // The forward pass computes the softmax prob values.
   softmax_bottom_vec_[0] = bottom[0];
   softmax_layer_->Forward(softmax_bottom_vec_, &softmax_top_vec_);
-  const Dtype* prob_data = prob_.cpu_data();
-  const Dtype* label = bottom[1]->cpu_data();
+  const Dtype* prob_data = prob_.const_data();
+  const Dtype* label = bottom[1]->const_data();
   int num = prob_.num();
   int dim = prob_.count() / num;
   Dtype loss = 0;
@@ -74,7 +74,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       bottom_diff[i * dim + static_cast<int>(label[i])] -= 1;
     }
     // Scale down gradient
-    caffe_scal(prob_.count(), Dtype(1) / num, bottom_diff);
+    this->device_scal(prob_.count(), Dtype(1) / num, bottom_diff);
   }
 }
 
