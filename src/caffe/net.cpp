@@ -42,7 +42,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   name_ = param.name();
   map<string, int> blob_name_to_idx;
   set<string> available_blobs;
-  int num_layers = param.layers_size();
   CHECK_EQ(param.input_size() * 4, param.input_dim_size())
       << "Incorrect input blob dimension specifications.";
   memory_used_ = 0;
@@ -58,7 +57,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   bottom_id_vecs_.resize(param.layers_size());
   top_id_vecs_.resize(param.layers_size());
   for (int layer_id = 0; layer_id < param.layers_size(); ++layer_id) {
-    bool in_place = false;
     const LayerParameter& layer_param = param.layers(layer_id);
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
@@ -198,7 +196,6 @@ int Net<Dtype>::AppendBottom(const NetParameter& param,
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
   bottom_id_vecs_[layer_id].push_back(blob_id);
   available_blobs->erase(blob_name);
-  bool need_backward = param.force_backward() || blob_need_backward_[blob_id];
   return blob_id;
 }
 
