@@ -23,7 +23,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::FurtherSetUp(
 }
 
 template <typename Dtype>
-Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
+Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   // The forward pass computes the sigmoid outputs.
   sigmoid_bottom_vec_[0] = bottom[0];
@@ -46,7 +46,7 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
+void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
@@ -60,9 +60,9 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
     const Dtype* target = (*bottom)[1]->cpu_data();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-    caffe_sub(count, sigmoid_output_data, target, bottom_diff);
+    this->device_->sub(count, sigmoid_output_data, target, bottom_diff);
     // Scale down gradient
-    caffe_scal(count, Dtype(1) / num, bottom_diff);
+    this->device_->scal(count, Dtype(1) / num, bottom_diff);
   }
 }
 
