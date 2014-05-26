@@ -27,7 +27,7 @@ void SplitLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype SplitLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < top->size(); ++i) {
     (*top)[i]->ShareData(*bottom[0]);
@@ -36,15 +36,21 @@ Dtype SplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+<<<<<<< HEAD
 void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[0]) {
+=======
+void SplitLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+  if (propagate_down) {
+>>>>>>> Unify the CPU/GPU Forward/Backward of the SplitLayer
     (*bottom)[0]->ShareDiff(*top[0]);
     // Add remaining top blob diffs.
-    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
     for (int i = 1; i < top.size(); ++i) {
-      const Dtype* top_diff = top[i]->cpu_diff();
-      caffe_axpy(count_, Dtype(1.), top_diff, bottom_diff);
+      const Dtype* top_diff = top[i]->const_diff();
+      this->device_->axpy(count_, Dtype(1.), top_diff, bottom_diff);
     }
   }
 }
