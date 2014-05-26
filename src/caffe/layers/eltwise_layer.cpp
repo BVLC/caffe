@@ -41,22 +41,24 @@ void EltwiseLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype EltwiseLayer<Dtype>::Forward_cpu(
+Dtype EltwiseLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
-    caffe_mul(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(), top_data);
+    this->device_->mul(count, bottom[0]->const_data(),
+                       bottom[1]->const_data(), top_data);
     for (int i = 2; i < bottom.size(); ++i) {
-      caffe_mul(count, top_data, bottom[i]->cpu_data(), top_data);
+      this->device_->mul(count, top_data, bottom[i]->const_data(), top_data);
     }
     break;
   case EltwiseParameter_EltwiseOp_SUM:
-    caffe_set(count, Dtype(0), top_data);
+    this->device_->set(count, Dtype(0), top_data);
     // TODO(shelhamer) does BLAS optimize to sum for coeff = 1?
     for (int i = 0; i < bottom.size(); ++i) {
-      caffe_axpy(count, coeffs_[i], bottom[i]->cpu_data(), top_data);
+      this->device_->axpy(count, coeffs_[i], bottom[i]->const_data(),
+                          top_data);
     }
     break;
   default:
@@ -66,25 +68,25 @@ Dtype EltwiseLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void EltwiseLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const int count = top[0]->count();
-  const Dtype* top_data = top[0]->cpu_data();
-  const Dtype* top_diff = top[0]->cpu_diff();
+  const Dtype* top_data = top[0]->const_data();
+  const Dtype* top_diff = top[0]->const_diff();
   for (int i = 0; i < bottom->size(); ++i) {
     if (propagate_down[i]) {
-      const Dtype* bottom_data = (*bottom)[i]->cpu_data();
-      Dtype* bottom_diff = (*bottom)[i]->mutable_cpu_diff();
+      const Dtype* bottom_data = (*bottom)[i]->const_data();
+      Dtype* bottom_diff = (*bottom)[i]->mutable_diff();
       switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD:
-        caffe_div(count, top_data, bottom_data, bottom_diff);
-        caffe_mul(count, bottom_diff, top_diff, bottom_diff);
+        this->device_->div(count, top_data, bottom_data, bottom_diff);
+        this->device_->mul(count, bottom_diff, top_diff, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_SUM:
         if (coeffs_[i] == Dtype(1)) {
-          caffe_copy(count, top_diff, bottom_diff);
+          this->device_->copy(count, top_diff, bottom_diff);
         } else {
-          caffe_cpu_scale(count, coeffs_[i], top_diff, bottom_diff);
+          this->device_->scale(count, coeffs_[i], top_diff, bottom_diff);
         }
         break;
       default:
