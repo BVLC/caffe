@@ -202,6 +202,37 @@ class TanHLayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
+/* ThresholdLayer
+  Outputs 1 if value in input is above threshold, 0 otherwise.
+  The defult threshold = 0, which means positive values would become 1 and 
+  negative or 0, would become 0
+
+  y = 1 if x > threshold
+  y = 0 if x <= threshold
+  
+  y' = don't differenciable
+*/
+template <typename Dtype>
+class ThresholdLayer : public NeuronLayer<Dtype> {
+ public:
+  explicit ThresholdLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    NOT_IMPLEMENTED;
+  }
+
+  Dtype threshold_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_NEURON_LAYERS_HPP_
