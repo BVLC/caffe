@@ -215,7 +215,7 @@ class TanHLayer : public NeuronLayer<Dtype> {
 template <typename Dtype>
 class ThresholdLayer : public NeuronLayer<Dtype> {
  public:
-  explicit DropoutLayer(const LayerParameter& param)
+  explicit ThresholdLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
