@@ -43,6 +43,11 @@ void MultiLabelAccuracyLayer<Dtype>::SetUp(
     // top[3] = Loss
     (*top)[0]->Reshape(1, 4, 1, 1);
   }
+  LOG(INFO) << "Positive weight: " <<
+    this->layer_param_.multi_label_accuracy_param().positive_weight();
+  LOG(INFO) << "Positive weight: " << 
+    this->layer_param_.multi_label_accuracy_param().negative_weight();
+
 }
 
 template <typename Dtype>
@@ -119,11 +124,11 @@ void MultiLabelAccuracyLayer<Dtype>::Backward_cpu(
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   for (int i = 0; i < count; ++i) {
     if (bottom_label[i] != 0) {
-      // bottom_diff[i] = sigmoid(bottom_data[i]) - (bottom_label[i] > 0);
+      bottom_diff[i] = sigmoid(bottom_data[i]) - (bottom_label[i] > 0);
       if (bottom_label[i] > 0) {
-        bottom_diff[i] = positive_weight_ * (sigmoid(bottom_data[i]) - 1);
+        bottom_diff[i] *= positive_weight_;
       } else {
-        bottom_diff[i] = negative_weight_ * sigmoid(bottom_data[i]);
+        bottom_diff[i] *= negative_weight_;
       }
     } else {
       bottom_diff[i] = 0;
