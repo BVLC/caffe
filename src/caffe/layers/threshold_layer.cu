@@ -33,7 +33,7 @@ Dtype ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 
-INSTANTIATE_CLASS(ReLULayer);
+INSTANTIATE_CLASS(ThresholdLayer);
 
 
 }  // namespace caffe

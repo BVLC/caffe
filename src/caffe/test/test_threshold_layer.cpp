@@ -99,52 +99,52 @@ TYPED_TEST(ThresholdLayerTest, TestCPU2) {
   }
 }
 
-// TYPED_TEST(ThresholdLayerTest, TestGPU) {
-//   LayerParameter layer_param;
-//   Caffe::set_mode(Caffe::GPU);
-//   ThresholdLayer<TypeParam> layer(layer_param);
-//   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-//   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-//   // Now, check values
-//   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-//   const TypeParam* top_data = this->blob_top_->cpu_data();
-//   const TypeParam threshold_ = layer_param.threshold_param().threshold();
-//   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-//     EXPECT_GE(top_data[i], 0.);
-//     EXPECT_LE(top_data[i], 1.);
-//     if (top_data[i] == 0) {
-//       EXPECT_LE(bottom_data[i], threshold_);
-//     }
-//     if (top_data[i] == 1) {
-//       EXPECT_GT(bottom_data[i], threshold_);
-//     }
-//   }
-// }
+TYPED_TEST(ThresholdLayerTest, TestGPU) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::GPU);
+  ThresholdLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  const TypeParam threshold_ = layer_param.threshold_param().threshold();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_LE(top_data[i], 1.);
+    if (top_data[i] == 0) {
+      EXPECT_LE(bottom_data[i], threshold_);
+    }
+    if (top_data[i] == 1) {
+      EXPECT_GT(bottom_data[i], threshold_);
+    }
+  }
+}
 
-// TYPED_TEST(ThresholdLayerTest, TestGPU2) {
-//   LayerParameter layer_param;
-//   Caffe::set_mode(Caffe::GPU);
-//   ThresholdParameter* threshold_param =
-//     layer_param.mutable_threshold_param();
-//   threshold_param->set_threshold(0.5);
-//   ThresholdLayer<TypeParam> layer(layer_param);
-//   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-//   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-//   // Now, check values
-//   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-//   const TypeParam* top_data = this->blob_top_->cpu_data();
-//   const TypeParam threshold_ = layer_param.threshold_param().threshold();
-//   EXPECT_FLOAT_EQ(threshold_, 0.5);
-//   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-//     EXPECT_GE(top_data[i], 0.);
-//     EXPECT_LE(top_data[i], 1.);
-//     if (top_data[i] == 0) {
-//       EXPECT_LE(bottom_data[i], threshold_);
-//     }
-//     if (top_data[i] == 1) {
-//       EXPECT_GT(bottom_data[i], threshold_);
-//     }
-//   }
-// }
+TYPED_TEST(ThresholdLayerTest, TestGPU2) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::GPU);
+  ThresholdParameter* threshold_param =
+    layer_param.mutable_threshold_param();
+  threshold_param->set_threshold(0.5);
+  ThresholdLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  const TypeParam threshold_ = layer_param.threshold_param().threshold();
+  EXPECT_FLOAT_EQ(threshold_, 0.5);
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], 0.);
+    EXPECT_LE(top_data[i], 1.);
+    if (top_data[i] == 0) {
+      EXPECT_LE(bottom_data[i], threshold_);
+    }
+    if (top_data[i] == 1) {
+      EXPECT_GT(bottom_data[i], threshold_);
+    }
+  }
+}
 
 }  // namespace caffe
