@@ -3,10 +3,9 @@ project( Caffe )
 
 ###    Build Options     ##########################################################################
 
-option(PYTHON "Build Python wrapper" OFF)
-option(MATLAB "Build Matlab wrapper" OFF)
-option(TOOLS "Build tools" ON)
-option(EXAMPLES "Build examples" ON)
+option(BUILD_PYTHON "Build Python wrapper" OFF)
+option(BUILD_MATLAB "Build Matlab wrapper" OFF)
+option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
 
 if(NOT BLAS)
@@ -48,23 +47,19 @@ include_directories(${CUDA_INCLUDE_DIRS})
 
 add_subdirectory(gtest)
 add_subdirectory(caffe)
+add_subdirectory(tools)
 
-if(TOOLS)
-  message(STATUS "Tools enabled")
-  add_subdirectory(tools)
-endif()
-
-if(EXAMPLES)
+if(BUILD_EXAMPLES)
     message(STATUS "Examples enabled")
     add_subdirectory(examples)
 endif()
 
-if(PYTHON)
+if(BUILD_PYTHON)
     message(STATUS "Python enabled")
     add_subdirectory(python)
 endif()
 
-if(MATLAB)
+if(BUILD_MATLAB)
     message(STATUS "Matlab enabled")
     add_subdirectory(matlab)
 endif()
