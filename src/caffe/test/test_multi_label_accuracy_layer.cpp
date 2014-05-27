@@ -169,8 +169,8 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPUPositiveWeight) {
   multi_label_accuracy_param->set_positive_weight(2.0);
   MultiLabelAccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(multi_label_accuracy_param->positive_weight(), 2.0);
-  EXPECT_EQ(multi_label_accuracy_param->negative_weight(), 1.0);
+  EXPECT_EQ(layer_param.multi_label_accuracy_param().positive_weight(), 2.0);
+  EXPECT_EQ(layer_param.multi_label_accuracy_param().negative_weight(), 2.0);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);
@@ -184,8 +184,8 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPUNegativeWeight) {
   multi_label_accuracy_param->set_negative_weight(2.0);
   MultiLabelAccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(multi_label_accuracy_param->positive_weight(), 1.0);
-  EXPECT_EQ(multi_label_accuracy_param->negative_weight(), 2.0);
+  EXPECT_EQ(layer_param.multi_label_accuracy_param().positive_weight(), 2.0);
+  EXPECT_EQ(layer_param.multi_label_accuracy_param().negative_weight(), 2.0);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);
@@ -200,8 +200,8 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPUBothWeights) {
   multi_label_accuracy_param->set_negative_weight(2.0);
   MultiLabelAccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(multi_label_accuracy_param->positive_weight(), 2.0);
-  EXPECT_EQ(multi_label_accuracy_param->negative_weight(), 2.0);
+  EXPECT_EQ(layer_param.multi_label_accuracy_param().positive_weight(), 2.0);
+  EXPECT_EQ(layer_param.multi_label_accuracy_param().negative_weight(), 2.0);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);

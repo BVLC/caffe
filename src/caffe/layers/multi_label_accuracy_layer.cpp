@@ -37,17 +37,12 @@ void MultiLabelAccuracyLayer<Dtype>::SetUp(
     << "The data and label should have the same width";
   if (top->size() == 1) {
     // If top is used then it will contain:
-    // top[0] = Sensitivity (TP/P), 
+    // top[0] = Sensitivity (TP/P),
     // top[1] = Specificity (TN/N),
     // top[2] = Harmonic Mean of Sens and Spec, 2/(P/TP+N/TN),
     // top[3] = Loss
     (*top)[0]->Reshape(1, 4, 1, 1);
   }
-  LOG(INFO) << "Positive weight: " <<
-    this->layer_param_.multi_label_accuracy_param().positive_weight();
-  LOG(INFO) << "Positive weight: " << 
-    this->layer_param_.multi_label_accuracy_param().negative_weight();
-
 }
 
 template <typename Dtype>
@@ -102,7 +97,7 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
     (*top)[0]->mutable_cpu_data()[0] = true_positive / count_pos;
     (*top)[0]->mutable_cpu_data()[1] = true_negative / count_neg;
     (*top)[0]->mutable_cpu_data()[2] =
-      2 / ( count_pos / true_positive + count_neg / true_negative);
+      2 / (count_pos / true_positive + count_neg / true_negative);
     (*top)[0]->mutable_cpu_data()[3] = total_loss / num;
   }
   // MultiLabelAccuracy can be used as a loss function.
