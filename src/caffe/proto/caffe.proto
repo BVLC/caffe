@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 31 (last added: ARGMAX)
+  // LayerType next available ID: 32 (last added: THRESHOLD)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -163,6 +163,7 @@ message LayerParameter {
     SPLIT = 22;
     TANH = 23;
     WINDOW_DATA = 24;
+    THRESHOLD = 31;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -175,6 +176,7 @@ message LayerParameter {
   repeated float weight_decay = 8;
 
   // Parameters for particular layer types.
+  // Parameters next available ID: 26 (last added: ThresholdParameter)
   optional ArgMaxParameter argmax_param = 23;
   optional ConcatParameter concat_param = 9;
   optional ConvolutionParameter convolution_param = 10;
@@ -191,6 +193,7 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
+  optional ThresholdParameter threshold_param = 25;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -259,6 +262,11 @@ message EltwiseParameter {
   }
   optional EltwiseOp operation = 1 [default = SUM]; // element-wise operation
   repeated float coeff = 2; // blob-wise coefficient for SUM operation
+}
+
+// Message that stores parameters used by ThresholdLayer
+message ThresholdParameter {
+  optional float threshold = 1 [default = 0]; // Strictly Positive values
 }
 
 // Message that stores parameters used by HDF5DataLayer
