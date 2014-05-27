@@ -2,7 +2,7 @@ project( CaffeSrc )
 
 
 #    Threads
-find_package(Threads) 
+find_package(Threads REQUIRED) 
 
 #	Google-glog
 find_package(Glog REQUIRED)
@@ -55,20 +55,25 @@ include_directories( ${Boost_INCLUDE_DIR} )
 link_directories( ${Boost_LIBRARY_DIRS} )
 
 add_subdirectory(proto)
-add_subdirectory(layers)
-add_subdirectory(util)
 
-add_library(caffe
-        blob.cpp
-        common.cpp
-        layer_factory.cpp
-        net.cpp
-        solver.cpp
-        syncedmem.cpp
-)
+#    Recursively sources
 
-target_link_libraries(caffe layers proto util  
+#    cuda sources 
+file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
 
+#    test sources
+file(GLOB_RECURSE TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
+
+#    all cpp sources
+file(GLOB_RECURSE CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+
+#    remove test sources from cpp sources
+list(REMOVE_ITEM CPP_SOURCES ${TEST_SOURCES})
+
+add_library(caffe ${CPP_SOURCES})
+cuda_add_library(caffe_cu ${CU_SOURCES})
+
+target_link_libraries(caffe caffe_cu proto
         ${GLOG_LIBRARIES}
         ${CUDA_curand_LIBRARY}
         ${HDF5_LIBRARIES} 
@@ -80,7 +85,6 @@ target_link_libraries(caffe layers proto util
 )
 
 add_subdirectory(test)
-
 
 ###    Install    #################################################################################
 

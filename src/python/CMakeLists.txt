@@ -8,7 +8,9 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(Boost 1.49 COMPONENTS python REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-add_library(pycaffe SHARED caffe/_caffe.cpp)
+file(GLOB_RECURSE Python_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+
+add_library(pycaffe SHARED ${Python_SOURCES})
 target_link_libraries(pycaffe caffe ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
 
 ###    Install    #################################################################################
