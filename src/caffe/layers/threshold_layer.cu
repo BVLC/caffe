@@ -11,7 +11,8 @@ using std::max;
 namespace caffe {
 
 template <typename Dtype>
-__global__ void ThresholdForward(const int n, const, threshold, const Dtype* in, Dtype* out) {
+__global__ void ThresholdForward(const int n, const Dtype threshold,
+    const Dtype* in, Dtype* out) {
   CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] > threshold ? 1 : 0;
   }
