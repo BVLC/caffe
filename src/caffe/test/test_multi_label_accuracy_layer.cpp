@@ -148,12 +148,52 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithAllZeros) {
   TypeParam eps = 2e-2;
   TypeParam loss = this->TestForward(TypeParam(1));
   CHECK_GE(loss, 0) << "loss should positive";
-  EXPECT_NEAR(loss, eps) << "loss should be close to 0";
+  EXPECT_NEAR(loss, 0, eps) << "loss should be close to 0";
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
+  SigmoidCrossEntropyLossLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
+  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_), 0, -1, -1);
+}
+
+TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPUPositiveWeight) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  MultiLabelAccuracyParameter* multi_label_accuracy_param =
+      layer_param.mutable_multi_label_accuracy_param();
+  multi_label_accuracy_param->set_positive_weight(2.0);
+  SigmoidCrossEntropyLossLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
+  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_), 0, -1, -1);
+}
+
+TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPUNegativeWeight) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  MultiLabelAccuracyParameter* multi_label_accuracy_param =
+      layer_param.mutable_multi_label_accuracy_param();
+  multi_label_accuracy_param->set_negative_weight(2.0);
+  SigmoidCrossEntropyLossLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
+  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_), 0, -1, -1);
+}
+
+TYPED_TEST(MultiLabelAccuracyLayerTest, TestGradientCPUBothWeights) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  MultiLabelAccuracyParameter* multi_label_accuracy_param =
+      layer_param.mutable_multi_label_accuracy_param();
+  multi_label_accuracy_param->set_positive_weight(2.0);
+  multi_label_accuracy_param->set_negative_weight(2.0);
   SigmoidCrossEntropyLossLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);

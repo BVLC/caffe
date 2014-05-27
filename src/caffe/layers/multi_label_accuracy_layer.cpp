@@ -110,12 +110,21 @@ void MultiLabelAccuracyLayer<Dtype>::Backward_cpu(
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
   const Dtype* bottom_label = (*bottom)[1]->cpu_data();
+  const Dtype positive_weight_ =
+    this->layer_param_.multi_label_accuracy_param().positive_weight();
+  const Dtype negative_weight_ =
+    this->layer_param_.multi_label_accuracy_param().negative_weight();
   const int count = (*bottom)[0]->count();
   const int num = (*bottom)[0]->num();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   for (int i = 0; i < count; ++i) {
     if (bottom_label[i] != 0) {
-      bottom_diff[i] = sigmoid(bottom_data[i]) - (bottom_label[i] > 0);
+      // bottom_diff[i] = sigmoid(bottom_data[i]) - (bottom_label[i] > 0);
+      if (bottom_label[i] > 0) {
+        bottom_diff[i] = positive_weight_ * (sigmoid(bottom_data[i]) - 1);
+      } else {
+        bottom_diff[i] = negative_weight_ * sigmoid(bottom_data[i]);
+      }
     } else {
       bottom_diff[i] = 0;
     }
