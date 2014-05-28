@@ -15,8 +15,13 @@
 using std::cout;
 using std::endl;
 
-#define CUDA_TEST_DEVICE -1
-#define CMAKE_SOURCE_DIR "/home/adam/workspace/caffe/src/"
+#ifdef CMAKE_BUILD
+	#include "cmake_test_defines.hpp.cmake"
+#else
+	#define CUDA_TEST_DEVICE -1
+	#define CMAKE_SOURCE_DIR "src/"
+	#define CMAKE_EXT ""
+#endif
 
 int main(int argc, char** argv);
 

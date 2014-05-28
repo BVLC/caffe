@@ -7,14 +7,15 @@ cmake_minimum_required(VERSION 2.8)
 project( Test )
 
 #    Set CUDA Device number and CMAKE_SOURCE_DIR
+add_definitions(-DCMAKE_BUILD)
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_caffe_main.hpp.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_caffe_main.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.cmake
 )
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.cmake
 )
 
 include_directories(
@@ -34,5 +35,5 @@ foreach(source ${TEST_SOURCES})
     
 endforeach()
 
-add_executable(test ${TEST_SOURCES} ${TEST_MAIN})
-target_link_libraries(test gtest caffe)
+add_executable(test.test ${TEST_SOURCES} ${TEST_MAIN})
+target_link_libraries(test.test gtest caffe)
