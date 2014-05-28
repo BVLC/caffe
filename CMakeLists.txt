@@ -37,7 +37,7 @@ include_directories(${${PROJECT_NAME}_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 #	CMake module path for custom module finding
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts)
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeScripts)
 
 #    CUDA is required globally
 find_package(CUDA 5.5 REQUIRED)

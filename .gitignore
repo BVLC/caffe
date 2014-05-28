@@ -66,4 +66,4 @@ _site
 
 
 # CMake generated files
-*.cmake
+*.gen.cmake

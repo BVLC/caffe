@@ -16,7 +16,7 @@ using std::cout;
 using std::endl;
 
 #ifdef CMAKE_BUILD
-	#include "cmake_test_defines.hpp.cmake"
+	#include "cmake_test_defines.hpp.gen.cmake"
 #else
 	#define CUDA_TEST_DEVICE -1
 	#define CMAKE_SOURCE_DIR "src/"
