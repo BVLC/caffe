@@ -15,7 +15,7 @@ configure_file(
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.hpp.gen.cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.gen.cmake
 )
 
 include_directories(
