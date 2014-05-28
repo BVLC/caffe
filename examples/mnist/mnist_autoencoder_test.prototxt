@@ -1,0 +1,145 @@
+name: "MNISTAutoencoder"
+layers {
+  top: "data"
+  name: "data"
+  type: DATA
+  data_param {
+    source: "mnist-test-leveldb"
+    scale: 0.0039215684
+    batch_size: 100
+  }
+}
+layers {
+  bottom: "data"
+  top: "flatdata"
+  name: "flatdata"
+  type: FLATTEN
+}
+layers {
+  bottom: "data"
+  top: "encode1"
+  name: "encode1"
+  type: INNER_PRODUCT
+  inner_product_param {
+    num_output: 1000
+  }
+}
+layers {
+  bottom: "encode1"
+  top: "encode1neuron"
+  name: "encode1neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "encode1neuron"
+  top: "encode2"
+  name: "encode2"
+  type: INNER_PRODUCT
+  inner_product_param {
+    num_output: 500
+  }
+}
+layers {
+  bottom: "encode2"
+  top: "encode2neuron"
+  name: "encode2neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "encode2neuron"
+  top: "encode3"
+  name: "encode3"
+  type: INNER_PRODUCT
+  inner_product_param {
+    num_output: 250
+  }
+}
+layers {
+  bottom: "encode3"
+  top: "encode3neuron"
+  name: "encode3neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "encode3neuron"
+  top: "encode4"
+  name: "encode4"
+  type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 30
+  }
+}
+layers {
+  bottom: "encode4"
+  top: "decode4"
+  name: "decode4"
+  type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 250
+  }
+}
+layers {
+  bottom: "decode4"
+  top: "decode4neuron"
+  name: "decode4neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "decode4neuron"
+  top: "decode3"
+  name: "decode3"
+  type: INNER_PRODUCT
+  inner_product_param {
+    num_output: 500
+  }
+}
+layers {
+  bottom: "decode3"
+  top: "decode3neuron"
+  name: "decode3neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "decode3neuron"
+  top: "decode2"
+  name: "decode2"
+  type: INNER_PRODUCT
+  inner_product_param {
+    num_output: 1000
+  }
+}
+layers {
+  bottom: "decode2"
+  top: "decode2neuron"
+  name: "decode2neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "decode2neuron"
+  top: "decode1"
+  name: "decode1"
+  type: INNER_PRODUCT
+  inner_product_param {
+    num_output: 784
+  }
+}
+layers {
+  bottom: "decode1"
+  top: "decode1neuron"
+  name: "decode1neuron"
+  type: SIGMOID
+}
+layers {
+  bottom: "decode1neuron"
+  bottom: "flatdata"
+  name: "loss"
+  type: EUCLIDEAN_LOSS
+}
