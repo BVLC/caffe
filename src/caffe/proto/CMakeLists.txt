@@ -19,7 +19,7 @@ foreach(header ${ProtoHeaders})
 
     ADD_CUSTOM_COMMAND(TARGET proto 
         COMMAND cmake -E copy ${header}
-        ${Caffe_INCLUDE_DIR}/caffe/proto/
+        ${Caffe_INCLUDE_DIRS}/caffe/proto/
         DEPENDS ${header} 
     ) 
  

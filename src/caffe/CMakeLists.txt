@@ -1,6 +1,5 @@
 project( CaffeSrc )
 
-
 #    Threads
 find_package(Threads REQUIRED) 
 

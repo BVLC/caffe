@@ -32,8 +32,9 @@ set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} -O3)
 
 #    Include Directories
-set(${PROJECT_NAME}_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/../include)
-include_directories(${${PROJECT_NAME}_INCLUDE_DIR})
+set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+include_directories(${${PROJECT_NAME}_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
 #	CMake module path for custom module finding
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeScripts)
@@ -45,8 +46,8 @@ include_directories(${CUDA_INCLUDE_DIRS})
 
 ###    Subdirectories    ##########################################################################
 
-add_subdirectory(gtest)
-add_subdirectory(caffe)
+add_subdirectory(src/gtest)
+add_subdirectory(src/caffe)
 add_subdirectory(tools)
 
 if(BUILD_EXAMPLES)
@@ -67,5 +68,5 @@ endif()
 ###    Install    #################################################################################
 
 #    Install Includes
-file(GLOB folders ${${PROJECT_NAME}_INCLUDE_DIR}/*)
+file(GLOB folders ${${PROJECT_NAME}_INCLUDE_DIRS}/*)
 install(DIRECTORY ${folders} DESTINATION include)
