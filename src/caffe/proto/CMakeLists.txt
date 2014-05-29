@@ -21,6 +21,6 @@ foreach(header ${ProtoHeaders})
         COMMAND cmake -E copy ${header}
         ${Caffe_INCLUDE_DIRS}/caffe/proto/
         DEPENDS ${header} 
-    ) 
+) 
  
 endforeach(header) 

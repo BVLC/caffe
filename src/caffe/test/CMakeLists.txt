@@ -33,7 +33,14 @@ foreach(source ${TEST_SOURCES})
     target_link_libraries(${name}.test gtest caffe)
     add_test(${name} ${name}.test)    
     
+    #    output dir
+    set_target_properties(${name}.test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+    
 endforeach()
 
-add_executable(test.test ${TEST_SOURCES} ${TEST_MAIN})
-target_link_libraries(test.test gtest caffe)
+add_executable(test_all.test ${TEST_SOURCES} ${TEST_MAIN})
+target_link_libraries(test_all.test gtest caffe)
+
+#    output dir
+set_target_properties(test_all.test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+
