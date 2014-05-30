@@ -207,6 +207,7 @@ message LayerParameter {
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
   optional MemoryDataParameter memory_data_param = 22;
+  optional MultiLabelAccuracyParameter multi_label_accuracy_param = 26;
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
@@ -400,6 +401,14 @@ message MemoryDataParameter {
   optional uint32 height = 3;
   optional uint32 width = 4;
 }
+// Message that stores parameters used by MultiLabelAccuracyParameter
+message MultiLabelAccuracyParameter {
+// Weights the contribution to the loss by the positive and negative samples
+// One can set both, but usually it is easier to set just one
+// To avoid big losses it is recomended to use weights <= 1.0
+  optional float positive_weight = 1 [default = 1.0];
+  optional float negative_weight = 2 [default = 1.0];
+}
 
 // Message that stores parameters used by PoolingLayer
 message PoolingParameter {
@@ -452,10 +461,17 @@ message WindowDataParameter {
   // warp: cropped window is warped to a fixed size and aspect ratio
   // square: the tightest square around the window is cropped
   optional string crop_mode = 11 [default = "warp"];
+<<<<<<< HEAD
   // If true produces multi-label outputs a vector labels (one per class) per window
   // with -1 means negative, 0 ignore for that class, and 1 means possitve
   // So the size of the output blob would be
   // multi_labels = batch_size x num_classes x 1 x 1
+=======
+  // If true produces multi-label outputs as vector labels (one per class) per window
+  // with -1 means negative and 1 means positive
+  // So the size of the output blob would be
+  // multi_labels = batch_size x num_classes x 1 x 1
+>>>>>>> # This is a combination of 2 commits.
   // instead of labels = batch_size x 1 x 1 x 1
   optional bool multi_label = 12 [default = false];
 }

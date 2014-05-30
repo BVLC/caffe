@@ -27,11 +27,16 @@ void MultiLabelAccuracyLayer<Dtype>::SetUp(
   CHECK_LE(top->size(), 1) << "MultiLabelAccuracy Layer takes 0/1 output.";
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number of instances";
-  CHECK_EQ(bottom[1]->channels(), bottom[1]->channels())
+  CHECK_EQ(bottom[0]->channels(), bottom[1]->channels())
     << "The data and label should have the same number of channels";
-  CHECK_EQ(bottom[1]->height(), 1);
-  CHECK_EQ(bottom[1]->width(), 1);
+  CHECK_EQ(bottom[0]->height(),bottom[1]->height())
+      << "The data and label should have the same height";
+  CHECK_EQ(bottom[0]->width(),bottom[1]->width())
+      << "The data and label should have the same width";
   if (top->size() == 1) {
+    // If top is used then it will contain:
+    // top[0] = Sensitivity (TP/P), top[1] = Specificity (TN/N), 
+    // top[2] = Likehood ratio positive (Sen/(1-Spe)), top[2] = Loss
     (*top)[0]->Reshape(1, 4, 1, 1);
   }
 }
@@ -39,9 +44,11 @@ void MultiLabelAccuracyLayer<Dtype>::SetUp(
 template <typename Dtype>
 Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  Dtype accuracy_pos = 0;
-  Dtype accuracy_neg = 0;
-  Dtype logloss = 0;
+  Dtype true_positive = 0;
+  Dtype true_negative = 0;
+  Dtype positive_weight_ = this->layer_param_.multi_label_accuracy_param().positive_weight();
+  Dtype negative_weight_ = this->layer_param_.multi_label_accuracy_param().negative_weight();
+  Dtype total_loss = 0;
   int count_pos = 0;
   int count_neg = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -51,43 +58,44 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
 
-  // caffe_copy(count, bottom_data, bottom_diff);
-  // caffe_cpu_sign(count, bottom_diff, bottom_diff);
-  for (int i = 0; i < num; ++i) {
+  for (int ind = 0; ind < count; ++ind) {
     // Accuracy
-    for (int j = 0; j < dim; ++j) {
-      int ind = i * dim + j;
-      int label = static_cast<int>(bottom_label[ind]);
-      if (label != 0) { 
-      //Update the loss only if it is not 0
-        logloss -= bottom_data[ind] * ((label > 0) - (bottom_data[ind] >= 0)) -
-          log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
-          (bottom_data[ind] >= 0)));
-      }
-      if (label > 0) { 
-      // Update Positive accuracy and count
-        accuracy_pos += (bottom_data[ind] >= 0);
-        count_pos++;
-      }
-      if (label < 0) {
-      // Update Negative accuracy and count
-        accuracy_neg += (bottom_data[ind] < 0);
-        count_neg++;        
-      }
-
+    int label = static_cast<int>(bottom_label[ind]);
+    Dtype loss = 0;
+    if (label != 0) { 
+    //Update the loss only if label is not 0
+      loss = bottom_data[ind] * ((label > 0) - (bottom_data[ind] >= 0)) -
+        log(1 + exp(bottom_data[ind] - 2 * bottom_data[ind] *
+        (bottom_data[ind] >= 0)));
     }
+    if (label > 0) { 
+    // Update Positive accuracy and count
+      true_positive += (bottom_data[ind] >= 0);
+      count_pos++;
+      loss *= positive_weight_;
+    }
+    if (label < 0) {
+    // Update Negative accuracy and count
+      true_negative += (bottom_data[ind] < 0);
+      count_neg++;        
+      loss *= negative_weight_;
+    }
+    total_loss -= loss;
   }
-  // LOG(INFO) << "Accuracy: " << accuracy_pos << " " << accuracy_neg;
-  // LOG(INFO) << "Logloss: " << logloss;
+  // LOG(INFO) << "(true_positive / count_pos)/(1.0 - true_negative / count_neg): " << true_positive / count_pos;
+  // LOG(INFO) << "Specificity: " << true_negative/ count_neg;
+  // LOG(INFO) << "Likehood ratio positive: " <<
+  //  (true_positive / count_pos)/(1.0 - true_negative / count_neg);
+  // LOG(INFO) << "Loss: " << total_loss;
   if ((top->size() == 1)) {
-    (*top)[0]->mutable_cpu_data()[0] = accuracy_pos / count_pos;
-    (*top)[0]->mutable_cpu_data()[1] = accuracy_neg / count_neg;
+    (*top)[0]->mutable_cpu_data()[0] = true_positive / count_pos;
+    (*top)[0]->mutable_cpu_data()[1] = true_negative / count_neg;
     (*top)[0]->mutable_cpu_data()[2] = 
-      (accuracy_pos / count_pos + accuracy_neg / count_neg) / 2;
-    (*top)[0]->mutable_cpu_data()[3] = logloss / num;
+      (true_positive / count_pos)/(1.0 - true_negative / count_neg);
+    (*top)[0]->mutable_cpu_data()[3] = total_loss / num;
   }
   // MultiLabelAccuracy can be used as a loss function.
-  return Dtype(logloss / num);
+  return Dtype(totalloss / num);
 }
 
 template <typename Dtype>
