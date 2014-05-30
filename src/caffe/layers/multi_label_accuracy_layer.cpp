@@ -95,7 +95,7 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
     (*top)[0]->mutable_cpu_data()[3] = total_loss / num;
   }
   // MultiLabelAccuracy can be used as a loss function.
-  return Dtype(totalloss / num);
+  return Dtype(total_loss / num);
 }
 
 template <typename Dtype>
