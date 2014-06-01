@@ -41,22 +41,22 @@ class ImageDataLayerTest : public ::testing::Test {
     std::ofstream outfile(filename_->c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << *filename_;
     for (int i = 0; i < 5; ++i) {
-      outfile << "examples/images/cat.jpg " << i;
+      outfile << "examples/images/cat.jpg " << i << endl;
     }
     outfile.close();
     // Create a Vector of files with muliple labels
     std::ofstream outfile2(filename_multi_label_->c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << *filename_multi_label_;
     for (int i = 0; i < 5; ++i) {
-      std::stringstream labels;
+      outfile2 << "examples/images/cat.jpg ";
       for (int l = 0; l < 5; ++l) {
         if (l == i){
-          labels << " 1";
+          outfile2 << " 1";
         } else {
-          labels << " -1";
+          outfile2 << " -1";
         }
       }
-      outfile2 << "examples/images/cat.jpg " << labels;
+      outfile2 << endl;
     }
     outfile2.close();
   }
@@ -108,6 +108,7 @@ TYPED_TEST(ImageDataLayerTest, TestReadMultiLabel) {
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
+  image_data_param->set_num_labels(5);
   image_data_param->set_source(this->filename_multi_label_->c_str());
   image_data_param->set_shuffle(false);
   ImageDataLayer<TypeParam> layer(param);

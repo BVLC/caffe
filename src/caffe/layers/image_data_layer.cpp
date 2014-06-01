@@ -174,7 +174,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     line_num++;
     lines_.push_back(std::make_pair(filename, labels));
   }
-  LOG(INFO) << "Read " << line_num << " lines from source";
+  LOG(INFO) << "Read " << line_num - 1 << " lines from source";
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
