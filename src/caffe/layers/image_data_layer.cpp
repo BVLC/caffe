@@ -117,7 +117,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       }
     }
     CHECK_EQ(datum.label_size(),num_labels)
-    for (int l = 0; l < num_labels - 1; ++l){
+    for (int l = 0; l < num_labels; ++l){
       top_label[item_id * num_labels + l] = datum.label(l);
     }
     // go to the next iter

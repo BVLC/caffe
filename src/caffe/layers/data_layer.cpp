@@ -121,7 +121,10 @@ void* DataLayerPrefetch(void* layer_pointer) {
     }
 
     if (layer->output_labels_) {
-      top_label[item_id] = datum.label();
+      const int num_labels = datum.label_size();
+      for (int l = 0; l < num_labels; ++l) {
+        top_label[item_id * num_labels + l] = datum.label(l);
+      }
     }
     // go to the next iter
     switch (layer->layer_param_.data_param().backend()) {
@@ -275,9 +278,10 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->width();
   // label
   if (output_labels_) {
-    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
+    const int num_labels = datum.label_size();
+    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), num_labels, 1, 1);
     prefetch_label_.reset(
-        new Blob<Dtype>(this->layer_param_.data_param().batch_size(), 1, 1, 1));
+        new Blob<Dtype>(this->layer_param_.data_param().batch_size(), num_labels, 1, 1));
   }
   // datum size
   datum_channels_ = datum.channels();
