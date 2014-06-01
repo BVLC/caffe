@@ -55,6 +55,8 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     CHECK_GT(lines_size, layer->lines_id_);
+    LOG(INFO) << layer->lines_[layer->lines_id_].first;
+    LOG(INFO) << layer->lines_[layer->lines_id_].second.size();
     if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first,
           layer->lines_[layer->lines_id_].second,
           new_height, new_width, &datum)) {

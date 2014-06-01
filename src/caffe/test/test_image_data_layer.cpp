@@ -29,8 +29,10 @@ class ImageDataLayerTest : public ::testing::Test {
   ImageDataLayerTest()
       : seed_(1701),
         filename_(new string(tmpnam(NULL))),
+        filename_multi_label_(new string(tmpnam(NULL))),
         blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()) {}
+>>>>>>> Added LOG(INFO) and test multi_label to image_data_layer
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
@@ -42,6 +44,21 @@ class ImageDataLayerTest : public ::testing::Test {
       outfile << "examples/images/cat.jpg " << i;
     }
     outfile.close();
+    // Create a Vector of files with muliple labels
+    std::ofstream outfile(filename_multi_label_->c_str(), std::ofstream::out);
+    LOG(INFO) << "Using temporary file " << *filename_multi_label_;
+    for (int i = 0; i < 5; ++i) {
+      std::stringstream labels;
+      for (int l = 0; l < 5; ++l) {
+        if (l == i){
+          labels << " 1";
+        } else {
+          labels << " -1";
+        }
+      }
+      outfile << "examples/images/cat.jpg " << labels;
+    }
+    outfile.close();
   }
 
   virtual ~ImageDataLayerTest() {
@@ -51,10 +68,12 @@ class ImageDataLayerTest : public ::testing::Test {
 
   int seed_;
   shared_ptr<string> filename_;
+  shared_ptr<string> filename_multi_label_;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
 };
 
 typedef ::testing::Types<float, double> Dtypes;
@@ -81,6 +100,37 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+  }
+}
+
+TYPED_TEST(ImageDataLayerTest, TestReadMultiLabel) {
+  LayerParameter param;
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_source(this->filename_multi_label_->c_str());
+  image_data_param->set_shuffle(false);
+  ImageDataLayer<TypeParam> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_data_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), 360);
+  EXPECT_EQ(this->blob_top_data_->width(), 480);
+  EXPECT_EQ(this->blob_top_label_->num(), 5);
+  EXPECT_EQ(this->blob_top_label_->channels(), 5);
+  EXPECT_EQ(this->blob_top_label_->height(), 1);
+  EXPECT_EQ(this->blob_top_label_->width(), 1);
+  // Go through the data twice
+  for (int iter = 0; iter < 2; ++iter) {
+    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      for (int l = 0; l < 5; ++l) {
+        if (i == l) {
+          EXPECT_EQ(1, this->blob_top_label_->cpu_data()[i * 5 + l]);
+        } else {
+          EXPECT_EQ(-1, this->blob_top_label_->cpu_data()[i * 5 + l ]);
+        }
+      }
     }
   }
 }

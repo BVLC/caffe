@@ -279,6 +279,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   if (output_labels_) {
     const int num_labels = datum.label_size();
+    LOG(INFO) << "Num of labels " << num_labels;
     (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), num_labels, 1, 1);
     prefetch_label_.reset(
         new Blob<Dtype>(this->layer_param_.data_param().batch_size(), num_labels, 1, 1));
