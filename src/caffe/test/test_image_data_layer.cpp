@@ -45,7 +45,7 @@ class ImageDataLayerTest : public ::testing::Test {
     }
     outfile.close();
     // Create a Vector of files with muliple labels
-    std::ofstream outfile(filename_multi_label_->c_str(), std::ofstream::out);
+    std::ofstream outfile2(filename_multi_label_->c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << *filename_multi_label_;
     for (int i = 0; i < 5; ++i) {
       std::stringstream labels;
@@ -56,9 +56,9 @@ class ImageDataLayerTest : public ::testing::Test {
           labels << " -1";
         }
       }
-      outfile << "examples/images/cat.jpg " << labels;
+      outfile2 << "examples/images/cat.jpg " << labels;
     }
-    outfile.close();
+    outfile2.close();
   }
 
   virtual ~ImageDataLayerTest() {
