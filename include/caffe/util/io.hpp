@@ -4,6 +4,7 @@
 #define CAFFE_UTIL_IO_H_
 
 #include <string>
+#include <vector>
 
 #include "google/protobuf/message.h"
 #include "hdf5.h"
@@ -59,6 +60,9 @@ inline void WriteProtoToBinaryFile(
     const Message& proto, const string& filename) {
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
+
+bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
+    const int height, const int width, Datum* datum);
 
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum);

@@ -222,7 +222,7 @@ class ImageDataLayer : public Layer<Dtype> {
   virtual unsigned int PrefetchRand();
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
-  vector<std::pair<std::string, int> > lines_;
+  vector<std::pair<std::string, vector<int> > > lines_;
   int lines_id_;
   int datum_channels_;
   int datum_height_;

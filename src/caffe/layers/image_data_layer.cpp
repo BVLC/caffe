@@ -116,7 +116,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
         }
       }
     }
-    CHECK_EQ(datum.label_size(),num_labels)
+    CHECK_EQ(datum.label_size(),num_labels);
     for (int l = 0; l < num_labels; ++l){
       top_label[item_id * num_labels + l] = datum.label(l);
     }
@@ -146,7 +146,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   Layer<Dtype>::SetUp(bottom, top);
   const int new_height  = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_height();
-  const num_labels = this->layer_param_.image_data_param().num_labels();
+  const int num_labels = this->layer_param_.image_data_param().num_labels();
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
@@ -163,7 +163,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     string filename;
     std::vector<int> labels;
     CHECK(iss >> filename) << "Error reading line " << line_num;
-    for (l = 0; l < num_labels; ++l){
+    for (int l = 0; l < num_labels; ++l) {
       int label;
       CHECK(iss >> label) << "Error reading labels at line " << line_num <<
         " filename " << filename;
@@ -172,7 +172,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     line_num++;
     lines_.push_back(std::make_pair(filename, labels));
   }
-
+  LOG(INFO) << "Read " << line_num << " lines from source";
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
@@ -180,8 +180,8 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
     ShuffleImages();
   }
-  LOG(INFO) << "A total of " << lines_.size() << " images.";
-
+  LOG(INFO) << "A total of " << lines_.size() << " images" <<
+    " with " << num_labels << " labels each";
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.image_data_param().rand_skip()) {
@@ -271,7 +271,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   for (int i = 0; i < num_images; ++i) {
     const int max_rand_index = num_images - i;
     const int rand_index = PrefetchRand() % max_rand_index;
-    pair<string, int> item = lines_[rand_index];
+    pair<string, vector<int> > item = lines_[rand_index];
     lines_.erase(lines_.begin() + rand_index);
     lines_.push_back(item);
   }
