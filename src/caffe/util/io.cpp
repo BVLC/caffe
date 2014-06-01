@@ -80,9 +80,13 @@ bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
 
   for (int i = 1 ; i < labels.size(); ++i) {
     LOG(INFO) << labels[i] << ",";
-    datum->add_label(labels[i]);
+    if (datum->label_size() <= i) {
+      datum->add_label(labels[i]);
+    } else {
+      datum->set_label(i,labels[i]);
+    }
   }
-
+  LOG(INFO) << "datum label_size: " << datum->label_size();
   return true;
 }
 
@@ -105,7 +109,11 @@ bool ReadImageToDatum(const string& filename, const int label,
   datum->set_channels(num_channels);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
-  datum->add_label(label);
+  if (datum->label_size() > 0){
+    datum->set_label(0,label);
+  } else {
+    datum->add_label(label);
+  }
   datum->clear_data();
   datum->clear_float_data();
   string* datum_string = datum->mutable_data();
