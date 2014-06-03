@@ -144,6 +144,10 @@ After this, run
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
 
+**Note** that in order to build the caffe python wrappers you must install boost using the --with-python option:
+
+    brew install --build-from-source --with-python --fresh -vd boost
+
 #### Windows
 
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng).
