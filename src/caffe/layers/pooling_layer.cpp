@@ -32,9 +32,11 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   stride_ = this->layer_param_.pooling_param().stride();
   pad_ = this->layer_param_.pooling_param().pad();
   if (pad_ != 0) {
-    CHECK_EQ(this->layer_param_.pooling_param().pool(),
-             PoolingParameter_PoolMethod_AVE)
-        << "Padding implemented only for average pooling.";
+    CHECK(this->layer_param_.pooling_param().pool()
+        == PoolingParameter_PoolMethod_AVE
+        || this->layer_param_.pooling_param().pool()
+        == PoolingParameter_PoolMethod_MAX)
+        << "Padding implemented only for average and max pooling.";
   }
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
@@ -92,10 +94,12 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int c = 0; c < channels_; ++c) {
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
-            int hstart = ph * stride_;
-            int wstart = pw * stride_;
+            int hstart = ph * stride_ - pad_;
+            int wstart = pw * stride_ - pad_;
             int hend = min(hstart + kernel_size_, height_);
             int wend = min(wstart + kernel_size_, width_);
+            hstart = max(hstart, 0);
+            wstart = max(wstart, 0);
             const int pool_index = ph * pooled_width_ + pw;
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
