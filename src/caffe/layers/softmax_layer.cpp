@@ -14,8 +14,7 @@ namespace caffe {
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) << "Softmax Layer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) << "Softmax Layer takes a single blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
   sum_multiplier_.Reshape(1, bottom[0]->channels(),
