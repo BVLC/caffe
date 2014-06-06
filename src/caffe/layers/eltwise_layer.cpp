@@ -11,10 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void EltwiseLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_GE(bottom.size(), 2) <<
-      "Eltwise Layer takes at least 2 blobs as input.";
-  CHECK_EQ(top->size(), 1) <<
-      "Eltwise Layer takes a single blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   CHECK(this->layer_param().eltwise_param().coeff_size() == 0
       || this->layer_param().eltwise_param().coeff_size() == bottom.size()) <<
       "Eltwise Layer takes one coefficient per bottom blob.";

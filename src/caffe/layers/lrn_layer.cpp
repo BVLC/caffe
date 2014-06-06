@@ -11,10 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) <<
-      "Local Response Normalization Layer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) <<
-      "Local Response Normalization Layer takes a single blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
