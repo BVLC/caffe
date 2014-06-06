@@ -72,6 +72,10 @@ list(REMOVE_ITEM CPP_SOURCES ${TEST_SOURCES})
 add_library(caffe ${CPP_SOURCES})
 cuda_add_library(caffe_cu ${CU_SOURCES})
 
+# both depend on proto
+add_dependencies(caffe proto)
+add_dependencies(caffe_cu proto)
+
 target_link_libraries(caffe caffe_cu proto
         ${GLOG_LIBRARIES}
         ${CUDA_curand_LIBRARY}
