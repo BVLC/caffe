@@ -4,6 +4,19 @@ PROJECT := caffe
 CONFIG_FILE := Makefile.config
 include $(CONFIG_FILE)
 
+BUILD_DIR_LINK := $(BUILD_DIR)
+RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
+DEBUG_BUILD_DIR := .$(BUILD_DIR)_debug
+
+DEBUG ?= 0
+ifeq ($(DEBUG), 1)
+	BUILD_DIR := $(DEBUG_BUILD_DIR)
+	OTHER_BUILD_DIR := $(RELEASE_BUILD_DIR)
+else
+	BUILD_DIR := $(RELEASE_BUILD_DIR)
+	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
+endif
+
 # The target static library and shared library name
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
 NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
@@ -167,7 +180,6 @@ ifeq ($(OSX), 1)
 endif
 
 # Debugging
-DEBUG ?= 0
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS := -DDEBUG -g -O0
 else
@@ -277,7 +289,19 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 runtest: $(TEST_ALL_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle
 
-$(ALL_BUILD_DIRS):
+$(BUILD_DIR_LINK): $(BUILD_DIR)/.linked
+
+# Create a target ".linked" in this BUILD_DIR to tell Make that the "build" link
+# is currently correct, then delete the one in the OTHER_BUILD_DIR in case it
+# exists and $(DEBUG) is toggled later.
+$(BUILD_DIR)/.linked:
+	@ mkdir -p $(BUILD_DIR)
+	@ $(RM) $(OTHER_BUILD_DIR)/.linked
+	@ $(RM) $(BUILD_DIR_LINK)
+	@ ln -s $(BUILD_DIR) $(BUILD_DIR_LINK)
+	@ touch $@
+
+$(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
 $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
@@ -357,7 +381,7 @@ proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
 
 $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR)
-	protoc --proto_path=src --cpp_out=build/src $<
+	protoc --proto_path=src --cpp_out=$(BUILD_DIR)/src $<
 	@ echo
 
 $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
@@ -370,6 +394,8 @@ $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 
 clean:
 	@- $(RM) -rf $(ALL_BUILD_DIRS)
+	@- $(RM) -rf $(OTHER_BUILD_DIR)
+	@- $(RM) -rf $(BUILD_DIR_LINK)
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
 	@- $(RM) $(PY$(PROJECT)_SO)
 	@- $(RM) $(MAT$(PROJECT)_SO)
