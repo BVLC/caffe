@@ -17,8 +17,7 @@ namespace caffe {
 template <typename Dtype>
 void AccuracyLayer<Dtype>::SetUp(
   const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 2) << "Accuracy Layer takes two blobs as input.";
-  CHECK_EQ(top->size(), 1) << "Accuracy Layer takes 1 output.";
+  Layer<Dtype>::SetUp(bottom, top);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number.";
   CHECK_EQ(bottom[1]->channels(), 1);

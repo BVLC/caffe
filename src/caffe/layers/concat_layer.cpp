@@ -11,11 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void ConcatLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_GT(bottom.size(), 1) <<
-    "ConcatLayer takes at least two blobs as input.";
-  CHECK_EQ(top->size(), 1) <<
-    "ConcatLayer takes a single blob as output.";
-
+  Layer<Dtype>::SetUp(bottom, top);
   concat_dim_ = this->layer_param_.concat_param().concat_dim();
   CHECK_GE(concat_dim_, 0) <<
     "concat_dim should be >= 0";

@@ -52,9 +52,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 0) << "HDF5DataLayer takes no input blobs.";
-  CHECK_EQ(top->size(), 2) << "HDF5DataLayer takes two blobs as output.";
-
+  Layer<Dtype>::SetUp(bottom, top);
   // Read the source to parse the filenames.
   const string& source = this->layer_param_.hdf5_data_param().source();
   LOG(INFO) << "Loading filename from " << source;

@@ -15,8 +15,7 @@ namespace caffe {
 template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 2) << "SoftmaxLoss Layer takes two blobs as input.";
-  CHECK_EQ(top->size(), 0) << "SoftmaxLoss Layer takes no blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
   softmax_top_vec_.push_back(&prob_);
