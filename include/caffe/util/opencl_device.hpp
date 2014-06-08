@@ -80,24 +80,46 @@ inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
        i < (n); \
        i += get_global_size(0))
 
-#define DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(name, operation) \
-template <typename Dtype> \
-__kernel void name##_kernel(__globalconst int n, __global const Dtype* a, \
-                            __globalconst Dtype* b, __global Dtype* y) { \
-  OPENCL_KERNEL_LOOP(i, n) { \
-      operation; \
+#define DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(name, operation) \
+template<typename Dtype> \
+__kernel void name##_kernel(const int n, const Dtype* x, Dtype* y) { \
+  OPENCL_KERNEL_LOOP(index, n) { \
+    operation; \
   } \
 } \
 template <> \
-void caffe_opencl_##name<float>(const int N, const float* a, \
-                                const float* b, float* y) { \
+void caffe_opencl_##name<float>(const int n, const float* x, float* y) { \
+  /* NOLINT_NEXT_LINE(whitespace/operators) */ \
+  name##_kernel<float><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
+      n, x, y); \
+} \
+template <> \
+void caffe_opencl_##name<double>(const int n, const double* x, double* y) { \
+  /* NOLINT_NEXT_LINE(whitespace/operators) */ \
+  name##_kernel<double><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
+      n, x, y); \
+}
+
+#define DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(name, operation) \
+template <typename Dtype> \
+__kernel void name##_kernel(__global const int n, __global const Dtype* a, \
+                            __global const Dtype* b, __global Dtype* y) { \
+  OPENCL_KERNEL_LOOP(i, n) { \
+    operation; \
+  } \
+} \
+template <> \
+void caffe_opencl_##name<float>( \
+    __global const int N, __global const float* a, \
+    __global const float* b, __global float* y) { \
   /* NOLINT_NEXT_LINE(whitespace/operators) */  \
   name##_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>( \
       N, a, b, y); \
 } \
 template <> \
-void caffe_opencl_##name<double>(const int N, const double* a, \
-                                 const double* b, double* y) { \
+void caffe_opencl_##name<double>( \
+    __global const int N, __global const double* a, \
+    __global const double* b, __global double* y) { \
   /* NOLINT_NEXT_LINE(whitespace/operators) */  \
   name##_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>( \
       N, a, b, y); \
