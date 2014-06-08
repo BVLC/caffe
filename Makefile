@@ -168,6 +168,8 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
+	CXXFLAGS += -mavx -m64 -fopenmp
+#	CXXFLAGS += -std=c++11
 endif
 
 # OS X:
@@ -184,14 +186,14 @@ endif
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS := -DDEBUG -g -O0
 else
-	COMMON_FLAGS := -DNDEBUG -O2
+	COMMON_FLAGS := -DNDEBUG -g -O2
 endif
 
 # BLAS configuration (default = ATLAS)
 BLAS ?= atlas
 ifeq ($(BLAS), mkl)
 	# MKL
-	LIBRARIES += mkl_rt
+	LIBRARIES += mkl_rt iomp5
 	COMMON_FLAGS += -DUSE_MKL
 	MKL_DIR = /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKL_DIR)/include

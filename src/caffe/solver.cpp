@@ -121,7 +121,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   }
   // After the optimization is done, always do a snapshot.
   iter_--;
-  Snapshot();
+  if (param_.snapshot()) Snapshot();
   LOG(INFO) << "Optimization Done.";
 }
 
