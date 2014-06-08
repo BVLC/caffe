@@ -353,7 +353,8 @@ message PoolingParameter {
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   optional uint32 kernel_size = 2; // The kernel size
   optional uint32 stride = 3 [default = 1]; // The stride
-  // The padding size -- currently implemented only for average pooling.
+  // The padding size -- currently implemented only for average and max pooling.
+  // average pooling zero pads. max pooling -inf pads.
   optional uint32 pad = 4 [default = 0];
 }
 
