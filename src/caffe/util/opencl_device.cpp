@@ -12,9 +12,9 @@ void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
                                  const Dtype* A, const Dtype* B,
                                  const Dtype beta, Dtype* C) {
   // Note that cublas follows fortran order.
-  int lda = (TransA == CblasNoTrans) ? K : M;
-  int ldb = (TransB == CblasNoTrans) ? N : K;
-  int ldc = (TransA == CblasNoTrans) ? N : M;
+  LEAD_DIM(A, M, K);
+  LEAD_DIM(B, K, N);
+  LEAD_DIM(C, M, N);
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   clblasTranspose clTransB = to_clblasTranspose(TransB);
   CREATE_CL_MEM(A, M, K, READ_ONLY);
@@ -26,9 +26,8 @@ void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
   PRE_CLBLAS_CALL;
   // bufX is defined by the macro CREATE_CL_MEM(X, ...)
   CLBLAS_CHECK(clblasSgemm(clblasRowMajor, clTransA, clTransB,
-      M, N, K, &alpha, bufA, 0, lda, bufB, 0, ldb, &beta, bufC, 0, ldc
-      numCommandQueues, Caffe::opencl_queue(), numEventsInWaitList,
-      eventWaitList, &events));
+      M, N, K, &alpha, ARRAY(A), ARRAY(B), &beta, ARRAY(C),
+      CLBALS_TRAILING_ARGS));
   /* Release OpenCL memory objects. */
   RELEASE_CL_MEM(C);
   RELEASE_CL_MEM(B);
@@ -42,9 +41,9 @@ void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
                                  const Dtype* A, const Dtype* B,
                                  const Dtype beta, Dtype* C) {
   // Note that cublas follows fortran order.
-  int lda = (TransA == CblasNoTrans) ? K : M;
-  int ldb = (TransB == CblasNoTrans) ? N : K;
-  int ldc = (TransA == CblasNoTrans) ? N : M;
+  LEAD_DIM(A, M, K);
+  LEAD_DIM(B, K, N);
+  LEAD_DIM(C, M, N);
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   clblasTranspose clTransB = to_clblasTranspose(TransB);
   CREATE_CL_MEM(A, M, K, READ_ONLY);
@@ -56,9 +55,8 @@ void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
   PRE_CLBLAS_CALL;
   // bufX is defined by the macro CREATE_CL_MEM(X, ...)
   CLBLAS_CHECK(clblasDgemm(clblasRowMajor, clTransA, clTransB,
-      M, N, K, &alpha, bufA, 0, lda, bufB, 0, ldb, &beta, bufC, 0, ldc
-      numCommandQueues, Caffe::opencl_queue(), numEventsInWaitList,
-      eventWaitList, &events));
+      M, N, K, &alpha, ARRAY(A), ARRAY(B), &beta, ARRAY(C),
+      CLBALS_TRAILING_ARGS));
   /* Release OpenCL memory objects. */
   RELEASE_CL_MEM(C);
   RELEASE_CL_MEM(B);
