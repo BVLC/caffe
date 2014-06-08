@@ -5,6 +5,36 @@
 
 namespace caffe {
 
+template<typename Dtype>
+OpenCLDevice<Dtype>::cl_command_queue_created_ = false;
+
+/**
+ * http://opencl.codeplex.com/wikipage?title=OpenCL%20Tutorials%20-%201
+ */
+template<typename Dtype>
+OpenCLDevice<Dtype>::cl_command_queue queue() {
+  if (cl_command_queue_created_) {
+    return cl_command_queue_;
+  } else {
+    cl_int error = 0;   // Used to handle error codes
+    cl_platform_id platform;
+    cl_context context;
+    cl_command_queue queue;
+    cl_device_id device;
+    // Platform
+    CL_CHECK(oclGetPlatformID(&platform));
+    // Device
+    CL_CHECK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL));
+    // Context
+    context = clCreateContext(0, 1, &device, NULL, NULL, &error);
+    CL_CHECK(error);
+    // Command-queue
+    queue = clCreateCommandQueue(context, device, 0, &error);
+    CL_CHECK(error);
+    cl_command_queue_created_ = true;
+  }
+}
+
 DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sqr, y[i] = x[i] * x[i]);
 DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(exp, y[i] = exp(x[i]));
 DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sign, y[i] = sign<Dtype>(x[i]));
@@ -171,7 +201,7 @@ void OpenCLDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X,
   cl_event *event_wait_list = NULL;
   cl_event events = NULL;
   CL_CHECK(clEnqueueWriteBuffer(
-      Caffe::opencl_queue(), bufY, blocking_write, 0, N * sizeof(Dtype),
+      OpenCLDevice::queue(), bufY, blocking_write, 0, N * sizeof(Dtype),
       X, num_events_in_wait_list, event_wait_list, &events));
 }
 
@@ -192,7 +222,7 @@ void OpenCLDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
   cl_event *event_wait_list = NULL;
   cl_event events = NULL;
   CL_CHECK(clEnqueueFillBuffer(
-      Caffe::opencl_queue(), bufA, &alpha, sizeof(Dtype), 0,
+      OpenCLDevice::queue(), bufA, &alpha, sizeof(Dtype), 0,
       sizeof(Dtype) * N, num_events_in_wait_list, event_wait_list, &event));
 }
 

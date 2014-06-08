@@ -184,6 +184,7 @@ class OpenCLDevice : public Device<Dtype> {
   }
   virtual ~OpenCLDevice() {
   }
+
   virtual void gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
                     const int M, const int N, const int K, const Dtype alpha,
                     const Dtype* A, const Dtype* B, const Dtype beta, Dtype* C);
@@ -250,6 +251,11 @@ class OpenCLDevice : public Device<Dtype> {
   virtual void col2im(const Dtype* data_col, const int channels,
       const int height, const int width, const int psize, const int pad,
       const int stride, Dtype* data_im);
+
+  inline static cl_command_queue queue();
+ private:
+  static cl_command_queue cl_command_queue_;
+  static bool cl_command_queue_created_;
 };
 
 
