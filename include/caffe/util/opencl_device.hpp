@@ -126,6 +126,21 @@ void caffe_opencl_##name<double>( \
 }
 
 template<typename Dtype>
+void caffe_opencl_sqr(const int n, const Dtype* x, Dtype* y);
+
+template<typename Dtype>
+void caffe_opencl_exp(const int n, const Dtype* x, Dtype* y);
+
+template<typename Dtype>
+void caffe_opencl_sign(const int n, const Dtype* x, Dtype* y);
+
+template<typename Dtype>
+void caffe_opencl_sgnbit(const int n, const Dtype* x, Dtype* y);
+
+template<typename Dtype>
+void caffe_opencl_fabs(const int n, const Dtype* x, Dtype* y);
+
+template<typename Dtype>
 void caffe_opencl_add(const int N, const Dtype* a,
                       const Dtype* b, Dtype* y);
 

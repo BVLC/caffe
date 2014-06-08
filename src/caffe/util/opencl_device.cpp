@@ -5,6 +5,12 @@
 
 namespace caffe {
 
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sqr, y[i] = x[i] * x[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(exp, y[i] = exp(x[i]));
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sign, y[i] = sign<Dtype>(x[i]));
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sgnbit, y[i] = signbit(x[i]));
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(fabs, y[i] = fabs(x[i]));
+
 DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(add, y[i] = a[i] + b[i]);
 DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(sub, y[i] = a[i] - b[i]);
 DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(mul, y[i] = a[i] * b[i]);
