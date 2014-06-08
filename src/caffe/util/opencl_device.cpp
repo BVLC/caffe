@@ -70,7 +70,7 @@ void OpenCLDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
-  CREATE_CL_MEM(y, M, 1, READ_ONLY);
+  CREATE_CL_MEM(y, M, 1, READ_WRITE);
   CLBLAS_CHECK(clblasSgemv(clblasRowMajor, clTransA, M, N, &alpha,
       ARRAY(A), ARRAY(x), &beta, ARRAY(y),
       CLBALS_TRAILING_ARGS));
@@ -83,7 +83,7 @@ void OpenCLDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
-  CREATE_CL_MEM(y, M, 1, READ_ONLY);
+  CREATE_CL_MEM(y, M, 1, READ_WRITE);
   CLBLAS_CHECK(clblasDgemv(clblasRowMajor, clTransA, M, N, &alpha,
       ARRAY(A), ARRAY(x), &beta, ARRAY(y),
       CLBALS_TRAILING_ARGS));
@@ -127,9 +127,22 @@ void OpenCLDevice<double>::axpby(
   this->axpy<double>(N, alpha, X, Y);
 }
 
-template<typename Dtype>
-void OpenCLDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
-  caffe_gpu_copy<Dtype>(N, X, Y);
+template <>
+void OpenCLDevice<float>::copy(const int N, const float *X, float *Y) {
+  CREATE_CL_MEM(X, N, 1, READ_ONLY);
+  CREATE_CL_MEM(Y, N, 1, READ_WRITE);
+  CLBLAS_CHECK(clblasScopy(
+      N, ARRAY(X), ARRAY(Y),
+      CLBALS_TRAILING_ARGS));
+}
+
+template <>
+void OpenCLDevice<double>::copy(const int N, const double *X, double *Y) {
+  CREATE_CL_MEM(X, N, 1, READ_ONLY);
+  CREATE_CL_MEM(Y, N, 1, READ_WRITE);
+  CLBLAS_CHECK(clblasScopy(
+      N, ARRAY(X), ARRAY(Y),
+      CLBALS_TRAILING_ARGS));
 }
 
 template<typename Dtype>
