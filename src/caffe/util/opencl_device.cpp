@@ -111,10 +111,20 @@ void OpenCLDevice<double>::axpy(const int N, const double alpha,
       CLBALS_TRAILING_ARGS));
 }
 
-template<typename Dtype>
-void OpenCLDevice<Dtype>::axpby(const int N, const Dtype alpha,
-                                  const Dtype* X, const Dtype beta, Dtype* Y) {
-  caffe_gpu_axpby<Dtype>(N, alpha, X, beta, Y);
+template <>
+void OpenCLDevice<float>::axpby(
+    const int N, const float alpha, const float* X,
+    const float beta, float* Y) {
+  this->scal<float>(N, beta, Y);
+  this->axpy<float>(N, alpha, X, Y);
+}
+
+template <>
+void OpenCLDevice<double>::axpby(
+    const int N, const double alpha, const double* X,
+    const double beta, double* Y) {
+  this->scal<double>(N, beta, Y);
+  this->axpy<double>(N, alpha, X, Y);
 }
 
 template<typename Dtype>
