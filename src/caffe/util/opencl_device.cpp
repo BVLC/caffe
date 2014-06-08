@@ -228,30 +228,25 @@ void OpenCLDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
 template<typename Dtype>
 void OpenCLDevice<Dtype>::add(const int N, const Dtype* a, const Dtype* b,
                               Dtype* y) {
-
-  NOT_IMPLEMENTED;
-//  caffe_gpu_add<Dtype>(N, a, b, y);
+  caffe_opencl_add<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sub(const int N, const Dtype* a, const Dtype* b,
                               Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_sub<Dtype>(N, a, b, y);
+  caffe_opencl_sub<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::mul(const int N, const Dtype* a, const Dtype* b,
                               Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_mul<Dtype>(N, a, b, y);
+  caffe_opencl_mul<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::div(const int N, const Dtype* a, const Dtype* b,
                               Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_div<Dtype>(N, a, b, y);
+  caffe_opencl_div<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
