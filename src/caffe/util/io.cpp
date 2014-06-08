@@ -72,9 +72,10 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 }
 
 bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool iscolor, Datum* datum) {
+    const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
-  int cv_read_flag = (iscolor ? CV_LOAD_IMAGE_COLOR : CV_LOAD_IMAGE_GRAYSCALE);
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
   if (height > 0 && width > 0) {
     cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
     cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
@@ -85,7 +86,7 @@ bool ReadImageToDatum(const string& filename, const int label,
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
-  int num_channels = (iscolor ? 3 : 1);
+  int num_channels = (is_color ? 3 : 1);
   datum->set_channels(num_channels);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
@@ -93,7 +94,7 @@ bool ReadImageToDatum(const string& filename, const int label,
   datum->clear_data();
   datum->clear_float_data();
   string* datum_string = datum->mutable_data();
-  if (iscolor) {
+  if (is_color) {
     for (int c = 0; c < num_channels; ++c) {
       for (int h = 0; h < cv_img.rows; ++h) {
         for (int w = 0; w < cv_img.cols; ++w) {
@@ -102,7 +103,7 @@ bool ReadImageToDatum(const string& filename, const int label,
         }
       }
     }
-  } else {  // Faster than repeatedly testing iscolor for each pixel w/i loop
+  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
     for (int h = 0; h < cv_img.rows; ++h) {
       for (int w = 0; w < cv_img.cols; ++w) {
         datum_string->push_back(
