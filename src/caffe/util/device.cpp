@@ -13,6 +13,8 @@ DeviceFactory<Dtype>::GetDevice() {
       return cpu_device_;
     case Caffe::GPU:
       return gpu_device_;
+    case Caffe::OPENCL:
+      return opencl_device_;
     default:
       LOG(FATAL) << "Unknown caffe mode.";
       return static_cast<Device<Dtype>*>(NULL);

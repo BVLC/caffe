@@ -247,6 +247,7 @@ class DeviceFactory {
  private:
   static Device<Dtype>* cpu_device_;
   static Device<Dtype>* gpu_device_;
+  static Device<Dtype>* opencl_device_;
 };
 
 }  // namespace caffe
