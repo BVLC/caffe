@@ -8,9 +8,9 @@ namespace caffe {
 template <>
 void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
                                  const CBLAS_TRANSPOSE TransB, const int M,
-                                 const int N, const int K, const Dtype alpha,
-                                 const Dtype* A, const Dtype* B,
-                                 const Dtype beta, Dtype* C) {
+                                 const int N, const int K, const float alpha,
+                                 const float* A, const float* B,
+                                 const float beta, float* C) {
   // Note that cublas follows fortran order.
   LEAD_DIM(A, M, K);
   LEAD_DIM(B, K, N);
@@ -37,9 +37,9 @@ void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
 template <>
 void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
                                  const CBLAS_TRANSPOSE TransB, const int M,
-                                 const int N, const int K, const Dtype alpha,
-                                 const Dtype* A, const Dtype* B,
-                                 const Dtype beta, Dtype* C) {
+                                 const int N, const int K, const double alpha,
+                                 const double* A, const double* B,
+                                 const double beta, double* C) {
   // Note that cublas follows fortran order.
   LEAD_DIM(A, M, K);
   LEAD_DIM(B, K, N);
@@ -65,8 +65,8 @@ void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
 
 template <>
 void OpenCLDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
-                                 const int N, const Dtype alpha, const Dtype* A,
-                                 const Dtype* x, const Dtype beta, Dtype* y) {
+                                 const int N, const float alpha, const float* A,
+                                 const float* x, const float beta, float* y) {
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
@@ -78,8 +78,8 @@ void OpenCLDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
 
 template <>
 void OpenCLDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
-                                 const int N, const Dtype alpha, const Dtype* A,
-                                 const Dtype* x, const Dtype beta, Dtype* y) {
+                                 const int N, const double alpha, const double* A,
+                                 const double* x, const double beta, double* y) {
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
@@ -89,10 +89,26 @@ void OpenCLDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
       CLBALS_TRAILING_ARGS));
 }
 
-template<typename Dtype>
-void OpenCLDevice<Dtype>::axpy(const int N, const Dtype alpha, const Dtype* X,
-                                 Dtype* Y) {
-  caffe_gpu_axpy<Dtype>(N, alpha, X, Y);
+template <>
+void OpenCLDevice<float>::axpy(const int N, const float alpha,
+                               const float* X, float* Y) {
+  CREATE_CL_MEM(X, N, 1, READ_ONLY);
+  CREATE_CL_MEM(Y, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
+  CUBLAS_CHECK(clblasSaxpy(
+      N, &alpha, ARRAY(X), ARRAY(Y),
+      CLBALS_TRAILING_ARGS));
+}
+
+template <>
+void OpenCLDevice<double>::axpy(const int N, const double alpha,
+                                const double* X, double* Y) {
+  CREATE_CL_MEM(X, N, 1, READ_ONLY);
+  CREATE_CL_MEM(Y, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
+  CUBLAS_CHECK(clblasDaxpy(
+      N, &alpha, ARRAY(X), ARRAY(Y),
+      CLBALS_TRAILING_ARGS));
 }
 
 template<typename Dtype>
@@ -241,8 +257,6 @@ void OpenCLDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
   col2im_gpu(data_col, channels, height, width, psize, pad, stride,
              data_im);
 }
-
-INSTANTIATE_CLASS(OpenCLDevice);
 
 const char* clGetErrorString(cl_int error) {
   switch (error) {
