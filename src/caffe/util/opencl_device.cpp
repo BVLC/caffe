@@ -63,11 +63,30 @@ void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
   RELEASE_CL_MEM(A);
 }
 
-template<typename Dtype>
-void OpenCLDevice<Dtype>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
+template <>
+void OpenCLDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
                                  const int N, const Dtype alpha, const Dtype* A,
                                  const Dtype* x, const Dtype beta, Dtype* y) {
-  caffe_gpu_gemv<Dtype>(TransA, M, N, alpha, A, x, beta, y);
+  clblasTranspose clTransA = to_clblasTranspose(TransA);
+  CREATE_CL_MEM(A, M, N, READ_ONLY);
+  CREATE_CL_MEM(x, N, 1, READ_ONLY);
+  CREATE_CL_MEM(y, M, 1, READ_ONLY);
+  CLBLAS_CHECK(clblasSgemv(clblasRowMajor, clTransA, M, N, &alpha,
+      ARRAY(A), ARRAY(x), &beta, ARRAY(y),
+      CLBALS_TRAILING_ARGS));
+}
+
+template <>
+void OpenCLDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
+                                 const int N, const Dtype alpha, const Dtype* A,
+                                 const Dtype* x, const Dtype beta, Dtype* y) {
+  clblasTranspose clTransA = to_clblasTranspose(TransA);
+  CREATE_CL_MEM(A, M, N, READ_ONLY);
+  CREATE_CL_MEM(x, N, 1, READ_ONLY);
+  CREATE_CL_MEM(y, M, 1, READ_ONLY);
+  CLBLAS_CHECK(clblasDgemv(clblasRowMajor, clTransA, M, N, &alpha,
+      ARRAY(A), ARRAY(x), &beta, ARRAY(y),
+      CLBALS_TRAILING_ARGS));
 }
 
 template<typename Dtype>
