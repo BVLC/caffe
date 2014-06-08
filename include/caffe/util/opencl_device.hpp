@@ -15,6 +15,45 @@
 
 namespace caffe {
 
+#define CL_CHECK(condition) \
+    /* Code block avoids redefinition of cudaError_t error */ \
+    do { \
+      cl_int error = condition; \
+      CHECK_EQ(error, CL_SUCCESS) << " " << clGetErrorString(error); \
+    } while (0)
+
+#define CLBLAS_CHECK(condition) \
+  do { \
+    clblasStatus_t status = condition; \
+    CHECK_EQ(status, clblasSuccess) << " " \
+      << caffe::clblasGetErrorString(status); \
+  } while (0)
+
+#define CREATE_CL_MEM(A, M, K, FLAG) \
+  do { \
+    cl_int error;
+    cl_mem buf##A = clCreateBuffer( \
+      Caffe::opencl_context(), CL_MEM_##FLAG, M * K * sizeof(*A), \
+      NULL, &error); \
+    CL_CHECK(error); \
+  } while(0)
+
+#define RELEASE_CL_MEM(A) \  clReleaseMemObject(buf##A)
+
+#define ENQUEUE_CL_BUFFER(FLAG, A, M, K) \
+  CLBLAS_CHECK(clEnqueue##FLAG##Buffer(
+    Caffe::opencl_queue(), bufA, CL_TRUE, 0, M * K * sizeof(*A),
+    A, 0, NULL, NULL));
+
+#define PRE_CLBLAS_CALL \
+  cl_uint numCommandQueues = 1; \
+  cl_uint numEventsInWaitList = 0; \
+  cl_event *eventWaitList = NULL; \
+  cl_event events = NULL
+
+const char* clGetErrorString(cl_int error);
+const char* clblasGetErrorString(clblasStatus_t status);
+
 inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
   switch (trans) {
   case CblasNoTrans:
