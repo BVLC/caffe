@@ -84,7 +84,7 @@ inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
 template <typename Dtype> \
 __kernel void name##_kernel(__globalconst int n, __global const Dtype* a, \
                             __globalconst Dtype* b, __global Dtype* y) { \
-  OPENCL_KERNEL_LOOP(index, n) { \
+  OPENCL_KERNEL_LOOP(i, n) { \
       operation; \
   } \
 } \
@@ -102,6 +102,22 @@ void caffe_opencl_##name<double>(const int N, const double* a, \
   name##_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>( \
       N, a, b, y); \
 }
+
+template<typename Dtype>
+void caffe_opencl_add(const int N, const Dtype* a,
+                      const Dtype* b, Dtype* y);
+
+template<typename Dtype>
+void caffe_opencl_sub(const int N, const Dtype* a,
+                      const Dtype* b, Dtype* y);
+
+template<typename Dtype>
+void caffe_opencl_mul(const int N, const Dtype* a,
+                      const Dtype* b, Dtype* y);
+
+template<typename Dtype>
+void caffe_opencl_div(const int N, const Dtype* a,
+                      const Dtype* b, Dtype* y);
 
 template<typename Dtype>
 class OpenCLDevice : public Device<Dtype> {

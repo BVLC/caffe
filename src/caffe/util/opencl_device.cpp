@@ -5,12 +5,17 @@
 
 namespace caffe {
 
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(add, y[i] = a[i] + b[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(sub, y[i] = a[i] - b[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(mul, y[i] = a[i] * b[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(div, y[i] = a[i] / b[i]);
+
 template <>
 void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
-                                 const CBLAS_TRANSPOSE TransB, const int M,
-                                 const int N, const int K, const float alpha,
-                                 const float* A, const float* B,
-                                 const float beta, float* C) {
+                               const CBLAS_TRANSPOSE TransB, const int M,
+                               const int N, const int K, const float alpha,
+                               const float* A, const float* B,
+                               const float beta, float* C) {
   // Note that cublas follows fortran order.
   LEAD_DIM(A, M, K);
   LEAD_DIM(B, K, N);
@@ -36,10 +41,10 @@ void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
 
 template <>
 void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
-                                 const CBLAS_TRANSPOSE TransB, const int M,
-                                 const int N, const int K, const double alpha,
-                                 const double* A, const double* B,
-                                 const double beta, double* C) {
+                                const CBLAS_TRANSPOSE TransB, const int M,
+                                const int N, const int K, const double alpha,
+                                const double* A, const double* B,
+                                const double beta, double* C) {
   // Note that cublas follows fortran order.
   LEAD_DIM(A, M, K);
   LEAD_DIM(B, K, N);
@@ -65,8 +70,8 @@ void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
 
 template <>
 void OpenCLDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
-                                 const int N, const float alpha, const float* A,
-                                 const float* x, const float beta, float* y) {
+                               const int N, const float alpha, const float* A,
+                               const float* x, const float beta, float* y) {
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
@@ -77,9 +82,10 @@ void OpenCLDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
 }
 
 template <>
-void OpenCLDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
-                                 const int N, const double alpha, const double* A,
-                                 const double* x, const double beta, double* y) {
+void OpenCLDevice<double>::gemv(
+    const CBLAS_TRANSPOSE TransA, const int M,
+    const int N, const double alpha, const double* A,
+    const double* x, const double beta, double* y) {
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
@@ -151,7 +157,8 @@ void OpenCLDevice<double>::copy(const int N, const double *X, double *Y) {
  * http://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueWriteBuffer.html
  */
 template<typename Dtype>
-void OpenCLDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
+void OpenCLDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X,
+                                        Dtype *Y) {
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
   cl_bool blocking_write = CL_TRUE;
   cl_uint num_events_in_wait_list = 0;
@@ -190,7 +197,7 @@ void OpenCLDevice<double>::set(const int N, const double alpha, double *X);
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::add_scalar(const int N, const Dtype alpha,
-                                       Dtype *X) {
+                                     Dtype *X) {
   NOT_IMPLEMENTED;
 }
 
@@ -220,49 +227,50 @@ void OpenCLDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::add(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
+                              Dtype* y) {
+
   NOT_IMPLEMENTED;
 //  caffe_gpu_add<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sub(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
+                              Dtype* y) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_sub<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::mul(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
+                              Dtype* y) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_mul<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::div(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
+                              Dtype* y) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_div<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::powx(const int N, const Dtype* a, const Dtype b,
-                                 Dtype* y) {
+                               Dtype* y) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_powx<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_uniform(const int N, const Dtype a,
-                                        const Dtype b, Dtype* r) {
+                                      const Dtype b, Dtype* r) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_rng_uniform<Dtype>(N, a, b, r);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
-                                         const Dtype sigma, Dtype* r) {
+                                       const Dtype sigma, Dtype* r) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_rng_gaussian<Dtype>(N, mu, sigma, r);
 }
@@ -281,23 +289,43 @@ void OpenCLDevice<Dtype>::exp(const int N, const Dtype* a, Dtype* y) {
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::dot(const int N, const Dtype* x, const Dtype* y,
-                                Dtype* out) {
+                              Dtype* out) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_dot<Dtype>(N, x, y, out);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
-                                             const Dtype* y, uint32_t* out) {
+                                           const Dtype* y, uint32_t* out) {
   NOT_IMPLEMENTED;
 //  *out = caffe_gpu_hamming_distance<Dtype>(N, x, y);
 }
 
+/**
+ *
+clblasSasum(
+    size_t N,
+    cl_mem asum,
+    size_t offAsum,
+    const cl_mem X,
+    size_t offx,
+    int incx,
+    cl_mem scratchBuff,
+    cl_uint numCommandQueues,
+    cl_command_queue *commandQueues,
+    cl_uint numEventsInWaitList,
+    const cl_event *eventWaitList,
+    cl_event *events)
+ */
 template<typename Dtype>
-// Returns the sum of the absolute values of the elements of vector x
 void OpenCLDevice<Dtype>::asum(const int N, const Dtype* x, Dtype* y) {
   NOT_IMPLEMENTED;
-//  caffe_gpu_asum<Dtype>(N, x, y);
+//  CREATE_CL_MEM(x, N, 1, READ_ONLY);
+//  CREATE_CL_MEM(y, N, 1, READ_WRITE);
+//  PRE_CLBLAS_CALL;
+//  CLBLAS_CHECK(clblasSasum(
+//      N, alpha, ARRAY(X),
+//      CLBALS_TRAILING_ARGS));
 }
 
 template<typename Dtype>
@@ -320,7 +348,7 @@ void OpenCLDevice<Dtype>::fabs(const int N, const Dtype* x, Dtype* y) {
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::scale(const int N, const Dtype alpha,
-                                  const Dtype *x, Dtype* y) {
+                                const Dtype *x, Dtype* y) {
   this->copy<Dtype>(N, x, y);
   this->scal<Dtype>(N, alpha, y);
 }
