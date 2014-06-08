@@ -232,6 +232,7 @@ TYPED_TEST(PoolingLayerTest, TestCPUGradientMax) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
+  pooling_param->set_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   Caffe::set_mode(Caffe::CPU);
   PoolingLayer<TypeParam> layer(layer_param);
@@ -245,6 +246,7 @@ TYPED_TEST(PoolingLayerTest, TestGPUGradientMax) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
+  pooling_param->set_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   Caffe::set_mode(Caffe::GPU);
   PoolingLayer<TypeParam> layer(layer_param);
@@ -252,6 +254,98 @@ TYPED_TEST(PoolingLayerTest, TestGPUGradientMax) {
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
+
+TYPED_TEST(PoolingLayerTest, TestCPUForwardMaxPadded) {
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  pooling_param->set_pad(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+  Caffe::set_mode(Caffe::CPU);
+  this->blob_bottom_->Reshape(1, 1, 3, 3);
+  // Input:
+  //     [ 1 2 4 ]
+  //     [ 2 3 2 ]
+  //     [ 4 2 1 ]
+  this->blob_bottom_->mutable_cpu_data()[0] = 1;
+  this->blob_bottom_->mutable_cpu_data()[1] = 2;
+  this->blob_bottom_->mutable_cpu_data()[2] = 4;
+  this->blob_bottom_->mutable_cpu_data()[3] = 2;
+  this->blob_bottom_->mutable_cpu_data()[4] = 3;
+  this->blob_bottom_->mutable_cpu_data()[5] = 2;
+  this->blob_bottom_->mutable_cpu_data()[6] = 4;
+  this->blob_bottom_->mutable_cpu_data()[7] = 2;
+  this->blob_bottom_->mutable_cpu_data()[8] = 1;
+  PoolingLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 3);
+  EXPECT_EQ(this->blob_top_->width(), 3);
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  TypeParam epsilon = 1e-8;
+  // Output:
+  //     [ 1 4 4 ]
+  //     [ 4 4 4 ]
+  //     [ 4 4 1 ]
+  EXPECT_NEAR(this->blob_top_->cpu_data()[0], 1, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[2], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[6], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[8], 1, epsilon);
+}
+
+
+TYPED_TEST(PoolingLayerTest, TestGPUForwardMaxPadded) {
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(2);
+  pooling_param->set_pad(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+  Caffe::set_mode(Caffe::GPU);
+  this->blob_bottom_->Reshape(1, 1, 3, 3);
+  // Input:
+  //     [ 1 2 4 ]
+  //     [ 2 3 2 ]
+  //     [ 4 2 1 ]
+  this->blob_bottom_->mutable_cpu_data()[0] = 1;
+  this->blob_bottom_->mutable_cpu_data()[1] = 2;
+  this->blob_bottom_->mutable_cpu_data()[2] = 4;
+  this->blob_bottom_->mutable_cpu_data()[3] = 2;
+  this->blob_bottom_->mutable_cpu_data()[4] = 3;
+  this->blob_bottom_->mutable_cpu_data()[5] = 2;
+  this->blob_bottom_->mutable_cpu_data()[6] = 4;
+  this->blob_bottom_->mutable_cpu_data()[7] = 2;
+  this->blob_bottom_->mutable_cpu_data()[8] = 1;
+  PoolingLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 3);
+  EXPECT_EQ(this->blob_top_->width(), 3);
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  TypeParam epsilon = 1e-8;
+  // Output:
+  //     [ 1 4 4 ]
+  //     [ 4 4 4 ]
+  //     [ 4 4 1 ]
+  EXPECT_NEAR(this->blob_top_->cpu_data()[0], 1, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[2], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[6], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[8], 1, epsilon);
+}
+
 
 TYPED_TEST(PoolingLayerTest, TestCPUGradientMaxTopMask) {
   LayerParameter layer_param;
