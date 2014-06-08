@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
   }
 
   // Test whether argv[1] == "-g"
-  bool iscolor= !(string("-g") == string(argv[1]));
-  int  arg_offset = (iscolor ? 0 : 1);
+  bool is_color= !(string("-g") == string(argv[1]));
+  int  arg_offset = (is_color ? 0 : 1);
   std::ifstream infile(argv[arg_offset+2]);
   std::vector<std::pair<string, int> > lines;
   string filename;
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   bool data_size_initialized = false;
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first,
-         lines[line_id].second, resize_height, resize_width, iscolor, &datum)) {
+        lines[line_id].second, resize_height, resize_width, is_color, &datum)) {
       continue;
     }
     if (!data_size_initialized) {
