@@ -30,6 +30,7 @@ namespace caffe {
   } while (0)
 
 #define CREATE_CL_MEM(A, M, K, FLAG) \
+  int ld##A = (Trans##A == CblasNoTrans) ? K : M
   do { \
     cl_int error;
     cl_mem buf##A = clCreateBuffer( \
@@ -50,6 +51,12 @@ namespace caffe {
   cl_uint numEventsInWaitList = 0; \
   cl_event *eventWaitList = NULL; \
   cl_event events = NULL
+
+#define ARRAY(A) buf##A, 0, ld##A
+
+#define CLBALS_TRAILING_ARGS \
+    numCommandQueues, Caffe::opencl_queue(), numEventsInWaitList, \
+    eventWaitList, &events
 
 const char* clGetErrorString(cl_int error);
 const char* clblasGetErrorString(clblasStatus_t status);
