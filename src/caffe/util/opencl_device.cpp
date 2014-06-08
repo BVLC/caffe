@@ -227,8 +227,7 @@ void OpenCLDevice<double>::scal(const int N, const double alpha, double *X) {
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_sqr<Dtype>(N, a, y);
+  caffe_opencl_sqr(N, a, y);
 }
 
 template<typename Dtype>
@@ -284,8 +283,7 @@ void OpenCLDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::exp(const int N, const Dtype* a, Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_exp<Dtype>(N, a, y);
+  caffe_opencl_exp(N, a, y);
 }
 
 template<typename Dtype>
@@ -331,20 +329,17 @@ void OpenCLDevice<Dtype>::asum(const int N, const Dtype* x, Dtype* y) {
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sign(const int N, const Dtype* x, Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_sign<Dtype>(N, x, y);
+  caffe_opencl_sign(N, x, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sgnbit(const int N, const Dtype* x, Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_sgnbit<Dtype>(N, x, y);
+  caffe_opencl_sgnbit(N, x, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::fabs(const int N, const Dtype* x, Dtype* y) {
-  NOT_IMPLEMENTED;
-//  caffe_gpu_fabs<Dtype>(N, x, y);
+  caffe_opencl_fabs(N, x, y);
 }
 
 template<typename Dtype>
