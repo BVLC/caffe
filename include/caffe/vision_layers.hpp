@@ -333,49 +333,6 @@ class LRNLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
-/* MemoryDataLayer
-*/
-template <typename Dtype>
-class MemoryDataLayer : public Layer<Dtype> {
- public:
-  explicit MemoryDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_MEMORY_DATA;
-  }
-  virtual inline int ExactNumBottomBlobs() { return 0; }
-  virtual inline int ExactNumTopBlobs() { return 2; }
-
-  // Reset should accept const pointers, but can't, because the memory
-  //  will be given to Blob, which is mutable
-  void Reset(Dtype* data, Dtype* label, int n);
-  int datum_channels() { return datum_channels_; }
-  int datum_height() { return datum_height_; }
-  int datum_width() { return datum_width_; }
-  int batch_size() { return batch_size_; }
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
-
-  Dtype* data_;
-  Dtype* labels_;
-  int datum_channels_;
-  int datum_height_;
-  int datum_width_;
-  int datum_size_;
-  int batch_size_;
-  int n_;
-  int pos_;
-};
-
 /* PoolingLayer
 */
 template <typename Dtype>
