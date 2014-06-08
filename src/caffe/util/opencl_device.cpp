@@ -131,6 +131,7 @@ template <>
 void OpenCLDevice<float>::copy(const int N, const float *X, float *Y) {
   CREATE_CL_MEM(X, N, 1, READ_ONLY);
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasScopy(
       N, ARRAY(X), ARRAY(Y),
       CLBALS_TRAILING_ARGS));
@@ -140,6 +141,7 @@ template <>
 void OpenCLDevice<double>::copy(const int N, const double *X, double *Y) {
   CREATE_CL_MEM(X, N, 1, READ_ONLY);
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasScopy(
       N, ARRAY(X), ARRAY(Y),
       CLBALS_TRAILING_ARGS));
@@ -147,8 +149,22 @@ void OpenCLDevice<double>::copy(const int N, const double *X, double *Y) {
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
-  CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyHostToDevice));
+  CREATE_CL_MEM(Y, N, 1, READ_WRITE);
+  cl_bool blocking_write = CL_TRUE;
+  cl_uint num_events_in_wait_list = 0;
+  cl_event *event_wait_list = NULL;
+  cl_event events = NULL;
+  CL_CHECK(clEnqueueWriteBuffer(
+      Caffe::opencl_queue(), bufY, blocking_write, 0, N * sizeof(Dtype),
+      X, num_events_in_wait_list, event_wait_list, &events));
 }
+
+template
+void OpenCLDevice<float>::copy_from_cpu(const int N, const float *X,
+                                        float *Y);
+template
+void OpenCLDevice<double>::copy_from_cpu(const int N, const double *X,
+                                         double *Y);
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {

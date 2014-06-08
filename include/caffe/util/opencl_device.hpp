@@ -47,16 +47,16 @@ namespace caffe {
     A, 0, NULL, NULL));
 
 #define PRE_CLBLAS_CALL \
-  cl_uint numCommandQueues = 1; \
-  cl_uint numEventsInWaitList = 0; \
-  cl_event *eventWaitList = NULL; \
+  cl_uint num_command_queues = 1; \
+  cl_uint num_events_in_wait_list = 0; \
+  cl_event *event_wait_list = NULL; \
   cl_event events = NULL
 
 #define ARRAY(A) buf##A, 0, ld##A
 
 #define CLBALS_TRAILING_ARGS \
-    numCommandQueues, Caffe::opencl_queue(), numEventsInWaitList, \
-    eventWaitList, &events
+    num_command_queues, Caffe::opencl_queue(), num_events_in_wait_list, \
+    event_wait_list, &events
 
 const char* clGetErrorString(cl_int error);
 const char* clblasGetErrorString(clblasStatus_t status);
