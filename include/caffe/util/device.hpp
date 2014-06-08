@@ -1,7 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
-#ifndef CAFFE_UTIL_MATH_BACKENDS_H_
-#define CAFFE_UTIL_MATH_BACKENDS_H_
+#ifndef CAFFE_UTIL_DEVICE_H_
+#define CAFFE_UTIL_DEVICE_H_
 
 #include <cublas_v2.h>
 #include <stdint.h>
@@ -251,4 +251,4 @@ class DeviceFactory {
 
 }  // namespace caffe
 
-#endif  // CAFFE_UTIL_MATH_BACKENDS_H_
+#endif  // CAFFE_UTIL_DEVICE_H_
