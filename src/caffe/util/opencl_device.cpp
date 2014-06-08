@@ -142,7 +142,7 @@ void OpenCLDevice<double>::copy(const int N, const double *X, double *Y) {
   CREATE_CL_MEM(X, N, 1, READ_ONLY);
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
   PRE_CLBLAS_CALL;
-  CLBLAS_CHECK(clblasScopy(
+  CLBLAS_CHECK(clblasDcopy(
       N, ARRAY(X), ARRAY(Y),
       CLBALS_TRAILING_ARGS));
 }
@@ -191,12 +191,25 @@ void OpenCLDevice<double>::set(const int N, const double alpha, double *X);
 template<typename Dtype>
 void OpenCLDevice<Dtype>::add_scalar(const int N, const Dtype alpha,
                                        Dtype *X) {
-  caffe_gpu_add_scalar<Dtype>(N, alpha, X);
+  NOT_IMPLEMENTED;
 }
 
-template<typename Dtype>
-void OpenCLDevice<Dtype>::scal(const int N, const Dtype alpha, Dtype *X) {
-  caffe_gpu_scal<Dtype>(N, alpha, X);
+template <>
+void OpenCLDevice<float>::scal(const int N, const float alpha, float *X) {
+  CREATE_CL_MEM(X, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
+  CLBLAS_CHECK(clblasSscal(
+      N, alpha, ARRAY(X),
+      CLBALS_TRAILING_ARGS));
+}
+
+template <>
+void OpenCLDevice<double>::scal(const int N, const double alpha, double *X) {
+  CREATE_CL_MEM(X, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
+  CLBLAS_CHECK(clblasDscal(
+      N, alpha, ARRAY(X),
+      CLBALS_TRAILING_ARGS));
 }
 
 template<typename Dtype>
@@ -208,43 +221,50 @@ void OpenCLDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
 template<typename Dtype>
 void OpenCLDevice<Dtype>::add(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-  caffe_gpu_add<Dtype>(N, a, b, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_add<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sub(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-  caffe_gpu_sub<Dtype>(N, a, b, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_sub<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::mul(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-  caffe_gpu_mul<Dtype>(N, a, b, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_mul<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::div(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-  caffe_gpu_div<Dtype>(N, a, b, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_div<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::powx(const int N, const Dtype* a, const Dtype b,
                                  Dtype* y) {
-  caffe_gpu_powx<Dtype>(N, a, b, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_powx<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_uniform(const int N, const Dtype a,
                                         const Dtype b, Dtype* r) {
-  caffe_gpu_rng_uniform<Dtype>(N, a, b, r);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_rng_uniform<Dtype>(N, a, b, r);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
                                          const Dtype sigma, Dtype* r) {
-  caffe_gpu_rng_gaussian<Dtype>(N, mu, sigma, r);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_rng_gaussian<Dtype>(N, mu, sigma, r);
 }
 
 template<typename Dtype>
@@ -262,56 +282,72 @@ void OpenCLDevice<Dtype>::exp(const int N, const Dtype* a, Dtype* y) {
 template<typename Dtype>
 void OpenCLDevice<Dtype>::dot(const int N, const Dtype* x, const Dtype* y,
                                 Dtype* out) {
-  caffe_gpu_dot<Dtype>(N, x, y, out);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_dot<Dtype>(N, x, y, out);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
                                              const Dtype* y, uint32_t* out) {
-  *out = caffe_gpu_hamming_distance<Dtype>(N, x, y);
+  NOT_IMPLEMENTED;
+//  *out = caffe_gpu_hamming_distance<Dtype>(N, x, y);
 }
 
 template<typename Dtype>
 // Returns the sum of the absolute values of the elements of vector x
 void OpenCLDevice<Dtype>::asum(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_asum<Dtype>(N, x, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_asum<Dtype>(N, x, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sign(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_sign<Dtype>(N, x, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_sign<Dtype>(N, x, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::sgnbit(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_sgnbit<Dtype>(N, x, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_sgnbit<Dtype>(N, x, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::fabs(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_fabs<Dtype>(N, x, y);
+  NOT_IMPLEMENTED;
+//  caffe_gpu_fabs<Dtype>(N, x, y);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::scale(const int N, const Dtype alpha,
                                   const Dtype *x, Dtype* y) {
-  caffe_gpu_scale<Dtype>(N, alpha, x, y);
+  this->copy<Dtype>(N, x, y);
+  this->scal<Dtype>(N, alpha, y);
 }
+
+template
+void OpenCLDevice<float>::scale(const int N, const float alpha,
+                                const float *x, float* y);
+template
+void OpenCLDevice<double>::scale(const int N, const double alpha,
+                                 const double *x, double* y);
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::im2col(const Dtype* data_im, const int channels,
     const int height, const int width, const int ksize, const int pad,
     const int stride, Dtype* data_col) {
-  im2col_gpu(data_im, channels, height, width, ksize, pad, stride,
-             data_col);
+  NOT_IMPLEMENTED;
+//  im2col_gpu(data_im, channels, height, width, ksize, pad, stride,
+//             data_col);
 }
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
     const int height, const int width, const int psize, const int pad,
     const int stride, Dtype* data_im) {
-  col2im_gpu(data_col, channels, height, width, psize, pad, stride,
-             data_im);
+  NOT_IMPLEMENTED;
+//  col2im_gpu(data_col, channels, height, width, psize, pad, stride,
+//             data_im);
 }
 
 const char* clGetErrorString(cl_int error) {
