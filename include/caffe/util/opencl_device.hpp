@@ -98,7 +98,16 @@ void caffe_opencl_##name<double>(const int n, const double* x, double* y) { \
   /* NOLINT_NEXT_LINE(whitespace/operators) */ \
   name##_kernel<double><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
       n, x, y); \
-}
+} \
+template<typename Dtype> \
+void OpenCLDevice<Dtype>::name(const int N, const Dtype* x, Dtype* y) { \
+  caffe_opencl_##name<Dtype>(N, x, y); \
+} \
+template \
+void OpenCLDevice<float>::name(const int N, const float* x, float* y); \
+template \
+void OpenCLDevice<double>::name(const int N, const double* x, double* y);
+
 
 #define DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(name, operation) \
 template <typename Dtype> \
@@ -123,7 +132,19 @@ void caffe_opencl_##name<double>( \
   /* NOLINT_NEXT_LINE(whitespace/operators) */  \
   name##_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>( \
       N, a, b, y); \
-}
+} \
+template<typename Dtype> \
+void OpenCLDevice<Dtype>::name(const int N, const Dtype* a, const Dtype* b, \
+                               Dtype* y) { \
+  caffe_opencl_##name<Dtype>(N, x, y); \
+} \
+template \
+void OpenCLDevice<float>::name(const int N, const float* a, const float* b, \
+                               float* y); \
+template \
+void OpenCLDevice<double>::name(const int N, const double* a, \
+                                const double* b, double* y);
+
 
 template<typename Dtype>
 void caffe_opencl_sqr(const int n, const Dtype* x, Dtype* y);

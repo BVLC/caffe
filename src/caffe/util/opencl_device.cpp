@@ -226,35 +226,6 @@ void OpenCLDevice<double>::scal(const int N, const double alpha, double *X) {
 }
 
 template<typename Dtype>
-void OpenCLDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
-  caffe_opencl_sqr(N, a, y);
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::add(const int N, const Dtype* a, const Dtype* b,
-                              Dtype* y) {
-  caffe_opencl_add<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::sub(const int N, const Dtype* a, const Dtype* b,
-                              Dtype* y) {
-  caffe_opencl_sub<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::mul(const int N, const Dtype* a, const Dtype* b,
-                              Dtype* y) {
-  caffe_opencl_mul<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::div(const int N, const Dtype* a, const Dtype* b,
-                              Dtype* y) {
-  caffe_opencl_div<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
 void OpenCLDevice<Dtype>::powx(const int N, const Dtype* a, const Dtype b,
                                Dtype* y) {
   NOT_IMPLEMENTED;
@@ -279,11 +250,6 @@ template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_rng_bernoulli<Dtype>(N, p, r);
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::exp(const int N, const Dtype* a, Dtype* y) {
-  caffe_opencl_exp(N, a, y);
 }
 
 template<typename Dtype>
@@ -325,21 +291,6 @@ void OpenCLDevice<Dtype>::asum(const int N, const Dtype* x, Dtype* y) {
 //  CLBLAS_CHECK(clblasSasum(
 //      N, alpha, ARRAY(X),
 //      CLBALS_TRAILING_ARGS));
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::sign(const int N, const Dtype* x, Dtype* y) {
-  caffe_opencl_sign(N, x, y);
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::sgnbit(const int N, const Dtype* x, Dtype* y) {
-  caffe_opencl_sgnbit(N, x, y);
-}
-
-template<typename Dtype>
-void OpenCLDevice<Dtype>::fabs(const int N, const Dtype* x, Dtype* y) {
-  caffe_opencl_fabs(N, x, y);
 }
 
 template<typename Dtype>
