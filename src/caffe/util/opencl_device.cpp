@@ -147,6 +147,9 @@ void OpenCLDevice<double>::copy(const int N, const double *X, double *Y) {
       CLBALS_TRAILING_ARGS));
 }
 
+/**
+ * http://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueWriteBuffer.html
+ */
 template<typename Dtype>
 void OpenCLDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
@@ -166,10 +169,24 @@ template
 void OpenCLDevice<double>::copy_from_cpu(const int N, const double *X,
                                          double *Y);
 
+/**
+ * http://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueFillBuffer.html
+ */
 template<typename Dtype>
 void OpenCLDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
-  caffe_gpu_set<Dtype>(N, alpha, X);
+  CREATE_CL_MEM(X, N, 1, READ_WRITE);
+  cl_uint num_events_in_wait_list = 0;
+  cl_event *event_wait_list = NULL;
+  cl_event events = NULL;
+  CL_CHECK(clEnqueueFillBuffer(
+      Caffe::opencl_queue(), bufA, &alpha, sizeof(Dtype), 0,
+      sizeof(Dtype) * N, num_events_in_wait_list, event_wait_list, &event));
 }
+
+template
+void OpenCLDevice<float>::set(const int N, const float alpha, float *X);
+template
+void OpenCLDevice<double>::set(const int N, const double alpha, double *X);
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::add_scalar(const int N, const Dtype alpha,
