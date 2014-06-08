@@ -1,0 +1,109 @@
+// Copyright 2014 BVLC and contributors.
+
+#ifndef CAFFE_UTIL_OPENCL_DEVICE_H_
+#define CAFFE_UTIL_OPENCL_DEVICE_H_
+
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
+#include <CL/opencl.h>
+#endif
+
+#include "glog/logging.h"
+
+#include "caffe/util/device.hpp"
+
+namespace caffe {
+
+inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
+  switch (trans) {
+  case CblasNoTrans:
+    return clblasNoTrans;
+  case CblasTrans:
+    return clblasTrans;
+  case CblasConjTrans:
+    return clblasConjTrans;
+  default:
+    LOG(FATAL) << "Unknown CBLAS_TRANSPOSE " << trans;
+  }
+}
+
+template<typename Dtype>
+class OpenCLDevice : public Device<Dtype> {
+ public:
+  OpenCLDevice() {
+  }
+  virtual ~OpenCLDevice() {
+  }
+  virtual void gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
+                    const int M, const int N, const int K, const Dtype alpha,
+                    const Dtype* A, const Dtype* B, const Dtype beta, Dtype* C);
+
+  virtual void gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
+                    const Dtype alpha, const Dtype* A, const Dtype* x,
+                    const Dtype beta, Dtype* y);
+
+  virtual void axpy(const int N, const Dtype alpha, const Dtype* X, Dtype* Y);
+
+  virtual void axpby(const int N, const Dtype alpha, const Dtype* X,
+                     const Dtype beta, Dtype* Y);
+
+  virtual void copy(const int N, const Dtype *X, Dtype *Y);
+  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
+
+  virtual void set(const int N, const Dtype alpha, Dtype *X);
+
+  virtual void add_scalar(const int N, const Dtype alpha, Dtype *X);
+
+  virtual void scal(const int N, const Dtype alpha, Dtype *X);
+
+  virtual void sqr(const int N, const Dtype* a, Dtype* y);
+
+  virtual void add(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+  virtual void sub(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+  virtual void mul(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+  virtual void div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+  virtual void powx(const int N, const Dtype* a, const Dtype b, Dtype* y);
+
+  virtual void rng_uniform(const int N, const Dtype a, const Dtype b, Dtype* r);
+
+  virtual void rng_gaussian(const int N, const Dtype mu, const Dtype sigma,
+                            Dtype* r);
+
+  virtual void rng_bernoulli(const int N, const Dtype p, int* r);
+
+  virtual void exp(const int N, const Dtype* a, Dtype* y);
+
+  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
+
+  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
+                                uint32_t* out);
+
+// Returns the sum of the absolute values of the elements of vector x
+  virtual void asum(const int N, const Dtype* x, Dtype* y);
+
+  virtual void sign(const int N, const Dtype* x, Dtype* y);
+
+  virtual void sgnbit(const int N, const Dtype* x, Dtype* y);
+
+  virtual void fabs(const int N, const Dtype* x, Dtype* y);
+
+  virtual void scale(const int N, const Dtype alpha, const Dtype *x, Dtype* y);
+
+  virtual void im2col(const Dtype* data_im, const int channels,
+      const int height, const int width, const int ksize, const int pad,
+      const int stride, Dtype* data_col);
+
+  virtual void col2im(const Dtype* data_col, const int channels,
+      const int height, const int width, const int psize, const int pad,
+      const int stride, Dtype* data_im);
+};
+
+
+}  // namespace caffe
+
+#endif  // CAFFE_UTIL_OPENCL_DEVICE_H_
