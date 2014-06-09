@@ -42,14 +42,6 @@ void HDF5OutputLayer<Dtype>::SaveBlobs() {
 }
 
 template <typename Dtype>
-void HDF5OutputLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
-  // TODO: no limit on the number of blobs
-  CHECK_EQ(bottom.size(), 2) << "HDF5OutputLayer takes two blobs as input.";
-  CHECK_EQ(top->size(), 0) << "HDF5OutputLayer takes no output blobs.";
-}
-
-template <typename Dtype>
 Dtype HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_GE(bottom.size(), 2);

@@ -11,8 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void SplitLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) << "Split Layer takes a single blob as input.";
-  CHECK_GE(top->size(), 1) << "Split Layer takes at least one blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   count_ = bottom[0]->count();
   for (int i = 0; i < top->size(); ++i) {
     // Allow the 0th top blob to be 'in-place', but no others.
