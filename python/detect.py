@@ -86,6 +86,12 @@ def main(argv):
              "RGB -> BGR since BGR is the Caffe default by way of OpenCV."
 
     )
+    parser.add_argument(
+        "--context_pad",
+        type=int,
+        default='16',
+        help="Amount of surrounding context to collect in input window."
+    )
     args = parser.parse_args()
 
     channel_swap = [int(s) for s in args.channel_swap.split(',')]
@@ -93,7 +99,8 @@ def main(argv):
     # Make detector.
     detector = caffe.Detector(args.model_def, args.pretrained_model,
             gpu=args.gpu, mean_file=args.mean_file,
-            input_scale=args.input_scale, channel_swap=channel_swap)
+            input_scale=args.input_scale, channel_swap=channel_swap,
+            context_pad=args.context_pad)
 
     if args.gpu:
         print 'GPU mode'
