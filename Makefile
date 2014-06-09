@@ -168,7 +168,7 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
-	CXXFLAGS += -mavx -m64 -fopenmp
+	CXXFLAGS += -mavx -m64 	-fopenmp
 #	CXXFLAGS += -std=c++11
 endif
 
@@ -197,7 +197,7 @@ ifeq ($(BLAS), mkl)
 	COMMON_FLAGS += -DUSE_MKL
 	MKL_DIR = /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKL_DIR)/include
-	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
+	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64 /opt/intel/composer_xe_2013_sp1.2.144/compiler/lib/intel64
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas

@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
   ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
   LOG(INFO) << "Starting Optimization";
+  double s_initial = dsecnd();
   SGDSolver<float> solver(solver_param);
   if (argc == 3) {
     LOG(INFO) << "Resuming from " << argv[2];
@@ -32,6 +33,8 @@ int main(int argc, char** argv) {
     solver.Solve();
   }
   LOG(INFO) << "Optimization Done.";
+  double s_elapsed = dsecnd() - s_initial;
+  LOG(INFO) << "Elapsed time, sec: " << s_elapsed;
 
   return 0;
 }

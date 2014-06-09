@@ -146,25 +146,15 @@ class ConvolutionLayer : public Layer<Dtype> {
   std::vector<Dtype> col_buffer_mt_;
   std::vector<Dtype> weight_diff_mt_;
   //----  fft ----------------------------------------------------------------
-  virtual void fft_setup();
-  virtual void fft_free();
-
   virtual Dtype Forward_cpu_fft(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Forward_cpu_fft_task(const Dtype *bottom_data, Dtype* top_data,
       const Dtype* weight, int n);
-
-  virtual void fft_pad_weights();
+  virtual void fft_setup();
+  virtual void fft_free();
   virtual void fft_doFFT_weights();
-  virtual void fft_clear_buffers();
-  virtual void fft_pad_map_in(Dtype* map_in);
-  virtual void fft_mult_acc(int channel);
-  virtual void fft_postprocess_map_out(float* map_out_real, Dtype* map_out);
-  virtual void fft_print_2D(Dtype *data, int height, int width);
-
   bool fft_on_ ;
   bool fft_initialiazed_ ;
-
   int fft_height_;
   int fft_width_ ;
   int fft_map_real_size_;
@@ -172,17 +162,12 @@ class ConvolutionLayer : public Layer<Dtype> {
   int height_out_ ;
   int width_out_ ;
   int map_out_size_;
-
-  // buffers
   float* fft_weights_real_ ;
   float* fft_map_in_real_ ;
   MKL_Complex8* fft_weights_complex_ ;
   MKL_Complex8* fft_map_in_complex_ ;
   MKL_Complex8* fft_map_out_complex_ ;
   float* fft_map_out_real_;
-
- // std::vector<float> fft_map_real_debug_ ;
-
   DFTI_DESCRIPTOR_HANDLE  fft_handle_ ;
   DFTI_DESCRIPTOR_HANDLE ifft_handle_ ;
 };
