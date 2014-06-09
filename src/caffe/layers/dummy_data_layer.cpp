@@ -19,17 +19,17 @@ void DummyDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << "Number of data fillers must be 0, 1 or equal to the number of tops: "
       << num_top << "; you specified " << num_data_filler << " data fillers.";
   CHECK(param.num_size() == 1 || param.num_size() == num_top)
-      << "Must specify either a single (1) 'num' or one for each top blob ("
-      << num_top << "); you specified " << param.num_size() << ".";
+      << "Must specify either a single (1) 'num' or one for each top blob "
+      << "(" << num_top << "); you specified " << param.num_size() << ".";
   CHECK(param.channels_size() == 1 || param.channels_size() == num_top)
-      << "Must specify either a single (1) 'channels' or one for each top blob ("
-      << num_top << "); you specified " << param.channels_size() << ".";
+      << "Must specify either a single (1) 'channels' or one for each top blob "
+      << "(" << num_top << "); you specified " << param.channels_size() << ".";
   CHECK(param.height_size() == 1 || param.height_size() == num_top)
-      << "Must specify either a single (1) 'height' or one for each top blob ("
-      << num_top << "); you specified " << param.height_size() << ".";
+      << "Must specify either a single (1) 'height' or one for each top blob "
+      << "(" << num_top << "); you specified " << param.height_size() << ".";
   CHECK(param.width_size() == 1 || param.width_size() == num_top)
-      << "Must specify either a single (1) 'width' or one for each top blob ("
-      << num_top << "); you specified " << param.width_size() << ".";
+      << "Must specify either a single (1) 'width' or one for each top blob "
+      << "(" << num_top << "); you specified " << param.width_size() << ".";
   // refill_[i] tells Forward i whether or not to actually refill top Blob i.
   // If refill_[i] is false, Forward does nothing for Blob i. We use this to
   // avoid wastefully refilling "constant" Blobs in every forward pass.
