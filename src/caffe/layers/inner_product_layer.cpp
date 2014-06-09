@@ -14,8 +14,7 @@ namespace caffe {
 template <typename Dtype>
 void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) << "IP Layer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) << "IP Layer takes a single blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   const int num_output = this->layer_param_.inner_product_param().num_output();
   bias_term_ = this->layer_param_.inner_product_param().bias_term();
   // Figure out the dimensions

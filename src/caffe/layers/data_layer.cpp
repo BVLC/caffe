@@ -129,9 +129,7 @@ DataLayer<Dtype>::~DataLayer<Dtype>() {
 template <typename Dtype>
 void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 0) << "Data Layer takes no input blobs.";
-  CHECK_GE(top->size(), 1) << "Data Layer takes at least one blob as output.";
-  CHECK_LE(top->size(), 2) << "Data Layer takes at most two blobs as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   if (top->size() == 1) {
     output_labels_ = false;
   } else {

@@ -13,8 +13,7 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) << "Conv Layer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) << "Conv Layer takes a single blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   kernel_size_ = this->layer_param_.convolution_param().kernel_size();
   stride_ = this->layer_param_.convolution_param().stride();
   group_ = this->layer_param_.convolution_param().group();

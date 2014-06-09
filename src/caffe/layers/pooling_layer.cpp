@@ -18,16 +18,16 @@ namespace caffe {
 template <typename Dtype>
 void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) << "PoolingLayer takes a single blob as input.";
+  // Set the max number of top blobs before calling base Layer::SetUp.
+  // If doing MAX pooling, we can optionally output an extra top Blob
+  // for the mask.  Otherwise, we only have one top Blob.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX) {
-    CHECK_GE(top->size(), 1)
-        << "MaxPoolingLayer takes at least one blob as output.";
-    CHECK_LE(top->size(), 2)
-        << "MaxPoolingLayer takes at most two blobs as output.";
+    max_top_blobs_ = 2;
   } else {
-    CHECK_EQ(top->size(), 1) << "PoolingLayer takes a single blob as output.";
+    max_top_blobs_ = 1;
   }
+  Layer<Dtype>::SetUp(bottom, top);
   kernel_size_ = this->layer_param_.pooling_param().kernel_size();
   stride_ = this->layer_param_.pooling_param().stride();
   pad_ = this->layer_param_.pooling_param().pad();
