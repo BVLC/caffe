@@ -297,7 +297,7 @@ $(BUILD_DIR_LINK): $(BUILD_DIR)/.linked
 $(BUILD_DIR)/.linked:
 	@ mkdir -p $(BUILD_DIR)
 	@ $(RM) $(OTHER_BUILD_DIR)/.linked
-	@ $(RM) $(BUILD_DIR_LINK)
+	@ $(RM) -r $(BUILD_DIR_LINK)
 	@ ln -s $(BUILD_DIR) $(BUILD_DIR_LINK)
 	@ touch $@
 
