@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -14,9 +15,10 @@
 #include "caffe/proto/caffe.pb.h"
 
 using std::map;
-using std::vector;
+using std::pair;
 using std::set;
 using std::string;
+using std::vector;
 
 namespace caffe {
 
@@ -103,6 +105,7 @@ class Net {
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name);
   bool has_layer(const string& layer_name);
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
+  const map<string, int>& param_names_index() { return param_names_index_; }
 
  protected:
   // Helpers for Init.
@@ -114,6 +117,8 @@ class Net {
   int AppendBottom(const NetParameter& param, const int layer_id,
                    const int bottom_id, set<string>* available_blobs,
                    map<string, int>* blob_name_to_idx);
+  void AppendParam(const NetParameter& param, const int layer_id,
+                   const int param_id);
   // Function to get misc parameters, e.g. the learning rate multiplier and
   // weight decay.
   void GetLearningRateAndWeightDecay();
@@ -138,6 +143,9 @@ class Net {
   // top_vecs stores the vectors containing the output for each layer
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
+  vector<int> param_owners_;
+  vector<pair<int, int> > param_net_indices_;
+  map<string, int> param_names_index_;
   // blob indices for the input and the output of the net
   vector<int> net_input_blob_indices_;
   vector<int> net_output_blob_indices_;
