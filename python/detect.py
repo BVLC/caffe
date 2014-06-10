@@ -57,9 +57,9 @@ def main(argv):
     )
     parser.add_argument(
         "--crop_mode",
-        default="center_only",
+        default="selective_search",
         choices=CROP_MODES,
-        help="Image crop mode"
+        help="How to generate windows for detection."
     )
     parser.add_argument(
         "--gpu",
