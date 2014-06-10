@@ -296,7 +296,10 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   string hashtag;
   int image_index, channels;
-  while (infile >> hashtag >> image_index) {
+  if (!(infile >> hashtag >> image_index)) {
+    LOG(FATAL) << "Window file is empty";
+  }
+  do {
     CHECK_EQ(hashtag, "#");
     // read image path
     string image_path;
@@ -352,7 +355,7 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
           << image_size[2] << " "
           << "windows to process: " << num_windows;
     }
-  }
+  } while (infile >> hashtag >> image_index);
 
   LOG(INFO) << "Number of images: " << image_index+1;
 
