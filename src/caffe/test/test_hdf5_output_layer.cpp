@@ -174,5 +174,4 @@ TYPED_TEST(HDF5OutputLayerTest, TestGPUForward) {
       this->output_file_name_;
 }
 
-}
-  // namespace caffe
+}  // namespace caffe
