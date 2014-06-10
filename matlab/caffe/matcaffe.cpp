@@ -3,8 +3,10 @@
 // caffe::Caffe functions so that one could easily call it from matlab.
 // Note that for matlab, we will simply use float as the data type.
 
-#include <string>
-#include <vector>
+// these need to be included after boost on OS X
+#include <string>  // NOLINT(build/include_order)
+#include <vector>  // NOLINT(build/include_order)
+#include <fstream>  // NOLINT
 
 #include "mex.h"
 
@@ -13,6 +15,20 @@
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs
 
 using namespace caffe;  // NOLINT(build/namespaces)
+
+
+// for convenience, check that input files can be opened, and raise an
+// exception that boost will send to Python if not (caffe could still crash
+// later if the input files are disturbed before they are actually used, but
+// this saves frustration in most cases)
+static void CheckFile(const string& filename) {
+    std::ifstream f(filename.c_str());
+    if (!f.good()) {
+      f.close();
+      throw std::runtime_error("Could not open file " + filename);
+    }
+    f.close();
+}
 
 // The pointer to the internal caffe::Net instance
 static shared_ptr<Net<float> > net_;
@@ -225,8 +241,87 @@ static mxArray* do_get_weights() {
   return mx_layers;
 }
 
+static mxArray* do_get_layers_info() {
+  const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
+  const vector<string>& layer_names = net_->layer_names();
+
+  int num_layers = layers.size();
+
+  // Step 1: prepare output array of structures
+  mxArray* mx_layers;
+  {
+    const char* fnames[3] = {"name", "type", "blobs"};
+    mx_layers = mxCreateStructArray(1, num_layers, 3, fnames);
+  }
+
+  // Step 2: copy info into output
+  {
+    mxArray* mx_blob;
+    const char* blobfnames[4] = {"num", "channels", "height", "width"};
+    string prev_layer_name = "";
+    int mx_layer_index = 0;
+    for (unsigned int i = 0; i < layers.size(); ++i) {
+      mxSetField(mx_layers, i, "name", mxCreateString(layer_names[i].c_str()));
+      mxSetField(mx_layers, i, "type", mxCreateString(layers[i]->type_name()));
+
+      vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
+      int num_blobs = layer_blobs.size();
+      if (num_blobs == 0) {
+        continue;
+      }
+
+      mx_blob = mxCreateStructArray(1, num_blobs, 4, blobfnames);
+
+      for (unsigned int j = 0; j < num_blobs; ++j) {
+        mxSetField(mx_blob, j, "num", layer_blobs[j]->num());
+        mxSetField(mx_blob, j, "channels", layer_blobs[j]->channels());
+        mxSetField(mx_blob, j, "height", layer_blobs[j]->height());
+        mxSetField(mx_blob, j, "width", layer_blobs[j]->width());
+      }
+      mxSetField(mx_layers, i, "blobs", mx_blob);
+    }
+  }
+
+  return mx_layers;
+}
+
+static mxArray* do_get_blobs_info() {
+  const vector<shared_ptr<Blob<float> > >& blobs = net_->blobs();
+  const vector<string>& blob_names = net_->blob_names();
+
+  int num_blobs = blobs.size();
+
+  // Step 1: prepare output array of structures
+  mxArray* mx_blobs;
+  {
+    const char* fnames[5] = {"name", "num", "channels", "height", "width"};
+    mx_blobs = mxCreateStructArray(1, num_blobs, 5, fnames);
+  }
+
+  // Step 2: copy info into output
+  {
+    for (unsigned int i = 0; i < num_blobs; ++i) {
+      mxSetField(mx_blobs, i, "name", mxCreateString(blob_names[i].c_str()));
+      mxSetField(mx_blobs, j, "num", layer_blobs[j]->num());
+      mxSetField(mx_blobs, j, "channels", layer_blobs[j]->channels());
+      mxSetField(mx_blobs, j, "height", layer_blobs[j]->height());
+      mxSetField(mx_blobs, j, "width", layer_blobs[j]->width());
+    }
+  }
+
+  return mx_blobs;
+}
+
 static void get_weights(MEX_ARGS) {
   plhs[0] = do_get_weights();
+}
+
+static void get_layers_info(MEX_ARGS) {
+  plhs[0] = do_get_layers_info();
+}
+
+static void get_blobs_info(MEX_ARGS) {
+  plhs[0] = do_get_blobs_info();
 }
 
 static void set_mode_cpu(MEX_ARGS) {
@@ -267,8 +362,9 @@ static void init(MEX_ARGS) {
 
   char* param_file = mxArrayToString(prhs[0]);
   char* model_file = mxArrayToString(prhs[1]);
-
+  CheckFile(string(param_file));
   net_.reset(new Net<float>(string(param_file)));
+  CheckFile(string(model_file));
   net_->CopyTrainedLayersFrom(string(model_file));
 
   mxFree(param_file);
@@ -279,6 +375,41 @@ static void init(MEX_ARGS) {
   if (nlhs == 1) {
     plhs[0] = mxCreateDoubleScalar(init_key);
   }
+}
+
+static void init_net(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+
+  char* param_file = mxArrayToString(prhs[0]);
+
+  CheckFile(string(param_file));
+  net_.reset(new Net<float>(string(param_file)));
+
+  mxFree(param_file);
+
+  init_key = random();  // NOLINT(caffe/random_fn)
+
+  if (nlhs == 1) {
+    plhs[0] = mxCreateDoubleScalar(init_key);
+  }
+}
+
+static void load_model(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+
+  char* model_file = mxArrayToString(prhs[0]);
+
+  CheckFile(string(model_file));
+  net_->CopyTrainedLayersFrom(string(model_file));
+
+  mxFree(model_file);
+
 }
 
 static void reset(MEX_ARGS) {
@@ -353,6 +484,8 @@ static handler_registry handlers[] = {
   { "forward",            forward         },
   { "backward",           backward        },
   { "init",               init            },
+  { "init_net",           init_net        },
+  { "load_model",         load_model      },
   { "is_initialized",     is_initialized  },
   { "set_mode_cpu",       set_mode_cpu    },
   { "set_mode_gpu",       set_mode_gpu    },
@@ -360,6 +493,8 @@ static handler_registry handlers[] = {
   { "set_phase_test",     set_phase_test  },
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
+  { "get_layers_info",    get_layers_info },
+  { "get_blobs_info",     get_blobs_info  },
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
   { "read_mean",          read_mean       },
