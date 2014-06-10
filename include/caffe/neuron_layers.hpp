@@ -17,9 +17,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#define HDF5_DATA_DATASET_NAME "data"
-#define HDF5_DATA_LABEL_NAME "label"
-
 namespace caffe {
 
 /* NeuronLayer

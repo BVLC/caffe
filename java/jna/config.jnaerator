@@ -1,0 +1,50 @@
+#https:/code.google.com/p/jnaerator/wiki/CommandLineOptionsAndEnvironmentVariables
+#https://code.google.com/p/jnaerator/wiki/JNAeratorFiles
+
+-I/usr/include/c++/4.6/x86_64-linux-gnu/
+-I/usr/lib/gcc/x86_64-linux-gnu/4.6/include
+-I/usr/local/cuda/include
+-I$(DIR)/../../build/src/caffe/proto
+-I$(DIR)/../../include/caffe
+-I$(DIR)/../../include/caffe/util
+
+-library Caffe
+$(DIR)/../../build/src/caffe/proto/caffe.pb.h
+$(DIR)/../../build/src/caffe/proto/caffe_pretty_print.pb.h
+$(DIR)/../../include/caffe/blob.hpp
+$(DIR)/../../include/caffe/caffe.hpp
+$(DIR)/../../include/caffe/common.hpp
+$(DIR)/../../include/caffe/data_layers.hpp
+$(DIR)/../../include/caffe/filler.hpp
+$(DIR)/../../include/caffe/layer.hpp
+$(DIR)/../../include/caffe/loss_layers.hpp
+$(DIR)/../../include/caffe/net.hpp
+$(DIR)/../../include/caffe/neuron_layers.hpp
+$(DIR)/../../include/caffe/solver.hpp
+$(DIR)/../../include/caffe/syncedmem.hpp
+$(DIR)/../../include/caffe/vision_layers.hpp
+$(DIR)/../../include/caffe/util/benchmark.hpp
+$(DIR)/../../include/caffe/util/im2col.hpp
+$(DIR)/../../include/caffe/util/insert_splits.hpp
+$(DIR)/../../include/caffe/util/io.hpp
+$(DIR)/../../include/caffe/util/math_functions.hpp
+$(DIR)/../../include/caffe/util/mkl_alternate.hpp
+$(DIR)/../../include/caffe/util/rng.hpp
+$(DIR)/../../include/caffe/util/upgrade_proto.hpp
+
+-package org.berkeleyvision.caffe
+-libraryNamingPrefixes caffe
+-mode Maven
+-mavenArtifactId caffe
+-mavenGroupId org.berkeleyvision 
+-mavenVersion 3.2.1
+-runtime JNA  
+-arch linux_x64 
+-beautifyNames 
+-dontCastConstants
+-gccLong
+-genRawBindings
+-direct
+-o generated
+-f 
+-v 
