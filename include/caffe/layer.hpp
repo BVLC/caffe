@@ -46,7 +46,7 @@ class Layer {
   inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   inline void Backward(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
   // Returns the vector of blobs.
@@ -104,10 +104,10 @@ class Layer {
   // Backward functions: compute the gradients for any parameters and
   // for the bottom blobs if propagate_down is true.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) = 0;
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) {
     // LOG(WARNING) << "Using CPU code as backup.";
     Backward_cpu(top, propagate_down, bottom);
@@ -172,7 +172,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+    const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   switch (Caffe::mode()) {
   case Caffe::CPU:
