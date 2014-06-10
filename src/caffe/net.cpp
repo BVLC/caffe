@@ -69,41 +69,42 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   top_vecs_.resize(param.layers_size());
   bottom_id_vecs_.resize(param.layers_size());
   top_id_vecs_.resize(param.layers_size());
-  for (int i = 0; i < param.layers_size(); ++i) {
+  for (int layer_id = 0; layer_id < param.layers_size(); ++layer_id) {
     bool in_place = false;
-    const LayerParameter& layer_param = param.layers(i);
+    const LayerParameter& layer_param = param.layers(layer_id);
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = param.force_backward();
     // Figure out this layer's input and output
-    for (int j = 0; j < layer_param.bottom_size(); ++j) {
-      const string& blob_name = layer_param.bottom(j);
+    for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
+         ++bottom_id) {
+      const string& blob_name = layer_param.bottom(bottom_id);
       const int blob_id = blob_name_to_idx[blob_name];
       if (available_blobs.find(blob_name) == available_blobs.end()) {
         LOG(FATAL) << "Unknown blob input " << blob_name <<
-            " to layer" << j;
+            " to layer" << bottom_id;
       }
       LOG(INFO) << layer_param.name() << " <- " << blob_name;
-      bottom_vecs_[i].push_back(
+      bottom_vecs_[layer_id].push_back(
           blobs_[blob_id].get());
-      bottom_id_vecs_[i].push_back(blob_id);
+      bottom_id_vecs_[layer_id].push_back(blob_id);
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
       available_blobs.erase(blob_name);
     }
-    for (int j = 0; j < layer_param.top_size(); ++j) {
-      const string& blob_name = layer_param.top(j);
+    for (int top_id = 0; top_id < layer_param.top_size(); ++top_id) {
+      const string& blob_name = layer_param.top(top_id);
       // Check if we are doing in-place computation
-      if (layer_param.bottom_size() > j &&
-          blob_name == layer_param.bottom(j)) {
+      if (layer_param.bottom_size() > top_id &&
+          blob_name == layer_param.bottom(top_id)) {
         // In-place computation
         LOG(INFO) << layer_param.name() << " -> " << blob_name << " (in-place)";
         in_place = true;
         available_blobs.insert(blob_name);
-        top_vecs_[i].push_back(
+        top_vecs_[layer_id].push_back(
             blobs_[blob_name_to_idx[blob_name]].get());
-        top_id_vecs_[i].push_back(blob_name_to_idx[blob_name]);
+        top_id_vecs_[layer_id].push_back(blob_name_to_idx[blob_name]);
       } else if (blob_name_to_idx.find(blob_name) != blob_name_to_idx.end()) {
         // If we are not doing in-place computation but has duplicated blobs,
         // raise an error.
@@ -117,33 +118,34 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_need_backward_.push_back(param.force_backward());
         blob_name_to_idx[blob_name] = blob_names_.size() - 1;
         available_blobs.insert(blob_name);
-        top_vecs_[i].push_back(blobs_[blob_names_.size() - 1].get());
-        top_id_vecs_[i].push_back(blob_names_.size() - 1);
+        top_vecs_[layer_id].push_back(blobs_[blob_names_.size() - 1].get());
+        top_id_vecs_[layer_id].push_back(blob_names_.size() - 1);
       }
     }
     // After this layer is connected, set it up.
-    // LOG(INFO) << "Setting up " << layer_names_[i];
-    layers_[i]->SetUp(bottom_vecs_[i], &top_vecs_[i]);
-    for (int topid = 0; topid < top_vecs_[i].size(); ++topid) {
-      LOG(INFO) << "Top shape: " << top_vecs_[i][topid]->num() << " "
-          << top_vecs_[i][topid]->channels() << " "
-          << top_vecs_[i][topid]->height() << " "
-          << top_vecs_[i][topid]->width() << " ("
-          << top_vecs_[i][topid]->count() << ")";
+    // LOG(INFO) << "Setting up " << layer_names_[layer_id];
+    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], &top_vecs_[layer_id]);
+    for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
+          << top_vecs_[layer_id][top_id]->channels() << " "
+          << top_vecs_[layer_id][top_id]->height() << " "
+          << top_vecs_[layer_id][top_id]->width() << " ("
+          << top_vecs_[layer_id][top_id]->count() << ")";
       if (!in_place)
-        memory_used += top_vecs_[i][topid]->count();
+        memory_used += top_vecs_[layer_id][top_id]->count();
     }
     DLOG(INFO) << "Memory  required for Data " << memory_used*sizeof(Dtype);
-    int blobs_lr_size = layers_[i]->layer_param().blobs_lr_size();
-    CHECK(blobs_lr_size == layers_[i]->blobs().size() || blobs_lr_size == 0)
+    int blobs_lr_size = layers_[layer_id]->layer_param().blobs_lr_size();
+    CHECK(blobs_lr_size == layers_[layer_id]->blobs().size() || blobs_lr_size == 0)
         << "Incorrect blobs lr size: should be either 0 or the same as "
            "the number of the layer's parameter blobs.";
     if (blobs_lr_size) {
       // Check if this layer needs backward operation itself
-      for (int j = 0; j < blobs_lr_size; ++j) {
-        need_backward |= (layers_[i]->layer_param().blobs_lr(j) > 0);
+      for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
+        need_backward |=
+            (layers_[layer_id]->layer_param().blobs_lr(param_id) > 0);
       }
-    } else if (layers_[i]->blobs().size()) {
+    } else if (layers_[layer_id]->blobs().size()) {
       // catch: if a layer param does not specify blobs_lr, we should assume the
       // learning rate to be 1. Thus we will need to perform backward.
       need_backward = true;
@@ -151,12 +153,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
     if (need_backward) {
-      LOG(INFO) << layer_names_[i] << " needs backward computation.";
-      for (int j = 0; j < top_id_vecs_[i].size(); ++j) {
-        blob_need_backward_[top_id_vecs_[i][j]] = true;
+      LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
+      for (int top_id = 0; top_id < top_id_vecs_[layer_id].size(); ++top_id) {
+        blob_need_backward_[top_id_vecs_[layer_id][top_id]] = true;
       }
     } else {
-      LOG(INFO) << layer_names_[i] << " does not need backward computation.";
+      LOG(INFO) << layer_names_[layer_id]
+                << " does not need backward computation.";
     }
   }
   // In the end, all remaining blobs are considered output blobs.
@@ -166,11 +169,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     net_output_blobs_.push_back(blobs_[blob_name_to_idx[*it]].get());
     net_output_blob_indices_.push_back(blob_name_to_idx[*it]);
   }
-  for (size_t i = 0; i < blob_names_.size(); ++i) {
-    blob_names_index_[blob_names_[i]] = i;
+  for (size_t blob_id = 0; blob_id < blob_names_.size(); ++blob_id) {
+    blob_names_index_[blob_names_[blob_id]] = blob_id;
   }
-  for (size_t i = 0; i < layer_names_.size(); ++i) {
-    layer_names_index_[layer_names_[i]] = i;
+  for (size_t layer_id = 0; layer_id < layer_names_.size(); ++layer_id) {
+    layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
