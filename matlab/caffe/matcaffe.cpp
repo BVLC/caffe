@@ -247,22 +247,25 @@ static mxArray* do_get_layer_weights(const mxArray* const layer_name) {
   const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
   const vector<string>& layer_names = net_->layer_names();
   char* c_layer_name = mxArrayToString(layer_name);
+  LOG(INFO) << c_layer_name;
   mxArray* mx_layer_weights = NULL;
 
   for (unsigned int i = 0; i < layers.size(); ++i) {
-    if (strcmp(layer_names[i].c_str(),c_layer_name)) {
+    LOG(INFO) << layer_names[i];
+    if (strcmp(layer_names[i].c_str(),c_layer_name) == 0) {
       vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
       if (layer_blobs.size() == 0) {
         continue;
       }
       const mwSize dims[2] = {layer_blobs.size(), 1};
       mx_layer_weights = mxCreateCellArray(2, dims);
+      LOG(INFO) << "layer_blobs.size()" << layer_blobs.size();
       for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
         // internally data is stored as (width, height, channels, num)
         // where width is the fastest dimension
         mwSize dims[4] = {layer_blobs[j]->width(), layer_blobs[j]->height(),
             layer_blobs[j]->channels(), layer_blobs[j]->num()};
-
+        LOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
         mxArray* mx_weights =
           mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
         mxSetCell(mx_layer_weights, j, mx_weights);
@@ -576,6 +579,7 @@ static handler_registry handlers[] = {
   { "set_phase_test",     set_phase_test  },
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
+  { "get_layer_weights",  get_layer_weights},
   { "get_layers_info",    get_layers_info },
   { "get_blobs_info",     get_blobs_info  },
   { "get_init_key",       get_init_key    },
