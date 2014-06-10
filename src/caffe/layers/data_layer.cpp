@@ -26,7 +26,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
   Datum datum;
   CHECK(layer->prefetch_data_);
   Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
-  Dtype* top_label;
+  Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
   if (layer->output_labels_) {
     top_label = layer->prefetch_label_->mutable_cpu_data();
   }
