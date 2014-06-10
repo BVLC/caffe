@@ -37,18 +37,24 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
 
 template <typename Dtype>
 void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
-    const vector<Blob<Dtype>*>& top, const bool propagate_down,
+    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  // First, compute the diff
-  const int count = (*bottom)[0]->count();
-  const int num = (*bottom)[0]->num();
-  const Dtype* sigmoid_output_data = sigmoid_output_->gpu_data();
-  const Dtype* target = (*bottom)[1]->gpu_data();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-  caffe_gpu_copy(count, sigmoid_output_data, bottom_diff);
-  caffe_gpu_axpy(count, Dtype(-1), target, bottom_diff);
-  // Scale down gradient
-  caffe_gpu_scal(count, Dtype(1) / num, bottom_diff);
+  if (propagate_down[1]) {
+    LOG(FATAL) << this->type_name()
+               << " Layer cannot backpropagate to label inputs.";
+  }
+  if (propagate_down[0]) {
+    // First, compute the diff
+    const int count = (*bottom)[0]->count();
+    const int num = (*bottom)[0]->num();
+    const Dtype* sigmoid_output_data = sigmoid_output_->gpu_data();
+    const Dtype* target = (*bottom)[1]->gpu_data();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+    caffe_gpu_copy(count, sigmoid_output_data, bottom_diff);
+    caffe_gpu_axpy(count, Dtype(-1), target, bottom_diff);
+    // Scale down gradient
+    caffe_gpu_scal(count, Dtype(1) / num, bottom_diff);
+  }
 }
 
 INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);

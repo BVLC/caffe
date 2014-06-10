@@ -42,9 +42,9 @@ __global__ void TanHBackward(const int n, const Dtype* in_diff,
 
 template <typename Dtype>
 void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+    const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  if (propagate_down) {
+  if (propagate_down[0]) {
     const Dtype* top_data = top[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
