@@ -5,19 +5,24 @@ import skimage.transform
 from caffe.proto import caffe_pb2
 
 
-def load_image(filename):
+def load_image(filename, color=True):
     """
     Load an image converting from grayscale or alpha as needed.
 
     Take
     filename: string
+    color: flag for color format. True (default) loads as RGB while False
+        loads as intensity (if image is already grayscale).
 
     Give
-    image: an image of size (H x W x 3) with RGB channels of type uint8.
+    image: an image with type np.float32 of size (H x W x 3) in RGB or
+        of size (H x W x 1) in grayscale.
     """
     img = skimage.img_as_float(skimage.io.imread(filename)).astype(np.float32)
     if img.ndim == 2:
-        img = np.tile(img[:, :, np.newaxis], (1, 1, 3))
+        img = img[:, :, np.newaxis]
+        if color:
+            img = np.tile(img, (1, 1, 3))
     elif img.shape[2] == 4:
         img = img[:, :, :3]
     return img
