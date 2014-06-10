@@ -57,6 +57,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   top_vecs_.resize(param.layers_size());
   bottom_id_vecs_.resize(param.layers_size());
   top_id_vecs_.resize(param.layers_size());
+  bottom_need_backward_.resize(param.layers_size());
   for (int layer_id = 0; layer_id < param.layers_size(); ++layer_id) {
     bool in_place = false;
     const LayerParameter& layer_param = param.layers(layer_id);
@@ -199,6 +200,7 @@ int Net<Dtype>::AppendBottom(const NetParameter& param,
   bottom_id_vecs_[layer_id].push_back(blob_id);
   available_blobs->erase(blob_name);
   bool need_backward = param.force_backward() || blob_need_backward_[blob_id];
+  bottom_need_backward_[layer_id].push_back(need_backward);
   return blob_id;
 }
 
@@ -291,7 +293,8 @@ template <typename Dtype>
 void Net<Dtype>::Backward() {
   for (int i = layers_.size() - 1; i >= 0; --i) {
     if (layer_need_backward_[i]) {
-      layers_[i]->Backward(top_vecs_[i], true, &bottom_vecs_[i]);
+      layers_[i]->Backward(
+          top_vecs_[i], bottom_need_backward_[i], &bottom_vecs_[i]);
     }
   }
 }

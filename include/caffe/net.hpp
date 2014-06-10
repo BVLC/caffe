@@ -81,6 +81,9 @@ class Net {
   // this unless you do per-layer checks such as gradients.
   inline vector<vector<Blob<Dtype>*> >& bottom_vecs() { return bottom_vecs_; }
   inline vector<vector<Blob<Dtype>*> >& top_vecs() { return top_vecs_; }
+  inline vector<vector<bool> >& bottom_need_backward() {
+    return bottom_need_backward_;
+  }
   // returns the parameters
   inline vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
   // returns the parameter learning rate multipliers
@@ -131,6 +134,7 @@ class Net {
   // pointers.
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
   vector<vector<int> > bottom_id_vecs_;
+  vector<vector<bool> > bottom_need_backward_;
   // top_vecs stores the vectors containing the output for each layer
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;

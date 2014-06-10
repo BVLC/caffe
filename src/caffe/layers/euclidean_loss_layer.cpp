@@ -1,16 +1,11 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <algorithm>
-#include <cmath>
-#include <cfloat>
 #include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
-
-using std::max;
 
 namespace caffe {
 
@@ -40,13 +35,18 @@ Dtype EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  caffe_cpu_axpby(
-      (*bottom)[0]->count(),              // count
-      Dtype(1) / (*bottom)[0]->num(),     // alpha
-      diff_.cpu_data(),                   // a
-      Dtype(0),                           // beta
-      (*bottom)[0]->mutable_cpu_diff());  // b
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  for (int i = 0; i < 2; ++i) {
+    if (propagate_down[i]) {
+      const Dtype sign = (i == 0) ? 1 : -1;
+      caffe_cpu_axpby(
+          (*bottom)[i]->count(),              // count
+          sign / (*bottom)[i]->num(),         // alpha
+          diff_.cpu_data(),                   // a
+          Dtype(0),                           // beta
+          (*bottom)[i]->mutable_cpu_diff());  // b
+    }
+  }
 }
 
 INSTANTIATE_CLASS(EuclideanLossLayer);
