@@ -285,7 +285,7 @@ static mxArray* do_get_layers_info() {
         mxSetField(mx_blob, j, "count",
           mxCreateDoubleScalar(layer_blobs[j]->count()));
       }
-      mxSetField(mx_layers, i, "blobs", mx_blob);
+      mxSetField(mx_layers, i, "weights", mx_blob);
     }
   }
 
