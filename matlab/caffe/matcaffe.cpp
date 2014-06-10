@@ -289,6 +289,48 @@ static mxArray* do_get_layer_weights(const mxArray* const layer_name) {
   return mx_layer_weights;
 }
 
+static void do_set_layer_weights(const mxArray* const layer_name,
+    const mxArray* const mx_layer_weights) {
+  const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
+  const vector<string>& layer_names = net_->layer_names();
+
+  char* c_layer_name = mxArrayToString(layer_name);
+  LOG(INFO) << c_layer_name;
+
+  for (unsigned int i = 0; i < layers.size(); ++i) {
+    LOG(INFO) << layer_names[i];
+    if (strcmp(layer_names[i].c_str(),c_layer_name) == 0) {
+      vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
+      if (layer_blobs.size() == 0) {
+        continue;
+      }
+      CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(mx_layer_weights)[0]),
+        layer_blobs.size());
+      LOG(INFO) << "layer_blobs.size()" << layer_blobs.size();
+      for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
+        // internally data is stored as (width, height, channels, num)
+        // where width is the fastest dimension
+        // 
+        const mxArray* const elem = mxGetCell(mx_layer_weights, i);
+        const float* const data_ptr =
+            reinterpret_cast<const float* const>(mxGetPr(elem));
+        switch (Caffe::mode()) {
+        case Caffe::CPU:
+          memcpy(layer_blobs[i]->mutable_cpu_data(), data_ptr,
+              sizeof(float) * layer_blobs[i]->count());
+          break;
+        case Caffe::GPU:
+          cudaMemcpy(layer_blobs[i]->mutable_gpu_data(), data_ptr,
+              sizeof(float) * layer_blobs[i]->count(), cudaMemcpyHostToDevice);
+          break;
+        default:
+          LOG(FATAL) << "Unknown Caffe mode.";
+        }
+      }
+    }
+  }
+}
+
 static mxArray* do_get_layers_info() {
   const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
   const vector<string>& layer_names = net_->layer_names();
@@ -368,7 +410,6 @@ static mxArray* do_get_blobs_info() {
         mxCreateDoubleScalar(blobs[i]->count()));
     }
   }
-
   return mx_blobs;
 }
 
@@ -382,6 +423,14 @@ static void get_layer_weights(MEX_ARGS) {
     mexErrMsgTxt("Wrong number of arguments");
   }
   plhs[0] = do_get_layer_weights(prhs[0]);
+}
+
+static void set_layer_weights(MEX_ARGS) {
+  if (nrhs != 2) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments you need layer_name and cell of weights");
+  }
+  do_set_layer_weights(prhs[0],prhs[1]);
 }
 
 static void get_layers_info(MEX_ARGS) {
@@ -580,6 +629,7 @@ static handler_registry handlers[] = {
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
   { "get_layer_weights",  get_layer_weights},
+  { "set_layer_weights",  set_layer_weights},
   { "get_layers_info",    get_layers_info },
   { "get_blobs_info",     get_blobs_info  },
   { "get_init_key",       get_init_key    },
