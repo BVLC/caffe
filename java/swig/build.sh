@@ -12,6 +12,7 @@ OUT_DIR=gen/org/berkeleyvision/caffe
 
 cp -R $BASE_DIR/include/caffe .
 cp -R $BASE_DIR/build/src/caffe/proto caffe
+rm -rf $OUR_DIR
 mkdir -p $OUT_DIR
 
 swig -c++ -java -cpperraswarn -outdir $OUT_DIR -package $PACKAGE $PROJECT.i 
