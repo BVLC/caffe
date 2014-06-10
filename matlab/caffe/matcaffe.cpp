@@ -407,19 +407,21 @@ static void init_net(MEX_ARGS) {
   }
 }
 
-static void load_model(MEX_ARGS) {
+static void load_net(MEX_ARGS) {
   if (nrhs != 1) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
   }
-
+  if (net_) {
   char* model_file = mxArrayToString(prhs[0]);
 
   CheckFile(string(model_file));
   net_->CopyTrainedLayersFrom(string(model_file));
 
   mxFree(model_file);
-
+  } else {
+    mexErrMsgTxt("Need to initialize the network first with init_net");
+  }
 }
 
 static void reset(MEX_ARGS) {
@@ -495,7 +497,7 @@ static handler_registry handlers[] = {
   { "backward",           backward        },
   { "init",               init            },
   { "init_net",           init_net        },
-  { "load_model",         load_model      },
+  { "load_net",           load_net        },
   { "is_initialized",     is_initialized  },
   { "set_mode_cpu",       set_mode_cpu    },
   { "set_mode_gpu",       set_mode_gpu    },
