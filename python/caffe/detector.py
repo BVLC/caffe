@@ -107,7 +107,10 @@ class Detector(caffe.Net):
         import selective_search_ijcv_with_python as selective_search
         # Make absolute paths so MATLAB can find the files.
         image_fnames = [os.path.abspath(f) for f in image_fnames]
-        windows_list = selective_search.get_windows(image_fnames)
+        windows_list = selective_search.get_windows(
+            image_fnames,
+            cmd='selective_search_rcnn'
+        )
         # Run windowed detection on the selective search list.
         return self.detect_windows(zip(image_fnames, windows_list))
 
