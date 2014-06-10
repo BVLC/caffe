@@ -295,7 +295,7 @@ static void do_set_layer_weights(const mxArray* const layer_name,
   const vector<string>& layer_names = net_->layer_names();
 
   char* c_layer_name = mxArrayToString(layer_name);
-  LOG(INFO) << c_layer_name;
+  LOG(INFO) << "Looking for: " << c_layer_name;
 
   for (unsigned int i = 0; i < layers.size(); ++i) {
     LOG(INFO) << layer_names[i];
@@ -304,24 +304,28 @@ static void do_set_layer_weights(const mxArray* const layer_name,
       if (layer_blobs.size() == 0) {
         continue;
       }
+      LOG(INFO) << "Found layer " << layer_names[i];
       CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(mx_layer_weights)[0]),
         layer_blobs.size());
-      LOG(INFO) << "layer_blobs.size()" << layer_blobs.size();
+      LOG(INFO) << "layer_blobs.size() = " << layer_blobs.size();
       for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
         // internally data is stored as (width, height, channels, num)
         // where width is the fastest dimension
-        // 
-        const mxArray* const elem = mxGetCell(mx_layer_weights, i);
+        const mxArray* const elem = mxGetCell(mx_layer_weights, j);
+        const mwSize* dims = mxGetDimensions(elem);
+        LOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
         const float* const data_ptr =
             reinterpret_cast<const float* const>(mxGetPr(elem));
+        LOG(INFO) << "elem: " << data_ptr[0] << " " << data_ptr[1];
+        LOG(INFO) << "count: " << layer_blobs[j]->count();
         switch (Caffe::mode()) {
         case Caffe::CPU:
-          memcpy(layer_blobs[i]->mutable_cpu_data(), data_ptr,
-              sizeof(float) * layer_blobs[i]->count());
+          memcpy(layer_blobs[j]->mutable_cpu_data(), data_ptr,
+              sizeof(float) * layer_blobs[j]->count());
           break;
         case Caffe::GPU:
-          cudaMemcpy(layer_blobs[i]->mutable_gpu_data(), data_ptr,
-              sizeof(float) * layer_blobs[i]->count(), cudaMemcpyHostToDevice);
+          cudaMemcpy(layer_blobs[j]->mutable_gpu_data(), data_ptr,
+              sizeof(float) * layer_blobs[j]->count(), cudaMemcpyHostToDevice);
           break;
         default:
           LOG(FATAL) << "Unknown Caffe mode.";
