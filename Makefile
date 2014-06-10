@@ -218,7 +218,7 @@ LIBRARY_DIRS += $(BLAS_LIB)
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
+CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
@@ -283,7 +283,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 		exit 1; \
 	fi
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
-			CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
+			CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS)" \
 			CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -o $@
 	@ echo
 
@@ -306,7 +306,7 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
 $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
-	$(CXX) -shared -o $@ $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) -shared -o $@ $(OBJS) $(CXXFLAGS) $(LDFLAGS)
 	@ echo
 
 $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
@@ -321,21 +321,21 @@ $(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
-		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+		-o $@ $(CXXFLAGS) $(LDFLAGS)
 	@ echo
 
 $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
-		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+		-o $@ $(CXXFLAGS) $(LDFLAGS)
 	@ echo
 
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
-	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS)
 	@ echo
 
 $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
-	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS)
 	@ echo
 
 $(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \
