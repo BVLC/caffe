@@ -75,7 +75,7 @@ void DummyDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     (*top)[i]->Reshape(num, channels, height, width);
   }
   // Run Forward once, with refill_ inverted, to fill the constant Blobs.
-  Forward(bottom, top);
+  this->Forward(bottom, top);
   // Invert the inverted refill_ values to refill the desired (non-constant)
   // Blobs in every usual forward pass.
   for (int i = 0; i < refill_.size(); ++i) {
