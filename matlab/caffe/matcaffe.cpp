@@ -251,14 +251,14 @@ static mxArray* do_get_layers_info() {
   // Step 1: prepare output array of structures
   mxArray* mx_layers;
   {
-    const char* fnames[3] = {"name", "type", "blobs"};
+    const char* fnames[3] = {"name", "type", "weights"};
     mx_layers = mxCreateStructArray(2, num_layers, 3, fnames);
   }
 
   // Step 2: copy info into output
   {
     mxArray* mx_blob;
-    const char* blobfnames[4] = {"num", "channels", "height", "width"};
+    const char* blobfnames[5] = {"num", "channels", "height", "width", "count"};
     for (unsigned int i = 0; i < layers.size(); ++i) {
       mxSetField(mx_layers, i, "name",
         mxCreateString(layer_names[i].c_str()));
@@ -270,8 +270,8 @@ static mxArray* do_get_layers_info() {
         continue;
       }
 
-      const int num_blobs[2] = {layer_blobs.size(), 1};
-      mx_blob = mxCreateStructArray(1, num_blobs, 4, blobfnames);
+      const int num_blobs[1] = {layer_blobs.size()};
+      mx_blob = mxCreateStructArray(1, num_blobs, 5, blobfnames);
 
       for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
         mxSetField(mx_blob, j, "num",
@@ -282,6 +282,8 @@ static mxArray* do_get_layers_info() {
           mxCreateDoubleScalar(layer_blobs[j]->height()));
         mxSetField(mx_blob, j, "width",
           mxCreateDoubleScalar(layer_blobs[j]->width()));
+        mxSetField(mx_blob, j, "count",
+          mxCreateDoubleScalar(layer_blobs[j]->count()));
       }
       mxSetField(mx_layers, i, "blobs", mx_blob);
     }
@@ -294,13 +296,12 @@ static mxArray* do_get_blobs_info() {
   const vector<shared_ptr<Blob<float> > >& blobs = net_->blobs();
   const vector<string>& blob_names = net_->blob_names();
 
-  const int num_blobs[2] = {blobs.size(), 1};
-
   // Step 1: prepare output array of structures
   mxArray* mx_blobs;
   {
-    const char* fnames[5] = {"name", "num", "channels", "height", "width"};
-    mx_blobs = mxCreateStructArray(2, num_blobs, 5, fnames);
+    const int num_blobs[1] = {blobs.size()};
+    const char* fnames[6] = {"name", "num", "channels", "height", "width", "count"};
+    mx_blobs = mxCreateStructArray(1, num_blobs, 6, fnames);
   }
 
   // Step 2: copy info into output
@@ -316,6 +317,8 @@ static mxArray* do_get_blobs_info() {
         mxCreateDoubleScalar(blobs[i]->height()));
       mxSetField(mx_blobs, i, "width",
         mxCreateDoubleScalar(blobs[i]->width()));
+      mxSetField(mx_blobs, i, "count",
+        mxCreateDoubleScalar(blobs[i]->count()));
     }
   }
 
