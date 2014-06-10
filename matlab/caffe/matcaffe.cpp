@@ -305,17 +305,17 @@ static mxArray* do_get_blobs_info() {
 
   // Step 2: copy info into output
   {
-    for (unsigned int i = 0; i < num_blobs; ++i) {
+    for (unsigned int i = 0; i < blobs.size(); ++i) {
       mxSetField(mx_blobs, i, "name",
         mxCreateString(blob_names[i].c_str()));
       mxSetField(mx_blobs, i, "num",
-        mxCreateDoubleScalar(layer_blobs[i]->num()));
+        mxCreateDoubleScalar(blobs[i]->num()));
       mxSetField(mx_blobs, i, "channels",
-        mxCreateDoubleScalar(layer_blobs[i]->channels()));
+        mxCreateDoubleScalar(blobs[i]->channels()));
       mxSetField(mx_blobs, i, "height",
-        mxCreateDoubleScalar(layer_blobs[i]->height()));
+        mxCreateDoubleScalar(blobs[i]->height()));
       mxSetField(mx_blobs, i, "width",
-        mxCreateDoubleScalar(layer_blobs[i]->width()));
+        mxCreateDoubleScalar(blobs[i]->width()));
     }
   }
 
