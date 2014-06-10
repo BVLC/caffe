@@ -16,7 +16,13 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+<<<<<<< HEAD
 #include "caffe/util/fft.hpp"
+=======
+#include "mkl.h"
+#include "mkl_vsl.h"    // mkl convolution
+#include "mkl_dfti.h"   // mkl fft
+>>>>>>> cleaned style by lint
 
 #define HDF5_DATA_DATASET_NAME "data"
 #define HDF5_DATA_LABEL_NAME "label"
@@ -100,7 +106,7 @@ template <typename Dtype>
 class ConvolutionLayer : public Layer<Dtype> {
  public:
   explicit ConvolutionLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {fft_initialiazed_=false;}
+      : Layer<Dtype>(param) { fft_initialiazed_ = false; }
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual  ~ConvolutionLayer<Dtype>();
@@ -153,23 +159,23 @@ class ConvolutionLayer : public Layer<Dtype> {
   virtual void fft_setup();
   virtual void fft_free();
   virtual void fft_doFFT_weights();
-  bool fft_on_ ;
-  bool fft_initialiazed_ ;
+  bool fft_on_;
+  bool fft_initialiazed_;
   int fft_height_;
-  int fft_width_ ;
+  int fft_width_;
   int fft_map_real_size_;
-  int fft_map_complex_size_ ;
-  int height_out_ ;
-  int width_out_ ;
+  int fft_map_complex_size_;
+  int height_out_;
+  int width_out_;
   int map_out_size_;
-  float* fft_weights_real_ ;
-  float* fft_map_in_real_ ;
-  MKL_Complex8* fft_weights_complex_ ;
-  MKL_Complex8* fft_map_in_complex_ ;
-  MKL_Complex8* fft_map_out_complex_ ;
+  float* fft_weights_real_;
+  float* fft_map_in_real_;
+  MKL_Complex8* fft_weights_complex_;
+  MKL_Complex8* fft_map_in_complex_;
+  MKL_Complex8* fft_map_out_complex_;
   float* fft_map_out_real_;
-  DFTI_DESCRIPTOR_HANDLE  fft_handle_ ;
-  DFTI_DESCRIPTOR_HANDLE ifft_handle_ ;
+  DFTI_DESCRIPTOR_HANDLE  fft_handle_;
+  DFTI_DESCRIPTOR_HANDLE ifft_handle_;
 };
 
 /* EltwiseLayer
