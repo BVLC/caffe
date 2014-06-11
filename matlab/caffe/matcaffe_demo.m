@@ -67,11 +67,13 @@ toc;
 % do forward pass to get scores
 % scores are now Width x Height x Channels x Num
 tic;
-scores = caffe('forward', input_data);
+[scores,loss] = caffe('forward', input_data);
 toc;
 
 scores = scores{1};
 size(scores)
+size(loss)
+loss
 scores = squeeze(scores);
 scores = mean(scores,2);
 
