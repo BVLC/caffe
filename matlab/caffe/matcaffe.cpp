@@ -80,18 +80,43 @@ static mxArray* do_forward_prefilled(mxArray* mx_loss) {
     float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
     switch (Caffe::mode()) {
     case Caffe::CPU:
-      memcpy(data_ptr, output_blobs[i]->cpu_data(),
-          sizeof(float) * output_blobs[i]->count());
+      caffe_copy(output_blobs[i]->count(), output_blobs[i]->cpu_data(),
+          data_ptr);
       break;
     case Caffe::GPU:
-      cudaMemcpy(data_ptr, output_blobs[i]->gpu_data(),
-          sizeof(float) * output_blobs[i]->count(), cudaMemcpyDeviceToHost);
+      caffe_copy(output_blobs[i]->count(), output_blobs[i]->gpu_data(),
+          data_ptr);
       break;
     default:
       mex_error("Unknown Caffe mode");
     }  // switch (Caffe::mode())
   }
   return mx_out;
+}
+
+// TODO(matcaffe) mex_error
+// TODO(matcaffe) caffe_copy
+static void do_set_input_blobs(const mxArray* const bottom) {
+  vector<Blob<float>*>& input_blobs = net_->input_blobs();
+  CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(bottom)[0]),
+      input_blobs.size());
+  for (unsigned int i = 0; i < input_blobs.size(); ++i) {
+    const mxArray* const elem = mxGetCell(bottom, i);
+    const float* const data_ptr =
+        reinterpret_cast<const float* const>(mxGetPr(elem));
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(input_blobs[i]->mutable_cpu_data(), data_ptr,
+          sizeof(float) * input_blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      cudaMemcpy(input_blobs[i]->mutable_gpu_data(), data_ptr,
+          sizeof(float) * input_blobs[i]->count(), cudaMemcpyHostToDevice);
+      break;
+    default:
+      LOG(FATAL) << "Unknown Caffe mode.";
+    }  // switch (Caffe::mode())
+  }
 }
 
 // TODO(matcaffe) no loss pointer arg
@@ -128,6 +153,7 @@ static mxArray* do_forward(const mxArray* const bottom) {
       mex_error("Unknown Caffe mode");
     }  // switch (Caffe::mode())
   }
+}
 
   float* loss_ptr = reinterpret_cast<float*>(mxGetPr(mx_loss));
   const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled(loss_ptr);
@@ -157,6 +183,7 @@ static mxArray* do_forward(const mxArray* const bottom) {
 
   return mx_out;
 }
+
 
 static mxArray* do_backward_prefilled() {
   vector<Blob<float>*>& input_blobs = net_->input_blobs();
@@ -189,6 +216,33 @@ static mxArray* do_backward_prefilled() {
   return mx_out;
 }
 
+// TODO(matcaffe) see do_set_input_blobs
+static void do_set_output_blobs(const mxArray* const top_diff) {
+  vector<Blob<float>*>& output_blobs = net_->output_blobs();
+  CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(top_diff)[0]),
+      output_blobs.size());
+  // Copy top_diff to the output diff
+  for (unsigned int i = 0; i < output_blobs.size(); ++i) {
+    const mxArray* const elem = mxGetCell(top_diff, i);
+    CHECK_EQ(output_blobs[i]->count(),mxGetNumberOfElements(elem)) <<
+      "output_blobs[i]->count() don't match with numel(top_diff{i})";
+    const float* const data_ptr =
+        reinterpret_cast<const float* const>(mxGetPr(elem));
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      caffe_copy(output_blobs[i]->count(), data_ptr,
+          output_blobs[i]->mutable_cpu_diff());
+      break;
+    case Caffe::GPU:
+      caffe_copy(output_blobs[i]->count(), data_ptr,
+          output_blobs[i]->mutable_gpu_diff());
+      break;
+    default:
+      LOG(FATAL) << "Unknown Caffe mode.";
+    }  // switch (Caffe::mode())
+  }
+}
+
 static mxArray* do_backward(const mxArray* const top_diff) {
   const vector<Blob<float>*>& output_blobs = net_->output_blobs();
   const vector<Blob<float>*>& input_blobs = net_->input_blobs();
@@ -196,7 +250,7 @@ static mxArray* do_backward(const mxArray* const top_diff) {
       output_blobs.size()) {
     mex_error("Invalid input size");
   }
-  // First, copy the output diff
+  // Copy top_diff to the output diff
   for (unsigned int i = 0; i < output_blobs.size(); ++i) {
     const mxArray* const elem = mxGetCell(top_diff, i);
     if (output_blobs[i]->count() != mxGetNumberOfElements(elem)) {
@@ -901,6 +955,15 @@ static void forward_prefilled(MEX_ARGS) {
 
 }
 
+static void set_input_blobs(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Given " << nrhs << " arguments";
+    mexErrMsgTxt("It takes one argument");
+  }
+  do_set_input_blobs(prhs[0]);
+}
+
+
 static void backward(MEX_ARGS) {
   if (nrhs != 1) {
     mex_error("Too many input arguments.");
@@ -920,6 +983,15 @@ static void backward_prefilled(MEX_ARGS) {
 
   plhs[0] = do_backward_prefilled();
 }
+
+static void set_output_blobs(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Given " << nrhs << " arguments";
+    mexErrMsgTxt("It takes one argument");
+  }
+  do_set_output_blobs(prhs[0]);
+}
+
 
 static void is_initialized(MEX_ARGS) {
   if (!net_) {
@@ -968,6 +1040,8 @@ static handler_registry handlers[] = {
   { "backward",           backward          },
   { "forward_prefilled",  forward_prefilled },
   { "backward_prefilled", backward_prefilled},
+  { "set_input_blobs",    set_input_blobs   },
+  { "set_output_blobs",   set_output_blobs  },
   { "init",               init              },
   { "init_net",           init_net          },
   { "load_net",           load_net          },

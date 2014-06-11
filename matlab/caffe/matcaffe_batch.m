@@ -27,20 +27,33 @@ if ischar(list_im)
     filename = list_im;
     list_im = read_cell(filename);
 end
-% Adjust the batch size and dim to match with models/bvlc_reference_caffenet/deploy.prototxt
-batch_size = 10;
-dim = 1000;
-disp(list_im)
-if mod(length(list_im),batch_size)
-    warning(['Assuming batches of ' num2str(batch_size) ' images rest will be filled with zeros'])
-end
 
 % init caffe network (spews logging info)
-if exist('use_gpu', 'var')
-  matcaffe_init(use_gpu);
-else
-  matcaffe_init();
+net = CaffeNet.instance;
+
+% Adjust the batch size to match with imagenet_deploy.prototxt input
+batch_size = net.blobs_info(1).num;
+% Adjust dim to the output size of imagenet_deploy.prototxt
+dim = net.blobs_info(end).channels;
+disp(list_im)
+if mod(length(list_im),batch_size)
+    warning(['Assuming batches of ' num2str(batch_size) ' images,' ...
+        'the rest will be filled with zeros'])
 end
+
+if exist('use_gpu', 'var')
+  if use_gpu
+    net.set_mode_gpu;
+    fprintf('Done with set_mode_gpu\n');
+  else
+    net.set_mode_cpu;
+    fprintf('Done with set_mode_cpu\n');
+  end
+end
+
+% put into test mode
+net.set_phase_test;
+fprintf('Done with set_phase_test\n');
 
 d = load('ilsvrc_2012_mean');
 IMAGE_MEAN = d.image_mean;
@@ -59,7 +72,7 @@ for bb = 1 : num_batches
     toc, tic
     fprintf('Batch %d out of %d %.2f%% Complete ETA %.2f seconds\n',...
         bb,num_batches,bb/num_batches*100,toc(initic)/bb*(num_batches-bb));
-    output_data = caffe('forward', {input_data});
+    output_data = net.forward({input_data});
     toc
     output_data = squeeze(output_data{1});
     scores(:,range) = output_data(:,mod(range-1,batch_size)+1);
