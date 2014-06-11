@@ -24,4 +24,6 @@ This page will be updated as more models become available.
 - The best validation performance during training was iteration 358,000 with
   validation accuracy 57.258% and loss 1.83948.
 
+**R-CNN (ILSVRC13)**: The pure Caffe instantiation of the [R-CNN](https://github.com/rbgirshick/rcnn) model for ILSVRC13 detection. Download the model (230.8MB) by running `examples/imagenet/get_caffe_rcnn_imagenet_model.sh` from the Caffe root directory. This model was made by transplanting the R-CNN SVM classifiers into a `fc-rcnn` classification layer, provided here as an off-the-shelf Caffe detector. Try the [detection example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection.ipynb) to see it in action. For the full details, refer to the R-CNN site. *N.B. For research purposes, make use of the official R-CNN package and not this example.*
+
 Additionally, you will probably eventually need some auxiliary data (mean image, synset list, etc.): run `data/ilsvrc12/get_ilsvrc_aux.sh` from the root directory to obtain it.
