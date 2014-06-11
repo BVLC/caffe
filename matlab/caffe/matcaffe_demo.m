@@ -53,6 +53,10 @@ else
   matcaffe_init();
 end
 
+% put into test mode
+caffe('set_phase_test');
+fprintf('Done with set_phase_test\n');
+
 if nargin < 1
   % For demo purposes we will use the peppers image
   im = imread('peppers.png');
