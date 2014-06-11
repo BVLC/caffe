@@ -87,10 +87,9 @@ static mxArray* do_forward(const mxArray* const bottom, mxArray* mx_loss) {
     }  // switch (Caffe::mode())
   }
 
-  mx_loss = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
   float* loss_ptr = reinterpret_cast<float*>(mxGetPr(mx_loss));
   const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled(loss_ptr);
-  LOG(INFO) << "loss: " << mxGetScalar(mx_loss);
+  DLOG(INFO) << "loss: " << mxGetScalar(mx_loss);
   mxArray* mx_out = mxCreateCellMatrix(output_blobs.size(), 1);
   for (unsigned int i = 0; i < output_blobs.size(); ++i) {
     // internally data is stored as (width, height, channels, num)
@@ -778,9 +777,10 @@ static void forward(MEX_ARGS) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
   }
-  mxArray* mx_loss;
-  plhs[0] = do_forward(prhs[0],mx_loss);
-  plhs[1] = mx_loss;
+
+  plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);  
+  plhs[0] = do_forward(prhs[0],plhs[1]);
+
 }
 
 static void backward(MEX_ARGS) {
