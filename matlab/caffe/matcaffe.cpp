@@ -882,7 +882,7 @@ static void forward(MEX_ARGS) {
 static void forward_prefilled(MEX_ARGS) {
   if (nrhs != 0) {
     LOG(ERROR) << "Given " << nrhs << " arguments";
-    mexErrMsgTxt("Wrong number of arguments");
+    mexErrMsgTxt("It takes no arguments");
   }
 
   plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);  
@@ -891,9 +891,9 @@ static void forward_prefilled(MEX_ARGS) {
 }
 
 static void backward(MEX_ARGS) {
-  if (nrhs != 1) {
-    LOG(ERROR) << "Only given " << nrhs << " arguments";
-    mexErrMsgTxt("Wrong number of arguments");
+  if (nrhs > 1) {
+    LOG(ERROR) << "Given " << nrhs << " arguments";
+    mexErrMsgTxt("Too many input arguments");
   }
   if (nrhs == 0) {
     //Backward without arguments behaves as backward_prefilled
@@ -904,9 +904,9 @@ static void backward(MEX_ARGS) {
 }
 
 static void backward_prefilled(MEX_ARGS) {
-  if (nrhs != 1) {
-    LOG(ERROR) << "Only given " << nrhs << " arguments";
-    mexErrMsgTxt("Wrong number of arguments");
+  if (nrhs != 0) {
+    LOG(ERROR) << "Given " << nrhs << " arguments";
+    mexErrMsgTxt("It takes no arguments");
   }
 
   plhs[0] = do_backward_prefilled();
