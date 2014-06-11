@@ -247,11 +247,11 @@ static mxArray* do_get_layer_weights(const mxArray* const layer_name) {
   const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
   const vector<string>& layer_names = net_->layer_names();
   char* c_layer_name = mxArrayToString(layer_name);
-  LOG(INFO) << c_layer_name;
+  DLOG(INFO) << c_layer_name;
   mxArray* mx_layer_weights = NULL;
 
   for (unsigned int i = 0; i < layers.size(); ++i) {
-    LOG(INFO) << layer_names[i];
+    DLOG(INFO) << layer_names[i];
     if (strcmp(layer_names[i].c_str(),c_layer_name) == 0) {
       vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
       if (layer_blobs.size() == 0) {
@@ -259,13 +259,13 @@ static mxArray* do_get_layer_weights(const mxArray* const layer_name) {
       }
       const mwSize dims[2] = {layer_blobs.size(), 1};
       mx_layer_weights = mxCreateCellArray(2, dims);
-      LOG(INFO) << "layer_blobs.size()" << layer_blobs.size();
+      DLOG(INFO) << "layer_blobs.size()" << layer_blobs.size();
       for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
         // internally data is stored as (width, height, channels, num)
         // where width is the fastest dimension
         mwSize dims[4] = {layer_blobs[j]->width(), layer_blobs[j]->height(),
             layer_blobs[j]->channels(), layer_blobs[j]->num()};
-        LOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+        DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
         mxArray* mx_weights =
           mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
         mxSetCell(mx_layer_weights, j, mx_weights);
@@ -295,32 +295,34 @@ static void do_set_layer_weights(const mxArray* const layer_name,
   const vector<string>& layer_names = net_->layer_names();
 
   char* c_layer_name = mxArrayToString(layer_name);
-  LOG(INFO) << "Looking for: " << c_layer_name;
+  DLOG(INFO) << "Looking for: " << c_layer_name;
 
   for (unsigned int i = 0; i < layers.size(); ++i) {
-    LOG(INFO) << layer_names[i];
+    DLOG(INFO) << layer_names[i];
     if (strcmp(layer_names[i].c_str(),c_layer_name) == 0) {
       vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
       if (layer_blobs.size() == 0) {
         continue;
       }
-      LOG(INFO) << "Found layer " << layer_names[i];
+      DLOG(INFO) << "Found layer " << layer_names[i];
       CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(mx_layer_weights)[0]),
-        layer_blobs.size());
-      LOG(INFO) << "layer_blobs.size() = " << layer_blobs.size();
+        layer_blobs.size()) << "Num of cells don't match layer_blobs.size";
+      DLOG(INFO) << "layer_blobs.size() = " << layer_blobs.size();
       for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
         // internally data is stored as (width, height, channels, num)
         // where width is the fastest dimension
         const mxArray* const elem = mxGetCell(mx_layer_weights, j);
         mwSize dims[4] = {layer_blobs[j]->width(), layer_blobs[j]->height(),
             layer_blobs[j]->channels(), layer_blobs[j]->num()};
-        LOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+        DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+        CHECK_EQ(layer_blobs[j]->count(), mxGetNumberOfElements(elem)) <<
+          "Numel of weights don't match count of layer_blob";
         const mwSize* dims_elem = mxGetDimensions(elem);
-        LOG(INFO) << dims_elem[0] << " " << dims_elem[1];
+        DLOG(INFO) << dims_elem[0] << " " << dims_elem[1];
         const float* const data_ptr =
             reinterpret_cast<const float* const>(mxGetPr(elem));
-        LOG(INFO) << "elem: " << data_ptr[0] << " " << data_ptr[1];
-        LOG(INFO) << "count: " << layer_blobs[j]->count();
+        DLOG(INFO) << "elem: " << data_ptr[0] << " " << data_ptr[1];
+        DLOG(INFO) << "count: " << layer_blobs[j]->count();
         switch (Caffe::mode()) {
         case Caffe::CPU:
           memcpy(layer_blobs[j]->mutable_cpu_data(), data_ptr,
