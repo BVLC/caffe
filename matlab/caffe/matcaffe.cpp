@@ -422,7 +422,7 @@ static mxArray* do_get_blobs_info() {
   return mx_blobs;
 }
 
-static mxArray* do_get_blobs_data(const mxArray* const blob_name) {
+static mxArray* do_get_blob_data(const mxArray* const blob_name) {
   const vector<shared_ptr<Blob<float> > >& blobs = net_->blobs();
   const vector<string>& blob_names = net_->blob_names();
 
@@ -459,6 +459,42 @@ static mxArray* do_get_blobs_data(const mxArray* const blob_name) {
   return mx_blob_data;
 }
 
+static mxArray* do_get_blob_diff(const mxArray* const blob_name) {
+  const vector<shared_ptr<Blob<float> > >& blobs = net_->blobs();
+  const vector<string>& blob_names = net_->blob_names();
+
+  char* c_blob_name = mxArrayToString(blob_name);
+  DLOG(INFO) << "Looking for: " << c_blob_name;
+
+  mxArray* mx_blob_data = NULL;
+  for (unsigned int i = 0; i < blobs.size(); ++i) {
+    DLOG(INFO) << blob_names[i];
+    if (strcmp(blob_names[i].c_str(),c_blob_name) == 0) {
+      mwSize dims[4] = {blobs[i]->width(), blobs[i]->height(),
+          blobs[i]->channels(), blobs[i]->num()};
+      DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+      mx_blob_data =
+        mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+
+      float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
+
+      switch (Caffe::mode()) {
+      case Caffe::CPU:
+        memcpy(blob_data_ptr, blobs[i]->cpu_diff(),
+            sizeof(float) * blobs[i]->count());
+        break;
+      case Caffe::GPU:
+        CUDA_CHECK(cudaMemcpy(blob_data_ptr, blobs[i]->gpu_diff(),
+            sizeof(float) * blobs[i]->count(), cudaMemcpyDeviceToHost));
+        break;
+      default:
+        LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+      }
+    }
+  }
+
+  return mx_blob_data;
+}
 static void get_weights(MEX_ARGS) {
   plhs[0] = do_get_weights();
 }
@@ -507,16 +543,16 @@ static void get_blob_data(MEX_ARGS) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
   }
-  plhs[0] = do_get_blobs_data(prhs[0]);
+  plhs[0] = do_get_blob_data(prhs[0]);
 }
 
-// static void get_blob_diff(MEX_ARGS) {
-//   if (nrhs != 1) {
-//     LOG(ERROR) << "Only given " << nrhs << " arguments";
-//     mexErrMsgTxt("Wrong number of arguments");
-//   }
-//   plhs[0] = do_get_blobs_diff(prhs[0]);
-// }
+static void get_blob_diff(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+  plhs[0] = do_get_blob_diff(prhs[0]);
+}
 
 static void set_mode_cpu(MEX_ARGS) {
   Caffe::set_mode(Caffe::CPU);
@@ -713,6 +749,7 @@ static handler_registry handlers[] = {
   { "get_layers_info",    get_layers_info },
   { "get_blobs_info",     get_blobs_info  },
   { "get_blob_data",      get_blob_data   },
+  { "get_blob_diff",      get_blob_diff   },
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
   { "read_mean",          read_mean       },
