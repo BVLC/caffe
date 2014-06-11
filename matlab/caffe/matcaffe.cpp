@@ -466,17 +466,17 @@ static mxArray* do_get_blob_diff(const mxArray* const blob_name) {
   char* c_blob_name = mxArrayToString(blob_name);
   DLOG(INFO) << "Looking for: " << c_blob_name;
 
-  mxArray* mx_blob_data = NULL;
+  mxArray* mx_blob_diff = NULL;
   for (unsigned int i = 0; i < blobs.size(); ++i) {
     DLOG(INFO) << blob_names[i];
     if (strcmp(blob_names[i].c_str(),c_blob_name) == 0) {
       mwSize dims[4] = {blobs[i]->width(), blobs[i]->height(),
           blobs[i]->channels(), blobs[i]->num()};
       DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
-      mx_blob_data =
+      mx_blob_diff =
         mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
 
-      float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
+      float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_diff));
 
       switch (Caffe::mode()) {
       case Caffe::CPU:
@@ -493,8 +493,91 @@ static mxArray* do_get_blob_diff(const mxArray* const blob_name) {
     }
   }
 
-  return mx_blob_data;
+  return mx_blob_diff;
 }
+
+static mxArray* do_get_all_data() {
+  const vector<shared_ptr<Blob<float> > >& blobs = net_->blobs();
+  const vector<string>& blob_names = net_->blob_names();
+
+  // Step 1: prepare output array of structures
+  mxArray* mx_all_data;
+  {
+    const int num_blobs[1] = {blobs.size()};
+    const char* fnames[2] = {"name", "data"};
+    mx_all_data = mxCreateStructArray(1, num_blobs, 2, fnames);
+  }
+
+  for (unsigned int i = 0; i < blobs.size(); ++i) {
+    DLOG(INFO) << blob_names[i];
+    mwSize dims[4] = {blobs[i]->width(), blobs[i]->height(),
+        blobs[i]->channels(), blobs[i]->num()};
+    DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+    mxArray* mx_blob_data =
+      mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+
+    float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
+
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(blob_data_ptr, blobs[i]->cpu_data(),
+          sizeof(float) * blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      CUDA_CHECK(cudaMemcpy(blob_data_ptr, blobs[i]->gpu_data(),
+          sizeof(float) * blobs[i]->count(), cudaMemcpyDeviceToHost));
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    }
+    mxSetField(mx_all_data, i, "name",
+        mxCreateString(blob_names[i].c_str()));
+    mxSetField(mx_all_data, i, "data",mx_blob_data);
+  }
+  return mx_all_data;
+}
+
+static mxArray* do_get_all_diff() {
+  const vector<shared_ptr<Blob<float> > >& blobs = net_->blobs();
+  const vector<string>& blob_names = net_->blob_names();
+
+  // Step 1: prepare output array of structures
+  mxArray* mx_all_diff;
+  {
+    const int num_blobs[1] = {blobs.size()};
+    const char* fnames[2] = {"name", "diff"};
+    mx_all_diff = mxCreateStructArray(1, num_blobs, 2, fnames);
+  }
+
+  for (unsigned int i = 0; i < blobs.size(); ++i) {
+    DLOG(INFO) << blob_names[i];
+    mwSize dims[4] = {blobs[i]->width(), blobs[i]->height(),
+        blobs[i]->channels(), blobs[i]->num()};
+    DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+    mxArray* mx_blob_data =
+      mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+
+    float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
+
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(blob_data_ptr, blobs[i]->cpu_diff(),
+          sizeof(float) * blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      CUDA_CHECK(cudaMemcpy(blob_data_ptr, blobs[i]->gpu_diff(),
+          sizeof(float) * blobs[i]->count(), cudaMemcpyDeviceToHost));
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    }
+    mxSetField(mx_all_diff, i, "name",
+        mxCreateString(blob_names[i].c_str()));
+    mxSetField(mx_all_diff, i, "diff",mx_blob_data);
+  }
+  return mx_all_diff;
+}
+
 static void get_weights(MEX_ARGS) {
   plhs[0] = do_get_weights();
 }
@@ -552,6 +635,22 @@ static void get_blob_diff(MEX_ARGS) {
     mexErrMsgTxt("Wrong number of arguments");
   }
   plhs[0] = do_get_blob_diff(prhs[0]);
+}
+
+static void get_all_data(MEX_ARGS) {
+  if (nrhs != 0) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+  plhs[0] = do_get_all_data();
+}
+
+static void get_all_diff(MEX_ARGS) {
+  if (nrhs != 0) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+  plhs[0] = do_get_all_diff();
 }
 
 static void set_mode_cpu(MEX_ARGS) {
@@ -750,6 +849,8 @@ static handler_registry handlers[] = {
   { "get_blobs_info",     get_blobs_info  },
   { "get_blob_data",      get_blob_data   },
   { "get_blob_diff",      get_blob_diff   },
+  { "get_all_data",       get_all_data    },
+  { "get_all_diff",       get_all_diff    },
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
   { "read_mean",          read_mean       },
