@@ -248,8 +248,8 @@ class MemoryDataLayer : public Layer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_MEMORY_DATA;
   }
-  virtual inline int ExactNumBottomBlobs() { return 0; }
-  virtual inline int ExactNumTopBlobs() { return 2; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
