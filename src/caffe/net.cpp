@@ -44,26 +44,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   set<string> available_blobs;
   int num_layers = param.layers_size();
   CHECK_EQ(param.input_size() * 4, param.input_dim_size())
-      << "Incorrect bottom blob dimension specifications.";
-  size_t memory_used = 0;
+      << "Incorrect input blob dimension specifications.";
+  memory_used_ = 0;
   // set the input blobs
-  for (int i = 0; i < param.input_size(); ++i) {
-    const string& blob_name = param.input(i);
-    shared_ptr<Blob<Dtype> > blob_pointer(
-        new Blob<Dtype>(param.input_dim(i * 4),
-                        param.input_dim(i * 4 + 1),
-                        param.input_dim(i * 4 + 2),
-                        param.input_dim(i * 4 + 3)));
-    blobs_.push_back(blob_pointer);
-    blob_names_.push_back(blob_name);
-    blob_need_backward_.push_back(param.force_backward());
-    net_input_blob_indices_.push_back(i);
-    net_input_blobs_.push_back(blob_pointer.get());
-    blob_name_to_idx[blob_name] = i;
-    available_blobs.insert(blob_name);
-    memory_used += blob_pointer->count();
+  for (int input_id = 0; input_id < param.input_size(); ++input_id) {
+    const int layer_id = -1;  // inputs have fake layer ID -1
+    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
   }
-  DLOG(INFO) << "Memory required for Data" << memory_used*sizeof(Dtype);
+  DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
   // For each layer, set up their input and output
   bottom_vecs_.resize(param.layers_size());
   top_vecs_.resize(param.layers_size());
@@ -79,48 +67,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Figure out this layer's input and output
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
-      const string& blob_name = layer_param.bottom(bottom_id);
-      const int blob_id = blob_name_to_idx[blob_name];
-      if (available_blobs.find(blob_name) == available_blobs.end()) {
-        LOG(FATAL) << "Unknown blob input " << blob_name <<
-            " to layer" << bottom_id;
-      }
-      LOG(INFO) << layer_param.name() << " <- " << blob_name;
-      bottom_vecs_[layer_id].push_back(
-          blobs_[blob_id].get());
-      bottom_id_vecs_[layer_id].push_back(blob_id);
+      const int blob_id = AppendBottom(param, layer_id, bottom_id,
+                                       &available_blobs, &blob_name_to_idx);
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
-      available_blobs.erase(blob_name);
     }
     for (int top_id = 0; top_id < layer_param.top_size(); ++top_id) {
-      const string& blob_name = layer_param.top(top_id);
-      // Check if we are doing in-place computation
-      if (layer_param.bottom_size() > top_id &&
-          blob_name == layer_param.bottom(top_id)) {
-        // In-place computation
-        LOG(INFO) << layer_param.name() << " -> " << blob_name << " (in-place)";
-        in_place = true;
-        available_blobs.insert(blob_name);
-        top_vecs_[layer_id].push_back(
-            blobs_[blob_name_to_idx[blob_name]].get());
-        top_id_vecs_[layer_id].push_back(blob_name_to_idx[blob_name]);
-      } else if (blob_name_to_idx.find(blob_name) != blob_name_to_idx.end()) {
-        // If we are not doing in-place computation but has duplicated blobs,
-        // raise an error.
-        LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
-      } else {
-        // Normal output.
-        LOG(INFO) << layer_param.name() << " -> " << blob_name;
-        shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
-        blobs_.push_back(blob_pointer);
-        blob_names_.push_back(blob_name);
-        blob_need_backward_.push_back(param.force_backward());
-        blob_name_to_idx[blob_name] = blob_names_.size() - 1;
-        available_blobs.insert(blob_name);
-        top_vecs_[layer_id].push_back(blobs_[blob_names_.size() - 1].get());
-        top_id_vecs_[layer_id].push_back(blob_names_.size() - 1);
-      }
+      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
     }
     // After this layer is connected, set it up.
     // LOG(INFO) << "Setting up " << layer_names_[layer_id];
@@ -131,14 +84,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           << top_vecs_[layer_id][top_id]->height() << " "
           << top_vecs_[layer_id][top_id]->width() << " ("
           << top_vecs_[layer_id][top_id]->count() << ")";
-      if (!in_place)
-        memory_used += top_vecs_[layer_id][top_id]->count();
     }
-    DLOG(INFO) << "Memory  required for Data " << memory_used*sizeof(Dtype);
-    int blobs_lr_size = layers_[layer_id]->layer_param().blobs_lr_size();
-    CHECK(blobs_lr_size == layers_[layer_id]->blobs().size() || blobs_lr_size == 0)
-        << "Incorrect blobs lr size: should be either 0 or the same as "
-           "the number of the layer's parameter blobs.";
+    DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
+    const int blobs_lr_size = layers_[layer_id]->layer_param().blobs_lr_size();
+    CHECK(blobs_lr_size == layers_[layer_id]->blobs().size() ||
+          blobs_lr_size == 0) << "Incorrect blobs lr size: should be either 0 "
+        << "or the same as the number of the layer's parameter blobs.";
     if (blobs_lr_size) {
       // Check if this layer needs backward operation itself
       for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
@@ -177,9 +128,79 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
-  LOG(INFO) << "Memory required for Data " << memory_used*sizeof(Dtype);
+  LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
 }
 
+// Helper for Net::Init: add a new input or top blob to the net.  (Inputs have
+// layer_id == -1, tops have layer_id >= 0.)
+template <typename Dtype>
+void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
+                           const int top_id, set<string>* available_blobs,
+                           map<string, int>* blob_name_to_idx) {
+  shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
+    (new LayerParameter(param.layers(layer_id))) : NULL);
+  const string& blob_name = layer_param ?
+      layer_param->top(top_id) : param.input(top_id);
+  // Check if we are doing in-place computation
+  if (layer_param && layer_param->bottom_size() > top_id &&
+      blob_name == layer_param->bottom(top_id)) {
+    // In-place computation
+    LOG(INFO) << layer_param->name() << " -> " << blob_name << " (in-place)";
+    top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
+    top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
+  } else if (blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
+    // If we are not doing in-place computation but have duplicated blobs,
+    // raise an error.
+    LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
+  } else {
+    // Normal output.
+    if (layer_param) {
+      LOG(INFO) << layer_param->name() << " -> " << blob_name;
+    } else {
+      LOG(INFO) << "Input " << top_id << " -> " << blob_name;
+    }
+    shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+    const int blob_id = blobs_.size();
+    blobs_.push_back(blob_pointer);
+    blob_names_.push_back(blob_name);
+    blob_need_backward_.push_back(param.force_backward());
+    (*blob_name_to_idx)[blob_name] = blob_id;
+    if (layer_id == -1) {
+      // Set the (explicitly specified) dimensions of the input blob.
+      blob_pointer->Reshape(param.input_dim(top_id * 4),
+                            param.input_dim(top_id * 4 + 1),
+                            param.input_dim(top_id * 4 + 2),
+                            param.input_dim(top_id * 4 + 3));
+      net_input_blob_indices_.push_back(blob_id);
+      net_input_blobs_.push_back(blob_pointer.get());
+    } else {
+      top_id_vecs_[layer_id].push_back(blob_id);
+      top_vecs_[layer_id].push_back(blob_pointer.get());
+    }
+    memory_used_ += blob_pointer->count();
+  }
+  available_blobs->insert(blob_name);
+}
+
+// Helper for Net::Init: add a new bottom blob to the net.
+template <typename Dtype>
+int Net<Dtype>::AppendBottom(const NetParameter& param,
+    const int layer_id, const int bottom_id,
+    set<string>* available_blobs, map<string, int>* blob_name_to_idx) {
+  const LayerParameter& layer_param = param.layers(layer_id);
+  const string& blob_name = layer_param.bottom(bottom_id);
+  if (available_blobs->find(blob_name) == available_blobs->end()) {
+    LOG(FATAL) << "Unknown blob input " << blob_name
+               << " (at index " << bottom_id << ") to layer " << layer_id;
+  }
+  const int blob_id = (*blob_name_to_idx)[blob_name];
+  LOG(INFO) << layer_names_[layer_id] << " <- " << blob_name;
+  bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
+  bottom_id_vecs_[layer_id].push_back(blob_id);
+  available_blobs->erase(blob_name);
+  bool need_backward = param.force_backward() || blob_need_backward_[blob_id];
+  return blob_id;
+}
 
 template <typename Dtype>
 void Net<Dtype>::GetLearningRateAndWeightDecay() {
