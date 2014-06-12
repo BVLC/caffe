@@ -386,7 +386,7 @@ $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 
 $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 		$(PY_PROTO_INIT) | $(PY_PROTO_BUILD_DIR)
-	protoc --proto_path=$(PY_PROTO_INIT) --python_out=$(PY_PROTO_BUILD_DIR) $<
+	protoc --proto_path=$(PROTO_SRC_DIR) --python_out=$(PY_PROTO_BUILD_DIR) $<
 	@ echo
 
 $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
