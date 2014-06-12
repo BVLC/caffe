@@ -24,9 +24,9 @@ template <typename Dtype>
 class DataLayerTest : public ::testing::Test {
  protected:
   DataLayerTest()
-      : blob_top_data_(new Blob<Dtype>()),
+      : filename_(new string(tmpnam(NULL))),
+        blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
-        filename_(new string(tmpnam(NULL))),
         backend_(DataParameter_DB_LEVELDB),
         seed_(1701) {}
   virtual void SetUp() {

@@ -12,9 +12,10 @@ template <typename Dtype>
 class MemoryDataLayerTest : public ::testing::Test {
  protected:
   MemoryDataLayerTest()
-    : data_blob_(new Blob<Dtype>()),
-      label_blob_(new Blob<Dtype>()),
-      data_(new Blob<Dtype>()), labels_(new Blob<Dtype>()) {}
+    : data_(new Blob<Dtype>()),
+      labels_(new Blob<Dtype>()),
+      data_blob_(new Blob<Dtype>()),
+      label_blob_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     batch_size_ = 8;
     batches_ = 12;
