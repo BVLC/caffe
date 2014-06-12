@@ -24,9 +24,9 @@ template <typename Dtype>
 class HDF5DataLayerTest : public ::testing::Test {
  protected:
   HDF5DataLayerTest()
-      : blob_top_data_(new Blob<Dtype>()),
-        blob_top_label_(new Blob<Dtype>()),
-        filename(NULL) {}
+      : filename(NULL),
+        blob_top_data_(new Blob<Dtype>()),
+        blob_top_label_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
