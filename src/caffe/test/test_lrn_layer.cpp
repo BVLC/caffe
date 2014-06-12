@@ -25,9 +25,9 @@ template <typename Dtype>
 class LRNLayerTest : public ::testing::Test {
  protected:
   LRNLayerTest()
-      : blob_bottom_(new Blob<Dtype>()),
-        blob_top_(new Blob<Dtype>()),
-        epsilon_(Dtype(1e-5)) {}
+      : epsilon_(Dtype(1e-5)),
+        blob_bottom_(new Blob<Dtype>()),
+        blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 7, 3, 3);
