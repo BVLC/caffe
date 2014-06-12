@@ -55,7 +55,6 @@ void LRNLayerTest<Dtype>::ReferenceLRNForward(
     Blob<Dtype>* blob_top) {
   blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
       blob_bottom.height(), blob_bottom.width());
-  const Dtype* bottom_data = blob_bottom.cpu_data();
   Dtype* top_data = blob_top->mutable_cpu_data();
   LRNParameter lrn_param = layer_param.lrn_param();
   Dtype alpha = lrn_param.alpha();
