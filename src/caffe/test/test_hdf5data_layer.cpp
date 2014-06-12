@@ -61,7 +61,6 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   int batch_size = 5;
   hdf5_data_param->set_batch_size(batch_size);
   hdf5_data_param->set_source(*(this->filename));
-  int num_rows = 10;
   int num_cols = 8;
   int height = 5;
   int width = 5;
