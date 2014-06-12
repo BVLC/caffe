@@ -824,16 +824,20 @@ static void init_net(MEX_ARGS) {
 
 static void load_net(MEX_ARGS) {
   if (nrhs != 1) {
-    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    LOG(ERROR) << "Given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
   }
   if (net_) {
-  char* model_file = mxArrayToString(prhs[0]);
+    char* model_file = mxArrayToString(prhs[0]);
 
-  CheckFile(string(model_file));
-  net_->CopyTrainedLayersFrom(string(model_file));
+    CheckFile(string(model_file));
+    net_->CopyTrainedLayersFrom(string(model_file));
 
-  mxFree(model_file);
+    mxFree(model_file);
+    init_key = random();  // NOLINT(caffe/random_fn)
+    if (nlhs == 1) {
+      plhs[0] = mxCreateDoubleScalar(init_key);
+    }
   } else {
     mexErrMsgTxt("Need to initialize the network first with init_net");
   }
