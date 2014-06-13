@@ -25,6 +25,7 @@ classdef CaffeNet < handle
             if nargin == 0
                 init_net(self,self.model_def_file);
                 load_net(self,self.model_file);
+            end
             if nargin > 0
                 init_net(self,model_def_file);
             end
@@ -49,10 +50,10 @@ classdef CaffeNet < handle
                         self = CaffeNet();
                 end
             else
-                if nargin > 0 & ~isempty(model_def_file)
+                if nargin > 0 && ~isempty(model_def_file)
                     init_net(self,model_def_file);
                 end
-                if nargin > 1 & ~isempty(model_file)
+                if nargin > 1 && ~isempty(model_file)
                     load_net(self,model_file);
                 end
             end
