@@ -23,15 +23,10 @@ classdef CaffeNet < handle
     methods (Access=private)
         function self = CaffeNet(model_def_file, model_file)
             if nargin > 0
-                self.model_def_file = model_def_file;
-                self.init_key = caffe('init_net', model_def_file);
-                self.layers_info = caffe('get_layers_info');
-                self.blobs_info = caffe('get_blobs_info');
-                self.weights_changed = true;
+                init_net(self,model_def_file);
             end
             if nargin > 1
-                self.model_file = model_file;
-                self.init_key = caffe('load_net', model_file);
+                load_net(self,model_file);
             end
             self.mode = caffe('get_mode');
             self.phase = caffe('get_phase');
@@ -41,16 +36,21 @@ classdef CaffeNet < handle
     methods (Static)
         function obj = instance(model_def_file, model_file)
             persistent self
-            if nargin < 1 || isempty(model_def_file)
+            if isempty(self)
+            if nargin == 2
+                self = CaffeNet(model_def_file, model_file);
                 % By default use imagenet_deploy
                 model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
             end
-            if nargin < 2 || isempty(model_file)
+            if isempty(model_file)
                 % By default use caffe reference model
                 model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
             end
             if isempty(self)
                 self = CaffeNet(model_def_file, model_file);
+            else
+                self.init_net(model_def_file);
+                self.load_net(mod
             end
             obj = self;
         end
@@ -117,7 +117,8 @@ classdef CaffeNet < handle
                 res = caffe('forward',input);
             end
         end
-        function res = backward(~,diff)
+        function res = backward(self,diff)
+            assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
             if nargin < 2
                 res = caffe('backward');
             else
@@ -127,15 +128,17 @@ classdef CaffeNet < handle
         function res = forward_prefilled(~)
             res = caffe('forward_prefilled');
         end
-        function res = backward_prefilled(~)
+        function res = backward_prefilled(self)
+            assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
             res = caffe('backward_prefilled');
         end
         function res = init_net(self, model_def_file)
             self.init_key = caffe('init_net',model_def_file);
+            self.model_def_file = model_def_file;
             self.layers_info = caffe('get_layers_info');
             self.blobs_info = caffe('get_blobs_info');
             self.weights_changed = true;
-            self.model_file = '';
+            self.model_file = [];
             res = self.init_key;
         end
         function res = load_net(self, model_file)
