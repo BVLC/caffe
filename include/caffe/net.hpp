@@ -4,6 +4,7 @@
 #define CAFFE_NET_HPP_
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,7 @@
 
 using std::map;
 using std::vector;
+using std::set;
 using std::string;
 
 namespace caffe {
@@ -100,6 +102,15 @@ class Net {
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
 
  protected:
+  // Helpers for Init.
+  // Append a new input or top blob to the net.
+  void AppendTop(const NetParameter& param, const int layer_id,
+                 const int top_id, set<string>* available_blobs,
+                 map<string, int>* blob_name_to_idx);
+  // Append a new bottom blob to the net.
+  int AppendBottom(const NetParameter& param, const int layer_id,
+                   const int bottom_id, set<string>* available_blobs,
+                   map<string, int>* blob_name_to_idx);
   // Function to get misc parameters, e.g. the learning rate multiplier and
   // weight decay.
   void GetLearningRateAndWeightDecay();
@@ -135,6 +146,8 @@ class Net {
   vector<float> params_lr_;
   // the weight decay multipliers
   vector<float> params_weight_decay_;
+  // The bytes of memory used by this net
+  size_t memory_used_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
