@@ -758,7 +758,7 @@ static void set_mode_gpu(MEX_ARGS) {
 }
 
 static void get_mode(MEX_ARGS) {
-  int mode = Caffe::get_mode();
+  int mode = Caffe::mode();
   if (mode == Caffe::CPU){
     // CPU mode
     plhs[0] = mxCreateString("CPU");
@@ -778,7 +778,7 @@ static void set_phase_test(MEX_ARGS) {
 }
 
 static void get_phase(MEX_ARGS) {
-  int phase = Caffe::get_phase();
+  int phase = Caffe::phase();
   if (phase == Caffe::TRAIN){
     // Train phase
     plhs[0] = mxCreateString("TRAIN");
@@ -800,7 +800,7 @@ static void set_device(MEX_ARGS) {
 }
 
 static void get_device(MEX_ARGS) {
-  int device_id =Caffe::GetDevice();
+  int device_id = Caffe::GetDevice();
   plhs[0] = mxCreateDoubleScalar(device_id);
 }
 
