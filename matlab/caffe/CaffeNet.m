@@ -1,7 +1,7 @@
 classdef CaffeNet < handle
     properties
-        model_def_file
-        model_file
+        model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
+        model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
         mode
         phase
         devide_id
@@ -11,6 +11,8 @@ classdef CaffeNet < handle
     end
     properties (Hidden)
         init_key
+        weights_changed = true;
+        getting_weights = false;
     end
     methods (Access=private)
         function self = CaffeNet(model_def_file, model_file)
@@ -23,12 +25,13 @@ classdef CaffeNet < handle
             if nargin > 1
                 self.model_file = model_file;
                 self.init_key = caffe('init', model_def_file, model_file);
-                self.weights = caffe('get_weights');
+                self.weights_changed  = true;
             end
         end
     end
     methods (Static)
         function obj = instance(model_def_file, model_file)
+            persistent self
             if nargin < 1 || isempty(model_def_file)
                 % By default use imagenet_deploy
                 model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
@@ -37,11 +40,63 @@ classdef CaffeNet < handle
                 % By default use caffe reference model
                 model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
             end
-            persistent self
             if isempty(self)
                 self = CaffeNet(model_def_file, model_file);
             end
             obj = self;
+        end
+    end
+    methods
+        function weights = get.weights(self)
+            if (weights_changed)
+                self.getting_weights = true;
+                self.weights = caffe('get_weights');
+                self.getting_weights = false;
+                self.weights_changed = false;
+            else
+                weights = self.weights;
+            end
+        end
+        function set.weights(self,weights)
+            if (self.getting_weights)
+                self.weights = weights;
+            else
+                caffe('set_weights', weights);
+                self.weights = weights;
+                self.weights_changed = false;
+            end
+        end
+        function set.mode(self,mode)
+            % mode = {'CPU' 'GPU'}
+            switch mode
+                case 'CPU'
+                    caffe('set_mode_cpu');
+                    self.mode = mode;
+                case 'GPU'
+                    caffe('set_mode_gpu');
+                    self.mode = mode;
+                otherwise
+                    fprintf('Mode unknown choose between CPU and GPU\n');
+                    error('Mode unknown');
+            end
+        end
+        function set.phase(self, phase)
+            % phase = {'TRAIN' 'TEST'}
+            switch phase
+                case 'TRAIN'
+                    caffe('set_phase_train');
+                    self.phase = phase;
+                case {'test','TEST'}
+                    caffe('set_phase_test');
+                    self.phase = phase;
+                otherwise
+                    fprintf('Phase unknown choose between TRAIN and TEST')
+                    error('Phase unknown');
+            end
+        end
+        function set.device(self, device_id)
+            caffe('set_device', device_id);
+            self.device_id = device_id;
         end
     end
     methods
@@ -69,11 +124,14 @@ classdef CaffeNet < handle
             self.init_key = caffe('init_net',model_def_file);
             self.layers_info = caffe('get_layers_info');
             self.blobs_info = caffe('get_blobs_info');
+            self.weights_changed = true;
+            self.model_file = null;
             res = self.init_key;
         end
         function res = load_net(self, model_file)
             self.init_key = caffe('load_net',model_file);
-            self.weights = caffe('get_weights');
+            self.model_file = model_file;
+            self.weights_changed = true;
             res = self.init_key;
         end
         function res = save_net(~, model_file)
@@ -83,58 +141,25 @@ classdef CaffeNet < handle
             res = caffe('is_initialized');
         end
         function set_mode_cpu(self)
-            caffe('set_mode_cpu');
-            self.mode = 'cpu';
+            self.mode = 'CPU';
         end
         function set_mode_gpu(self)
-            caffe('set_mode_gpu');
-            self.mode = 'gpu';
-        end
-        function set_mode(self,mode)
-            % mode = {'cpu' 'gpu'}
-            switch mode
-                case {'cpu','CPU'}
-                    caffe('set_mode_cpu');
-                    self.mode = mode;
-                case {'gpu','GPU'}
-                    caffe('set_mode_gpu');
-                    self.mode = mode;
-                otherwise
-                    error('Mode unknown');
-            end
+            self.mode = 'GPU';
         end
         function set_phase_train(self)
-            caffe('set_phase_train');
-            self.phase = 'train';
+            self.phase = 'TRAIN';
         end
         function set_phase_test(self)
-            caffe('set_phase_test');
-            self.phase = 'test';
-        end
-        function set_phase(self, phase)
-            % phase = {'train' 'test'}
-            switch phase
-                case {'train','TRAIN'}
-                    caffe('set_phase_train');
-                    self.phase = phase;
-                case {'test','TEST'}
-                    caffe('set_phase_test');
-                    self.phase = phase;
-                otherwise
-                    error('Phase unknown');
-            end
+            self.phase = 'TEST';
         end
         function set_device(self, device_id)
-            caffe('set_device', device_id);
             self.device_id = device_id;
         end
         function res = get_weights(self)
-            self.weights = caffe('get_weights');
             res = self.weights;
         end
         function res = set_weights(self, weights)
-            res = caffe('set_weights', weights);
-            self.weights = caffe('get_weights');
+            self.weights = weights;
         end
         function res = get_layer_weights(~, layer_name)
             res = caffe('get_layer_weights', layer_name);
@@ -167,7 +192,7 @@ classdef CaffeNet < handle
         end
         function res = reset(self)
             res = caffe('reset');
-            self.init_key
+            self.init_key = caffe('get_init_key');
         end
     end
 end
