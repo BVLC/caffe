@@ -22,6 +22,9 @@ classdef CaffeNet < handle
     end
     methods (Access=private)
         function self = CaffeNet(model_def_file, model_file)
+            if nargin == 0
+                init_net(self,self.model_def_file);
+                load_net(self,self.model_file);
             if nargin > 0
                 init_net(self,model_def_file);
             end
@@ -37,20 +40,21 @@ classdef CaffeNet < handle
         function obj = instance(model_def_file, model_file)
             persistent self
             if isempty(self)
-            if nargin == 2
-                self = CaffeNet(model_def_file, model_file);
-                % By default use imagenet_deploy
-                model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
-            end
-            if isempty(model_file)
-                % By default use caffe reference model
-                model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
-            end
-            if isempty(self)
-                self = CaffeNet(model_def_file, model_file);
+                switch nargin
+                    case 2
+                        self = CaffeNet(model_def_file, model_file);
+                    case 1
+                        self = CaffeNet(model_def_file);
+                    case 0
+                        self = CaffeNet();
+                end
             else
-                self.init_net(model_def_file);
-                self.load_net(mod
+                if nargin > 0 & ~isempty(model_def_file)
+                    init_net(self,model_def_file);
+                end
+                if nargin > 1 & ~isempty(model_file)
+                    load_net(self,model_file);
+                end
             end
             obj = self;
         end
