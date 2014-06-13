@@ -27,6 +27,9 @@ classdef CaffeNet < handle
                 self.init_key = caffe('init', model_def_file, model_file);
                 self.weights_changed  = true;
             end
+            self.mode = caffe('get_mode');
+            self.phase = caffe('get_phase');
+            self.device_id = caffe('get_device');
         end
     end
     methods (Static)
@@ -48,7 +51,7 @@ classdef CaffeNet < handle
     end
     methods
         function weights = get.weights(self)
-            if (weights_changed)
+            if (self.weights_changed)
                 self.getting_weights = true;
                 self.weights = caffe('get_weights');
                 self.getting_weights = false;
