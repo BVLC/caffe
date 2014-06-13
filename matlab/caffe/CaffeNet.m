@@ -29,7 +29,7 @@ classdef CaffeNet < handle
             end
             if nargin > 1
                 self.model_file = model_file;
-                self.init_key = caffe('init', model_def_file, model_file);
+                self.init_key = caffe('load_net', model_file);
                 self.getting_weights = true;
                 self.weights = caffe('get_weights');
                 self.getting_weights = false;
