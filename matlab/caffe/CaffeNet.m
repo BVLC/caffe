@@ -30,10 +30,10 @@ classdef CaffeNet < handle
             if nargin > 1
                 self.model_file = model_file;
                 self.init_key = caffe('load_net', model_file);
-                self.getting_weights = true;
-                self.weights = caffe('get_weights');
-                self.getting_weights = false;
-                self.weights_changed  = false;
+                % self.getting_weights = true;
+                % self.weights = caffe('get_weights');
+                % self.getting_weights = false;
+                % self.weights_changed  = false;
             end
             self.mode = caffe('get_mode');
             self.phase = caffe('get_phase');
