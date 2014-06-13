@@ -1,13 +1,17 @@
 classdef CaffeNet < handle
-    properties
+    properties (SetAccess = private)
         model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
         model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
+        layers_info
+        blobs_info
+    end
+    properties (AbortSet = true)
+        weights
         mode
         phase
         device_id
-        weights
-        layers_info
-        blobs_info
+        input_blobs
+        output_blobs
     end
     properties (Hidden)
         init_key
@@ -100,6 +104,14 @@ classdef CaffeNet < handle
         function set.device_id(self, device_id)
             caffe('set_device', device_id);
             self.device_id = device_id;
+        end
+        function set.input_blobs(self, input_blobs)
+            caffe('set_input_blobs', input_blobs);
+            self.input_blobs = input_blobs;
+        end
+        function set.output_blobs(self, output_blobs)
+            caffe('set_output_blobs', output_blobs);
+            self.output_blobs = output_blobs;
         end
     end
     methods
