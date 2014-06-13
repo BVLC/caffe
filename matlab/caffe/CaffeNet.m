@@ -5,8 +5,8 @@ classdef CaffeNet < handle
         layers_info
         blobs_info
     end
-    properties (AbortSet = true)
-        weights
+    properties
+        weights = [];
         mode
         phase
         device_id
@@ -15,7 +15,7 @@ classdef CaffeNet < handle
     end
     properties (Hidden)
         init_key
-        weights_changed = true;
+        weights_changed = false;
         getting_weights = false;
     end
     methods (Access=private)
@@ -25,11 +25,15 @@ classdef CaffeNet < handle
                 self.init_key = caffe('init_net', model_def_file);
                 self.layers_info = caffe('get_layers_info');
                 self.blobs_info = caffe('get_blobs_info');
+                self.weights_changed  = true;
             end
             if nargin > 1
                 self.model_file = model_file;
                 self.init_key = caffe('init', model_def_file, model_file);
-                self.weights_changed  = true;
+                self.getting_weights = true;
+                self.weights = caffe('get_weights');
+                self.getting_weights = false;
+                self.weights_changed  = false;
             end
             self.mode = caffe('get_mode');
             self.phase = caffe('get_phase');
