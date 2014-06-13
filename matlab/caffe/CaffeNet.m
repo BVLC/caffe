@@ -4,7 +4,7 @@ classdef CaffeNet < handle
         model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
         mode
         phase
-        devide_id
+        device_id
         weights
         layers_info
         blobs_info
@@ -94,7 +94,7 @@ classdef CaffeNet < handle
                     error('Phase unknown');
             end
         end
-        function set.device(self, device_id)
+        function set.device_id(self, device_id)
             caffe('set_device', device_id);
             self.device_id = device_id;
         end
