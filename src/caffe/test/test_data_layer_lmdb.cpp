@@ -1,8 +1,8 @@
 // Copyright 2014 BVLC and contributors.
 
+#include <sys/stat.h>
 #include <string>
 #include <vector>
-#include <sys/stat.h>
 
 #include "cuda_runtime.h"
 #include "leveldb/db.h"
@@ -48,7 +48,7 @@ class DataLayerTestLmdb : public ::testing::Test {
     MDB_val mdbkey, mdbdata;
     MDB_txn *txn;
     CHECK_EQ(mdb_env_create(&env), MDB_SUCCESS) << "mdb_env_create failed";
-    CHECK_EQ(mdb_env_set_mapsize(env, 1099511627776), MDB_SUCCESS) // 1TB
+    CHECK_EQ(mdb_env_set_mapsize(env, 1099511627776), MDB_SUCCESS)  // 1TB
         << "mdb_env_set_mapsize failed";
     CHECK_EQ(mdb_env_open(env, filename_->c_str(), 0, 0664), MDB_SUCCESS)
         << "mdb_env_open failed";
@@ -85,7 +85,10 @@ class DataLayerTestLmdb : public ::testing::Test {
     mdb_env_close(env);
   }
 
-  virtual ~DataLayerTestLmdb() { delete blob_top_data_; delete blob_top_label_; }
+  virtual ~DataLayerTestLmdb() {
+    delete blob_top_data_;
+    delete blob_top_label_;
+  }
 
   shared_ptr<string> filename_;
   Blob<Dtype>* const blob_top_data_;
