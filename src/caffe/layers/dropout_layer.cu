@@ -70,7 +70,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           count, top_diff, mask, uint_thres_, scale_, bottom_diff);
       CUDA_POST_KERNEL_CHECK;
     } else {
-      caffe_gpu_copy(top[0]->count(), bottom_data, top_data);
+      caffe_gpu_copy(top[0]->count(), top_diff, bottom_diff);
     }
   }
 }
