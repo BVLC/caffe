@@ -124,7 +124,7 @@ classdef CaffeNet < handle
         end
     end
     methods
-        function res = forward(~,input)
+        function res = forward(self,input)
             if (is_initialized(self))
                 if nargin < 2
                     res = caffe('forward');
@@ -143,7 +143,7 @@ classdef CaffeNet < handle
                 end
             end
         end
-        function res = forward_prefilled(~)
+        function res = forward_prefilled(self)
             if (is_initialized(self))
                 res = caffe('forward_prefilled');
             end
@@ -180,7 +180,7 @@ classdef CaffeNet < handle
                 res = self.init_key;
             end
         end
-        function res = save_net(~, model_file)
+        function res = save_net(self, model_file)
             if (is_initialized(self))
                 res = caffe('save_net', model_file);
             end
