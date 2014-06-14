@@ -220,7 +220,7 @@ message AccuracyParameter {
   // When computing accuracy, count as correct by comparing the true label to
   // the top k scoring classes.  By default, only compare to the top scoring
   // class (i.e. argmax).
-  optional uint32 compare_to_top_k = 1 [default = 1];
+  optional uint32 top_k = 1 [default = 1];
 }
 
 // Message that stores parameters used by ArgMaxLayer
