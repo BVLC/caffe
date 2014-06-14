@@ -47,14 +47,18 @@ function [scores, maxlabel] = matcaffe_demo(im, use_gpu)
 
 
 % init caffe network (spews logging info)
+net = CaffeNet.instance;
 if exist('use_gpu', 'var')
-  matcaffe_init(use_gpu);
-else
-  matcaffe_init();
+  if use_gpu
+    net.set_mode_gpu;
+  else
+    net.set_mode_cpu;
+  end
+  fprintf('Done with set_mode\n');
 end
 
 % put into test mode
-caffe('set_phase_test');
+net.set_phase_test;
 fprintf('Done with set_phase_test\n');
 
 if nargin < 1
@@ -71,7 +75,7 @@ toc;
 % do forward pass to get scores
 % scores are now Width x Height x Channels x Num
 tic;
-scores = caffe('forward', input_data);
+scores = net.forward(input_data);
 toc;
 
 scores = scores{1};
