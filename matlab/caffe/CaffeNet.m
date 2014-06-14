@@ -23,14 +23,13 @@ classdef CaffeNet < handle
     methods (Access=private)
         function self = CaffeNet(model_def_file, model_file)
             if nargin == 0
-                init_net(self,self.model_def_file);
-                load_net(self,self.model_file);
+                init(self, self.model_def_file, self.model_file);
             end
             if nargin > 0
-                init_net(self,model_def_file);
+                init_net(self, model_def_file);
             end
             if nargin > 1
-                load_net(self,model_file);
+                load_net(self, model_file);
             end
             self.mode = caffe('get_mode');
             self.phase = caffe('get_phase');
@@ -137,13 +136,22 @@ classdef CaffeNet < handle
             assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
             res = caffe('backward_prefilled');
         end
-        function res = init_net(self, model_def_file)
-            self.init_key = caffe('init_net',model_def_file);
+        function res = init(self, model_def_file, model_file)
+            self.init_key = caffe('init',model_def_file, model_file);
             self.model_def_file = model_def_file;
+            self.model_file = model_file;
             self.layers_info = caffe('get_layers_info');
             self.blobs_info = caffe('get_blobs_info');
             self.weights_changed = true;
+            res = self.init_key;
+        end
+        function res = init_net(self, model_def_file)
+            self.init_key = caffe('init_net',model_def_file);
+            self.model_def_file = model_def_file;
             self.model_file = [];
+            self.layers_info = caffe('get_layers_info');
+            self.blobs_info = caffe('get_blobs_info');
+            self.weights_changed = true;
             res = self.init_key;
         end
         function res = load_net(self, model_file)
@@ -211,6 +219,10 @@ classdef CaffeNet < handle
         function reset(self)
             caffe('reset');
             self.init_key = caffe('get_init_key');
+        end
+        function delete(self)
+            reset(self);
+            clear caffe;
         end
     end
 end
