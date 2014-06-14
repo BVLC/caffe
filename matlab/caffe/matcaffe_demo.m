@@ -1,5 +1,6 @@
 function [scores, maxlabel] = matcaffe_demo(im, use_gpu)
 % scores = matcaffe_demo(im, use_gpu)
+% By default uses cpu
 %
 % Demo of the matlab wrapper using the ILSVRC network.
 %
@@ -51,17 +52,18 @@ net = CaffeNet.instance;
 if exist('use_gpu', 'var')
   if use_gpu
     net.set_mode_gpu;
+    fprintf('Done with set_mode_gpu\n');
   else
     net.set_mode_cpu;
+    fprintf('Done with set_mode_cpu\n');
   end
-  fprintf('Done with set_mode\n');
 end
 
 % put into test mode
 net.set_phase_test;
 fprintf('Done with set_phase_test\n');
 
-if nargin < 1
+if nargin < 1 || isempty(im)
   % For demo purposes we will use the peppers image
   im = imread('peppers.png');
 end
