@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
   string db_backend = "leveldb";
   if (argc >= (arg_offset+6)) {
     db_backend = string(argv[arg_offset+5]);
-    if (db_backend != "leveldb" || db_backend != "lmdb") {
+    if (!(db_backend == "leveldb") && !(db_backend == "lmdb")) {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }
   }
