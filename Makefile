@@ -168,6 +168,11 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
+	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
+	# older versions of gcc are too dumb to build boost with -Wuninitalized
+	ifeq ($(shell echo $(GCCVERSION) \< 4.6 | bc), 1)
+		WARNINGS += -Wno-uninitialized
+	endif
 endif
 
 # OS X:
@@ -175,6 +180,8 @@ endif
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
+	# clang throws this warning for cuda headers
+	WARNINGS += -Wno-unneeded-internal-declaration
 	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
 		CXXFLAGS += -stdlib=libstdc++
 	endif
@@ -220,6 +227,8 @@ LIBRARY_DIRS += $(BLAS_LIB)
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+# mex may invoke an older gcc that is too liberal with -Wuninitalized
+MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
@@ -283,7 +292,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 		exit 1; \
 	fi
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
-			CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS)" \
+			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
 			CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -o $@
 	@ echo
 
