@@ -254,7 +254,9 @@ classdef CaffeNet < handle
         end
         function reset(self)
             caffe('reset');
-            self = [];
+            self.init_key = caffe('get_init_key');
+            self.layers_info = [];
+            self.blobs_info = [];
         end
         function delete(self)
             caffe('reset');
