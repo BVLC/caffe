@@ -254,10 +254,10 @@ classdef CaffeNet < handle
         end
         function reset(self)
             caffe('reset');
-            self.init_key = caffe('get_init_key');
+            self = [];
         end
         function delete(self)
-            reset(self);
+            caffe('reset');
             clear caffe;
         end
     end
