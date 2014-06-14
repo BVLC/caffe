@@ -61,16 +61,22 @@ classdef CaffeNet < handle
     end
     methods
         function weights = get.weights(self)
-            if (self.weights_changed)
-                self.weights_store = caffe('get_weights');
-                self.weights_changed = false;
+            if (is_initialized(self))
+                if (self.weights_changed)
+                    self.weights_store = caffe('get_weights');
+                    self.weights_changed = false;
+                end
+                weights = self.weights_store;
+            else
+                weights = [];
             end
-            weights = self.weights_store;
         end
         function set.weights(self,weights)
-            caffe('set_weights', weights);
-            self.weights_store = weights;
-            self.weights_changed = false;
+            if (is_initialized(self))
+                caffe('set_weights', weights);
+                self.weights_store = weights;
+                self.weights_changed = false;
+            end
         end
         function set.mode(self,mode)
             % mode = {'CPU' 'GPU'}
@@ -105,36 +111,48 @@ classdef CaffeNet < handle
             self.device_id = device_id;
         end
         function set.input_blobs(self, input_blobs)
-            caffe('set_input_blobs', input_blobs);
-            self.input_blobs = input_blobs;
+            if (is_initialized(self))
+                caffe('set_input_blobs', input_blobs);
+                self.input_blobs = input_blobs;
+            end
         end
         function set.output_blobs(self, output_blobs)
-            caffe('set_output_blobs', output_blobs);
-            self.output_blobs = output_blobs;
+            if (is_initialized(self))
+                caffe('set_output_blobs', output_blobs);
+                self.output_blobs = output_blobs;
+            end
         end
     end
     methods
         function res = forward(~,input)
-            if nargin < 2
-                res = caffe('forward');
-            else
-                res = caffe('forward',input);
+            if (is_initialized(self))
+                if nargin < 2
+                    res = caffe('forward');
+                else
+                    res = caffe('forward',input);
+                end
             end
         end
         function res = backward(self,diff)
-            assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
-            if nargin < 2
-                res = caffe('backward');
-            else
-                res = caffe('backward',diff);
+            if (is_initialized(self))
+                assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
+                if nargin < 2
+                    res = caffe('backward');
+                else
+                    res = caffe('backward',diff);
+                end
             end
         end
         function res = forward_prefilled(~)
-            res = caffe('forward_prefilled');
+            if (is_initialized(self))
+                res = caffe('forward_prefilled');
+            end
         end
         function res = backward_prefilled(self)
-            assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
-            res = caffe('backward_prefilled');
+            if (is_initialized(self))
+                assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
+                res = caffe('backward_prefilled');
+            end
         end
         function res = init(self, model_def_file, model_file)
             self.init_key = caffe('init',model_def_file, model_file);
@@ -155,13 +173,17 @@ classdef CaffeNet < handle
             res = self.init_key;
         end
         function res = load_net(self, model_file)
-            self.init_key = caffe('load_net',model_file);
-            self.model_file = model_file;
-            self.weights_changed = true;
-            res = self.init_key;
+            if (is_initialized(self))
+                self.init_key = caffe('load_net',model_file);
+                self.model_file = model_file;
+                self.weights_changed = true;
+                res = self.init_key;
+            end
         end
         function res = save_net(~, model_file)
-            res = caffe('save_net', model_file);
+            if (is_initialized(self))
+                res = caffe('save_net', model_file);
+            end
         end
         function res = is_initialized(~)
             res = caffe('is_initialized');
@@ -182,17 +204,23 @@ classdef CaffeNet < handle
             self.device_id = device_id;
         end
         function res = get_weights(self)
-            res = self.weights;
+            if (is_initialized(self))
+                res = self.weights;
+            end
         end
         function set_weights(self, weights)
             self.weights = weights;
         end
-        function res = get_layer_weights(~, layer_name)
-            res = caffe('get_layer_weights', layer_name);
+        function res = get_layer_weights(self, layer_name)
+            if (is_initialized(self))
+                res = caffe('get_layer_weights', layer_name);
+            end
         end
         function res = set_layer_weights(self, layer_name, weights)
-            res = caffe('set_layer_weights', layer_name, weights);
-            self.weights = caffe('get_weights');
+            if (is_initialized(self))
+                res = caffe('set_layer_weights', layer_name, weights);
+                self.weights = caffe('get_weights');
+            end
         end
         function res = get_layers_info(self)
             res = self.layers_info;
@@ -200,17 +228,25 @@ classdef CaffeNet < handle
         function res = get_blobs_info(self)
             res = self.blobs_info;
         end
-        function res = get_blob_data(~, blob_name)
-            res = caffe('get_blob_data', blob_name);
+        function res = get_blob_data(self, blob_name)
+            if (is_initialized(self))
+                res = caffe('get_blob_data', blob_name);
+            end
         end
-        function res = get_blob_diff(~, blob_name)
-            res = caffe('get_blob_diff', blob_name);
+        function res = get_blob_diff(self, blob_name)
+            if (is_initialized(self))
+                res = caffe('get_blob_diff', blob_name);
+            end
         end
-        function res = get_all_data(~)
-            res = caffe('get_all_data');
+        function res = get_all_data(self)
+            if (is_initialized(self))
+                res = caffe('get_all_data');
+            end
         end
-        function res = get_all_diff(~)
-            res = caffe('get_all_diff');
+        function res = get_all_diff(self)
+            if (is_initialized(self))
+                res = caffe('get_all_diff');
+            end
         end
         function res = get_init_key(self)
             res = caffe('get_init_key');
