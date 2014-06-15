@@ -52,11 +52,11 @@ int main(int argc, char** argv) {
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     // just a dummy operation
     datum.ParseFromString(it->value().ToString());
-    const string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(), datum.float_data_size());
     CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " <<
         size_in_datum;
-    if (data.size() != 0) {
+    if (datum.data().size() != 0) {
+      const string& data = datum.data();
       for (int i = 0; i < size_in_datum; ++i) {
         sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
       }
