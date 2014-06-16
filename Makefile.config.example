@@ -3,6 +3,9 @@
 
 # CUDA directory contains bin/ and lib/ directories that we need.
 CUDA_DIR := /usr/local/cuda
+# On Ubuntu 14.04, if cuda tools are installed via
+# "sudo apt-get install nvidia-cuda-toolkit" then use this instead:
+# CUDA_DIR := /usr
 
 # CUDA architecture setting: going with all of them.
 CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
