@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "leveldb/db.h"
+#include "lmdb.h"
 #include "pthread.h"
 #include "hdf5.h"
 #include "boost/scoped_ptr.hpp"
@@ -133,8 +134,17 @@ class DataLayer : public Layer<Dtype> {
   virtual unsigned int PrefetchRand();
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
+
+  // LEVELDB
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
+  // LMDB
+  MDB_env* mdb_env_;
+  MDB_dbi mdb_dbi_;
+  MDB_txn* mdb_txn_;
+  MDB_cursor* mdb_cursor_;
+  MDB_val mdb_key_, mdb_value_;
+
   int datum_channels_;
   int datum_height_;
   int datum_width_;

@@ -229,6 +229,10 @@ message ConvolutionParameter {
 
 // Message that stores parameters used by DataLayer
 message DataParameter {
+  enum DB {
+    LEVELDB = 0;
+    LMDB = 1;
+  }
   // Specify the data source.
   optional string source = 1;
   // For data pre-processing, we can do simple scaling and subtracting the
@@ -247,6 +251,7 @@ message DataParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 7 [default = 0];
+  optional DB backend = 8 [default = LEVELDB];
 }
 
 // Message that stores parameters used by DropoutLayer
