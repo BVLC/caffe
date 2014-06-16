@@ -62,7 +62,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     layers_.push_back(shared_ptr<Layer<Dtype> >(GetLayer<Dtype>(layer_param)));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
-    bool need_backward = param.force_backward();
+    bool need_backward = false;
     // Figure out this layer's input and output
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
@@ -110,6 +110,21 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     } else {
       LOG(INFO) << layer_names_[layer_id]
                 << " does not need backward computation.";
+    }
+  }
+  // Handle force_backward if needed.
+  if (param.force_backward()) {
+    for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+      layer_need_backward_[layer_id] = true;
+      for (int bottom_id = 0;
+           bottom_id < bottom_need_backward_[layer_id].size(); ++bottom_id) {
+        bottom_need_backward_[layer_id][bottom_id] =
+            bottom_need_backward_[layer_id][bottom_id] ||
+            layers_[layer_id]->AllowForceBackward(bottom_id);
+        blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] =
+            blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] ||
+            bottom_need_backward_[layer_id][bottom_id];
+      }
     }
   }
   // In the end, all remaining blobs are considered output blobs.
@@ -162,7 +177,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     const int blob_id = blobs_.size();
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
-    blob_need_backward_.push_back(param.force_backward());
+    blob_need_backward_.push_back(false);
     (*blob_name_to_idx)[blob_name] = blob_id;
     if (layer_id == -1) {
       // Set the (explicitly specified) dimensions of the input blob.
@@ -197,7 +212,7 @@ int Net<Dtype>::AppendBottom(const NetParameter& param,
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
   bottom_id_vecs_[layer_id].push_back(blob_id);
   available_blobs->erase(blob_name);
-  const bool need_backward = param.force_backward() || blob_need_backward_[blob_id];
+  const bool need_backward = blob_need_backward_[blob_id];
   bottom_need_backward_[layer_id].push_back(need_backward);
   return blob_id;
 }
