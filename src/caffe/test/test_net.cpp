@@ -80,6 +80,62 @@ class NetTest : public ::testing::Test {
     InitNetFromProtoString(proto);
   }
 
+  virtual void InitTinyNetEuclidean(const bool force_backward = false) {
+    string proto =
+        "name: 'TinyTestEuclidLossNetwork' "
+        "layers: { "
+        "  name: 'data' "
+        "  type: DUMMY_DATA "
+        "  dummy_data_param { "
+        "    num: 5 "
+        "    channels: 2 "
+        "    height: 3 "
+        "    width: 4 "
+        "    num: 5 "
+        "    channels: 1 "
+        "    height: 1 "
+        "    width: 1 "
+        "    data_filler { "
+        "      type: 'gaussian' "
+        "      std: 0.01 "
+        "    } "
+        "  } "
+        "  top: 'data' "
+        "  top: 'label' "
+        "} "
+        "layers: { "
+        "  name: 'innerproduct' "
+        "  type: INNER_PRODUCT "
+        "  inner_product_param { "
+        "    num_output: 1 "
+        "    weight_filler { "
+        "      type: 'gaussian' "
+        "      std: 0.01 "
+        "    } "
+        "    bias_filler { "
+        "      type: 'constant' "
+        "      value: 0 "
+        "    } "
+        "  } "
+        "  blobs_lr: 1. "
+        "  blobs_lr: 2. "
+        "  weight_decay: 1. "
+        "  weight_decay: 0. "
+        "  bottom: 'data' "
+        "  top: 'innerproduct' "
+        "} "
+        "layers: { "
+        "  name: 'loss' "
+        "  type: EUCLIDEAN_LOSS "
+        "  bottom: 'innerproduct' "
+        "  bottom: 'label' "
+        "} ";
+    if (force_backward) {
+      proto += "force_backward: true ";
+    }
+    InitNetFromProtoString(proto);
+  }
+
   virtual void InitTrickyNet() {
     const string& proto =
         "name: 'TrickyTestNetwork' "
@@ -218,6 +274,20 @@ TYPED_TEST(NetTest, TestBottomNeedBackwardForce) {
   EXPECT_EQ(true, bottom_need_backward[1][0]);
   EXPECT_EQ(2, bottom_need_backward[2].size());
   EXPECT_EQ(true, bottom_need_backward[2][0]);
+  EXPECT_EQ(false, bottom_need_backward[2][1]);
+}
+
+TYPED_TEST(NetTest, TestBottomNeedBackwardEuclideanForce) {
+  const bool force_backward = true;
+  this->InitTinyNetEuclidean(force_backward);
+  const vector<vector<bool> >& bottom_need_backward =
+      this->net_->bottom_need_backward();
+  EXPECT_EQ(3, bottom_need_backward.size());
+  EXPECT_EQ(0, bottom_need_backward[0].size());
+  EXPECT_EQ(1, bottom_need_backward[1].size());
+  EXPECT_EQ(true, bottom_need_backward[1][0]);
+  EXPECT_EQ(2, bottom_need_backward[2].size());
+  EXPECT_EQ(true, bottom_need_backward[2][0]);
   EXPECT_EQ(true, bottom_need_backward[2][1]);
 }
 
@@ -233,6 +303,9 @@ TYPED_TEST(NetTest, TestBottomNeedBackwardTricky) {
   EXPECT_EQ(false, bottom_need_backward[2][0]);
   EXPECT_EQ(2, bottom_need_backward[3].size());
   EXPECT_EQ(true, bottom_need_backward[3][0]);
+  // The label input to the SoftmaxLossLayer should say it "needs backward"
+  // since it has weights under it, even though we expect this to cause a crash
+  // at training/test time.
   EXPECT_EQ(true, bottom_need_backward[3][1]);
 }
 
