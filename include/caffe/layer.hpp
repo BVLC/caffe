@@ -84,6 +84,14 @@ class Layer {
   virtual inline int MinTopBlobs() const { return -1; }
   virtual inline int MaxTopBlobs() const { return -1; }
 
+  // Declare for each bottom blob whether to allow force_backward -- that is,
+  // if AllowForceBackward(i) == false, we will ignore the force_backward
+  // setting and backpropagate to blob i only if it needs gradient information
+  // (as is done when force_backward == false).
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return true;
+  }
+
  protected:
   // The protobuf that stores the layer parameters
   LayerParameter layer_param_;

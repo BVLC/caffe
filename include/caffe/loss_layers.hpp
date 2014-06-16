@@ -38,6 +38,11 @@ class LossLayer : public Layer<Dtype> {
 
   virtual inline int ExactNumBottomBlobs() const { return 2; }
   virtual inline int MaxTopBlobs() const { return 1; }
+  // We usually cannot backpropagate to the labels; ignore force_backward for
+  // these inputs.
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return bottom_index != 1;
+  }
 };
 
 // Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.
@@ -63,6 +68,11 @@ class SoftmaxWithLossLayer : public Layer<Dtype> {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
   }
   virtual inline int MaxTopBlobs() const { return 2; }
+  // We cannot backpropagate to the labels; ignore force_backward for these
+  // inputs.
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return bottom_index != 1;
+  }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -132,6 +142,11 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_EUCLIDEAN_LOSS;
+  }
+  // Unlike most loss layers, in the EuclideanLossLayer we can backpropagate
+  // to both inputs.
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return true;
   }
 
  protected:
