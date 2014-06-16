@@ -426,6 +426,11 @@ class SoftmaxWithLossLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
   virtual inline int ExactNumTopBlobs() const { return 0; }
+  // We cannot backpropagate to the labels; ignore force_backward for these
+  // inputs.
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return bottom_index != 1;
+  }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
