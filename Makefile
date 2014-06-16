@@ -129,6 +129,7 @@ LIBRARY_DIRS += $(CUDA_LIB_DIR)
 LIBRARIES := cudart cublas curand \
 	pthread \
 	glog protobuf leveldb snappy \
+	lmdb \
 	boost_system \
 	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
