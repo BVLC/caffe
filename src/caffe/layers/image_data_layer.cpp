@@ -236,9 +236,7 @@ void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   phase_ = Caffe::phase();
   const bool prefetch_needs_rand =
       this->layer_param_.image_data_param().shuffle() ||
-          ((phase_ == Caffe::TRAIN) &&
-           (this->layer_param_.image_data_param().mirror() ||
-            this->layer_param_.image_data_param().crop_size()));
+      this->layer_param_.image_data_param().crop_size();
   if (prefetch_needs_rand) {
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
