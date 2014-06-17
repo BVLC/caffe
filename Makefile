@@ -132,7 +132,8 @@ LIBRARIES := cudart cublas curand \
 	lmdb \
 	boost_system \
 	hdf5_hl hdf5 \
-	opencv_core opencv_highgui opencv_imgproc
+	fftw3f fftw3 \
+	opencv_core opencv_highgui opencv_imgproc 
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
@@ -168,7 +169,8 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
-	CXXFLAGS += -mavx -m64 	-fopenmp
+	CXXFLAGS += -mavx -m64 
+#-fopenmp
 #	CXXFLAGS += -std=c++11
 endif
 
@@ -180,6 +182,13 @@ ifeq ($(OSX), 1)
 	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
 		CXXFLAGS += -stdlib=libstdc++
 	endif
+endif
+
+# OpenMP
+OPENMP ?= 0
+ifeq ($(OPENMP), 1)
+	CXXFLAGS += -fopenmp
+    LIBRARIES += fftw3_omp fftw3_omp
 endif
 
 # Debugging
@@ -200,7 +209,8 @@ ifeq ($(BLAS), mkl)
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64 /opt/intel/composer_xe_2013_sp1.2.144/compiler/lib/intel64
 else ifeq ($(BLAS), open)
 	# OpenBLAS
-	LIBRARIES += openblas
+	LIBRARIES += openblas   
+	BLAS_LIB ?= /opt/OpenBLAS/lib
 else
 	# ATLAS
 	ifeq ($(LINUX), 1)

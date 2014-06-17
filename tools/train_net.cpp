@@ -8,8 +8,10 @@
 #include <cuda_runtime.h>
 
 #include <cstring>
+#include <ctime>
 
 #include "caffe/caffe.hpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
@@ -24,7 +26,9 @@ int main(int argc, char** argv) {
   ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
   LOG(INFO) << "Starting Optimization";
-  double s_initial = dsecnd();
+  boost::posix_time::ptime  start_timer =
+           boost::posix_time::microsec_clock::local_time();
+
   SGDSolver<float> solver(solver_param);
   if (argc == 3) {
     LOG(INFO) << "Resuming from " << argv[2];
@@ -32,9 +36,12 @@ int main(int argc, char** argv) {
   } else {
     solver.Solve();
   }
-  LOG(INFO) << "Optimization Done.";
-  double s_elapsed = dsecnd() - s_initial;
-  LOG(INFO) << "Elapsed time, sec: " << s_elapsed;
+  LOG(INFO) << "Solver: Optimization Done.";
+
+  boost::posix_time::ptime  stop_timer =
+          boost::posix_time::microsec_clock::local_time();
+  uint64_t elapsed_sec=(stop_timer - start_timer).total_milliseconds()/1000;
+  LOG(INFO) << "Elapsed time, sec: " << elapsed_sec;
 
   return 0;
 }

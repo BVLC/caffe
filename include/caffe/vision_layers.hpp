@@ -8,26 +8,21 @@
 #include <vector>
 #include <complex>
 
+#include "leveldb/db.h"
+#include "pthread.h"
+#include "boost/scoped_ptr.hpp"
+#include "hdf5.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/neuron_layers.hpp"
-#include "caffe/loss_layers.hpp"
-#include "caffe/data_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-<<<<<<< HEAD
 #include "caffe/util/fft.hpp"
-=======
-#include "mkl.h"
-#include "mkl_vsl.h"    // mkl convolution
-#include "mkl_dfti.h"   // mkl fft
->>>>>>> cleaned style by lint
 
 #define HDF5_DATA_DATASET_NAME "data"
 #define HDF5_DATA_LABEL_NAME "label"
 
->>>>>>> First version of fft.
 namespace caffe {
 
 /* ArgmaxLayer
@@ -151,14 +146,17 @@ class ConvolutionLayer : public Layer<Dtype> {
   int num_of_threads_;
   std::vector<Dtype> col_buffer_mt_;
   std::vector<Dtype> weight_diff_mt_;
-  //----  fft ----------------------------------------------------------------
+
+  // fft ------------------------------------------------------------
+
   virtual Dtype Forward_cpu_fft(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Forward_cpu_fft_task(const Dtype *bottom_data, Dtype* top_data,
       const Dtype* weight, int n);
   virtual void fft_setup();
-  virtual void fft_free();
+  virtual void fft_clean();
   virtual void fft_doFFT_weights();
+
   bool fft_on_;
   bool fft_initialiazed_;
   int fft_height_;
@@ -168,14 +166,16 @@ class ConvolutionLayer : public Layer<Dtype> {
   int height_out_;
   int width_out_;
   int map_out_size_;
-  float* fft_weights_real_;
-  float* fft_map_in_real_;
-  MKL_Complex8* fft_weights_complex_;
-  MKL_Complex8* fft_map_in_complex_;
-  MKL_Complex8* fft_map_out_complex_;
-  float* fft_map_out_real_;
-  DFTI_DESCRIPTOR_HANDLE  fft_handle_;
-  DFTI_DESCRIPTOR_HANDLE ifft_handle_;
+  // buffers
+  Dtype* fft_weights_real_;
+  Dtype* fft_map_in_real_;
+  std::complex<Dtype>* fft_weights_complex_;
+  std::complex<Dtype>* fft_map_in_complex_;
+  std::complex<Dtype>* fft_map_out_complex_;
+  Dtype* fft_map_out_real_;
+  void* fft_handle_;
+  void* ifft_handle_;
+ 
 };
 
 /* EltwiseLayer
