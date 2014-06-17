@@ -140,7 +140,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   const int kMaxKeyStrLength = 100;
   char key_str[kMaxKeyStrLength];
   vector<Blob<float>*> input_vec;
-  int image_index = 0;
+  vector<int> image_indices(num_features, 0);
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
     for (int i = 0; i < num_features; ++i) {
@@ -162,13 +162,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
         }
         string value;
         datum.SerializeToString(&value);
-        snprintf(key_str, kMaxKeyStrLength, "%d", image_index);
+        snprintf(key_str, kMaxKeyStrLength, "%d", image_indices[i]);
         feature_batches[i]->Put(string(key_str), value);
-        ++image_index;
-        if (image_index % 1000 == 0) {
+        ++image_indices[i];
+        if (image_indices[i] % 1000 == 0) {
           feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i]);
-          LOG(ERROR)<< "Extracted features of " << image_index <<
-              " query images.";
+          LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+              " query images for feature blob " << blob_names[i];
           delete feature_batches[i];
           feature_batches[i] = new leveldb::WriteBatch();
         }
@@ -176,12 +176,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
     }  // for (int i = 0; i < num_features; ++i)
   }  // for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
   // write the last batch
-  if (image_index % 1000 != 0) {
-    for (int i = 0; i < num_features; ++i) {
+  for (int i = 0; i < num_features; ++i) {
+    if (image_indices[i] % 1000 != 0) {
       feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i]);
     }
-    LOG(ERROR)<< "Extracted features of " << image_index <<
-        " query images.";
+    LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+        " query images for feature blob " << blob_names[i];
   }
 
   for (int i = 0; i < num_features; ++i) {
