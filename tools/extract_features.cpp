@@ -185,10 +185,6 @@ int feature_extraction_pipeline(int argc, char** argv) {
         " query images for feature blob " << blob_names[i];
   }
 
-  for (int i = 0; i < num_features; ++i) {
-    delete feature_batches[i];
-    delete feature_dbs[i];
-  }
   LOG(ERROR)<< "Successfully extracted the features!";
   return 0;
 }
