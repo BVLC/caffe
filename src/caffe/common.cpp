@@ -126,7 +126,7 @@ class Caffe::RNG::Generator {
   shared_ptr<caffe::rng_t> rng_;
 };
 
-Caffe::RNG::RNG() : generator_(new Generator) { }
+Caffe::RNG::RNG() : generator_(new Generator()) { }
 
 Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) { }
 
