@@ -39,7 +39,6 @@ void VirtualBlob<Dtype>::Reshape(const int num, const int channels, const int he
 template <typename Dtype>
 void VirtualBlob<Dtype>::ShareData(const Blob& other) {
   // An VirtualBlob can share data with another Blobs that is bigger
-  CHECK(other.data())
   CHECK_LE(count_, other.count());
   data_ = other.data();
 }
@@ -47,7 +46,6 @@ void VirtualBlob<Dtype>::ShareData(const Blob& other) {
 template <typename Dtype>
 void VirtualBlob<Dtype>::ShareDiff(const Blob& other) {
   // An VirtualBlob can share diff with another Blobs that is bigger
-  CHECK(other.diff())
   CHECK_LE(count_, other.count());
   diff_ = other.diff();
 }
