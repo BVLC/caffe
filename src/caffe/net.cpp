@@ -12,6 +12,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "caffe/vision_layers.hpp"
 
 using std::pair;
 using std::map;
