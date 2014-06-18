@@ -16,7 +16,8 @@ Device<Dtype>* DeviceFactory<Dtype>::GetDevice() {
   case Caffe::GPU:
     return gpu_device_;
 #ifdef USE_OPENCL
-  case Caffe::OPENCL:
+  case Caffe::OPENCL_CPU:
+  case Caffe::OPENCL_GPU:
     return opencl_device_;
 #endif
   default:

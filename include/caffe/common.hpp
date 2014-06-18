@@ -74,7 +74,7 @@ class Caffe {
     }
     return *singleton_;
   }
-  enum Brew { CPU, GPU, OPENCL };
+  enum Brew { CPU, GPU, OPENCL_CPU, OPENCL_GPU };
   enum Phase { TRAIN, TEST };
 
 

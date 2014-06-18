@@ -14,6 +14,8 @@
 
 #include "caffe/util/device.hpp"
 
+#include <vector>
+
 namespace caffe {
 
 #define CL_CHECK(condition) \
@@ -116,8 +118,12 @@ void caffe_opencl_div(const int N, const Dtype* a,
 template<typename Dtype>
 class OpenCLDevice : public Device<Dtype> {
  public:
-  OpenCLDevice() {
+  OpenCLDevice() :
+    current_device_id_(0), current_cl_platform_id_(NULL),
+    current_platform_device_count_(0), current_platform_device_id_(0),
+    cl_context_(NULL), cl_command_queue_(NULL) {
   }
+
   virtual ~OpenCLDevice() {
   }
 
@@ -188,14 +194,22 @@ class OpenCLDevice : public Device<Dtype> {
       const int height, const int width, const int psize, const int pad,
       const int stride, Dtype* data_im);
 
-  static cl_context context();
-  static cl_command_queue queue();
- private:
-  static cl_device_id cl_device_id_;
-  static cl_context cl_context_;
-  static cl_command_queue cl_command_queue_;
-  static bool cl_context_created_;
-  static bool cl_command_queue_created_;
+  void SetDevice(const int device_id);
+  inline cl_context context();
+  inline cl_command_queue queue();
+ protected:
+  cl_device_type get_device_type();
+  cl_device_id current_cl_device_id();
+  void release_context();
+  void release_queue();
+ protected:
+  int current_device_id_;
+  cl_platform_id current_cl_platform_id_;
+  cl_int current_platform_device_count_;
+  std::vector<cl_device_id> current_platform_device_ids_;
+  int current_platform_device_id_;
+  cl_context cl_context_;
+  cl_command_queue cl_command_queue_;
 };
 
 

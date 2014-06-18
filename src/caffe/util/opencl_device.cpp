@@ -8,51 +8,110 @@
 namespace caffe {
 
 template<typename Dtype>
-cl_device_id OpenCLDevice<Dtype>::cl_device_id_ = NULL;
-
-template<typename Dtype>
-cl_context OpenCLDevice<Dtype>::cl_context_ = NULL;
-
-template<typename Dtype>
-cl_command_queue OpenCLDevice<Dtype>::cl_command_queue_ = NULL;
-
-template<typename Dtype>
-bool OpenCLDevice<Dtype>::cl_command_queue_created_ = false;
-
-template<typename Dtype>
-bool OpenCLDevice<Dtype>::cl_context_created_ = false;
+cl_device_type OpenCLDevice<Dtype>::get_device_type() {
+  switch (Caffe::mode()) {
+  case Caffe::OPENCL_CPU:
+    return CL_DEVICE_TYPE_CPU;
+  case Caffe::OPENCL_GPU:
+    return CL_DEVICE_TYPE_GPU;
+  default:
+    LOG(FATAL) << "Unknown Caffe OpenCL mode.";
+    return CL_DEVICE_TYPE_DEFAULT;
+  }
+}
 
 /**
- * http://dhruba.name/2012/10/14/opencl-cookbook-how-to-leverage-multiple-devices-in-opencl/
+ * http://dhruba.name/2012/08/14/opencl-cookbook-listing-all-devices-and-their-critical-attributes/
  */
 template<typename Dtype>
 cl_context OpenCLDevice<Dtype>::context() {
-  if (!cl_context_created_) {
-    cl_int error = 0;   // Used to handle error codes
-    cl_platform_id platform;
-    // Platform
-    CL_CHECK(clGetPlatformIDs(1, &platform, NULL));
-    // Device
-    CL_CHECK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &cl_device_id_,
-                            NULL));
-    // Context
-    cl_context_ = clCreateContext(0, 1, &cl_device_id_, NULL, NULL, &error);
-    CL_CHECK(error);
-    cl_context_created_ = true;
+  if (cl_context_ == NULL) {
+    cl_uint platformCount;
+    CL_CHECK(clGetPlatformIDs(0, NULL, &platformCount));
+
+    cl_platform_id* platforms = (cl_platform_id*)
+        malloc(sizeof(cl_platform_id) * platformCount);
+    CL_CHECK(clGetPlatformIDs(1, platforms, NULL));
+
+    cl_uint deviceCount;
+    cl_device_type device_type = get_device_type();
+    int num_devices_to_skip = current_device_id_;
+    while (num_devices_to_skip >= 0) {
+      for (int i = 0; i < platformCount; i++) {
+        cl_context_properties properties[] = {
+            CL_CONTEXT_PLATFORM, (cl_context_properties)(
+                platforms[i]), 0};
+        // get all devices
+        clGetDeviceIDs(platforms[i], device_type, 0, NULL, &deviceCount);
+        if (num_devices_to_skip <= deviceCount) {
+          current_cl_platform_id_ = platforms[i];
+          current_platform_device_count_ = deviceCount;
+          current_platform_device_id_ = num_devices_to_skip;
+          current_platform_device_ids_.resize(deviceCount);
+          CL_CHECK(clGetDeviceIDs(current_cl_platform_id_, device_type,
+                                  current_platform_device_count_,
+                                  &(current_platform_device_ids_[0]), NULL));
+          cl_int error = CL_SUCCESS;   // Used to handle error codes
+          // TODO: clCreateContext or clCreateContextFromType?
+  /*
+   * http://dhruba.name/2012/10/14/opencl-cookbook-how-to-leverage-multiple-devices-in-opencl/
+   */
+  //        cl_context_ = clCreateContext(properties, deviceCount, devices, NULL,
+  //                                    NULL, &error);
+          cl_context_ = clCreateContextFromType(properties, device_type, NULL,
+                                                NULL, &error);
+          CL_CHECK(error);
+        }
+        num_devices_to_skip -= deviceCount;
+        if (num_devices_to_skip < 0) {
+          break;
+        }
+      }
+    }
   }
   return cl_context_;
 }
 
 template<typename Dtype>
+cl_device_id OpenCLDevice<Dtype>::current_cl_device_id() {
+  // To initialize current platform info
+  context();
+  return current_platform_device_ids_[current_platform_device_id_];
+}
+
+template<typename Dtype>
 cl_command_queue OpenCLDevice<Dtype>::queue() {
-  if (!cl_command_queue_created_) {
+  if (cl_command_queue_ == NULL) {
     cl_int error = 0;   // Used to handle error codes
-    cl_command_queue_ = clCreateCommandQueue(context(), cl_device_id_, 0,
-                                             &error);
+    cl_command_queue_properties properties = 0;
+    cl_command_queue_ = clCreateCommandQueue(
+        context(), current_cl_device_id(), properties, &error);
     CL_CHECK(error);
-    cl_command_queue_created_ = true;
   }
   return cl_command_queue_;
+}
+
+template<typename Dtype>
+void OpenCLDevice<Dtype>::release_context() {
+  CL_CHECK(clReleaseContext(cl_context_));
+  cl_context_ = NULL;
+}
+
+template<typename Dtype>
+void OpenCLDevice<Dtype>::release_queue() {
+  CL_CHECK(clReleaseCommandQueue(cl_command_queue_));
+  cl_command_queue_ = NULL;
+}
+
+template<typename Dtype>
+void OpenCLDevice<Dtype>::SetDevice(const int device_id) {
+  if (current_device_id_ != device_id) {
+    current_device_id_ = device_id;
+    release_queue();
+    // TODO: reuse context for the devices of the same platform
+    release_context();
+    context();
+  }
 }
 
 template <>
