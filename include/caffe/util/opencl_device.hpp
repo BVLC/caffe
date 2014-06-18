@@ -32,51 +32,8 @@ namespace caffe {
       << caffe::clblasGetErrorString(status); \
   } while (0)
 
-#define CREATE_CL_MEM(A, M, K, FLAG) \
-  cl_mem buf##A; \
-  do { \
-    cl_int error; \
-    buf##A = clCreateBuffer( \
-      OpenCLDevice::context(), CL_MEM_##FLAG, M * K * sizeof(*A), \
-      NULL, &error); \
-    CL_CHECK(error); \
-  } while(0)
-
-#define RELEASE_CL_MEM(A) clReleaseMemObject(buf##A)
-
-#define ENQUEUE_CL_BUFFER(FLAG, A, M, K) \
-  CL_CHECK(clEnqueue##FLAG##Buffer( \
-    OpenCLDevice::queue(), bufA, CL_TRUE, 0, M * K * sizeof(*A), \
-    A, 0, NULL, NULL));
-
-#define PRE_CLBLAS_CALL \
-  cl_uint num_command_queues = 1; \
-  cl_uint num_events_in_wait_list = 0; \
-  cl_event *event_wait_list = NULL; \
-  cl_event events = NULL; \
-  cl_command_queue queue = OpenCLDevice::queue();
-
-#define ARRAY(A) buf##A, 0, ld##A
-
-#define CLBALS_TRAILING_ARGS \
-    num_command_queues, &queue, num_events_in_wait_list, \
-    event_wait_list, &events
-
 const char* clGetErrorString(cl_int error);
 const char* clblasGetErrorString(clblasStatus status);
-
-inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
-  switch (trans) {
-  case CblasNoTrans:
-    return clblasNoTrans;
-  case CblasTrans:
-    return clblasTrans;
-  case CblasConjTrans:
-    return clblasConjTrans;
-  default:
-    LOG(FATAL) << "Unknown CBLAS_TRANSPOSE " << trans;
-  }
-}
 
 // OpenCL: grid stride looping
 #define OPENCL_KERNEL_LOOP(i, n) \
@@ -84,45 +41,67 @@ inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
        i < (n); \
        i += get_global_size(0))
 
-template<typename Dtype>
-void caffe_opencl_sqr(const int n, const Dtype* x, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_exp(const int n, const Dtype* x, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_sign(const int n, const Dtype* x, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_sgnbit(const int n, const Dtype* x, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_fabs(const int n, const Dtype* x, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_add(const int N, const Dtype* a,
-                      const Dtype* b, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_sub(const int N, const Dtype* a,
-                      const Dtype* b, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_mul(const int N, const Dtype* a,
-                      const Dtype* b, Dtype* y);
-
-template<typename Dtype>
-void caffe_opencl_div(const int N, const Dtype* a,
-                      const Dtype* b, Dtype* y);
-
-template<typename Dtype>
-class OpenCLDevice : public Device<Dtype> {
+class CaffeOpenCL {
  public:
-  OpenCLDevice() :
+  inline static CaffeOpenCL& Get() {
+    if (!singleton_.get()) {
+      singleton_.reset(new CaffeOpenCL());
+    }
+    return *singleton_;
+  }
+
+  virtual ~CaffeOpenCL() {
+  }
+
+  void SetDevice(const int device_id);
+  inline static cl_context context() {
+    if (Get().cl_context_ == NULL) {
+      Get().create_context();
+    }
+    return Get().cl_context_;
+  }
+  inline static cl_command_queue queue() {
+    if (Get().cl_command_queue_ == NULL) {
+      Get().create_queue();
+    }
+    return Get().cl_command_queue_;
+  }
+ protected:
+  cl_device_type get_device_type();
+  cl_device_id current_cl_device_id();
+  void create_context();
+  void release_context();
+  void create_queue();
+  void release_queue();
+  void initialize_clblas();
+  void finalize_clblas();
+ protected:
+  static shared_ptr<CaffeOpenCL> singleton_;
+
+  int current_device_id_;
+  cl_platform_id current_cl_platform_id_;
+  cl_int current_platform_device_count_;
+  std::vector<cl_device_id> current_platform_device_ids_;
+  int current_platform_device_id_;
+  cl_context cl_context_;
+  cl_command_queue cl_command_queue_;
+  bool clblas_initialized_;
+ private:
+  CaffeOpenCL() :
     current_device_id_(0), current_cl_platform_id_(NULL),
     current_platform_device_count_(0), current_platform_device_id_(0),
     cl_context_(NULL), cl_command_queue_(NULL), clblas_initialized_(false) {
     initialize_clblas();
+  }
+
+  DISABLE_COPY_AND_ASSIGN(CaffeOpenCL);
+};
+
+
+template<typename Dtype>
+class OpenCLDevice : public Device<Dtype> {
+ public:
+  OpenCLDevice() : Device<Dtype>() {
   }
 
   virtual ~OpenCLDevice() {
@@ -146,7 +125,7 @@ class OpenCLDevice : public Device<Dtype> {
 
   virtual void set(const int N, const Dtype alpha, Dtype *X);
 
-  virtual void add_scalar(const int N, const Dtype alpha, Dtype *X);
+//  virtual void add_scalar(const int N, const Dtype alpha, Dtype *X);
 
   virtual void scal(const int N, const Dtype alpha, Dtype *X);
 
@@ -160,24 +139,24 @@ class OpenCLDevice : public Device<Dtype> {
 //
 //  virtual void div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
-  virtual void powx(const int N, const Dtype* a, const Dtype b, Dtype* y);
+//  virtual void powx(const int N, const Dtype* a, const Dtype b, Dtype* y);
 
-  virtual void rng_uniform(const int N, const Dtype a, const Dtype b, Dtype* r);
-
-  virtual void rng_gaussian(const int N, const Dtype mu, const Dtype sigma,
-                            Dtype* r);
-
-  virtual void rng_bernoulli(const int N, const Dtype p, int* r);
+//  virtual void rng_uniform(const int N, const Dtype a, const Dtype b, Dtype* r);
+//
+//  virtual void rng_gaussian(const int N, const Dtype mu, const Dtype sigma,
+//                            Dtype* r);
+//
+//  virtual void rng_bernoulli(const int N, const Dtype p, int* r);
 
 //  virtual void exp(const int N, const Dtype* a, Dtype* y);
 
-  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
-
-  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
-                                uint32_t* out);
+//  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
+//
+//  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
+//                                uint32_t* out);
 
 // Returns the sum of the absolute values of the elements of vector x
-  virtual void asum(const int N, const Dtype* x, Dtype* y);
+//  virtual void asum(const int N, const Dtype* x, Dtype* y);
 
 //  virtual void sign(const int N, const Dtype* x, Dtype* y);
 
@@ -185,35 +164,15 @@ class OpenCLDevice : public Device<Dtype> {
 
 //  virtual void fabs(const int N, const Dtype* x, Dtype* y);
 
-  virtual void scale(const int N, const Dtype alpha, const Dtype *x, Dtype* y);
+//  virtual void scale(const int N, const Dtype alpha, const Dtype *x, Dtype* y);
 
-  virtual void im2col(const Dtype* data_im, const int channels,
-      const int height, const int width, const int ksize, const int pad,
-      const int stride, Dtype* data_col);
-
-  virtual void col2im(const Dtype* data_col, const int channels,
-      const int height, const int width, const int psize, const int pad,
-      const int stride, Dtype* data_im);
-
-  void SetDevice(const int device_id);
-  inline cl_context context();
-  inline cl_command_queue queue();
- protected:
-  cl_device_type get_device_type();
-  cl_device_id current_cl_device_id();
-  void release_context();
-  void release_queue();
-  void initialize_clblas();
-  void finalize_clblas();
- protected:
-  int current_device_id_;
-  cl_platform_id current_cl_platform_id_;
-  cl_int current_platform_device_count_;
-  std::vector<cl_device_id> current_platform_device_ids_;
-  int current_platform_device_id_;
-  cl_context cl_context_;
-  cl_command_queue cl_command_queue_;
-  bool clblas_initialized_;
+//  virtual void im2col(const Dtype* data_im, const int channels,
+//      const int height, const int width, const int ksize, const int pad,
+//      const int stride, Dtype* data_col);
+//
+//  virtual void col2im(const Dtype* data_col, const int channels,
+//      const int height, const int width, const int psize, const int pad,
+//      const int stride, Dtype* data_im);
 };
 
 
