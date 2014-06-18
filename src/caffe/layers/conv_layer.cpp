@@ -29,8 +29,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // overly large memory usage.
   int height_out = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
   int width_out = (width_ + 2 * pad_ - kernel_size_) / stride_ + 1;
-  col_buffer_.Reshape(
-      1, channels_ * kernel_size_ * kernel_size_, height_out, width_out);
+  col_buffer_ = new VirtualBlob<Dtype>(1, channels_ * kernel_size_ * kernel_size_,
+    height_out, width_out);
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
@@ -81,7 +81,7 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
+  Dtype* col_data = col_buffer_->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
@@ -115,8 +115,8 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
-  Dtype* col_diff = col_buffer_.mutable_cpu_diff();
+  Dtype* col_data = col_buffer_->mutable_cpu_data();
+  Dtype* col_diff = col_buffer_->mutable_cpu_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
 

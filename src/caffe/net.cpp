@@ -84,7 +84,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (layers_[layer_id]->type() == LayerParameter_LayerType_CONVOLUTION) {
       ConvolutionLayer<Dtype>* conv_layer =
         dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
-      VirtualBlob<Dtype>* col_buffer = conv_layer->col_buffer();
+      Blob<Dtype>* col_buffer = conv_layer->col_buffer();
       LOG(INFO) << "Size of col_buffer of layer " << layer_id << ":" <<
         col_buffer->count();
       max_size_buffer_ = std::max(max_size_buffer_, col_buffer->count());
@@ -145,7 +145,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (layers_[layer_id]->type() == LayerParameter_LayerType_CONVOLUTION) {
       ConvolutionLayer<Dtype>* conv_layer =
         dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
-      VirtualBlob<Dtype>* col_buffer = conv_layer->col_buffer();
+      Blob<Dtype>* col_buffer = conv_layer->col_buffer();
       col_buffer->ShareData(shared_buffer_);
       col_buffer->ShareDiff(shared_buffer_);
     }
