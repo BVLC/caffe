@@ -148,7 +148,6 @@ class ConvolutionLayer : public Layer<Dtype> {
   std::vector<Dtype> weight_diff_mt_;
 
   // fft ------------------------------------------------------------
-
   virtual Dtype Forward_cpu_fft(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Forward_cpu_fft_task(const Dtype *bottom_data, Dtype* top_data,
@@ -176,7 +175,6 @@ class ConvolutionLayer : public Layer<Dtype> {
   void* fft_handle_;
   void* ifft_handle_;
   void* fft_many_handle_;
-
 };
 
 /* EltwiseLayer
