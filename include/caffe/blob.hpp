@@ -95,6 +95,21 @@ class Blob {
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
 
+// It is meant to be use as a shared buffer for im2col and col2im col_buffer
+// When resizing it will only increase the memory size as needed, never decrease it
+template <typename Dtype>
+class VirtualBlob : public Blob<Dtype> {
+ public:
+  // A VirtualBlob doesn't reserve any memory, after creating it, 
+  // it needs to ShareData and ShareDiff with a Blob
+  virtual void Reshape(const int num, const int channels, const int height,
+    const int width);
+  virtual void ShareData(const Blob& other);
+  virtual void ShareDiff(const Blob& other);
+protected:
+
+};  // class VirtualBlob
+
 }  // namespace caffe
 
 #endif  // CAFFE_BLOB_HPP_
