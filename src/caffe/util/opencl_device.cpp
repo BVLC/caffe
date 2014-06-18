@@ -3,48 +3,57 @@
 #include "caffe/common.hpp"
 #include "caffe/util/opencl_device.hpp"
 
+#include <vector>
+
 namespace caffe {
 
 template<typename Dtype>
-OpenCLDevice<Dtype>::cl_command_queue_created_ = false;
+cl_device_id OpenCLDevice<Dtype>::cl_device_id_ = NULL;
+
+template<typename Dtype>
+cl_context OpenCLDevice<Dtype>::cl_context_ = NULL;
+
+template<typename Dtype>
+cl_command_queue OpenCLDevice<Dtype>::cl_command_queue_ = NULL;
+
+template<typename Dtype>
+bool OpenCLDevice<Dtype>::cl_command_queue_created_ = false;
+
+template<typename Dtype>
+bool OpenCLDevice<Dtype>::cl_context_created_ = false;
 
 /**
- * http://opencl.codeplex.com/wikipage?title=OpenCL%20Tutorials%20-%201
+ * http://dhruba.name/2012/10/14/opencl-cookbook-how-to-leverage-multiple-devices-in-opencl/
  */
 template<typename Dtype>
-OpenCLDevice<Dtype>::cl_command_queue queue() {
-  if (cl_command_queue_created_) {
-    return cl_command_queue_;
-  } else {
+cl_context OpenCLDevice<Dtype>::context() {
+  if (!cl_context_created_) {
     cl_int error = 0;   // Used to handle error codes
     cl_platform_id platform;
-    cl_context context;
-    cl_command_queue queue;
-    cl_device_id device;
     // Platform
-    CL_CHECK(oclGetPlatformID(&platform));
+    CL_CHECK(clGetPlatformIDs(1, &platform, NULL));
     // Device
-    CL_CHECK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL));
+    CL_CHECK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &cl_device_id_,
+                            NULL));
     // Context
-    context = clCreateContext(0, 1, &device, NULL, NULL, &error);
+    cl_context_ = clCreateContext(0, 1, &cl_device_id_, NULL, NULL, &error);
     CL_CHECK(error);
-    // Command-queue
-    queue = clCreateCommandQueue(context, device, 0, &error);
+    cl_context_created_ = true;
+  }
+  return cl_context_;
+}
+
+template<typename Dtype>
+cl_command_queue OpenCLDevice<Dtype>::queue() {
+  if (!cl_command_queue_created_) {
+    cl_int error = 0;   // Used to handle error codes
+    cl_command_queue_ = clCreateCommandQueue(context(), cl_device_id_, 0,
+                                             &error);
     CL_CHECK(error);
     cl_command_queue_created_ = true;
   }
+  return cl_command_queue_;
 }
-
-DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sqr, y[i] = x[i] * x[i]);
-DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(exp, y[i] = exp(x[i]));
-DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sign, y[i] = sign<Dtype>(x[i]));
-DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sgnbit, y[i] = signbit(x[i]));
-DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(fabs, y[i] = fabs(x[i]));
-
-DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(add, y[i] = a[i] + b[i]);
-DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(sub, y[i] = a[i] - b[i]);
-DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(mul, y[i] = a[i] * b[i]);
-DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(div, y[i] = a[i] / b[i]);
 
 template <>
 void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
@@ -52,10 +61,9 @@ void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
                                const int N, const int K, const float alpha,
                                const float* A, const float* B,
                                const float beta, float* C) {
-  // Note that cublas follows fortran order.
-  LEAD_DIM(A, M, K);
-  LEAD_DIM(B, K, N);
-  LEAD_DIM(C, M, N);
+  int ldA = (TransA == CblasNoTrans) ? K : M;
+  int ldB = (TransB == CblasNoTrans) ? N : K;
+  int ldC = N;
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   clblasTranspose clTransB = to_clblasTranspose(TransB);
   CREATE_CL_MEM(A, M, K, READ_ONLY);
@@ -67,7 +75,7 @@ void OpenCLDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
   PRE_CLBLAS_CALL;
   // bufX is defined by the macro CREATE_CL_MEM(X, ...)
   CLBLAS_CHECK(clblasSgemm(clblasRowMajor, clTransA, clTransB,
-      M, N, K, &alpha, ARRAY(A), ARRAY(B), &beta, ARRAY(C),
+      M, N, K, alpha, ARRAY(A), ARRAY(B), beta, ARRAY(C),
       CLBALS_TRAILING_ARGS));
   /* Release OpenCL memory objects. */
   RELEASE_CL_MEM(C);
@@ -81,10 +89,9 @@ void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
                                 const int N, const int K, const double alpha,
                                 const double* A, const double* B,
                                 const double beta, double* C) {
-  // Note that cublas follows fortran order.
-  LEAD_DIM(A, M, K);
-  LEAD_DIM(B, K, N);
-  LEAD_DIM(C, M, N);
+  int ldA = (TransA == CblasNoTrans) ? K : M;
+  int ldB = (TransB == CblasNoTrans) ? N : K;
+  int ldC = N;
   clblasTranspose clTransA = to_clblasTranspose(TransA);
   clblasTranspose clTransB = to_clblasTranspose(TransB);
   CREATE_CL_MEM(A, M, K, READ_ONLY);
@@ -96,7 +103,7 @@ void OpenCLDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
   PRE_CLBLAS_CALL;
   // bufX is defined by the macro CREATE_CL_MEM(X, ...)
   CLBLAS_CHECK(clblasDgemm(clblasRowMajor, clTransA, clTransB,
-      M, N, K, &alpha, ARRAY(A), ARRAY(B), &beta, ARRAY(C),
+      M, N, K, alpha, ARRAY(A), ARRAY(B), beta, ARRAY(C),
       CLBALS_TRAILING_ARGS));
   /* Release OpenCL memory objects. */
   RELEASE_CL_MEM(C);
@@ -109,11 +116,15 @@ void OpenCLDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
                                const int N, const float alpha, const float* A,
                                const float* x, const float beta, float* y) {
   clblasTranspose clTransA = to_clblasTranspose(TransA);
+  int ldA = (TransA == CblasNoTrans) ? N : M;
+  int ldx = N;
+  int ldy = N;
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
   CREATE_CL_MEM(y, M, 1, READ_WRITE);
-  CLBLAS_CHECK(clblasSgemv(clblasRowMajor, clTransA, M, N, &alpha,
-      ARRAY(A), ARRAY(x), &beta, ARRAY(y),
+  PRE_CLBLAS_CALL;
+  CLBLAS_CHECK(clblasSgemv(clblasRowMajor, clTransA, M, N, alpha,
+      ARRAY(A), ARRAY(x), beta, ARRAY(y),
       CLBALS_TRAILING_ARGS));
 }
 
@@ -123,33 +134,61 @@ void OpenCLDevice<double>::gemv(
     const int N, const double alpha, const double* A,
     const double* x, const double beta, double* y) {
   clblasTranspose clTransA = to_clblasTranspose(TransA);
+  int ldA = (TransA == CblasNoTrans) ? N : M;
+  int ldx = N;
+  int ldy = N;
   CREATE_CL_MEM(A, M, N, READ_ONLY);
   CREATE_CL_MEM(x, N, 1, READ_ONLY);
   CREATE_CL_MEM(y, M, 1, READ_WRITE);
-  CLBLAS_CHECK(clblasDgemv(clblasRowMajor, clTransA, M, N, &alpha,
-      ARRAY(A), ARRAY(x), &beta, ARRAY(y),
+  PRE_CLBLAS_CALL;
+  CLBLAS_CHECK(clblasDgemv(clblasRowMajor, clTransA, M, N, alpha,
+      ARRAY(A), ARRAY(x), beta, ARRAY(y),
       CLBALS_TRAILING_ARGS));
 }
 
 template <>
 void OpenCLDevice<float>::axpy(const int N, const float alpha,
                                const float* X, float* Y) {
+  int ldX = N;
+  int ldY = N;
   CREATE_CL_MEM(X, N, 1, READ_ONLY);
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
   PRE_CLBLAS_CALL;
-  CUBLAS_CHECK(clblasSaxpy(
-      N, &alpha, ARRAY(X), ARRAY(Y),
+  CLBLAS_CHECK(clblasSaxpy(
+      N, alpha, ARRAY(X), ARRAY(Y),
       CLBALS_TRAILING_ARGS));
 }
 
 template <>
 void OpenCLDevice<double>::axpy(const int N, const double alpha,
                                 const double* X, double* Y) {
+  int ldX = N;
+  int ldY = N;
   CREATE_CL_MEM(X, N, 1, READ_ONLY);
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
   PRE_CLBLAS_CALL;
-  CUBLAS_CHECK(clblasDaxpy(
-      N, &alpha, ARRAY(X), ARRAY(Y),
+  CLBLAS_CHECK(clblasDaxpy(
+      N, alpha, ARRAY(X), ARRAY(Y),
+      CLBALS_TRAILING_ARGS));
+}
+
+template <>
+void OpenCLDevice<float>::scal(const int N, const float alpha, float *X) {
+  int ldX = N;
+  CREATE_CL_MEM(X, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
+  CLBLAS_CHECK(clblasSscal(
+      N, alpha, ARRAY(X),
+      CLBALS_TRAILING_ARGS));
+}
+
+template <>
+void OpenCLDevice<double>::scal(const int N, const double alpha, double *X) {
+  int ldX = N;
+  CREATE_CL_MEM(X, N, 1, READ_WRITE);
+  PRE_CLBLAS_CALL;
+  CLBLAS_CHECK(clblasDscal(
+      N, alpha, ARRAY(X),
       CLBALS_TRAILING_ARGS));
 }
 
@@ -157,20 +196,22 @@ template <>
 void OpenCLDevice<float>::axpby(
     const int N, const float alpha, const float* X,
     const float beta, float* Y) {
-  this->scal<float>(N, beta, Y);
-  this->axpy<float>(N, alpha, X, Y);
+  this->scal(N, beta, Y);
+  this->axpy(N, alpha, X, Y);
 }
 
 template <>
 void OpenCLDevice<double>::axpby(
     const int N, const double alpha, const double* X,
     const double beta, double* Y) {
-  this->scal<double>(N, beta, Y);
-  this->axpy<double>(N, alpha, X, Y);
+  this->scal(N, beta, Y);
+  this->axpy(N, alpha, X, Y);
 }
 
 template <>
 void OpenCLDevice<float>::copy(const int N, const float *X, float *Y) {
+  int ldX = N;
+  int ldY = N;
   CREATE_CL_MEM(X, N, 1, READ_ONLY);
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
   PRE_CLBLAS_CALL;
@@ -181,6 +222,8 @@ void OpenCLDevice<float>::copy(const int N, const float *X, float *Y) {
 
 template <>
 void OpenCLDevice<double>::copy(const int N, const double *X, double *Y) {
+  int ldX = N;
+  int ldY = N;
   CREATE_CL_MEM(X, N, 1, READ_ONLY);
   CREATE_CL_MEM(Y, N, 1, READ_WRITE);
   PRE_CLBLAS_CALL;
@@ -217,13 +260,18 @@ void OpenCLDevice<double>::copy_from_cpu(const int N, const double *X,
  */
 template<typename Dtype>
 void OpenCLDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
+#ifdef CL_VERSION_1_2
   CREATE_CL_MEM(X, N, 1, READ_WRITE);
   cl_uint num_events_in_wait_list = 0;
   cl_event *event_wait_list = NULL;
-  cl_event events = NULL;
+  cl_event event = NULL;
   CL_CHECK(clEnqueueFillBuffer(
-      OpenCLDevice::queue(), bufA, &alpha, sizeof(Dtype), 0,
-      sizeof(Dtype) * N, num_events_in_wait_list, event_wait_list, &event));
+      OpenCLDevice::queue(), bufX, static_cast<void*>(&alpha), sizeof(Dtype),
+      0, sizeof(Dtype) * N, num_events_in_wait_list, event_wait_list, &event));
+#else
+  std::vector<Dtype> tmp(N, alpha);
+  copy_from_cpu(N, &tmp[0], X);
+#endif
 }
 
 template
@@ -237,23 +285,12 @@ void OpenCLDevice<Dtype>::add_scalar(const int N, const Dtype alpha,
   NOT_IMPLEMENTED;
 }
 
-template <>
-void OpenCLDevice<float>::scal(const int N, const float alpha, float *X) {
-  CREATE_CL_MEM(X, N, 1, READ_WRITE);
-  PRE_CLBLAS_CALL;
-  CLBLAS_CHECK(clblasSscal(
-      N, alpha, ARRAY(X),
-      CLBALS_TRAILING_ARGS));
-}
+template
+void OpenCLDevice<float>::add_scalar(const int N, const float alpha, float *X);
+template
+void OpenCLDevice<double>::add_scalar(const int N, const double alpha,
+                                      double *X);
 
-template <>
-void OpenCLDevice<double>::scal(const int N, const double alpha, double *X) {
-  CREATE_CL_MEM(X, N, 1, READ_WRITE);
-  PRE_CLBLAS_CALL;
-  CLBLAS_CHECK(clblasDscal(
-      N, alpha, ARRAY(X),
-      CLBALS_TRAILING_ARGS));
-}
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::powx(const int N, const Dtype* a, const Dtype b,
@@ -262,12 +299,27 @@ void OpenCLDevice<Dtype>::powx(const int N, const Dtype* a, const Dtype b,
 //  caffe_gpu_powx<Dtype>(N, a, b, y);
 }
 
+template
+void OpenCLDevice<float>::powx(const int N, const float* a, const float b,
+                               float *y);
+template
+void OpenCLDevice<double>::powx(const int N, const double* a,
+                                const double b, double *y);
+
+
 template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_uniform(const int N, const Dtype a,
                                       const Dtype b, Dtype* r) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_rng_uniform<Dtype>(N, a, b, r);
 }
+
+template
+void OpenCLDevice<float>::rng_uniform(
+    const int N, const float a, const float b, float* r);
+template
+void OpenCLDevice<double>::rng_uniform(
+    const int N, const double a, const double b, double* r);
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
@@ -276,11 +328,23 @@ void OpenCLDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
 //  caffe_gpu_rng_gaussian<Dtype>(N, mu, sigma, r);
 }
 
+template
+void OpenCLDevice<float>::rng_gaussian(
+    const int N, const float mu, const float sigma, float* r);
+template
+void OpenCLDevice<double>::rng_gaussian(
+    const int N, const double mu, const double sigma, double* r);
+
 template<typename Dtype>
 void OpenCLDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
   NOT_IMPLEMENTED;
 //  caffe_gpu_rng_bernoulli<Dtype>(N, p, r);
 }
+
+template
+void OpenCLDevice<float>::rng_bernoulli(const int N, const float p, int* r);
+template
+void OpenCLDevice<double>::rng_bernoulli(const int N, const double p, int* r);
 
 template<typename Dtype>
 void OpenCLDevice<Dtype>::dot(const int N, const Dtype* x, const Dtype* y,
@@ -289,12 +353,26 @@ void OpenCLDevice<Dtype>::dot(const int N, const Dtype* x, const Dtype* y,
 //  caffe_gpu_dot<Dtype>(N, x, y, out);
 }
 
+template
+void OpenCLDevice<float>::dot(const int N, const float* x, const float* y,
+                              float* out);
+template
+void OpenCLDevice<double>::dot(const int N, const double* x, const double* y,
+                               double* out);
+
 template<typename Dtype>
 void OpenCLDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
                                            const Dtype* y, uint32_t* out) {
   NOT_IMPLEMENTED;
 //  *out = caffe_gpu_hamming_distance<Dtype>(N, x, y);
 }
+
+template
+void OpenCLDevice<float>::hamming_distance(const int N, const float* x,
+                                           const float* y, uint32_t* out);
+template
+void OpenCLDevice<double>::hamming_distance(const int N, const double* x,
+                                            const double* y, uint32_t* out);
 
 /**
  *
@@ -323,11 +401,16 @@ void OpenCLDevice<Dtype>::asum(const int N, const Dtype* x, Dtype* y) {
 //      CLBALS_TRAILING_ARGS));
 }
 
+template
+void OpenCLDevice<float>::asum(const int N, const float* x, float* y);
+template
+void OpenCLDevice<double>::asum(const int N, const double* x, double* y);
+
 template<typename Dtype>
 void OpenCLDevice<Dtype>::scale(const int N, const Dtype alpha,
                                 const Dtype *x, Dtype* y) {
-  this->copy<Dtype>(N, x, y);
-  this->scal<Dtype>(N, alpha, y);
+  this->copy(N, x, y);
+  this->scal(N, alpha, y);
 }
 
 template
@@ -338,22 +421,46 @@ void OpenCLDevice<double>::scale(const int N, const double alpha,
                                  const double *x, double* y);
 
 template<typename Dtype>
-void OpenCLDevice<Dtype>::im2col(const Dtype* data_im, const int channels,
+void OpenCLDevice<Dtype>::im2col(
+    const Dtype* data_im, const int channels,
     const int height, const int width, const int ksize, const int pad,
     const int stride, Dtype* data_col) {
-  NOT_IMPLEMENTED;
+//  NOT_IMPLEMENTED;
 //  im2col_gpu(data_im, channels, height, width, ksize, pad, stride,
 //             data_col);
 }
 
+template
+void OpenCLDevice<float>::im2col(
+    const float* data_im, const int channels,
+    const int height, const int width, const int ksize, const int pad,
+    const int stride, float* data_col);
+template
+void OpenCLDevice<double>::im2col(
+    const double* data_im, const int channels,
+    const int height, const int width, const int ksize, const int pad,
+    const int stride, double* data_col);
+
 template<typename Dtype>
-void OpenCLDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
+void OpenCLDevice<Dtype>::col2im(
+    const Dtype* data_col, const int channels,
     const int height, const int width, const int psize, const int pad,
     const int stride, Dtype* data_im) {
-  NOT_IMPLEMENTED;
+//  NOT_IMPLEMENTED;
 //  col2im_gpu(data_col, channels, height, width, psize, pad, stride,
 //             data_im);
 }
+
+template
+void OpenCLDevice<float>::col2im(
+    const float* data_col, const int channels,
+    const int height, const int width, const int psize, const int pad,
+    const int stride, float* data_im);
+template
+void OpenCLDevice<double>::col2im(
+    const double* data_col, const int channels,
+    const int height, const int width, const int psize, const int pad,
+    const int stride, double* data_im);
 
 const char* clGetErrorString(cl_int error) {
   switch (error) {
@@ -385,7 +492,7 @@ const char* clGetErrorString(cl_int error) {
   return "Unknown OpenCL error";
 }
 
-const char* clblasGetErrorString(clblasStatus_t status) {
+const char* clblasGetErrorString(clblasStatus status) {
   switch (status) {
   case clblasSuccess:
     return "clblasSuccess";
