@@ -6,7 +6,7 @@
 
 #include <omp.h>
 #include <vector>
-#include <algorithm> // for max
+#include <algorithm>  // for max
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -117,9 +117,9 @@ void ConvolutionLayer<Dtype>::fft_setup() {
 
 #ifdef _OPENMP
   caffe_cpu_fft_init_threads();
-//#ifdef USE_MKL
+// #ifdef USE_MKL
 //  fftw3_mkl.number_of_user_threads = 4;
-//#endif
+// #endif
   caffe_cpu_fft_plan_with_nthreads(num_of_threads_);
 #endif
 
@@ -134,39 +134,39 @@ void ConvolutionLayer<Dtype>::fft_setup() {
 
   //  common buffers
   fft_weights_real_= (Dtype *) caffe_cpu_fft_malloc<Dtype>(
-	  num_weights * fft_map_real_size_ * sizeof(Dtype));
+        num_weights * fft_map_real_size_ * sizeof(Dtype));
   fft_weights_complex_ = (std::complex<Dtype> *)  caffe_cpu_fft_malloc<Dtype>(
-	  num_weights * fft_map_complex_size_ * sizeof(std::complex<Dtype> ));
+        num_weights * fft_map_complex_size_ * sizeof(std::complex<Dtype> ));
   fft_map_in_real_ = (Dtype *) caffe_cpu_fft_malloc<Dtype>(
-	  num_of_threads_ * fft_map_real_size_ * sizeof(Dtype));
+        num_of_threads_ * fft_map_real_size_ * sizeof(Dtype));
   fft_map_in_complex_ = (std::complex<Dtype> *) caffe_cpu_fft_malloc<Dtype>(
-	  num_of_threads_ * fft_map_complex_size_ * sizeof(std::complex<Dtype>));
+        num_of_threads_ * fft_map_complex_size_ * sizeof(std::complex<Dtype>));
   fft_map_out_complex_ = (std::complex<Dtype>*) caffe_cpu_fft_malloc<Dtype>(
-	  num_of_threads_ * num_output_ * fft_map_complex_size_ *
-		  sizeof(std::complex<Dtype>));
+        num_of_threads_ * num_output_ * fft_map_complex_size_ *
+        sizeof(std::complex<Dtype>));
   fft_map_out_real_ = (Dtype *) caffe_cpu_fft_malloc<Dtype>(
-	  num_of_threads_ * num_output_ * fft_map_real_size_ * sizeof(Dtype));
+        num_of_threads_ * num_output_ * fft_map_real_size_ * sizeof(Dtype));
 
- //  fftw plans
+  //  fftw plans
   fft_handle_ = caffe_cpu_fft_plan_dft_r2c_2d<Dtype>(fft_height_, fft_width_,
-      fft_map_in_real_, fft_map_in_complex_, FFTW_ESTIMATE );
+        fft_map_in_real_, fft_map_in_complex_, FFTW_ESTIMATE);
   ifft_handle_ = caffe_cpu_fft_plan_dft_c2r_2d<Dtype>(fft_height_, fft_width_,
-	  fft_map_out_complex_, fft_map_out_real_, FFTW_ESTIMATE) ;
+        fft_map_out_complex_, fft_map_out_real_, FFTW_ESTIMATE);
   // plan for fft_many
   int in_N[2];
-  in_N[0]=fft_height_;
-  in_N[1]= fft_width_;
-  int in_stride=1;
-  int in_dist= fft_height_ * fft_width_;
+  in_N[0] = fft_height_;
+  in_N[1] = fft_width_;
+  int in_stride = 1;
+  int in_dist = fft_height_ * fft_width_;
   int out_N[2];
-  out_N[0]= fft_height_;
-  out_N[1]= fft_width_/2 +1;
+  out_N[0] = fft_height_;
+  out_N[1] = fft_width_/2 +1;
   int out_stride = 1;
-  int out_dist=fft_height_ * (fft_width_/2 +1);
+  int out_dist = fft_height_ * (fft_width_/2 +1);
   int num_filters  = num_output_ * (channels_/group_);
   fft_many_handle_ = caffe_cpu_fft_plan_many_dft_r2c<Dtype>(2, in_N,
-	  num_filters, fft_weights_real_, in_N, in_stride, in_dist,
-      fft_weights_complex_, out_N, out_stride, out_dist,FFTW_ESTIMATE);
+      num_filters, fft_weights_real_, in_N, in_stride, in_dist,
+      fft_weights_complex_, out_N, out_stride, out_dist, FFTW_ESTIMATE);
 }
 
 // free FFT buffers--------------------------------------------------
@@ -238,7 +238,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu_fft_task(
   Dtype* map_in_n = (Dtype*) (bottom_data + n * channels_ * map_in_size);
   Dtype* fft_map_in_real_n = fft_map_in_real_ + tid * fft_map_real_size_;
   std::complex<Dtype>* fft_map_in_complex_n =
-		  fft_map_in_complex_ + tid * fft_map_complex_size_;
+          fft_map_in_complex_ + tid * fft_map_complex_size_;
   std::complex<Dtype>* fft_map_out_complex_n =
           fft_map_out_complex_ + tid * (num_output_*fft_map_complex_size_);
   Dtype* fft_map_out_real_n =
@@ -246,7 +246,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu_fft_task(
   Dtype* map_out_n = top_data + n* (num_output_ * height_out_ * width_out_);
   // clear buffers
   memset(fft_map_out_complex_n, 0.,
-             (num_output_*fft_map_complex_size_* sizeof(std::complex<Dtype>)));
+          (num_output_*fft_map_complex_size_* sizeof(std::complex<Dtype>)));
   // loop over all channels ---------------------
   Dtype* map_in;
   std::complex<Dtype>* map_in_complex;
@@ -261,11 +261,11 @@ void ConvolutionLayer<Dtype>::Forward_cpu_fft_task(
     for (int h = 0; h < height_; h++) {
       for (int w = 0; w < width_; w++ )
         fft_map_in_real_n[(h + pad_)* fft_width_ + (w + pad_)] =
-             map_in[h * width_ + w ];
+                map_in[h * width_ + w ];
     }
     // FFT: map_in_real --> map_in_complex
     caffe_cpu_fft_execute_dft_r2c<Dtype>(fft_handle_,
-    		fft_map_in_real_n, fft_map_in_complex_n);
+                fft_map_in_real_n, fft_map_in_complex_n);
     // fft_map_out_complex[c] += fft_map_in_complex * fft_weight_complex[n,c]
     int g = c / (channels_ / group_);        // channel group
     int c_offset= c % (channels_ / group_);  // channel_index inside group
@@ -288,7 +288,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu_fft_task(
     map_out_real = fft_map_out_real_n + out * fft_map_real_size_;
     map_out = map_out_n + out * map_out_size_;
     caffe_cpu_fft_execute_dft_c2r<Dtype>(ifft_handle_,
-    		map_out_complex, map_out_real);
+             map_out_complex, map_out_real);
     //  post-process: map_out_real --> map_out
     int h, w;
     for (int h_out = 0; h_out < height_out_; h_out++) {
@@ -375,8 +375,9 @@ void ConvolutionLayer<Dtype>::Forward_cpu_task(
 template <typename Dtype>
 Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
              vector<Blob<Dtype>*>* top) {
-  if (fft_on_)
+  if (fft_on_) {
     Forward_cpu_fft(bottom, top);
+  }
   else {
     const Dtype* bottom_data = bottom[0]->cpu_data();
     const Dtype* weight = this->blobs_[0]->cpu_data();

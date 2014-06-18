@@ -6,9 +6,9 @@
 #include <complex>
 #include <fftw3.h>
 
-//#ifdef USE_MKL
-//#include <fftw3_mkl.h>
-//#endif
+// #ifdef USE_MKL
+// #include <fftw3_mkl.h>
+// #endif
 
 namespace caffe {
 
@@ -33,18 +33,18 @@ void* caffe_cpu_fft_plan_many_dft_r2c(int rank, const int *n, int howmany,
     unsigned flags);
 
 template <typename Dtype>
-void  caffe_cpu_fft_destroy_plan(void* plan);
+void caffe_cpu_fft_destroy_plan(void* plan);
 
 template <typename Dtype>
-void  caffe_cpu_fft_execute(void* plan);
+void caffe_cpu_fft_execute(void* plan);
 
 template <typename Dtype>
-void  caffe_cpu_fft_execute_dft_r2c(void* plan,
-   Dtype *in, std::complex<Dtype> *out);
+void caffe_cpu_fft_execute_dft_r2c(void* plan,
+    Dtype *in, std::complex<Dtype> *out);
 
 template <typename Dtype>
- void  caffe_cpu_fft_execute_dft_c2r(void* plan,
-   std::complex<Dtype> *in, Dtype  *out);
+void caffe_cpu_fft_execute_dft_c2r(void* plan,
+    std::complex<Dtype> *in, Dtype  *out);
 
 inline
 int caffe_cpu_fft_init_threads(void ) {
@@ -55,11 +55,10 @@ void  caffe_cpu_fft_plan_with_nthreads(int num_of_threads_) {
   fftw_plan_with_nthreads(num_of_threads_);
 }
 inline
-void caffe_cpu_fft_cleanup_threads(void){
-	fftw_cleanup_threads();
+void caffe_cpu_fft_cleanup_threads(void) {
+  fftw_cleanup_threads();
 }
 
 }  // namespace caffe
-
 
 #endif  // CAFFE_UTIL_caffe_cpu_fft_H_
