@@ -149,7 +149,7 @@ class Net {
   // The bytes of memory used by this net
   size_t memory_used_;
   // Shared buffer for Convolution Layers
-  size_t max_size_buffer_;
+  int max_size_buffer_;
   Blob<Dtype> shared_buffer_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
