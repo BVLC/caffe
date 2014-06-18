@@ -85,6 +85,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       ConvolutionLayer<Dtype>* conv_layer =
         dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
       VirtualBlob<Dtype>* col_buffer = conv_layer->col_buffer();
+      LOG(INFO) << "Size of col_buffer of layer " << layer_id << ":" <<
+        col_buffer->count();
       max_size_buffer_ = std::max(max_size_buffer_, col_buffer->count());
     }
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
@@ -136,7 +138,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
   // Create the shared_buffer Blob
-  LOG(INFO) << "shared_buffer_ size" << max_size_buffer_;
+  LOG(INFO) << "Size of shared_buffer_: " << max_size_buffer_;
   shared_buffer_.Reshape(1,1,1,max_size_buffer_);
   memory_used_ += max_size_buffer_;
   for (int layer_id = 0; layer_id < num_layers; ++layer_id) {
