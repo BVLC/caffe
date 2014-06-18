@@ -83,4 +83,37 @@ TYPED_TEST(Im2colLayerTest, TestGradient) {
 }
 
 
+TYPED_TEST(Im2colLayerTest, TestRect) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_h(5);
+  convolution_param->set_kernel_w(3);
+  convolution_param->set_stride(2);
+  Im2colLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // We are lazy and will only check the top left block
+  for (int c = 0; c < 45; ++c) {
+    EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
+        this->blob_bottom_->data_at(0, (c / 15), (c / 5) % 5, c % 5));
+  }
+}
+
+
+TYPED_TEST(Im2colLayerTest, TestRectGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_h(5);
+  convolution_param->set_kernel_w(3);
+  convolution_param->set_stride(2);
+  Im2colLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
 }  // namespace caffe
