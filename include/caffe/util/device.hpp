@@ -21,73 +21,85 @@ class Device {
   virtual void gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
                     const int M, const int N, const int K, const Dtype alpha,
                     const Dtype* A, const Dtype* B, const Dtype beta,
-                    Dtype* C) = 0;
+                    Dtype* C) { NOT_IMPLEMENTED; }
 
   virtual void gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
                     const Dtype alpha, const Dtype* A, const Dtype* x,
-                    const Dtype beta, Dtype* y) = 0;
+                    const Dtype beta, Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void axpy(const int N, const Dtype alpha, const Dtype* X,
-                    Dtype* Y) = 0;
+                    Dtype* Y) { NOT_IMPLEMENTED; }
 
   virtual void axpby(const int N, const Dtype alpha, const Dtype* X,
-                     const Dtype beta, Dtype* Y) = 0;
+                     const Dtype beta, Dtype* Y) { NOT_IMPLEMENTED; }
 
-  virtual void copy(const int N, const Dtype *X, Dtype *Y) = 0;
-  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y) = 0;
+  virtual void copy(const int N, const Dtype *X, Dtype *Y) { NOT_IMPLEMENTED; }
+  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y) {
+    NOT_IMPLEMENTED; }
 
-  virtual void set(const int N, const Dtype alpha, Dtype *X) = 0;
+  virtual void set(const int N, const Dtype alpha, Dtype *X) {
+    NOT_IMPLEMENTED; }
 
-  virtual void add_scalar(const int N, const Dtype alpha, Dtype *X) = 0;
+  virtual void add_scalar(const int N, const Dtype alpha, Dtype *X) {
+    NOT_IMPLEMENTED; }
 
-  virtual void scal(const int N, const Dtype alpha, Dtype *X) = 0;
+  virtual void scal(const int N, const Dtype alpha, Dtype *X) {
+    NOT_IMPLEMENTED; }
 
-  virtual void sqr(const int N, const Dtype* a, Dtype* y) = 0;
+  virtual void sqr(const int N, const Dtype* a, Dtype* y) { NOT_IMPLEMENTED; }
 
-  virtual void add(const int N, const Dtype* a, const Dtype* b, Dtype* y) = 0;
+  virtual void add(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
+    NOT_IMPLEMENTED; }
 
-  virtual void sub(const int N, const Dtype* a, const Dtype* b, Dtype* y) = 0;
+  virtual void sub(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
+    NOT_IMPLEMENTED; }
 
-  virtual void mul(const int N, const Dtype* a, const Dtype* b, Dtype* y) = 0;
+  virtual void mul(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
+    NOT_IMPLEMENTED; }
 
-  virtual void div(const int N, const Dtype* a, const Dtype* b, Dtype* y) = 0;
+  virtual void div(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
+    NOT_IMPLEMENTED; }
 
-  virtual void powx(const int N, const Dtype* a, const Dtype b, Dtype* y) = 0;
+  virtual void powx(const int N, const Dtype* a, const Dtype b, Dtype* y) {
+    NOT_IMPLEMENTED; }
 
   virtual void rng_uniform(const int N, const Dtype a, const Dtype b,
-                           Dtype* r) = 0;
+                           Dtype* r) { NOT_IMPLEMENTED; }
 
   virtual void rng_gaussian(const int N, const Dtype mu, const Dtype sigma,
-                            Dtype* r) = 0;
+                            Dtype* r) { NOT_IMPLEMENTED; }
 
-  virtual void rng_bernoulli(const int N, const Dtype p, int* r) = 0;
+  virtual void rng_bernoulli(const int N, const Dtype p, int* r) {
+    NOT_IMPLEMENTED; }
 
-  virtual void exp(const int N, const Dtype* a, Dtype* y) = 0;
+  virtual void exp(const int N, const Dtype* a, Dtype* y) { NOT_IMPLEMENTED; }
 
-  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out) = 0;
+  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out) {
+    NOT_IMPLEMENTED; }
 
   virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
-                                uint32_t* out) = 0;
+                                uint32_t* out) { NOT_IMPLEMENTED; }
 
 // Returns the sum of the absolute values of the elements of vector x
-  virtual void asum(const int N, const Dtype* x, Dtype* y) = 0;
+  virtual void asum(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
-  virtual void sign(const int N, const Dtype* x, Dtype* y) = 0;
+  virtual void sign(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
-  virtual void sgnbit(const int N, const Dtype* x, Dtype* y) = 0;
+  virtual void sgnbit(const int N, const Dtype* x, Dtype* y) {
+    NOT_IMPLEMENTED; }
 
-  virtual void fabs(const int N, const Dtype* x, Dtype* y) = 0;
+  virtual void fabs(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void scale(const int N, const Dtype alpha, const Dtype *x,
-                     Dtype* y) = 0;
+                     Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void im2col(const Dtype* data_im, const int channels,
       const int height, const int width, const int ksize, const int pad,
-      const int stride, Dtype* data_col) = 0;
+      const int stride, Dtype* data_col) { NOT_IMPLEMENTED; }
 
   virtual void col2im(const Dtype* data_col, const int channels,
       const int height, const int width, const int psize, const int pad,
-      const int stride, Dtype* data_im) = 0;
+      const int stride, Dtype* data_im) { NOT_IMPLEMENTED; }
 };
 
 template<typename Dtype>
