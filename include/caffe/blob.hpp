@@ -102,12 +102,17 @@ class VirtualBlob : public Blob<Dtype> {
  public:
   // A VirtualBlob doesn't reserve any memory, after creating it, 
   // it needs to ShareData and ShareDiff with a Blob
+  VirtualBlob()
+     : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
+     diff_() {}
+  explicit VirtualBlob(const int num, const int channels, const int height,
+    const int width);
   virtual void Reshape(const int num, const int channels, const int height,
     const int width);
   virtual void ShareData(const Blob& other);
   virtual void ShareDiff(const Blob& other);
-protected:
 
+  DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class VirtualBlob
 
 }  // namespace caffe
