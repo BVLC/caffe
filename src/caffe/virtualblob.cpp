@@ -25,7 +25,7 @@ void VirtualBlob<Dtype>::Reshape(const int num, const int channels, const int he
   this->channels_ = channels;
   this->height_ = height;
   this->width_ = width;
-  this->count_ = num_ * channels_ * height_ * width_;
+  this->count_ = num * channels * height * width;
   if (this->count_ == 0) {
     // If new size is zero then release data and diff pointers
     this->data_.reset(reinterpret_cast<SyncedMemory*>(NULL));
@@ -33,11 +33,11 @@ void VirtualBlob<Dtype>::Reshape(const int num, const int channels, const int he
   }
   if (this->data_) {
     // If it already has data then the new size has to fit in
-    CHECK_GE(this->data_.size(), this->count_ * sizeof(Dtype));
+    CHECK_GE(this->data_->size(), this->count_ * sizeof(Dtype));
   }
   if (this->diff_) {
     // If it already has diff then the new size has to fit in
-    CHECK_GE(this->diff_.size(), this->count_ * sizeof(Dtype));
+    CHECK_GE(this->diff_->size(), this->count_ * sizeof(Dtype));
   }
 }
 
@@ -51,7 +51,7 @@ void VirtualBlob<Dtype>::ShareData(const Blob<Dtype>& other) {
 template <typename Dtype>
 void VirtualBlob<Dtype>::ShareDiff(const Blob<Dtype>& other) {
   // An VirtualBlob can share diff with another Blobs that is bigger
-  CHECK_LE(count_, other.count());
+  CHECK_LE(this->count_, other.count());
   this->diff_ = other.diff();
 }
 
