@@ -132,8 +132,8 @@ LIBRARIES := cudart cublas curand \
 	lmdb \
 	boost_system \
 	hdf5_hl hdf5 \
-	fftw3f fftw3 \
 	opencv_core opencv_highgui opencv_imgproc 
+#	 \
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
@@ -184,12 +184,7 @@ ifeq ($(OSX), 1)
 	endif
 endif
 
-# OpenMP
-OPENMP ?= 0
-ifeq ($(OPENMP), 1)
-	CXXFLAGS += -fopenmp
-    LIBRARIES += fftw3_omp fftw3_omp
-endif
+
 
 # Debugging
 ifeq ($(DEBUG), 1)
@@ -202,31 +197,42 @@ endif
 BLAS ?= atlas
 ifeq ($(BLAS), mkl)
 	# MKL
-	LIBRARIES += mkl_rt iomp5
+	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
 	MKL_DIR = /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKL_DIR)/include
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64 /opt/intel/composer_xe_2013_sp1.2.144/compiler/lib/intel64
 else ifeq ($(BLAS), open)
 	# OpenBLAS
-	LIBRARIES += openblas   
+	LIBRARIES += openblas fftw3f fftw3   
 	BLAS_LIB ?= /opt/OpenBLAS/lib
 else
 	# ATLAS
 	ifeq ($(LINUX), 1)
 		ifeq ($(BLAS), atlas)
 			# Linux simply has cblas and atlas
-			LIBRARIES += cblas atlas
+			LIBRARIES += cblas atlas fftw3f fftw3
 		endif
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
 		BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
-		LIBRARIES += cblas
+		LIBRARIES += cblas 
 		LDFLAGS += -framework vecLib
 	endif
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
+
+# OpenMP
+OPENMP ?= 0
+ifeq ($(OPENMP), 1)
+	CXXFLAGS += -fopenmp
+    ifeq ($(BLAS), mkl)	
+        LIBRARIES += iomp5
+    else
+        LIBRARIES += fftw3_omp 
+    endif
+endif
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))

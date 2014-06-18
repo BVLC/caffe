@@ -175,7 +175,9 @@ class ConvolutionLayer : public Layer<Dtype> {
   Dtype* fft_map_out_real_;
   void* fft_handle_;
   void* ifft_handle_;
- 
+  void* fft_many_handle_;
+  void* ifft_many_handle_;
+  
 };
 
 /* EltwiseLayer
