@@ -15,7 +15,6 @@ class Blob {
   Blob()
        : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
        diff_() {}
-  ~Blob() {LOG(INFO) << "Destroying Blob" << this;};
   explicit Blob(const int num, const int channels, const int height,
     const int width);
   void Reshape(const int num, const int channels, const int height,
@@ -104,7 +103,6 @@ class VirtualBlob : public Blob<Dtype> {
   // A VirtualBlob doesn't reserve any memory, after creating it, 
   // it needs to ShareData and ShareDiff with a Blob
   VirtualBlob();
-  ~VirtualBlob() {LOG(INFO) << "Destroying VirtualBlob" << this;};
   explicit VirtualBlob(const int num, const int channels, const int height,
     const int width);
   virtual void Reshape(const int num, const int channels, const int height,

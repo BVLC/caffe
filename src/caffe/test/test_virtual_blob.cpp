@@ -18,7 +18,7 @@ class VirtualBlobSimpleTest : public ::testing::Test {
       : virtual_blob_(new VirtualBlob<Dtype>()),
         real_blob_(new Blob<Dtype>(2, 3, 4, 5)) {}
   virtual ~VirtualBlobSimpleTest() { delete virtual_blob_; delete real_blob_; }
-  Blob<Dtype>* const virtual_blob_;
+  VirtualBlob<Dtype>* const virtual_blob_;
   Blob<Dtype>* const real_blob_;
 };
 
@@ -59,19 +59,27 @@ TYPED_TEST(VirtualBlobSimpleTest, TestReshape) {
 TYPED_TEST(VirtualBlobSimpleTest, TestShareData) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
   this->virtual_blob_->ShareData(*(this->real_blob_));
-  EXPECT_EQ(this->virtual_blob_->gpu_data(),this->real_blob_->gpu_data());
-  EXPECT_EQ(this->virtual_blob_->cpu_data(),this->real_blob_->cpu_data());
-  EXPECT_EQ(this->virtual_blob_->mutable_gpu_data(),this->real_blob_->mutable_gpu_data());
-  EXPECT_EQ(this->virtual_blob_->mutable_cpu_data(),this->real_blob_->mutable_cpu_data());
+  EXPECT_EQ(this->virtual_blob_->data(),this->real_blob_->data());
+}
+
+TYPED_TEST(VirtualBlobSimpleTest, TestShareDataSize) {
+  this->virtual_blob_->Reshape(1, 1, 1, 1);
+  this->virtual_blob_->ShareData(*(this->real_blob_));
+  EXPECT_EQ(this->virtual_blob_->data()->size(),
+    this->real_blob_->data()->size());
 }
 
 TYPED_TEST(VirtualBlobSimpleTest, TestShareDif) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
   this->virtual_blob_->ShareDiff(*(this->real_blob_));
-  EXPECT_EQ(this->virtual_blob_->gpu_diff(),this->real_blob_->gpu_diff());
-  EXPECT_EQ(this->virtual_blob_->cpu_diff(),this->real_blob_->cpu_diff());
-  EXPECT_EQ(this->virtual_blob_->mutable_gpu_diff(),this->real_blob_->mutable_gpu_diff());
-  EXPECT_EQ(this->virtual_blob_->mutable_cpu_diff(),this->real_blob_->mutable_cpu_diff());
+  EXPECT_EQ(this->virtual_blob_->diff(),this->real_blob_->diff());
+}
+
+TYPED_TEST(VirtualBlobSimpleTest, TestShareDifSize) {
+  this->virtual_blob_->Reshape(1, 1, 1, 1);
+  this->virtual_blob_->ShareDiff(*(this->real_blob_));
+  EXPECT_EQ(this->virtual_blob_->diff()-size(),
+    this->real_blob_->diff()->size());
 }
 
 }  // namespace caffe
