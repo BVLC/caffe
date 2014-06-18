@@ -58,7 +58,7 @@ TYPED_TEST(BlobSimpleTest, TestReshape) {
 
 TYPED_TEST(BlobSimpleTest, TestShareData) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
-  this->virtual_blob_->ShareData(this->real_blob_)
+  this->virtual_blob_->ShareData(this->real_blob_);
   EXPECT_EQ(this->virtual_blob_->gpu_data(),this->real_blob_->gpu_data());
   EXPECT_EQ(this->virtual_blob_->cpu_data(),this->real_blob_->cpu_data());
   EXPECT_EQ(this->virtual_blob_->mutable_gpu_data(),this->real_blob_->mutable_gpu_data());
@@ -67,7 +67,7 @@ TYPED_TEST(BlobSimpleTest, TestShareData) {
 
 TYPED_TEST(BlobSimpleTest, TestShareDif) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
-  this->virtual_blob_->ShareDiff(this->real_blob_)
+  this->virtual_blob_->ShareDiff(this->real_blob_);
   EXPECT_EQ(this->virtual_blob_->gpu_diff(),this->real_blob_->gpu_diff());
   EXPECT_EQ(this->virtual_blob_->cpu_diff(),this->real_blob_->cpu_diff());
   EXPECT_EQ(this->virtual_blob_->mutable_gpu_diff(),this->real_blob_->mutable_gpu_diff());
