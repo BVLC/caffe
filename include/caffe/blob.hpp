@@ -96,7 +96,7 @@ class Blob {
 };  // class Blob
 
 // It is meant to be use as a shared buffer for im2col and col2im col_buffer
-// When resizing it will only increase the memory size as needed, never decrease it
+// It doesn't have its own data or diff, need to be shared with real Blob
 template <typename Dtype>
 class VirtualBlob : public Blob<Dtype> {
  public:

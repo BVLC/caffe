@@ -15,14 +15,14 @@ VirtualBlob<Dtype>::VirtualBlob() {
 }
 
 template <typename Dtype>
-VirtualBlob<Dtype>::VirtualBlob(const int num, const int channels, const int height,
-    const int width) {
+VirtualBlob<Dtype>::VirtualBlob(const int num, const int channels,
+    const int height, const int width) {
   Reshape(num, channels, height, width);
 }
 
 template <typename Dtype>
-void VirtualBlob<Dtype>::Reshape(const int num, const int channels, const int height,
-    const int width) {
+void VirtualBlob<Dtype>::Reshape(const int num, const int channels,
+    const int height, const int width) {
   CHECK_GE(num, 0);
   CHECK_GE(channels, 0);
   CHECK_GE(height, 0);

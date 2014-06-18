@@ -59,7 +59,7 @@ TYPED_TEST(VirtualBlobSimpleTest, TestReshape) {
 TYPED_TEST(VirtualBlobSimpleTest, TestShareData) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
   this->virtual_blob_->ShareData(*(this->real_blob_));
-  EXPECT_EQ(this->virtual_blob_->data(),this->real_blob_->data());
+  EXPECT_EQ(this->virtual_blob_->data(), this->real_blob_->data());
 }
 
 TYPED_TEST(VirtualBlobSimpleTest, TestShareDataSize) {
@@ -72,13 +72,13 @@ TYPED_TEST(VirtualBlobSimpleTest, TestShareDataSize) {
 TYPED_TEST(VirtualBlobSimpleTest, TestShareDif) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
   this->virtual_blob_->ShareDiff(*(this->real_blob_));
-  EXPECT_EQ(this->virtual_blob_->diff(),this->real_blob_->diff());
+  EXPECT_EQ(this->virtual_blob_->diff(), this->real_blob_->diff());
 }
 
 TYPED_TEST(VirtualBlobSimpleTest, TestShareDifSize) {
   this->virtual_blob_->Reshape(1, 1, 1, 1);
   this->virtual_blob_->ShareDiff(*(this->real_blob_));
-  EXPECT_EQ(this->virtual_blob_->diff()-size(),
+  EXPECT_EQ(this->virtual_blob_->diff()->size(),
     this->real_blob_->diff()->size());
 }
 
