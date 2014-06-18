@@ -111,6 +111,24 @@ void OpenCLDevice<Dtype>::SetDevice(const int device_id) {
     // TODO: reuse context for the devices of the same platform
     release_context();
     context();
+    finalize_clblas();
+    initialize_clblas();
+  }
+}
+
+template<typename Dtype>
+void OpenCLDevice<Dtype>::initialize_clblas() {
+  if (!clblas_initialized_) {
+    CLBLAS_CHECK(clblasSetup());
+    clblas_initialized_ = true;
+  }
+}
+
+template<typename Dtype>
+void OpenCLDevice<Dtype>::finalize_clblas() {
+  if (clblas_initialized_) {
+    clblasTeardown();
+    clblas_initialized_ = false;
   }
 }
 

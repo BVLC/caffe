@@ -121,7 +121,8 @@ class OpenCLDevice : public Device<Dtype> {
   OpenCLDevice() :
     current_device_id_(0), current_cl_platform_id_(NULL),
     current_platform_device_count_(0), current_platform_device_id_(0),
-    cl_context_(NULL), cl_command_queue_(NULL) {
+    cl_context_(NULL), cl_command_queue_(NULL), clblas_initialized_(false) {
+    initialize_clblas();
   }
 
   virtual ~OpenCLDevice() {
@@ -202,6 +203,8 @@ class OpenCLDevice : public Device<Dtype> {
   cl_device_id current_cl_device_id();
   void release_context();
   void release_queue();
+  void initialize_clblas();
+  void finalize_clblas();
  protected:
   int current_device_id_;
   cl_platform_id current_cl_platform_id_;
@@ -210,6 +213,7 @@ class OpenCLDevice : public Device<Dtype> {
   int current_platform_device_id_;
   cl_context cl_context_;
   cl_command_queue cl_command_queue_;
+  bool clblas_initialized_;
 };
 
 
