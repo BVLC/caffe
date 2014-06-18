@@ -103,8 +103,7 @@ class VirtualBlob : public Blob<Dtype> {
  public:
   // A VirtualBlob doesn't reserve any memory, after creating it, 
   // it needs to ShareData and ShareDiff with a Blob
-  explicit VirtualBlob()
-     : Blob<Dtype>() {}
+  VirtualBlob();
   ~VirtualBlob() {LOG(INFO) << "Destroying VirtualBlob" << this;};
   explicit VirtualBlob(const int num, const int channels, const int height,
     const int width);

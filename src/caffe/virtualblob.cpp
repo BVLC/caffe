@@ -10,10 +10,16 @@
 namespace caffe {
 
 template <typename Dtype>
+VirtualBlob<Dtype>::VirtualBlob() {
+  Reshape(0, 0, 0, 0);
+}
+
+template <typename Dtype>
 VirtualBlob<Dtype>::VirtualBlob(const int num, const int channels, const int height,
     const int width) {
   Reshape(num, channels, height, width);
 }
+
 template <typename Dtype>
 void VirtualBlob<Dtype>::Reshape(const int num, const int channels, const int height,
     const int width) {
