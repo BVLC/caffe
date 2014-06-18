@@ -12,20 +12,20 @@
 namespace caffe {
 
 template <typename Dtype>
-class BlobSimpleTest : public ::testing::Test {
+class VirtualBlobSimpleTest : public ::testing::Test {
  protected:
-  BlobSimpleTest()
+  VirtualBlobSimpleTest()
       : virtual_blob_(new VirtualBlob<Dtype>()),
         real_blob_(new Blob<Dtype>(2, 3, 4, 5)) {}
-  virtual ~BlobSimpleTest() { delete virtual_blob_; delete real_blob_; }
+  virtual ~VirtualBlobSimpleTest() { delete virtual_blob_; delete real_blob_; }
   Blob<Dtype>* const virtual_blob_;
   Blob<Dtype>* const real_blob_;
 };
 
 typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(BlobSimpleTest, Dtypes);
+TYPED_TEST_CASE(VirtualBlobSimpleTest, Dtypes);
 
-TYPED_TEST(BlobSimpleTest, TestInitialization) {
+TYPED_TEST(VirtualBlobSimpleTest, TestInitialization) {
   EXPECT_TRUE(this->virtual_blob_);
   EXPECT_TRUE(this->real_blob_);
   EXPECT_EQ(this->real_blob_->num(), 2);
@@ -40,14 +40,14 @@ TYPED_TEST(BlobSimpleTest, TestInitialization) {
   EXPECT_EQ(this->virtual_blob_->count(), 0);
 }
 
-TYPED_TEST(BlobSimpleTest, TestPointers) {
+TYPED_TEST(VirtualBlobSimpleTest, TestPointers) {
   EXPECT_TRUE(this->real_blob_->gpu_data());
   EXPECT_TRUE(this->real_blob_->cpu_data());
   EXPECT_TRUE(this->real_blob_->mutable_gpu_data());
   EXPECT_TRUE(this->real_blob_->mutable_cpu_data());
 }
 
-TYPED_TEST(BlobSimpleTest, TestReshape) {
+TYPED_TEST(VirtualBlobSimpleTest, TestReshape) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
   EXPECT_EQ(this->virtual_blob_->num(), 2);
   EXPECT_EQ(this->virtual_blob_->channels(), 3);
@@ -56,18 +56,18 @@ TYPED_TEST(BlobSimpleTest, TestReshape) {
   EXPECT_EQ(this->virtual_blob_->count(), 120);
 }
 
-TYPED_TEST(BlobSimpleTest, TestShareData) {
+TYPED_TEST(VirtualBlobSimpleTest, TestShareData) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
-  this->virtual_blob_->ShareData(this->real_blob_);
+  this->virtual_blob_->ShareData(*(this->real_blob_));
   EXPECT_EQ(this->virtual_blob_->gpu_data(),this->real_blob_->gpu_data());
   EXPECT_EQ(this->virtual_blob_->cpu_data(),this->real_blob_->cpu_data());
   EXPECT_EQ(this->virtual_blob_->mutable_gpu_data(),this->real_blob_->mutable_gpu_data());
   EXPECT_EQ(this->virtual_blob_->mutable_cpu_data(),this->real_blob_->mutable_cpu_data());
 }
 
-TYPED_TEST(BlobSimpleTest, TestShareDif) {
+TYPED_TEST(VirtualBlobSimpleTest, TestShareDif) {
   this->virtual_blob_->Reshape(2, 3, 4, 5);
-  this->virtual_blob_->ShareDiff(this->real_blob_);
+  this->virtual_blob_->ShareDiff(*(this->real_blob_));
   EXPECT_EQ(this->virtual_blob_->gpu_diff(),this->real_blob_->gpu_diff());
   EXPECT_EQ(this->virtual_blob_->cpu_diff(),this->real_blob_->cpu_diff());
   EXPECT_EQ(this->virtual_blob_->mutable_gpu_diff(),this->real_blob_->mutable_gpu_diff());
