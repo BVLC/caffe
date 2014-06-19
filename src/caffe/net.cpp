@@ -151,8 +151,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
       if (conv_layer->share_col_buffer()) {
         Blob<Dtype>* col_buffer = conv_layer->col_buffer();
-        col_buffer->ShareData(shared_buffer_);
-        col_buffer->ShareDiff(shared_buffer_);
+        col_buffer->ShareData(shared_col_buffer_);
+        col_buffer->ShareDiff(shared_col_buffer_);
       }
     }
   }
