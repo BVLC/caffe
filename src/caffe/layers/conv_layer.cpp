@@ -23,6 +23,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
   num_output_ = this->layer_param_.convolution_param().num_output();
+  shared_col_buffer_ = this->layer_param_.convolution_param().shared_col_buffer();
   CHECK_GT(num_output_, 0);
   CHECK_EQ(channels_ % group_, 0);
   // The im2col result buffer would only hold one image at a time to avoid

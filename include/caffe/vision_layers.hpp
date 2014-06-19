@@ -102,6 +102,8 @@ class ConvolutionLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual Blob<Dtype>* col_buffer() { return &col_buffer_; }
+  virtual bool shared_col_buffer() { return shared_col_buffer_; }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -123,6 +125,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int num_output_;
   int group_;
   Blob<Dtype> col_buffer_;
+  bool shared_col_buffer_;
   shared_ptr<SyncedMemory> bias_multiplier_;
   bool bias_term_;
   int M_;
