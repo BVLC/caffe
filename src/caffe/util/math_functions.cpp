@@ -151,22 +151,30 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
 
 template <>
 void caffe_copy<float>(const int N, const float* X, float* Y) {
-  cblas_scopy(N, X, 1, Y, 1);
+  if (X != Y) {
+    cblas_scopy(N, X, 1, Y, 1);
+  }
 }
 
 template <>
 void caffe_copy<double>(const int N, const double* X, double* Y) {
-  cblas_dcopy(N, X, 1, Y, 1);
+  if (X != Y) {
+    cblas_dcopy(N, X, 1, Y, 1);
+  }
 }
 
 template <>
 void caffe_gpu_copy<float>(const int N, const float* X, float* Y) {
-  CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
+  if (X != Y) {
+    CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
+  }
 }
 
 template <>
 void caffe_gpu_copy<double>(const int N, const double* X, double* Y) {
-  CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
+  if (X != Y) {
+    CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
+  }
 }
 
 template <>
