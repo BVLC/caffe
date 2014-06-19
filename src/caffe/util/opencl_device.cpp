@@ -16,9 +16,9 @@ cl_device_type CaffeOpenCL::get_device_type() {
     return CL_DEVICE_TYPE_CPU;
   case Caffe::OPENCL_GPU:
     return CL_DEVICE_TYPE_GPU;
+  case Caffe::OPENCL_ALL:
   default:
-    LOG(FATAL) << "Unknown Caffe OpenCL mode.";
-    return CL_DEVICE_TYPE_DEFAULT;
+    return CL_DEVICE_TYPE_ALL;
   }
 }
 
@@ -33,7 +33,7 @@ void CaffeOpenCL::create_context() {
       malloc(sizeof(cl_platform_id) * platformCount);
   CL_CHECK(clGetPlatformIDs(1, platforms, NULL));
 
-  cl_uint deviceCount;
+  cl_uint device_count;
   cl_device_type device_type = get_device_type();
   int num_devices_to_skip = current_device_id_;
   while (num_devices_to_skip >= 0) {
@@ -42,27 +42,26 @@ void CaffeOpenCL::create_context() {
           CL_CONTEXT_PLATFORM, (cl_context_properties)(
               platforms[i]), 0};
       // get all devices
-      clGetDeviceIDs(platforms[i], device_type, 0, NULL, &deviceCount);
-      if (num_devices_to_skip <= deviceCount) {
+      clGetDeviceIDs(platforms[i], device_type, 0, NULL, &device_count);
+      if (num_devices_to_skip <= device_count) {
         current_cl_platform_id_ = platforms[i];
-        current_platform_device_count_ = deviceCount;
+        current_platform_device_count_ = device_count;
         current_platform_device_id_ = num_devices_to_skip;
-        current_platform_device_ids_.resize(deviceCount);
+        current_platform_device_ids_.resize(device_count);
         CL_CHECK(clGetDeviceIDs(current_cl_platform_id_, device_type,
                                 current_platform_device_count_,
                                 &(current_platform_device_ids_[0]), NULL));
         cl_int error = CL_SUCCESS;   // Used to handle error codes
-        // TODO: clCreateContext or clCreateContextFromType?
 /*
  * http://dhruba.name/2012/10/14/opencl-cookbook-how-to-leverage-multiple-devices-in-opencl/
+ * https://software.intel.com/sites/products/documentation/ioclsdk/2013/OG/Using_Shared_Context_for_Multiple_OpenCL_Devices.htm
  */
-//        cl_context_ = clCreateContext(properties, deviceCount, devices, NULL,
-//                                    NULL, &error);
-        cl_context_ = clCreateContextFromType(properties, device_type, NULL,
-                                              NULL, &error);
+        cl_context_ = clCreateContext(
+            properties, device_count, &(current_platform_device_ids_[0]),
+            NULL, NULL, &error);
         CL_CHECK(error);
       }
-      num_devices_to_skip -= deviceCount;
+      num_devices_to_skip -= device_count;
       if (num_devices_to_skip < 0) {
         break;
       }
