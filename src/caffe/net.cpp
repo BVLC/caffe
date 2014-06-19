@@ -12,6 +12,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "caffe/vision_layers.hpp"
 
 using std::pair;
 using std::map;
@@ -46,6 +47,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   CHECK_EQ(param.input_size() * 4, param.input_dim_size())
       << "Incorrect input blob dimension specifications.";
   memory_used_ = 0;
+  max_size_buffer_ = 0;
   // set the input blobs
   for (int input_id = 0; input_id < param.input_size(); ++input_id) {
     const int layer_id = -1;  // inputs have fake layer ID -1
@@ -78,6 +80,19 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // After this layer is connected, set it up.
     // LOG(INFO) << "Setting up " << layer_names_[layer_id];
     layers_[layer_id]->SetUp(bottom_vecs_[layer_id], &top_vecs_[layer_id]);
+    // Collect max size needed by col_buffers
+    if (layers_[layer_id]->type() == LayerParameter_LayerType_CONVOLUTION) {
+      ConvolutionLayer<Dtype>* conv_layer =
+        dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
+      Blob<Dtype>* col_buffer = conv_layer->col_buffer();
+      LOG(INFO) << "Size of col_buffer of layer " << layer_id << ":" <<
+        col_buffer->count();
+      if (conv_layer->shared_col_buffer()) {
+        max_size_buffer_ = std::max(max_size_buffer_, col_buffer->count());
+      } else {
+        memory_used_ += col_buffer->count();
+      }
+    }
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
           << top_vecs_[layer_id][top_id]->channels() << " "
@@ -125,6 +140,22 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   for (size_t layer_id = 0; layer_id < layer_names_.size(); ++layer_id) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
+  }
+  // Create the shared_buffer Blob
+  LOG(INFO) << "Size of shared_buffer_: " << max_size_buffer_;
+  shared_buffer_.Reshape(1,1,1,max_size_buffer_);
+  memory_used_ += max_size_buffer_;
+  for (int layer_id = 0; layer_id < num_layers; ++layer_id) {
+    if (layers_[layer_id]->type() == LayerParameter_LayerType_CONVOLUTION) {
+      ConvolutionLayer<Dtype>* conv_layer =
+        dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
+      if (conv_layer->shared_col_buffer()) {
+        VirtualBlob<Dtype>* col_buffer =
+          static_cast<VirtualBlob<Dtype>* >(conv_layer->col_buffer());
+        col_buffer->ShareData(shared_buffer_);
+        col_buffer->ShareDiff(shared_buffer_);
+      }
+    }
   }
   GetLearningRateAndWeightDecay();
   LOG(INFO) << "Network initialization done.";
