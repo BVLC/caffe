@@ -37,6 +37,9 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     loss += -log(max(prob_data[i * dim + static_cast<int>(label[i])],
                      Dtype(FLT_MIN)));
   }
+  if (top->size() == 1) {
+    (*top)[0]->mutable_cpu_data()[0] = loss / num;
+  }
   return loss / num;
 }
 
