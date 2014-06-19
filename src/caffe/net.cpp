@@ -150,7 +150,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       ConvolutionLayer<Dtype>* conv_layer =
         dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
       if (conv_layer->shared_col_buffer()) {
-        Blob<Dtype>* col_buffer = conv_layer->col_buffer();
+        VirtualBlob<Dtype>* col_buffer =
+          static_cast<VirtualBlob<Dtype>* >(conv_layer->col_buffer());
         col_buffer->ShareData(shared_buffer_);
         col_buffer->ShareDiff(shared_buffer_);
       }
