@@ -80,17 +80,27 @@ void caffe_opencl_##name<Dtype>(const int n, const Dtype *x, Dtype *y) { \
   cl_context context = CaffeOpenCL::context(); \
   cl_command_queue queue = CaffeOpenCL::queue(); \
   cl_int error; \
+  const size_t bytes = n * sizeof(Dtype); \
   cl_program program = clCreateProgramWithSource( \
     context, 1, (const char **) & kernel_source, NULL, &error); \
   CL_CHECK(error); \
   clBuildProgram(program, 0, NULL, NULL, NULL, NULL); \
   cl_kernel kernel = clCreateKernel(program, #name, &error); \
   CL_CHECK(error); \
-  size_t bytes = n * sizeof(Dtype); \
-  cl_mem d_x = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL); \
-  cl_mem d_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL); \
-  CL_CHECK(clEnqueueWriteBuffer(queue, d_x, CL_TRUE, 0, \
-                                bytes, x, 0, NULL, NULL)); \
+  cl_mem d_x = clCreateBuffer(context, \
+                              CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, \
+                              bytes, \
+                              const_cast<void*>(static_cast<const void*>(x)), \
+                              &error); \
+  cl_mem d_y = clCreateBuffer(context, \
+                              CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, \
+                              bytes, static_cast<void*>(y), &error); \
+  void* mapped_x = clEnqueueMapBuffer( \
+    queue, d_x, CL_TRUE, CL_MAP_READ, 0, bytes, 0, NULL, NULL, &error); \
+  CL_CHECK(error); \
+  CL_CHECK(clEnqueueUnmapMemObject( \
+    CaffeOpenCL::queue(), d_x, mapped_x, \
+    0, NULL, NULL)); \
   CL_CHECK(clSetKernelArg(kernel, 0, sizeof(cl_mem), &d_x)); \
   CL_CHECK(clSetKernelArg(kernel, 1, sizeof(cl_mem), &d_y)); \
   CL_CHECK(clSetKernelArg(kernel, 2, sizeof(unsigned int), &n)); \
@@ -100,6 +110,12 @@ void caffe_opencl_##name<Dtype>(const int n, const Dtype *x, Dtype *y) { \
   CL_CHECK(clFinish(queue)); \
   CL_CHECK(clEnqueueReadBuffer(queue, d_y, CL_TRUE, 0, \
                                bytes, y, 0, NULL, NULL )); \
+  void* mapped_y = clEnqueueMapBuffer( \
+   queue, d_y, CL_TRUE, CL_MAP_WRITE, 0, bytes, 0, NULL, NULL, &error); \
+  CL_CHECK(error); \
+  CL_CHECK(clEnqueueUnmapMemObject( \
+    CaffeOpenCL::queue(), d_y, mapped_y, \
+    0, NULL, NULL)); \
   CL_CHECK(clReleaseMemObject(d_x)); \
   CL_CHECK(clReleaseMemObject(d_y)); \
   CL_CHECK(clReleaseProgram(program)); \
@@ -108,7 +124,7 @@ void caffe_opencl_##name<Dtype>(const int n, const Dtype *x, Dtype *y) { \
 
 #define DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(name, operation) \
     DEFINE_OPENCL_UNARY_FUNC(float, name, operation) \
-    DEFINE_OPENCL_UNARY_FUNC(double, name, operation) \
+    DEFINE_OPENCL_UNARY_FUNC(double, name, operation)
 
 #define DEFINE_OPENCL_BINARY_FUNC(Dtype, name, operation) \
 template <> \
@@ -119,16 +135,33 @@ void caffe_opencl_##name<Dtype>(const int n, const Dtype *a, const Dtype *b, \
   cl_context context = CaffeOpenCL::context(); \
   cl_command_queue queue = CaffeOpenCL::queue(); \
   cl_int error; \
+  const size_t bytes = n * sizeof(Dtype); \
   cl_program program = clCreateProgramWithSource( \
     context, 1, (const char **) & kernel_source, NULL, &error); \
   CL_CHECK(error); \
   clBuildProgram(program, 0, NULL, NULL, NULL, NULL); \
   cl_kernel kernel = clCreateKernel(program, #name, &error); \
   CL_CHECK(error); \
-  size_t bytes = n * sizeof(Dtype); \
-  cl_mem d_a = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL); \
-  cl_mem d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL); \
-  cl_mem d_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL); \
+  cl_mem d_a = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, \
+                              const_cast<void*>(static_cast<const void*>(a)),\
+                              &error); \
+  cl_mem d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, \
+                              const_cast<void*>(static_cast<const void*>(b)), \
+                              &error); \
+  cl_mem d_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, \
+                              static_cast<void*>(y), &error); \
+  void* mapped_a = clEnqueueMapBuffer( \
+    queue, d_a, CL_TRUE, CL_MAP_READ, 0, bytes, 0, NULL, NULL, &error); \
+  CL_CHECK(error); \
+  CL_CHECK(clEnqueueUnmapMemObject( \
+    CaffeOpenCL::queue(), d_a, mapped_a, \
+    0, NULL, NULL)); \
+  void* mapped_b = clEnqueueMapBuffer( \
+    queue, d_b, CL_TRUE, CL_MAP_READ, 0, bytes, 0, NULL, NULL, &error); \
+  CL_CHECK(error); \
+  CL_CHECK(clEnqueueUnmapMemObject( \
+    CaffeOpenCL::queue(), d_b, mapped_b, \
+    0, NULL, NULL)); \
   CL_CHECK(clEnqueueWriteBuffer(queue, d_a, CL_TRUE, 0, \
                                 bytes, a, 0, NULL, NULL)); \
   CL_CHECK(clEnqueueWriteBuffer(queue, d_b, CL_TRUE, 0, \
@@ -141,8 +174,12 @@ void caffe_opencl_##name<Dtype>(const int n, const Dtype *a, const Dtype *b, \
   CL_CHECK(clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, \
                                   &local_size, 0, NULL, NULL)); \
   CL_CHECK(clFinish(queue)); \
-  CL_CHECK(clEnqueueReadBuffer(queue, d_y, CL_TRUE, 0, \
-                               bytes, y, 0, NULL, NULL )); \
+  void* mapped_y = clEnqueueMapBuffer( \
+   queue, d_y, CL_TRUE, CL_MAP_WRITE, 0, bytes, 0, NULL, NULL, &error); \
+  CL_CHECK(error); \
+  CL_CHECK(clEnqueueUnmapMemObject( \
+    CaffeOpenCL::queue(), d_y, mapped_y, \
+    0, NULL, NULL)); \
   CL_CHECK(clReleaseMemObject(d_a)); \
   CL_CHECK(clReleaseMemObject(d_b)); \
   CL_CHECK(clReleaseMemObject(d_y)); \
