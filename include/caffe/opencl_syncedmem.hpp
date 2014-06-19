@@ -48,33 +48,24 @@ inline void opencl_aligned_free(void* ptr) {
 #endif
 }
 
-class OpenCLSyncedMemory {
+class OpenCLSyncedMemory : public AbstractSyncedMemory {
  public:
-  OpenCLSyncedMemory()
-      : shared_host_ptr_(NULL), mapped_device_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
-  explicit OpenCLSyncedMemory(size_t size)
-      : shared_host_ptr_(NULL), mapped_device_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
+  OpenCLSyncedMemory() : AbstractSyncedMemory() {}
+  explicit OpenCLSyncedMemory(size_t size) : AbstractSyncedMemory(size) {}
   ~OpenCLSyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
   const void* gpu_data();
   void* mutable_cpu_data();
   void* mutable_gpu_data();
-  enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
-  SyncedHead head() { return head_; }
-  size_t size() { return size_; }
-
- private:
+ protected:
   void to_cpu();
   void to_gpu();
+
+ private:
   void* shared_host_ptr_;
   void* mapped_device_ptr_;
   cl_mem device_mem_;
-  size_t size_;
-  SyncedHead head_;
-  bool own_cpu_data_;
 
   DISABLE_COPY_AND_ASSIGN(OpenCLSyncedMemory);
 };  // class OpenCLSyncedMemory

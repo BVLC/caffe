@@ -8,7 +8,7 @@
 namespace caffe {
 
 OpenCLSyncedMemory::~OpenCLSyncedMemory() {
-  if (shared_host_ptr_ && own_cpu_data_) {
+  if (shared_host_ptr_ && this->own_cpu_data_) {
     opencl_aligned_free(shared_host_ptr_);
     shared_host_ptr_ = NULL;
   }
@@ -21,22 +21,22 @@ OpenCLSyncedMemory::~OpenCLSyncedMemory() {
 }
 
 inline void OpenCLSyncedMemory::to_cpu() {
-  switch (head_) {
+  switch (this->head_) {
   case UNINITIALIZED:
-    opencl_aligned_malloc(&shared_host_ptr_, &size_);
-    memset(shared_host_ptr_, 0, size_);
-    head_ = HEAD_AT_CPU;
-    own_cpu_data_ = true;
+    opencl_aligned_malloc(&shared_host_ptr_, &(this->size_));
+    memset(shared_host_ptr_, 0, this->size_);
+    this->head_ = HEAD_AT_CPU;
+    this->own_cpu_data_ = true;
     break;
   case HEAD_AT_GPU:
     if (shared_host_ptr_ == NULL) {
-      opencl_aligned_malloc(&shared_host_ptr_, &size_);
-      own_cpu_data_ = true;
+      opencl_aligned_malloc(&shared_host_ptr_, &(this->size_));
+      this->own_cpu_data_ = true;
     }
     CL_CHECK(clEnqueueReadBuffer(
         CaffeOpenCL::queue(), device_mem_, CL_TRUE, 0,
-        size_, shared_host_ptr_, 0, NULL, NULL));
-    head_ = SYNCED;
+        this->size_, shared_host_ptr_, 0, NULL, NULL));
+    this->head_ = SYNCED;
     break;
   case HEAD_AT_CPU:
   case SYNCED:
@@ -45,35 +45,35 @@ inline void OpenCLSyncedMemory::to_cpu() {
 }
 
 inline void OpenCLSyncedMemory::to_gpu() {
-  switch (head_) {
+  switch (this->head_) {
   case UNINITIALIZED:
 /*
  * http://streamcomputing.eu/blog/2013-02-03/opencl-basics-flags-for-the-creating-memory-objects/
  */
-    opencl_aligned_malloc(&shared_host_ptr_, &size_);
+    opencl_aligned_malloc(&shared_host_ptr_, &(this->size_));
     cl_int error;
     device_mem_ = clCreateBuffer(
         CaffeOpenCL::context(), CL_MEM_USE_HOST_PTR,
-        size_, shared_host_ptr_, &error);
+        this->size_, shared_host_ptr_, &error);
     CL_CHECK(error);
-    head_ = HEAD_AT_GPU;
+    this->head_ = HEAD_AT_GPU;
     break;
   case HEAD_AT_CPU:
     if (mapped_device_ptr_ == NULL) {
       cl_int error;
       device_mem_ = clCreateBuffer(
           CaffeOpenCL::context(), CL_MEM_USE_HOST_PTR,
-          size_, shared_host_ptr_, &error);
+          this->size_, shared_host_ptr_, &error);
       CL_CHECK(error);
       mapped_device_ptr_ = clEnqueueMapBuffer(
           CaffeOpenCL::queue(), device_mem_, CL_TRUE,
-          CL_MAP_READ | CL_MAP_WRITE, 0, size_, 0, NULL, NULL, &error);
+          CL_MAP_READ | CL_MAP_WRITE, 0, this->size_, 0, NULL, NULL, &error);
       CL_CHECK(error);
     }
     CL_CHECK(clEnqueueWriteBuffer(
         CaffeOpenCL::queue(), device_mem_, CL_TRUE, 0,
-        size_, shared_host_ptr_, 0, NULL, NULL));
-    head_ = SYNCED;
+        this->size_, shared_host_ptr_, 0, NULL, NULL));
+    this->head_ = SYNCED;
     break;
   case HEAD_AT_GPU:
   case SYNCED:
@@ -88,12 +88,12 @@ const void* OpenCLSyncedMemory::cpu_data() {
 
 void OpenCLSyncedMemory::set_cpu_data(void* data) {
   CHECK(data);
-  if (own_cpu_data_) {
+  if (this->own_cpu_data_) {
     CaffeFreeHost(shared_host_ptr_);
   }
   shared_host_ptr_ = data;
-  head_ = HEAD_AT_CPU;
-  own_cpu_data_ = false;
+  this->head_ = HEAD_AT_CPU;
+  this->own_cpu_data_ = false;
 }
 
 const void* OpenCLSyncedMemory::gpu_data() {
@@ -101,12 +101,12 @@ const void* OpenCLSyncedMemory::gpu_data() {
   cl_int error;
   mapped_device_ptr_ = clEnqueueMapBuffer(
       CaffeOpenCL::queue(), device_mem_, CL_TRUE,
-      CL_MAP_WRITE, 0, size_, 0, NULL, NULL, &error);
+      CL_MAP_WRITE, 0, this->size_, 0, NULL, NULL, &error);
   CL_CHECK(error);
   CL_CHECK(clEnqueueUnmapMemObject(
       CaffeOpenCL::queue(), device_mem_, mapped_device_ptr_,
       0, NULL, NULL));
-  return (const void*)mapped_device_ptr_;
+  return (const void*)(mapped_device_ptr_);
 }
 
 void* OpenCLSyncedMemory::mutable_cpu_data() {
@@ -119,7 +119,7 @@ void* OpenCLSyncedMemory::mutable_gpu_data() {
   cl_int error;
   mapped_device_ptr_ = clEnqueueMapBuffer(
       CaffeOpenCL::queue(), device_mem_, CL_TRUE,
-      CL_MAP_READ | CL_MAP_WRITE, 0, size_, 0, NULL, NULL, &error);
+      CL_MAP_READ | CL_MAP_WRITE, 0, this->size_, 0, NULL, NULL, &error);
   CL_CHECK(error);
   CL_CHECK(clEnqueueUnmapMemObject(
       CaffeOpenCL::queue(), device_mem_, mapped_device_ptr_,
