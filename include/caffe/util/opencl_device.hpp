@@ -35,12 +35,6 @@ namespace caffe {
 const char* clGetErrorString(cl_int error);
 const char* clblasGetErrorString(clblasStatus status);
 
-// OpenCL: grid stride looping
-#define OPENCL_KERNEL_LOOP(i, n) \
-  for (int i = get_global_id(0); \
-       i < (n); \
-       i += get_global_size(0))
-
 class CaffeOpenCL {
  public:
   inline static CaffeOpenCL& Get() {

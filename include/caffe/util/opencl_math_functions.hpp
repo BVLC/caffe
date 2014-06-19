@@ -33,9 +33,126 @@ namespace caffe {
 
 #define ARRAY(A) buf##A, 0, ld##A
 
-#define CLBALS_TRAILING_ARGS \
+#define CLBLAS_TRAILING_ARGS \
     num_command_queues, &queue, num_events_in_wait_list, \
     event_wait_list, &events
+
+#define OPENCL_UNARY_KERNEL(Dtype_str, name_str, operation_str) \
+"template<typename Dtype>           \n" \
+"__kernel void " name_str "(        \n" \
+"  __global " Dtype_str "* x,       \n" \
+"  __global " Dtype_str "* y,       \n" \
+"  const unsigned int count) {      \n" \
+"  for (int i = get_global_id(0);   \n" \
+"       i < (count);                \n" \
+"       i += get_global_size(0)) {  \n" \
+"       " operation_str ";              \n" \
+"}                                  \n" \
+"\n";
+
+#define OPENCL_BINARY_KERNEL(Dtype_str, name_str, operation_str) \
+"__kernel void " name_str "(        \n" \
+"  __global " Dtype_str "* a,       \n" \
+"  __global " Dtype_str "* b,       \n" \
+"  __global " Dtype_str "* y,       \n" \
+"  const unsigned int count) {      \n" \
+"  for (int i = get_global_id(0);   \n" \
+"       i < (count);                \n" \
+"       i += get_global_size(0)) {  \n" \
+"       " operation_str ";              \n" \
+"}                                  \n" \
+"\n"
+
+// local_size: Number of work items in each local work group
+// global_size: Number of total work items
+#define DEFINE_LOCAL_AND_GLOBAL_SIZE(n) \
+  const size_t local_size = 64; \
+  const size_t global_size = (n + local_size - 1) \
+    / local_size
+
+
+// https://www.olcf.ornl.gov/tutorials/opencl-vector-addition/
+#define DEFINE_OPENCL_UNARY_FUNC(Dtype, name, operation) \
+template <> \
+void caffe_opencl_##name<Dtype>(const int n, const Dtype *x, Dtype *y) { \
+  const char* kernel_source = OPENCL_UNARY_KERNEL(#Dtype, #name, \
+                                                  #operation); \
+  cl_context context = CaffeOpenCL::context(); \
+  cl_command_queue queue = CaffeOpenCL::queue(); \
+  cl_int error; \
+  cl_program program = clCreateProgramWithSource( \
+    context, 1, (const char **) & kernel_source, NULL, &error); \
+  CL_CHECK(error); \
+  clBuildProgram(program, 0, NULL, NULL, NULL, NULL); \
+  cl_kernel kernel = clCreateKernel(program, #name, &error); \
+  CL_CHECK(error); \
+  size_t bytes = n * sizeof(Dtype); \
+  cl_mem d_x = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL); \
+  cl_mem d_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL); \
+  CL_CHECK(clEnqueueWriteBuffer(queue, d_x, CL_TRUE, 0, \
+                                bytes, x, 0, NULL, NULL)); \
+  CL_CHECK(clSetKernelArg(kernel, 0, sizeof(cl_mem), &d_x)); \
+  CL_CHECK(clSetKernelArg(kernel, 1, sizeof(cl_mem), &d_y)); \
+  CL_CHECK(clSetKernelArg(kernel, 2, sizeof(unsigned int), &n)); \
+  DEFINE_LOCAL_AND_GLOBAL_SIZE(n); \
+  CL_CHECK(clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, \
+                                  &local_size, 0, NULL, NULL)); \
+  CL_CHECK(clFinish(queue)); \
+  CL_CHECK(clEnqueueReadBuffer(queue, d_y, CL_TRUE, 0, \
+                               bytes, y, 0, NULL, NULL )); \
+  CL_CHECK(clReleaseMemObject(d_x)); \
+  CL_CHECK(clReleaseMemObject(d_y)); \
+  CL_CHECK(clReleaseProgram(program)); \
+  CL_CHECK(clReleaseKernel(kernel)); \
+}
+
+#define DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(name, operation) \
+    DEFINE_OPENCL_UNARY_FUNC(float, name, operation) \
+    DEFINE_OPENCL_UNARY_FUNC(double, name, operation) \
+
+#define DEFINE_OPENCL_BINARY_FUNC(Dtype, name, operation) \
+template <> \
+void caffe_opencl_##name<Dtype>(const int n, const Dtype *a, const Dtype *b, \
+                         Dtype *y) { \
+  const char* kernel_source = OPENCL_BINARY_KERNEL(#Dtype, #name, \
+                                                   #operation); \
+  cl_context context = CaffeOpenCL::context(); \
+  cl_command_queue queue = CaffeOpenCL::queue(); \
+  cl_int error; \
+  cl_program program = clCreateProgramWithSource( \
+    context, 1, (const char **) & kernel_source, NULL, &error); \
+  CL_CHECK(error); \
+  clBuildProgram(program, 0, NULL, NULL, NULL, NULL); \
+  cl_kernel kernel = clCreateKernel(program, #name, &error); \
+  CL_CHECK(error); \
+  size_t bytes = n * sizeof(Dtype); \
+  cl_mem d_a = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL); \
+  cl_mem d_b = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL); \
+  cl_mem d_y = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL); \
+  CL_CHECK(clEnqueueWriteBuffer(queue, d_a, CL_TRUE, 0, \
+                                bytes, a, 0, NULL, NULL)); \
+  CL_CHECK(clEnqueueWriteBuffer(queue, d_b, CL_TRUE, 0, \
+                                bytes, b, 0, NULL, NULL)); \
+  CL_CHECK(clSetKernelArg(kernel, 0, sizeof(cl_mem), &d_a)); \
+  CL_CHECK(clSetKernelArg(kernel, 1, sizeof(cl_mem), &d_b)); \
+  CL_CHECK(clSetKernelArg(kernel, 2, sizeof(cl_mem), &d_y)); \
+  CL_CHECK(clSetKernelArg(kernel, 3, sizeof(unsigned int), &n)); \
+  DEFINE_LOCAL_AND_GLOBAL_SIZE(n); \
+  CL_CHECK(clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, \
+                                  &local_size, 0, NULL, NULL)); \
+  CL_CHECK(clFinish(queue)); \
+  CL_CHECK(clEnqueueReadBuffer(queue, d_y, CL_TRUE, 0, \
+                               bytes, y, 0, NULL, NULL )); \
+  CL_CHECK(clReleaseMemObject(d_a)); \
+  CL_CHECK(clReleaseMemObject(d_b)); \
+  CL_CHECK(clReleaseMemObject(d_y)); \
+  CL_CHECK(clReleaseProgram(program)); \
+  CL_CHECK(clReleaseKernel(kernel)); \
+}
+
+#define DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(name, operation) \
+    DEFINE_OPENCL_BINARY_FUNC(float, name, operation) \
+    DEFINE_OPENCL_BINARY_FUNC(double, name, operation)
 
 inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
   switch (trans) {
@@ -52,35 +169,35 @@ inline clblasTranspose to_clblasTranspose(const CBLAS_TRANSPOSE trans) {
 
 template <typename Dtype>
 void caffe_opencl_gemm(const CBLAS_TRANSPOSE TransA,
-    const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+    const CBLAS_TRANSPOSE TransB, const int M, const int n, const int K,
     const Dtype alpha, const Dtype* A, const Dtype* B, const Dtype beta,
     Dtype* C);
 
 
 template <typename Dtype>
-void caffe_opencl_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
+void caffe_opencl_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int n,
     const Dtype alpha, const Dtype* A, const Dtype* x, const Dtype beta,
     Dtype* y);
 
 template <typename Dtype>
-void caffe_opencl_axpy(const int N, const Dtype alpha, const Dtype* X,
-    Dtype* Y);
+void caffe_opencl_axpy(const int n, const Dtype alpha, const Dtype* x,
+    Dtype* y);
 
 template <typename Dtype>
-void caffe_opencl_axpby(const int N, const Dtype alpha, const Dtype* X,
-    const Dtype beta, Dtype* Y);
+void caffe_opencl_axpby(const int n, const Dtype alpha, const Dtype* x,
+    const Dtype beta, Dtype* y);
 
 template <typename Dtype>
-void caffe_opencl_copy(const int N, const Dtype *X, Dtype *Y);
+void caffe_opencl_copy(const int n, const Dtype *x, Dtype *y);
 
 template <typename Dtype>
-void caffe_opencl_set(const int N, const Dtype alpha, Dtype *X);
+void caffe_opencl_set(const int n, const Dtype alpha, Dtype *x);
 
 template <typename Dtype>
-void caffe_opencl_add_scalar(const int N, const Dtype alpha, Dtype *X);
+void caffe_opencl_add_scalar(const int n, const Dtype alpha, Dtype *x);
 
 template <typename Dtype>
-void caffe_opencl_scal(const int N, const Dtype alpha, Dtype *X);
+void caffe_opencl_scal(const int n, const Dtype alpha, Dtype *x);
 
 template <typename Dtype>
 Dtype caffe_opencl_dot(const int n, const Dtype* x, const Dtype* y);
@@ -96,7 +213,7 @@ template <typename Dtype>
 void caffe_opencl_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
 template<typename Dtype>
-void caffe_opencl_copy_from_cpu(const int N, const Dtype *X, Dtype *Y);
+void caffe_opencl_copy_from_cpu(const int n, const Dtype *x, Dtype *y);
 
 template<typename Dtype>
 void caffe_opencl_sqr(const int n, const Dtype* x, Dtype* y);
@@ -114,19 +231,19 @@ template<typename Dtype>
 void caffe_opencl_fabs(const int n, const Dtype* x, Dtype* y);
 
 template<typename Dtype>
-void caffe_opencl_add(const int N, const Dtype* a,
+void caffe_opencl_add(const int n, const Dtype* a,
                       const Dtype* b, Dtype* y);
 
 template<typename Dtype>
-void caffe_opencl_sub(const int N, const Dtype* a,
+void caffe_opencl_sub(const int n, const Dtype* a,
                       const Dtype* b, Dtype* y);
 
 template<typename Dtype>
-void caffe_opencl_mul(const int N, const Dtype* a,
+void caffe_opencl_mul(const int n, const Dtype* a,
                       const Dtype* b, Dtype* y);
 
 template<typename Dtype>
-void caffe_opencl_div(const int N, const Dtype* a,
+void caffe_opencl_div(const int n, const Dtype* a,
                       const Dtype* b, Dtype* y);
 }  // namespace caffe
 

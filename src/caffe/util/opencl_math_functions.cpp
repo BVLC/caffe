@@ -25,7 +25,7 @@ void caffe_opencl_gemm<float>(const CBLAS_TRANSPOSE TransA,
   // bufX is defined by the macro CREATE_CL_MEM(X, ...)
   CLBLAS_CHECK(clblasSgemm(clblasRowMajor, clTransA, clTransB,
       M, N, K, alpha, ARRAY(A), ARRAY(B), beta, ARRAY(C),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
   /* Release OpenCL memory objects. */
   RELEASE_CL_MEM(C);
   RELEASE_CL_MEM(B);
@@ -52,7 +52,7 @@ void caffe_opencl_gemm<double>(const CBLAS_TRANSPOSE TransA,
   // bufX is defined by the macro CREATE_CL_MEM(X, ...)
   CLBLAS_CHECK(clblasDgemm(clblasRowMajor, clTransA, clTransB,
       M, N, K, alpha, ARRAY(A), ARRAY(B), beta, ARRAY(C),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
   /* Release OpenCL memory objects. */
   RELEASE_CL_MEM(C);
   RELEASE_CL_MEM(B);
@@ -73,7 +73,7 @@ void caffe_opencl_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasSgemv(clblasRowMajor, clTransA, M, N, alpha,
       ARRAY(A), ARRAY(x), beta, ARRAY(y),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -90,7 +90,7 @@ void caffe_opencl_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasDgemv(clblasRowMajor, clTransA, M, N, alpha,
       ARRAY(A), ARRAY(x), beta, ARRAY(y),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -103,7 +103,7 @@ void caffe_opencl_axpy<float>(const int N, const float alpha, const float* X,
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasSaxpy(
       N, alpha, ARRAY(X), ARRAY(Y),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -116,7 +116,7 @@ void caffe_opencl_axpy<double>(const int N, const double alpha, const double* X,
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasDaxpy(
       N, alpha, ARRAY(X), ARRAY(Y),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -128,7 +128,7 @@ void caffe_opencl_copy<float>(const int N, const float* X, float* Y) {
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasScopy(
       N, ARRAY(X), ARRAY(Y),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -140,7 +140,7 @@ void caffe_opencl_copy<double>(const int N, const double* X, double* Y) {
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasDcopy(
       N, ARRAY(X), ARRAY(Y),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -150,7 +150,7 @@ void caffe_opencl_scal<float>(const int N, const float alpha, float *X) {
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasSscal(
       N, alpha, ARRAY(X),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -160,7 +160,7 @@ void caffe_opencl_scal<double>(const int N, const double alpha, double *X) {
   PRE_CLBLAS_CALL;
   CLBLAS_CHECK(clblasDscal(
       N, alpha, ARRAY(X),
-      CLBALS_TRAILING_ARGS));
+      CLBLAS_TRAILING_ARGS));
 }
 
 template <>
@@ -176,7 +176,6 @@ void caffe_opencl_axpby<double>(const int N, const double alpha, const double* X
   caffe_opencl_scal(N, beta, Y);
   caffe_opencl_axpy(N, alpha, X, Y);
 }
-
 
 template<typename Dtype>
 void caffe_opencl_copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
@@ -216,5 +215,17 @@ template
 void caffe_opencl_set(const int N, const float alpha, float *X);
 template
 void caffe_opencl_set(const int N, const double alpha, double *X);
+
+
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sqr, y[i] = x[i] * x[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(exp, y[i] = exp(x[i]));
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sign, y[i] = sign<Dtype>(x[i]));
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(sgnbit, y[i] = signbit(x[i]));
+DEFINE_AND_INSTANTIATE_OPENCL_UNARY_FUNC(fabs, y[i] = fabs(x[i]));
+
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(add, y[i] = a[i] + b[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(sub, y[i] = a[i] - b[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(mul, y[i] = a[i] * b[i]);
+DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(div, y[i] = a[i] / b[i]);
 
 }  // namespace caffe
