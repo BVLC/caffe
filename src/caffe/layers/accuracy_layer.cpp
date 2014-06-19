@@ -37,12 +37,12 @@ Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_label = bottom[1]->cpu_data();
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
-  Dtype* maxval = new Dtype[top_k_+1];
-  int* max_id = new int[top_k_+1];
+  vector<Dtype> maxval(top_k_+1);
+  vector<int> max_id(top_k_+1);
   for (int i = 0; i < num; ++i) {
     // Top-k accuracy
-    std::fill_n(maxval, top_k_, -FLT_MAX);
-    std::fill_n(max_id, top_k_, 0);
+    std::fill_n(maxval.begin(), top_k_, -FLT_MAX);
+    std::fill_n(max_id.begin(), top_k_, 0);
     for (int j = 0, k; j < dim; ++j) {
       // insert into (reverse-)sorted top-k array
       Dtype val = bottom_data[i * dim + j];
@@ -60,8 +60,6 @@ Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         break;
       }
   }
-  delete[] maxval;
-  delete[] max_id;
 
   // LOG(INFO) << "Accuracy: " << accuracy;
   (*top)[0]->mutable_cpu_data()[0] = accuracy / num;
