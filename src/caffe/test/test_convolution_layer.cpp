@@ -51,7 +51,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(4);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   shared_ptr<Layer<TypeParam> > layer(
       new ConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -82,7 +82,7 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolution) {
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(4);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("constant");
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -111,7 +111,7 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUSimpleConvolution) {
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(4);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("constant");
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -151,7 +151,7 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolutionGroup) {
   convolution_param->set_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("constant");
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -199,7 +199,7 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUSimpleConvolutionGroup) {
   convolution_param->set_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("constant");
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
@@ -231,7 +231,7 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradient) {
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(2);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::CPU);
@@ -249,7 +249,7 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
   convolution_param->set_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::CPU);
@@ -266,7 +266,7 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUGradient) {
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(2);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::GPU);
@@ -284,7 +284,7 @@ TYPED_TEST(ConvolutionLayerTest, TestGPUGradientGroup) {
   convolution_param->set_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  convolution_param->set_shared_col_buffer(false);
+  convolution_param->set_share_col_buffer(false);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   Caffe::set_mode(Caffe::GPU);
