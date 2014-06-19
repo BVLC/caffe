@@ -225,6 +225,9 @@ message ConvolutionParameter {
   optional uint32 stride = 6 [default = 1]; // The stride
   optional FillerParameter weight_filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
+  // If true the col_buffer will be shared with other Convolutinal Layers
+  // If false col_buffer will hold its own data
+  optional bool shared_col_buffer = 9 [default = true];
 }
 
 // Message that stores parameters used by DataLayer

@@ -87,7 +87,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       Blob<Dtype>* col_buffer = conv_layer->col_buffer();
       LOG(INFO) << "Size of col_buffer of layer " << layer_id << ":" <<
         col_buffer->count();
-      max_size_buffer_ = std::max(max_size_buffer_, col_buffer->count());
+      if (conv_layer->shared_col_buffer()) {
+        max_size_buffer_ = std::max(max_size_buffer_, col_buffer->count());
+      } else {
+        memory_used_ += col_buffer->count();
+      }
     }
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
@@ -145,9 +149,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (layers_[layer_id]->type() == LayerParameter_LayerType_CONVOLUTION) {
       ConvolutionLayer<Dtype>* conv_layer =
         dynamic_cast<ConvolutionLayer<Dtype>* >(layers_[layer_id].get());
-      Blob<Dtype>* col_buffer = conv_layer->col_buffer();
-      col_buffer->ShareData(shared_buffer_);
-      col_buffer->ShareDiff(shared_buffer_);
+      if (conv_layer->shared_col_buffer()) {
+        Blob<Dtype>* col_buffer = conv_layer->col_buffer();
+        col_buffer->ShareData(shared_buffer_);
+        col_buffer->ShareDiff(shared_buffer_);
+      }
     }
   }
   GetLearningRateAndWeightDecay();
