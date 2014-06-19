@@ -37,7 +37,7 @@ class LossLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {}
 
   virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 0; }
+  virtual inline int MaxTopBlobs() const { return 1; }
 };
 
 /* SigmoidCrossEntropyLossLayer
@@ -166,7 +166,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 
 /* AccuracyLayer
   Note: not an actual loss layer! Does not implement backwards step.
-  Computes the accuracy and logprob of a with respect to b.
+  Computes the accuracy of a with respect to b.
 */
 template <typename Dtype>
 class AccuracyLayer : public Layer<Dtype> {
