@@ -103,7 +103,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
   virtual Blob<Dtype>* col_buffer() { return &col_buffer_; }
-  virtual bool share_col_buffer() { return share_col_buffer_; }
+  virtual bool is_col_buffer_shared() { return share_col_buffer_; }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
