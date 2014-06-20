@@ -93,6 +93,5 @@ void* SyncedMemory::mutable_gpu_data() {
   return gpu_ptr_;
 }
 
-
 }  // namespace caffe
 
