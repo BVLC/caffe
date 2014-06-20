@@ -191,7 +191,7 @@ message LayerParameter {
 
   // Parameters for particular layer types.
 
-  // Parameters next available ID: 28 (last added: AccuracyParameter)
+  // next available ID: 29 for params(last added: MultiLabelAccuracyParameter)
   optional AccuracyParameter accuracy_param = 27;
   optional ArgMaxParameter argmax_param = 23;
   optional ConcatParameter concat_param = 9;
@@ -207,7 +207,7 @@ message LayerParameter {
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
   optional MemoryDataParameter memory_data_param = 22;
-  optional MultiLabelAccuracyParameter multi_label_accuracy_param = 26;
+  optional MultiLabelAccuracyParameter multi_label_accuracy_param = 28;
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
