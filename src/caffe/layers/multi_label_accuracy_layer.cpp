@@ -50,10 +50,10 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
   const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   Dtype true_positive = 0;
   Dtype true_negative = 0;
-  Dtype positive_weight_ =
-    this->layer_param_.multi_label_accuracy_param().positive_weight();
-  Dtype negative_weight_ =
-    this->layer_param_.multi_label_accuracy_param().negative_weight();
+  // Dtype positive_weight_ =
+  //   this->layer_param_.multi_label_accuracy_param().positive_weight();
+  // Dtype negative_weight_ =
+  //   this->layer_param_.multi_label_accuracy_param().negative_weight();
   Dtype total_loss = 0;
   int count_pos = 0;
   int count_neg = 0;
@@ -78,21 +78,21 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
     // Update Positive accuracy and count
       true_positive += (bottom_data[ind] >= 0);
       count_pos++;
-      loss *= positive_weight_;
+      // loss *= positive_weight_;
     }
     if (label < 0) {
     // Update Negative accuracy and count
       true_negative += (bottom_data[ind] < 0);
       count_neg++;
-      loss *= negative_weight_;
+      // loss *= negative_weight_;
     }
     total_loss -= loss;
   }
-  // LOG(INFO) << "Sensitivity: " << (true_positive / count_pos);
-  // LOG(INFO) << "Specificity: " << (true_negative / count_neg);
-  // LOG(INFO) << "Harmonic Mean of Sens and Spec: " <<
-  //  2 / ( count_pos / true_positive + count_neg / true_negative);
-  // LOG(INFO) << "Loss: " << total_loss;
+  DLOG(INFO) << "Sensitivity: " << (true_positive / count_pos);
+  DLOG(INFO) << "Specificity: " << (true_negative / count_neg);
+  DLOG(INFO) << "Harmonic Mean of Sens and Spec: " <<
+    2 / ( count_pos / true_positive + count_neg / true_negative);
+  DLOG(INFO) << "Loss: " << total_loss;
   if ((top->size() == 1)) {
     (*top)[0]->mutable_cpu_data()[0] = true_positive / count_pos;
     (*top)[0]->mutable_cpu_data()[1] = true_negative / count_neg;
@@ -100,38 +100,38 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
       2 / (count_pos / true_positive + count_neg / true_negative);
     (*top)[0]->mutable_cpu_data()[3] = total_loss / num;
   }
-  // MultiLabelAccuracy can be used as a loss function.
-  return Dtype(total_loss / num);
+  // MultiLabelAccuracy should not be used as a loss function.
+  return Dtype(0);
 }
 
-template <typename Dtype>
-void MultiLabelAccuracyLayer<Dtype>::Backward_cpu(
-    const vector<Blob<Dtype>*>& top, const bool propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
-  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
-  const Dtype* bottom_label = (*bottom)[1]->cpu_data();
-  const Dtype positive_weight_ =
-    this->layer_param_.multi_label_accuracy_param().positive_weight();
-  const Dtype negative_weight_ =
-    this->layer_param_.multi_label_accuracy_param().negative_weight();
-  const int count = (*bottom)[0]->count();
-  const int num = (*bottom)[0]->num();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  for (int i = 0; i < count; ++i) {
-    if (bottom_label[i] != 0) {
-      bottom_diff[i] = sigmoid(bottom_data[i]) - (bottom_label[i] > 0);
-      if (bottom_label[i] > 0) {
-        bottom_diff[i] *= positive_weight_;
-      } else {
-        bottom_diff[i] *= negative_weight_;
-      }
-    } else {
-      bottom_diff[i] = 0;
-    }
-  }
-  // Scale down gradient
-  caffe_scal(count, Dtype(1) / num, bottom_diff);
-}
+// template <typename Dtype>
+// void MultiLabelAccuracyLayer<Dtype>::Backward_cpu(
+//     const vector<Blob<Dtype>*>& top, const bool propagate_down,
+//     vector<Blob<Dtype>*>* bottom) {
+//   const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+//   const Dtype* bottom_label = (*bottom)[1]->cpu_data();
+//   const Dtype positive_weight_ =
+//     this->layer_param_.multi_label_accuracy_param().positive_weight();
+//   const Dtype negative_weight_ =
+//     this->layer_param_.multi_label_accuracy_param().negative_weight();
+//   const int count = (*bottom)[0]->count();
+//   const int num = (*bottom)[0]->num();
+//   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+//   for (int i = 0; i < count; ++i) {
+//     if (bottom_label[i] != 0) {
+//       bottom_diff[i] = sigmoid(bottom_data[i]) - (bottom_label[i] > 0);
+//       if (bottom_label[i] > 0) {
+//         bottom_diff[i] *= positive_weight_;
+//       } else {
+//         bottom_diff[i] *= negative_weight_;
+//       }
+//     } else {
+//       bottom_diff[i] = 0;
+//     }
+//   }
+//   // Scale down gradient
+//   caffe_scal(count, Dtype(1) / num, bottom_diff);
+// }
 
 
 INSTANTIATE_CLASS(MultiLabelAccuracyLayer);

@@ -256,7 +256,7 @@ class AccuracyLayer : public Layer<Dtype> {
 };
 
 /* MultiLabelAccuracyLayer
-  Note: It is also a loss layer! Does implement backwards step.
+  Note: It is also a loss layer! Does not implement backwards step.
   Computes the accuracy and cross entropy loss with respect to b.
 */
 template <typename Dtype>
@@ -271,7 +271,9 @@ class MultiLabelAccuracyLayer : public Layer<Dtype> {
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    NOT_IMPLEMENTED;
+  }
 };
 
 }  // namespace caffe
