@@ -86,7 +86,7 @@ class DataLayerTest : public ::testing::Test {
 
     for (int i = 0; i < 5; ++i) {
       Datum datum;
-      datum.set_label(i);
+      datum.add_label(i);
       datum.set_channels(2);
       datum.set_height(3);
       datum.set_width(4);
