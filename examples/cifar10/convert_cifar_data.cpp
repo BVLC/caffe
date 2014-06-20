@@ -61,7 +61,7 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
     CHECK(data_file) << "Unable to open train file #" << fileid + 1;
     for (int itemid = 0; itemid < kCIFARBatchSize; ++itemid) {
       read_image(&data_file, &label, str_buffer);
-      datum.set_label(0, label);
+      datum.add_label(label);
       datum.set_data(str_buffer, kCIFARImageNBytes);
       datum.SerializeToString(&value);
       snprintf(str_buffer, kCIFARImageNBytes, "%05d",
@@ -80,7 +80,7 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
   CHECK(data_file) << "Unable to open test file.";
   for (int itemid = 0; itemid < kCIFARBatchSize; ++itemid) {
     read_image(&data_file, &label, str_buffer);
-    datum.set_label(0, label);
+    datum.add_label(label);
     datum.set_data(str_buffer, kCIFARImageNBytes);
     datum.SerializeToString(&value);
     snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
