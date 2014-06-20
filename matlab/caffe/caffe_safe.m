@@ -1,7 +1,15 @@
-function vargout = caffe_safe(vargin)
+function varargout = caffe_safe(varargin)
   try
-  	vargout = caffe(vargin);
-  catch
-  	error('Exception in caffe');
+     switch nargout
+	case 0
+	 caffe(varargin{:});
+	 varargout={};
+	case 1
+	 varargout{1} = caffe(varargin{:});
+	case 2
+	 [varargout{1} varargout{2}] = caffe(varargin{:});
   end
- end
+  catch
+    error('Exception in caffe');
+  end
+end
