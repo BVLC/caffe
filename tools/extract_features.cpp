@@ -119,7 +119,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   options.error_if_exists = true;
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
-  vector<leveldb::DB*> feature_dbs;
+  vector<shared_ptr<leveldb::DB> > feature_dbs;
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening leveldb " << leveldb_names[i];
     leveldb::DB* db;
@@ -127,7 +127,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
                                                leveldb_names[i].c_str(),
                                                &db);
     CHECK(status.ok()) << "Failed to open leveldb " << leveldb_names[i];
-    feature_dbs.push_back(db);
+    feature_dbs.push_back(shared_ptr<leveldb::DB>(db));
   }
 
   int num_mini_batches = atoi(argv[++arg_pos]);
@@ -135,8 +135,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
-  vector<leveldb::WriteBatch*> feature_batches(
-      num_features, new leveldb::WriteBatch());
+  vector<shared_ptr<leveldb::WriteBatch> > feature_batches(
+      num_features,
+      shared_ptr<leveldb::WriteBatch>(new leveldb::WriteBatch()));
   const int kMaxKeyStrLength = 100;
   char key_str[kMaxKeyStrLength];
   int num_bytes_of_binary_code = sizeof(Dtype);
@@ -167,11 +168,11 @@ int feature_extraction_pipeline(int argc, char** argv) {
         feature_batches[i]->Put(string(key_str), value);
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
-          feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i]);
+          feature_dbs[i]->Write(leveldb::WriteOptions(),
+                                feature_batches[i].get());
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
-          delete feature_batches[i];
-          feature_batches[i] = new leveldb::WriteBatch();
+          feature_batches[i].reset(new leveldb::WriteBatch());
         }
       }  // for (int n = 0; n < batch_size; ++n)
     }  // for (int i = 0; i < num_features; ++i)
@@ -179,7 +180,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
     if (image_indices[i] % 1000 != 0) {
-      feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i]);
+      feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i].get());
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
         " query images for feature blob " << blob_names[i];
