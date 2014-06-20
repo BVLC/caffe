@@ -31,7 +31,6 @@ Dtype ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
   for (int i = 0; i < num; ++i) {
-    // Accuracy
     Dtype max_val = -FLT_MAX;
     int max_ind = 0;
     for (int j = 0; j < dim; ++j) {
