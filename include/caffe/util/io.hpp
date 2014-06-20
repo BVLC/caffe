@@ -62,7 +62,7 @@ inline void WriteProtoToBinaryFile(
 }
 
 bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
-    const int height, const int width, Datum* datum);
+    const int height, const int width, const bool is_color, Datum* datum);
 
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum);
