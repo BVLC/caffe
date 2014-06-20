@@ -920,11 +920,16 @@ static handler_registry handlers[] = {
 };
 
 
+void FailureFunction() {
+     // Reports something...
+     mex_error("exception");
+}
+
 /** -----------------------------------------------------------------
  ** matlab entry point: caffe(api_command, arg1, arg2, ...)
  **/
 void mexFunction(MEX_ARGS) {
-  mexLock();  // Avoid clearing the mex file.
+  google::InstallFailureFunction(&FailureFunction);
   if (nrhs == 0) {
     mex_error("No API command given");
     return;
