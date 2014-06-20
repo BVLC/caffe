@@ -31,10 +31,10 @@ classdef CaffeNet < handle
             if nargin > 1
                 load_net(self, model_file);
             end
-            assert(is_initialized())
-            self.mode = caffe('get_mode');
-            self.phase = caffe('get_phase');
-            self.device_id = caffe('get_device');
+            assert(is_initialized(self))
+            self.mode = caffe_safe('get_mode');
+            self.phase = caffe_safe('get_phase');
+            self.device_id = caffe_safe('get_device');
         end
     end
     methods (Static)
@@ -64,14 +64,14 @@ classdef CaffeNet < handle
         function weights = get.weights(self)
             assert(is_initialized(self))
             if (self.weights_changed)
-                self.weights_store = caffe('get_weights');
+                self.weights_store = caffe_safe('get_weights');
                 self.weights_changed = false;
             end
             weights = self.weights_store;
         end
         function set.weights(self,weights)
             assert(is_initialized(self))
-            caffe('set_weights', weights);
+            caffe_safe('set_weights', weights);
             self.weights_store = weights;
             self.weights_changed = false;
         end
@@ -79,10 +79,10 @@ classdef CaffeNet < handle
             % mode = {'CPU' 'GPU'}
             switch mode
                 case 'CPU'
-                    caffe('set_mode_cpu');
+                    caffe_safe('set_mode_cpu');
                     self.mode = mode;
                 case 'GPU'
-                    caffe('set_mode_gpu');
+                    caffe_safe('set_mode_gpu');
                     self.mode = mode;
                 otherwise
                     fprintf('Mode unknown choose between CPU and GPU\n');
@@ -93,10 +93,10 @@ classdef CaffeNet < handle
             % phase = {'TRAIN' 'TEST'}
             switch phase
                 case 'TRAIN'
-                    caffe('set_phase_train');
+                    caffe_safe('set_phase_train');
                     self.phase = phase;
                 case {'test','TEST'}
-                    caffe('set_phase_test');
+                    caffe_safe('set_phase_test');
                     self.phase = phase;
                 otherwise
                     fprintf('Phase unknown choose between TRAIN and TEST')
@@ -104,17 +104,17 @@ classdef CaffeNet < handle
             end
         end
         function set.device_id(self, device_id)
-            caffe('set_device', device_id);
+            caffe_safe('set_device', device_id);
             self.device_id = device_id;
         end
         function set.input_blobs(self, input_blobs)
             assert(is_initialized(self))
-            caffe('set_input_blobs', input_blobs);
+            caffe_safe('set_input_blobs', input_blobs);
             self.input_blobs = input_blobs;
         end
         function set.output_blobs(self, output_blobs)
             assert(is_initialized(self))
-            caffe('set_output_blobs', output_blobs);
+            caffe_safe('set_output_blobs', output_blobs);
             self.output_blobs = output_blobs;
         end
     end
@@ -122,60 +122,60 @@ classdef CaffeNet < handle
         function res = forward(self,input)
             assert(is_initialized(self))
             if nargin < 2
-                res = caffe('forward');
+                res = caffe_safe('forward');
             else
-                res = caffe('forward',input);
+                res = caffe_safe('forward',input);
             end
         end
         function res = backward(self,diff)
             assert(is_initialized(self))
             if nargin < 2
-                res = caffe('backward');
+                res = caffe_safe('backward');
             else
-                res = caffe('backward',diff);
+                res = caffe_safe('backward',diff);
             end
         end
         function res = forward_prefilled(self)
             assert(is_initialized(self))
-            res = caffe('forward_prefilled');
+            res = caffe_safe('forward_prefilled');
         end
         function res = backward_prefilled(self)
             assert(is_initialized(self))
-            res = caffe('backward_prefilled');
+            res = caffe_safe('backward_prefilled');
         end
         function res = init(self, model_def_file, model_file)
-            self.init_key = caffe('init',model_def_file, model_file);
+            self.init_key = caffe_safe('init',model_def_file, model_file);
             assert(is_initialized(self))
             self.model_def_file = model_def_file;
             self.model_file = model_file;
-            self.layers_info = caffe('get_layers_info');
-            self.blobs_info = caffe('get_blobs_info');
+            self.layers_info = caffe_safe('get_layers_info');
+            self.blobs_info = caffe_safe('get_blobs_info');
             self.weights_changed = true;
             res = self.init_key;
         end
         function res = init_net(self, model_def_file)
-            self.init_key = caffe('init_net',model_def_file);
+            self.init_key = caffe_safe('init_net',model_def_file);
             assert(is_initialized(self))
             self.model_def_file = model_def_file;
             self.model_file = [];
-            self.layers_info = caffe('get_layers_info');
-            self.blobs_info = caffe('get_blobs_info');
+            self.layers_info = caffe_safe('get_layers_info');
+            self.blobs_info = caffe_safe('get_blobs_info');
             self.weights_changed = true;
             res = self.init_key;
         end
         function res = load_net(self, model_file)
             assert(is_initialized(self))
-            self.init_key = caffe('load_net',model_file);
+            self.init_key = caffe_safe('load_net',model_file);
             self.model_file = model_file;
             self.weights_changed = true;
             res = self.init_key;
         end
         function res = save_net(self, model_file)
             assert(is_initialized(self))
-            res = caffe('save_net', model_file);
+            res = caffe_safe('save_net', model_file);
         end
         function res = is_initialized(~)
-            res = caffe('is_initialized');
+            res = caffe_safe('is_initialized')>0;
         end
         function set_mode_cpu(self)
             self.mode = 'CPU';
@@ -201,12 +201,12 @@ classdef CaffeNet < handle
         end
         function res = get_layer_weights(self, layer_name)
             assert(is_initialized(self))
-            res = caffe('get_layer_weights', layer_name);
+            res = caffe_safe('get_layer_weights', layer_name);
         end
         function res = set_layer_weights(self, layer_name, weights)
             assert(is_initialized(self))
-            res = caffe('set_layer_weights', layer_name, weights);
-            self.weights = caffe('get_weights');
+            res = caffe_safe('set_layer_weights', layer_name, weights);
+            self.weights = caffe_safe('get_weights');
         end
         function res = get_layers_info(self)
             assert(is_initialized(self))
@@ -218,34 +218,34 @@ classdef CaffeNet < handle
         end
         function res = get_blob_data(self, blob_name)
             assert(is_initialized(self))
-            res = caffe('get_blob_data', blob_name);
+            res = caffe_safe('get_blob_data', blob_name);
         end
         function res = get_blob_diff(self, blob_name)
             assert(is_initialized(self))
-            res = caffe('get_blob_diff', blob_name);
+            res = caffe_safe('get_blob_diff', blob_name);
         end
         function res = get_all_data(self)
             assert(is_initialized(self))
-            res = caffe('get_all_data');
+            res = caffe_safe('get_all_data');
         end
         function res = get_all_diff(self)
             assert(is_initialized(self))
-            res = caffe('get_all_diff');
+            res = caffe_safe('get_all_diff');
         end
         function res = get_init_key(self)
-            self.init_key = caffe('get_init_key');
+            self.init_key = caffe_safe('get_init_key');
             res = self.init_key;
         end
         function reset(self)
-            caffe('reset');
-            self.init_key = caffe('get_init_key');
+            caffe_safe('reset');
+            self.init_key = caffe_safe('get_init_key');
             self.layers_info = [];
             self.blobs_info = [];
             self.weights_store = [];
         end
         function delete(self)
             self.weights_store = [];
-            caffe('reset');
+            caffe_safe('reset');
             clear caffe;
         end
     end
