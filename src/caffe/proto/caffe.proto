@@ -370,6 +370,7 @@ message ImageDataParameter {
   // If greater than 1 then there are multiple labels per image
   // (usefull for multi-label problems)
   optional uint32 num_labels = 11 [default = 1];
+  optional bool images_in_color = 12 [default = true];
 }
 
 // Message that stores parameters InfogainLossLayer

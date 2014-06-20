@@ -72,10 +72,10 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 }
 
 bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
-    const int height, const int width, Datum* datum) {
+    const int height, const int width, const bool is_color, Datum* datum) {
 
   CHECK(ReadImageToDatum(filename, labels[0],
-                         height, width, datum));
+                         height, width, is_color, datum));
 
   for (int i = 1 ; i < labels.size(); ++i) {
     if (datum->label_size() <= i) {

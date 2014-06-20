@@ -40,6 +40,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
   const int num_labels = image_data_param.num_labels();
+  const bool images_in_color = image_data_param.images_in_color();
 
   if (mirror && crop_size == 0) {
     LOG(FATAL) << "Current implementation requires mirror and crop_size to be "
@@ -57,7 +58,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
     CHECK_GT(lines_size, layer->lines_id_);
     if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first,
           layer->lines_[layer->lines_id_].second,
-          new_height, new_width, &datum)) {
+          new_height, new_width, images_in_color, &datum)) {
       continue;
     }
     const string& data = datum.data();
@@ -147,6 +148,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   const int new_height  = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_height();
   const int num_labels = this->layer_param_.image_data_param().num_labels();
+  const bool images_in_color = this->layer_param_.image_data_param().images_in_color();
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
@@ -194,7 +196,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
-                         new_height, new_width, &datum));
+                         new_height, new_width, images_in_color, &datum));
   // image
   const int crop_size = this->layer_param_.image_data_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
@@ -253,7 +255,9 @@ void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   phase_ = Caffe::phase();
   const bool prefetch_needs_rand =
       this->layer_param_.image_data_param().shuffle() ||
-      this->layer_param_.image_data_param().crop_size();
+      this->layer_param_.image_data_param().mirror() ||
+        ((phase_ == Caffe::TRAIN) &&
+        this->layer_param_.image_data_param().crop_size());
   if (prefetch_needs_rand) {
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
