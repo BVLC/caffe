@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 34 (last added: MULTI_LABEL_ACCURACY)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -153,6 +153,7 @@ message LayerParameter {
     INNER_PRODUCT = 14;
     LRN = 15;
     MEMORY_DATA = 29;
+    MULTI_LABEL_ACCURACY = 33;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
     POWER = 26;
@@ -188,6 +189,9 @@ message LayerParameter {
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 8;
 
+  // Parameters for particular layer types.
+
+  // Parameters next available ID: 28 (last added: AccuracyParameter)
   optional AccuracyParameter accuracy_param = 27;
   optional ArgMaxParameter argmax_param = 23;
   optional ConcatParameter concat_param = 9;
@@ -450,8 +454,8 @@ message WindowDataParameter {
   optional string crop_mode = 11 [default = "warp"];
   // If true produces multi-label outputs a vector labels (one per class) per window
   // with -1 means negative, 0 ignore for that class, and 1 means possitve
-  // So the size of the output blob would be 
-  // multi_labels = batch_size x num_classes x 1 x 1 
+  // So the size of the output blob would be
+  // multi_labels = batch_size x num_classes x 1 x 1
   // instead of labels = batch_size x 1 x 1 x 1
   optional bool multi_label = 12 [default = false];
 }
