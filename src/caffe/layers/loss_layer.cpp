@@ -21,7 +21,6 @@ void LossLayer<Dtype>::SetUp(
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number.";
   FurtherSetUp(bottom, top);
-
 }
 
 INSTANTIATE_CLASS(LossLayer);
