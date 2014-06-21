@@ -71,8 +71,9 @@ TYPED_TEST(HingeLossLayerTest, TestGradientGPU) {
 }
 
 
-TYPED_TEST(HingeLossLayerTest, TestGradientCPUL2) {
+TYPED_TEST(HingeLossLayerTest, TestGradientL2CPU) {
   LayerParameter layer_param;
+  // Set norm to L2
   HingeLossParameter* hinge_loss_param = layer_param.mutable_hinge_loss_param();
   hinge_loss_param->set_hinge_norm(HingeLossParameter_Norm_L2);
   Caffe::set_mode(Caffe::CPU);
@@ -83,8 +84,10 @@ TYPED_TEST(HingeLossLayerTest, TestGradientCPUL2) {
       &(this->blob_top_vec_), 0, -1, -1);
 }
 
-TYPED_TEST(HingeLossLayerTest, TestGradientGPUL2) {
+
+TYPED_TEST(HingeLossLayerTest, TestGradientL2GPU) {
   LayerParameter layer_param;
+  // Set norm to L2
   HingeLossParameter* hinge_loss_param = layer_param.mutable_hinge_loss_param();
   hinge_loss_param->set_hinge_norm(HingeLossParameter_Norm_L2);
   Caffe::set_mode(Caffe::GPU);
@@ -94,4 +97,5 @@ TYPED_TEST(HingeLossLayerTest, TestGradientGPUL2) {
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);
 }
+
 }  // namespace caffe
