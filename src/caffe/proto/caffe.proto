@@ -194,6 +194,7 @@ message LayerParameter {
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
   optional ThresholdParameter threshold_param = 25;
+  optional HingeLossParameter hinge_loss_param = 29;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -303,6 +304,15 @@ message HDF5DataParameter {
 // Message that stores parameters used by HDF5OutputLayer
 message HDF5OutputParameter {
   optional string file_name = 1;
+}
+
+message HingeLossParameter {
+  enum Norm {
+    L1 = 0;
+    L2 = 1;    
+  }
+  // Specify the Norm to use L1 or L2
+  optional Norm hinge_norm = 1 [default = L1];
 }
 
 // Message that stores parameters used by ImageDataLayer
