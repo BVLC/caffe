@@ -312,7 +312,7 @@ message HingeLossParameter {
     L2 = 2;    
   }
   // Specify the Norm to use L1 or L2
-  optional Norm hinge_norm = 1 [default = L1];
+  optional Norm norm = 1 [default = L1];
 }
 
 // Message that stores parameters used by ImageDataLayer
