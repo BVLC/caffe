@@ -307,9 +307,9 @@ message HDF5OutputParameter {
 }
 
 message HingeLossParameter {
-  enum Norm {
-    L1 = 0;
-    L2 = 1;    
+  enum Norm {    
+    L1 = 1;
+    L2 = 2;    
   }
   // Specify the Norm to use L1 or L2
   optional Norm hinge_norm = 1 [default = L1];
