@@ -50,7 +50,7 @@ typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(HingeLossLayerTest, Dtypes);
 
 
-TYPED_TEST(HingeLossLayerTest, TestGradientCPU) {
+TYPED_TEST(HingeLossLayerTest, TestGradientL1CPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
   HingeLossLayer<TypeParam> layer(layer_param);
@@ -60,7 +60,7 @@ TYPED_TEST(HingeLossLayerTest, TestGradientCPU) {
       &(this->blob_top_vec_), 0, -1, -1);
 }
 
-TYPED_TEST(HingeLossLayerTest, TestGradientGPU) {
+TYPED_TEST(HingeLossLayerTest, TestGradientL1GPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::GPU);
   HingeLossLayer<TypeParam> layer(layer_param);
