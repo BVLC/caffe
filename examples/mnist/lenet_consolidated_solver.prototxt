@@ -263,17 +263,18 @@ test_net_param {
     }
   }
   layers {
-    name: "prob"
-    type: SOFTMAX
-    bottom: "ip2"
-    top: "prob"
-  }
-  layers {
     name: "accuracy"
     type: ACCURACY
-    bottom: "prob"
+    bottom: "ip2"
     bottom: "label"
     top: "accuracy"
+  }
+  layers {
+    name: "loss"
+    type: SOFTMAX_LOSS
+    bottom: "ip2"
+    bottom: "label"
+    top: "loss"
   }
 }
 
@@ -386,17 +387,18 @@ test_net_param {
     }
   }
   layers {
-    name: "prob"
-    type: SOFTMAX
-    bottom: "ip2"
-    top: "prob"
-  }
-  layers {
     name: "accuracy"
     type: ACCURACY
-    bottom: "prob"
+    bottom: "ip2"
     bottom: "label"
     top: "accuracy"
+  }
+  layers {
+    name: "loss"
+    type: SOFTMAX_LOSS
+    bottom: "ip2"
+    bottom: "label"
+    top: "loss"
   }
 }
 

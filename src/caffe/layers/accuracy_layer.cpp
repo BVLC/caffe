@@ -23,14 +23,13 @@ void AccuracyLayer<Dtype>::SetUp(
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  (*top)[0]->Reshape(1, 2, 1, 1);
+  (*top)[0]->Reshape(1, 1, 1, 1);
 }
 
 template <typename Dtype>
 Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype accuracy = 0;
-  Dtype logprob = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
   int num = bottom[0]->num();
@@ -48,13 +47,10 @@ Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (max_id == static_cast<int>(bottom_label[i])) {
       ++accuracy;
     }
-    Dtype prob = max(bottom_data[i * dim + static_cast<int>(bottom_label[i])],
-                     Dtype(kLOG_THRESHOLD));
-    logprob -= log(prob);
   }
   // LOG(INFO) << "Accuracy: " << accuracy;
   (*top)[0]->mutable_cpu_data()[0] = accuracy / num;
-  (*top)[0]->mutable_cpu_data()[1] = logprob / num;
+
   // Accuracy layer should not be used as a loss function.
   return Dtype(0);
 }
