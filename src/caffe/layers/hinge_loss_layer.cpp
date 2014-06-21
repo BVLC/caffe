@@ -66,7 +66,7 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     break;
   default:
     LOG(FATAL) << "Unknown Norm";
-  }  
+  }
 }
 
 INSTANTIATE_CLASS(HingeLossLayer);
