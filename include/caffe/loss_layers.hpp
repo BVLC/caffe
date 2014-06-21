@@ -166,7 +166,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
 
 /* AccuracyLayer
   Note: not an actual loss layer! Does not implement backwards step.
-  Computes the accuracy of a with respect to b.
+  Computes the accuracy of argmax(a) with respect to b.
 */
 template <typename Dtype>
 class AccuracyLayer : public Layer<Dtype> {
@@ -179,6 +179,9 @@ class AccuracyLayer : public Layer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ACCURACY;
   }
+
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,

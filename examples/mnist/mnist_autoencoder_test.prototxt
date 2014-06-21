@@ -142,4 +142,5 @@ layers {
   bottom: "flatdata"
   name: "loss"
   type: EUCLIDEAN_LOSS
+  top: "loss"
 }
