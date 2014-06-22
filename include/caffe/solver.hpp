@@ -33,8 +33,7 @@ class Solver {
   // written to disk together with the learned net.
   void Snapshot();
   // The test routine
-  void TestAll();
-  void Test(const int test_net_id = 0);
+  void Test();
   virtual void SnapshotSolverState(SolverState* state) = 0;
   // The Restore function implements how one should restore the solver to a
   // previously snapshotted state. You should implement the RestoreSolverState()
@@ -45,7 +44,7 @@ class Solver {
   SolverParameter param_;
   int iter_;
   shared_ptr<Net<Dtype> > net_;
-  vector<shared_ptr<Net<Dtype> > > test_nets_;
+  shared_ptr<Net<Dtype> > test_net_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };

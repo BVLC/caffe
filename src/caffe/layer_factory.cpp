@@ -24,8 +24,6 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   switch (type) {
   case LayerParameter_LayerType_ACCURACY:
     return new AccuracyLayer<Dtype>(param);
-  case LayerParameter_LayerType_ARGMAX:
-    return new ArgMaxLayer<Dtype>(param);
   case LayerParameter_LayerType_BNLL:
     return new BNLLLayer<Dtype>(param);
   case LayerParameter_LayerType_CONCAT:
@@ -36,12 +34,10 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new DataLayer<Dtype>(param);
   case LayerParameter_LayerType_DROPOUT:
     return new DropoutLayer<Dtype>(param);
-  case LayerParameter_LayerType_DUMMY_DATA:
-    return new DummyDataLayer<Dtype>(param);
   case LayerParameter_LayerType_EUCLIDEAN_LOSS:
     return new EuclideanLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_ELTWISE:
-    return new EltwiseLayer<Dtype>(param);
+  case LayerParameter_LayerType_ELTWISE_PRODUCT:
+    return new EltwiseProductLayer<Dtype>(param);
   case LayerParameter_LayerType_FLATTEN:
     return new FlattenLayer<Dtype>(param);
   case LayerParameter_LayerType_HDF5_DATA:

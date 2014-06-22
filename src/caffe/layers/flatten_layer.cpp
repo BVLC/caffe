@@ -11,7 +11,8 @@ namespace caffe {
 template <typename Dtype>
 void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
+  CHECK_EQ(bottom.size(), 1) << "Flatten Layer takes a single blob as input.";
+  CHECK_EQ(top->size(), 1) << "Flatten Layer takes a single blob as output.";
   int channels_out = bottom[0]->channels() * bottom[0]->height()
       * bottom[0]->width();
   (*top)[0]->Reshape(bottom[0]->num(), channels_out, 1, 1);

@@ -11,14 +11,15 @@ namespace caffe {
 template <typename Dtype>
 void ConcatLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
+  CHECK_GT(bottom.size(), 1) <<
+    "Concat Layer takes at least two blobs as input.";
+  CHECK_EQ(top->size(), 1) <<
+    "Concat Layer takes a single blob as output.";
   concat_dim_ = this->layer_param_.concat_param().concat_dim();
-  CHECK_GE(concat_dim_, 0) <<
-    "concat_dim should be >= 0";
+  CHECK_GE(concat_dim_, 0) << "concat_dim should be >= 0";
   CHECK_LE(concat_dim_, 1) <<
     "For now concat_dim <=1, it can only concat num and channels";
-
-  // Initialize with the first blob.
+  // Intialize with the first blob
   count_ = bottom[0]->count();
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
@@ -63,7 +64,10 @@ Dtype ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           top_data+(*top)[0]->offset(n, offset_channel));
       }
       offset_channel += bottom[i]->channels();
-    }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
+    }
+  } else {
+    LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
+      " not implemented yet";
   }
   return Dtype(0.);
 }
@@ -93,7 +97,10 @@ void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
       offset_channel += blob->channels();
     }
-  }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
+  } else {
+    LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
+      " not implemented yet";
+  }
 }
 
 INSTANTIATE_CLASS(ConcatLayer);

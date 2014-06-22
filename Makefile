@@ -4,19 +4,6 @@ PROJECT := caffe
 CONFIG_FILE := Makefile.config
 include $(CONFIG_FILE)
 
-BUILD_DIR_LINK := $(BUILD_DIR)
-RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
-DEBUG_BUILD_DIR := .$(BUILD_DIR)_debug
-
-DEBUG ?= 0
-ifeq ($(DEBUG), 1)
-	BUILD_DIR := $(DEBUG_BUILD_DIR)
-	OTHER_BUILD_DIR := $(RELEASE_BUILD_DIR)
-else
-	BUILD_DIR := $(RELEASE_BUILD_DIR)
-	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
-endif
-
 # The target static library and shared library name
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
 NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
@@ -129,11 +116,9 @@ LIBRARY_DIRS += $(CUDA_LIB_DIR)
 LIBRARIES := cudart cublas curand \
 	pthread \
 	glog protobuf leveldb snappy \
-	lmdb \
 	boost_system \
 	hdf5_hl hdf5 \
-	opencv_core opencv_highgui opencv_imgproc 
-#	 \
+	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall
 
@@ -169,9 +154,6 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
-	CXXFLAGS += -mavx -m64 
-#-fopenmp
-#	CXXFLAGS += -std=c++11
 endif
 
 # OS X:
@@ -184,13 +166,12 @@ ifeq ($(OSX), 1)
 	endif
 endif
 
-
-
 # Debugging
+DEBUG ?= 0
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS := -DDEBUG -g -O0
 else
-	COMMON_FLAGS := -DNDEBUG -g -O2
+	COMMON_FLAGS := -DNDEBUG -O2
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -204,7 +185,7 @@ ifeq ($(BLAS), mkl)
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64 /opt/intel/composer_xe_2013_sp1.2.144/compiler/lib/intel64
 else ifeq ($(BLAS), open)
 	# OpenBLAS
-	LIBRARIES += openblas fftw3f fftw3   
+	LIBRARIES += openblas fftw3f fftw3
 	BLAS_LIB ?= /opt/OpenBLAS/lib
 else
 	# ATLAS
@@ -216,7 +197,7 @@ else
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
 		BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
-		LIBRARIES += cblas 
+		LIBRARIES += cblas
 		LDFLAGS += -framework vecLib
 	endif
 endif
@@ -308,19 +289,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 runtest: $(TEST_ALL_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle
 
-$(BUILD_DIR_LINK): $(BUILD_DIR)/.linked
-
-# Create a target ".linked" in this BUILD_DIR to tell Make that the "build" link
-# is currently correct, then delete the one in the OTHER_BUILD_DIR in case it
-# exists and $(DEBUG) is toggled later.
-$(BUILD_DIR)/.linked:
-	@ mkdir -p $(BUILD_DIR)
-	@ $(RM) $(OTHER_BUILD_DIR)/.linked
-	@ $(RM) -r $(BUILD_DIR_LINK)
-	@ ln -s $(BUILD_DIR) $(BUILD_DIR_LINK)
-	@ touch $@
-
-$(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
+$(ALL_BUILD_DIRS):
 	@ mkdir -p $@
 
 $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
@@ -384,12 +353,12 @@ $(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
 	@ echo
 
 $(TOOL_BUILD_DIR)/%.o: tools/%.cpp $(PROTO_GEN_HEADER) | $(TOOL_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@ echo
 
 $(EXAMPLE_BUILD_DIR)/%.o: examples/%.cpp $(PROTO_GEN_HEADER) \
 		| $(EXAMPLE_BUILD_DIRS)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ $(LDFLAGS)
 	@ echo
 
 $(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS)
@@ -400,7 +369,7 @@ proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
 
 $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR)
-	protoc --proto_path=src --cpp_out=$(BUILD_DIR)/src $<
+	protoc --proto_path=src --cpp_out=build/src $<
 	@ echo
 
 $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
@@ -413,8 +382,6 @@ $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 
 clean:
 	@- $(RM) -rf $(ALL_BUILD_DIRS)
-	@- $(RM) -rf $(OTHER_BUILD_DIR)
-	@- $(RM) -rf $(BUILD_DIR_LINK)
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
 	@- $(RM) $(PY$(PROJECT)_SO)
 	@- $(RM) $(MAT$(PROJECT)_SO)

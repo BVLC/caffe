@@ -140,7 +140,8 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 template <typename Dtype>
 void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
+  CHECK_EQ(bottom.size(), 0) << "Input Layer takes no input blobs.";
+  CHECK_EQ(top->size(), 2) << "Input Layer takes two blobs as output.";
   const int new_height  = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_height();
   CHECK((new_height == 0 && new_width == 0) ||

@@ -19,7 +19,7 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
+//  Layer<Dtype>::SetUp(bottom, top);
   kernel_size_ = this->layer_param_.convolution_param().kernel_size();
   stride_ = this->layer_param_.convolution_param().stride();
   group_ = this->layer_param_.convolution_param().group();

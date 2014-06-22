@@ -44,8 +44,13 @@ int main(int argc, char** argv) {
   NetParameterPrettyPrint net_param_pretty;
   NetParameterToPrettyPrint(net_param, &net_param_pretty);
 
-  // Save new format prototxt.
-  WriteProtoToTextFile(net_param_pretty, argv[2]);
+  // TODO(jdonahue): figure out why WriteProtoToTextFile doesn't work
+  // (no file is created).
+  // WriteProtoToTextFile(net_param_pretty, argv[2]);
+  ofstream output_proto;
+  output_proto.open(argv[2]);
+  output_proto << net_param_pretty.DebugString();
+  output_proto.close();
 
   LOG(ERROR) << "Wrote upgraded NetParameter text proto to " << argv[2];
   return !success;
