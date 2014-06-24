@@ -43,7 +43,7 @@ class AccuracyLayerTest : public ::testing::Test {
     int offset = blob_bottom_label_->offset(0);
     label_data[offset] = m_id;
 
-    // set the labels; first label is set to min-probability index
+    // set the labels; second label is set to min-probability index
     m_val = FLT_MAX;
     m_id = 0;
     for (int i = 0; i < 10; i++)
