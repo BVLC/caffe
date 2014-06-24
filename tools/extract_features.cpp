@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv) {
+  ::google::InitGoogleLogging(argv[0]);
   const int num_required_args = 6;
   if (argc < num_required_args) {
     LOG(ERROR)<<
