@@ -157,6 +157,7 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
     }
     EXPECT_EQ(5, values_to_indices.size());
     EXPECT_GT(5, num_in_order);
+    const TypeParam* data = this->blob_top_data_->cpu_data();
     for (int i = 0, index = 0; i < 5; ++i) {
       EXPECT_GE(this->blob_top_label_->cpu_data()[i], 0);
       EXPECT_LE(this->blob_top_label_->cpu_data()[i], 5);

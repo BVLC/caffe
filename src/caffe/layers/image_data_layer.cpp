@@ -152,7 +152,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
-  if (this->layer_param_.has_source()) { 
+  if (this->layer_param_.image_data_param().has_source()) { 
     // Read the file with filenames and labels
     const string& source = this->layer_param_.image_data_param().source();
     LOG(INFO) << "Opening file " << source;
@@ -193,11 +193,11 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       CreatePrefetchThread();
       DLOG(INFO) << "Prefetch initialized.";
     }
-  }  // if (this->layer_param_.has_source()) {
+  }  // if (this->layer_param_.image_data_param().has_source()) {
 }
 
 template<typename Dtype>
-void ImagesLayer<Dtype>::SetUpWithDatum(
+void ImageDataLayer<Dtype>::SetUpWithDatum(
     const int crop_size, const Datum datum, vector<Blob<Dtype>*>* top) {
   // datum size
   datum_channels_ = datum.channels();
@@ -211,21 +211,22 @@ void ImagesLayer<Dtype>::SetUpWithDatum(
   if (crop_size > 0) {
     CHECK_GT(datum_height_, crop_size);
     CHECK_GT(datum_width_, crop_size);
-    (*top)[0]->Reshape(this->layer_param_.batchsize(), datum.channels(),
-                       crop_size, crop_size);
+    (*top)[0]->Reshape(this->layer_param_.image_data_param().batch_size(),
+                       datum.channels(), crop_size, crop_size);
     prefetch_data_.reset(
-        new Blob<Dtype>(this->layer_param_.batchsize(), datum.channels(),
-                        crop_size, crop_size));
+        new Blob<Dtype>(this->layer_param_.image_data_param().batch_size(),
+                        datum.channels(), crop_size, crop_size));
   } else {
     (*top)[0]->Reshape(
-        this->layer_param_.batchsize(), datum.channels(), datum.height(),
-        datum.width());
+        this->layer_param_.image_data_param().batch_size(), datum.channels(),
+        datum.height(), datum.width());
     prefetch_data_.reset(new Blob<Dtype>(
-        this->layer_param_.batchsize(), datum.channels(), datum.height(),
-        datum.width()));
+        this->layer_param_.image_data_param().batch_size(), datum.channels(),
+        datum.height(), datum.width()));
   }
   prefetch_label_.reset(
-      new Blob<Dtype>(this->layer_param_.batchsize(), 1, 1, 1));
+      new Blob<Dtype>(this->layer_param_.image_data_param().batch_size(),
+                      1, 1, 1));
 
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
   << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
@@ -293,11 +294,11 @@ unsigned int ImageDataLayer<Dtype>::PrefetchRand() {
 }
 
 template <typename Dtype>
-void ImagesLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
-                                   const vector<int> labels) {
+void ImageDataLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
+                                               const vector<int>& labels) {
   size_t num_images = images.size();
   CHECK_GT(num_images, 0) << "There is no image to add";
-  int batch_size = this->layer_param_.batchsize();
+  int batch_size = this->layer_param_.image_data_param().batch_size();
   CHECK_LE(num_images, batch_size)<<
       "The number of added images " << images.size() <<
       " must be no greater than the batch size " << batch_size;
@@ -305,14 +306,14 @@ void ImagesLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
       "The number of images " << images.size() <<
       " must be no greater than the number of labels " << labels.size();
 
-  const int crop_size = this->layer_param_.cropsize();
-  const bool mirror = this->layer_param_.mirror();
+  const int crop_size = this->layer_param_.image_data_param().crop_size();
+  const bool mirror = this->layer_param_.image_data_param().mirror();
   if (mirror && crop_size == 0) {
     LOG(FATAL)<< "Current implementation requires mirror and crop size to be "
         << "set at the same time.";
   }
-  const int new_height = this->layer_param_.new_height();
-  const int new_width = this->layer_param_.new_height();
+  const int new_height = this->layer_param_.image_data_param().new_height();
+  const int new_width = this->layer_param_.image_data_param().new_height();
 
   // TODO: create a thread-safe buffer with Intel TBB concurrent container
   //   and process the images in multiple threads with boost::thread
@@ -330,7 +331,7 @@ void ImagesLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
   const int width = this->datum_width_;
   const int size = this->datum_size_;
   const Dtype* mean = this->data_mean_.cpu_data();
-  const Dtype scale = this->layer_param_.scale();
+  const Dtype scale = this->layer_param_.image_data_param().scale();
   Dtype* top_data = this->prefetch_data_->mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_->mutable_cpu_data();
   ProcessImageDatum<Dtype>(channels, height, width, size, crop_size, mirror,
@@ -348,7 +349,7 @@ void ImagesLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {  
-  if (this->layer_param_.has_source()) {
+  if (this->layer_param_.image_data_param().has_source()) {
     // First, join the thread
     JoinPrefetchThread();
   }

@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <opencv2/opencv.hpp>
 
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
@@ -182,6 +183,10 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual ~ImageDataLayer();
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  void SetUpWithDatum(const int crop_size, const Datum datum,
+                      vector<Blob<Dtype>*>* top);
+  virtual void AddImagesAndLabels(const vector<cv::Mat>& images,
+                                  const vector<int>& labels);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_IMAGE_DATA;
@@ -217,6 +222,8 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   Blob<Dtype> prefetch_label_;
   Blob<Dtype> data_mean_;
   Caffe::Phase phase_;
+  bool is_datum_set_up_;
+  vector<Blob<Dtype>*>* top_;
 };
 
 /* MemoryDataLayer
