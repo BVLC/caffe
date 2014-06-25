@@ -50,6 +50,7 @@ void Caffe::set_random_seed(const unsigned int seed) {
   // Curand seed
   // Yangqing's note: simply setting the generator seed does not seem to
   // work on the tesla K20s, so I wrote the ugly reset thing below.
+  static bool g_curand_availability_logged = false;
   if (Get().curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator()));
     CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
@@ -57,7 +58,11 @@ void Caffe::set_random_seed(const unsigned int seed) {
     CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator(),
         seed));
   } else {
-    LOG(ERROR) << "Curand not available. Skipping setting the curand seed.";
+    if (!g_curand_availability_logged) {
+        LOG(ERROR) <<
+            "Curand not available. Skipping setting the curand seed.";
+        g_curand_availability_logged = true;
+    }
   }
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
