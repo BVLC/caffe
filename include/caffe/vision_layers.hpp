@@ -425,7 +425,7 @@ class SoftmaxWithLossLayer : public Layer<Dtype> {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
   }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 0; }
+  virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
