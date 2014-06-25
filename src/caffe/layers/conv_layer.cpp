@@ -110,7 +110,7 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       if (bias_term_) {
         this->device_->gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
-            bias_multiplier_.cpu_data(),
+            bias_multiplier_.const_data(),
             (Dtype)1., top_data + (*top)[i]->offset(n));
       }
     }
