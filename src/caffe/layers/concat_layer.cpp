@@ -70,26 +70,30 @@ Dtype ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   if (concat_dim_ == 0) {
     int offset_num = 0;
     for (int i = 0; i < bottom->size(); ++i) {
       Blob<Dtype>* blob = (*bottom)[i];
-      Dtype* bottom_diff = blob->mutable_cpu_diff();
-      caffe_copy(blob->count(),
-        top_diff+top[0]->offset(offset_num), bottom_diff);
+      if (propagate_down[i]) {
+        Dtype* bottom_diff = blob->mutable_cpu_diff();
+        caffe_copy(blob->count(), top_diff + top[0]->offset(offset_num),
+                   bottom_diff);
+      }
       offset_num += blob->num();
     }
   } else if (concat_dim_ == 1) {
     int offset_channel = 0;
     for (int i = 0; i < bottom->size(); ++i) {
       Blob<Dtype>* blob = (*bottom)[i];
-      Dtype* bottom_diff = blob->mutable_cpu_diff();
-      int num_elem = blob->channels()*blob->height()*blob->width();
-      for (int n = 0; n < num_; ++n) {
-        caffe_copy(num_elem, top_diff+top[0]->offset(n, offset_channel),
-          bottom_diff+blob->offset(n));
+      if (propagate_down[i]) {
+        Dtype* bottom_diff = blob->mutable_cpu_diff();
+        int num_elem = blob->channels()*blob->height()*blob->width();
+        for (int n = 0; n < num_; ++n) {
+          caffe_copy(num_elem, top_diff + top[0]->offset(n, offset_channel),
+                     bottom_diff + blob->offset(n));
+        }
       }
       offset_channel += blob->channels();
     }

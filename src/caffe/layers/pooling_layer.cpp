@@ -184,8 +184,8 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  if (!propagate_down) {
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  if (!propagate_down[0]) {
     return;
   }
   const Dtype* top_diff = top[0]->cpu_diff();
