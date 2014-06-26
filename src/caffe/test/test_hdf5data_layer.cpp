@@ -24,9 +24,9 @@ template <typename Dtype>
 class HDF5DataLayerTest : public ::testing::Test {
  protected:
   HDF5DataLayerTest()
-      : blob_top_data_(new Blob<Dtype>()),
-        blob_top_label_(new Blob<Dtype>()),
-        filename(NULL) {}
+      : filename(NULL),
+        blob_top_data_(new Blob<Dtype>()),
+        blob_top_label_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
@@ -61,7 +61,6 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   int batch_size = 5;
   hdf5_data_param->set_batch_size(batch_size);
   hdf5_data_param->set_source(*(this->filename));
-  int num_rows = 10;
   int num_cols = 8;
   int height = 5;
   int width = 5;

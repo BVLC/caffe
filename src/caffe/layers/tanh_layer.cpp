@@ -33,7 +33,6 @@ void TanHLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const int count = (*bottom)[0]->count();
-    Dtype exp2x;
     Dtype tanhx;
     for (int i = 0; i < count; ++i) {
       tanhx = top_data[i];

@@ -69,7 +69,6 @@ class SigmoidCrossEntropyLossLayerTest : public ::testing::Test {
     targets_filler_param.set_max(1.0);
     UniformFiller<Dtype> targets_filler(targets_filler_param);
     Dtype eps = 2e-2;
-    int num_inf = 0;
     for (int i = 0; i < 100; ++i) {
       // Fill the data vector
       data_filler.Fill(this->blob_bottom_data_);

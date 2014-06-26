@@ -24,10 +24,10 @@ template <typename Dtype>
 class DataLayerTest : public ::testing::Test {
  protected:
   DataLayerTest()
-      : blob_top_data_(new Blob<Dtype>()),
-        blob_top_label_(new Blob<Dtype>()),
+      : backend_(DataParameter_DB_LEVELDB),
         filename_(new string(tmpnam(NULL))),
-        backend_(DataParameter_DB_LEVELDB),
+        blob_top_data_(new Blob<Dtype>()),
+        blob_top_label_(new Blob<Dtype>()),
         seed_(1701) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);

@@ -2,7 +2,7 @@
 // This program converts a set of images to a leveldb by storing them as Datum
 // proto buffers.
 // Usage:
-//   convert_imageset [-g] ROOTFOLDER/ LISTFILE DB_NAME RANDOM_SHUFFLE[0 or 1] \
+//   convert_imageset [-g] ROOTFOLDER/ LISTFILE DB_NAME RANDOM_SHUFFLE[0 or 1]
 //                     [resize_height] [resize_width]
 // where ROOTFOLDER is the root folder that holds all the images, and LISTFILE
 // should be a list of files as well as their labels, in the format as
