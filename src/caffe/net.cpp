@@ -242,7 +242,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   }
   const int net_param_id = params_.size();
   params_.push_back(layers_[layer_id]->blobs()[param_id]);
-  param_net_indices_.push_back(make_pair(layer_id, param_id));
+  layer_param_indices_.push_back(make_pair(layer_id, param_id));
   if (!param_size || !param_name.size() || (param_name.size() &&
       param_names_index_.find(param_name) == param_names_index_.end())) {
     // This layer "owns" this parameter blob -- it is either anonymous
@@ -257,7 +257,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     const int owner_net_param_id = param_names_index_[param_name];
     param_owners_.push_back(owner_net_param_id);
     const pair<int, int>& owner_index =
-        param_net_indices_[owner_net_param_id];
+        layer_param_indices_[owner_net_param_id];
     const int owner_layer_id = owner_index.first;
     const int owner_param_id = owner_index.second;
     LOG(INFO) << "Sharing parameters '" << param_name << "' owned by "
