@@ -172,7 +172,7 @@ message LayerParameter {
   repeated BlobProto blobs = 6;
   // The names of the parameter blobs -- useful for sharing parameters among
   // layers (but never required).
-  repeated string blob_name = 1001;
+  repeated string param = 1001;
   // Whether to require shared weights to have the same shape, or just the same
   // count -- defaults to STRICT if unspecified.
   repeated DimCheckMode blob_share_mode = 1002;
@@ -319,9 +319,9 @@ message HDF5OutputParameter {
 }
 
 message HingeLossParameter {
-  enum Norm {    
+  enum Norm {
     L1 = 1;
-    L2 = 2;    
+    L2 = 2;
   }
   // Specify the Norm to use L1 or L2
   optional Norm norm = 1 [default = L1];

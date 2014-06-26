@@ -103,9 +103,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       // learning rate to be 1. Thus we will need to perform backward.
       need_backward = true;
     }
-    const int blob_name_size = layer_param.blob_name_size();
-    CHECK(blob_name_size == num_param_blobs || blob_name_size == 0)
-        << "Incorrect blob_name size: should be either 0 or the same as "
+    const int param_size = layer_param.param_size();
+    CHECK(param_size == num_param_blobs || param_size == 0)
+        << "Incorrect param size: should be either 0 or the same as "
            "the number of the layer's parameter blobs: " << num_param_blobs;
     const int blob_share_mode_size = layer_param.blob_share_mode_size();
     CHECK(blob_share_mode_size == num_param_blobs || blob_share_mode_size == 0)
@@ -235,21 +235,21 @@ template <typename Dtype>
 void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
                              const int param_id) {
   const LayerParameter& layer_param = layers_[layer_id]->layer_param();
-  const int blob_name_size = layer_param.blob_name_size();
+  const int param_size = layer_param.param_size();
   string param_name;
-  if (blob_name_size) {
-    param_name = layer_param.blob_name(param_id);
+  if (param_size) {
+    param_name = layer_param.param(param_id);
   }
   const int net_param_id = params_.size();
   params_.push_back(layers_[layer_id]->blobs()[param_id]);
   param_net_indices_.push_back(make_pair(layer_id, param_id));
-  if (!blob_name_size || !param_name.size() || (param_name.size() &&
+  if (!param_size || !param_name.size() || (param_name.size() &&
       param_names_index_.find(param_name) == param_names_index_.end())) {
     // This layer "owns" this parameter blob -- it is either anonymous
     // (i.e., not given a param_name) or explicitly given a name that we
     // haven't already seen.
     param_owners_.push_back(-1);
-    if (blob_name_size) {
+    if (param_size) {
       param_names_index_[param_name] = net_param_id;
     }
   } else {
