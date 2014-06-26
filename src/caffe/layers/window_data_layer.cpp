@@ -31,7 +31,6 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::InternalThreadEntry() {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
-
   Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
@@ -41,7 +40,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   const bool mirror = this->layer_param_.window_data_param().mirror();
   const float fg_fraction =
       this->layer_param_.window_data_param().fg_fraction();
-  const Dtype* mean = data_mean_.const_data();
+  const Dtype* mean = data_mean_.cpu_data();
   const int mean_off = (data_mean_.width() - crop_size) / 2;
   const int mean_width = data_mean_.width();
   const int mean_height = data_mean_.height();
@@ -386,12 +385,12 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     data_mean_.Reshape(1, channels, crop_size, crop_size);
   }
   // Now, start the prefetch thread. Before calling prefetch, we make two
-  // const_data calls so that the prefetch thread does not accidentally make
+  // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_data();
-  prefetch_label_->mutable_data();
-  data_mean_.const_data();
+  prefetch_data_->mutable_cpu_data();
+  prefetch_label_->mutable_cpu_data();
+  data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
   DLOG(INFO) << "Prefetch initialized.";
@@ -432,10 +431,10 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   JoinPrefetchThread();
   // Copy the data
   this->device_->copy_from_cpu(
-      prefetch_data_->count(), prefetch_data_->const_data(),
+      prefetch_data_->count(), prefetch_data_->cpu_data(),
       (*top)[0]->mutable_data());
   this->device_->copy_from_cpu(
-      prefetch_label_->count(), prefetch_label_->const_data(),
+      prefetch_label_->count(), prefetch_label_->cpu_data(),
       (*top)[1]->mutable_data());
   // Start a new prefetch thread
   CreatePrefetchThread();
