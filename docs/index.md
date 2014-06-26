@@ -55,9 +55,9 @@ Please kindly cite Caffe in your publications if it helps your research:
        Howpublished = {\url{http://caffe.berkeleyvision.org/}
     }
 
-### Publications
+### Related Publications
 
-For publications featuring Caffe, refer to our [list of publications](/publications.html) (please do add your own!) and [Google Scholar](http://scholar.google.com/scholar?oi=bibs&hl=en&cites=17333247995453974016).
+For publications featuring Caffe, refer to this [open list of publications](/publications.html) (please do add your own!) and [Google Scholar](http://scholar.google.com/scholar?oi=bibs&hl=en&cites=17333247995453974016).
 
 ### Acknowledgements
 
