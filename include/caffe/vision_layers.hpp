@@ -231,7 +231,7 @@ template <typename Dtype>
 class ConvolutionLayer : public Layer<Dtype> {
  public:
   explicit ConvolutionLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) { fft_initialiazed_ = false; }
+      : Layer<Dtype>(param) { fft_on_ = false; fft_initialized_ = false; }
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual  ~ConvolutionLayer<Dtype>();
@@ -241,6 +241,8 @@ class ConvolutionLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual void FFT_on() ;
+  virtual void FFT_off();
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -287,7 +289,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   virtual void fft_doFFT_weights();
 
   bool fft_on_;
-  bool fft_initialiazed_;
+  bool fft_initialized_;
   int fft_height_;
   int fft_width_;
   int fft_map_real_size_;
