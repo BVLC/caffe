@@ -55,6 +55,10 @@ Please kindly cite Caffe in your publications if it helps your research:
        Howpublished = {\url{http://caffe.berkeleyvision.org/}
     }
 
+### Publications
+
+For publications featuring Caffe, refer to our [list of publications](/publications.html) (please do add your own!) and [Google Scholar](http://scholar.google.com/scholar?oi=bibs&hl=en&cites=17333247995453974016).
+
 ### Acknowledgements
 
 Yangqing would like to thank the NVIDIA Academic program for providing K20 GPUs, and [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for various discussions along the journey.
