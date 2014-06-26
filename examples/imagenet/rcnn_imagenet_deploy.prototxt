@@ -1,4 +1,4 @@
-name: "CaffeNet"
+name: "R-CNN-ilsvrc13"
 input: "data"
 input_dim: 10
 input_dim: 3
@@ -195,18 +195,13 @@ layers {
     dropout_ratio: 0.5
   }
 }
+# R-CNN classification layer made from R-CNN ILSVRC13 SVMs.
 layers {
-  name: "fc8"
+  name: "fc-rcnn"
   type: INNER_PRODUCT
   bottom: "fc7"
-  top: "fc8"
+  top: "fc-rcnn"
   inner_product_param {
-    num_output: 1000
+    num_output: 200
   }
-}
-layers {
-  name: "prob"
-  type: SOFTMAX
-  bottom: "fc8"
-  top: "prob"
 }
