@@ -1,7 +1,7 @@
 ---
 layout: default
 ---
-# Publications
+# Related Publications
 
 Caffe powers on-going research projects, large-scale industrial applications, and startup prototypes in vision, speech, and multimedia. Here we highlight publications involving Caffe.
 
