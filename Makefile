@@ -154,6 +154,7 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
+	CXXFLAGS += -mavx -m64 
 endif
 
 # OS X:
@@ -171,7 +172,7 @@ DEBUG ?= 0
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS := -DDEBUG -g -O0
 else
-	COMMON_FLAGS := -DNDEBUG -O2
+	COMMON_FLAGS := -DNDEBUG -g -O2
 endif
 
 # BLAS configuration (default = ATLAS)
