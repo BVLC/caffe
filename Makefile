@@ -134,7 +134,7 @@ LIBRARIES := cudart cublas curand \
 	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
-WARNINGS := -Wall -Werror -Wno-sign-compare
+WARNINGS := -Wall -Wno-sign-compare
 
 ##############################
 # Set build directories
