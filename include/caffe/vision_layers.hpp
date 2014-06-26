@@ -405,46 +405,6 @@ class SoftmaxLayer : public Layer<Dtype> {
   Blob<Dtype> scale_;
 };
 
-/* SoftmaxWithLossLayer
-  Implements softmax and computes the loss.
-
-  It is preferred over separate softmax + multinomiallogisticloss
-  layers due to more numerically stable gradients.
-
-  In test, this layer could be replaced by simple softmax layer.
-*/
-template <typename Dtype>
-class SoftmaxWithLossLayer : public Layer<Dtype> {
- public:
-  explicit SoftmaxWithLossLayer(const LayerParameter& param)
-      : Layer<Dtype>(param), softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_SOFTMAX_LOSS;
-  }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 0; }
-
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-     const bool propagate_down, vector<Blob<Dtype>*>* bottom);
-
-  shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
-  // prob stores the output probability of the layer.
-  Blob<Dtype> prob_;
-  // Vector holders to call the underlying softmax layer forward and backward.
-  vector<Blob<Dtype>*> softmax_bottom_vec_;
-  vector<Blob<Dtype>*> softmax_top_vec_;
-};
-
 /* SplitLayer
 */
 template <typename Dtype>

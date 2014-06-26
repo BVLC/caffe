@@ -20,6 +20,10 @@ void LossLayer<Dtype>::SetUp(
   Layer<Dtype>::SetUp(bottom, top);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number.";
+  if (top->size() == 1) {
+  // Layers should copy the loss in the top blob
+    (*top)[0]->Reshape(1, 1, 1, 1);
+  }
   FurtherSetUp(bottom, top);
 }
 
