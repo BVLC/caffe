@@ -144,7 +144,7 @@ class Net {
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
   vector<int> param_owners_;
-  vector<pair<int, int> > param_net_indices_;
+  vector<pair<int, int> > layer_param_indices_;
   map<string, int> param_names_index_;
   // blob indices for the input and the output of the net
   vector<int> net_input_blob_indices_;
