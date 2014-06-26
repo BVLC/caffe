@@ -25,9 +25,9 @@ template <typename Dtype>
 class LRNLayerTest : public ::testing::Test {
  protected:
   LRNLayerTest()
-      : blob_bottom_(new Blob<Dtype>()),
-        blob_top_(new Blob<Dtype>()),
-        epsilon_(Dtype(1e-5)) {}
+      : epsilon_(Dtype(1e-5)),
+        blob_bottom_(new Blob<Dtype>()),
+        blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 7, 3, 3);
@@ -55,7 +55,6 @@ void LRNLayerTest<Dtype>::ReferenceLRNForward(
     Blob<Dtype>* blob_top) {
   blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
       blob_bottom.height(), blob_bottom.width());
-  const Dtype* bottom_data = blob_bottom.cpu_data();
   Dtype* top_data = blob_top->mutable_cpu_data();
   LRNParameter lrn_param = layer_param.lrn_param();
   Dtype alpha = lrn_param.alpha();

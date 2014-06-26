@@ -134,7 +134,7 @@ LIBRARIES := cudart cublas curand \
 	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
-WARNINGS := -Wall
+WARNINGS := -Wall -Wno-sign-compare
 
 ##############################
 # Set build directories
@@ -168,6 +168,11 @@ endif
 
 ifeq ($(LINUX), 1)
 	CXX := /usr/bin/g++
+	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
+	# older versions of gcc are too dumb to build boost with -Wuninitalized
+	ifeq ($(shell echo $(GCCVERSION) \< 4.6 | bc), 1)
+		WARNINGS += -Wno-uninitialized
+	endif
 endif
 
 # OS X:
@@ -175,8 +180,11 @@ endif
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
+	# clang throws this warning for cuda headers
+	WARNINGS += -Wno-unneeded-internal-declaration
 	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
 		CXXFLAGS += -stdlib=libstdc++
+		LINKFLAGS += -stdlib=libstdc++
 	endif
 endif
 
@@ -218,8 +226,11 @@ LIBRARY_DIRS += $(BLAS_LIB)
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS)
+CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+# mex may invoke an older gcc that is too liberal with -Wuninitalized
+MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
+LINKFLAGS += -fPIC $(COMMON_FLAGS) $(WARNINGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
@@ -269,7 +280,7 @@ py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 
 $(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC)
 	$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
-		$(STATIC_NAME) $(CXXFLAGS) $(PYTHON_LDFLAGS)
+		$(STATIC_NAME) $(LINKFLAGS) $(PYTHON_LDFLAGS)
 	@ echo
 
 mat$(PROJECT): mat
@@ -283,7 +294,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 		exit 1; \
 	fi
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
-			CXXFLAGS="\$$CXXFLAGS $(CXXFLAGS) $(WARNINGS)" \
+			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
 			CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -o $@
 	@ echo
 
@@ -306,7 +317,7 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
 $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
-	$(CXX) -shared -o $@ $(OBJS) $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
 $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
@@ -321,21 +332,21 @@ $(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
-		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+		-o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
 $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
-		-o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+		-o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
 $(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
-	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(STATIC_NAME) -o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
 $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
-	$(CXX) $< $(STATIC_NAME) -o $@ $(CXXFLAGS) $(LDFLAGS) $(WARNINGS)
+	$(CXX) $< $(STATIC_NAME) -o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
 $(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \

@@ -189,7 +189,6 @@ TYPED_TEST(NeuronLayerTest, TestDropoutCPUTestPhase) {
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  float scale = 1. / (1. - layer_param.dropout_param().dropout_ratio());
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     if (top_data[i] != 0) {
       EXPECT_EQ(top_data[i], bottom_data[i]);
@@ -244,7 +243,6 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGPUTestPhase) {
   // Now, check values
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
-  float scale = 1. / (1. - layer_param.dropout_param().dropout_ratio());
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     if (top_data[i] != 0) {
       EXPECT_EQ(top_data[i], bottom_data[i]);

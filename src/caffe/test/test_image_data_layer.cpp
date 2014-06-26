@@ -27,10 +27,10 @@ template <typename Dtype>
 class ImageDataLayerTest : public ::testing::Test {
  protected:
   ImageDataLayerTest()
-      : blob_top_data_(new Blob<Dtype>()),
-        blob_top_label_(new Blob<Dtype>()),
+      : seed_(1701),
         filename_(new string(tmpnam(NULL))),
-        seed_(1701) {}
+        blob_top_data_(new Blob<Dtype>()),
+        blob_top_label_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
