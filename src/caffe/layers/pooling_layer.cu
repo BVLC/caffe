@@ -322,8 +322,8 @@ __global__ void StoPoolBackward(const int nthreads,
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  if (!propagate_down) {
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  if (!propagate_down[0]) {
     return;
   }
   const Dtype* top_diff = top[0]->gpu_diff();

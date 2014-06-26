@@ -67,7 +67,7 @@ Dtype HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void HDF5OutputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   return;
 }
 

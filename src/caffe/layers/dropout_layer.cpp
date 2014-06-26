@@ -47,10 +47,10 @@ Dtype DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+    const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   CHECK(Caffe::phase() == Caffe::TRAIN);
-  if (propagate_down) {
+  if (propagate_down[0]) {
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const unsigned int* mask = rand_vec_->cpu_data();

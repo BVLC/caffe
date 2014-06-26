@@ -46,7 +46,7 @@ class Layer {
   inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   inline void Backward(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
   // Returns the vector of blobs.
@@ -84,6 +84,14 @@ class Layer {
   virtual inline int MinTopBlobs() const { return -1; }
   virtual inline int MaxTopBlobs() const { return -1; }
 
+  // Declare for each bottom blob whether to allow force_backward -- that is,
+  // if AllowForceBackward(i) == false, we will ignore the force_backward
+  // setting and backpropagate to blob i only if it needs gradient information
+  // (as is done when force_backward == false).
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return true;
+  }
+
  protected:
   // The protobuf that stores the layer parameters
   LayerParameter layer_param_;
@@ -104,10 +112,10 @@ class Layer {
   // Backward functions: compute the gradients for any parameters and
   // for the bottom blobs if propagate_down is true.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) = 0;
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) {
     // LOG(WARNING) << "Using CPU code as backup.";
     Backward_cpu(top, propagate_down, bottom);
@@ -172,7 +180,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+    const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   switch (Caffe::mode()) {
   case Caffe::CPU:
