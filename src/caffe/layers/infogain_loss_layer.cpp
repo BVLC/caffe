@@ -48,6 +48,9 @@ Dtype InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       loss -= infogain_mat[label * dim + j] * log(prob);
     }
   }
+  if (top->size() == 1) {
+    (*top)[0]->mutable_cpu_data()[0] = loss / num;
+  }
   return loss / num;
 }
 

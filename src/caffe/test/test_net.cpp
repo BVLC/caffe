@@ -64,6 +64,7 @@ class NetTest : public ::testing::Test {
         "  type: SOFTMAX_LOSS "
         "  bottom: 'innerproduct' "
         "  bottom: 'label' "
+        "  top: 'top_loss' "
         "} ";
     NetParameter param;
     CHECK(google::protobuf::TextFormat::ParseFromString(proto, &param));
@@ -81,6 +82,7 @@ TYPED_TEST(NetTest, TestHasBlob) {
   EXPECT_TRUE(this->net_->has_blob("label"));
   EXPECT_TRUE(this->net_->has_blob("innerproduct"));
   EXPECT_FALSE(this->net_->has_blob("loss"));
+  EXPECT_TRUE(this->net_->has_blob("top_loss"));
 }
 
 TYPED_TEST(NetTest, TestGetBlob) {
@@ -88,6 +90,7 @@ TYPED_TEST(NetTest, TestGetBlob) {
   EXPECT_EQ(this->net_->blob_by_name("label"), this->net_->blobs()[1]);
   EXPECT_EQ(this->net_->blob_by_name("innerproduct"), this->net_->blobs()[2]);
   EXPECT_FALSE(this->net_->blob_by_name("loss"));
+  EXPECT_EQ(this->net_->blob_by_name("top_loss"), this->net_->blobs()[3]);
 }
 
 TYPED_TEST(NetTest, TestHasLayer) {
