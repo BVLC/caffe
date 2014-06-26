@@ -11,10 +11,12 @@
 #include "caffe/net.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/insert_splits.hpp"
+#include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-using std::pair;
+using std::make_pair;
 using std::map;
+using std::pair;
 using std::set;
 
 namespace caffe {
@@ -86,8 +88,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
     const int blobs_lr_size = layers_[layer_id]->layer_param().blobs_lr_size();
-    CHECK(blobs_lr_size == layers_[layer_id]->blobs().size() ||
-          blobs_lr_size == 0) << "Incorrect blobs lr size: should be either 0 "
+    const int num_param_blobs = layers_[layer_id]->blobs().size();
+    CHECK(blobs_lr_size == num_param_blobs || blobs_lr_size == 0)
+        << "Incorrect blobs lr size: should be either 0 "
         << "or the same as the number of the layer's parameter blobs.";
     if (blobs_lr_size) {
       // Check if this layer needs backward operation itself
@@ -99,6 +102,17 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       // catch: if a layer param does not specify blobs_lr, we should assume the
       // learning rate to be 1. Thus we will need to perform backward.
       need_backward = true;
+    }
+    const int param_size = layer_param.param_size();
+    CHECK(param_size == num_param_blobs || param_size == 0)
+        << "Incorrect param size: should be either 0 or the same as "
+           "the number of the layer's parameter blobs: " << num_param_blobs;
+    const int blob_share_mode_size = layer_param.blob_share_mode_size();
+    CHECK(blob_share_mode_size == num_param_blobs || blob_share_mode_size == 0)
+        << "Incorrect blob_share_mode size: should be either 0 or the same as "
+           "the number of the layer's parameter blobs: " << num_param_blobs;
+    for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
+      AppendParam(param, layer_id, param_id);
     }
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
@@ -218,13 +232,68 @@ int Net<Dtype>::AppendBottom(const NetParameter& param,
 }
 
 template <typename Dtype>
+void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
+                             const int param_id) {
+  const LayerParameter& layer_param = layers_[layer_id]->layer_param();
+  const int param_size = layer_param.param_size();
+  string param_name;
+  if (param_size) {
+    param_name = layer_param.param(param_id);
+  }
+  const int net_param_id = params_.size();
+  params_.push_back(layers_[layer_id]->blobs()[param_id]);
+  layer_param_indices_.push_back(make_pair(layer_id, param_id));
+  if (!param_size || !param_name.size() || (param_name.size() &&
+      param_names_index_.find(param_name) == param_names_index_.end())) {
+    // This layer "owns" this parameter blob -- it is either anonymous
+    // (i.e., not given a param_name) or explicitly given a name that we
+    // haven't already seen.
+    param_owners_.push_back(-1);
+    if (param_size) {
+      param_names_index_[param_name] = net_param_id;
+    }
+  } else {
+    // Named param blob with name we've seen before: share params
+    const int owner_net_param_id = param_names_index_[param_name];
+    param_owners_.push_back(owner_net_param_id);
+    const pair<int, int>& owner_index =
+        layer_param_indices_[owner_net_param_id];
+    const int owner_layer_id = owner_index.first;
+    const int owner_param_id = owner_index.second;
+    LOG(INFO) << "Sharing parameters '" << param_name << "' owned by "
+              << "layer '" << layer_names_[owner_layer_id] << "', param "
+              << "index " << owner_param_id;
+    Blob<Dtype>* this_blob = layers_[layer_id]->blobs()[param_id].get();
+    Blob<Dtype>* owner_blob =
+        layers_[owner_layer_id]->blobs()[owner_param_id].get();
+    const int blob_share_mode_size = layer_param.blob_share_mode_size();
+    if (blob_share_mode_size > param_id &&
+        (layer_param.blob_share_mode(param_id) ==
+         LayerParameter_DimCheckMode_PERMISSIVE)) {
+      // Permissive dimension checking -- only check counts are the same.
+      CHECK_EQ(this_blob->count(), owner_blob->count())
+          << "Shared parameter blobs must have the same count.";
+    } else {
+      // Strict dimension checking -- all dims must be the same.
+      CHECK_EQ(this_blob->num(), owner_blob->num())
+          << "Shared parameter blobs must have the same num.";
+      CHECK_EQ(this_blob->channels(), owner_blob->channels())
+          << "Shared parameter blobs must have the same channels.";
+      CHECK_EQ(this_blob->height(), owner_blob->height())
+          << "Shared parameter blobs must have the same height.";
+      CHECK_EQ(this_blob->width(), owner_blob->width())
+          << "Shared parameter blobs must have the same width.";
+    }
+    layers_[layer_id]->blobs()[param_id]->ShareData(
+        *layers_[owner_layer_id]->blobs()[owner_param_id]);
+  }
+}
+
+template <typename Dtype>
 void Net<Dtype>::GetLearningRateAndWeightDecay() {
   LOG(INFO) << "Collecting Learning Rate and Weight Decay.";
   for (int i = 0; i < layers_.size(); ++i) {
     vector<shared_ptr<Blob<Dtype> > >& layer_blobs = layers_[i]->blobs();
-    for (int j = 0; j < layer_blobs.size(); ++j) {
-      params_.push_back(layer_blobs[j]);
-    }
     // push the learning rate mutlipliers
     if (layers_[i]->layer_param().blobs_lr_size()) {
       CHECK_EQ(layers_[i]->layer_param().blobs_lr_size(), layer_blobs.size());
@@ -403,8 +472,36 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
 
 template <typename Dtype>
 void Net<Dtype>::Update() {
+  // First, accumulate the diffs of any shared parameters into their owner's
+  // diff. (Assumes that the learning rate, weight decay, etc. have already been
+  // accounted for in the current diff.)
   for (int i = 0; i < params_.size(); ++i) {
-    params_[i]->Update();
+    if (param_owners_[i] < 0) {
+      continue;
+    }
+    const int count = params_[i]->count();
+    const Dtype* this_diff;
+    Dtype* owner_diff;
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      this_diff = params_[i]->cpu_diff();
+      owner_diff = params_[param_owners_[i]]->mutable_cpu_diff();
+      caffe_add(count, this_diff, owner_diff, owner_diff);
+      break;
+    case Caffe::GPU:
+      this_diff = params_[i]->gpu_diff();
+      owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
+      caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    }
+  }
+  // Now, update the owned parameters.
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) {
+      params_[i]->Update();
+    }
   }
 }
 

@@ -170,6 +170,18 @@ message LayerParameter {
 
   // The blobs containing the numeric parameters of the layer
   repeated BlobProto blobs = 6;
+  // The names of the parameter blobs -- useful for sharing parameters among
+  // layers (but never required).
+  repeated string param = 1001;
+  // Whether to require shared weights to have the same shape, or just the same
+  // count -- defaults to STRICT if unspecified.
+  repeated DimCheckMode blob_share_mode = 1002;
+  enum DimCheckMode {
+    // STRICT (default) requires that num, channels, height, width each match.
+    STRICT = 0;
+    // PERMISSIVE requires only the count (num*channels*height*width) to match.
+    PERMISSIVE = 1;
+  }
   // The ratio that is multiplied on the global learning rate. If you want to
   // set the learning ratio for one blob, you need to set it for all blobs.
   repeated float blobs_lr = 7;
@@ -307,9 +319,9 @@ message HDF5OutputParameter {
 }
 
 message HingeLossParameter {
-  enum Norm {    
+  enum Norm {
     L1 = 1;
-    L2 = 2;    
+    L2 = 2;
   }
   // Specify the Norm to use L1 or L2
   optional Norm norm = 1 [default = L1];
