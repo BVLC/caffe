@@ -116,8 +116,11 @@ TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
 # Put the test binaries in build/test for convenience.
 TEST_BIN_DIR := $(BUILD_DIR)/test
-TEST_BINS := $(addsuffix .testbin,$(addprefix $(TEST_BIN_DIR)/, \
-		$(foreach obj,$(TEST_OBJS),$(basename $(notdir $(obj))))))
+TEST_CU_BINS := $(addsuffix .testbin,$(addprefix $(TEST_BIN_DIR)/, \
+		$(foreach obj,$(TEST_CU_OBJS),$(basename $(notdir $(obj))))))
+TEST_CXX_BINS := $(addsuffix .testbin,$(addprefix $(TEST_BIN_DIR)/, \
+		$(foreach obj,$(TEST_CXX_OBJS),$(basename $(notdir $(obj))))))
+TEST_BINS := $(TEST_CXX_BINS) $(TEST_CU_BINS)
 TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 
 ##############################
@@ -343,7 +346,13 @@ $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
-$(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.*o $(GTEST_OBJ) $(STATIC_NAME) \
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.cuo $(GTEST_OBJ) $(STATIC_NAME) \
+		| $(TEST_BIN_DIR)
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
+		-o $@ $(LINKFLAGS) $(LDFLAGS)
+	@ echo
+
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_NAME) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
