@@ -251,6 +251,8 @@ class AccuracyLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
     NOT_IMPLEMENTED;
   }
+
+  int top_k_;
 };
 
 }  // namespace caffe
