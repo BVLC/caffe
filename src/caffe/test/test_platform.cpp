@@ -47,6 +47,8 @@ TEST_F(PlatformTest, TestInitialization) {
          CAFFE_TEST_CUDA_PROP.multiProcessorCount);
   printf("Kernel execution timeout:      %s\n",
          (CAFFE_TEST_CUDA_PROP.kernelExecTimeoutEnabled ? "Yes" : "No"));
+  printf("Unified virtual addressing:    %s\n",
+         (CAFFE_TEST_CUDA_PROP.unifiedAddressing ? "Yes" : "No"));
   EXPECT_TRUE(true);
 }
 
