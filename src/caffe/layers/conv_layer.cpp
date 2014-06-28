@@ -126,11 +126,11 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  memset(weight_diff, 0, sizeof(Dtype) * this->blobs_[0]->count());
+  caffe_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
   Dtype* bias_diff = NULL;
   if (bias_term_) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();
-    memset(bias_diff, 0, sizeof(Dtype) * this->blobs_[1]->count());
+    caffe_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
   }
   const int weight_offset = M_ * K_;
   const int col_offset = K_ * N_;

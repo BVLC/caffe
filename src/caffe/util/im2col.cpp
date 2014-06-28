@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "caffe/util/im2col.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -45,7 +46,7 @@ template <typename Dtype>
 void col2im_cpu(const Dtype* data_col, const int channels,
     const int height, const int width, const int ksize, const int pad,
     const int stride, Dtype* data_im) {
-  memset(data_im, 0, sizeof(Dtype) * height * width * channels);
+  caffe_set(height * width * channels, Dtype(0), data_im);
   int height_col = (height + 2 * pad - ksize) / stride + 1;
   int width_col = (width + 2 * pad - ksize) / stride + 1;
   int channels_col = channels * ksize * ksize;

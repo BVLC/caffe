@@ -59,7 +59,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
-  memset(top_data, 0, sizeof(Dtype)*layer->prefetch_data_->count());
+  caffe_set(layer->prefetch_data_->count(), Dtype(0), top_data);
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);

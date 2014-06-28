@@ -123,7 +123,7 @@ Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
   }
   Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);
   Dtype* padded_square_data = padded_square.mutable_cpu_data();
-  memset(padded_square_data, 0, sizeof(Dtype) * padded_square.count());
+  caffe_set(padded_square.count(), Dtype(0), padded_square_data);
   Dtype alpha_over_size = alpha_ / size_;
   // go through the images
   for (int n = 0; n < num_; ++n) {
@@ -201,7 +201,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   Dtype* accum_ratio_data = accum_ratio.mutable_cpu_data();
   // We hack a little bit by using the diff() to store an additional result
   Dtype* accum_ratio_times_bottom = accum_ratio.mutable_cpu_diff();
-  memset(padded_ratio_data, 0, sizeof(Dtype) * padded_ratio.count());
+  caffe_set(padded_ratio.count(), Dtype(0), padded_ratio_data);
   Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
 
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
@@ -220,7 +220,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
         scale_data + block_offset,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
     // Now, compute the accumulated ratios and the bottom diff
-    memset(accum_ratio_data, 0, sizeof(Dtype) * accum_ratio.count());
+    caffe_set(accum_ratio.count(), Dtype(0), accum_ratio_data);
     for (int c = 0; c < size_ - 1; ++c) {
       caffe_axpy<Dtype>(height_ * width_, 1.,
           padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
