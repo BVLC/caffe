@@ -114,15 +114,15 @@ Dtype LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  Dtype* scale_data = scale_.mutable_cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
+  Dtype* scale_data = scale_.mutable_data();
   // start with the constant value
   for (int i = 0; i < scale_.count(); ++i) {
     scale_data[i] = 1.;
   }
   Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);
-  Dtype* padded_square_data = padded_square.mutable_cpu_data();
+  Dtype* padded_square_data = padded_square.mutable_data();
   memset(padded_square_data, 0, sizeof(Dtype) * padded_square.count());
   Dtype alpha_over_size = alpha_ / size_;
   // go through the images
@@ -190,17 +190,17 @@ template <typename Dtype>
 void LRNLayer<Dtype>::CrossChannelBackward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  const Dtype* top_data = top[0]->cpu_data();
-  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
-  const Dtype* scale_data = scale_.cpu_data();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  const Dtype* top_diff = top[0]->const_diff();
+  const Dtype* top_data = top[0]->const_data();
+  const Dtype* bottom_data = (*bottom)[0]->const_data();
+  const Dtype* scale_data = scale_.const_data();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
   Blob<Dtype> padded_ratio(1, channels_ + size_ - 1, height_, width_);
   Blob<Dtype> accum_ratio(1, 1, height_, width_);
-  Dtype* padded_ratio_data = padded_ratio.mutable_cpu_data();
-  Dtype* accum_ratio_data = accum_ratio.mutable_cpu_data();
+  Dtype* padded_ratio_data = padded_ratio.mutable_data();
+  Dtype* accum_ratio_data = accum_ratio.mutable_data();
   // We hack a little bit by using the diff() to store an additional result
-  Dtype* accum_ratio_times_bottom = accum_ratio.mutable_cpu_diff();
+  Dtype* accum_ratio_times_bottom = accum_ratio.mutable_diff();
   memset(padded_ratio_data, 0, sizeof(Dtype) * padded_ratio.count());
   Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
 

@@ -153,7 +153,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     if (i == 0) {
       for (int j = 0; j < result.size(); ++j) {
-        const Dtype* result_vec = result[j]->cpu_data();
+        const Dtype* result_vec = result[j]->const_data();
         for (int k = 0; k < result[j]->count(); ++k) {
           test_score.push_back(result_vec[k]);
         }
@@ -161,7 +161,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
     } else {
       int idx = 0;
       for (int j = 0; j < result.size(); ++j) {
-        const Dtype* result_vec = result[j]->cpu_data();
+        const Dtype* result_vec = result[j]->const_data();
         for (int k = 0; k < result[j]->count(); ++k) {
           test_score[idx++] += result_vec[k];
         }
@@ -272,51 +272,25 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   }
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
-      // Compute the value to history, and then copy them to the blob's diff.
-      Dtype local_rate = rate * net_params_lr[param_id];
-      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
-      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-          net_params[param_id]->cpu_diff(), momentum,
-          history_[param_id]->mutable_cpu_data());
-      if (local_decay) {
-        // add weight decay
-        caffe_axpy(net_params[param_id]->count(),
-            local_decay * local_rate,
-            net_params[param_id]->cpu_data(),
-            history_[param_id]->mutable_cpu_data());
-      }
-      // copy
-      caffe_copy(net_params[param_id]->count(),
-          history_[param_id]->cpu_data(),
-          net_params[param_id]->mutable_cpu_diff());
+  for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+    // Compute the value to history, and then copy them to the blob's diff.
+    Dtype local_rate = rate * net_params_lr[param_id];
+    Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+    DeviceFactory<Dtype>::GetDevice()->axpby(
+        net_params[param_id]->count(), local_rate,
+        net_params[param_id]->const_diff(), momentum,
+        history_[param_id]->mutable_data());
+    if (local_decay) {
+      // add weight decay
+      DeviceFactory<Dtype>::GetDevice()->axpy(net_params[param_id]->count(),
+          local_decay * local_rate,
+          net_params[param_id]->const_data(),
+          history_[param_id]->mutable_data());
     }
-    break;
-  case Caffe::GPU:
-    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
-      // Compute the value to history, and then copy them to the blob's diff.
-      Dtype local_rate = rate * net_params_lr[param_id];
-      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
-      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-          net_params[param_id]->gpu_diff(), momentum,
-          history_[param_id]->mutable_gpu_data());
-      if (local_decay) {
-        // add weight decay
-        caffe_gpu_axpy(net_params[param_id]->count(),
-            local_decay * local_rate,
-            net_params[param_id]->gpu_data(),
-            history_[param_id]->mutable_gpu_data());
-      }
-      // copy
-      caffe_gpu_copy(net_params[param_id]->count(),
-          history_[param_id]->gpu_data(),
-          net_params[param_id]->mutable_gpu_diff());
-    }
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    // copy
+    DeviceFactory<Dtype>::GetDevice()->copy(net_params[param_id]->count(),
+        history_[param_id]->const_data(),
+        net_params[param_id]->mutable_diff());
   }
 }
 

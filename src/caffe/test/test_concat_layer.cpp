@@ -84,8 +84,8 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
 
 TYPED_TEST(ConcatLayerTest, TestCPUNum) {
   LayerParameter layer_param;
-  ConcatLayer<TypeParam> layer(layer_param);
   Caffe::set_mode(Caffe::CPU);
+  ConcatLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_0, &(this->blob_top_vec_));
   for (int n = 0; n < this->blob_top_->num(); ++n) {
@@ -93,7 +93,8 @@ TYPED_TEST(ConcatLayerTest, TestCPUNum) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
         for (int w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n, c, h, w),
-            this->blob_bottom_vec_0[0]->data_at(n, c, h, w));
+            this->blob_bottom_vec_0[0]->data_at(n, c, h, w)) <<
+                "n " << n << ", c " << c << ", h " << h << ", w " << w;
         }
       }
     }
@@ -101,7 +102,8 @@ TYPED_TEST(ConcatLayerTest, TestCPUNum) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
         for (int w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n, c+3, h, w),
-            this->blob_bottom_vec_0[1]->data_at(n, c, h, w));
+            this->blob_bottom_vec_0[1]->data_at(n, c, h, w)) <<
+                "n " << n << ", c " << c << ", h " << h << ", w " << w;
         }
       }
     }

@@ -9,6 +9,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/device.hpp"
 
 using std::string;
 using std::vector;
@@ -43,9 +44,9 @@ class Layer {
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
   // functions.
-  inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  inline void Backward(const vector<Blob<Dtype>*>& top,
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
@@ -101,7 +102,7 @@ class Layer {
   // Forward functions: compute the layer output
   // (and loss layers return the loss; other layers return the dummy value 0.)
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) = 0;
+      vector<Blob<Dtype>*>* top) { return static_cast<Dtype>(0); }
   // If no gpu code is provided, we will simply use cpu code.
   virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -113,7 +114,7 @@ class Layer {
   // for the bottom blobs if propagate_down is true.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
-      vector<Blob<Dtype>*>* bottom) = 0;
+      vector<Blob<Dtype>*>* bottom) { return; }
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) {
@@ -165,7 +166,7 @@ class Layer {
 // gpu specific implementations instead, and should not change these
 // functions.
 template <typename Dtype>
-inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
+Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -179,7 +180,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
+void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   switch (Caffe::mode()) {

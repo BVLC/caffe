@@ -482,20 +482,10 @@ void Net<Dtype>::Update() {
     const int count = params_[i]->count();
     const Dtype* this_diff;
     Dtype* owner_diff;
-    switch (Caffe::mode()) {
-    case Caffe::CPU:
-      this_diff = params_[i]->cpu_diff();
-      owner_diff = params_[param_owners_[i]]->mutable_cpu_diff();
-      caffe_add(count, this_diff, owner_diff, owner_diff);
-      break;
-    case Caffe::GPU:
-      this_diff = params_[i]->gpu_diff();
-      owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
-      caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
-      break;
-    default:
-      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-    }
+    this_diff = params_[i]->const_diff();
+    owner_diff = params_[param_owners_[i]]->mutable_diff();
+    DeviceFactory<Dtype>::GetDevice()->add(count, this_diff, owner_diff,
+                                           owner_diff);
   }
   // Now, update the owned parameters.
   for (int i = 0; i < params_.size(); ++i) {

@@ -25,7 +25,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::FurtherSetUp(
 }
 
 template <typename Dtype>
-Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
+Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   // The forward pass computes the sigmoid outputs.
   sigmoid_bottom_vec_[0] = bottom[0];
@@ -34,21 +34,21 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   const int count = bottom[0]->count();
   const int num = bottom[0]->num();
   // Stable version of loss computation from input data
-  const Dtype* input_data = bottom[0]->cpu_data();
-  const Dtype* target = bottom[1]->cpu_data();
+  const Dtype* input_data = bottom[0]->const_data();
+  const Dtype* target = bottom[1]->const_data();
   Dtype loss = 0;
   for (int i = 0; i < count; ++i) {
     loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
         log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
   }
   if (top->size() == 1) {
-    (*top)[0]->mutable_cpu_data()[0] = loss / num;
+    (*top)[0]->mutable_data()[0] = loss / num;
   }
   return loss / num;
 }
 
 template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
+void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
@@ -59,12 +59,14 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     // First, compute the diff
     const int count = (*bottom)[0]->count();
     const int num = (*bottom)[0]->num();
-    const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
-    const Dtype* target = (*bottom)[1]->cpu_data();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-    caffe_sub(count, sigmoid_output_data, target, bottom_diff);
+    const Dtype* sigmoid_output_data = sigmoid_output_->const_data();
+    const Dtype* target = (*bottom)[1]->const_data();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    DeviceFactory<Dtype>::GetDevice()->sub(
+        count, sigmoid_output_data, target, bottom_diff);
     // Scale down gradient
-    caffe_scal(count, Dtype(1) / num, bottom_diff);
+    DeviceFactory<Dtype>::GetDevice()->scal(count, Dtype(1) / num,
+                                            bottom_diff);
   }
 }
 

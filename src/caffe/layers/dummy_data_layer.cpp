@@ -84,7 +84,7 @@ void DummyDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype DummyDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < top->size(); ++i) {
     const int filler_id = (fillers_.size() > 1) ? i : 0;

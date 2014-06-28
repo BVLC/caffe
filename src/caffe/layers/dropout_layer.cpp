@@ -29,18 +29,20 @@ void DropoutLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 Dtype DropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  unsigned int* mask = rand_vec_->mutable_cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
+  int* mask = reinterpret_cast<int*>(rand_vec_->mutable_data());
   const int count = bottom[0]->count();
   if (Caffe::phase() == Caffe::TRAIN) {
     // Create random numbers
-    caffe_rng_bernoulli(count, 1. - threshold_, mask);
+    DeviceFactory<Dtype>::GetDevice()->rng_bernoulli(count, 1. - threshold_,
+                                                     mask);
     for (int i = 0; i < count; ++i) {
       top_data[i] = bottom_data[i] * mask[i] * scale_;
     }
   } else {
-    caffe_copy(bottom[0]->count(), bottom_data, top_data);
+    DeviceFactory<Dtype>::GetDevice()->copy(bottom[0]->count(), bottom_data,
+                                            top_data);
   }
   return Dtype(0);
 }
@@ -51,9 +53,9 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     vector<Blob<Dtype>*>* bottom) {
   CHECK(Caffe::phase() == Caffe::TRAIN);
   if (propagate_down[0]) {
-    const Dtype* top_diff = top[0]->cpu_diff();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-    const unsigned int* mask = rand_vec_->cpu_data();
+    const Dtype* top_diff = top[0]->const_diff();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    const unsigned int* mask = rand_vec_->const_data();
     const int count = (*bottom)[0]->count();
     for (int i = 0; i < count; ++i) {
       bottom_diff[i] = top_diff[i] * mask[i] * scale_;
@@ -61,8 +63,6 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-
 INSTANTIATE_CLASS(DropoutLayer);
-
 
 }  // namespace caffe

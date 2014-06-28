@@ -82,8 +82,8 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
   const int top_count = (*top)[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top->size() > 1;
@@ -95,10 +95,10 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   case PoolingParameter_PoolMethod_MAX:
     // Initialize
     if (use_top_mask) {
-      top_mask = (*top)[1]->mutable_cpu_data();
+      top_mask = (*top)[1]->mutable_data();
       caffe_set(top_count, Dtype(-1), top_mask);
     } else {
-      mask = max_idx_->mutable_cpu_data();
+      mask = max_idx_->mutable_data();
       caffe_set(top_count, -1, mask);
     }
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
@@ -188,8 +188,8 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (!propagate_down[0]) {
     return;
   }
-  const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  const Dtype* top_diff = top[0]->const_diff();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
   caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
@@ -201,9 +201,9 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
     if (use_top_mask) {
-      top_mask = top[1]->cpu_data();
+      top_mask = top[1]->const_data();
     } else {
-      mask = max_idx_->cpu_data();
+      mask = max_idx_->const_data();
     }
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {

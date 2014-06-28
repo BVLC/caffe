@@ -15,16 +15,16 @@ using std::max;
 namespace caffe {
 
 template <typename Dtype>
-Dtype HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-  const Dtype* label = bottom[1]->cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* bottom_diff = bottom[0]->mutable_diff();
+  const Dtype* label = bottom[1]->const_data();
   int num = bottom[0]->num();
   int count = bottom[0]->count();
   int dim = count / num;
 
-  caffe_copy(count, bottom_data, bottom_diff);
+  DeviceFactory<Dtype>::GetDevice()->copy(count, bottom_data, bottom_diff);
   for (int i = 0; i < num; ++i) {
     bottom_diff[i * dim + static_cast<int>(label[i])] *= -1;
   }
@@ -35,24 +35,29 @@ Dtype HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    return caffe_cpu_asum(count, bottom_diff) / num;
+    Dtype sum;
+    DeviceFactory<Dtype>::GetDevice()->asum(count, bottom_diff, &sum);
+    return sum / num;
   case HingeLossParameter_Norm_L2:
-    return caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    Dtype dot;
+    DeviceFactory<Dtype>::GetDevice()->dot(count, bottom_diff,
+                                           bottom_diff, &dot);
+    return dot / num;
   default:
     LOG(FATAL) << "Unknown Norm";
   }
 }
 
 template <typename Dtype>
-void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void HingeLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
     LOG(FATAL) << this->type_name()
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
-    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-    const Dtype* label = (*bottom)[1]->cpu_data();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+    const Dtype* label = (*bottom)[1]->const_data();
     int num = (*bottom)[0]->num();
     int count = (*bottom)[0]->count();
     int dim = count / num;
@@ -63,11 +68,13 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     switch (this->layer_param_.hinge_loss_param().norm()) {
     case HingeLossParameter_Norm_L1:
-      caffe_cpu_sign(count, bottom_diff, bottom_diff);
-      caffe_scal(count, Dtype(1. / num), bottom_diff);
+      DeviceFactory<Dtype>::GetDevice()->sign(count, bottom_diff, bottom_diff);
+      DeviceFactory<Dtype>::GetDevice()->scal(count, Dtype(1. / num),
+                                              bottom_diff);
       break;
     case HingeLossParameter_Norm_L2:
-      caffe_scal(count, Dtype(2. / num), bottom_diff);
+      DeviceFactory<Dtype>::GetDevice()->scal(count, Dtype(2. / num),
+                                              bottom_diff);
       break;
     default:
       LOG(FATAL) << "Unknown Norm";

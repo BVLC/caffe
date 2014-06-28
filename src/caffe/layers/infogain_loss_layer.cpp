@@ -32,11 +32,11 @@ void InfogainLossLayer<Dtype>::FurtherSetUp(
 
 
 template <typename Dtype>
-Dtype InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype InfogainLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  const Dtype* bottom_label = bottom[1]->cpu_data();
-  const Dtype* infogain_mat = infogain_.cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  const Dtype* bottom_label = bottom[1]->const_data();
+  const Dtype* infogain_mat = infogain_.const_data();
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
   CHECK_EQ(infogain_.height(), dim);
@@ -49,13 +49,13 @@ Dtype InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
   }
   if (top->size() == 1) {
-    (*top)[0]->mutable_cpu_data()[0] = loss / num;
+    (*top)[0]->mutable_data()[0] = loss / num;
   }
   return loss / num;
 }
 
 template <typename Dtype>
-void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void InfogainLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
@@ -63,10 +63,10 @@ void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
-    const Dtype* bottom_data = (*bottom)[0]->cpu_data();
-    const Dtype* bottom_label = (*bottom)[1]->cpu_data();
-    const Dtype* infogain_mat = infogain_.cpu_data();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+    const Dtype* bottom_data = (*bottom)[0]->const_data();
+    const Dtype* bottom_label = (*bottom)[1]->const_data();
+    const Dtype* infogain_mat = infogain_.const_data();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
     int num = (*bottom)[0]->num();
     int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
     CHECK_EQ(infogain_.height(), dim);

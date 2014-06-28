@@ -46,6 +46,13 @@ PYTHON_INCLUDE := /usr/local/include/python2.7 \
 PYTHON_LIB := /usr/local/lib
 # PYTHON_LIB := $(HOME)/anaconda/lib
 
+OPENCL_INCLUDE_DIR := /opt/AMDAPP/include/
+OPENCL_LIB_DIR := /opt/AMDAPP/lib/x86_64/
+OPENCL_LIBS := OpenCL
+CLBLAS_INCLUDE_DIR :=  /home/user/Codes/clBLAS/src/package/include
+CLBLAS_LIB_DIR := /home/user/Codes/clBLAS/src/package/lib64
+CLBLAS_LIBS := clBLAS
+
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib

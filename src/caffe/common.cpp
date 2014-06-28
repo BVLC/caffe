@@ -10,7 +10,6 @@ namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
 
-
 // curand seeding
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;

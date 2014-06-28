@@ -68,7 +68,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (bias_term_) {
     bias_multiplier_.reset(new SyncedMemory(N_ * sizeof(Dtype)));
     Dtype* bias_multiplier_data =
-        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());
+        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_data());
     for (int i = 0; i < N_; ++i) {
         bias_multiplier_data[i] = 1.;
     }
@@ -77,30 +77,33 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
 
 template <typename Dtype>
-Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
-  const Dtype* weight = this->blobs_[0]->cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
+  Dtype* col_data = col_buffer_.mutable_data();
+  const Dtype* weight = this->blobs_[0]->const_data();
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
   for (int n = 0; n < num_; ++n) {
     // First, im2col
-    im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
-                      width_, kernel_size_, pad_, stride_, col_data);
+    DeviceFactory<Dtype>::GetDevice()->im2col(
+        bottom_data + bottom[0]->offset(n), channels_, height_,
+        width_, kernel_size_, pad_, stride_, col_data);
     // Second, innerproduct with groups
     for (int g = 0; g < group_; ++g) {
-      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-        (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
-        (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
+      DeviceFactory<Dtype>::GetDevice()->gemm(
+          CblasNoTrans, CblasNoTrans, M_, N_, K_,
+          (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+          (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
     }
     // third, add bias
     if (bias_term_) {
-      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-          N_, 1, (Dtype)1., this->blobs_[1]->cpu_data(),
-          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
+      DeviceFactory<Dtype>::GetDevice()->gemm(
+          CblasNoTrans, CblasNoTrans, num_output_,
+          N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
+          reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()),
           (Dtype)1., top_data + (*top)[0]->offset(n));
     }
   }
@@ -108,25 +111,26 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  const Dtype* weight = this->blobs_[0]->cpu_data();
-  Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  Dtype* col_data = col_buffer_.mutable_cpu_data();
-  Dtype* col_diff = col_buffer_.mutable_cpu_diff();
+  const Dtype* top_diff = top[0]->const_diff();
+  const Dtype* weight = this->blobs_[0]->const_data();
+  Dtype* weight_diff = this->blobs_[0]->mutable_diff();
+  const Dtype* bottom_data = (*bottom)[0]->const_data();
+  Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
+  Dtype* col_data = col_buffer_.mutable_data();
+  Dtype* col_diff = col_buffer_.mutable_diff();
   // bias gradient if necessary
   Dtype* bias_diff = NULL;
 
   if (bias_term_) {
-    bias_diff = this->blobs_[1]->mutable_cpu_diff();
-    memset(bias_diff, 0, sizeof(Dtype) * this->blobs_[1]->count());
+    bias_diff = this->blobs_[1]->mutable_diff();
+    DeviceFactory<Dtype>::GetDevice()->set(
+        this->blobs_[1]->count(), 0, bias_diff);
     for (int n = 0; n < num_; ++n) {
-      caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
+      DeviceFactory<Dtype>::GetDevice()->gemv(CblasNoTrans, num_output_, N_,
           1., top_diff + top[0]->offset(n),
-          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), 1.,
+          reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()), 1.,
           bias_diff);
     }
   }
@@ -134,29 +138,34 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
-  memset(weight_diff, 0, sizeof(Dtype) * this->blobs_[0]->count());
+  DeviceFactory<Dtype>::GetDevice()->set(
+      this->blobs_[0]->count(), 0, weight_diff);
   for (int n = 0; n < num_; ++n) {
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
-    im2col_cpu(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
-                      width_, kernel_size_, pad_, stride_, col_data);
+    DeviceFactory<Dtype>::GetDevice()->im2col(
+        bottom_data + (*bottom)[0]->offset(n), channels_, height_,
+        width_, kernel_size_, pad_, stride_, col_data);
     // gradient w.r.t. weight. Note that we will accumulate diffs.
     for (int g = 0; g < group_; ++g) {
-      caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
-        (Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
-        col_data + col_offset * g, (Dtype)1.,
-        weight_diff + weight_offset * g);
+      DeviceFactory<Dtype>::GetDevice()->gemm(
+          CblasNoTrans, CblasTrans, M_, K_, N_,
+          (Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
+          col_data + col_offset * g, (Dtype)1.,
+          weight_diff + weight_offset * g);
     }
     // gradient w.r.t. bottom data, if necessary
     if (propagate_down[0]) {
       for (int g = 0; g < group_; ++g) {
-        caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
-          (Dtype)1., weight + weight_offset * g,
-          top_diff + top[0]->offset(n) + top_offset * g,
-          (Dtype)0., col_diff + col_offset * g);
+        DeviceFactory<Dtype>::GetDevice()->gemm(
+            CblasTrans, CblasNoTrans, K_, N_, M_,
+            (Dtype)1., weight + weight_offset * g,
+            top_diff + top[0]->offset(n) + top_offset * g,
+            (Dtype)0., col_diff + col_offset * g);
       }
       // col2im back to the data
-      col2im_cpu(col_diff, channels_, height_, width_, kernel_size_, pad_,
+      DeviceFactory<Dtype>::GetDevice()->col2im(
+          col_diff, channels_, height_, width_, kernel_size_, pad_,
           stride_, bottom_diff + (*bottom)[0]->offset(n));
     }
   }

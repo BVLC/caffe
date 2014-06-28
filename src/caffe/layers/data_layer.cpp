@@ -25,10 +25,10 @@ void* DataLayerPrefetch(void* layer_pointer) {
   CHECK(layer);
   Datum datum;
   CHECK(layer->prefetch_data_);
-  Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
+  Dtype* top_data = layer->prefetch_data_->mutable_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
   if (layer->output_labels_) {
-    top_label = layer->prefetch_label_->mutable_cpu_data();
+    top_label = layer->prefetch_label_->mutable_data();
   }
   const Dtype scale = layer->layer_param_.data_param().scale();
   const int batch_size = layer->layer_param_.data_param().batch_size();
@@ -44,7 +44,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
   const int height = layer->datum_height_;
   const int width = layer->datum_width_;
   const int size = layer->datum_size_;
-  const Dtype* mean = layer->data_mean_.cpu_data();
+  const Dtype* mean = layer->data_mean_.const_data();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     switch (layer->layer_param_.data_param().backend()) {
@@ -302,14 +302,14 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     data_mean_.Reshape(1, datum_channels_, datum_height_, datum_width_);
   }
   // Now, start the prefetch thread. Before calling prefetch, we make two
-  // cpu_data calls so that the prefetch thread does not accidentally make
+  // const_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_cpu_data();
+  prefetch_data_->mutable_data();
   if (output_labels_) {
-    prefetch_label_->mutable_cpu_data();
+    prefetch_label_->mutable_data();
   }
-  data_mean_.cpu_data();
+  data_mean_.const_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
   DLOG(INFO) << "Prefetch initialized.";
@@ -346,16 +346,18 @@ unsigned int DataLayer<Dtype>::PrefetchRand() {
 }
 
 template <typename Dtype>
-Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype DataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
-             (*top)[0]->mutable_cpu_data());
+  DeviceFactory<Dtype>::GetDevice()->copy_from_cpu(
+      prefetch_data_->count(), prefetch_data_->const_data(),
+      (*top)[0]->mutable_data());
   if (output_labels_) {
-    caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
-               (*top)[1]->mutable_cpu_data());
+    DeviceFactory<Dtype>::GetDevice()->copy_from_cpu(
+        prefetch_label_->count(), prefetch_label_->const_data(),
+        (*top)[1]->mutable_data());
   }
   // Start a new prefetch thread
   CreatePrefetchThread();

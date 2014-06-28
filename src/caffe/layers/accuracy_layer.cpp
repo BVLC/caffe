@@ -30,11 +30,11 @@ void AccuracyLayer<Dtype>::SetUp(
 }
 
 template <typename Dtype>
-Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype AccuracyLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype accuracy = 0;
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  const Dtype* bottom_label = bottom[1]->cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  const Dtype* bottom_label = bottom[1]->const_data();
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
   vector<Dtype> maxval(top_k_+1);
@@ -62,7 +62,7 @@ Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  (*top)[0]->mutable_cpu_data()[0] = accuracy / num;
+  (*top)[0]->mutable_data()[0] = accuracy / num;
 
   // Accuracy layer should not be used as a loss function.
   return Dtype(0);

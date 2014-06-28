@@ -31,33 +31,56 @@ inline void CaffeFreeHost(void* ptr) {
   free(ptr);
 }
 
-
-class SyncedMemory {
+class AbstractSyncedMemory {
  public:
-  SyncedMemory()
+  AbstractSyncedMemory()
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
         own_cpu_data_(false) {}
-  explicit SyncedMemory(size_t size)
+  explicit AbstractSyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
         own_cpu_data_(false) {}
-  ~SyncedMemory();
-  const void* cpu_data();
-  void set_cpu_data(void* data);
-  const void* gpu_data();
-  void* mutable_cpu_data();
-  void* mutable_gpu_data();
+  virtual ~AbstractSyncedMemory() {}
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
-  SyncedHead head() { return head_; }
-  size_t size() { return size_; }
+  virtual const void* cpu_data() = 0;
+  virtual void set_cpu_data(void* data) = 0;
+  virtual const void* gpu_data() = 0;
+  virtual void* mutable_cpu_data() = 0;
+  virtual void* mutable_gpu_data() = 0;
+  virtual SyncedHead head() { return head_; }
+  virtual size_t size() { return size_; }
 
- private:
-  void to_cpu();
-  void to_gpu();
+  virtual const void* const_data() { return NULL; }
+  virtual void* mutable_data() { return NULL;}
+
+ protected:
+  virtual void to_cpu() = 0;
+  virtual void to_gpu() = 0;
+
+ protected:
   void* cpu_ptr_;
   void* gpu_ptr_;
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
+};
+
+class SyncedMemory : public AbstractSyncedMemory {
+ public:
+  SyncedMemory() : AbstractSyncedMemory() {}
+  explicit SyncedMemory(size_t size) : AbstractSyncedMemory(size) {}
+  virtual ~SyncedMemory();
+  const void* cpu_data();
+  void set_cpu_data(void* data);
+  const void* gpu_data();
+  void* mutable_cpu_data();
+  void* mutable_gpu_data();
+
+  const void* const_data();
+  void* mutable_data();
+
+ protected:
+  void to_cpu();
+  void to_gpu();
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
