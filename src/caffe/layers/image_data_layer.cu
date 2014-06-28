@@ -29,10 +29,10 @@ Dtype ImageDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // Copy the data
   CUDA_CHECK(cudaMemcpy((*top)[0]->mutable_gpu_data(),
       prefetch_data_->cpu_data(), sizeof(Dtype) * prefetch_data_->count(),
-      cudaMemcpyHostToDevice));
+      cudaMemcpyDefault));
   CUDA_CHECK(cudaMemcpy((*top)[1]->mutable_gpu_data(),
       prefetch_label_->cpu_data(), sizeof(Dtype) * prefetch_label_->count(),
-      cudaMemcpyHostToDevice));
+      cudaMemcpyDefault));
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);

@@ -150,10 +150,10 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   case Caffe::GPU:
     if (copy_diff) {
       CUDA_CHECK(cudaMemcpy(diff_->mutable_gpu_data(), source.gpu_diff(),
-          sizeof(Dtype) * count_, cudaMemcpyDeviceToDevice));
+          sizeof(Dtype) * count_, cudaMemcpyDefault));
     } else {
       CUDA_CHECK(cudaMemcpy(data_->mutable_gpu_data(), source.gpu_data(),
-          sizeof(Dtype) * count_, cudaMemcpyDeviceToDevice));
+          sizeof(Dtype) * count_, cudaMemcpyDefault));
     }
     break;
   case Caffe::CPU:
