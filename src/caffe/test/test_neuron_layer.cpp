@@ -226,7 +226,6 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGPU) {
 
 
 TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
-  if (CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_phase(Caffe::TRAIN);
@@ -236,13 +235,9 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPU) {
     // exhaustive gradient check.
     checker.CheckGradient(&layer, &(this->blob_bottom_vec_),
         &(this->blob_top_vec_));
-  } else {
-    LOG(ERROR) << "Skipping test to spare my laptop.";
-  }
 }
 
 TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPUTest) {
-  if (CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_phase(Caffe::TEST);
@@ -252,9 +247,6 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradientGPUTest) {
     // exhaustive gradient check.
     checker.CheckGradient(&layer, &(this->blob_bottom_vec_),
         &(this->blob_top_vec_));
-  } else {
-    LOG(ERROR) << "Skipping test to spare my laptop.";
-  }
 }
 
 
