@@ -150,30 +150,35 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
 }
 
 template <>
+void caffe_copy<int>(const int N, const int* X, int* Y) {
+  if (X != Y) {
+    CUDA_CHECK(cudaMemcpy(Y, X, sizeof(int) * N, cudaMemcpyDefault));
+  }
+}
+
+template <>
+void caffe_copy<unsigned int>(const int N, const unsigned int* X,
+    unsigned int* Y) {
+  if (X != Y) {
+  CUDA_CHECK(cudaMemcpy(Y, X, sizeof(unsigned int) * N, cudaMemcpyDefault));
+  }
+}
+
+template <>
 void caffe_copy<float>(const int N, const float* X, float* Y) {
   if (X != Y) {
-    cblas_scopy(N, X, 1, Y, 1);
+    CUDA_CHECK(cudaMemcpy(Y, X, sizeof(float) * N, cudaMemcpyDefault));
   }
 }
 
 template <>
 void caffe_copy<double>(const int N, const double* X, double* Y) {
-  if (X != Y) {
-    cblas_dcopy(N, X, 1, Y, 1);
-  }
+  CUDA_CHECK(cudaMemcpy(Y, X, sizeof(double) * N, cudaMemcpyDefault));
 }
 
-template <>
-void caffe_gpu_copy<float>(const int N, const float* X, float* Y) {
+void caffe_copy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
-    CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
-  }
-}
-
-template <>
-void caffe_gpu_copy<double>(const int N, const double* X, double* Y) {
-  if (X != Y) {
-    CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
+    CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));
   }
 }
 
