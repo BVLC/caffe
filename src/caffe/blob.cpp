@@ -131,7 +131,7 @@ Dtype* Blob<Dtype>::mutable_data() {
     return mutable_gpu_data();
   default:
     LOG(FATAL) << "Unknown caffe mode.";
-    return static_cast<Dtype*>(0);
+    return static_cast<Dtype*>(NULL);
   }
 }
 
@@ -144,7 +144,7 @@ Dtype* Blob<Dtype>::mutable_diff() {
     return mutable_gpu_diff();
   default:
     LOG(FATAL) << "Unknown caffe mode.";
-    return static_cast<Dtype*>(0);
+    return static_cast<Dtype*>(NULL);
   }
 }
 
