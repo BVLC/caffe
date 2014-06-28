@@ -49,7 +49,7 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
       const Dtype* bottom_data = bottom[i]->const_data();
       int num_elem = bottom[i]->count();
-      this->device_->copy(num_elem, bottom_data,
+      DeviceFactory<Dtype>::GetDevice()->copy(num_elem, bottom_data,
                         top_data+(*top)[0]->offset(offset_num));
       offset_num += bottom[i]->num();
     }
@@ -60,7 +60,8 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       int num_elem =
         bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
       for (int n = 0; n < num_; ++n) {
-        this->device_->copy(num_elem, bottom_data+bottom[i]->offset(n),
+        DeviceFactory<Dtype>::GetDevice()->copy(
+            num_elem, bottom_data+bottom[i]->offset(n),
           top_data+(*top)[0]->offset(n, offset_channel));
       }
       offset_channel += bottom[i]->channels();
@@ -81,7 +82,7 @@ void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < bottom->size(); ++i) {
       Blob<Dtype>* blob = (*bottom)[i];
       Dtype* bottom_diff = blob->mutable_diff();
-      this->device_->copy(blob->count(),
+      DeviceFactory<Dtype>::GetDevice()->copy(blob->count(),
         top_diff+top[0]->offset(offset_num), bottom_diff);
       offset_num += blob->num();
     }
@@ -92,7 +93,8 @@ void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = blob->mutable_diff();
       int num_elem = blob->channels()*blob->height()*blob->width();
       for (int n = 0; n < num_; ++n) {
-        this->device_->copy(num_elem, top_diff+top[0]->offset(n, offset_channel),
+        DeviceFactory<Dtype>::GetDevice()->copy(
+            num_elem, top_diff+top[0]->offset(n, offset_channel),
           bottom_diff+blob->offset(n));
       }
       offset_channel += blob->channels();

@@ -24,7 +24,7 @@ Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   int count = bottom[0]->count();
   int dim = count / num;
 
-  this->device_->copy(count, bottom_data, bottom_diff);
+  DeviceFactory<Dtype>::GetDevice()->copy(count, bottom_data, bottom_diff);
   for (int i = 0; i < num; ++i) {
     bottom_diff[i * dim + static_cast<int>(label[i])] *= -1;
   }
@@ -35,9 +35,14 @@ Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   }
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    return caffe_cpu_asum(count, bottom_diff) / num;
+    Dtype sum;
+    DeviceFactory<Dtype>::GetDevice()->asum(count, bottom_diff, &sum);
+    return sum / num;
   case HingeLossParameter_Norm_L2:
-    return caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    Dtype dot;
+    DeviceFactory<Dtype>::GetDevice()->dot(count, bottom_diff,
+                                           bottom_diff, &dot);
+    return dot / num;
   default:
     LOG(FATAL) << "Unknown Norm";
   }
@@ -63,11 +68,13 @@ void HingeLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 
     switch (this->layer_param_.hinge_loss_param().norm()) {
     case HingeLossParameter_Norm_L1:
-      this->device_->sign(count, bottom_diff, bottom_diff);
-      this->device_->scal(count, Dtype(1. / num), bottom_diff);
+      DeviceFactory<Dtype>::GetDevice()->sign(count, bottom_diff, bottom_diff);
+      DeviceFactory<Dtype>::GetDevice()->scal(count, Dtype(1. / num),
+                                              bottom_diff);
       break;
     case HingeLossParameter_Norm_L2:
-      this->device_->scal(count, Dtype(2. / num), bottom_diff);
+      DeviceFactory<Dtype>::GetDevice()->scal(count, Dtype(2. / num),
+                                              bottom_diff);
       break;
     default:
       LOG(FATAL) << "Unknown Norm";

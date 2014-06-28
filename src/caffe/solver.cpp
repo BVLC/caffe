@@ -276,18 +276,19 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
     // Compute the value to history, and then copy them to the blob's diff.
     Dtype local_rate = rate * net_params_lr[param_id];
     Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
-    caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+    DeviceFactory<Dtype>::GetDevice()->axpby(
+        net_params[param_id]->count(), local_rate,
         net_params[param_id]->const_diff(), momentum,
         history_[param_id]->mutable_data());
     if (local_decay) {
       // add weight decay
-      caffe_axpy(net_params[param_id]->count(),
+      DeviceFactory<Dtype>::GetDevice()->axpy(net_params[param_id]->count(),
           local_decay * local_rate,
           net_params[param_id]->const_data(),
           history_[param_id]->mutable_data());
     }
     // copy
-    caffe_copy(net_params[param_id]->count(),
+    DeviceFactory<Dtype>::GetDevice()->copy(net_params[param_id]->count(),
         history_[param_id]->const_data(),
         net_params[param_id]->mutable_diff());
   }

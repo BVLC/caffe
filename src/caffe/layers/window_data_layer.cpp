@@ -444,10 +444,10 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  this->device_->copy_from_cpu(
+  DeviceFactory<Dtype>::GetDevice()->copy_from_cpu(
       prefetch_data_->count(), prefetch_data_->const_data(),
       (*top)[0]->mutable_data());
-  this->device_->copy_from_cpu(
+  DeviceFactory<Dtype>::GetDevice()->copy_from_cpu(
       prefetch_label_->count(), prefetch_label_->const_data(),
       (*top)[1]->mutable_data());
   // Start a new prefetch thread

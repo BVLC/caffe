@@ -74,7 +74,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       bottom_diff[i * dim + static_cast<int>(label[i])] -= 1;
     }
     // Scale down gradient
-    this->device_->scal(prob_.count(), Dtype(1) / num, bottom_diff);
+    DeviceFactory<Dtype>::GetDevice()->scal(prob_.count(), Dtype(1) / num,
+                                            bottom_diff);
   }
 }
 

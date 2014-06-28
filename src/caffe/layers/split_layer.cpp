@@ -44,7 +44,8 @@ void SplitLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
     for (int i = 1; i < top.size(); ++i) {
       const Dtype* top_diff = top[i]->const_diff();
-      this->device_->axpy(count_, Dtype(1.), top_diff, bottom_diff);
+      DeviceFactory<Dtype>::GetDevice()->axpy(
+          count_, Dtype(1.), top_diff, bottom_diff);
     }
   }
 }

@@ -484,7 +484,8 @@ void Net<Dtype>::Update() {
     Dtype* owner_diff;
     this_diff = params_[i]->const_diff();
     owner_diff = params_[param_owners_[i]]->mutable_diff();
-    caffe_add(count, this_diff, owner_diff, owner_diff);
+    DeviceFactory<Dtype>::GetDevice()->add(count, this_diff, owner_diff,
+                                           owner_diff);
   }
   // Now, update the owned parameters.
   for (int i = 0; i < params_.size(); ++i) {

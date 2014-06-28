@@ -62,9 +62,11 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
     const Dtype* sigmoid_output_data = sigmoid_output_->const_data();
     const Dtype* target = (*bottom)[1]->const_data();
     Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
-    this->device_->sub(count, sigmoid_output_data, target, bottom_diff);
+    DeviceFactory<Dtype>::GetDevice()->sub(
+        count, sigmoid_output_data, target, bottom_diff);
     // Scale down gradient
-    this->device_->scal(count, Dtype(1) / num, bottom_diff);
+    DeviceFactory<Dtype>::GetDevice()->scal(count, Dtype(1) / num,
+                                            bottom_diff);
   }
 }
 

@@ -88,18 +88,20 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   int top_offset = M_ * N_;
   for (int n = 0; n < num_; ++n) {
     // First, im2col
-    this->device_->im2col(
+    DeviceFactory<Dtype>::GetDevice()->im2col(
         bottom_data + bottom[0]->offset(n), channels_, height_,
         width_, kernel_size_, pad_, stride_, col_data);
     // Second, innerproduct with groups
     for (int g = 0; g < group_; ++g) {
-      this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-        (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
-        (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
+      DeviceFactory<Dtype>::GetDevice()->gemm(
+          CblasNoTrans, CblasNoTrans, M_, N_, K_,
+          (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+          (Dtype)0., top_data + (*top)[0]->offset(n) + top_offset * g);
     }
     // third, add bias
     if (bias_term_) {
-      this->device_->gemm(CblasNoTrans, CblasNoTrans, num_output_,
+      DeviceFactory<Dtype>::GetDevice()->gemm(
+          CblasNoTrans, CblasNoTrans, num_output_,
           N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
           reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()),
           (Dtype)1., top_data + (*top)[0]->offset(n));
@@ -123,9 +125,10 @@ void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 
   if (bias_term_) {
     bias_diff = this->blobs_[1]->mutable_diff();
-    this->device_->set(this->blobs_[1]->count(), 0, bias_diff);
+    DeviceFactory<Dtype>::GetDevice()->set(
+        this->blobs_[1]->count(), 0, bias_diff);
     for (int n = 0; n < num_; ++n) {
-      this->device_->gemv(CblasNoTrans, num_output_, N_,
+      DeviceFactory<Dtype>::GetDevice()->gemv(CblasNoTrans, num_output_, N_,
           1., top_diff + top[0]->offset(n),
           reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()), 1.,
           bias_diff);
@@ -135,30 +138,33 @@ void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   int weight_offset = M_ * K_;
   int col_offset = K_ * N_;
   int top_offset = M_ * N_;
-  this->device_->set(this->blobs_[0]->count(), 0, weight_diff);
+  DeviceFactory<Dtype>::GetDevice()->set(
+      this->blobs_[0]->count(), 0, weight_diff);
   for (int n = 0; n < num_; ++n) {
     // since we saved memory in the forward pass by not storing all col data,
     // we will need to recompute them.
-    this->device_->im2col(
+    DeviceFactory<Dtype>::GetDevice()->im2col(
         bottom_data + (*bottom)[0]->offset(n), channels_, height_,
         width_, kernel_size_, pad_, stride_, col_data);
     // gradient w.r.t. weight. Note that we will accumulate diffs.
     for (int g = 0; g < group_; ++g) {
-      this->device_->gemm(CblasNoTrans, CblasTrans, M_, K_, N_,
-        (Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
-        col_data + col_offset * g, (Dtype)1.,
-        weight_diff + weight_offset * g);
+      DeviceFactory<Dtype>::GetDevice()->gemm(
+          CblasNoTrans, CblasTrans, M_, K_, N_,
+          (Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
+          col_data + col_offset * g, (Dtype)1.,
+          weight_diff + weight_offset * g);
     }
     // gradient w.r.t. bottom data, if necessary
     if (propagate_down[0]) {
       for (int g = 0; g < group_; ++g) {
-        this->device_->gemm(CblasTrans, CblasNoTrans, K_, N_, M_,
-          (Dtype)1., weight + weight_offset * g,
-          top_diff + top[0]->offset(n) + top_offset * g,
-          (Dtype)0., col_diff + col_offset * g);
+        DeviceFactory<Dtype>::GetDevice()->gemm(
+            CblasTrans, CblasNoTrans, K_, N_, M_,
+            (Dtype)1., weight + weight_offset * g,
+            top_diff + top[0]->offset(n) + top_offset * g,
+            (Dtype)0., col_diff + col_offset * g);
       }
       // col2im back to the data
-      this->device_->col2im(
+      DeviceFactory<Dtype>::GetDevice()->col2im(
           col_diff, channels_, height_, width_, kernel_size_, pad_,
           stride_, bottom_diff + (*bottom)[0]->offset(n));
     }

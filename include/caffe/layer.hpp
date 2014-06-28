@@ -23,7 +23,7 @@ class Layer {
   // to SetUp(), where the dimensions of the bottom blobs are provided to the
   // layer.
   explicit Layer(const LayerParameter& param)
-    : layer_param_(param), device_(DeviceFactory<Dtype>::GetDevice()) {
+    : layer_param_(param) {
       // The only thing we do is to copy blobs if there are any.
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());
@@ -98,9 +98,6 @@ class Layer {
   LayerParameter layer_param_;
   // The vector that stores the parameters as a set of blobs.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
-  // The math backend abstracts the CPU and the GPU specific
-  // implementation details
-  Device<Dtype>* device_;
 
   // Forward functions: compute the layer output
   // (and loss layers return the loss; other layers return the dummy value 0.)
