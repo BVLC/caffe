@@ -51,7 +51,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         break;
       case EltwiseParameter_EltwiseOp_SUM:
         if (coeffs_[i] == Dtype(1.)) {
-          caffe_gpu_copy(count, top_diff, bottom_diff);
+          caffe_copy(count, top_diff, bottom_diff);
         } else {
           caffe_gpu_scale(count, coeffs_[i], top_diff, bottom_diff);
         }
