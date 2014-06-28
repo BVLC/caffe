@@ -149,20 +149,20 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   switch (Caffe::mode()) {
   case Caffe::GPU:
     if (copy_diff) {
-      CUDA_CHECK(cudaMemcpy(diff_->mutable_gpu_data(), source.gpu_diff(),
-          sizeof(Dtype) * count_, cudaMemcpyDefault));
+      caffe_copy(count_, source.gpu_diff(),
+          reinterpret_cast<Dtype*>(diff_->mutable_gpu_data()));
     } else {
-      CUDA_CHECK(cudaMemcpy(data_->mutable_gpu_data(), source.gpu_data(),
-          sizeof(Dtype) * count_, cudaMemcpyDefault));
+      caffe_copy(count_, source.gpu_data(),
+          reinterpret_cast<Dtype*>(data_->mutable_gpu_data()));
     }
     break;
   case Caffe::CPU:
     if (copy_diff) {
-      memcpy(diff_->mutable_cpu_data(), source.cpu_diff(),
-          sizeof(Dtype) * count_);
+      caffe_copy(count_, source.cpu_diff(),
+          reinterpret_cast<Dtype*>(diff_->mutable_cpu_data()));
     } else {
-      memcpy(data_->mutable_cpu_data(), source.cpu_data(),
-        sizeof(Dtype) * count_);
+      caffe_copy(count_, source.cpu_data(),
+          reinterpret_cast<Dtype*>(data_->mutable_cpu_data()));
     }
     break;
   default:

@@ -40,16 +40,12 @@ Dtype HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
       current_row_ = 0;
     }
-    CUDA_CHECK(cudaMemcpy(
-            &(*top)[0]->mutable_gpu_data()[i * data_count],
-            &data_blob_.cpu_data()[current_row_ * data_count],
-            sizeof(Dtype) * data_count,
-            cudaMemcpyDefault));
-    CUDA_CHECK(cudaMemcpy(
-            &(*top)[1]->mutable_gpu_data()[i * label_data_count],
-            &label_blob_.cpu_data()[current_row_ * label_data_count],
-            sizeof(Dtype) * label_data_count,
-            cudaMemcpyDefault));
+    caffe_copy(data_count,
+        &data_blob_.cpu_data()[current_row_ * data_count],
+        &(*top)[0]->mutable_gpu_data()[i * data_count]);
+    caffe_copy(label_data_count,
+        &label_blob_.cpu_data()[current_row_ * label_data_count],
+        &(*top)[1]->mutable_gpu_data()[i * label_data_count]);
   }
   return Dtype(0.);
 }
