@@ -29,10 +29,10 @@ Dtype HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < bottom[0]->num(); ++i) {
     CUDA_CHECK(cudaMemcpy(&data_blob_.mutable_cpu_data()[i * data_datum_dim],
            &bottom[0]->gpu_data()[i * data_datum_dim],
-           sizeof(Dtype) * data_datum_dim, cudaMemcpyDeviceToHost));
+           sizeof(Dtype) * data_datum_dim, cudaMemcpyDefault));
     CUDA_CHECK(cudaMemcpy(&label_blob_.mutable_cpu_data()[i * label_datum_dim],
            &bottom[1]->gpu_data()[i * label_datum_dim],
-           sizeof(Dtype) * label_datum_dim, cudaMemcpyDeviceToHost));
+           sizeof(Dtype) * label_datum_dim, cudaMemcpyDefault));
   }
   SaveBlobs();
   return Dtype(0.);

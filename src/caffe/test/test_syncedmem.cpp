@@ -58,7 +58,7 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   // check if values are the same
   char* recovered_value = new char[10];
   cudaMemcpy(reinterpret_cast<void*>(recovered_value), gpu_data, 10,
-             cudaMemcpyDeviceToHost);
+             cudaMemcpyDefault);
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 1);
   }
@@ -73,7 +73,7 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
   cudaMemcpy(reinterpret_cast<void*>(recovered_value), gpu_data, 10,
-             cudaMemcpyDeviceToHost);
+             cudaMemcpyDefault);
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 2);
   }
