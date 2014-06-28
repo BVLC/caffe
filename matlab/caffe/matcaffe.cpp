@@ -54,12 +54,12 @@ static mxArray* do_forward(const mxArray* const bottom) {
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {
     case Caffe::CPU:
-      memcpy(input_blobs[i]->mutable_cpu_data(), data_ptr,
-          sizeof(float) * input_blobs[i]->count());
+      caffe_copy(input_blobs[i]->count(), data_ptr,
+          input_blobs[i]->mutable_cpu_data());
       break;
     case Caffe::GPU:
-      cudaMemcpy(input_blobs[i]->mutable_gpu_data(), data_ptr,
-          sizeof(float) * input_blobs[i]->count(), cudaMemcpyDefault);
+      caffe_copy(input_blobs[i]->count(), data_ptr,
+          input_blobs[i]->mutable_gpu_data());
       break;
     default:
       LOG(FATAL) << "Unknown Caffe mode.";
@@ -77,12 +77,12 @@ static mxArray* do_forward(const mxArray* const bottom) {
     float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
     switch (Caffe::mode()) {
     case Caffe::CPU:
-      memcpy(data_ptr, output_blobs[i]->cpu_data(),
-          sizeof(float) * output_blobs[i]->count());
+      caffe_copy(output_blobs[i]->count(), output_blobs[i]->cpu_data(),
+          data_ptr);
       break;
     case Caffe::GPU:
-      cudaMemcpy(data_ptr, output_blobs[i]->gpu_data(),
-          sizeof(float) * output_blobs[i]->count(), cudaMemcpyDefault);
+      caffe_copy(output_blobs[i]->count(), output_blobs[i]->gpu_data(),
+          data_ptr);
       break;
     default:
       LOG(FATAL) << "Unknown Caffe mode.";
@@ -104,12 +104,12 @@ static mxArray* do_backward(const mxArray* const top_diff) {
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {
     case Caffe::CPU:
-      memcpy(output_blobs[i]->mutable_cpu_diff(), data_ptr,
-        sizeof(float) * output_blobs[i]->count());
+      caffe_copy(output_blobs[i]->count(), data_ptr,
+          output_blobs[i]->mutable_cpu_diff());
       break;
     case Caffe::GPU:
-      cudaMemcpy(output_blobs[i]->mutable_gpu_diff(), data_ptr,
-        sizeof(float) * output_blobs[i]->count(), cudaMemcpyDefault);
+      caffe_copy(output_blobs[i]->count(), data_ptr,
+          output_blobs[i]->mutable_gpu_diff());
       break;
     default:
       LOG(FATAL) << "Unknown Caffe mode.";
@@ -129,12 +129,10 @@ static mxArray* do_backward(const mxArray* const top_diff) {
     float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
     switch (Caffe::mode()) {
     case Caffe::CPU:
-      memcpy(data_ptr, input_blobs[i]->cpu_diff(),
-          sizeof(float) * input_blobs[i]->count());
+      caffe_copy(input_blobs[i]->count(), input_blobs[i]->cpu_diff(), data_ptr);
       break;
     case Caffe::GPU:
-      cudaMemcpy(data_ptr, input_blobs[i]->gpu_diff(),
-          sizeof(float) * input_blobs[i]->count(), cudaMemcpyDefault);
+      caffe_copy(input_blobs[i]->count(), input_blobs[i]->gpu_diff(), data_ptr);
       break;
     default:
       LOG(FATAL) << "Unknown Caffe mode.";
@@ -206,12 +204,12 @@ static mxArray* do_get_weights() {
 
         switch (Caffe::mode()) {
         case Caffe::CPU:
-          memcpy(weights_ptr, layer_blobs[j]->cpu_data(),
-              sizeof(float) * layer_blobs[j]->count());
+          caffe_copy(layer_blobs[j]->count(), layer_blobs[j]->cpu_data(),
+              weights_ptr);
           break;
         case Caffe::GPU:
-          CUDA_CHECK(cudaMemcpy(weights_ptr, layer_blobs[j]->gpu_data(),
-              sizeof(float) * layer_blobs[j]->count(), cudaMemcpyDefault));
+          caffe_copy(layer_blobs[j]->count(), layer_blobs[j]->gpu_data(),
+              weights_ptr);
           break;
         default:
           LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
