@@ -1,5 +1,6 @@
 // Copyright 2014 BVLC and contributors.
-//#ifdef USE_OPENCL
+
+#ifdef USE_OPENCL
 #include <cstring>
 
 #include "caffe/common.hpp"
@@ -129,4 +130,4 @@ void* OpenCLSyncedMemory::mutable_gpu_data() {
 
 
 }  // namespace caffe
-//#endif  // USE_OPENCL
+#endif  // USE_OPENCL

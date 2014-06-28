@@ -1,5 +1,6 @@
 // Copyright 2014 BVLC and contributors.
-//#ifdef USE_OPENCL
+
+#ifdef USE_OPENCL
 #ifndef CAFFE_OPENCL_SYNCEDMEM_HPP_
 #define CAFFE_OPENCL_SYNCEDMEM_HPP_
 
@@ -73,4 +74,4 @@ class OpenCLSyncedMemory : public AbstractSyncedMemory {
 }  // namespace caffe
 
 #endif  // CAFFE_OPENCL_SYNCEDMEM_HPP_
-//#endif  // USE_OPENCL
+#endif  // USE_OPENCL

@@ -1,5 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
+#ifdef USE_OPENCL
 #ifndef CAFFE_UTIL_OPENCL_MATH_FUNCTIONS_H_
 #define CAFFE_UTIL_OPENCL_MATH_FUNCTIONS_H_
 
@@ -286,3 +287,5 @@ void caffe_opencl_div(const int n, const Dtype* a,
 
 
 #endif  // CAFFE_UTIL_MATH_FUNCTIONS_H_
+#endif  // USE_OPENCL
+

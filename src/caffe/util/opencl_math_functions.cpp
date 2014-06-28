@@ -1,5 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
+#ifdef USE_OPENCL
 //#include "caffe/common.hpp"
 #include "caffe/util/opencl_math_functions.hpp"
 
@@ -229,3 +230,5 @@ DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(mul, y[i] = a[i] * b[i]);
 DEFINE_AND_INSTANTIATE_OPENCL_BINARY_FUNC(div, y[i] = a[i] / b[i]);
 
 }  // namespace caffe
+
+#endif  // USE_OPENCL

@@ -1,5 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
+#ifdef USE_OPENCL
 #include "caffe/common.hpp"
 #include "caffe/util/opencl_device.hpp"
 #include "caffe/util/opencl_math_functions.hpp"
@@ -378,3 +379,5 @@ const char* clblasGetErrorString(clblasStatus status) {
 }
 
 }  // namespace caffe
+
+#endif  // USE_OPENCL

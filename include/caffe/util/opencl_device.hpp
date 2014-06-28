@@ -1,5 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
+#ifdef USE_OPENCL
 #ifndef CAFFE_UTIL_OPENCL_DEVICE_H_
 #define CAFFE_UTIL_OPENCL_DEVICE_H_
 
@@ -173,3 +174,5 @@ class OpenCLDevice : public Device<Dtype> {
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_OPENCL_DEVICE_H_
+#endif  // USE_OPENCL
+
