@@ -49,6 +49,9 @@ class AbstractSyncedMemory {
   virtual SyncedHead head() { return head_; }
   virtual size_t size() { return size_; }
 
+  const void* const_data() const { return NULL; }
+  void* mutable_data() { return NULL;}
+
  protected:
   virtual void to_cpu() = 0;
   virtual void to_gpu() = 0;

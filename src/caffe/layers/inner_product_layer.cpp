@@ -49,7 +49,7 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (bias_term_) {
     bias_multiplier_.reset(new SyncedMemory(M_ * sizeof(Dtype)));
     Dtype* bias_multiplier_data =
-        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());
+        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_data());
     for (int i = 0; i < M_; ++i) {
         bias_multiplier_data[i] = 1.;
     }
@@ -66,7 +66,7 @@ Dtype InnerProductLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       bottom_data, weight, (Dtype)0., top_data);
   if (bias_term_) {
     this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
-        reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
+        reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()),
         this->blobs_[1]->const_data(), (Dtype)1., top_data);
   }
   return Dtype(0);
@@ -84,8 +84,8 @@ void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   if (bias_term_) {
     // Gradient with respect to bias
     this->device_->gemv(CblasTrans, M_, N_, (Dtype)1., top_diff,
-        reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), (Dtype)0.,
-        this->blobs_[1]->mutable_cpu_diff());
+        reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()), (Dtype)0.,
+        this->blobs_[1]->mutable_diff());
   }
   if (propagate_down[0]) {
     // Gradient with respect to bottom data

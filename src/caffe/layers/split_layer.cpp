@@ -36,15 +36,9 @@ Dtype SplitLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-<<<<<<< HEAD
-void SplitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void SplitLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[0]) {
-=======
-void SplitLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  if (propagate_down) {
->>>>>>> Unify the CPU/GPU Forward/Backward of the SplitLayer
     (*bottom)[0]->ShareDiff(*top[0]);
     // Add remaining top blob diffs.
     Dtype* bottom_diff = (*bottom)[0]->mutable_diff();

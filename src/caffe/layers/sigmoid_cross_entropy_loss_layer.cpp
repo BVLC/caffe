@@ -42,7 +42,7 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward(
         log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
   }
   if (top->size() == 1) {
-    (*top)[0]->mutable_cpu_data()[0] = loss / num;
+    (*top)[0]->mutable_data()[0] = loss / num;
   }
   return loss / num;
 }
@@ -59,9 +59,9 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward(
     // First, compute the diff
     const int count = (*bottom)[0]->count();
     const int num = (*bottom)[0]->num();
-    const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
+    const Dtype* sigmoid_output_data = sigmoid_output_->const_data();
     const Dtype* target = (*bottom)[1]->const_data();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+    Dtype* bottom_diff = (*bottom)[0]->mutable_diff();
     this->device_->sub(count, sigmoid_output_data, target, bottom_diff);
     // Scale down gradient
     this->device_->scal(count, Dtype(1) / num, bottom_diff);

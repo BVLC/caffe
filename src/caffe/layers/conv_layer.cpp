@@ -68,7 +68,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (bias_term_) {
     bias_multiplier_.reset(new SyncedMemory(N_ * sizeof(Dtype)));
     Dtype* bias_multiplier_data =
-        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_cpu_data());
+        reinterpret_cast<Dtype*>(bias_multiplier_->mutable_data());
     for (int i = 0; i < N_; ++i) {
         bias_multiplier_data[i] = 1.;
     }
@@ -101,7 +101,7 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     if (bias_term_) {
       this->device_->gemm(CblasNoTrans, CblasNoTrans, num_output_,
           N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
-          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()),
+          reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()),
           (Dtype)1., top_data + (*top)[0]->offset(n));
     }
   }
@@ -127,7 +127,7 @@ void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     for (int n = 0; n < num_; ++n) {
       this->device_->gemv(CblasNoTrans, num_output_, N_,
           1., top_diff + top[0]->offset(n),
-          reinterpret_cast<const Dtype*>(bias_multiplier_->cpu_data()), 1.,
+          reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()), 1.,
           bias_diff);
     }
   }

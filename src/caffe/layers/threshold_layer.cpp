@@ -18,8 +18,8 @@ void ThresholdLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 Dtype ThresholdLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  const Dtype* bottom_data = bottom[0]->const_data();
+  Dtype* top_data = (*top)[0]->mutable_data();
   const int count = bottom[0]->count();
   for (int i = 0; i < count; ++i) {
     top_data[i] = (bottom_data[i] > threshold_) ? Dtype(1) : Dtype(0);
