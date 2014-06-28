@@ -49,7 +49,7 @@ find_package(LevelDB REQUIRED)
 include_directories(${LEVELDB_INCLUDE})
 
 #    Boost
-find_package(Boost 1.49 COMPONENTS system REQUIRED)
+find_package(Boost 1.46 COMPONENTS system REQUIRED)
 include_directories( ${Boost_INCLUDE_DIR} )
 link_directories( ${Boost_LIBRARY_DIRS} )
 
