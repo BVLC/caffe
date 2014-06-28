@@ -106,8 +106,6 @@ template <typename Dtype>
 void col2im_gpu(const Dtype* data_col, const int channels,
     const int height, const int width, const int ksize, const int pad,
     const int stride, Dtype* data_im) {
-  // CUDA_CHECK(cudaMemset(data_im, 0,
-  //            sizeof(Dtype) * height * width * channels));
   int height_col = (height + 2 * pad - ksize) / stride + 1;
   int width_col = (width + 2 * pad - ksize) / stride + 1;
   int num_kernels = channels * height * width;
