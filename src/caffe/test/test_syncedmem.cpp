@@ -58,7 +58,7 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
   char* recovered_value = new char[10];
-  caffe_copy(size_t(10), gpu_data, reinterpret_cast<void*>(recovered_value));
+  caffe_memcpy(10, gpu_data, recovered_value);
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 1);
   }
@@ -72,7 +72,7 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   gpu_data = mem.gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
-  caffe_copy(size_t(10), gpu_data, reinterpret_cast<void*>(recovered_value));
+  caffe_memcpy(10, gpu_data, recovered_value);
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 2);
   }
