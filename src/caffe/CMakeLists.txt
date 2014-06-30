@@ -48,6 +48,10 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(LevelDB REQUIRED)
 include_directories(${LEVELDB_INCLUDE})
 
+#    LMDB
+find_package(LMDB REQUIRED)
+include_directories(${LMDB_INCLUDE_DIR})
+
 #    Boost
 find_package(Boost 1.46 COMPONENTS system REQUIRED)
 include_directories( ${Boost_INCLUDE_DIR} )
@@ -82,6 +86,7 @@ target_link_libraries(caffe caffe_cu proto
         ${HDF5_LIBRARIES} 
         ${OpenCV_LIBS} 
         ${LEVELDB_LIBS} 
+        ${LMDB_LIBRARIES} 
         ${CUDA_CUBLAS_LIBRARIES}
         ${BLAS_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
