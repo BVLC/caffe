@@ -15,12 +15,12 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
 		-gencode arch=compute_35,code=sm_35
 )
 
-#    BLAS
+#   BLAS
 if(BLAS STREQUAL "atlas")
 
     find_package(Atlas REQUIRED)
-    include_directories(${ATLAS_INCLUDE_DIR})
-    set(BLAS_LIBRARIES ${ATLAS_LIBRARIES})
+    include_directories(${Atlas_INCLUDE_DIR})
+    set(BLAS_LIBRARIES ${Atlas_LIBRARIES})
     
 elseif(BLAS STREQUAL "open")
 
@@ -49,13 +49,13 @@ find_package(LevelDB REQUIRED)
 include_directories(${LEVELDB_INCLUDE})
 
 #    Boost
-find_package(Boost 1.49 COMPONENTS system REQUIRED)
+find_package(Boost 1.46 COMPONENTS system REQUIRED)
 include_directories( ${Boost_INCLUDE_DIR} )
 link_directories( ${Boost_LIBRARY_DIRS} )
 
 add_subdirectory(proto)
 
-#    Recursively sources
+#    Recursively find source files
 
 #    cuda sources 
 file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)

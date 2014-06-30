@@ -1,79 +1,62 @@
-# Copyright: (C) 2010 RobotCub Consortium
-# Authors: Arjan Gijsberts
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-#
 # Find the Atlas (and Lapack) libraries
 #
+# The following variables are optionally searched for defaults
+#  Atlas_ROOT_DIR:            Base directory where all Atlas components are found
+#
+# The following are set after configuration is done: 
+#  Atlas_FOUND
+#  Atlas_INCLUDE_DIRS
+#  Atlas_LIBRARIES
+#  Atlas_LIBRARYRARY_DIRS
 
-SET(ATLAS_POSSIBLE_INCLUDE_PATHS
-  /usr/include
+set(Atlas_INCLUDE_SEARCH_PATHS
   /usr/include/atlas
-  /usr/local/include
-  $ENV{ATLAS_DIR}
-  $ENV{ATLAS_DIR}/include
+  /usr/include/atlas-base
+  $ENV{Atlas_ROOT_DIR}
+  $ENV{Atlas_ROOT_DIR}/include
 )
 
-SET(ATLAS_POSSIBLE_LIBRARY_PATHS
-  /usr/lib/libatlas-corei7sse3
-  /usr/lib/atlas-amd64sse3
+set(Atlas_LIB_SEARCH_PATHS
+  /usr/lib/atlas
   /usr/lib/atlas-base     
-  /usr/lib/sse2
-  /usr/lib/sse
-  /usr/local/lib/sse2
-  /usr/local/lib/sse
-  /usr/lib
-  /usr/local/lib
-  $ENV{ATLAS_DIR}
-  $ENV{ATLAS_DIR}/lib
+  $ENV{Atlas_ROOT_DIR}
+  $ENV{Atlas_ROOT_DIR}/lib
 )
 
-FIND_PATH(ATLAS_CBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${ATLAS_POSSIBLE_INCLUDE_PATHS})
-FIND_PATH(ATLAS_CLAPACK_INCLUDE_DIR NAMES clapack.h PATHS ${ATLAS_POSSIBLE_INCLUDE_PATHS})
-FIND_LIBRARY(ATLAS_CBLAS_LIBRARY NAMES ptcblas_r ptcblas cblas_r cblas PATHS ${ATLAS_POSSIBLE_LIBRARY_PATHS})
-FIND_LIBRARY(ATLAS_ATLAS_LIBRARY NAMES atlas_r atlas PATHS ${ATLAS_POSSIBLE_LIBRARY_PATHS})
-FIND_LIBRARY(ATLAS_LAPACK_ATLAS_LIBRARY NAMES alapack_r alapack lapack_atlas PATHS ${ATLAS_POSSIBLE_LIBRARY_PATHS})
+find_path(Atlas_CBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Atlas_INCLUDE_SEARCH_PATHS})
+find_path(Atlas_CLAPACK_INCLUDE_DIR NAMES clapack.h PATHS ${Atlas_INCLUDE_SEARCH_PATHS})
+find_library(Atlas_CBLAS_LIBRARY NAMES ptcblas_r ptcblas cblas_r cblas PATHS ${Atlas_LIB_SEARCH_PATHS})
+find_library(Atlas_BLAS_LIBRARY NAMES atlas_r atlas PATHS ${Atlas_LIB_SEARCH_PATHS})
+find_library(Atlas_LAPACK_LIBRARY NAMES alapack_r alapack lapack_atlas PATHS ${Atlas_LIB_SEARCH_PATHS})
 
-SET(ATLAS_FOUND ON)
+set(LOOKED_FOR 
 
-#    Check include files
-FOREACH(INCDIR ATLAS_CBLAS_INCLUDE_DIR ATLAS_CLAPACK_INCLUDE_DIR)
-  IF(${INCDIR})
-    SET(ATLAS_INCLUDE_DIR ${ATLAS_INCLUDE_DIR} ${${INCDIR}} )
-  ELSE(${INCDIR})
-    MESSAGE("${INCDIR} not found turning off ATLAS_FOUND")
-    SET(ATLAS_FOUND OFF)
-  ENDIF (${INCDIR})
-ENDFOREACH(INCDIR)
-
-#    Check libraries
-FOREACH(LIBNAME ATLAS_LAPACK_ATLAS_LIBRARY ATLAS_CBLAS_LIBRARY ATLAS_ATLAS_LIBRARY)
-  IF(${LIBNAME})
-    SET(ATLAS_LIBRARIES ${ATLAS_LIBRARIES} ${${LIBNAME}} )
-  ELSE(${LIBNAME})
-    MESSAGE("${LIBNAME} not found turning off ATLAS_FOUND")
-    SET(ATLAS_FOUND OFF)
-  ENDIF (${LIBNAME})
-ENDFOREACH(LIBNAME)
-
-IF (ATLAS_FOUND)
-  IF (NOT Atlas_FIND_QUIETLY)
-    MESSAGE(STATUS "Found Atlas libraries: ${ATLAS_LIBRARIES}")
-    MESSAGE(STATUS "Found Atlas include: ${ATLAS_INCLUDE_DIR}")
-  ENDIF (NOT Atlas_FIND_QUIETLY)
-ELSE (ATLAS_FOUND)
-  IF (Atlas_FIND_REQUIRED)
-    MESSAGE(FATAL_ERROR "Could not find Atlas")
-  ENDIF (Atlas_FIND_REQUIRED)
-ENDIF (ATLAS_FOUND)
-
-MARK_AS_ADVANCED(
-  ATLAS_INCLUDE_DIR
-  ATLAS_CBLAS_INCLUDE_DIR
-  ATLAS_CLAPACK_INCLUDE_DIR
-  ATLAS_LIBRARIES
-  ATLAS_CBLAS_LIBRARY
-  ATLAS_ATLAS_LIBRARY
-  ATLAS_LAPACK_ATLAS_LIBRARY
+  Atlas_CBLAS_INCLUDE_DIR
+  Atlas_CLAPACK_INCLUDE_DIR
+  
+  Atlas_CBLAS_LIBRARY
+  Atlas_BLAS_LIBRARY
+  Atlas_LAPACK_LIBRARY
 )
 
-set(Atlas_FOUND ${ATLAS_FOUND})
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Atlas DEFAULT_MSG ${LOOKED_FOR})
+
+if(ATLAS_FOUND)
+
+  mark_as_advanced(${LOOKED_FOR})
+
+  set(Atlas_INCLUDE_DIR 
+    ${Atlas_CBLAS_INCLUDE_DIR}
+    ${Atlas_CLAPACK_INCLUDE_DIR}
+  )
+
+  set(Atlas_LIBRARIES
+    ${Atlas_LAPACK_LIBRARY}
+    ${Atlas_CBLAS_LIBRARY}
+    ${Atlas_BLAS_LIBRARY}
+  )
+
+endif(ATLAS_FOUND)
+
+  
