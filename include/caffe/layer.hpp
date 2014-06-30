@@ -9,6 +9,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/cpu_only.hpp"
 
 using std::string;
 using std::vector;

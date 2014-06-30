@@ -69,6 +69,10 @@ void HDF5OutputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   return;
 }
 
+#ifdef CPU_ONLY
+STUB_GPU(HDF5OutputLayer);
+#endif
+
 INSTANTIATE_CLASS(HDF5OutputLayer);
 
 }  // namespace caffe
