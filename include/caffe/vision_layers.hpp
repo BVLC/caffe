@@ -45,11 +45,11 @@ class ConvolutionLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  int kernel_size_;
-  int stride_;
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
   int num_;
   int channels_;
-  int pad_;
+  int pad_h_, pad_w_;
   int height_;
   int width_;
   int num_output_;
@@ -119,12 +119,12 @@ class Im2colLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  int kernel_size_;
-  int stride_;
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
   int channels_;
   int height_;
   int width_;
-  int pad_;
+  int pad_h_, pad_w_;
 };
 
 /* InnerProductLayer
