@@ -202,6 +202,16 @@ ifeq ($(LINUX), 1)
 	endif
 endif
 
+# CPU-only configuration
+ifeq ($(CPU_ONLY), 1)
+	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
+	TEST_OBJS := $(TEST_CXX_OBJS)
+	TEST_BINS := $(TEST_CXX_BINS)
+	ALL_WARNS := $(ALL_CXX_WARNS)
+	TEST_FILTER := --gtest_filter="-*GPU*:*/2.*:*/3.*"
+	COMMON_FLAGS += -DCPU_ONLY
+endif
+
 # OS X:
 # clang++ instead of g++
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
@@ -222,9 +232,9 @@ endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
-	COMMON_FLAGS := -DDEBUG -g -O0
+	COMMON_FLAGS += -DDEBUG -g -O0
 else
-	COMMON_FLAGS := -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O2
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -342,7 +352,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	@ echo
 
 runtest: $(TEST_ALL_BIN)
-	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle
+	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
 
 runtestnogpu: $(TEST_ALL_BIN)
 	$(TEST_ALL_BIN) --gtest_shuffle --gtest_filter="-*GPU*:*/2.*:*/3.*"
