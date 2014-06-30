@@ -32,7 +32,6 @@ class ImageDataLayerTest : public ::testing::Test {
         filename_multi_label_(new string(tmpnam(NULL))),
         blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()) {}
->>>>>>> Added LOG(INFO) and test multi_label to image_data_layer
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
