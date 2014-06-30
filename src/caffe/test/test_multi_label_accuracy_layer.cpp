@@ -81,7 +81,7 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
       layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
       layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
       const Dtype* top_acc = this->blob_top_->cpu_data();
-      LOG(INFO) << top_acc[0] << " " << top_acc[1] << " " << top_acc[2];
+      DLOG(INFO) << top_acc[0] << " " << top_acc[1] << " " << top_acc[2];
       mean_acc += top_acc[2];
     }
     return mean_acc/num_repetitions;
@@ -113,7 +113,8 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithoutZeros) {
   // Should use all the samples, since no label = 0
   // The mean_acc should be positive and greater than 1
   TypeParam mean_acc = this->TestForward(TypeParam(0));
-  EXPECT_GE(mean_acc, 0) << "mean_acc should positive and greater than 0";
+  EXPECT_GT(mean_acc, 0);
+  EXPECT_LT(mean_acc, 1);
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithHalfZeros) {
@@ -121,7 +122,8 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithHalfZeros) {
   // Should use half of the samples, since half of labels are 0
   // The mean_acc should be positive and greater than 1
   TypeParam mean_acc = this->TestForward(TypeParam(0.5));
-  EXPECT_GE(mean_acc, 0) << "mean_acc should positive and greater than 0";
+  EXPECT_GT(mean_acc, 0);
+  EXPECT_LT(mean_acc, 1);
 }
 
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithAllZeros) {
@@ -129,7 +131,7 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestWithAllZeros) {
   // Should ignore all the samples, since all labels 0
   // The mean_acc should be 0 when we ignore all the labels
   TypeParam mean_acc = this->TestForward(TypeParam(1));
-  EXPECT_EQ(mean_acc, nan) << "mean_acc should be undefined";
+  EXPECT_EQ(mean_acc, 0);
 }
 
 }  // namespace caffe

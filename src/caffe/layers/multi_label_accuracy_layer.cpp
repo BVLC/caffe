@@ -59,14 +59,17 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
       count_neg++;
     }
   }
-  DLOG(INFO) << "Sensitivity: " << (true_positive / count_pos);
-  DLOG(INFO) << "Specificity: " << (true_negative / count_neg);
-  DLOG(INFO) << "Harmonic Mean of Sens and Spec: " <<
-    2 / ( count_pos / true_positive + count_neg / true_negative);
-  (*top)[0]->mutable_cpu_data()[0] = true_positive / count_pos;
-  (*top)[0]->mutable_cpu_data()[1] = true_negative / count_neg;
-  (*top)[0]->mutable_cpu_data()[2] =
-    2 / (count_pos / true_positive + count_neg / true_negative);
+  Dtype sensitivity = (count_pos > 0)? (true_positive / count_pos): 0;
+  Dtype specificity = (count_neg > 0)? (true_negative / count_neg): 0;
+  Dtype harmmean = ((count_pos + count_neg) > 0)? 
+    2 / (count_pos / true_positive + count_neg / true_negative) : 0;
+
+  DLOG(INFO) << "Sensitivity: " << sensitivity;
+  DLOG(INFO) << "Specificity: " << specificity;
+  DLOG(INFO) << "Harmonic Mean of Sens and Spec: " << harmmean;
+  (*top)[0]->mutable_cpu_data()[0] = sensitivity;
+  (*top)[0]->mutable_cpu_data()[1] = specificity;
+  (*top)[0]->mutable_cpu_data()[2] = harmmean;
 
   // MultiLabelAccuracy should not be used as a loss function.
   return Dtype(0);
