@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 34 (last added: CENTER_SCALE)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -136,6 +136,7 @@ message LayerParameter {
     ACCURACY = 1;
     ARGMAX = 30;
     BNLL = 2;
+    CENTER_SCALE = 34;
     CONCAT = 3;
     CONVOLUTION = 4;
     DATA = 5;
@@ -188,8 +189,10 @@ message LayerParameter {
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 8;
 
+  // Layerparm next available ID: 31 (last added: CenterScaleParameter)
   optional AccuracyParameter accuracy_param = 27;
   optional ArgMaxParameter argmax_param = 23;
+  optional CenterScaleParameter center_scale_param = 30;
   optional ConcatParameter concat_param = 9;
   optional ConvolutionParameter convolution_param = 10;
   optional DataParameter data_param = 11;
@@ -227,6 +230,13 @@ message AccuracyParameter {
 message ArgMaxParameter {
   // If true produce pairs (argmax, maxval)
   optional bool out_max_val = 1 [default = false];
+}
+
+// Message that stores parameters used by CenterScaleLayer
+message CenterScaleParameter {
+  optional string mean_file = 1;
+  repeated float mean_value = 2;
+  repeated float scale_value = 3;
 }
 
 // Message that stores parameters used by ConcatLayer

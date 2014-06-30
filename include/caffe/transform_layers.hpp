@@ -90,8 +90,6 @@ class CenterScaleLayer : public TransformationLayer<Dtype> {
 
   Blob<Dtype> data_mean_;
   bool has_mean_file_;
-  bool has_scale_;
-  Dtype scale_;
   std::vector<Dtype> mean_values_;
   std::vector<Dtype> scale_values_;
 
