@@ -44,6 +44,12 @@ struct DoubleCPU {
   static const Caffe::Brew device = Caffe::CPU;
 };
 
+#ifdef CPU_ONLY
+
+typedef ::testing::Types<FloatCPU, DoubleCPU> TestDtypesAndDevices;
+
+#else
+
 struct FloatGPU {
   typedef float Dtype;
   static const Caffe::Brew device = Caffe::GPU;
@@ -56,6 +62,8 @@ struct DoubleGPU {
 
 typedef ::testing::Types<FloatCPU, DoubleCPU, FloatGPU, DoubleGPU>
     TestDtypesAndDevices;
+
+#endif
 
 }  // namespace caffe
 
