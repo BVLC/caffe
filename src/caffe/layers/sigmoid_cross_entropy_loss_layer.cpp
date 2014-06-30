@@ -28,8 +28,8 @@ void SigmoidCrossEntropyLossLayer<Dtype>::FurtherSetUp(
   }
   if (top->size() == 2) {
     // softmax output
-    (*top)[1]->ReshapeLike(sigmoid_output_.get());
-    (*top)[1]->ShareData(sigmoid_output_.get());
+    (*top)[1]->ReshapeLike(*sigmoid_output_.get());
+    (*top)[1]->ShareData(*sigmoid_output_.get());
   }
 }
 
@@ -49,7 +49,7 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   for (int i = 0; i < count; ++i) {
     if (target[i] != 0) {
     // Update the loss only if target[i] is not 0
-      loss = input_data[i] * ((target[i] > 0) - (input_data[i] >= 0)) -
+      loss -= input_data[i] * ((target[i] > 0) - (input_data[i] >= 0)) -
         log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
     }
   }
