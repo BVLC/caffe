@@ -115,7 +115,7 @@ message SolverState {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 28 (last added: accuracy_param)
+// LayerParameter next available ID: 31 (last added: spatial_pyramid_pooling_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 34 (last added: SPATIAL_PYRAMID_POOLING)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -161,6 +161,7 @@ message LayerParameter {
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SOFTMAX = 20;
     SOFTMAX_LOSS = 21;
+    SPATIAL_PYRAMID_POOLING = 33;
     SPLIT = 22;
     TANH = 23;
     WINDOW_DATA = 24;
@@ -205,6 +206,7 @@ message LayerParameter {
   optional MemoryDataParameter memory_data_param = 22;
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
+  optional SpatialPyramidPoolingParameter spatial_pyramid_pooling_param = 30;  
   optional WindowDataParameter window_data_param = 20;
   optional ThresholdParameter threshold_param = 25;
   optional HingeLossParameter hinge_loss_param = 29;
@@ -424,6 +426,20 @@ message PowerParameter {
   optional float power = 1 [default = 1.0];
   optional float scale = 2 [default = 1.0];
   optional float shift = 3 [default = 0.0];
+}
+
+// Message that stores parameters used by PoolingLayer
+message SpatialPyramidPoolingParameter {
+  enum PoolMethod {
+    MAX = 0;
+    AVE = 1;
+    STOCHASTIC = 2;
+  }
+  optional PoolMethod pool = 1 [default = MAX]; // The pooling method
+  // The number of spatial bins of each pyramid level
+  repeated uint32 spatial_bin = 2; 
+   // The number of image scales to apply spatial pyramid pooling 
+  repeated uint32 scale = 3;
 }
 
 // Message that stores parameters used by WindowDataLayer
