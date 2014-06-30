@@ -114,6 +114,10 @@ Dtype HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   return Dtype(0.);
 }
 
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(HDF5DataLayer, Forward);
+#endif
+
 INSTANTIATE_CLASS(HDF5DataLayer);
 
 }  // namespace caffe

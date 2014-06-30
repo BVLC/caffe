@@ -362,6 +362,10 @@ Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   return Dtype(0.);
 }
 
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(DataLayer, Forward);
+#endif
+
 INSTANTIATE_CLASS(DataLayer);
 
 }  // namespace caffe
