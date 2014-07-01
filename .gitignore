@@ -62,3 +62,9 @@ _site
 *.sublime-workspace
 *.sublime-project
 
+# Eclipse Project settings
+*.*project
+
+
+# CMake generated files
+*.gen.cmake

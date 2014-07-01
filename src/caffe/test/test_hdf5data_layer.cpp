@@ -31,7 +31,7 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_label_);
 
     // Check out generate_sample_data.py in the same directory.
-    filename = new string("src/caffe/test/test_data/sample_data_list.txt");
+    filename = new string(CMAKE_SOURCE_DIR "caffe/test/test_data/sample_data_list.txt" CMAKE_EXT);
     LOG(INFO) << "Using sample HDF5 data file " << filename;
   }
 
