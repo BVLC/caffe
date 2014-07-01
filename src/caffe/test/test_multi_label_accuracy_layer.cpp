@@ -102,7 +102,7 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestSetup) {
   MultiLabelAccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(),1);
-  EXPECT_EQ(this->blob_top_->channels(),3);
+  EXPECT_EQ(this->blob_top_->channels(),5);
   EXPECT_EQ(this->blob_top_->height(),1);
   EXPECT_EQ(this->blob_top_->width(),1);
 }
