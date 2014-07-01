@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   leveldb::DB* db;
   leveldb::Options options;
   options.create_if_missing = false;
-  leveldb::Iterator* it;
+  leveldb::Iterator* it = NULL;
   // lmdb
   MDB_env* mdb_env;
   MDB_dbi mdb_dbi;
