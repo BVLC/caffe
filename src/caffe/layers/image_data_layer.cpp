@@ -39,6 +39,8 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
   const bool mirror = image_data_param.mirror();
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
+  const int num_labels = image_data_param.num_labels();
+  const bool images_in_color = image_data_param.images_in_color();
 
   if (mirror && crop_size == 0) {
     LOG(FATAL) << "Current implementation requires mirror and crop_size to be "
@@ -56,7 +58,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
     CHECK_GT(lines_size, layer->lines_id_);
     if (!ReadImageToDatum(layer->lines_[layer->lines_id_].first,
           layer->lines_[layer->lines_id_].second,
-          new_height, new_width, &datum)) {
+          new_height, new_width, images_in_color, &datum)) {
       continue;
     }
     const string& data = datum.data();
@@ -115,8 +117,12 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
         }
       }
     }
-
-    top_label[item_id] = datum.label();
+    if (layer->output_labels_) {
+      CHECK_EQ(datum.label_size(), num_labels);
+      for (int l = 0; l < num_labels; ++l){
+        top_label[item_id * num_labels + l] = datum.label(l);
+      }
+    }
     // go to the next iter
     layer->lines_id_++;
     if (layer->lines_id_ >= lines_size) {
@@ -143,6 +149,14 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   Layer<Dtype>::SetUp(bottom, top);
   const int new_height  = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_height();
+  const int num_labels = this->layer_param_.image_data_param().num_labels();
+  const bool images_in_color = this->layer_param_.image_data_param().images_in_color();
+  if (top->size() == 2) {
+    output_labels_ = true;
+    CHECK(num_labels > 0) << "Need labels for top";
+  } else {
+    output_labels_ = false;
+  }
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
@@ -150,12 +164,25 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
-  string filename;
-  int label;
-  while (infile >> filename >> label) {
-    lines_.push_back(std::make_pair(filename, label));
-  }
 
+  std::string line;
+  int line_num = 1;
+  while (std::getline(infile, line))
+  {
+    std::istringstream iss(line);
+    string filename;
+    std::vector<int> labels;
+    CHECK(iss >> filename) << "Error reading line " << line_num;
+    for (int l = 0; l < num_labels; ++l) {
+      int label;
+      CHECK(iss >> label) << "Error reading labels at line " << line_num <<
+        " filename " << filename;
+      labels.push_back(label);
+    }
+    line_num++;
+    lines_.push_back(std::make_pair(filename, labels));
+  }
+  LOG(INFO) << "Read " << line_num - 1 << " lines from source";
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
@@ -163,8 +190,8 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
     ShuffleImages();
   }
-  LOG(INFO) << "A total of " << lines_.size() << " images.";
-
+  LOG(INFO) << "A total of " << lines_.size() << " images" <<
+    " with " << num_labels << " labels each";
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.image_data_param().rand_skip()) {
@@ -177,7 +204,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
-                         new_height, new_width, &datum));
+                         new_height, new_width, images_in_color, &datum));
   // image
   const int crop_size = this->layer_param_.image_data_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
@@ -196,8 +223,10 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
   // label
-  (*top)[1]->Reshape(batch_size, 1, 1, 1);
-  prefetch_label_.reset(new Blob<Dtype>(batch_size, 1, 1, 1));
+  if (output_labels_) {
+    (*top)[1]->Reshape(batch_size, num_labels, 1, 1);
+    prefetch_label_.reset(new Blob<Dtype>(batch_size, num_labels, 1, 1));
+  }
   // datum size
   datum_channels_ = datum.channels();
   datum_height_ = datum.height();
@@ -224,7 +253,9 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
   prefetch_data_->mutable_cpu_data();
-  prefetch_label_->mutable_cpu_data();
+  if (output_labels_) {
+    prefetch_label_->mutable_cpu_data();
+  }
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
@@ -236,7 +267,9 @@ void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   phase_ = Caffe::phase();
   const bool prefetch_needs_rand =
       this->layer_param_.image_data_param().shuffle() ||
-      this->layer_param_.image_data_param().crop_size();
+      this->layer_param_.image_data_param().mirror() ||
+        ((phase_ == Caffe::TRAIN) &&
+        this->layer_param_.image_data_param().crop_size());
   if (prefetch_needs_rand) {
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
@@ -254,7 +287,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   for (int i = 0; i < num_images; ++i) {
     const int max_rand_index = num_images - i;
     const int rand_index = PrefetchRand() % max_rand_index;
-    pair<string, int> item = lines_[rand_index];
+    pair<string, vector<int> > item = lines_[rand_index];
     lines_.erase(lines_.begin() + rand_index);
     lines_.push_back(item);
   }
@@ -280,8 +313,10 @@ Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Copy the data
   caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
              (*top)[0]->mutable_cpu_data());
-  caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
+  if (output_labels_) {
+    caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
              (*top)[1]->mutable_cpu_data());
+  }
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);

@@ -71,7 +71,41 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
+bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  if (labels.size() > 0) {
+    CHECK(ReadImageToDatum(filename, labels[0],
+                         height, width, is_color, datum));
+    for (int i = 1 ; i < labels.size(); ++i) {
+      if (datum->label_size() <= i) {
+        datum->add_label(labels[i]);
+      } else {
+        datum->set_label(i,labels[i]);
+      }
+    }
+  } else {
+    CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
+  }
+
+  return true;
+}
+
 bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
+
+  if (datum->label_size() > 0){
+    datum->set_label(0,label);
+  } else {
+    datum->add_label(label);
+  }
+
+  return true;
+}
+
+bool ReadImageToDatum(const string& filename,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
@@ -90,7 +124,6 @@ bool ReadImageToDatum(const string& filename, const int label,
   datum->set_channels(num_channels);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
-  datum->set_label(label);
   datum->clear_data();
   datum->clear_float_data();
   string* datum_string = datum->mutable_data();
@@ -123,7 +156,6 @@ void hdf5_load_nd_dataset_helper(
   herr_t status;
   int ndims;
   status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
-  CHECK_GE(status, 0) << "Failed to get dataset ndims for " << dataset_name_;
   CHECK_GE(ndims, min_dim);
   CHECK_LE(ndims, max_dim);
 

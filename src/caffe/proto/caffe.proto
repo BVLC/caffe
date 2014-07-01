@@ -23,7 +23,7 @@ message Datum {
   optional int32 width = 3;
   // the actual image data, in bytes
   optional bytes data = 4;
-  optional int32 label = 5;
+  repeated int32 label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
 }
@@ -363,6 +363,10 @@ message ImageDataParameter {
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 9 [default = 0];
   optional uint32 new_width = 10 [default = 0];
+  // All the images should have the same number of labels. 
+  // If greater than 1 can be used for multilabel problems.
+  optional uint32 num_labels = 11 [default = 1];
+  optional bool images_in_color =12 [default = true];
 }
 
 // Message that stores parameters InfogainLossLayer
