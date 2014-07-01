@@ -71,43 +71,10 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
-bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
-    const int height, const int width, const bool is_color, Datum* datum) {
-
-  if (labels.size() > 0) {
-    CHECK(ReadImageToDatum(filename, labels[0],
-                         height, width, is_color, datum));
-    for (int i = 1 ; i < labels.size(); ++i) {
-      if (datum->label_size() <= i) {
-        datum->add_label(labels[i]);
-      } else {
-        datum->set_label(i,labels[i]);
-      }
-    }
-  } else {
-    CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
-  }
-
-  return true;
-}
-
-bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color, Datum* datum) {
-
-  CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
-
-  if (datum->label_size() > 0){
-    datum->set_label(0,label);
-  } else {
-    datum->add_label(label);
-  }
-
-  return true;
-}
-
-bool ReadImageToDatum(const string& filename,
+bool ReadImage(const string& filename,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
+
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
   if (height > 0 && width > 0) {
@@ -144,6 +111,40 @@ bool ReadImageToDatum(const string& filename,
         }
       }
   }
+  return true;
+}
+
+bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  CHECK(ReadImage(filename, height, width, is_color, datum));
+
+  if (datum->label_size() > 0){
+    datum->set_label(0,label);
+  } else {
+    datum->add_label(label);
+  }
+
+  return true;
+}
+
+bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  if (labels.size() > 0) {
+    CHECK(ReadImageToDatum(filename, labels[0],
+                         height, width, is_color, datum));
+    for (int i = 1 ; i < labels.size(); ++i) {
+      if (datum->label_size() <= i) {
+        datum->add_label(labels[i]);
+      } else {
+        datum->set_label(i,labels[i]);
+      }
+    }
+  } else {
+    CHECK(ReadImage(filename, height, width, is_color, datum));
+  }
+
   return true;
 }
 

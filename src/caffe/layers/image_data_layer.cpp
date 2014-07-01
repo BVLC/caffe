@@ -203,6 +203,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
+  LOG(INFO) << lines_[lines_id_].first << " " << lines_[lines_id_].second[0];
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
                          new_height, new_width, images_in_color, &datum));
   // image

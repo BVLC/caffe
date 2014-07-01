@@ -27,11 +27,11 @@ template <typename Dtype>
 class ImageDataLayerTest : public ::testing::Test {
  protected:
   ImageDataLayerTest()
-      : blob_top_data_(new Blob<Dtype>()),
+      : seed_(1701),
+        blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
         filename_(new string(tmpnam(NULL))),
-        filename_multi_label_(new string(tmpnam(NULL))),
-        seed_(1701) {}
+        filename_multi_label_(new string(tmpnam(NULL))) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
@@ -49,7 +49,7 @@ class ImageDataLayerTest : public ::testing::Test {
     for (int i = 0; i < 5; ++i) {
       outfile2 << "examples/images/cat.jpg ";
       for (int l = 0; l < 5; ++l) {
-        if (l == i){
+        if (l == i) {
           outfile2 << " 1";
         } else {
           outfile2 << " -1";
