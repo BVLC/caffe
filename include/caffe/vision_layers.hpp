@@ -273,7 +273,7 @@ class PoolingLayer : public Layer<Dtype> {
   int pooled_height_;
   int pooled_width_;
   Blob<Dtype> rand_idx_;
-  shared_ptr<Blob<int> > max_idx_;
+  Blob<int> max_idx_;
 };
 
 }  // namespace caffe
