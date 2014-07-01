@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
   options.error_if_exists = true;
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
-  leveldb::WriteBatch* batch;
+  leveldb::WriteBatch* batch = NULL;
 
   // Open db
   if (db_backend == "leveldb") {  // leveldb
