@@ -55,7 +55,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int num_output_;
   int group_;
   Blob<Dtype> col_buffer_;
-  shared_ptr<Blob<Dtype> > bias_multiplier_;
+  Blob<Dtype> bias_multiplier_;
   bool bias_term_;
   int M_;
   int K_;
