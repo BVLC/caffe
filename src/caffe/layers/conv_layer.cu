@@ -35,7 +35,7 @@ Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       if (bias_term_) {
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->gpu_data(),
-            bias_multiplier_->gpu_data(),
+            bias_multiplier_.gpu_data(),
             (Dtype)1., top_data + (*top)[i]->offset(n));
       }
     }
@@ -69,7 +69,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < num_; ++n) {
         caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
             1., top_diff + top[0]->offset(n),
-            bias_multiplier_->gpu_data(), 1.,
+            bias_multiplier_.gpu_data(), 1.,
             bias_diff);
       }
     }
