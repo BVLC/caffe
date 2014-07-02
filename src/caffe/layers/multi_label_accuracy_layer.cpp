@@ -83,6 +83,8 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
   (*top)[0]->mutable_cpu_data()[0] = sensitivity;
   (*top)[0]->mutable_cpu_data()[1] = specificity;
   (*top)[0]->mutable_cpu_data()[2] = harmmean;
+  (*top)[0]->mutable_cpu_data()[3] = precission;
+  (*top)[0]->mutable_cpu_data()[4] = f1_score;
 
   // MultiLabelAccuracy should not be used as a loss function.
   return Dtype(0);
