@@ -28,7 +28,7 @@ void AccuracyLayer<Dtype>::SetUp(
 }
 
 template <typename Dtype>
-Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype AccuracyLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype accuracy = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();

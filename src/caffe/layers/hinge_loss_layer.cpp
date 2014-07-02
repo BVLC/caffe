@@ -13,7 +13,7 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -43,7 +43,7 @@ Dtype HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void HingeLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
     LOG(FATAL) << this->type_name()

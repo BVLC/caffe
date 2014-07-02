@@ -20,15 +20,16 @@ void EuclideanLossLayer<Dtype>::FurtherSetUp(
 }
 
 template <typename Dtype>
-Dtype EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype EuclideanLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   int count = bottom[0]->count();
-  caffe_sub(
+  this->device_->sub(
       count,
-      bottom[0]->cpu_data(),
-      bottom[1]->cpu_data(),
-      diff_.mutable_cpu_data());
-  Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
+      bottom[0]->const_data(),
+      bottom[1]->const_data(),
+      diff_.mutable_data());
+  Dtype dot;
+  this->device_->dot(count, diff_.const_data(), diff_.const_data(), &dot);
   Dtype loss = dot / bottom[0]->num() / Dtype(2);
   if (top->size() == 1) {
     (*top)[0]->mutable_cpu_data()[0] = loss;
@@ -37,17 +38,17 @@ Dtype EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void EuclideanLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
-      caffe_cpu_axpby(
+      this->device_->axpby(
           (*bottom)[i]->count(),              // count
           sign / (*bottom)[i]->num(),         // alpha
-          diff_.cpu_data(),                   // a
+          diff_.const_data(),                 // a
           Dtype(0),                           // beta
-          (*bottom)[i]->mutable_cpu_diff());  // b
+          (*bottom)[i]->mutable_diff());      // b
     }
   }
 }

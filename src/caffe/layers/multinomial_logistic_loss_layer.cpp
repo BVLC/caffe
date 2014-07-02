@@ -21,7 +21,7 @@ void MultinomialLogisticLossLayer<Dtype>::FurtherSetUp(
 }
 
 template <typename Dtype>
-Dtype MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
+Dtype MultinomialLogisticLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
@@ -41,7 +41,7 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
+void MultinomialLogisticLossLayer<Dtype>::Backward(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
