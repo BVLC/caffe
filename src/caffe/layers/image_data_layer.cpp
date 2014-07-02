@@ -31,7 +31,12 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
   Datum datum;
   CHECK(layer->prefetch_data_);
   Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
-  Dtype* top_label = layer->prefetch_label_->mutable_cpu_data();
+  Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
+  int num_labels = 0;
+  if (layer->output_labels_) {
+    top_label = layer->prefetch_label_->mutable_cpu_data();
+    num_labels = layer->prefetch_label_->channels();
+  }
   ImageDataParameter image_data_param = layer->layer_param_.image_data_param();
   const Dtype scale = image_data_param.scale();
   const int batch_size = image_data_param.batch_size();
@@ -39,7 +44,6 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
   const bool mirror = image_data_param.mirror();
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
-  const int num_labels = image_data_param.num_labels();
   const bool images_in_color = image_data_param.images_in_color();
 
   if (mirror && crop_size == 0) {
@@ -149,11 +153,9 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   Layer<Dtype>::SetUp(bottom, top);
   const int new_height  = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_height();
-  const int num_labels = this->layer_param_.image_data_param().num_labels();
   const bool images_in_color = this->layer_param_.image_data_param().images_in_color();
   if (top->size() == 2) {
     output_labels_ = true;
-    CHECK(num_labels > 0) << "Need labels for top";
   } else {
     output_labels_ = false;
   }
@@ -167,18 +169,23 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
   std::string line;
   int line_num = 1;
+  int num_labels = 0;
   while (std::getline(infile, line))
   {
     std::istringstream iss(line);
     string filename;
     std::vector<int> labels;
+    int label;
     CHECK(iss >> filename) << "Error reading line " << line_num;
-    for (int l = 0; l < num_labels; ++l) {
-      int label;
-      CHECK(iss >> label) << "Error reading labels at line " << line_num <<
-        " filename " << filename;
+    while(iss >> label) {
       labels.push_back(label);
     }
+    if (line_num == 1) {
+      // Use first line to set the number of labels
+      num_labels = labels.size();
+    }
+    CHECK_EQ(labels.size(), num_labels) << filename << " error at line " << line_num <<
+      " All images should have the same number of labels";
     line_num++;
     lines_.push_back(std::make_pair(filename, labels));
   }
@@ -224,7 +231,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->width();
   // label
   if (output_labels_) {
-    CHECK(num_labels > 0) << "File should contain labels for top";
+    CHECK(num_labels > 0) << "File should contain labels for top[1]";
     (*top)[1]->Reshape(batch_size, num_labels, 1, 1);
     LOG(INFO) << "output label size: " << (*top)[1]->num() << ","
       << (*top)[1]->channels() << "," << (*top)[1]->height() << ","

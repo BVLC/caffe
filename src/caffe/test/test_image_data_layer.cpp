@@ -27,37 +27,45 @@ template <typename Dtype>
 class ImageDataLayerTest : public ::testing::Test {
  protected:
   ImageDataLayerTest()
-      : seed_(1701),
-        blob_top_data_(new Blob<Dtype>()),
+      : blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
         filename_(new string(tmpnam(NULL))),
-        filename_multi_label_(new string(tmpnam(NULL))) {}
+        seed_(1701) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
-    Caffe::set_random_seed(seed_);
-    // Create a Vector of files with labels
+  }
+  void FillImageList(const int num_labels=1) {
     std::ofstream outfile(filename_->c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << *filename_;
-    for (int i = 0; i < 5; ++i) {
-      outfile << "examples/images/cat.jpg " << i << endl;
-    }
-    outfile.close();
-    // Create a Vector of files with muliple labels
-    std::ofstream outfile2(filename_multi_label_->c_str(), std::ofstream::out);
-    LOG(INFO) << "Using temporary file " << *filename_multi_label_;
-    for (int i = 0; i < 5; ++i) {
-      outfile2 << "examples/images/cat.jpg ";
-      for (int l = 0; l < 5; ++l) {
-        if (l == i) {
-          outfile2 << " 1";
-        } else {
-          outfile2 << " -1";
-        }
+    switch (num_labels) {
+    case 0:
+      // Images without labels
+      for (int i = 0; i < 5; ++i) {
+        outfile << "examples/images/cat.jpg " << endl;
       }
-      outfile2 << endl;
+      break;
+    case 1:
+      // Create a List of files with a single label
+      for (int i = 0; i < 5; ++i) {
+        outfile << "examples/images/cat.jpg " << i << endl;
+      }
+      break;
+    default:  
+      // Create a Vector of files with muliple {-1,1} labels
+      for (int i = 0; i < 5; ++i) {
+        outfile << "examples/images/cat.jpg ";
+        for (int l = 0; l < num_labels; ++l) {
+          if (l == i) {
+            outfile << " 1";
+          } else {
+            outfile << " -1";
+          }
+        }
+        outfile << endl;
+      }
     }
-    outfile2.close();
+    outfile.close();  
   }
 
   virtual ~ImageDataLayerTest() {
@@ -67,7 +75,6 @@ class ImageDataLayerTest : public ::testing::Test {
 
   int seed_;
   shared_ptr<string> filename_;
-  shared_ptr<string> filename_multi_label_;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -79,6 +86,8 @@ typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(ImageDataLayerTest, Dtypes);
 
 TYPED_TEST(ImageDataLayerTest, TestRead) {
+  const int num_labels = 1;
+  this->FillImageList(num_labels);
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -91,7 +100,7 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_data_->height(), 360);
   EXPECT_EQ(this->blob_top_data_->width(), 480);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label_->channels(), num_labels);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
@@ -103,12 +112,37 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   }
 }
 
-TYPED_TEST(ImageDataLayerTest, TestReadMultiLabel) {
+TYPED_TEST(ImageDataLayerTest, TestReadWithoutLabels) {
+  const int num_labels = 0;
+  this->FillImageList(num_labels);
+  vector<Blob<TypeParam>*> aux_blob_top_vec_;
+  aux_blob_top_vec_.push_back(this->blob_top_data_);
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
-  image_data_param->set_num_labels(5);
-  image_data_param->set_source(this->filename_multi_label_->c_str());
+  image_data_param->set_source(this->filename_->c_str());
+  image_data_param->set_shuffle(false);
+  ImageDataLayer<TypeParam> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, &aux_blob_top_vec_);
+  EXPECT_EQ(this->blob_top_data_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), 360);
+  EXPECT_EQ(this->blob_top_data_->width(), 480);
+  EXPECT_EQ(aux_blob_top_vec_.size(), 1);
+  // Go through the data twice
+  for (int iter = 0; iter < 2; ++iter) {
+    layer.Forward(this->blob_bottom_vec_, &aux_blob_top_vec_);
+    EXPECT_EQ(aux_blob_top_vec_.size(), 1);
+  }
+}
+
+TYPED_TEST(ImageDataLayerTest, TestReadMultiLabel) {
+  const int num_labels = 5;
+  this->FillImageList(num_labels);
+  LayerParameter param;
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_source(this->filename_->c_str());
   image_data_param->set_shuffle(false);
   ImageDataLayer<TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
@@ -117,7 +151,7 @@ TYPED_TEST(ImageDataLayerTest, TestReadMultiLabel) {
   EXPECT_EQ(this->blob_top_data_->height(), 360);
   EXPECT_EQ(this->blob_top_data_->width(), 480);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
-  EXPECT_EQ(this->blob_top_label_->channels(), 5);
+  EXPECT_EQ(this->blob_top_label_->channels(), num_labels);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
@@ -136,6 +170,8 @@ TYPED_TEST(ImageDataLayerTest, TestReadMultiLabel) {
 }
 
 TYPED_TEST(ImageDataLayerTest, TestResize) {
+  const int num_labels = 1;
+  this->FillImageList(num_labels);
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -150,7 +186,7 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
   EXPECT_EQ(this->blob_top_data_->height(), 256);
   EXPECT_EQ(this->blob_top_data_->width(), 256);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label_->channels(), num_labels);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
@@ -163,6 +199,9 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
 }
 
 TYPED_TEST(ImageDataLayerTest, TestShuffle) {
+  const int num_labels = 1;
+  this->FillImageList(num_labels);
+  Caffe::set_random_seed(this->seed_);
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -175,7 +214,7 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   EXPECT_EQ(this->blob_top_data_->height(), 360);
   EXPECT_EQ(this->blob_top_data_->width(), 480);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label_->channels(), num_labels);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
