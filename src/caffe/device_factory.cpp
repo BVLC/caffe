@@ -5,6 +5,7 @@
 
 namespace caffe {
 
+
 template<typename Dtype>
 class DeviceFactory {
  public:
