@@ -21,7 +21,7 @@ class Layer {
   // to SetUp(), where the dimensions of the bottom blobs are provided to the
   // layer.
   explicit Layer(const LayerParameter& param)
-    : layer_param_(param), device_(DeviceFactory<Dtype>::GetDevice()) {
+    : layer_param_(param), device_(GetDevice<Dtype>()) {
       // The only thing we do is to copy blobs if there are any.
       if (layer_param_.blobs_size() > 0) {
         blobs_.resize(layer_param_.blobs_size());

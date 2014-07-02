@@ -8,6 +8,7 @@
 
 #include "glog/logging.h"
 
+#include "caffe/common.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -252,14 +253,9 @@ class GPUDevice : public Device<Dtype> {
       const int stride, Dtype* data_im);
 };
 
+// Device factory function
 template<typename Dtype>
-class DeviceFactory {
- public:
-  static Device<Dtype>* GetDevice();
- private:
-  static Device<Dtype>* cpu_device_;
-  static Device<Dtype>* gpu_device_;
-};
+Device<Dtype>* GetDevice(Caffe::Brew mode = Caffe::UNSPECIFIED);
 
 }  // namespace caffe
 
