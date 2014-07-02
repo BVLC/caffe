@@ -23,14 +23,15 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
   num_output_ = this->layer_param_.convolution_param().num_output();
+  share_col_buffer_ = this->layer_param_.convolution_param().share_col_buffer();
   CHECK_GT(num_output_, 0);
   CHECK_EQ(channels_ % group_, 0);
   // The im2col result buffer would only hold one image at a time to avoid
   // overly large memory usage.
   int height_out = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
   int width_out = (width_ + 2 * pad_ - kernel_size_) / stride_ + 1;
-  col_buffer_.Reshape(
-      1, channels_ * kernel_size_ * kernel_size_, height_out, width_out);
+  col_buffer_.Reshape(1, channels_ * kernel_size_ * kernel_size_,
+    height_out, width_out);
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";

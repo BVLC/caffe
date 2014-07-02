@@ -160,6 +160,8 @@ class Net {
   vector<float> params_weight_decay_;
   // The bytes of memory used by this net
   size_t memory_used_;
+  // Blob to use as shared col_buffer by the Convolution Layers
+  Blob<Dtype> shared_col_buffer_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
