@@ -73,6 +73,8 @@ A core set of BVLC members have contributed lots of new functionality and fixes 
 - [Sergey Karayev](http://sergeykarayev.com/)
 - [Dr. Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/)
 
+The BVLC contributors would like to thank BVLC PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for advising the project.
+
 Additionally, the open-source community plays a large and growing role in Caffe's development.
 Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity, and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for an ordered list (by commit activity).
 We sincerely appreciate your interest and contributions!
