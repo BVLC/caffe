@@ -105,6 +105,10 @@ class DummyDataLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+     vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DUMMY_DATA;
@@ -113,13 +117,6 @@ class DummyDataLayer : public Layer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-
   vector<shared_ptr<Filler<Dtype> > > fillers_;
   vector<bool> refill_;
 };
@@ -203,6 +200,10 @@ class MemoryDataLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+       vector<Blob<Dtype>*>* top);
+   virtual void Backward(const vector<Blob<Dtype>*>& top,
+       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_MEMORY_DATA;
@@ -219,13 +220,6 @@ class MemoryDataLayer : public Layer<Dtype> {
   int batch_size() { return batch_size_; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-
   Dtype* data_;
   Dtype* labels_;
   int datum_channels_;
