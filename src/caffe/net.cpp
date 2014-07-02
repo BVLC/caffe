@@ -684,7 +684,7 @@ void Net<Dtype>::Update() {
     const int count = params_[i]->count();
     const Dtype* this_diff = params_[i]->const_diff();
     Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
-    Device<Dtype>* device = DeviceFactory<Dtype>::GetDevice();
+    Device<Dtype>* device = GetDevice<Dtype>();
     device->add(count, this_diff, owner_diff, owner_diff);
   }
   // Now, update the owned parameters.
