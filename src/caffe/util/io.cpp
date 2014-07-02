@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <fstream>  // NOLINT(readability/streams)
+#include <utility>
 
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
@@ -118,8 +119,8 @@ bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
 
   if (ReadImage(filename, height, width, is_color, datum)) {
-    if (datum->label_size() > 0){
-      datum->set_label(0,label);
+    if (datum->label_size() > 0) {
+      datum->set_label(0, label);
     } else {
       datum->add_label(label);
     }
@@ -139,7 +140,7 @@ bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
         if (datum->label_size() <= i) {
           datum->add_label(labels[i]);
         } else {
-          datum->set_label(i,labels[i]);
+          datum->set_label(i, labels[i]);
         }
       }
       return true;
@@ -160,14 +161,13 @@ void ReadImagesList(const string& source,
   std::string line;
   int line_num = 1;
   int num_labels = 0;
-  while (std::getline(infile, line))
-  {
+  while (std::getline(infile, line)) {
     std::istringstream iss(line);
     string filename;
     std::vector<int> labels;
     int label;
     CHECK(iss >> filename) << "Error reading line " << line_num;
-    while(iss >> label) {
+    while (iss >> label) {
       labels.push_back(label);
     }
     if (line_num == 1) {

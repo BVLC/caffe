@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "google/protobuf/message.h"
 #include "hdf5.h"

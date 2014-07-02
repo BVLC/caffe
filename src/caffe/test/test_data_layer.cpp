@@ -37,7 +37,7 @@ class DataLayerTest : public ::testing::Test {
   // Fill the LevelDB with data: if unique_pixels, each pixel is unique but
   // all images are the same; else each image is unique but all pixels within
   // an image are the same.
-  void FillLevelDB(const bool unique_pixels, const bool multilabel=false) {
+  void FillLevelDB(const bool unique_pixels, const bool multilabel = false) {
     backend_ = DataParameter_DB_LEVELDB;
     LOG(INFO) << "Using temporary leveldb " << *filename_;
     leveldb::DB* db;
@@ -58,7 +58,7 @@ class DataLayerTest : public ::testing::Test {
           }
         }
       } else {
-        datum.add_label(i);  
+        datum.add_label(i);
       }
       datum.set_channels(2);
       datum.set_height(3);
@@ -76,7 +76,7 @@ class DataLayerTest : public ::testing::Test {
   }
 
   // Fill the LMDB with data: unique_pixels has same meaning as in FillLevelDB.
-  void FillLMDB(const bool unique_pixels, const bool multilabel=false) {
+  void FillLMDB(const bool unique_pixels, const bool multilabel = false) {
     backend_ = DataParameter_DB_LMDB;
     LOG(INFO) << "Using temporary lmdb " << *filename_;
     CHECK_EQ(mkdir(filename_->c_str(), 0744), 0) << "mkdir " << filename_
@@ -105,7 +105,7 @@ class DataLayerTest : public ::testing::Test {
           }
         }
       } else {
-        datum.add_label(i);  
+        datum.add_label(i);
       }
       datum.set_channels(2);
       datum.set_height(3);
@@ -388,7 +388,7 @@ TYPED_TEST(DataLayerTest, TestReadLevelDBGPU) {
 TYPED_TEST(DataLayerTest, TestReadMultiLabelLevelDBCPU) {
   Caffe::set_mode(Caffe::CPU);
   const bool unique_pixels = false;  // all pixels the same; images different
-  const bool multilabel = true; // each image have multiple labels
+  const bool multilabel = true;      // each image have multiple labels
   this->FillLevelDB(unique_pixels, multilabel);
   this->TestReadMultiLabel();
 }
@@ -396,7 +396,7 @@ TYPED_TEST(DataLayerTest, TestReadMultiLabelLevelDBCPU) {
 TYPED_TEST(DataLayerTest, TestReadMultiLabelLevelDBGPU) {
   Caffe::set_mode(Caffe::GPU);
   const bool unique_pixels = false;  // all pixels the same; images different
-  const bool multilabel = true; // each image have multiple labels
+  const bool multilabel = true;      // each image have multiple labels
   this->FillLevelDB(unique_pixels, multilabel);
   this->TestReadMultiLabel();
 }
@@ -490,7 +490,7 @@ TYPED_TEST(DataLayerTest, TestReadLMDBGPU) {
 TYPED_TEST(DataLayerTest, TestReadMultiLabelLMDBCPU) {
   Caffe::set_mode(Caffe::CPU);
   const bool unique_pixels = false;  // all pixels the same; images different
-  const bool multilabel = true; // each image have multiple labels
+  const bool multilabel = true;      // each image have multiple labels
   this->FillLMDB(unique_pixels, multilabel);
   this->TestReadMultiLabel();
 }
@@ -498,7 +498,7 @@ TYPED_TEST(DataLayerTest, TestReadMultiLabelLMDBCPU) {
 TYPED_TEST(DataLayerTest, TestReadMultiLabelLMDBGPU) {
   Caffe::set_mode(Caffe::GPU);
   const bool unique_pixels = false;  // all pixels the same; images different
-  const bool multilabel = true; // each image have multiple labels
+  const bool multilabel = true;      // each image have multiple labels
   this->FillLMDB(unique_pixels, multilabel);
   this->TestReadMultiLabel();
 }

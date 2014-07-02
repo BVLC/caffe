@@ -65,14 +65,15 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
       count_neg++;
     }
   }
-  Dtype sensitivity = (count_pos > 0)? (true_positive / count_pos): 0;
-  Dtype specificity = (count_neg > 0)? (true_negative / count_neg): 0;
+  Dtype sensitivity = (count_pos > 0)? (true_positive / count_pos) : 0;
+  Dtype specificity = (count_neg > 0)? (true_negative / count_neg) : 0;
   Dtype harmmean = ((count_pos + count_neg) > 0)?
     2 / (count_pos / true_positive + count_neg / true_negative) : 0;
   Dtype precission = (true_positive > 0)?
-    (true_positive / (true_positive + false_positive)): 0;
+    (true_positive / (true_positive + false_positive)) : 0;
   Dtype f1_score = (true_positive > 0)?
-    2 * true_positive / (2 * true_positive + false_positive + false_negative) : 0;
+    2 * true_positive /
+    (2 * true_positive + false_positive + false_negative) : 0;
 
   DLOG(INFO) << "Sensitivity: " << sensitivity;
   DLOG(INFO) << "Specificity: " << specificity;

@@ -124,7 +124,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
     // Copy all the labels from datum
     if (layer->output_labels_) {
       CHECK_EQ(datum.label_size(), num_labels);
-      for (int l = 0; l < num_labels; ++l){
+      for (int l = 0; l < num_labels; ++l) {
         top_label[item_id * num_labels + l] = datum.label(l);
       }
     }
@@ -280,7 +280,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->width();
   // label
   if (output_labels_) {
-    CHECK(datum.label_size() > 0) << "Datum should contain labels for top";
+    CHECK_GT(datum.label_size(), 0) << "Datum should contain labels for top";
     (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(),
       datum.label_size(), 1, 1);
     LOG(INFO) << "output label size: " << (*top)[1]->num() << ","

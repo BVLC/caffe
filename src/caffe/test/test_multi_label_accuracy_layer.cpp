@@ -29,7 +29,7 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
     data_filler_param.set_std(1);
     GaussianFiller<Dtype> data_filler(data_filler_param);
     data_filler.Fill(blob_bottom_data_);
-  
+
     // Fill the label vector
     FillerParameter targets_filler_param;
     targets_filler_param.set_min(-1);
@@ -101,10 +101,10 @@ TYPED_TEST(MultiLabelAccuracyLayerTest, TestSetup) {
   LayerParameter layer_param;
   MultiLabelAccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  EXPECT_EQ(this->blob_top_->num(),1);
-  EXPECT_EQ(this->blob_top_->channels(),5);
-  EXPECT_EQ(this->blob_top_->height(),1);
-  EXPECT_EQ(this->blob_top_->width(),1);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 5);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
 }
 
 

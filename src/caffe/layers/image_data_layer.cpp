@@ -123,7 +123,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
     }
     if (layer->output_labels_) {
       CHECK_EQ(datum.label_size(), num_labels);
-      for (int l = 0; l < num_labels; ++l){
+      for (int l = 0; l < num_labels; ++l) {
         top_label[item_id * num_labels + l] = datum.label(l);
       }
     }
@@ -153,7 +153,8 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   Layer<Dtype>::SetUp(bottom, top);
   const int new_height  = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_height();
-  const bool images_in_color = this->layer_param_.image_data_param().images_in_color();
+  const bool images_in_color =
+      this->layer_param_.image_data_param().images_in_color();
   if (top->size() == 2) {
     output_labels_ = true;
   } else {
@@ -204,7 +205,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   int num_labels = datum.label_size();
   // label
   if (output_labels_) {
-    CHECK(num_labels > 0) << "File should contain labels for top[1]";
+    CHECK_GT(num_labels, 0) << "File should contain labels for top[1]";
     (*top)[1]->Reshape(batch_size, num_labels, 1, 1);
     LOG(INFO) << "output label size: " << (*top)[1]->num() << ","
       << (*top)[1]->channels() << "," << (*top)[1]->height() << ","

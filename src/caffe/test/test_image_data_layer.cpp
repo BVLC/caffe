@@ -31,11 +31,13 @@ class ImageDataLayerTest : public ::testing::Test {
         blob_top_label_(new Blob<Dtype>()),
         filename_(new string(tmpnam(NULL))),
         seed_(1701) {}
+
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
   }
-  void FillImageList(const int num_labels=1) {
+
+  void FillImageList(const int num_labels = 1) {
     std::ofstream outfile(filename_->c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << *filename_;
     switch (num_labels) {
@@ -51,7 +53,7 @@ class ImageDataLayerTest : public ::testing::Test {
         outfile << "examples/images/cat.jpg " << i << endl;
       }
       break;
-    default:  
+    default:
       // Create a Vector of files with muliple {-1,1} labels
       for (int i = 0; i < 5; ++i) {
         outfile << "examples/images/cat.jpg ";
@@ -65,7 +67,7 @@ class ImageDataLayerTest : public ::testing::Test {
         outfile << endl;
       }
     }
-    outfile.close();  
+    outfile.close();
   }
 
   virtual ~ImageDataLayerTest() {
@@ -79,7 +81,6 @@ class ImageDataLayerTest : public ::testing::Test {
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
-
 };
 
 typedef ::testing::Types<float, double> Dtypes;
@@ -199,6 +200,7 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
 }
 
 TYPED_TEST(ImageDataLayerTest, TestShuffle) {
+  Caffe::set_random_seed(this->seed_);
   const int num_labels = 1;
   this->FillImageList(num_labels);
   LayerParameter param;
