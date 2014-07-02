@@ -203,7 +203,6 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
-  LOG(INFO) << lines_[lines_id_].first << " " << lines_[lines_id_].second[0];
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
                          new_height, new_width, images_in_color, &datum));
   // image
@@ -225,7 +224,11 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->width();
   // label
   if (output_labels_) {
+    CHECK(num_labels > 0) << "File should contain labels for top";
     (*top)[1]->Reshape(batch_size, num_labels, 1, 1);
+    LOG(INFO) << "output label size: " << (*top)[1]->num() << ","
+      << (*top)[1]->channels() << "," << (*top)[1]->height() << ","
+      << (*top)[1]->width();
     prefetch_label_.reset(new Blob<Dtype>(batch_size, num_labels, 1, 1));
   }
   // datum size

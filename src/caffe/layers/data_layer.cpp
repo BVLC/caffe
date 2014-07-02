@@ -177,10 +177,10 @@ template <typename Dtype>
 void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   Layer<Dtype>::SetUp(bottom, top);
-  if (top->size() == 1) {
-    output_labels_ = false;
-  } else {
+  if (top->size() == 2) {
     output_labels_ = true;
+  } else {
+    output_labels_ = false;
   }
   // Initialize DB
   switch (this->layer_param_.data_param().backend()) {
@@ -280,8 +280,12 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->width();
   // label
   if (output_labels_) {
-    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
     CHECK(datum.label_size() > 0) << "Datum should contain labels for top";
+    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(),
+      datum.label_size(), 1, 1);
+    LOG(INFO) << "output label size: " << (*top)[1]->num() << ","
+      << (*top)[1]->channels() << "," << (*top)[1]->height() << ","
+      << (*top)[1]->width();
     prefetch_label_.reset(
         new Blob<Dtype>(this->layer_param_.data_param().batch_size(),
           datum.label_size(), 1, 1));
