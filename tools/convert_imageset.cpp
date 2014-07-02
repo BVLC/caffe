@@ -50,19 +50,21 @@ int main(int argc, char** argv) {
   // Test whether argv[1] == "-g"
   bool is_color= !(string("-g") == string(argv[1]));
   int  arg_offset = (is_color ? 0 : 1);
-  std::ifstream infile(argv[arg_offset+2]);
-  std::vector<std::pair<string, int> > lines;
-  string filename;
-  int label;
-  while (infile >> filename >> label) {
-    lines.push_back(std::make_pair(filename, label));
-  }
-  if (argc >= (arg_offset+5) && argv[arg_offset+4][0] == '1') {
-    // randomly shuffle data
-    LOG(INFO) << "Shuffling data";
-    std::random_shuffle(lines.begin(), lines.end());
-  }
-  LOG(INFO) << "A total of " << lines.size() << " images.";
+  std::vector<std::pair<std::string, std::vector<int> > > lines;
+  ReadImagesList(argv[arg_offset+2], &lines);
+  // std::ifstream infile(argv[arg_offset+2]);
+  // std::vector<std::pair<string, int> > lines;
+  // string filename;
+  // int label;
+  // while (infile >> filename >> label) {
+  //   lines.push_back(std::make_pair(filename, label));
+  // }
+  // if (argc >= (arg_offset+5) && argv[arg_offset+4][0] == '1') {
+  //   // randomly shuffle data
+  //   LOG(INFO) << "Shuffling data";
+  //   std::random_shuffle(lines.begin(), lines.end());
+  // }
+  // LOG(INFO) << "A total of " << lines.size() << " images.";
 
   string db_backend = "leveldb";
   if (argc >= (arg_offset+6)) {

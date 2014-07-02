@@ -163,33 +163,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
-  const string& source = this->layer_param_.image_data_param().source();
-  LOG(INFO) << "Opening file " << source;
-  std::ifstream infile(source.c_str());
-
-  std::string line;
-  int line_num = 1;
-  int num_labels = 0;
-  while (std::getline(infile, line))
-  {
-    std::istringstream iss(line);
-    string filename;
-    std::vector<int> labels;
-    int label;
-    CHECK(iss >> filename) << "Error reading line " << line_num;
-    while(iss >> label) {
-      labels.push_back(label);
-    }
-    if (line_num == 1) {
-      // Use first line to set the number of labels
-      num_labels = labels.size();
-    }
-    CHECK_EQ(labels.size(), num_labels) << filename << " error at line " << line_num <<
-      " All images should have the same number of labels";
-    line_num++;
-    lines_.push_back(std::make_pair(filename, labels));
-  }
-  LOG(INFO) << "Read " << line_num - 1 << " lines from source";
+  ReadImagesList(this->layer_param_.image_data_param().source(), &lines_);
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
@@ -197,8 +171,6 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
     ShuffleImages();
   }
-  LOG(INFO) << "A total of " << lines_.size() << " images" <<
-    " with " << num_labels << " labels each";
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.image_data_param().rand_skip()) {
@@ -229,6 +201,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
+  int num_labels = datum.label_size();
   // label
   if (output_labels_) {
     CHECK(num_labels > 0) << "File should contain labels for top[1]";

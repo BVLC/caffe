@@ -77,6 +77,8 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
+void ReadImagesList(const string& source,
+    std::vector<std::pair<std::string, std::vector<int> > >* images_vec);
 
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(

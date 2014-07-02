@@ -201,7 +201,6 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
 TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   const int num_labels = 1;
   this->FillImageList(num_labels);
-  Caffe::set_random_seed(this->seed_);
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
