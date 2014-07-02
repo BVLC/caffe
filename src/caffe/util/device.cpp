@@ -1,7 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
 #include "caffe/common.hpp"
-#include "caffe/util/device.hpp"
+#include "caffe/device.hpp"
 
 namespace caffe {
 

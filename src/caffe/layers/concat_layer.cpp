@@ -4,7 +4,7 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/util/device.hpp"
+#include "caffe/device.hpp"
 
 namespace caffe {
 
