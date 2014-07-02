@@ -1,7 +1,7 @@
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/util/device.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {

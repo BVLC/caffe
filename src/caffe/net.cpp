@@ -5,14 +5,10 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
-<<<<<<< HEAD
 #include "caffe/proto/caffe.pb.h"
-=======
-#include "caffe/util/io.hpp"
-#include "caffe/util/device.hpp"
->>>>>>> Incorporate additional abstractions from 1605431.
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"

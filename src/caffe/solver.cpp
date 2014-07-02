@@ -8,7 +8,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/device.hpp"
+#include "caffe/device.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
