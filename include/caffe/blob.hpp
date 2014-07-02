@@ -20,7 +20,7 @@ class Blob {
  public:
   Blob()
        : data_(), diff_(), num_(0), channels_(0), height_(0), width_(0),
-       count_(0) {}
+       count_(0), capacity_(0) {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
   void Reshape(const int num, const int channels, const int height,
@@ -120,6 +120,7 @@ class Blob {
   int height_;
   int width_;
   int count_;
+  int capacity_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
