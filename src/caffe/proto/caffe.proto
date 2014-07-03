@@ -548,3 +548,32 @@ message V0LayerParameter {
 
   optional HDF5OutputParameter hdf5_output_param = 1001;
 }
+
+message ROIGeneratorParameter {
+  enum ROIGeneratorType {
+    // "NONE" layer type is 0th enum element so that we don't cause confusion
+    // by defaulting to an existent ROIGeneratorType (instead, should usually
+    //  error if the type is unspecified).
+    NONE = 0;
+    SLIDING_WINDOW = 1;
+    SELECTIVE_SEARCH = 2;
+    BING = 3;
+  }
+  optional SlidingWindowParameter sliding_window_param = 1;
+  optional SelectiveSearchParameter selective_search_param = 2;
+  optional BingParameter bing_param = 3;
+}
+
+message SlidingWindowParameter {
+  // numbers of sliding windows along the x or y axis of multiple scales
+  // as seen in the Spatial Pyramid Pooling (Matching) algorithm
+  repeated uint32 spatial_bin = 1;
+  // sliding window stride / sliding window size
+  optional float stride_size_ratio = 2 [default = 0.5];
+}
+
+message SelectiveSearchParameter {
+}
+
+message BingParameter {
+}
