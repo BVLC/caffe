@@ -204,6 +204,29 @@ class HingeLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
+/* TripletRankingHingeLossLayer
+*/
+template <typename Dtype>
+class TripletRankingHingeLossLayer : public LossLayer<Dtype> {
+ public:
+  explicit TripletRankingHingeLossLayer(const LayerParameter& param)
+      : LossLayer<Dtype>(param) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_TRIPLET_RANKING_HINGE_LOSS;
+  }
+  // 0: Query feature
+  // 1: Similar sample feature
+  // 2: Dissimilar sample feature
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
 /* MultinomialLogisticLossLayer
 */
 template <typename Dtype>

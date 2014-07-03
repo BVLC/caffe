@@ -82,6 +82,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new SplitLayer<Dtype>(param);
   case LayerParameter_LayerType_TANH:
     return new TanHLayer<Dtype>(param);
+  case LayerParameter_LayerType_TRIPLET_RANKING_HINGE_LOSS:
+    return new TripletRankingHingeLossLayer<Dtype>(param);
   case LayerParameter_LayerType_WINDOW_DATA:
     return new WindowDataLayer<Dtype>(param);
   case LayerParameter_LayerType_NONE:
