@@ -84,6 +84,10 @@ class Layer {
   virtual inline int MinTopBlobs() const { return -1; }
   virtual inline int MaxTopBlobs() const { return -1; }
 
+  // EqualNumBottomTopBlobs should return true for layers requiring an equal
+  // number of bottom and top blobs.
+  virtual inline bool EqualNumBottomTopBlobs() const { return false; }
+
   // Declare for each bottom blob whether to allow force_backward -- that is,
   // if AllowForceBackward(i) == false, we will ignore the force_backward
   // setting and backpropagate to blob i only if it needs gradient information
@@ -155,6 +159,11 @@ class Layer {
       CHECK_GE(MaxTopBlobs(), top.size())
           << type_name() << " Layer produces at most " << MaxTopBlobs()
           << " top blob(s) as output.";
+    }
+    if (EqualNumBottomTopBlobs()) {
+      CHECK_EQ(bottom.size(), top.size())
+          << type_name() << " Layer produces one top blob as output for each "
+          << "bottom blob input.";
     }
   }
 
