@@ -17,8 +17,9 @@ template <typename Dtype>
 class ArgMaxLayerTest : public ::testing::Test {
  protected:
   ArgMaxLayerTest()
-      : blob_bottom_(new Blob<Dtype>(20, 10, 1, 1)),
-        blob_top_(new Blob<Dtype>()) {
+      : blob_bottom_(new Blob<Dtype>(10, 20, 1, 1)),
+        blob_top_(new Blob<Dtype>()),
+        top_k_(10) {
     Caffe::set_random_seed(1701);
     // fill the values
     FillerParameter filler_param;
@@ -32,6 +33,7 @@ class ArgMaxLayerTest : public ::testing::Test {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+  size_t top_k_;
 };
 
 TYPED_TEST_CASE(ArgMaxLayerTest, TestDtypes);
@@ -104,5 +106,61 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxVal) {
     }
   }
 }
+
+TYPED_TEST(ArgMaxLayerTest, TestCPUTopK) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
+  argmax_param->set_top_k(this->top_k_);
+  ArgMaxLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  int max_ind;
+  TypeParam max_val;
+  int num = this->blob_bottom_->num();
+  int dim = this->blob_bottom_->count() / num;
+  for (int i = 0; i < num; ++i) {
+    EXPECT_GE(top_data[i], 0);
+    EXPECT_LE(top_data[i], dim);
+    max_ind = top_data[i * this->top_k_];
+    max_val = bottom_data[i * dim + max_ind];
+    EXPECT_EQ(bottom_data[i * dim + max_ind], max_val);
+    for (int j = 0; j < dim; ++j) {
+      EXPECT_LE(bottom_data[i * dim + j], max_val);
+    }
+  }
+}
+
+TYPED_TEST(ArgMaxLayerTest, TestCPUMaxValTopK) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
+  argmax_param->set_out_max_val(true);
+  argmax_param->set_top_k(this->top_k_);
+  ArgMaxLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Now, check values
+  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
+  const TypeParam* top_data = this->blob_top_->cpu_data();
+  int max_ind;
+  TypeParam max_val;
+  int num = this->blob_bottom_->num();
+  int dim = this->blob_bottom_->count() / num;
+  for (int i = 0; i < num; ++i) {
+    EXPECT_GE(top_data[i], 0);
+    EXPECT_LE(top_data[i], dim);
+    max_ind = top_data[i * 2 * this->top_k_];
+    max_val = top_data[i * 2 * this->top_k_ + 1];
+    EXPECT_EQ(bottom_data[i * dim + max_ind], max_val);
+    for (int j = 0; j < dim; ++j) {
+      EXPECT_LE(bottom_data[i * dim + j], max_val);
+    }
+  }
+}
+
 
 }  // namespace caffe
