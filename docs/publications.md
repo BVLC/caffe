@@ -9,4 +9,4 @@ Caffe powers on-going research projects, large-scale industrial applications, an
 
 Please add your own publications by submitting a pull request to the [project github](http://github.com/BVLC/caffe). Send your pull request to the master branch for inclusion on the site and in the documentation.
 
-*Publication list coming soon.*
+* Yunchao Wei et al. [CNN: Single-label to Multi-label](http://arxiv.org/abs/1406.5726). arXiv 2014.
