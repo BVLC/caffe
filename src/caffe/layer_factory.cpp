@@ -66,6 +66,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new PowerLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
     return new ReLULayer<Dtype>(param);
+  case LayerParameter_LayerType_SILENCE:
+    return new SilenceLayer<Dtype>(param);
   case LayerParameter_LayerType_SIGMOID:
     return new SigmoidLayer<Dtype>(param);
   case LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS:
