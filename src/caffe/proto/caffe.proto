@@ -220,7 +220,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 36 (last added: ABSVAL)
+  // LayerType next available ID: 37 (last added: SILENCE)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -254,6 +254,7 @@ message LayerParameter {
     RELU = 18;
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
+    SILENCE = 36;
     SOFTMAX = 20;
     SOFTMAX_LOSS = 21;
     SPLIT = 22;
