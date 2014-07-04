@@ -181,4 +181,6 @@ Now that you have installed Caffe, check out the [MNIST demo](mnist.html) and th
 
 **CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.
 
+Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
+
 Refer to the project's issue tracker for [hardware/compatibility](https://github.com/BVLC/caffe/issues?labels=hardware%2Fcompatibility&page=1&state=open).
