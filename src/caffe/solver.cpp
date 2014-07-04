@@ -310,7 +310,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
             history_[param_id]->mutable_gpu_data());
       }
       // copy
-      caffe_gpu_copy(net_params[param_id]->count(),
+      caffe_copy(net_params[param_id]->count(),
           history_[param_id]->gpu_data(),
           net_params[param_id]->mutable_gpu_diff());
     }
