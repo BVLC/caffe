@@ -55,3 +55,8 @@ Testing: 100 secs / validation set (50,000 images).
 
 Training: 36.0 secs / 20 iterations (5,120 images).
 Testing: 133 secs / validation set (50,000 images)
+
+## NVIDIA GTX 770
+
+Training: 33.0 secs / 20 iterations (5,120 images).
+Testing: 129 secs / validation set (50,000 images)
