@@ -48,6 +48,7 @@ class ArgMaxLayer : public Layer<Dtype> {
     NOT_IMPLEMENTED;
   }
   bool out_max_val_;
+  size_t top_k_;
 };
 
 /* ConcatLayer
