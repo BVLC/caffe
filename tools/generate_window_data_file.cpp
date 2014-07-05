@@ -1,5 +1,8 @@
 // Copyright 2014 BVLC and contributors.
 
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -12,19 +15,53 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc != 3) {
-    LOG(ERROR) << "Usage: generate_window_data_file"
-        "  bounding_boxes_ground_truth_file  output_file";
+  if (argc != 5) {
+    LOG(ERROR) << "Makes a window file that can be used by the caffe"
+        " WindowDataLayer for finetuning.\n"
+        "  Usage: generate_window_data_file"
+        "  bounding_boxes_ground_truth_file  output_file  spatial_bins"
+        "  stride_size_ratio\n"
+        "The input ground truth bounding boxes file format contains repeated"
+        " blocks of:\n"
+        "  # image_index\n"
+        "  img_path\n"
+        "  channels\n"
+        "  height\n"
+        "  width\n"
+        "  num_bounding_boxes\n"
+        "  class_index x1 y1 x2 y2\n"
+        "  <... num_bounding_boxes-1 more bounding boxes follow ...>\n";
+        "The output window file format contains repeated blocks of:\n"
+        "  # image_index\n"
+        "  img_path\n"
+        "  channels\n"
+        "  height\n"
+        "  width\n"
+        "  num_windows\n"
+        "  class_index x1 y1 x2 y2\n"
+        "  <... num_windows-1 more windows follow ...>\n";
     return 1;
   }
 
   std::ifstream input_file(argv[1]);
   CHECK(input_file.good()) << "Failed to open bounding boxes ground truth file "
+      << argv[1];
+
+  std::ofstream output_file(argv[2]);
+  CHECK(output_file.good()) << "Failed to open output file "
       << argv[2];
 
-  std::ifstream output_file(argv[2]);
-  CHECK(output_file.good()) << "Failed to open output file "
-      << argv[3];
+  ROIGeneratorParameter roi_param;
+  SlidingWindowParameter* param = roi_param.mutable_sliding_window_param();
+  vector<string> spatial_bins;
+  string spaital_bins_str = argv[3];
+  boost::split(spatial_bins, spaital_bins_str, boost::is_any_of(","));
+  for (size_t i = 0; i < spatial_bins.size(); ++i) {
+    param->add_spatial_bin(boost::lexical_cast<int>(spatial_bins[i]));
+  }
+  param->set_stride_size_ratio(boost::lexical_cast<float>(argv[4]));
+  shared_ptr<ROIGenerator<float> > roi_generator(
+      new SlidingWindowROIGenerator<float>(roi_param));
 
   string hashtag;
   int image_index;
@@ -40,9 +77,8 @@ int main(int argc, char** argv) {
   int y2;
   std::vector<int> class_indices;
   std::vector<Rect> bounding_boxes;
+  std::vector<Rect> candidate_bboxes;
   std::vector<float> bbox_areas;
-  cv::Mat image;
-  shared_ptr<ROIGenerator> roi_generator(new SlidingWindowROIGenerator());
   Rect overlapped_rect;
   float overlapped_area;
   std::vector<int> overlapped_class_indices;
@@ -51,16 +87,6 @@ int main(int argc, char** argv) {
   if (!(input_file >> hashtag >> image_index)) {
     LOG(FATAL) << "Bounding boxes ground truth file is empty" << argv[2];
   }
-  // caffe/layers/window_data_layer.cpp
-  // window_file format
-  // repeated:
-  //    # image_index
-  //    img_path (abs path)
-  //    channels
-  //    height
-  //    width
-  //    num_windows
-  //    class_index overlap x1 y1 x2 y2
   do {
     CHECK_EQ(hashtag, "#");
     // read image path
@@ -76,7 +102,8 @@ int main(int argc, char** argv) {
       Rect bbox(x1, y1, x2, y2);
       bounding_boxes.push_back(bbox);
     }
-    roi_generator->generate(height, width, &candidate_bboxes);
+    Blob<float> dummy(1, 1, height, width);
+    roi_generator->generate(dummy, &candidate_bboxes);
     for (size_t i = 0; i < bounding_boxes.size(); ++i) {
       bbox_areas.push_back(bounding_boxes[i].area());
     }
@@ -92,9 +119,9 @@ int main(int argc, char** argv) {
       }
     }
     if (overlapped_candidate_indices.size() > 0) {
-      output_file << "# " << image_index << std::endl << file_path << std::endl
+      output_file << "# " << image_index << std::endl << image_path << std::endl
           << channels << std::endl << height << std::endl << width << std::endl
-          << overlapped_bboxes_indices.size() << std::endl;
+          << overlapped_candidate_indices.size() << std::endl;
       for (size_t i = 0; i < overlapped_candidate_indices.size(); ++i) {
         output_file << overlapped_class_indices[i] << std::endl
             << overlapped_ratios[i] << std::endl
