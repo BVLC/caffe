@@ -10,6 +10,8 @@
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
+#include "caffe/objdetect/rect.hpp"
+#include "caffe/objdetect/roi_generator.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
