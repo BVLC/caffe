@@ -411,8 +411,8 @@ message PoolingParameter {
   optional uint32 pad_h = 9 [default = 0]; // The padding height
   optional uint32 pad_w = 10 [default = 0]; // The padding width
   optional uint32 kernel_size = 2; // The kernel size (square)
-  optional uint32 kernel_size_h = 5; // The kernel height
-  optional uint32 kernel_size_w = 6; // The kernel width
+  optional uint32 kernel_h = 5; // The kernel height
+  optional uint32 kernel_w = 6; // The kernel width
   optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
   optional uint32 stride_h = 7; // The stride height
   optional uint32 stride_w = 8; // The stride width
