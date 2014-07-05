@@ -361,7 +361,7 @@ class PoolingLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   int max_top_blobs_;
-  int kernel_size_h_, kernel_size_w_;
+  int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int pad_h_, pad_w_;
   int channels_;

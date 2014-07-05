@@ -43,14 +43,14 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       && pool_param.has_stride_w())
       || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
       << "Stride is stride OR stride_h and stride_w are required.";
-
   if (pool_param.has_kernel_size()) {
     kernel_h_ = kernel_w_ = pool_param.kernel_size();
   } else {
     kernel_h_ = pool_param.kernel_h();
     kernel_w_ = pool_param.kernel_w();
   }
-  CHECK_GT(kernel_h_ * kernel_w_, 0) << "Filter dimensions cannot be zero.";
+  CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
+  CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
   if (!pool_param.has_pad_h()) {
     pad_h_ = pad_w_ = pool_param.pad();
   } else {
@@ -69,16 +69,16 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         || this->layer_param_.pooling_param().pool()
         == PoolingParameter_PoolMethod_MAX)
         << "Padding implemented only for average and max pooling.";
-    CHECK_LT(pad_h_, kernel_size_h_);
-    CHECK_LT(pad_w_, kernel_size_w_);
+    CHECK_LT(pad_h_, kernel_h_);
+    CHECK_LT(pad_w_, kernel_w_);
   }
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
   pooled_height_ = static_cast<int>(ceil(static_cast<float>(
-      height_ + 2 * pad_h_ - kernel_size_h_) / stride_h_)) + 1;
+      height_ + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
   pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      width_ + 2 * pad_w_ - kernel_size_w_) / stride_w_)) + 1;
+      width_ + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
   if (pad_h_ || pad_w_) {
     // If we have padding, ensure that the last pooling starts strictly
     // inside the image (instead of at the padding); otherwise clip the last.
@@ -142,8 +142,8 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
             int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_size_h_, height_);
-            int wend = min(wstart + kernel_size_w_, width_);
+            int hend = min(hstart + kernel_h_, height_);
+            int wend = min(wstart + kernel_w_, width_);
             hstart = max(hstart, 0);
             wstart = max(wstart, 0);
             const int pool_index = ph * pooled_width_ + pw;
@@ -184,8 +184,8 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
             int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_size_h_, height_ + pad_h_);
-            int wend = min(wstart + kernel_size_w_, width_ + pad_w_);
+            int hend = min(hstart + kernel_h_, height_ + pad_h_);
+            int wend = min(wstart + kernel_w_, width_ + pad_w_);
             int pool_size = (hend - hstart) * (wend - wstart);
             hstart = max(hstart, 0);
             wstart = max(wstart, 0);
@@ -266,8 +266,8 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
             int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_size_h_, height_ + pad_h_);
-            int wend = min(wstart + kernel_size_w_, width_ + pad_w_);
+            int hend = min(hstart + kernel_h_, height_ + pad_h_);
+            int wend = min(wstart + kernel_w_, width_ + pad_w_);
             int pool_size = (hend - hstart) * (wend - wstart);
             hstart = max(hstart, 0);
             wstart = max(wstart, 0);
