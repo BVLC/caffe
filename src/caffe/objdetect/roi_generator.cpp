@@ -3,7 +3,6 @@
 #include "caffe/objdetect/roi_generator.hpp"
 
 #include "caffe/common.hpp"
-#include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {

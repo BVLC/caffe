@@ -560,8 +560,6 @@ message ROIGeneratorParameter {
     BING = 3;
   }
   optional SlidingWindowParameter sliding_window_param = 1;
-  optional SelectiveSearchParameter selective_search_param = 2;
-  optional BingParameter bing_param = 3;
 }
 
 message SlidingWindowParameter {
@@ -572,8 +570,17 @@ message SlidingWindowParameter {
   optional float stride_size_ratio = 2 [default = 0.5];
 }
 
-message SelectiveSearchParameter {
-}
+message RegionsMergerParameter {
+  enum RegionsMergerType {
+    // "NONE" layer type is 0th enum element so that we don't cause confusion
+    // by defaulting to an existent ROIGeneratorType (instead, should usually
+    //  error if the type is unspecified).
+    NONE = 0;
+    NON_MAXIMUM_SUPPRESION = 1;
+  }
+  optional NonMaximumSuppressionRegionsMergerParameter nms_param = 1;
+} 
 
-message BingParameter {
+message NonMaximumSuppressionRegionsMergerParameter {
+  optional float overlap = 1;
 }
