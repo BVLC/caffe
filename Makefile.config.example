@@ -22,10 +22,10 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 		#-gencode arch=compute_50,code=compute_50
 
 # BLAS choice:
-# atlas for ATLAS (default)
+# open for OpenBlas (default)
 # mkl for MKL
-# open for OpenBlas
-BLAS := atlas
+# atlas for ATLAS
+BLAS := open
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
