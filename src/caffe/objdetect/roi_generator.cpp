@@ -45,6 +45,23 @@ void SlidingWindowROIGenerator<Dtype>::generate(const Blob<Dtype>& image,
   }
 }
 
+
 INSTANTIATE_CLASS(SlidingWindowROIGenerator);
+
+template <typename Dtype>
+ROIGenerator<Dtype>* GetROIGenerator(const ROIGeneratorParameter& param) {
+  switch (param.type()) {
+  case ROIGeneratorParameter_ROIGeneratorType_SLIDING_WINDOW:
+    return new SlidingWindowROIGenerator<Dtype>(param);
+  default:
+    LOG(FATAL) << "Unknown ROIGenerator type " << param.type();
+  }
+}
+template <>
+ROIGenerator<float>* GetROIGenerator<float>(
+    const ROIGeneratorParameter& param);
+template <>
+ROIGenerator<double>* GetROIGenerator<double>(
+    const ROIGeneratorParameter& param);
 
 }  // namespace caffe

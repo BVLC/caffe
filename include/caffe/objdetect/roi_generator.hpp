@@ -39,22 +39,7 @@ class SlidingWindowROIGenerator : public ROIGenerator<Dtype> {
 };
 
 template <typename Dtype>
-class SelectiveSearchROIGenerator : public ROIGenerator<Dtype> {
- public:
-  explicit SelectiveSearchROIGenerator(const ROIGeneratorParameter& param);
-  virtual ~SelectiveSearchROIGenerator() {}
-  virtual void generate(const Blob<Dtype>& image, vector<Rect>* rois);
- protected:
-};
-
-template <typename Dtype>
-class BINGROIGenerator : public ROIGenerator<Dtype> {
- public:
-  explicit BINGROIGenerator(const ROIGeneratorParameter& param);
-  virtual ~BINGROIGenerator() {}
-  virtual void generate(const Blob<Dtype>& image, vector<Rect>* rois);
- protected:
-};
+ROIGenerator<Dtype>* GetROIGenerator(const ROIGeneratorParameter& param);
 
 }  // namespace caffe
 
