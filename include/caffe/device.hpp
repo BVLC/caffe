@@ -73,6 +73,9 @@ class Device {
   virtual void rng_bernoulli(const int N, const Dtype p, int* r) {
     NOT_IMPLEMENTED; }
 
+  virtual void rng_bernoulli(const int N, const Dtype p, unsigned int* r) {
+    NOT_IMPLEMENTED; }
+
   virtual void exp(const int N, const Dtype* a, Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out) {
@@ -150,6 +153,8 @@ class CPUDevice : public Device<Dtype> {
                             Dtype* r);
 
   virtual void rng_bernoulli(const int N, const Dtype p, int* r);
+
+  virtual void rng_bernoulli(const int N, const Dtype p, unsigned int* r);
 
   virtual void exp(const int N, const Dtype* a, Dtype* y);
 
