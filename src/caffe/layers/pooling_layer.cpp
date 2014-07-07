@@ -35,11 +35,11 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(pool_param.has_kernel_size() ||
       (pool_param.has_kernel_h() && pool_param.has_kernel_w()))
       << "For non-square filters both kernel_h and kernel_w are required.";
-  CHECK((!pool_param.has_pad() && pool_param.has_pad_h() 
+  CHECK((!pool_param.has_pad() && pool_param.has_pad_h()
       && pool_param.has_pad_w())
       || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
       << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!pool_param.has_stride() && pool_param.has_stride_h() 
+  CHECK((!pool_param.has_stride() && pool_param.has_stride_h()
       && pool_param.has_stride_w())
       || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
       << "Stride is stride OR stride_h and stride_w are required.";
