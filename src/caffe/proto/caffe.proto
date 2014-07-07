@@ -559,7 +559,8 @@ message ROIGeneratorParameter {
     SELECTIVE_SEARCH = 2;
     BING = 3;
   }
-  optional SlidingWindowParameter sliding_window_param = 1;
+  optional ROIGeneratorType type = 1;
+  optional SlidingWindowParameter sliding_window_param = 2;
 }
 
 message SlidingWindowParameter {
@@ -578,9 +579,29 @@ message RegionsMergerParameter {
     NONE = 0;
     NON_MAXIMUM_SUPPRESION = 1;
   }
-  optional NonMaximumSuppressionRegionsMergerParameter nms_param = 1;
+  optional RegionsMergerType type = 1;
+  optional NonMaximumSuppressionRegionsMergerParameter nms_param = 2;
 } 
 
 message NonMaximumSuppressionRegionsMergerParameter {
   optional float overlap = 1;
+}
+
+message ObjectDetectorParameter {
+  enum ObjectDetectorType {
+    // "NONE" layer type is 0th enum element so that we don't cause confusion
+    // by defaulting to an existent ROIGeneratorType (instead, should usually
+    //  error if the type is unspecified).
+    NONE = 0;
+    GENERIC_CNN = 1;
+  }
+  optional ObjectDetectorType type = 1;
+  optional GenericCNNObjectDetectorParameter generic_cnn_param = 2;
+}
+
+message GenericCNNObjectDetectorParameter {
+  optional string net_proto = 1;
+  optional string pretrained_binary_proto = 2;
+  optional ROIGeneratorParameter roi_generator_param = 3;
+  optional RegionsMergerParameter regions_merger_param = 4;
 }
