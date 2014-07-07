@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 34 (last added: DISTANCE)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -139,6 +139,7 @@ message LayerParameter {
     CONCAT = 3;
     CONVOLUTION = 4;
     DATA = 5;
+    DISTANCE = 33;
     DROPOUT = 6;
     DUMMY_DATA = 32;
     EUCLIDEAN_LOSS = 7;
@@ -193,6 +194,7 @@ message LayerParameter {
   optional ConcatParameter concat_param = 9;
   optional ConvolutionParameter convolution_param = 10;
   optional DataParameter data_param = 11;
+  optional DistanceParameter distance_param = 30;
   optional DropoutParameter dropout_param = 12;
   optional DummyDataParameter dummy_data_param = 26;
   optional EltwiseParameter eltwise_param = 24;
@@ -377,6 +379,21 @@ message InnerProductParameter {
   optional FillerParameter bias_filler = 4; // The filler for the bias
 }
 
+// Message that stores parameters used by DistanceLayer
+message DistanceParameter {
+  enum Distance {
+    Squared = 1;
+    Abs = 2;
+  }
+  // Specify the type of distance
+  optional Distance distance = 1 [default = Squared];
+
+  optional uint32 num_output = 2; // The number of outputs for the layer  
+  optional bool bias_term = 3 [default = true]; // whether to have bias terms
+  optional FillerParameter weight_filler = 4; // The filler for the weight
+  optional FillerParameter bias_filler = 5; // The filler for the bias
+}
+  
 // Message that stores parameters used by LRNLayer
 message LRNParameter {
   optional uint32 local_size = 1 [default = 5];

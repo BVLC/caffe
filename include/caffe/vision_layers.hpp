@@ -130,6 +130,39 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
+/* DistanceLayer
+
+  y = b + \sum_i w_i f( x0_i - x1_i )
+
+  where f(x) = |x| or f(x) = x^2
+*/
+template <typename Dtype>
+class DistanceLayer : public Layer<Dtype> {
+ public:
+  explicit DistanceLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+ protected:   
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int M_;
+  int K_;
+  int N_;
+  bool bias_term_;
+  shared_ptr<SyncedMemory> bias_multiplier_;
+  Blob<Dtype> difference_;
+  Blob<Dtype> difference_squared_;
+};
+
 /* EltwiseLayer
   Compute elementwise operations like product or sum.
 */
