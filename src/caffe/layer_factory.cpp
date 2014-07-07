@@ -64,6 +64,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new MemoryDataLayer<Dtype>(param);
   case LayerParameter_LayerType_MULTI_LABEL_ACCURACY:
     return new MultiLabelAccuracyLayer<Dtype>(param);
+  case LayerParameter_LayerType_MULTI_LABEL_LOSS:
+    return new MultiLabelLossLayer<Dtype>(param);
   case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
     return new MultinomialLogisticLossLayer<Dtype>(param);
   case LayerParameter_LayerType_POOLING:

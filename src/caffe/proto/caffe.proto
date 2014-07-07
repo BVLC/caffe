@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 34 (last added: MULTI_LABEL_ACCURACY)
+  // LayerType next available ID: 35 (last added: MULTI_LABEL_LOSS)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -154,6 +154,7 @@ message LayerParameter {
     LRN = 15;
     MEMORY_DATA = 29;
     MULTI_LABEL_ACCURACY = 33;
+    MULTI_LABEL_LOSS = 34;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
     POWER = 26;
