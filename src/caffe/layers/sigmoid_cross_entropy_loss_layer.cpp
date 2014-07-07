@@ -23,11 +23,11 @@ void SigmoidCrossEntropyLossLayer<Dtype>::FurtherSetUp(
   sigmoid_top_vec_.push_back(sigmoid_output_.get());
   sigmoid_layer_->SetUp(sigmoid_bottom_vec_, &sigmoid_top_vec_);
   if (top->size() >= 1) {
-    // sigmoid cross entropy loss (averaged across batch)
+   // sigmoid cross entropy loss (averaged across batch)
     (*top)[0]->Reshape(1, 1, 1, 1);
   }
   if (top->size() == 2) {
-    // softmax output
+   // softmax output
     (*top)[1]->ReshapeLike(*sigmoid_output_.get());
     (*top)[1]->ShareData(*sigmoid_output_.get());
   }
@@ -47,16 +47,12 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   const Dtype* target = bottom[1]->cpu_data();
   Dtype loss = 0;
   for (int i = 0; i < count; ++i) {
-    if (target[i] != 0) {
-    // Update the loss only if target[i] is not 0
-      loss -= input_data[i] * ((target[i] > 0) - (input_data[i] >= 0)) -
+    loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
         log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
-    }
   }
-  if (top->size() >= 1) {
+  if (top->size() == 1) {
     (*top)[0]->mutable_cpu_data()[0] = loss / num;
   }
-
   return loss / num;
 }
 
@@ -75,15 +71,9 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
     const Dtype* target = (*bottom)[1]->cpu_data();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-    for (int i = 0; i < count; ++i) {
-    if (target[i] != 0) {
-      bottom_diff[i] = sigmoid_output_data[i] - (target[i] > 0);
-    } else {
-      bottom_diff[i] = 0;
-    }
-  }
-  // Scale down gradient
-  caffe_scal(count, Dtype(1) / num, bottom_diff);
+    caffe_sub(count, sigmoid_output_data, target, bottom_diff);
+    // Scale down gradient
+    caffe_scal(count, Dtype(1) / num, bottom_diff);
   }
 }
 
