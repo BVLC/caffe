@@ -12,8 +12,7 @@ namespace caffe {
 template <typename Dtype>
 void Im2colLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) << "Im2col Layer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) << "Im2col Layer takes a single blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   kernel_size_ = this->layer_param_.convolution_param().kernel_size();
   stride_ = this->layer_param_.convolution_param().stride();
   pad_ = this->layer_param_.convolution_param().pad();

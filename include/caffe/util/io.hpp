@@ -61,12 +61,18 @@ inline void WriteProtoToBinaryFile(
 }
 
 bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, Datum* datum);
+    const int height, const int width, const bool is_color, Datum* datum);
+
+inline bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, Datum* datum) {
+  return ReadImageToDatum(filename, label, height, width, true, datum);
+}
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
+
 
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(

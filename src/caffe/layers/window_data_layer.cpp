@@ -258,13 +258,11 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 template <typename Dtype>
 void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+  Layer<Dtype>::SetUp(bottom, top);
   // SetUp runs through the window_file and creates two structures
   // that hold windows: one for foreground (object) windows and one
   // for background (non-object) windows. We use an overlap threshold
   // to decide which is which.
-
-  CHECK_EQ(bottom.size(), 0) << "Window data Layer takes no input blobs.";
-  CHECK_EQ(top->size(), 2) << "Window data Layer prodcues two blobs as output.";
 
   // window_file format
   // repeated:
