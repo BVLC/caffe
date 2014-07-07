@@ -26,10 +26,13 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
   const Dtype* target = bottom[1]->cpu_data();
   Dtype loss = 0;
   for (int i = 0; i < count; ++i) {
-    loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
+    if (target[i] != 0) {
+      // Update the loss only if target[i] is not 0
+      loss -= input_data[i] * ((target[i] > 0) - (input_data[i] >= 0)) -
         log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
+    }
   }
-  if (top->size() == 1) {
+  if (top->size() >= 1) {
     (*top)[0]->mutable_cpu_data()[0] = loss / num;
   }
   return loss / num;

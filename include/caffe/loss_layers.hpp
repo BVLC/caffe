@@ -98,6 +98,15 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
     return true;
   }
 
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 2; }
+
+  // We cannot backpropagate to the labels; ignore force_backward for these
+  // inputs.
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return bottom_index != 1;
+  }
+
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
