@@ -405,11 +405,17 @@ message PoolingParameter {
     STOCHASTIC = 2;
   }
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
-  optional uint32 kernel_size = 2; // The kernel size
-  optional uint32 stride = 3 [default = 1]; // The stride
-  // The padding size -- currently implemented only for average and max pooling.
-  // average pooling zero pads. max pooling -inf pads.
-  optional uint32 pad = 4 [default = 0];
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
+  optional uint32 pad_h = 9 [default = 0]; // The padding height
+  optional uint32 pad_w = 10 [default = 0]; // The padding width
+  optional uint32 kernel_size = 2; // The kernel size (square)
+  optional uint32 kernel_h = 5; // The kernel height
+  optional uint32 kernel_w = 6; // The kernel width
+  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
+  optional uint32 stride_h = 7; // The stride height
+  optional uint32 stride_w = 8; // The stride width
 }
 
 // Message that stores parameters used by PowerLayer
