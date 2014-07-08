@@ -276,6 +276,45 @@ class PoolingLayer : public Layer<Dtype> {
   shared_ptr<Blob<int> > max_idx_;
 };
 
+/* PyramidLevelLayer
+*/
+template <typename Dtype>
+class PyramidLevelLayer : public Layer<Dtype> {
+ public:
+  explicit PyramidLevelLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_POOLING;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return max_top_blobs_; }
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int max_top_blobs_;
+  int bin_num_h_;
+  int bin_num_w_;
+  float bin_size_h_;
+  float bin_size_w_;
+  int channels_;
+  int height_;
+  int width_;
+  Blob<Dtype> rand_idx_;
+  shared_ptr<Blob<int> > max_idx_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_

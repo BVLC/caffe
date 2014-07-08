@@ -115,7 +115,7 @@ message SolverState {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 28 (last added: accuracy_param)
+// LayerParameter next available ID: 31 (last added: accuracy_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 34 (last added: PYRAMID_LEVEL)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -156,6 +156,7 @@ message LayerParameter {
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
     POWER = 26;
+    PYRAMID_LEVEL = 33;
     RELU = 18;
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
@@ -208,6 +209,7 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 20;
   optional ThresholdParameter threshold_param = 25;
   optional HingeLossParameter hinge_loss_param = 29;
+  optional PyramidLevelParameter pyramid_level_param = 31;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -416,6 +418,18 @@ message PoolingParameter {
   optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
   optional uint32 stride_h = 7; // The stride height
   optional uint32 stride_w = 8; // The stride width
+}
+
+// Message that stores parameters used by PyramidLevelParameter
+message PyramidLevelParameter {
+  enum PoolMethod {
+    MAX = 0;
+    AVE = 1;
+    STOCHASTIC = 2;
+  }
+  optional PoolMethod pool = 1 [default = MAX]; // The pooling method
+  optional uint32 bin_num_h = 2; // number of spatial bins along height axis
+  optional uint32 bin_num_w = 3; // number of spatial bins along width axis
 }
 
 // Message that stores parameters used by PowerLayer
