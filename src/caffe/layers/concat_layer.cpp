@@ -93,8 +93,9 @@ void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = blob->mutable_diff();
       int num_elem = blob->channels()*blob->height()*blob->width();
       for (int n = 0; n < num_; ++n) {
-        this->device_->copy(num_elem, top_diff+top[0]->offset(n, offset_channel),
-          bottom_diff+blob->offset(n));
+        this->device_->copy(num_elem,
+            top_diff + top[0]->offset(n, offset_channel),
+            bottom_diff + blob->offset(n));
       }
       offset_channel += blob->channels();
     }

@@ -34,7 +34,9 @@ class HDF5OutputLayer : public Layer<Dtype> {
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
   inline std::string file_name() const { return file_name_; }
 
  protected:
@@ -58,7 +60,9 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HDF5_DATA;
@@ -98,7 +102,9 @@ class DataLayer : public Layer<Dtype> {
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DATA;
@@ -177,7 +183,9 @@ class ImageDataLayer : public Layer<Dtype> {
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_IMAGE_DATA;
@@ -215,10 +223,10 @@ class MemoryDataLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
-       vector<Blob<Dtype>*>* top);
-   virtual void Backward(const vector<Blob<Dtype>*>& top,
-       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_MEMORY_DATA;
@@ -264,7 +272,9 @@ class WindowDataLayer : public Layer<Dtype> {
   virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) { return; }
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    return;
+  }
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_WINDOW_DATA;

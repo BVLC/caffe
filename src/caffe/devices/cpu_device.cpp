@@ -1,14 +1,14 @@
 // Copyright 2014 BVLC and contributors.
 
+extern "C" {
+#include <cblas.h>
+}
+
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
 #include <limits>
 #include <cmath>
-
-extern "C" {
-#include <cblas.h>
-}
 
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
@@ -87,6 +87,7 @@ void CPUDevice<float>::copy(const int N, const float *X, float *Y) {
 }
 
 template<>
+/* NOLINT_NEXT_LINE(build/include_what_you_use) */
 void CPUDevice<double>::copy(const int N, const double *X, double *Y) {
   cblas_dcopy(N, X, 1, Y, 1);
 }

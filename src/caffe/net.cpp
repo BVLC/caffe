@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <utility>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
