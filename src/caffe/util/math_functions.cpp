@@ -10,6 +10,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif //_MSC_VER
+
 namespace caffe {
 
 template<>
