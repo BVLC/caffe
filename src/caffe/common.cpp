@@ -18,6 +18,7 @@ shared_ptr<Caffe> Caffe::singleton_;
 // curand seeding
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;
+
   pid = _getpid();
   s = time(NULL);
   seed = abs(((s * 181) * ((pid - 83) * 359)) % 104729);

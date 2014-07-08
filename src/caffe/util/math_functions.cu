@@ -11,10 +11,6 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
-namespace std{
-__host__ __device__ bool signbit(double num) { return _copysign(1.0, num) < 0; }
-}
-
 namespace caffe {
 
 template <typename Dtype>
