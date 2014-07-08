@@ -81,8 +81,8 @@ class Device {
   virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out) {
     NOT_IMPLEMENTED; }
 
-  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
-                                uint32_t* out) { NOT_IMPLEMENTED; }
+  virtual uint32_t hamming_distance(const int N, const Dtype* x,
+      const Dtype* y) { NOT_IMPLEMENTED; return 0; }
 
 // Returns the sum of the absolute values of the elements of vector x
   virtual void asum(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
@@ -102,7 +102,7 @@ class Device {
       const int stride, Dtype* data_col) { NOT_IMPLEMENTED; }
 
   virtual void col2im(const Dtype* data_col, const int channels,
-      const int height, const int width, const int psize, const int pad,
+      const int height, const int width, const int ksize, const int pad,
       const int stride, Dtype* data_im) { NOT_IMPLEMENTED; }
 };
 
@@ -160,8 +160,8 @@ class CPUDevice : public Device<Dtype> {
 
   virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
 
-  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
-                                uint32_t* out);
+  virtual uint32_t hamming_distance(const int N, const Dtype* x,
+      const Dtype* y);
 
 // Returns the sum of the absolute values of the elements of vector x
   virtual void asum(const int N, const Dtype* x, Dtype* y);
@@ -179,7 +179,7 @@ class CPUDevice : public Device<Dtype> {
       const int stride, Dtype* data_col);
 
   virtual void col2im(const Dtype* data_col, const int channels,
-      const int height, const int width, const int psize, const int pad,
+      const int height, const int width, const int ksize, const int pad,
       const int stride, Dtype* data_im);
 };
 
@@ -235,8 +235,8 @@ class GPUDevice : public Device<Dtype> {
 
   virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
 
-  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
-                                uint32_t* out);
+  virtual uint32_t hamming_distance(const int N, const Dtype* x,
+      const Dtype* y);
 
 // Returns the sum of the absolute values of the elements of vector x
   virtual void asum(const int N, const Dtype* x, Dtype* y);
