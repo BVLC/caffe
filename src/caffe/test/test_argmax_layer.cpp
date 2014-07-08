@@ -1,6 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -109,12 +108,6 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxVal) {
   }
 }
 
-template<typename Dtype>
-bool int_Dtype_pair_greater(std::pair<int, Dtype> a,
-                            std::pair<int, Dtype> b) {
-  return a.second > b.second || (a.second == b.second && a.first > b.first);
-}
-
 TYPED_TEST(ArgMaxLayerTest, TestCPUTopK) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
@@ -124,27 +117,23 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUTopK) {
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
   int max_ind;
   TypeParam max_val;
   int num = this->blob_bottom_->num();
   int dim = this->blob_bottom_->count() / num;
   for (int i = 0; i < num; ++i) {
-    EXPECT_GE(top_data[i], 0);
-    EXPECT_LE(top_data[i], dim);
-    max_ind = top_data[i * this->top_k_];
-    max_val = bottom_data[i * dim + max_ind];
-    EXPECT_EQ(bottom_data[i * dim + max_ind], max_val);
-    std::vector<std::pair<int, TypeParam> > bottom_data_vector;
-    for (int j = 0; j < dim; ++j) {
-      EXPECT_LE(bottom_data[i * dim + j], max_val);
-      bottom_data_vector.push_back(std::make_pair(j, bottom_data[i * dim + j]));
-    }
-    std::sort(bottom_data_vector.begin(), bottom_data_vector.end(),
-              int_Dtype_pair_greater<TypeParam>);
+    EXPECT_GE(this->blob_top_->data_at(i, 0, 0, 0), 0);
+    EXPECT_LE(this->blob_top_->data_at(i, 0, 0, 0), dim);
     for (int j = 0; j < this->top_k_; ++j) {
-      EXPECT_EQ(bottom_data_vector[j].first, top_data[i * this->top_k_ + j]);
+      max_ind = this->blob_top_->data_at(i, 0, j, 0);
+      max_val = this->blob_bottom_->data_at(i, max_ind, 0, 0);
+      int count = 0;
+      for (int k = 0; k < dim; ++k) {
+        if (this->blob_bottom_->data_at(i, k, 0, 0) > max_val) {
+          ++count;
+        }
+      }
+      EXPECT_EQ(j, count);
     }
   }
 }
@@ -159,30 +148,24 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxValTopK) {
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
   int max_ind;
   TypeParam max_val;
   int num = this->blob_bottom_->num();
   int dim = this->blob_bottom_->count() / num;
   for (int i = 0; i < num; ++i) {
-    EXPECT_GE(top_data[i], 0);
-    EXPECT_LE(top_data[i], dim);
-    max_ind = top_data[i * 2 * this->top_k_];
-    max_val = top_data[i * 2 * this->top_k_ + 1];
-    EXPECT_EQ(bottom_data[i * dim + max_ind], max_val);
-    std::vector<std::pair<int, TypeParam> > bottom_data_vector;
-    for (int j = 0; j < dim; ++j) {
-      EXPECT_LE(bottom_data[i * dim + j], max_val);
-      bottom_data_vector.push_back(std::make_pair(j, bottom_data[i * dim + j]));
-    }
-    std::sort(bottom_data_vector.begin(), bottom_data_vector.end(),
-              int_Dtype_pair_greater<TypeParam>);
+    EXPECT_GE(this->blob_top_->data_at(i, 0, 0, 0), 0);
+    EXPECT_LE(this->blob_top_->data_at(i, 0, 0, 0), dim);
     for (int j = 0; j < this->top_k_; ++j) {
-      EXPECT_EQ(bottom_data_vector[j].first,
-                top_data[i * 2 * this->top_k_ + 2 * j]);
-      EXPECT_EQ(bottom_data_vector[j].second,
-                top_data[i * 2 * this->top_k_ + 2 * j + 1]);
+      max_ind = this->blob_top_->data_at(i, 0, j, 0);
+      max_val = this->blob_top_->data_at(i, 1, j, 0);
+      EXPECT_EQ(this->blob_bottom_->data_at(i, max_ind, 0, 0), max_val);
+      int count = 0;
+      for (int k = 0; k < dim; ++k) {
+        if (this->blob_bottom_->data_at(i, k, 0, 0) > max_val) {
+          ++count;
+        }
+      }
+      EXPECT_EQ(j, count);
     }
   }
 }
