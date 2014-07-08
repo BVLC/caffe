@@ -124,6 +124,22 @@ TEST_BINS := $(TEST_CXX_BINS) $(TEST_CU_BINS)
 TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 
 ##############################
+# Derive compiler warning dump locations
+##############################
+WARNS_EXT := warnings.txt
+CXX_WARNS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o.${WARNS_EXT}})
+CU_WARNS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo.${WARNS_EXT}})
+TOOL_WARNS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o.${WARNS_EXT}})
+EXAMPLE_WARNS := $(addprefix $(BUILD_DIR)/, ${EXAMPLE_SRCS:.cpp=.o.${WARNS_EXT}})
+TEST_WARNS := $(addprefix $(BUILD_DIR)/, ${TEST_SRCS:.cpp=.o.${WARNS_EXT}})
+TEST_CU_WARNS := $(addprefix $(BUILD_DIR)/, ${TEST_CU_SRCS:.cu=.cuo.${WARNS_EXT}})
+ALL_CXX_WARNS := $(CXX_WARNS) $(TOOL_WARNS) $(EXAMPLE_WARNS) $(TEST_WARNS)
+ALL_CU_WARNS := $(CU_WARNS) $(TEST_CU_WARNS)
+ALL_WARNS := $(ALL_CXX_WARNS) $(ALL_CU_WARNS)
+
+ALL_WARNS_FILENAME := $(BUILD_DIR)/$(WARNS_EXT)
+
+##############################
 # Derive include and lib directories
 ##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
@@ -262,7 +278,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 ##############################
 .PHONY: all test clean linecount lint tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
-	superclean supercleanlist supercleanfiles
+	superclean supercleanlist supercleanfiles warn
 
 all: $(NAME) $(STATIC_NAME) tools examples
 
@@ -312,6 +328,23 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 runtest: $(TEST_ALL_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle
 
+warn: $(ALL_WARNS_FILENAME)
+
+$(ALL_WARNS_FILENAME): $(ALL_WARNS) | $(BUILD_DIR)
+	@ touch $(ALL_WARNS)
+	@ cat $(ALL_WARNS) > $@
+	@ # If the concatenated warning file is non-empty, touch all dependencies
+	@ # so that "make warn" always prints the error list and only says
+	@ # "nothing to be done" when there are no warnings.
+	@ if [ -s "$@" ]; then touch $(ALL_WARNS); else echo "No compiler warnings!"; fi
+	@ cat $@
+
+$(ALL_CXX_WARNS): %.o.${WARNS_EXT} : %.o
+	@ cat $@
+
+$(ALL_CU_WARNS): %.cuo.${WARNS_EXT} : %.cuo
+	@ cat $@
+
 $(BUILD_DIR_LINK): $(BUILD_DIR)/.linked
 
 # Create a target ".linked" in this BUILD_DIR to tell Make that the "build" link
@@ -337,12 +370,14 @@ $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
 
 $(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
 		| $(TEST_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(TEST_BUILD_DIR)/%.cuo: src/$(PROJECT)/test/%.cu $(HXX_SRCS) $(TEST_HDRS) \
 		| $(TEST_BUILD_DIR)
-	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
@@ -373,42 +408,51 @@ $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
 
 $(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		| $(PROTO_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(UTIL_BUILD_DIR)/%.o: src/$(PROJECT)/util/%.cpp $(HXX_SRCS) | $(UTIL_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(GTEST_OBJ): $(GTEST_SRC) | $(GTEST_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(LAYER_BUILD_DIR)/%.cuo: src/$(PROJECT)/layers/%.cu $(HXX_SRCS) \
 		| $(LAYER_BUILD_DIR)
-	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(UTIL_BUILD_DIR)/%.cuo: src/$(PROJECT)/util/%.cu | $(UTIL_BUILD_DIR)
-	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(TOOL_BUILD_DIR)/%.o: tools/%.cpp $(PROTO_GEN_HEADER) | $(TOOL_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(EXAMPLE_BUILD_DIR)/%.o: examples/%.cpp $(PROTO_GEN_HEADER) \
 		| $(EXAMPLE_BUILD_DIRS)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 $(BUILD_DIR)/src/$(PROJECT)/%.o: src/$(PROJECT)/%.cpp $(HXX_SRCS)
-	$(CXX) $< $(CXXFLAGS) -c -o $@
+	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.${WARNS_EXT}
+	@ cat $@.${WARNS_EXT}
 	@ echo
 
 proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
