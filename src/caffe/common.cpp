@@ -6,6 +6,10 @@
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 
+#if _MSC_VER
+#include <process.h>
+#endif
+
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;

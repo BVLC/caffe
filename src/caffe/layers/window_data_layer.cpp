@@ -26,6 +26,11 @@ using std::string;
 using std::map;
 using std::pair;
 
+#if _MSC_VER < 1800
+inline double round(double x) { return (x > 0.0) ? floor(x + 0.5) : ceil(x - 0.5); }
+#endif
+
+
 // caffe.proto > LayerParameter > WindowDataParameter
 //   'source' field specifies the window_file
 //   'crop_size' indicates the desired warped size
