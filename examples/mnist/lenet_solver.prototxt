@@ -23,5 +23,10 @@ max_iter: 10000
 # snapshot intermediate results
 snapshot: 5000
 snapshot_prefix: "lenet"
+<<<<<<< HEAD:examples/mnist/lenet_solver.prototxt
 # solver mode: CPU or GPU
 solver_mode: GPU
+=======
+# solver mode: 0 for CPU and 1 for GPU
+solver_mode: 0
+>>>>>>> f1c7fae8db255f881c425e295974f2b79e1a26c4:data/lenet_solver.prototxt

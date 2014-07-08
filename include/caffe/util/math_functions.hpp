@@ -8,7 +8,11 @@
 #include <cmath>  // for std::fabs and std::signbit
 
 #ifdef _MSC_VER
+<<<<<<< HEAD
 #include "caffe/util/math_extras.h"
+=======
+#include "caffe/util/vs11toCpp11.h"
+>>>>>>> f1c7fae8db255f881c425e295974f2b79e1a26c4
 #include <intrin.h>
 #define __builtin_popcount __popcnt16
 #define __builtin_popcountl __popcnt64
