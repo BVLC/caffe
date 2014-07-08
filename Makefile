@@ -266,7 +266,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 
 all: $(NAME) $(STATIC_NAME) tools examples
 
-linecount: clean
+linecount:
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
 
 lint: $(LINT_REPORT)
