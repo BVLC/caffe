@@ -125,9 +125,9 @@ void GPUDevice<Dtype>::dot(const int N, const Dtype* x, const Dtype* y,
 }
 
 template<typename Dtype>
-void GPUDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
-                                             const Dtype* y, uint32_t* out) {
-  *out = caffe_gpu_hamming_distance<Dtype>(N, x, y);
+uint32_t GPUDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
+                                             const Dtype* y) {
+  return caffe_gpu_hamming_distance<Dtype>(N, x, y);
 }
 
 template<typename Dtype>
