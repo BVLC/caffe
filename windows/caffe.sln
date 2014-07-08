@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe", "windows\windows.vcxproj", "{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "convert_mnist_data", "convert_mnist_data\convert_mnist_data.vcxproj", "{6E2F2358-0097-4C02-811E-94A2491DFD51}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "train_net", "train_net\train_net.vcxproj", "{22869C0E-5BCB-462A-8D67-FD336356DA49}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pycaffe", "pycaffe\pycaffe.vcxproj", "{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Debug|Win32.Build.0 = Debug|Win32
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Debug|x64.ActiveCfg = Debug|x64
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Debug|x64.Build.0 = Debug|x64
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Release|Win32.ActiveCfg = Release|Win32
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Release|Win32.Build.0 = Release|Win32
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Release|x64.ActiveCfg = Release|x64
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}.Release|x64.Build.0 = Release|x64
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Debug|Win32.Build.0 = Debug|Win32
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Debug|x64.ActiveCfg = Debug|x64
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Debug|x64.Build.0 = Debug|x64
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Release|Win32.ActiveCfg = Release|Win32
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Release|Win32.Build.0 = Release|Win32
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Release|x64.ActiveCfg = Release|x64
+		{6E2F2358-0097-4C02-811E-94A2491DFD51}.Release|x64.Build.0 = Release|x64
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Debug|Win32.ActiveCfg = Debug|Win32
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Debug|Win32.Build.0 = Debug|Win32
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Debug|x64.ActiveCfg = Debug|x64
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Debug|x64.Build.0 = Debug|x64
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Release|Win32.ActiveCfg = Release|Win32
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Release|Win32.Build.0 = Release|Win32
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Release|x64.ActiveCfg = Release|x64
+		{22869C0E-5BCB-462A-8D67-FD336356DA49}.Release|x64.Build.0 = Release|x64
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Debug|Win32.Build.0 = Debug|Win32
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Debug|x64.ActiveCfg = Debug|x64
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Debug|x64.Build.0 = Debug|x64
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Release|Win32.ActiveCfg = Release|Win32
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Release|Win32.Build.0 = Release|Win32
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Release|x64.ActiveCfg = Release|x64
+		{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
