@@ -10,9 +10,6 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
-using std::max;
-using std::min;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -140,12 +137,12 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int c = 0; c < channels_; ++c) {
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
-            int hstart = ph * stride_h_ - pad_h_;
-            int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_);
-            int wend = min(wstart + kernel_w_, width_);
-            hstart = max(hstart, 0);
-            wstart = max(wstart, 0);
+            float hstart = ph * stride_h_ - pad_h_;
+            float wstart = pw * stride_w_ - pad_w_;
+            int hend = std::min<float>(ceil(hstart + kernel_h_), height_);
+            int wend = std::min<float>(ceil(wstart + kernel_w_), width_);
+            hstart = std::max<float>(floor(hstart), 0);
+            wstart = std::max<float>(floor(wstart), 0);
             const int pool_index = ph * pooled_width_ + pw;
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
@@ -182,15 +179,15 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int c = 0; c < channels_; ++c) {
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
-            int hstart = ph * stride_h_ - pad_h_;
-            int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_ + pad_h_);
-            int wend = min(wstart + kernel_w_, width_ + pad_w_);
-            int pool_size = (hend - hstart) * (wend - wstart);
-            hstart = max(hstart, 0);
-            wstart = max(wstart, 0);
-            hend = min(hend, height_);
-            wend = min(wend, width_);
+            float hstart = ph * stride_h_ - pad_h_;
+            float wstart = pw * stride_w_ - pad_w_;
+            int hend = std::min<float>(ceil(hstart + kernel_h_), height_ + pad_h_);
+            int wend = std::min<float>(ceil(wstart + kernel_w_), width_ + pad_w_);
+            const float pool_size = (hend - hstart) * (wend - wstart);
+            hstart = std::max<float>(floor(hstart), 0);
+            wstart = std::max<float>(floor(wstart), 0);
+            hend = std::min<float>(hend, height_);
+            wend = std::min<float>(wend, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 top_data[ph * pooled_width_ + pw] +=
@@ -264,15 +261,15 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       for (int c = 0; c < channels_; ++c) {
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
-            int hstart = ph * stride_h_ - pad_h_;
-            int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_ + pad_h_);
-            int wend = min(wstart + kernel_w_, width_ + pad_w_);
-            int pool_size = (hend - hstart) * (wend - wstart);
-            hstart = max(hstart, 0);
-            wstart = max(wstart, 0);
-            hend = min(hend, height_);
-            wend = min(wend, width_);
+            float hstart = ph * stride_h_ - pad_h_;
+            float wstart = pw * stride_w_ - pad_w_;
+            int hend = std::min<float>(ceil(hstart + kernel_h_), height_ + pad_h_);
+            int wend = std::min<float>(ceil(wstart + kernel_w_), width_ + pad_w_);
+            const float pool_size = (hend - hstart) * (wend - wstart);
+            hstart = std::max<float>(floor(hstart), 0);
+            wstart = std::max<float>(floor(wstart), 0);
+            hend = std::min<float>(hend, height_);
+            wend = std::min<float>(wend, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 bottom_diff[h * width_ + w] +=

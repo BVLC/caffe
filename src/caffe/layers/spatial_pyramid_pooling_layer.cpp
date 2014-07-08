@@ -22,7 +22,7 @@ void SpatialPyramidPoolingLayer<Dtype>::SetUp(
   CHECK_GE(height_, width_);
   const int image_side_length = height_;
   // TODO: multiple image scales
-  // int scale = this->layer_param_.spatial_pyramid_pooling_param().scale();
+  // float scale = this->layer_param_.spatial_pyramid_pooling_param().scale();
 
   LayerParameter layer_param;
   layer_param.mutable_concat_param()->set_concat_dim(1);
