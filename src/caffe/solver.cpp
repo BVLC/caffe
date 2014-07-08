@@ -12,6 +12,10 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#if _MSC_VER
+# define snprintf _snprintf
+#endif
+
 using std::max;
 using std::min;
 
