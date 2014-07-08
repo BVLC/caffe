@@ -34,6 +34,7 @@ class Device {
   virtual void axpby(const int N, const Dtype alpha, const Dtype* X,
                      const Dtype beta, Dtype* Y) { NOT_IMPLEMENTED; }
 
+  /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y) { NOT_IMPLEMENTED; }
   virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y) {
     NOT_IMPLEMENTED; }
@@ -71,20 +72,23 @@ class Device {
                             Dtype* r) { NOT_IMPLEMENTED; }
 
   virtual void rng_bernoulli(const int N, const Dtype p, int* r) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void rng_bernoulli(const int N, const Dtype p, unsigned int* r) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void exp(const int N, const Dtype* a, Dtype* y) { NOT_IMPLEMENTED; }
 
-  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out) {
-    NOT_IMPLEMENTED; }
+  virtual Dtype dot(const int N, const Dtype* x, const Dtype* y) {
+    NOT_IMPLEMENTED; return 0;
+  }
 
   virtual uint32_t hamming_distance(const int N, const Dtype* x,
       const Dtype* y) { NOT_IMPLEMENTED; return 0; }
 
-// Returns the sum of the absolute values of the elements of vector x
+  // Returns the sum of the absolute values of the elements of vector x
   virtual void asum(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void sign(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
@@ -126,6 +130,7 @@ class CPUDevice : public Device<Dtype> {
   virtual void axpby(const int N, const Dtype alpha, const Dtype* X,
                      const Dtype beta, Dtype* Y);
 
+  /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
   virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
 
@@ -158,12 +163,12 @@ class CPUDevice : public Device<Dtype> {
 
   virtual void exp(const int N, const Dtype* a, Dtype* y);
 
-  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
+  virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
 
   virtual uint32_t hamming_distance(const int N, const Dtype* x,
       const Dtype* y);
 
-// Returns the sum of the absolute values of the elements of vector x
+  // Returns the sum of the absolute values of the elements of vector x
   virtual void asum(const int N, const Dtype* x, Dtype* y);
 
   virtual void sign(const int N, const Dtype* x, Dtype* y);
@@ -203,6 +208,7 @@ class GPUDevice : public Device<Dtype> {
   virtual void axpby(const int N, const Dtype alpha, const Dtype* X,
                      const Dtype beta, Dtype* Y);
 
+  /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
   virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
 
@@ -233,7 +239,7 @@ class GPUDevice : public Device<Dtype> {
 
   virtual void exp(const int N, const Dtype* a, Dtype* y);
 
-  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
+  virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
 
   virtual uint32_t hamming_distance(const int N, const Dtype* x,
       const Dtype* y);

@@ -33,6 +33,7 @@ void GPUDevice<Dtype>::axpby(const int N, const Dtype alpha,
 }
 
 template<typename Dtype>
+/* NOLINT_NEXT_LINE(build/include_what_you_use) */
 void GPUDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
   caffe_gpu_copy<Dtype>(N, X, Y);
 }
@@ -61,19 +62,19 @@ void GPUDevice<Dtype>::scal(const int N, const Dtype alpha, Dtype *X) {
 template<typename Dtype>
 void GPUDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
   NOT_IMPLEMENTED;
-//	caffe_gpu_sqr<Dtype>(N, a, y);
+  // caffe_gpu_sqr<Dtype>(N, a, y);
 }
 
 template<typename Dtype>
 void GPUDevice<Dtype>::add(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-	caffe_gpu_add<Dtype>(N, a, b, y);
+  caffe_gpu_add<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
 void GPUDevice<Dtype>::sub(const int N, const Dtype* a, const Dtype* b,
                                 Dtype* y) {
-	caffe_gpu_sub<Dtype>(N, a, b, y);
+  caffe_gpu_sub<Dtype>(N, a, b, y);
 }
 
 template<typename Dtype>
@@ -109,13 +110,13 @@ void GPUDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
 template<typename Dtype>
 void GPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
   NOT_IMPLEMENTED;
-//	caffe_gpu_rng_bernoulli<Dtype>(N, p, r);
+  // caffe_gpu_rng_bernoulli<Dtype>(N, p, r);
 }
 
 template<typename Dtype>
 void GPUDevice<Dtype>::exp(const int N, const Dtype* a, Dtype* y) {
   NOT_IMPLEMENTED;
-//	caffe_gpu_exp<Dtype>(N, a, y);
+  // caffe_gpu_exp<Dtype>(N, a, y);
 }
 
 template<typename Dtype>
