@@ -9,13 +9,6 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
-<<<<<<< HEAD
-=======
-
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif //_MSC_VER
->>>>>>> f1c7fae8db255f881c425e295974f2b79e1a26c4
 
 namespace caffe {
 

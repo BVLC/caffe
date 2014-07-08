@@ -1,11 +1,7 @@
 // Copyright 2014 BVLC and contributors.
-<<<<<<< HEAD
-=======
 
->>>>>>> f1c7fae8db255f881c425e295974f2b79e1a26c4
 #include <stdint.h>
 #include <fcntl.h>
-#include <io.h>
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
@@ -18,13 +14,11 @@
 #include <string>
 #include <vector>
 #include <fstream>  // NOLINT(readability/streams)
-<<<<<<< HEAD
-=======
 
 #ifdef _MSC_VER
 #include <io.h>
 #endif
->>>>>>> f1c7fae8db255f881c425e295974f2b79e1a26c4
+
 
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
