@@ -409,15 +409,15 @@ message PoolingParameter {
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   // Pad, kernel size, and stride are all given as a single value for equal
   // dimensions in height and width or as Y, X pairs.
-  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
-  optional uint32 pad_h = 9 [default = 0]; // The padding height
-  optional uint32 pad_w = 10 [default = 0]; // The padding width
-  optional uint32 kernel_size = 2; // The kernel size (square)
-  optional uint32 kernel_h = 5; // The kernel height
-  optional uint32 kernel_w = 6; // The kernel width
-  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
-  optional uint32 stride_h = 7; // The stride height
-  optional uint32 stride_w = 8; // The stride width
+  optional float pad = 4 [default = 0]; // The padding size (equal in Y, X)
+  optional float pad_h = 9 [default = 0]; // The padding height
+  optional float pad_w = 10 [default = 0]; // The padding width
+  optional float kernel_size = 2; // The kernel size (square)
+  optional float kernel_h = 5; // The kernel height
+  optional float kernel_w = 6; // The kernel width
+  optional float stride = 3 [default = 1]; // The stride (equal in Y, X)
+  optional float stride_h = 7; // The stride height
+  optional float stride_w = 8; // The stride width
 }
 
 // Message that stores parameters used by PowerLayer
@@ -439,7 +439,7 @@ message SpatialPyramidPoolingParameter {
   // The number of spatial bins of each pyramid level
   repeated uint32 spatial_bin = 2; 
    // The number of image scales to apply spatial pyramid pooling 
-  repeated uint32 scale = 3;
+  repeated float scale = 3;
 }
 
 // Message that stores parameters used by WindowDataLayer
