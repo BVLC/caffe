@@ -1,14 +1,14 @@
+@import url(http://fonts.googleapis.com/css?family=PT+Serif|Open+Sans:600,400);
+
 body {
   padding:10px 50px 0 0;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 300;
+  font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   color: #232323;
   background-color: #FBFAF7;
   margin: 0;
-  line-height: 1.8em;
+  line-height: 1.5rem;
   -webkit-font-smoothing: antialiased;
-
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -21,8 +21,7 @@ p, ul, ol, table, dl {
 }
 
 h1, h2, h3 {
-  font-family: Times, serif;
-  font-weight: 300;
+  font-family: 'PT Serif', serif;
   line-height:1.3;
   font-weight: normal;
   display: block;
@@ -203,7 +202,7 @@ header {
 }
 
 p.header {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 h1.header {
@@ -277,7 +276,8 @@ a.buttons {
 }
 
 a.github {
-  background: url(../images/octocat-small.png) no-repeat 1px;
+  background: url(/images/GitHub-Mark-64px.png) no-repeat center left;
+  background-size: 15%;
 }
 
 a.buttons:hover {
@@ -292,6 +292,10 @@ section {
   width:650px;
   float:right;
   padding-bottom:50px;
+}
+
+p.footnote {
+  font-size: 12px;
 }
 
 
