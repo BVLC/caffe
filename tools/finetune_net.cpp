@@ -14,9 +14,25 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc != 3) {
-    LOG(ERROR) << "Usage: finetune_net solver_proto_file pretrained_net";
+  if (argc < 3) {
+    LOG(ERROR) << "Usage: finetune_net solver_proto_file pretrained_net"
+        << " [CPU/GPU] [Device ID]";
     return 1;
+  }
+
+  Caffe::set_phase(Caffe::TRAIN);
+
+  if (argc >= 4 && strcmp(argv[3], "GPU") == 0) {
+    Caffe::set_mode(Caffe::GPU);
+    int device_id = 0;
+    if (argc >= 5) {
+      device_id = atoi(argv[4]);
+    }
+    Caffe::SetDevice(device_id);
+    LOG(ERROR) << "Using GPU #" << device_id;
+  } else {
+    LOG(ERROR) << "Using CPU";
+    Caffe::set_mode(Caffe::CPU);
   }
 
   SolverParameter solver_param;
