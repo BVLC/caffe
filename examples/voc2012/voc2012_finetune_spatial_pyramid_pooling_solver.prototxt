@@ -1,0 +1,18 @@
+# 5717 images
+train_net: "voc2012_finetune_spatial_pyramid_pooling_train.prototxt"
+# 5823 images, batch_size 100
+test_net: "voc2012_finetune_spatial_pyramid_pooling_test.prototxt"
+test_iter: 59
+test_interval: 500
+base_lr: 0.0001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 20000
+display: 20
+max_iter: 100000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 500
+snapshot_prefix: "voc2012_finetune_spatial_pyramid_pooling_train"
+# solver mode: CPU or GPU
+solver_mode: CPU
