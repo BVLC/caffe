@@ -4,7 +4,7 @@
 // all the intermediate blobs produced by the net to individual binary
 // files stored in protobuffer binary formats.
 // Usage:
-//    dump_network input_net_param trained_net_param \
+//    dump_network input_net_param trained_net_param
 //        input_blob output_prefix 0/1
 // if input_net_param is 'none', we will directly load the network from
 // trained_net_param. If the last argv is 1, we will do a forward-backward pass

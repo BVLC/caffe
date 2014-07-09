@@ -6,6 +6,7 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -13,8 +14,8 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
-       diff_() {}
+       : data_(), diff_(), num_(0), channels_(0), height_(0), width_(0),
+       count_(0) {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
   void Reshape(const int num, const int channels, const int height,

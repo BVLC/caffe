@@ -21,7 +21,7 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward_gpu(
 
 template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   // TODO(Yangqing): implement the GPU version of softmax.
   Backward_cpu(top, propagate_down, bottom);
 }

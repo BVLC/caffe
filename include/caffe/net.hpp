@@ -4,7 +4,9 @@
 #define CAFFE_NET_HPP_
 
 #include <map>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -13,8 +15,10 @@
 #include "caffe/proto/caffe.pb.h"
 
 using std::map;
-using std::vector;
+using std::pair;
+using std::set;
 using std::string;
+using std::vector;
 
 namespace caffe {
 
@@ -79,6 +83,9 @@ class Net {
   // this unless you do per-layer checks such as gradients.
   inline vector<vector<Blob<Dtype>*> >& bottom_vecs() { return bottom_vecs_; }
   inline vector<vector<Blob<Dtype>*> >& top_vecs() { return top_vecs_; }
+  inline vector<vector<bool> >& bottom_need_backward() {
+    return bottom_need_backward_;
+  }
   // returns the parameters
   inline vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
   // returns the parameter learning rate multipliers
@@ -98,8 +105,20 @@ class Net {
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name);
   bool has_layer(const string& layer_name);
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name);
+  const map<string, int>& param_names_index() { return param_names_index_; }
 
  protected:
+  // Helpers for Init.
+  // Append a new input or top blob to the net.
+  void AppendTop(const NetParameter& param, const int layer_id,
+                 const int top_id, set<string>* available_blobs,
+                 map<string, int>* blob_name_to_idx);
+  // Append a new bottom blob to the net.
+  int AppendBottom(const NetParameter& param, const int layer_id,
+                   const int bottom_id, set<string>* available_blobs,
+                   map<string, int>* blob_name_to_idx);
+  void AppendParam(const NetParameter& param, const int layer_id,
+                   const int param_id);
   // Function to get misc parameters, e.g. the learning rate multiplier and
   // weight decay.
   void GetLearningRateAndWeightDecay();
@@ -120,9 +139,13 @@ class Net {
   // pointers.
   vector<vector<Blob<Dtype>*> > bottom_vecs_;
   vector<vector<int> > bottom_id_vecs_;
+  vector<vector<bool> > bottom_need_backward_;
   // top_vecs stores the vectors containing the output for each layer
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
+  vector<int> param_owners_;
+  vector<pair<int, int> > layer_param_indices_;
+  map<string, int> param_names_index_;
   // blob indices for the input and the output of the net
   vector<int> net_input_blob_indices_;
   vector<int> net_output_blob_indices_;
@@ -135,6 +158,8 @@ class Net {
   vector<float> params_lr_;
   // the weight decay multipliers
   vector<float> params_weight_decay_;
+  // The bytes of memory used by this net
+  size_t memory_used_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
