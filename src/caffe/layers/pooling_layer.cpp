@@ -72,10 +72,20 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
-  pooled_height_ = static_cast<int>(ceil(static_cast<float>(
-      height_ + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
-  pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      width_ + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
+  float hstart;
+  float wstart;
+  int hend;
+  int wend;
+  for (pooled_height_ = 0, hend = 0; hend < (height_ + pad_h_);
+      ++pooled_height_) {
+    hstart = pooled_height_ * stride_h_ - pad_h_;
+    hend = ceil(hstart + kernel_h_);
+  }
+  for (pooled_width_ = 0, wend = 0; wend < (width_ + pad_w_);
+      ++pooled_width_) {
+    wstart = pooled_width_ * stride_w_ - pad_w_;
+    wend = ceil(wstart + kernel_w_);
+  }
   if (pad_h_ || pad_w_) {
     // If we have padding, ensure that the last pooling starts strictly
     // inside the image (instead of at the padding); otherwise clip the last.
