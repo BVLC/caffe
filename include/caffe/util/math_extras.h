@@ -10,9 +10,9 @@
 
 
 namespace std {
-	inline bool isinf(double num) { return !_finite(num) && !_isnan(num); }
-	inline bool isnan(double num) { return !!_isnan(num); }
-	inline bool isfinite(double x) { return _finite(x); }
+	//inline bool isinf(double num) { return !_finite(num) && !_isnan(num); }
+	//inline bool isnan(double num) { return !!_isnan(num); }
+	//inline bool isfinite(double x) { return _finite(x); }
 	__device__ __host__ inline bool signbit(float num) { return _copysign(1.0f, num) < 0; }
 	__device__ __host__ inline bool signbit(double num) { return _copysign(1.0, num) < 0; }
 } // namespace std

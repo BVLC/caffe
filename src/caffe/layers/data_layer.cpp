@@ -53,12 +53,15 @@ void* DataLayerPrefetch(void* layer_pointer) {
       CHECK(layer->iter_->Valid());
       datum.ParseFromString(layer->iter_->value().ToString());
       break;
+#if USE_LMDB
     case DataParameter_DB_LMDB:
       CHECK_EQ(mdb_cursor_get(layer->mdb_cursor_, &layer->mdb_key_,
               &layer->mdb_value_, MDB_GET_CURRENT), MDB_SUCCESS);
       datum.ParseFromArray(layer->mdb_value_.mv_data,
           layer->mdb_value_.mv_size);
       break;
+#endif
+
     default:
       LOG(FATAL) << "Unknown database backend";
     }
@@ -133,6 +136,7 @@ void* DataLayerPrefetch(void* layer_pointer) {
         layer->iter_->SeekToFirst();
       }
       break;
+#if USE_LMDB
     case DataParameter_DB_LMDB:
       if (mdb_cursor_get(layer->mdb_cursor_, &layer->mdb_key_,
               &layer->mdb_value_, MDB_NEXT) != MDB_SUCCESS) {
@@ -142,6 +146,8 @@ void* DataLayerPrefetch(void* layer_pointer) {
                 &layer->mdb_value_, MDB_FIRST), MDB_SUCCESS);
       }
       break;
+#endif
+
     default:
       LOG(FATAL) << "Unknown database backend";
     }
@@ -157,12 +163,15 @@ DataLayer<Dtype>::~DataLayer<Dtype>() {
   switch (this->layer_param_.data_param().backend()) {
   case DataParameter_DB_LEVELDB:
     break;  // do nothing
+#if USE_LMDB
   case DataParameter_DB_LMDB:
     mdb_cursor_close(mdb_cursor_);
     mdb_close(mdb_env_, mdb_dbi_);
     mdb_txn_abort(mdb_txn_);
     mdb_env_close(mdb_env_);
     break;
+#endif
+
   default:
     LOG(FATAL) << "Unknown database backend";
   }
@@ -196,6 +205,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     iter_->SeekToFirst();
     }
     break;
+#if USE_LMDB
   case DataParameter_DB_LMDB:
     CHECK_EQ(mdb_env_create(&mdb_env_), MDB_SUCCESS) << "mdb_env_create failed";
     CHECK_EQ(mdb_env_set_mapsize(mdb_env_, 1099511627776), MDB_SUCCESS);  // 1TB
@@ -212,6 +222,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_FIRST),
         MDB_SUCCESS) << "mdb_cursor_get failed";
     break;
+#endif
   default:
     LOG(FATAL) << "Unknown database backend";
   }
@@ -220,26 +231,29 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.data_param().rand_skip()) {
     unsigned int skip = caffe_rng_rand() %
                         this->layer_param_.data_param().rand_skip();
-    LOG(INFO) << "Skipping first " << skip << " data points.";
-    while (skip-- > 0) {
-      switch (this->layer_param_.data_param().backend()) {
-      case DataParameter_DB_LEVELDB:
-        iter_->Next();
-        if (!iter_->Valid()) {
-          iter_->SeekToFirst();
-        }
-        break;
-      case DataParameter_DB_LMDB:
-        if (mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_NEXT)
-            != MDB_SUCCESS) {
-          CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_,
-                   MDB_FIRST), MDB_SUCCESS);
-        }
-        break;
-      default:
-        LOG(FATAL) << "Unknown database backend";
-      }
-    }
+	LOG(INFO) << "Skipping first " << skip << " data points.";
+	while (skip-- > 0) {
+		switch (this->layer_param_.data_param().backend()) {
+		case DataParameter_DB_LEVELDB:
+			iter_->Next();
+			if (!iter_->Valid()) {
+				iter_->SeekToFirst();
+			}
+			break;
+#if USE_LMDB
+
+		case DataParameter_DB_LMDB:
+			if (mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_NEXT)
+				!= MDB_SUCCESS) {
+					CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_,
+						MDB_FIRST), MDB_SUCCESS);
+			}
+			break;
+#endif
+		default:
+			LOG(FATAL) << "Unknown database backend";
+		}
+	}
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
@@ -247,9 +261,12 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   case DataParameter_DB_LEVELDB:
     datum.ParseFromString(iter_->value().ToString());
     break;
+#if USE_LMDB
   case DataParameter_DB_LMDB:
     datum.ParseFromArray(mdb_value_.mv_data, mdb_value_.mv_size);
     break;
+#endif
+
   default:
     LOG(FATAL) << "Unknown database backend";
   }
