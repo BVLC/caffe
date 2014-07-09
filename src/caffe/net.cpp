@@ -96,12 +96,18 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (blobs_lr_size) {
       // Check if this layer needs backward operation itself
       for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
-        need_backward |= layer_param.blobs_lr(param_id) > 0;
+        const bool param_need_backward = layer_param.blobs_lr(param_id) > 0;
+        need_backward |= param_need_backward;
+        layers_[layer_id]->set_param_propagate_down(param_id,
+                                                    param_need_backward);
       }
     } else if (layers_[layer_id]->blobs().size()) {
       // catch: if a layer param does not specify blobs_lr, we should assume the
       // learning rate to be 1. Thus we will need to perform backward.
       need_backward = true;
+      for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
+        layers_[layer_id]->set_param_propagate_down(param_id, true);
+      }
     }
     const int param_size = layer_param.param_size();
     CHECK(param_size == num_param_blobs || param_size == 0)
@@ -138,6 +144,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] =
             blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] ||
             bottom_need_backward_[layer_id][bottom_id];
+      }
+      for (int param_id = 0; param_id < layers_[layer_id]->blobs().size();
+           ++param_id) {
+        layers_[layer_id]->set_param_propagate_down(param_id, true);
       }
     }
   }
