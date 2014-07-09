@@ -23,7 +23,7 @@ Dtype InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       bottom_data, weight, (Dtype)0., top_data);
   if (bias_term_) {
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
-        reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
+        bias_multiplier_->gpu_data(),
         this->blobs_[1]->gpu_data(), (Dtype)1., top_data);
   }
   return Dtype(0);
@@ -44,7 +44,7 @@ void InnerProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     // Gradient with respect to bias
     caffe_gpu_gemv<Dtype>(CblasTrans, M_, N_, (Dtype)1., top_diff,
-        reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()), (Dtype)0.,
+        bias_multiplier_->gpu_data(), (Dtype)0.,
         this->blobs_[1]->mutable_gpu_diff());
   }
   if (propagate_down[0]) {
