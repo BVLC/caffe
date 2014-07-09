@@ -40,8 +40,9 @@ Dtype ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int j = 0; j < dim; ++j) {
       bottom_data_vector.push_back(std::make_pair(j, bottom_data[i * dim + j]));
     }
-    std::sort(bottom_data_vector.begin(), bottom_data_vector.end(),
-              int_Dtype_pair_greater<Dtype>);
+    std::partial_sort(
+        bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
+        bottom_data_vector.end(), int_Dtype_pair_greater<Dtype>);
     if (out_max_val_) {
       for (int j = 0; j < top_k_; ++j) {
         top_data[(*top)[0]->offset(i, 0, j)] = bottom_data_vector[j].first;
