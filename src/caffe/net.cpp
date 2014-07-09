@@ -88,7 +88,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           << top_vecs_[layer_id][top_id]->count() << ")";
     }
     DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
-    const int blobs_lr_size = layers_[layer_id]->layer_param().blobs_lr_size();
+    const int blobs_lr_size = layer_param.blobs_lr_size();
     const int num_param_blobs = layers_[layer_id]->blobs().size();
     CHECK(blobs_lr_size == num_param_blobs || blobs_lr_size == 0)
         << "Incorrect blobs lr size: should be either 0 "
@@ -96,8 +96,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (blobs_lr_size) {
       // Check if this layer needs backward operation itself
       for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
-        need_backward |=
-            (layers_[layer_id]->layer_param().blobs_lr(param_id) > 0);
+        need_backward |= layer_param.blobs_lr(param_id) > 0;
       }
     } else if (layers_[layer_id]->blobs().size()) {
       // catch: if a layer param does not specify blobs_lr, we should assume the
