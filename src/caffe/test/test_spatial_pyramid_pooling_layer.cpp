@@ -88,6 +88,9 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
         layer_param.mutable_spatial_pyramid_pooling_param();
     spatial_pyramid_pooling_param->set_pool(
         SpatialPyramidPoolingParameter_PoolMethod_MAX);
+    // kernel: 11 * 11, stride: 11 * 11
+    // x1, y1, x2, y2
+    // 0, 11, 0, 11
     spatial_pyramid_pooling_param->add_spatial_bin(1);
     SpatialPyramidPoolingLayer<Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
@@ -110,6 +113,12 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
       }
     }
 
+    // kernel: 5.5 * 5.5, stride: 5.5 * 5.5
+    // x1, y1, x2, y2
+    // 0, 0, 6, 6
+    // 0, 5, 6, 11
+    // 5, 0, 11, 6
+    // 5, 5, 11, 11
     spatial_pyramid_pooling_param->add_spatial_bin(2);
     SpatialPyramidPoolingLayer<Dtype> two_level_layer(layer_param);
     two_level_layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
@@ -140,6 +149,17 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
       }
     }
 
+    // kernel: 3.66667 * 3.66667, stride: 3.66667 * 3.66667
+    // x1, y1, x2, y2
+    // 0, 0, 4, 4
+    // 0, 3, 4, 8
+    // 0, 7, 4, 11
+    // 3, 0, 8, 4
+    // 3, 3, 8, 8
+    // 3, 7, 8, 11
+    // 7, 0, 11, 4
+    // 7, 3, 11, 8
+    // 7, 7, 11, 11
     spatial_pyramid_pooling_param->add_spatial_bin(3);
     SpatialPyramidPoolingLayer<Dtype> three_level_layer(layer_param);
     three_level_layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
@@ -190,8 +210,8 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
           }
         }
       }
-    }
-  }
+    }  // for (int i = 0; i < num; i += 1) {
+  }  // void TestForward() {
 };
 
 typedef ::testing::Types<float, double> Dtypes;
