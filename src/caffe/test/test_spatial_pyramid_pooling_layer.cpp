@@ -51,37 +51,15 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
     int offset;
     blob_bottom_->Reshape(num, channels, 5, 5);
     // Input: 2 x 3 channels of:
-    //     [1 2 5 2 3]
-    //     [9 4 1 4 8]
-    //     [31 22 15 27 33]
-    //     [19 14 21 14 38]
-    //     [21 32 25 12 23]
+    Dtype data[] = {1, 2, 5, 2, 3,
+        9, 4, 1, 4, 8,
+        31, 22, 15, 27, 33,
+        19, 14, 21, 14, 38,
+        21, 32, 25, 12, 23};
     for (int i = 0; i < 25 * num * channels; i += 25) {
-      blob_bottom_->mutable_cpu_data()[i +  0] = 1;
-      blob_bottom_->mutable_cpu_data()[i +  1] = 2;
-      blob_bottom_->mutable_cpu_data()[i +  2] = 5;
-      blob_bottom_->mutable_cpu_data()[i +  3] = 2;
-      blob_bottom_->mutable_cpu_data()[i +  4] = 3;
-      blob_bottom_->mutable_cpu_data()[i +  5] = 9;
-      blob_bottom_->mutable_cpu_data()[i +  6] = 4;
-      blob_bottom_->mutable_cpu_data()[i +  7] = 1;
-      blob_bottom_->mutable_cpu_data()[i +  8] = 4;
-      blob_bottom_->mutable_cpu_data()[i +  9] = 8;
-      blob_bottom_->mutable_cpu_data()[i + 10] = 31;
-      blob_bottom_->mutable_cpu_data()[i + 11] = 22;
-      blob_bottom_->mutable_cpu_data()[i + 12] = 15;
-      blob_bottom_->mutable_cpu_data()[i + 13] = 27;
-      blob_bottom_->mutable_cpu_data()[i + 14] = 33;
-      blob_bottom_->mutable_cpu_data()[i + 15] = 19;
-      blob_bottom_->mutable_cpu_data()[i + 16] = 14;
-      blob_bottom_->mutable_cpu_data()[i + 17] = 21;
-      blob_bottom_->mutable_cpu_data()[i + 18] = 14;
-      blob_bottom_->mutable_cpu_data()[i + 19] = 38;
-      blob_bottom_->mutable_cpu_data()[i + 20] = 21;
-      blob_bottom_->mutable_cpu_data()[i + 21] = 32;
-      blob_bottom_->mutable_cpu_data()[i + 22] = 25;
-      blob_bottom_->mutable_cpu_data()[i + 23] = 12;
-      blob_bottom_->mutable_cpu_data()[i + 24] = 23;
+      for (int j = 0; j < 25; ++j) {
+        blob_bottom_->mutable_cpu_data()[i +  j] = data[j];
+      }
     }
     LayerParameter layer_param;
     SpatialPyramidPoolingParameter* spatial_pyramid_pooling_param =
@@ -194,15 +172,12 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
             EXPECT_EQ(blob_top_->cpu_data()[offset + 3], 38);
             offset += 2 * 2;
           } else if (pyramid_level == 2) {
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 0], 9);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 1], 5);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 2], 8);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 3], 31);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 4], 27);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 5], 38);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 6], 32);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 7], 32);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 8], 38);
+            Dtype output[] = {9, 5, 8,
+                31, 27, 38,
+                32, 32, 38};
+            for (int k = 0; k < 9; ++k) {
+              EXPECT_EQ(blob_top_->cpu_data()[offset + k], output[k]);
+            }
             offset += 3 * 3;
           }
         }
@@ -268,7 +243,7 @@ TYPED_TEST(SpatialPyramidPoolingLayerTest, TestCPUGradientMax) {
   spatial_pyramid_pooling_param->set_pool(
       SpatialPyramidPoolingParameter_PoolMethod_MAX);
 
-  for (int i = 1; i < 5; ++i) {
+  for (int i = 1; i < 4; ++i) {
     spatial_pyramid_pooling_param->add_spatial_bin(i);
   }
   SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
@@ -286,7 +261,7 @@ TYPED_TEST(SpatialPyramidPoolingLayerTest, TestGPUGradientMax) {
   spatial_pyramid_pooling_param->set_pool(
       SpatialPyramidPoolingParameter_PoolMethod_MAX);
 
-  for (int i = 1; i < 5; ++i) {
+  for (int i = 1; i < 4; ++i) {
     spatial_pyramid_pooling_param->add_spatial_bin(i);
   }
   SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
