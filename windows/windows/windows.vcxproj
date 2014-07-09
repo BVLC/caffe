@@ -22,12 +22,14 @@
     <ClCompile Include="..\..\src\caffe\blob.cpp" />
     <ClCompile Include="..\..\src\caffe\common.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\accuracy_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\argmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\concat_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\dropout_layer.cpp" />
-    <ClCompile Include="..\..\src\caffe\layers\eltwise_product_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\dummy_data_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\eltwise_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\flatten_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\hdf5_data_layer.cpp" />
@@ -51,6 +53,7 @@
     <ClCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\split_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\tanh_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\threshold_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\window_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layer_factory.cpp" />
     <ClCompile Include="..\..\src\caffe\net.cpp" />
@@ -71,7 +74,8 @@
     <CudaCompile Include="..\..\src\caffe\layers\conv_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\data_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\dropout_layer.cu" />
-    <CudaCompile Include="..\..\src\caffe\layers\eltwise_product_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\eltwise_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\flatten_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\hdf5_data_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\hdf5_output_layer.cu" />
@@ -88,6 +92,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\split_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\tanh_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\threshold_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\window_data_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\util\im2col.cu" />
     <CudaCompile Include="..\..\src\caffe\util\math_functions.cu" />

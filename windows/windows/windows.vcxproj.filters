@@ -24,7 +24,52 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\caffe\util\benchmark.cpp">
+      <Filter>src\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\im2col.cpp">
+      <Filter>src\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\insert_splits.cpp">
+      <Filter>src\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\io.cpp">
+      <Filter>src\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\math_functions.cpp">
+      <Filter>src\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\upgrade_proto.cpp">
+      <Filter>src\util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\proto\caffe.pb.cc">
+      <Filter>src\proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\proto\caffe_pretty_print.pb.cc">
+      <Filter>src\proto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layer_factory.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\syncedmem.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\solver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\net.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\common.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\blob.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\accuracy_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\argmax_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp">
@@ -42,7 +87,10 @@
     <ClCompile Include="..\..\src\caffe\layers\dropout_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\caffe\layers\eltwise_product_layer.cpp">
+    <ClCompile Include="..\..\src\caffe\layers\dummy_data_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\eltwise_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cpp">
@@ -114,53 +162,20 @@
     <ClCompile Include="..\..\src\caffe\layers\tanh_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\threshold_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\window_data_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\caffe\util\benchmark.cpp">
-      <Filter>src\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\util\im2col.cpp">
-      <Filter>src\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\util\insert_splits.cpp">
-      <Filter>src\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\util\io.cpp">
-      <Filter>src\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\util\math_functions.cpp">
-      <Filter>src\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\util\upgrade_proto.cpp">
-      <Filter>src\util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\proto\caffe.pb.cc">
-      <Filter>src\proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\proto\caffe_pretty_print.pb.cc">
-      <Filter>src\proto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\layer_factory.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\syncedmem.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\solver.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\net.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\common.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\blob.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="..\..\src\caffe\util\im2col.cu">
+      <Filter>src\util</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\util\math_functions.cu">
+      <Filter>src\util</Filter>
+    </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\bnll_layer.cu">
       <Filter>src\layers</Filter>
     </CudaCompile>
@@ -176,7 +191,10 @@
     <CudaCompile Include="..\..\src\caffe\layers\dropout_layer.cu">
       <Filter>src\layers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\layers\eltwise_product_layer.cu">
+    <CudaCompile Include="..\..\src\caffe\layers\eltwise_layer.cu">
+      <Filter>src\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cu">
       <Filter>src\layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\flatten_layer.cu">
@@ -227,14 +245,11 @@
     <CudaCompile Include="..\..\src\caffe\layers\tanh_layer.cu">
       <Filter>src\layers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\layers\window_data_layer.cu">
+    <CudaCompile Include="..\..\src\caffe\layers\threshold_layer.cu">
       <Filter>src\layers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\util\im2col.cu">
-      <Filter>src\util</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\util\math_functions.cu">
-      <Filter>src\util</Filter>
+    <CudaCompile Include="..\..\src\caffe\layers\window_data_layer.cu">
+      <Filter>src\layers</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
