@@ -18,9 +18,6 @@ void SpatialPyramidPoolingLayer<Dtype>::SetUp(
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
-  // TODO: Support unequal height and width sizes once PoolingLayer does
-  CHECK_GE(height_, width_);
-  const int image_side_length = height_;
   // TODO: multiple image scales
   // float scale = this->layer_param_.spatial_pyramid_pooling_param().scale();
 
@@ -57,12 +54,12 @@ void SpatialPyramidPoolingLayer<Dtype>::SetUp(
     flatten_layers_.clear();
     concat_bottom_vec_.clear();
     for (int i = 0; i < num_pyramid_levels_; ++i) {
-      const int spatial_bin =
+      const float spatial_bin =
           this->layer_param_.spatial_pyramid_pooling_param().spatial_bin(i);
-      const float spatial_bin_size =
-          static_cast<float>(image_side_length) / spatial_bin;
-      pooling_param->set_kernel_size(ceil(spatial_bin_size));
-      pooling_param->set_stride(floor(spatial_bin_size));
+      pooling_param->set_kernel_h(height_ / spatial_bin);
+      pooling_param->set_stride_h(height_ / spatial_bin);
+      pooling_param->set_kernel_w(width_ / spatial_bin);
+      pooling_param->set_stride_w(width_ / spatial_bin);
       shared_ptr<PoolingLayer<Dtype> > pooling_layer(
           new PoolingLayer<Dtype>(layer_param));
       vector<Blob<Dtype>*> pooling_layer_bottom(1, split_top_vec_[i]);
@@ -84,8 +81,10 @@ void SpatialPyramidPoolingLayer<Dtype>::SetUp(
     concat_layer_.reset(new ConcatLayer<Dtype>(layer_param));
     concat_layer_->SetUp(concat_bottom_vec_, top);
   } else {
-    pooling_param->set_kernel_size(image_side_length);
-    pooling_param->set_stride(image_side_length);
+    pooling_param->set_kernel_h(height_);
+    pooling_param->set_stride_h(height_);
+    pooling_param->set_kernel_w(width_);
+    pooling_param->set_stride_w(width_);
     shared_ptr<PoolingLayer<Dtype> > layer(
         new PoolingLayer<Dtype>(layer_param));
     layer->SetUp(bottom, top);
