@@ -62,6 +62,9 @@ NONGEN_CXX_SRCS := $(shell find \
 	examples \
 	tools \
 	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh")
+LINT_OUTPUT_DIR := $(BUILD_DIR)/lint
+LINT_EXT := lint.txt
+LINT_OUTPUTS := $(addsuffix .$(LINT_EXT), $(addprefix $(LINT_OUTPUT_DIR)/, ${NONGEN_CXX_SRCS}))
 LINT_REPORT := $(BUILD_DIR)/cpp_lint.log
 FAILED_LINT_REPORT := $(BUILD_DIR)/cpp_lint.error_log
 # PY$(PROJECT)_SRC is the python wrapper for $(PROJECT)
@@ -173,6 +176,7 @@ ALL_BUILD_DIRS := $(sort \
 		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
 		$(TEST_BUILD_DIR) $(TEST_BIN_DIR) $(GTEST_BUILD_DIR) \
 		$(EXAMPLE_BUILD_DIRS) \
+		$(LINT_OUTPUT_DIR) \
 		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) $(PY_PROTO_BUILD_DIR) \
 		$(DISTRIBUTE_SUBDIRS))
 
@@ -287,13 +291,22 @@ linecount:
 
 lint: $(LINT_REPORT)
 
-$(LINT_REPORT): $(NONGEN_CXX_SRCS) | $(BUILD_DIR)
-	@ (python ./scripts/cpp_lint.py $(NONGEN_CXX_SRCS) > $(LINT_REPORT) 2>&1 \
-		&& ($(RM) $(FAILED_LINT_REPORT); echo "No lint errors!")) || ( \
-			mv $(LINT_REPORT) $(FAILED_LINT_REPORT); \
-			grep -v "^Done processing " $(FAILED_LINT_REPORT); \
-			echo "Found 1 or more lint errors; see log at $(FAILED_LINT_REPORT)"; \
-			exit 1)
+$(LINT_REPORT): $(LINT_OUTPUTS)
+	@ cat $(LINT_OUTPUTS) > $@
+	@ if [ -s "$@" ]; then \
+		cat $@; mv $@ $(FAILED_LINT_REPORT); \
+	  else \
+		echo "No lint errors!"; \
+	  fi
+
+$(LINT_OUTPUTS): $(LINT_OUTPUT_DIR)/%.lint.txt : % | $(LINT_OUTPUT_DIR)
+	@ mkdir -p $(dir $@)
+	@ python ./scripts/cpp_lint.py $< 2>&1 \
+		| grep -v "^Done processing " \
+		| grep -v "^Total errors found: 0" \
+		> $@ \
+		|| true
+	@ if [ -s "$@" ]; then touch $<; cat $@; fi
 
 test: $(TEST_ALL_BIN) $(TEST_BINS)
 
