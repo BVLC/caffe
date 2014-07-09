@@ -113,12 +113,16 @@ class Device {
                      Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void im2col(const Dtype* data_im, const int channels,
-      const int height, const int width, const int ksize, const int pad,
-      const int stride, Dtype* data_col) { NOT_IMPLEMENTED; }
+                      const int height, const int width, const int ksize,
+                      const int pad, const int stride, Dtype* data_col) {
+    NOT_IMPLEMENTED;
+  }
 
   virtual void col2im(const Dtype* data_col, const int channels,
-      const int height, const int width, const int ksize, const int pad,
-      const int stride, Dtype* data_im) { NOT_IMPLEMENTED; }
+                      const int height, const int width, const int ksize,
+                      const int pad, const int stride, Dtype* data_im) {
+    NOT_IMPLEMENTED;
+  }
 };
 
 template<typename Dtype>
@@ -178,7 +182,7 @@ class CPUDevice : public Device<Dtype> {
   virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
 
   virtual uint32_t hamming_distance(const int N, const Dtype* x,
-      const Dtype* y);
+                                    const Dtype* y);
 
   // Returns the sum of the absolute values of the elements of vector x
   virtual void asum(const int N, const Dtype* x, Dtype* y);
@@ -192,12 +196,12 @@ class CPUDevice : public Device<Dtype> {
   virtual void scale(const int N, const Dtype alpha, const Dtype *x, Dtype* y);
 
   virtual void im2col(const Dtype* data_im, const int channels,
-      const int height, const int width, const int ksize, const int pad,
-      const int stride, Dtype* data_col);
+                      const int height, const int width, const int ksize,
+                      const int pad, const int stride, Dtype* data_col);
 
   virtual void col2im(const Dtype* data_col, const int channels,
-      const int height, const int width, const int ksize, const int pad,
-      const int stride, Dtype* data_im);
+                      const int height, const int width, const int ksize,
+                      const int pad, const int stride, Dtype* data_im);
 };
 
 template<typename Dtype>
@@ -255,7 +259,7 @@ class GPUDevice : public Device<Dtype> {
   virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
 
   virtual uint32_t hamming_distance(const int N, const Dtype* x,
-      const Dtype* y);
+                                    const Dtype* y);
 
 // Returns the sum of the absolute values of the elements of vector x
   virtual void asum(const int N, const Dtype* x, Dtype* y);
@@ -269,12 +273,12 @@ class GPUDevice : public Device<Dtype> {
   virtual void scale(const int N, const Dtype alpha, const Dtype *x, Dtype* y);
 
   virtual void im2col(const Dtype* data_im, const int channels,
-      const int height, const int width, const int ksize, const int pad,
-      const int stride, Dtype* data_col);
+                      const int height, const int width, const int ksize,
+                      const int pad, const int stride, Dtype* data_col);
 
   virtual void col2im(const Dtype* data_col, const int channels,
-      const int height, const int width, const int psize, const int pad,
-      const int stride, Dtype* data_im);
+                      const int height, const int width, const int psize,
+                      const int pad, const int stride, Dtype* data_im);
 };
 
 // Device factory function

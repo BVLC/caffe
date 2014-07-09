@@ -19,10 +19,10 @@ namespace caffe {
 
 template<>
 void CPUDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
-                                  const CBLAS_TRANSPOSE TransB, const int M,
-                                  const int N, const int K, const float alpha,
-                                  const float* A, const float* B,
-                                  const float beta, float* C) {
+                            const CBLAS_TRANSPOSE TransB, const int M,
+                            const int N, const int K, const float alpha,
+                            const float* A, const float* B, const float beta,
+                            float* C) {
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
   cblas_sgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
@@ -31,10 +31,10 @@ void CPUDevice<float>::gemm(const CBLAS_TRANSPOSE TransA,
 
 template<>
 void CPUDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
-                                  const CBLAS_TRANSPOSE TransB, const int M,
-                                  const int N, const int K, const double alpha,
-                                  const double* A, const double* B,
-                                  const double beta, double* C) {
+                             const CBLAS_TRANSPOSE TransB, const int M,
+                             const int N, const int K, const double alpha,
+                             const double* A, const double* B,
+                             const double beta, double* C) {
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
   cblas_dgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
@@ -43,41 +43,39 @@ void CPUDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
 
 template<>
 void CPUDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
-                                  const int N, const float alpha,
-                                  const float* A, const float* x,
-                                  const float beta, float* y) {
+                            const int N, const float alpha, const float* A,
+                            const float* x, const float beta, float* y) {
   cblas_sgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
 }
 
 template<>
 void CPUDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
-                                  const int N, const double alpha,
-                                  const double* A, const double* x,
-                                  const double beta, double* y) {
+                             const int N, const double alpha, const double* A,
+                             const double* x, const double beta, double* y) {
   cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
 }
 
 template<>
 void CPUDevice<float>::axpy(const int N, const float alpha, const float* X,
-                                  float* Y) {
+                            float* Y) {
   cblas_saxpy(N, alpha, X, 1, Y, 1);
 }
 
 template<>
 void CPUDevice<double>::axpy(const int N, const double alpha, const double* X,
-                                  double* Y) {
+                             double* Y) {
   cblas_daxpy(N, alpha, X, 1, Y, 1);
 }
 
 template<>
 void CPUDevice<float>::axpby(const int N, const float alpha, const float* X,
-                                  const float beta, float* Y) {
+                             const float beta, float* Y) {
   cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
 }
 
 template<>
 void CPUDevice<double>::axpby(const int N, const double alpha, const double* X,
-                                  const double beta, double* Y) {
+                              const double beta, double* Y) {
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
 }
 
@@ -148,61 +146,61 @@ void CPUDevice<double>::sqr(const int N, const double* a, double* y) {
 
 template<>
 void CPUDevice<float>::add(const int N, const float* a, const float* b,
-                                float* y) {
+                           float* y) {
   vsAdd(N, a, b, y);
 }
 
 template<>
 void CPUDevice<double>::add(const int N, const double* a, const double* b,
-                                double* y) {
+                            double* y) {
   vdAdd(N, a, b, y);
 }
 
 template<>
 void CPUDevice<float>::sub(const int N, const float* a, const float* b,
-                                float* y) {
+                           float* y) {
   vsSub(N, a, b, y);
 }
 
 template<>
 void CPUDevice<double>::sub(const int N, const double* a, const double* b,
-                                double* y) {
+                            double* y) {
   vdSub(N, a, b, y);
 }
 
 template<>
 void CPUDevice<float>::mul(const int N, const float* a, const float* b,
-                                float* y) {
+                           float* y) {
   vsMul(N, a, b, y);
 }
 
 template<>
 void CPUDevice<double>::mul(const int N, const double* a, const double* b,
-                                double* y) {
+                            double* y) {
   vdMul(N, a, b, y);
 }
 
 template<>
 void CPUDevice<float>::div(const int N, const float* a, const float* b,
-                                float* y) {
+                           float* y) {
   vsDiv(N, a, b, y);
 }
 
 template<>
 void CPUDevice<double>::div(const int N, const double* a, const double* b,
-                                double* y) {
+                            double* y) {
   vdDiv(N, a, b, y);
 }
 
 template<>
 void CPUDevice<float>::powx(const int N, const float* a, const float b,
-                                float* y) {
+                            float* y) {
   vsPowx(N, a, b, y);
 }
 
 template<>
 void CPUDevice<double>::powx(const int N, const double* a, const double b,
-                                double* y) {
+                             double* y) {
   vdPowx(N, a, b, y);
 }
 
@@ -213,8 +211,8 @@ static Dtype _nextafter(const Dtype b) {
 }
 
 template<typename Dtype>
-void CPUDevice<Dtype>::rng_uniform(const int N, const Dtype a,
-                                        const Dtype b, Dtype* r) {
+void CPUDevice<Dtype>::rng_uniform(const int N, const Dtype a, const Dtype b,
+                                   Dtype* r) {
   CHECK_GE(N, 0);
   CHECK(r);
   CHECK_LE(a, b);
@@ -228,7 +226,7 @@ void CPUDevice<Dtype>::rng_uniform(const int N, const Dtype a,
 
 template<typename Dtype>
 void CPUDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
-                                         const Dtype sigma, Dtype* r) {
+                                    const Dtype sigma, Dtype* r) {
   CHECK_GE(N, 0);
   CHECK(r);
   CHECK_GT(sigma, 0);
@@ -256,7 +254,7 @@ void CPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
 
 template<typename Dtype>
 void CPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p,
-                                          unsigned int* r) {
+                                     unsigned int* r) {
   CHECK_GE(N, 0);
   CHECK(r);
   CHECK_GE(p, 0);
@@ -281,19 +279,19 @@ void CPUDevice<double>::exp(const int N, const double* a, double* y) {
 
 template<>
 void CPUDevice<float>::dot(const int N, const float* x, const float* y,
-                                float* out) {
+                           float* out) {
   *out = cblas_sdot(N, x, 1, y, 1);
 }
 
 template<>
 void CPUDevice<double>::dot(const int N, const double* x, const double* y,
-                                double* out) {
+                            double* out) {
   *out = cblas_ddot(N, x, 1, y, 1);
 }
 
 template<>
 uint32_t CPUDevice<float>::hamming_distance(const int N, const float* x,
-                                             const float* y) {
+                                            const float* y) {
   uint32_t dist = 0;
   for (int i = 0; i < N; ++i) {
     dist += __builtin_popcount(static_cast<uint32_t>(x[i]) ^
@@ -366,22 +364,23 @@ void CPUDevice<Dtype>::fabs(const int N, const Dtype* x, Dtype* y) {
 
 template<>
 void CPUDevice<float>::scale(const int N, const float alpha, const float *x,
-                                  float* y) {
+                             float* y) {
   cblas_scopy(N, x, 1, y, 1);
   cblas_sscal(N, alpha, y, 1);
 }
 
 template<>
 void CPUDevice<double>::scale(const int N, const double alpha, const double *x,
-                                  double* y) {
+                              double* y) {
   cblas_dcopy(N, x, 1, y, 1);
   cblas_dscal(N, alpha, y, 1);
 }
 
 template<typename Dtype>
 void CPUDevice<Dtype>::im2col(const Dtype* data_im, const int channels,
-    const int height, const int width, const int ksize, const int pad,
-    const int stride, Dtype* data_col) {
+                              const int height, const int width,
+                              const int ksize, const int pad, const int stride,
+                              Dtype* data_col) {
   int height_col = (height + 2 * pad - ksize) / stride + 1;
   int width_col = (width + 2 * pad - ksize) / stride + 1;
   int channels_col = channels * ksize * ksize;
@@ -405,8 +404,9 @@ void CPUDevice<Dtype>::im2col(const Dtype* data_im, const int channels,
 
 template<typename Dtype>
 void CPUDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
-    const int height, const int width, const int ksize, const int pad,
-    const int stride, Dtype* data_im) {
+                              const int height, const int width,
+                              const int ksize, const int pad, const int stride,
+                              Dtype* data_im) {
   memset(data_im, 0, sizeof(Dtype) * height * width * channels);
   int height_col = (height + 2 * pad - ksize) / stride + 1;
   int width_col = (width + 2 * pad - ksize) / stride + 1;
