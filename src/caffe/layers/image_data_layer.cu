@@ -27,12 +27,10 @@ Dtype ImageDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  CUDA_CHECK(cudaMemcpy((*top)[0]->mutable_gpu_data(),
-      prefetch_data_->cpu_data(), sizeof(Dtype) * prefetch_data_->count(),
-      cudaMemcpyHostToDevice));
-  CUDA_CHECK(cudaMemcpy((*top)[1]->mutable_gpu_data(),
-      prefetch_label_->cpu_data(), sizeof(Dtype) * prefetch_label_->count(),
-      cudaMemcpyHostToDevice));
+  caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
+      (*top)[0]->mutable_gpu_data());
+  caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
+      (*top)[1]->mutable_gpu_data());
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);

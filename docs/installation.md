@@ -21,8 +21,8 @@ Caffe depends on several software packages.
 * [OpenCV](http://opencv.org/).
 * [Boost](http://www.boost.org/) (we have only tested 1.55)
 * `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`
-* For the python wrapper
-    * `python`, `numpy (>= 1.7)`, Boost-provided `boost.python`
+* For the Python wrapper
+    * `Python`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For the MATLAB wrapper
     * MATLAB with the `mex` compiler.
 
@@ -48,8 +48,7 @@ The choice is yours:
 
 ### Python and/or Matlab wrappers (optional)
 
-This is only a requirement if you'd like the Python wrapper for Caffe.
-The main required package is `numpy`, and `Boost` (in "Other dependencies" below) must be compiled with Python support.
+Python: The main requirements are `numpy` and `boost.python` (provided by boost). `pandas` is useful too and needed for some examples.
 
 For **OS X**, we highly recommend using the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
 If you don't, please use Homebrew -- but beware of potential linking errors!
@@ -58,7 +57,7 @@ Note that if you use the **Ubuntu** default python, you will need to `apt-get in
 
     pip install -r /path/to/caffe/python/requirements.txt
 
-If you would like to have the MATLAB wrapper, install MATLAB, and make sure that its `mex` is in your `$PATH`.
+MATLAB: install MATLAB, and make sure that its `mex` is in your `$PATH`.
 
 ### The rest of the dependencies
 
@@ -99,12 +98,12 @@ In other `ENV` settings, things may not work as expected.
 
 #### 10.8-specific Instructions
 
-Simply run the following.
+Simply run the following:
 
-    brew install --build-from-source boost
+    brew install --build-from-source --with-python boost
     for x in snappy leveldb protobuf gflags glog szip homebrew/science/opencv; do brew install $x; done
 
-Building boost from source is needed to link against your local python (exceptions might be raised during some OS X installs, but **ignore** these and continue).
+Building boost from source is needed to link against your local Python (exceptions might be raised during some OS X installs, but **ignore** these and continue). If you do not need the Python wrapper, simply doing `brew install boost` is fine.
 
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
@@ -139,18 +138,17 @@ To edit the formulae in turn, run
 
 After this, run
 
-    for x in snappy leveldb protobuf gflags glog szip boost homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+    for x in snappy leveldb protobuf gflags glog szip homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+    brew install --build-from-source --with-python --fresh -vd boost
+
+**Note** that `brew install --build-from-source --fresh -vd boost` is fine if you do not need the Caffe Python wrapper.
 
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
 
-**Note** that in order to build the caffe python wrappers you must install boost using the --with-python option:
-
-    brew install --build-from-source --with-python --fresh -vd boost
-
 #### Windows
 
-There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng).
+There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
 
 ## Compilation
 
@@ -165,9 +163,9 @@ The defaults should work, but uncomment the relevant lines if using Anaconda Pyt
 
 Note that if there is no GPU in your machine, building and running CPU-only works, but GPU tests will naturally fail.
 
-To compile the python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
-Be sure to set your MATLAB and python paths in `Makefile.config` first!
-For Python support, you must add the compiled module to your `PYTHONPATH` (as `/path/to/caffe/python` or the like).
+To compile the Python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
+Be sure to set your MATLAB and Python paths in `Makefile.config` first!
+For Python support, you must add the compiled module to your `$PYTHONPATH` (as `/path/to/caffe/python` or the like).
 
 *Distribution*: run `make distribute` to create a `distribute` directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.
 

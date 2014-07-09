@@ -7,6 +7,15 @@
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
 
+#ifdef _MSC_VER
+#include "caffe/util/math_extras.h"
+#include <intrin.h>
+#define __builtin_popcount __popcnt16
+#define __builtin_popcountl __popcnt64
+#else
+#include <stdint.h>
+#endif //_MSC_VER
+
 #include "glog/logging.h"
 
 #include "caffe/util/mkl_alternate.hpp"
@@ -59,14 +68,13 @@ void caffe_gpu_axpby(const int N, const Dtype alpha, const Dtype* X,
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype *X, Dtype *Y);
 
+void caffe_memcpy(const size_t N, const void *X, void *Y);
+
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype *X);
 
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype *X);
-
-template <typename Dtype>
-void caffe_gpu_copy(const int N, const Dtype *X, Dtype *Y);
 
 template <typename Dtype>
 void caffe_add_scalar(const int N, const Dtype alpha, Dtype *X);
@@ -87,7 +95,13 @@ template <typename Dtype>
 void caffe_add(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
+void caffe_gpu_add(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+template <typename Dtype>
 void caffe_sub(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_sub(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
 void caffe_mul(const int N, const Dtype* a, const Dtype* b, Dtype* y);
@@ -137,6 +151,9 @@ void caffe_gpu_rng_gaussian(const int n, const Dtype mu, const Dtype sigma,
 
 template <typename Dtype>
 void caffe_rng_bernoulli(const int n, const Dtype p, int* r);
+
+template <typename Dtype>
+void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r);
 
 template <typename Dtype>
 void caffe_gpu_rng_bernoulli(const int n, const Dtype p, int* r);

@@ -224,6 +224,13 @@ struct CaffeNet {
         PyArray_DIMS(data_arr)[0]);
   }
 
+  // save the network weights to binary proto for net surgeries.
+  void save(string filename) {
+    NetParameter net_param;
+    net_->ToProto(&net_param, false);
+    WriteProtoToBinaryFile(net_param, filename.c_str());
+  }
+
   // The caffe::Caffe utility functions.
   void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
   void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
@@ -315,7 +322,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("layers",   &CaffeNet::layers)
       .add_property("inputs",   &CaffeNet::inputs)
       .add_property("outputs",  &CaffeNet::outputs)
-      .def("_set_input_arrays", &CaffeNet::set_input_arrays);
+      .def("_set_input_arrays", &CaffeNet::set_input_arrays)
+      .def("save",              &CaffeNet::save);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
       "Blob", boost::python::no_init)

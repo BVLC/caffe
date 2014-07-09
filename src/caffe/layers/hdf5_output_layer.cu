@@ -27,12 +27,10 @@ Dtype HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
 
   for (int i = 0; i < bottom[0]->num(); ++i) {
-    CUDA_CHECK(cudaMemcpy(&data_blob_.mutable_cpu_data()[i * data_datum_dim],
-           &bottom[0]->gpu_data()[i * data_datum_dim],
-           sizeof(Dtype) * data_datum_dim, cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(&label_blob_.mutable_cpu_data()[i * label_datum_dim],
-           &bottom[1]->gpu_data()[i * label_datum_dim],
-           sizeof(Dtype) * label_datum_dim, cudaMemcpyDeviceToHost));
+    caffe_copy(data_datum_dim, &bottom[0]->gpu_data()[i * data_datum_dim],
+        &data_blob_.mutable_cpu_data()[i * data_datum_dim]);
+    caffe_copy(label_datum_dim, &bottom[0]->gpu_data()[i * label_datum_dim],
+        &label_blob_.mutable_cpu_data()[i * label_datum_dim]);
   }
   SaveBlobs();
   return Dtype(0.);
@@ -40,7 +38,7 @@ Dtype HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void HDF5OutputLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   return;
 }
 

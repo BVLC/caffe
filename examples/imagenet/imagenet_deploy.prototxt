@@ -9,10 +9,6 @@ layers {
   type: CONVOLUTION
   bottom: "data"
   top: "conv1"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   convolution_param {
     num_output: 96
     kernel_size: 11
@@ -52,10 +48,6 @@ layers {
   type: CONVOLUTION
   bottom: "norm1"
   top: "conv2"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   convolution_param {
     num_output: 256
     pad: 2
@@ -96,10 +88,6 @@ layers {
   type: CONVOLUTION
   bottom: "norm2"
   top: "conv3"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   convolution_param {
     num_output: 384
     pad: 1
@@ -117,10 +105,6 @@ layers {
   type: CONVOLUTION
   bottom: "conv3"
   top: "conv4"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   convolution_param {
     num_output: 384
     pad: 1
@@ -139,10 +123,6 @@ layers {
   type: CONVOLUTION
   bottom: "conv4"
   top: "conv5"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   convolution_param {
     num_output: 256
     pad: 1
@@ -172,10 +152,6 @@ layers {
   type: INNER_PRODUCT
   bottom: "pool5"
   top: "fc6"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 4096
   }
@@ -200,10 +176,6 @@ layers {
   type: INNER_PRODUCT
   bottom: "fc6"
   top: "fc7"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 4096
   }
@@ -228,10 +200,6 @@ layers {
   type: INNER_PRODUCT
   bottom: "fc7"
   top: "fc8"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
   inner_product_param {
     num_output: 1000
   }
