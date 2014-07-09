@@ -26,7 +26,7 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
         blob_top_mask_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    blob_bottom_->Reshape(2, 5, 11, 11);
+    blob_bottom_->Reshape(2, 5, 13, 13);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -88,9 +88,9 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
         layer_param.mutable_spatial_pyramid_pooling_param();
     spatial_pyramid_pooling_param->set_pool(
         SpatialPyramidPoolingParameter_PoolMethod_MAX);
-    // kernel: 11 * 11, stride: 11 * 11
+    // kernel: 5 * 5, stride: 5 * 5
     // x1, y1, x2, y2
-    // 0, 11, 0, 11
+    // 0, 5, 0, 5
     spatial_pyramid_pooling_param->add_spatial_bin(1);
     SpatialPyramidPoolingLayer<Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
@@ -113,12 +113,12 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
       }
     }
 
-    // kernel: 5.5 * 5.5, stride: 5.5 * 5.5
+    // kernel: 2.5 * 2.5, stride: 2.5 * 2.5
     // x1, y1, x2, y2
-    // 0, 0, 6, 6
-    // 0, 5, 6, 11
-    // 5, 0, 11, 6
-    // 5, 5, 11, 11
+    // 0, 0, 3, 3
+    // 2, 0, 5, 3
+    // 0, 2, 3, 5
+    // 2, 2, 5, 5
     spatial_pyramid_pooling_param->add_spatial_bin(2);
     SpatialPyramidPoolingLayer<Dtype> two_level_layer(layer_param);
     two_level_layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
@@ -149,22 +149,27 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
       }
     }
 
-    // kernel: 3.66667 * 3.66667, stride: 3.66667 * 3.66667
+    //     [1 2 5 2 3]
+    //     [9 4 1 4 8]
+    //     [31 22 15 27 33]
+    //     [19 14 21 14 38]
+    //     [21 32 25 12 23]
+    // kernel: 1.666666667 * 1.666666667, stride: 1.666666667 * 1.666666667
     // x1, y1, x2, y2
-    // 0, 0, 4, 4
-    // 0, 3, 4, 8
-    // 0, 7, 4, 11
-    // 3, 0, 8, 4
-    // 3, 3, 8, 8
-    // 3, 7, 8, 11
-    // 7, 0, 11, 4
-    // 7, 3, 11, 8
-    // 7, 7, 11, 11
+    // 0, 0, 2, 2
+    // 1, 0, 4, 2
+    // 3, 0, 5, 2
+    // 0, 1, 2, 4
+    // 1, 1, 4, 4
+    // 3, 1, 5, 4
+    // 0, 3, 2, 5
+    // 1, 3, 4, 5
+    // 3, 3, 5, 5
     spatial_pyramid_pooling_param->add_spatial_bin(3);
     SpatialPyramidPoolingLayer<Dtype> three_level_layer(layer_param);
     three_level_layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
-    EXPECT_EQ(blob_top_->channels(), channels * (1 * 1 + 2 * 2 + 4 * 4));
+    EXPECT_EQ(blob_top_->channels(), channels * (1 * 1 + 2 * 2 + 3 * 3));
     EXPECT_EQ(blob_top_->height(), 1);
     EXPECT_EQ(blob_top_->width(), 1);
     three_level_layer.Forward(blob_bottom_vec_, &blob_top_vec_);
@@ -172,10 +177,9 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
     //     [38]
     //     [31 33]
     //     [32 38]
-    //     [9 5 5 8]
-    //     [31 22 27 33]
-    //     [31 22 27 38]
-    //     [32 32 25 38]
+    //     [9  5  8]
+    //     [31 27 38]
+    //     [32 32 38]
     offset = 0;
     for (int i = 0; i < num; i += 1) {
       for (int pyramid_level = 0; pyramid_level < 3; ++pyramid_level) {
@@ -192,21 +196,14 @@ class SpatialPyramidPoolingLayerTest : public ::testing::Test {
           } else if (pyramid_level == 2) {
             EXPECT_EQ(blob_top_->cpu_data()[offset + 0], 9);
             EXPECT_EQ(blob_top_->cpu_data()[offset + 1], 5);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 2], 5);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 3], 8);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 4], 31);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 5], 22);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 6], 27);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 7], 33);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 8], 31);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 9], 22);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 10], 27);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 11], 38);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 12], 32);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 13], 32);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 14], 25);
-            EXPECT_EQ(blob_top_->cpu_data()[offset + 15], 38);
-            offset += 4 * 4;
+            EXPECT_EQ(blob_top_->cpu_data()[offset + 2], 8);
+            EXPECT_EQ(blob_top_->cpu_data()[offset + 3], 31);
+            EXPECT_EQ(blob_top_->cpu_data()[offset + 4], 27);
+            EXPECT_EQ(blob_top_->cpu_data()[offset + 5], 38);
+            EXPECT_EQ(blob_top_->cpu_data()[offset + 6], 32);
+            EXPECT_EQ(blob_top_->cpu_data()[offset + 7], 32);
+            EXPECT_EQ(blob_top_->cpu_data()[offset + 8], 38);
+            offset += 3 * 3;
           }
         }
       }
@@ -246,7 +243,7 @@ TYPED_TEST(SpatialPyramidPoolingLayerTest, TestSetup) {
   three_level_layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(),
-            this->blob_bottom_->channels() * (1 * 1 + 2 * 2 + 4 * 4));
+            this->blob_bottom_->channels() * (1 * 1 + 2 * 2 + 3 * 3));
   EXPECT_EQ(this->blob_top_->height(), 1);
   EXPECT_EQ(this->blob_top_->width(), 1);
 }
@@ -271,12 +268,12 @@ TYPED_TEST(SpatialPyramidPoolingLayerTest, TestCPUGradientMax) {
   spatial_pyramid_pooling_param->set_pool(
       SpatialPyramidPoolingParameter_PoolMethod_MAX);
 
-  for (int i = 1; i < 10; ++i) {
+  for (int i = 1; i < 5; ++i) {
     spatial_pyramid_pooling_param->add_spatial_bin(i);
-    SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
-    checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-        &(this->blob_top_vec_));
   }
+  SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 TYPED_TEST(SpatialPyramidPoolingLayerTest, TestGPUGradientMax) {
@@ -289,12 +286,12 @@ TYPED_TEST(SpatialPyramidPoolingLayerTest, TestGPUGradientMax) {
   spatial_pyramid_pooling_param->set_pool(
       SpatialPyramidPoolingParameter_PoolMethod_MAX);
 
-  for (int i = 1; i < 10; ++i) {
+  for (int i = 1; i < 5; ++i) {
     spatial_pyramid_pooling_param->add_spatial_bin(i);
-    SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
-    checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-        &(this->blob_top_vec_));
   }
+  SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
 }
 
 }  // namespace caffe
