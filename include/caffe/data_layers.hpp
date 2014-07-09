@@ -8,7 +8,10 @@
 #include <vector>
 
 #include "leveldb/db.h"
+#if USE_LMDB
 #include "lmdb.h"
+#endif
+
 #include "pthread.h"
 #include "hdf5.h"
 #include "boost/scoped_ptr.hpp"
@@ -69,13 +72,15 @@ class DataLayer : public Layer<Dtype> {
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
+#if USE_LMDB
   // LMDB
   MDB_env* mdb_env_;
   MDB_dbi mdb_dbi_;
   MDB_txn* mdb_txn_;
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
-
+#endif
+  
   int datum_channels_;
   int datum_height_;
   int datum_width_;
