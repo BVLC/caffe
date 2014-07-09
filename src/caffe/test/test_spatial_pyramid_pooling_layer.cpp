@@ -271,20 +271,12 @@ TYPED_TEST(SpatialPyramidPoolingLayerTest, TestCPUGradientMax) {
   spatial_pyramid_pooling_param->set_pool(
       SpatialPyramidPoolingParameter_PoolMethod_MAX);
 
-  spatial_pyramid_pooling_param->add_spatial_bin(1);
-  SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-
-  spatial_pyramid_pooling_param->add_spatial_bin(2);
-  SpatialPyramidPoolingLayer<TypeParam> two_level_layer(layer_param);
-  checker.CheckGradientExhaustive(&two_level_layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-
-  spatial_pyramid_pooling_param->add_spatial_bin(3);
-  SpatialPyramidPoolingLayer<TypeParam> three_level_layer(layer_param);
-  checker.CheckGradientExhaustive(&three_level_layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  for (int i = 1; i < 10; ++i) {
+    spatial_pyramid_pooling_param->add_spatial_bin(i);
+    SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
+    checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+        &(this->blob_top_vec_));
+  }
 }
 
 TYPED_TEST(SpatialPyramidPoolingLayerTest, TestGPUGradientMax) {
@@ -297,20 +289,12 @@ TYPED_TEST(SpatialPyramidPoolingLayerTest, TestGPUGradientMax) {
   spatial_pyramid_pooling_param->set_pool(
       SpatialPyramidPoolingParameter_PoolMethod_MAX);
 
-  spatial_pyramid_pooling_param->add_spatial_bin(1);
-  SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-
-  spatial_pyramid_pooling_param->add_spatial_bin(2);
-  SpatialPyramidPoolingLayer<TypeParam> two_level_layer(layer_param);
-  checker.CheckGradientExhaustive(&two_level_layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-
-  spatial_pyramid_pooling_param->add_spatial_bin(3);
-  SpatialPyramidPoolingLayer<TypeParam> three_level_layer(layer_param);
-  checker.CheckGradientExhaustive(&three_level_layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  for (int i = 1; i < 10; ++i) {
+    spatial_pyramid_pooling_param->add_spatial_bin(i);
+    SpatialPyramidPoolingLayer<TypeParam> layer(layer_param);
+    checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+        &(this->blob_top_vec_));
+  }
 }
 
 }  // namespace caffe
