@@ -63,7 +63,6 @@ class DataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
 
-<<<<<<< .mine
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
   virtual unsigned int PrefetchRand();
@@ -92,36 +91,6 @@ class DataLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
   bool output_labels_;
   Caffe::Phase phase_;
-=======
-  virtual void CreatePrefetchThread();
-  virtual void JoinPrefetchThread();
-  virtual unsigned int PrefetchRand();
-
-  shared_ptr<Caffe::RNG> prefetch_rng_;
-
-  // LEVELDB
-  shared_ptr<leveldb::DB> db_;
-  shared_ptr<leveldb::Iterator> iter_;
-  // LMDB
-  MDB_env* mdb_env_;
-  MDB_dbi mdb_dbi_;
-  MDB_txn* mdb_txn_;
-  MDB_cursor* mdb_cursor_;
-  MDB_val mdb_key_, mdb_value_;
-
-  int datum_channels_;
-  int datum_height_;
-  int datum_width_;
-  int datum_size_;
-  pthread_t thread_;
-  shared_ptr<Blob<Dtype> > prefetch_data_;
-  shared_ptr<Blob<Dtype> > prefetch_label_;
-  Blob<Dtype> data_mean_;
-  bool output_labels_;
-  Caffe::Phase phase_;
-
-
->>>>>>> .theirs
 };
 
 template <typename Dtype>
