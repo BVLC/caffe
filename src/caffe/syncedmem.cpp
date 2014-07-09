@@ -33,6 +33,7 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_);
       own_cpu_data_ = true;
     }
+    Caffe::set_mode(Caffe::GPU);
     caffe_memcpy(size_, gpu_ptr_, cpu_ptr_);
     head_ = SYNCED;
     break;
@@ -53,6 +54,7 @@ inline void SyncedMemory::to_gpu() {
     if (gpu_ptr_ == NULL) {
       CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     }
+    Caffe::set_mode(Caffe::GPU);
     caffe_memcpy(size_, cpu_ptr_, gpu_ptr_);
     head_ = SYNCED;
     break;
