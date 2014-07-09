@@ -36,34 +36,44 @@ class Device {
 
   /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y) { NOT_IMPLEMENTED; }
+
   virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void set(const int N, const Dtype alpha, Dtype *X) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void add_scalar(const int N, const Dtype alpha, Dtype *X) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void scal(const int N, const Dtype alpha, Dtype *X) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void sqr(const int N, const Dtype* a, Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void add(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void sub(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void mul(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void div(const int N, const Dtype* a, const Dtype* b, Dtype* y) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void powx(const int N, const Dtype* a, const Dtype b, Dtype* y) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void rng_uniform(const int N, const Dtype a, const Dtype b,
                            Dtype* r) { NOT_IMPLEMENTED; }
@@ -94,7 +104,8 @@ class Device {
   virtual void sign(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void sgnbit(const int N, const Dtype* x, Dtype* y) {
-    NOT_IMPLEMENTED; }
+    NOT_IMPLEMENTED;
+  }
 
   virtual void fabs(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
@@ -132,6 +143,7 @@ class CPUDevice : public Device<Dtype> {
 
   /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
+
   virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
 
   virtual void set(const int N, const Dtype alpha, Dtype *X);
@@ -210,6 +222,7 @@ class GPUDevice : public Device<Dtype> {
 
   /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
+
   virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
 
   virtual void set(const int N, const Dtype alpha, Dtype *X);
