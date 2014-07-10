@@ -152,7 +152,11 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
-    CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
+    if (Caffe::mode() == Caffe::GPU) {
+      CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
+    } else {
+      memcpy(Y, X, sizeof(Dtype) * N);
+    }
   }
 }
 
@@ -162,7 +166,7 @@ template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
 template void caffe_copy<float>(const int N, const float* X, float* Y);
 template void caffe_copy<double>(const int N, const double* X, double* Y);
 
-void caffe_memcpy(const size_t N, const void* X, void* Y) {
+void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
     CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));
   }
