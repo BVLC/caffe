@@ -5,15 +5,16 @@ compiler:
 before_install:
   - echo $LANG
   - echo $LC_ALL
-  - apt-get -y update
+  - sudo apt-get -y update
 install:
-  - apt-get -y install python-dev libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
-  - pip install -r python/requirements.txt
+  - sudo apt-get -y install python-dev libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
+  - sudo pip install -r python/requirements.txt
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
   - tar zxvf glog-0.3.3.tar.gz
   - cd glog-0.3.3.tar.gz 
   - ./configure
-  - make && make install
+  - make
+  - sudo make install
 before_script:
   - mv Makefile.config.example Makefile.config
 script:
