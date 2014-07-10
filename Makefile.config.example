@@ -52,7 +52,7 @@ PYTHON_LIB := /usr/local/lib
 
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include $(CUDA_DIR)/include /usr/include/atlas
-LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib $(CUDA_DIR)/lib /usr/lib/atlas
+LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib $(CUDA_DIR)/lib /usr/lib/atlas-base
 
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute
