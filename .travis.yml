@@ -14,6 +14,8 @@ install:
   - cd glog-0.3.3.tar.gz 
   - ./configure
   - make && make install
+before_script:
+  - mv Makefile.config.example Makefile.config
 script:
   - make all
   - make test
