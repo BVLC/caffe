@@ -7,7 +7,7 @@ before_install:
   - echo $LC_ALL
   - sudo apt-get -y update
 install:
-  - sudo apt-get -y install python-dev libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
+  - sudo apt-get -y install python-dev libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev nvidia-cuda-toolkit
   # - sudo pip install -r python/requirements.txt
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
   - tar zxvf glog-0.3.3.tar.gz
