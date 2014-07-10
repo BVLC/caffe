@@ -20,7 +20,7 @@ before_script:
 script:
   - make all
   - make test
-  - make runtest
+  - LD_LIBRARY_PATH=/usr/local/cuda/lib64 make runtest
 branches:
   only:
     - master
