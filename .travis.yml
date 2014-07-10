@@ -24,9 +24,9 @@ branches:
     - dev
     - travisci
 notifications:
-  recipients:
-    - huy@huyng.com
   email:
+    recipients:
+      - huy@huyng.com
     on_success: change
     on_failure: always
   irc:
@@ -34,6 +34,3 @@ notifications:
       - "chat.freenode.net#caffe"
     template:
       - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
-os:
-  - linux
-  - osx
