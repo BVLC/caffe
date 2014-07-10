@@ -46,20 +46,17 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     kernel_h_ = pool_param.kernel_h();
     kernel_w_ = pool_param.kernel_w();
   }
-  CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
-  CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
+  CHECK_GT(kernel_h_, 0) << "Filter height must be positive.";
+  CHECK_GT(kernel_w_, 0) << "Filter width must be positive.";
+
   if (!pool_param.has_pad_h()) {
     pad_h_ = pad_w_ = pool_param.pad();
   } else {
     pad_h_ = pool_param.pad_h();
     pad_w_ = pool_param.pad_w();
   }
-  if (!pool_param.has_stride_h()) {
-    stride_h_ = stride_w_ = pool_param.stride();
-  } else {
-    stride_h_ = pool_param.stride_h();
-    stride_w_ = pool_param.stride_w();
-  }
+  CHECK_GE(pad_h_, 0) << "Pad height must be non-negative.";
+  CHECK_GE(pad_w_, 0) << "Pad width must be non-negative.";
   if (pad_h_ != 0 || pad_w_ != 0) {
     CHECK(this->layer_param_.pooling_param().pool()
         == PoolingParameter_PoolMethod_AVE
@@ -69,6 +66,15 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT(pad_h_, kernel_h_);
     CHECK_LT(pad_w_, kernel_w_);
   }
+
+  if (!pool_param.has_stride_h()) {
+    stride_h_ = stride_w_ = pool_param.stride();
+  } else {
+    stride_h_ = pool_param.stride_h();
+    stride_w_ = pool_param.stride_w();
+  }
+  CHECK_GT(stride_h_, 0) << "Stride height must be positive.";
+  CHECK_GT(stride_w_, 0) << "Stride width must be positive.";
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
@@ -193,11 +199,13 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             float wstart = pw * stride_w_ - pad_w_;
             int hend = std::min<float>(ceil(hstart + kernel_h_), height_ + pad_h_);
             int wend = std::min<float>(ceil(wstart + kernel_w_), width_ + pad_w_);
-            const float pool_size = (hend - hstart) * (wend - wstart);
-            hstart = std::max<float>(floor(hstart), 0);
-            wstart = std::max<float>(floor(wstart), 0);
-            hend = std::min<float>(hend, height_);
-            wend = std::min<float>(wend, width_);
+            hstart = floor(hstart);
+            wstart = floor(wstart);
+            const int pool_size = (hend - hstart) * (wend - wstart);
+            hstart = std::max<float>(hstart, 0);
+            wstart = std::max<float>(wstart, 0);
+            hend = std::min(hend, height_);
+            wend = std::min(wend, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 top_data[ph * pooled_width_ + pw] +=
@@ -275,11 +283,13 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             float wstart = pw * stride_w_ - pad_w_;
             int hend = std::min<float>(ceil(hstart + kernel_h_), height_ + pad_h_);
             int wend = std::min<float>(ceil(wstart + kernel_w_), width_ + pad_w_);
-            const float pool_size = (hend - hstart) * (wend - wstart);
-            hstart = std::max<float>(floor(hstart), 0);
-            wstart = std::max<float>(floor(wstart), 0);
-            hend = std::min<float>(hend, height_);
-            wend = std::min<float>(wend, width_);
+            hstart = floor(hstart);
+            wstart = floor(wstart);
+            const int pool_size = (hend - hstart) * (wend - wstart);
+            hstart = std::max<float>(hstart, 0);
+            wstart = std::max<float>(wstart, 0);
+            hend = std::min(hend, height_);
+            wend = std::min(wend, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 bottom_diff[h * width_ + w] +=
