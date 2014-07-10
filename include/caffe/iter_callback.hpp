@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
 
@@ -8,134 +9,32 @@ namespace caffe
 {
 
 // Provides indication to the solver after each iteration  if it should save
-// a snapshot, continue, and cetera.
+// a snapshot, continue or stop, what the learning rate should be and cetera.
 template< typename Dtype>
 struct IterActions
 {
     // Constructor.
-    IterActions():
-        create_snapshot_( false ),
-        continue_( false ),
-        test_( false ),
-        display_( false ),
-        learn_rate_( 0.0 ),
-        momentum_( 0.0 ),
-        resume_( false ),
-        resume_file_(),
-        weight_decay_( 0.0 )
-    {
-    }
-
-    IterActions SetResumeFile( const std::string& resume_file ) const
-    {
-        IterActions actions = *this;
-        actions.resume_file_ = resume_file;
-        actions.resume_ = true;
-        return actions;
-    }
-
-    IterActions SetShouldSnapshot() const
-    {
-        IterActions actions = *this;
-        actions.create_snapshot_ = true;
-        return actions;
-    }
-
-    IterActions SetShouldTest() const
-    {
-        IterActions actions = *this;
-        actions.test_ = true;
-        return actions;
-    }
-
-    IterActions SetLearnRate( Dtype learn_rate ) const
-    {
-        IterActions actions = *this;
-        actions.learn_rate_ = learn_rate;
-        return actions;
-    }
-
-    IterActions SetMomentum( Dtype momentum ) const
-    {
-        IterActions actions = *this;
-        actions.momentum_ = momentum;
-        return actions;
-    }
-
-    IterActions SetWeightDecay( double weight_decay ) const
-    {
-        IterActions actions = *this;
-        actions.weight_decay_ = weight_decay;
-        return actions;
-    }
-
-    IterActions SetShouldContinue() const
-    {
-        IterActions actions = *this;
-        actions.continue_ = true;
-        return actions;
-    }
-
-    IterActions SetShouldStop() const
-    {
-        IterActions actions = *this;
-        actions.continue_ = false;
-        return actions;
-    }
-
-    IterActions SetShouldDisplay() const
-    {
-        IterActions actions = *this;
-        actions.display_ = true;
-        return actions;
-    }
-
+    IterActions();
+    IterActions SetResumeFile( const std::string& resume_file ) const;
+    IterActions SetShouldSnapshot() const;
+    IterActions SetShouldTest() const;
+    IterActions SetLearnRate( Dtype learn_rate ) const;
+    IterActions SetMomentum( Dtype momentum ) const;
+    IterActions SetWeightDecay( double weight_decay ) const;
+    IterActions SetShouldContinue() const;
+    IterActions SetShouldStop() const;
+    IterActions SetShouldDisplay() const;
     // Returns true iff a snapshot should be created.
-    bool ShouldSnapshot() const
-    {
-        return create_snapshot_;
-    }
-
-    bool ShouldDisplay() const
-    {
-        return display_;
-    }
-
-    bool ShouldTest() const
-    {
-        return test_;
-    }
-
+    bool ShouldSnapshot() const;
+    bool ShouldDisplay() const;
+    bool ShouldTest() const;
     // Returns true iff the solver should continue solving, or false to stop.
-    bool ShouldContinue() const
-    {
-        return continue_;
-    }
-
-    bool ShouldResume() const
-    {
-        return resume_;
-    }
-
-    std::string GetResumeFile() const
-    {
-        return resume_file_;
-    }
-
-    Dtype GetLearningRate() const
-    {
-        return learn_rate_;
-    }
-
-    Dtype GetMomentum() const
-    {
-        return momentum_;
-    }
-
-    Dtype GetWeightDecay() const
-    {
-        return weight_decay_;
-    }
+    bool ShouldContinue() const;
+    bool ShouldResume() const;
+    std::string GetResumeFile() const;
+    Dtype GetLearningRate() const;
+    Dtype GetMomentum() const;
+    Dtype GetWeightDecay() const;
 private:
     // True iff the solver should save a snapshot.
     bool create_snapshot_;
@@ -153,30 +52,11 @@ private:
 template<typename Dtype>
 struct TestResult
 {
-    TestResult SetLoss( Dtype loss ) const
-    {
-        TestResult result = *this;
-        result.loss_ = loss;
-        return result;
-    }
-
+    TestResult SetLoss( Dtype loss ) const;
     // One score for each test iteration.
-    TestResult SetScores( const std::vector<Dtype>& scores ) const
-    {
-        TestResult result = *this;
-        result.scores_ = scores;
-        return result;
-    }
-
-    boost::optional<Dtype> GetLoss() const
-    {
-        return loss_;
-    }
-
-    std::vector<Dtype> GetScores() const
-    {
-        return scores_;
-    }
+    TestResult SetScores( const std::vector<Dtype>& scores ) const;
+    boost::optional<Dtype> GetLoss() const;
+    std::vector<Dtype> GetScores() const;
 private:
     // Loss on the test net, if param_.test_compute_loss_ was true.
     // Otherwise the loss is not present.
