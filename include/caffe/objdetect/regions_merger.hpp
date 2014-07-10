@@ -22,7 +22,7 @@ class RegionsMerger {
     regions_merger_param_(param) {}
   virtual ~RegionsMerger() {}
   virtual void merge(const vector<Rect> boxes, const vector<float> confidences,
-                     vector<Rect>* top_boxes) = 0;
+                     vector<int>* top_boxes_indices) = 0;
  protected:
   RegionsMergerParameter regions_merger_param_;
 };
@@ -33,9 +33,9 @@ class NonMaximumSuppressionRegionsMerger : public RegionsMerger {
       const RegionsMergerParameter& param);
   virtual ~NonMaximumSuppressionRegionsMerger() {}
   virtual void merge(const vector<Rect> boxes, const vector<float> confidences,
-                     vector<Rect>* top_boxes);
+                     vector<int>* top_boxes_indices);
  protected:
-  float overlap_;
+  float overlap_threshold_;
 };
 
 RegionsMerger* GetRegionsMerger(const RegionsMergerParameter& param);

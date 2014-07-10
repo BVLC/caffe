@@ -15,6 +15,8 @@ SlidingWindowROIGenerator<Dtype>::SlidingWindowROIGenerator(
       this->roi_generator_param_.sliding_window_param().spatial_bin_size()),
     stride_size_ratio_(
       this->roi_generator_param_.sliding_window_param().stride_size_ratio()) {
+  CHECK_GE(stride_size_ratio_, 0);
+  CHECK_LE(stride_size_ratio_, 1);
 }
 
 template <typename Dtype>
@@ -33,10 +35,10 @@ void SlidingWindowROIGenerator<Dtype>::generate(const Blob<Dtype>& image,
     const int width_stride = int(window_width * stride_size_ratio_);
     for (size_t j = 0; j < spatial_bin; ++j) {
       const int y1 = height_stride * j;
-      const int y2 = std::min(height, y1 + window_height) - 1;
+      const int y2 = std::min(height, y1 + window_height);
       for (size_t k = 0; k < spatial_bin; ++k) {
         const int x1 = width_stride * k;
-        const int x2 = std::min(width, x1 + window_width) - 1;
+        const int x2 = std::min(width, x1 + window_width);
         Rect roi(x1, y1, x2, y2);
         rois->push_back(roi);
       }

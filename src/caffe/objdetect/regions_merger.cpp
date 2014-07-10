@@ -13,7 +13,8 @@ namespace caffe {
 
 NonMaximumSuppressionRegionsMerger::NonMaximumSuppressionRegionsMerger(
     const RegionsMergerParameter& param) : RegionsMerger(param),
-        overlap_(this->regions_merger_param_.nms_param().overlap()) {
+        overlap_threshold_(
+            this->regions_merger_param_.nms_param().overlap_threshold()) {
 }
 
 template<typename Dtype>
@@ -25,8 +26,8 @@ bool Dtype_int_pair_greater(std::pair<Dtype, int> a,
 // https://github.com/quantombone/exemplarsvm/blob/master/internal/esvm_nms.m
 void NonMaximumSuppressionRegionsMerger::merge(
     const vector<Rect> boxes, const vector<float> confidences,
-    vector<Rect>* top_boxes) {
-  top_boxes->clear();
+    vector<int>* top_boxes_indices) {
+  top_boxes_indices->clear();
   if (boxes.size() <= 0) {
     return;
   }
@@ -43,17 +44,19 @@ void NonMaximumSuppressionRegionsMerger::merge(
   std::sort(value_and_indices.begin(), value_and_indices.end(),
             Dtype_int_pair_greater<float>);
 
-  size_t current = 0;
   float area;
   vector<bool> is_candidate(confidences.size(), true);
-  while (current < value_and_indices.size()) {
-    top_boxes->push_back(boxes[value_and_indices[current].second]);
-    for (size_t i = current + 1; i < value_and_indices.size(); ++i) {
-      if (is_candidate[i]) {
-        area = boxes[value_and_indices[current].second].intersect(
-            boxes[value_and_indices[i].second]).area();
-        if (area / areas[value_and_indices[i].second] > overlap_) {
-          is_candidate[i] = false;
+  for (size_t i = 0; i < value_and_indices.size(); ++i) {
+    if (!is_candidate[i]) {
+      continue;
+    }
+    top_boxes_indices->push_back(value_and_indices[i].second);
+    for (size_t j = i + 1; j < value_and_indices.size(); ++j) {
+      if (is_candidate[j]) {
+        area = boxes[value_and_indices[i].second].intersect(
+            boxes[value_and_indices[j].second]).area();
+        if (area / areas[value_and_indices[j].second] > overlap_threshold_) {
+          is_candidate[j] = false;
         }
       }
     }

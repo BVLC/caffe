@@ -67,9 +67,10 @@ class Rect {
   inline const int y2() const { return y2_; }
 
  protected:
-  // All are inclusive
+  // x1_ and y1_ are inclusive
   int x1_;  // left upper corner horizontal
   int y1_;  // left upper corner vertical
+  // x2_ and y2_ are exclusive
   int x2_;  // right bottom corner horizontal
   int y2_;  // right bottom corner vertical
 };

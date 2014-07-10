@@ -560,10 +560,10 @@ message ROIGeneratorParameter {
     BING = 3;
   }
   optional ROIGeneratorType type = 1;
-  optional SlidingWindowParameter sliding_window_param = 2;
+  optional SlidingWindowROIGeneratorParameter sliding_window_param = 2;
 }
 
-message SlidingWindowParameter {
+message SlidingWindowROIGeneratorParameter {
   // numbers of sliding windows along the x or y axis of multiple scales
   // as seen in the Spatial Pyramid Pooling (Matching) algorithm
   repeated uint32 spatial_bin = 1;
@@ -584,7 +584,7 @@ message RegionsMergerParameter {
 } 
 
 message NonMaximumSuppressionRegionsMergerParameter {
-  optional float overlap = 1;
+  optional float overlap_threshold = 1;
 }
 
 message ObjectDetectorParameter {
