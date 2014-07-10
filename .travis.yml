@@ -1,0 +1,39 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+before_install:
+  - echo $LANG
+  - echo $LC_ALL
+  - apt-get -y update
+install:
+  - apt-get -y install python-dev libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
+  - pip install -r python/requirements.txt
+  - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
+  - tar zxvf glog-0.3.3.tar.gz
+  - cd glog-0.3.3.tar.gz 
+  - ./configure
+  - make && make install
+script:
+  - make all
+  - make test
+  - make runtest
+branches:
+  only:
+    - master
+    - dev
+    - travisci
+notifications:
+  recipients:
+    - huy@huyng.com
+  email:
+    on_success: change
+    on_failure: always
+  irc:
+    channels:
+      - "chat.freenode.net#caffe"
+    template:
+      - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
+os:
+  - linux
+  - osx
