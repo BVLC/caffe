@@ -1,3 +1,5 @@
+![Build Status](https://travis-ci.org/huyng/caffe.svg?branch=travisci)
+
 [Caffe: Convolutional Architecture for Fast Feature Extraction](http://caffe.berkeleyvision.org)
 
 Created by [Yangqing Jia](http://daggerfs.com), UC Berkeley EECS department.
