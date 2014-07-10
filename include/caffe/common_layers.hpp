@@ -17,12 +17,6 @@
 
 namespace caffe {
 
-template<typename Dtype>
-bool int_Dtype_pair_greater(std::pair<int, Dtype> a,
-                            std::pair<int, Dtype> b) {
-  return a.second > b.second || (a.second == b.second && a.first > b.first);
-}
-
 /* ArgmaxLayer
   Compute the index of the max value across all (channels x height x width).
   [In the future, can take specific dimension.]

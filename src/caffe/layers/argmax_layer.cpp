@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cfloat>
 #include <queue>
+#include <utility>
 #include <vector>
 
 #include "caffe/layer.hpp"
@@ -28,6 +29,12 @@ void ArgMaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
+template<typename Dtype>
+bool int_Dtype_pair_greater(std::pair<int, Dtype> a,
+                            std::pair<int, Dtype> b) {
+  return a.second > b.second;
+}
+
 template <typename Dtype>
 Dtype ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
@@ -38,7 +45,8 @@ Dtype ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num; ++i) {
     std::vector<std::pair<int, Dtype> > bottom_data_vector;
     for (int j = 0; j < dim; ++j) {
-      bottom_data_vector.push_back(std::make_pair(j, bottom_data[i * dim + j]));
+      bottom_data_vector.push_back(
+          std::make_pair(j, bottom_data[i * dim + j]));
     }
     std::partial_sort(
         bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
