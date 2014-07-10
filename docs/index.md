@@ -32,7 +32,7 @@ Consult performance [details](/performance_hardware.html).
 ## How
 
 * [Introductory slides](https://www.dropbox.com/s/10fx16yp5etb8dv/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
-* [ACM MM paper](https://github.com/UCB-ICSI-Vision-Group/caffe-paper/raw/arxiv/caffe.pdf): a 4-page report for the ACM Multimedia Open Source competition.
+* [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf): a 4-page report for the ACM Multimedia Open Source competition.
 * [Installation instructions](/installation.html): tested on Ubuntu, Red Hat, OS X.
 * [Pre-trained models](/getting_pretrained_models.html): BVLC provides ready-to-use models for non-commercial use.
 * [Development](/development.html): Guidelines for development and contributing to Caffe.
