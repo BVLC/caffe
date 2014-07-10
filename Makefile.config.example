@@ -6,10 +6,10 @@
 # CUSTOM_CXX := g++
 
 # CUDA directory contains bin/ and lib/ directories that we need.
-# CUDA_DIR := /usr/local/cuda
+CUDA_DIR := /usr/local/cuda
 # On Ubuntu 14.04, if cuda tools are installed via
 # "sudo apt-get install nvidia-cuda-toolkit" then use this instead:
-CUDA_DIR := /usr
+# CUDA_DIR := /usr
 
 # CUDA architecture setting: going with all of them (up to CUDA 5.5 compatible).
 # For the latest architecture, you need to install CUDA >= 6.0 and uncomment
