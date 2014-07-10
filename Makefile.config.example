@@ -51,7 +51,7 @@ PYTHON_LIB := /usr/local/lib
 # PYTHON_LIB := $(HOME)/anaconda/lib
 
 # Whatever else you find you need goes here.
-INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include $(CUDA_DIR)/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 
 BUILD_DIR := build
