@@ -23,5 +23,5 @@ fi
 
 echo "Downloading..."
 
-wget --no-check-certificate https://www.dropbox.com/s/0i3etlgmsmgf5ei/$MODEL
+wget http://dl.caffe.berkeleyvision.org/$MODEL
 echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
