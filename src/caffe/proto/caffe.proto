@@ -609,15 +609,16 @@ message ObjectDetectorParameter {
     // by defaulting to an existent ROIGeneratorType (instead, should usually
     //  error if the type is unspecified).
     NONE = 0;
-    GENERIC_CNN = 1;
+    SPATIAL_PYRAMID_POOLING_NET = 1;
   }
   optional ObjectDetectorType type = 1;
-  optional GenericCNNObjectDetectorParameter generic_cnn_param = 2;
+  optional SpatialPyramidPoolingNetObjectDetectorParameter 
+    spatial_pyramid_pooling_net_param = 2;
 }
 
-message GenericCNNObjectDetectorParameter {
+message SpatialPyramidPoolingNetObjectDetectorParameter {
   optional string net_proto = 1;
-  optional string pretrained_binary_proto = 2;
+  optional string pretrained_model_file = 2;
   optional ROIGeneratorParameter roi_generator_param = 3;
   optional RegionsMergerParameter regions_merger_param = 4;
 }

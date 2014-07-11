@@ -2,26 +2,35 @@
 
 #include "caffe/objdetect/object_detector.hpp"
 
+#include <leveldb/db.h>
+#include <leveldb/write_batch.h>
+#include <fstream>
+#include <string>
+#include <vector>
+
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 
 template <typename Dtype>
-GenericCNNObjectDetector<Dtype>::GenericCNNObjectDetector(
+SpatialPyramidPoolingNetObjectDetector<Dtype>::
+SpatialPyramidPoolingNetObjectDetector(
     const ObjectDetectorParameter& param) : ObjectDetector<Dtype>(param),
-    net_(param.generic_cnn_param().net_proto()),
+    net_(param.spatial_pyramid_pooling_net_param().net_proto()),
     roi_generator_(
-        GetROIGenerator<Dtype>(param.generic_cnn_param().roi_generator_param())),
+        GetROIGenerator<Dtype>(param.spatial_pyramid_pooling_net_param(
+            ).roi_generator_param())),
     regions_merger_(
-        GetRegionsMerger(param.generic_cnn_param().regions_merger_param())) {
+        GetRegionsMerger(param.spatial_pyramid_pooling_net_param(
+            ).regions_merger_param())) {
   net_.CopyTrainedLayersFrom(
-      param.generic_cnn_param().pretrained_binary_proto());
+      param.spatial_pyramid_pooling_net_param().pretrained_model_file());
 }
 
 template <typename Dtype>
-void GenericCNNObjectDetector<Dtype>::detect(const Blob<Dtype>& image,
-                                             vector<Rect>* object_regions) {
+void SpatialPyramidPoolingNetObjectDetector<Dtype>::detect(
+    const Blob<Dtype>& image, vector<Rect>* object_regions) {
 //  vector<Rect> candidate_bboxes;
 //  roi_generator_->generate(image, &candidate_bboxes);
 ////  const shared_ptr<MemoryDataLayer<float> > memory_data_layer =
@@ -42,14 +51,14 @@ void GenericCNNObjectDetector<Dtype>::detect(const Blob<Dtype>& image,
 //  regions_merger_.merge(candidate_bboxes, confidences, object_regions);
 }
 
-INSTANTIATE_CLASS(GenericCNNObjectDetector);
+INSTANTIATE_CLASS(SpatialPyramidPoolingNetObjectDetector);
 
 template <typename Dtype>
 ObjectDetector<Dtype>* GetObjectDetector(
     const ObjectDetectorParameter& param) {
   switch (param.type()) {
-  case ObjectDetectorParameter_ObjectDetectorType_GENERIC_CNN:
-    return new GenericCNNObjectDetector<Dtype>(param);
+  case ObjectDetectorParameter_ObjectDetectorType_SPATIAL_PYRAMID_POOLING_NET:
+    return new SpatialPyramidPoolingNetObjectDetector<Dtype>(param);
   default:
     LOG(FATAL) << "Unknown ObjectDetector type " << param.type();
   }

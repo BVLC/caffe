@@ -29,10 +29,11 @@ class ObjectDetector {
 };
 
 template <typename Dtype>
-class GenericCNNObjectDetector : public ObjectDetector<Dtype> {
+class SpatialPyramidPoolingNetObjectDetector : public ObjectDetector<Dtype> {
  public:
-  explicit GenericCNNObjectDetector(const ObjectDetectorParameter& param);
-  virtual ~GenericCNNObjectDetector() {}
+  explicit SpatialPyramidPoolingNetObjectDetector(
+      const ObjectDetectorParameter& param);
+  virtual ~SpatialPyramidPoolingNetObjectDetector() {}
   virtual void detect(const Blob<Dtype>& image, vector<Rect>* object_regions);
  protected:
   Net<float> net_;
