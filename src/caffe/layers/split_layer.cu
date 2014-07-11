@@ -7,12 +7,11 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype SplitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void SplitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < top->size(); ++i) {
     (*top)[i]->ShareData(*bottom[0]);
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>

@@ -9,26 +9,22 @@
 namespace caffe {
 
 template <typename Dtype>
-void SoftmaxWithLossLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
+void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  LossLayer<Dtype>::LayerSetUp(bottom, top);
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
+  softmax_top_vec_.clear();
   softmax_top_vec_.push_back(&prob_);
   softmax_layer_->SetUp(softmax_bottom_vec_, &softmax_top_vec_);
-  if (top->size() >= 1) {
-    // softmax loss (averaged across batch)
-    (*top)[0]->Reshape(1, 1, 1, 1);
-  }
-  if (top->size() == 2) {
+  if (top->size() >= 2) {
     // softmax output
-    (*top)[1]->Reshape(bottom[0]->num(), bottom[0]->channels(),
-        bottom[0]->height(), bottom[0]->width());
+    (*top)[1]->ReshapeLike(*bottom[0]);
   }
 }
 
 template <typename Dtype>
-Dtype SoftmaxWithLossLayer<Dtype>::Forward_cpu(
+void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   // The forward pass computes the softmax prob values.
   softmax_bottom_vec_[0] = bottom[0];
@@ -42,13 +38,10 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward_cpu(
     loss += -log(std::max(prob_data[i * dim + static_cast<int>(label[i])],
                           Dtype(FLT_MIN)));
   }
-  if (top->size() >= 1) {
-    (*top)[0]->mutable_cpu_data()[0] = loss / num;
-  }
+  (*top)[0]->mutable_cpu_data()[0] = loss / num;
   if (top->size() == 2) {
     (*top)[1]->ShareData(prob_);
   }
-  return loss / num;
 }
 
 template <typename Dtype>
@@ -69,8 +62,9 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < num; ++i) {
       bottom_diff[i * dim + static_cast<int>(label[i])] -= 1;
     }
-    // Scale down gradient
-    caffe_scal(prob_.count(), Dtype(1) / num, bottom_diff);
+    // Scale gradient
+    const Dtype loss_weight = top[0]->cpu_diff()[0];
+    caffe_scal(prob_.count(), loss_weight / num, bottom_diff);
   }
 }
 

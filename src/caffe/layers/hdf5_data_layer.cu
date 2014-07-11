@@ -17,7 +17,7 @@ TODO:
 namespace caffe {
 
 template <typename Dtype>
-Dtype HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
@@ -44,7 +44,6 @@ Dtype HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         &label_blob_.cpu_data()[current_row_ * label_data_count],
         &(*top)[1]->mutable_gpu_data()[i * label_data_count]);
   }
-  return Dtype(0.);
 }
 
 INSTANTIATE_CLASS(HDF5DataLayer);

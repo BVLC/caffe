@@ -7,9 +7,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
@@ -96,21 +95,22 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    return CrossChannelForward_cpu(bottom, top);
+    CrossChannelForward_cpu(bottom, top);
+    break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    return WithinChannelForward(bottom, top);
+    WithinChannelForward(bottom, top);
+    break;
   default:
     LOG(FATAL) << "Unknown normalization region.";
-    return Dtype(0);
   }
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
+void LRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -154,19 +154,16 @@ Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
   // In the end, compute output
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
-
-  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::WithinChannelForward(
+void LRNLayer<Dtype>::WithinChannelForward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   split_layer_->Forward(bottom, &split_top_vec_);
   square_layer_->Forward(square_bottom_vec_, &square_top_vec_);
   pool_layer_->Forward(square_top_vec_, &pool_top_vec_);
   power_layer_->Forward(pool_top_vec_, &power_top_vec_);
   product_layer_->Forward(product_bottom_vec_, top);
-  return Dtype(0.);
 }
 
 template <typename Dtype>

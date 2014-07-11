@@ -1,6 +1,7 @@
 #ifndef CAFFE_LAYER_H_
 #define CAFFE_LAYER_H_
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -29,12 +30,17 @@ class Layer {
       }
     }
   virtual ~Layer() {}
-  // SetUp: your function should implement this, and call Layer::SetUp for
-  // common SetUp functionality.
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+  // SetUp: implements common layer setup functionality, and calls
+  // LayerSetUp to do special layer setup for individual layer types.
+  // This method may not be overridden.
+  void SetUp(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
     CheckBlobCounts(bottom, *top);
+    LayerSetUp(bottom, top);
+    SetLossWeights(top);
   }
+  // LayerSetUp: your layer should implement this.
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) { NOT_IMPLEMENTED; }
 
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
@@ -51,9 +57,36 @@ class Layer {
   }
 
   // Returns the layer parameter
-  const LayerParameter& layer_param() { return layer_param_; }
+  const LayerParameter& layer_param() const { return layer_param_; }
   // Writes the layer parameter to a protocol buffer
   virtual void ToProto(LayerParameter* param, bool write_diff = false);
+
+  inline Dtype loss(const int top_index) const {
+    return (loss_.size() > top_index) ? loss_[top_index] : Dtype(0);
+  }
+  inline void set_loss(const int top_index, const Dtype value) {
+    if (loss_.size() <= top_index) {
+      loss_.resize(top_index + 1, Dtype(0));
+    }
+    loss_[top_index] = value;
+  }
+  // Setup the weights associated with each top blob in the loss function.
+  // Store non-zero loss weights in the diff blob.
+  inline void SetLossWeights(vector<Blob<Dtype>*>* top) {
+    const int num_loss_weights = layer_param_.loss_weight_size();
+    if (num_loss_weights) {
+      CHECK_EQ(top->size(), num_loss_weights) << "loss_weight must be "
+          "unspecified or specified once per top blob.";
+      for (int top_id = 0; top_id < top->size(); ++top_id) {
+        const Dtype loss_weight = layer_param_.loss_weight(top_id);
+        if (loss_weight == Dtype(0)) { continue; }
+        this->set_loss(top_id, loss_weight);
+        const int count = (*top)[top_id]->count();
+        Dtype* loss_multiplier = (*top)[top_id]->mutable_cpu_diff();
+        caffe_set(count, loss_weight, loss_multiplier);
+      }
+    }
+  }
 
   // Returns the layer type as an enum value.
   virtual inline LayerParameter_LayerType type() const {
@@ -79,6 +112,11 @@ class Layer {
   virtual inline int ExactNumTopBlobs() const { return -1; }
   virtual inline int MinTopBlobs() const { return -1; }
   virtual inline int MaxTopBlobs() const { return -1; }
+
+  // AutoTopBlobs may be overridden with a positive integer to automatically
+  // create enough "anonymous" top blobs to fulfill the requirement specified
+  // by ExactNumTopBlobs() or MinTopBlobs().
+  virtual inline bool AutoTopBlobs() const { return false; }
 
   // EqualNumBottomTopBlobs should return true for layers requiring an equal
   // number of bottom and top blobs.
@@ -115,12 +153,16 @@ class Layer {
   // Vector indicating whether to compute the diff of each param blob.
   vector<bool> param_propagate_down_;
 
+  // The vector that indicates whether each top blob has a non-zero weight in
+  // the objective function.
+  vector<Dtype> loss_;
+
   // Forward functions: compute the layer output
   // (and loss layers return the loss; other layers return the dummy value 0.)
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) = 0;
   // If no gpu code is provided, we will simply use cpu code.
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
     // LOG(WARNING) << "Using CPU code as backup.";
     return Forward_cpu(bottom, top);
@@ -189,15 +231,36 @@ class Layer {
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
+  Dtype loss = 0;
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    return Forward_cpu(bottom, top);
+    Forward_cpu(bottom, top);
+    for (int top_id = 0; top_id < top->size(); ++top_id) {
+      if (!this->loss(top_id)) { continue; }
+      const int count = (*top)[top_id]->count();
+      const Dtype* data = (*top)[top_id]->cpu_data();
+      const Dtype* loss_weights = (*top)[top_id]->cpu_diff();
+      loss += caffe_cpu_dot(count, data, loss_weights);
+    }
+    break;
   case Caffe::GPU:
-    return Forward_gpu(bottom, top);
+    Forward_gpu(bottom, top);
+#ifndef CPU_ONLY
+    for (int top_id = 0; top_id < top->size(); ++top_id) {
+      if (!this->loss(top_id)) { continue; }
+      const int count = (*top)[top_id]->count();
+      const Dtype* data = (*top)[top_id]->gpu_data();
+      const Dtype* loss_weights = (*top)[top_id]->gpu_diff();
+      Dtype blob_loss = 0;
+      caffe_gpu_dot(count, data, loss_weights, &blob_loss);
+      loss += blob_loss;
+    }
+#endif
+    break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";
-    return Dtype(0);
   }
+  return loss;
 }
 
 template <typename Dtype>

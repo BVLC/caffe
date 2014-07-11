@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <map>
 #include <set>
 #include <string>
@@ -73,11 +74,26 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
     }
-    for (int top_id = 0; top_id < layer_param.top_size(); ++top_id) {
+    int num_top = layer_param.top_size();
+    for (int top_id = 0; top_id < num_top; ++top_id) {
       AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
     }
+    // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
+    // specified fewer than the required number (as specified by
+    // ExactNumTopBlobs() or MinTopBlobs()), allocate them here.
+    Layer<Dtype>* layer = layers_[layer_id].get();
+    if (layer->AutoTopBlobs()) {
+      const int needed_num_top =
+          std::max(layer->MinTopBlobs(), layer->ExactNumTopBlobs());
+      for (; num_top < needed_num_top; ++num_top) {
+        // Add "anonymous" top blobs -- do not modify available_blobs or
+        // blob_name_to_idx as we don't want these blobs to be usable as input
+        // to other layers.
+        AppendTop(param, layer_id, num_top, NULL, NULL);
+      }
+    }
     // After this layer is connected, set it up.
-    // LOG(INFO) << "Setting up " << layer_names_[layer_id];
+    LOG(INFO) << "Setting up " << layer_names_[layer_id];
     layers_[layer_id]->SetUp(bottom_vecs_[layer_id], &top_vecs_[layer_id]);
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
@@ -272,15 +288,17 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
   shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
     (new LayerParameter(param.layers(layer_id))) : NULL);
   const string& blob_name = layer_param ?
-      layer_param->top(top_id) : param.input(top_id);
+      (layer_param->top_size() > top_id ?
+          layer_param->top(top_id) : "(automatic)") : param.input(top_id);
   // Check if we are doing in-place computation
-  if (layer_param && layer_param->bottom_size() > top_id &&
+  if (blob_name_to_idx && layer_param && layer_param->bottom_size() > top_id &&
       blob_name == layer_param->bottom(top_id)) {
     // In-place computation
     LOG(INFO) << layer_param->name() << " -> " << blob_name << " (in-place)";
     top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
     top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
-  } else if (blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
+  } else if (blob_name_to_idx &&
+             blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
     // raise an error.
     LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
@@ -296,7 +314,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
     blob_need_backward_.push_back(false);
-    (*blob_name_to_idx)[blob_name] = blob_id;
+    if (blob_name_to_idx) { (*blob_name_to_idx)[blob_name] = blob_id; }
     if (layer_id == -1) {
       // Set the (explicitly specified) dimensions of the input blob.
       blob_pointer->Reshape(param.input_dim(top_id * 4),
@@ -311,7 +329,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     }
     memory_used_ += blob_pointer->count();
   }
-  available_blobs->insert(blob_name);
+  if (available_blobs) { available_blobs->insert(blob_name); }
 }
 
 // Helper for Net::Init: add a new bottom blob to the net.
