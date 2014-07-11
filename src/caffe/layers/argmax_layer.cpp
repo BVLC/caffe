@@ -30,7 +30,7 @@ void ArgMaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template<typename Dtype>
-bool int_Dtype_pair_greater(std::pair<int, Dtype> a,
+static bool int_Dtype_pair_greater(std::pair<int, Dtype> a,
                             std::pair<int, Dtype> b) {
   return a.second > b.second;
 }
