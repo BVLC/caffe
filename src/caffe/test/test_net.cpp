@@ -141,7 +141,11 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     InitNetFromProtoString(proto);
   }
 
-  virtual void InitTrickyNet() {
+  virtual void InitTrickyNet(Dtype* loss_weight = NULL) {
+    ostringstream loss_weight_stream;
+    if (loss_weight) {
+      loss_weight_stream << "  top_loss_weight: " << *loss_weight << " ";
+    }
     const string& proto =
         "name: 'TrickyTestNetwork' "
         "layers: { "
@@ -208,19 +212,27 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "} "
         "layers: { "
         "  name: 'loss' "
-        "  type: SOFTMAX_LOSS "
+        "  type: SOFTMAX_LOSS " +
+        loss_weight_stream.str() +
         "  bottom: 'transformed_data' "
         "  bottom: 'transformed_label' "
         "} ";
     InitNetFromProtoString(proto);
   }
 
-  virtual void InitUnsharedWeightsNet(const bool bias_term = false,
+  virtual void InitUnsharedWeightsNet(Dtype* loss_weight,
+      const bool force_backward = false, const bool bias_term = false,
       const Dtype blobs_lr_w1 = 1, const Dtype blobs_lr_b1 = 2,
       const Dtype blobs_lr_w2 = 1, const Dtype blobs_lr_b2 = 2) {
     ostringstream proto;
+    if (loss_weight) {
+      loss_weight_stream << "  top_loss_weight: " << *loss_weight << " ";
+    }
+    proto << "name: 'UnsharedWeightsNetwork' ";
+    if (force_backward) {
+      proto << "force_backward: true ";
+    }
     proto <<
-        "name: 'UnsharedWeightsNetwork' "
         "layers: { "
         "  name: 'data' "
         "  type: DUMMY_DATA "
@@ -286,7 +298,11 @@ class NetTest : public MultiDeviceTest<TypeParam> {
         "} "
         "layers: { "
         "  name: 'loss' "
-        "  type: EUCLIDEAN_LOSS "
+        "  type: EUCLIDEAN_LOSS ";
+    if (loss_weight) {
+      proto << "  top_loss_weight: " << *loss_weight << " ";
+    }
+    proto <<
         "  bottom: 'innerproduct1' "
         "  bottom: 'innerproduct2' "
         "} ";
@@ -575,6 +591,128 @@ TYPED_TEST(NetTest, TestBottomNeedBackwardTricky) {
   EXPECT_EQ(true, bottom_need_backward[3][1]);
 }
 
+TYPED_TEST(NetTest, TestLossWeightCPU) {
+  Caffe::set_mode(Caffe::CPU);
+  // First, compute the loss and gradients with no top_loss_weight specified.
+  // In this case, the loss weight for the EUCLIDEAN_LOSS layer should default
+  // to 1.
+  vector<Blob<TypeParam>*> bottom;
+  Caffe::set_random_seed(this->seed_);
+  const bool kForceBackward = true;
+  this->InitUnsharedWeightsNet(NULL, kForceBackward);
+  const TypeParam loss = this->net_->ForwardBackward(bottom);
+  const bool kCopyDiff = true;
+  const bool kReshape = true;
+  const vector<shared_ptr<Blob<TypeParam> > >& net_blobs = this->net_->blobs();
+  vector<shared_ptr<Blob<TypeParam> > > blob_grads(net_blobs.size());
+  for (int i = 0; i < net_blobs.size(); ++i) {
+    blob_grads[i].reset(new Blob<TypeParam>());
+    blob_grads[i]->CopyFrom(*net_blobs[i], kCopyDiff, kReshape);
+  }
+  const vector<shared_ptr<Blob<TypeParam> > >& net_params =
+      this->net_->params();
+  vector<shared_ptr<Blob<TypeParam> > > param_grads(net_params.size());
+  for (int i = 0; i < net_params.size(); ++i) {
+    param_grads[i].reset(new Blob<TypeParam>());
+    param_grads[i]->CopyFrom(*net_params[i], kCopyDiff, kReshape);
+  }
+  // Check that the loss is non-trivial, otherwise the test doesn't prove much.
+  const TypeParam kMinLossAbsValue = 1e-2;
+  ASSERT_GE(fabs(loss), kMinLossAbsValue);
+  const TypeParam kErrorMargin = 1e-5;
+  const int kNumLossWeights = 6;
+  TypeParam kLossWeights[kNumLossWeights] = {2, 0, 1, -1, -2.5, 3.7};
+  for (int i = 0; i < kNumLossWeights; ++i) {
+    Caffe::set_random_seed(this->seed_);
+    this->InitUnsharedWeightsNet(&kLossWeights[i], kForceBackward);
+    const TypeParam weighted_loss = this->net_->ForwardBackward(bottom);
+    const TypeParam error_margin = kErrorMargin * fabs(kLossWeights[i]);
+    EXPECT_NEAR(loss * kLossWeights[i], weighted_loss, error_margin)
+        << "loss weight = " << kLossWeights[i];
+    const vector<shared_ptr<Blob<TypeParam> > >& weighted_blobs =
+        this->net_->blobs();
+    ASSERT_EQ(blob_grads.size(), weighted_blobs.size());
+    for (int j = 0; j < blob_grads.size(); ++j) {
+      ASSERT_EQ(blob_grads[j]->count(), weighted_blobs[j]->count());
+      for (int k = 0; k < blob_grads[j]->count(); ++k) {
+        EXPECT_NEAR(blob_grads[j]->cpu_diff()[k] * kLossWeights[i],
+                    weighted_blobs[j]->cpu_diff()[k], error_margin);
+      }
+    }
+    const vector<shared_ptr<Blob<TypeParam> > >& weighted_params =
+        this->net_->params();
+    ASSERT_EQ(param_grads.size(), weighted_params.size());
+    for (int j = 0; j < param_grads.size(); ++j) {
+      ASSERT_EQ(param_grads[j]->count(), weighted_params[j]->count());
+      for (int k = 0; k < param_grads[j]->count(); ++k) {
+        EXPECT_NEAR(param_grads[j]->cpu_diff()[k] * kLossWeights[i],
+                    weighted_params[j]->cpu_diff()[k], error_margin);
+      }
+    }
+  }
+}
+
+TYPED_TEST(NetTest, TestLossWeightGPU) {
+  Caffe::set_mode(Caffe::GPU);
+  // First, compute the loss and gradients with no top_loss_weight specified.
+  // In this case, the loss weight for the EUCLIDEAN_LOSS layer should default
+  // to 1.
+  vector<Blob<TypeParam>*> bottom;
+  Caffe::set_random_seed(this->seed_);
+  const bool kForceBackward = true;
+  this->InitUnsharedWeightsNet(NULL, kForceBackward);
+  const TypeParam loss = this->net_->ForwardBackward(bottom);
+  const bool kCopyDiff = true;
+  const bool kReshape = true;
+  const vector<shared_ptr<Blob<TypeParam> > >& net_blobs = this->net_->blobs();
+  vector<shared_ptr<Blob<TypeParam> > > blob_grads(net_blobs.size());
+  for (int i = 0; i < net_blobs.size(); ++i) {
+    blob_grads[i].reset(new Blob<TypeParam>());
+    blob_grads[i]->CopyFrom(*net_blobs[i], kCopyDiff, kReshape);
+  }
+  const vector<shared_ptr<Blob<TypeParam> > >& net_params =
+      this->net_->params();
+  vector<shared_ptr<Blob<TypeParam> > > param_grads(net_params.size());
+  for (int i = 0; i < net_params.size(); ++i) {
+    param_grads[i].reset(new Blob<TypeParam>());
+    param_grads[i]->CopyFrom(*net_params[i], kCopyDiff, kReshape);
+  }
+  // Check that the loss is non-trivial, otherwise the test doesn't prove much.
+  const TypeParam kMinLossAbsValue = 1e-2;
+  ASSERT_GE(fabs(loss), kMinLossAbsValue);
+  const Dtype kErrorMargin = 1e-4;
+  const int kNumLossWeights = 6;
+  TypeParam kLossWeights[kNumLossWeights] = {2, 0, 1, -1, -2.5, 3.7};
+  for (int i = 0; i < kNumLossWeights; ++i) {
+    Caffe::set_random_seed(this->seed_);
+    this->InitUnsharedWeightsNet(&kLossWeights[i], kForceBackward);
+    const TypeParam weighted_loss = this->net_->ForwardBackward(bottom);
+    const TypeParam error_margin = kErrorMargin * fabs(kLossWeights[i]);
+    EXPECT_NEAR(loss * kLossWeights[i], weighted_loss, error_margin)
+        << "loss weight = " << kLossWeights[i];
+    const vector<shared_ptr<Blob<TypeParam> > >& weighted_blobs =
+        this->net_->blobs();
+    ASSERT_EQ(blob_grads.size(), weighted_blobs.size());
+    for (int j = 0; j < blob_grads.size(); ++j) {
+      ASSERT_EQ(blob_grads[j]->count(), weighted_blobs[j]->count());
+      for (int k = 0; k < blob_grads[j]->count(); ++k) {
+        EXPECT_NEAR(blob_grads[j]->cpu_diff()[k] * kLossWeights[i],
+                    weighted_blobs[j]->cpu_diff()[k], error_margin);
+      }
+    }
+    const vector<shared_ptr<Blob<TypeParam> > >& weighted_params =
+        this->net_->params();
+    ASSERT_EQ(param_grads.size(), weighted_params.size());
+    for (int j = 0; j < param_grads.size(); ++j) {
+      ASSERT_EQ(param_grads[j]->count(), weighted_params[j]->count());
+      for (int k = 0; k < param_grads[j]->count(); ++k) {
+        EXPECT_NEAR(param_grads[j]->cpu_diff()[k] * kLossWeights[i],
+                    weighted_params[j]->cpu_diff()[k], error_margin);
+      }
+    }
+  }
+}
+
 TYPED_TEST(NetTest, TestUnsharedWeightsDataNet) {
   typedef typename TypeParam::Dtype Dtype;
   this->InitUnsharedWeightsNet();
@@ -722,12 +860,14 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   typedef typename TypeParam::Dtype Dtype;
   vector<Blob<Dtype>*> bottom;
   const bool kBiasTerm = true;
+  const bool kForceBackward = false;
+  const Dtype* kLossWeight = NULL;
 
   // Run the net with all params learned; check that gradients are non-zero.
   Caffe::set_random_seed(this->seed_);
   Dtype blobs_lr_w1 = 1, blobs_lr_w2 = 1, blobs_lr_b1 = 2, blobs_lr_b2 = 2;
-  this->InitUnsharedWeightsNet(kBiasTerm, blobs_lr_w1, blobs_lr_w2,
-                               blobs_lr_b1, blobs_lr_b2);
+  this->InitUnsharedWeightsNet(kLossWeight, kForceBackward, kBiasTerm
+      blobs_lr_w1, blobs_lr_w2, blobs_lr_b1, blobs_lr_b2);
   this->net_->Forward(bottom);
   this->net_->Backward();
   const vector<shared_ptr<Blob<Dtype> > >& params = this->net_->params();
@@ -746,8 +886,8 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   // gradients.
   Caffe::set_random_seed(this->seed_);
   blobs_lr_w1 *= 2, blobs_lr_w2 *= 2, blobs_lr_b1 *= 2, blobs_lr_b2 *= 2;
-  this->InitUnsharedWeightsNet(kBiasTerm, blobs_lr_w1, blobs_lr_w2,
-                               blobs_lr_b1, blobs_lr_b2);
+  this->InitUnsharedWeightsNet(kLossWeight, kForceBackward, kBiasTerm
+      blobs_lr_w1, blobs_lr_w2, blobs_lr_b1, blobs_lr_b2);
   this->net_->Forward(bottom);
   this->net_->Backward();
   const vector<shared_ptr<Blob<Dtype> > >& params2 = this->net_->params();
@@ -762,8 +902,8 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   // gradients for those.
   Caffe::set_random_seed(this->seed_);
   blobs_lr_w1 = 1, blobs_lr_w2 = 0, blobs_lr_b1 = 0, blobs_lr_b2 = 1;
-  this->InitUnsharedWeightsNet(kBiasTerm, blobs_lr_w1, blobs_lr_w2,
-                               blobs_lr_b1, blobs_lr_b2);
+  this->InitUnsharedWeightsNet(kLossWeight, kForceBackward, kBiasTerm
+      blobs_lr_w1, blobs_lr_w2, blobs_lr_b1, blobs_lr_b2);
   this->net_->Forward(bottom);
   this->net_->Backward();
   const vector<shared_ptr<Blob<Dtype> > >& params3 = this->net_->params();
@@ -781,8 +921,8 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   // Change the opposite subset of the learning rates to zero.
   Caffe::set_random_seed(this->seed_);
   blobs_lr_w1 = 0, blobs_lr_w2 = 1, blobs_lr_b1 = 1, blobs_lr_b2 = 0;
-  this->InitUnsharedWeightsNet(kBiasTerm, blobs_lr_w1, blobs_lr_w2,
-                               blobs_lr_b1, blobs_lr_b2);
+  this->InitUnsharedWeightsNet(kLossWeight, kForceBackward, kBiasTerm
+      blobs_lr_w1, blobs_lr_w2, blobs_lr_b1, blobs_lr_b2);
   this->net_->Forward(bottom);
   this->net_->Backward();
   const vector<shared_ptr<Blob<Dtype> > >& params4 = this->net_->params();

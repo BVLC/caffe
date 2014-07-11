@@ -57,8 +57,8 @@ class GradientChecker {
       const vector<Blob<Dtype>*>& input);
 
  protected:
-  Dtype GetObjAndGradient(vector<Blob<Dtype>*>* top, int top_id = -1,
-      int top_data_id = -1);
+  Dtype GetObjAndGradient(const Layer<Dtype>& layer, vector<Blob<Dtype>*>* top,
+      int top_id = -1, int top_data_id = -1);
   Dtype stepsize_;
   Dtype threshold_;
   unsigned int seed_;
@@ -97,10 +97,11 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   }
   // Compute the gradient analytically using Backward
   Caffe::set_random_seed(seed_);
-  // Get any loss from the layer
-  Dtype computed_objective = layer->Forward(*bottom, top);
+  // Ignore the loss from the layer (it's just the weighted sum of the losses
+  // from the top blobs, whose gradients we may want to test individually).
+  layer->Forward(*bottom, top);
   // Get additional loss from the objective
-  computed_objective += GetObjAndGradient(top, top_id, top_data_id);
+  GetObjAndGradient(*layer, top, top_id, top_data_id);
   layer->Backward(*top, propagate_down, bottom);
   // Store computed gradients for all checked blobs
   vector<shared_ptr<Blob<Dtype> > >
@@ -131,18 +132,22 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       // i != top_data_id, we know the derivative is 0 by definition, and simply
       // check that that's true.
       Dtype estimated_gradient = 0;
+      Dtype positive_objective = 0;
+      Dtype negative_objective = 0;
       if (!element_wise || (feat_id == top_data_id)) {
         // Do finite differencing.
         // Compute loss with stepsize_ added to input.
         current_blob->mutable_cpu_data()[feat_id] += stepsize_;
         Caffe::set_random_seed(seed_);
-        Dtype positive_objective = layer->Forward(*bottom, top);
-        positive_objective += GetObjAndGradient(top, top_id, top_data_id);
+        layer->Forward(*bottom, top);
+        positive_objective =
+            GetObjAndGradient(*layer, top, top_id, top_data_id);
         // Compute loss with stepsize_ subtracted from input.
         current_blob->mutable_cpu_data()[feat_id] -= stepsize_ * 2;
         Caffe::set_random_seed(seed_);
-        Dtype negative_objective = layer->Forward(*bottom, top);
-        negative_objective += GetObjAndGradient(top, top_id, top_data_id);
+        layer->Forward(*bottom, top);
+        negative_objective =
+            GetObjAndGradient(*layer, top, top_id, top_data_id);
         // Recover original input value.
         current_blob->mutable_cpu_data()[feat_id] += stepsize_;
         estimated_gradient = (positive_objective - negative_objective) /
@@ -160,7 +165,10 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
             std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
         EXPECT_NEAR(computed_gradient, estimated_gradient, threshold_ * scale)
           << "debug: (top_id, top_data_id, blob_id, feat_id)="
-          << top_id << "," << top_data_id << "," << blob_id << "," << feat_id;
+          << top_id << "," << top_data_id << "," << blob_id << "," << feat_id
+          << "; feat = " << feature
+          << "; objective+ = " << positive_objective
+          << "; objective- = " << negative_objective;
       }
       // LOG(ERROR) << "Feature: " << current_blob->cpu_data()[feat_id];
       // LOG(ERROR) << "computed gradient: " << computed_gradient
@@ -212,8 +220,8 @@ void GradientChecker<Dtype>::CheckGradientNet(
 }
 
 template <typename Dtype>
-Dtype GradientChecker<Dtype>::GetObjAndGradient(vector<Blob<Dtype>*>* top,
-    int top_id, int top_data_id) {
+Dtype GradientChecker<Dtype>::GetObjAndGradient(const Layer<Dtype>& layer,
+    vector<Blob<Dtype>*>* top, int top_id, int top_data_id) {
   Dtype loss = 0;
   if (top_id < 0) {
     // the loss will be half of the sum of squares of all outputs
@@ -236,8 +244,9 @@ Dtype GradientChecker<Dtype>::GetObjAndGradient(vector<Blob<Dtype>*>* top,
       Dtype* top_blob_diff = top_blob->mutable_cpu_diff();
       caffe_set(top_blob->count(), Dtype(0), top_blob_diff);
     }
-    loss = (*top)[top_id]->cpu_data()[top_data_id];
-    (*top)[top_id]->mutable_cpu_diff()[top_data_id] = 1.;
+    const Dtype loss_weight = 2;
+    loss = (*top)[top_id]->cpu_data()[top_data_id] * loss_weight;
+    (*top)[top_id]->mutable_cpu_diff()[top_data_id] = loss_weight;
   }
   return loss;
 }
