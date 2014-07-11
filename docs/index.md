@@ -1,34 +1,43 @@
 ---
 layout: default
 ---
-# Welcome to Caffe
+# Caffe
 
-Caffe is a framework for convolutional neural network algorithms, developed with speed in mind.
-It was created by [Yangqing Jia](http://daggerfs.com), and is in active development by the [Berkeley Vision and Learning Center](http://bvlc.eecs.berkeley.edu).
+Caffe is a deep learning framework developed with cleanliness, readability, and speed in mind.
+It was created by [Yangqing Jia](http://daggerfs.com), and is in active development by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
+Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
-Caffe is released under [the BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
+## Why
 
-Check out the [classification demo](http://demo.caffe.berkeleyvision.org/)!
+**Clean architecture** enables rapid deployment.
+Networks are specified in simple config files, with no hard-coded parameters in the code.
+Switching between CPU and GPU code is as simple as setting a flag -- so models can be trained on a GPU machine, and then used on commodity clusters.
 
-## Why Caffe?
+**Readable & modifiable implementation** fosters active development.
+In Caffe's first six months, it has been forked by over 300 developers on Github, and many have contributed significant changes.
 
-Caffe aims to provide computer vision scientists and practitioners with a **clean and modifiable implementation** of state-of-the-art deep learning algorithms.
-For example, network structure is easily specified in separate config files, with no mess of hard-coded parameters in the code.
+**Speed** makes Caffe perfect for industry use.
+Caffe can process over **40M images per day** with a single NVIDIA K40 or Titan GPU\*.
+That's 5 ms/image in training, and 2 ms/image in test.
+We believe that Caffe is the fastest CNN implementation available.
 
-At the same time, Caffe fits industry needs, with blazing fast C++/CUDA code for GPU computation.
-Caffe is currently the fastest GPU CNN implementation publicly available, and is able to process more than **40 million images per day** with a single NVIDIA K40 or Titan GPU (or 20 million images per day on a K20 GPU)\*. That's 192 images per second during training and 500 images per second during test.
+**Community**: Caffe already powers academic research projects, startup prototypes, and even large-scale industrial applications in vision, speech, and multimedia.
+There is an active discussion and support community on [Github](https://github.com/BVLC/caffe/issues).
 
-Caffe also provides **seamless switching between CPU and GPU**, which allows one to train models with fast GPUs and then deploy them on non-GPU clusters with one line of code: `Caffe::set_mode(Caffe::CPU)`.
-Even in CPU mode, computing predictions on an image takes only 20 ms when images are processed in batch mode. While in GPU mode, computing predictions on an image takes only 2 ms when images are processed in batch mode.
+<p class="footnote" markdown="1">
+\* When files are properly cached, and using the ILSVRC2012-winning [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model.
+Consult performance [details](/performance_hardware.html).
+</p>
 
-## Documentation
+## How
 
-* [Introductory slides](https://www.dropbox.com/s/10fx16yp5etb8dv/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
-* [Installation](/installation.html): Instructions on installing Caffe (works on Ubuntu, Red Hat, OS X).
-* [Pre-trained models](/getting_pretrained_models.html): BVLC provides some pre-trained models for academic / non-commercial use.
+* [Introductory slides](http://dl.caffe.berkeleyvision.org/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
+* [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf): a 4-page report for the ACM Multimedia Open Source competition.
+* [Installation instructions](/installation.html): tested on Ubuntu, Red Hat, OS X.
+* [Pre-trained models](/getting_pretrained_models.html): BVLC provides ready-to-use models for non-commercial use.
 * [Development](/development.html): Guidelines for development and contributing to Caffe.
 
-### Examples
+### Tutorials and Examples
 
 * [Image Classification \[notebook\]][imagenet_classification]: classify images with the pretrained ImageNet model by the Python interface.
 * [Detection \[notebook\]][detection]: run a pretrained model as a detector in Python.
@@ -46,7 +55,7 @@ Even in CPU mode, computing predictions on an image takes only 20 ms when images
 
 ## Citing Caffe
 
-Please kindly cite Caffe in your publications if it helps your research:
+Please cite Caffe in your publications if it helps your research:
 
     @misc{Jia13caffe,
        Author = {Yangqing Jia},
@@ -55,25 +64,18 @@ Please kindly cite Caffe in your publications if it helps your research:
        Howpublished = {\url{http://caffe.berkeleyvision.org/}
     }
 
-### Acknowledgements
+If you do publish a paper where Caffe helped your research, we encourage you to update the [publications wiki](https://github.com/BVLC/caffe/wiki/Publications).
+Citations are also tracked automatically by [Google Scholar](http://scholar.google.com/scholar?oi=bibs&hl=en&cites=17333247995453974016).
 
-Yangqing would like to thank the NVIDIA Academic program for providing K20 GPUs, and [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for various discussions along the journey.
+## Acknowledgements
 
-A core set of BVLC members have contributed lots of new functionality and fixes since the original release (alphabetical by first name):
+Yangqing would like to thank the NVIDIA Academic program for providing GPUs, [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for discussions along the journey, and BVLC PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for guidance.
 
-- [Eric Tzeng](https://github.com/erictzeng)
-- [Evan Shelhamer](http://imaginarynumber.net/)
-- [Jeff Donahue](http://jeffdonahue.com/)
-- [Jon Long](https://github.com/longjon)
-- [Dr. Ross Girshick](http://www.cs.berkeley.edu/~rbg/)
-- [Sergey Karayev](http://sergeykarayev.com/)
-- [Dr. Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/)
+A core set of BVLC members have contributed much new functionality and many fixes since the original release (alphabetical by first name):
+[Eric Tzeng](https://github.com/erictzeng), [Evan Shelhamer](http://imaginarynumber.net/), [Jeff Donahue](http://jeffdonahue.com/), [Jon Long](https://github.com/longjon), [Ross Girshick](http://www.cs.berkeley.edu/~rbg/), [Sergey Karayev](http://sergeykarayev.com/), [Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/).
 
 Additionally, the open-source community plays a large and growing role in Caffe's development.
-Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity, and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for an ordered list (by commit activity).
+Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity, and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for a sorted list.
+
 We sincerely appreciate your interest and contributions!
-If you'd like to contribute, read [this](development.html).
-
----
-
-\*: When measured with the [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model that won the ImageNet Large Scale Visual Recognition Challenge 2012. See [performance and hardware configuration details](/performance_hardware.html).
+If you'd like to contribute, please read the [development guide](development.html).
