@@ -150,6 +150,36 @@ class ReLULayer : public NeuronLayer<Dtype> {
       const bool propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
+/* LReLULayer
+  Leaky Rectified Linear Unit non-linearity.
+  Shown easier to optimize than ReLU in
+  Maas, A. L., Hannun, A. Y., & Ng, A. Y. (2013). Rectifier nonlinearities
+  improve neural network acoustic models. In ICML Workshop on Deep Learning
+  for Audio, Speech, and Language Processing.
+
+  y = max(0, x) + 0.01 * min(0, x).
+
+  y' = 0.01  if x <= 0
+  y' = 1 if x > 0
+*/
+template <typename Dtype>
+class LReLULayer : public NeuronLayer<Dtype> {
+ public:
+  explicit LReLULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const bool propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
 /* SigmoidLayer
   Sigmoid function non-linearity, a classic choice in neural networks.
   Note that the gradient vanishes as the values move away from 0.
