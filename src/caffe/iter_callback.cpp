@@ -186,7 +186,56 @@ std::vector<Dtype> TestResult<Dtype>::GetScores() const
   return scores_;
 }
 
+
+//==============================================================================
+// Current training statistics.
+//==============================================================================
+template<typename Dtype>
+TrainingStats<Dtype> TrainingStats<Dtype>::SetIter( int iter ) const
+{
+    TrainingStats stats = *this;
+    stats.iter_ = iter;
+    return stats;
+}
+
+template<typename Dtype>
+TrainingStats<Dtype> TrainingStats<Dtype>::SetLoss( Dtype loss ) const
+{
+    TrainingStats stats = *this;
+    stats.loss_ = loss;
+    return stats;
+}
+
+template<typename Dtype>
+TrainingStats<Dtype> TrainingStats<Dtype>::AddTestNetResult(
+                                    const TestResult<Dtype>& result ) const
+{
+    TrainingStats stats = *this;
+    stats.testnet_results_.push_back( result );
+    return stats;
+}
+
+template<typename Dtype>
+int TrainingStats<Dtype>::GetIter() const
+{
+    return iter_;
+}
+
+template<typename Dtype>
+Dtype TrainingStats<Dtype>::GetLoss() const
+{
+  return loss_;
+}
+
+// One TestResult instance for each test net.
+template<typename Dtype>
+std::vector< TestResult<Dtype> > TrainingStats<Dtype>::GetTestNetResults() const
+{
+  return testnet_results_;
+}
+
 INSTANTIATE_CLASS(IterActions);
 INSTANTIATE_CLASS(TestResult);
+INSTANTIATE_CLASS(TrainingStats);
 
 } // namespace caffe
