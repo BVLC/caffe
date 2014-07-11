@@ -28,7 +28,7 @@ class NeuronLayer : public Layer<Dtype> {
  public:
   explicit NeuronLayer(const LayerParameter& param)
      : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -56,9 +56,9 @@ class BNLLLayer : public NeuronLayer<Dtype> {
   }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
@@ -81,7 +81,7 @@ class DropoutLayer : public NeuronLayer<Dtype> {
  public:
   explicit DropoutLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -89,9 +89,9 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
@@ -115,7 +115,7 @@ class PowerLayer : public NeuronLayer<Dtype> {
  public:
   explicit PowerLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -123,9 +123,9 @@ class PowerLayer : public NeuronLayer<Dtype> {
   }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
@@ -158,9 +158,9 @@ class ReLULayer : public NeuronLayer<Dtype> {
   }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -191,9 +191,9 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
   }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
@@ -219,9 +219,9 @@ class TanHLayer : public NeuronLayer<Dtype> {
   }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
@@ -244,7 +244,7 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
  public:
   explicit ThresholdLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -252,9 +252,9 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
   }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {

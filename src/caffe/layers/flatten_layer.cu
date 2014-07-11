@@ -7,10 +7,9 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype FlattenLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void FlattenLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   (*top)[0]->ShareData(*bottom[0]);
-  return Dtype(0.);
 }
 
 template <typename Dtype>

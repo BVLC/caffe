@@ -9,7 +9,7 @@ namespace caffe {
 const float kBNLL_THRESHOLD = 50.;
 
 template <typename Dtype>
-Dtype BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -19,7 +19,6 @@ Dtype BNLLLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         bottom_data[i] + log(1. + exp(-bottom_data[i])) :
         log(1. + exp(bottom_data[i]));
   }
-  return Dtype(0);
 }
 
 template <typename Dtype>

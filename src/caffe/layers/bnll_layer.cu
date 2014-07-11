@@ -18,7 +18,7 @@ __global__ void BNLLForward(const int n, const Dtype* in, Dtype* out) {
 }
 
 template <typename Dtype>
-Dtype BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -27,7 +27,6 @@ Dtype BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   BNLLForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, top_data);
   CUDA_POST_KERNEL_CHECK;
-  return Dtype(0);
 }
 
 template <typename Dtype>
