@@ -30,11 +30,19 @@ class Rect {
         y2_ == that.y2();
   }
 
+  inline int height() const {
+    return y2_ - y1_;
+  }
+
+  inline int width() const {
+    return x2_ - x1_;
+  }
+
   inline float area() const {
     if (empty()) {
       return 0;
     }
-    return static_cast<float>((x2_ - x1_) * (y2_ - y1_));
+    return static_cast<float>(width() * height());
   }
 
   Rect intersect(const Rect& that) const {
@@ -57,14 +65,10 @@ class Rect {
     return false;
   }
 
-  inline int x1() { return x1_; }
-  inline int y1() { return y1_; }
-  inline int x2() { return x2_; }
-  inline int y2() { return y2_; }
-  inline const int x1() const { return x1_; }
-  inline const int y1() const { return y1_; }
-  inline const int x2() const { return x2_; }
-  inline const int y2() const { return y2_; }
+  inline int x1() const { return x1_; }
+  inline int y1() const { return y1_; }
+  inline int x2() const { return x2_; }
+  inline int y2() const { return y2_; }
 
  protected:
   // x1_ and y1_ are inclusive

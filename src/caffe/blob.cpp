@@ -171,6 +171,46 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::CopyFromRegion(
+    const Blob<Dtype>& source, const Rect& region, bool copy_diff,
+    bool reshape) {
+  if (num_ != source.num() || channels_ != source.channels() ||
+      height_ != region.height() || width_ != region.width()) {
+    if (reshape) {
+      Reshape(source.num(), source.channels(), region.height(), region.width());
+    } else {
+      LOG(FATAL) << "Trying to copy blobs of different sizes.";
+    }
+  }
+  Dtype* dst_ptr = mutable_cpu_data();
+  Dtype* src_ptr;
+  if (copy_diff) {
+    src_ptr = const_cast<Dtype*>(source.cpu_diff());
+  } else {
+    src_ptr = const_cast<Dtype*>(source.cpu_data());
+  }
+  for (int n = 0; n < source.num(); ++n) {
+    for (int c = 0; c < source.channels(); ++c) {
+      for (int h = 0; h < region.height(); ++h) {
+        for (int w = 0; w < region.width(); ++w) {
+          dst_ptr[offset(n, c, h, w)] = src_ptr
+              [source.offset(n, c, h + region.y1(), w + region.x1())];
+        }
+      }
+    }
+  }
+  switch (Caffe::mode()) {
+  case Caffe::GPU:
+    data_->gpu_data();  // move the data from cpu to gpu
+    break;
+  case Caffe::CPU:
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+  }
+}
+
+template <typename Dtype>
 void Blob<Dtype>::FromProto(const BlobProto& proto) {
   Reshape(proto.num(), proto.channels(), proto.height(), proto.width());
   // copy data
