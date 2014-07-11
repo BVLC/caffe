@@ -78,7 +78,6 @@ Dtype EltwiseLayer<Dtype>::Forward_cpu(
 	bottom_data_a = bottom[0]->cpu_data();
 	bottom_data_b = bottom[1]->cpu_data();
 	for (int idx = 0; idx < count; ++idx) {
-		bottom_data_a[idx];
 		if (bottom_data_a[idx] > bottom_data_b[idx]) {
 			top_data[idx] = bottom_data_a[idx]; // maxval
 			mask[idx] = 0; // maxid
