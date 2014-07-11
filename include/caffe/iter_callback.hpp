@@ -70,42 +70,13 @@ private:
 template<typename Dtype>
 struct TrainingStats
 {
-    TrainingStats SetIter( int iter ) const
-    {
-        TrainingStats stats = *this;
-        stats.iter_ = iter;
-        return stats;
-    }
-
-    TrainingStats SetLoss( Dtype loss ) const
-    {
-        TrainingStats stats = *this;
-        stats.loss_ = loss;
-        return stats;
-    }
-
-    TrainingStats AddTestNetResult( const TestResult<Dtype>& result ) const
-    {
-        TrainingStats stats = *this;
-        stats.testnet_results_.push_back( result );
-        return stats;
-    }
-
-    int GetIter() const
-    {
-        return iter_;
-    }
-
-    Dtype GetLoss() const
-    {
-        return loss_;
-    }
-
+    TrainingStats SetIter( int iter ) const;
+    TrainingStats SetLoss( Dtype loss ) const;
+    TrainingStats AddTestNetResult( const TestResult<Dtype>& result ) const;
+    int GetIter() const;
+    Dtype GetLoss() const;
     // One TestResult instance for each test net.
-    std::vector< TestResult<Dtype> > GetTestNetResults() const
-    {
-        return testnet_results_;
-    }
+    std::vector< TestResult<Dtype> > GetTestNetResults() const;
 private:
     // Number of iterations completed.
     int iter_;
