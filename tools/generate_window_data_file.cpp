@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
       << argv[2];
 
   ROIGeneratorParameter roi_param;
-  SlidingWindowParameter* param = roi_param.mutable_sliding_window_param();
+  SlidingWindowROIGeneratorParameter* param = roi_param.mutable_sliding_window_param();
   vector<string> spatial_bins;
   string spaital_bins_str = argv[3];
   boost::split(spatial_bins, spaital_bins_str, boost::is_any_of(","));
