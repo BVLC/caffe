@@ -6,6 +6,8 @@
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -37,21 +39,19 @@ int feature_extraction_pipeline(int argc, char** argv) {
     "Usage: extract_features  pretrained_net_param"
     "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
     "  save_feature_leveldb_name1[,name2,...]  num_mini_batches  [CPU/GPU]"
-    "  [DEVICE_ID=0]\n"
+    "  [DEVICE_ID=0] [sample_keys_file]\n"
     "Note: you can extract multiple features in one pass by specifying"
     " multiple feature blob names and leveldb names seperated by ','."
     " The names cannot contain white space characters and the number of blobs"
     " and leveldbs must be equal.";
     return 1;
   }
-  int arg_pos = num_required_args;
 
-  arg_pos = num_required_args;
-  if (argc > arg_pos && strcmp(argv[arg_pos], "GPU") == 0) {
+  if (argc > num_required_args && strcmp(argv[num_required_args], "GPU") == 0) {
     LOG(ERROR)<< "Using GPU";
     uint device_id = 0;
-    if (argc > arg_pos + 1) {
-      device_id = atoi(argv[arg_pos + 1]);
+    if (argc > num_required_args + 1) {
+      device_id = atoi(argv[num_required_args + 1]);
       CHECK_GE(device_id, 0);
     }
     LOG(ERROR) << "Using Device_id=" << device_id;
@@ -61,9 +61,23 @@ int feature_extraction_pipeline(int argc, char** argv) {
     LOG(ERROR) << "Using CPU";
     Caffe::set_mode(Caffe::CPU);
   }
+  vector<string> sample_keys;
+  if (argc > num_required_args + 2) {
+    const string sample_keys_file(argv[num_required_args + 2]);
+    std::ifstream sample_keys_ifstream(sample_keys_file.c_str());
+    if (sample_keys_ifstream.good()) {
+      std::string line;
+      while (sample_keys_ifstream >> line) {
+        sample_keys.push_back(line);
+      }
+      sample_keys_ifstream.close();
+    }
+  }
+  const size_t num_sample_keys = sample_keys.size();
+
   Caffe::set_phase(Caffe::TEST);
 
-  arg_pos = 0;  // the name of the executable
+  int arg_pos = 0;  // the name of the executable
   string pretrained_binary_proto(argv[++arg_pos]);
 
   // Expected prototxt contains at least one data layer such as
@@ -139,8 +153,6 @@ int feature_extraction_pipeline(int argc, char** argv) {
   vector<shared_ptr<leveldb::WriteBatch> > feature_batches(
       num_features,
       shared_ptr<leveldb::WriteBatch>(new leveldb::WriteBatch()));
-  const int kMaxKeyStrLength = 100;
-  char key_str[kMaxKeyStrLength];
   vector<Blob<float>*> input_vec;
   vector<int> image_indices(num_features, 0);
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
@@ -164,8 +176,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
         }
         string value;
         datum.SerializeToString(&value);
-        snprintf(key_str, kMaxKeyStrLength, "%d", image_indices[i]);
-        feature_batches[i]->Put(string(key_str), value);
+        string sample_key;
+        if (num_sample_keys <= 0) {
+          sample_key = boost::lexical_cast<string>(image_indices[i]);
+        } else {
+          sample_key = sample_keys[image_indices[i] % num_sample_keys];
+        }
+        feature_batches[i]->Put(sample_key, value);
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           feature_dbs[i]->Write(leveldb::WriteOptions(),
