@@ -1,5 +1,5 @@
-#!/usr/bin/env sh
-# Publish/ Pull-request documentation to the gh-pages site.
+#!/bin/bash
+# Publish documentation to the gh-pages site.
 
 # The remote for pushing the docs (defaults to origin).
 # This is where you will submit the PR to BVLC:gh-pages from.

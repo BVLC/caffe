@@ -1,3 +1,5 @@
-To generate stuff you can paste in an .md page from an IPython notebook, run
+# Caffe Documentation
 
-    ipython nbconvert --to markdown <notebook_file>
+To generate the documentation, run `$CAFFE_ROOT/scripts/build_docs.sh`.
+
+To push your changes to the documentation to the gh-pages branch of your or the BVLC repo, run `$CAFFE_ROOT/scripts/deploy_docs.sh <repo_name>`.
