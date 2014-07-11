@@ -219,7 +219,6 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeffGPU) {
   }
 }
 
-
 TYPED_TEST(EltwiseLayerTest, TestMaxGPU) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
@@ -278,8 +277,24 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeffCPUGradient) {
       &(this->blob_top_vec_));
 }
 
+<<<<<<< HEAD
 TYPED_TEST(EltwiseLayerTest, TestSumGradient) {
   typedef typename TypeParam::Dtype Dtype;
+=======
+TYPED_TEST(EltwiseLayerTest, TestMaxCPUGradient) {
+  Caffe::set_mode(Caffe::CPU);
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_MAX);
+  EltwiseLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
+TYPED_TEST(EltwiseLayerTest, TestSumGPUGradient) {
+  Caffe::set_mode(Caffe::GPU);
+>>>>>>> changed gpu to cpu_data()
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
@@ -299,6 +314,17 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeffGradient) {
   eltwise_param->add_coeff(2);
   EltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
+TYPED_TEST(EltwiseLayerTest, TestMaxGPUGradient) {
+  Caffe::set_mode(Caffe::GPU);
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_MAX);
+  EltwiseLayer<TypeParam> layer(layer_param);
+  GradientChecker<TypeParam> checker(1e-2, 1e-2);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }

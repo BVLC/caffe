@@ -75,9 +75,10 @@ Dtype EltwiseLayer<Dtype>::Forward_cpu(
 	caffe_set(count, -1, mask);
 	caffe_set(count, Dtype(-FLT_MAX), top_data);
 	// bottom 0 & 1
-	bottom_data_a = bottom[0]->gpu_data();
-	bottom_data_b = bottom[1]->gpu_data();
+	bottom_data_a = bottom[0]->cpu_data();
+	bottom_data_b = bottom[1]->cpu_data();
 	for (int idx = 0; idx < count; ++idx) {
+		bottom_data_a[idx];
 		if (bottom_data_a[idx] > bottom_data_b[idx]) {
 			top_data[idx] = bottom_data_a[idx]; // maxval
 			mask[idx] = 0; // maxid
@@ -89,7 +90,7 @@ Dtype EltwiseLayer<Dtype>::Forward_cpu(
 	// bottom 2++
 	bottom_data_a = top_data;
 	for (int blob_idx = 2; blob_idx < bottom.size(); ++blob_idx) {
-		bottom_data_b = bottom[blob_idx]->gpu_data();
+		bottom_data_b = bottom[blob_idx]->cpu_data();
 		for (int idx = 0; idx < count; ++idx) {
 			if (bottom_data_a[idx] < bottom_data_b[idx]) {
 				top_data[idx] = bottom_data_b[idx];	// maxval
@@ -144,12 +145,12 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         break;
       case EltwiseParameter_EltwiseOp_MAX:
     	mask = max_idx_->cpu_data();
-    	for (int index = 0; index < count; ++index) {
+    	for (int idx = 0; idx < count; ++idx) {
     		Dtype gradient = 0;
-    		if (mask[index] == i) {
-    			gradient += top_diff[index];
+    		if (mask[idx] == i) {
+    			gradient += top_diff[idx];
     		}
-    		bottom_diff[index] = gradient;
+    		bottom_diff[idx] = gradient;
 		}
 		break;
       default:
