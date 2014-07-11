@@ -7,6 +7,8 @@ Caffe is a deep learning framework developed with cleanliness, readability, and 
 It was created by [Yangqing Jia](http://daggerfs.com), and is in active development by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
+Check out our web image classification [demo](http://demo.caffe.berkeleyvision.org)!
+
 ## Why
 
 **Clean architecture** enables rapid deployment.
