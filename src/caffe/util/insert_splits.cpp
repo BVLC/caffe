@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <map>
 #include <sstream>
 #include <string>
@@ -15,6 +16,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
   map<string, pair<int, int> > blob_name_to_last_top_idx;
   map<pair<int, int>, pair<int, int> > bottom_idx_to_source_top_idx;
   map<pair<int, int>, int> top_idx_to_bottom_count;
+  map<pair<int, int>, float> top_idx_to_loss_weight;
   map<pair<int, int>, int> top_idx_to_bottom_split_idx;
   map<int, string> layer_idx_to_layer_name;
   layer_idx_to_layer_name[-1] = "input";
@@ -41,6 +43,18 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       const string& blob_name = layer_param.top(j);
       blob_name_to_last_top_idx[blob_name] = make_pair(i, j);
     }
+    // A use of a top blob as a loss should be handled similarly to the use of
+    // a top blob as an input (bottom) blob to another layer.
+    const int last_loss =
+        std::min(layer_param.loss_weight_size(), layer_param.top_size());
+    for (int j = 0; j < last_loss; ++j) {
+      const string& blob_name = layer_param.top(j);
+      const pair<int, int>& top_idx = blob_name_to_last_top_idx[blob_name];
+      top_idx_to_loss_weight[top_idx] = layer_param.loss_weight(j);
+      if (top_idx_to_loss_weight[top_idx]) {
+        ++top_idx_to_bottom_count[top_idx];
+      }
+    }
   }
   // Create split layer for any input blobs used by other layers as bottom
   // blobs more than once.
@@ -50,8 +64,9 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       const string& layer_name = layer_idx_to_layer_name[-1];
       const string& blob_name = param.input(i);
       LayerParameter* split_layer_param = param_split->add_layers();
+      const float kZeroLossWeight = 0;
       ConfigureSplitLayer(layer_name, blob_name, i, split_count,
-          split_layer_param);
+          kZeroLossWeight, split_layer_param);
     }
   }
   for (int i = 0; i < param.layers_size(); ++i) {
@@ -72,20 +87,26 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
     // Create split layer for any top blobs used by other layers as bottom
     // blobs more than once.
     for (int j = 0; j < layer_param->top_size(); ++j) {
-      const int split_count = top_idx_to_bottom_count[make_pair(i, j)];
+      const pair<int, int>& top_idx = make_pair(i, j);
+      const int split_count = top_idx_to_bottom_count[top_idx];
       if (split_count > 1) {
         const string& layer_name = layer_idx_to_layer_name[i];
         const string& blob_name = layer_param->top(j);
         LayerParameter* split_layer_param = param_split->add_layers();
+        const float loss_weight = top_idx_to_loss_weight[top_idx];
         ConfigureSplitLayer(layer_name, blob_name, j, split_count,
-            split_layer_param);
+            loss_weight, split_layer_param);
+        if (loss_weight) {
+          layer_param->clear_loss_weight();
+          top_idx_to_bottom_split_idx[top_idx]++;
+        }
       }
     }
   }
 }
 
 void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
-    const int blob_idx, const int split_count,
+    const int blob_idx, const int split_count, const float loss_weight,
     LayerParameter* split_layer_param) {
   split_layer_param->Clear();
   split_layer_param->add_bottom(blob_name);
@@ -94,6 +115,13 @@ void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
   for (int k = 0; k < split_count; ++k) {
     split_layer_param->add_top(
         SplitBlobName(layer_name, blob_name, blob_idx, k));
+    if (loss_weight) {
+      if (k == 0) {
+        split_layer_param->add_loss_weight(loss_weight);
+      } else {
+        split_layer_param->add_loss_weight(0);
+      }
+    }
   }
 }
 
