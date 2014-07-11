@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Caffe</title>
+    <title>
+      Caffe {% if page contains 'title' %}| {{ page.title }}{% endif %}
+    </title>
 
     <link rel="stylesheet" href="stylesheets/reset.css">
     <link rel="stylesheet" href="stylesheets/styles.css">
@@ -27,7 +29,7 @@
     <div class="wrapper">
       <header>
         <h1 class="header"><a href="index.html">Caffe</a></h1>
-        <p class="header">Convolutional Architecture for Fast Feature Embedding</p>
+        <!-- <p class="header">Convolutional Architecture for Fast Feature Embedding</p> -->
 
         <ul>
           <!--<li class="download"><a class="buttons" href="https://github.com/BVLC/caffe/zipball/master">Download ZIP</a></li>
@@ -43,10 +45,11 @@
       {{ content }}
 
       </section>
-      <footer>
+<!--       <footer>
         <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a>.</small></p>
       </footer>
-    </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+ -->
+  </div>
+  <!--[if !IE]><script>fixScale(document);</script><![endif]-->
   </body>
 </html>

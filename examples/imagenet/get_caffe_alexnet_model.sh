@@ -23,6 +23,6 @@ fi
 
 echo "Downloading..."
 
-wget --no-check-certificate https://www.dropbox.com/s/rk6nkt0kf109slo/caffe_alexnet_model
+wget http://dl.caffe.berkeleyvision.org/caffe_alexnet_model
 
 echo "Done. Please run this command again to verify that checksum = $CHECKSUM."

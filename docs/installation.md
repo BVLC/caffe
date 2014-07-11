@@ -146,6 +146,10 @@ After this, run
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
 
+**Note** that in order to build the caffe python wrappers you must install boost using the --with-python option:
+
+    brew install --build-from-source --with-python --fresh -vd boost
+
 #### Windows
 
 There is an unofficial Windows port of Caffe at [niuzhiheng/caffe:windows](https://github.com/niuzhiheng/caffe). Thanks [@niuzhiheng](https://github.com/niuzhiheng)!
@@ -178,5 +182,7 @@ Now that you have installed Caffe, check out the [MNIST demo](mnist.html) and th
 **Laboratory Tested Hardware**: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.
 
 **CUDA compute capability**: devices with compute capability <= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.
+
+Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
 
 Refer to the project's issue tracker for [hardware/compatibility](https://github.com/BVLC/caffe/issues?labels=hardware%2Fcompatibility&page=1&state=open).
