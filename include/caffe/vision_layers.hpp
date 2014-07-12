@@ -230,7 +230,7 @@ class LRNLayer : public Layer<Dtype> {
   Blob<Dtype> power_output_;
   vector<Blob<Dtype>*> power_top_vec_;
   shared_ptr<EltwiseLayer<Dtype> > product_layer_;
-  Blob<Dtype> product_data_input_;
+  Blob<Dtype> product_input_;
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 

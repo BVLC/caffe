@@ -135,11 +135,6 @@ string SplitLayerName(const string& layer_name, const string& blob_name,
 
 string SplitBlobName(const string& layer_name, const string& blob_name,
     const int blob_idx, const int split_idx) {
-  // 0th split top blob is given the same name as the bottom blob so that
-  // computation is done 'in-place', saving a bit of time and memory.
-  if (split_idx == 0) {
-    return blob_name;
-  }
   ostringstream split_blob_name;
   split_blob_name << blob_name << "_" << layer_name << "_" << blob_idx
       << "_split_" << split_idx;

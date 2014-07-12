@@ -26,7 +26,7 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     {
       // Set up split_layer_ to use inputs in the numerator and denominator.
       split_top_vec_.clear();
-      split_top_vec_.push_back(bottom[0]);
+      split_top_vec_.push_back(&product_input_);
       split_top_vec_.push_back(&square_input_);
       LayerParameter split_param;
       split_layer_.reset(new SplitLayer<Dtype>(split_param));
@@ -76,7 +76,7 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       // Set up a product_layer_ to compute outputs by multiplying inputs by the
       // inverse demoninator computed by the power layer.
       product_bottom_vec_.clear();
-      product_bottom_vec_.push_back(bottom[0]);
+      product_bottom_vec_.push_back(&product_input_);
       product_bottom_vec_.push_back(&power_output_);
       LayerParameter product_param;
       EltwiseParameter* eltwise_param = product_param.mutable_eltwise_param();
