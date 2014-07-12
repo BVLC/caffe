@@ -157,6 +157,7 @@ class DataLayerTest : public ::testing::Test {
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
     DataLayer<Dtype> layer(param);
+    layer.set_phase(Caffe::phase());
     layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
     EXPECT_EQ(blob_top_data_->num(), 5);
     EXPECT_EQ(blob_top_data_->channels(), 2);
@@ -208,6 +209,7 @@ class DataLayerTest : public ::testing::Test {
     vector<vector<Dtype> > crop_sequence;
     {
       DataLayer<Dtype> layer1(param);
+      layer1.set_phase(Caffe::phase());
       layer1.SetUp(blob_bottom_vec_, &blob_top_vec_);
       for (int iter = 0; iter < 2; ++iter) {
         layer1.Forward(blob_bottom_vec_, &blob_top_vec_);
@@ -229,6 +231,7 @@ class DataLayerTest : public ::testing::Test {
     // Check that the sequence is the same as the original.
     Caffe::set_random_seed(seed_);
     DataLayer<Dtype> layer2(param);
+    layer2.set_phase(Caffe::phase());
     layer2.SetUp(blob_bottom_vec_, &blob_top_vec_);
     for (int iter = 0; iter < 2; ++iter) {
       layer2.Forward(blob_bottom_vec_, &blob_top_vec_);

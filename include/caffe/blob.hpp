@@ -7,6 +7,7 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/objdetect/rect.hpp"
 
 namespace caffe {
 
@@ -42,6 +43,8 @@ class Blob {
   // is true, we copy the diff.
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
+  void CopyFromRegion(const Blob<Dtype>& source, const Rect& region,
+                      bool copy_diff = false, bool reshape = false);
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {

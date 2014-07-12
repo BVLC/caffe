@@ -8,29 +8,29 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
-using std::max;
-using std::min;
-
 namespace caffe {
+
+#define max(a, b) ((a < b) ? b : a)
+#define min(a, b) ((a < b) ? a : b)
 
 template <typename Dtype>
 __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, const int pad_h, const int pad_w, Dtype* top_data,
+    const float kernel_h, const float kernel_w, const float stride_h,
+    const float stride_w, const int pad_h, const int pad_w, Dtype* top_data,
     int* mask, Dtype* top_mask) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
     int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h - pad_h;
-    int wstart = pw * stride_w - pad_w;
-    int hend = min(hstart + kernel_h, height);
-    int wend = min(wstart + kernel_w, width);
-    hstart = max(hstart, 0);
-    wstart = max(wstart, 0);
+    float hstart = ph * stride_h - pad_h;
+    float wstart = pw * stride_w - pad_w;
+    int hend = min(ceil(hstart + kernel_h), height);
+    int wend = min(ceil(wstart + kernel_w), width);
+    hstart = max(floor(hstart), 0);
+    wstart = max(floor(wstart), 0);
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
     bottom_data += (n * channels + c) * height * width;
@@ -55,20 +55,20 @@ template <typename Dtype>
 __global__ void AvePoolForward(const int nthreads, const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, const int pad_h, const int pad_w, Dtype* top_data) {
+    const float kernel_h, const float kernel_w, const float stride_h,
+    const float stride_w, const int pad_h, const int pad_w, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
     int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h - pad_h;
-    int wstart = pw * stride_w - pad_w;
-    int hend = min(hstart + kernel_h, height + pad_h);
-    int wend = min(wstart + kernel_w, width + pad_w);
-    int pool_size = (hend - hstart) * (wend - wstart);
-    hstart = max(hstart, 0);
-    wstart = max(wstart, 0);
+    float hstart = ph * stride_h - pad_h;
+    float wstart = pw * stride_w - pad_w;
+    int hend = min(ceil(hstart + kernel_h), height + pad_h);
+    int wend = min(ceil(wstart + kernel_w), width + pad_w);
+    const int pool_size = (hend - hstart) * (wend - wstart);
+    hstart = max(floor(hstart), 0);
+    wstart = max(floor(wstart), 0);
     hend = min(hend, height);
     wend = min(wend, width);
     Dtype aveval = 0;
@@ -87,17 +87,19 @@ __global__ void StoPoolForwardTrain(const int nthreads,
     const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* rand_idx, Dtype* top_data) {
+    const float kernel_h, const float kernel_w, const float stride_h,
+    const float stride_w, Dtype* rand_idx, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
     int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h;
-    int hend = min(hstart + kernel_h, height);
-    int wstart = pw * stride_w;
-    int wend = min(wstart + kernel_w, width);
+    float hstart = ph * stride_h;
+    float wstart = pw * stride_w;
+    int hend = min(ceil(hstart + kernel_h), height);
+    int wend = min(ceil(wstart + kernel_w), width);
+    hstart = max(floor(hstart), 0);
+    wstart = max(floor(wstart), 0);
     Dtype cumsum = 0.;
     bottom_data += (n * channels + c) * height * width;
     // First pass: get sum
@@ -128,17 +130,19 @@ __global__ void StoPoolForwardTest(const int nthreads,
     const Dtype* bottom_data,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* top_data) {
+    const float kernel_h, const float kernel_w, const float stride_h,
+    const float stride_w, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
     int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h;
-    int hend = min(hstart + kernel_h, height);
-    int wstart = pw * stride_w;
-    int wend = min(wstart + kernel_w, width);
+    float hstart = ph * stride_h;
+    float wstart = pw * stride_w;
+    int hend = min(ceil(hstart + kernel_h), height);
+    int wend = min(ceil(wstart + kernel_w), width);
+    hstart = max(floor(hstart), 0);
+    wstart = max(floor(wstart), 0);
     // We set cumsum to be 0 to avoid divide-by-zero problems
     Dtype cumsum = FLT_MIN;
     Dtype cumvalues = 0.;
@@ -219,8 +223,8 @@ template <typename Dtype>
 __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     const int* mask, const Dtype* top_mask, const int num, const int channels,
     const int height, const int width, const int pooled_height,
-    const int pooled_width, const int kernel_h, const int kernel_w,
-    const int stride_h, const int stride_w, const int pad_h, const int pad_w,
+    const int pooled_width, const float kernel_h, const float kernel_w,
+    const float stride_h, const float stride_w, const int pad_h, const int pad_w,
     Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
@@ -229,12 +233,14 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     int h = (index / width) % height;
     int c = (index / width / height) % channels;
     int n = index / width / height / channels;
-    int phstart =
+    float phstart =
         (h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;
-    int phend = min((h + pad_h) / stride_h + 1, pooled_height);
-    int pwstart =
+    int phend = min(ceil((h + pad_h) / stride_h + 1), pooled_height);
+    float pwstart =
         (w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;
-    int pwend = min((w + pad_w) / stride_w + 1, pooled_width);
+    int pwend = min(ceil((w + pad_w) / stride_w + 1), pooled_width);
+    phstart = max(floor(phstart), 0);
+    pwstart = max(floor(pwstart), 0);
     Dtype gradient = 0;
     int offset = (n * channels + c) * pooled_height * pooled_width;
     top_diff += offset;
@@ -296,14 +302,13 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
   }
 }
 
-
 template <typename Dtype>
 __global__ void StoPoolBackward(const int nthreads,
     const Dtype* rand_idx, const Dtype* top_diff,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* bottom_diff) {
+    const float kernel_h, const float kernel_w, const float stride_h,
+    const float stride_w, Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
@@ -311,10 +316,12 @@ __global__ void StoPoolBackward(const int nthreads,
     int h = (index / width) % height;
     int c = (index / width / height) % channels;
     int n = index / width / height / channels;
-    int phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;
-    int phend = min(h / stride_h + 1, pooled_height);
-    int pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;
-    int pwend = min(w / stride_w + 1, pooled_width);
+    float phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;
+    int phend = min(ceil(h / stride_h + 1), pooled_height);
+    float pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;
+    int pwend = min(ceil(w / stride_w + 1), pooled_width);
+    phstart = max(floor(phstart), 0);
+    pwstart = max(floor(pwstart), 0);
     Dtype gradient = 0;
     rand_idx += (n * channels + c) * pooled_height * pooled_width;
     top_diff += (n * channels + c) * pooled_height * pooled_width;

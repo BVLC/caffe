@@ -264,9 +264,9 @@ class PoolingLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   int max_top_blobs_;
-  int kernel_h_, kernel_w_;
-  int stride_h_, stride_w_;
-  int pad_h_, pad_w_;
+  float kernel_h_, kernel_w_;
+  float stride_h_, stride_w_;
+  float pad_h_, pad_w_;
   int channels_;
   int height_;
   int width_;
@@ -274,6 +274,51 @@ class PoolingLayer : public Layer<Dtype> {
   int pooled_width_;
   Blob<Dtype> rand_idx_;
   shared_ptr<Blob<int> > max_idx_;
+};
+
+/* SpatialPyramidPoolingLayer
+*/
+template <typename Dtype>
+class SpatialPyramidPoolingLayer : public Layer<Dtype> {
+ public:
+  explicit SpatialPyramidPoolingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_POOLING;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+    return Forward_cpu(bottom, top);
+  }
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    Backward_cpu(top, propagate_down, bottom);
+  }
+
+  int num_pyramid_levels_;
+  int channels_;
+  int height_;
+  int width_;
+  shared_ptr<SplitLayer<Dtype> > split_layer_;
+  vector<Blob<Dtype>*> split_top_vec_;
+  vector<shared_ptr<PoolingLayer<Dtype> > > pooling_layers_;
+  vector<shared_ptr<FlattenLayer<Dtype> > > flatten_layers_;
+  shared_ptr<ConcatLayer<Dtype> > concat_layer_;
+  vector<vector<Blob<Dtype>*> > pooling_bottom_vecs_;
+  vector<vector<Blob<Dtype>*> > pooling_top_vecs_;
+  vector<vector<Blob<Dtype>*> > flatten_top_vecs_;
+  vector<Blob<Dtype>*> concat_bottom_vec_;
 };
 
 }  // namespace caffe

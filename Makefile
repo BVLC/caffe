@@ -99,6 +99,7 @@ CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
 OBJ_BUILD_DIR := $(BUILD_DIR)/src/$(PROJECT)
 LAYER_BUILD_DIR := $(OBJ_BUILD_DIR)/layers
+OBJDETECT_BUILD_DIR := $(OBJ_BUILD_DIR)/objdetect
 UTIL_BUILD_DIR := $(OBJ_BUILD_DIR)/util
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
@@ -173,8 +174,8 @@ ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
 endif
 
 ALL_BUILD_DIRS := $(sort \
-		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
-		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
+		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) $(LAYER_BUILD_DIR) \
+		$(OBJDETECT_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
 		$(TEST_BUILD_DIR) $(TEST_BIN_DIR) $(GTEST_BUILD_DIR) \
 		$(EXAMPLE_BUILD_DIRS) \
 		$(LINT_OUTPUT_DIR) \
@@ -427,6 +428,11 @@ $(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \
 	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
+	@ echo
+
+$(OBJDETECT_BUILD_DIR)/%.o: src/$(PROJECT)/objdetect/%.cpp $(HXX_SRCS) \
+		| $(OBJDETECT_BUILD_DIR)
+	$(CXX) $< $(CXXFLAGS) -c -o $@
 	@ echo
 
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \

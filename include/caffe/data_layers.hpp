@@ -3,6 +3,7 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
+#include <boost/unordered_map.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -17,6 +18,7 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/objdetect/rect.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -49,6 +51,11 @@ class DataLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 2; }
+
+  virtual inline Caffe::Phase phase() const { return phase_; }
+  virtual inline void set_phase(const Caffe::Phase phase) {
+    phase_ = phase;
+  }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -204,6 +211,11 @@ class ImageDataLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
+  virtual inline Caffe::Phase phase() const { return phase_; }
+  virtual inline void set_phase(const Caffe::Phase phase) {
+    phase_ = phase;
+  }
+
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -275,6 +287,58 @@ class MemoryDataLayer : public Layer<Dtype> {
   int batch_size_;
   int n_;
   int pos_;
+};
+
+// This function is used to create a pthread that prefetches the window data.
+template <typename Dtype>
+void* SpatialPyramidPoolingDataLayerPrefetch(void* layer_pointer);
+
+template <typename Dtype>
+class SpatialPyramidPoolingDataLayer : public Layer<Dtype> {
+  // The function used to perform prefetching.
+  friend void* SpatialPyramidPoolingDataLayerPrefetch<Dtype>(
+      void* layer_pointer);
+
+ public:
+  explicit SpatialPyramidPoolingDataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~SpatialPyramidPoolingDataLayer();
+  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_SPATIAL_PYRAMID_POOLING_DATA;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
+
+ protected:
+  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
+
+  virtual void CreatePrefetchThread();
+  virtual void JoinPrefetchThread();
+  virtual unsigned int PrefetchRand();
+
+  vector<size_t> sample_heights_;
+  vector<size_t> sample_widths_;
+  vector<Rect> positive_regions_;
+  vector<int> positive_regions_class_label_;
+  vector<int> positive_regions_sample_id_;
+  vector<Rect> negative_regions_;
+  vector<int> negative_regions_class_label_;
+  vector<int> negative_regions_sample_id_;
+  boost::unordered_map<size_t, shared_ptr<Blob<Dtype> > > sample_features_;
+  pthread_t thread_;
+  shared_ptr<Caffe::RNG> prefetch_rng_;
+  shared_ptr<Blob<Dtype> > prefetch_data_;
+  shared_ptr<Blob<Dtype> > prefetch_label_;
 };
 
 // This function is used to create a pthread that prefetches the window data.
