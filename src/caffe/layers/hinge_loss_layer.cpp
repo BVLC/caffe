@@ -5,6 +5,7 @@
 #include <cfloat>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -22,7 +23,7 @@ Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   int count = bottom[0]->count();
   int dim = count / num;
 
-  caffe_copy(count, bottom_data, bottom_diff);
+  GetDevice<Dtype>(Caffe::CPU)->copy(count, bottom_data, bottom_diff);
   for (int i = 0; i < num; ++i) {
     bottom_diff[i * dim + static_cast<int>(label[i])] *= -1;
   }
@@ -34,9 +35,10 @@ Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   }
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    return caffe_cpu_asum(count, bottom_diff) / num;
+    return GetDevice<Dtype>(Caffe::CPU)->asum(count, bottom_diff) / num;
   case HingeLossParameter_Norm_L2:
-    return caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    return GetDevice<Dtype>(Caffe::CPU)->dot(count, bottom_diff, bottom_diff) /
+        num;
   default:
     LOG(FATAL) << "Unknown Norm";
   }
@@ -62,11 +64,11 @@ void HingeLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
 
     switch (this->layer_param_.hinge_loss_param().norm()) {
     case HingeLossParameter_Norm_L1:
-      caffe_cpu_sign(count, bottom_diff, bottom_diff);
-      caffe_scal(count, Dtype(1. / num), bottom_diff);
+      GetDevice<Dtype>(Caffe::CPU)->sign(count, bottom_diff, bottom_diff);
+      GetDevice<Dtype>(Caffe::CPU)->scal(count, Dtype(1. / num), bottom_diff);
       break;
     case HingeLossParameter_Norm_L2:
-      caffe_scal(count, Dtype(2. / num), bottom_diff);
+      GetDevice<Dtype>(Caffe::CPU)->scal(count, Dtype(2. / num), bottom_diff);
       break;
     default:
       LOG(FATAL) << "Unknown Norm";

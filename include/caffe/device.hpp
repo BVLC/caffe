@@ -95,11 +95,12 @@ class Device {
     NOT_IMPLEMENTED; return 0;
   }
 
-  virtual uint32_t hamming_distance(const int N, const Dtype* x,
-      const Dtype* y) { NOT_IMPLEMENTED; return 0; }
+  virtual int hamming_distance(const int N, const Dtype* x, const Dtype* y) {
+    NOT_IMPLEMENTED; return 0;
+  }
 
   // Returns the sum of the absolute values of the elements of vector x
-  virtual void asum(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
+  virtual Dtype asum(const int N, const Dtype* x) { NOT_IMPLEMENTED; }
 
   virtual void sign(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
@@ -181,11 +182,10 @@ class CPUDevice : public Device<Dtype> {
 
   virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
 
-  virtual uint32_t hamming_distance(const int N, const Dtype* x,
-                                    const Dtype* y);
+  virtual int hamming_distance(const int N, const Dtype* x, const Dtype* y);
 
   // Returns the sum of the absolute values of the elements of vector x
-  virtual void asum(const int N, const Dtype* x, Dtype* y);
+  virtual Dtype asum(const int N, const Dtype* x);
 
   virtual void sign(const int N, const Dtype* x, Dtype* y);
 
@@ -258,11 +258,10 @@ class GPUDevice : public Device<Dtype> {
 
   virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
 
-  virtual uint32_t hamming_distance(const int N, const Dtype* x,
-                                    const Dtype* y);
+  virtual int hamming_distance(const int N, const Dtype* x, const Dtype* y);
 
 // Returns the sum of the absolute values of the elements of vector x
-  virtual void asum(const int N, const Dtype* x, Dtype* y);
+  virtual Dtype asum(const int N, const Dtype* x);
 
   virtual void sign(const int N, const Dtype* x, Dtype* y);
 

@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -42,16 +42,19 @@ Dtype SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
   }
   // subtraction
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
-    scale_data, sum_multiplier_.cpu_data(), 1., top_data);
+  GetDevice<Dtype>(Caffe::CPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
+                                     -1., scale_data,
+                                     sum_multiplier_.cpu_data(), 1., top_data);
   // Perform exponentiation
-  caffe_exp<Dtype>(num * dim, top_data, top_data);
+  GetDevice<Dtype>(Caffe::CPU)->exp(num * dim, top_data, top_data);
   // sum after exp
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., top_data,
-      sum_multiplier_.cpu_data(), 0., scale_data);
+  GetDevice<Dtype>(Caffe::CPU)->gemv(CblasNoTrans, num, dim, 1., top_data,
+                                     sum_multiplier_.cpu_data(), 0.,
+                                     scale_data);
   // Do division
   for (int i = 0; i < num; ++i) {
-    caffe_scal<Dtype>(dim, Dtype(1.) / scale_data[i], top_data + i * dim);
+    GetDevice<Dtype>(Caffe::CPU)->scal(dim, Dtype(1.) / scale_data[i],
+                                       top_data + i * dim);
   }
   return Dtype(0);
 }
@@ -69,14 +72,17 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_copy(top[0]->count(), top_diff, bottom_diff);
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
   for (int i = 0; i < num; ++i) {
-    scale_data[i] = caffe_cpu_dot<Dtype>(dim, top_diff + i * dim,
-        top_data + i * dim);
+    scale_data[i] = GetDevice<Dtype>(Caffe::CPU)->dot(dim, top_diff + i * dim,
+                                                      top_data + i * dim);
   }
   // subtraction
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
-      scale_data, sum_multiplier_.cpu_data(), 1., bottom_diff);
+  GetDevice<Dtype>(Caffe::CPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,
+                                     -1., scale_data,
+                                     sum_multiplier_.cpu_data(), 1.,
+                                     bottom_diff);
   // elementwise multiplication
-  caffe_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
+  GetDevice<Dtype>(Caffe::CPU)->mul(top[0]->count(), bottom_diff, top_data,
+                                    bottom_diff);
 }
 
 

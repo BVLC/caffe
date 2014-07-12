@@ -9,6 +9,7 @@ extern "C" {
 
 #include <limits>
 #include <cmath>
+#include <algorithm>
 
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
@@ -101,20 +102,7 @@ void CPUDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
     memset(X, 0, sizeof(Dtype) * N);
     return;
   }
-  for (int i = 0; i < N; ++i) {
-    X[i] = alpha;
-  }
-}
-
-template<>
-void CPUDevice<int>::set(const int N, const int alpha, int *X) {
-  if (alpha == 0) {
-    memset(X, 0, sizeof(int) * N);
-    return;
-  }
-  for (int i = 0; i < N; ++i) {
-    X[i] = alpha;
-  }
+  std::fill_n(X, N, alpha);
 }
 
 template<typename Dtype>
@@ -278,21 +266,19 @@ void CPUDevice<double>::exp(const int N, const double* a, double* y) {
 }
 
 template<>
-void CPUDevice<float>::dot(const int N, const float* x, const float* y,
-                           float* out) {
-  *out = cblas_sdot(N, x, 1, y, 1);
+float CPUDevice<float>::dot(const int N, const float* x, const float* y) {
+  return cblas_sdot(N, x, 1, y, 1);
 }
 
 template<>
-void CPUDevice<double>::dot(const int N, const double* x, const double* y,
-                            double* out) {
-  *out = cblas_ddot(N, x, 1, y, 1);
+double CPUDevice<double>::dot(const int N, const double* x, const double* y) {
+  return cblas_ddot(N, x, 1, y, 1);
 }
 
 template<>
-uint32_t CPUDevice<float>::hamming_distance(const int N, const float* x,
+int CPUDevice<float>::hamming_distance(const int N, const float* x,
                                             const float* y) {
-  uint32_t dist = 0;
+  int dist = 0;
   for (int i = 0; i < N; ++i) {
     dist += __builtin_popcount(static_cast<uint32_t>(x[i]) ^
                                static_cast<uint32_t>(y[i]));
@@ -301,26 +287,26 @@ uint32_t CPUDevice<float>::hamming_distance(const int N, const float* x,
 }
 
 template<>
-uint32_t CPUDevice<double>::hamming_distance(const int N, const double* x,
+int CPUDevice<double>::hamming_distance(const int N, const double* x,
                                              const double* y) {
-  uint32_t dist = 0;
+  int dist = 0;
   for (int i = 0; i < N; ++i) {
-    dist += __builtin_popcount(static_cast<uint64_t>(x[i]) ^
-                               static_cast<uint64_t>(y[i]));
+    dist += __builtin_popcountl(static_cast<uint64_t>(x[i]) ^
+                                static_cast<uint64_t>(y[i]));
   }
   return dist;
 }
 
-template<>
 // Returns the sum of the absolute values of the elements of vector x
-void CPUDevice<float>::asum(const int N, const float* x, float* y) {
-  *y = cblas_sasum(N, x, 1);
+template<>
+float CPUDevice<float>::asum(const int N, const float* x) {
+  return cblas_sasum(N, x, 1);
 }
 
-template<>
 // Returns the sum of the absolute values of the elements of vector x
-void CPUDevice<double>::asum(const int N, const double* x, double* y) {
-  *y = cblas_dasum(N, x, 1);
+template<>
+double CPUDevice<double>::asum(const int N, const double* x) {
+  return cblas_dasum(N, x, 1);
 }
 
 // the branchless, type-safe version from

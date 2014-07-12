@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/test/test_caffe_main.hpp"
@@ -61,7 +62,8 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
   void RngGaussianFill(const Dtype mu, const Dtype sigma, void* cpu_data) {
     Dtype* rng_data = static_cast<Dtype*>(cpu_data);
-    caffe_rng_gaussian(sample_size_, mu, sigma, rng_data);
+    GetDevice<Dtype>(Caffe::CPU)->rng_gaussian(sample_size_, mu, sigma,
+                                               rng_data);
   }
 
   void RngGaussianChecks(const Dtype mu, const Dtype sigma,
@@ -105,7 +107,8 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   void RngUniformFill(const Dtype lower, const Dtype upper, void* cpu_data) {
     CHECK_GE(upper, lower);
     Dtype* rng_data = static_cast<Dtype*>(cpu_data);
-    caffe_rng_uniform(sample_size_, lower, upper, rng_data);
+    GetDevice<Dtype>(Caffe::CPU)->rng_uniform(sample_size_, lower, upper,
+                                              rng_data);
   }
 
   void RngUniformChecks(const Dtype lower, const Dtype upper,
@@ -157,7 +160,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
   void RngBernoulliFill(const Dtype p, void* cpu_data) {
     int* rng_data = static_cast<int*>(cpu_data);
-    caffe_rng_bernoulli(sample_size_, p, rng_data);
+    GetDevice<Dtype>(Caffe::CPU)->rng_bernoulli(sample_size_, p, rng_data);
   }
 
   void RngBernoulliChecks(const Dtype p, const void* cpu_data) {

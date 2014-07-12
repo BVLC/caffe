@@ -10,6 +10,7 @@
 #include <cmath>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 
@@ -115,7 +116,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
     const Dtype* diff = blobs_to_check[blob_id]->cpu_diff();
     Dtype* computed_gradients =
         computed_gradient_blobs[blob_id]->mutable_cpu_data();
-    caffe_copy(count, diff, computed_gradients);
+    GetDevice<Dtype>(Caffe::CPU)->copy(count, diff, computed_gradients);
   }
   // Compute derivative of top w.r.t. each bottom and parameter input using
   // finite differencing.

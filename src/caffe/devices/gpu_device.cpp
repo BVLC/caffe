@@ -120,21 +120,24 @@ void GPUDevice<Dtype>::exp(const int N, const Dtype* a, Dtype* y) {
 }
 
 template<typename Dtype>
-void GPUDevice<Dtype>::dot(const int N, const Dtype* x, const Dtype* y,
-                                Dtype* out) {
-  caffe_gpu_dot<Dtype>(N, x, y, out);
+Dtype GPUDevice<Dtype>::dot(const int N, const Dtype* x, const Dtype* y) {
+  Dtype out;
+  caffe_gpu_dot<Dtype>(N, x, y, &out);
+  return out;
 }
 
 template<typename Dtype>
-uint32_t GPUDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
-                                             const Dtype* y) {
+int GPUDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
+                                       const Dtype* y) {
   return caffe_gpu_hamming_distance<Dtype>(N, x, y);
 }
 
 template<typename Dtype>
 // Returns the sum of the absolute values of the elements of vector x
-void GPUDevice<Dtype>::asum(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_asum<Dtype>(N, x, y);
+Dtype GPUDevice<Dtype>::asum(const int N, const Dtype* x) {
+  Dtype y;
+  caffe_gpu_asum<Dtype>(N, x, &y);
+  return y;
 }
 
 template<typename Dtype>

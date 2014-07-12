@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
+#include "caffe/device.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -128,35 +129,44 @@ Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
   // go through the images
   for (int n = 0; n < num_; ++n) {
     // compute the padded square
-    caffe_sqr(channels_ * height_ * width_,
+    GetDevice<Dtype>(Caffe::CPU)->sqr(
+        channels_ * height_ * width_,
         bottom_data + bottom[0]->offset(n),
         padded_square_data + padded_square.offset(0, pre_pad_));
     // Create the first channel scale
     for (int c = 0; c < size_; ++c) {
-      caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
+      GetDevice<Dtype>(Caffe::CPU)->axpy(
+          height_ * width_,
+          alpha_over_size,
           padded_square_data + padded_square.offset(0, c),
           scale_data + scale_.offset(n, 0));
     }
     for (int c = 1; c < channels_; ++c) {
       // copy previous scale
-      caffe_copy<Dtype>(height_ * width_,
+      GetDevice<Dtype>(Caffe::CPU)->copy(
+          height_ * width_,
           scale_data + scale_.offset(n, c - 1),
           scale_data + scale_.offset(n, c));
       // add head
-      caffe_axpy<Dtype>(height_ * width_, alpha_over_size,
+      GetDevice<Dtype>(Caffe::CPU)->axpy(
+          height_ * width_,
+          alpha_over_size,
           padded_square_data + padded_square.offset(0, c + size_ - 1),
           scale_data + scale_.offset(n, c));
       // subtract tail
-      caffe_axpy<Dtype>(height_ * width_, -alpha_over_size,
+      GetDevice<Dtype>(Caffe::CPU)->axpy(
+          height_ * width_,
+          -alpha_over_size,
           padded_square_data + padded_square.offset(0, c - 1),
           scale_data + scale_.offset(n, c));
     }
   }
 
   // In the end, compute output
-  caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
-  caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
-
+  GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
+                                     top_data);
+  GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_data, bottom_data,
+                                    top_data);
   return Dtype(0.);
 }
 
@@ -204,39 +214,51 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   caffe_set(padded_ratio.count(), Dtype(0), padded_ratio_data);
   Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
 
-  caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
-  caffe_mul<Dtype>(scale_.count(), top_diff, bottom_diff, bottom_diff);
+  GetDevice<Dtype>(Caffe::CPU)->powx(scale_.count(), scale_data, -beta_,
+                                     bottom_diff);
+  GetDevice<Dtype>(Caffe::CPU)->mul(scale_.count(), top_diff, bottom_diff,
+                                    bottom_diff);
 
   // go through individual data
   int inverse_pre_pad = size_ - (size_ + 1) / 2;
   for (int n = 0; n < num_; ++n) {
     int block_offset = scale_.offset(n);
     // first, compute diff_i * y_i / s_i
-    caffe_mul<Dtype>(channels_ * height_ * width_,
+    GetDevice<Dtype>(Caffe::CPU)->mul(channels_ * height_ * width_,
         top_diff + block_offset, top_data + block_offset,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
-    caffe_div<Dtype>(channels_ * height_ * width_,
+    GetDevice<Dtype>(Caffe::CPU)->div(channels_ * height_ * width_,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad),
         scale_data + block_offset,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
     // Now, compute the accumulated ratios and the bottom diff
     caffe_set(accum_ratio.count(), Dtype(0), accum_ratio_data);
     for (int c = 0; c < size_ - 1; ++c) {
-      caffe_axpy<Dtype>(height_ * width_, 1.,
-          padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
+      GetDevice<Dtype>(Caffe::CPU)->axpy(
+          height_ * width_,
+          1.,
+          padded_ratio_data + padded_ratio.offset(0, c),
+          accum_ratio_data);
     }
     for (int c = 0; c < channels_; ++c) {
-      caffe_axpy<Dtype>(height_ * width_, 1.,
+      GetDevice<Dtype>(Caffe::CPU)->axpy(
+          height_ * width_,
+          1.,
           padded_ratio_data + padded_ratio.offset(0, c + size_ - 1),
           accum_ratio_data);
       // compute bottom diff
-      caffe_mul<Dtype>(height_ * width_,
-          bottom_data + top[0]->offset(n, c),
-          accum_ratio_data, accum_ratio_times_bottom);
-      caffe_axpy<Dtype>(height_ * width_, -cache_ratio_value,
-          accum_ratio_times_bottom, bottom_diff + top[0]->offset(n, c));
-      caffe_axpy<Dtype>(height_ * width_, -1.,
-          padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
+      GetDevice<Dtype>(Caffe::CPU)->mul(height_ * width_,
+                                        bottom_data + top[0]->offset(n, c),
+                                        accum_ratio_data,
+                                        accum_ratio_times_bottom);
+      GetDevice<Dtype>(Caffe::CPU)->axpy(height_ * width_, -cache_ratio_value,
+                                         accum_ratio_times_bottom,
+                                         bottom_diff + top[0]->offset(n, c));
+      GetDevice<Dtype>(Caffe::CPU)->axpy(
+          height_ * width_,
+          -1.,
+          padded_ratio_data + padded_ratio.offset(0, c),
+          accum_ratio_data);
     }
   }
 }
