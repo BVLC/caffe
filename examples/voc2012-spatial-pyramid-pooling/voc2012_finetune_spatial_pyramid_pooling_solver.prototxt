@@ -13,6 +13,6 @@ max_iter: 100000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 500
-snapshot_prefix: "voc2012_finetune_spatial_pyramid_pooling_train"
+snapshot_prefix: "voc2012_finetune_spatial_pyramid_pooling"
 # solver mode: CPU or GPU
 solver_mode: CPU
