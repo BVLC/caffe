@@ -1,6 +1,9 @@
 ---
+title: CIFAR-10 tutorial
+category: example
+description: Train and test Caffe on CIFAR-10 data.
+include_in_docs: true
 layout: default
-title: Caffe
 ---
 
 Alex's CIFAR-10 tutorial, Caffe style

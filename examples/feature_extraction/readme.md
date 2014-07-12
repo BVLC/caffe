@@ -1,6 +1,9 @@
 ---
+title: Feature extraction with Caffe C++ code.
+description: Extract AlexNet features using the Caffe binary.
+category: example
+include_in_docs: true
 layout: default
-title: Caffe
 ---
 
 Extracting Features
@@ -57,7 +60,7 @@ The last parameter above is the number of data mini-batches.
 
 The features are stored to LevelDB `examples/_temp/features`, ready for access by some other code.
 
-If you meet with the error "Check failed: status.ok() Failed to open leveldb examples/_temp/features", it is because the directory examples/_temp/features has been created the last time you run the command. Remove it and run again. 
+If you meet with the error "Check failed: status.ok() Failed to open leveldb examples/_temp/features", it is because the directory examples/_temp/features has been created the last time you run the command. Remove it and run again.
 
     rm -rf examples/_temp/features/
 
