@@ -50,6 +50,11 @@ class DataLayer : public Layer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 2; }
 
+  virtual inline Caffe::Phase phase() const { return phase_; }
+  virtual inline void set_phase(const Caffe::Phase phase) {
+    phase_ = phase;
+  }
+
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -203,6 +208,11 @@ class ImageDataLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
+
+  virtual inline Caffe::Phase phase() const { return phase_; }
+  virtual inline void set_phase(const Caffe::Phase phase) {
+    phase_ = phase;
+  }
 
  protected:
   virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
