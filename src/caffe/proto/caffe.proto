@@ -115,7 +115,7 @@ message SolverState {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 31 (last added: spatial_pyramid_pooling_param)
+// LayerParameter next available ID: 32 (last added: spatial_pyramid_pooling_data_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 34 (last added: SPATIAL_PYRAMID_POOLING)
+  // LayerType next available ID: 35 (last added: SPATIAL_PYRAMID_POOLING_DATA)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -162,6 +162,7 @@ message LayerParameter {
     SOFTMAX = 20;
     SOFTMAX_LOSS = 21;
     SPATIAL_PYRAMID_POOLING = 33;
+    SPATIAL_PYRAMID_POOLING_DATA = 34;
     SPLIT = 22;
     TANH = 23;
     WINDOW_DATA = 24;
@@ -206,7 +207,9 @@ message LayerParameter {
   optional MemoryDataParameter memory_data_param = 22;
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
-  optional SpatialPyramidPoolingParameter spatial_pyramid_pooling_param = 30;  
+  optional SpatialPyramidPoolingParameter spatial_pyramid_pooling_param = 30; 
+  optional SpatialPyramidPoolingDataParameter 
+      spatial_pyramid_pooling_data_param = 31;   
   optional WindowDataParameter window_data_param = 20;
   optional ThresholdParameter threshold_param = 25;
   optional HingeLossParameter hinge_loss_param = 29;
@@ -428,7 +431,7 @@ message PowerParameter {
   optional float shift = 3 [default = 0.0];
 }
 
-// Message that stores parameters used by PoolingLayer
+// Message that stores parameters used by SpatialPyramidPoolingLayer
 message SpatialPyramidPoolingParameter {
   enum PoolMethod {
     MAX = 0;
@@ -440,6 +443,22 @@ message SpatialPyramidPoolingParameter {
   repeated uint32 spatial_bin = 2; 
    // The number of image scales to apply spatial pyramid pooling 
   repeated float scale = 3;
+}
+
+// Message that stores parameters used by SpatialPyramidPoolingDataLayer
+message SpatialPyramidPoolingDataParameter {
+  // Specify the feature source.
+  optional string features_source = 1;
+  // Specify the regions source.
+  optional string regions_source = 2;
+  // Specify the batch size.
+  optional uint32 batch_size = 3;
+  // Positive (object) overlap threshold
+  optional float positive_threshold = 4 [default = 1];
+  // Negative samples (non-object) overlap threshold
+  optional float negative_threshold = 5 [default = 0.3];
+  // Fraction of batch that should be foreground objects
+  optional float positive_sampling_ratio = 9 [default = 0.25];
 }
 
 // Message that stores parameters used by WindowDataLayer
