@@ -7,14 +7,16 @@ Caffe is a deep learning framework developed with cleanliness, readability, and 
 It was created by [Yangqing Jia](http://daggerfs.com), and is in active development by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
-## Why
+Check out our web image classification [demo](http://demo.caffe.berkeleyvision.org)!
+
+## Why use Caffe?
 
 **Clean architecture** enables rapid deployment.
 Networks are specified in simple config files, with no hard-coded parameters in the code.
-Switching between CPU and GPU code is as simple as setting a flag -- so models can be trained on a GPU machine, and then used on commodity clusters.
+Switching between CPU and GPU is as simple as setting a flag -- so models can be trained on a GPU machine, and then used on commodity clusters.
 
 **Readable & modifiable implementation** fosters active development.
-In Caffe's first six months, it has been forked by over 300 developers on Github, and many have contributed significant changes.
+In Caffe's first six months, it has been forked by over 300 developers on Github, and many have pushed significant changes.
 
 **Speed** makes Caffe perfect for industry use.
 Caffe can process over **40M images per day** with a single NVIDIA K40 or Titan GPU\*.
@@ -29,29 +31,34 @@ There is an active discussion and support community on [Github](https://github.c
 Consult performance [details](/performance_hardware.html).
 </p>
 
-## How
+## Documentation
 
-* [Introductory slides](http://dl.caffe.berkeleyvision.org/caffe-presentation.pdf): slides about the Caffe architecture, *updated 03/14*.
-* [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf): a 4-page report for the ACM Multimedia Open Source competition.
-* [Installation instructions](/installation.html): tested on Ubuntu, Red Hat, OS X.
-* [Pre-trained models](/getting_pretrained_models.html): BVLC provides ready-to-use models for non-commercial use.
-* [Development](/development.html): Guidelines for development and contributing to Caffe.
+- [Introductory slides](http://dl.caffe.berkeleyvision.org/caffe-presentation.pdf)<br />
+Slides about the Caffe architecture, *updated 03/14*.
+- [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br />
+A 4-page report for the ACM Multimedia Open Source competition.
+- [Installation instructions](/installation.html)<br />
+Tested on Ubuntu, Red Hat, OS X.
+* [Pre-trained models](/getting_pretrained_models.html)<br />
+BVLC provides ready-to-use models for non-commercial use.
+* [Development](/development.html)<br />
+Guidelines for development and contributing to Caffe.
 
-### Tutorials and Examples
+### Examples
 
-* [Image Classification \[notebook\]][imagenet_classification]: classify images with the pretrained ImageNet model by the Python interface.
-* [Detection \[notebook\]][detection]: run a pretrained model as a detector in Python.
-* [Visualizing Features and Filters \[notebook\]][visualizing_filters]: extracting features and visualizing trained filters with an example image, viewed layer-by-layer.
-* [Editing Model Parameters \[notebook\]][net_surgery]: how to do net surgery and manually change model parameters.
-* [LeNet / MNIST Demo](/mnist.html): end-to-end training and testing of LeNet on MNIST.
-* [CIFAR-10 Demo](/cifar10.html): training and testing on the CIFAR-10 data.
-* [Training ImageNet](/imagenet_training.html): recipe for end-to-end training of an ImageNet classifier.
-* [Feature extraction with C++](/feature_extraction.html): feature extraction using pre-trained model.
+{% for page in site.pages %}
+{% if page.category == 'example' %}
+- <div><a href="{{page.url}}">{{page.title}}</a><br />{{page.description}}</div>
+{% endif %}
+{% endfor %}
 
-[imagenet_classification]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/imagenet_classification.ipynb
-[detection]:   http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection.ipynb
-[visualizing_filters]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb
-[net_surgery]:  http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/net_surgery.ipynb
+### Notebook examples
+
+{% for page in site.pages %}
+{% if page.category == 'notebook' %}
+- <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br />{{page.description}}</div>
+{% endif %}
+{% endfor %}
 
 ## Citing Caffe
 
