@@ -44,7 +44,9 @@ class AccuracyLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
-    NOT_IMPLEMENTED;
+    for (int i = 0; i < propagate_down.size(); ++i) {
+      if (propagate_down[i]) { NOT_IMPLEMENTED; }
+    }
   }
 
   int top_k_;
