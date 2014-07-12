@@ -1,6 +1,9 @@
 ---
+title: ImageNet tutorial
+description: Train and test "CaffeNet" on ImageNet challenge data.
+category: example
+include_in_docs: true
 layout: default
-title: Caffe
 ---
 
 Yangqing's Recipe on Brewing ImageNet

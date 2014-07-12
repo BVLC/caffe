@@ -9,9 +9,14 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions
 
 ### Documentation
 
-Tutorials and general documentation -- including this website -- are written in Markdown format in the `docs/` folder.
-While the format is quite easy to read directly, you may prefer to view the whole thing as a website.
-To do so, simply run `jekyll serve -s docs` and view the documentation website at `http://0.0.0.0:4000` (for [jekyll](http://jekyllrb.com/), you must have ruby and do `gem install jekyll`).
+This website, written with [Jekyll](http://jekyllrb.com/), functions as the official Caffe documentation -- simply run `scripts/build_docs.sh` and view the website at `http://0.0.0.0:4000`.
+
+We prefer tutorials and examples to be documented close to where they live, in `readme.md` files.
+The `build_docs.sh` script gathers all `examples/**/readme.md` and `examples/*.ipynb` files, and makes a table of contents.
+To be included in the docs, the readme files must be annotated with [YAML front-matter](http://jekyllrb.com/docs/frontmatter/), including the flag `include_in_docs: true`.
+Similarly for IPython notebooks: simply include `"include_in_docs": true` in the `"metadata"` JSON field.
+
+Other docs, such as installation guides, are written in the `docs` directory and manually linked to from the `index.md` page.
 
 We strive to provide provide lots of usage examples, and to document all code in docstrings.
 We absolutely appreciate any contribution to this effort!
