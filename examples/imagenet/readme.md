@@ -1,6 +1,6 @@
 ---
 title: ImageNet tutorial
-description: Train and test "AlexNet" on ImageNet challenge data.
+description: Train and test "CaffeNet" on ImageNet challenge data.
 category: example
 include_in_docs: true
 layout: default

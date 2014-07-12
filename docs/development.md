@@ -9,7 +9,7 @@ The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions
 
 ### Documentation
 
-This website, written with [Jekyll](http://jekyllrb.com/), functions as the documentation portal -- simply run `scripts/build_docs.sh` and view the website at `http://0.0.0.0:4000`.
+This website, written with [Jekyll](http://jekyllrb.com/), functions as the official Caffe documentation -- simply run `scripts/build_docs.sh` and view the website at `http://0.0.0.0:4000`.
 
 We prefer tutorials and examples to be documented close to where they live, in `readme.md` files.
 The `build_docs.sh` script gathers all `examples/**/readme.md` and `examples/*.ipynb` files, and makes a table of contents.
