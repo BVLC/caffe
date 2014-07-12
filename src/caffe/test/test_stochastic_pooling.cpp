@@ -49,8 +49,7 @@ class StochasticPoolingLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(StochasticPoolingLayerTest, Dtypes);
+TYPED_TEST_CASE(StochasticPoolingLayerTest, TestDtypes);
 
 TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
   LayerParameter layer_param;
