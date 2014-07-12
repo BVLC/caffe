@@ -11,7 +11,7 @@ cd $DIR
 
 echo "Downloading..."
 
-wget --no-check-certificate https://www.dropbox.com/s/g5myor4y2scdv95/caffe_ilsvrc12.tar.gz
+wget http://dl.caffe.berkeleyvision.org/caffe_ilsvrc12.tar.gz
 
 echo "Unzipping..."
 

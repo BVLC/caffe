@@ -1,14 +1,14 @@
+@import url(http://fonts.googleapis.com/css?family=PT+Serif|Open+Sans:600,400);
+
 body {
   padding:10px 50px 0 0;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 300;
+  font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   color: #232323;
   background-color: #FBFAF7;
   margin: 0;
-  line-height: 1.8em;
+  line-height: 1.5rem;
   -webkit-font-smoothing: antialiased;
-
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -21,8 +21,7 @@ p, ul, ol, table, dl {
 }
 
 h1, h2, h3 {
-  font-family: Times, serif;
-  font-weight: 300;
+  font-family: 'PT Serif', serif;
   line-height:1.3;
   font-weight: normal;
   display: block;
@@ -43,7 +42,7 @@ h3 {
 }
 
 h4, h5, h6 {
-  font-family: Times, serif;
+  font-family: 'PT Serif', serif;
   font-weight: 700;
 }
 
@@ -69,12 +68,11 @@ strong {
 }
 
 ul {
-  list-style: inside;
   padding-left: 25px;
 }
 
 ol {
-  list-style: decimal inside;
+  list-style: decimal;
   padding-left: 20px;
 }
 
@@ -130,7 +128,6 @@ p img {
 }
 
 /* Code blocks */
-
 code, pre {
   font-family: monospace;
   color:#000;
@@ -150,7 +147,6 @@ pre {
 
 
 /* Tables */
-
 table {
   width:100%;
 }
@@ -162,7 +158,7 @@ table {
  }
 
 th {
-  font-family: 'Arvo', Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 18px;
   font-weight: normal;
   padding: 10px;
@@ -185,43 +181,22 @@ td {
 /* Header */
 
 header {
-  background-color: #171717;
-  color: #FDFDFB;
   width:170px;
   float:left;
   position:fixed;
-  border: 1px solid #000;
-  -webkit-border-top-right-radius: 4px;
-  -webkit-border-bottom-right-radius: 4px;
-  -moz-border-radius-topright: 4px;
-  -moz-border-radius-bottomright: 4px;
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
   padding: 12px 25px 22px 50px;
   margin: 24px 25px 0 0;
-  -webkit-font-smoothing: antialiased;
 }
 
 p.header {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 h1.header {
-  /*font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;*/
   font-size: 30px;
   font-weight: 300;
   line-height: 1.3em;
-  border-bottom: none;
   margin-top: 0;
-}
-
-
-h1.header, a.header, a.name, header a{
-  color: #fff;
-}
-
-a.header {
-  text-decoration: underline;
 }
 
 a.name {
@@ -240,51 +215,27 @@ header li {
   margin-bottom: 12px;
   line-height: 1em;
   padding: 6px 6px 6px 7px;
-
-  background: #AF0011;
-  background: -moz-linear-gradient(top, #AF0011 0%, #820011 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#dddddd));
-  background: -webkit-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: -o-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: -ms-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: linear-gradient(top, #AF0011 0%,#820011 100%);
-
+  background: #c30000;
   border-radius:4px;
-  border:1px solid #0D0D0D;
-
-  -webkit-box-shadow: inset 0px 1px 1px 0 rgba(233,2,38, 1);
-  box-shadow: inset 0px 1px 1px 0 rgba(233,2,38, 1);
-
+  border:1px solid #555;
 }
 
 header li:hover {
-  background: #C3001D;
-  background: -moz-linear-gradient(top, #C3001D 0%, #950119 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#dddddd));
-  background: -webkit-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: -o-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: -ms-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: linear-gradient(top, #C3001D 0%,#950119 100%);
+  background: #dd0000;
 }
 
 a.buttons {
-  -webkit-font-smoothing: antialiased;
-  background: url(../images/arrow-down.png) no-repeat;
+  color: #fff;
+  text-decoration: none;
   font-weight: normal;
-  text-shadow: rgba(0, 0, 0, 0.4) 0 -1px 0;
   padding: 2px 2px 2px 22px;
   height: 30px;
 }
 
 a.github {
-  background: url(../images/octocat-small.png) no-repeat 1px;
+  background: url(/images/GitHub-Mark-64px.png) no-repeat center left;
+  background-size: 15%;
 }
-
-a.buttons:hover {
-  color: #fff;
-  text-decoration: none;
-}
-
 
 /* Section - for main page content */
 
@@ -292,6 +243,10 @@ section {
   width:650px;
   float:right;
   padding-bottom:50px;
+}
+
+p.footnote {
+  font-size: 12px;
 }
 
 
