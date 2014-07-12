@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cfloat>
+#include <utility>
 #include <vector>
 
 #include "caffe/layer.hpp"
