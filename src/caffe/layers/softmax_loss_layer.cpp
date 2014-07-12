@@ -2,6 +2,7 @@
 #include <cfloat>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
@@ -70,7 +71,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       bottom_diff[i * dim + static_cast<int>(label[i])] -= 1;
     }
     // Scale down gradient
-    caffe_scal(prob_.count(), Dtype(1) / num, bottom_diff);
+    GetDevice<Dtype>(Caffe::CPU)->scal(prob_.count(), Dtype(1) / num,
+                                       bottom_diff);
   }
 }
 
