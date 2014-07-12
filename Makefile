@@ -37,8 +37,8 @@ TEST_SRCS := $(shell find src/$(PROJECT) -name "test_*.cpp")
 TEST_SRCS := $(filter-out $(TEST_MAIN_SRC), $(TEST_SRCS))
 TEST_CU_SRCS := $(shell find src/$(PROJECT) -name "test_*.cu")
 GTEST_SRC := src/gtest/gtest-all.cpp
-# TEST_HDRS are the test header files
-TEST_HDRS := $(shell find include/$(PROJECT) -name "test_*.hpp")
+# TEST_HXX_SRCS are the test header files
+TEST_HXX_SRCS := $(shell find include/$(PROJECT) -name "test_*.hpp")
 # TOOL_SRCS are the source files for the tool binaries
 TOOL_SRCS := $(shell find tools -name "*.cpp")
 # EXAMPLE_SRCS are the source files for the example binaries
@@ -194,7 +194,7 @@ else ifeq ($(UNAME), Darwin)
 endif
 
 ifeq ($(LINUX), 1)
-	CXX := /usr/bin/g++
+	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
 	# older versions of gcc are too dumb to build boost with -Wuninitalized
 	ifeq ($(shell echo $(GCCVERSION) \< 4.6 | bc), 1)
@@ -206,18 +206,13 @@ endif
 # clang++ instead of g++
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
 ifeq ($(OSX), 1)
-	CXX := /usr/bin/clang++
+	CXX ?= /usr/bin/clang++
 	# clang throws this warning for cuda headers
 	WARNINGS += -Wno-unneeded-internal-declaration
 	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
 		CXXFLAGS += -stdlib=libstdc++
 		LINKFLAGS += -stdlib=libstdc++
 	endif
-endif
-
-# Custom compiler 
-ifdef CUSTOM_CXX
-	CXX := $(CUSTOM_CXX)
 endif
 
 # Debugging
@@ -385,14 +380,14 @@ $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
 	ar rcs $@ $(PROTO_OBJS) $(OBJS)
 	@ echo
 
-$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
+$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HXX_SRCS) \
 		| $(TEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 	@ echo
 
-$(TEST_BUILD_DIR)/%.cuo: src/$(PROJECT)/test/%.cu $(HXX_SRCS) $(TEST_HDRS) \
+$(TEST_BUILD_DIR)/%.cuo: src/$(PROJECT)/test/%.cu $(HXX_SRCS) $(TEST_HXX_SRCS) \
 		| $(TEST_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
