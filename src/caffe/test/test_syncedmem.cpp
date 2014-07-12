@@ -24,11 +24,23 @@ TEST_F(SyncedMemoryTest, TestInitialization) {
   delete p_mem;
 }
 
-TEST_F(SyncedMemoryTest, TestAllocation) {
+TEST_F(SyncedMemoryTest, TestAllocationCPUGPU) {
   SyncedMemory mem(10);
   EXPECT_TRUE(mem.cpu_data());
   EXPECT_TRUE(mem.gpu_data());
   EXPECT_TRUE(mem.mutable_cpu_data());
+  EXPECT_TRUE(mem.mutable_gpu_data());
+}
+
+TEST_F(SyncedMemoryTest, TestAllocationCPU) {
+  SyncedMemory mem(10);
+  EXPECT_TRUE(mem.cpu_data());
+  EXPECT_TRUE(mem.mutable_cpu_data());
+}
+
+TEST_F(SyncedMemoryTest, TestAllocationGPU) {
+  SyncedMemory mem(10);
+  EXPECT_TRUE(mem.gpu_data());
   EXPECT_TRUE(mem.mutable_gpu_data());
 }
 
@@ -38,14 +50,14 @@ TEST_F(SyncedMemoryTest, TestCPUWrite) {
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   memset(cpu_data, 1, mem.size());
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((reinterpret_cast<char*>(cpu_data))[i], 1);
+    EXPECT_EQ((static_cast<char*>(cpu_data))[i], 1);
   }
   // do another round
   cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   memset(cpu_data, 2, mem.size());
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((reinterpret_cast<char*>(cpu_data))[i], 2);
+    EXPECT_EQ((static_cast<char*>(cpu_data))[i], 2);
   }
 }
 
@@ -60,21 +72,21 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   char* recovered_value = new char[10];
   caffe_gpu_memcpy(10, gpu_data, recovered_value);
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 1);
+    EXPECT_EQ((static_cast<char*>(recovered_value))[i], 1);
   }
   // do another round
   cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   memset(cpu_data, 2, mem.size());
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((reinterpret_cast<char*>(cpu_data))[i], 2);
+    EXPECT_EQ((static_cast<char*>(cpu_data))[i], 2);
   }
   gpu_data = mem.gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
   caffe_gpu_memcpy(10, gpu_data, recovered_value);
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 2);
+    EXPECT_EQ((static_cast<char*>(recovered_value))[i], 2);
   }
   delete[] recovered_value;
 }
@@ -86,7 +98,7 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   CUDA_CHECK(cudaMemset(gpu_data, 1, mem.size()));
   const void* cpu_data = mem.cpu_data();
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((reinterpret_cast<const char*>(cpu_data))[i], 1);
+    EXPECT_EQ((static_cast<const char*>(cpu_data))[i], 1);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
 
@@ -95,7 +107,7 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   CUDA_CHECK(cudaMemset(gpu_data, 2, mem.size()));
   cpu_data = mem.cpu_data();
   for (int i = 0; i < mem.size(); ++i) {
-    EXPECT_EQ((reinterpret_cast<const char*>(cpu_data))[i], 2);
+    EXPECT_EQ((static_cast<const char*>(cpu_data))[i], 2);
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
 }

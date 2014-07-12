@@ -37,9 +37,7 @@ class ArgMaxLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(ArgMaxLayerTest, Dtypes);
-
+TYPED_TEST_CASE(ArgMaxLayerTest, TestDtypes);
 
 TYPED_TEST(ArgMaxLayerTest, TestSetup) {
   LayerParameter layer_param;

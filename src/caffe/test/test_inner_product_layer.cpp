@@ -17,8 +17,9 @@ namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
-template <typename Dtype>
-class InnerProductLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
  protected:
   InnerProductLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
@@ -37,16 +38,16 @@ class InnerProductLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(InnerProductLayerTest, Dtypes);
+TYPED_TEST_CASE(InnerProductLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(InnerProductLayerTest, TestSetUp) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   InnerProductParameter* inner_product_param =
       layer_param.mutable_inner_product_param();
   inner_product_param->set_num_output(10);
-  shared_ptr<InnerProductLayer<TypeParam> > layer(
-      new InnerProductLayer<TypeParam>(layer_param));
+  shared_ptr<InnerProductLayer<Dtype> > layer(
+      new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->height(), 1);
@@ -54,43 +55,23 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   EXPECT_EQ(this->blob_top_->channels(), 10);
 }
 
-TYPED_TEST(InnerProductLayerTest, TestCPU) {
-  LayerParameter layer_param;
-  InnerProductParameter* inner_product_param =
-      layer_param.mutable_inner_product_param();
-  Caffe::set_mode(Caffe::CPU);
-  inner_product_param->set_num_output(10);
-  inner_product_param->mutable_weight_filler()->set_type("uniform");
-  inner_product_param->mutable_bias_filler()->set_type("uniform");
-  inner_product_param->mutable_bias_filler()->set_min(1);
-  inner_product_param->mutable_bias_filler()->set_max(2);
-  shared_ptr<InnerProductLayer<TypeParam> > layer(
-      new InnerProductLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  const TypeParam* data = this->blob_top_->cpu_data();
-  const int count = this->blob_top_->count();
-  for (int i = 0; i < count; ++i) {
-    EXPECT_GE(data[i], 1.);
-  }
-}
-
-TYPED_TEST(InnerProductLayerTest, TestGPU) {
-  if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
+TYPED_TEST(InnerProductLayerTest, TestForward) {
+  typedef typename TypeParam::Dtype Dtype;
+  if (Caffe::mode() == Caffe::CPU ||
+      sizeof(Dtype) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
     InnerProductParameter* inner_product_param =
         layer_param.mutable_inner_product_param();
-    Caffe::set_mode(Caffe::GPU);
     inner_product_param->set_num_output(10);
     inner_product_param->mutable_weight_filler()->set_type("uniform");
     inner_product_param->mutable_bias_filler()->set_type("uniform");
     inner_product_param->mutable_bias_filler()->set_min(1);
     inner_product_param->mutable_bias_filler()->set_max(2);
-    shared_ptr<InnerProductLayer<TypeParam> > layer(
-      new InnerProductLayer<TypeParam>(layer_param));
+    shared_ptr<InnerProductLayer<Dtype> > layer(
+        new InnerProductLayer<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
     layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-    const TypeParam* data = this->blob_top_->cpu_data();
+    const Dtype* data = this->blob_top_->cpu_data();
     const int count = this->blob_top_->count();
     for (int i = 0; i < count; ++i) {
       EXPECT_GE(data[i], 1.);
@@ -100,34 +81,21 @@ TYPED_TEST(InnerProductLayerTest, TestGPU) {
   }
 }
 
-TYPED_TEST(InnerProductLayerTest, TestCPUGradient) {
-  LayerParameter layer_param;
-  InnerProductParameter* inner_product_param =
-      layer_param.mutable_inner_product_param();
-  Caffe::set_mode(Caffe::CPU);
-  inner_product_param->set_num_output(10);
-  inner_product_param->mutable_weight_filler()->set_type("gaussian");
-  inner_product_param->mutable_bias_filler()->set_type("gaussian");
-  inner_product_param->mutable_bias_filler()->set_min(1);
-  inner_product_param->mutable_bias_filler()->set_max(2);
-  InnerProductLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-}
-
-TYPED_TEST(InnerProductLayerTest, TestGPUGradient) {
-  if (sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
+TYPED_TEST(InnerProductLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  if (Caffe::mode() == Caffe::CPU ||
+      sizeof(Dtype) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
     LayerParameter layer_param;
     InnerProductParameter* inner_product_param =
         layer_param.mutable_inner_product_param();
-    Caffe::set_mode(Caffe::GPU);
     inner_product_param->set_num_output(10);
     inner_product_param->mutable_weight_filler()->set_type("gaussian");
     inner_product_param->mutable_bias_filler()->set_type("gaussian");
-    InnerProductLayer<TypeParam> layer(layer_param);
-    GradientChecker<TypeParam> checker(1e-2, 1e-2);
-    checker.CheckGradient(&layer, &(this->blob_bottom_vec_),
+    inner_product_param->mutable_bias_filler()->set_min(1);
+    inner_product_param->mutable_bias_filler()->set_max(2);
+    InnerProductLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-2, 1e-3);
+    checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
         &(this->blob_top_vec_));
   } else {
     LOG(ERROR) << "Skipping test due to old architecture.";

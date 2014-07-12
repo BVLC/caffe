@@ -65,8 +65,7 @@ class Im2colKernelTest : public ::testing::Test {
   int width_col_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(Im2colKernelTest, Dtypes);
+TYPED_TEST_CASE(Im2colKernelTest, TestDtypes);
 
 TYPED_TEST(Im2colKernelTest, TestGPU) {
   Caffe::set_mode(Caffe::GPU);

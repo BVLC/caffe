@@ -46,8 +46,7 @@ class MultinomialLogisticLossLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(MultinomialLogisticLossLayerTest, Dtypes);
+TYPED_TEST_CASE(MultinomialLogisticLossLayerTest, TestDtypes);
 
 
 TYPED_TEST(MultinomialLogisticLossLayerTest, TestGradientCPU) {

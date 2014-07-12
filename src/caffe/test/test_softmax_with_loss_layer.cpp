@@ -19,8 +19,10 @@ namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
-template <typename Dtype>
-class SoftmaxWithLossLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class SoftmaxWithLossLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
  protected:
   SoftmaxWithLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
@@ -46,26 +48,15 @@ class SoftmaxWithLossLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(SoftmaxWithLossLayerTest, Dtypes);
+TYPED_TEST_CASE(SoftmaxWithLossLayerTest, TestDtypesAndDevices);
 
 
-TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientCPU) {
+TYPED_TEST(SoftmaxWithLossLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
-  SoftmaxWithLossLayer<TypeParam> layer(layer_param);
+  SoftmaxWithLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0, -1, -1);
-}
-
-TYPED_TEST(SoftmaxWithLossLayerTest, TestGradientGPU) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::GPU);
-  SoftmaxWithLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
+  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);
 }

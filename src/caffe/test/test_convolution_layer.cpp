@@ -17,8 +17,10 @@ namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
-template <typename Dtype>
-class ConvolutionLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
  protected:
   ConvolutionLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
@@ -51,10 +53,10 @@ class ConvolutionLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(ConvolutionLayerTest, Dtypes);
+TYPED_TEST_CASE(ConvolutionLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(ConvolutionLayerTest, TestSetup) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -63,8 +65,8 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  shared_ptr<Layer<TypeParam> > layer(
-      new ConvolutionLayer<TypeParam>(layer_param));
+  shared_ptr<Layer<Dtype> > layer(
+      new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 4);
@@ -77,7 +79,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   // setting group should not change the shape
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  layer.reset(new ConvolutionLayer<TypeParam>(layer_param));
+  layer.reset(new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3);
@@ -89,15 +91,16 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_2_->width(), 1);
 }
 
-TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolution) {
+TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   // We will simply see if the convolution layer carries out averaging well.
-  shared_ptr<ConstantFiller<TypeParam> > filler;
+  typedef typename TypeParam::Dtype Dtype;
+  shared_ptr<ConstantFiller<Dtype> > filler;
   FillerParameter filler_param;
   filler_param.set_value(1.);
-  filler.reset(new ConstantFiller<TypeParam>(filler_param));
+  filler.reset(new ConstantFiller<Dtype>(filler_param));
   filler->Fill(this->blob_bottom_);
   filler_param.set_value(2.);
-  filler.reset(new ConstantFiller<TypeParam>(filler_param));
+  filler.reset(new ConstantFiller<Dtype>(filler_param));
   filler->Fill(this->blob_bottom_2_);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -111,13 +114,12 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolution) {
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<TypeParam> > layer(
-      new ConvolutionLayer<TypeParam>(layer_param));
+  shared_ptr<Layer<Dtype> > layer(
+      new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  Caffe::set_mode(Caffe::CPU);
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // After the convolution, the output should all have output values 27.1
-  const TypeParam* top_data = this->blob_top_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], 27.1, 1e-4);
   }
@@ -127,51 +129,14 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolution) {
   }
 }
 
-TYPED_TEST(ConvolutionLayerTest, TestGPUSimpleConvolution) {
+TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   // We will simply see if the convolution layer carries out averaging well.
-  shared_ptr<ConstantFiller<TypeParam> > filler;
+  typedef typename TypeParam::Dtype Dtype;
   FillerParameter filler_param;
   filler_param.set_value(1.);
-  filler.reset(new ConstantFiller<TypeParam>(filler_param));
-  filler->Fill(this->blob_bottom_);
-  filler_param.set_value(2.);
-  filler.reset(new ConstantFiller<TypeParam>(filler_param));
-  filler->Fill(this->blob_bottom_2_);
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(4);
-  convolution_param->mutable_weight_filler()->set_type("constant");
-  convolution_param->mutable_weight_filler()->set_value(1);
-  convolution_param->mutable_bias_filler()->set_type("constant");
-  convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<TypeParam> > layer(
-      new ConvolutionLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  Caffe::set_mode(Caffe::GPU);
-  layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // After the convolution, the output should all have output values 27.1
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], 27.1, 1e-4);
-  }
-  top_data = this->blob_top_2_->cpu_data();
-  for (int i = 0; i < this->blob_top_2_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], 54.1, 1e-4);
-  }
-}
-
-TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolutionGroup) {
-  // We will simply see if the convolution layer carries out averaging well.
-  FillerParameter filler_param;
-  filler_param.set_value(1.);
-  ConstantFiller<TypeParam> filler(filler_param);
+  ConstantFiller<Dtype> filler(filler_param);
   filler.Fill(this->blob_bottom_);
-  TypeParam* bottom_data = this->blob_bottom_->mutable_cpu_data();
+  Dtype* bottom_data = this->blob_bottom_->mutable_cpu_data();
   for (int n = 0; n < this->blob_bottom_->num(); ++n) {
     for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
       for (int h = 0; h < this->blob_bottom_->height(); ++h) {
@@ -192,18 +157,17 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolutionGroup) {
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<TypeParam> > layer(
-      new ConvolutionLayer<TypeParam>(layer_param));
+  shared_ptr<Layer<Dtype> > layer(
+      new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  Caffe::set_mode(Caffe::CPU);
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // After the convolution, the output should all have output values 9.1
-  const TypeParam* top_data = this->blob_top_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
   for (int n = 0; n < this->blob_top_->num(); ++n) {
     for (int c = 0; c < this->blob_top_->channels(); ++c) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
         for (int w = 0; w < this->blob_top_->width(); ++w) {
-          TypeParam data = top_data[this->blob_top_->offset(n, c, h, w)];
+          Dtype data = top_data[this->blob_top_->offset(n, c, h, w)];
           EXPECT_NEAR(data, c * 9 + 0.1, 1e-4);
         }
       }
@@ -211,55 +175,8 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUSimpleConvolutionGroup) {
   }
 }
 
-
-TYPED_TEST(ConvolutionLayerTest, TestGPUSimpleConvolutionGroup) {
-  // We will simply see if the convolution layer carries out averaging well.
-  FillerParameter filler_param;
-  filler_param.set_value(1.);
-  ConstantFiller<TypeParam> filler(filler_param);
-  filler.Fill(this->blob_bottom_);
-  TypeParam* bottom_data = this->blob_bottom_->mutable_cpu_data();
-  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
-      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
-        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
-          bottom_data[this->blob_bottom_->offset(n, c, h, w)] = c;
-        }
-      }
-    }
-  }
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(3);
-  convolution_param->set_group(3);
-  convolution_param->mutable_weight_filler()->set_type("constant");
-  convolution_param->mutable_weight_filler()->set_value(1);
-  convolution_param->mutable_bias_filler()->set_type("constant");
-  convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<TypeParam> > layer(
-      new ConvolutionLayer<TypeParam>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  Caffe::set_mode(Caffe::GPU);
-  layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // After the convolution, the output should all have output values 9.1
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
-          TypeParam data = top_data[this->blob_top_->offset(n, c, h, w)];
-          EXPECT_NEAR(data, c * 9 + 0.1, 1e-4);
-        }
-      }
-    }
-  }
-}
-
-
-TYPED_TEST(ConvolutionLayerTest, TestCPUGradient) {
+TYPED_TEST(ConvolutionLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -270,14 +187,14 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradient) {
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  Caffe::set_mode(Caffe::CPU);
-  ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
-TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
+TYPED_TEST(ConvolutionLayerTest, TestGradientGroup) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -287,44 +204,8 @@ TYPED_TEST(ConvolutionLayerTest, TestCPUGradientGroup) {
   convolution_param->set_group(3);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  Caffe::set_mode(Caffe::CPU);
-  ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-}
-
-TYPED_TEST(ConvolutionLayerTest, TestGPUGradient) {
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(2);
-  convolution_param->mutable_weight_filler()->set_type("gaussian");
-  convolution_param->mutable_bias_filler()->set_type("gaussian");
-  Caffe::set_mode(Caffe::GPU);
-  ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-}
-
-TYPED_TEST(ConvolutionLayerTest, TestGPUGradientGroup) {
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(3);
-  convolution_param->set_group(3);
-  convolution_param->mutable_weight_filler()->set_type("gaussian");
-  convolution_param->mutable_bias_filler()->set_type("gaussian");
-  Caffe::set_mode(Caffe::GPU);
-  ConvolutionLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
