@@ -138,13 +138,41 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
     if (need_backward) {
-      LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
       for (int top_id = 0; top_id < top_id_vecs_[layer_id].size(); ++top_id) {
         blob_need_backward_[top_id_vecs_[layer_id][top_id]] = true;
       }
+    }
+  }
+  // Go through the net backwards to determine which blobs contribute to the
+  // loss.  We can skip backward computation for blobs that don't contribute
+  // to the loss.
+  set<string> blobs_under_loss;
+  for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
+    bool layer_contributes_loss = false;
+    for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
+      if (layers_[layer_id]->has_loss(top_id) ||
+          (blobs_under_loss.find(blob_name) != blobs_under_loss.end())) {
+        layer_contributes_loss = true;
+        break;
+      }
+    }
+    if (!layer_contributes_loss) { layer_need_backward_[layer_id] = false; }
+    if (layer_need_backward_[layer_id]) {
+      LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
     } else {
       LOG(INFO) << layer_names_[layer_id]
                 << " does not need backward computation.";
+    }
+    for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
+         ++bottom_id) {
+      if (layer_contributes_loss) {
+        const string& blob_name =
+            blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
+        blobs_under_loss.insert(blob_name);
+      } else {
+        bottom_need_backward_[layer_id][bottom_id] = false;
+      }
     }
   }
   // Handle force_backward if needed.
