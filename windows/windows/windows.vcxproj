@@ -258,8 +258,15 @@
       <PreserveSbr>true</PreserveSbr>
     </Bscmake>
     <PreBuildEvent>
-      <Command>set SRC_DIR="$(SolutionDir)../src/caffe/proto/"
-echo $(SRC_DIR)</Command>
+      <Command>echo "Create proto files..."
+cd $(SolutionDir)
+cd ..
+set SRC_DIR=./src/caffe/proto
+"./windows/protoc.exe" --proto_path=src --cpp_out=%SRC_DIR%  %SRC_DIR%/caffe.proto
+"./windows/protoc.exe" --proto_path=src --cpp_out=%SRC_DIR%  %SRC_DIR%/caffe_pretty_print.proto
+cp %SRC_DIR%/*.h ./include/caffe/proto
+cd $(ProjectDir)
+echo "Create proto files done..."</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
