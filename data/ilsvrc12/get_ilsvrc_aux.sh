@@ -4,6 +4,7 @@
 # This script downloads the imagenet example auxiliary files including:
 # - the ilsvrc12 image mean, binaryproto
 # - synset ids and words
+# - Python pickle-format data of ImageNet graph structure and relative infogain
 # - the training splits with labels
 
 DIR="$( cd "$(dirname "$0")" ; pwd -P )"
