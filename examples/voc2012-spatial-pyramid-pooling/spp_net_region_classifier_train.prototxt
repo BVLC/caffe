@@ -1,0 +1,125 @@
+name: "ImagenetSpatialPyramidPoolingNet"
+layers {
+  name: "data"
+  type: SPATIAL_PYRAMID_POOLING_DATA
+  top: "feature_map_region"
+  top: "region_label"
+  spatial_pyramid_pooling_data_param {
+    features_source: "voc2012_spp_net_conv5_train.leveldb"
+    regions_source: "voc2012_regions_train.txt"
+    batch_size: 100
+  }
+}
+layers {
+  name: "spatial_pyramid_pooling"
+  type: SPATIAL_PYRAMID_POOLING
+  bottom: "feature_map_region"
+  top: "spatial_pyramid_pooling"
+  spatial_pyramid_pooling_param {
+    pool: MAX
+    spatial_bin: 1
+    spatial_bin: 2
+    spatial_bin: 3
+    spatial_bin: 6
+    scale: 1
+  }
+}
+layers {
+  name: "ip6"
+  type: INNER_PRODUCT
+  bottom: "spatial_pyramid_pooling"
+  top: "ip6"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+layers {
+  name: "relu6"
+  type: RELU
+  bottom: "ip6"
+  top: "ip6"
+}
+layers {
+  name: "drop6"
+  type: DROPOUT
+  bottom: "ip6"
+  top: "ip6"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+layers {
+  name: "fc7"
+  type: INNER_PRODUCT
+  bottom: "ip6"
+  top: "fc7"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+layers {
+  name: "relu7"
+  type: RELU
+  bottom: "fc7"
+  top: "fc7"
+}
+layers {
+  name: "drop7"
+  type: DROPOUT
+  bottom: "fc7"
+  top: "fc7"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+layers {
+  name: "fc8_voc2012"
+  type: INNER_PRODUCT
+  bottom: "fc7"
+  top: "fc8_voc2012"
+  blobs_lr: 10
+  blobs_lr: 20
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 20
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "fc8_voc2012"
+  bottom: "region_label"
+}

@@ -1,0 +1,18 @@
+# 5717 images
+train_net: "spp_net_region_classifier_train.prototxt"
+# 5823 images, batch_size 100
+test_net: "spp_net_region_classifier_test.prototxt"
+test_iter: 59
+test_interval: 500
+base_lr: 0.0001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 20000
+display: 20
+max_iter: 100000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 500
+snapshot_prefix: "spp_net_region_classifier"
+# solver mode: CPU or GPU
+solver_mode: CPU
