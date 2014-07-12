@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <fstream>  // NOLINT(readability/streams)
+#include <utility>
 
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
@@ -71,9 +72,10 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
-bool ReadImageToDatum(const string& filename, const int label,
+bool ReadImage(const string& filename,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
+
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
   if (height > 0 && width > 0) {
@@ -90,7 +92,6 @@ bool ReadImageToDatum(const string& filename, const int label,
   datum->set_channels(num_channels);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
-  datum->set_label(label);
   datum->clear_data();
   datum->clear_float_data();
   string* datum_string = datum->mutable_data();
@@ -114,6 +115,75 @@ bool ReadImageToDatum(const string& filename, const int label,
   return true;
 }
 
+bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  if (ReadImage(filename, height, width, is_color, datum)) {
+    if (datum->label_size() > 0) {
+      datum->set_label(0, label);
+    } else {
+      datum->add_label(label);
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  if (labels.size() > 0) {
+    if (ReadImageToDatum(filename, labels[0],
+                         height, width, is_color, datum)) {
+      for (int i = 1 ; i < labels.size(); ++i) {
+        if (datum->label_size() <= i) {
+          datum->add_label(labels[i]);
+        } else {
+          datum->set_label(i, labels[i]);
+        }
+      }
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return ReadImage(filename, height, width, is_color, datum);
+  }
+}
+
+void ReadImagesList(const string& source,
+    std::vector<std::pair<std::string, std::vector<int> > >* images_vec) {
+  // Read the file with filenames and labels
+  LOG(INFO) << "Opening file " << source;
+  std::ifstream infile(source.c_str());
+  CHECK(infile) << "Error opening file";
+  std::string line;
+  int line_num = 1;
+  int num_labels = 0;
+  while (std::getline(infile, line)) {
+    std::istringstream iss(line);
+    string filename;
+    std::vector<int> labels;
+    int label;
+    CHECK(iss >> filename) << "Error reading line " << line_num;
+    while (iss >> label) {
+      labels.push_back(label);
+    }
+    if (line_num == 1) {
+      // Use first line to set the number of labels
+      num_labels = labels.size();
+    }
+    CHECK_EQ(labels.size(), num_labels) <<
+      filename << " error at line " << line_num << std::endl <<
+      " All images should have the same number of labels";
+    line_num++;
+    images_vec->push_back(std::make_pair(filename, labels));
+  }
+  LOG(INFO) << "Read " << line_num - 1 << " images with " <<
+    num_labels << " labels";
+}
+
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
@@ -123,7 +193,6 @@ void hdf5_load_nd_dataset_helper(
   herr_t status;
   int ndims;
   status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
-  CHECK_GE(status, 0) << "Failed to get dataset ndims for " << dataset_name_;
   CHECK_GE(ndims, min_dim);
   CHECK_LE(ndims, max_dim);
 

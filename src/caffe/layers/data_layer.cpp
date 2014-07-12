@@ -27,8 +27,10 @@ void* DataLayerPrefetch(void* layer_pointer) {
   CHECK(layer->prefetch_data_);
   Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
+  int num_labels = 0;
   if (layer->output_labels_) {
     top_label = layer->prefetch_label_->mutable_cpu_data();
+    num_labels = layer->prefetch_label_->channels();
   }
   const Dtype scale = layer->layer_param_.data_param().scale();
   const int batch_size = layer->layer_param_.data_param().batch_size();
@@ -119,9 +121,12 @@ void* DataLayerPrefetch(void* layer_pointer) {
         }
       }
     }
-
+    // Copy all the labels from datum
     if (layer->output_labels_) {
-      top_label[item_id] = datum.label();
+      CHECK_EQ(datum.label_size(), num_labels);
+      for (int l = 0; l < num_labels; ++l) {
+        top_label[item_id * num_labels + l] = datum.label(l);
+      }
     }
     // go to the next iter
     switch (layer->layer_param_.data_param().backend()) {
@@ -172,10 +177,10 @@ template <typename Dtype>
 void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   Layer<Dtype>::SetUp(bottom, top);
-  if (top->size() == 1) {
-    output_labels_ = false;
-  } else {
+  if (top->size() == 2) {
     output_labels_ = true;
+  } else {
+    output_labels_ = false;
   }
   // Initialize DB
   switch (this->layer_param_.data_param().backend()) {
@@ -275,9 +280,15 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->width();
   // label
   if (output_labels_) {
-    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
+    CHECK_GT(datum.label_size(), 0) << "Datum should contain labels for top";
+    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(),
+      datum.label_size(), 1, 1);
+    LOG(INFO) << "output label size: " << (*top)[1]->num() << ","
+      << (*top)[1]->channels() << "," << (*top)[1]->height() << ","
+      << (*top)[1]->width();
     prefetch_label_.reset(
-        new Blob<Dtype>(this->layer_param_.data_param().batch_size(), 1, 1, 1));
+        new Blob<Dtype>(this->layer_param_.data_param().batch_size(),
+          datum.label_size(), 1, 1));
   }
   // datum size
   datum_channels_ = datum.channels();

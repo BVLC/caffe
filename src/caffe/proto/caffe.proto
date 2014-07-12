@@ -23,7 +23,7 @@ message Datum {
   optional int32 width = 3;
   // the actual image data, in bytes
   optional bytes data = 4;
-  optional int32 label = 5;
+  repeated int32 label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
 }
@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 35 (last added: MULTI_LABEL_LOSS)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -153,6 +153,8 @@ message LayerParameter {
     INNER_PRODUCT = 14;
     LRN = 15;
     MEMORY_DATA = 29;
+    MULTI_LABEL_ACCURACY = 33;
+    MULTI_LABEL_LOSS = 34;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     POOLING = 17;
     POWER = 26;
@@ -188,6 +190,7 @@ message LayerParameter {
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 8;
 
+  // next available ID: 29 for params (last added: hinge_loss_param)
   optional AccuracyParameter accuracy_param = 27;
   optional ArgMaxParameter argmax_param = 23;
   optional ConcatParameter concat_param = 9;
@@ -207,7 +210,7 @@ message LayerParameter {
   optional PowerParameter power_param = 21;
   optional WindowDataParameter window_data_param = 20;
   optional ThresholdParameter threshold_param = 25;
-  optional HingeLossParameter hinge_loss_param = 29;
+  optional HingeLossParameter hinge_loss_param = 28;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -339,6 +342,8 @@ message HingeLossParameter {
 // Message that stores parameters used by ImageDataLayer
 message ImageDataParameter {
   // Specify the data source.
+  // One line per image and vector of labels
+  // All the images should have the same number of labels.
   optional string source = 1;
   // For data pre-processing, we can do simple scaling and subtracting the
   // data mean, if provided. Note that the mean subtraction is always carried
@@ -361,6 +366,8 @@ message ImageDataParameter {
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 9 [default = 0];
   optional uint32 new_width = 10 [default = 0];
+  // By default assumes images are in color
+  optional bool images_in_color = 11 [default = true];
 }
 
 // Message that stores parameters InfogainLossLayer

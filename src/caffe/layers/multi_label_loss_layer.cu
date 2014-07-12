@@ -13,7 +13,7 @@ using std::max;
 namespace caffe {
 
 template <typename Dtype>
-Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
+Dtype MultiLabelLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   // The forward pass computes the sigmoid outputs.
   sigmoid_bottom_vec_[0] = bottom[0];
@@ -26,8 +26,11 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
   const Dtype* target = bottom[1]->cpu_data();
   Dtype loss = 0;
   for (int i = 0; i < count; ++i) {
-    loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
-        log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
+    if (target[i] != 0) {
+    // Update the loss only if target[i] is not 0
+      loss -= input_data[i] * ((target[i] > 0) - (input_data[i] >= 0)) -
+          log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
+    }
   }
   if (top->size() >= 1) {
     (*top)[0]->mutable_cpu_data()[0] = loss / num;
@@ -36,28 +39,14 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
 }
 
 template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::Backward_gpu(
+void MultiLabelLossLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  if (propagate_down[1]) {
-    LOG(FATAL) << this->type_name()
-               << " Layer cannot backpropagate to label inputs.";
-  }
-  if (propagate_down[0]) {
-    // First, compute the diff
-    const int count = (*bottom)[0]->count();
-    const int num = (*bottom)[0]->num();
-    const Dtype* sigmoid_output_data = sigmoid_output_->gpu_data();
-    const Dtype* target = (*bottom)[1]->gpu_data();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-    caffe_copy(count, sigmoid_output_data, bottom_diff);
-    caffe_gpu_axpy(count, Dtype(-1), target, bottom_diff);
-    // Scale down gradient
-    caffe_gpu_scal(count, Dtype(1) / num, bottom_diff);
-  }
+  // TODO: implement the GPU version of sigmoid_cross_entropy with -1,0,1 labels
+  Backward_cpu(top, propagate_down, bottom);
 }
 
-INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
+INSTANTIATE_CLASS(MultiLabelLossLayer);
 
 
 }  // namespace caffe
