@@ -93,7 +93,9 @@ void Solver<Dtype>::Solve( typename IterCallback<Dtype>::Type callback ) {
   PreSolve();
 
   iter_ = 0;
-  IterActions<Dtype> actions = callback( TrainingStats<Dtype>().SetIter( iter_ ) );
+  TrainingStats<Dtype> stats;
+  stats.SetIter( iter_ );
+  IterActions<Dtype> actions = callback( stats );
   if ( actions.ShouldResume() ) {
     std::string resume_file = actions.GetResumeFile();
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
@@ -111,7 +113,7 @@ void Solver<Dtype>::Solve( typename IterCallback<Dtype>::Type callback ) {
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
-  while ( actions.ShouldContinue() ) { //iter_++ < param_.max_iter()) {
+  while ( actions.ShouldContinue() ) {
     Dtype loss = net_->ForwardBackward(bottom_vec);
     ComputeUpdateValue( actions );
     net_->Update();
@@ -121,7 +123,6 @@ void Solver<Dtype>::Solve( typename IterCallback<Dtype>::Type callback ) {
         LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
 
-    TrainingStats<Dtype> stats;
     if ( actions.ShouldTest() )
     {
         stats = TestAll();
@@ -135,7 +136,8 @@ void Solver<Dtype>::Solve( typename IterCallback<Dtype>::Type callback ) {
     ++iter_;
 
     // Create the statistics object to pass to the callback.
-    stats = stats.SetIter( iter_ ).SetLoss( loss );
+    stats.SetIter( iter_ );
+    stats.SetLoss( loss );
     // Call the client, delivering the statistics and getting his
     // instructions for the next iteration.
     actions = callback( stats );
@@ -151,7 +153,7 @@ TrainingStats<Dtype> Solver<Dtype>::TestAll() {
   TrainingStats<Dtype> stats;
   for (int test_net_id = 0; test_net_id < test_nets_.size(); ++test_net_id) {
      TestResult<Dtype> result = Test( test_net_id );
-     stats = stats.AddTestNetResult( result );
+     stats.AddTestNetResult( result );
   }
   return stats;
 }
@@ -196,7 +198,7 @@ TestResult<Dtype> Solver<Dtype>::Test(const int test_net_id ) {
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
-    result = result.SetLoss( loss );
+    result.SetLoss( loss );
   }
   std::vector<Dtype> reported_scores;
   for (int i = 0; i < test_score.size(); ++i) {
@@ -205,7 +207,7 @@ TestResult<Dtype> Solver<Dtype>::Test(const int test_net_id ) {
         << reported_score;
     reported_scores.push_back( reported_score );
   }
-  result = result.SetScores( reported_scores );
+  result.SetScores( reported_scores );
   Caffe::set_phase(Caffe::TRAIN);
   return result;
 }

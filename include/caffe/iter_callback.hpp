@@ -15,22 +15,26 @@ struct IterActions
 {
     // Constructor.
     IterActions();
-    IterActions SetResumeFile( const std::string& resume_file ) const;
-    IterActions SetShouldSnapshot() const;
-    IterActions SetShouldTest() const;
-    IterActions SetLearnRate( Dtype learn_rate ) const;
-    IterActions SetMomentum( Dtype momentum ) const;
-    IterActions SetWeightDecay( double weight_decay ) const;
-    IterActions SetShouldContinue() const;
-    IterActions SetShouldStop() const;
-    IterActions SetShouldDisplay() const;
-    // Returns true iff a snapshot should be created.
+    void SetResumeFile( const std::string& resume_file );
+    void SetShouldSnapshot();
+    void SetShouldTest();
+    void SetLearnRate( Dtype learn_rate );
+    void SetMomentum( Dtype momentum );
+    void SetWeightDecay( double weight_decay );
+    void SetShouldContinue();
+    void SetShouldStop();
+    void SetShouldDisplay();
+    // True iff the solver should create a snapshot.
     bool ShouldSnapshot() const;
+    // True iff solver should write to the log.
     bool ShouldDisplay() const;
+    // True if the solver should test.
     bool ShouldTest() const;
-    // Returns true iff the solver should continue solving, or false to stop.
+    // True if the solver should continue running.
     bool ShouldContinue() const;
+    // True if the solver should resume from the resume file.
     bool ShouldResume() const;
+    // Path to the file to load when resuming.
     std::string GetResumeFile() const;
     Dtype GetLearningRate() const;
     Dtype GetMomentum() const;
@@ -52,9 +56,9 @@ private:
 template<typename Dtype>
 struct TestResult
 {
-    TestResult SetLoss( Dtype loss ) const;
+    void SetLoss( Dtype loss );
     // One score for each test iteration.
-    TestResult SetScores( const std::vector<Dtype>& scores ) const;
+    void SetScores( const std::vector<Dtype>& scores );
     boost::optional<Dtype> GetLoss() const;
     std::vector<Dtype> GetScores() const;
 private:
@@ -70,9 +74,9 @@ private:
 template<typename Dtype>
 struct TrainingStats
 {
-    TrainingStats SetIter( int iter ) const;
-    TrainingStats SetLoss( Dtype loss ) const;
-    TrainingStats AddTestNetResult( const TestResult<Dtype>& result ) const;
+    void SetIter( int iter );
+    void SetLoss( Dtype loss );
+    void AddTestNetResult( const TestResult<Dtype>& result );
     int GetIter() const;
     Dtype GetLoss() const;
     // One TestResult instance for each test net.
@@ -86,7 +90,8 @@ private:
     std::vector< TestResult<Dtype> > testnet_results_;
 };
 
-// Type of the training iteration callback functor.  Called by the solver to deliver
+// Type of the training iteration callback functor that is provided to the
+// solver. The function is called by the solver to deliver
 // statistics to the solver's client, and the client returns IterActions
 // indicating whether training continue, if a snapshot should be saved, learning
 // rate and cetera.
@@ -95,17 +100,5 @@ struct IterCallback
 {
     typedef boost::function< IterActions<Dtype>( const TrainingStats<Dtype>& )> Type;
 };
-
-//template class IterCallback<float>;
-//template class IterCallback<double>;
-
-//template class IterActions<float>;
-//template class IterActions<double>;
-
-//template class TrainingStats<float>;
-//template class TrainingStats<double>;
-
-//template class TestResult<float>;
-//template class TestResult<double>;
 
 } // namespace caffe
