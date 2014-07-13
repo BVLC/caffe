@@ -96,11 +96,18 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     LOG(INFO) << "Setting up " << layer_names_[layer_id];
     layers_[layer_id]->SetUp(bottom_vecs_[layer_id], &top_vecs_[layer_id]);
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
+        blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
+      }
+      blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
       LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
           << top_vecs_[layer_id][top_id]->channels() << " "
           << top_vecs_[layer_id][top_id]->height() << " "
           << top_vecs_[layer_id][top_id]->width() << " ("
           << top_vecs_[layer_id][top_id]->count() << ")";
+      if (layer->loss(top_id)) {
+        LOG(INFO) << "    with loss weight " << layer->loss(top_id);
+      }
     }
     DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
     const int blobs_lr_size = layer_param.blobs_lr_size();
@@ -151,7 +158,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     bool layer_contributes_loss = false;
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
-      if (layers_[layer_id]->has_loss(top_id) ||
+      if (layers_[layer_id]->loss(top_id) ||
           (blobs_under_loss.find(blob_name) != blobs_under_loss.end())) {
         layer_contributes_loss = true;
         break;
