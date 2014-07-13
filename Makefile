@@ -292,10 +292,11 @@ $(EMPTY_LINT_REPORT): $(LINT_OUTPUTS) | $(BUILD_DIR)
 	@ if [ -s "$@" ]; then \
 		cat $@; \
 		mv $@ $(NONEMPTY_LINT_REPORT); \
-	  else \
-		$(RM) $(NONEMPTY_LINT_REPORT); \
-		echo "No lint errors!"; \
-	  fi
+		echo "Found one or more lint errors."; \
+		exit 1; \
+	  fi; \
+	  $(RM) $(NONEMPTY_LINT_REPORT); \
+	  echo "No lint errors!";
 
 $(LINT_OUTPUTS): $(LINT_OUTPUT_DIR)/%.lint.txt : % | $(LINT_OUTPUT_DIR)
 	@ mkdir -p $(dir $@)
@@ -348,10 +349,11 @@ $(EMPTY_WARN_REPORT): $(ALL_WARNS) | $(BUILD_DIR)
 	@ if [ -s "$@" ]; then \
 		cat $@; \
 		mv $@ $(NONEMPTY_WARN_REPORT); \
-	  else \
-		$(RM) $(NONEMPTY_WARN_REPORT); \
-		echo "No compiler warnings!"; \
-	  fi
+		echo "Found one or more lint errors."; \
+		exit 1; \
+	  fi; \
+	  $(RM) $(NONEMPTY_WARN_REPORT); \
+	  echo "No compiler warnings!";
 
 $(ALL_CXX_WARNS): %.o.$(WARNS_EXT) : %.o
 
