@@ -24,154 +24,132 @@ IterActions<Dtype>::IterActions():
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetResumeFile(
-        const std::string& resume_file ) const
+void IterActions<Dtype>::SetResumeFile(
+        const std::string& resume_file )
 {
-    IterActions actions = *this;
-    actions.resume_file_ = resume_file;
-    actions.resume_ = true;
-    return actions;
+  resume_file_ = resume_file;
+  resume_ = true;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetShouldSnapshot() const
+void IterActions<Dtype>::SetShouldSnapshot()
 {
-    IterActions actions = *this;
-    actions.create_snapshot_ = true;
-    return actions;
+  create_snapshot_ = true;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetShouldTest() const
+void IterActions<Dtype>::SetShouldTest()
 {
-    IterActions actions = *this;
-    actions.test_ = true;
-    return actions;
+  test_ = true;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetLearnRate( Dtype learn_rate ) const
+void IterActions<Dtype>::SetLearnRate( Dtype learn_rate )
 {
-    IterActions actions = *this;
-    actions.learn_rate_ = learn_rate;
-    return actions;
+  learn_rate_ = learn_rate;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetMomentum( Dtype momentum ) const
+void IterActions<Dtype>::SetMomentum( Dtype momentum )
 {
-    IterActions actions = *this;
-    actions.momentum_ = momentum;
-    return actions;
+  momentum_ = momentum;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetWeightDecay( double weight_decay ) const
+void IterActions<Dtype>::SetWeightDecay( double weight_decay )
 {
-    IterActions actions = *this;
-    actions.weight_decay_ = weight_decay;
-    return actions;
+  weight_decay_ = weight_decay;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetShouldContinue() const
+void IterActions<Dtype>::SetShouldContinue()
 {
-    IterActions actions = *this;
-    actions.continue_ = true;
-    return actions;
+  continue_ = true;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetShouldStop() const
+void IterActions<Dtype>::SetShouldStop()
 {
-    IterActions actions = *this;
-    actions.continue_ = false;
-    return actions;
+  continue_ = false;
 }
 
 template<typename Dtype>
-IterActions<Dtype> IterActions<Dtype>::SetShouldDisplay() const
+void IterActions<Dtype>::SetShouldDisplay()
 {
-    IterActions actions = *this;
-    actions.display_ = true;
-    return actions;
+  display_ = true;
 }
 
 // Returns true iff a snapshot should be created.
 template<typename Dtype>
 bool IterActions<Dtype>::ShouldSnapshot() const
 {
-    return create_snapshot_;
+  return create_snapshot_;
 }
 
 template<typename Dtype>
 bool IterActions<Dtype>::ShouldDisplay() const
 {
-    return display_;
+  return display_;
 }
 
 template<typename Dtype>
 bool IterActions<Dtype>::ShouldTest() const
 {
-    return test_;
+  return test_;
 }
 
 // Returns true iff the solver should continue solving, or false to stop.
 template<typename Dtype>
 bool IterActions<Dtype>::ShouldContinue() const
 {
-    return continue_;
+  return continue_;
 }
 
 template<typename Dtype>
 bool IterActions<Dtype>::ShouldResume() const
 {
-    return resume_;
+  return resume_;
 }
 
 template<typename Dtype>
 std::string IterActions<Dtype>::GetResumeFile() const
 {
-    return resume_file_;
+  return resume_file_;
 }
 
 template<typename Dtype>
 Dtype IterActions<Dtype>::GetLearningRate() const
 {
-    return learn_rate_;
+  return learn_rate_;
 }
 
 template<typename Dtype>
 Dtype IterActions<Dtype>::GetMomentum() const
 {
-    return momentum_;
+  return momentum_;
 }
 
 template<typename Dtype>
 Dtype IterActions<Dtype>::GetWeightDecay() const
 {
-    return weight_decay_;
+  return weight_decay_;
 }
 
 //==============================================================================
 // TestResult class
 //==============================================================================
 template<typename Dtype>
-TestResult<Dtype> TestResult<Dtype>::SetLoss( Dtype loss ) const
+void TestResult<Dtype>::SetLoss( Dtype loss )
 {
   TestResult<Dtype> result = *this;
   result.loss_ = loss;
-  return result;
 }
 
 // One score for each test iteration.
 template<typename Dtype>
-TestResult<Dtype> TestResult<Dtype>::SetScores(
-                                const std::vector<Dtype>& scores ) const
+void TestResult<Dtype>::SetScores( const std::vector<Dtype>& scores )
 {
-  TestResult<Dtype> result = *this;
-  result.scores_ = scores;
-  return result;
+  scores_ = scores;
 }
 
 template<typename Dtype>
@@ -186,33 +164,26 @@ std::vector<Dtype> TestResult<Dtype>::GetScores() const
   return scores_;
 }
 
-
 //==============================================================================
 // Current training statistics.
 //==============================================================================
 template<typename Dtype>
-TrainingStats<Dtype> TrainingStats<Dtype>::SetIter( int iter ) const
+void TrainingStats<Dtype>::SetIter( int iter )
 {
-    TrainingStats stats = *this;
-    stats.iter_ = iter;
-    return stats;
+  iter_ = iter;
 }
 
 template<typename Dtype>
-TrainingStats<Dtype> TrainingStats<Dtype>::SetLoss( Dtype loss ) const
+void TrainingStats<Dtype>::SetLoss( Dtype loss )
 {
-    TrainingStats stats = *this;
-    stats.loss_ = loss;
-    return stats;
+  loss_ = loss;
 }
 
 template<typename Dtype>
-TrainingStats<Dtype> TrainingStats<Dtype>::AddTestNetResult(
-                                    const TestResult<Dtype>& result ) const
+void TrainingStats<Dtype>::AddTestNetResult(
+                                    const TestResult<Dtype>& result )
 {
-    TrainingStats stats = *this;
-    stats.testnet_results_.push_back( result );
-    return stats;
+  testnet_results_.push_back( result );
 }
 
 template<typename Dtype>
