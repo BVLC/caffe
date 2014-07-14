@@ -55,8 +55,7 @@ class MemoryDataLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(MemoryDataLayerTest, Dtypes);
+TYPED_TEST_CASE(MemoryDataLayerTest, TestDtypes);
 
 TYPED_TEST(MemoryDataLayerTest, TestSetup) {
   LayerParameter layer_param;

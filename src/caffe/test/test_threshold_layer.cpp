@@ -16,8 +16,9 @@ namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
-template <typename Dtype>
-class ThresholdLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class ThresholdLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
  protected:
   ThresholdLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
@@ -37,13 +38,13 @@ class ThresholdLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(ThresholdLayerTest, Dtypes);
+TYPED_TEST_CASE(ThresholdLayerTest, TestDtypesAndDevices);
 
 
 TYPED_TEST(ThresholdLayerTest, TestSetup) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ThresholdLayer<TypeParam> layer(layer_param);
+  ThresholdLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -51,16 +52,16 @@ TYPED_TEST(ThresholdLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_->width());
 }
 
-TYPED_TEST(ThresholdLayerTest, TestCPU) {
+TYPED_TEST(ThresholdLayerTest, Test) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
-  ThresholdLayer<TypeParam> layer(layer_param);
+  ThresholdLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  const TypeParam threshold_ = layer_param.threshold_param().threshold();
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  const Dtype threshold_ = layer_param.threshold_param().threshold();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
@@ -73,67 +74,19 @@ TYPED_TEST(ThresholdLayerTest, TestCPU) {
   }
 }
 
-TYPED_TEST(ThresholdLayerTest, TestCPU2) {
+TYPED_TEST(ThresholdLayerTest, Test2) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
   ThresholdParameter* threshold_param =
     layer_param.mutable_threshold_param();
   threshold_param->set_threshold(0.5);
-  ThresholdLayer<TypeParam> layer(layer_param);
+  ThresholdLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  const TypeParam threshold_ = layer_param.threshold_param().threshold();
-  EXPECT_FLOAT_EQ(threshold_, 0.5);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_GE(top_data[i], 0.);
-    EXPECT_LE(top_data[i], 1.);
-    if (top_data[i] == 0) {
-      EXPECT_LE(bottom_data[i], threshold_);
-    }
-    if (top_data[i] == 1) {
-      EXPECT_GT(bottom_data[i], threshold_);
-    }
-  }
-}
-
-TYPED_TEST(ThresholdLayerTest, TestGPU) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::GPU);
-  ThresholdLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  const TypeParam threshold_ = layer_param.threshold_param().threshold();
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_GE(top_data[i], 0.);
-    EXPECT_LE(top_data[i], 1.);
-    if (top_data[i] == 0) {
-      EXPECT_LE(bottom_data[i], threshold_);
-    }
-    if (top_data[i] == 1) {
-      EXPECT_GT(bottom_data[i], threshold_);
-    }
-  }
-}
-
-TYPED_TEST(ThresholdLayerTest, TestGPU2) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::GPU);
-  ThresholdParameter* threshold_param =
-    layer_param.mutable_threshold_param();
-  threshold_param->set_threshold(0.5);
-  ThresholdLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // Now, check values
-  const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  const TypeParam threshold_ = layer_param.threshold_param().threshold();
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  const Dtype threshold_ = layer_param.threshold_param().threshold();
   EXPECT_FLOAT_EQ(threshold_, 0.5);
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);

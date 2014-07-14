@@ -3,7 +3,7 @@
 // The main caffe test code. Your test cpp code should include this hpp
 // to allow a main function to be compiled into the binary.
 
-#include "test_caffe_main.hpp"
+#include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
   cudaDeviceProp CAFFE_TEST_CUDA_PROP;
