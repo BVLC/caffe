@@ -8,11 +8,15 @@
 
 namespace caffe {
 
-  typedef boost::mt19937 rng_t;
+typedef boost::mt19937 rng_t;
 
-  inline rng_t* caffe_rng() {
-    return static_cast<caffe::rng_t*>(Caffe::rng_stream().generator());
-  }
+inline rng_t* caffe_rng() {
+  return static_cast<caffe::rng_t*>(Caffe::rng_stream().generator());
+}
+
+inline unsigned int caffe_rng_rand() {
+  return (*caffe_rng())();
+}
 
 }  // namespace caffe
 
