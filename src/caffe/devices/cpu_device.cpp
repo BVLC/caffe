@@ -204,7 +204,7 @@ void CPUDevice<Dtype>::rng_uniform(const int N, const Dtype a, const Dtype b,
   CHECK_GE(N, 0);
   CHECK(r);
   CHECK_LE(a, b);
-  boost::uniform_real<Dtype> random_distribution(a, caffe_nextafter<Dtype>(b));
+  boost::uniform_real<Dtype> random_distribution(a, _nextafter<Dtype>(b));
   boost::variate_generator<caffe::rng_t*, boost::uniform_real<Dtype> >
       variate_generator(caffe_rng(), random_distribution);
   for (int i = 0; i < N; ++i) {
