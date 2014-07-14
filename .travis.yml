@@ -1,0 +1,53 @@
+language: cpp
+# Cache Ubuntu apt packages.
+cache: apt
+compiler:
+  - gcc
+# Disable clang build: doesn't seem to work on Linux.
+# (@jeffdonahue: Travis buildbot's failure behavior is similar to what I see
+# building on Linux.)
+#   - clang
+before_install:
+  - echo $LANG
+  - echo $LC_ALL
+  - sudo apt-get -y update
+  - sudo apt-get -y install wget git curl python-dev libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc
+install:
+  - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
+  - cd /tmp/glog-0.3.3 && ./configure && make && sudo make install && cd -
+  - curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_6.0-37_amd64.deb -o /tmp/cuda_install.deb && sudo dpkg -i /tmp/cuda_install.deb && rm /tmp/cuda_install.deb
+  - sudo apt-get -y update && sudo apt-get -y install cuda
+  - curl https://gitorious.org/mdb/mdb/archive/7f038d0f15bec57b4c07aa3f31cd5564c88a1897.tar.gz -o /tmp/mdb.tar.gz && tar -C /tmp -xzvf /tmp/mdb.tar.gz && rm /tmp/mdb.tar.gz
+  - cd /tmp/mdb-mdb/libraries/liblmdb/ && make && sudo make install && cd -
+before_script:
+  - mv Makefile.config.example Makefile.config
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/lib
+  - export NUM_THREADS=4
+script:
+  - make -j $NUM_THREADS all test warn lint
+  - make runtestnogpu
+  - make -j $NUM_THREADS all
+  - make -j $NUM_THREADS test
+  - make -j $NUM_THREADS warn
+  - make -j $NUM_THREADS lint
+branches:
+  only:
+    - master
+    - dev
+    - travisci
+notifications:
+# Emails are sent to the committer's git-configured email address by default,
+# but only if they have access to the repository.  To enable Travis on your
+# public fork of Caffe, just go to travis-ci.org and flip the switch on for
+# your Caffe fork.  To configure your git email address, use:
+#     git config --global user.email me@example.com
+  email:
+    on_success: always
+    on_failure: always
+# IRC notifications disabled by default.
+# Uncomment next 5 lines to send notifications to chat.freenode.net#caffe
+#   irc:
+#     channels:
+#       - "chat.freenode.net#caffe"
+#     template:
+#       - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"

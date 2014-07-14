@@ -65,8 +65,7 @@ class MathFunctionsTest : public ::testing::Test {
   Blob<Dtype>* const blob_top_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(MathFunctionsTest, Dtypes);
+TYPED_TEST_CASE(MathFunctionsTest, TestDtypes);
 
 TYPED_TEST(MathFunctionsTest, TestNothing) {
   // The first test case of a test suite takes the longest time

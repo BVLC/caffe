@@ -46,8 +46,7 @@ class DummyDataLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(DummyDataLayerTest, Dtypes);
+TYPED_TEST_CASE(DummyDataLayerTest, TestDtypes);
 
 TYPED_TEST(DummyDataLayerTest, TestOneTopConstant) {
   Caffe::set_mode(Caffe::CPU);
