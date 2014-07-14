@@ -215,6 +215,11 @@ ifeq ($(OSX), 1)
 	endif
 endif
 
+# Custom compiler
+ifdef CUSTOM_CXX
+	CXX := $(CUSTOM_CXX)
+endif
+
 # Debugging
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS := -DDEBUG -g -O0
