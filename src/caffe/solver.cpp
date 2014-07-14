@@ -1,8 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cstdio>
-
 #include <algorithm>
+#include <cstdio>
 #include <string>
 #include <vector>
 
@@ -81,10 +80,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve( typename IterCallback<Dtype>::Type callback ) {
-
-  if ( callback.empty() )
-  {
+void Solver<Dtype>::Solve(typename IterCallback<Dtype>::Type callback) {
+  if (callback.empty()) {
       LOG(FATAL) << "Solver iter callback is not set.";
   }
 
@@ -94,53 +91,50 @@ void Solver<Dtype>::Solve( typename IterCallback<Dtype>::Type callback ) {
 
   iter_ = 0;
   TrainingStats<Dtype> stats;
-  stats.SetIter( iter_ );
-  IterActions<Dtype> actions = callback( stats );
-  if ( actions.ShouldResume() ) {
+  stats.SetIter(iter_);
+  IterActions<Dtype> actions = callback(stats);
+  if (actions.ShouldResume()) {
     std::string resume_file = actions.GetResumeFile();
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
-    Restore( resume_file.c_str() );
+    Restore(resume_file.c_str());
   }
 
   // Run a test pass before doing any training to avoid waiting a potentially
   // very long time (param_.test_interval() training iterations) to report that
   // there's not enough memory to run the test net and crash, etc.; and to gauge
   // the effect of the first training iterations.
-  if ( actions.ShouldTest() ) { //param_.test_interval()) {
+  if (actions.ShouldTest()) {
     TestAll();
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
-  while ( actions.ShouldContinue() ) {
+  while (actions.ShouldContinue()) {
     Dtype loss = net_->ForwardBackward(bottom_vec);
-    ComputeUpdateValue( actions );
+    ComputeUpdateValue(actions);
     net_->Update();
 
-    if ( actions.ShouldDisplay() )
-    {
+    if (actions.ShouldDisplay()) {
         LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
 
-    if ( actions.ShouldTest() )
-    {
+    if (actions.ShouldTest()) {
         stats = TestAll();
     }
 
     // Check if we need to do snapshot
-    if ( actions.ShouldSnapshot() )
-    {
+    if (actions.ShouldSnapshot()) {
         Snapshot();
     }
     ++iter_;
 
     // Create the statistics object to pass to the callback.
-    stats.SetIter( iter_ );
-    stats.SetLoss( loss );
+    stats.SetIter(iter_);
+    stats.SetLoss(loss);
     // Call the client, delivering the statistics and getting his
     // instructions for the next iteration.
-    actions = callback( stats );
+    actions = callback(stats);
   }
   // After the optimization is done, always do a snapshot.
   iter_--;
@@ -152,14 +146,14 @@ template <typename Dtype>
 TrainingStats<Dtype> Solver<Dtype>::TestAll() {
   TrainingStats<Dtype> stats;
   for (int test_net_id = 0; test_net_id < test_nets_.size(); ++test_net_id) {
-     TestResult<Dtype> result = Test( test_net_id );
-     stats.AddTestNetResult( result );
+     TestResult<Dtype> result = Test(test_net_id);
+     stats.AddTestNetResult(result);
   }
   return stats;
 }
 
 template <typename Dtype>
-TestResult<Dtype> Solver<Dtype>::Test(const int test_net_id ) {
+TestResult<Dtype> Solver<Dtype>::Test(const int test_net_id) {
   LOG(INFO) << "Iteration " << iter_
             << ", Testing net (#" << test_net_id << ")";
   // We need to set phase to test before running.
@@ -198,16 +192,16 @@ TestResult<Dtype> Solver<Dtype>::Test(const int test_net_id ) {
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
-    result.SetLoss( loss );
+    result.SetLoss(loss);
   }
   std::vector<Dtype> reported_scores;
   for (int i = 0; i < test_score.size(); ++i) {
     Dtype reported_score = test_score[i] / param_.test_iter(test_net_id);
     LOG(INFO) << "Test score #" << i << ": "
         << reported_score;
-    reported_scores.push_back( reported_score );
+    reported_scores.push_back(reported_score);
   }
-  result.SetScores( reported_scores );
+  result.SetScores(reported_scores);
   Caffe::set_phase(Caffe::TRAIN);
   return result;
 }
@@ -260,18 +254,17 @@ void SGDSolverEx<Dtype>::PreSolve() {
 }
 
 template <typename Dtype>
-void SGDSolverEx<Dtype>::ComputeUpdateValue( const IterActions<Dtype>& actions ) {
+void SGDSolverEx<Dtype>::ComputeUpdateValue(const IterActions<Dtype>& actions) {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   vector<float>& net_params_lr = this->net_->params_lr();
   vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
   // get the learning rate
   Dtype rate = actions.GetLearningRate();
-  if ( actions.ShouldDisplay() )
-  {
+  if ( actions.ShouldDisplay() ) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
   }
-  Dtype momentum = actions.GetMomentum(); //this->param_.momentum();
-  Dtype weight_decay = actions.GetWeightDecay(); //this->param_.weight_decay();
+  Dtype momentum = actions.GetMomentum();
+  Dtype weight_decay = actions.GetWeightDecay();
   switch (Caffe::mode()) {
   case Caffe::CPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {

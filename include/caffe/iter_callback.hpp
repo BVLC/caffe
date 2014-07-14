@@ -1,32 +1,31 @@
+// Copyright 2014 BVLC and contributors.
 #pragma once
 
-#include <string>
-#include <vector>
 #include <boost/function.hpp>
 #include <boost/optional.hpp>
+#include <string>
+#include <vector>
 
-namespace caffe
-{
+namespace caffe {
 
 // Provides indication to the solver after each iteration  if it should save
 // a snapshot, continue or stop, what the learning rate should be and cetera.
 template< typename Dtype>
-struct IterActions
-{
+struct IterActions {
     // Constructor.
     IterActions();
-    void SetResumeFile( const std::string& resume_file );
+    void SetResumeFile(const std::string& resume_file);
     void SetShouldSnapshot();
     void SetShouldTest();
-    void SetLearnRate( Dtype learn_rate );
-    void SetMomentum( Dtype momentum );
-    void SetWeightDecay( double weight_decay );
+    void SetLearnRate(Dtype learn_rate);
+    void SetMomentum(Dtype momentum);
+    void SetWeightDecay(double weight_decay);
     void SetShouldContinue();
     void SetShouldStop();
     void SetShouldDisplay();
-    // True iff the solver should create a snapshot.
+    // True if the solver should create a snapshot.
     bool ShouldSnapshot() const;
-    // True iff solver should write to the log.
+    // True if solver should write to the log.
     bool ShouldDisplay() const;
     // True if the solver should test.
     bool ShouldTest() const;
@@ -39,7 +38,8 @@ struct IterActions
     Dtype GetLearningRate() const;
     Dtype GetMomentum() const;
     Dtype GetWeightDecay() const;
-private:
+
+ private:
     // True iff the solver should save a snapshot.
     bool create_snapshot_;
     // True iff the solver should continue training.
@@ -54,14 +54,14 @@ private:
 };
 
 template<typename Dtype>
-struct TestResult
-{
-    void SetLoss( Dtype loss );
+struct TestResult{
+    void SetLoss(Dtype loss);
     // One score for each test iteration.
-    void SetScores( const std::vector<Dtype>& scores );
+    void SetScores(const std::vector<Dtype>& scores);
     boost::optional<Dtype> GetLoss() const;
     std::vector<Dtype> GetScores() const;
-private:
+
+ private:
     // Loss on the test net, if param_.test_compute_loss_ was true.
     // Otherwise the loss is not present.
     boost::optional<Dtype> loss_;
@@ -72,16 +72,16 @@ private:
 
 // Current training statistics.
 template<typename Dtype>
-struct TrainingStats
-{
-    void SetIter( int iter );
-    void SetLoss( Dtype loss );
-    void AddTestNetResult( const TestResult<Dtype>& result );
+struct TrainingStats {
+    void SetIter(int iter);
+    void SetLoss(Dtype loss);
+    void AddTestNetResult(const TestResult<Dtype>& result);
     int GetIter() const;
     Dtype GetLoss() const;
     // One TestResult instance for each test net.
     std::vector< TestResult<Dtype> > GetTestNetResults() const;
-private:
+
+ private:
     // Number of iterations completed.
     int iter_;
     // Loss on the net being trained.
@@ -96,9 +96,11 @@ private:
 // indicating whether training continue, if a snapshot should be saved, learning
 // rate and cetera.
 template <typename Dtype>
-struct IterCallback
-{
-    typedef boost::function< IterActions<Dtype>( const TrainingStats<Dtype>& )> Type;
+struct IterCallback {
+  // Type for a function that takes a TrainingStats object, and returns
+  // an IterActions object.
+  typedef boost::function< IterActions<Dtype>(
+                              const TrainingStats<Dtype>&)> Type;
 };
 
-} // namespace caffe
+}  // namespace caffe
