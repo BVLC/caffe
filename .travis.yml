@@ -30,11 +30,6 @@ script:
   - make --jobs=$NUM_THREADS test
   - make --jobs=$NUM_THREADS warn
   - make --jobs=$NUM_THREADS lint
-branches:
-  only:
-    - master
-    - dev
-    - travisci
 notifications:
 # Emails are sent to the committer's git-configured email address by default,
 # but only if they have access to the repository.  To enable Travis on your
