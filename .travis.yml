@@ -24,12 +24,12 @@ before_script:
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/lib
   - export NUM_THREADS=4
 script:
-  - make -j $NUM_THREADS all test warn lint
+  - make --keep-going --jobs=$NUM_THREADS all test warn lint
   - make runtestnogpu
-  - make -j $NUM_THREADS all
-  - make -j $NUM_THREADS test
-  - make -j $NUM_THREADS warn
-  - make -j $NUM_THREADS lint
+  - make --jobs=$NUM_THREADS all
+  - make --jobs=$NUM_THREADS test
+  - make --jobs=$NUM_THREADS warn
+  - make --jobs=$NUM_THREADS lint
 branches:
   only:
     - master
