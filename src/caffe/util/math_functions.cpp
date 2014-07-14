@@ -109,10 +109,6 @@ void caffe_gpu_axpby<double>(const int N, const double alpha, const double* X,
   caffe_gpu_axpy<double>(N, alpha, X, Y);
 }
 
-unsigned int caffe_rng_rand() {
-  return (*caffe_rng())();
-}
-
 template <>
 void caffe_gpu_dot<float>(const int n, const float* x, const float* y,
     float* out) {

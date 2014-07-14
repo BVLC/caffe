@@ -10,6 +10,7 @@
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/util/rng.hpp"
 #include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
