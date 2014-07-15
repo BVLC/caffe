@@ -8,7 +8,6 @@
 #include "caffe/blob.hpp"
 #include "caffe/device.hpp"
 #include "caffe/util/device_alternate.hpp"
-#include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 

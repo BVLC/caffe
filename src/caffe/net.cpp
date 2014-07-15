@@ -14,7 +14,6 @@
 #include "caffe/util/io.hpp"
 #include "caffe/device.hpp"
 #include "caffe/util/insert_splits.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 

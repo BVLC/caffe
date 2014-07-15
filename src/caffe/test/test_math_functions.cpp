@@ -12,7 +12,6 @@
 #include "caffe/device.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/util/rng.hpp"
-#include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -159,7 +158,9 @@ TYPED_TEST(MathFunctionsTest, DISABLED_TestHammingDistanceGPU) {
   int reference_distance = this->ReferenceHammingDistance(n, x, y);
   x = this->blob_bottom_->gpu_data();
   y = this->blob_top_->gpu_data();
-  int computed_distance = caffe_gpu_hamming_distance<TypeParam>(n, x, y);
+  int computed_distance;
+  GetDevice<TypeParam>(Caffe::GPU)->hamming_distance(n, x, y,
+      &computed_distance);
   EXPECT_EQ(reference_distance, computed_distance);
 }
 
@@ -171,14 +172,14 @@ TYPED_TEST(MathFunctionsTest, TestAsumGPU) {
     std_asum += std::fabs(x[i]);
   }
   TypeParam gpu_asum;
-  caffe_gpu_asum<TypeParam>(n, this->blob_bottom_->gpu_data(), &gpu_asum);
+  GetDevice<TypeParam>(Caffe::GPU)->asum(n, this->blob_bottom_->gpu_data(), &gpu_asum);
   EXPECT_LT((gpu_asum - std_asum) / std_asum, 1e-2);
 }
 
 TYPED_TEST(MathFunctionsTest, TestSignGPU) {
   int n = this->blob_bottom_->count();
-  caffe_gpu_sign<TypeParam>(n, this->blob_bottom_->gpu_data(),
-                            this->blob_bottom_->mutable_gpu_diff());
+  GetDevice<TypeParam>(Caffe::GPU)->sign(n, this->blob_bottom_->gpu_data(),
+                                         this->blob_bottom_->mutable_gpu_diff());
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int i = 0; i < n; ++i) {
@@ -188,8 +189,8 @@ TYPED_TEST(MathFunctionsTest, TestSignGPU) {
 
 TYPED_TEST(MathFunctionsTest, TestSgnbitGPU) {
   int n = this->blob_bottom_->count();
-  caffe_gpu_sgnbit<TypeParam>(n, this->blob_bottom_->gpu_data(),
-                            this->blob_bottom_->mutable_gpu_diff());
+  GetDevice<TypeParam>(Caffe::GPU)->sgnbit(n, this->blob_bottom_->gpu_data(),
+                                           this->blob_bottom_->mutable_gpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int i = 0; i < n; ++i) {
@@ -199,8 +200,8 @@ TYPED_TEST(MathFunctionsTest, TestSgnbitGPU) {
 
 TYPED_TEST(MathFunctionsTest, TestFabsGPU) {
   int n = this->blob_bottom_->count();
-  caffe_gpu_fabs<TypeParam>(n, this->blob_bottom_->gpu_data(),
-                            this->blob_bottom_->mutable_gpu_diff());
+  GetDevice<TypeParam>(Caffe::GPU)->fabs(n, this->blob_bottom_->gpu_data(),
+                                         this->blob_bottom_->mutable_gpu_diff());
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int i = 0; i < n; ++i) {

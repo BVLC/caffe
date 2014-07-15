@@ -7,7 +7,6 @@
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
 #include "caffe/syncedmem.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
@@ -176,20 +175,15 @@ class RandomNumberGeneratorTest : public ::testing::Test {
 
   void RngGaussianFillGPU(const Dtype mu, const Dtype sigma, void* gpu_data) {
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
-    caffe_gpu_rng_gaussian(sample_size_, mu, sigma, rng_data);
+    GetDevice<Dtype>(Caffe::GPU)->rng_gaussian(sample_size_, mu, sigma,
+                                               rng_data);
   }
 
   void RngUniformFillGPU(const Dtype lower, const Dtype upper, void* gpu_data) {
     CHECK_GE(upper, lower);
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
-    caffe_gpu_rng_uniform(sample_size_, lower, upper, rng_data);
-  }
-
-  // Fills with uniform integers in [0, UINT_MAX] using 2 argument form of
-  // caffe_gpu_rng_uniform.
-  void RngUniformIntFillGPU(void* gpu_data) {
-    unsigned int* rng_data = static_cast<unsigned int*>(gpu_data);
-    caffe_gpu_rng_uniform(sample_size_, rng_data);
+    GetDevice<Dtype>(Caffe::GPU)->rng_uniform(sample_size_, lower, upper,
+                                              rng_data);
   }
 
 #endif
@@ -437,23 +431,6 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniform2GPU) {
   void* uniform_gpu_data = this->data_->mutable_gpu_data();
   this->RngUniformFillGPU(lower, upper, uniform_gpu_data);
   const void* uniform_data = this->data_->cpu_data();
-  this->RngUniformChecks(lower, upper, uniform_data);
-}
-
-
-TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformIntGPU) {
-  unsigned int* uniform_uint_gpu_data =
-      static_cast<unsigned int*>(this->int_data_->mutable_gpu_data());
-  this->RngUniformIntFillGPU(uniform_uint_gpu_data);
-  const unsigned int* uniform_uint_data =
-      static_cast<const unsigned int*>(this->int_data_->cpu_data());
-  TypeParam* uniform_data =
-      static_cast<TypeParam*>(this->data_->mutable_cpu_data());
-  for (int i = 0; i < this->sample_size_; ++i) {
-    uniform_data[i] = static_cast<const TypeParam>(uniform_uint_data[i]);
-  }
-  const TypeParam lower = 0;
-  const TypeParam upper = UINT_MAX;
   this->RngUniformChecks(lower, upper, uniform_data);
 }
 

@@ -9,7 +9,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/syncedmem.hpp"
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
