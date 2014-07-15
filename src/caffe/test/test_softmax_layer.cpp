@@ -18,8 +18,9 @@ namespace caffe {
 
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
-template <typename Dtype>
-class SoftmaxLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class SoftmaxLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
  protected:
   SoftmaxLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 10, 1, 1)),
@@ -38,16 +39,17 @@ class SoftmaxLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(SoftmaxLayerTest, TestDtypes);
+TYPED_TEST_CASE(SoftmaxLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(SoftmaxLayerTest, TestForward) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  SoftmaxLayer<TypeParam> layer(layer_param);
+  SoftmaxLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Test sum
   for (int i = 0; i < this->blob_bottom_->num(); ++i) {
-    TypeParam sum = 0;
+    Dtype sum = 0;
     for (int j = 0; j < this->blob_top_->channels(); ++j) {
       sum += this->blob_top_->data_at(i, j, 0, 0);
     }
@@ -56,7 +58,7 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
   }
   // Test exact values
   for (int i = 0; i < this->blob_bottom_->num(); ++i) {
-    TypeParam scale = 0;
+    Dtype scale = 0;
     for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
       scale += exp(this->blob_bottom_->data_at(i, j, 0, 0));
     }
@@ -72,9 +74,10 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
 }
 
 TYPED_TEST(SoftmaxLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  SoftmaxLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  SoftmaxLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
