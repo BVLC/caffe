@@ -179,7 +179,7 @@ void Blob<Dtype>::Update() {
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
     // perform computation on GPU
-    caffe_gpu_axpy<Dtype>(
+    GetDevice<Dtype>(Caffe::GPU)->axpy(
         count_,
         Dtype(-1),
         reinterpret_cast<const Dtype*>(diff_->gpu_data()),

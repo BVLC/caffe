@@ -35,10 +35,13 @@ Dtype HingeLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   }
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    return GetDevice<Dtype>(Caffe::CPU)->asum(count, bottom_diff) / num;
+    Dtype asum;
+    GetDevice<Dtype>(Caffe::CPU)->asum(count, bottom_diff, &asum);
+    return asum / num;
   case HingeLossParameter_Norm_L2:
-    return GetDevice<Dtype>(Caffe::CPU)->dot(count, bottom_diff, bottom_diff) /
-        num;
+    Dtype dot;
+    GetDevice<Dtype>(Caffe::CPU)->dot(count, bottom_diff, bottom_diff, &dot);
+    return dot / num;
   default:
     LOG(FATAL) << "Unknown Norm";
   }

@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -367,7 +368,7 @@ void caffe_gpu_rng_uniform<float>(const int n, const float a, const float b,
   CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(), r, n));
   const float range = b - a;
   if (range != static_cast<float>(1)) {
-    caffe_gpu_scal(n, range, r);
+    GetDevice<float>(Caffe::GPU)->scal(n, range, r);
   }
   if (a != static_cast<float>(0)) {
     caffe_gpu_add_scalar(n, a, r);
@@ -380,7 +381,7 @@ void caffe_gpu_rng_uniform<double>(const int n, const double a, const double b,
   CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(), r, n));
   const double range = b - a;
   if (range != static_cast<double>(1)) {
-    caffe_gpu_scal(n, range, r);
+    GetDevice<double>(Caffe::GPU)->scal(n, range, r);
   }
   if (a != static_cast<double>(0)) {
     caffe_gpu_add_scalar(n, a, r);

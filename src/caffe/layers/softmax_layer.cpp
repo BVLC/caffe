@@ -72,8 +72,8 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_copy(top[0]->count(), top_diff, bottom_diff);
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
   for (int i = 0; i < num; ++i) {
-    scale_data[i] = GetDevice<Dtype>(Caffe::CPU)->dot(dim, top_diff + i * dim,
-                                                      top_data + i * dim);
+    GetDevice<Dtype>(Caffe::CPU)->dot(dim, top_diff + i * dim,
+                                      top_data + i * dim, scale_data + i);
   }
   // subtraction
   GetDevice<Dtype>(Caffe::CPU)->gemm(CblasNoTrans, CblasNoTrans, num, dim, 1,

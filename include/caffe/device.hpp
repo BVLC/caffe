@@ -91,16 +91,15 @@ class Device {
 
   virtual void exp(const int N, const Dtype* a, Dtype* y) { NOT_IMPLEMENTED; }
 
-  virtual Dtype dot(const int N, const Dtype* x, const Dtype* y) {
-    NOT_IMPLEMENTED; return 0;
+  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out) {
+    NOT_IMPLEMENTED;
   }
 
-  virtual int hamming_distance(const int N, const Dtype* x, const Dtype* y) {
-    NOT_IMPLEMENTED; return 0;
-  }
+  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
+                                int* out) { NOT_IMPLEMENTED; }
 
   // Returns the sum of the absolute values of the elements of vector x
-  virtual Dtype asum(const int N, const Dtype* x) { NOT_IMPLEMENTED; }
+  virtual void asum(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void sign(const int N, const Dtype* x, Dtype* y) { NOT_IMPLEMENTED; }
 
@@ -180,12 +179,13 @@ class CPUDevice : public Device<Dtype> {
 
   virtual void exp(const int N, const Dtype* a, Dtype* y);
 
-  virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
+  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
 
-  virtual int hamming_distance(const int N, const Dtype* x, const Dtype* y);
+  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
+                                int* out);
 
   // Returns the sum of the absolute values of the elements of vector x
-  virtual Dtype asum(const int N, const Dtype* x);
+  virtual void asum(const int N, const Dtype* x, Dtype* y);
 
   virtual void sign(const int N, const Dtype* x, Dtype* y);
 
@@ -256,12 +256,13 @@ class GPUDevice : public Device<Dtype> {
 
   virtual void exp(const int N, const Dtype* a, Dtype* y);
 
-  virtual Dtype dot(const int N, const Dtype* x, const Dtype* y);
+  virtual void dot(const int N, const Dtype* x, const Dtype* y, Dtype* out);
 
-  virtual int hamming_distance(const int N, const Dtype* x, const Dtype* y);
+  virtual void hamming_distance(const int N, const Dtype* x, const Dtype* y,
+                                int* out);
 
 // Returns the sum of the absolute values of the elements of vector x
-  virtual Dtype asum(const int N, const Dtype* x);
+  virtual void asum(const int N, const Dtype* x, Dtype* y);
 
   virtual void sign(const int N, const Dtype* x, Dtype* y);
 

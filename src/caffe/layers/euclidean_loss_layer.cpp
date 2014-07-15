@@ -28,7 +28,8 @@ Dtype EuclideanLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       bottom[0]->const_data(),
       bottom[1]->const_data(),
       diff_.mutable_data());
-  Dtype dot = this->device_->dot(count, diff_.const_data(), diff_.const_data());
+  Dtype dot;
+  this->device_->dot(count, diff_.const_data(), diff_.const_data(), &dot);
   Dtype loss = dot / bottom[0]->num() / Dtype(2);
   if (top->size() == 1) {
     (*top)[0]->mutable_cpu_data()[0] = loss;
