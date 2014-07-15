@@ -55,7 +55,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int num_output_;
   int group_;
   Blob<Dtype> col_buffer_;
-  shared_ptr<SyncedMemory> bias_multiplier_;
+  shared_ptr<Blob<Dtype> > bias_multiplier_;
   bool bias_term_;
   int M_;
   int K_;
@@ -157,7 +157,7 @@ class InnerProductLayer : public Layer<Dtype> {
   int K_;
   int N_;
   bool bias_term_;
-  shared_ptr<SyncedMemory> bias_multiplier_;
+  shared_ptr<Blob<Dtype> > bias_multiplier_;
 };
 
 // Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
