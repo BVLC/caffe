@@ -266,47 +266,49 @@ void CPUDevice<double>::exp(const int N, const double* a, double* y) {
 }
 
 template<>
-float CPUDevice<float>::dot(const int N, const float* x, const float* y) {
-  return cblas_sdot(N, x, 1, y, 1);
+void CPUDevice<float>::dot(const int N, const float* x, const float* y,
+                           float* out) {
+  *out =  cblas_sdot(N, x, 1, y, 1);
 }
 
 template<>
-double CPUDevice<double>::dot(const int N, const double* x, const double* y) {
-  return cblas_ddot(N, x, 1, y, 1);
+void CPUDevice<double>::dot(const int N, const double* x, const double* y,
+                            double* out) {
+  *out = cblas_ddot(N, x, 1, y, 1);
 }
 
 template<>
-int CPUDevice<float>::hamming_distance(const int N, const float* x,
-                                            const float* y) {
+void CPUDevice<float>::hamming_distance(const int N, const float* x,
+                                        const float* y, int* out) {
   int dist = 0;
   for (int i = 0; i < N; ++i) {
     dist += __builtin_popcount(static_cast<uint32_t>(x[i]) ^
                                static_cast<uint32_t>(y[i]));
   }
-  return dist;
+  *out = dist;
 }
 
 template<>
-int CPUDevice<double>::hamming_distance(const int N, const double* x,
-                                             const double* y) {
+void CPUDevice<double>::hamming_distance(const int N, const double* x,
+                                         const double* y, int* out) {
   int dist = 0;
   for (int i = 0; i < N; ++i) {
     dist += __builtin_popcountl(static_cast<uint64_t>(x[i]) ^
                                 static_cast<uint64_t>(y[i]));
   }
-  return dist;
+  *out = dist;
 }
 
 // Returns the sum of the absolute values of the elements of vector x
 template<>
-float CPUDevice<float>::asum(const int N, const float* x) {
-  return cblas_sasum(N, x, 1);
+void CPUDevice<float>::asum(const int N, const float* x, float* y) {
+  *y = cblas_sasum(N, x, 1);
 }
 
 // Returns the sum of the absolute values of the elements of vector x
 template<>
-double CPUDevice<double>::asum(const int N, const double* x) {
-  return cblas_dasum(N, x, 1);
+void CPUDevice<double>::asum(const int N, const double* x, double* y) {
+  *y = cblas_dasum(N, x, 1);
 }
 
 // the branchless, type-safe version from
