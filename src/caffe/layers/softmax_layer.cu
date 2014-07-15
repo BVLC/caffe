@@ -6,7 +6,6 @@
 
 #include "caffe/device.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -102,7 +101,8 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                      sum_multiplier_.gpu_data(), 1.,
                                      bottom_diff);
   // elementwise multiplication
-  caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
+  GetDevice<Dtype>(Caffe::GPU)->mul(top[0]->count(), bottom_diff, top_data,
+                                    bottom_diff);
 }
 
 INSTANTIATE_CLASS(SoftmaxLayer);

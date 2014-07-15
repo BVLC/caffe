@@ -3,14 +3,16 @@
 #ifndef CAFFE_UTIL_DEVICE_H_
 #define CAFFE_UTIL_DEVICE_H_
 
+extern "C" {
+#include <cblas.h>
+}
+
 #include <cublas_v2.h>
 #include <stdint.h>
 
 #include "glog/logging.h"
 
 #include "caffe/common.hpp"
-#include "caffe/util/im2col.hpp"
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -251,8 +253,6 @@ class GPUDevice : public Device<Dtype> {
 
   virtual void rng_gaussian(const int N, const Dtype mu, const Dtype sigma,
                             Dtype* r);
-
-  virtual void rng_bernoulli(const int N, const Dtype p, int* r);
 
   virtual void exp(const int N, const Dtype* a, Dtype* y);
 

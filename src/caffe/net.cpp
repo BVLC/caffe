@@ -12,7 +12,6 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"

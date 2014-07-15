@@ -97,17 +97,6 @@ void GPUDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
   CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyHostToDevice));
 }
 
-template<typename Dtype>
-void GPUDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
-  caffe_gpu_set<Dtype>(N, alpha, X);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::add_scalar(const int N, const Dtype alpha,
-                                       Dtype *X) {
-  caffe_gpu_add_scalar<Dtype>(N, alpha, X);
-}
-
 template<>
 void GPUDevice<float>::scal(const int N, const float alpha, float *X) {
   CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
@@ -121,53 +110,6 @@ void GPUDevice<double>::scal(const int N, const double alpha, double *X) {
 template<typename Dtype>
 void GPUDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
   // TODO: implement this
-  NOT_IMPLEMENTED;
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::add(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
-  caffe_gpu_add<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::sub(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
-  caffe_gpu_sub<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::mul(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
-  caffe_gpu_mul<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::div(const int N, const Dtype* a, const Dtype* b,
-                                Dtype* y) {
-  caffe_gpu_div<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::powx(const int N, const Dtype* a, const Dtype b,
-                                 Dtype* y) {
-  caffe_gpu_powx<Dtype>(N, a, b, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::rng_uniform(const int N, const Dtype a,
-                                        const Dtype b, Dtype* r) {
-  caffe_gpu_rng_uniform<Dtype>(N, a, b, r);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
-                                         const Dtype sigma, Dtype* r) {
-  caffe_gpu_rng_gaussian<Dtype>(N, mu, sigma, r);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
   NOT_IMPLEMENTED;
 }
 
@@ -189,12 +131,6 @@ void GPUDevice<double>::dot(const int N, const double* x, const double* y,
   CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), N, x, 1, y, 1, out));
 }
 
-template<typename Dtype>
-void GPUDevice<Dtype>::hamming_distance(const int N, const Dtype* x,
-                                        const Dtype* y, int* out) {
-  *out = caffe_gpu_hamming_distance<Dtype>(N, x, y);
-}
-
 template<>
 // Returns the sum of the absolute values of the elements of vector x
 void GPUDevice<float>::asum(const int N, const float* x, float* y) {
@@ -208,41 +144,10 @@ void GPUDevice<double>::asum(const int N, const double* x, double* y) {
 }
 
 template<typename Dtype>
-void GPUDevice<Dtype>::sign(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_sign<Dtype>(N, x, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::sgnbit(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_sgnbit<Dtype>(N, x, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::fabs(const int N, const Dtype* x, Dtype* y) {
-  caffe_gpu_fabs<Dtype>(N, x, y);
-}
-
-template<typename Dtype>
 void GPUDevice<Dtype>::scale(const int N, const Dtype alpha, const Dtype *x,
                              Dtype* y) {
   this->copy(N, x, y);
   this->scal(N, alpha, y);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::im2col(const Dtype* data_im, const int channels,
-    const int height, const int width, const int ksize, const int pad,
-    const int stride, Dtype* data_col) {
-  im2col_gpu(data_im, channels, height, width, ksize, pad, stride,
-             data_col);
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
-    const int height, const int width, const int psize, const int pad,
-    const int stride, Dtype* data_im) {
-  col2im_gpu(data_col, channels, height, width, psize, pad, stride,
-             data_im);
 }
 
 INSTANTIATE_CLASS(GPUDevice);

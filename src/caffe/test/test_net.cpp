@@ -9,7 +9,6 @@
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
 #include "caffe/net.hpp"
-#include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
