@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"

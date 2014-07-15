@@ -149,11 +149,13 @@ NONEMPTY_WARN_REPORT := $(BUILD_DIR)/$(WARNS_EXT)
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR)
-INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR)
-LIBRARY_DIRS += $(CUDA_LIB_DIR)
-LIBRARIES := cudart cublas curand \
-	pthread \
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+ifneq ($(CPU_ONLY), 1)
+	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
+	LIBRARY_DIRS += $(CUDA_LIB_DIR)
+	LIBRARIES := cudart cublas curand
+endif
+LIBRARIES += pthread \
 	glog protobuf leveldb snappy \
 	lmdb \
 	boost_system \

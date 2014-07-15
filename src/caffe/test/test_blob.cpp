@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
 #include "caffe/blob.hpp"

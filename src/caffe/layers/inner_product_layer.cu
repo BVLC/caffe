@@ -1,7 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cublas_v2.h>
-
 #include <vector>
 
 #include "caffe/blob.hpp"

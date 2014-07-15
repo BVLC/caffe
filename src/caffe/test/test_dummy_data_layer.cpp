@@ -15,8 +15,6 @@ using std::stringstream;
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-
 template <typename Dtype>
 class DummyDataLayerTest : public ::testing::Test {
  protected:
