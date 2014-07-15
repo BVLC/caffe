@@ -19,7 +19,7 @@ using std::ostringstream;
 namespace caffe {
 
 template <typename TypeParam>
-class NetTest : public ::testing::Test {
+class NetTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
