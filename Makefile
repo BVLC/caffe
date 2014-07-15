@@ -354,7 +354,7 @@ $(EMPTY_WARN_REPORT): $(ALL_WARNS) | $(BUILD_DIR)
 	@ if [ -s "$@" ]; then \
 		cat $@; \
 		mv $@ $(NONEMPTY_WARN_REPORT); \
-		echo "Found one or more lint errors."; \
+		echo "Compiler produced one or more warnings."; \
 		exit 1; \
 	  fi; \
 	  $(RM) $(NONEMPTY_WARN_REPORT); \
