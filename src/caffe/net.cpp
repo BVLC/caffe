@@ -414,9 +414,9 @@ void Net<Dtype>::ShareTrainedLayersWith(Net* other) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param, const int remove_from_top) {
+void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
   int num_source_layers = param.layers_size();
-  for (int i = 0; i < num_source_layers - remove_from_top; ++i) {
+  for (int i = 0; i < num_source_layers; ++i) {
     const LayerParameter& source_layer = param.layers(i);
     const string& source_layer_name = source_layer.name();
     int target_layer_id = 0;

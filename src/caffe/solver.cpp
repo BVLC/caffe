@@ -80,19 +80,13 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file, const int remove_from_top) {
+void Solver<Dtype>::Solve(const char* resume_file) {
   Caffe::set_phase(Caffe::TRAIN);
   LOG(INFO) << "Solving " << net_->name();
   PreSolve();
 
   iter_ = 0;
-  if (resume_file && remove_from_top) {
-    LOG(INFO) << "Restoring previous solver status from " << resume_file;
-    LOG(INFO) << "Removing " << remove_from_top << " layers from top of network";
-    Restore(resume_file, remove_from_top);
-  }
-
-  else if (remove_from_top) {
+  if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
   }
@@ -208,16 +202,16 @@ void Solver<Dtype>::Snapshot() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Restore(const char* state_file, const int remove_from_top) {
+void Solver<Dtype>::Restore(const char* state_file) {
   SolverState state;
   NetParameter net_param;
   ReadProtoFromBinaryFile(state_file, &state);
   if (state.has_learned_net()) {
     ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
-    net_->CopyTrainedLayersFrom(net_param, remove_from_top);
+    net_->CopyTrainedLayersFrom(net_param);
   }
   iter_ = state.iter();
-  RestoreSolverState(state, remove_from_top);
+  RestoreSolverState(state);
 }
 
 
@@ -337,8 +331,8 @@ void SGDSolver<Dtype>::SnapshotSolverState(SolverState* state) {
 }
 
 template <typename Dtype>
-void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state, const int remove_from_top) {
-  CHECK_EQ(state.history_size(), history_.size() + remove_from_top)
+void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
+  CHECK_EQ(state.history_size(), history_.size())
       << "Incorrect length of history blobs.";
   LOG(INFO) << "SGDSolver: restoring history";
   for (int i = 0; i < history_.size(); ++i) {

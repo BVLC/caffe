@@ -15,8 +15,8 @@ using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc < 2 || argc > 4) {
-    LOG(ERROR) << "Usage: train_net solver_proto_file [resume_point_file] [num_remove_top_layers]";
+  if (argc < 2 || argc > 3) {
+    LOG(ERROR) << "Usage: train_net solver_proto_file [resume_point_file]";
     return 1;
   }
 
@@ -28,13 +28,7 @@ int main(int argc, char** argv) {
   if (argc == 3) {
     LOG(INFO) << "Resuming from " << argv[2];
     solver.Solve(argv[2]);
-  } 
-  else if (argc == 4) {
-    LOG(INFO) << "Resuming from " << argv[2];
-    LOG(INFO) << "Removing top " << argv[3] << " layers";
-    solver.Solve(argv[2], atoi(argv[3]));
-  }
-  else {
+  } else {
     solver.Solve();
   }
   LOG(INFO) << "Optimization Done.";
