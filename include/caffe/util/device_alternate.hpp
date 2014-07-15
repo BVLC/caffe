@@ -1,15 +1,13 @@
 // Copyright 2014 BVLC and contributors.
 
-#ifndef CAFFE_UTIL_CPU_ONLY_H_
-#define CAFFE_UTIL_CPU_ONLY_H_
+#ifndef CAFFE_UTIL_DEVICE_ALTERNATE_H_
+#define CAFFE_UTIL_DEVICE_ALTERNATE_H_
+
+#ifdef CPU_ONLY  // CPU-only Caffe.
 
 #include <vector>
 
-#include "caffe/blob.hpp"
-#include "caffe/common.hpp"
-
-// For CPU-only Caffe, stub out GPU calls as unavailable.
-#ifdef CPU_ONLY
+// Stub out GPU calls as unavailable.
 
 #define NO_GPU LOG(FATAL) << "CPU-only Mode"
 
@@ -33,5 +31,14 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
     const vector<bool>& propagate_down, \
     vector<Blob<Dtype>*>* bottom) { NO_GPU; } \
 
+#else  // Normal GPU + CPU Caffe.
+
+#include <cublas_v2.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <curand.h>
+#include <driver_types.h>  // cuda driver types
+
 #endif  // CPU_ONLY
-#endif  // CAFFE_UTIL_CPU_ONLY_H_
+
+#endif  // CAFFE_UTIL_DEVICE_ALTERNATE_H_

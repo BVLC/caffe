@@ -9,7 +9,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/cpu_only.hpp"
+#include "caffe/util/device_alternate.hpp"
 
 using std::string;
 using std::vector;

@@ -1,7 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <unistd.h>  // for usleep
-#include <cuda_runtime.h>
 #include <gtest/gtest.h>
 
 #include "caffe/common.hpp"
@@ -9,8 +8,6 @@
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename TypeParam>
 class BenchmarkTest : public MultiDeviceTest<TypeParam> {};

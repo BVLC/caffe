@@ -19,14 +19,12 @@ before_install:
 install:
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
   - cd /tmp/glog-0.3.3 && ./configure && make && sudo make install && cd -
-  - curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_6.0-37_amd64.deb -o /tmp/cuda_install.deb && sudo dpkg -i /tmp/cuda_install.deb && rm /tmp/cuda_install.deb
-  - sudo apt-get -y update && sudo apt-get -y install cuda
   - curl https://gitorious.org/mdb/mdb/archive/7f038d0f15bec57b4c07aa3f31cd5564c88a1897.tar.gz -o /tmp/mdb.tar.gz && tar -C /tmp -xzvf /tmp/mdb.tar.gz && rm /tmp/mdb.tar.gz
   - cd /tmp/mdb-mdb/libraries/liblmdb/ && make && sudo make install && cd -
 
 before_script:
   - mv Makefile.config.example Makefile.config
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/lib
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
   - export NUM_THREADS=4
 
 script:
