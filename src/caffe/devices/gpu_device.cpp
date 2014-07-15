@@ -107,18 +107,6 @@ void GPUDevice<double>::scal(const int N, const double alpha, double *X) {
   CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
 }
 
-template<typename Dtype>
-void GPUDevice<Dtype>::sqr(const int N, const Dtype* a, Dtype* y) {
-  // TODO: implement this
-  NOT_IMPLEMENTED;
-}
-
-template<typename Dtype>
-void GPUDevice<Dtype>::exp(const int N, const Dtype* a, Dtype* y) {
-  // TODO: implement this
-  NOT_IMPLEMENTED;
-}
-
 template<>
 void GPUDevice<float>::dot(const int N, const float* x, const float* y,
                            float* out) {

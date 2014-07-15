@@ -167,6 +167,34 @@ void GPUDevice<Dtype>::fabs(const int n, const Dtype* x, Dtype* y) {
       n, x, y);
 }
 
+template <typename Dtype>
+__global__ void sqr_kernel(const int n, const Dtype* a, Dtype* y) {
+  CUDA_KERNEL_LOOP(index, n) {
+    y[index] = a[index] * a[index];
+  }
+}
+
+template <typename Dtype>
+void GPUDevice<Dtype>::sqr(const int n, const Dtype* a, Dtype* y) {
+  /* NOLINT_NEXT_LINE(whitespace/operators) */
+  sqr_kernel<Dtype><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
+      n, a, y);
+}
+
+template <typename Dtype>
+__global__ void exp_kernel(const int n, const Dtype* a, Dtype* y) {
+  CUDA_KERNEL_LOOP(index, n) {
+    y[index] = exp(a[index]);
+  }
+}
+
+template <typename Dtype>
+void GPUDevice<Dtype>::exp(const int n, const Dtype* a, Dtype* y) {
+  /* NOLINT_NEXT_LINE(whitespace/operators) */
+  exp_kernel<Dtype><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
+      n, a, y);
+}
+
 __global__ void popc_kernel(const int n, const float* a,
     const float* b, uint8_t* y) {
   CUDA_KERNEL_LOOP(index, n) {
