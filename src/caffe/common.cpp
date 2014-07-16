@@ -6,6 +6,10 @@
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 
+#if _MSC_VER
+#include <process.h>
+#endif
+
 namespace caffe {
 
 shared_ptr<Caffe> Caffe::singleton_;
@@ -14,7 +18,12 @@ shared_ptr<Caffe> Caffe::singleton_;
 // curand seeding
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;
+#if _MSC_VER
+  pid = _getpid();
+#else
   pid = getpid();
+#endif
+
   s = time(NULL);
   seed = abs(((s * 181) * ((pid - 83) * 359)) % 104729);
   return seed;
@@ -35,6 +44,10 @@ Caffe::Caffe()
       curandSetPseudoRandomGeneratorSeed(curand_generator_, cluster_seedgen())
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
+  }
+  int device;
+  if(cudaSuccess == cudaGetDevice(&device)) {
+	  CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
   }
 }
 
@@ -85,6 +98,7 @@ void Caffe::SetDevice(const int device_id) {
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
       cluster_seedgen()));
+  CUDA_CHECK(cudaGetDeviceProperties(&Get().prop, device_id));
 }
 
 void Caffe::DeviceQuery() {
