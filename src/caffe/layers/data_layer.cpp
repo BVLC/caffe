@@ -14,8 +14,6 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-using std::string;
-
 namespace caffe {
 
 template <typename Dtype>
