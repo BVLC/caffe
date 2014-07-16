@@ -3,7 +3,7 @@
 #include <cublas_v2.h>
 
 #include "caffe/common.hpp"
-#include "caffe/device.hpp"
+#include "caffe/devices/gpu.hpp"
 
 namespace caffe {
 

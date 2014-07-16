@@ -9,7 +9,7 @@
 #include <cstring>
 
 #include "caffe/common.hpp"
-#include "caffe/device.hpp"
+#include "caffe/devices/gpu.hpp"
 
 namespace caffe {
 
