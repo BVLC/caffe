@@ -11,6 +11,7 @@
 #include "caffe/solver.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/iter_callback.hpp"
 
 using std::max;
 using std::min;
@@ -80,43 +81,64 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file) {
+void Solver<Dtype>::Solve( typename IterCallback<Dtype>::Type callback ) {
+
+  if ( callback.empty() )
+  {
+      LOG(FATAL) << "Solver iter callback is not set.";
+  }
+
   Caffe::set_phase(Caffe::TRAIN);
   LOG(INFO) << "Solving " << net_->name();
   PreSolve();
 
   iter_ = 0;
-  if (resume_file) {
+  IterActions<Dtype> actions = callback( TrainingStats<Dtype>().SetIter( iter_ ) );
+  if ( actions.ShouldResume() ) {
+    std::string resume_file = actions.GetResumeFile();
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
-    Restore(resume_file);
+    Restore( resume_file.c_str() );
   }
 
   // Run a test pass before doing any training to avoid waiting a potentially
   // very long time (param_.test_interval() training iterations) to report that
   // there's not enough memory to run the test net and crash, etc.; and to gauge
   // the effect of the first training iterations.
-  if (param_.test_interval()) {
+  if ( actions.ShouldTest() ) { //param_.test_interval()) {
     TestAll();
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
-  while (iter_++ < param_.max_iter()) {
+  while ( actions.ShouldContinue() ) { //iter_++ < param_.max_iter()) {
     Dtype loss = net_->ForwardBackward(bottom_vec);
-    ComputeUpdateValue();
+    ComputeUpdateValue( actions );
     net_->Update();
 
-    if (param_.display() && iter_ % param_.display() == 0) {
-      LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
+    if ( actions.ShouldDisplay() )
+    {
+        LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
-    if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
-      TestAll();
+
+    TrainingStats<Dtype> stats;
+    if ( actions.ShouldTest() )
+    {
+        stats = TestAll();
     }
+
     // Check if we need to do snapshot
-    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
-      Snapshot();
+    if ( actions.ShouldSnapshot() )
+    {
+        Snapshot();
     }
+    ++iter_;
+
+    // Create the statistics object to pass to the callback.
+    stats = stats.SetIter( iter_ ).SetLoss( loss );
+    // Call the client, delivering the statistics and getting his
+    // instructions for the next iteration.
+    actions = callback( stats );
   }
   // After the optimization is done, always do a snapshot.
   iter_--;
@@ -124,17 +146,18 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   LOG(INFO) << "Optimization Done.";
 }
 
-
 template <typename Dtype>
-void Solver<Dtype>::TestAll() {
+TrainingStats<Dtype> Solver<Dtype>::TestAll() {
+  TrainingStats<Dtype> stats;
   for (int test_net_id = 0; test_net_id < test_nets_.size(); ++test_net_id) {
-    Test(test_net_id);
+     TestResult<Dtype> result = Test( test_net_id );
+     stats = stats.AddTestNetResult( result );
   }
+  return stats;
 }
 
-
 template <typename Dtype>
-void Solver<Dtype>::Test(const int test_net_id) {
+TestResult<Dtype> Solver<Dtype>::Test(const int test_net_id ) {
   LOG(INFO) << "Iteration " << iter_
             << ", Testing net (#" << test_net_id << ")";
   // We need to set phase to test before running.
@@ -143,7 +166,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
       ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<Blob<Dtype>*> bottom_vec;
-  Dtype loss = 0;
+  Dtype loss = 0.0;
   for (int i = 0; i < param_.test_iter(test_net_id); ++i) {
     Dtype iter_loss;
     const vector<Blob<Dtype>*>& result =
@@ -168,17 +191,24 @@ void Solver<Dtype>::Test(const int test_net_id) {
       }
     }
   }
+
+  TestResult<Dtype> result;
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
+    result = result.SetLoss( loss );
   }
+  std::vector<Dtype> reported_scores;
   for (int i = 0; i < test_score.size(); ++i) {
+    Dtype reported_score = test_score[i] / param_.test_iter(test_net_id);
     LOG(INFO) << "Test score #" << i << ": "
-        << test_score[i] / param_.test_iter(test_net_id);
+        << reported_score;
+    reported_scores.push_back( reported_score );
   }
+  result = result.SetScores( reported_scores );
   Caffe::set_phase(Caffe::TRAIN);
+  return result;
 }
-
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
@@ -214,40 +244,8 @@ void Solver<Dtype>::Restore(const char* state_file) {
   RestoreSolverState(state);
 }
 
-
-// Return the current learning rate. The currently implemented learning rate
-// policies are as follows:
-//    - fixed: always return base_lr.
-//    - step: return base_lr * gamma ^ (floor(iter / step))
-//    - exp: return base_lr * gamma ^ iter
-//    - inv: return base_lr * (1 + gamma * iter) ^ (- power)
-// where base_lr, gamma, step and power are defined in the solver parameter
-// protocol buffer, and iter is the current iteration.
 template <typename Dtype>
-Dtype SGDSolver<Dtype>::GetLearningRate() {
-  Dtype rate;
-  const string& lr_policy = this->param_.lr_policy();
-  if (lr_policy == "fixed") {
-    rate = this->param_.base_lr();
-  } else if (lr_policy == "step") {
-    int current_step = this->iter_ / this->param_.stepsize();
-    rate = this->param_.base_lr() *
-        pow(this->param_.gamma(), current_step);
-  } else if (lr_policy == "exp") {
-    rate = this->param_.base_lr() * pow(this->param_.gamma(), this->iter_);
-  } else if (lr_policy == "inv") {
-    rate = this->param_.base_lr() *
-        pow(Dtype(1) + this->param_.gamma() * this->iter_,
-            - this->param_.power());
-  } else {
-    LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;
-  }
-  return rate;
-}
-
-
-template <typename Dtype>
-void SGDSolver<Dtype>::PreSolve() {
+void SGDSolverEx<Dtype>::PreSolve() {
   // Initialize the history
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   history_.clear();
@@ -259,19 +257,19 @@ void SGDSolver<Dtype>::PreSolve() {
   }
 }
 
-
 template <typename Dtype>
-void SGDSolver<Dtype>::ComputeUpdateValue() {
+void SGDSolverEx<Dtype>::ComputeUpdateValue( const IterActions<Dtype>& actions ) {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   vector<float>& net_params_lr = this->net_->params_lr();
   vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
   // get the learning rate
-  Dtype rate = GetLearningRate();
-  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+  Dtype rate = actions.GetLearningRate();
+  if ( actions.ShouldDisplay() )
+  {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
   }
-  Dtype momentum = this->param_.momentum();
-  Dtype weight_decay = this->param_.weight_decay();
+  Dtype momentum = actions.GetMomentum(); //this->param_.momentum();
+  Dtype weight_decay = actions.GetWeightDecay(); //this->param_.weight_decay();
   switch (Caffe::mode()) {
   case Caffe::CPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
@@ -321,7 +319,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 }
 
 template <typename Dtype>
-void SGDSolver<Dtype>::SnapshotSolverState(SolverState* state) {
+void SGDSolverEx<Dtype>::SnapshotSolverState(SolverState* state) {
   state->clear_history();
   for (int i = 0; i < history_.size(); ++i) {
     // Add history
@@ -331,7 +329,7 @@ void SGDSolver<Dtype>::SnapshotSolverState(SolverState* state) {
 }
 
 template <typename Dtype>
-void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
+void SGDSolverEx<Dtype>::RestoreSolverState(const SolverState& state) {
   CHECK_EQ(state.history_size(), history_.size())
       << "Incorrect length of history blobs.";
   LOG(INFO) << "SGDSolver: restoring history";
@@ -341,6 +339,7 @@ void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
 }
 
 INSTANTIATE_CLASS(Solver);
+INSTANTIATE_CLASS(SGDSolverEx);
 INSTANTIATE_CLASS(SGDSolver);
 
 }  // namespace caffe
