@@ -229,8 +229,8 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.data_param().rand_skip()) {
     unsigned int skip = caffe_rng_rand() %
                         this->layer_param_.data_param().rand_skip();
-	LOG(INFO) << "Skipping first " << skip << " data points.";
-	while (skip-- > 0) {
+    LOG(INFO) << "Skipping first " << skip << " data points.";
+    while (skip-- > 0) {
       switch (this->layer_param_.data_param().backend()) {
       case DataParameter_DB_LEVELDB:
         iter_->Next();

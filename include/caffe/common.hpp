@@ -3,6 +3,10 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
+#ifdef _MSC_VER
+#include <process.h>
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <cublas_v2.h>
 #include <cuda.h>

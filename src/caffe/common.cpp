@@ -3,13 +3,8 @@
 #include <cstdio>
 #include <ctime>
 
-#if _MSC_VER
-#include <process.h>
-#endif
-
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
-
 
 
 namespace caffe {
@@ -48,7 +43,7 @@ Caffe::Caffe()
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
   int device;
-  if(cudaSuccess == cudaGetDevice(&device)) {
+  if (cudaSuccess == cudaGetDevice(&device)) {
     CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
   }
 }
