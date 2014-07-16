@@ -76,8 +76,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\pthreads\Pre-built.2\include;D:\glog-0.3.3\src\windows;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include;F:\project\dl\caffe_gpu\src\caffe\include;D:\boost_1_55_x64\boost_1_55_0;C:\Program Files %28x86%29\Intel\Composer XE 2013\mkl\include;D:\protobuf-2.5.0\src;D:\leveldb-master\include;D:\HDF_Group\HDF5\1.8.13\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\lib\x64;D:\boost_1_55_x64\boost_1_55_0\lib64-msvc-11.0;F:\project\dl\caffe_gpu\src\caffe\windows\x64\Debug;F:\project\dl\caffe_gpu\src\caffe\windows\windows;C:\Program Files (x86)\Intel\Composer XE 2013\mkl\lib\intel64;D:\opencv\build\x64\vc11\lib;C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE;D:\pthreads\Pre-built.2\lib\x64;D:\protobuf-2.5.0\vsprojects\x64\Debug;D:\leveldb-master\build\x64\Debug;D:\glog-0.3.3\x64\Debug;D:\HDF_Group\HDF5\1.8.13\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\pthreads\Pre-built.2\include;D:\glog-0.3.3\src\windows;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include;..\..\include;D:\boost_1_55_x64\boost_1_55_0;C:\Program Files %28x86%29\Intel\Composer XE 2013\mkl\include;D:\protobuf-2.5.0\src;D:\leveldb-master\include;D:\HDF_Group\HDF5\1.8.13\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\lib\x64;D:\boost_1_55_x64\boost_1_55_0\lib64-msvc-11.0;..\x64\Debug;..\windows;C:\Program Files (x86)\Intel\Composer XE 2013\mkl\lib\intel64;D:\opencv\build\x64\vc11\lib;C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE;D:\pthreads\Pre-built.2\lib\x64;D:\protobuf-2.5.0\vsprojects\x64\Debug;D:\leveldb-master\build\x64\Debug;D:\glog-0.3.3\x64\Debug;D:\HDF_Group\HDF5\1.8.13\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

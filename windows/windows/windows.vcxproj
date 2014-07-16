@@ -185,8 +185,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\HDF_Group\HDF5\1.8.13\include;D:\leveldb-master\include;D:\pthreads\Pre-built.2\include;D:\opencv\build\include;D:\protobuf-2.5.0\src;D:\glog-0.3.3\src\windows;D:\boost_1_55_x64\boost_1_55_0;C:\Program Files %28x86%29\Intel\Composer XE 2013\mkl\include;F:\project\dl\caffe_gpu\src\caffe\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\HDF_Group\HDF5\1.8.13\lib;F:\project\dl\caffe_gpu\src\caffe\windows\windows;C:\Program Files %28x86%29\Intel\Composer XE 2013\mkl\lib\intel64;C:\Program Files %28x86%29\Microsoft Visual Studio 11.0\Common7\IDE;D:\pthreads\Pre-built.2\lib\x64;D:\protobuf-2.5.0\vsprojects\x64\Debug;D:\opencv\build\x64\vc11\lib;D:\leveldb-master\build\x64\Debug;D:\glog-0.3.3\x64\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\HDF_Group\HDF5\1.8.13\include;D:\leveldb-master\include;D:\pthreads\Pre-built.2\include;D:\opencv\build\include;D:\protobuf-2.5.0\src;D:\glog-0.3.3\src\windows;D:\boost_1_55_x64\boost_1_55_0;C:\Program Files %28x86%29\Intel\Composer XE 2013\mkl\include;..\..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\HDF_Group\HDF5\1.8.13\lib;C:\Program Files %28x86%29\Intel\Composer XE 2013\mkl\lib\intel64;C:\Program Files %28x86%29\Microsoft Visual Studio 11.0\Common7\IDE;D:\pthreads\Pre-built.2\lib\x64;D:\protobuf-2.5.0\vsprojects\x64\Debug;D:\opencv\build\x64\vc11\lib;D:\leveldb-master\build\x64\Debug;D:\glog-0.3.3\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
