@@ -13,8 +13,6 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
-using std::isnan;
-
 namespace caffe {
 
 template <typename TypeParam>
