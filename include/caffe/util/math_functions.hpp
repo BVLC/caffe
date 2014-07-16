@@ -12,9 +12,7 @@
 #include <intrin.h>
 #define __builtin_popcount __popcnt16
 #define __builtin_popcountl __popcnt64
-#else
-#include <stdint.h>
-#endif //_MSC_VER
+#endif // _MSC_VER
 
 #include "glog/logging.h"
 

@@ -80,7 +80,7 @@ class DataLayer : public Layer<Dtype> {
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
 #endif
-  
+
   int datum_channels_;
   int datum_height_;
   int datum_width_;

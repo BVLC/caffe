@@ -3,12 +3,14 @@
 #include <cstdio>
 #include <ctime>
 
-#include "caffe/common.hpp"
-#include "caffe/util/rng.hpp"
-
 #if _MSC_VER
 #include <process.h>
 #endif
+
+#include "caffe/common.hpp"
+#include "caffe/util/rng.hpp"
+
+
 
 namespace caffe {
 
@@ -47,7 +49,7 @@ Caffe::Caffe()
   }
   int device;
   if(cudaSuccess == cudaGetDevice(&device)) {
-	  CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
+    CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
   }
 }
 

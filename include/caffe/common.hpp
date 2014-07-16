@@ -159,8 +159,9 @@ const char* curandGetErrorString(curandStatus_t error);
 
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {
-	int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
-	return num_blocks > Caffe::cuProp().maxGridSize[0]? num_blocks : Caffe::cuProp().maxGridSize[0];
+  int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  int max_blocks = Caffe::cuProp().maxGridSize[0];
+  return num_blocks > max_blocks ? num_blocks : max_blocks;
 }
 
 

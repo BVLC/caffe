@@ -61,7 +61,6 @@ void* DataLayerPrefetch(void* layer_pointer) {
           layer->mdb_value_.mv_size);
       break;
 #endif
-
     default:
       LOG(FATAL) << "Unknown database backend";
     }
@@ -147,10 +146,8 @@ void* DataLayerPrefetch(void* layer_pointer) {
       }
       break;
 #endif
-
     default:
       LOG(FATAL) << "Unknown database backend";
-
     }
   }
 
@@ -172,7 +169,6 @@ DataLayer<Dtype>::~DataLayer<Dtype>() {
     mdb_env_close(mdb_env_);
     break;
 #endif
-
   default:
     LOG(FATAL) << "Unknown database backend";
   }
@@ -223,7 +219,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_FIRST),
         MDB_SUCCESS) << "mdb_cursor_get failed";
     break;
-#endif 
+#endif
   default:
     LOG(FATAL) << "Unknown database backend";
   }
@@ -235,28 +231,26 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
                         this->layer_param_.data_param().rand_skip();
 	LOG(INFO) << "Skipping first " << skip << " data points.";
 	while (skip-- > 0) {
-		switch (this->layer_param_.data_param().backend()) {
-		case DataParameter_DB_LEVELDB:
-			iter_->Next();
-			if (!iter_->Valid()) {
-				iter_->SeekToFirst();
-			}
-			break;
+      switch (this->layer_param_.data_param().backend()) {
+      case DataParameter_DB_LEVELDB:
+        iter_->Next();
+        if (!iter_->Valid()) {
+          iter_->SeekToFirst();
+        }
+        break;
 #ifdef USE_LMDB
-
-		case DataParameter_DB_LMDB:
-			if (mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_NEXT)
-				!= MDB_SUCCESS) {
-					CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_,
-						MDB_FIRST), MDB_SUCCESS);
-			}
-			break;
+      case DataParameter_DB_LMDB:
+        if (mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_NEXT)
+        != MDB_SUCCESS) {
+          CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_,
+          MDB_FIRST), MDB_SUCCESS);
+        }
+        break;
 #endif
-		default:
-			LOG(FATAL) << "Unknown database backend";
-		}
-	}
-
+      default:
+        LOG(FATAL) << "Unknown database backend";
+      }
+    }
   }
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
@@ -269,7 +263,6 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     datum.ParseFromArray(mdb_value_.mv_data, mdb_value_.mv_size);
     break;
 #endif
-
   default:
     LOG(FATAL) << "Unknown database backend";
   }
