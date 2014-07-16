@@ -223,7 +223,7 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_FIRST),
         MDB_SUCCESS) << "mdb_cursor_get failed";
     break;
-#endif
+#endif 
   default:
     LOG(FATAL) << "Unknown database backend";
   }
