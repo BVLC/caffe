@@ -14,14 +14,13 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+namespace caffe {
+
 using std::map;
 using std::pair;
 using std::set;
 using std::string;
 using std::vector;
-
-namespace caffe {
-
 
 template <typename Dtype>
 class Net {

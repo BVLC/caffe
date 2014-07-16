@@ -16,11 +16,10 @@
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::iterator;
-using std::string;
-using std::pair;
-
 namespace caffe {
+
+using std::iterator;
+using std::pair;
 
 template <typename Dtype>
 void* ImageDataLayerPrefetch(void* layer_pointer) {

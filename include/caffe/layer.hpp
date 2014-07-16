@@ -10,10 +10,10 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+namespace caffe {
+
 using std::string;
 using std::vector;
-
-namespace caffe {
 
 template <typename Dtype>
 class Layer {
