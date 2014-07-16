@@ -63,8 +63,8 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
   usleep(300 * 1000);
-  EXPECT_GE(timer.MilliSeconds(), 298);
-  EXPECT_LE(timer.MilliSeconds(), 302);
+  EXPECT_GE(timer.MilliSeconds(), 295);
+  EXPECT_LE(timer.MilliSeconds(), 305);
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_TRUE(timer.has_run_at_least_once());
@@ -78,8 +78,8 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
   usleep(300 * 1000);
-  EXPECT_GE(timer.Seconds(), 0.298);
-  EXPECT_LE(timer.Seconds(), 0.302);
+  EXPECT_GE(timer.Seconds(), 0.295);
+  EXPECT_LE(timer.Seconds(), 0.305);
   EXPECT_TRUE(timer.initted());
   EXPECT_FALSE(timer.running());
   EXPECT_TRUE(timer.has_run_at_least_once());
