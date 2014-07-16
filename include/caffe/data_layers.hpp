@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "leveldb/db.h"
-#if USE_LMDB
+#ifdef USE_LMDB
 #include "lmdb.h"
 #endif
 
@@ -72,7 +72,7 @@ class DataLayer : public Layer<Dtype> {
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
-#if USE_LMDB
+#ifdef USE_LMDB
   // LMDB
   MDB_env* mdb_env_;
   MDB_dbi mdb_dbi_;
