@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <leveldb/db.h>
-#include <pthread.h>
 
 #include <string>
 #include <vector>
@@ -16,46 +15,44 @@
 
 namespace caffe {
 
+// This function is used to create a pthread that prefetches the data.
 template <typename Dtype>
-void* DataLayerPrefetch(void* layer_pointer) {
-  CHECK(layer_pointer);
-  DataLayer<Dtype>* layer = static_cast<DataLayer<Dtype>*>(layer_pointer);
-  CHECK(layer);
+void DataLayer<Dtype>::InternalThreadEntry() {
   Datum datum;
-  CHECK(layer->prefetch_data_.count());
-  Dtype* top_data = layer->prefetch_data_.mutable_cpu_data();
+  CHECK(prefetch_data_.count());
+  Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
-  if (layer->output_labels_) {
-    top_label = layer->prefetch_label_.mutable_cpu_data();
+  if (output_labels_) {
+    top_label = prefetch_label_.mutable_cpu_data();
   }
-  const Dtype scale = layer->layer_param_.data_param().scale();
-  const int batch_size = layer->layer_param_.data_param().batch_size();
-  const int crop_size = layer->layer_param_.data_param().crop_size();
-  const bool mirror = layer->layer_param_.data_param().mirror();
+  const Dtype scale = this->layer_param_.data_param().scale();
+  const int batch_size = this->layer_param_.data_param().batch_size();
+  const int crop_size = this->layer_param_.data_param().crop_size();
+  const bool mirror = this->layer_param_.data_param().mirror();
 
   if (mirror && crop_size == 0) {
     LOG(FATAL) << "Current implementation requires mirror and crop_size to be "
         << "set at the same time.";
   }
   // datum scales
-  const int channels = layer->datum_channels_;
-  const int height = layer->datum_height_;
-  const int width = layer->datum_width_;
-  const int size = layer->datum_size_;
-  const Dtype* mean = layer->data_mean_.cpu_data();
+  const int channels = datum_channels_;
+  const int height = datum_height_;
+  const int width = datum_width_;
+  const int size = datum_size_;
+  const Dtype* mean = data_mean_.cpu_data();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
-    switch (layer->layer_param_.data_param().backend()) {
+    switch (this->layer_param_.data_param().backend()) {
     case DataParameter_DB_LEVELDB:
-      CHECK(layer->iter_);
-      CHECK(layer->iter_->Valid());
-      datum.ParseFromString(layer->iter_->value().ToString());
+      CHECK(iter_);
+      CHECK(iter_->Valid());
+      datum.ParseFromString(iter_->value().ToString());
       break;
     case DataParameter_DB_LMDB:
-      CHECK_EQ(mdb_cursor_get(layer->mdb_cursor_, &layer->mdb_key_,
-              &layer->mdb_value_, MDB_GET_CURRENT), MDB_SUCCESS);
-      datum.ParseFromArray(layer->mdb_value_.mv_data,
-          layer->mdb_value_.mv_size);
+      CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
+              &mdb_value_, MDB_GET_CURRENT), MDB_SUCCESS);
+      datum.ParseFromArray(mdb_value_.mv_data,
+          mdb_value_.mv_size);
       break;
     default:
       LOG(FATAL) << "Unknown database backend";
@@ -66,14 +63,14 @@ void* DataLayerPrefetch(void* layer_pointer) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
       int h_off, w_off;
       // We only do random crop when we do training.
-      if (layer->phase_ == Caffe::TRAIN) {
-        h_off = layer->PrefetchRand() % (height - crop_size);
-        w_off = layer->PrefetchRand() % (width - crop_size);
+      if (phase_ == Caffe::TRAIN) {
+        h_off = PrefetchRand() % (height - crop_size);
+        w_off = PrefetchRand() % (width - crop_size);
       } else {
         h_off = (height - crop_size) / 2;
         w_off = (width - crop_size) / 2;
       }
-      if (mirror && layer->PrefetchRand() % 2) {
+      if (mirror && PrefetchRand() % 2) {
         // Copy mirrored version
         for (int c = 0; c < channels; ++c) {
           for (int h = 0; h < crop_size; ++h) {
@@ -118,34 +115,32 @@ void* DataLayerPrefetch(void* layer_pointer) {
       }
     }
 
-    if (layer->output_labels_) {
+    if (output_labels_) {
       top_label[item_id] = datum.label();
     }
     // go to the next iter
-    switch (layer->layer_param_.data_param().backend()) {
+    switch (this->layer_param_.data_param().backend()) {
     case DataParameter_DB_LEVELDB:
-      layer->iter_->Next();
-      if (!layer->iter_->Valid()) {
+      iter_->Next();
+      if (!iter_->Valid()) {
         // We have reached the end. Restart from the first.
         DLOG(INFO) << "Restarting data prefetching from start.";
-        layer->iter_->SeekToFirst();
+        iter_->SeekToFirst();
       }
       break;
     case DataParameter_DB_LMDB:
-      if (mdb_cursor_get(layer->mdb_cursor_, &layer->mdb_key_,
-              &layer->mdb_value_, MDB_NEXT) != MDB_SUCCESS) {
+      if (mdb_cursor_get(mdb_cursor_, &mdb_key_,
+              &mdb_value_, MDB_NEXT) != MDB_SUCCESS) {
         // We have reached the end. Restart from the first.
         DLOG(INFO) << "Restarting data prefetching from start.";
-        CHECK_EQ(mdb_cursor_get(layer->mdb_cursor_, &layer->mdb_key_,
-                &layer->mdb_value_, MDB_FIRST), MDB_SUCCESS);
+        CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
+                &mdb_value_, MDB_FIRST), MDB_SUCCESS);
       }
       break;
     default:
       LOG(FATAL) << "Unknown database backend";
     }
   }
-
-  return static_cast<void*>(NULL);
 }
 
 template <typename Dtype>
@@ -323,14 +318,12 @@ void DataLayer<Dtype>::CreatePrefetchThread() {
   } else {
     prefetch_rng_.reset();
   }
-  // Create the thread.
-  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
-        static_cast<void*>(this))) << "Pthread execution failed.";
+  CHECK(!StartInternalThread()) << "Pthread execution failed";
 }
 
 template <typename Dtype>
 void DataLayer<Dtype>::JoinPrefetchThread() {
-  CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
+  CHECK(!WaitForInternalThreadToExit()) << "Pthread joining failed";
 }
 
 template <typename Dtype>
