@@ -3,11 +3,14 @@
 #ifndef CAFFE_LAYER_H_
 #define CAFFE_LAYER_H_
 
+#include <string>
 #include <vector>
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+using std::string;
 using std::vector;
 
 namespace caffe {
@@ -30,9 +33,12 @@ class Layer {
       }
     }
   virtual ~Layer() {}
-  // SetUp: your function should implement this.
+  // SetUp: your function should implement this, and call Layer::SetUp for
+  // common SetUp functionality.
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) = 0;
+      vector<Blob<Dtype>*>* top) {
+    CheckBlobCounts(bottom, *top);
+  }
 
   // Forward and backward wrappers. You should implement the cpu and
   // gpu specific implementations instead, and should not change these
@@ -40,7 +46,7 @@ class Layer {
   inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   inline void Backward(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom);
 
   // Returns the vector of blobs.
@@ -52,6 +58,43 @@ class Layer {
   const LayerParameter& layer_param() { return layer_param_; }
   // Writes the layer parameter to a protocol buffer
   virtual void ToProto(LayerParameter* param, bool write_diff = false);
+
+  // Returns the layer type as an enum value.
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_NONE;
+  }
+
+  // Returns the layer type name.
+  virtual inline const string& type_name() const {
+    return LayerParameter_LayerType_Name(type());
+  }
+
+  // These methods can be overwritten to declare that this layer type expects
+  // a certain number of blobs as input and output.
+  //
+  // ExactNum{Bottom,Top}Blobs return a non-negative number to require an exact
+  // number of bottom/top blobs; the Min/Max versions return a non-negative
+  // number to require a minimum and/or maximum number of blobs.
+  // If Exact is specified, neither Min nor Max should be specified, and vice
+  // versa.  These methods may not rely on SetUp having been called.
+  virtual inline int ExactNumBottomBlobs() const { return -1; }
+  virtual inline int MinBottomBlobs() const { return -1; }
+  virtual inline int MaxBottomBlobs() const { return -1; }
+  virtual inline int ExactNumTopBlobs() const { return -1; }
+  virtual inline int MinTopBlobs() const { return -1; }
+  virtual inline int MaxTopBlobs() const { return -1; }
+
+  // EqualNumBottomTopBlobs should return true for layers requiring an equal
+  // number of bottom and top blobs.
+  virtual inline bool EqualNumBottomTopBlobs() const { return false; }
+
+  // Declare for each bottom blob whether to allow force_backward -- that is,
+  // if AllowForceBackward(i) == false, we will ignore the force_backward
+  // setting and backpropagate to blob i only if it needs gradient information
+  // (as is done when force_backward == false).
+  virtual inline bool AllowForceBackward(const int bottom_index) const {
+    return true;
+  }
 
  protected:
   // The protobuf that stores the layer parameters
@@ -73,13 +116,55 @@ class Layer {
   // Backward functions: compute the gradients for any parameters and
   // for the bottom blobs if propagate_down is true.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) = 0;
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down,
+      const vector<bool>& propagate_down,
       vector<Blob<Dtype>*>* bottom) {
     // LOG(WARNING) << "Using CPU code as backup.";
     Backward_cpu(top, propagate_down, bottom);
+  }
+
+  // CheckBlobCounts: called by the parent Layer's SetUp to check that the
+  // number of bottom and top Blobs provided as input match the expected
+  // numbers specified by the {ExactNum,Min,Max}{Bottom,Top}Blobs() functions.
+  virtual void CheckBlobCounts(const vector<Blob<Dtype>*>& bottom,
+                               const vector<Blob<Dtype>*>& top) {
+    if (ExactNumBottomBlobs() >= 0) {
+      CHECK_EQ(ExactNumBottomBlobs(), bottom.size())
+          << type_name() << " Layer takes " << ExactNumBottomBlobs()
+          << " bottom blob(s) as input.";
+    }
+    if (MinBottomBlobs() >= 0) {
+      CHECK_LE(MinBottomBlobs(), bottom.size())
+          << type_name() << " Layer takes at least " << MinBottomBlobs()
+          << " bottom blob(s) as input.";
+    }
+    if (MaxBottomBlobs() >= 0) {
+      CHECK_GE(MaxBottomBlobs(), bottom.size())
+          << type_name() << " Layer takes at most " << MaxBottomBlobs()
+          << " bottom blob(s) as input.";
+    }
+    if (ExactNumTopBlobs() >= 0) {
+      CHECK_EQ(ExactNumTopBlobs(), top.size())
+          << type_name() << " Layer produces " << ExactNumTopBlobs()
+          << " top blob(s) as output.";
+    }
+    if (MinTopBlobs() >= 0) {
+      CHECK_LE(MinTopBlobs(), top.size())
+          << type_name() << " Layer produces at least " << MinTopBlobs()
+          << " top blob(s) as output.";
+    }
+    if (MaxTopBlobs() >= 0) {
+      CHECK_GE(MaxTopBlobs(), top.size())
+          << type_name() << " Layer produces at most " << MaxTopBlobs()
+          << " top blob(s) as output.";
+    }
+    if (EqualNumBottomTopBlobs()) {
+      CHECK_EQ(bottom.size(), top.size())
+          << type_name() << " Layer produces one top blob as output for each "
+          << "bottom blob input.";
+    }
   }
 
   DISABLE_COPY_AND_ASSIGN(Layer);
@@ -104,7 +189,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+    const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   switch (Caffe::mode()) {
   case Caffe::CPU:
