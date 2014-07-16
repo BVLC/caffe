@@ -12,7 +12,7 @@ extern "C" {
 #include <algorithm>
 
 #include "caffe/common.hpp"
-#include "caffe/device.hpp"
+#include "caffe/devices/cpu.hpp"
 #include "caffe/util/mkl_alternate.hpp"
 #include "caffe/util/rng.hpp"
 

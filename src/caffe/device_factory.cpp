@@ -2,6 +2,8 @@
 
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"
+#include "caffe/devices/cpu.hpp"
+#include "caffe/devices/gpu.hpp"
 
 namespace caffe {
 
