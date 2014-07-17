@@ -14,6 +14,9 @@
 
 namespace caffe {
 
+using std::map;
+using std::string;
+
 bool NetNeedsUpgrade(const NetParameter& net_param) {
   for (int i = 0; i < net_param.layers_size(); ++i) {
     if (net_param.layers(i).has_layer()) {
