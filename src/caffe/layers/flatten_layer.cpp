@@ -33,6 +33,10 @@ void FlattenLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   (*bottom)[0]->ShareDiff(*top[0]);
 }
 
+#ifdef CPU_ONLY
+STUB_GPU(FlattenLayer);
+#endif
+
 INSTANTIATE_CLASS(FlattenLayer);
 
 }  // namespace caffe

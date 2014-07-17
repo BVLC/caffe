@@ -149,11 +149,13 @@ NONEMPTY_WARN_REPORT := $(BUILD_DIR)/$(WARNS_EXT)
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR)
-INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR)
-LIBRARY_DIRS += $(CUDA_LIB_DIR)
-LIBRARIES := cudart cublas curand \
-	pthread \
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+ifneq ($(CPU_ONLY), 1)
+	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
+	LIBRARY_DIRS += $(CUDA_LIB_DIR)
+	LIBRARIES := cudart cublas curand
+endif
+LIBRARIES += pthread \
 	glog protobuf leveldb snappy \
 	lmdb \
 	boost_system \
@@ -202,6 +204,16 @@ ifeq ($(LINUX), 1)
 	endif
 endif
 
+# CPU-only configuration
+ifeq ($(CPU_ONLY), 1)
+	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
+	TEST_OBJS := $(TEST_CXX_OBJS)
+	TEST_BINS := $(TEST_CXX_BINS)
+	ALL_WARNS := $(ALL_CXX_WARNS)
+	TEST_FILTER := --gtest_filter="-*GPU*"
+	COMMON_FLAGS += -DCPU_ONLY
+endif
+
 # OS X:
 # clang++ instead of g++
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
@@ -222,9 +234,9 @@ endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
-	COMMON_FLAGS := -DDEBUG -g -O0
+	COMMON_FLAGS += -DDEBUG -g -O0
 else
-	COMMON_FLAGS := -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O2
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -282,7 +294,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 # Define build targets
 ##############################
 .PHONY: all test clean linecount lint tools examples $(DIST_ALIASES) \
-	py mat py$(PROJECT) mat$(PROJECT) proto runtest runtestnogpu \
+	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn
 
 all: $(NAME) $(STATIC_NAME) tools examples
@@ -342,10 +354,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	@ echo
 
 runtest: $(TEST_ALL_BIN)
-	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle
-
-runtestnogpu: $(TEST_ALL_BIN)
-	$(TEST_ALL_BIN) --gtest_shuffle --gtest_filter="-*GPU*:*/2.*:*/3.*"
+	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
 
 warn: $(EMPTY_WARN_REPORT)
 

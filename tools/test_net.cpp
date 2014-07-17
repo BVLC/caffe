@@ -6,8 +6,6 @@
 // Usage:
 //    test_net net_proto pretrained_net_proto iterations [CPU/GPU]
 
-#include <cuda_runtime.h>
-
 #include <cstring>
 #include <cstdlib>
 #include <vector>

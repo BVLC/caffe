@@ -295,6 +295,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
     }
     break;
   case Caffe::GPU:
+#ifndef CPU_ONLY
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
       // Compute the value to history, and then copy them to the blob's diff.
       Dtype local_rate = rate * net_params_lr[param_id];
@@ -314,6 +315,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
           history_[param_id]->gpu_data(),
           net_params[param_id]->mutable_gpu_diff());
     }
+#else
+    NO_GPU;
+#endif
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();

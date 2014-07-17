@@ -26,12 +26,18 @@ install:
 
 before_script:
   - mv Makefile.config.example Makefile.config
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/lib
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
   - export NUM_THREADS=4
 
 script:
+  # CPU-GPU: build only.
+  - export CPU_ONLY=0
+  - make --keep-going --jobs=$NUM_THREADS all
+  - make clean
+  # CPU-only: comprehensive.
+  - export CPU_ONLY=1
   - make --keep-going --jobs=$NUM_THREADS all test warn lint
-  - make runtestnogpu
+  - make runtest
   - make --jobs=$NUM_THREADS all
   - make --jobs=$NUM_THREADS test
   - make --jobs=$NUM_THREADS warn

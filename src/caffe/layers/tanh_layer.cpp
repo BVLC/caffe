@@ -41,6 +41,10 @@ void TanHLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+#ifdef CPU_ONLY
+STUB_GPU(TanHLayer);
+#endif
+
 INSTANTIATE_CLASS(TanHLayer);
 
 }  // namespace caffe

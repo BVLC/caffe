@@ -1,6 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cuda_runtime.h>
 #include <string>
 #include <vector>
 
@@ -16,8 +15,6 @@ using std::string;
 using std::vector;
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template<typename TypeParam>
 class HDF5OutputLayerTest : public MultiDeviceTest<TypeParam> {
