@@ -1,7 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cuda_runtime.h>
-
 #include <iostream>  // NOLINT(readability/streams)
 #include <fstream>  // NOLINT(readability/streams)
 #include <map>
@@ -20,8 +18,6 @@ using std::map;
 using std::string;
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename TypeParam>
 class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {

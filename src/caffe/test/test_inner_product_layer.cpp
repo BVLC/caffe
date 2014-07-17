@@ -3,7 +3,6 @@
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -15,7 +14,9 @@
 
 namespace caffe {
 
+#ifndef CPU_ONLY
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
 
 template <typename TypeParam>
 class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
@@ -57,8 +58,12 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
 
 TYPED_TEST(InnerProductLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
+  bool IS_VALID_CUDA = false;
+#ifndef CPU_ONLY
+  IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
+#endif
   if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
+      sizeof(Dtype) == 4 || IS_VALID_CUDA) {
     LayerParameter layer_param;
     InnerProductParameter* inner_product_param =
         layer_param.mutable_inner_product_param();
@@ -83,8 +88,12 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
 
 TYPED_TEST(InnerProductLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
+  bool IS_VALID_CUDA = false;
+#ifndef CPU_ONLY
+  IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
+#endif
   if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2) {
+      sizeof(Dtype) == 4 || IS_VALID_CUDA) {
     LayerParameter layer_param;
     InnerProductParameter* inner_product_param =
         layer_param.mutable_inner_product_param();

@@ -57,6 +57,7 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+
 INSTANTIATE_CLASS(ReLULayer);
 
 

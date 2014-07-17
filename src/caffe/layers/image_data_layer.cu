@@ -1,6 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cuda_runtime.h>
 #include <stdint.h>
 #include <leveldb/db.h>
 #include <pthread.h>
