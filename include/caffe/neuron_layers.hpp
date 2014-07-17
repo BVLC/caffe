@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "leveldb/db.h"
 #include "pthread.h"
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"

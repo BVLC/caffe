@@ -15,10 +15,9 @@
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::string;
-using std::pair;
-
 namespace caffe {
+
+using std::pair;
 
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
