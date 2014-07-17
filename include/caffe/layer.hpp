@@ -11,10 +11,10 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/device_alternate.hpp"
 
+namespace caffe {
+
 using std::string;
 using std::vector;
-
-namespace caffe {
 
 template <typename Dtype>
 class Layer {

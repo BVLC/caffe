@@ -7,10 +7,10 @@
 
 #include "caffe/proto/caffe.pb.h"
 
+namespace caffe {
+
 using std::pair;
 using std::string;
-
-namespace caffe {
 
 // Copy NetParameters with SplitLayers added to replace any shared bottom
 // blobs with unique bottom blobs provided by the SplitLayer.

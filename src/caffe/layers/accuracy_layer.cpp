@@ -10,9 +10,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
 
-using std::max;
 
 namespace caffe {
+
+using std::max;
 
 template <typename Dtype>
 void AccuracyLayer<Dtype>::SetUp(
