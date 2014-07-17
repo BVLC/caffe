@@ -13,6 +13,7 @@
 
 using caffe::Datum;
 using caffe::BlobProto;
+using std::string;
 using std::max;
 
 int main(int argc, char** argv) {
