@@ -4,7 +4,6 @@
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -17,8 +16,6 @@
 using std::min;
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
 class StochasticPoolingLayerTest : public ::testing::Test {

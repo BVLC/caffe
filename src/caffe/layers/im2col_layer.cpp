@@ -47,6 +47,10 @@ void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+#ifdef CPU_ONLY
+STUB_GPU(Im2colLayer);
+#endif
+
 INSTANTIATE_CLASS(Im2colLayer);
 
 }  // namespace caffe

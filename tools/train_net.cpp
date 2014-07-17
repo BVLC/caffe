@@ -5,8 +5,6 @@
 // Usage:
 //    train_net net_proto_file solver_proto_file [resume_point_file]
 
-#include <cuda_runtime.h>
-
 #include <cstring>
 
 #include "caffe/caffe.hpp"

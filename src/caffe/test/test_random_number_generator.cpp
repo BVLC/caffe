@@ -1,6 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cuda_runtime.h>
 #include <cmath>
 #include <cstring>
 
@@ -65,11 +64,6 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     caffe_rng_gaussian(sample_size_, mu, sigma, rng_data);
   }
 
-  void RngGaussianFillGPU(const Dtype mu, const Dtype sigma, void* gpu_data) {
-    Dtype* rng_data = static_cast<Dtype*>(gpu_data);
-    caffe_gpu_rng_gaussian(sample_size_, mu, sigma, rng_data);
-  }
-
   void RngGaussianChecks(const Dtype mu, const Dtype sigma,
                          const void* cpu_data, const Dtype sparse_p = 0) {
     const Dtype* rng_data = static_cast<const Dtype*>(cpu_data);
@@ -112,19 +106,6 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     CHECK_GE(upper, lower);
     Dtype* rng_data = static_cast<Dtype*>(cpu_data);
     caffe_rng_uniform(sample_size_, lower, upper, rng_data);
-  }
-
-  void RngUniformFillGPU(const Dtype lower, const Dtype upper, void* gpu_data) {
-    CHECK_GE(upper, lower);
-    Dtype* rng_data = static_cast<Dtype*>(gpu_data);
-    caffe_gpu_rng_uniform(sample_size_, lower, upper, rng_data);
-  }
-
-  // Fills with uniform integers in [0, UINT_MAX] using 2 argument form of
-  // caffe_gpu_rng_uniform.
-  void RngUniformIntFillGPU(void* gpu_data) {
-    unsigned int* rng_data = static_cast<unsigned int*>(gpu_data);
-    caffe_gpu_rng_uniform(sample_size_, rng_data);
   }
 
   void RngUniformChecks(const Dtype lower, const Dtype upper,
@@ -187,6 +168,28 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     const Dtype sample_mean = this->sample_mean(rng_data);
     EXPECT_NEAR(sample_mean, true_mean, bound);
   }
+
+#ifndef CPU_ONLY
+
+  void RngGaussianFillGPU(const Dtype mu, const Dtype sigma, void* gpu_data) {
+    Dtype* rng_data = static_cast<Dtype*>(gpu_data);
+    caffe_gpu_rng_gaussian(sample_size_, mu, sigma, rng_data);
+  }
+
+  void RngUniformFillGPU(const Dtype lower, const Dtype upper, void* gpu_data) {
+    CHECK_GE(upper, lower);
+    Dtype* rng_data = static_cast<Dtype*>(gpu_data);
+    caffe_gpu_rng_uniform(sample_size_, lower, upper, rng_data);
+  }
+
+  // Fills with uniform integers in [0, UINT_MAX] using 2 argument form of
+  // caffe_gpu_rng_uniform.
+  void RngUniformIntFillGPU(void* gpu_data) {
+    unsigned int* rng_data = static_cast<unsigned int*>(gpu_data);
+    caffe_gpu_rng_uniform(sample_size_, rng_data);
+  }
+
+#endif
 
   int num_above_mean;
   int num_below_mean;
@@ -393,6 +396,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   EXPECT_NEAR(true_mean, sample_p, bound);
 }
 
+#ifndef CPU_ONLY
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianGPU) {
   const TypeParam mu = 0;
@@ -512,5 +516,6 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngUniformTimesUniformGPU) {
   this->RngUniformChecks(lower_prod, upper_prod, uniform_data_1);
 }
 
+#endif
 
 }  // namespace caffe
