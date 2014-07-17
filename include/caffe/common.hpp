@@ -66,14 +66,11 @@ namespace caffe {
 using boost::shared_ptr;
 
 // Common functions and classes from std that caffe often uses.
-using std::abs;
 using std::fstream;
 using std::ios;
 using std::iterator;
 using std::make_pair;
 using std::map;
-using std::max;
-using std::min;
 using std::ostringstream;
 using std::pair;
 using std::set;
