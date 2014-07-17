@@ -42,7 +42,7 @@ Dtype InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
     for (int j = 0; j < dim; ++j) {
-      Dtype prob = max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
+      Dtype prob = std::max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
       loss -= infogain_mat[label * dim + j] * log(prob);
     }
   }
@@ -71,7 +71,7 @@ void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
       for (int j = 0; j < dim; ++j) {
-        Dtype prob = max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
+        Dtype prob = std::max(bottom_data[i * dim + j], Dtype(kLOG_THRESHOLD));
         bottom_diff[i * dim + j] = - infogain_mat[label * dim + j] / prob / num;
       }
     }
