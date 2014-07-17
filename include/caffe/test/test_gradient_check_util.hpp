@@ -13,8 +13,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 
-using std::max;
-
 namespace caffe {
 
 // The gradient checker adds a L2 normalization loss function on top of the

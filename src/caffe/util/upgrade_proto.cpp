@@ -12,10 +12,10 @@
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+namespace caffe {
+
 using std::map;
 using std::string;
-
-namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
   for (int i = 0; i < net_param.layers_size(); ++i) {

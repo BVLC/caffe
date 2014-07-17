@@ -10,8 +10,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
 
-using std::max;
-
 namespace caffe {
 
 template <typename Dtype>
