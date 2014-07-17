@@ -19,10 +19,8 @@
 #include "caffe/util/io.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-using std::fstream;
-using std::ios;
-using std::max;
-using std::string;
+namespace caffe {
+
 using google::protobuf::io::FileInputStream;
 using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
@@ -30,8 +28,6 @@ using google::protobuf::io::CodedInputStream;
 using google::protobuf::io::ZeroCopyOutputStream;
 using google::protobuf::io::CodedOutputStream;
 using google::protobuf::Message;
-
-namespace caffe {
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto) {
   int fd = open(filename, O_RDONLY);

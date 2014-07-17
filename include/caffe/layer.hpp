@@ -13,9 +13,6 @@
 
 namespace caffe {
 
-using std::string;
-using std::vector;
-
 template <typename Dtype>
 class Layer {
  public:
