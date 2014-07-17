@@ -26,10 +26,11 @@ before_script:
   - mv Makefile.config.example Makefile.config
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
   - export NUM_THREADS=4
+  - export CPU_ONLY=1
 
 script:
   - make --keep-going --jobs=$NUM_THREADS all test warn lint
-  - make runtestnogpu
+  - make runtest
   - make --jobs=$NUM_THREADS all
   - make --jobs=$NUM_THREADS test
   - make --jobs=$NUM_THREADS warn
