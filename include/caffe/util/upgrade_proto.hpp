@@ -10,8 +10,6 @@
 
 namespace caffe {
 
-using std::string;
-
 // Return true iff any layer contains parameters specified using
 // deprecated V0LayerParameter.
 bool NetNeedsUpgrade(const NetParameter& net_param);
