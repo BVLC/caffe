@@ -8,8 +8,6 @@
 
 namespace caffe {
 
-using std::min;
-
 const float kBNLL_THRESHOLD = 50.;
 
 template <typename Dtype>

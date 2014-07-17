@@ -28,9 +28,6 @@
 
 namespace caffe {
 
-using std::map;
-using std::pair;
-
 template <typename Dtype>
 void* WindowDataLayerPrefetch(void* layer_pointer) {
   WindowDataLayer<Dtype>* layer =

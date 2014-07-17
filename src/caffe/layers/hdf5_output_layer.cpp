@@ -12,7 +12,6 @@
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
-using std::vector;
 
 template <typename Dtype>
 HDF5OutputLayer<Dtype>::HDF5OutputLayer(const LayerParameter& param)
