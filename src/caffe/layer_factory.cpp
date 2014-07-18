@@ -10,7 +10,7 @@
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
-  
+
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,
 // but we will leave it this way for now.
