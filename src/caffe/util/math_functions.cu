@@ -12,6 +12,13 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#if _MSC_VER < 1800
+namespace std {
+  __host__ __device__ inline bool signbit(float num) { return _copysign(1.0f, num) < 0; }
+  __host__ __device__ inline bool signbit(double num) { return _copysign(1.0, num) < 0; }
+}
+#endif
+
 namespace caffe {
 
 template <>
