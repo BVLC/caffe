@@ -22,14 +22,16 @@ int main(int argc, char** argv) {
   ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
   LOG(INFO) << "Starting Optimization";
-  SGDSolver<float> solver(solver_param);
+  Solver<float>* solver = GetSolver<float>(solver_param);
   if (argc == 3) {
     LOG(INFO) << "Resuming from " << argv[2];
-    solver.Solve(argv[2]);
+    solver->Solve(argv[2]);
   } else {
-    solver.Solve();
+    solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
+
+  delete solver;
 
   return 0;
 }
