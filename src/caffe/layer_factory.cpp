@@ -9,10 +9,7 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-using std::string;
-
 namespace caffe {
-
 
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,

@@ -16,10 +16,6 @@
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::iterator;
-using std::string;
-using std::pair;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -286,6 +282,10 @@ Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   CreatePrefetchThread();
   return Dtype(0.);
 }
+
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(ImageDataLayer, Forward);
+#endif
 
 INSTANTIATE_CLASS(ImageDataLayer);
 

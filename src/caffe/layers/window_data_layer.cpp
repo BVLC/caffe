@@ -22,16 +22,11 @@
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::string;
-using std::map;
-using std::pair;
-
 #if _MSC_VER < 1800
 inline double round(double x) {
   return (x > 0.0) ? floor(x + 0.5) : ceil(x - 0.5);
 }
 #endif
-
 
 // caffe.proto > LayerParameter > WindowDataParameter
 //   'source' field specifies the window_file
@@ -459,6 +454,10 @@ Dtype WindowDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   CreatePrefetchThread();
   return Dtype(0.);
 }
+
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(WindowDataLayer, Forward);
+#endif
 
 INSTANTIATE_CLASS(WindowDataLayer);
 

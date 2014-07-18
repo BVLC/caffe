@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "leveldb/db.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
@@ -17,8 +16,6 @@ using std::string;
 using std::stringstream;
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename TypeParam>
 class DataLayerTest : public MultiDeviceTest<TypeParam> {

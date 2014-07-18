@@ -3,10 +3,10 @@
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
+#include "caffe/util/device_alternate.hpp"
 #include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -24,6 +24,8 @@ TEST_F(SyncedMemoryTest, TestInitialization) {
   delete p_mem;
 }
 
+#ifndef CPU_ONLY  // GPU test
+
 TEST_F(SyncedMemoryTest, TestAllocationCPUGPU) {
   SyncedMemory mem(10);
   EXPECT_TRUE(mem.cpu_data());
@@ -32,17 +34,23 @@ TEST_F(SyncedMemoryTest, TestAllocationCPUGPU) {
   EXPECT_TRUE(mem.mutable_gpu_data());
 }
 
+#endif
+
 TEST_F(SyncedMemoryTest, TestAllocationCPU) {
   SyncedMemory mem(10);
   EXPECT_TRUE(mem.cpu_data());
   EXPECT_TRUE(mem.mutable_cpu_data());
 }
 
+#ifndef CPU_ONLY  // GPU test
+
 TEST_F(SyncedMemoryTest, TestAllocationGPU) {
   SyncedMemory mem(10);
   EXPECT_TRUE(mem.gpu_data());
   EXPECT_TRUE(mem.mutable_gpu_data());
 }
+
+#endif
 
 TEST_F(SyncedMemoryTest, TestCPUWrite) {
   SyncedMemory mem(10);
@@ -60,6 +68,8 @@ TEST_F(SyncedMemoryTest, TestCPUWrite) {
     EXPECT_EQ((static_cast<char*>(cpu_data))[i], 2);
   }
 }
+
+#ifndef CPU_ONLY  // GPU test
 
 TEST_F(SyncedMemoryTest, TestGPURead) {
   SyncedMemory mem(10);
@@ -111,5 +121,7 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   }
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
 }
+
+#endif
 
 }  // namespace caffe

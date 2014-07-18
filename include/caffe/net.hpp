@@ -14,14 +14,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-using std::map;
-using std::pair;
-using std::set;
-using std::string;
-using std::vector;
-
 namespace caffe {
-
 
 template <typename Dtype>
 class Net {

@@ -16,8 +16,6 @@
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-
 template <typename TypeParam>
 class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;

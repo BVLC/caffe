@@ -12,12 +12,11 @@
 
 #include "caffe/blob.hpp"
 
-using std::string;
-using ::google::protobuf::Message;
-
 #define HDF5_NUM_DIMS 4
 
 namespace caffe {
+
+using ::google::protobuf::Message;
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto);
 

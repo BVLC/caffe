@@ -1,6 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cuda_runtime.h>
 #include <fcntl.h>
 #include <google/protobuf/text_format.h>
 

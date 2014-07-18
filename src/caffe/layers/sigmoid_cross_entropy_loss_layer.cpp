@@ -8,8 +8,6 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
-using std::max;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -67,6 +65,10 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     caffe_scal(count, Dtype(1) / num, bottom_diff);
   }
 }
+
+#ifdef CPU_ONLY
+STUB_GPU(SigmoidCrossEntropyLossLayer);
+#endif
 
 INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
 

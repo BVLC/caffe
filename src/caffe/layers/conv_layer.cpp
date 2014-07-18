@@ -187,6 +187,10 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+#ifdef CPU_ONLY
+STUB_GPU(ConvolutionLayer);
+#endif
+
 INSTANTIATE_CLASS(ConvolutionLayer);
 
 }  // namespace caffe

@@ -5,7 +5,6 @@
 #ifndef CAFFE_TEST_TEST_CAFFE_MAIN_HPP_
 #define CAFFE_TEST_TEST_CAFFE_MAIN_HPP_
 
-#include <cuda_runtime.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
 
@@ -44,6 +43,12 @@ struct DoubleCPU {
   static const Caffe::Brew device = Caffe::CPU;
 };
 
+#ifdef CPU_ONLY
+
+typedef ::testing::Types<FloatCPU, DoubleCPU> TestDtypesAndDevices;
+
+#else
+
 struct FloatGPU {
   typedef float Dtype;
   static const Caffe::Brew device = Caffe::GPU;
@@ -56,6 +61,8 @@ struct DoubleGPU {
 
 typedef ::testing::Types<FloatCPU, DoubleCPU, FloatGPU, DoubleGPU>
     TestDtypesAndDevices;
+
+#endif
 
 }  // namespace caffe
 

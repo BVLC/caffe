@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
@@ -13,11 +12,15 @@ namespace caffe {
 
 class CommonTest : public ::testing::Test {};
 
+#ifndef CPU_ONLY  // GPU Caffe singleton test.
+
 TEST_F(CommonTest, TestCublasHandlerGPU) {
   int cuda_device_id;
   CUDA_CHECK(cudaGetDevice(&cuda_device_id));
   EXPECT_TRUE(Caffe::cublas_handle());
 }
+
+#endif
 
 TEST_F(CommonTest, TestBrewMode) {
   Caffe::set_mode(Caffe::CPU);
@@ -48,6 +51,8 @@ TEST_F(CommonTest, TestRandSeedCPU) {
   }
 }
 
+#ifndef CPU_ONLY  // GPU Caffe singleton test.
+
 TEST_F(CommonTest, TestRandSeedGPU) {
   SyncedMemory data_a(10 * sizeof(unsigned int));
   SyncedMemory data_b(10 * sizeof(unsigned int));
@@ -62,5 +67,7 @@ TEST_F(CommonTest, TestRandSeedGPU) {
         ((const unsigned int*)(data_b.cpu_data()))[i]);
   }
 }
+
+#endif
 
 }  // namespace caffe

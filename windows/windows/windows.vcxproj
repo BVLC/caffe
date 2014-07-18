@@ -263,8 +263,9 @@
 cd $(SolutionDir)
 cd ..
 set SRC_DIR=./src/caffe/proto
-"./windows/protoc.exe" --proto_path=src --cpp_out=%SRC_DIR%  %SRC_DIR%/caffe.proto
-"./windows/protoc.exe" --proto_path=src --cpp_out=%SRC_DIR%  %SRC_DIR%/caffe_pretty_print.proto
+echo %SRC_DIR%
+"./windows/protoc.exe" --proto_path=src --cpp_out=src  %SRC_DIR%/caffe.proto
+"./windows/protoc.exe" --proto_path=src --cpp_out=src  %SRC_DIR%/caffe_pretty_print.proto
 cp %SRC_DIR%/*.h ./include/caffe/proto
 cd $(ProjectDir)
 echo "Create proto files done..."</Command>

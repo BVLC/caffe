@@ -6,8 +6,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::max;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -58,6 +56,7 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     CUDA_POST_KERNEL_CHECK;
   }
 }
+
 
 INSTANTIATE_CLASS(ReLULayer);
 

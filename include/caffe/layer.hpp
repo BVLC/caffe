@@ -9,9 +9,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
-
-using std::string;
-using std::vector;
+#include "caffe/util/device_alternate.hpp"
 
 namespace caffe {
 

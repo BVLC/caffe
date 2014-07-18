@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/filler.hpp"
 

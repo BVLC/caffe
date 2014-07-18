@@ -8,8 +8,6 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/proto/caffe_pretty_print.pb.h"
 
-using std::string;
-
 namespace caffe {
 
 // Return true iff any layer contains parameters specified using
