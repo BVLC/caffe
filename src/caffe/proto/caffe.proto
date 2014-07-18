@@ -56,24 +56,55 @@ message NetParameter {
   // If set False, then whether to carry out backward is determined
   // automatically according to the net structure and learning rates.
   optional bool force_backward = 5 [default = false];
+  // The current "state" of the network, including the phase, level, and stage.
+  // Some layers may be included/excluded depending on this state and the states
+  // specified in the layers' include and exclude fields.
+  optional NetState state = 6;
 }
 
+// NOTE
+// Update the next available ID when you add a new SolverParameter field.
+//
+// SolverParameter next available ID: 27 (last added: test_state)
 message SolverParameter {
-  // {train,test}_net specify a path to a file containing the {train,test} net
-  // parameters; {train,test}_net_param specify the net parameters directly
-  // inside the SolverParameter.
+  //////////////////////////////////////////////////////////////////////////////
+  // Specifying the train and test networks
   //
-  // Only either train_net or train_net_param (not both) should be specified.
-  // You may specify 0 or more test_net and/or test_net_param.  All
-  // nets specified using test_net_param will be tested first, followed by all
-  // nets specified using test_net (each processed in the order specified in
-  // the prototxt).
-  optional string train_net = 1; // The proto filename for the train net.
-  repeated string test_net = 2; // The proto filenames for the test nets.
-  optional NetParameter train_net_param = 21; // Full params for the train net.
-  repeated NetParameter test_net_param = 22; // Full params for the test nets.
-  // The number of iterations for each testing phase.
+  // Exactly one train net must be specified using one of the following fields:
+  //     train_net_param, train_net, net_param, net
+  // One or more test nets may be specified using any of the following fields:
+  //     test_net_param, test_net, net_param, net
+  // If more than one test net field is specified (e.g., both net and
+  // test_net are specified), they will be evaluated in the field order given
+  // above: (1) test_net_param, (2) test_net, (3) net_param/net.
+  // A test_iter must be specified for each test_net.
+  // A test_level and/or a test_stage may also be specified for each test_net.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // Proto filename for the train net, possibly combined with one or more
+  // test nets.
+  optional string net = 24;
+  // Inline train net param, possibly combined with one or more test nets.
+  optional NetParameter net_param = 25;
+
+  optional string train_net = 1; // Proto filename for the train net.
+  repeated string test_net = 2; // Proto filenames for the test nets.
+  optional NetParameter train_net_param = 21; // Inline train net params.
+  repeated NetParameter test_net_param = 22; // Inline test net params.
+
+  // The states for the train/test nets. Must be unspecified or
+  // specified once per net.
+  //
+  // By default, all states will have solver = true;
+  // train_state will have phase = TRAIN,
+  // and all test_state's will have phase = TEST.
+  // Other defaults are set according to the NetState defaults.
+  optional NetState train_state = 26;
+  repeated NetState test_state = 27;
+
+  // The number of iterations for each test net.
   repeated int32 test_iter = 3;
+
   // The number of iterations between two testing phases.
   optional int32 test_interval = 4 [default = 0];
   optional bool test_compute_loss = 19 [default = false];
@@ -118,14 +149,50 @@ message SolverState {
   repeated BlobProto history = 3; // The history for sgd solvers
 }
 
+enum Phase {
+   TRAIN = 0;
+   TEST = 1;
+}
+
+message NetState {
+  optional Phase phase = 1 [default = TEST];
+  optional int32 level = 2 [default = 0];
+  repeated string stage = 3;
+}
+
+message NetStateRule {
+  // Set phase to require the NetState have a particular phase (TRAIN or TEST)
+  // to meet this rule.
+  optional Phase phase = 1;
+
+  // Set the minimum and/or maximum levels in which the layer should be used.
+  // Leave undefined to meet the rule regardless of level.
+  optional int32 min_level = 2;
+  optional int32 max_level = 3;
+
+  // A customizable set of stages.
+  // The net must have ALL of the specified stages to meet the rule.
+  // (Use multiple NetStateRules to specify conjunctions of stages.)
+  repeated string stage = 4;
+}
+
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 32 (last added: slice_param)
+// LayerParameter next available ID: 34 (last added: exclude)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
   optional string name = 4; // the layer name
+
+  // Rules controlling whether and when a layer is included in the network,
+  // based on the current NetState.  You may specify a non-zero number of rules
+  // to include OR exclude, but not both.  If no include or exclude rules are
+  // specified, the layer is always included.  If the current NetState meets
+  // ANY (i.e., one or more) of the specified rules, the layer is
+  // included/excluded.
+  repeated NetStateRule include = 32;
+  repeated NetStateRule exclude = 33;
 
   // NOTE
   // Add new LayerTypes to the enum below in lexicographical order (other than
