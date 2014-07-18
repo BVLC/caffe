@@ -12,7 +12,7 @@ namespace std {
   inline bool signbit(float num);
   inline bool signbit(double num);
 } // namespace std
-
+inline double round(double x);
 #endif // _MSC_VER < 1800
 #endif // _MSC_VER
 

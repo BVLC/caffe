@@ -1,4 +1,5 @@
 // Copyright 2014 BVLC and contributors.
+
 #ifdef _MSC_VER
 #include <io.h>
 #endif
@@ -21,8 +22,10 @@
 #include "caffe/util/io.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-namespace caffe {
-
+using std::fstream;
+using std::ios;
+using std::max;
+using std::string;
 using google::protobuf::io::FileInputStream;
 using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
@@ -30,6 +33,8 @@ using google::protobuf::io::CodedInputStream;
 using google::protobuf::io::ZeroCopyOutputStream;
 using google::protobuf::io::CodedOutputStream;
 using google::protobuf::Message;
+
+namespace caffe {
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto) {
 #ifdef _MSC_VER

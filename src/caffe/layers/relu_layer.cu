@@ -6,6 +6,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
+using std::max;
+
 namespace caffe {
 
 template <typename Dtype>

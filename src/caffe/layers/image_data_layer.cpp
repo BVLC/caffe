@@ -18,6 +18,9 @@
 
 namespace caffe {
 
+using std::iterator;
+using std::pair;
+
 template <typename Dtype>
 void* ImageDataLayerPrefetch(void* layer_pointer) {
   CHECK(layer_pointer);

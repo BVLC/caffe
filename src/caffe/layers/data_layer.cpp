@@ -222,7 +222,6 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     LOG(FATAL) << "Unknown database backend";
   }
 
-
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.data_param().rand_skip()) {
     unsigned int skip = caffe_rng_rand() %
@@ -239,9 +238,9 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 #ifdef USE_LMDB
       case DataParameter_DB_LMDB:
         if (mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_NEXT)
-        != MDB_SUCCESS) {
+            != MDB_SUCCESS) {
           CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_,
-          MDB_FIRST), MDB_SUCCESS);
+                   MDB_FIRST), MDB_SUCCESS);
         }
         break;
 #endif

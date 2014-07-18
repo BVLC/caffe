@@ -12,6 +12,9 @@
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+using std::map;
+using std::string;
+
 namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {

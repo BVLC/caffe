@@ -3,10 +3,6 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
-#ifdef _MSC_VER
-#include <process.h>
-#endif
-
 #include <boost/shared_ptr.hpp>
 #include <glog/logging.h>
 
@@ -72,17 +68,6 @@ namespace caffe {
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
 
-// Common functions and classes from std that caffe often uses.
-using std::fstream;
-using std::ios;
-using std::iterator;
-using std::make_pair;
-using std::map;
-using std::ostringstream;
-using std::pair;
-using std::set;
-using std::string;
-using std::vector;
 
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.

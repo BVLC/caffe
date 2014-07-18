@@ -18,6 +18,9 @@
 
 namespace caffe {
 
+using std::map;
+using std::pair;
+
 template <typename Dtype>
 Dtype WindowDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {

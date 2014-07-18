@@ -16,6 +16,7 @@
 
 namespace caffe {
 
+using std::string;
 using ::google::protobuf::Message;
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto);

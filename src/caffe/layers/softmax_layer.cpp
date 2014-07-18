@@ -7,6 +7,8 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
+using std::max;
+
 namespace caffe {
 
 template <typename Dtype>
@@ -38,7 +40,7 @@ Dtype SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num; ++i) {
     scale_data[i] = bottom_data[i*dim];
     for (int j = 0; j < dim; ++j) {
-      scale_data[i] = std::max(scale_data[i], bottom_data[i * dim + j]);
+      scale_data[i] = max(scale_data[i], bottom_data[i * dim + j]);
     }
   }
   // subtraction

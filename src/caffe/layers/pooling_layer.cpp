@@ -10,10 +10,10 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
-namespace caffe {
-
-using std::min;
 using std::max;
+using std::min;
+
+namespace caffe {
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,

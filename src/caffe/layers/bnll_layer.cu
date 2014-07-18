@@ -8,6 +8,8 @@
 
 namespace caffe {
 
+using std::max;
+
 __constant__ float kBNLL_THRESHOLD = 50.;
 
 template <typename Dtype>

@@ -10,6 +10,8 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
 
+using std::max;
+
 namespace caffe {
 
 template <typename Dtype>
@@ -28,8 +30,7 @@ Dtype HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < dim; ++j) {
-      bottom_diff[i * dim + j] = std::max(
-        Dtype(0), 1 + bottom_diff[i * dim + j]);
+      bottom_diff[i * dim + j] = max(Dtype(0), 1 + bottom_diff[i * dim + j]);
     }
   }
   switch (this->layer_param_.hinge_loss_param().norm()) {

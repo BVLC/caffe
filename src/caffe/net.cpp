@@ -15,6 +15,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
+using std::make_pair;
+using std::map;
+using std::pair;
+using std::set;
 
 namespace caffe {
 
