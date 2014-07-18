@@ -10,7 +10,8 @@
 #include "leveldb/db.h"
 #ifdef USE_LMDB
 #include "lmdb.h"
-#endif  // USE_LMDB
+#endif
+
 #include "pthread.h"
 #include "hdf5.h"
 #include "boost/scoped_ptr.hpp"
@@ -78,7 +79,7 @@ class DataLayer : public Layer<Dtype> {
   MDB_txn* mdb_txn_;
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
-#endif  // USE_LMDB
+#endif
 
   int datum_channels_;
   int datum_height_;
