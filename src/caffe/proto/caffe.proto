@@ -66,6 +66,7 @@ message SolverParameter {
   // nets specified using test_net_param will be tested first, followed by all
   // nets specified using test_net (each processed in the order specified in
   // the prototxt).
+  // Next available ID 24 (last added: solver_type)
   optional string train_net = 1; // The proto filename for the train net.
   repeated string test_net = 2; // The proto filenames for the test nets.
   optional NetParameter train_net_param = 21; // Full params for the train net.
@@ -103,6 +104,15 @@ message SolverParameter {
   // random number generator -- useful for reproducible results. Otherwise,
   // (and by default) initialize using a seed derived from the system clock.
   optional int64 random_seed = 20 [default = -1];
+  
+  // the type of the solver, use SGD by default.
+  // Next available ID: 3
+  enum SolverType {
+    SGD = 0;
+    ADAGRAD = 1;
+    NESTEROV = 2;
+  }  
+  optional SolverType solver_type = 23 [default = SGD];
 }
 
 // A message that stores the solver snapshots
