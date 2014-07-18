@@ -1,5 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
+syntax = "proto2";
+
 package caffe;
 
 message BlobProto {
