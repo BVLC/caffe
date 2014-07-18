@@ -5,7 +5,6 @@
 #include <cfloat>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -15,8 +14,6 @@
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
 class AccuracyLayerTest : public ::testing::Test {
@@ -71,14 +68,12 @@ class AccuracyLayerTest : public ::testing::Test {
   int top_k_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(AccuracyLayerTest, Dtypes);
+TYPED_TEST_CASE(AccuracyLayerTest, TestDtypes);
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
   AccuracyParameter* accuracy_param = layer_param.mutable_accuracy_param();
   accuracy_param->set_top_k(this->top_k_);
-  Caffe::set_mode(Caffe::CPU);
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));

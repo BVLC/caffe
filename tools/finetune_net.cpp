@@ -4,8 +4,6 @@
 // Usage:
 //    finetune_net solver_proto_file pretrained_net
 
-#include <cuda_runtime.h>
-
 #include <string>
 
 #include "caffe/caffe.hpp"

@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
 #include "caffe/blob.hpp"
@@ -23,8 +22,7 @@ class BlobSimpleTest : public ::testing::Test {
   Blob<Dtype>* const blob_preshaped_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(BlobSimpleTest, Dtypes);
+TYPED_TEST_CASE(BlobSimpleTest, TestDtypes);
 
 TYPED_TEST(BlobSimpleTest, TestInitialization) {
   EXPECT_TRUE(this->blob_);
@@ -41,7 +39,7 @@ TYPED_TEST(BlobSimpleTest, TestInitialization) {
   EXPECT_EQ(this->blob_->count(), 0);
 }
 
-TYPED_TEST(BlobSimpleTest, TestPointers) {
+TYPED_TEST(BlobSimpleTest, TestPointersCPUGPU) {
   EXPECT_TRUE(this->blob_preshaped_->gpu_data());
   EXPECT_TRUE(this->blob_preshaped_->cpu_data());
   EXPECT_TRUE(this->blob_preshaped_->mutable_gpu_data());

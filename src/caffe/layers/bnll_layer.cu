@@ -6,8 +6,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::max;
-
 namespace caffe {
 
 const float kBNLL_THRESHOLD = 50.;

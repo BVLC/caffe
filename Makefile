@@ -17,7 +17,7 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
-# The target static library and shared library name
+# The target shared library and static library name
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
 NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
 STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
@@ -28,7 +28,7 @@ STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
 # CXX_SRCS are the source files excluding the test ones.
 CXX_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cpp" -name "*.cpp")
 # HXX_SRCS are the header files
-HXX_SRCS := $(shell find include/$(PROJECT) -name "*.hpp")
+HXX_SRCS := $(shell find include/$(PROJECT) ! -name "test_*.hpp" -name "*.hpp")
 # CU_SRCS are the cuda source files
 CU_SRCS := $(shell find src/$(PROJECT) ! -name "test_*.cu" -name "*.cu")
 # TEST_SRCS are the test source files
@@ -37,8 +37,8 @@ TEST_SRCS := $(shell find src/$(PROJECT) -name "test_*.cpp")
 TEST_SRCS := $(filter-out $(TEST_MAIN_SRC), $(TEST_SRCS))
 TEST_CU_SRCS := $(shell find src/$(PROJECT) -name "test_*.cu")
 GTEST_SRC := src/gtest/gtest-all.cpp
-# TEST_HDRS are the test header files
-TEST_HDRS := $(shell find src/$(PROJECT) -name "test_*.hpp")
+# TEST_HXX_SRCS are the test header files
+TEST_HXX_SRCS := $(shell find include/$(PROJECT) -name "test_*.hpp")
 # TOOL_SRCS are the source files for the tool binaries
 TOOL_SRCS := $(shell find tools -name "*.cpp")
 # EXAMPLE_SRCS are the source files for the example binaries
@@ -149,11 +149,13 @@ NONEMPTY_WARN_REPORT := $(BUILD_DIR)/$(WARNS_EXT)
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
 CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR)
-INCLUDE_DIRS += ./src ./include $(CUDA_INCLUDE_DIR)
-LIBRARY_DIRS += $(CUDA_LIB_DIR)
-LIBRARIES := cudart cublas curand \
-	pthread \
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+ifneq ($(CPU_ONLY), 1)
+	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
+	LIBRARY_DIRS += $(CUDA_LIB_DIR)
+	LIBRARIES := cudart cublas curand
+endif
+LIBRARIES += pthread \
 	glog protobuf leveldb snappy \
 	lmdb \
 	boost_system \
@@ -194,12 +196,22 @@ else ifeq ($(UNAME), Darwin)
 endif
 
 ifeq ($(LINUX), 1)
-	CXX := /usr/bin/g++
+	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
 	# older versions of gcc are too dumb to build boost with -Wuninitalized
 	ifeq ($(shell echo $(GCCVERSION) \< 4.6 | bc), 1)
 		WARNINGS += -Wno-uninitialized
 	endif
+endif
+
+# CPU-only configuration
+ifeq ($(CPU_ONLY), 1)
+	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
+	TEST_OBJS := $(TEST_CXX_OBJS)
+	TEST_BINS := $(TEST_CXX_BINS)
+	ALL_WARNS := $(ALL_CXX_WARNS)
+	TEST_FILTER := --gtest_filter="-*GPU*"
+	COMMON_FLAGS += -DCPU_ONLY
 endif
 
 # OS X:
@@ -215,16 +227,16 @@ ifeq ($(OSX), 1)
 	endif
 endif
 
-# Custom compiler 
+# Custom compiler
 ifdef CUSTOM_CXX
 	CXX := $(CUSTOM_CXX)
 endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
-	COMMON_FLAGS := -DDEBUG -g -O0
+	COMMON_FLAGS += -DDEBUG -g -O0
 else
-	COMMON_FLAGS := -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O2
 endif
 
 # BLAS configuration (default = ATLAS)
@@ -297,10 +309,11 @@ $(EMPTY_LINT_REPORT): $(LINT_OUTPUTS) | $(BUILD_DIR)
 	@ if [ -s "$@" ]; then \
 		cat $@; \
 		mv $@ $(NONEMPTY_LINT_REPORT); \
-	  else \
-		$(RM) $(NONEMPTY_LINT_REPORT); \
-		echo "No lint errors!"; \
-	  fi
+		echo "Found one or more lint errors."; \
+		exit 1; \
+	  fi; \
+	  $(RM) $(NONEMPTY_LINT_REPORT); \
+	  echo "No lint errors!";
 
 $(LINT_OUTPUTS): $(LINT_OUTPUT_DIR)/%.lint.txt : % | $(LINT_OUTPUT_DIR)
 	@ mkdir -p $(dir $@)
@@ -335,13 +348,13 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 			"to build mat$(PROJECT)."; \
 		exit 1; \
 	fi
-	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) $(STATIC_NAME) \
+	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) \
 			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
-			CXXLIBS="\$$CXXLIBS $(LDFLAGS)" -o $@
+			CXXLIBS="\$$CXXLIBS $(STATIC_NAME) $(LDFLAGS)" -output $@
 	@ echo
 
 runtest: $(TEST_ALL_BIN)
-	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle
+	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
 
 warn: $(EMPTY_WARN_REPORT)
 
@@ -350,10 +363,11 @@ $(EMPTY_WARN_REPORT): $(ALL_WARNS) | $(BUILD_DIR)
 	@ if [ -s "$@" ]; then \
 		cat $@; \
 		mv $@ $(NONEMPTY_WARN_REPORT); \
-	  else \
-		$(RM) $(NONEMPTY_WARN_REPORT); \
-		echo "No compiler warnings!"; \
-	  fi
+		echo "Compiler produced one or more warnings."; \
+		exit 1; \
+	  fi; \
+	  $(RM) $(NONEMPTY_WARN_REPORT); \
+	  echo "No compiler warnings!";
 
 $(ALL_CXX_WARNS): %.o.$(WARNS_EXT) : %.o
 
@@ -382,14 +396,14 @@ $(STATIC_NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
 	ar rcs $@ $(PROTO_OBJS) $(OBJS)
 	@ echo
 
-$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HDRS) \
+$(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HXX_SRCS) \
 		| $(TEST_BUILD_DIR)
 	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 	@ echo
 
-$(TEST_BUILD_DIR)/%.cuo: src/$(PROJECT)/test/%.cu $(HXX_SRCS) $(TEST_HDRS) \
+$(TEST_BUILD_DIR)/%.cuo: src/$(PROJECT)/test/%.cu $(HXX_SRCS) $(TEST_HXX_SRCS) \
 		| $(TEST_BUILD_DIR)
 	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)

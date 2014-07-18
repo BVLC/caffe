@@ -15,10 +15,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-using std::make_pair;
-using std::map;
-using std::pair;
-using std::set;
 
 namespace caffe {
 
@@ -88,7 +84,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           << top_vecs_[layer_id][top_id]->count() << ")";
     }
     DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
-    const int blobs_lr_size = layers_[layer_id]->layer_param().blobs_lr_size();
+    const int blobs_lr_size = layer_param.blobs_lr_size();
     const int num_param_blobs = layers_[layer_id]->blobs().size();
     CHECK(blobs_lr_size == num_param_blobs || blobs_lr_size == 0)
         << "Incorrect blobs lr size: should be either 0 "
@@ -96,13 +92,18 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (blobs_lr_size) {
       // Check if this layer needs backward operation itself
       for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
-        need_backward |=
-            (layers_[layer_id]->layer_param().blobs_lr(param_id) > 0);
+        const bool param_need_backward = layer_param.blobs_lr(param_id) > 0;
+        need_backward |= param_need_backward;
+        layers_[layer_id]->set_param_propagate_down(param_id,
+                                                    param_need_backward);
       }
     } else if (layers_[layer_id]->blobs().size()) {
       // catch: if a layer param does not specify blobs_lr, we should assume the
       // learning rate to be 1. Thus we will need to perform backward.
       need_backward = true;
+      for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
+        layers_[layer_id]->set_param_propagate_down(param_id, true);
+      }
     }
     const int param_size = layer_param.param_size();
     CHECK(param_size == num_param_blobs || param_size == 0)
@@ -139,6 +140,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] =
             blob_need_backward_[bottom_id_vecs_[layer_id][bottom_id]] ||
             bottom_need_backward_[layer_id][bottom_id];
+      }
+      for (int param_id = 0; param_id < layers_[layer_id]->blobs().size();
+           ++param_id) {
+        layers_[layer_id]->set_param_propagate_down(param_id, true);
       }
     }
   }
@@ -489,11 +494,13 @@ void Net<Dtype>::Update() {
       owner_diff = params_[param_owners_[i]]->mutable_cpu_diff();
       caffe_add(count, this_diff, owner_diff, owner_diff);
       break;
+#ifndef CPU_ONLY
     case Caffe::GPU:
       this_diff = params_[i]->gpu_diff();
       owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
       caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
       break;
+#endif
     default:
       LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
     }

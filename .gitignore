@@ -55,6 +55,7 @@ examples/*
 
 # Generated documentation
 docs/_site
+docs/gathered
 _site
 
 # Sublime Text settings

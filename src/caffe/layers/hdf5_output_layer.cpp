@@ -12,7 +12,6 @@
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
-using std::vector;
 
 template <typename Dtype>
 HDF5OutputLayer<Dtype>::HDF5OutputLayer(const LayerParameter& param)
@@ -68,6 +67,10 @@ void HDF5OutputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   return;
 }
+
+#ifdef CPU_ONLY
+STUB_GPU(HDF5OutputLayer);
+#endif
 
 INSTANTIATE_CLASS(HDF5OutputLayer);
 

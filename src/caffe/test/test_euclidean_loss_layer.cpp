@@ -5,7 +5,6 @@
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -17,10 +16,10 @@
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+template <typename TypeParam>
+class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
 
-template <typename Dtype>
-class EuclideanLossLayerTest : public ::testing::Test {
  protected:
   EuclideanLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
@@ -43,27 +42,17 @@ class EuclideanLossLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(EuclideanLossLayerTest, Dtypes);
+TYPED_TEST_CASE(EuclideanLossLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(EuclideanLossLayerTest, TestGradientCPU) {
-  Caffe::set_mode(Caffe::CPU);
+TYPED_TEST(EuclideanLossLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  EuclideanLossLayer<TypeParam> layer(layer_param);
+  EuclideanLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
+  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), -1, -1, -1);
 }
 
-TYPED_TEST(EuclideanLossLayerTest, TestGradientGPU) {
-  Caffe::set_mode(Caffe::GPU);
-  LayerParameter layer_param;
-  EuclideanLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), -1, -1, -1);
-}
 
 }  // namespace caffe

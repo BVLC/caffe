@@ -1,7 +1,5 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cuda_runtime.h>
-
 #include <iostream>  // NOLINT(readability/streams)
 #include <fstream>  // NOLINT(readability/streams)
 #include <map>
@@ -21,10 +19,10 @@ using std::string;
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+template <typename TypeParam>
+class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
 
-template <typename Dtype>
-class ImageDataLayerTest : public ::testing::Test {
  protected:
   ImageDataLayerTest()
       : seed_(1701),
@@ -57,16 +55,16 @@ class ImageDataLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(ImageDataLayerTest, Dtypes);
+TYPED_TEST_CASE(ImageDataLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(ImageDataLayerTest, TestRead) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_source(this->filename_->c_str());
   image_data_param->set_shuffle(false);
-  ImageDataLayer<TypeParam> layer(param);
+  ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -86,6 +84,7 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
 }
 
 TYPED_TEST(ImageDataLayerTest, TestResize) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
@@ -93,7 +92,7 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
   image_data_param->set_new_height(256);
   image_data_param->set_new_width(256);
   image_data_param->set_shuffle(false);
-  ImageDataLayer<TypeParam> layer(param);
+  ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -113,12 +112,13 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
 }
 
 TYPED_TEST(ImageDataLayerTest, TestShuffle) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_source(this->filename_->c_str());
   image_data_param->set_shuffle(true);
-  ImageDataLayer<TypeParam> layer(param);
+  ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -131,14 +131,14 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   // Go through the data twice
   for (int iter = 0; iter < 2; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    map<TypeParam, int> values_to_indices;
+    map<Dtype, int> values_to_indices;
     int num_in_order = 0;
     for (int i = 0; i < 5; ++i) {
-      TypeParam value = this->blob_top_label_->cpu_data()[i];
+      Dtype value = this->blob_top_label_->cpu_data()[i];
       // Check that the value has not been seen already (no duplicates).
       EXPECT_EQ(values_to_indices.find(value), values_to_indices.end());
       values_to_indices[value] = i;
-      num_in_order += (value == TypeParam(i));
+      num_in_order += (value == Dtype(i));
     }
     EXPECT_EQ(5, values_to_indices.size());
     EXPECT_GT(5, num_in_order);

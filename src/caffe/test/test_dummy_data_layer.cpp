@@ -15,8 +15,6 @@ using std::stringstream;
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-
 template <typename Dtype>
 class DummyDataLayerTest : public ::testing::Test {
  protected:
@@ -46,8 +44,7 @@ class DummyDataLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(DummyDataLayerTest, Dtypes);
+TYPED_TEST_CASE(DummyDataLayerTest, TestDtypes);
 
 TYPED_TEST(DummyDataLayerTest, TestOneTopConstant) {
   Caffe::set_mode(Caffe::CPU);

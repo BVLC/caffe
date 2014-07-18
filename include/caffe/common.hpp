@@ -4,11 +4,13 @@
 #define CAFFE_COMMON_HPP_
 
 #include <boost/shared_ptr.hpp>
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <curand.h>
-#include <driver_types.h>  // cuda driver types
 #include <glog/logging.h>
+
+#include <map>
+#include <set>
+#include <string>
+
+#include "caffe/util/device_alternate.hpp"
 
 // Disable the copy and assignment operator for a class.
 #define DISABLE_COPY_AND_ASSIGN(classname) \
@@ -24,6 +26,8 @@ private:\
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
+
+#ifndef CPU_ONLY
 
 // CUDA: various checks for different function calls.
 #define CUDA_CHECK(condition) \
@@ -56,12 +60,25 @@ private:\
 // CUDA: check for error after kernel execution and exit loudly if there is one.
 #define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
 
+#endif  // CPU_ONLY
+
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
 
+// Common functions and classes from std that caffe often uses.
+using std::fstream;
+using std::ios;
+using std::iterator;
+using std::make_pair;
+using std::map;
+using std::ostringstream;
+using std::pair;
+using std::set;
+using std::string;
+using std::vector;
 
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
@@ -99,10 +116,12 @@ class Caffe {
     }
     return *(Get().random_generator_);
   }
+#ifndef CPU_ONLY
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
+#endif
 
   // Returns the mode: running on CPU or GPU.
   inline static Brew mode() { return Get().mode_; }
@@ -125,8 +144,10 @@ class Caffe {
   static void DeviceQuery();
 
  protected:
+#ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
+#endif
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
@@ -139,6 +160,8 @@ class Caffe {
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
+
+#ifndef CPU_ONLY
 
 // NVIDIA_CUDA-5.5_Samples/common/inc/helper_cuda.h
 const char* cublasGetErrorString(cublasStatus_t error);
@@ -158,6 +181,7 @@ inline int CAFFE_GET_BLOCKS(const int N) {
   return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
 }
 
+#endif  // CPU_ONLY
 
 }  // namespace caffe
 

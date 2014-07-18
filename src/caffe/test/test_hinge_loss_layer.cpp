@@ -5,7 +5,6 @@
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -17,15 +16,16 @@
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+template <typename TypeParam>
+class HingeLossLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
 
-template <typename Dtype>
-class HingeLossLayerTest : public ::testing::Test {
  protected:
   HingeLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
         blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)) {
     // fill the values
+    Caffe::set_random_seed(1701);
     FillerParameter filler_param;
     filler_param.set_std(10);
     GaussianFiller<Dtype> filler(filler_param);
@@ -46,56 +46,31 @@ class HingeLossLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(HingeLossLayerTest, Dtypes);
+TYPED_TEST_CASE(HingeLossLayerTest, TestDtypesAndDevices);
 
 
-TYPED_TEST(HingeLossLayerTest, TestGradientL1CPU) {
+TYPED_TEST(HingeLossLayerTest, TestGradientL1) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
-  HingeLossLayer<TypeParam> layer(layer_param);
+  HingeLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 1, 0.01);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 1, 0.01);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);
 }
 
-TYPED_TEST(HingeLossLayerTest, TestGradientL1GPU) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::GPU);
-  HingeLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 1, 0.01);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0, -1, -1);
-}
-
-
-TYPED_TEST(HingeLossLayerTest, TestGradientL2CPU) {
+TYPED_TEST(HingeLossLayerTest, TestGradientL2) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Set norm to L2
   HingeLossParameter* hinge_loss_param = layer_param.mutable_hinge_loss_param();
   hinge_loss_param->set_norm(HingeLossParameter_Norm_L2);
-  Caffe::set_mode(Caffe::CPU);
-  HingeLossLayer<TypeParam> layer(layer_param);
+  HingeLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 2e-3, 1701);
+  GradientChecker<Dtype> checker(1e-2, 2e-3, 1701);
   checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_), 0, -1, -1);
 }
 
-
-TYPED_TEST(HingeLossLayerTest, TestGradientL2GPU) {
-  LayerParameter layer_param;
-  // Set norm to L2
-  HingeLossParameter* hinge_loss_param = layer_param.mutable_hinge_loss_param();
-  hinge_loss_param->set_norm(HingeLossParameter_Norm_L2);
-  Caffe::set_mode(Caffe::GPU);
-  HingeLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 2e-3, 1701);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0, -1, -1);
-}
 
 }  // namespace caffe

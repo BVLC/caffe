@@ -12,7 +12,6 @@
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
-using std::vector;
 
 template <typename Dtype>
 Dtype HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,

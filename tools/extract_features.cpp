@@ -1,7 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <stdio.h>  // for snprintf
-#include <cuda_runtime.h>
 #include <google/protobuf/text_format.h>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>

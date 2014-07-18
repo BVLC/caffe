@@ -3,7 +3,6 @@
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -15,10 +14,10 @@
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+template <typename TypeParam>
+class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
 
-template <typename Dtype>
-class ConcatLayerTest : public ::testing::Test {
  protected:
   ConcatLayerTest()
       : blob_bottom_0(new Blob<Dtype>(2, 3, 6, 5)),
@@ -55,13 +54,13 @@ class ConcatLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(ConcatLayerTest, Dtypes);
+TYPED_TEST_CASE(ConcatLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(ConcatLayerTest, TestSetupNum) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_concat_param()->set_concat_dim(0);
-  ConcatLayer<TypeParam> layer(layer_param);
+  ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(),
     this->blob_bottom_0->num() + this->blob_bottom_2->num());
@@ -71,8 +70,9 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
 }
 
 TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<TypeParam> layer(layer_param);
+  ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0->num());
   EXPECT_EQ(this->blob_top_->channels(),
@@ -82,10 +82,10 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
 }
 
 
-TYPED_TEST(ConcatLayerTest, TestCPUNum) {
+TYPED_TEST(ConcatLayerTest, TestNum) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<TypeParam> layer(layer_param);
-  Caffe::set_mode(Caffe::CPU);
+  ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_0, &(this->blob_top_vec_));
   for (int n = 0; n < this->blob_top_->num(); ++n) {
@@ -108,21 +108,11 @@ TYPED_TEST(ConcatLayerTest, TestCPUNum) {
   }
 }
 
-
-TYPED_TEST(ConcatLayerTest, TestCPUGradient) {
+TYPED_TEST(ConcatLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
-  ConcatLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
-  checker.CheckGradient(&layer, &(this->blob_bottom_vec_0),
-    &(this->blob_top_vec_));
-}
-
-TYPED_TEST(ConcatLayerTest, TestGPUGradient) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::GPU);
-  ConcatLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-3);
+  ConcatLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradient(&layer, &(this->blob_bottom_vec_0),
     &(this->blob_top_vec_));
 }
