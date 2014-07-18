@@ -6,6 +6,10 @@
 #include <boost/shared_ptr.hpp>
 #include <glog/logging.h>
 
+#include <map>
+#include <set>
+#include <string>
+
 #include "caffe/util/device_alternate.hpp"
 
 // Disable the copy and assignment operator for a class.
