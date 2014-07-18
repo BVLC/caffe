@@ -154,14 +154,13 @@ class Caffe {
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
+  cudaDeviceProp prop;
 #endif
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
   Phase phase_;
   static shared_ptr<Caffe> singleton_;
-
-  cudaDeviceProp prop;
 
  private:
   // The private constructor to avoid duplicate instantiation.

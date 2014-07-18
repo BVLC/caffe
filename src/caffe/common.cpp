@@ -14,7 +14,7 @@ shared_ptr<Caffe> Caffe::singleton_;
 // random seeding
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;
-#if _MSC_VER
+#ifdef _MSC_VER
   pid = _getpid();
 #else
   pid = getpid();
