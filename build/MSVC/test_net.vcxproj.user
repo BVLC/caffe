@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommandArguments>D:\sandbox\utility\cnn\caffe-windows\dev\caffe\examples\facepts_3\lenet_test.prototxt D:\sandbox\utility\cnn\caffe-windows\dev\caffe\examples\facepts_3\lenet_iter_10000 100</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>D:\sandbox\utility\cnn\caffe-windows\dev\caffe\examples\facepts_3\</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>D:\sandbox\utility\cnn\caffe-windows\dev\caffe\examples\facepts_3\lenet_predict.prototxt D:\sandbox\utility\cnn\caffe-windows\dev\caffe\examples\facepts_3\lenet_iter_10000 100</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>D:\sandbox\utility\cnn\caffe-windows\dev\caffe\examples\facepts_3\</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+</Project>

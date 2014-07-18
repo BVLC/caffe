@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>lenet_solver.prototxt lenet_iter_10000.solverstate --logtostderr=1</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>D:\sandbox\utility\cnn\caffe_example\caffe\examples\fpcontour</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommandArguments>D:\sandbox\utility\cnn\caffe_example\caffe\examples\fpcontour\lenet_solver.prototxt</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerEnvironment>
+    </LocalDebuggerEnvironment>
+    <LocalDebuggerWorkingDirectory>D:\sandbox\utility\cnn\caffe_example\caffe\examples\fpcontour</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+</Project>
