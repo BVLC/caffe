@@ -35,6 +35,13 @@ class Net {
   // Run forward with the input blobs already fed separately. You can get the
   // input blobs using input_blobs().
   const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss = NULL);
+
+  // The From and To variants of Forward and Backward operate on the
+  // (topological) ordering by which the net is specified. For general DAG
+  // networks, note that (1) computing from one layer to another might entail
+  // extra computation on unrelated branches, and (2) computation starting in
+  // the middle may be incorrect if all of the layers of a fan-in are not
+  // included.
   Dtype ForwardFromTo(int start, int end);
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
