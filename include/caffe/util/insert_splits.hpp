@@ -9,9 +9,6 @@
 
 namespace caffe {
 
-using std::pair;
-using std::string;
-
 // Copy NetParameters with SplitLayers added to replace any shared bottom
 // blobs with unique bottom blobs provided by the SplitLayer.
 void InsertSplits(const NetParameter& param, NetParameter* param_split);

@@ -3,6 +3,10 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
+#ifdef _MSC_VER
+#include <process.h>
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <glog/logging.h>
 
@@ -68,6 +72,17 @@ namespace caffe {
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
 
+// Common functions and classes from std that caffe often uses.
+using std::fstream;
+using std::ios;
+using std::iterator;
+using std::make_pair;
+using std::map;
+using std::ostringstream;
+using std::pair;
+using std::set;
+using std::string;
+using std::vector;
 
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
@@ -110,6 +125,9 @@ class Caffe {
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
+
+  // device property
+  inline static cudaDeviceProp cuProp() { return Get().prop; }
 #endif
 
   // Returns the mode: running on CPU or GPU.
@@ -136,6 +154,7 @@ class Caffe {
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
+  cudaDeviceProp prop;
 #endif
   shared_ptr<RNG> random_generator_;
 
@@ -167,7 +186,9 @@ const char* curandGetErrorString(curandStatus_t error);
 
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {
-  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  int max_blocks = Caffe::cuProp().maxGridSize[0];
+  return num_blocks > max_blocks ? num_blocks : max_blocks;
 }
 
 #endif  // CPU_ONLY

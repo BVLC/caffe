@@ -8,8 +8,6 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 
-using std::max;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -43,8 +41,8 @@ Dtype SoftmaxWithLossLayer<Dtype>::Forward_cpu(
   int dim = prob_.count() / num;
   Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
-    loss += -log(max(prob_data[i * dim + static_cast<int>(label[i])],
-                     Dtype(FLT_MIN)));
+    loss += -log(std::max(prob_data[i * dim + static_cast<int>(label[i])],
+                          Dtype(FLT_MIN)));
   }
   if (top->size() >= 1) {
     (*top)[0]->mutable_cpu_data()[0] = loss / num;

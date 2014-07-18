@@ -6,6 +6,13 @@
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
 
+#ifdef _MSC_VER
+#include "caffe/util/math_extras.h"
+#include <intrin.h>
+#define __builtin_popcount __popcnt16
+#define __builtin_popcountl __popcnt64
+#endif  // _MSC_VER
+
 #include "glog/logging.h"
 
 #include "caffe/util/device_alternate.hpp"

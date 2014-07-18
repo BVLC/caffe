@@ -10,8 +10,6 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
 
-using std::max;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -32,7 +30,8 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
   Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
     int label = static_cast<int>(bottom_label[i]);
-    Dtype prob = max(bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
+    Dtype prob = std::max(
+        bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
     loss -= log(prob);
   }
   if (top->size() == 1) {
@@ -58,7 +57,8 @@ void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
     caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
-      Dtype prob = max(bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
+      Dtype prob = std::max(
+          bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
       bottom_diff[i * dim + label] = -1. / prob / num;
     }
   }
