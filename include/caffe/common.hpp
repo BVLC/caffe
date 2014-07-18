@@ -3,9 +3,6 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
-#include <map>
-#include <set>
-
 #include <boost/shared_ptr.hpp>
 #include <glog/logging.h>
 
