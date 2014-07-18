@@ -8,11 +8,6 @@
 #include "caffe/common.hpp"
 #include "caffe/util/insert_splits.hpp"
 
-using std::map;
-using std::ostringstream;
-using std::pair;
-using std::make_pair;
-
 namespace caffe {
 
 void InsertSplits(const NetParameter& param, NetParameter* param_split) {

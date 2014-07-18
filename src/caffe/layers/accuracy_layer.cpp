@@ -13,8 +13,6 @@
 
 namespace caffe {
 
-using std::max;
-
 template <typename Dtype>
 void AccuracyLayer<Dtype>::SetUp(
   const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
