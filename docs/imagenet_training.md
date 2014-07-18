@@ -30,7 +30,7 @@ You will first need to prepare some auxiliary data for training. This data can b
 
 The training and validation input are described in `train.txt` and `val.txt` as text listing all the files and their labels. Note that we use a different indexing for labels than the ILSVRC devkit: we sort the synset names in their ASCII order, and then label them from 0 to 999. See `synset_words.txt` for the synset/name mapping.
 
-You will also need to resize the images to 256x256: we do not explicitly do this because in a cluster environment, one may benefit from resizing images in a parallel fashion, using mapreduce. For example, Yangqing used his lightedweighted [mincepie](https://github.com/Yangqing/mincepie) package to do mapreduce on the Berkeley cluster. If you would things to be rather simple and straightforward, you can also use shell commands, something like:
+You may want to resize the images to 256x256 in advance. By default, we do not explicitly do this because in a cluster environment, one may benefit from resizing images in a parallel fashion, using mapreduce. For example, Yangqing used his lightedweighted [mincepie](https://github.com/Yangqing/mincepie) package to do mapreduce on the Berkeley cluster. If you would things to be rather simple and straightforward, you can also use shell commands, something like:
 
     for name in /path/to/imagenet/val/*.JPEG; do
         convert -resize 256x256\! $name $name
@@ -38,7 +38,7 @@ You will also need to resize the images to 256x256: we do not explicitly do this
 
 Go to `$CAFFE_ROOT/examples/imagenet/` for the rest of this guide.
 
-Take a look at `create_imagenet.sh`. Set the paths to the train and val dirs as needed. Now simply create the leveldbs with `./create_imagenet.sh`. Note that `imagenet_train_leveldb` and `imagenet_val_leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
+Take a look at `create_imagenet.sh`. Set the paths to the train and val dirs as needed, and set "RESIZE=true" to resize all images to 256x256 if you haven't resized the images in advance. Now simply create the leveldbs with `./create_imagenet.sh`. Note that `imagenet_train_leveldb` and `imagenet_val_leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
 
 Compute Image Mean
 ------------------

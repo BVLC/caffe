@@ -27,10 +27,10 @@ template <typename Dtype>
 class ImageDataLayerTest : public ::testing::Test {
  protected:
   ImageDataLayerTest()
-      : blob_top_data_(new Blob<Dtype>()),
-        blob_top_label_(new Blob<Dtype>()),
+      : seed_(1701),
         filename_(new string(tmpnam(NULL))),
-        seed_(1701) {}
+        blob_top_data_(new Blob<Dtype>()),
+        blob_top_label_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
@@ -70,8 +70,8 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), 1200);
-  EXPECT_EQ(this->blob_top_data_->width(), 1600);
+  EXPECT_EQ(this->blob_top_data_->height(), 360);
+  EXPECT_EQ(this->blob_top_data_->width(), 480);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
@@ -122,8 +122,8 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), 1200);
-  EXPECT_EQ(this->blob_top_data_->width(), 1600);
+  EXPECT_EQ(this->blob_top_data_->height(), 360);
+  EXPECT_EQ(this->blob_top_data_->width(), 480);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);

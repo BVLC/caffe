@@ -25,9 +25,9 @@ template <typename Dtype>
 class LRNLayerTest : public ::testing::Test {
  protected:
   LRNLayerTest()
-      : blob_bottom_(new Blob<Dtype>()),
-        blob_top_(new Blob<Dtype>()),
-        epsilon_(Dtype(1e-5)) {}
+      : epsilon_(Dtype(1e-5)),
+        blob_bottom_(new Blob<Dtype>()),
+        blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 7, 3, 3);
@@ -55,7 +55,6 @@ void LRNLayerTest<Dtype>::ReferenceLRNForward(
     Blob<Dtype>* blob_top) {
   blob_top->Reshape(blob_bottom.num(), blob_bottom.channels(),
       blob_bottom.height(), blob_bottom.width());
-  const Dtype* bottom_data = blob_bottom.cpu_data();
   Dtype* top_data = blob_top->mutable_cpu_data();
   LRNParameter lrn_param = layer_param.lrn_param();
   Dtype alpha = lrn_param.alpha();
@@ -165,7 +164,9 @@ TYPED_TEST(LRNLayerTest, TestCPUGradientAcrossChannels) {
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
-  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+  vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
+  layer.Backward(this->blob_top_vec_, propagate_down,
+                 &(this->blob_bottom_vec_));
   // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
   //   std::cout << "CPU diff " << this->blob_bottom_->cpu_diff()[i]
   //       << std::endl;
@@ -184,7 +185,9 @@ TYPED_TEST(LRNLayerTest, TestGPUGradientAcrossChannels) {
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
-  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+  vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
+  layer.Backward(this->blob_top_vec_, propagate_down,
+                 &(this->blob_bottom_vec_));
   // for (int i = 0; i < this->blob_bottom_->count(); ++i) {
   //   std::cout << "GPU diff " << this->blob_bottom_->cpu_diff()[i]
   //       << std::endl;
@@ -255,7 +258,6 @@ TYPED_TEST(LRNLayerTest, TestCPUGradientWithinChannel) {
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
-  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
@@ -273,7 +275,6 @@ TYPED_TEST(LRNLayerTest, TestGPUGradientWithinChannel) {
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
-  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }

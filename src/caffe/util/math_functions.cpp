@@ -120,10 +120,10 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
-template <>
-void caffe_set(const int N, const float alpha, float* Y) {
+template <typename Dtype>
+void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
-    memset(Y, 0, sizeof(float) * N);
+    memset(Y, 0, sizeof(Dtype) * N);
     return;
   }
   for (int i = 0; i < N; ++i) {
@@ -131,16 +131,9 @@ void caffe_set(const int N, const float alpha, float* Y) {
   }
 }
 
-template <>
-void caffe_set(const int N, const double alpha, double* Y) {
-  if (alpha == 0) {
-    memset(Y, 0, sizeof(double) * N);
-    return;
-  }
-  for (int i = 0; i < N; ++i) {
-    Y[i] = alpha;
-  }
-}
+template void caffe_set<int>(const int N, const int alpha, int* Y);
+template void caffe_set<float>(const int N, const float alpha, float* Y);
+template void caffe_set<double>(const int N, const double alpha, double* Y);
 
 template <>
 void caffe_add_scalar(const int N, const float alpha, float* Y) {
@@ -156,24 +149,27 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
   }
 }
 
-template <>
-void caffe_copy<float>(const int N, const float* X, float* Y) {
-  cblas_scopy(N, X, 1, Y, 1);
+template <typename Dtype>
+void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
+  if (X != Y) {
+    if (Caffe::mode() == Caffe::GPU) {
+      CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
+    } else {
+      memcpy(Y, X, sizeof(Dtype) * N);
+    }
+  }
 }
 
-template <>
-void caffe_copy<double>(const int N, const double* X, double* Y) {
-  cblas_dcopy(N, X, 1, Y, 1);
-}
+template void caffe_copy<int>(const int N, const int* X, int* Y);
+template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
+    unsigned int* Y);
+template void caffe_copy<float>(const int N, const float* X, float* Y);
+template void caffe_copy<double>(const int N, const double* X, double* Y);
 
-template <>
-void caffe_gpu_copy<float>(const int N, const float* X, float* Y) {
-  CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
-}
-
-template <>
-void caffe_gpu_copy<double>(const int N, const double* X, double* Y) {
-  CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
+void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
+  if (X != Y) {
+    CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));
+  }
 }
 
 template <>
@@ -380,6 +376,26 @@ void caffe_rng_bernoulli<double>(const int n, const double p, int* r);
 
 template
 void caffe_rng_bernoulli<float>(const int n, const float p, int* r);
+
+template <typename Dtype>
+void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GE(p, 0);
+  CHECK_LE(p, 1);
+  boost::bernoulli_distribution<Dtype> random_distribution(p);
+  boost::variate_generator<caffe::rng_t*, boost::bernoulli_distribution<Dtype> >
+      variate_generator(caffe_rng(), random_distribution);
+  for (int i = 0; i < n; ++i) {
+    r[i] = static_cast<unsigned int>(variate_generator());
+  }
+}
+
+template
+void caffe_rng_bernoulli<double>(const int n, const double p, unsigned int* r);
+
+template
+void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
 
 template <>
 float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {

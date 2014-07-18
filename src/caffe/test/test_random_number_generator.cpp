@@ -16,9 +16,9 @@ template <typename Dtype>
 class RandomNumberGeneratorTest : public ::testing::Test {
  protected:
   RandomNumberGeneratorTest()
-     : sample_size_(10000),
+     : mean_bound_multiplier_(3.8),  // ~99.99% confidence for test failure.
+       sample_size_(10000),
        seed_(1701),
-       mean_bound_multiplier_(3.8),  // ~99.99% confidence for test failure.
        data_(new SyncedMemory(sample_size_ * sizeof(Dtype))),
        data_2_(new SyncedMemory(sample_size_ * sizeof(Dtype))),
        int_data_(new SyncedMemory(sample_size_ * sizeof(int))),

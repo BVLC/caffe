@@ -314,15 +314,17 @@ layers {
   }
 }
 layers {
-  name: "prob"
-  type: SOFTMAX
-  bottom: "fc8_pascal"
-  top: "prob"
-}
-layers {
   name: "accuracy"
   type: ACCURACY
-  bottom: "prob"
+  bottom: "fc8_pascal"
   bottom: "label"
   top: "accuracy"
 }
+layers {
+  name: "prob"
+  type: SOFTMAX_LOSS
+  bottom: "fc8_pascal"
+  bottom: "label"
+  top: "loss"
+}
+

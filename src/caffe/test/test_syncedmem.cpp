@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
+#include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -39,12 +40,25 @@ TEST_F(SyncedMemoryTest, TestCPUWrite) {
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((reinterpret_cast<char*>(cpu_data))[i], 1);
   }
+  // do another round
+  cpu_data = mem.mutable_cpu_data();
+  EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
+  memset(cpu_data, 2, mem.size());
+  for (int i = 0; i < mem.size(); ++i) {
+    EXPECT_EQ((reinterpret_cast<char*>(cpu_data))[i], 2);
+  }
+}
+
+TEST_F(SyncedMemoryTest, TestGPURead) {
+  SyncedMemory mem(10);
+  void* cpu_data = mem.mutable_cpu_data();
+  EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
+  memset(cpu_data, 1, mem.size());
   const void* gpu_data = mem.gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
   char* recovered_value = new char[10];
-  cudaMemcpy(reinterpret_cast<void*>(recovered_value), gpu_data, 10,
-             cudaMemcpyDeviceToHost);
+  caffe_gpu_memcpy(10, gpu_data, recovered_value);
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 1);
   }
@@ -58,8 +72,7 @@ TEST_F(SyncedMemoryTest, TestCPUWrite) {
   gpu_data = mem.gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
-  cudaMemcpy(reinterpret_cast<void*>(recovered_value), gpu_data, 10,
-             cudaMemcpyDeviceToHost);
+  caffe_gpu_memcpy(10, gpu_data, recovered_value);
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((reinterpret_cast<char*>(recovered_value))[i], 2);
   }
