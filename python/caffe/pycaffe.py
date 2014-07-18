@@ -262,9 +262,9 @@ def _Net_preprocess(self, input_name, input_):
     in_size = self.blobs[input_name].data.shape[2:]
     if caffe_in.shape[:2] != in_size:
         caffe_in = caffe.io.resize_image(caffe_in, in_size)
-    if input_scale:
+    if input_scale is not None:
         caffe_in *= input_scale
-    if channel_order:
+    if channel_order is not None:
         caffe_in = caffe_in[:, :, channel_order]
     caffe_in = caffe_in.transpose((2, 0, 1))
     if hasattr(self, 'mean'):
@@ -282,11 +282,11 @@ def _Net_deprocess(self, input_name, input_):
     if hasattr(self, 'mean'):
         decaf_in += self.mean.get(input_name, 0)
     decaf_in = decaf_in.transpose((1,2,0))
-    if channel_order:
+    if channel_order is not None:
         channel_order_inverse = [channel_order.index(i)
                                  for i in range(decaf_in.shape[2])]
         decaf_in = decaf_in[:, :, channel_order_inverse]
-    if input_scale:
+    if input_scale is not None:
         decaf_in /= input_scale
     return decaf_in
 
