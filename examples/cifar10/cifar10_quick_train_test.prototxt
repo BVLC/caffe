@@ -1,4 +1,4 @@
-name: "CIFAR10_full_train"
+name: "CIFAR10_quick"
 layers {
   name: "cifar"
   type: DATA
@@ -9,6 +9,19 @@ layers {
     mean_file: "mean.binaryproto"
     batch_size: 100
   }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "cifar"
+  type: DATA
+  top: "data"
+  top: "label"
+  data_param {
+    source: "cifar10-leveldb/cifar-test-leveldb"
+    mean_file: "mean.binaryproto"
+    batch_size: 100
+  }
+  include: { phase: TEST }
 }
 layers {
   name: "conv1"
@@ -49,21 +62,9 @@ layers {
   top: "pool1"
 }
 layers {
-  name: "norm1"
-  type: LRN
-  bottom: "pool1"
-  top: "norm1"
-  lrn_param {
-    norm_region: WITHIN_CHANNEL
-    local_size: 3
-    alpha: 5e-05
-    beta: 0.75
-  }
-}
-layers {
   name: "conv2"
   type: CONVOLUTION
-  bottom: "norm1"
+  bottom: "pool1"
   top: "conv2"
   blobs_lr: 1
   blobs_lr: 2
@@ -99,22 +100,12 @@ layers {
   }
 }
 layers {
-  name: "norm2"
-  type: LRN
-  bottom: "pool2"
-  top: "norm2"
-  lrn_param {
-    norm_region: WITHIN_CHANNEL
-    local_size: 3
-    alpha: 5e-05
-    beta: 0.75
-  }
-}
-layers {
   name: "conv3"
   type: CONVOLUTION
-  bottom: "norm2"
+  bottom: "pool2"
   top: "conv3"
+  blobs_lr: 1
+  blobs_lr: 2
   convolution_param {
     num_output: 64
     pad: 2
@@ -153,13 +144,11 @@ layers {
   top: "ip1"
   blobs_lr: 1
   blobs_lr: 2
-  weight_decay: 250
-  weight_decay: 0
   inner_product_param {
-    num_output: 10
+    num_output: 64
     weight_filler {
       type: "gaussian"
-      std: 0.01
+      std: 0.1
     }
     bias_filler {
       type: "constant"
@@ -167,8 +156,35 @@ layers {
   }
 }
 layers {
+  name: "ip2"
+  type: INNER_PRODUCT
+  bottom: "ip1"
+  top: "ip2"
+  blobs_lr: 1
+  blobs_lr: 2
+  inner_product_param {
+    num_output: 10
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "ip2"
+  bottom: "label"
+  top: "accuracy"
+  include: { phase: TEST }
+}
+layers {
   name: "loss"
   type: SOFTMAX_LOSS
-  bottom: "ip1"
+  bottom: "ip2"
   bottom: "label"
+  top: "loss"
 }

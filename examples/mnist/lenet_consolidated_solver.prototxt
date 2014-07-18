@@ -30,8 +30,19 @@ random_seed: 1701
 # solver mode: CPU or GPU
 solver_mode: GPU
 
-# The training protocol buffer definition
-train_net_param {
+# We test on both the test and train set using "stages".  The TEST DATA layers
+# each have a stage, either 'test-on-train-set' or 'test-on-test-set'.
+# test_iter specifies how many forward passes the test should carry out.
+# In the case of MNIST, we have test batch size 100 and 100 test iterations,
+# covering the full 10,000 testing images.
+test_iter: 100
+test_state: { stage: "test-on-test-set" }
+# The train set has 60K images, so we run 600 test iters (600 * 100 = 60K).
+test_iter: 600
+test_state: { stage: "test-on-train-set" }
+
+# The net protocol buffer definition
+net_param {
   name: "LeNet"
   layers {
     name: "mnist"
@@ -43,122 +54,8 @@ train_net_param {
       scale: 0.00390625
       batch_size: 64
     }
+    include: { phase: TRAIN }
   }
-  layers {
-    name: "conv1"
-    type: CONVOLUTION
-    bottom: "data"
-    top: "conv1"
-    blobs_lr: 1
-    blobs_lr: 2
-    convolution_param {
-      num_output: 20
-      kernel_size: 5
-      stride: 1
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
-    }
-  }
-  layers {
-    name: "pool1"
-    type: POOLING
-    bottom: "conv1"
-    top: "pool1"
-    pooling_param {
-      pool: MAX
-      kernel_size: 2
-      stride: 2
-    }
-  }
-  layers {
-    name: "conv2"
-    type: CONVOLUTION
-    bottom: "pool1"
-    top: "conv2"
-    blobs_lr: 1
-    blobs_lr: 2
-    convolution_param {
-      num_output: 50
-      kernel_size: 5
-      stride: 1
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
-    }
-  }
-  layers {
-    name: "pool2"
-    type: POOLING
-    bottom: "conv2"
-    top: "pool2"
-    pooling_param {
-      pool: MAX
-      kernel_size: 2
-      stride: 2
-    }
-  }
-  layers {
-    name: "ip1"
-    type: INNER_PRODUCT
-    bottom: "pool2"
-    top: "ip1"
-    blobs_lr: 1
-    blobs_lr: 2
-    inner_product_param {
-      num_output: 500
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
-    }
-  }
-  layers {
-    name: "relu1"
-    type: RELU
-    bottom: "ip1"
-    top: "ip1"
-  }
-  layers {
-    name: "ip2"
-    type: INNER_PRODUCT
-    bottom: "ip1"
-    top: "ip2"
-    blobs_lr: 1
-    blobs_lr: 2
-    inner_product_param {
-      num_output: 10
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
-    }
-  }
-  layers {
-    name: "loss"
-    type: SOFTMAX_LOSS
-    bottom: "ip2"
-    bottom: "label"
-  }
-}
-
-# test_iter specifies how many forward passes the test should carry out.
-# In the case of MNIST, we have test batch size 100 and 100 test iterations,
-# covering the full 10,000 testing images.
-test_iter: 100
-# The testing protocol buffer definition
-test_net_param {
-  name: "LeNet-test"
   layers {
     name: "mnist"
     type: DATA
@@ -169,120 +66,11 @@ test_net_param {
       scale: 0.00390625
       batch_size: 100
     }
-  }
-  layers {
-    name: "conv1"
-    type: CONVOLUTION
-    bottom: "data"
-    top: "conv1"
-    convolution_param {
-      num_output: 20
-      kernel_size: 5
-      stride: 1
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
+    include: {
+      phase: TEST
+      stage: "test-on-test-set"
     }
   }
-  layers {
-    name: "pool1"
-    type: POOLING
-    bottom: "conv1"
-    top: "pool1"
-    pooling_param {
-      pool: MAX
-      kernel_size: 2
-      stride: 2
-    }
-  }
-  layers {
-    name: "conv2"
-    type: CONVOLUTION
-    bottom: "pool1"
-    top: "conv2"
-    convolution_param {
-      num_output: 50
-      kernel_size: 5
-      stride: 1
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
-    }
-  }
-  layers {
-    name: "pool2"
-    type: POOLING
-    bottom: "conv2"
-    top: "pool2"
-    pooling_param {
-      pool: MAX
-      kernel_size: 2
-      stride: 2
-    }
-  }
-  layers {
-    name: "ip1"
-    type: INNER_PRODUCT
-    bottom: "pool2"
-    top: "ip1"
-    inner_product_param {
-      num_output: 500
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
-    }
-  }
-  layers {
-    name: "relu1"
-    type: RELU
-    bottom: "ip1"
-    top: "ip1"
-  }
-  layers {
-    name: "ip2"
-    type: INNER_PRODUCT
-    bottom: "ip1"
-    top: "ip2"
-    inner_product_param {
-      num_output: 10
-      weight_filler {
-        type: "xavier"
-      }
-      bias_filler {
-        type: "constant"
-      }
-    }
-  }
-  layers {
-    name: "accuracy"
-    type: ACCURACY
-    bottom: "ip2"
-    bottom: "label"
-    top: "accuracy"
-  }
-  layers {
-    name: "loss"
-    type: SOFTMAX_LOSS
-    bottom: "ip2"
-    bottom: "label"
-    top: "loss"
-  }
-}
-
-# The train set has 60K images, so we run 600 test iters (600 * 100 = 60K).
-test_iter: 600
-# The protocol buffer definition to test on the train set
-test_net_param {
-  name: "LeNet-test-on-train"
   layers {
     name: "mnist"
     type: DATA
@@ -293,12 +81,18 @@ test_net_param {
       scale: 0.00390625
       batch_size: 100
     }
+    include: {
+      phase: TEST
+      stage: "test-on-train-set"
+    }
   }
   layers {
     name: "conv1"
     type: CONVOLUTION
     bottom: "data"
     top: "conv1"
+    blobs_lr: 1
+    blobs_lr: 2
     convolution_param {
       num_output: 20
       kernel_size: 5
@@ -327,6 +121,8 @@ test_net_param {
     type: CONVOLUTION
     bottom: "pool1"
     top: "conv2"
+    blobs_lr: 1
+    blobs_lr: 2
     convolution_param {
       num_output: 50
       kernel_size: 5
@@ -355,6 +151,8 @@ test_net_param {
     type: INNER_PRODUCT
     bottom: "pool2"
     top: "ip1"
+    blobs_lr: 1
+    blobs_lr: 2
     inner_product_param {
       num_output: 500
       weight_filler {
@@ -376,6 +174,8 @@ test_net_param {
     type: INNER_PRODUCT
     bottom: "ip1"
     top: "ip2"
+    blobs_lr: 1
+    blobs_lr: 2
     inner_product_param {
       num_output: 10
       weight_filler {
@@ -392,6 +192,7 @@ test_net_param {
     bottom: "ip2"
     bottom: "label"
     top: "accuracy"
+    include: { phase: TEST }
   }
   layers {
     name: "loss"
