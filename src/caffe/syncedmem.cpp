@@ -90,7 +90,7 @@ const void* SyncedMemory::gpu_data() {
   to_gpu();
   return (const void*)gpu_ptr_;
 #else
-  NO_GPU;
+  NO_GPU; return NULL;
 #endif
 }
 
@@ -106,7 +106,7 @@ void* SyncedMemory::mutable_gpu_data() {
   head_ = HEAD_AT_GPU;
   return gpu_ptr_;
 #else
-  NO_GPU;
+  NO_GPU; return NULL;
 #endif
 }
 

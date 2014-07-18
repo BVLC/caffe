@@ -127,7 +127,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 34 (last added: DUMMY_DATA)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -149,6 +149,7 @@ message LayerParameter {
     HINGE_LOSS = 28;
     IM2COL = 11;
     IMAGE_DATA = 12;
+    IMAGE_FEATURE_DATA = 33;
     INFOGAIN_LOSS = 13;
     INNER_PRODUCT = 14;
     LRN = 15;
@@ -199,6 +200,7 @@ message LayerParameter {
   optional HDF5DataParameter hdf5_data_param = 13;
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional ImageDataParameter image_data_param = 15;
+  optional ImageFeatureDataParameter image_feature_data_param = 30;
   optional InfogainLossParameter infogain_loss_param = 16;
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
@@ -361,6 +363,18 @@ message ImageDataParameter {
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 9 [default = 0];
   optional uint32 new_width = 10 [default = 0];
+}
+
+// Message that stores parameters used by ImageFeatureDataParameter
+message ImageFeatureDataParameter {
+  // Specify the data width.
+  optional uint32 width = 1;
+  // Specify the data height.
+  optional uint32 height = 2;
+  // Specify the data channel.
+  optional uint32 channel = 3;
+  // Specify the label size.
+  optional uint32 feature_size = 4;
 }
 
 // Message that stores parameters InfogainLossLayer

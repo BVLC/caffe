@@ -8,7 +8,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
-
+#include "caffe/ImageFeatureDataLayer.h"
 namespace caffe {
 
 // A function to get a specific layer from the specification given in
@@ -43,6 +43,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new FlattenLayer<Dtype>(param);
   case LayerParameter_LayerType_HDF5_DATA:
     return new HDF5DataLayer<Dtype>(param);
+  case LayerParameter_LayerType_IMAGE_FEATURE_DATA:
+    return new ImageFeatureDataLayer<Dtype>(param);
   case LayerParameter_LayerType_HDF5_OUTPUT:
     return new HDF5OutputLayer<Dtype>(param);
   case LayerParameter_LayerType_HINGE_LOSS:

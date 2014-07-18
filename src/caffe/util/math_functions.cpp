@@ -84,6 +84,7 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
   }
 }
 
+
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
@@ -104,6 +105,20 @@ template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
     unsigned int* Y);
 template void caffe_copy<float>(const int N, const float* X, float* Y);
 template void caffe_copy<double>(const int N, const double* X, double* Y);
+//
+//template <>
+//void caffe_copy<float>(const int N, const float* X, float* Y) {
+//  if (X != Y) {
+//    cblas_scopy(N, X, 1, Y, 1);
+//  }
+//}
+//
+//template <>
+//void caffe_copy<double>(const int N, const double* X, double* Y) {
+//  if (X != Y) {
+//    cblas_dcopy(N, X, 1, Y, 1);
+//  }
+//}
 
 template <>
 void caffe_scal<float>(const int N, const float alpha, float *X) {
@@ -316,7 +331,7 @@ double caffe_cpu_dot<double>(const int n, const double* x, const double* y) {
   return cblas_ddot(n, x, 1, y, 1);
 }
 
-template <>
+/*template <>
 int caffe_cpu_hamming_distance<float>(const int n, const float* x,
                                   const float* y) {
   int dist = 0;
@@ -337,7 +352,7 @@ int caffe_cpu_hamming_distance<double>(const int n, const double* x,
   }
   return dist;
 }
-
+*/
 template <>
 float caffe_cpu_asum<float>(const int n, const float* x) {
   return cblas_sasum(n, x, 1);

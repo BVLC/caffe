@@ -38,6 +38,7 @@ class NeuronLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+  DISABLE_COPY_AND_ASSIGN(NeuronLayer);
 };
 
 /* BNLLLayer
@@ -66,6 +67,8 @@ class BNLLLayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  DISABLE_COPY_AND_ASSIGN(BNLLLayer);
 };
 
 /* DropoutLayer
@@ -104,6 +107,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   Dtype threshold_;
   Dtype scale_;
   unsigned int uint_thres_;
+
+  DISABLE_COPY_AND_ASSIGN(DropoutLayer);
 };
 
 /* PowerLayer
@@ -138,6 +143,8 @@ class PowerLayer : public NeuronLayer<Dtype> {
   Dtype scale_;
   Dtype shift_;
   Dtype diff_scale_;
+
+  DISABLE_COPY_AND_ASSIGN(PowerLayer);
 };
 
 /* ReLULayer
@@ -169,6 +176,8 @@ class ReLULayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  DISABLE_COPY_AND_ASSIGN(ReLULayer);
 };
 
 /* SigmoidLayer
@@ -201,6 +210,8 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  DISABLE_COPY_AND_ASSIGN(SigmoidLayer);
 };
 
 /* TanHLayer
@@ -229,6 +240,8 @@ class TanHLayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  DISABLE_COPY_AND_ASSIGN(TanHLayer);
 };
 
 /* ThresholdLayer
@@ -264,8 +277,11 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
   }
 
   Dtype threshold_;
-};
 
+  DISABLE_COPY_AND_ASSIGN(ThresholdLayer);
+};
+EXTERN_INSTANCE_CLASS(Layer);
+EXTERN_INSTANCE_CLASS(NeuronLayer);
 }  // namespace caffe
 
 #endif  // CAFFE_NEURON_LAYERS_HPP_

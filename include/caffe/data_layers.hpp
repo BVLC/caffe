@@ -86,6 +86,8 @@ class DataLayer : public Layer<Dtype> {
   Blob<Dtype> data_mean_;
   bool output_labels_;
   Caffe::Phase phase_;
+
+  DISABLE_COPY_AND_ASSIGN(DataLayer);
 };
 
 template <typename Dtype>
@@ -112,6 +114,8 @@ class DummyDataLayer : public Layer<Dtype> {
 
   vector<shared_ptr<Filler<Dtype> > > fillers_;
   vector<bool> refill_;
+
+  DISABLE_COPY_AND_ASSIGN(DummyDataLayer);
 };
 
 template <typename Dtype>
@@ -146,6 +150,8 @@ class HDF5DataLayer : public Layer<Dtype> {
   hsize_t current_row_;
   Blob<Dtype> data_blob_;
   Blob<Dtype> label_blob_;
+
+  DISABLE_COPY_AND_ASSIGN(HDF5DataLayer);
 };
 
 template <typename Dtype>
@@ -180,6 +186,8 @@ class HDF5OutputLayer : public Layer<Dtype> {
   hid_t file_id_;
   Blob<Dtype> data_blob_;
   Blob<Dtype> label_blob_;
+
+  DISABLE_COPY_AND_ASSIGN(HDF5OutputLayer);
 };
 
 // This function is used to create a pthread that prefetches the data.
@@ -232,6 +240,8 @@ class ImageDataLayer : public Layer<Dtype> {
   shared_ptr<Blob<Dtype> > prefetch_label_;
   Blob<Dtype> data_mean_;
   Caffe::Phase phase_;
+
+  DISABLE_COPY_AND_ASSIGN(ImageDataLayer);
 };
 
 /* MemoryDataLayer
@@ -275,6 +285,8 @@ class MemoryDataLayer : public Layer<Dtype> {
   int batch_size_;
   int n_;
   int pos_;
+
+  DISABLE_COPY_AND_ASSIGN(MemoryDataLayer);
 };
 
 // This function is used to create a pthread that prefetches the window data.
@@ -322,8 +334,10 @@ class WindowDataLayer : public Layer<Dtype> {
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
-};
 
+  DISABLE_COPY_AND_ASSIGN(WindowDataLayer);
+};
+EXTERN_INSTANCE_CLASS(Layer);
 }  // namespace caffe
 
 #endif  // CAFFE_DATA_LAYERS_HPP_

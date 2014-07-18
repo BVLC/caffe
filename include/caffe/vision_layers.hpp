@@ -60,6 +60,8 @@ class ConvolutionLayer : public Layer<Dtype> {
   int M_;
   int K_;
   int N_;
+
+  DISABLE_COPY_AND_ASSIGN(ConvolutionLayer);
 };
 
 /* EltwiseLayer
@@ -91,6 +93,8 @@ class EltwiseLayer : public Layer<Dtype> {
 
   EltwiseParameter_EltwiseOp op_;
   vector<Dtype> coeffs_;
+
+  DISABLE_COPY_AND_ASSIGN(EltwiseLayer);
 };
 
 /* Im2colLayer
@@ -125,6 +129,8 @@ class Im2colLayer : public Layer<Dtype> {
   int height_;
   int width_;
   int pad_;
+
+  DISABLE_COPY_AND_ASSIGN(Im2colLayer);
 };
 
 /* InnerProductLayer
@@ -158,6 +164,8 @@ class InnerProductLayer : public Layer<Dtype> {
   int N_;
   bool bias_term_;
   shared_ptr<Blob<Dtype> > bias_multiplier_;
+
+  DISABLE_COPY_AND_ASSIGN(InnerProductLayer);
 };
 
 // Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
@@ -234,6 +242,8 @@ class LRNLayer : public Layer<Dtype> {
   shared_ptr<EltwiseLayer<Dtype> > product_layer_;
   Blob<Dtype> product_data_input_;
   vector<Blob<Dtype>*> product_bottom_vec_;
+
+  DISABLE_COPY_AND_ASSIGN(LRNLayer);
 };
 
 /* PoolingLayer
@@ -274,8 +284,9 @@ class PoolingLayer : public Layer<Dtype> {
   int pooled_width_;
   Blob<Dtype> rand_idx_;
   shared_ptr<Blob<int> > max_idx_;
-};
 
+  DISABLE_COPY_AND_ASSIGN(PoolingLayer);
+};
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_

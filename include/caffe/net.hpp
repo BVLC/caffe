@@ -59,6 +59,7 @@ class Net {
   // trained layers from another net parameter instance.
   void CopyTrainedLayersFrom(const NetParameter& param);
   void CopyTrainedLayersFrom(const string trained_filename);
+  void CopyTrainedLayersFromTextFile(const string trained_filename);
   // Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
 

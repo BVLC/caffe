@@ -14,7 +14,7 @@
 #define STUB_GPU(classname) \
 template <typename Dtype> \
 Dtype classname<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, \
-    vector<Blob<Dtype>*>* top) { NO_GPU; } \
+    vector<Blob<Dtype>*>* top) { NO_GPU; return Dtype(0);} \
 template <typename Dtype> \
 void classname<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, \
     const vector<bool>& propagate_down, \
@@ -23,7 +23,7 @@ void classname<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, \
 #define STUB_GPU_FORWARD(classname, funcname) \
 template <typename Dtype> \
 Dtype classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& bottom, \
-    vector<Blob<Dtype>*>* top) { NO_GPU; } \
+    vector<Blob<Dtype>*>* top) { NO_GPU; return Dtype(0);} \
 
 #define STUB_GPU_BACKWARD(classname, funcname) \
 template <typename Dtype> \

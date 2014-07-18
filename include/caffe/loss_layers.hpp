@@ -50,6 +50,7 @@ class AccuracyLayer : public Layer<Dtype> {
   }
 
   int top_k_;
+  DISABLE_COPY_AND_ASSIGN(AccuracyLayer);
 };
 
 /* LossLayer
@@ -73,6 +74,7 @@ class LossLayer : public Layer<Dtype> {
   virtual inline bool AllowForceBackward(const int bottom_index) const {
     return bottom_index != 1;
   }
+  DISABLE_COPY_AND_ASSIGN(LossLayer);
 };
 
 /* EuclideanLossLayer
@@ -109,6 +111,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   Blob<Dtype> diff_;
+  DISABLE_COPY_AND_ASSIGN(EuclideanLossLayer);
 };
 
 /* HingeLossLayer
@@ -128,6 +131,8 @@ class HingeLossLayer : public LossLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  DISABLE_COPY_AND_ASSIGN(HingeLossLayer);
 };
 
 /* InfogainLossLayer
@@ -151,6 +156,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   Blob<Dtype> infogain_;
+
+  DISABLE_COPY_AND_ASSIGN(InfogainLossLayer);
 };
 
 /* MultinomialLogisticLossLayer
@@ -172,6 +179,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  DISABLE_COPY_AND_ASSIGN(MultinomialLogisticLossLayer);
 };
 
 /* SigmoidCrossEntropyLossLayer
@@ -206,6 +214,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   // Vector holders to call the underlying sigmoid layer forward and backward.
   vector<Blob<Dtype>*> sigmoid_bottom_vec_;
   vector<Blob<Dtype>*> sigmoid_top_vec_;
+  DISABLE_COPY_AND_ASSIGN(SigmoidCrossEntropyLossLayer);
 };
 
 // Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.
@@ -253,6 +262,7 @@ class SoftmaxWithLossLayer : public Layer<Dtype> {
   // Vector holders to call the underlying softmax layer forward and backward.
   vector<Blob<Dtype>*> softmax_bottom_vec_;
   vector<Blob<Dtype>*> softmax_top_vec_;
+  DISABLE_COPY_AND_ASSIGN(SoftmaxWithLossLayer);
 };
 
 }  // namespace caffe

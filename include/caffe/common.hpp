@@ -5,7 +5,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <glog/logging.h>
-
+#include <wincompat.h>
 #include <map>
 #include <set>
 #include <string>
@@ -18,10 +18,27 @@ private:\
   classname(const classname&);\
   classname& operator=(const classname&)
 
+
+#ifdef EXP_CAFFE
+#define CAFFE_DLL_EXPORT __declspec(dllexport)
+#define EXTERN_DLL_EXPORT extern "C" __declspec(dllexport) 
+#define EXPIMP_TEMPLATE
+#else
+#define CAFFE_DLL_EXPORT __declspec(dllimport)
+#define EXTERN_DLL_EXPORT extern 
+#define EXPIMP_TEMPLATE extern
+#endif
+
+#define EXTERN_INSTANCE_CLASS(classname) \
+  extern template class CAFFE_DLL_EXPORT classname<float>; \
+  extern template class CAFFE_DLL_EXPORT classname<double>
+
+//EXTERN_INSTANCE_CLASS(NeuronLayer);
+
 // Instantiate a class with float and double specifications.
 #define INSTANTIATE_CLASS(classname) \
-  template class classname<float>; \
-  template class classname<double>
+  template class CAFFE_DLL_EXPORT classname<float>; \
+  template class CAFFE_DLL_EXPORT classname<double>
 
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
@@ -82,7 +99,7 @@ using std::vector;
 
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
-class Caffe {
+class CAFFE_DLL_EXPORT Caffe {
  public:
   ~Caffe();
   inline static Caffe& Get() {

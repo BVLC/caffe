@@ -48,6 +48,8 @@ class ArgMaxLayer : public Layer<Dtype> {
     NOT_IMPLEMENTED;
   }
   bool out_max_val_;
+  
+ DISABLE_COPY_AND_ASSIGN(ArgMaxLayer);
 };
 
 /* ConcatLayer
@@ -85,6 +87,8 @@ class ConcatLayer : public Layer<Dtype> {
   int height_;
   int width_;
   int concat_dim_;
+
+ DISABLE_COPY_AND_ASSIGN(ConcatLayer);
 };
 
 /* FlattenLayer
@@ -114,6 +118,8 @@ class FlattenLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   int count_;
+
+  DISABLE_COPY_AND_ASSIGN(FlattenLayer);
 };
 
 /* SoftmaxLayer
@@ -146,6 +152,8 @@ class SoftmaxLayer : public Layer<Dtype> {
   Blob<Dtype> sum_multiplier_;
   // scale is an intermediate blob to hold temporary results.
   Blob<Dtype> scale_;
+
+  DISABLE_COPY_AND_ASSIGN(SoftmaxLayer);
 };
 
 /* SplitLayer
@@ -175,6 +183,8 @@ class SplitLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   int count_;
+
+  DISABLE_COPY_AND_ASSIGN(SplitLayer);
 };
 
 }  // namespace caffe

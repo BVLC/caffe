@@ -9,7 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
-
+#include <io.h>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -48,7 +48,7 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
 }
 
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
+  int fd = open(filename, O_RDONLY | O_BINARY);
   CHECK_NE(fd, -1) << "File not found: " << filename;
   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
@@ -157,7 +157,7 @@ void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
 }
 
 template <>
-void hdf5_save_nd_dataset<float>(
+void CAFFE_DLL_EXPORT hdf5_save_nd_dataset<float>(
     const hid_t file_id, const string dataset_name, const Blob<float>& blob) {
   hsize_t dims[HDF5_NUM_DIMS];
   dims[0] = blob.num();
@@ -170,7 +170,7 @@ void hdf5_save_nd_dataset<float>(
 }
 
 template <>
-void hdf5_save_nd_dataset<double>(
+void CAFFE_DLL_EXPORT hdf5_save_nd_dataset<double>(
     const hid_t file_id, const string dataset_name, const Blob<double>& blob) {
   hsize_t dims[HDF5_NUM_DIMS];
   dims[0] = blob.num();
