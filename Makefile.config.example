@@ -42,15 +42,15 @@ BLAS := atlas
 
 # NOTE: this is required only if you will compile the python interface.
 # We need to be able to find Python.h and numpy/arrayobject.h.
-PYTHON_INCLUDE := /usr/local/include/python2.7 \
-		/usr/local/lib/python2.7/dist-packages/numpy/core/include
+PYTHON_INCLUDE := /usr/include/python2.7 \
+		/usr/lib/python2.7/dist-packages/numpy/core/include
 # Anaconda Python distribution is quite popular. Include path:
 # PYTHON_INCLUDE := $(HOME)/anaconda/include \
 		# $(HOME)/anaconda/include/python2.7 \
 		# $(HOME)/anaconda/lib/python2.7/site-packages/numpy/core/include
 
 # We need to be able to find libpythonX.X.so or .dylib.
-PYTHON_LIB := /usr/local/lib
+PYTHON_LIB := /usr/lib
 # PYTHON_LIB := $(HOME)/anaconda/lib
 
 # Whatever else you find you need goes here.
