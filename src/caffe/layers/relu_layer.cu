@@ -9,7 +9,8 @@
 namespace caffe {
 
 template <typename Dtype>
-__global__ void ReLUForward(const int n, const Dtype* in, Dtype* out, Dtype negative_slope) {
+__global__ void ReLUForward(const int n, const Dtype* in, Dtype* out,
+    Dtype negative_slope) {
   CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] > 0 ? in[index] : negative_slope * in[index];
   }
@@ -38,7 +39,8 @@ template <typename Dtype>
 __global__ void ReLUBackward(const int n, const Dtype* in_diff,
     const Dtype* in_data, Dtype* out_diff, Dtype negative_slope) {
   CUDA_KERNEL_LOOP(index, n) {
-    out_diff[index] = in_diff[index] * (in_data[index] >= 0) + negative_slope * in_diff[index] * (in_data[index] < 0);
+    out_diff[index] = in_diff[index] * (in_data[index] >= 0)
+      + negative_slope * in_diff[index] * (in_data[index] < 0);
   }
 }
 
