@@ -60,6 +60,9 @@ class Classifier(caffe.Net):
         inputs = np.asarray([caffe.io.resize_image(im, self.image_dims)
                              for im in inputs])
 
+        if len(inputs.shape) == 3:
+          inputs = inputs.reshape((inputs.shape[0], inputs.shape[1], inputs.shape[2], 1))
+
         if oversample:
             # Generate center, corner, and mirrored crops.
             inputs = caffe.io.oversample(inputs, self.crop_dims)

@@ -11,6 +11,7 @@ import sys
 import argparse
 import glob
 import time
+from skimage.color import rgb2gray
 
 import caffe
 
@@ -94,14 +95,25 @@ def main(argv):
         action='store_true',
         help="Write output text to stdout rather than serializing to a file."
     )
+    parser.add_argument(
+        "--force_grayscale",
+        action='store_true',
+        help="Converts RGB images down to single-channel grayscale versions," +
+             "useful for single-channel networks like MNIST."
+    )
     args = parser.parse_args()
 
     image_dims = [int(s) for s in args.images_dim.split(',')]
-    channel_swap = [int(s) for s in args.channel_swap.split(',')]
+    if args.force_grayscale:
+      channel_swap = None
+      mean_file = None
+    else:
+      channel_swap = [int(s) for s in args.channel_swap.split(',')]
+      mean_file = args.mean_file
 
     # Make classifier.
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
-            image_dims=image_dims, gpu=args.gpu, mean_file=args.mean_file,
+            image_dims=image_dims, gpu=args.gpu, mean_file=mean_file,
             input_scale=args.input_scale, channel_swap=channel_swap)
 
     if args.gpu:
@@ -116,6 +128,9 @@ def main(argv):
                  for im_f in glob.glob(args.input_file + '/*.' + args.ext)]
     else:
         inputs = [caffe.io.load_image(args.input_file)]
+
+    if args.force_grayscale:
+      inputs = [rgb2gray(input) for input in inputs];
 
     print "Classifying %d inputs." % len(inputs)
 
