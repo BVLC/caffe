@@ -476,7 +476,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
         this->history_[param_id]->mutable_cpu_data());
       if (local_decay) {
         // add weight decay
-        caffe_cpu_axpy(net_params[param_id]->count(),
+        caffe_axpy(net_params[param_id]->count(),
           local_decay * local_rate,
           net_params[param_id]->cpu_data(),
           this->history_[param_id]->mutable_cpu_data());
