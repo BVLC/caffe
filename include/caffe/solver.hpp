@@ -67,9 +67,60 @@ class SGDSolver : public Solver<Dtype> {
   virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
   vector<shared_ptr<Blob<Dtype> > > history_;
+  // update maintains update related data
+  vector<shared_ptr<Blob<Dtype> > > update_;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
+
+template <typename Dtype>
+class AdaGradSolver : public SGDSolver<Dtype> {
+ public:
+  explicit AdaGradSolver(const SolverParameter& param)
+     : SGDSolver<Dtype>(param) {}
+  explicit AdaGradSolver(const string& param_file)
+     : SGDSolver<Dtype>(param_file) {}
+  virtual ~AdaGradSolver() {}
+
+ protected:
+    virtual void ComputeUpdateValue();
+    virtual Dtype GetLearningRate();
+
+    DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
+};
+
+template <typename Dtype>
+class NesterovSolver : public SGDSolver<Dtype> {
+ public:
+  explicit NesterovSolver(const SolverParameter& param)
+     : SGDSolver<Dtype>(param) {}
+  explicit NesterovSolver(const string& param_file)
+     : SGDSolver<Dtype>(param_file) {}
+  virtual ~NesterovSolver() {}
+
+ protected:
+    virtual void ComputeUpdateValue();
+
+    DISABLE_COPY_AND_ASSIGN(NesterovSolver);
+};
+
+// Solver factory
+template <typename Dtype>
+Solver<Dtype>* GetSolver(const SolverParameter& param) {
+  const SolverParameter_SolverType& type = param.solver_type();
+  switch (type) {
+  case SolverParameter_SolverType_SGD:
+    return new SGDSolver<Dtype>(param);
+  case SolverParameter_SolverType_ADAGRAD:
+    return new AdaGradSolver<Dtype>(param);
+  case SolverParameter_SolverType_NESTEROV:
+    return new NesterovSolver<Dtype>(param);
+  default:
+    LOG(FATAL) << "Unknown Solver Type: " << type;
+  }
+  // just to suppress old compiler warnings.
+  return (Solver<Dtype>*)(NULL);
+}
 
 
 }  // namespace caffe

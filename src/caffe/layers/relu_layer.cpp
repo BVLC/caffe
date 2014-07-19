@@ -6,8 +6,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::max;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -17,7 +15,7 @@ Dtype ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
   for (int i = 0; i < count; ++i) {
-    top_data[i] = max(bottom_data[i], Dtype(0));
+    top_data[i] = std::max(bottom_data[i], Dtype(0));
   }
   return Dtype(0);
 }

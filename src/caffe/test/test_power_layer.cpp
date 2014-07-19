@@ -55,8 +55,8 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
       if (isnan(expected_value)) {
         EXPECT_TRUE(isnan(top_data[i]));
       } else {
-        Dtype precision = max(Dtype(abs(expected_value * 0.0001)),
-                              min_precision);
+        Dtype precision = std::max(
+          Dtype(std::abs(expected_value * Dtype(1e-4))), min_precision);
         EXPECT_NEAR(expected_value, top_data[i], precision);
       }
     }
