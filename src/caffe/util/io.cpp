@@ -37,11 +37,7 @@ using google::protobuf::Message;
 namespace caffe {
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto) {
-#ifdef _MSC_VER
-  int fd = open(filename, O_RDONLY | O_BINARY);
-#else
   int fd = open(filename, O_RDONLY);
-#endif
   CHECK_NE(fd, -1) << "File not found: " << filename;
   FileInputStream* input = new FileInputStream(fd);
   bool success = google::protobuf::TextFormat::Parse(input, proto);
