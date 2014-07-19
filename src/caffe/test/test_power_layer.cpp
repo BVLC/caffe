@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
@@ -17,8 +16,6 @@
 using std::isnan;
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename TypeParam>
 class PowerLayerTest : public MultiDeviceTest<TypeParam> {

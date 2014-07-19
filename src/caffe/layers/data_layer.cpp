@@ -14,8 +14,6 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-using std::string;
-
 namespace caffe {
 
 template <typename Dtype>
@@ -361,6 +359,10 @@ Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   CreatePrefetchThread();
   return Dtype(0.);
 }
+
+#ifdef CPU_ONLY
+STUB_GPU_FORWARD(DataLayer, Forward);
+#endif
 
 INSTANTIATE_CLASS(DataLayer);
 

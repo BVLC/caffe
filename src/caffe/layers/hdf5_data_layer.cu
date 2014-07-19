@@ -15,8 +15,6 @@ TODO:
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::string;
-
 namespace caffe {
 
 template <typename Dtype>

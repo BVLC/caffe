@@ -6,9 +6,9 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
-using std::min;
-
 namespace caffe {
+
+using std::min;
 
 const float kBNLL_THRESHOLD = 50.;
 
@@ -43,6 +43,9 @@ void BNLLLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+#ifdef CPU_ONLY
+STUB_GPU(BNLLLayer);
+#endif
 
 INSTANTIATE_CLASS(BNLLLayer);
 
