@@ -370,7 +370,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
 
       if (local_decay) {
         // add weight decay
-    caffe_axpy(net_params[param_id]->count(),
+        caffe_axpy(net_params[param_id]->count(),
                local_decay * local_rate,
                net_params[param_id]->cpu_data(),
                this->update_[param_id]->mutable_cpu_data());
@@ -391,11 +391,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
              Dtype(-.5), this->update_[param_id]->mutable_cpu_data());
       caffe_mul(net_params[param_id]->count(),
              net_params[param_id]->cpu_diff(),
-             this->update_[param_id]->mutable_cpu_data(),
-             this->update_[param_id]->mutable_cpu_data());
-
-
-      caffe_scal(net_params[param_id]->count(), local_rate,
+             this->update_[param_id]->cpu_data(),
              this->update_[param_id]->mutable_cpu_data());
 
       // scale by the learning rate and copy to gradient differential
@@ -434,7 +430,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
            Dtype(-0.5), this->update_[param_id]->mutable_gpu_data());
       caffe_gpu_mul(net_params[param_id]->count(),
            net_params[param_id]->gpu_diff(),
-           this->update_[param_id]->mutable_gpu_data(),
+           this->update_[param_id]->gpu_data(),
            this->update_[param_id]->mutable_gpu_data());
 
       // scale by the learning rate and copy to gradient differential
@@ -471,29 +467,29 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 
       // save last update for stepping back
       caffe_copy(net_params[param_id]->count(),
-      this->history_[param_id]->gpu_data(),
-      this->update_[param_id]->mutable_gpu_data());
+        this->history_[param_id]->cpu_data(),
+        this->update_[param_id]->mutable_cpu_data());
 
       // update history with new gradient
-      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-        net_params[param_id]->gpu_diff(), momentum,
-        this->history_[param_id]->mutable_gpu_data());
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+        net_params[param_id]->cpu_diff(), momentum,
+        this->history_[param_id]->mutable_cpu_data());
       if (local_decay) {
         // add weight decay
-        caffe_gpu_axpy(net_params[param_id]->count(),
+        caffe_cpu_axpy(net_params[param_id]->count(),
           local_decay * local_rate,
-          net_params[param_id]->gpu_data(),
-          this->history_[param_id]->mutable_gpu_data());
+          net_params[param_id]->cpu_data(),
+          this->history_[param_id]->mutable_cpu_data());
       }
 
       // step back then over step to evaluate gradient
       caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
-                  this->history_[param_id]->gpu_data(), -momentum,
-                  this->update_[param_id]->mutable_gpu_data());
+                  this->history_[param_id]->cpu_data(), -momentum,
+                  this->update_[param_id]->mutable_cpu_data());
 
       caffe_copy(net_params[param_id]->count(),
-                 this->update_[param_id]->gpu_data(),
-                 net_params[param_id]->mutable_gpu_diff());
+                 this->update_[param_id]->cpu_data(),
+                 net_params[param_id]->mutable_cpu_diff());
     }
     break;
   case Caffe::GPU:
