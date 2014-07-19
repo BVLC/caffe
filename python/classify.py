@@ -5,11 +5,13 @@ classify.py is an out-of-the-box image classifer callable from the command line.
 By default it configures and runs the Caffe reference ImageNet model.
 """
 import numpy as np
+import pandas as pd
 import os
 import sys
 import argparse
 import glob
 import time
+from skimage.color import rgb2gray
 
 import caffe
 
@@ -82,14 +84,36 @@ def main(argv):
         help="Image file extension to take as input when a directory " +
              "is given as the input file."
     )
+    parser.add_argument(
+        "--labels_file",
+        default=os.path.join(pycaffe_dir,
+                "../data/ilsvrc12/synset_words.txt"),
+        help="Readable label definition file."
+    )
+    parser.add_argument(
+        "--print_results",
+        action='store_true',
+        help="Write output text to stdout rather than serializing to a file."
+    )
+    parser.add_argument(
+        "--force_grayscale",
+        action='store_true',
+        help="Converts RGB images down to single-channel grayscale versions," +
+             "useful for single-channel networks like MNIST."
+    )
     args = parser.parse_args()
 
     image_dims = [int(s) for s in args.images_dim.split(',')]
-    channel_swap = [int(s) for s in args.channel_swap.split(',')]
+    if args.force_grayscale:
+      channel_swap = None
+      mean_file = None
+    else:
+      channel_swap = [int(s) for s in args.channel_swap.split(',')]
+      mean_file = args.mean_file
 
     # Make classifier.
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
-            image_dims=image_dims, gpu=args.gpu, mean_file=args.mean_file,
+            image_dims=image_dims, gpu=args.gpu, mean_file=mean_file,
             input_scale=args.input_scale, channel_swap=channel_swap)
 
     if args.gpu:
@@ -105,16 +129,39 @@ def main(argv):
     else:
         inputs = [caffe.io.load_image(args.input_file)]
 
+    if args.force_grayscale:
+      inputs = [rgb2gray(input) for input in inputs];
+
     print "Classifying %d inputs." % len(inputs)
 
     # Classify.
     start = time.time()
-    predictions = classifier.predict(inputs, not args.center_only)
+    scores = classifier.predict(inputs, not args.center_only).flatten()
     print "Done in %.2f s." % (time.time() - start)
 
-    # Save
-    np.save(args.output_file, predictions)
+    if args.print_results:
+        with open(args.labels_file) as f:
+          labels_df = pd.DataFrame([
+               {
+                   'synset_id': l.strip().split(' ')[0],
+                   'name': ' '.join(l.strip().split(' ')[1:]).split(',')[0]
+               }
+               for l in f.readlines()
+            ])
+        labels = labels_df.sort('synset_id')['name'].values
 
+        indices = (-scores).argsort()[:5]
+        predictions = labels[indices]
+
+        meta = [
+                   (p, '%.5f' % scores[i])
+                   for i, p in zip(indices, predictions)
+               ]
+
+        print meta
+
+    # Save
+    np.save(args.output_file, scores)
 
 if __name__ == '__main__':
     main(sys.argv)
