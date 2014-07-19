@@ -377,9 +377,13 @@ void SGDSolver<Dtype>::PreSolve() {
   // Initialize the history
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   history_.clear();
+  update_.clear();
   for (int i = 0; i < net_params.size(); ++i) {
     const Blob<Dtype>* net_param = net_params[i].get();
     history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
+        net_param->num(), net_param->channels(), net_param->height(),
+        net_param->width())));
+    update_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
         net_param->num(), net_param->channels(), net_param->height(),
         net_param->width())));
   }
@@ -470,7 +474,192 @@ void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
   }
 }
 
+template <typename Dtype>
+void NesterovSolver<Dtype>::ComputeUpdateValue() {
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_lr = this->net_->params_lr();
+  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  // get the learning rate
+  Dtype rate = this->GetLearningRate();
+  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+  }
+  Dtype momentum = this->param_.momentum();
+  Dtype weight_decay = this->param_.weight_decay();
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // save history momentum for stepping back
+      caffe_copy(net_params[param_id]->count(),
+          this->history_[param_id]->cpu_data(),
+          this->update_[param_id]->mutable_cpu_data());
+
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+          net_params[param_id]->cpu_diff(), momentum,
+          this->history_[param_id]->mutable_cpu_data());
+      if (local_decay) {
+        // add weight decay
+        caffe_axpy(net_params[param_id]->count(),
+            local_decay * local_rate,
+            net_params[param_id]->cpu_data(),
+            this->history_[param_id]->mutable_cpu_data());
+      }
+      // compute udpate: step back then over step
+      caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
+          this->history_[param_id]->cpu_data(), -momentum,
+          this->update_[param_id]->mutable_cpu_data());
+
+      // copy
+      caffe_copy(net_params[param_id]->count(),
+          this->update_[param_id]->cpu_data(),
+          net_params[param_id]->mutable_cpu_diff());
+    }
+    break;
+  case Caffe::GPU:
+#ifndef CPU_ONLY
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      // save history momentum for stepping back
+      caffe_copy(net_params[param_id]->count(),
+          this->history_[param_id]->gpu_data(),
+          this->update_[param_id]->mutable_gpu_data());
+
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
+          net_params[param_id]->gpu_diff(), momentum,
+          this->history_[param_id]->mutable_gpu_data());
+      if (local_decay) {
+        // add weight decay
+        caffe_gpu_axpy(net_params[param_id]->count(),
+            local_decay * local_rate,
+            net_params[param_id]->gpu_data(),
+            this->history_[param_id]->mutable_gpu_data());
+      }
+      // compute udpate: step back then over step
+      caffe_gpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
+          this->history_[param_id]->gpu_data(), -momentum,
+          this->update_[param_id]->mutable_gpu_data());
+
+      // copy
+      caffe_copy(net_params[param_id]->count(),
+          this->update_[param_id]->gpu_data(),
+          net_params[param_id]->mutable_gpu_diff());
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
+}
+
+template <typename Dtype>
+void AdaGradSolver<Dtype>::ComputeUpdateValue() {
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_lr = this->net_->params_lr();
+  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  // get the learning rate
+  Dtype rate = this->GetLearningRate();
+  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+  }
+  Dtype weight_decay = this->param_.weight_decay();
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        // add weight decay
+        caffe_axpy(net_params[param_id]->count(),
+            local_decay * local_rate,
+            net_params[param_id]->cpu_data(),
+            this->history_[param_id]->mutable_cpu_data());
+      }
+
+      // compute square of gradient in update
+      caffe_powx(net_params[param_id]->count(),
+          net_params[param_id]->cpu_data(), Dtype(2),
+          this->update_[param_id]->mutable_cpu_data());
+
+      // update history
+      caffe_add(net_params[param_id]->count(),
+          this->update_[param_id]->cpu_data(),
+          this->history_[param_id]->cpu_data(),
+          this->history_[param_id]->mutable_cpu_data());
+
+      // prepare update
+      caffe_powx(net_params[param_id]->count(),
+                this->history_[param_id]->cpu_data(), Dtype(-0.5),
+                this->update_[param_id]->mutable_cpu_data());
+
+      caffe_mul(net_params[param_id]->count(),
+                net_params[param_id]->cpu_diff(),
+                this->update_[param_id]->cpu_data(),
+                this->update_[param_id]->mutable_cpu_data());
+
+      // scale and copy
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+          this->update_[param_id]->cpu_data(), Dtype(0),
+          net_params[param_id]->mutable_cpu_diff());
+    }
+    break;
+  case Caffe::GPU:
+#ifndef CPU_ONLY
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      Dtype local_rate = rate * net_params_lr[param_id];
+      Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+
+      if (local_decay) {
+        // add weight decay
+        caffe_gpu_axpy(net_params[param_id]->count(),
+            local_decay * local_rate,
+            net_params[param_id]->gpu_data(),
+            this->history_[param_id]->mutable_gpu_data());
+      }
+
+      // compute square of gradient in update
+      caffe_gpu_powx(net_params[param_id]->count(),
+          net_params[param_id]->gpu_data(), Dtype(2),
+          this->update_[param_id]->mutable_gpu_data());
+
+      // update history
+      caffe_gpu_add(net_params[param_id]->count(),
+          this->update_[param_id]->gpu_data(),
+          this->history_[param_id]->gpu_data(),
+          this->history_[param_id]->mutable_gpu_data());
+
+      // prepare update
+      caffe_gpu_powx(net_params[param_id]->count(),
+                this->history_[param_id]->gpu_data(), Dtype(-0.5),
+                this->update_[param_id]->mutable_gpu_data());
+
+      caffe_gpu_mul(net_params[param_id]->count(),
+                net_params[param_id]->gpu_diff(),
+                this->update_[param_id]->gpu_data(),
+                this->update_[param_id]->mutable_gpu_data());
+
+      // scale and copy
+      caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
+          this->update_[param_id]->gpu_data(), Dtype(0),
+          net_params[param_id]->mutable_gpu_diff());
+    }
+#else
+    NO_GPU;
+#endif
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
+}
+
 INSTANTIATE_CLASS(Solver);
 INSTANTIATE_CLASS(SGDSolver);
+INSTANTIATE_CLASS(NesterovSolver);
+INSTANTIATE_CLASS(AdaGradSolver);
 
 }  // namespace caffe
