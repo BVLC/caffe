@@ -81,8 +81,8 @@ TYPED_TEST(NeuronLayerTest, TestReLUWithNegativeSlope) {
 TYPED_TEST(NeuronLayerTest, TestReLUGradientWithNegativeSlope) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ReLULayer<Dtype> layer(layer_param);
   layer_param.ParseFromString("relu_param{negative_slope:0.01}");
+  ReLULayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
