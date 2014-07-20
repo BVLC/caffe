@@ -28,9 +28,9 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       reinterpret_cast<ImageDataLayer<Dtype>*>(layer_pointer);
   CHECK(layer);
   Datum datum;
-  CHECK(layer->prefetch_data_);
-  Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
-  Dtype* top_label = layer->prefetch_label_->mutable_cpu_data();
+  CHECK(layer->prefetch_data_.count());
+  Dtype* top_data = layer->prefetch_data_.mutable_cpu_data();
+  Dtype* top_label = layer->prefetch_label_.mutable_cpu_data();
   ImageDataParameter image_data_param = layer->layer_param_.image_data_param();
   const Dtype scale = image_data_param.scale();
   const int batch_size = image_data_param.batch_size();
@@ -183,20 +183,19 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   const string& mean_file = this->layer_param_.image_data_param().mean_file();
   if (crop_size > 0) {
     (*top)[0]->Reshape(batch_size, datum.channels(), crop_size, crop_size);
-    prefetch_data_.reset(new Blob<Dtype>(batch_size, datum.channels(),
-                                         crop_size, crop_size));
+    prefetch_data_.Reshape(batch_size, datum.channels(), crop_size, crop_size);
   } else {
     (*top)[0]->Reshape(batch_size, datum.channels(), datum.height(),
                        datum.width());
-    prefetch_data_.reset(new Blob<Dtype>(batch_size, datum.channels(),
-                                         datum.height(), datum.width()));
+    prefetch_data_.Reshape(batch_size, datum.channels(), datum.height(),
+        datum.width());
   }
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
   // label
   (*top)[1]->Reshape(batch_size, 1, 1, 1);
-  prefetch_label_.reset(new Blob<Dtype>(batch_size, 1, 1, 1));
+  prefetch_label_.Reshape(batch_size, 1, 1, 1);
   // datum size
   datum_channels_ = datum.channels();
   datum_height_ = datum.height();
@@ -222,8 +221,8 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_cpu_data();
-  prefetch_label_->mutable_cpu_data();
+  prefetch_data_.mutable_cpu_data();
+  prefetch_label_.mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
@@ -277,9 +276,9 @@ Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
+  caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
              (*top)[0]->mutable_cpu_data());
-  caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
+  caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
              (*top)[1]->mutable_cpu_data());
   // Start a new prefetch thread
   CreatePrefetchThread();

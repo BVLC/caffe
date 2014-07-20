@@ -228,8 +228,8 @@ class ImageDataLayer : public Layer<Dtype> {
   int datum_width_;
   int datum_size_;
   pthread_t thread_;
-  shared_ptr<Blob<Dtype> > prefetch_data_;
-  shared_ptr<Blob<Dtype> > prefetch_label_;
+  Blob<Dtype> prefetch_data_;
+  Blob<Dtype> prefetch_label_;
   Blob<Dtype> data_mean_;
   Caffe::Phase phase_;
 };
