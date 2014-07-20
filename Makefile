@@ -295,7 +295,9 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 ##############################
 .PHONY: all test clean linecount lint tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
-	superclean supercleanlist supercleanfiles warn
+	superclean supercleanlist supercleanfiles warn everything
+
+everything: all py$(PROJECT) mat$(PROJECT) test warn lint runtest
 
 all: $(NAME) $(STATIC_NAME) tools examples
 
