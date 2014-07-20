@@ -22,11 +22,11 @@ void* DataLayerPrefetch(void* layer_pointer) {
   DataLayer<Dtype>* layer = static_cast<DataLayer<Dtype>*>(layer_pointer);
   CHECK(layer);
   Datum datum;
-  CHECK(layer->prefetch_data_);
-  Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
+  CHECK(layer->prefetch_data_.count());
+  Dtype* top_data = layer->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
   if (layer->output_labels_) {
-    top_label = layer->prefetch_label_->mutable_cpu_data();
+    top_label = layer->prefetch_label_.mutable_cpu_data();
   }
   const Dtype scale = layer->layer_param_.data_param().scale();
   const int batch_size = layer->layer_param_.data_param().batch_size();
@@ -257,16 +257,14 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   if (crop_size > 0) {
     (*top)[0]->Reshape(this->layer_param_.data_param().batch_size(),
                        datum.channels(), crop_size, crop_size);
-    prefetch_data_.reset(new Blob<Dtype>(
-        this->layer_param_.data_param().batch_size(), datum.channels(),
-        crop_size, crop_size));
+    prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
+        datum.channels(), crop_size, crop_size);
   } else {
     (*top)[0]->Reshape(
         this->layer_param_.data_param().batch_size(), datum.channels(),
         datum.height(), datum.width());
-    prefetch_data_.reset(new Blob<Dtype>(
-        this->layer_param_.data_param().batch_size(), datum.channels(),
-        datum.height(), datum.width()));
+    prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
+        datum.channels(), datum.height(), datum.width());
   }
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
@@ -274,8 +272,8 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   if (output_labels_) {
     (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
-    prefetch_label_.reset(
-        new Blob<Dtype>(this->layer_param_.data_param().batch_size(), 1, 1, 1));
+    prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
+        1, 1, 1);
   }
   // datum size
   datum_channels_ = datum.channels();
@@ -303,9 +301,9 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_cpu_data();
+  prefetch_data_.mutable_cpu_data();
   if (output_labels_) {
-    prefetch_label_->mutable_cpu_data();
+    prefetch_label_.mutable_cpu_data();
   }
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
@@ -349,10 +347,10 @@ Dtype DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
+  caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
              (*top)[0]->mutable_cpu_data());
   if (output_labels_) {
-    caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
+    caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
                (*top)[1]->mutable_cpu_data());
   }
   // Start a new prefetch thread
