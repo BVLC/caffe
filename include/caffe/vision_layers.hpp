@@ -157,7 +157,7 @@ class InnerProductLayer : public Layer<Dtype> {
   int K_;
   int N_;
   bool bias_term_;
-  shared_ptr<Blob<Dtype> > bias_multiplier_;
+  Blob<Dtype> bias_multiplier_;
 };
 
 // Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
