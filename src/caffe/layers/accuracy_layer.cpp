@@ -1,8 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <algorithm>
-#include <cmath>
-#include <cfloat>
 #include <functional>
 #include <utility>
 #include <vector>
@@ -11,7 +9,6 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
-
 
 namespace caffe {
 

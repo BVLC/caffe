@@ -1,9 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <algorithm>
-#include <cfloat>
 #include <functional>
-#include <queue>
 #include <utility>
 #include <vector>
 
