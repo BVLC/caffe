@@ -120,8 +120,11 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
   default:
       LOG(FATAL) << "Unknown SolverType: " << type;
   }
+  return (Solver<Dtype>*) NULL;
 }
 
+template Solver<float>* GetSolver(const SolverParameter& param);
+template Solver<double>* GetSolver(const SolverParameter& param);
 
 }  // namespace caffe
 
