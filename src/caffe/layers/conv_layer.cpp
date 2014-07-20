@@ -76,10 +76,10 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
-  // Set up the bias filler
+  // Set up the all ones "bias multiplier" for adding bias using blas
   if (bias_term_) {
-    bias_multiplier_.reset(new Blob<Dtype>(1, 1, 1, N_));
-    caffe_set(N_, Dtype(1), bias_multiplier_->mutable_cpu_data());
+    bias_multiplier_.Reshape(1, 1, 1, N_);
+    caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
@@ -110,7 +110,7 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       if (bias_term_) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->cpu_data(),
-            bias_multiplier_->cpu_data(),
+            bias_multiplier_.cpu_data(),
             (Dtype)1., top_data + (*top)[i]->offset(n));
       }
     }
@@ -144,7 +144,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < num_; ++n) {
         caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
             1., top_diff + top[0]->offset(n),
-            bias_multiplier_->cpu_data(), 1.,
+            bias_multiplier_.cpu_data(), 1.,
             bias_diff);
       }
     }
