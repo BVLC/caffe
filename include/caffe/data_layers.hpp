@@ -315,8 +315,8 @@ class WindowDataLayer : public Layer<Dtype> {
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
   pthread_t thread_;
-  shared_ptr<Blob<Dtype> > prefetch_data_;
-  shared_ptr<Blob<Dtype> > prefetch_label_;
+  Blob<Dtype> prefetch_data_;
+  Blob<Dtype> prefetch_label_;
   Blob<Dtype> data_mean_;
   vector<std::pair<std::string, vector<int> > > image_database_;
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
