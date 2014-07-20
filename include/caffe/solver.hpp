@@ -66,11 +66,11 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param_file) {}
 
  protected:
-  void PreSolve();
+  virtual void PreSolve();
   Dtype GetLearningRate();
   virtual void ComputeUpdateValue();
-  void SnapshotSolverState(SolverState * state);
-  void RestoreSolverState(const SolverState& state);
+  virtual void SnapshotSolverState(SolverState * state);
+  virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
   vector<shared_ptr<Blob<Dtype> > > history_, update_;
