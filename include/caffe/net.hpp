@@ -35,6 +35,16 @@ class Net {
   // Run forward with the input blobs already fed separately. You can get the
   // input blobs using input_blobs().
   const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss = NULL);
+
+  // The From and To variants of Forward and Backward operate on the
+  // (topological) ordering by which the net is specified. For general DAG
+  // networks, note that (1) computing from one layer to another might entail
+  // extra computation on unrelated branches, and (2) computation starting in
+  // the middle may be incorrect if all of the layers of a fan-in are not
+  // included.
+  Dtype ForwardFromTo(int start, int end);
+  Dtype ForwardFrom(int start);
+  Dtype ForwardTo(int end);
   // Run forward using a set of bottom blobs, and return the result.
   const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom,
       Dtype* loss = NULL);
@@ -46,6 +56,9 @@ class Net {
   // computes the gradient w.r.t the parameters, and the data has already
   // been provided during the forward pass.
   void Backward();
+  void BackwardFromTo(int start, int end);
+  void BackwardFrom(int start);
+  void BackwardTo(int end);
 
   Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
     Dtype loss;
