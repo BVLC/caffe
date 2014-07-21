@@ -22,8 +22,7 @@ int main(int argc, char** argv) {
   ReadProtoFromTextFileOrDie(argv[1], &solver_param);
 
   LOG(INFO) << "Starting Optimization";
-  shared_ptr<Solver<float> > solver =
-      (shared_ptr<Solver<float> >) GetSolver<float>(solver_param);
+  shared_ptr<Solver<float> > solver(GetSolver<float>(solver_param));
   if (argc == 3) {
     LOG(INFO) << "Resuming from " << argv[2];
     solver->Solve(argv[2]);
