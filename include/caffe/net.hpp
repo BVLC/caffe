@@ -16,12 +16,6 @@
 
 namespace caffe {
 
-using std::map;
-using std::pair;
-using std::set;
-using std::string;
-using std::vector;
-
 template <typename Dtype>
 class Net {
  public:

@@ -13,8 +13,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 
-using std::max;
-
 namespace caffe {
 
 // The gradient checker adds a L2 normalization loss function on top of the
@@ -160,8 +158,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
           || fabs(feature) > kink_ + kink_range_) {
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
-        Dtype scale = max(
-            max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
+        Dtype scale = std::max(
+            std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
         EXPECT_NEAR(computed_gradient, estimated_gradient, threshold_ * scale)
           << "debug: (top_id, top_data_id, blob_id, feat_id)="
           << top_id << "," << top_data_id << "," << blob_id << "," << feat_id;
