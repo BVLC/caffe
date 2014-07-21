@@ -9,6 +9,14 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+#ifdef _MSC_VER
+#if _MSC_VER < 1800
+inline double round(double x) {
+  return (x > 0.0) ? floor(x + 0.5) : ceil(x - 0.5);
+}
+#endif
+#endif
+
 namespace caffe {
 
 template<>

@@ -110,6 +110,9 @@ class Caffe {
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
   }
+
+  // device property
+  inline static cudaDeviceProp cuProp() { return Get().prop; }
 #endif
 
   // Returns the mode: running on CPU or GPU.
@@ -136,6 +139,7 @@ class Caffe {
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
+  cudaDeviceProp prop;
 #endif
   shared_ptr<RNG> random_generator_;
 
@@ -167,7 +171,9 @@ const char* curandGetErrorString(curandStatus_t error);
 
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {
-  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  int max_blocks = Caffe::cuProp().maxGridSize[0];
+  return num_blocks > max_blocks ? num_blocks : max_blocks;
 }
 
 #endif  // CPU_ONLY
