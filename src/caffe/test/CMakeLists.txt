@@ -8,18 +8,41 @@ project( Test )
 
 #    Set CUDA Device number and CMAKE_SOURCE_DIR
 add_definitions(-DCMAKE_BUILD)
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.gen.cmake
+
+#    Generate config files
+set(IN_EXT .in)
+set(GEN_EXT .gen.cmake)
+set(TEST_DEFINES_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp)
+set(TEST_DATA_FILE ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt)
+
+set(IN_FILES 
+    ${TEST_DEFINES_FILE}
+    ${TEST_DATA_FILE}
 )
 
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.in
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.gen.cmake
-)
+foreach(in_file ${IN_FILES})
+    
+    configure_file(
+        ${in_file}${IN_EXT}
+        ${in_file}${GEN_EXT}
+    )
+    
+endforeach()       
+
+
+#configure_file(
+#    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.in
+#    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.gen.cmake
+#)
+#
+#configure_file(
+#    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.in
+#    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.gen.cmake
+#)
 
 include_directories(
         ${Caffe_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 set(TEST_MAIN test_caffe_main.cpp)
