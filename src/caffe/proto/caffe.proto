@@ -117,7 +117,7 @@ message SolverState {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 31 (last added: relu_param)
+// LayerParameter next available ID: 32 (last added: slice_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -212,7 +212,7 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 20;
   optional ThresholdParameter threshold_param = 25;
   optional HingeLossParameter hinge_loss_param = 29;
-  optional SliceParameter slice_param=30;
+  optional SliceParameter slice_param = 31;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -444,9 +444,10 @@ message ReLUParameter {
 
 // Message that stores parameters used by SliceLayer
 message SliceParameter {
-  // Slice Layer needs to specify the dimension along the slice will happen,
-  // the other dimensions must be the same for all the bottom blobs
-  // By default it will slice blobs along channels dimension
+  // SliceLayer needs to know which dimension to slice across.
+  // Currently, SliceLayer only supports slicing across num (dim 0)
+  // and channels (dim 1).
+  // By default, SliceLayer slices across channels.
   optional uint32 slice_dim = 1 [default = 1];
   repeated uint32 slice_point = 2;
 }
