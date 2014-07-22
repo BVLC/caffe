@@ -181,12 +181,12 @@ struct CaffeNet {
     }
   }
 
-  void Forward() {
-    net_->ForwardPrefilled();
+  void Forward(int start, int end) {
+    net_->ForwardFromTo(start, end);
   }
 
-  void Backward() {
-    net_->Backward();
+  void Backward(int start, int end) {
+    net_->BackwardFromTo(start, end);
   }
 
   void set_input_arrays(object data_obj, object labels_obj) {

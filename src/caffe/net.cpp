@@ -335,16 +335,34 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 }
 
 template <typename Dtype>
-const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled(Dtype* loss) {
-  if (loss != NULL) {
-    *loss = Dtype(0.);
-  }
-  for (int i = 0; i < layers_.size(); ++i) {
+Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
+  CHECK_GE(start, 0);
+  CHECK_LT(end, layers_.size());
+  Dtype loss = 0;
+  for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
-    if (loss != NULL) {
-      *loss += layer_loss;
-    }
+    loss += layer_loss;
+  }
+  return loss;
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::ForwardFrom(int start) {
+  return ForwardFromTo(start, layers_.size() - 1);
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::ForwardTo(int end) {
+  return ForwardFromTo(0, end);
+}
+
+template <typename Dtype>
+const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled(Dtype* loss) {
+  if (loss != NULL) {
+    *loss = ForwardFromTo(0, layers_.size() - 1);
+  } else {
+    ForwardFromTo(0, layers_.size() - 1);
   }
   return net_output_blobs_;
 }
@@ -380,10 +398,11 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
   return output;
 }
 
-
 template <typename Dtype>
-void Net<Dtype>::Backward() {
-  for (int i = layers_.size() - 1; i >= 0; --i) {
+void Net<Dtype>::BackwardFromTo(int start, int end) {
+  CHECK_GE(end, 0);
+  CHECK_LT(start, layers_.size());
+  for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], &bottom_vecs_[i]);
@@ -420,6 +439,21 @@ void Net<Dtype>::ShareTrainedLayersWith(Net* other) {
       target_blobs[j]->ShareData(*source_blob);
     }
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::BackwardFrom(int start) {
+  BackwardFromTo(start, 0);
+}
+
+template <typename Dtype>
+void Net<Dtype>::BackwardTo(int end) {
+  BackwardFromTo(layers_.size() - 1, end);
+}
+
+template <typename Dtype>
+void Net<Dtype>::Backward() {
+  BackwardFromTo(layers_.size() - 1, 0);
 }
 
 template <typename Dtype>

@@ -6,6 +6,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "convert_mnist_data", "convert_mnist_data\convert_mnist_data.vcxproj", "{6E2F2358-0097-4C02-811E-94A2491DFD51}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "train_net", "train_net\train_net.vcxproj", "{22869C0E-5BCB-462A-8D67-FD336356DA49}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D2730D78-27AB-4D1C-9484-3FBD17BD5BDB} = {D2730D78-27AB-4D1C-9484-3FBD17BD5BDB}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pycaffe", "pycaffe\pycaffe.vcxproj", "{87538E5B-E96F-439A-A7BA-8E5F0A18EFD6}"
 EndProject

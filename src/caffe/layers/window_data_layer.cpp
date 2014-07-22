@@ -39,8 +39,8 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
 
-  Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
-  Dtype* top_label = layer->prefetch_label_->mutable_cpu_data();
+  Dtype* top_data = layer->prefetch_data_.mutable_cpu_data();
+  Dtype* top_label = layer->prefetch_label_.mutable_cpu_data();
   const Dtype scale = layer->layer_param_.window_data_param().scale();
   const int batch_size = layer->layer_param_.window_data_param().batch_size();
   const int crop_size = layer->layer_param_.window_data_param().crop_size();
@@ -58,7 +58,7 @@ void* WindowDataLayerPrefetch(void* layer_pointer) {
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
-  caffe_set(layer->prefetch_data_->count(), Dtype(0), top_data);
+  caffe_set(layer->prefetch_data_.count(), Dtype(0), top_data);
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
@@ -370,16 +370,14 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(crop_size, 0);
   const int batch_size = this->layer_param_.window_data_param().batch_size();
   (*top)[0]->Reshape(batch_size, channels, crop_size, crop_size);
-  prefetch_data_.reset(
-      new Blob<Dtype>(batch_size, channels, crop_size, crop_size));
+  prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
 
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
   // label
   (*top)[1]->Reshape(batch_size, 1, 1, 1);
-  prefetch_label_.reset(
-      new Blob<Dtype>(batch_size, 1, 1, 1));
+  prefetch_label_.Reshape(batch_size, 1, 1, 1);
 
   // check if we want to have mean
   if (this->layer_param_.window_data_param().has_mean_file()) {
@@ -400,8 +398,8 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_cpu_data();
-  prefetch_label_->mutable_cpu_data();
+  prefetch_data_.mutable_cpu_data();
+  prefetch_label_.mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
@@ -443,9 +441,9 @@ Dtype WindowDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  caffe_copy(prefetch_data_->count(), prefetch_data_->cpu_data(),
+  caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
              (*top)[0]->mutable_cpu_data());
-  caffe_copy(prefetch_label_->count(), prefetch_label_->cpu_data(),
+  caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
              (*top)[1]->mutable_cpu_data());
   // Start a new prefetch thread
   CreatePrefetchThread();

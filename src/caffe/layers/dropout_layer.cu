@@ -32,7 +32,7 @@ Dtype DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int count = bottom[0]->count();
   if (Caffe::phase() == Caffe::TRAIN) {
     unsigned int* mask =
-        static_cast<unsigned int*>(rand_vec_->mutable_gpu_data());
+        static_cast<unsigned int*>(rand_vec_.mutable_gpu_data());
     caffe_gpu_rng_uniform(count, mask);
     // set thresholds
     // NOLINT_NEXT_LINE(whitespace/operators)
@@ -63,7 +63,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
     if (Caffe::phase() == Caffe::TRAIN) {
       const unsigned int* mask =
-          static_cast<const unsigned int*>(rand_vec_->gpu_data());
+          static_cast<const unsigned int*>(rand_vec_.gpu_data());
       const int count = (*bottom)[0]->count();
       // NOLINT_NEXT_LINE(whitespace/operators)
       DropoutBackward<Dtype><<<CAFFE_GET_BLOCKS(count),

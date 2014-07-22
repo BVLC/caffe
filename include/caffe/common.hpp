@@ -173,7 +173,7 @@ const char* curandGetErrorString(curandStatus_t error);
 inline int CAFFE_GET_BLOCKS(const int N) {
   int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
   int max_blocks = Caffe::cuProp().maxGridSize[0];
-  return num_blocks > max_blocks ? num_blocks : max_blocks;
+  return num_blocks > max_blocks ? max_blocks : num_blocks;
 }
 
 #endif  // CPU_ONLY

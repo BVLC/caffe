@@ -77,7 +77,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\pthreads\Pre-built.2\include;D:\glog-0.3.3\src\windows;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\include;..\..\include;D:\boost_1_55_x64\boost_1_55_0;C:\Program Files %28x86%29\Intel\Composer XE 2013\mkl\include;D:\protobuf-2.5.0\src;D:\leveldb-master\include;D:\HDF_Group\HDF5\1.8.13\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\lib\x64;D:\boost_1_55_x64\boost_1_55_0\lib64-msvc-11.0;..\x64\Debug;..\windows;C:\Program Files (x86)\Intel\Composer XE 2013\mkl\lib\intel64;D:\opencv\build\x64\vc11\lib;C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE;D:\pthreads\Pre-built.2\lib\x64;D:\protobuf-2.5.0\vsprojects\x64\Debug;D:\leveldb-master\build\x64\Debug;D:\glog-0.3.3\x64\Debug;D:\HDF_Group\HDF5\1.8.13\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v6.0\lib\x64;D:\boost_1_55_x64\boost_1_55_0\lib64-msvc-11.0;..\x64\Debug;..\windows;C:\Program Files (x86)\Intel\Composer XE 2013\mkl\lib\intel64;D:\opencv\build\x64\vc11\lib;C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE;D:\pthreads\Pre-built.2\lib\x64;D:\protobuf-2.5.0\vsprojects\x64\Debug;D:\leveldb-master\build\X64\Debug\;D:\glog-0.3.3\x64\Debug;D:\HDF_Group\HDF5\1.8.13\lib;D:\zlib128\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -117,11 +117,12 @@
       <SDLCheck>true</SDLCheck>
       <OpenMPSupport>true</OpenMPSupport>
       <BrowseInformation>true</BrowseInformation>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>mkl_blacs_lp64_dll.lib;mkl_blacs_ilp64_dll.lib;mkl_intel_ilp64.lib;mkl_sequential.lib;mkl_intel_thread.lib;mkl_core.lib;pthreadVC2.lib;opencv_highgui246d.lib;opencv_core246d.lib;opencv_imgproc246d.lib;curand.lib;cudart.lib;cuda.lib;cublas.lib;libglog.lib;caffe.lib;leveldbd.lib;libprotobuf.lib;boost_chrono-vc110-mt-gd-1_55.lib;boost_filesystem-vc110-mt-gd-1_55.lib;boost_system-vc110-mt-gd-1_55.lib;boost_thread-vc110-mt-gd-1_55.lib;hdf5_hl.lib;hdf5.lib</AdditionalDependencies>
+      <AdditionalDependencies>mkl_blacs_lp64_dll.lib;mkl_blacs_ilp64_dll.lib;mkl_intel_ilp64.lib;mkl_sequential.lib;mkl_intel_thread.lib;mkl_core.lib;pthreadVC2.lib;opencv_highgui246d.lib;opencv_core246d.lib;opencv_imgproc246d.lib;curand.lib;cudart.lib;cuda.lib;cublas.lib;libglog.lib;caffe.lib;leveldbd.lib;libprotobuf.lib;boost_chrono-vc110-mt-gd-1_55.lib;boost_filesystem-vc110-mt-gd-1_55.lib;boost_system-vc110-mt-gd-1_55.lib;boost_thread-vc110-mt-gd-1_55.lib;hdf5_hl.lib;hdf5.lib;zdll.lib</AdditionalDependencies>
     </Link>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
