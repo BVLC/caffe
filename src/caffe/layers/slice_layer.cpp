@@ -1,6 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <vector>
+#include <algorithm>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -17,9 +18,9 @@ void SliceLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(slice_dim_, 0);
   CHECK_LE(slice_dim_, 1) << "Can only slice num and channels";
   slice_point_.clear();
-  for (int i = 0; i < slice_param.slice_point_size(); ++i) {
-    slice_point_.push_back(slice_param.slice_point(i));
-  }
+  std::copy(slice_param.slice_point().begin(),
+      slice_param.slice_point().end(),
+      std::back_inserter(slice_point_));
   count_ = 0;
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
