@@ -179,8 +179,8 @@ class SplitLayer : public Layer<Dtype> {
 };
 
 /* SliceLayer
-  Takes one blobs and slice it along either num or
-  channel dim, outputting the result.
+  Takes one blobs and slices it along either num or channel dim,
+  outputting the result into as many top blobs as needed.
 */
 template <typename Dtype>
 class SliceLayer : public Layer<Dtype> {
@@ -213,7 +213,7 @@ class SliceLayer : public Layer<Dtype> {
   int height_;
   int width_;
   int slice_dim_;
-  google::protobuf::RepeatedField<google::uint32> slice_point_;
+  vector<int> slice_point_;
 };
 
 }  // namespace caffe
