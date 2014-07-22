@@ -117,7 +117,7 @@ message SolverState {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 31 (last added: relu_param)
+// LayerParameter next available ID: 32 (last added: slice_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -129,7 +129,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 33 (last added: DUMMY_DATA)
+  // LayerType next available ID: 34 (last added: SLICE)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -164,6 +164,7 @@ message LayerParameter {
     SOFTMAX = 20;
     SOFTMAX_LOSS = 21;
     SPLIT = 22;
+    SLICE = 33;
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
@@ -211,6 +212,7 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 20;
   optional ThresholdParameter threshold_param = 25;
   optional HingeLossParameter hinge_loss_param = 29;
+  optional SliceParameter slice_param = 31;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -438,6 +440,16 @@ message ReLUParameter {
   // improve neural network acoustic models. In ICML Workshop on Deep Learning
   // for Audio, Speech, and Language Processing.
   optional float negative_slope = 1 [default = 0];
+}
+
+// Message that stores parameters used by SliceLayer
+message SliceParameter {
+  // SliceLayer needs to know which dimension to slice across.
+  // Currently, SliceLayer only supports slicing across num (dim 0)
+  // and channels (dim 1).
+  // By default, SliceLayer slices across channels.
+  optional uint32 slice_dim = 1 [default = 1];
+  repeated uint32 slice_point = 2;
 }
 
 // Message that stores parameters used by WindowDataLayer
