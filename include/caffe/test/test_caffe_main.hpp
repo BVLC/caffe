@@ -14,6 +14,15 @@
 using std::cout;
 using std::endl;
 
+#ifdef CMAKE_BUILD
+  #include <cmake_test_defines.hpp.gen.cmake>
+#else
+  #define CUDA_TEST_DEVICE -1
+  #define CMAKE_SOURCE_DIR "src/"
+  #define Examples_SOURCE_DIR "examples/"
+  #define CMAKE_EXT ""
+#endif
+
 int main(int argc, char** argv);
 
 namespace caffe {
