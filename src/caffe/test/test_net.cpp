@@ -801,4 +801,38 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   }
 }
 
+TYPED_TEST(NetTest, TestFromTo) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->InitTinyNet();
+
+  // Run Forward and Backward, recording the data diff and loss.
+  Blob<Dtype> data;
+  data.ReshapeLike(*this->net_->blob_by_name("data"));
+  this->net_->ForwardPrefilled();
+  this->net_->Backward();
+  data.CopyFrom(*this->net_->blob_by_name("data"), true, true);
+  const Dtype *loss_ptr = this->net_->output_blobs()[0]->cpu_data();
+  Dtype loss = *loss_ptr;
+
+  // Check that combining partial Forwards gives the same loss.
+  for (int i = 1; i < this->net_->layers().size(); ++i) {
+    // Note that we skip layer zero to keep the same data.
+    this->net_->ForwardFromTo(1, 1);
+    if (i < this->net_->layers().size() - 1) {
+      this->net_->ForwardFrom(i + 1);
+    }
+    EXPECT_EQ(loss, *loss_ptr);
+  }
+
+  // Check that combining partial Backwards gives the same data diff.
+  for (int i = 1; i < this->net_->layers().size(); ++i) {
+    this->net_->BackwardTo(i);
+    this->net_->BackwardFrom(i - 1);
+    for (int j = 0; j < data.count(); ++j) {
+      EXPECT_EQ(data.cpu_diff()[j],
+          this->net_->blob_by_name("data")->cpu_diff()[j]);
+    }
+  }
+}
+
 }  // namespace caffe

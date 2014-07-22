@@ -99,8 +99,8 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX && top->size() == 1) {
-    max_idx_.reset(new Blob<int>(bottom[0]->num(), channels_,
-                                 pooled_height_, pooled_width_));
+    max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
+        pooled_width_);
   }
   // If stochastic pooling, we will initialize the random index part.
   if (this->layer_param_.pooling_param().pool() ==
@@ -131,7 +131,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_mask = (*top)[1]->mutable_cpu_data();
       caffe_set(top_count, Dtype(-1), top_mask);
     } else {
-      mask = max_idx_->mutable_cpu_data();
+      mask = max_idx_.mutable_cpu_data();
       caffe_set(top_count, -1, mask);
     }
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
@@ -236,7 +236,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (use_top_mask) {
       top_mask = top[1]->cpu_data();
     } else {
-      mask = max_idx_->cpu_data();
+      mask = max_idx_.cpu_data();
     }
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
