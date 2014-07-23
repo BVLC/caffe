@@ -3,7 +3,6 @@
 #    All test files' names must begin with a "test_" prefix
 #
 #
-cmake_minimum_required(VERSION 2.8)
 project( Test )
 
 #    Set CUDA Device number and CMAKE_SOURCE_DIR

@@ -5,7 +5,7 @@ find_package(PythonLibs REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 
 #    Boost.Python
-find_package(Boost 1.49 COMPONENTS python REQUIRED)
+find_package(Boost 1.46 COMPONENTS python REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 file(GLOB_RECURSE Python_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
