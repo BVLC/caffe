@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.8)
 project( Caffe )
 
 ###    Build Options     ##########################################################################
@@ -29,7 +29,7 @@ enable_testing()
 #    Compiler Flags
 set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
-set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} -O3)
+set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} )#-O3)
 
 #    Include Directories
 set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
@@ -42,7 +42,6 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeScripts)
 #    CUDA is required globally
 find_package(CUDA 5.5 REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
-
 
 ###    Subdirectories    ##########################################################################
 
