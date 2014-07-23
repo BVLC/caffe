@@ -55,7 +55,7 @@ Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         // check if true label is in top k predictions
       for (int k = 0; k < top_k_; k++) {
         if (bottom_data_vector[k].second
-          == static_cast<int>(bottom_label[i * label_channels + c ])) {
+            == static_cast<int>(bottom_label[i * label_channels + c ])) {
           ++intra_chan_accuracy;
           break;
         }

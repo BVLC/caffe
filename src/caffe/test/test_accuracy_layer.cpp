@@ -91,7 +91,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   int max_id;
   int num_correct_labels = 0;
   int data_split = this->blob_bottom_data_->channels()/
-    this->blob_bottom_label_->channels();
+      this->blob_bottom_label_->channels();
   for (int i = 0; i < 100; ++i) {
     int split_offset = 0;
     int num_chan_correct_labels = 0;
@@ -100,9 +100,9 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
       max_id = 0;
       for (int j = 0; j < data_split; ++j) {
         if (this->blob_bottom_data_->data_at(i, j +
-          split_offset, 0, 0) > max_value) {
+            split_offset, 0, 0) > max_value) {
           max_value = this->blob_bottom_data_->data_at(i, j +
-            split_offset, 0, 0);
+              split_offset, 0, 0);
           max_id = j;
         }
       }
@@ -131,18 +131,18 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
   int current_rank;
   int num_correct_labels = 0;
   int data_split = this->blob_bottom_data_->channels()/
-    this->blob_bottom_label_->channels();
+      this->blob_bottom_label_->channels();
   for (int i = 0; i < 100; ++i) {
     int split_offset = 0;
     int num_chan_correct_labels = 0;
     for (int c = 0; c < this->blob_bottom_label_->channels(); ++c) {
       for (int j = 0; j < data_split; ++j) {
         current_value = this->blob_bottom_data_->data_at(i, j +
-          split_offset, 0, 0);
+            split_offset, 0, 0);
         current_rank = 0;
         for (int k = 0; k < data_split; ++k) {
           if (this->blob_bottom_data_->data_at(i, k +
-            split_offset, 0, 0) > current_value) {
+              split_offset, 0, 0) > current_value) {
             ++current_rank;
           }
         }
