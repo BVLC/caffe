@@ -23,7 +23,8 @@ class HDF5OutputLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   HDF5OutputLayerTest()
       : output_file_name_(tmpnam(NULL)),
-        input_file_name_(CMAKE_SOURCE_DIR  "caffe/test/test_data/sample_data.h5"),
+        input_file_name_(
+        CMAKE_SOURCE_DIR "caffe/test/test_data/sample_data.h5"),
         blob_data_(new Blob<Dtype>()),
         blob_label_(new Blob<Dtype>()),
         num_(5),
