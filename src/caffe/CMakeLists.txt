@@ -47,6 +47,14 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 #    LevelDB
 find_package(LevelDB REQUIRED)
 include_directories(${LEVELDB_INCLUDE})
+if(LEVELDB_FOUND)
+    find_package(Snappy REQUIRED)
+    include_directories(${SNAPPY_INCLUDE_DIR})
+    set(LEVELDB_LIBS
+        ${LEVELDB_LIBS}
+        ${SNAPPY_LIBS}
+    )
+endif()
 
 #    LMDB
 find_package(LMDB REQUIRED)
@@ -82,12 +90,12 @@ add_dependencies(caffe_cu proto)
 
 target_link_libraries(caffe caffe_cu proto
         ${GLOG_LIBRARIES}
-        ${CUDA_curand_LIBRARY}
         ${HDF5_LIBRARIES}
         ${OpenCV_LIBS}
         ${LEVELDB_LIBS}
         ${LMDB_LIBRARIES} 
         ${CUDA_CUBLAS_LIBRARIES}
+        ${CUDA_curand_LIBRARY}
         ${BLAS_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
 )

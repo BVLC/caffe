@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 2.8)
 project( Proto )
 
 #	Google Protocol Buffers
@@ -22,6 +21,9 @@ add_library(proto
 )
 
 target_link_libraries(proto ${PROTOBUF_LIBRARIES})
+
+# Create proto include directory
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include/caffe/proto)
 
 # Copy proto headers to include/caffe/proto/
 foreach(header ${ProtoHeaders})
