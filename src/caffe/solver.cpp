@@ -577,14 +577,14 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
       if (local_decay) {
         // add weight decay
         caffe_axpy(net_params[param_id]->count(),
-            local_decay * local_rate,
+            local_decay,
             net_params[param_id]->cpu_data(),
-            this->history_[param_id]->mutable_cpu_data());
+            net_params[param_id]->mutable_cpu_diff());
       }
 
       // compute square of gradient in update
       caffe_powx(net_params[param_id]->count(),
-          net_params[param_id]->cpu_data(), Dtype(2),
+          net_params[param_id]->cpu_diff(), Dtype(2),
           this->update_[param_id]->mutable_cpu_data());
 
       // update history
@@ -621,14 +621,14 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
       if (local_decay) {
         // add weight decay
         caffe_gpu_axpy(net_params[param_id]->count(),
-            local_decay * local_rate,
+            local_decay,
             net_params[param_id]->gpu_data(),
-            this->history_[param_id]->mutable_gpu_data());
+            net_params[param_id]->mutable_gpu_diff());
       }
 
       // compute square of gradient in update
       caffe_gpu_powx(net_params[param_id]->count(),
-          net_params[param_id]->gpu_data(), Dtype(2),
+          net_params[param_id]->gpu_diff(), Dtype(2),
           this->update_[param_id]->mutable_gpu_data());
 
       // update history
