@@ -71,12 +71,22 @@ And on **CentOS or RHEL**, you can install via yum using:
 
     sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
 
-The only exception being the google logging library, which does not exist in the Ubuntu 12.04 or CentOS/RHEL repositories. To install it, do:
+The only exceptions being the google flags library and the google logging library, which does not exist in the Ubuntu 12.04 or CentOS/RHEL repositories. To install them, do:
 
+    # glog
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
     tar zxvf glog-0.3.3.tar.gz
     ./configure
     make && make install
+    # gflags
+    wget https://github.com/schuhschuh/gflags/archive/master.zip
+    unzip master.zip
+    cd gflags-master
+    mkdir build && cd build
+    cmake ..
+    make && make install
+
+Note that glog does not compile with the most recent gflags version (2.1), so before that is solved you will need to build with gflags first. Also note that if you have newer versions of Ubuntu, like 13.04 or 14.04, gflags may be available under apt-get.
 
 #### OS X
 
