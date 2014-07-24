@@ -73,7 +73,9 @@ class SGDSolver : public Solver<Dtype> {
   virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
-  vector<shared_ptr<Blob<Dtype> > > history_, update_;
+  // temp maintains other information that might be needed in computation
+  //   of gradients/updates and is not needed in snapshots
+  vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
