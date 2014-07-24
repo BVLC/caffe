@@ -155,8 +155,8 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-LIBRARIES += pthread \
-	glog protobuf leveldb snappy \
+LIBRARIES += \
+	glog gflags pthread protobuf leveldb snappy \
 	lmdb \
 	boost_system \
 	hdf5_hl hdf5 \

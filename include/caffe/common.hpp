@@ -80,6 +80,10 @@ using std::set;
 using std::string;
 using std::vector;
 
+// A global initialization function that you should call in your main function.
+// Currently it initializes google flags and google logging.
+void GlobalInit(int* pargc, char*** pargv);
+
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
 class Caffe {
