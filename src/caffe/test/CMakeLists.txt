@@ -28,17 +28,6 @@ foreach(in_file ${IN_FILES})
     
 endforeach()       
 
-
-#configure_file(
-#    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.in
-#    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp.gen.cmake
-#)
-#
-#configure_file(
-#    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.in
-#    ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt.gen.cmake
-#)
-
 include_directories(
         ${Caffe_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -53,16 +42,23 @@ foreach(source ${TEST_SOURCES})
     get_filename_component(name ${source} NAME_WE)
     add_executable(${name}.test ${TEST_MAIN} ${source} ../blob.cpp)
     target_link_libraries(${name}.test gtest caffe)
-    add_test(${name} ${name}.test)
+    #disable ctest
+    #add_test(${name} ${name}.test)
 
     #    output dir
     set_target_properties(${name}.test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
 endforeach()
 
-add_executable(test_all.test ${TEST_SOURCES} ${TEST_MAIN})
-target_link_libraries(test_all.test gtest caffe)
+add_executable(test ${TEST_SOURCES} ${TEST_MAIN})
+target_link_libraries(test gtest caffe)
+#    Test command
+set(TEST_ARGS --gtest_shuffle)
+if(CPU_ONLY)
+    set(TEST_ARGS ${TEST_ARGS} --gtest_filter="-*GPU*")
+endif()
+add_custom_command(TARGET test POSTBUILD COMMAND test ${TEST_ARGS})
 
 #    output dir
-set_target_properties(test_all.test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+set_target_properties(test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
