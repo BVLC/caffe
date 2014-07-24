@@ -15,12 +15,10 @@ before_install:
   - echo $LC_ALL
   - sudo apt-get -y update
   - sudo apt-get -y install wget git curl python-dev libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc
-  - export CFLAGS="-fPIC"
-  - export CXXFLAGS="-fPIC"
 
 install:
-  - wget https://github.com/schuhschuh/gflags/archive/master.zip -O /tmp/gflags-master.zip && pushd /tmp/ && unzip gflags-master.zip && cd gflags-master && mkdir build && cd build && cmake .. && make && sudo make install && popd
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
+  - wget https://github.com/schuhschuh/gflags/archive/master.zip -O /tmp/gflags-master.zip && pushd /tmp/ && unzip gflags-master.zip && cd gflags-master && mkdir build && cd build && cmake .. && make && sudo make install && popd
   - cd /tmp/glog-0.3.3 && ./configure && make && sudo make install && cd -
   - curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_6.0-37_amd64.deb -o /tmp/cuda_install.deb && sudo dpkg -i /tmp/cuda_install.deb && rm /tmp/cuda_install.deb
   - sudo apt-get -y update && sudo apt-get -y install cuda
