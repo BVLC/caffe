@@ -80,20 +80,9 @@ void CPUDevice<double>::axpby(const int N, const double alpha, const double* X,
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
 }
 
-template<>
-void CPUDevice<float>::copy(const int N, const float *X, float *Y) {
-  cblas_scopy(N, X, 1, Y, 1);
-}
-
-template<>
-/* NOLINT_NEXT_LINE(build/include_what_you_use) */
-void CPUDevice<double>::copy(const int N, const double *X, double *Y) {
-  cblas_dcopy(N, X, 1, Y, 1);
-}
-
 template<typename Dtype>
-void CPUDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
-  this->copy(N, X, Y);
+void CPUDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
+  memcpy(Y, X, sizeof(Dtype) * N);
 }
 
 template<typename Dtype>
