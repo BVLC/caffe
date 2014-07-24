@@ -34,10 +34,6 @@ class Device {
   /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y) { NOT_IMPLEMENTED; }
 
-  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y) {
-    NOT_IMPLEMENTED;
-  }
-
   virtual void set(const int N, const Dtype alpha, Dtype *X) {
     NOT_IMPLEMENTED;
   }

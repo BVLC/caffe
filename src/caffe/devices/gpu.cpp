@@ -80,21 +80,9 @@ void GPUDevice<Dtype>::axpby(const int N, const Dtype alpha,
   this->axpy(N, alpha, X, Y);
 }
 
-template<>
-/* NOLINT_NEXT_LINE(build/include_what_you_use) */
-void GPUDevice<float>::copy(const int N, const float *X, float *Y) {
-  CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
-}
-
-template<>
-/* NOLINT_NEXT_LINE(build/include_what_you_use) */
-void GPUDevice<double>::copy(const int N, const double *X, double *Y) {
-  CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), N, X, 1, Y, 1));
-}
-
 template<typename Dtype>
-void GPUDevice<Dtype>::copy_from_cpu(const int N, const Dtype *X, Dtype *Y) {
-  CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyHostToDevice));
+void GPUDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
+  CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
 }
 
 template<>

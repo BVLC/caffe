@@ -34,8 +34,6 @@ class GPUDevice : public Device<Dtype> {
   /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
 
-  virtual void copy_from_cpu(const int N, const Dtype* X, Dtype* Y);
-
   virtual void set(const int N, const Dtype alpha, Dtype *X);
 
   virtual void add_scalar(const int N, const Dtype alpha, Dtype *X);
