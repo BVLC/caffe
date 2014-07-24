@@ -78,7 +78,10 @@ class ConvolutionLayer : public Layer<Dtype> {
   int width_;
   int num_output_;
   int group_;
+  int mem_group_size;
   Blob<Dtype> col_buffer_;
+  Blob<Dtype> bias_buffer_;
+  Blob<Dtype> trans_buffer_;
   shared_ptr<SyncedMemory> bias_multiplier_;
   bool bias_term_;
   int M_;

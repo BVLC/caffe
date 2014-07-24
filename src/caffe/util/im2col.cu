@@ -10,6 +10,115 @@
 
 namespace caffe {
 
+	template <typename Dtype>
+__global__ void bu_im2col_gpu_kernel(
+	const int n, const Dtype* data_im,
+	const int height, const int width, const int ksize, const int pad,
+	const int stride, const int height_col, const int width_col,
+	Dtype* data_col,
+	const int data_im_size,
+	const int data_col_size,
+	const int batch_size) 
+{
+	/*for(int batch_index = 0; batch_index < batch_size; batch_index++)
+	{
+		for (int index = blockIdx.x * blockDim.x + threadIdx.x; index < n; index += blockDim.x * gridDim.x){
+			int w_out = index % width_col;
+			int h_index = index / width_col;
+			int h_out = h_index % height_col;
+			int channel_in = h_index / height_col;
+			int channel_out = channel_in * ksize * ksize;
+			int h_in = h_out * stride - pad;
+			int w_in = w_out * stride - pad;
+			Dtype* data_col_ptr = data_col;
+			data_col_ptr += batch_index* data_col_size + (channel_out * height_col + h_out) * width_col + w_out;
+			const Dtype* data_im_ptr = data_im;
+			data_im_ptr += batch_index* data_im_size + (channel_in * height + h_in) * width + w_in;
+
+			for (int i = 0; i < ksize; ++i) {
+				for (int j = 0; j < ksize; ++j) {
+					int h = h_in + i;
+					int w = w_in + j;
+					*data_col_ptr = (h >= 0 && w >= 0 && h < height && w < width) ?
+						data_im_ptr[i * width + j]  : 0;
+					data_col_ptr += height_col * width_col;
+				}
+			}
+
+		}
+	}*/
+	int N = height_col * width_col;
+
+	for (int index = blockIdx.x * blockDim.x + threadIdx.x; index < n; index += blockDim.x * gridDim.x){
+		int w_out = index % width_col;
+		int h_index = index / width_col;
+		int h_out = h_index % height_col;
+		int channel_in = h_index / height_col;
+		int channel_out = channel_in * ksize * ksize;
+		int h_in = h_out * stride - pad;
+		int w_in = w_out * stride - pad;
+
+
+		Dtype* data_col_ptr = data_col;
+		data_col_ptr += channel_out * N * batch_size + h_out * width_col + w_out;
+
+		const Dtype* data_im_ptr = data_im;
+		data_im_ptr += (channel_in * height + h_in) * width + w_in;
+
+		for(int batch_index = 0; batch_index < batch_size; batch_index++)
+		{
+			Dtype* data_write_col_ptr = data_col_ptr;
+
+			for (int i = 0; i < ksize; ++i) {
+				for (int j = 0; j < ksize; ++j) {
+					int h = h_in + i;
+					int w = w_in + j;
+					*data_write_col_ptr = (h >= 0 && w >= 0 && h < height && w < width) ?
+						data_im_ptr[i * width + j]  : 0;
+					data_write_col_ptr += N * batch_size;
+				}
+			}
+
+			data_col_ptr += N;
+			data_im_ptr += data_im_size;
+		}
+	}
+}
+
+template <typename Dtype>
+void bu_im2col_gpu(const Dtype* data_im, const int channels,
+				   const int height, const int width, const int ksize, const int pad,
+				   const int stride, Dtype* data_col, const int batch_size)
+{
+	// We are going to launch channels * height_col * width_col kernels, each
+	// kernel responsible for copying a single-channel grid.
+	int height_col = (height + 2 * pad - ksize) / stride + 1;
+	int width_col = (width + 2 * pad - ksize) / stride + 1;
+	int num_kernels = channels * height_col * width_col;
+
+	int data_im_size = height*width*channels;
+	int data_col_size = num_kernels*ksize*ksize;
+	// NOLINT_NEXT_LINE(whitespace/operators)
+	bu_im2col_gpu_kernel<Dtype><<<CAFFE_GET_BLOCKS(num_kernels), // num_kernels/16, means each thread process 16 elements
+		CAFFE_CUDA_NUM_THREADS>>>(
+		num_kernels, data_im, height, width, ksize, pad, stride, height_col,
+		width_col, data_col, data_im_size, data_col_size, batch_size);
+	CUDA_POST_KERNEL_CHECK;
+}
+
+
+// Explicit instantiation
+template void bu_im2col_gpu<float>(
+	const float* data_im, const int channels,
+	const int height, const int width, const int ksize, const int pad,
+	const int stride, float* data_col,
+	const int batch_size);
+template void bu_im2col_gpu<double>(
+	const double* data_im, const int channels,
+	const int height, const int width, const int ksize, const int pad,
+	const int stride, double* data_col,
+	const int batch_size);
+
 template <typename Dtype>
 __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
     const int height, const int width, const int ksize, const int pad,

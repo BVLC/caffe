@@ -200,6 +200,7 @@ message ConvolutionParameter {
   optional uint32 stride = 6 [default = 1]; // The stride
   optional FillerParameter weight_filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
+  optional uint32 mem_group_size = 9 [default = 1];
 }
 
 // Message that stores parameters used by DataLayer
