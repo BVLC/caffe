@@ -50,9 +50,16 @@ script:
   # CMake build.
   - mkdir build
   - cd build
+    ## CPU-GPU build
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release ..
   - make --keep-going --jobs=$NUM_THREADS
-  - make clean
+  - make clean && rm -rf *
+    ## CPU-only build
+  - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
+  - make --keep-going --jobs=$NUM_THREADS
+  - cd test && ./test --gtest_shuffle --gtest_filter="-*GPU*" && cd -
+  - make clean && rm -rf *
+    ## Cleaning
   - cd ..
   - rm -r build
 
