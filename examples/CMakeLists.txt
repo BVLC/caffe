@@ -2,7 +2,6 @@ project( Examples )
 
 file(GLOB_RECURSE Examples_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-# message(${Examples_SOURCES})
 foreach(source ${Examples_SOURCES})
     #    get file name
     get_filename_component(name ${source} NAME_WE)  
