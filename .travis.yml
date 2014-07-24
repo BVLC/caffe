@@ -50,31 +50,25 @@ script:
   # CMake build.
   - mkdir build
   - cd build
-  ## CPU-only build
-    #- cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
-    #- make --keep-going --jobs=$NUM_THREADS
-    #- make clean
-    #- rm -rf *
-  ## GPU + CPU build
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release ..
   - make --keep-going --jobs=$NUM_THREADS
   - make clean
   - cd ..
   - rm -r build
 
-#  # CPU-GPU: build only.
-#  - export CPU_ONLY=0
-#  - make --keep-going --jobs=$NUM_THREADS all
-#  - make clean
-#  # CPU-only: comprehensive.
-#  - export CPU_ONLY=1
-#  - make --keep-going --jobs=$NUM_THREADS all test warn lint
-#  - make runtest
-#  - make --jobs=$NUM_THREADS all
-#  - make --jobs=$NUM_THREADS test
-#  - make --jobs=$NUM_THREADS warn
-#  - make --jobs=$NUM_THREADS lint
-#  - make --jobs=$NUM_THREADS pycaffe
+  # CPU-GPU: build only.
+  - export CPU_ONLY=0
+  - make --keep-going --jobs=$NUM_THREADS all
+  - make clean
+  # CPU-only: comprehensive.
+  - export CPU_ONLY=1
+  - make --keep-going --jobs=$NUM_THREADS all test warn lint
+  - make runtest
+  - make --jobs=$NUM_THREADS all
+  - make --jobs=$NUM_THREADS test
+  - make --jobs=$NUM_THREADS warn
+  - make --jobs=$NUM_THREADS lint
+  - make --jobs=$NUM_THREADS pycaffe
 
 notifications:
 # Emails are sent to the committer's git-configured email address by default,
