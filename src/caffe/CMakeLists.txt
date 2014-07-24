@@ -7,14 +7,6 @@ find_package(Threads REQUIRED)
 find_package(Glog REQUIRED)
 include_directories(${GLOG_INCLUDE_DIRS})
 
-#    CUDA
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
-        -gencode arch=compute_20,code=sm_20
-		-gencode arch=compute_20,code=sm_21
-		-gencode arch=compute_30,code=sm_30
-		-gencode arch=compute_35,code=sm_35
-)
-
 #   BLAS
 if(BLAS STREQUAL "atlas")
 
@@ -68,34 +60,44 @@ link_directories( ${Boost_LIBRARY_DIRS} )
 add_subdirectory(proto)
 
 #    Recursively find source files
-
-#    cuda sources
-file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
-
-#    test sources
+##    test sources
 file(GLOB_RECURSE TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
 
-#    all cpp sources
+##    all cpp sources
 file(GLOB_RECURSE CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-#    remove test sources from cpp sources
+##    remove test sources from cpp sources
 list(REMOVE_ITEM CPP_SOURCES ${TEST_SOURCES})
 
 add_library(caffe ${CPP_SOURCES})
-cuda_add_library(caffe_cu ${CU_SOURCES})
-
 # both depend on proto
 add_dependencies(caffe proto)
-add_dependencies(caffe_cu proto)
 
-target_link_libraries(caffe caffe_cu proto
+#    CUDA
+if(NOT CPU_ONLY)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
+            -gencode arch=compute_20,code=sm_20
+            -gencode arch=compute_20,code=sm_21
+            -gencode arch=compute_30,code=sm_30
+            -gencode arch=compute_35,code=sm_35
+    )
+    
+    #    cuda sources
+    file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
+    cuda_add_library(caffe_cu ${CU_SOURCES})
+    add_dependencies(caffe_cu proto)
+    target_link_libraries(caffe caffe_cu
+        ${CUDA_CUBLAS_LIBRARIES}
+        ${CUDA_curand_LIBRARY}
+    )
+endif()
+
+target_link_libraries(caffe proto
         ${GLOG_LIBRARIES}
         ${HDF5_LIBRARIES}
         ${OpenCV_LIBS}
         ${LEVELDB_LIBS}
-        ${LMDB_LIBRARIES} 
-        ${CUDA_CUBLAS_LIBRARIES}
-        ${CUDA_curand_LIBRARY}
+        ${LMDB_LIBRARIES}
         ${BLAS_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
 )
