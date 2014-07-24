@@ -25,7 +25,8 @@ endif()
 ###    Configuration    ###########################################################################
 
 #    Enable CTest from top build directory
-enable_testing()
+#disable ctest
+#enable_testing()
 
 #    Compiler Flags
 set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
@@ -60,6 +61,8 @@ add_subdirectory(tools)
 if(BUILD_EXAMPLES)
     message(STATUS "Examples enabled")
     add_subdirectory(examples)
+else()
+    set(Examples_SOURCE_DIR ${CMAKE_SOURCE_DIR}/examples)
 endif()
 
 if(BUILD_PYTHON)
