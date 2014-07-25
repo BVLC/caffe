@@ -128,9 +128,9 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
 
 // This returns a nonzero value if the input has its sign bit set.
 // The name sngbit is meant to avoid conflicts with std::signbit in the macro
-bool caffe_signbit( float arg );
-bool caffe_signbit( double arg );
-bool caffe_signbit( long double arg );
+bool caffe_signbit(float arg);
+bool caffe_signbit(double arg);
+bool caffe_signbit(long double arg);
 DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, y[i] = caffe_signbit(x[i]));
 
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
