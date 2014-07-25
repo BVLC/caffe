@@ -3,6 +3,7 @@
 #include "caffe/common.hpp"
 
 int main(int argc, char** argv) {
-  LOG(ERROR) << "Deprecated. Use caffe.bin devicequery [--device_id=0] instead.";
+  LOG(ERROR) << "Deprecated. Use caffe.bin devicequery "
+                "[--device_id=0] instead.";
   return 0;
 }

@@ -1,8 +1,11 @@
+// Copyright 2014 BVLC and contributors.
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include <cstring>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "caffe/caffe.hpp"
 
@@ -13,7 +16,7 @@ using caffe::Layer;
 using caffe::shared_ptr;
 using caffe::Timer;
 using caffe::string;
-using std::vector;
+using caffe::vector;
 
 
 // Used in device query
@@ -36,21 +39,21 @@ DEFINE_bool(speedtest_with_gpu, false,
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
-typedef std::map<std::string, BrewFunction> BrewMap;
+typedef std::map<string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
 #define RegisterBrewFunction(func) \
-  namespace { \
-  class __Registerer_##func { \
-   public: \
-    __Registerer_##func() { \
-      g_brew_map[#func] = &func; \
-    } \
-  }; \
-  __Registerer_##func g_registerer_##func; \
-  }
+namespace { \
+class __Registerer_##func { \
+ public: /* NOLINT */ \
+  __Registerer_##func() { \
+    g_brew_map[#func] = &func; \
+  } \
+}; \
+__Registerer_##func g_registerer_##func; \
+}
 
-static BrewFunction GetBrewFunction(const std::string& name) {
+static BrewFunction GetBrewFunction(const string& name) {
   if (g_brew_map.count(name)) {
     return g_brew_map[name];
   } else {
@@ -172,5 +175,5 @@ RegisterBrewFunction(speedtest);
 int main(int argc, char** argv) {
   caffe::GlobalInit(&argc, &argv);
   CHECK_EQ(argc, 2);
-  return GetBrewFunction(std::string(argv[1]))();
+  return GetBrewFunction(string(argv[1]))();
 }
