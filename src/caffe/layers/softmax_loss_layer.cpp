@@ -77,11 +77,6 @@ void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   }
 }
 
-
-#ifdef CPU_ONLY
-STUB_GPU(SoftmaxWithLossLayer);
-#endif
-
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
 
 

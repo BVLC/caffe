@@ -64,10 +64,6 @@ Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   return Dtype(0.);
 }
 
-#ifdef CPU_ONLY
-STUB_GPU(HDF5OutputLayer);
-#endif
-
 INSTANTIATE_CLASS(HDF5OutputLayer);
 
 }  // namespace caffe

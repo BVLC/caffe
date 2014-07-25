@@ -448,10 +448,6 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   return Dtype(0.);
 }
 
-#ifdef CPU_ONLY
-STUB_GPU_FORWARD(WindowDataLayer, Forward);
-#endif
-
 INSTANTIATE_CLASS(WindowDataLayer);
 
 }  // namespace caffe
