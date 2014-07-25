@@ -50,11 +50,11 @@ script:
   # CMake build.
   - mkdir build
   - cd build
-    ## CPU-GPU build
+  ## CPU-GPU: build only.
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release ..
   - make --keep-going --jobs=$NUM_THREADS
   - make clean && rm -rf *
-    ## CPU-only build
+   ## CPU-only: comprehensive
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
   - make --keep-going --jobs=$NUM_THREADS
   - cd test && ./test --gtest_shuffle --gtest_filter="-*GPU*" && cd -
@@ -62,12 +62,13 @@ script:
     ## Cleaning
   - cd ..
   - rm -r build
-
-  # CPU-GPU: build only.
+  
+  # Make build
+  ## CPU-GPU: build only.
   - export CPU_ONLY=0
   - make --keep-going --jobs=$NUM_THREADS all
   - make clean
-  # CPU-only: comprehensive.
+  ## CPU-only: comprehensive.
   - export CPU_ONLY=1
   - make --keep-going --jobs=$NUM_THREADS all test warn lint
   - make runtest
