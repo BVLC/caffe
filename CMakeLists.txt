@@ -23,11 +23,6 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 ###    Configuration    ###########################################################################
-
-#    Enable CTest from top build directory
-#disable ctest
-#enable_testing()
-
 #    Compiler Flags
 set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
