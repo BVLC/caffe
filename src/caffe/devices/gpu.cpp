@@ -42,6 +42,24 @@ void GPUDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
 }
 
 template<>
+void GPUDevice<int>::gemm(const CBLAS_TRANSPOSE TransA,
+                          const CBLAS_TRANSPOSE TransB, const int M,
+                          const int N, const int K, const int alpha,
+                          const int* A, const int* B, const int beta, int* C) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void GPUDevice<unsigned int>::gemm(const CBLAS_TRANSPOSE TransA,
+                                   const CBLAS_TRANSPOSE TransB, const int M,
+                                   const int N, const int K,
+                                   const unsigned int alpha,
+                                   const unsigned int* A, const unsigned int* B,
+                                   const unsigned int beta, unsigned int* C) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
 void GPUDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
                             const int N, const float alpha, const float* A,
                             const float* x, const float beta, float* y) {
@@ -62,6 +80,21 @@ void GPUDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
 }
 
 template<>
+void GPUDevice<int>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
+                          const int N, const int alpha, const int* A,
+                          const int* x, const int beta, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void GPUDevice<unsigned int>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
+                                   const int N, const unsigned int alpha,
+                                   const unsigned int* A, const unsigned int* x,
+                                   const unsigned int beta, unsigned int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
 void GPUDevice<float>::axpy(const int N, const float alpha, const float* X,
                             float* Y) {
   CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
@@ -71,6 +104,17 @@ template<>
 void GPUDevice<double>::axpy(const int N, const double alpha, const double* X,
                              double* Y) {
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
+}
+
+template<>
+void GPUDevice<int>::axpy(const int N, const int alpha, const int* X, int* Y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void GPUDevice<unsigned int>::axpy(const int N, const unsigned int alpha,
+                                   const unsigned int* X, unsigned int* Y) {
+  NOT_IMPLEMENTED;
 }
 
 template<typename Dtype>
@@ -96,6 +140,15 @@ void GPUDevice<double>::scal(const int N, const double alpha, double *X) {
 }
 
 template<>
+void GPUDevice<int>::scal(const int N, const int alpha, int *X) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void GPUDevice<unsigned int>::scal(const int N, const unsigned int alpha,
+                                   unsigned int *X) { NOT_IMPLEMENTED; }
+
+template<>
 void GPUDevice<float>::dot(const int N, const float* x, const float* y,
                            float* out) {
   CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), N, x, 1, y, 1, out));
@@ -108,16 +161,35 @@ void GPUDevice<double>::dot(const int N, const double* x, const double* y,
 }
 
 template<>
+void GPUDevice<int>::dot(const int N, const int* x, const int* y, int* out) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void GPUDevice<unsigned int>::dot(const int N, const unsigned int* x,
+                                  const unsigned int* y, unsigned int* out) {
+  NOT_IMPLEMENTED;
+}
+
 // Returns the sum of the absolute values of the elements of vector x
+template<>
 void GPUDevice<float>::asum(const int N, const float* x, float* y) {
   CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), N, x, 1, y));
 }
 
 template<>
-// Returns the sum of the absolute values of the elements of vector x
 void GPUDevice<double>::asum(const int N, const double* x, double* y) {
   CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), N, x, 1, y));
 }
+
+template<>
+void GPUDevice<int>::asum(const int N, const int* x, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void GPUDevice<unsigned int>::asum(const int N, const unsigned int* x,
+                                   unsigned int* y) { NOT_IMPLEMENTED; }
 
 template<typename Dtype>
 void GPUDevice<Dtype>::scale(const int N, const Dtype alpha, const Dtype *x,
@@ -127,5 +199,7 @@ void GPUDevice<Dtype>::scale(const int N, const Dtype alpha, const Dtype *x,
 }
 
 INSTANTIATE_CLASS(GPUDevice);
+template class GPUDevice<int>;
+template class GPUDevice<unsigned int>;
 
 }  // namespace caffe

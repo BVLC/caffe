@@ -43,6 +43,24 @@ void CPUDevice<double>::gemm(const CBLAS_TRANSPOSE TransA,
 }
 
 template<>
+void CPUDevice<int>::gemm(const CBLAS_TRANSPOSE TransA,
+                          const CBLAS_TRANSPOSE TransB, const int M,
+                          const int N, const int K, const int alpha,
+                          const int* A, const int* B, const int beta, int* C) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::gemm(const CBLAS_TRANSPOSE TransA,
+                                   const CBLAS_TRANSPOSE TransB, const int M,
+                                   const int N, const int K,
+                                   const unsigned int alpha,
+                                   const unsigned int* A, const unsigned int* B,
+                                   const unsigned int beta, unsigned int* C) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
 void CPUDevice<float>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
                             const int N, const float alpha, const float* A,
                             const float* x, const float beta, float* y) {
@@ -54,6 +72,21 @@ void CPUDevice<double>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
                              const int N, const double alpha, const double* A,
                              const double* x, const double beta, double* y) {
   cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
+}
+
+template<>
+void CPUDevice<int>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
+                          const int N, const int alpha, const int* A,
+                          const int* x, const int beta, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::gemv(const CBLAS_TRANSPOSE TransA, const int M,
+                                   const int N, const unsigned int alpha,
+                                   const unsigned int* A, const unsigned int* x,
+                                   const unsigned int beta, unsigned int* y) {
+  NOT_IMPLEMENTED;
 }
 
 template<>
@@ -69,6 +102,17 @@ void CPUDevice<double>::axpy(const int N, const double alpha, const double* X,
 }
 
 template<>
+void CPUDevice<int>::axpy(const int N, const int alpha, const int* X, int* Y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::axpy(const int N, const unsigned int alpha,
+                                   const unsigned int* X, unsigned int* Y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
 void CPUDevice<float>::axpby(const int N, const float alpha, const float* X,
                              const float beta, float* Y) {
   cblas_saxpby(N, alpha, X, 1, beta, Y, 1);
@@ -78,6 +122,17 @@ template<>
 void CPUDevice<double>::axpby(const int N, const double alpha, const double* X,
                               const double beta, double* Y) {
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
+}
+
+template<>
+void CPUDevice<int>::axpby(const int N, const int alpha, const int* X,
+                           const int beta, int* Y) { NOT_IMPLEMENTED; }
+
+template<>
+void CPUDevice<unsigned int>::axpby(const int N, const unsigned int alpha,
+                                    const unsigned int* X,
+                                    const unsigned int beta, unsigned int* Y) {
+  NOT_IMPLEMENTED;
 }
 
 template<typename Dtype>
@@ -112,6 +167,15 @@ void CPUDevice<double>::scal(const int N, const double alpha, double *X) {
 }
 
 template<>
+void CPUDevice<int>::scal(const int N, const int alpha, int *X) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::scal(const int N, const unsigned int alpha,
+                                   unsigned int *X) { NOT_IMPLEMENTED; }
+
+template<>
 void CPUDevice<float>::sqr(const int N, const float* a, float* y) {
   vsSqr(N, a, y);
 }
@@ -120,6 +184,13 @@ template<>
 void CPUDevice<double>::sqr(const int N, const double* a, double* y) {
   vdSqr(N, a, y);
 }
+
+template<>
+void CPUDevice<int>::sqr(const int N, const int* a, int* y) { NOT_IMPLEMENTED; }
+
+template<>
+void CPUDevice<unsigned int>::sqr(const int N, const unsigned int* a,
+                                  unsigned int* y) { NOT_IMPLEMENTED; }
 
 template<>
 void CPUDevice<float>::add(const int N, const float* a, const float* b,
@@ -131,6 +202,17 @@ template<>
 void CPUDevice<double>::add(const int N, const double* a, const double* b,
                             double* y) {
   vdAdd(N, a, b, y);
+}
+
+template<>
+void CPUDevice<int>::add(const int N, const int* a, const int* b, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::add(const int N, const unsigned int* a,
+                                  const unsigned int* b, unsigned int* y) {
+  NOT_IMPLEMENTED;
 }
 
 template<>
@@ -146,6 +228,17 @@ void CPUDevice<double>::sub(const int N, const double* a, const double* b,
 }
 
 template<>
+void CPUDevice<int>::sub(const int N, const int* a, const int* b, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::sub(const int N, const unsigned int* a,
+                                  const unsigned int* b, unsigned int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
 void CPUDevice<float>::mul(const int N, const float* a, const float* b,
                            float* y) {
   vsMul(N, a, b, y);
@@ -155,6 +248,17 @@ template<>
 void CPUDevice<double>::mul(const int N, const double* a, const double* b,
                             double* y) {
   vdMul(N, a, b, y);
+}
+
+template<>
+void CPUDevice<int>::mul(const int N, const int* a, const int* b, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::mul(const int N, const unsigned int* a,
+                                  const unsigned int* b, unsigned int* y) {
+  NOT_IMPLEMENTED;
 }
 
 template<>
@@ -170,6 +274,17 @@ void CPUDevice<double>::div(const int N, const double* a, const double* b,
 }
 
 template<>
+void CPUDevice<int>::div(const int N, const int* a, const int* b, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::div(const int N, const unsigned int* a,
+                                  const unsigned int* b, unsigned int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
 void CPUDevice<float>::powx(const int N, const float* a, const float b,
                             float* y) {
   vsPowx(N, a, b, y);
@@ -179,6 +294,17 @@ template<>
 void CPUDevice<double>::powx(const int N, const double* a, const double b,
                              double* y) {
   vdPowx(N, a, b, y);
+}
+
+template<>
+void CPUDevice<int>::powx(const int N, const int* a, const int b, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::powx(const int N, const unsigned int* a,
+                                   const unsigned int b, unsigned int* y) {
+  NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
@@ -201,6 +327,15 @@ void CPUDevice<Dtype>::rng_uniform(const int N, const Dtype a, const Dtype b,
   }
 }
 
+template <>
+void CPUDevice<int>::rng_uniform(const int n, const int a, const int b,
+                                 int* r) { NOT_IMPLEMENTED; }
+
+template <>
+void CPUDevice<unsigned int>::rng_uniform(const int n, const unsigned int a,
+                                          const unsigned int b,
+                                          unsigned int* r) { NOT_IMPLEMENTED; }
+
 template<typename Dtype>
 void CPUDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
                                     const Dtype sigma, Dtype* r) {
@@ -215,6 +350,15 @@ void CPUDevice<Dtype>::rng_gaussian(const int N, const Dtype mu,
   }
 }
 
+template <>
+void CPUDevice<int>::rng_gaussian(const int n, const int mu, const int sigma,
+                                  int* r) { NOT_IMPLEMENTED; }
+
+template <>
+void CPUDevice<unsigned int>::rng_gaussian(const int n, const unsigned int mu,
+                                           const unsigned int sigma,
+                                           unsigned int* r) { NOT_IMPLEMENTED; }
+
 template<typename Dtype>
 void CPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
   CHECK_GE(N, 0);
@@ -228,6 +372,15 @@ void CPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p, int* r) {
     r[i] = variate_generator();
   }
 }
+
+template<>
+void CPUDevice<int>::rng_bernoulli(const int N, const int p, int* r) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::rng_bernoulli(const int N, const unsigned int p,
+                                            int* r) { NOT_IMPLEMENTED; }
 
 template<typename Dtype>
 void CPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p,
@@ -245,6 +398,17 @@ void CPUDevice<Dtype>::rng_bernoulli(const int N, const Dtype p,
 }
 
 template<>
+void CPUDevice<int>::rng_bernoulli(const int N, const int p, unsigned int* r) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::rng_bernoulli(const int N, const unsigned int p,
+                                            unsigned int* r) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
 void CPUDevice<float>::exp(const int N, const float* a, float* y) {
   vsExp(N, a, y);
 }
@@ -253,6 +417,13 @@ template<>
 void CPUDevice<double>::exp(const int N, const double* a, double* y) {
   vdExp(N, a, y);
 }
+
+template<>
+void CPUDevice<int>::exp(const int N, const int* a, int* y) { NOT_IMPLEMENTED; }
+
+template<>
+void CPUDevice<unsigned int>::exp(const int N, const unsigned int* a,
+                                  unsigned int* y) { NOT_IMPLEMENTED; }
 
 template<>
 void CPUDevice<float>::dot(const int N, const float* x, const float* y,
@@ -264,6 +435,17 @@ template<>
 void CPUDevice<double>::dot(const int N, const double* x, const double* y,
                             double* out) {
   *out = cblas_ddot(N, x, 1, y, 1);
+}
+
+template<>
+void CPUDevice<int>::dot(const int N, const int* x, const int* y, int* out) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::dot(const int N, const unsigned int* x,
+                                  const unsigned int* y, unsigned int* out) {
+  NOT_IMPLEMENTED;
 }
 
 template<>
@@ -288,17 +470,35 @@ void CPUDevice<double>::hamming_distance(const int N, const double* x,
   *out = dist;
 }
 
+template<>
+void CPUDevice<int>::hamming_distance(const int N, const int* x, const int* y,
+                                      int* out) { NOT_IMPLEMENTED; }
+
+template<>
+void CPUDevice<unsigned int>::hamming_distance(const int N,
+                                               const unsigned int* x,
+                                               const unsigned int* y,
+                                               int* out) { NOT_IMPLEMENTED; }
+
 // Returns the sum of the absolute values of the elements of vector x
 template<>
 void CPUDevice<float>::asum(const int N, const float* x, float* y) {
   *y = cblas_sasum(N, x, 1);
 }
 
-// Returns the sum of the absolute values of the elements of vector x
 template<>
 void CPUDevice<double>::asum(const int N, const double* x, double* y) {
   *y = cblas_dasum(N, x, 1);
 }
+
+template<>
+void CPUDevice<int>::asum(const int N, const int* x, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::asum(const int N, const unsigned int* x,
+                                   unsigned int* y) { NOT_IMPLEMENTED; }
 
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
@@ -353,6 +553,17 @@ void CPUDevice<double>::scale(const int N, const double alpha, const double *x,
   cblas_dscal(N, alpha, y, 1);
 }
 
+template<>
+void CPUDevice<int>::scale(const int N, const int alpha, const int *x, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void CPUDevice<unsigned int>::scale(const int N, const unsigned int alpha,
+                                    const unsigned int *x, unsigned int* y) {
+  NOT_IMPLEMENTED;
+}
+
 template<typename Dtype>
 void CPUDevice<Dtype>::im2col(const Dtype* data_im, const int channels,
                               const int height, const int width,
@@ -405,5 +616,7 @@ void CPUDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
 }
 
 INSTANTIATE_CLASS(CPUDevice);
+template class CPUDevice<int>;
+template class CPUDevice<unsigned int>;
 
 }  // namespace caffe

@@ -39,6 +39,8 @@ template<typename Dtype>
 Device<Dtype>* DeviceFactory<Dtype>::gpu_device_ = new GPUDevice<Dtype>();
 
 INSTANTIATE_CLASS(DeviceFactory);
+template class DeviceFactory<int>;
+template class DeviceFactory<unsigned int>;
 
 // A function to get the device either for the current mode (if
 // Caffe::UNSPECIFIED is passed, which is the default), or for a specific mode
@@ -50,5 +52,7 @@ Device<Dtype>* GetDevice(Caffe::Brew mode) {
 
 template Device<float>* GetDevice(Caffe::Brew mode);
 template Device<double>* GetDevice(Caffe::Brew mode);
+template Device<int>* GetDevice(Caffe::Brew mode);
+template Device<unsigned int>* GetDevice(Caffe::Brew mode);
 
 }  // namespace caffe
