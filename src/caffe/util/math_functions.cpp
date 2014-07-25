@@ -67,6 +67,44 @@ void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
 }
 
 template <>
+void caffe_gpu_gemm_batched<float>(const CBLAS_TRANSPOSE TransA,
+    const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+    const float alpha, const float** A, const float** B, const float beta,
+    float** C,
+	int batch_count){
+	
+	// Note that cublas follows fortran order.
+	int lda = (TransA == CblasNoTrans) ? K : M;
+	int ldb = (TransB == CblasNoTrans) ? N : K;
+	cublasOperation_t cuTransA =
+      (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+	cublasOperation_t cuTransB =
+      (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+	CUBLAS_CHECK(cublasSgemmBatched(Caffe::cublas_handle(), cuTransB, cuTransA,
+      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N,
+	  batch_count));
+}
+
+template <>
+void caffe_gpu_gemm_batched<double>(const CBLAS_TRANSPOSE TransA,
+    const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+    const double alpha, const double** A, const double** B, const double beta,
+    double** C,
+	int batch_count){
+	
+	// Note that cublas follows fortran order.
+	int lda = (TransA == CblasNoTrans) ? K : M;
+	int ldb = (TransB == CblasNoTrans) ? N : K;
+	cublasOperation_t cuTransA =
+      (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+	cublasOperation_t cuTransB =
+      (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+	CUBLAS_CHECK(cublasDgemmBatched(Caffe::cublas_handle(), cuTransB, cuTransA,
+      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N,
+	  batch_count));
+}
+
+template <>
 void caffe_gpu_geam<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N,
     const float alpha, const float* A, const float* B, const float beta,

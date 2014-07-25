@@ -30,6 +30,17 @@ void bu_im2col_gpu(const Dtype* data_im, const int channels,
 				   const int height, const int width, const int ksize, const int pad,
 				   const int stride, Dtype* data_col, const int batch_size);
 
+template <typename Dtype>
+void bu_im2col_gpu_rot(const Dtype* data_im, const int channels,
+				   const int height, const int width, const int ksize, const int pad,
+				   const int stride, Dtype* data_col, const int batch_size);
+
+template <typename Dtype>
+void bu_col2im_gpu(const Dtype* data_col, const int channels,
+    const int height, const int width, const int psize, const int pad,
+    const int stride, Dtype* data_im,
+	const int batch_size);
+
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_IM2COL_HPP_

@@ -135,36 +135,81 @@ namespace caffe {
 						1., bias_diff);
 				}
 			}
-
-			int weight_offset = M_ * K_;
-			int col_offset = K_ * N_;
-			int top_offset = M_ * N_;
-			CUDA_CHECK(cudaMemset(weight_diff, 0,
-				sizeof(Dtype) * this->blobs_[0]->count()));
-			for (int n = 0; n < num_; n++) {
-				// since we saved memory in the forward pass by not storing all col data,
-				// we will need to recompute them.
-				size_t this_mem_group_size = min(mem_group_size,num_-n);
-				im2col_gpu(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
-					width_, kernel_size_, pad_, stride_, col_data);
-				// gradient w.r.t. weight. Note that we will accumulate diffs.
-				for (int g = 0; g < group_; ++g) {
-					caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
-						(Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
-						col_data + col_offset * g, (Dtype)1.,
-						weight_diff + weight_offset * g);
-				}
-				// gradient w.r.t. bottom data, if necessary
-				if (propagate_down) {
+			if (group_>=1){
+				int weight_offset = M_ * K_;
+				int col_offset = K_ * N_;
+				int top_offset = M_ * N_;
+				CUDA_CHECK(cudaMemset(weight_diff, 0,
+					sizeof(Dtype) * this->blobs_[0]->count()));
+				for (int n = 0; n < num_; n++) {
+					// since we saved memory in the forward pass by not storing all col data,
+					// we will need to recompute them.
+					
+					im2col_gpu(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
+						width_, kernel_size_, pad_, stride_, col_data);
+					// gradient w.r.t. weight. Note that we will accumulate diffs.
 					for (int g = 0; g < group_; ++g) {
-						caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
-							(Dtype)1., weight + weight_offset * g,
-							top_diff + top[0]->offset(n) + top_offset * g,
-							(Dtype)0., col_diff + col_offset * g);
+						caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
+							(Dtype)1., top_diff + top[0]->offset(n) + top_offset * g,
+							col_data + col_offset * g, (Dtype)1.,
+							weight_diff + weight_offset * g);
 					}
-					// col2im back to the data
-					col2im_gpu(col_diff, channels_, height_, width_, kernel_size_, pad_,
-						stride_, bottom_diff + (*bottom)[0]->offset(n));
+					// gradient w.r.t. bottom data, if necessary
+					if (propagate_down) {
+						for (int g = 0; g < group_; ++g) {
+							caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
+								(Dtype)1., weight + weight_offset * g,
+								top_diff + top[0]->offset(n) + top_offset * g,
+								(Dtype)0., col_diff + col_offset * g);
+						}
+						// col2im back to the data
+						col2im_gpu(col_diff, channels_, height_, width_, kernel_size_, pad_,
+							stride_, bottom_diff + (*bottom)[0]->offset(n));
+					}
+				}
+			}else{
+				int weight_offset = M_ * K_;
+				int col_offset = K_ * N_;
+				int top_offset = M_ * N_;
+
+				CUDA_CHECK(cudaMemset(weight_diff, 0,
+					sizeof(Dtype) * this->blobs_[0]->count()));
+				for (int n = 0; n<num_; n+=mem_group_size){
+					// since we saved memory in the forward pass by not storing all col data,
+					// we will need to recompute them.
+					size_t this_mem_group_size = min(mem_group_size,num_-n);
+					//im2col_gpu(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
+					//	width_, kernel_size_, pad_, stride_, col_data);
+					bu_im2col_gpu_rot(bottom_data + (*bottom)[0]->offset(n), channels_, height_,
+						width_, kernel_size_, pad_, stride_, col_data, this_mem_group_size);
+					// gradient w.r.t. weight. Note that we will accumulate diffs.
+
+					for (int i_batch = 0; i_batch<this_mem_group_size;i_batch++){
+							
+					// Maybe we can add batched multiplication here, but since the matrix is large, the accleration seem to be insignificant.
+					caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_*this_mem_group_size, N_,
+							(Dtype)1., top_diff + top[0]->offset(n+i_batch),
+							col_data+col_offset*i_batch, (Dtype)1.,
+							weight_diff);
+					}
+
+					// gradient w.r.t. bottom data, if necessary
+					// can group to batched gemm here
+					if (propagate_down) {
+						for (int i_batch = 0; i_batch<this_mem_group_size;i_batch++){
+							batch_left_ptr_list[i_batch] = weight;
+							batch_right_ptr_list[i_batch] = top_diff + top[0]->offset(n+i_batch);
+							batch_result_ptr_list[i_batch] = col_diff+col_offset*i_batch;
+						}
+						caffe_gpu_gemm_batched<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
+								(Dtype)1., batch_left_ptr_list,
+								batch_right_ptr_list,
+								(Dtype)0., batch_result_ptr_list,
+								this_mem_group_size);
+						// col2im back to the data
+						bu_col2im_gpu(col_diff, channels_, height_, width_, kernel_size_, pad_,
+							stride_, bottom_diff + (*bottom)[0]->offset(n), this_mem_group_size);
+					}
 				}
 			}
 	}
