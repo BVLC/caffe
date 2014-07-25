@@ -25,12 +25,18 @@ endif()
 ###    Configuration    ###########################################################################
 
 #    Enable CTest from top build directory
-enable_testing()
+#disable ctest
+#enable_testing()
 
 #    Compiler Flags
 set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} )#-O3)
+
+#    Global Definitions
+if(CPU_ONLY)
+    add_definitions(-DCPU_ONLY)
+endif()
 
 #    Include Directories
 set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
@@ -41,8 +47,10 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeScripts)
 
 #    CUDA is required globally
-find_package(CUDA 5.5 REQUIRED)
-include_directories(${CUDA_INCLUDE_DIRS})
+if(NOT CPU_ONLY)
+    find_package(CUDA 5.5 REQUIRED)
+    include_directories(${CUDA_INCLUDE_DIRS})
+endif()
 
 ###    Subdirectories    ##########################################################################
 
