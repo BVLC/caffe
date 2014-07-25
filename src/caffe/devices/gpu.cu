@@ -117,12 +117,32 @@ __global__ void powx_kernel(const int n, const Dtype* a, const Dtype alpha,
   }
 }
 
+template<>
+__global__ void powx_kernel<int>(const int n, const int* a, const int alpha,
+                                 int* y) {}
+
+template<>
+__global__ void powx_kernel<unsigned int>(const int n, const unsigned int* a,
+                                          const unsigned int alpha,
+                                          unsigned int* y) {}
+
 template <typename Dtype>
 void GPUDevice<Dtype>::powx(const int N, const Dtype* a, const Dtype alpha,
                             Dtype* y) {
   // NOLINT_NEXT_LINE(whitespace/operators)
   powx_kernel<Dtype><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
       N, a, alpha, y);
+}
+
+template <>
+void GPUDevice<int>::powx(const int N, const int* a, const int alpha, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template <>
+void GPUDevice<unsigned int>::powx(const int N, const unsigned int* a,
+                                   const unsigned int alpha, unsigned int* y) {
+  NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
@@ -132,12 +152,20 @@ __global__ void sign_kernel(const int n, const Dtype* x, Dtype* y) {
   }
 }
 
+template<>
+__global__ void sign_kernel<unsigned int>(const int n, const unsigned int* x,
+                                          unsigned int* y) {}
+
 template <typename Dtype>
 void GPUDevice<Dtype>::sign(const int n, const Dtype* x, Dtype* y) {
   /* NOLINT_NEXT_LINE(whitespace/operators) */
   sign_kernel<Dtype><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
       n, x, y);
 }
+
+template <>
+void GPUDevice<unsigned int>::sign(const int n, const unsigned int* x,
+                                   unsigned int* y) { NOT_IMPLEMENTED; }
 
 template <typename Dtype>
 __global__ void sgnbit_kernel(const int n, const Dtype* x, Dtype* y) {
@@ -160,12 +188,28 @@ __global__ void fabs_kernel(const int n, const Dtype* x, Dtype* y) {
   }
 }
 
+template<>
+__global__ void fabs_kernel<int>(const int n, const int* x, int* y) {}
+
+template<>
+__global__ void fabs_kernel<unsigned int>(const int n, const unsigned int* x,
+                                          unsigned int* y) {}
+
 template <typename Dtype>
 void GPUDevice<Dtype>::fabs(const int n, const Dtype* x, Dtype* y) {
   /* NOLINT_NEXT_LINE(whitespace/operators) */
   fabs_kernel<Dtype><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
       n, x, y);
 }
+
+template<>
+void GPUDevice<int>::fabs(const int n, const int* x, int* y) {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void GPUDevice<unsigned int>::fabs(const int n, const unsigned int* x,
+                                   unsigned int* y) { NOT_IMPLEMENTED; }
 
 template <typename Dtype>
 __global__ void sqr_kernel(const int n, const Dtype* a, Dtype* y) {
@@ -188,12 +232,26 @@ __global__ void exp_kernel(const int n, const Dtype* a, Dtype* y) {
   }
 }
 
+template <>
+__global__ void exp_kernel<int>(const int n, const int* a, int* y) {}
+
+template <>
+__global__ void exp_kernel<unsigned int>(const int n, const unsigned int* a,
+                                         unsigned int* y) {}
+
 template <typename Dtype>
 void GPUDevice<Dtype>::exp(const int n, const Dtype* a, Dtype* y) {
   /* NOLINT_NEXT_LINE(whitespace/operators) */
   exp_kernel<Dtype><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
       n, a, y);
 }
+
+template <>
+void GPUDevice<int>::exp(const int n, const int* a, int* y) { NOT_IMPLEMENTED; }
+
+template <>
+void GPUDevice<unsigned int>::exp(const int n, const unsigned int* a,
+                                  unsigned int* y) { NOT_IMPLEMENTED; }
 
 __global__ void popc_kernel(const int n, const float* a,
     const float* b, uint8_t* y) {
@@ -240,6 +298,16 @@ void GPUDevice<double>::hamming_distance(const int n, const double* x,
                         (uint32_t) 0, thrust::plus<uint32_t>());
 }
 
+template<>
+void GPUDevice<int>::hamming_distance(const int N, const int* x, const int* y,
+                                      int* out) { NOT_IMPLEMENTED; }
+
+template<>
+void GPUDevice<unsigned int>::hamming_distance(const int N,
+                                               const unsigned int* x,
+                                               const unsigned int* y,
+                                               int* out) { NOT_IMPLEMENTED; }
+
 template <>
 void GPUDevice<float>::rng_uniform(const int n, const float a, const float b,
                                    float* r) {
@@ -267,6 +335,15 @@ void GPUDevice<double>::rng_uniform(const int n, const double a, const double b,
 }
 
 template <>
+void GPUDevice<int>::rng_uniform(const int n, const int a, const int b,
+                                 int* r) { NOT_IMPLEMENTED; }
+
+template <>
+void GPUDevice<unsigned int>::rng_uniform(const int n, const unsigned int a,
+                                          const unsigned int b,
+                                          unsigned int* r) { NOT_IMPLEMENTED; }
+
+template <>
 void GPUDevice<float>::rng_gaussian(const int n, const float mu,
                                     const float sigma, float* r) {
   CURAND_CHECK(
@@ -280,6 +357,14 @@ void GPUDevice<double>::rng_gaussian(const int n, const double mu,
       curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
 }
 
+template <>
+void GPUDevice<int>::rng_gaussian(const int n, const int mu, const int sigma,
+                                  int* r) { NOT_IMPLEMENTED; }
+
+template <>
+void GPUDevice<unsigned int>::rng_gaussian(const int n, const unsigned int mu,
+                                           const unsigned int sigma,
+                                           unsigned int* r) { NOT_IMPLEMENTED; }
 
 template <typename Dtype>
 __global__ void im2col_gpu_kernel(const int n, const Dtype* data_im,
@@ -389,5 +474,7 @@ void GPUDevice<Dtype>::col2im(const Dtype* data_col, const int channels,
 }
 
 INSTANTIATE_CLASS(GPUDevice);
+template class GPUDevice<int>;
+template class GPUDevice<unsigned int>;
 
 }  // namespace caffe
