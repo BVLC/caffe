@@ -171,7 +171,7 @@ void bu_im2col_gpu_rot(const Dtype* data_im, const int channels,
 	int num_kernels = channels * height_col * width_col;
 
 	int data_im_size = height*width*channels;
-	int data_col_size = num_kernels*ksize*ksize*height_col*width_col;
+	int data_col_size = num_kernels*ksize*ksize;
 	// NOLINT_NEXT_LINE(whitespace/operators)
 	bu_im2col_gpu_kernel_rot<Dtype><<<CAFFE_GET_BLOCKS(num_kernels), // num_kernels/16, means each thread process 16 elements
 		CAFFE_CUDA_NUM_THREADS>>>(

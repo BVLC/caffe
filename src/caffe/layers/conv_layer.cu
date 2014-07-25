@@ -187,7 +187,7 @@ namespace caffe {
 					for (int i_batch = 0; i_batch<this_mem_group_size;i_batch++){
 							
 					// Maybe we can add batched multiplication here, but since the matrix is large, the accleration seem to be insignificant.
-					caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_*this_mem_group_size, N_,
+					caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
 							(Dtype)1., top_diff + top[0]->offset(n+i_batch),
 							col_data+col_offset*i_batch, (Dtype)1.,
 							weight_diff);
@@ -201,11 +201,24 @@ namespace caffe {
 							batch_right_ptr_list[i_batch] = top_diff + top[0]->offset(n+i_batch);
 							batch_result_ptr_list[i_batch] = col_diff+col_offset*i_batch;
 						}
+						
+
+						CUDA_CHECK(cudaMemcpy(d_batch_left_ptr_list, batch_left_ptr_list, this_mem_group_size*sizeof(Dtype*),cudaMemcpyHostToDevice));
+						CUDA_CHECK(cudaMemcpy(d_batch_right_ptr_list, batch_right_ptr_list, this_mem_group_size*sizeof(Dtype*),cudaMemcpyHostToDevice));
+						CUDA_CHECK(cudaMemcpy(d_batch_result_ptr_list, batch_result_ptr_list, this_mem_group_size*sizeof(Dtype*),cudaMemcpyHostToDevice));
+
 						caffe_gpu_gemm_batched<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
-								(Dtype)1., batch_left_ptr_list,
-								batch_right_ptr_list,
-								(Dtype)0., batch_result_ptr_list,
+								(Dtype)1., d_batch_left_ptr_list,
+								d_batch_right_ptr_list,
+								(Dtype)0., d_batch_result_ptr_list,
 								this_mem_group_size);
+
+						/*for (int i_batch = 0; i_batch<this_mem_group_size;i_batch++){
+							caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
+									(Dtype)1., weight,
+									top_diff + top[0]->offset(n+i_batch),
+									(Dtype)0., col_diff + col_offset*i_batch);
+						}*/
 						// col2im back to the data
 						bu_col2im_gpu(col_diff, channels_, height_, width_, kernel_size_, pad_,
 							stride_, bottom_diff + (*bottom)[0]->offset(n), this_mem_group_size);
