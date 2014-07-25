@@ -94,10 +94,6 @@ void PowerLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   }
 }
 
-#ifdef CPU_ONLY
-STUB_GPU(PowerLayer);
-#endif
-
 INSTANTIATE_CLASS(PowerLayer);
 
 
