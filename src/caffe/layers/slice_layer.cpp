@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -81,8 +81,8 @@ Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < top->size(); ++i) {
       Blob<Dtype>* blob = (*top)[i];
       Dtype* top_data = blob->mutable_cpu_data();
-      caffe_copy(blob->count(), bottom_data + bottom[0]->offset(offset_num),
-                 top_data);
+      GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(),
+          bottom_data + bottom[0]->offset(offset_num), top_data);
       offset_num += blob->num();
     }
   } else if (slice_dim_ == 1) {
@@ -92,8 +92,9 @@ Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       Dtype* top_data = blob->mutable_cpu_data();
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
-        caffe_copy(num_elem, bottom_data + bottom[0]->offset(n, offset_channel),
-                   top_data + blob->offset(n));
+        GetDevice<Dtype>(Caffe::CPU)->copy(num_elem,
+            bottom_data + bottom[0]->offset(n, offset_channel),
+            top_data + blob->offset(n));
       }
       offset_channel += blob->channels();
     }
@@ -111,8 +112,8 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     for (int i = 0; i < top.size(); ++i) {
       Blob<Dtype>* blob = top[i];
       const Dtype* top_diff = blob->cpu_diff();
-      caffe_copy(blob->count(), top_diff,
-                 bottom_diff + (*bottom)[0]->offset(offset_num));
+      GetDevice<Dtype>(Caffe::CPU)->copy(blob->count(), top_diff,
+          bottom_diff + (*bottom)[0]->offset(offset_num));
       offset_num += blob->num();
     }
   } else if (slice_dim_ == 1) {
@@ -122,8 +123,8 @@ void SliceLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const Dtype* top_diff = blob->cpu_diff();
       const int num_elem = blob->channels() * blob->height() * blob->width();
       for (int n = 0; n < num_; ++n) {
-        caffe_copy(num_elem, top_diff + blob->offset(n),
-                   bottom_diff + (*bottom)[0]->offset(n, offset_channel));
+        GetDevice<Dtype>(Caffe::CPU)->copy(num_elem, top_diff + blob->offset(n),
+            bottom_diff + (*bottom)[0]->offset(n, offset_channel));
       }
       offset_channel += blob->channels();
     }

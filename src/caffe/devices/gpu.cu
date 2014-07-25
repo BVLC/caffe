@@ -428,8 +428,10 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
     int c = index / (width * height);
     // compute the start and end of the output
     int w_col_start = (w < ksize) ? 0 : (w - ksize) / stride + 1;
+    /* NOLINT_NEXT_LINE(build/include_what_you_use) */
     int w_col_end = min(w / stride + 1, width_col);
     int h_col_start = (h < ksize) ? 0 : (h - ksize) / stride + 1;
+    /* NOLINT_NEXT_LINE(build/include_what_you_use) */
     int h_col_end = min(h / stride + 1, height_col);
     /*
     for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {

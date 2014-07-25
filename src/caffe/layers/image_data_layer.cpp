@@ -206,8 +206,8 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_cpu_data();
-  prefetch_label_->mutable_cpu_data();
+  prefetch_data_.mutable_cpu_data();
+  prefetch_label_.mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
@@ -256,12 +256,10 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  this->device_->copy_from_cpu(
-      prefetch_data_->count(), prefetch_data_->cpu_data(),
-      (*top)[0]->mutable_data());
-  this->device_->copy_from_cpu(
-      prefetch_label_->count(), prefetch_label_->cpu_data(),
-      (*top)[1]->mutable_data());
+  this->device_->copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
+                      (*top)[0]->mutable_data());
+  this->device_->copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
+                      (*top)[1]->mutable_data());
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);

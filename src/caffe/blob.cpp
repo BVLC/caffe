@@ -167,20 +167,20 @@ void Blob<Dtype>::Update() {
   switch (data_->head()) {
   case SyncedMemory::HEAD_AT_CPU:
     // perform computation on CPU
-    GetDevice<Dtype>(Caffe::CPU)->axpy(
-        count_,
-        Dtype(-1),
+    GetDevice<Dtype>(Caffe::CPU)->axpy(count_, Dtype(-1),
         static_cast<const Dtype*>(diff_->cpu_data()),
         static_cast<Dtype*>(data_->mutable_cpu_data()));
     break;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
+#ifndef CPU_ONLY
     // perform computation on GPU
-    GetDevice<Dtype>(Caffe::GPU)->axpy(
-        count_,
-        Dtype(-1),
-        reinterpret_cast<const Dtype*>(diff_->gpu_data()),
-        reinterpret_cast<Dtype*>(data_->mutable_gpu_data()));
+    GetDevice<Dtype>(Caffe::GPU)->axpy(count_, Dtype(-1),
+        static_cast<const Dtype*>(diff_->gpu_data()),
+        static_cast<Dtype*>(data_->mutable_gpu_data()));
+#else
+    NO_GPU;
+#endif
     break;
   default:
     LOG(FATAL) << "Syncedmem not initialized.";
@@ -267,27 +267,13 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
       LOG(FATAL) << "Trying to copy blobs of different sizes.";
     }
   }
-  switch (Caffe::mode()) {
-  case Caffe::GPU:
-    if (copy_diff) {
-      caffe_copy(count_, source.gpu_diff(),
-          static_cast<Dtype*>(diff_->mutable_gpu_data()));
-    } else {
-      caffe_copy(count_, source.gpu_data(),
-          static_cast<Dtype*>(data_->mutable_gpu_data()));
-    }
-    break;
-  case Caffe::CPU:
-    if (copy_diff) {
-      caffe_copy(count_, source.cpu_diff(),
-          static_cast<Dtype*>(diff_->mutable_cpu_data()));
-    } else {
-      caffe_copy(count_, source.cpu_data(),
-          static_cast<Dtype*>(data_->mutable_cpu_data()));
-    }
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode.";
+
+  if (copy_diff) {
+    GetDevice<Dtype>()->copy(count_, source.const_diff(),
+                             static_cast<Dtype*>(diff_->mutable_data()));
+  } else {
+    GetDevice<Dtype>()->copy(count_, source.const_data(),
+                             static_cast<Dtype*>(data_->mutable_data()));
   }
 }
 

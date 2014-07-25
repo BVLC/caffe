@@ -14,6 +14,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
@@ -49,7 +50,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
-  caffe_set(prefetch_data_.count(), Dtype(0), top_data);
+  GetDevice<Dtype>(Caffe::CPU)->set(prefetch_data_.count(), Dtype(0), top_data);
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
@@ -387,8 +388,8 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_cpu_data();
-  prefetch_label_->mutable_cpu_data();
+  prefetch_data_.mutable_cpu_data();
+  prefetch_label_.mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
@@ -429,11 +430,9 @@ Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  this->device_->copy_from_cpu(
-      prefetch_data_->count(), prefetch_data_->cpu_data(),
+  this->device_->copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
       (*top)[0]->mutable_data());
-  this->device_->copy_from_cpu(
-      prefetch_label_->count(), prefetch_label_->cpu_data(),
+  this->device_->copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
       (*top)[1]->mutable_data());
   // Start a new prefetch thread
   CreatePrefetchThread();

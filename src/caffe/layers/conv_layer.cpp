@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -108,7 +109,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Set up the all ones "bias multiplier" for adding bias using blas
   if (bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
-    caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->set(N_, Dtype(1),
+                                      bias_multiplier_.mutable_cpu_data());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
@@ -133,12 +135,12 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       // Second, innerproduct with groups
       for (int g = 0; g < group_; ++g) {
         this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-          (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
-          (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
+            (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+            (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
       }
       // third, add bias
       if (bias_term_) {
-        this->device_->gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
+        this->device_->gemm(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
             bias_multiplier_.const_data(),
             (Dtype)1., top_data + (*top)[i]->offset(n));

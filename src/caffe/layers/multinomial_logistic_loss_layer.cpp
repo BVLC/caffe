@@ -3,6 +3,7 @@
 #include <cmath>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -52,7 +53,8 @@ void MultinomialLogisticLossLayer<Dtype>::Backward(
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     int num = (*bottom)[0]->num();
     int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
-    caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
+    GetDevice<Dtype>(Caffe::CPU)->set((*bottom)[0]->count(), Dtype(0),
+                                      bottom_diff);
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
       Dtype prob = std::max(

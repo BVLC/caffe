@@ -375,8 +375,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
         history_[param_id]->mutable_data());
     if (local_decay) {
       // add weight decay
-      device->axpy(net_params[param_id]->count(),
-          local_decay * local_rate,
+      device->axpy(net_params[param_id]->count(), local_decay * local_rate,
           net_params[param_id]->const_data(),
           history_[param_id]->mutable_data());
     }
