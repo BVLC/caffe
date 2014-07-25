@@ -366,15 +366,15 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
   cblas_dscal(n, alpha, y, 1);
 }
 
-}  // namespace caffe
-
 using std::signbit;
-bool caffe_signbit( float arg ){
+bool caffe_signbit(float arg){
     return signbit(arg);
 }
-bool caffe_signbit( double arg ){
+bool caffe_signbit(double arg){
     return signbit(arg);
 }
-bool caffe_signbit( long double arg ){
+bool caffe_signbit(long double arg){
     return signbit(arg);
 }
+
+}  // namespace caffe
