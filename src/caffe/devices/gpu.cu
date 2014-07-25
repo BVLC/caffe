@@ -154,7 +154,11 @@ __global__ void sign_kernel(const int n, const Dtype* x, Dtype* y) {
 
 template<>
 __global__ void sign_kernel<unsigned int>(const int n, const unsigned int* x,
-                                          unsigned int* y) {}
+                                          unsigned int* y) {
+  CUDA_KERNEL_LOOP(index, n) {
+    y[index] = x[index] != 0;
+  }
+}
 
 template <typename Dtype>
 void GPUDevice<Dtype>::sign(const int n, const Dtype* x, Dtype* y) {
@@ -162,10 +166,6 @@ void GPUDevice<Dtype>::sign(const int n, const Dtype* x, Dtype* y) {
   sign_kernel<Dtype><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
       n, x, y);
 }
-
-template <>
-void GPUDevice<unsigned int>::sign(const int n, const unsigned int* x,
-                                   unsigned int* y) { NOT_IMPLEMENTED; }
 
 template <typename Dtype>
 __global__ void sgnbit_kernel(const int n, const Dtype* x, Dtype* y) {
