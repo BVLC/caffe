@@ -4,6 +4,6 @@
 
 int main(int argc, char** argv) {
   LOG(ERROR) << "Deprecated. Use caffe.bin train --solver_proto_file=... "
-                "[resume_point_file=...] instead.";
+                "[--resume_point_file=...] instead.";
   return 0;
 }
