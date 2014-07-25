@@ -32,7 +32,7 @@ Dtype SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* scale_data = scale_.mutable_cpu_data();
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
-  caffe_copy(bottom[0]->count(), bottom_data, top_data);
+  GetDevice<Dtype>(Caffe::CPU)->copy(bottom[0]->count(), bottom_data, top_data);
   // we need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   for (int i = 0; i < num; ++i) {
@@ -69,7 +69,7 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* scale_data = scale_.mutable_cpu_data();
   int num = top[0]->num();
   int dim = top[0]->count() / top[0]->num();
-  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  GetDevice<Dtype>(Caffe::CPU)->copy(top[0]->count(), top_diff, bottom_diff);
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
   for (int i = 0; i < num; ++i) {
     GetDevice<Dtype>(Caffe::CPU)->dot(dim, top_diff + i * dim,

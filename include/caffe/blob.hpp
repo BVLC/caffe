@@ -6,7 +6,6 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 

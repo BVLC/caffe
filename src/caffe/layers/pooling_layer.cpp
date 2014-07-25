@@ -132,7 +132,7 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       GetDevice<Dtype>(Caffe::CPU)->set(top_count, Dtype(-1), top_mask);
     } else {
       mask = max_idx_.mutable_cpu_data();
-      std::fill_n(mask, top_count, -1);
+      GetDevice<int>(Caffe::CPU)->set(top_count, -1, mask);
     }
     GetDevice<Dtype>(Caffe::CPU)->set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop

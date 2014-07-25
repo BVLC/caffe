@@ -24,9 +24,9 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       reinterpret_cast<ImageDataLayer<Dtype>*>(layer_pointer);
   CHECK(layer);
   Datum datum;
-  CHECK(layer->prefetch_data_);
-  Dtype* top_data = layer->prefetch_data_->mutable_cpu_data();
-  Dtype* top_label = layer->prefetch_label_->mutable_cpu_data();
+  CHECK(layer->prefetch_data_.count());
+  Dtype* top_data = layer->prefetch_data_.mutable_cpu_data();
+  Dtype* top_label = layer->prefetch_label_.mutable_cpu_data();
   ImageDataParameter image_data_param = layer->layer_param_.image_data_param();
   const Dtype scale = image_data_param.scale();
   const int batch_size = image_data_param.batch_size();
@@ -217,8 +217,8 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // cpu_data calls so that the prefetch thread does not accidentally make
   // simultaneous cudaMalloc calls when the main thread is running. In some
   // GPUs this seems to cause failures if we do not so.
-  prefetch_data_->mutable_cpu_data();
-  prefetch_label_->mutable_cpu_data();
+  prefetch_data_.mutable_cpu_data();
+  prefetch_label_.mutable_cpu_data();
   data_mean_.cpu_data();
   DLOG(INFO) << "Initializing prefetch";
   CreatePrefetchThread();
@@ -272,12 +272,10 @@ Dtype ImageDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  this->device_->copy_from_cpu(
-      prefetch_data_->count(), prefetch_data_->cpu_data(),
-      (*top)[0]->mutable_data());
-  this->device_->copy_from_cpu(
-      prefetch_label_->count(), prefetch_label_->cpu_data(),
-      (*top)[1]->mutable_data());
+  this->device_->copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
+                      (*top)[0]->mutable_data());
+  this->device_->copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
+                      (*top)[1]->mutable_data());
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);

@@ -54,9 +54,8 @@ class UniformFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
     GetDevice<Dtype>(Caffe::CPU)->rng_uniform(blob->count(),
-                                              Dtype(this->filler_param_.min()),
-                                              Dtype(this->filler_param_.max()),
-                                              blob->mutable_cpu_data());
+        Dtype(this->filler_param_.min()), Dtype(this->filler_param_.max()),
+        blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
   }
@@ -70,10 +69,8 @@ class GaussianFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     CHECK(blob->count());
-    GetDevice<Dtype>(Caffe::CPU)->rng_gaussian(
-        blob->count(),
-        Dtype(this->filler_param_.mean()),
-        Dtype(this->filler_param_.std()),
+    GetDevice<Dtype>(Caffe::CPU)->rng_gaussian(blob->count(),
+        Dtype(this->filler_param_.mean()), Dtype(this->filler_param_.std()),
         blob->mutable_cpu_data());
     int sparse = this->filler_param_.sparse();
     CHECK_GE(sparse, -1);

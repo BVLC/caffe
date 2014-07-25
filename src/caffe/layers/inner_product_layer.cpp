@@ -4,6 +4,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
@@ -47,7 +48,8 @@ void InnerProductLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Setting up the bias multiplier
   if (bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, M_);
-    caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->set(M_, Dtype(1),
+                                      bias_multiplier_.mutable_cpu_data());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
@@ -62,7 +64,7 @@ Dtype InnerProductLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       bottom_data, weight, (Dtype)0., top_data);
   if (bias_term_) {
     this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
-        reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()),
+        reinterpret_cast<const Dtype*>(bias_multiplier_.const_data()),
         this->blobs_[1]->const_data(), (Dtype)1., top_data);
   }
   return Dtype(0);
@@ -70,20 +72,23 @@ Dtype InnerProductLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void InnerProductLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
-  const Dtype* top_diff = top[0]->const_diff();
-  const Dtype* bottom_data = (*bottom)[0]->const_data();
-  // Gradient with respect to weight
-  this->device_->gemm(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
-      top_diff, bottom_data, (Dtype)0., this->blobs_[0]->mutable_diff());
-  if (bias_term_) {
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  if (this->param_propagate_down_[0]) {
+    const Dtype* top_diff = top[0]->const_diff();
+    const Dtype* bottom_data = (*bottom)[0]->const_data();
+    // Gradient with respect to weight
+    this->device_->gemm(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
+        top_diff, bottom_data, (Dtype)0., this->blobs_[0]->mutable_diff());
+  }
+  if (bias_term_ && this->param_propagate_down_[1]) {
+    const Dtype* top_diff = top[0]->const_diff();
     // Gradient with respect to bias
     this->device_->gemv(CblasTrans, M_, N_, (Dtype)1., top_diff,
-        reinterpret_cast<const Dtype*>(bias_multiplier_->const_data()),
-        (Dtype)0., this->blobs_[1]->mutable_diff());
+        bias_multiplier_.const_data(), (Dtype)0.,
+        this->blobs_[1]->mutable_diff());
   }
   if (propagate_down[0]) {
+    const Dtype* top_diff = top[0]->const_diff();
     // Gradient with respect to bottom data
     this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, K_, N_, (Dtype)1.,
         top_diff, this->blobs_[0]->const_data(), (Dtype)0.,

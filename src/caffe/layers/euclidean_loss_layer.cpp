@@ -22,11 +22,8 @@ template <typename Dtype>
 Dtype EuclideanLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   int count = bottom[0]->count();
-  this->device_->sub(
-      count,
-      bottom[0]->const_data(),
-      bottom[1]->const_data(),
-      diff_.mutable_data());
+  this->device_->sub(count, bottom[0]->const_data(), bottom[1]->const_data(),
+                     diff_.mutable_data());
   Dtype dot;
   this->device_->dot(count, diff_.const_data(), diff_.const_data(), &dot);
   Dtype loss = dot / bottom[0]->num() / Dtype(2);

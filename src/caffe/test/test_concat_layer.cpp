@@ -93,8 +93,7 @@ TYPED_TEST(ConcatLayerTest, TestNum) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
         for (int w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n, c, h, w),
-            this->blob_bottom_vec_0[0]->data_at(n, c, h, w)) <<
-                "n " << n << ", c " << c << ", h " << h << ", w " << w;
+            this->blob_bottom_vec_0[0]->data_at(n, c, h, w));
         }
       }
     }
@@ -102,8 +101,7 @@ TYPED_TEST(ConcatLayerTest, TestNum) {
       for (int h = 0; h < this->blob_top_->height(); ++h) {
         for (int w = 0; w < this->blob_top_->width(); ++w) {
           EXPECT_EQ(this->blob_top_->data_at(n, c+3, h, w),
-            this->blob_bottom_vec_0[1]->data_at(n, c, h, w)) <<
-                "n " << n << ", c " << c << ", h " << h << ", w " << w;
+            this->blob_bottom_vec_0[1]->data_at(n, c, h, w));
         }
       }
     }

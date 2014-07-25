@@ -3,7 +3,6 @@
 #include <map>
 #include <set>
 #include <string>
-#include <utility>
 #include <vector>
 #include <utility>
 
@@ -523,8 +522,7 @@ void Net<Dtype>::Update() {
     const int count = params_[i]->count();
     const Dtype* this_diff = params_[i]->const_diff();
     Dtype* owner_diff = params_[param_owners_[i]]->mutable_diff();
-    Device<Dtype>* device = GetDevice<Dtype>();
-    device->add(count, this_diff, owner_diff, owner_diff);
+    GetDevice<Dtype>()->add(count, this_diff, owner_diff, owner_diff);
   }
   // Now, update the owned parameters.
   for (int i = 0; i < params_.size(); ++i) {

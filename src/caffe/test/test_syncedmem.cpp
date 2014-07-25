@@ -1,13 +1,18 @@
 // Copyright 2014 BVLC and contributors.
 
+#ifndef CPU_ONLY
+#include <cuda.h>
+#include <cuda_runtime.h>
+#endif
+
 #include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/device_alternate.hpp"
-#include "caffe/util/math_functions.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -80,7 +85,8 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
   char* recovered_value = new char[10];
-  caffe_gpu_memcpy(10, gpu_data, recovered_value);
+  CUDA_CHECK(cudaMemcpy(recovered_value, gpu_data, sizeof(char) * 10,
+                        cudaMemcpyDefault));
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(recovered_value))[i], 1);
   }
@@ -94,7 +100,8 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   gpu_data = mem.gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::SYNCED);
   // check if values are the same
-  caffe_gpu_memcpy(10, gpu_data, recovered_value);
+  CUDA_CHECK(cudaMemcpy(recovered_value, gpu_data, sizeof(char) * 10,
+                        cudaMemcpyDefault));
   for (int i = 0; i < mem.size(); ++i) {
     EXPECT_EQ((static_cast<char*>(recovered_value))[i], 2);
   }

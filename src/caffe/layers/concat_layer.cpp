@@ -65,44 +65,41 @@ Dtype ConcatLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       }
       offset_channel += bottom[i]->channels();
     }
-  } else {
-    LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
-      " not implemented yet";
-  }
+  }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
   return Dtype(0.);
 }
 
 template <typename Dtype>
 void ConcatLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->const_diff();
   if (concat_dim_ == 0) {
     int offset_num = 0;
     for (int i = 0; i < bottom->size(); ++i) {
       Blob<Dtype>* blob = (*bottom)[i];
-      Dtype* bottom_diff = blob->mutable_diff();
-      this->device_->copy(blob->count(),
-        top_diff+top[0]->offset(offset_num), bottom_diff);
+      if (propagate_down[i]) {
+        Dtype* bottom_diff = blob->mutable_diff();
+        this->device_->copy(blob->count(),
+            top_diff + top[0]->offset(offset_num), bottom_diff);
+      }
       offset_num += blob->num();
     }
   } else if (concat_dim_ == 1) {
     int offset_channel = 0;
     for (int i = 0; i < bottom->size(); ++i) {
       Blob<Dtype>* blob = (*bottom)[i];
-      Dtype* bottom_diff = blob->mutable_diff();
-      int num_elem = blob->channels()*blob->height()*blob->width();
-      for (int n = 0; n < num_; ++n) {
-        this->device_->copy(num_elem,
-            top_diff + top[0]->offset(n, offset_channel),
-            bottom_diff + blob->offset(n));
+      if (propagate_down[i]) {
+        Dtype* bottom_diff = blob->mutable_diff();
+        int num_elem = blob->channels() * blob->height() * blob->width();
+        for (int n = 0; n < num_; ++n) {
+          this->device_->copy(num_elem,
+              top_diff + top[0]->offset(n, offset_channel),
+              bottom_diff + blob->offset(n));
+        }
       }
       offset_channel += blob->channels();
     }
-  } else {
-    LOG(FATAL) << "concat_dim along dim" << concat_dim_ <<
-      " not implemented yet";
-  }
+  }  // concat_dim_ is guaranteed to be 0 or 1 by SetUp.
 }
 
 INSTANTIATE_CLASS(ConcatLayer);

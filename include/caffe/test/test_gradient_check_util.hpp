@@ -229,7 +229,8 @@ Dtype GradientChecker<Dtype>::GetObjAndGradient(vector<Blob<Dtype>*>* top,
         loss += top_blob_data[j] * top_blob_data[j];
       }
       // set the diff: simply the data.
-      caffe_copy(top_blob->count(), top_blob_data, top_blob_diff);
+      GetDevice<Dtype>(Caffe::CPU)->copy(top_blob->count(), top_blob_data,
+                                         top_blob_diff);
     }
     loss /= 2.;
   } else {
@@ -237,7 +238,8 @@ Dtype GradientChecker<Dtype>::GetObjAndGradient(vector<Blob<Dtype>*>* top,
     for (int i = 0; i < top->size(); ++i) {
       Blob<Dtype>* top_blob = (*top)[i];
       Dtype* top_blob_diff = top_blob->mutable_cpu_diff();
-      caffe_set(top_blob->count(), Dtype(0), top_blob_diff);
+      GetDevice<Dtype>(Caffe::CPU)->set(top_blob->count(), Dtype(0),
+                                        top_blob_diff);
     }
     loss = (*top)[top_id]->cpu_data()[top_data_id];
     (*top)[top_id]->mutable_cpu_diff()[top_data_id] = 1.;

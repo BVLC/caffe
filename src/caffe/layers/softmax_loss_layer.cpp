@@ -64,7 +64,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const Dtype* prob_data = prob_.cpu_data();
-    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    GetDevice<Dtype>(Caffe::CPU)->copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = (*bottom)[1]->cpu_data();
     int num = prob_.num();
     int dim = prob_.count() / num;

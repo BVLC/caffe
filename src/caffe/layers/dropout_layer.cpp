@@ -60,7 +60,8 @@ void DropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         bottom_diff[i] = top_diff[i] * mask[i] * scale_;
       }
     } else {
-      caffe_copy(top[0]->count(), top_diff, bottom_diff);
+      GetDevice<Dtype>(Caffe::CPU)->copy(top[0]->count(), top_diff,
+                                         bottom_diff);
     }
   }
 }

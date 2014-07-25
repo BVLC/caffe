@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 #include "caffe/filler.hpp"
@@ -77,7 +78,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Set up the all ones "bias multiplier" for adding bias using blas
   if (bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
-    caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->set(N_, Dtype(1),
+                                      bias_multiplier_.mutable_cpu_data());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
@@ -96,17 +98,17 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     int top_offset = M_ * N_;
     for (int n = 0; n < num_; ++n) {
       // First, im2col
-      this->device_->im2col(bottom_data + bottom[i]->offset(n), channels_, height_,
-             width_, kernel_size_, pad_, stride_, col_data);
+      this->device_->im2col(bottom_data + bottom[i]->offset(n), channels_,
+          height_, width_, kernel_size_, pad_, stride_, col_data);
       // Second, innerproduct with groups
       for (int g = 0; g < group_; ++g) {
         this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-          (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
-          (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
+            (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+            (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
       }
       // third, add bias
       if (bias_term_) {
-        this->device_->gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
+        this->device_->gemm(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->const_data(),
             bias_multiplier_.const_data(),
             (Dtype)1., top_data + (*top)[i]->offset(n));
@@ -157,8 +159,8 @@ void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < num_; ++n) {
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
-        this->device_->im2col(bottom_data + (*bottom)[i]->offset(n), channels_, height_,
-               width_, kernel_size_, pad_, stride_, col_data);
+        this->device_->im2col(bottom_data + (*bottom)[i]->offset(n), channels_,
+            height_, width_, kernel_size_, pad_, stride_, col_data);
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < group_; ++g) {
@@ -177,8 +179,9 @@ void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
                 (Dtype)0., col_diff + col_offset * g);
           }
           // col2im back to the data
-          this->device_->col2im(col_diff, channels_, height_, width_, kernel_size_, pad_,
-              stride_, bottom_diff + (*bottom)[i]->offset(n));
+          this->device_->col2im(col_diff, channels_, height_, width_,
+              kernel_size_, pad_, stride_,
+              bottom_diff + (*bottom)[i]->offset(n));
         }
       }
     }

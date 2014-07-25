@@ -125,6 +125,7 @@ void GPUDevice<Dtype>::axpby(const int N, const Dtype alpha,
 }
 
 template<typename Dtype>
+/* NOLINT_NEXT_LINE(build/include_what_you_use) */
 void GPUDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
   CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
 }
