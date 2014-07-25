@@ -57,7 +57,7 @@ script:
    ## CPU-only: comprehensive
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
   - make --keep-going --jobs=$NUM_THREADS
-  - cd test && ./test --gtest_shuffle --gtest_filter="-*GPU*" && cd -
+  - make runtest --keep-going --jobs=$NUM_THREADS
   - make clean && rm -rf *
     ## Cleaning
   - cd ..
