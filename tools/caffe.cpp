@@ -15,7 +15,6 @@ using caffe::Net;
 using caffe::Layer;
 using caffe::shared_ptr;
 using caffe::Timer;
-using caffe::string;
 using caffe::vector;
 
 
@@ -39,7 +38,7 @@ DEFINE_bool(speedtest_with_gpu, false,
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
-typedef std::map<string, BrewFunction> BrewMap;
+typedef std::map<caffe::string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
 #define RegisterBrewFunction(func) \
@@ -53,7 +52,7 @@ class __Registerer_##func { \
 __Registerer_##func g_registerer_##func; \
 }
 
-static BrewFunction GetBrewFunction(const string& name) {
+static BrewFunction GetBrewFunction(const caffe::string& name) {
   if (g_brew_map.count(name)) {
     return g_brew_map[name];
   } else {
@@ -141,7 +140,7 @@ int speedtest() {
   forward_timer.Start();
   Timer timer;
   for (int i = 0; i < layers.size(); ++i) {
-    const string& layername = layers[i]->layer_param().name();
+    const caffe::string& layername = layers[i]->layer_param().name();
     timer.Start();
     for (int j = 0; j < FLAGS_run_iterations; ++j) {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
@@ -154,7 +153,7 @@ int speedtest() {
   Timer backward_timer;
   backward_timer.Start();
   for (int i = layers.size() - 1; i >= 0; --i) {
-    const string& layername = layers[i]->layer_param().name();
+    const caffe::string& layername = layers[i]->layer_param().name();
     timer.Start();
     for (int j = 0; j < FLAGS_run_iterations; ++j) {
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
@@ -175,5 +174,5 @@ RegisterBrewFunction(speedtest);
 int main(int argc, char** argv) {
   caffe::GlobalInit(&argc, &argv);
   CHECK_EQ(argc, 2);
-  return GetBrewFunction(string(argv[1]))();
+  return GetBrewFunction(caffe::string(argv[1]))();
 }
