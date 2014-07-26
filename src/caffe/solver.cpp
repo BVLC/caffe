@@ -53,6 +53,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
     LOG(INFO) << "Creating training net from file: " << param_.train_net();
     net_.reset(new Net<Dtype>(param_.train_net()));
   }
+  CHECK(net_) << "Training net uninitialized.";
+  net_->set_debug_info(param_.debug_info());
   const int num_test_net_params = param_.test_net_param_size();
   const int num_test_net_files = param_.test_net_size();
   const int num_test_nets = num_test_net_params + num_test_net_files;
@@ -100,11 +102,17 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
   while (iter_++ < param_.max_iter()) {
+    const bool display = param_.display() && iter_ % param_.display() == 0;
+    if (display) {
+      net_->set_debug_info(param_.debug_info());
+    } else {
+      net_->set_debug_info(false);
+    }
     Dtype loss = net_->ForwardBackward(bottom_vec);
     ComputeUpdateValue();
     net_->Update();
 
-    if (param_.display() && iter_ % param_.display() == 0) {
+    if (display) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
     if (param_.test_interval() && iter_ % param_.test_interval() == 0) {

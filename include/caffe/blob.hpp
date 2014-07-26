@@ -76,6 +76,10 @@ class Blob {
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
 
+  // Compute the sum of absolute values (L1 norm) of the data or diff.
+  Dtype asum_data() const;
+  Dtype asum_diff() const;
+
   // Set the data_/diff_ shared_ptr to point to the SyncedMemory holding the
   // data_/diff_ of Blob other -- useful in layers which simply perform a copy
   // in their forward or backward pass.
