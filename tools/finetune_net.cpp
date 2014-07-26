@@ -3,7 +3,7 @@
 #include "caffe/caffe.hpp"
 
 int main(int argc, char** argv) {
-  LOG(ERROR) << "Deprecated. Use caffe.bin train --solver_proto_file=... "
+  LOG(FATAL) << "Deprecated. Use caffe.bin train --solver_proto_file=... "
                 "[--pretrained_net_file=...] instead.";
   return 0;
 }
