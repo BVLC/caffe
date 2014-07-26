@@ -212,7 +212,7 @@ Training the model is simple after you have written the network definition proto
     cd $CAFFE_ROOT/examples/mnist
     ./train_lenet.sh
 
-`train_lenet.sh` is a simple script, but here are a few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `train_net.bin`, with the solver protobuf text file as its argument.
+`train_lenet.sh` is a simple script, but here are a few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `caffe.bin` with action `train`, with the solver protobuf text file as its argument.
 
 When you run the code, you will see a lot of messages flying by like this:
 
