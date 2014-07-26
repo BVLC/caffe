@@ -1,4 +1,5 @@
 #!/bin/bash
 TOOLS=../../build/tools
 
-GLOG_logtostderr=1 $TOOLS/train_net.bin mnist_autoencoder_solver.prototxt
+GLOG_logtostderr=1 $TOOLS/caffe.bin train \
+  --solver_proto_file=mnist_autoencoder_solver.prototxt

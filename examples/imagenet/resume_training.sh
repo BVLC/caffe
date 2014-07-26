@@ -2,7 +2,8 @@
 
 TOOLS=../../build/tools
 
-GLOG_logtostderr=1 $TOOLS/train_net.bin \
-    imagenet_solver.prototxt caffe_imagenet_train_10000.solverstate
+GLOG_logtostderr=1 $TOOLS/caffe.bin train\
+    --solver_proto_file=imagenet_solver.prototxt \
+    --resume_point_file=caffe_imagenet_train_10000.solverstate
 
 echo "Done."
