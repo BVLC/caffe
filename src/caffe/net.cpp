@@ -419,11 +419,10 @@ void Net<Dtype>::ForwardDebugInfo(const int layer_id) {
   for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
     const Blob<Dtype>& blob = *top_vecs_[layer_id][top_id];
     const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
-    const Dtype asum = blob.asum_data();
-    const Dtype asum_mean = asum / blob.count();
+    const Dtype asum_mean = blob.asum_data() / blob.count();
     LOG(INFO) << "    [Forward] "
        << "Layer " << layer_names_[layer_id] << ", top blob " << blob_name
-       << " data: " << asum << " (" << asum_mean << ")";
+       << " data: " << asum_mean;
   }
 }
 
@@ -434,21 +433,19 @@ void Net<Dtype>::BackwardDebugInfo(const int layer_id) {
     if (!bottom_need_backward_[layer_id][bottom_id]) { continue; }
     const Blob<Dtype>& blob = *bottom_vec[bottom_id];
     const string& blob_name = blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
-    const Dtype asum = blob.asum_diff();
-    const Dtype asum_mean = asum / blob.count();
+    const Dtype asum_mean = blob.asum_diff() / blob.count();
     LOG(INFO) << "    [Backward] "
         << "Layer " << layer_names_[layer_id] << ", bottom blob " << blob_name
-        << " diff: " << asum << " (" << asum_mean << ")";
+        << " diff: " << asum_mean;
   }
   for (int param_id = 0; param_id < layers_[layer_id]->blobs().size();
        ++param_id) {
     if (!layers_[layer_id]->param_propagate_down(param_id)) { continue; }
     const Blob<Dtype>& blob = *layers_[layer_id]->blobs()[param_id];
-    const Dtype asum = blob.asum_diff();
-    const Dtype asum_mean = asum / blob.count();
+    const Dtype asum_mean = blob.asum_diff() / blob.count();
     LOG(INFO) << "    [Backward] "
         << "Layer " << layer_names_[layer_id] << ", param blob " << param_id
-        << " diff: " << asum << " (" << asum_mean << ")";
+        << " diff: " << asum_mean;
   }
 }
 
@@ -458,15 +455,12 @@ void Net<Dtype>::UpdateDebugInfo(const int param_id) {
   const int param_owner = param_owners_[param_id];
   const string& layer_name = layer_names_[param_layer_indices_[param_id].first];
   const string& param_display_name = param_display_names_[param_id];
-  const Dtype asum_diff = blob.asum_diff();
-  const Dtype asum_diff_mean = asum_diff / blob.count();
+  const Dtype asum_diff_mean = blob.asum_diff() / blob.count();
   if (param_owner < 0) {
-    const Dtype asum_data = blob.asum_data();
-    const Dtype asum_data_mean = asum_data / blob.count();
+    const Dtype asum_data_mean = blob.asum_data() / blob.count();
     LOG(INFO) << "    [Update] Layer " << layer_name
         << ", param " << param_display_name
-        << " data: " << asum_data << " (" << asum_data_mean << ");"
-        << " diff: " << asum_diff << " (" << asum_diff_mean << ")";
+        << " data: " << asum_data_mean << "; diff: " << asum_diff_mean;
   } else {
     const string& owner_layer_name =
         layer_names_[param_layer_indices_[param_owner].first];
@@ -474,7 +468,7 @@ void Net<Dtype>::UpdateDebugInfo(const int param_id) {
         << ", param blob " << param_display_name
         << " (owned by layer " << owner_layer_name << ", "
         << "param " << param_display_names_[param_owners_[param_id]] << ")"
-        << " diff: " << asum_diff << " (" << asum_diff_mean << ")";
+        << " diff: " << asum_diff_mean;
   }
 }
 
