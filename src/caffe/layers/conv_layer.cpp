@@ -93,13 +93,13 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   //}
 
   //initial batch pointer holders
-  batch_left_ptr_list = new const Dtype*[mem_group_size];
-  batch_right_ptr_list = new const Dtype*[mem_group_size];
-  batch_result_ptr_list = new Dtype*[mem_group_size];
+  // batch_left_ptr_list = new const Dtype*[mem_group_size];
+  // batch_right_ptr_list = new const Dtype*[mem_group_size];
+  // batch_result_ptr_list = new Dtype*[mem_group_size];
 
-  cudaMalloc(&d_batch_left_ptr_list, mem_group_size*sizeof(Dtype*));
-  cudaMalloc(&d_batch_right_ptr_list, mem_group_size*sizeof(Dtype*));
-  cudaMalloc(&d_batch_result_ptr_list, mem_group_size*sizeof(Dtype*));
+  // cudaMalloc(&d_batch_left_ptr_list, mem_group_size*sizeof(Dtype*));
+  // cudaMalloc(&d_batch_right_ptr_list, mem_group_size*sizeof(Dtype*));
+  // cudaMalloc(&d_batch_result_ptr_list, mem_group_size*sizeof(Dtype*));
 
 }
 
