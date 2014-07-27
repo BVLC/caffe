@@ -5,6 +5,8 @@
 #ifndef CAFFE_FILLER_HPP
 #define CAFFE_FILLER_HPP
 
+#include <math.h>
+
 #include <string>
 
 #include "caffe/blob.hpp"
