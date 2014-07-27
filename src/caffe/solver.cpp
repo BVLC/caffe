@@ -102,18 +102,20 @@ void Solver<Dtype>::Solve(const char* resume_file) {
         iter_ % param_.snapshot() == 0) {
       Snapshot();
     }
+
     if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
       TestAll();
     }
+
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
     Dtype loss = net_->ForwardBackward(bottom_vec);
-    ComputeUpdateValue();
-    net_->Update();
-
     if (display) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
     }
+
+    ComputeUpdateValue();
+    net_->Update();
   }
   // Always save a snapshot after optimization.
   Snapshot();
