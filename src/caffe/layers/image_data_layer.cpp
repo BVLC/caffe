@@ -143,7 +143,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(bottom.size(), 0) << "Input Layer takes no input blobs.";
   CHECK_EQ(top->size(), 2) << "Input Layer takes two blobs as output.";
   const int new_height  = this->layer_param_.image_data_param().new_height();
-  const int new_width  = this->layer_param_.image_data_param().new_height();
+  const int new_width  = this->layer_param_.image_data_param().new_width();
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
