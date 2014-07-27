@@ -3,6 +3,8 @@
 #ifndef CAFFE_DEVICES_GPU_H_
 #define CAFFE_DEVICES_GPU_H_
 
+#ifndef CPU_ONLY
+
 extern "C" {
 #include <cblas.h>
 }
@@ -85,5 +87,7 @@ class GPUDevice : public Device<Dtype> {
 };
 
 }  // namespace caffe
+
+#endif  // CPU_ONLY
 
 #endif  // CAFFE_DEVICES_GPU_H_

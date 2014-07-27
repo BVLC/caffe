@@ -25,7 +25,12 @@ Device<Dtype>* DeviceFactory<Dtype>::GetDevice(Caffe::Brew mode) {
     case Caffe::CPU:
       return cpu_device_;
     case Caffe::GPU:
+#ifndef CPU_ONLY
       return gpu_device_;
+#else
+      NO_GPU;
+      return static_cast<Device<Dtype>*>(NULL);
+#endif
     default:
       LOG(FATAL) << "Unknown caffe mode.";
       return static_cast<Device<Dtype>*>(NULL);
@@ -35,8 +40,10 @@ Device<Dtype>* DeviceFactory<Dtype>::GetDevice(Caffe::Brew mode) {
 template<typename Dtype>
 Device<Dtype>* DeviceFactory<Dtype>::cpu_device_ = new CPUDevice<Dtype>();
 
+#ifndef CPU_ONLY
 template<typename Dtype>
 Device<Dtype>* DeviceFactory<Dtype>::gpu_device_ = new GPUDevice<Dtype>();
+#endif
 
 INSTANTIATE_CLASS(DeviceFactory);
 template class DeviceFactory<int>;
