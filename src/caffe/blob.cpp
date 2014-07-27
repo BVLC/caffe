@@ -200,26 +200,25 @@ template <> int Blob<int>::asum_data() const {
 template <typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
   if (!data_) { return 0; }
+  Dtype asum = 0;
   switch (data_->head()) {
   case SyncedMemory::HEAD_AT_CPU:
-    return caffe_cpu_asum(count_, cpu_data());
+    GetDevice<Dtype>(Caffe::CPU)->asum(count_, cpu_data(), &asum);
+    return asum;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-  {
-    Dtype asum;
-    caffe_gpu_asum(count_, gpu_data(), &asum);
+    GetDevice<Dtype>(Caffe::GPU)->asum(count_, gpu_data(), &asum);
     return asum;
-  }
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
-    return 0;
+    return asum;
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
   }
-  return 0;
+  return asum;
 }
 
 template <> unsigned int Blob<unsigned int>::asum_diff() const {
@@ -235,26 +234,25 @@ template <> int Blob<int>::asum_diff() const {
 template <typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) { return 0; }
+  Dtype asum = 0;
   switch (diff_->head()) {
   case SyncedMemory::HEAD_AT_CPU:
-    return caffe_cpu_asum(count_, cpu_diff());
+    GetDevice<Dtype>(Caffe::CPU)->asum(count_, cpu_diff(), &asum);
+    return asum;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-  {
-    Dtype asum;
-    caffe_gpu_asum(count_, gpu_diff(), &asum);
+    GetDevice<Dtype>(Caffe::GPU)->asum(count_, gpu_diff(), &asum);
     return asum;
-  }
 #else
     NO_GPU;
 #endif
   case SyncedMemory::UNINITIALIZED:
-    return 0;
+    return asum;
   default:
     LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
-  return 0;
+  return asum;
 }
 
 template <typename Dtype>

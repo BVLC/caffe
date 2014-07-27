@@ -11,7 +11,7 @@ extern "C" {
 
 namespace caffe {
 
-template<typename Dtype>
+template <typename Dtype>
 class Device {
  public:
   virtual ~Device() {
@@ -106,16 +106,14 @@ class Device {
                      Dtype* y) { NOT_IMPLEMENTED; }
 
   virtual void im2col(const Dtype* data_im, const int channels,
-                      const int height, const int width, const int ksize,
-                      const int pad, const int stride, Dtype* data_col) {
-    NOT_IMPLEMENTED;
-  }
+      const int height, const int width, const int kernel_h, const int kernel_w,
+      const int pad_h, const int pad_w, const int stride_h, const int stride_w,
+      Dtype* data_col) { NOT_IMPLEMENTED; }
 
   virtual void col2im(const Dtype* data_col, const int channels,
-                      const int height, const int width, const int ksize,
-                      const int pad, const int stride, Dtype* data_im) {
-    NOT_IMPLEMENTED;
-  }
+      const int height, const int width, const int patch_h, const int patch_w,
+      const int pad_h, const int pad_w, const int stride_h, const int stride_w,
+      Dtype* data_im) { NOT_IMPLEMENTED; }
 };
 
 // Device factory function

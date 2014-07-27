@@ -78,12 +78,14 @@ class GPUDevice : public Device<Dtype> {
   virtual void scale(const int N, const Dtype alpha, const Dtype *x, Dtype* y);
 
   virtual void im2col(const Dtype* data_im, const int channels,
-                      const int height, const int width, const int ksize,
-                      const int pad, const int stride, Dtype* data_col);
+      const int height, const int width, const int kernel_h, const int kernel_w,
+      const int pad_h, const int pad_w, const int stride_h, const int stride_w,
+      Dtype* data_col);
 
   virtual void col2im(const Dtype* data_col, const int channels,
-                      const int height, const int width, const int psize,
-                      const int pad, const int stride, Dtype* data_im);
+      const int height, const int width, const int patch_h, const int patch_w,
+      const int pad_h, const int pad_w, const int stride_h, const int stride_w,
+      Dtype* data_im);
 };
 
 }  // namespace caffe

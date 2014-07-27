@@ -129,9 +129,9 @@ Dtype ConvolutionLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     int top_offset = M_ * N_;
     for (int n = 0; n < num_; ++n) {
       // First, im2col
-      this->device_->im2col(bottom_data + bottom[i]->offset(n), channels_, height_,
-          width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-          col_data);
+      this->device_->im2col(bottom_data + bottom[i]->offset(n), channels_,
+          height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+          stride_h_, stride_w_, col_data);
       // Second, innerproduct with groups
       for (int g = 0; g < group_; ++g) {
         this->device_->gemm(CblasNoTrans, CblasNoTrans, M_, N_, K_,
@@ -191,9 +191,9 @@ void ConvolutionLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < num_; ++n) {
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
-        this->device_->im2col(bottom_data + (*bottom)[i]->offset(n), channels_, height_,
-                   width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                   stride_h_, stride_w_, col_data);
+        this->device_->im2col(bottom_data + (*bottom)[i]->offset(n), channels_,
+            height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+            stride_h_, stride_w_, col_data);
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < group_; ++g) {

@@ -5,11 +5,12 @@
 #include <string>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/device.hpp"
+#include "caffe/util/upgrade_proto.hpp"
 
 namespace caffe {
 
