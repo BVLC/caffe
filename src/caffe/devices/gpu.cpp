@@ -1,5 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
+#ifndef CPU_ONLY
+
 #include <cublas_v2.h>
 
 #include "caffe/common.hpp"
@@ -204,3 +206,5 @@ template class GPUDevice<int>;
 template class GPUDevice<unsigned int>;
 
 }  // namespace caffe
+
+#endif  // CPU_ONLY
