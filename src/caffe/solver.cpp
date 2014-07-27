@@ -1,5 +1,7 @@
 // Copyright 2014 BVLC and contributors.
 
+#include <math.h>
+
 #include <cstdio>
 
 #include <algorithm>
