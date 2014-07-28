@@ -15,7 +15,7 @@
 // remove the following hack.
 #ifdef GFLAGS_GFLAGS_H_
 namespace google {
-using namespace gflags; 
+using ::gflags::ParseCommandLineFlags;
 }  // namespace google
 #endif  // GFLAGS_GFLAGS_H_
 
