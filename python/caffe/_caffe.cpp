@@ -25,6 +25,7 @@
 
 
 using namespace caffe;  // NOLINT(build/namespaces)
+using boost::python::dict;
 using boost::python::extract;
 using boost::python::len;
 using boost::python::list;
@@ -274,6 +275,10 @@ struct CaffeNet {
 
   // The pointer to the internal caffe::Net instant.
   shared_ptr<Net<float> > net_;
+  // Input preprocessing configuration attributes.
+  dict mean_;
+  dict input_scale_;
+  dict channel_swap_;
   // if taking input from an ndarray, we need to hold references
   object input_data_;
   object input_labels_;
@@ -311,19 +316,22 @@ BOOST_PYTHON_MODULE(_caffe) {
   boost::python::class_<CaffeNet, shared_ptr<CaffeNet> >(
       "Net", boost::python::init<string, string>())
       .def(boost::python::init<string>())
-      .def("_forward",          &CaffeNet::Forward)
-      .def("_backward",         &CaffeNet::Backward)
-      .def("set_mode_cpu",      &CaffeNet::set_mode_cpu)
-      .def("set_mode_gpu",      &CaffeNet::set_mode_gpu)
-      .def("set_phase_train",   &CaffeNet::set_phase_train)
-      .def("set_phase_test",    &CaffeNet::set_phase_test)
-      .def("set_device",        &CaffeNet::set_device)
-      .add_property("_blobs",   &CaffeNet::blobs)
-      .add_property("layers",   &CaffeNet::layers)
-      .add_property("inputs",   &CaffeNet::inputs)
-      .add_property("outputs",  &CaffeNet::outputs)
-      .def("_set_input_arrays", &CaffeNet::set_input_arrays)
-      .def("save",              &CaffeNet::save);
+      .def("_forward",              &CaffeNet::Forward)
+      .def("_backward",             &CaffeNet::Backward)
+      .def("set_mode_cpu",          &CaffeNet::set_mode_cpu)
+      .def("set_mode_gpu",          &CaffeNet::set_mode_gpu)
+      .def("set_phase_train",       &CaffeNet::set_phase_train)
+      .def("set_phase_test",        &CaffeNet::set_phase_test)
+      .def("set_device",            &CaffeNet::set_device)
+      .add_property("_blobs",       &CaffeNet::blobs)
+      .add_property("layers",       &CaffeNet::layers)
+      .add_property("inputs",       &CaffeNet::inputs)
+      .add_property("outputs",      &CaffeNet::outputs)
+      .add_property("mean",         &CaffeNet::mean_)
+      .add_property("input_scale",  &CaffeNet::input_scale_)
+      .add_property("channel_swap", &CaffeNet::channel_swap_)
+      .def("_set_input_arrays",     &CaffeNet::set_input_arrays)
+      .def("save",                  &CaffeNet::save);
 
   boost::python::class_<CaffeBlob, CaffeBlobWrap>(
       "Blob", boost::python::no_init)

@@ -211,8 +211,6 @@ def _Net_set_mean(self, input_, mean_f, mode='elementwise'):
     mode: elementwise = use the whole mean (and check dimensions)
           channel = channel constant (e.g. mean pixel instead of mean image)
     """
-    if not hasattr(self, 'mean'):
-        self.mean = {}
     if input_ not in self.inputs:
         raise Exception('Input not in {}'.format(self.inputs))
     in_shape = self.blobs[input_].data.shape
@@ -240,8 +238,6 @@ def _Net_set_input_scale(self, input_, scale):
     input_: which input to assign this scale factor
     scale: scale coefficient
     """
-    if not hasattr(self, 'input_scale'):
-        self.input_scale = {}
     if input_ not in self.inputs:
         raise Exception('Input not in {}'.format(self.inputs))
     self.input_scale[input_] = scale
@@ -257,8 +253,6 @@ def _Net_set_channel_swap(self, input_, order):
     order: the order to take the channels.
            (2,1,0) maps RGB to BGR for example.
     """
-    if not hasattr(self, 'channel_swap'):
-        self.channel_swap = {}
     if input_ not in self.inputs:
         raise Exception('Input not in {}'.format(self.inputs))
     self.channel_swap[input_] = order
@@ -282,6 +276,7 @@ def _Net_preprocess(self, input_name, input_):
     caffe_inputs: (K x H x W) ndarray
     """
     caffe_in = input_.astype(np.float32)
+    mean = self.mean.get(input_name)
     input_scale = self.input_scale.get(input_name)
     channel_order = self.channel_swap.get(input_name)
     in_size = self.blobs[input_name].data.shape[2:]
@@ -292,8 +287,8 @@ def _Net_preprocess(self, input_name, input_):
     if channel_order is not None:
         caffe_in = caffe_in[:, :, channel_order]
     caffe_in = caffe_in.transpose((2, 0, 1))
-    if hasattr(self, 'mean'):
-        caffe_in -= self.mean.get(input_name, 0)
+    if mean is not None:
+        caffe_in -= mean
     return caffe_in
 
 
@@ -302,10 +297,11 @@ def _Net_deprocess(self, input_name, input_):
     Invert Caffe formatting; see Net.preprocess().
     """
     decaf_in = input_.copy().squeeze()
+    mean = self.mean.get(input_name)
     input_scale = self.input_scale.get(input_name)
     channel_order = self.channel_swap.get(input_name)
-    if hasattr(self, 'mean'):
-        decaf_in += self.mean.get(input_name, 0)
+    if mean is not None:
+        decaf_in += mean
     decaf_in = decaf_in.transpose((1,2,0))
     if channel_order is not None:
         channel_order_inverse = [channel_order.index(i)
