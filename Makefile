@@ -299,9 +299,9 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
-everything: all py$(PROJECT) mat$(PROJECT) test warn lint runtest
-
 all: $(NAME) $(STATIC_NAME) tools examples
+
+everything: all py$(PROJECT) mat$(PROJECT) test warn lint runtest
 
 linecount:
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
