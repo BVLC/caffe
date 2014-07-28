@@ -86,7 +86,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 
     // On even iterations, we're reading the first half of the data.
     // On odd iterations, we're reading the second half of the data.
-    int label_offset = (iter % 2 == 0) ? 0 : batch_size;
+    // NB: label is 1-indexed
+    int label_offset = 1 + ((iter % 2 == 0) ? 0 : batch_size);
     int data_offset = (iter % 2 == 0) ? 0 : batch_size * data_size;
 
     // Every two iterations we are reading the second file,
