@@ -14,7 +14,10 @@ total_size = num_cols * num_rows * height * width
 data = np.arange(total_size)
 data = data.reshape(num_rows, num_cols, height, width)
 data = data.astype('float32')
-label = np.arange(num_rows)[:, np.newaxis]
+
+# We had a bug where data was copied into label, but the tests weren't
+# catching it, so let's make label 1-indexed.
+label = 1 + np.arange(num_rows)[:, np.newaxis]
 label = label.astype('float32')
 
 print data
