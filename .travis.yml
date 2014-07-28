@@ -58,6 +58,7 @@ script:
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
   - make --keep-going --jobs=$NUM_THREADS
   - make runtest --keep-going --jobs=$NUM_THREADS
+  - make lint --jobs=$NUM_THREADS
   - make clean && rm -rf *
     ## Cleaning
   - cd ..
