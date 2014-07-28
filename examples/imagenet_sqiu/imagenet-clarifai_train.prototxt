@@ -5,7 +5,7 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "/home/common/caffe-master/examples/imagenet-finetune-target_coding_less/imagenet_train_leveldb"
+    source: "/home/common/caffe-master/examples/imagenet-clarifai/imagenet_train_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
     batch_size: 128
     crop_size: 227

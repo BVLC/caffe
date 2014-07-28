@@ -34,7 +34,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   int width_out = (width_ + 2 * pad_ - kernel_size_) / stride_ + 1;
   col_buffer_.Reshape(
       mem_group_size, channels_ * kernel_size_ * kernel_size_, height_out, width_out);
-  
+
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
@@ -45,9 +45,9 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   N_ = height_out * width_out;
   (*top)[0]->Reshape(bottom[0]->num(), num_output_, height_out, width_out);
   bias_buffer_.Reshape(
-	1, 1,num_output_, N_);
+  1, 1,num_output_, N_);
   trans_buffer_.Reshape(
-	  mem_group_size,1,N_, M_);
+    mem_group_size,1,M_, N_);
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
@@ -85,21 +85,21 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     //Try to create 16 streams for cuBLAS
   //cuda_streams = new cudaStream_t[16]();
   //for(int i = 0; i < 16; i++){
-		//  int err = cudaStreamCreate(cuda_streams+i);
-	 // if ( err != cudaSuccess) {
-		//  LOG(ERROR) << "Cannot create CUDA stream No "<<i;
-		//  exit(-1);
-	 // }
+    //  int err = cudaStreamCreate(cuda_streams+i);
+   // if ( err != cudaSuccess) {
+    //  LOG(ERROR) << "Cannot create CUDA stream No "<<i;
+    //  exit(-1);
+   // }
   //}
 
   //initial batch pointer holders
-  batch_left_ptr_list = new const Dtype*[mem_group_size];
+  /*batch_left_ptr_list = new const Dtype*[mem_group_size];
   batch_right_ptr_list = new const Dtype*[mem_group_size];
   batch_result_ptr_list = new Dtype*[mem_group_size];
 
   cudaMalloc(&d_batch_left_ptr_list, mem_group_size*sizeof(Dtype*));
   cudaMalloc(&d_batch_right_ptr_list, mem_group_size*sizeof(Dtype*));
-  cudaMalloc(&d_batch_result_ptr_list, mem_group_size*sizeof(Dtype*));
+  cudaMalloc(&d_batch_result_ptr_list, mem_group_size*sizeof(Dtype*));*/
 
 }
 
@@ -118,6 +118,8 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // First, im2col
     im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
                       width_, kernel_size_, pad_, stride_, col_data);
+  //bu_im2col_gpu(bottom_data + bottom[0]->offset(n), channels_, height_,
+ //                     width_, kernel_size_, pad_, stride_, col_data, 1);
     // Second, innerproduct with groups
     for (int g = 0; g < group_; ++g) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,

@@ -5,7 +5,7 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "/home/common/caffe-master/examples/imagenet-finetune-target_coding_less/imagenet_val_leveldb"
+    source: "/home/common/caffe-master/examples/imagenet-clarifai/imagenet_val_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
     batch_size: 50
     crop_size: 227
@@ -21,7 +21,7 @@ layers {
     num_output: 96
     kernel_size: 7
     stride: 2
-    mem_group_size: 32
+    mem_group_size: 8
   }
 }
 layers {
@@ -62,7 +62,7 @@ layers {
     pad: 1
     kernel_size: 5
     stride: 2
-    mem_group_size: 32
+    mem_group_size: 8
   }
 }
 layers {
@@ -102,8 +102,9 @@ layers {
     num_output: 384
     pad: 1
     kernel_size: 3
-    mem_group_size: 32
+    mem_group_size: 8
   }
+
 }
 layers {
   name: "relu3"
@@ -120,7 +121,7 @@ layers {
     num_output: 384
     pad: 1
     kernel_size: 3
-    mem_group_size: 32
+    mem_group_size: 8
   }
 }
 layers {
@@ -138,7 +139,7 @@ layers {
     num_output: 256
     pad: 1
     kernel_size: 3
-    mem_group_size: 32
+    mem_group_size: 8
   }
 }
 layers {
