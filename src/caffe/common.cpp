@@ -8,6 +8,17 @@
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 
+// gflags 2.1 issue: namespace google was changed to gflags without warning.
+// Luckily we will be able to use GFLAGS_GFAGS_H_ to detect if it is version
+// 2.1. If it is not, we will add a temporary solution to redirect the
+// namespace.
+// TODO(Yangqing): Once gflags solves the problem in a more elegant way, let's
+// remove the following hack.
+#ifdef GFLAGS_GFLAGS_H_
+namespace google {
+using namespace gflags; 
+}  // namespace google
+#endif  // GFLAGS_GFLAGS_H_
 
 namespace caffe {
 
@@ -25,7 +36,7 @@ int64_t cluster_seedgen(void) {
 
 void GlobalInit(int* pargc, char*** pargv) {
   // Google flags.
-  ::gflags::ParseCommandLineFlags(pargc, pargv, true);
+  ::google::ParseCommandLineFlags(pargc, pargv, true);
   // Google logging.
   ::google::InitGoogleLogging(*(pargv)[0]);
 }
