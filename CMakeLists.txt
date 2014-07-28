@@ -38,8 +38,11 @@ set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 include_directories(${${PROJECT_NAME}_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
+#    CMake Scripts dir
+set(CMAKE_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/CMakeScripts)
+
 #	CMake module path for custom module finding
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeScripts)
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SCRIPT_DIR})
 
 #    CUDA is required globally
 if(NOT CPU_ONLY)
@@ -68,8 +71,19 @@ if(BUILD_MATLAB)
     add_subdirectory(matlab)
 endif()
 
+###    Lint Target Setup    ##########################################################################
+
+set(LINT_TARGET lint)
+set(LINT_SCRIPT ${CMAKE_SCRIPT_DIR}/lint.cmake)
+add_custom_target(
+    ${LINT_TARGET} 
+    COMMAND ${CMAKE_COMMAND} -P ${LINT_SCRIPT}
+)
+
 ###    Install    #################################################################################
 
 #    Install Includes
 file(GLOB folders ${${PROJECT_NAME}_INCLUDE_DIRS}/*)
 install(DIRECTORY ${folders} DESTINATION include)
+
+
