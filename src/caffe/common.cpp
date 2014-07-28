@@ -10,8 +10,7 @@
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 // Luckily we will be able to use GFLAGS_GFAGS_H_ to detect if it is version
-// 2.1. If it is not, we will add a temporary solution to redirect the
-// namespace.
+// 2.1. If yes , we will add a temporary solution to redirect the namespace.
 // TODO(Yangqing): Once gflags solves the problem in a more elegant way, let's
 // remove the following hack.
 #ifdef GFLAGS_GFLAGS_H_
