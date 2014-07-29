@@ -167,6 +167,17 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   debug_info_ = false;
 }
 
+template <typename Dtype>
+void Net<Dtype>::FilterNet(const NetParameter& param,
+    NetParameter* param_filtered) {
+}
+
+template <typename Dtype>
+bool Net<Dtype>::StateMeetsRule(const NetState& state,
+    const NetStateRule& rule, const string& layer_name) {
+  return true;
+}
+
 // Helper for Net::Init: add a new input or top blob to the net.  (Inputs have
 // layer_id == -1, tops have layer_id >= 0.)
 template <typename Dtype>
