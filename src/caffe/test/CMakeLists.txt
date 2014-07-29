@@ -36,10 +36,14 @@ include_directories(
 )
 
 set(TEST_MAIN test_caffe_main.cpp)
-list(REMOVE_ITEM TEST_SOURCES ${TEST_MAIN})
+list(REMOVE_ITEM TEST_CPP_SOURCES ${TEST_MAIN})
+
+if(NOT CPU_ONLY)
+    set(TEST_CPP_SOURCES ${TEST_CPP_SOURCES} ${TEST_CU_SOURCES})
+endif()
 
 #    Build each test separately
-foreach(source ${TEST_SOURCES})
+foreach(source ${TEST_CPP_SOURCES})
     get_filename_component(name ${source} NAME_WE)
     set(TEST_NAME ${name}${TEST_EXT})
     add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_MAIN} ${source} ../blob.cpp)
@@ -50,7 +54,7 @@ foreach(source ${TEST_SOURCES})
 endforeach()
 
 #    Build a compound test excluded from the ALL target
-add_executable(${ALL_TEST} EXCLUDE_FROM_ALL ${TEST_SOURCES} ${TEST_MAIN})
+add_executable(${ALL_TEST} EXCLUDE_FROM_ALL ${TEST_CPP_SOURCES} ${TEST_MAIN})
 target_link_libraries(${ALL_TEST} gtest caffe)
 add_dependencies(${ALL_TEST} ${TEST_TARGETS})
 #    output dir
