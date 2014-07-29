@@ -87,7 +87,7 @@ The only exceptions being the google flags library and the google logging librar
     cmake ..
     make && make install
 
-Note that glog does not compile with the most recent gflags version (2.1), so before that is solved you will need to build with gflags first. Also note that if you have newer versions of Ubuntu, like 13.04 or 14.04, gflags may be available under apt-get.
+Note that glog does not compile with the most recent gflags version (2.1), so before that is solved you will need to build with glog first. Also note that if you have newer versions of Ubuntu, like 13.04 or 14.04, gflags may be available under apt-get.
 
 #### OS X
 
