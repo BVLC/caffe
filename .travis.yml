@@ -18,13 +18,8 @@ before_install:
 
 install:
   # CMake 2.8.12
-<<<<<<< HEAD
-  - wget http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz -O /tmp/cmake.tar.gz && tar -C /tmp -xvf /tmp/cmake.tar.gz && rm /tmp/cmake.tar.gz
-  - cd /tmp/cmake-2.8.12 && ./bootstrap --prefix=/usr && make -j4 &&  sudo make install -j4 &&  cd - #&& rm -r /tmp/cmake-2.8.12
-=======
-  - wget http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Linux-i386.tar.gz -O /tmp/cmake.tar.gz && tar -C /tmp -xvf /tmp/cmake.tar.gz && rm /tmp/cmake.tar.gz 
+  - wget http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Linux-i386.tar.gz -O /tmp/cmake.tar.gz && tar -C /tmp -xvf /tmp/cmake.tar.gz && rm /tmp/cmake.tar.gz
   - cd /tmp/cmake-2.8.12.2-Linux-i386 && sudo cp * /usr/ -r && cd - && rm -r /tmp/cmake-2.8.12.2-Linux-i386
->>>>>>> cmake from binaries
     #
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
   - cd /tmp/glog-0.3.3 && ./configure && make -j4 && sudo make install -j4 && cd -
@@ -63,7 +58,7 @@ script:
     ## Cleaning
   - cd ..
   - rm -r build
-  
+
   # Make build
   ## CPU-GPU: build only.
   - export CPU_ONLY=0
