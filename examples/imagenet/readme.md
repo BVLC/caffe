@@ -41,7 +41,7 @@ You will also need to resize the images to 256x256: we do not explicitly do this
 
 Go to `$CAFFE_ROOT/examples/imagenet/` for the rest of this guide.
 
-Take a look at `create_imagenet.sh`. Set the paths to the train and val dirs as needed. Now simply create the leveldbs with `./create_imagenet.sh`. Note that `imagenet_train_leveldb` and `imagenet_val_leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
+Take a look at `create_imagenet.sh`. Set the paths to the train and val dirs as needed. Now simply create the leveldbs with `./create_imagenet.sh`. Note that `ilsvrc12_train_leveldb` and `ilsvrc12_val_leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
 
 Compute Image Mean
 ------------------
