@@ -7,6 +7,10 @@ find_package(Threads REQUIRED)
 find_package(Glog REQUIRED)
 include_directories(${GLOG_INCLUDE_DIRS})
 
+#   Google-gflags
+find_package(GFlags REQUIRED)
+include_directories(${GFLAGS_INCLUDE_DIRS})
+
 #   BLAS
 if(BLAS STREQUAL "atlas")
 
@@ -61,13 +65,13 @@ add_subdirectory(proto)
 
 #    Recursively find source files
 ##    test sources
-file(GLOB_RECURSE TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
+file(GLOB_RECURSE TEST_CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
 
 ##    all cpp sources
 file(GLOB_RECURSE CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 ##    remove test sources from cpp sources
-list(REMOVE_ITEM CPP_SOURCES ${TEST_SOURCES})
+list(REMOVE_ITEM CPP_SOURCES ${TEST_CPP_SOURCES})
 
 add_library(caffe ${CPP_SOURCES})
 # both depend on proto
@@ -84,6 +88,8 @@ if(NOT CPU_ONLY)
     
     #    cuda sources
     file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
+    file(GLOB_RECURSE TEST_CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cu)
+    list(REMOVE_ITEM CU_SOURCES ${TEST_CU_SOURCES})
     cuda_add_library(caffe_cu ${CU_SOURCES})
     add_dependencies(caffe_cu proto)
     target_link_libraries(caffe caffe_cu
@@ -94,6 +100,7 @@ endif()
 
 target_link_libraries(caffe proto
         ${GLOG_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
         ${HDF5_LIBRARIES}
         ${OpenCV_LIBS}
         ${LEVELDB_LIBS}
