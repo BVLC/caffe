@@ -115,6 +115,14 @@ class Net {
 
   void set_debug_info(const bool value) { debug_info_ = value; }
 
+  // Helpers for Init.
+  // Remove layers that the user specified should be excluded given the current
+  // phase, level, and stage.
+  static void FilterNet(const NetParameter& param,
+      NetParameter* param_filtered);
+  static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
+      const string& layer_name);
+
  protected:
   // Helpers for Init.
   // Append a new input or top blob to the net.

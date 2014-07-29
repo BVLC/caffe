@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "caffe/net.hpp"
+
 namespace caffe {
 
 template <typename Dtype>
@@ -20,6 +22,9 @@ class Solver {
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
+  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
+    return test_nets_;
+  }
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
