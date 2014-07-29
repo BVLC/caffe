@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "caffe/net.hpp"
+
 namespace caffe {
 
 template <typename Dtype>
@@ -14,12 +16,17 @@ class Solver {
   explicit Solver(const SolverParameter& param);
   explicit Solver(const string& param_file);
   void Init(const SolverParameter& param);
+  void InitTrainNet();
+  void InitTestNets();
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
+  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
+    return test_nets_;
+  }
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
