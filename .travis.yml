@@ -16,7 +16,7 @@ before_install:
   - echo $LC_ALL
   - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
   - sudo apt-get -y update
-  - sudo apt-get -y install wget git curl python-dev python-numpy libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc cmake
+  - sudo apt-get -y install wget git curl python-dev python-numpy libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-dev libboost-system-dev libboost-python-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc cmake
 
 install:
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
