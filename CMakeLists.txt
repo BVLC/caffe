@@ -25,8 +25,9 @@ endif()
 ###    Configuration    ###########################################################################
 #    Compiler Flags
 set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
-set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} )#-O3)
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} )#set global flags here)
+set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG} )#set debug flags here)
+set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} )#set release flags here)
 
 #    Global Definitions
 if(CPU_ONLY)
