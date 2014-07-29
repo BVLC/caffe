@@ -48,6 +48,13 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   1, 1,num_output_, N_);
   trans_buffer_.Reshape(
     mem_group_size,1,M_, N_);
+
+  CUDA_CHECK(cudaMalloc(&row_sumer_, num_*sizeof(Dtype)));
+  Dtype *temp = new Dtype[num_];
+  for(int i = 0; i<num_; i++) temp[i] = (Dtype)1.;
+  CUBLAS_CHECK(cublasSetVector(num_, sizeof(Dtype), temp, 1, row_sumer_, 1));
+  delete temp;
+
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";

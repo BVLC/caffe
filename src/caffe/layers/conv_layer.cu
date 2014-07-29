@@ -61,6 +61,7 @@ namespace caffe {
 	void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 		const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
 			const Dtype* top_diff = top[0]->gpu_diff();
+			Dtype* top_data = top[0]->mutable_gpu_data();
 			const Dtype* weight = this->blobs_[0]->gpu_data();
 			Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
 			const Dtype* bottom_data = (*bottom)[0]->gpu_data();
@@ -73,14 +74,24 @@ namespace caffe {
 
 			if (bias_term_) {
 				bias_diff = this->blobs_[1]->mutable_gpu_diff();
-				CUDA_CHECK(cudaMemset(bias_diff, 0,
-					sizeof(Dtype) * this->blobs_[1]->count()));
-				for (int n = 0; n < num_; ++n) {
-					caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
-						1., top_diff + top[0]->offset(n),
+				// CUDA_CHECK(cudaMemset(bias_diff, 0,
+				// 	sizeof(Dtype) * this->blobs_[1]->count()));
+				// for (int n = 0; n < num_; ++n) {
+				// 	caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
+				// 		1., top_diff + top[0]->offset(n),
+				// 		reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
+				// 		1., bias_diff);
+				// }
+				caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_ * num_, N_,
+						1., top_diff,
 						reinterpret_cast<const Dtype*>(bias_multiplier_->gpu_data()),
-						1., bias_diff);
-				}
+						0., top_data);
+				caffe_gpu_gemv<Dtype>(CblasTrans, num_, num_output_,
+						1.,	top_data,
+						row_sumer_,
+						0., bias_diff);
+
+
 			}
 
 			int weight_offset = M_ * K_;
