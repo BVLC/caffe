@@ -405,15 +405,9 @@ void WindowDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void WindowDataLayer<Dtype>::CreatePrefetchThread() {
-  const bool prefetch_needs_rand =
-      this->layer_param_.window_data_param().mirror() ||
-      this->layer_param_.window_data_param().crop_size();
-  if (prefetch_needs_rand) {
-    const unsigned int prefetch_rng_seed = caffe_rng_rand();
-    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
-  } else {
-    prefetch_rng_.reset();
-  }
+  // Create Caffe::RNG for the thread
+  const unsigned int prefetch_rng_seed = caffe_rng_rand();
+  prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
   // Create the thread.
   CHECK(!pthread_create(&thread_, NULL, WindowDataLayerPrefetch<Dtype>,
         static_cast<void*>(this))) << "Pthread execution failed.";
