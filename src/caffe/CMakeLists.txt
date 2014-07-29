@@ -114,6 +114,7 @@ target_link_libraries(caffe proto
         ${CMAKE_THREAD_LIBS_INIT}
         ${GFLAGS_LIBRARIES}
         ${GLOG_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
         ${HDF5_LIBRARIES}
         ${LEVELDB_LIBS}
         ${LMDB_LIBRARIES}
