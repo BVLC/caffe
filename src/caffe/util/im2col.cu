@@ -101,7 +101,8 @@ __global__ void col2im_gpu_kernel(const int n, const Dtype* data_col,
     }
     */
     // equivalent implementation
-    int offset = (c * patch_h * patch_w + h * patch_h + w) * height_col * width_col;
+    int offset =
+        (c * patch_h * patch_w + h * patch_w + w) * height_col * width_col;
     int coeff_h_col = (1 - stride_h * patch_w * height_col) * width_col;
     int coeff_w_col = (1 - stride_w * height_col * width_col);
     for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
