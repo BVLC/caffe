@@ -72,12 +72,11 @@ We will also lay out a protocol buffer for running the solver. Let's make a few 
 * The network will be trained with momentum 0.9 and a weight decay of 0.0005.
 * For every 10,000 iterations, we will take a snapshot of the current status.
 
-Sound good? This is implemented in `examples/imagenet/imagenet_solver.prototxt`. Again, you will need to change the first two lines:
+Sound good? This is implemented in `examples/imagenet/imagenet_solver.prototxt`. Again, you will need to change the first line:
 
-    train_net: "imagenet_train.prototxt"
-    test_net: "imagenet_val.prototxt"
+    net: "imagenet_train_val.prototxt"
 
-to point to the actual path if you have changed them.
+to point to the actual path if you have changed it.
 
 Training ImageNet
 -----------------

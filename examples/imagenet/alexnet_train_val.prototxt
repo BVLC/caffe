@@ -2,6 +2,22 @@ name: "AlexNet"
 layers {
   name: "data"
   type: DATA
+  top: "data"
+  top: "label"
+  data_param {
+    source: "ilsvrc12_train_leveldb"
+    mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
+    batch_size: 256
+    crop_size: 227
+    mirror: true
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: DATA
+  top: "data"
+  top: "label"
   data_param {
     source: "ilsvrc12_val_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
@@ -9,16 +25,27 @@ layers {
     crop_size: 227
     mirror: false
   }
-  top: "data"
-  top: "label"
+  include: { phase: TEST }
 }
 layers {
   name: "conv1"
   type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   convolution_param {
     num_output: 96
     kernel_size: 11
     stride: 4
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
   bottom: "data"
   top: "conv1"
@@ -54,11 +81,23 @@ layers {
 layers {
   name: "conv2"
   type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   convolution_param {
     num_output: 256
     pad: 2
     kernel_size: 5
     group: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
   }
   bottom: "pool1"
   top: "conv2"
@@ -94,10 +133,22 @@ layers {
 layers {
   name: "conv3"
   type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   convolution_param {
     num_output: 384
     pad: 1
     kernel_size: 3
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
   bottom: "pool2"
   top: "conv3"
@@ -111,11 +162,23 @@ layers {
 layers {
   name: "conv4"
   type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   convolution_param {
     num_output: 384
     pad: 1
     kernel_size: 3
     group: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
   }
   bottom: "conv3"
   top: "conv4"
@@ -129,11 +192,23 @@ layers {
 layers {
   name: "conv5"
   type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   convolution_param {
     num_output: 256
     pad: 1
     kernel_size: 3
     group: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
   }
   bottom: "conv4"
   top: "conv5"
@@ -158,8 +233,20 @@ layers {
 layers {
   name: "fc6"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
   }
   bottom: "pool5"
   top: "fc6"
@@ -182,8 +269,20 @@ layers {
 layers {
   name: "fc7"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.1
+    }
   }
   bottom: "fc6"
   top: "fc7"
@@ -206,8 +305,20 @@ layers {
 layers {
   name: "fc8"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 1000
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
   bottom: "fc7"
   top: "fc8"
@@ -218,11 +329,11 @@ layers {
   bottom: "fc8"
   bottom: "label"
   top: "accuracy"
+  include: { phase: TEST }
 }
 layers {
   name: "loss"
   type: SOFTMAX_LOSS
   bottom: "fc8"
   bottom: "label"
-  top: "loss"
 }
