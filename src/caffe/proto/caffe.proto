@@ -137,6 +137,16 @@ message SolverParameter {
   // random number generator -- useful for reproducible results. Otherwise,
   // (and by default) initialize using a seed derived from the system clock.
   optional int64 random_seed = 20 [default = -1];
+  
+  // Solver type
+  enum SolverType {
+    SGD = 0;
+    NESTEROV = 1;
+    ADAGRAD = 2;
+  }
+  optional SolverType solver_type = 26 [default = SGD];
+  // numerical stability for AdaGrad
+  optional float delta = 27 [default = 1e-8];
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
