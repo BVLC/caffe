@@ -38,7 +38,7 @@ echo "Creating train leveldb..."
 GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
     $TRAIN_DATA_ROOT \
     $DATA/train.txt \
-    imagenet_train_leveldb 1 \
+    ilsvrc12_train_leveldb 1
     $RESIZE_HEIGHT $RESIZE_WIDTH
 
 echo "Creating val leveldb..."
@@ -46,7 +46,7 @@ echo "Creating val leveldb..."
 GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
     $VAL_DATA_ROOT \
     $DATA/val.txt \
-    imagenet_val_leveldb 1 \
+    ilsvrc12_val_leveldb 1
     $RESIZE_HEIGHT $RESIZE_WIDTH
 
 echo "Done."
