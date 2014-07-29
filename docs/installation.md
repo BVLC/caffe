@@ -76,6 +76,7 @@ The only exceptions being the google flags library and the google logging librar
     # glog
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
     tar zxvf glog-0.3.3.tar.gz
+    cd glog-0.3.3
     ./configure
     make && make install
     # gflags
