@@ -25,6 +25,17 @@ class SolverTest : public MultiDeviceTest<TypeParam> {
   virtual void InitSolverFromProtoString(const string& proto) {
     SolverParameter param;
     CHECK(google::protobuf::TextFormat::ParseFromString(proto, &param));
+    // Set the solver_mode according to current Caffe::mode.
+    switch (Caffe::mode()) {
+      case Caffe::CPU:
+        param.set_solver_mode(SolverParameter_SolverMode_CPU);
+        break;
+      case Caffe::GPU:
+        param.set_solver_mode(SolverParameter_SolverMode_GPU);
+        break;
+      default:
+        LOG(FATAL) << "Unknown Caffe mode: " << Caffe::mode();
+    }
     solver_.reset(new SGDSolver<Dtype>(param));
   }
 
