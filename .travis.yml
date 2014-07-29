@@ -10,17 +10,15 @@ compiler:
 # building on Linux.)
 #   - clang
 
+  
 before_install:
   - echo $LANG
   - echo $LC_ALL
+  - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
   - sudo apt-get -y update
-  - sudo apt-get -y install wget git curl python-dev python-numpy libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc
+  - sudo apt-get -y install wget git curl python-dev python-numpy libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc cmake
 
 install:
-  # CMake 2.8.12
-  - wget http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Linux-i386.tar.gz -O /tmp/cmake.tar.gz && tar -C /tmp -xvf /tmp/cmake.tar.gz && rm /tmp/cmake.tar.gz
-  - cd /tmp/cmake-2.8.12.2-Linux-i386 && sudo cp * /usr/ -r && cd - && rm -r /tmp/cmake-2.8.12.2-Linux-i386
-    #
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
   - cd /tmp/glog-0.3.3 && ./configure && make -j4 && sudo make install -j4 && cd -
   - wget https://github.com/schuhschuh/gflags/archive/master.zip -O /tmp/gflags-master.zip && pushd /tmp/ && unzip gflags-master.zip && cd gflags-master && mkdir build && cd build && export CXXFLAGS="-fPIC" && cmake .. && make VERBOSE=1 && sudo make install && popd
