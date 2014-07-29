@@ -7,7 +7,7 @@ layers {
   data_param {
     source: "/home/common/caffe-master/examples/imagenet-clarifai/imagenet_val_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
-    batch_size: 50
+    batch_size: 64
     crop_size: 227
     mirror: false
   }
@@ -139,7 +139,7 @@ layers {
     num_output: 256
     pad: 1
     kernel_size: 3
-    mem_group_size: 8
+    mem_group_size:8
   }
 }
 layers {
