@@ -24,8 +24,8 @@ Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < num_; ++n) {
       // First, im2col
       im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
-                        width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_data);
-                      pad_w_, stride_h_, stride_w_, col_data);
+          width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+          col_data);
       // Second, innerproduct with groups
       for (int g = 0; g < group_; ++g) {
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
@@ -66,7 +66,6 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = NULL;
     // Bias gradient, if necessary.
     if (bias_term_ && this->param_propagate_down_[1]) {
-                      width_, kernel_h_, kernel_w_, pad_h_,
       top_diff = top[i]->gpu_diff();
       for (int n = 0; n < num_; ++n) {
         caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
@@ -107,8 +106,9 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                 (Dtype)0., col_diff + col_offset * g);
           }
           // col2im back to the data
-          col2im_gpu(col_diff, channels_, height_, width_, kernel_h_, kernel_w, pad_h_, pad_w_,
-              stride_h_, stride_w_, bottom_diff + (*bottom)[i]->offset(n));
+          col2im_gpu(col_diff, channels_, height_, width_,
+              kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+              bottom_diff + (*bottom)[i]->offset(n));
         }
       }
     }

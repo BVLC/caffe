@@ -97,7 +97,7 @@ TYPED_TEST(Im2colLayerTest, TestRect) {
   // We are lazy and will only check the top left block
   for (int c = 0; c < 45; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
-        this->blob_bottom_->data_at(0, (c / 15), (c / 5) % 5, c % 5));
+        this->blob_bottom_->data_at(0, (c / 15), (c / 3) % 5, c % 3));
   }
 }
 

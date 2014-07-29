@@ -132,8 +132,8 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < num_; ++n) {
       // First, im2col
       im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
-                        width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_data);
-        stride_h_, stride_w_, col_data);
+          width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+          col_data);
       // Second, innerproduct with groups
       for (int g = 0; g < group_; ++g) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
@@ -194,7 +194,8 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
         im2col_cpu(bottom_data + (*bottom)[i]->offset(n), channels_, height_,
-                   width_, kernel_h_, kernel_w_ pad_h_, pad_w_, stride_h_, stride_w_, col_data);
+                   width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+                   stride_h_, stride_w_, col_data);
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < group_; ++g) {
@@ -213,7 +214,8 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                 (Dtype)0., col_diff + col_offset * g);
           }
           // col2im back to the data
-          col2im_cpu(col_diff, channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+          col2im_cpu(col_diff, channels_, height_, width_,
+              kernel_h_, kernel_w_, pad_h_, pad_w_,
               stride_h_, stride_w_, bottom_diff + (*bottom)[i]->offset(n));
         }
       }
