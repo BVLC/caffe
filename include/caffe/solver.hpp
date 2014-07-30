@@ -125,9 +125,6 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
   return (Solver<Dtype>*) NULL;
 }
 
-template Solver<float>* GetSolver(const SolverParameter& param);
-template Solver<double>* GetSolver(const SolverParameter& param);
-
 }  // namespace caffe
 
 #endif  // CAFFE_OPTIMIZATION_SOLVER_HPP_
