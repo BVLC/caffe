@@ -63,7 +63,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 27 (last added: test_state)
+// SolverParameter next available ID: 31 (last added: delta)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -118,7 +118,7 @@ message SolverParameter {
   optional float weight_decay = 12; // The weight decay.
   // regularization types supported: L1 and L2
   // controled by weight_decay
-  optional string regularization_type = 25 [default = "L2"];
+  optional string regularization_type = 28 [default = "L2"];
   optional int32 stepsize = 13; // the stepsize for learning rate policy "step"
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
   optional string snapshot_prefix = 15; // The prefix for the snapshot.
@@ -144,9 +144,9 @@ message SolverParameter {
     NESTEROV = 1;
     ADAGRAD = 2;
   }
-  optional SolverType solver_type = 26 [default = SGD];
+  optional SolverType solver_type = 29 [default = SGD];
   // numerical stability for AdaGrad
-  optional float delta = 27 [default = 1e-8];
+  optional float delta = 30 [default = 1e-8];
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
