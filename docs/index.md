@@ -89,7 +89,9 @@ If you'd like to contribute, please read the [developing & contributing](develop
 
 ## Contacting us
 
-All questions about installation, code, future development, and applications should be searched for and asked at [GitHub Issues](https://github.com/BVLC/caffe/issues).
+All questions about usage, installation, code, and applications should be searched for and asked on the [caffe-users mailing list](https://groups.google.com/forum/#!forum/caffe-users).
+
+All development discussion should be carried out at [GitHub Issues](https://github.com/BVLC/caffe/issues).
 
 If you have a proposal that may not be suited for public discussion *and an ability to act on it*, please email us [directly](mailto:caffe-dev@googlegroups.com).
 Requests for features, explanations, or personal help will be ignored; post such matters publicly as issues.
