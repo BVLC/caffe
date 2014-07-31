@@ -10,6 +10,8 @@
 #include <set>
 #include <string>
 
+#include <cmath>
+
 #include "caffe/util/device_alternate.hpp"
 
 // Disable the copy and assignment operator for a class.
