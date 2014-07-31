@@ -216,12 +216,10 @@ def _Net_set_mean(self, input_, mean_f, mode='elementwise'):
     in_shape = self.blobs[input_].data.shape
     mean = np.load(mean_f)
     if mode == 'elementwise':
-        if mean.shape != in_shape[1:]:
-            # Resize mean (which requires H x W x K input in range [0,1]).
-            m_min, m_max = mean.min(), mean.max()
-            normal_mean = (mean - m_min) / (m_max - m_min)
-            mean = caffe.io.resize_image(normal_mean.transpose((1,2,0)),
-                    in_shape[2:]).transpose((2,0,1)) * (m_max - m_min) + m_min
+        if mean.shape[1:] != in_shape[2:]:
+            # Resize mean (which requires H x W x K input).
+            mean = caffe.io.resize_image(mean.transpose((1,2,0)),
+                                         in_shape[2:]).transpose((2,0,1))
         self.mean[input_] = mean
     elif mode == 'channel':
         self.mean[input_] = mean.mean(1).mean(1).reshape((in_shape[1], 1, 1))
@@ -229,10 +227,11 @@ def _Net_set_mean(self, input_, mean_f, mode='elementwise'):
         raise Exception('Mode not in {}'.format(['elementwise', 'channel']))
 
 
-
 def _Net_set_input_scale(self, input_, scale):
     """
-    Set the input feature scaling factor s.t. input blob = input * scale.
+    Set the scale of preprocessed inputs s.t. the blob = blob * scale.
+    N.B. input_scale is done AFTER mean subtraction and other preprocessing
+    while raw_scale is done BEFORE.
 
     Take
     input_: which input to assign this scale factor
@@ -241,6 +240,22 @@ def _Net_set_input_scale(self, input_, scale):
     if input_ not in self.inputs:
         raise Exception('Input not in {}'.format(self.inputs))
     self.input_scale[input_] = scale
+
+
+def _Net_set_raw_scale(self, input_, scale):
+    """
+    Set the scale of raw features s.t. the input blob = input * scale.
+    While Python represents images in [0, 1], certain Caffe models
+    like CaffeNet and AlexNet represent images in [0, 255] so the raw_scale
+    of these models must be 255.
+
+    Take
+    input_: which input to assign this scale factor
+    scale: scale coefficient
+    """
+    if input_ not in self.inputs:
+        raise Exception('Input not in {}'.format(self.inputs))
+    self.raw_scale[input_] = scale
 
 
 def _Net_set_channel_swap(self, input_, order):
@@ -263,10 +278,11 @@ def _Net_preprocess(self, input_name, input_):
     Format input for Caffe:
     - convert to single
     - resize to input dimensions (preserving number of channels)
-    - scale feature
     - reorder channels (for instance color to BGR)
-    - subtract mean
+    - scale raw input (e.g. from [0, 1] to [0, 255] for ImageNet models)
     - transpose dimensions to K x H x W
+    - subtract mean
+    - scale feature
 
     Take
     input_name: name of input blob to preprocess for
@@ -275,20 +291,23 @@ def _Net_preprocess(self, input_name, input_):
     Give
     caffe_inputs: (K x H x W) ndarray
     """
-    caffe_in = input_.astype(np.float32)
+    caffe_in = input_.astype(np.float32, copy=False)
     mean = self.mean.get(input_name)
     input_scale = self.input_scale.get(input_name)
+    raw_scale = self.raw_scale.get(input_name)
     channel_order = self.channel_swap.get(input_name)
     in_size = self.blobs[input_name].data.shape[2:]
     if caffe_in.shape[:2] != in_size:
         caffe_in = caffe.io.resize_image(caffe_in, in_size)
-    if input_scale is not None:
-        caffe_in *= input_scale
     if channel_order is not None:
         caffe_in = caffe_in[:, :, channel_order]
     caffe_in = caffe_in.transpose((2, 0, 1))
+    if raw_scale is not None:
+        caffe_in *= raw_scale
     if mean is not None:
         caffe_in -= mean
+    if input_scale is not None:
+        caffe_in *= input_scale
     return caffe_in
 
 
@@ -299,16 +318,19 @@ def _Net_deprocess(self, input_name, input_):
     decaf_in = input_.copy().squeeze()
     mean = self.mean.get(input_name)
     input_scale = self.input_scale.get(input_name)
+    raw_scale = self.raw_scale.get(input_name)
     channel_order = self.channel_swap.get(input_name)
+    if input_scale is not None:
+        decaf_in /= input_scale
     if mean is not None:
         decaf_in += mean
+    if raw_scale is not None:
+        decaf_in /= raw_scale
     decaf_in = decaf_in.transpose((1,2,0))
     if channel_order is not None:
         channel_order_inverse = [channel_order.index(i)
                                  for i in range(decaf_in.shape[2])]
         decaf_in = decaf_in[:, :, channel_order_inverse]
-    if input_scale is not None:
-        decaf_in /= input_scale
     return decaf_in
 
 
@@ -364,6 +386,7 @@ Net.forward_all = _Net_forward_all
 Net.forward_backward_all = _Net_forward_backward_all
 Net.set_mean = _Net_set_mean
 Net.set_input_scale = _Net_set_input_scale
+Net.set_raw_scale = _Net_set_raw_scale
 Net.set_channel_swap = _Net_set_channel_swap
 Net.preprocess = _Net_preprocess
 Net.deprocess = _Net_deprocess

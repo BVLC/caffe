@@ -66,8 +66,12 @@ def main(argv):
     parser.add_argument(
         "--input_scale",
         type=float,
-        default=255,
-        help="Multiply input features by this scale before input to net"
+        help="Multiply input features by this scale to finish input preprocessing."
+    )
+    parser.add_argument(
+        "--raw_scale",
+        type=float,
+        help="Multiply raw input by this scale before preprocessing."
     )
     parser.add_argument(
         "--channel_swap",

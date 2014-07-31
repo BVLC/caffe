@@ -278,6 +278,7 @@ struct CaffeNet {
   // Input preprocessing configuration attributes.
   dict mean_;
   dict input_scale_;
+  dict raw_scale_;
   dict channel_swap_;
   // if taking input from an ndarray, we need to hold references
   object input_data_;
@@ -329,6 +330,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("outputs",      &CaffeNet::outputs)
       .add_property("mean",         &CaffeNet::mean_)
       .add_property("input_scale",  &CaffeNet::input_scale_)
+      .add_property("raw_scale",    &CaffeNet::raw_scale_)
       .add_property("channel_swap", &CaffeNet::channel_swap_)
       .def("_set_input_arrays",     &CaffeNet::set_input_arrays)
       .def("save",                  &CaffeNet::save);
