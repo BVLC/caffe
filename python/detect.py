@@ -76,8 +76,12 @@ def main(argv):
     parser.add_argument(
         "--input_scale",
         type=float,
-        default=255,
-        help="Multiply input features by this scale before input to net"
+        help="Multiply input features by this scale to finish input preprocessing."
+    )
+    parser.add_argument(
+        "--raw_scale",
+        type=float,
+        help="Multiply raw input by this scale before preprocessing."
     )
     parser.add_argument(
         "--channel_swap",
@@ -99,7 +103,8 @@ def main(argv):
     # Make detector.
     detector = caffe.Detector(args.model_def, args.pretrained_model,
             gpu=args.gpu, mean_file=args.mean_file,
-            input_scale=args.input_scale, channel_swap=channel_swap,
+            input_scale=args.input_scale, raw_scale=args.raw_scale,
+            channel_swap=channel_swap,
             context_pad=args.context_pad)
 
     if args.gpu:

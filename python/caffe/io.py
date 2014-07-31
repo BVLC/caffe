@@ -1,6 +1,7 @@
 import numpy as np
 import skimage.io
-import skimage.transform
+from scipy.ndimage import zoom
+from skimage.transform import resize
 
 from caffe.proto import caffe_pb2
 
@@ -15,7 +16,8 @@ def load_image(filename, color=True):
         loads as intensity (if image is already grayscale).
 
     Give
-    image: an image with type np.float32 of size (H x W x 3) in RGB or
+    image: an image with type np.float32 in range [0, 1]
+        of size (H x W x 3) in RGB or
         of size (H x W x 1) in grayscale.
     """
     img = skimage.img_as_float(skimage.io.imread(filename)).astype(np.float32)
@@ -40,7 +42,17 @@ def resize_image(im, new_dims, interp_order=1):
     Give
     im: resized ndarray with shape (new_dims[0], new_dims[1], K)
     """
-    return skimage.transform.resize(im, new_dims, order=interp_order)
+    if im.shape[-1] == 1 or im.shape[-1] == 3:
+        # skimage is fast but only understands {1,3} channel images in [0, 1].
+        im_min, im_max = im.min(), im.max()
+        im_std = (im - im_min) / (im_max - im_min)
+        resized_std = resize(im_std, new_dims, order=interp_order)
+        resized_im = resized_std * (im_max - im_min) + im_min
+    else:
+        # ndimage interpolates anything but more slowly.
+        scale = tuple(np.array(new_dims) / np.array(im.shape[:2]))
+        resized_im = zoom(im, scale + (1,), order=interp_order)
+    return resized_im.astype(np.float32)
 
 
 def oversample(images, crop_dims):
