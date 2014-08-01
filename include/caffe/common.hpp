@@ -81,6 +81,7 @@ using std::pair;
 using std::set;
 using std::string;
 using std::vector;
+using std::isnan;
 
 // A global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.
