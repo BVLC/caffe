@@ -6,11 +6,10 @@
 #include <boost/shared_ptr.hpp>
 #include <glog/logging.h>
 
+#include <cmath>
 #include <map>
 #include <set>
 #include <string>
-
-#include <cmath>
 
 #include "caffe/util/device_alternate.hpp"
 
@@ -73,6 +72,7 @@ using boost::shared_ptr;
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
 using std::ios;
+using std::isnan;
 using std::iterator;
 using std::make_pair;
 using std::map;
@@ -81,7 +81,6 @@ using std::pair;
 using std::set;
 using std::string;
 using std::vector;
-using std::isnan;
 
 // A global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.

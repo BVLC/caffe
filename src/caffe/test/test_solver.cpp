@@ -96,18 +96,14 @@ TYPED_TEST(SolverTest, TestInitTrainTestNets) {
      "  } "
      "} ";
   this->InitSolverFromProtoString(proto);
-  ASSERT_TRUE(static_cast<bool>(this->solver_->net()));
-  EXPECT_TRUE(static_cast<bool>(this->solver_->net()->has_layer("loss")));
-  EXPECT_FALSE(static_cast<bool>(this->solver_->net()->has_layer("accuracy")));
+  ASSERT_TRUE(this->solver_->net() != NULL);
+  EXPECT_TRUE(this->solver_->net()->has_layer("loss"));
+  EXPECT_FALSE(this->solver_->net()->has_layer("accuracy"));
   ASSERT_EQ(2, this->solver_->test_nets().size());
-  EXPECT_TRUE(static_cast<bool>(
-      this->solver_->test_nets()[0]->has_layer("loss")));
-  EXPECT_TRUE(static_cast<bool>(
-      this->solver_->test_nets()[0]->has_layer("accuracy")));
-  EXPECT_FALSE(static_cast<bool>(
-      this->solver_->test_nets()[1]->has_layer("loss")));
-  EXPECT_TRUE(static_cast<bool>(
-      this->solver_->test_nets()[1]->has_layer("accuracy")));
+  EXPECT_TRUE(this->solver_->test_nets()[0]->has_layer("loss"));
+  EXPECT_TRUE(this->solver_->test_nets()[0]->has_layer("accuracy"));
+  EXPECT_FALSE(this->solver_->test_nets()[1]->has_layer("loss"));
+  EXPECT_TRUE(this->solver_->test_nets()[1]->has_layer("accuracy"));
 }
 
 }  // namespace caffe
