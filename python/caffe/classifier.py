@@ -14,13 +14,13 @@ class Classifier(caffe.Net):
     by scaling, center cropping, or oversampling.
     """
     def __init__(self, model_file, pretrained_file, image_dims=None,
-                 gpu=False, mean_file=None, input_scale=None, raw_scale=None,
+                 gpu=False, mean=None, input_scale=None, raw_scale=None,
                  channel_swap=None):
         """
         Take
         image_dims: dimensions to scale input for cropping/sampling.
             Default is to scale to net input size for whole-image crop.
-        gpu, mean_file, input_scale, raw_scale, channel_swap: params for
+        gpu, mean, input_scale, raw_scale, channel_swap: params for
             preprocessing options.
         """
         caffe.Net.__init__(self, model_file, pretrained_file)
@@ -31,8 +31,8 @@ class Classifier(caffe.Net):
         else:
             self.set_mode_cpu()
 
-        if mean_file:
-            self.set_mean(self.inputs[0], mean_file)
+        if mean is not None:
+            self.set_mean(self.inputs[0], mean)
         if input_scale is not None:
             self.set_input_scale(self.inputs[0], input_scale)
         if raw_scale is not None:

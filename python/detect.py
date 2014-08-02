@@ -98,11 +98,15 @@ def main(argv):
     )
     args = parser.parse_args()
 
-    channel_swap = [int(s) for s in args.channel_swap.split(',')]
+    mean, channel_swap = None, None
+    if args.mean_file:
+        mean = np.load(args.mean_file)
+    if args.channel_swap:
+        channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
     # Make detector.
     detector = caffe.Detector(args.model_def, args.pretrained_model,
-            gpu=args.gpu, mean_file=args.mean_file,
+            gpu=args.gpu, mean=mean,
             input_scale=args.input_scale, raw_scale=args.raw_scale,
             channel_swap=channel_swap,
             context_pad=args.context_pad)

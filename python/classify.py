@@ -78,7 +78,6 @@ def main(argv):
         default='2,1,0',
         help="Order to permute input channels. The default converts " +
              "RGB -> BGR since BGR is the Caffe default by way of OpenCV."
-
     )
     parser.add_argument(
         "--ext",
@@ -89,12 +88,18 @@ def main(argv):
     args = parser.parse_args()
 
     image_dims = [int(s) for s in args.images_dim.split(',')]
-    channel_swap = [int(s) for s in args.channel_swap.split(',')]
+
+    mean, channel_swap = None, None
+    if args.mean_file:
+        mean = np.load(args.mean_file)
+    if args.channel_swap:
+        channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
     # Make classifier.
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
-            image_dims=image_dims, gpu=args.gpu, mean_file=args.mean_file,
-            input_scale=args.input_scale, channel_swap=channel_swap)
+            image_dims=image_dims, gpu=args.gpu, mean=mean,
+            input_scale=args.input_scale, raw_scale=args.raw_scale,
+            channel_swap=channel_swap)
 
     if args.gpu:
         print 'GPU mode'
