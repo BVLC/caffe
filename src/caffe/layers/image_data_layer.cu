@@ -1,13 +1,6 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <stdint.h>
-#include <leveldb/db.h>
-#include <pthread.h>
-
-#include <string>
 #include <vector>
-#include <iostream>  // NOLINT(readability/streams)
-#include <fstream>  // NOLINT(readability/streams)
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"

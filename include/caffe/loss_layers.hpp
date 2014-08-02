@@ -7,10 +7,10 @@
 #include <utility>
 #include <vector>
 
-#include "leveldb/db.h"
-#include "pthread.h"
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
+#include "leveldb/db.h"
+#include "pthread.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"

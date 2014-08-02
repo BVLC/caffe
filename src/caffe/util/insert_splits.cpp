@@ -1,8 +1,8 @@
 // Copyright 2014 BVLC and contributors.
 
 #include <map>
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 
 #include "caffe/common.hpp"

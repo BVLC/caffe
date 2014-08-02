@@ -1,17 +1,19 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <iostream>  // NOLINT(readability/streams)
 #include <fstream>  // NOLINT(readability/streams)
+#include <iostream>  // NOLINT(readability/streams)
 #include <map>
 #include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/vision_layers.hpp"
+
 #include "caffe/test/test_caffe_main.hpp"
 
 using std::map;

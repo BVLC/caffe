@@ -1,11 +1,11 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <stdint.h>
-#include <leveldb/db.h>
-#include <pthread.h>
-
 #include <string>
 #include <vector>
+
+#include "leveldb/db.h"
+#include "pthread.h"
+#include "stdint.h"
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"

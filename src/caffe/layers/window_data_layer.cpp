@@ -5,11 +5,11 @@
 #include <stdint.h>
 
 #include <algorithm>
-#include <string>
-#include <vector>
-#include <map>
 #include <fstream>  // NOLINT(readability/streams)
+#include <map>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
