@@ -7,9 +7,9 @@
 #include <utility>
 #include <vector>
 
-#include "pthread.h"
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
+#include "pthread.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
