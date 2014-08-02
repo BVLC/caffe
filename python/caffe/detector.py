@@ -186,9 +186,16 @@ class Detector(caffe.Net):
             raw_scale = self.raw_scale.get(self.inputs[0])
             channel_order = self.channel_swap.get(self.inputs[0])
             # Padding context crops needs the mean in unprocessed input space.
-            self.crop_mean = self.mean[self.inputs[0]].copy()
-            self.crop_mean = self.crop_mean.transpose((1,2,0))
-            channel_order_inverse = [channel_order.index(i)
-                                     for i in range(self.crop_mean.shape[2])]
-            self.crop_mean = self.crop_mean[:,:, channel_order_inverse]
-            self.crop_mean /= raw_scale
+            mean = self.mean.get(self.inputs[0])
+            if mean is not None:
+                crop_mean = mean.copy().transpose((1,2,0))
+                if channel_order is not None:
+                    channel_order_inverse = [channel_order.index(i)
+                                            for i in range(crop_mean.shape[2])]
+                    crop_mean = crop_mean[:,:, channel_order_inverse]
+                if raw_scale is not None:
+                    crop_mean /= raw_scale
+                self.crop_mean = crop_mean
+            else:
+                self.crop_mean = np.zeros(self.blobs[self.inputs[0]].data.shape,
+                                          dtype=np.float32)
