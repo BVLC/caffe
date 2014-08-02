@@ -201,20 +201,19 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
     return all_outs, all_diffs
 
 
-def _Net_set_mean(self, input_, mean_f, mode='elementwise'):
+def _Net_set_mean(self, input_, mean, mode='elementwise'):
     """
     Set the mean to subtract for data centering.
 
     Take
     input_: which input to assign this mean.
-    mean_f: path to mean .npy with ndarray (input dimensional or broadcastable)
+    mean: mean K x H x W ndarray (input dimensional or broadcastable)
     mode: elementwise = use the whole mean (and check dimensions)
           channel = channel constant (e.g. mean pixel instead of mean image)
     """
     if input_ not in self.inputs:
         raise Exception('Input not in {}'.format(self.inputs))
     in_shape = self.blobs[input_].data.shape
-    mean = np.load(mean_f)
     if mode == 'elementwise':
         if mean.shape[1:] != in_shape[2:]:
             # Resize mean (which requires H x W x K input).
