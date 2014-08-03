@@ -96,7 +96,7 @@ TYPED_TEST(SolverTest, TestInitTrainTestNets) {
      "  } "
      "} ";
   this->InitSolverFromProtoString(proto);
-  ASSERT_TRUE(this->solver_->net());
+  ASSERT_TRUE(this->solver_->net() != NULL);
   EXPECT_TRUE(this->solver_->net()->has_layer("loss"));
   EXPECT_FALSE(this->solver_->net()->has_layer("accuracy"));
   ASSERT_EQ(2, this->solver_->test_nets().size());
