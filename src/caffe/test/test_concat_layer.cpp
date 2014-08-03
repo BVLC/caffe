@@ -26,14 +26,17 @@ class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
+    shared_ptr<ConstantFiller<Dtype> > filler;
     FillerParameter filler_param;
     filler_param.set_value(1.);
-    ConstantFiller<Dtype> filler(filler_param);
-    filler.Fill(this->blob_bottom_0);
+    filler.reset(new ConstantFiller<Dtype>(filler_param));
+    filler->Fill(this->blob_bottom_0);
     filler_param.set_value(2.);
-    filler.Fill(this->blob_bottom_1);
+    filler.reset(new ConstantFiller<Dtype>(filler_param));
+    filler->Fill(this->blob_bottom_1);
     filler_param.set_value(3.);
-    filler.Fill(this->blob_bottom_2);
+    filler.reset(new ConstantFiller<Dtype>(filler_param));
+    filler->Fill(this->blob_bottom_2);
     blob_bottom_vec_0.push_back(blob_bottom_0);
     blob_bottom_vec_0.push_back(blob_bottom_1);
     blob_bottom_vec_1.push_back(blob_bottom_0);
@@ -112,7 +115,7 @@ TYPED_TEST(ConcatLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConcatLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradient(&layer, &(this->blob_bottom_vec_0),
     &(this->blob_top_vec_));
 }
