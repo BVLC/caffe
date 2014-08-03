@@ -28,27 +28,27 @@ class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
     // fill the values
 
 #if 0
-	  // The following code seems to not work
-	  FillerParameter filler_param;
-	  filler_param.set_value(1.);
-	  ConstantFiller<Dtype> filler(filler_param);
-	  filler.Fill(this->blob_bottom_0);
-	  filler_param.set_value(2.);
-	  filler.Fill(this->blob_bottom_1);
-	  filler_param.set_value(3.);
-	  filler.Fill(this->blob_bottom_2);
+    // The following code seems to not work
+    FillerParameter filler_param;
+    filler_param.set_value(1.);
+    ConstantFiller<Dtype> filler(filler_param);
+    filler.Fill(this->blob_bottom_0);
+    filler_param.set_value(2.);
+    filler.Fill(this->blob_bottom_1);
+    filler_param.set_value(3.);
+    filler.Fill(this->blob_bottom_2);
 #else
-	  shared_ptr<ConstantFiller<Dtype> > filler;
-	  FillerParameter filler_param;
-	  filler_param.set_value(1.);
-	  filler.reset(new ConstantFiller<Dtype>(filler_param));
-	  filler->Fill(this->blob_bottom_0);
-	  filler_param.set_value(2.);
-	  filler.reset(new ConstantFiller<Dtype>(filler_param));
-	  filler->Fill(this->blob_bottom_1);
-	  filler_param.set_value(3.);
-	  filler.reset(new ConstantFiller<Dtype>(filler_param));
-	  filler->Fill(this->blob_bottom_2);
+    shared_ptr<ConstantFiller<Dtype> > filler;
+    FillerParameter filler_param;
+    filler_param.set_value(1.);
+    filler.reset(new ConstantFiller<Dtype>(filler_param));
+    filler->Fill(this->blob_bottom_0);
+    filler_param.set_value(2.);
+    filler.reset(new ConstantFiller<Dtype>(filler_param));
+    filler->Fill(this->blob_bottom_1);
+    filler_param.set_value(3.);
+    filler.reset(new ConstantFiller<Dtype>(filler_param));
+    filler->Fill(this->blob_bottom_2);
 #endif
     blob_bottom_vec_0.push_back(blob_bottom_0);
     blob_bottom_vec_0.push_back(blob_bottom_1);
