@@ -183,7 +183,7 @@ static mxArray* do_get_weights() {
       mxArray* mx_layer_cells = NULL;
       if (layer_names[i] != prev_layer_name) {
         prev_layer_name = layer_names[i];
-        const mwSize dims[2] = {layer_blobs.size(), 1};
+        const mwSize dims[2] = {static_cast<mwSize>(layer_blobs.size()), 1};
         mx_layer_cells = mxCreateCellArray(2, dims);
         mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_cells);
         mxSetField(mx_layers, mx_layer_index, "layer_names",
