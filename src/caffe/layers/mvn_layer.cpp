@@ -43,14 +43,10 @@ Dtype MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       temp_.mutable_cpu_data());
 
   // computes variance using var(X) = E(X^2) - (EX)^2
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., bottom_data,
-      sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., temp_.cpu_data(),
-      sum_multiplier_.cpu_data(), 0., variance_.mutable_cpu_data());
-  caffe_cpu_scale(mean_.count(), Dtype(1. / dim), mean_.cpu_data(),
-      mean_.mutable_cpu_data());  // EX
-  caffe_cpu_scale(mean_.count(), Dtype(1. / dim), variance_.cpu_data(),
-      variance_.mutable_cpu_data());  // E(X^2)
+  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
+      sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data()); // EX
+  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, temp_.cpu_data(),
+      sum_multiplier_.cpu_data(), 0., variance_.mutable_cpu_data()); // E(X^2)
   caffe_powx(mean_.count(), mean_.cpu_data(), Dtype(2),
       temp_.mutable_cpu_data());  // (EX)^2
   caffe_sub(mean_.count(), variance_.cpu_data(), temp_.cpu_data(),
@@ -114,14 +110,10 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       temp_.mutable_cpu_data());
 
   // computes variance using var(X) = E(X^2) - (EX)^2
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., bottom_data,
-      sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1., temp_.cpu_data(),
-      sum_multiplier_.cpu_data(), 0., variance_.mutable_cpu_data());
-  caffe_cpu_scale(mean_.count(), Dtype(1. / dim), mean_.cpu_data(),
-      mean_.mutable_cpu_data());  // EX
-  caffe_cpu_scale(mean_.count(), Dtype(1. / dim), variance_.cpu_data(),
-      variance_.mutable_cpu_data());  // E(X^2)
+  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
+      sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data()); // EX
+  caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, temp_.cpu_data(),
+      sum_multiplier_.cpu_data(), 0., variance_.mutable_cpu_data()); // E(X^2)
   caffe_powx(mean_.count(), mean_.cpu_data(), Dtype(2),
       temp_.mutable_cpu_data());  // (EX)^2
   caffe_sub(mean_.count(), variance_.cpu_data(), temp_.cpu_data(),
