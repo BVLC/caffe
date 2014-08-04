@@ -140,6 +140,9 @@ message SolverParameter {
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
   optional bool debug_info = 23 [default = false];
+
+  // If false, don't save a snapshot after training finishes.
+  optional bool snapshot_after_train = 28 [default = true];
 }
 
 // A message that stores the solver snapshots

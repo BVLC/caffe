@@ -200,8 +200,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     ComputeUpdateValue();
     net_->Update();
   }
-  // Always save a snapshot after optimization.
-  Snapshot();
+  // Always save a snapshot after optimization, unless overridden by setting
+  // snapshot_after_train := false.
+  if (param_.snapshot_after_train()) { Snapshot(); }
   // After the optimization is done, run an additional train and test pass to
   // display the train and test loss/outputs if appropriate (based on the
   // display and test_interval settings, respectively).  Unlike in the rest of
