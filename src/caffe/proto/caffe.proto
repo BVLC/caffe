@@ -201,7 +201,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 34 (last added: SLICE)
+  // LayerType next available ID: 35 (last added: MVN)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -228,6 +228,7 @@ message LayerParameter {
     LRN = 15;
     MEMORY_DATA = 29;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
+    MVN = 34;
     POOLING = 17;
     POWER = 26;
     RELU = 18;
