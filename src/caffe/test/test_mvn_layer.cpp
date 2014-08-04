@@ -63,12 +63,11 @@ TYPED_TEST(MVNLayerTest, TestForward) {
       sum /= height * width;
       var /= height * width;
 
+      const Dtype kErrorBound = 0.001;
       // expect zero mean
-      EXPECT_GE(sum, -0.001);
-      EXPECT_LE(sum, 0.001);
+      EXPECT_NEAR(0, sum, kErrorBound);
       // expect unit variance
-      EXPECT_GE(var, 0.999);
-      EXPECT_LE(var, 1.001);
+      EXPECT_NEAR(1, var, kErrorBound);
     }
   }
 }
