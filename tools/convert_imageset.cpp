@@ -28,6 +28,7 @@
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
+#include "caffe/util/rng.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
@@ -60,7 +61,7 @@ int main(int argc, char** argv) {
   if (argc >= (arg_offset+5) && argv[arg_offset+4][0] == '1') {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
-    std::random_shuffle(lines.begin(), lines.end());
+    shuffle(lines.begin(), lines.end());
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 

@@ -238,14 +238,9 @@ void ImageDataLayer<Dtype>::CreatePrefetchThread() {
 
 template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
-  const int num_images = lines_.size();
-  for (int i = 0; i < num_images; ++i) {
-    const int max_rand_index = num_images - i;
-    const int rand_index = PrefetchRand() % max_rand_index;
-    pair<string, int> item = lines_[rand_index];
-    lines_.erase(lines_.begin() + rand_index);
-    lines_.push_back(item);
-  }
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }
 
 
