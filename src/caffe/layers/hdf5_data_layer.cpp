@@ -7,13 +7,13 @@ TODO:
   :: don't forget to update hdf5_daa_layer.cu accordingly
 - add ability to shuffle filenames if flag is set
 */
-#include <stdint.h>
+#include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
-#include <fstream>  // NOLINT(readability/streams)
 
 #include "hdf5.h"
 #include "hdf5_hl.h"
+#include "stdint.h"
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"

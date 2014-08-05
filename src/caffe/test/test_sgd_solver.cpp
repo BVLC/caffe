@@ -8,6 +8,7 @@
 #include "google/protobuf/text_format.h"
 
 #include "gtest/gtest.h"
+
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"

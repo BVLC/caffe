@@ -18,11 +18,11 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/net.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/io.hpp"
 #include "caffe/solver.hpp"
+#include "caffe/util/io.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
 

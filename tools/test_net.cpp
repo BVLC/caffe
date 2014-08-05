@@ -6,8 +6,8 @@
 // Usage:
 //    test_net net_proto pretrained_net_proto iterations [CPU/GPU]
 
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 #include "caffe/caffe.hpp"

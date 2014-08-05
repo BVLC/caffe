@@ -7,14 +7,13 @@
 #include "google/protobuf/text_format.h"
 
 #include "gtest/gtest.h"
+
 #include "caffe/common.hpp"
 #include "caffe/net.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/test/test_gradient_check_util.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-
-using std::ostringstream;
+#include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
 
