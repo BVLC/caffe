@@ -43,6 +43,11 @@ DEFINE_int32(resize_height, 0, "Height images are resized to");
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
+
+#ifndef GFLAGS_GFLAGS_H_
+  namespace gflags = google;
+#endif
+  
   gflags::SetUsageMessage("Convert a set of images to the leveldb/lmdb format used\n"
         "as input for Caffe.\n"
         "Usage:\n"
@@ -74,8 +79,8 @@ int main(int argc, char** argv) {
   const string& db_backend = FLAGS_backend;
   const char* db_path = argv[3];
 
-  int resize_height = FLAGS_resize_height;
-  int resize_width = FLAGS_resize_width;
+  int resize_height = std::max<int>(0, FLAGS_resize_height);
+  int resize_width = std::max<int>(0, FLAGS_resize_width);
 
   // Open new db
   // lmdb
