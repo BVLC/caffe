@@ -35,8 +35,10 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using std::string;
 
-DEFINE_bool(gray, false, "When this option is on, treat images as grayscale ones; otherwise colored");
-DEFINE_bool(shuffle, false, "Randomly shuffle the order of images and their labels");
+DEFINE_bool(gray, false,
+    "When this option is on, treat images as grayscale ones");
+DEFINE_bool(shuffle, false,
+    "Randomly shuffle the order of images and their labels");
 DEFINE_string(backend, "leveldb", "The backend for storing the result");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
@@ -47,9 +49,9 @@ int main(int argc, char** argv) {
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
 #endif
-  
-  gflags::SetUsageMessage("Convert a set of images to the leveldb/lmdb format used\n"
-        "as input for Caffe.\n"
+
+  gflags::SetUsageMessage("Convert a set of images to the leveldb/lmdb\n"
+        "format used as input for Caffe.\n"
         "Usage:\n"
         "    convert_imageset [FLAGS] ROOTFOLDER/ LISTFILE DB_NAME\n"
         "The ImageNet dataset for the training demo is at\n"
