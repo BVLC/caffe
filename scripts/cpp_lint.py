@@ -210,7 +210,6 @@ _ERROR_CATEGORIES = [
 # off by default (i.e., categories that must be enabled by the --filter= flags).
 # All entries here should start with a '-' or '+', as in the --filter= flag.
 _DEFAULT_FILTERS = [
-  '-build/include_alpha',
   '-build/include_dir',
   '-readability/todo',
   ]

@@ -7,6 +7,7 @@
 #include <cstdlib>  // for rand_r
 
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"

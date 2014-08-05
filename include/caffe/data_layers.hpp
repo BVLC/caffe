@@ -7,17 +7,17 @@
 #include <utility>
 #include <vector>
 
+#include "boost/scoped_ptr.hpp"
+#include "hdf5.h"
 #include "leveldb/db.h"
 #include "lmdb.h"
-#include "hdf5.h"
-#include "boost/scoped_ptr.hpp"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/internal_thread.hpp"
 
 namespace caffe {
 

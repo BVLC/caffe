@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/util/device_alternate.hpp"
 #include "caffe/util/math_functions.hpp"

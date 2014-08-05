@@ -7,13 +7,13 @@
 // The MNIST dataset could be downloaded at
 //    http://yann.lecun.com/exdb/mnist/
 
-#include <google/protobuf/text_format.h>
-#include <glog/logging.h>
-#include <leveldb/db.h>
-
-#include <stdint.h>
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
+
+#include "glog/logging.h"
+#include "google/protobuf/text_format.h"
+#include "leveldb/db.h"
+#include "stdint.h"
 
 #include "caffe/proto/caffe.pb.h"
 

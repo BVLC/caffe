@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include "gtest/gtest.h"
+
 #include "caffe/filler.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
