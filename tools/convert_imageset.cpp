@@ -15,6 +15,7 @@
 // converted to color.
 
 #include <glog/logging.h>
+#include <gflags/gflags.h>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <lmdb.h>
@@ -34,53 +35,47 @@ using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using std::string;
 
+DEFINE_bool(gray, false, "When this option is on, treat images as grayscale ones; otherwise colored");
+DEFINE_bool(shuffle, false, "Randomly shuffle the order of images and their labels");
+DEFINE_string(backend, "leveldb", "The backend for storing the result");
+DEFINE_int32(resize_width, 0, "Width images are resized to");
+DEFINE_int32(resize_height, 0, "Height images are resized to");
+
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  if (argc < 4 || argc > 9) {
-    printf("Convert a set of images to the leveldb format used\n"
+  gflags::SetUsageMessage("Convert a set of images to the leveldb/lmdb format used\n"
         "as input for Caffe.\n"
         "Usage:\n"
-        "    convert_imageset [-g] ROOTFOLDER/ LISTFILE DB_NAME"
-        " RANDOM_SHUFFLE_DATA[0 or 1] DB_BACKEND[leveldb or lmdb]"
-        " [resize_height] [resize_width]\n"
+        "    convert_imageset [FLAGS] ROOTFOLDER/ LISTFILE DB_NAME\n"
         "The ImageNet dataset for the training demo is at\n"
         "    http://www.image-net.org/download-images\n");
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+
+  if (argc != 4) {
+    fputs("Use --help to see detailed description of usage\n", stdout);
     return 1;
   }
 
-  // Test whether argv[1] == "-g"
-  bool is_color= !(string("-g") == string(argv[1]));
-  int  arg_offset = (is_color ? 0 : 1);
-  std::ifstream infile(argv[arg_offset+2]);
+  bool is_color = !FLAGS_gray;
+  std::ifstream infile(argv[2]);
   std::vector<std::pair<string, int> > lines;
   string filename;
   int label;
   while (infile >> filename >> label) {
     lines.push_back(std::make_pair(filename, label));
   }
-  if (argc >= (arg_offset+5) && argv[arg_offset+4][0] == '1') {
+  if (FLAGS_shuffle) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
     shuffle(lines.begin(), lines.end());
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
-  string db_backend = "leveldb";
-  if (argc >= (arg_offset+6)) {
-    db_backend = string(argv[arg_offset+5]);
-    if (!(db_backend == "leveldb") && !(db_backend == "lmdb")) {
-      LOG(FATAL) << "Unknown db backend " << db_backend;
-    }
-  }
+  const string& db_backend = FLAGS_backend;
+  const char* db_path = argv[3];
 
-  int resize_height = 0;
-  int resize_width = 0;
-  if (argc >= (arg_offset+7)) {
-    resize_height = atoi(argv[arg_offset+6]);
-  }
-  if (argc >= (arg_offset+8)) {
-    resize_width = atoi(argv[arg_offset+7]);
-  }
+  int resize_height = FLAGS_resize_height;
+  int resize_width = FLAGS_resize_width;
 
   // Open new db
   // lmdb
@@ -98,19 +93,19 @@ int main(int argc, char** argv) {
 
   // Open db
   if (db_backend == "leveldb") {  // leveldb
-    LOG(INFO) << "Opening leveldb " << argv[arg_offset+3];
+    LOG(INFO) << "Opening leveldb " << db_path;
     leveldb::Status status = leveldb::DB::Open(
-        options, argv[arg_offset+3], &db);
-    CHECK(status.ok()) << "Failed to open leveldb " << argv[arg_offset+3];
+        options, db_path, &db);
+    CHECK(status.ok()) << "Failed to open leveldb " << db_path;
     batch = new leveldb::WriteBatch();
   } else if (db_backend == "lmdb") {  // lmdb
-    LOG(INFO) << "Opening lmdb " << argv[arg_offset+3];
-    CHECK_EQ(mkdir(argv[arg_offset+3], 0744), 0)
-        << "mkdir " << argv[arg_offset+3] << "failed";
+    LOG(INFO) << "Opening lmdb " << db_path;
+    CHECK_EQ(mkdir(db_path, 0744), 0)
+        << "mkdir " << db_path << "failed";
     CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
     CHECK_EQ(mdb_env_set_mapsize(mdb_env, 1099511627776), MDB_SUCCESS)  // 1TB
         << "mdb_env_set_mapsize failed";
-    CHECK_EQ(mdb_env_open(mdb_env, argv[3], 0, 0664), MDB_SUCCESS)
+    CHECK_EQ(mdb_env_open(mdb_env, db_path, 0, 0664), MDB_SUCCESS)
         << "mdb_env_open failed";
     CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
         << "mdb_txn_begin failed";
@@ -121,7 +116,7 @@ int main(int argc, char** argv) {
   }
 
   // Storing to db
-  string root_folder(argv[arg_offset+1]);
+  string root_folder(argv[1]);
   Datum datum;
   int count = 0;
   const int kMaxKeyLength = 256;
