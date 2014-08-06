@@ -311,6 +311,31 @@ static void is_initialized(MEX_ARGS) {
   }
 }
 
+static void read_mean(MEX_ARGS) {
+    if (nrhs != 1) {
+        mexErrMsgTxt("Usage: caffe('read_mean', 'path_to_binary_mean_file'");
+        return;
+    }
+    const string& mean_file = mxArrayToString(prhs[0]);
+    Blob<float> data_mean;
+    LOG(INFO) << "Loading mean file from" << mean_file;
+    BlobProto blob_proto;
+    bool result = ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
+    if (!result) {
+        mexErrMsgTxt("Couldn't read the file");
+        return;
+    }
+    data_mean.FromProto(blob_proto);
+    mwSize dims[4] = {data_mean.width(), data_mean.height(),
+                      data_mean.channels(), data_mean.num() };
+    mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+    float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
+    caffe_copy(data_mean.count(), data_mean.cpu_data(), data_ptr);
+    mexWarnMsgTxt("Remember that Caffe saves in [width, height, channels]"
+                  " format and channels are also BGR!");
+    plhs[0] = mx_blob;
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -333,6 +358,7 @@ static handler_registry handlers[] = {
   { "get_weights",        get_weights     },
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
+  { "read_mean",          read_mean       },
   // The end.
   { "END",                NULL            },
 };
