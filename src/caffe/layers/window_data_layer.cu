@@ -2,8 +2,8 @@
 //
 // Based on data_layer.cpp by Yangqing Jia.
 
-#include <stdint.h>
 #include <pthread.h>
+#include <stdint.h>
 
 #include <string>
 #include <vector>

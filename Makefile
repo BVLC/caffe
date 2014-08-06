@@ -295,7 +295,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 ##############################
 # Define build targets
 ##############################
-.PHONY: all test clean linecount lint tools examples $(DIST_ALIASES) \
+.PHONY: all test clean linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
@@ -307,6 +307,9 @@ linecount:
 	cloc --read-lang-def=$(PROJECT).cloc src/$(PROJECT)/
 
 lint: $(EMPTY_LINT_REPORT)
+
+lintclean:
+	@ $(RM) -r $(LINT_OUTPUT_DIR) $(EMPTY_LINT_REPORT) $(NONEMPTY_LINT_REPORT)
 
 $(EMPTY_LINT_REPORT): $(LINT_OUTPUTS) | $(BUILD_DIR)
 	@ cat $(LINT_OUTPUTS) > $@

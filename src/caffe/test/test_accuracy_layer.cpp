@@ -1,11 +1,12 @@
 // Copyright 2014 BVLC and contributors.
 
+#include <cfloat>
 #include <cmath>
 #include <cstring>
-#include <cfloat>
 #include <vector>
 
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"

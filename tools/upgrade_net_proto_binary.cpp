@@ -5,8 +5,8 @@
 //    upgrade_net_proto_binary v0_net_proto_file_in net_proto_file_out
 
 #include <cstring>
-#include <iostream>  // NOLINT(readability/streams)
 #include <fstream>  // NOLINT(readability/streams)
+#include <iostream>  // NOLINT(readability/streams)
 
 #include "caffe/caffe.hpp"
 #include "caffe/util/io.hpp"

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/device_alternate.hpp"

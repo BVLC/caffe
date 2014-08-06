@@ -6,8 +6,10 @@
 
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
-#include "caffe/test/test_caffe_main.hpp"
+
 #include "caffe/proto/caffe.pb.h"
+
+#include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
 

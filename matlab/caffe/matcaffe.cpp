@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "mex.h"
+
 #include "caffe/caffe.hpp"
 
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs

@@ -8,9 +8,9 @@
 #include "google/protobuf/message.h"
 #include "hdf5.h"
 #include "hdf5_hl.h"
-#include "caffe/proto/caffe.pb.h"
 
 #include "caffe/blob.hpp"
+#include "caffe/proto/caffe.pb.h"
 
 #define HDF5_NUM_DIMS 4
 
