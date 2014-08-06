@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 //
 // matcaffe.cpp provides a wrapper of the caffe::Net class as well as some
 // caffe::Caffe functions so that one could easily call it from matlab.

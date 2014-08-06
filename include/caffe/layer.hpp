@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_LAYER_H_
 #define CAFFE_LAYER_H_
 

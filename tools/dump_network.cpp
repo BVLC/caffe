@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-//
 // This program takes in a trained network and an input blob, and then dumps
 // all the intermediate blobs produced by the net to individual binary
 // files stored in protobuffer binary formats.

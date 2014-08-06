@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 //
 // This script converts the MNIST dataset to the leveldb format used
 // by caffe to perform classification.

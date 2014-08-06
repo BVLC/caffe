@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 // pycaffe provides a wrapper of the caffe::Net class as well as some
 // caffe::Caffe functions so that one could easily call it from Python.
 // Note that for Python, we will simply use float as the data type.
