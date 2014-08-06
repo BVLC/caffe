@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>

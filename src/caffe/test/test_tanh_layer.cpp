@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 // Adapted from other test files
 
 #include <cmath>

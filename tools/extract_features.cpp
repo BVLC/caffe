@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <stdio.h>  // for snprintf
 #include <string>
 #include <vector>

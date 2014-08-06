@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
 

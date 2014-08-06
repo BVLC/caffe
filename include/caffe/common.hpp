@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 

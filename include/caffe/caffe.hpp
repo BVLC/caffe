@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 // caffe.hpp is the header file that you need to include in your code. It wraps
 // all the internal caffe header files into one for simpler inclusion.
 

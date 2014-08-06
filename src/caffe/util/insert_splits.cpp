@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <map>
 #include <sstream>
 #include <string>
