@@ -14,8 +14,8 @@
 // single-channel grayscale. If omitted, grayscale images will be
 // converted to color.
 
-#include <glog/logging.h>
 #include <gflags/gflags.h>
+#include <glog/logging.h>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <lmdb.h>
