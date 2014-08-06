@@ -14,13 +14,14 @@ class Classifier(caffe.Net):
     by scaling, center cropping, or oversampling.
     """
     def __init__(self, model_file, pretrained_file, image_dims=None,
-                 gpu=False, mean_file=None, input_scale=None, channel_swap=None):
+                 gpu=False, mean=None, input_scale=None, raw_scale=None,
+                 channel_swap=None):
         """
         Take
         image_dims: dimensions to scale input for cropping/sampling.
-                    Default is to scale to net input size for whole-image crop.
-        gpu, mean_file, input_scale, channel_swap: convenience params for
-            setting mode, mean, input scale, and channel order.
+            Default is to scale to net input size for whole-image crop.
+        gpu, mean, input_scale, raw_scale, channel_swap: params for
+            preprocessing options.
         """
         caffe.Net.__init__(self, model_file, pretrained_file)
         self.set_phase_test()
@@ -30,11 +31,13 @@ class Classifier(caffe.Net):
         else:
             self.set_mode_cpu()
 
-        if mean_file:
-            self.set_mean(self.inputs[0], mean_file)
-        if input_scale:
+        if mean is not None:
+            self.set_mean(self.inputs[0], mean)
+        if input_scale is not None:
             self.set_input_scale(self.inputs[0], input_scale)
-        if channel_swap:
+        if raw_scale is not None:
+            self.set_raw_scale(self.inputs[0], raw_scale)
+        if channel_swap is not None:
             self.set_channel_swap(self.inputs[0], channel_swap)
 
         self.crop_dims = np.array(self.blobs[self.inputs[0]].data.shape[2:])
@@ -57,12 +60,15 @@ class Classifier(caffe.Net):
                      for N images and C classes.
         """
         # Scale to standardize input dimensions.
-        inputs = np.asarray([caffe.io.resize_image(im, self.image_dims)
-                             for im in inputs])
+        input_ = np.zeros((len(inputs),
+            self.image_dims[0], self.image_dims[1], inputs[0].shape[2]),
+            dtype=np.float32)
+        for ix, in_ in enumerate(inputs):
+            input_[ix] = caffe.io.resize_image(in_, self.image_dims)
 
         if oversample:
             # Generate center, corner, and mirrored crops.
-            inputs = caffe.io.oversample(inputs, self.crop_dims)
+            input_ = caffe.io.oversample(input_, self.crop_dims)
         else:
             # Take center crop.
             center = np.array(self.image_dims) / 2.0
@@ -70,11 +76,13 @@ class Classifier(caffe.Net):
                 -self.crop_dims / 2.0,
                 self.crop_dims / 2.0
             ])
-            inputs = inputs[:, crop[0]:crop[2], crop[1]:crop[3], :]
+            input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
 
         # Classify
-        caffe_in = np.asarray([self.preprocess(self.inputs[0], in_)
-                    for in_ in inputs])
+        caffe_in = np.zeros(np.array(input_.shape)[[0,3,1,2]],
+                            dtype=np.float32)
+        for ix, in_ in enumerate(input_):
+            caffe_in[ix] = self.preprocess(self.inputs[0], in_)
         out = self.forward_all(**{self.inputs[0]: caffe_in})
         predictions = out[self.outputs[0]].squeeze(axis=(2,3))
 

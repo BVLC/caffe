@@ -24,12 +24,13 @@ class Detector(caffe.Net):
     Detector extends Net for windowed detection by a list of crops or
     selective search proposals.
     """
-    def __init__(self, model_file, pretrained_file, gpu=False, mean_file=None,
-                 input_scale=None, channel_swap=None, context_pad=None):
+    def __init__(self, model_file, pretrained_file, gpu=False, mean=None,
+                 input_scale=None, raw_scale=None, channel_swap=None,
+                 context_pad=None):
         """
         Take
-        gpu, mean_file, input_scale, channel_swap: convenience params for
-            setting mode, mean, input scale, and channel order.
+        gpu, mean, input_scale, raw_scale, channel_swap: params for
+            preprocessing options.
         context_pad: amount of surrounding context to take s.t. a `context_pad`
             sized border of pixels in the network input image is context, as in
             R-CNN feature extraction.
@@ -42,11 +43,13 @@ class Detector(caffe.Net):
         else:
             self.set_mode_cpu()
 
-        if mean_file:
-            self.set_mean(self.inputs[0], mean_file)
-        if input_scale:
+        if mean is not None:
+            self.set_mean(self.inputs[0], mean)
+        if input_scale is not None:
             self.set_input_scale(self.inputs[0], input_scale)
-        if channel_swap:
+        if raw_scale is not None:
+            self.set_raw_scale(self.inputs[0], raw_scale)
+        if channel_swap is not None:
             self.set_channel_swap(self.inputs[0], channel_swap)
 
         self.configure_crop(context_pad)
@@ -73,8 +76,11 @@ class Detector(caffe.Net):
                 window_inputs.append(self.crop(image, window))
 
         # Run through the net (warping windows to input dimensions).
-        caffe_in = np.asarray([self.preprocess(self.inputs[0], window_in)
-                    for window_in in window_inputs])
+        caffe_in = np.zeros((len(window_inputs), window_inputs[0].shape[2])
+                            + self.blobs[self.inputs[0]].data.shape[2:],
+                            dtype=np.float32)
+        for ix, window_in in enumerate(window_inputs):
+            caffe_in[ix] = self.preprocess(self.inputs[0], window_in)
         out = self.forward_all(**{self.inputs[0]: caffe_in})
         predictions = out[self.outputs[0]].squeeze(axis=(2,3))
 
@@ -180,12 +186,19 @@ class Detector(caffe.Net):
         """
         self.context_pad = context_pad
         if self.context_pad:
-            input_scale = self.input_scale.get(self.inputs[0])
+            raw_scale = self.raw_scale.get(self.inputs[0])
             channel_order = self.channel_swap.get(self.inputs[0])
             # Padding context crops needs the mean in unprocessed input space.
-            self.crop_mean = self.mean[self.inputs[0]].copy()
-            self.crop_mean = self.crop_mean.transpose((1,2,0))
-            channel_order_inverse = [channel_order.index(i)
-                                     for i in range(self.crop_mean.shape[2])]
-            self.crop_mean = self.crop_mean[:,:, channel_order_inverse]
-            self.crop_mean /= input_scale
+            mean = self.mean.get(self.inputs[0])
+            if mean is not None:
+                crop_mean = mean.copy().transpose((1,2,0))
+                if channel_order is not None:
+                    channel_order_inverse = [channel_order.index(i)
+                                            for i in range(crop_mean.shape[2])]
+                    crop_mean = crop_mean[:,:, channel_order_inverse]
+                if raw_scale is not None:
+                    crop_mean /= raw_scale
+                self.crop_mean = crop_mean
+            else:
+                self.crop_mean = np.zeros(self.blobs[self.inputs[0]].data.shape,
+                                          dtype=np.float32)
