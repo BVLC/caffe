@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
 #include <map>

@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 

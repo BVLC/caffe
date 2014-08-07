@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 // Fillers are random number generators that fills a blob using the specified
 // algorithm. The expectation is that they are only going to be used during
 // initialization time and will not involve any GPUs.

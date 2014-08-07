@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"

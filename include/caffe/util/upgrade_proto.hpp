@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_UTIL_UPGRADE_PROTO_H_
 #define CAFFE_UTIL_UPGRADE_PROTO_H_
 

@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_INTERNAL_THREAD_HPP_
 #define CAFFE_INTERNAL_THREAD_HPP_
 
@@ -28,7 +26,7 @@ class InternalThread {
   }
 
  protected:
-  /* Implement this method in your subclass 
+  /* Implement this method in your subclass
       with the code you want your thread to run. */
   virtual void InternalThreadEntry() = 0;
 

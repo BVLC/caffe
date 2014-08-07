@@ -7,6 +7,19 @@ title: Development
 Caffe is developed with active participation of the community.<br />
 The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions!
 
+The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements).
+This method is impartial and always up-to-date.
+
+## License
+
+Caffe is licensed under the terms in [LICENSE](https://github.com/BVLC/caffe/blob/master/LICENSE). By contributing to the project, you agree to the license and copyright terms therein and release your contribution under these terms.
+
+## Copyright
+
+Caffe uses a shared copyright model: each contributor holds copyright over their contributions to Caffe. The project versioning records all such contribution and copyright details.
+
+If a contributor wants to further mark their specific copyright on a particular contribution, they should indicate their copyright solely in the commit message of the change when it is committed. Do not include copyright notices in files for this purpose.
+
 ### Documentation
 
 This website, written with [Jekyll](http://jekyllrb.com/), functions as the official Caffe documentation -- simply run `scripts/build_docs.sh` and view the website at `http://0.0.0.0:4000`.
@@ -109,12 +122,3 @@ To get a list of all options `googletest` provides, simply pass the `--help` fla
 - Wrap lines at 80 chars.
 - Remember that “a foolish consistency is the hobgoblin of little minds,” so use your best judgement to write the clearest code for your particular case.
 - **Run `make lint` to check C++ code.**
-
-### Copyright
-
-Assign copyright jointly to BVLC and contributors like so:
-
-    // Copyright 2014 BVLC and contributors.
-
-The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements).
-This method is impartial and always up-to-date.

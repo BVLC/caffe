@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CPU_ONLY  // CPU-GPU test
 
 #include <cstring>
