@@ -107,6 +107,40 @@ int train() {
 RegisterBrewFunction(train);
 
 
+// Test: score a model.
+int test() {
+  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
+  CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
+
+  // Set device id and mode
+  if (FLAGS_gpu) {
+    LOG(INFO) << "Use GPU with device id " << FLAGS_device_id;
+    Caffe::SetDevice(FLAGS_device_id);
+    Caffe::set_mode(Caffe::GPU);
+  } else {
+    LOG(INFO) << "Use CPU.";
+    Caffe::set_mode(Caffe::CPU);
+  }
+  // Instantiate the caffe net.
+  Caffe::set_phase(Caffe::TEST);
+  Net<float> caffe_net(FLAGS_model);
+  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+  LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
+
+  double test_score = 0;
+  for (int i = 0; i < FLAGS_iterations; ++i) {
+    const vector<Blob<float>*>& result = caffe_net.ForwardPrefilled();
+    test_score += result[0]->cpu_data()[0];
+    LOG(INFO) << "Batch " << i << ", score: " << result[0]->cpu_data()[0];
+  }
+  test_score /= FLAGS_iterations;
+  LOG(INFO) << "Score: " << test_score;
+
+  return 0;
+}
+RegisterBrewFunction(test);
+
+
 // Time: benchmark the execution time of a model.
 int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
@@ -187,6 +221,7 @@ int main(int argc, char** argv) {
       "usage: caffe <command> <args>\n\n"
       "commands:\n"
       "  train           train or finetune a model\n"
+      "  test            score a model\n"
       "  device_query    show GPU diagnostic information\n"
       "  time            benchmark model execution time");
   // Run tool or show usage.
