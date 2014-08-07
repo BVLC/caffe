@@ -77,7 +77,10 @@ int device_query() {
 RegisterBrewFunction(device_query);
 
 int train() {
-  CHECK_GT(FLAGS_solver.size(), 0);
+  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
+  CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
+      << "Give a snapshot to resume training or weights to finetune "
+      "but not both.";
 
   caffe::SolverParameter solver_param;
   caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
@@ -100,6 +103,8 @@ int train() {
 RegisterBrewFunction(train);
 
 int time() {
+  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
+
   // Set device id and mode
   if (FLAGS_gpu) {
     LOG(INFO) << "Use GPU with device id " << FLAGS_device_id;
