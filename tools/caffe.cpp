@@ -17,10 +17,8 @@ using caffe::Timer;
 using caffe::vector;
 
 
-DEFINE_int32(device_id, 0,
-    "The GPU device ID to use.");
-DEFINE_bool(gpu, false,
-    "Run in GPU mode when true.");
+DEFINE_int32(gpu, -1,
+    "Run in GPU mode on given device ID.");
 DEFINE_string(solver, "",
     "The solver definition protocol buffer text file.");
 DEFINE_string(model, "",
@@ -71,8 +69,9 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
 
 // Device Query: show diagnostic information for a GPU device.
 int device_query() {
-  LOG(INFO) << "Querying device_id = " << FLAGS_device_id;
-  caffe::Caffe::SetDevice(FLAGS_device_id);
+  CHECK_GT(FLAGS_gpu, -1) << "Need a device ID to query.";
+  LOG(INFO) << "Querying device ID = " << FLAGS_gpu;
+  caffe::Caffe::SetDevice(FLAGS_gpu);
   caffe::Caffe::DeviceQuery();
   return 0;
 }
@@ -113,9 +112,9 @@ int test() {
   CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
 
   // Set device id and mode
-  if (FLAGS_gpu) {
-    LOG(INFO) << "Use GPU with device id " << FLAGS_device_id;
-    Caffe::SetDevice(FLAGS_device_id);
+  if (FLAGS_gpu >= 0) {
+    LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
+    Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
   } else {
     LOG(INFO) << "Use CPU.";
@@ -146,9 +145,9 @@ int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
 
   // Set device id and mode
-  if (FLAGS_gpu) {
-    LOG(INFO) << "Use GPU with device id " << FLAGS_device_id;
-    Caffe::SetDevice(FLAGS_device_id);
+  if (FLAGS_gpu >= 0) {
+    LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
+    Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
   } else {
     LOG(INFO) << "Use CPU.";
