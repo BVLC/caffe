@@ -173,8 +173,18 @@ RegisterBrewFunction(time);
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
-
+  // Usage message.
+  gflags::SetUsageMessage("command line brew\n"
+      "usage: caffe <command> <args>\n\n"
+      "commands:\n"
+      "  train           train or finetune a model\n"
+      "  device_query    show GPU diagnostic information\n"
+      "  time            benchmark model execution time");
+  // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
-  CHECK_EQ(argc, 2);
-  return GetBrewFunction(caffe::string(argv[1]))();
+  if (argc == 2) {
+    return GetBrewFunction(caffe::string(argv[1]))();
+  } else {
+    gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
+  }
 }
