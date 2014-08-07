@@ -63,11 +63,13 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
   }
 }
 
-// caffe actions that could be called in the form
-//     caffe.bin action
-// To do so, define actions as "int action()" functions, and register it with
+// caffe commands to call by
+//     caffe <command> <args>
+//
+// To add a command, define a function "int command()" and register it with
 // RegisterBrewFunction(action);
 
+// Device Query: show diagnostic information for a GPU device.
 int device_query() {
   LOG(INFO) << "Querying device_id = " << FLAGS_device_id;
   caffe::Caffe::SetDevice(FLAGS_device_id);
@@ -76,6 +78,8 @@ int device_query() {
 }
 RegisterBrewFunction(device_query);
 
+
+// Train / Finetune a model.
 int train() {
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
@@ -102,6 +106,8 @@ int train() {
 }
 RegisterBrewFunction(train);
 
+
+// Time: benchmark the execution time of a model.
 int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
 
