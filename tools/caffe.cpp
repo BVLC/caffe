@@ -171,6 +171,9 @@ int time() {
 RegisterBrewFunction(time);
 
 int main(int argc, char** argv) {
+  // Print output to stderr (while still logging).
+  FLAGS_alsologtostderr = 1;
+
   caffe::GlobalInit(&argc, &argv);
   CHECK_EQ(argc, 2);
   return GetBrewFunction(caffe::string(argv[1]))();
