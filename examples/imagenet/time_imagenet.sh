@@ -3,20 +3,15 @@
 TOOLS=../../build/tools
 
 if [ -z "$1" ]; then
-  echo "Using CPU! To run GPU speedtest, use:"
-  echo "    ./speedtest_imagenet.sh <device ID>"
-  echo "(Try ./speedtest_imagenet.sh 0 if you have just one GPU.)"
+  echo "Using CPU! To time GPU mode, use:"
+  echo "    ./time_imagenet.sh <device ID>"
+  echo "(Try ./time_imagenet.sh 0 if you have just one GPU.)"
   sleep 3  # Let the user read
-  WITH_GPU=false
-  DEVICE_ID=0
+  GPU=""
 else
-  WITH_GPU=true
-  DEVICE_ID=$1
+  GPU="--gpu=$1"
 fi
 
-$TOOLS/caffe time \
-  --model=imagenet_train_val.prototxt \
-  --gpu=${WITH_GPU} \
-  --device_id=${DEVICE_ID}
+$TOOLS/caffe time --model=imagenet_train_val.prototxt ${GPU}
 
 echo "Done."
