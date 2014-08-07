@@ -17,23 +17,19 @@ using caffe::Timer;
 using caffe::vector;
 
 
-// Used in device query
-DEFINE_int32(device_id, 0,
-             "[devicequery,speedtest] The device id to use.");
-// Used in training
-DEFINE_string(solver_proto_file, "",
-              "[train] The protobuf containing the solver definition.");
-DEFINE_string(net_proto_file, "",
-              "[speedtest] The net proto file to use.");
-DEFINE_string(resume_point_file, "",
-              "[train] (optional) The snapshot from which to resume training.");
-DEFINE_string(pretrained_net_file, "",
-              "[train] (optional) A pretrained network to run finetune from. "
-              "Cannot be set simultaneously with resume_point_file.");
-DEFINE_int32(run_iterations, 50,
-             "[speedtest] The number of iterations to run.");
-DEFINE_bool(speedtest_with_gpu, false,
-            "[speedtest] Test the model with GPU.");
+DEFINE_int32(gpu, -1,
+    "Run in GPU mode on given device ID.");
+DEFINE_string(solver, "",
+    "The solver definition protocol buffer text file.");
+DEFINE_string(model, "",
+    "The model definition protocol buffer text file..");
+DEFINE_string(snapshot, "",
+    "Optional; the snapshot solver state to resume training.");
+DEFINE_string(weights, "",
+    "Optional; the pretrained weights to initialize finetuning. "
+    "Cannot be set simultaneously with snapshot.");
+DEFINE_int32(iterations, 50,
+    "The number of iterations to run.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -65,33 +61,41 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
   }
 }
 
-// caffe actions that could be called in the form
-//     caffe.bin action
-// To do so, define actions as "int action()" functions, and register it with
+// caffe commands to call by
+//     caffe <command> <args>
+//
+// To add a command, define a function "int command()" and register it with
 // RegisterBrewFunction(action);
 
-int devicequery() {
-  LOG(INFO) << "Querying device_id = " << FLAGS_device_id;
-  caffe::Caffe::SetDevice(FLAGS_device_id);
+// Device Query: show diagnostic information for a GPU device.
+int device_query() {
+  CHECK_GT(FLAGS_gpu, -1) << "Need a device ID to query.";
+  LOG(INFO) << "Querying device ID = " << FLAGS_gpu;
+  caffe::Caffe::SetDevice(FLAGS_gpu);
   caffe::Caffe::DeviceQuery();
   return 0;
 }
-RegisterBrewFunction(devicequery);
+RegisterBrewFunction(device_query);
 
+
+// Train / Finetune a model.
 int train() {
-  CHECK_GT(FLAGS_solver_proto_file.size(), 0);
+  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
+  CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
+      << "Give a snapshot to resume training or weights to finetune "
+      "but not both.";
 
   caffe::SolverParameter solver_param;
-  caffe::ReadProtoFromTextFileOrDie(FLAGS_solver_proto_file, &solver_param);
+  caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   LOG(INFO) << "Starting Optimization";
   caffe::SGDSolver<float> solver(solver_param);
-  if (FLAGS_resume_point_file.size()) {
-    LOG(INFO) << "Resuming from " << FLAGS_resume_point_file;
-    solver.Solve(FLAGS_resume_point_file);
-  } else if (FLAGS_pretrained_net_file.size()) {
-    LOG(INFO) << "Finetuning from " << FLAGS_pretrained_net_file;
-    solver.net()->CopyTrainedLayersFrom(FLAGS_pretrained_net_file);
+  if (FLAGS_snapshot.size()) {
+    LOG(INFO) << "Resuming from " << FLAGS_snapshot;
+    solver.Solve(FLAGS_snapshot);
+  } else if (FLAGS_weights.size()) {
+    LOG(INFO) << "Finetuning from " << FLAGS_weights;
+    solver.net()->CopyTrainedLayersFrom(FLAGS_weights);
     solver.Solve();
   } else {
     solver.Solve();
@@ -101,11 +105,49 @@ int train() {
 }
 RegisterBrewFunction(train);
 
-int speedtest() {
+
+// Test: score a model.
+int test() {
+  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
+  CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
+
   // Set device id and mode
-  if (FLAGS_speedtest_with_gpu) {
-    LOG(INFO) << "Use GPU with device id " << FLAGS_device_id;
-    Caffe::SetDevice(FLAGS_device_id);
+  if (FLAGS_gpu >= 0) {
+    LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
+    Caffe::SetDevice(FLAGS_gpu);
+    Caffe::set_mode(Caffe::GPU);
+  } else {
+    LOG(INFO) << "Use CPU.";
+    Caffe::set_mode(Caffe::CPU);
+  }
+  // Instantiate the caffe net.
+  Caffe::set_phase(Caffe::TEST);
+  Net<float> caffe_net(FLAGS_model);
+  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+  LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
+
+  double test_score = 0;
+  for (int i = 0; i < FLAGS_iterations; ++i) {
+    const vector<Blob<float>*>& result = caffe_net.ForwardPrefilled();
+    test_score += result[0]->cpu_data()[0];
+    LOG(INFO) << "Batch " << i << ", score: " << result[0]->cpu_data()[0];
+  }
+  test_score /= FLAGS_iterations;
+  LOG(INFO) << "Score: " << test_score;
+
+  return 0;
+}
+RegisterBrewFunction(test);
+
+
+// Time: benchmark the execution time of a model.
+int time() {
+  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
+
+  // Set device id and mode
+  if (FLAGS_gpu >= 0) {
+    LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
+    Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
   } else {
     LOG(INFO) << "Use CPU.";
@@ -113,7 +155,7 @@ int speedtest() {
   }
   // Instantiate the caffe net.
   Caffe::set_phase(Caffe::TRAIN);
-  Net<float> caffe_net(FLAGS_net_proto_file);
+  Net<float> caffe_net(FLAGS_model);
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
@@ -132,7 +174,7 @@ int speedtest() {
   const vector<vector<bool> >& bottom_need_backward =
       caffe_net.bottom_need_backward();
   LOG(INFO) << "*** Benchmark begins ***";
-  LOG(INFO) << "Testing for " << FLAGS_run_iterations << " iterations.";
+  LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";
   Timer total_timer;
   total_timer.Start();
   Timer forward_timer;
@@ -141,7 +183,7 @@ int speedtest() {
   for (int i = 0; i < layers.size(); ++i) {
     const caffe::string& layername = layers[i]->layer_param().name();
     timer.Start();
-    for (int j = 0; j < FLAGS_run_iterations; ++j) {
+    for (int j = 0; j < FLAGS_iterations; ++j) {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
     }
     LOG(INFO) << layername << "\tforward: " << timer.MilliSeconds() <<
@@ -154,7 +196,7 @@ int speedtest() {
   for (int i = layers.size() - 1; i >= 0; --i) {
     const caffe::string& layername = layers[i]->layer_param().name();
     timer.Start();
-    for (int j = 0; j < FLAGS_run_iterations; ++j) {
+    for (int j = 0; j < FLAGS_iterations; ++j) {
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           &bottom_vecs[i]);
     }
@@ -168,10 +210,24 @@ int speedtest() {
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
 }
-RegisterBrewFunction(speedtest);
+RegisterBrewFunction(time);
 
 int main(int argc, char** argv) {
+  // Print output to stderr (while still logging).
+  FLAGS_alsologtostderr = 1;
+  // Usage message.
+  gflags::SetUsageMessage("command line brew\n"
+      "usage: caffe <command> <args>\n\n"
+      "commands:\n"
+      "  train           train or finetune a model\n"
+      "  test            score a model\n"
+      "  device_query    show GPU diagnostic information\n"
+      "  time            benchmark model execution time");
+  // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
-  CHECK_EQ(argc, 2);
-  return GetBrewFunction(caffe::string(argv[1]))();
+  if (argc == 2) {
+    return GetBrewFunction(caffe::string(argv[1]))();
+  } else {
+    gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
+  }
 }
