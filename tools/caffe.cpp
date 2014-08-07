@@ -19,21 +19,21 @@ using caffe::vector;
 
 // Used in device query
 DEFINE_int32(device_id, 0,
-             "[devicequery,speedtest] The device id to use.");
+             "[device_query,time] The device id to use.");
 // Used in training
 DEFINE_string(solver_proto_file, "",
               "[train] The protobuf containing the solver definition.");
 DEFINE_string(net_proto_file, "",
-              "[speedtest] The net proto file to use.");
+              "[time] The net proto file to use.");
 DEFINE_string(resume_point_file, "",
               "[train] (optional) The snapshot from which to resume training.");
 DEFINE_string(pretrained_net_file, "",
               "[train] (optional) A pretrained network to run finetune from. "
               "Cannot be set simultaneously with resume_point_file.");
 DEFINE_int32(run_iterations, 50,
-             "[speedtest] The number of iterations to run.");
-DEFINE_bool(speedtest_with_gpu, false,
-            "[speedtest] Test the model with GPU.");
+             "[time] The number of iterations to run.");
+DEFINE_bool(time_with_gpu, false,
+            "[time] Test the model with GPU.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -70,13 +70,13 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
 // To do so, define actions as "int action()" functions, and register it with
 // RegisterBrewFunction(action);
 
-int devicequery() {
+int device_query() {
   LOG(INFO) << "Querying device_id = " << FLAGS_device_id;
   caffe::Caffe::SetDevice(FLAGS_device_id);
   caffe::Caffe::DeviceQuery();
   return 0;
 }
-RegisterBrewFunction(devicequery);
+RegisterBrewFunction(device_query);
 
 int train() {
   CHECK_GT(FLAGS_solver_proto_file.size(), 0);
@@ -101,9 +101,9 @@ int train() {
 }
 RegisterBrewFunction(train);
 
-int speedtest() {
+int time() {
   // Set device id and mode
-  if (FLAGS_speedtest_with_gpu) {
+  if (FLAGS_time_with_gpu) {
     LOG(INFO) << "Use GPU with device id " << FLAGS_device_id;
     Caffe::SetDevice(FLAGS_device_id);
     Caffe::set_mode(Caffe::GPU);
@@ -168,7 +168,7 @@ int speedtest() {
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
 }
-RegisterBrewFunction(speedtest);
+RegisterBrewFunction(time);
 
 int main(int argc, char** argv) {
   caffe::GlobalInit(&argc, &argv);
