@@ -2,5 +2,4 @@
 
 TOOLS=../../build/tools
 
-GLOG_logtostderr=1 $TOOLS/caffe.bin train \
-  --solver_proto_file=lenet_solver.prototxt
+$TOOLS/caffe train --solver=lenet_solver.prototxt
