@@ -14,9 +14,9 @@ else
   DEVICE_ID=$1
 fi
 
-GLOG_logtostderr=1 $TOOLS/caffe.bin speedtest \
-  --net_proto_file=imagenet_train_val.prototxt \
-  --speedtest_with_gpu=${WITH_GPU} \
+$TOOLS/caffe time \
+  --model=imagenet_train_val.prototxt \
+  --gpu=${WITH_GPU} \
   --device_id=${DEVICE_ID}
 
 echo "Done."
