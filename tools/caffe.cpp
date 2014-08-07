@@ -32,8 +32,8 @@ DEFINE_string(pretrained_net_file, "",
               "Cannot be set simultaneously with resume_point_file.");
 DEFINE_int32(run_iterations, 50,
              "[time] The number of iterations to run.");
-DEFINE_bool(time_with_gpu, false,
-            "[time] Test the model with GPU.");
+DEFINE_bool(gpu, false,
+            "[time] Run in GPU mode when true.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -103,7 +103,7 @@ RegisterBrewFunction(train);
 
 int time() {
   // Set device id and mode
-  if (FLAGS_time_with_gpu) {
+  if (FLAGS_gpu) {
     LOG(INFO) << "Use GPU with device id " << FLAGS_device_id;
     Caffe::SetDevice(FLAGS_device_id);
     Caffe::set_mode(Caffe::GPU);
