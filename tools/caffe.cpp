@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 

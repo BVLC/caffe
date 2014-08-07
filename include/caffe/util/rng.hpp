@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_RNG_CPP_HPP_
 #define CAFFE_RNG_CPP_HPP_
 

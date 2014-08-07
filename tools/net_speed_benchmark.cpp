@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include "caffe/caffe.hpp"
 
 int main(int argc, char** argv) {

@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 

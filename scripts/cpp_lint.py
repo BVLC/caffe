@@ -445,7 +445,7 @@ _RE_SUPPRESSION = re.compile(r'\bNOLINT(_NEXT_LINE)?\b(\([^)]*\))?')
 _error_suppressions = {}
 
 # Finds Copyright.
-_RE_COPYRIGHT = re.compile(r'Copyright \d\d\d\d BVLC and contributors.')
+_RE_COPYRIGHT = re.compile(r'Copyright')
 
 # The root directory used for deriving header guard CPP variable.
 # This is set by --root flag.
@@ -1368,16 +1368,15 @@ def ReverseCloseExpression(clean_lines, linenum, pos):
 
 
 def CheckForCopyright(filename, lines, error):
-  """Logs an error if no Copyright message appears at the top of the file."""
+  """Logs an error if a Copyright message appears at the top of the file."""
 
-  # We'll say it should occur by line 10. Don't forget there's a
+  # We'll check up to line 10. Don't forget there's a
   # dummy line at the front.
   for line in xrange(1, min(len(lines), 11)):
-    if _RE_COPYRIGHT.search(lines[line], re.I): break
-  else:                       # means no copyright line was found
-    error(filename, 0, 'legal/copyright', 5,
-          'BVLC copyright message not found.  '
-          'You should have a line: "Copyright [year] BVLC and contributors."')
+    if _RE_COPYRIGHT.search(lines[line], re.I):
+      error(filename, 0, 'legal/copyright', 5,
+            'Copyright message found.  '
+            'You should not include a copyright line.')
 
 
 def GetHeaderGuardCPPVariable(filename):

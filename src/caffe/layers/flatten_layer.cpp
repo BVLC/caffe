@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <vector>
 
 #include "caffe/layer.hpp"

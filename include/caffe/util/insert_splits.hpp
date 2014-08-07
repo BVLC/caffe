@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef _CAFFE_UTIL_INSERT_SPLITS_HPP_
 #define _CAFFE_UTIL_INSERT_SPLITS_HPP_
 
