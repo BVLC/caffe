@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_NEURON_LAYERS_HPP_
 #define CAFFE_NEURON_LAYERS_HPP_
 
@@ -233,12 +231,12 @@ class TanHLayer : public NeuronLayer<Dtype> {
 
 /* ThresholdLayer
   Outputs 1 if value in input is above threshold, 0 otherwise.
-  The defult threshold = 0, which means positive values would become 1 and 
+  The defult threshold = 0, which means positive values would become 1 and
   negative or 0, would become 0
 
   y = 1 if x > threshold
   y = 0 if x <= threshold
-  
+
   y' = don't differenciable
 */
 template <typename Dtype>

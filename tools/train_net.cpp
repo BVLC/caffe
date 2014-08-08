@@ -1,9 +1,7 @@
-// Copyright 2014 BVLC and contributors.
-
 #include "caffe/caffe.hpp"
 
 int main(int argc, char** argv) {
-  LOG(FATAL) << "Deprecated. Use caffe.bin train --solver_proto_file=... "
-                "[--resume_point_file=...] instead.";
+  LOG(FATAL) << "Deprecated. Use caffe train --solver=... "
+                "[--snapshot=...] instead.";
   return 0;
 }

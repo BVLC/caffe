@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 /*
 TODO:
 - load file in a separate thread ("prefetch")

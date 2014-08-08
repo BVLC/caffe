@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_LAYER_FACTORY_HPP_
 #define CAFFE_LAYER_FACTORY_HPP_
 

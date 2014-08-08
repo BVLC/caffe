@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <leveldb/db.h>
 #include <stdint.h>
 

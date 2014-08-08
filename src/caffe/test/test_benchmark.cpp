@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <unistd.h>  // for usleep
 
 #include "gtest/gtest.h"
