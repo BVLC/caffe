@@ -1,40 +1,14 @@
-@import url(https://fonts.googleapis.com/css?family=Arvo:400,700,400italic);
-
-/* MeyerWeb Reset */
-
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font: inherit;
-  vertical-align: baseline;
-}
-
-
-/* Base text styles */
+@import url(http://fonts.googleapis.com/css?family=PT+Serif|Open+Sans:600,400);
 
 body {
   padding:10px 50px 0 0;
-  font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 14px;
-	color: #232323;
-	background-color: #FBFAF7;
-	margin: 0;
-	line-height: 1.8em;
-	-webkit-font-smoothing: antialiased;
-
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  color: #232323;
+  background-color: #FBFAF7;
+  margin: 0;
+  line-height: 1.5rem;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -47,50 +21,46 @@ p, ul, ol, table, dl {
 }
 
 h1, h2, h3 {
-	font-family: Arvo, Monaco, serif;
+  font-family: 'PT Serif', serif;
   line-height:1.3;
-	font-weight: normal;
-}
-
-h1,h2, h3 {
-	display: block;
-	border-bottom: 1px solid #ccc;
-	padding-bottom: 5px;
+  font-weight: normal;
+  display: block;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
 }
 
 h1 {
-	font-size: 30px;
+  font-size: 30px;
 }
 
 h2 {
-	font-size: 24px;
+  font-size: 24px;
 }
 
 h3 {
-	font-size: 18px;
+  font-size: 18px;
 }
 
 h4, h5, h6 {
-	font-family: Arvo, Monaco, serif;
-	font-weight: 700;
+  font-family: 'PT Serif', serif;
+  font-weight: 700;
 }
 
 a {
   color:#C30000;
-  font-weight:200;
   text-decoration:none;
 }
 
 a:hover {
-	text-decoration: underline;
+  text-decoration: underline;
 }
 
 a small {
-	font-size: 12px;
+  font-size: 12px;
 }
 
 em {
-	font-style: italic;
+  font-style: italic;
 }
 
 strong {
@@ -98,12 +68,11 @@ strong {
 }
 
 ul {
-  list-style: inside;
   padding-left: 25px;
 }
 
 ol {
-  list-style: decimal inside;
+  list-style: decimal;
   padding-left: 20px;
 }
 
@@ -114,7 +83,7 @@ blockquote {
 }
 
 dl, dt, dd, dl p {
-	font-color: #444;
+  font-color: #444;
 }
 
 dl dt {
@@ -159,26 +128,25 @@ p img {
 }
 
 /* Code blocks */
-
 code, pre {
-	font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  font-family: monospace;
   color:#000;
-  font-size:14px;
+  font-size:12px;
+  line-height: 14px;
 }
 
 pre {
-	padding: 4px 12px;
+  padding: 6px 12px;
   background: #FDFEFB;
   border-radius:4px;
   border:1px solid #D7D8C8;
   overflow: auto;
-  overflow-y: hidden;
-	margin-bottom: 32px;
+  white-space: pre-wrap;
+  margin-bottom: 16px;
 }
 
 
 /* Tables */
-
 table {
   width:100%;
 }
@@ -190,9 +158,9 @@ table {
  }
 
 th {
-  font-family: 'Arvo', Helvetica, Arial, sans-serif;
-	font-size: 18px;
-	font-weight: normal;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 18px;
+  font-weight: normal;
   padding: 10px;
   background: #232323;
   color: #FDFEFB;
@@ -200,7 +168,7 @@ th {
 
 td {
   padding: 10px;
-	background: #ccc;
+  background: #ccc;
  }
 
 
@@ -213,47 +181,26 @@ td {
 /* Header */
 
 header {
-	background-color: #171717;
-	color: #FDFDFB;
   width:170px;
   float:left;
   position:fixed;
-	border: 1px solid #000;
-	-webkit-border-top-right-radius: 4px;
-	-webkit-border-bottom-right-radius: 4px;
-	-moz-border-radius-topright: 4px;
-	-moz-border-radius-bottomright: 4px;
-	border-top-right-radius: 4px;
-	border-bottom-right-radius: 4px;
-	padding: 34px 25px 22px 50px;
-	margin: 30px 25px 0 0;
-	-webkit-font-smoothing: antialiased;
+  padding: 12px 25px 22px 50px;
+  margin: 24px 25px 0 0;
 }
 
 p.header {
-	font-size: 16px;
+  font-size: 14px;
 }
 
 h1.header {
-	font-family: Arvo, sans-serif;
-	font-size: 30px;
-	font-weight: 300;
-	line-height: 1.3em;
-	border-bottom: none;
-	margin-top: 0;
-}
-
-
-h1.header, a.header, a.name, header a{
-	color: #fff;
-}
-
-a.header {
-	text-decoration: underline;
+  font-size: 30px;
+  font-weight: 300;
+  line-height: 1.3em;
+  margin-top: 0;
 }
 
 a.name {
-	white-space: nowrap;
+  white-space: nowrap;
 }
 
 header ul {
@@ -262,57 +209,33 @@ header ul {
 }
 
 header li {
-	list-style-type: none;
+  list-style-type: none;
   width:132px;
   height:15px;
-	margin-bottom: 12px;
-	line-height: 1em;
-	padding: 6px 6px 6px 7px;
-
-	background: #AF0011;
-	background: -moz-linear-gradient(top, #AF0011 0%, #820011 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#dddddd));
-  background: -webkit-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: -o-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: -ms-linear-gradient(top, #AF0011 0%,#820011 100%);
-  background: linear-gradient(top, #AF0011 0%,#820011 100%);
-
-	border-radius:4px;
-  border:1px solid #0D0D0D;
-
-	-webkit-box-shadow: inset 0px 1px 1px 0 rgba(233,2,38, 1);
-	box-shadow: inset 0px 1px 1px 0 rgba(233,2,38, 1);
-
+  margin-bottom: 12px;
+  line-height: 1em;
+  padding: 6px 6px 6px 7px;
+  background: #c30000;
+  border-radius:4px;
+  border:1px solid #555;
 }
 
 header li:hover {
-	background: #C3001D;
-	background: -moz-linear-gradient(top, #C3001D 0%, #950119 100%);
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f8f8f8), color-stop(100%,#dddddd));
-  background: -webkit-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: -o-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: -ms-linear-gradient(top, #C3001D 0%,#950119 100%);
-  background: linear-gradient(top, #C3001D 0%,#950119 100%);
+  background: #dd0000;
 }
 
 a.buttons {
-	-webkit-font-smoothing: antialiased;
-	background: url(../images/arrow-down.png) no-repeat;
-	font-weight: normal;
-	text-shadow: rgba(0, 0, 0, 0.4) 0 -1px 0;
-	padding: 2px 2px 2px 22px;
-	height: 30px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: normal;
+  padding: 2px 2px 2px 22px;
+  height: 30px;
 }
 
 a.github {
-	background: url(../images/octocat-small.png) no-repeat 1px;
+  background: url(/images/GitHub-Mark-64px.png) no-repeat center left;
+  background-size: 15%;
 }
-
-a.buttons:hover {
-	color: #fff;
-	text-decoration: none;
-}
-
 
 /* Section - for main page content */
 
@@ -320,6 +243,10 @@ section {
   width:650px;
   float:right;
   padding-bottom:50px;
+}
+
+p.footnote {
+  font-size: 12px;
 }
 
 
@@ -330,7 +257,7 @@ footer {
   float:left;
   position:fixed;
   bottom:10px;
-	padding-left: 50px;
+  padding-left: 50px;
 }
 
 @media print, screen and (max-width: 960px) {
@@ -346,11 +273,11 @@ footer {
     width:auto;
   }
 
-	footer {
-		border-top: 1px solid #ccc;
-		margin:0 84px 0 50px;
-		padding:0;
-	}
+  footer {
+    border-top: 1px solid #ccc;
+    margin:0 84px 0 50px;
+    padding:0;
+  }
 
   header {
     padding-right:320px;
@@ -379,17 +306,17 @@ footer {
 
   header {
     padding:10px 20px 0;
-		margin-right: 0;
+    margin-right: 0;
   }
 
-	section {
+  section {
     padding:10px 0 10px 20px;
     margin:0 0 30px;
   }
 
-	footer {
-		margin: 0 0 0 30px;
-	}
+  footer {
+    margin: 0 0 0 30px;
+  }
 
   header ul, header p.view {
     position:static;
@@ -402,13 +329,13 @@ footer {
     display:none;
   }
 
-	footer {
-		margin: 0 0 0 20px;
-	}
+  footer {
+    margin: 0 0 0 20px;
+  }
 
-	footer a{
-		display:block;
-	}
+  footer a{
+    display:block;
+  }
 
 }
 
