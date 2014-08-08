@@ -1,9 +1,8 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <vector>
 
 #include "caffe/filler.hpp"
 #include "caffe/vision_layers.hpp"
+
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
@@ -12,9 +11,10 @@ template <typename Dtype>
 class MemoryDataLayerTest : public ::testing::Test {
  protected:
   MemoryDataLayerTest()
-    : data_blob_(new Blob<Dtype>()),
-      label_blob_(new Blob<Dtype>()),
-      data_(new Blob<Dtype>()), labels_(new Blob<Dtype>()) {}
+    : data_(new Blob<Dtype>()),
+      labels_(new Blob<Dtype>()),
+      data_blob_(new Blob<Dtype>()),
+      label_blob_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     batch_size_ = 8;
     batches_ = 12;
@@ -54,8 +54,7 @@ class MemoryDataLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(MemoryDataLayerTest, Dtypes);
+TYPED_TEST_CASE(MemoryDataLayerTest, TestDtypes);
 
 TYPED_TEST(MemoryDataLayerTest, TestSetup) {
   LayerParameter layer_param;

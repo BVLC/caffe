@@ -177,10 +177,8 @@ The `softmax_loss` layer implements both the softmax and the multinomial logisti
 
 Check out the comments explaining each line in the prototxt:
 
-    # The training protocol buffer definition
-    train_net: "lenet_train.prototxt"
-    # The testing protocol buffer definition
-    test_net: "lenet_test.prototxt"
+    # The train/test net protocol buffer definition
+    net: "lenet_train_test.prototxt"
     # test_iter specifies how many forward passes the test should carry out.
     # In the case of MNIST, we have test batch size 100 and 100 test iterations,
     # covering the full 10,000 testing images.
@@ -212,7 +210,7 @@ Training the model is simple after you have written the network definition proto
     cd $CAFFE_ROOT/examples/mnist
     ./train_lenet.sh
 
-`train_lenet.sh` is a simple script, but here are a few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `train_net.bin`, with the solver protobuf text file as its argument.
+`train_lenet.sh` is a simple script, but here are a few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `caffe.bin` with action `train`, with the solver protobuf text file as its argument.
 
 When you run the code, you will see a lot of messages flying by like this:
 

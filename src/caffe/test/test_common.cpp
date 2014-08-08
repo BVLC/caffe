@@ -1,23 +1,26 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cstring>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
+
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
 
 class CommonTest : public ::testing::Test {};
 
-TEST_F(CommonTest, TestCublasHandler) {
+#ifndef CPU_ONLY  // GPU Caffe singleton test.
+
+TEST_F(CommonTest, TestCublasHandlerGPU) {
   int cuda_device_id;
   CUDA_CHECK(cudaGetDevice(&cuda_device_id));
   EXPECT_TRUE(Caffe::cublas_handle());
 }
+
+#endif
 
 TEST_F(CommonTest, TestBrewMode) {
   Caffe::set_mode(Caffe::CPU);
@@ -48,19 +51,23 @@ TEST_F(CommonTest, TestRandSeedCPU) {
   }
 }
 
+#ifndef CPU_ONLY  // GPU Caffe singleton test.
+
 TEST_F(CommonTest, TestRandSeedGPU) {
   SyncedMemory data_a(10 * sizeof(unsigned int));
   SyncedMemory data_b(10 * sizeof(unsigned int));
   Caffe::set_random_seed(1701);
   CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
-        reinterpret_cast<unsigned int*>(data_a.mutable_gpu_data()), 10));
+        static_cast<unsigned int*>(data_a.mutable_gpu_data()), 10));
   Caffe::set_random_seed(1701);
   CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
-        reinterpret_cast<unsigned int*>(data_b.mutable_gpu_data()), 10));
+        static_cast<unsigned int*>(data_b.mutable_gpu_data()), 10));
   for (int i = 0; i < 10; ++i) {
     EXPECT_EQ(((const unsigned int*)(data_a.cpu_data()))[i],
         ((const unsigned int*)(data_b.cpu_data()))[i]);
   }
 }
+
+#endif
 
 }  // namespace caffe

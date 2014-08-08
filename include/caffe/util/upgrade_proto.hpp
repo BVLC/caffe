@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_UTIL_UPGRADE_PROTO_H_
 #define CAFFE_UTIL_UPGRADE_PROTO_H_
 
@@ -7,8 +5,6 @@
 
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/proto/caffe_pretty_print.pb.h"
-
-using std::string;
 
 namespace caffe {
 

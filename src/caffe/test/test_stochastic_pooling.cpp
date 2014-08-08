@@ -1,24 +1,20 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <algorithm>
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/test/test_gradient_check_util.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/test/test_gradient_check_util.hpp"
 
 using std::min;
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
 class StochasticPoolingLayerTest : public ::testing::Test {
@@ -49,8 +45,7 @@ class StochasticPoolingLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(StochasticPoolingLayerTest, Dtypes);
+TYPED_TEST_CASE(StochasticPoolingLayerTest, TestDtypes);
 
 TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
   LayerParameter layer_param;

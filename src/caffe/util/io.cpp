@@ -1,28 +1,24 @@
-// Copyright 2014 BVLC and contributors.
-
-#include <stdint.h>
 #include <fcntl.h>
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <stdint.h>
 
 #include <algorithm>
+#include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
-#include <fstream>  // NOLINT(readability/streams)
 
 #include "caffe/common.hpp"
-#include "caffe/util/io.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
 
-using std::fstream;
-using std::ios;
-using std::max;
-using std::string;
+namespace caffe {
+
 using google::protobuf::io::FileInputStream;
 using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
@@ -30,8 +26,6 @@ using google::protobuf::io::CodedInputStream;
 using google::protobuf::io::ZeroCopyOutputStream;
 using google::protobuf::io::CodedOutputStream;
 using google::protobuf::Message;
-
-namespace caffe {
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto) {
   int fd = open(filename, O_RDONLY);
@@ -72,32 +66,44 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 }
 
 bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, Datum* datum) {
+    const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
   if (height > 0 && width > 0) {
-    cv::Mat cv_img_origin = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+    cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
     cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
   } else {
-    cv_img = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
+    cv_img = cv::imread(filename, cv_read_flag);
   }
   if (!cv_img.data) {
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
-  datum->set_channels(3);
+  int num_channels = (is_color ? 3 : 1);
+  datum->set_channels(num_channels);
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
   datum->set_label(label);
   datum->clear_data();
   datum->clear_float_data();
   string* datum_string = datum->mutable_data();
-  for (int c = 0; c < 3; ++c) {
+  if (is_color) {
+    for (int c = 0; c < num_channels; ++c) {
+      for (int h = 0; h < cv_img.rows; ++h) {
+        for (int w = 0; w < cv_img.cols; ++w) {
+          datum_string->push_back(
+            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+        }
+      }
+    }
+  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
     for (int h = 0; h < cv_img.rows; ++h) {
       for (int w = 0; w < cv_img.cols; ++w) {
         datum_string->push_back(
-            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+          static_cast<char>(cv_img.at<uchar>(h, w)));
+        }
       }
-    }
   }
   return true;
 }
@@ -111,6 +117,7 @@ void hdf5_load_nd_dataset_helper(
   herr_t status;
   int ndims;
   status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
+  CHECK_GE(status, 0) << "Failed to get dataset ndims for " << dataset_name_;
   CHECK_GE(ndims, min_dim);
   CHECK_LE(ndims, max_dim);
 
@@ -119,6 +126,7 @@ void hdf5_load_nd_dataset_helper(
   H5T_class_t class_;
   status = H5LTget_dataset_info(
       file_id, dataset_name_, dims.data(), &class_, NULL);
+  CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
   CHECK_EQ(class_, H5T_FLOAT) << "Expected float or double data";
 
   blob->Reshape(
@@ -134,6 +142,7 @@ void hdf5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
   hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
   herr_t status = H5LTread_dataset_float(
     file_id, dataset_name_, blob->mutable_cpu_data());
+  CHECK_GE(status, 0) << "Failed to read float dataset " << dataset_name_;
 }
 
 template <>
@@ -142,6 +151,7 @@ void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
   hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
   herr_t status = H5LTread_dataset_double(
     file_id, dataset_name_, blob->mutable_cpu_data());
+  CHECK_GE(status, 0) << "Failed to read double dataset " << dataset_name_;
 }
 
 template <>

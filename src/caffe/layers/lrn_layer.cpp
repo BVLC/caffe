@@ -1,20 +1,15 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
 void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 1) <<
-      "Local Response Normalization Layer takes a single blob as input.";
-  CHECK_EQ(top->size(), 1) <<
-      "Local Response Normalization Layer takes a single blob as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
@@ -85,7 +80,9 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       product_bottom_vec_.push_back(bottom[0]);
       product_bottom_vec_.push_back(&power_output_);
       LayerParameter product_param;
-      product_layer_.reset(new EltwiseProductLayer<Dtype>(product_param));
+      EltwiseParameter* eltwise_param = product_param.mutable_eltwise_param();
+      eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+      product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
       product_layer_->SetUp(product_bottom_vec_, top);
       CHECK_EQ((*top)[0]->num(), num_);
       CHECK_EQ((*top)[0]->channels(), channels_);
@@ -124,7 +121,7 @@ Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
   }
   Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);
   Dtype* padded_square_data = padded_square.mutable_cpu_data();
-  memset(padded_square_data, 0, sizeof(Dtype) * padded_square.count());
+  caffe_set(padded_square.count(), Dtype(0), padded_square_data);
   Dtype alpha_over_size = alpha_ / size_;
   // go through the images
   for (int n = 0; n < num_; ++n) {
@@ -174,7 +171,7 @@ Dtype LRNLayer<Dtype>::WithinChannelForward(
 
 template <typename Dtype>
 void LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
     CrossChannelBackward_cpu(top, propagate_down, bottom);
@@ -189,7 +186,7 @@ void LRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 template <typename Dtype>
 void LRNLayer<Dtype>::CrossChannelBackward_cpu(
-    const vector<Blob<Dtype>*>& top, const bool propagate_down,
+    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   const Dtype* top_data = top[0]->cpu_data();
@@ -202,7 +199,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   Dtype* accum_ratio_data = accum_ratio.mutable_cpu_data();
   // We hack a little bit by using the diff() to store an additional result
   Dtype* accum_ratio_times_bottom = accum_ratio.mutable_cpu_diff();
-  memset(padded_ratio_data, 0, sizeof(Dtype) * padded_ratio.count());
+  caffe_set(padded_ratio.count(), Dtype(0), padded_ratio_data);
   Dtype cache_ratio_value = 2. * alpha_ * beta_ / size_;
 
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
@@ -221,7 +218,7 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
         scale_data + block_offset,
         padded_ratio_data + padded_ratio.offset(0, inverse_pre_pad));
     // Now, compute the accumulated ratios and the bottom diff
-    memset(accum_ratio_data, 0, sizeof(Dtype) * accum_ratio.count());
+    caffe_set(accum_ratio.count(), Dtype(0), accum_ratio_data);
     for (int c = 0; c < size_ - 1; ++c) {
       caffe_axpy<Dtype>(height_ * width_, 1.,
           padded_ratio_data + padded_ratio.offset(0, c), accum_ratio_data);
@@ -244,16 +241,24 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
 
 template <typename Dtype>
 void LRNLayer<Dtype>::WithinChannelBackward(
-    const vector<Blob<Dtype>*>& top, const bool propagate_down,
+    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  if (propagate_down) {
-    product_layer_->Backward(top, true, &product_bottom_vec_);
-    power_layer_->Backward(power_top_vec_, true, &pool_top_vec_);
-    pool_layer_->Backward(pool_top_vec_, true, &square_top_vec_);
-    square_layer_->Backward(square_top_vec_, true, &square_bottom_vec_);
-    split_layer_->Backward(split_top_vec_, true, bottom);
+  if (propagate_down[0]) {
+    vector<bool> product_propagate_down(2, true);
+    product_layer_->Backward(top, product_propagate_down, &product_bottom_vec_);
+    power_layer_->Backward(power_top_vec_, propagate_down, &pool_top_vec_);
+    pool_layer_->Backward(pool_top_vec_, propagate_down, &square_top_vec_);
+    square_layer_->Backward(square_top_vec_, propagate_down,
+                            &square_bottom_vec_);
+    split_layer_->Backward(split_top_vec_, propagate_down, bottom);
   }
 }
+
+#ifdef CPU_ONLY
+STUB_GPU(LRNLayer);
+STUB_GPU_FORWARD(LRNLayer, CrossChannelForward);
+STUB_GPU_BACKWARD(LRNLayer, CrossChannelBackward);
+#endif
 
 INSTANTIATE_CLASS(LRNLayer);
 

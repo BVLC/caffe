@@ -1,12 +1,10 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cstring>
 #include <string>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/util/upgrade_proto.hpp"

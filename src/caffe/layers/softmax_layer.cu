@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <algorithm>
 #include <cfloat>
 #include <vector>
@@ -7,10 +5,8 @@
 #include "thrust/device_vector.h"
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-
-using std::max;
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -50,8 +46,7 @@ Dtype SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* scale_data = scale_.mutable_gpu_data();
   int num = bottom[0]->num();
   int dim = bottom[0]->count() / bottom[0]->num();
-  CUDA_CHECK(cudaMemcpy(top_data, bottom_data,
-      sizeof(Dtype) * bottom[0]->count(), cudaMemcpyDeviceToDevice));
+  caffe_copy(bottom[0]->count(), bottom_data, top_data);
   // we need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   // Compute max
@@ -79,14 +74,13 @@ Dtype SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 // TODO(Yangqing): implement the GPU version of softmax.
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
   int num = top[0]->num();
   int dim = top[0]->count() / top[0]->num();
-  CUDA_CHECK(cudaMemcpy(bottom_diff, top_diff,
-      sizeof(Dtype) * top[0]->count(), cudaMemcpyDeviceToDevice));
+  caffe_copy(top[0]->count(), top_diff, bottom_diff);
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff
   // cuda dot returns the result to cpu, so we temporarily change the pointer
   // mode

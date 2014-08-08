@@ -1,13 +1,9 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <algorithm>
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/util/math_functions.hpp"
-
-using std::max;
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -23,7 +19,7 @@ Dtype PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     return Dtype(0);
   }
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  caffe_gpu_copy(count, bottom_data, top_data);
+  caffe_copy(count, bottom_data, top_data);
   if (scale_ != Dtype(1)) {
     caffe_gpu_scal(count, scale_, top_data);
   }
@@ -38,9 +34,9 @@ Dtype PowerLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+    const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  if (propagate_down) {
+  if (propagate_down[0]) {
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
     const int count = (*bottom)[0]->count();
     const Dtype* top_diff = top[0]->gpu_diff();
@@ -68,7 +64,7 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         caffe_gpu_div(count, top_data, bottom_data, bottom_diff);
         caffe_gpu_scal(count, power_, bottom_diff);
       } else {
-        caffe_gpu_copy(count, bottom_data, bottom_diff);
+        caffe_copy(count, bottom_data, bottom_diff);
         if (scale_ != Dtype(1)) {
           caffe_gpu_scal(count, scale_, bottom_diff);
         }

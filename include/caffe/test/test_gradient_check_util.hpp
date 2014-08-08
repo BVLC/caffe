@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_TEST_GRADIENT_CHECK_UTIL_H_
 #define CAFFE_TEST_GRADIENT_CHECK_UTIL_H_
 
@@ -12,8 +10,6 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
-
-using std::max;
 
 namespace caffe {
 
@@ -86,6 +82,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   }
   // First, figure out what blobs we need to check against.
   vector<Blob<Dtype>*> blobs_to_check;
+  vector<bool> propagate_down(bottom->size(), check_bottom < 0);
   for (int i = 0; i < layer->blobs().size(); ++i) {
     blobs_to_check.push_back(layer->blobs()[i].get());
   }
@@ -94,8 +91,9 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       blobs_to_check.push_back((*bottom)[i]);
     }
   } else {
-    CHECK(check_bottom < bottom->size());
+    CHECK_LT(check_bottom, bottom->size());
     blobs_to_check.push_back((*bottom)[check_bottom]);
+    propagate_down[check_bottom] = true;
   }
   // Compute the gradient analytically using Backward
   Caffe::set_random_seed(seed_);
@@ -103,7 +101,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   Dtype computed_objective = layer->Forward(*bottom, top);
   // Get additional loss from the objective
   computed_objective += GetObjAndGradient(top, top_id, top_data_id);
-  layer->Backward(*top, true, bottom);
+  layer->Backward(*top, propagate_down, bottom);
   // Store computed gradients for all checked blobs
   vector<shared_ptr<Blob<Dtype> > >
       computed_gradient_blobs(blobs_to_check.size());
@@ -158,8 +156,8 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
           || fabs(feature) > kink_ + kink_range_) {
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
-        Dtype scale = max(
-            max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
+        Dtype scale = std::max(
+            std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
         EXPECT_NEAR(computed_gradient, estimated_gradient, threshold_ * scale)
           << "debug: (top_id, top_data_id, blob_id, feat_id)="
           << top_id << "," << top_data_id << "," << blob_id << "," << feat_id;
@@ -228,7 +226,7 @@ Dtype GradientChecker<Dtype>::GetObjAndGradient(vector<Blob<Dtype>*>* top,
         loss += top_blob_data[j] * top_blob_data[j];
       }
       // set the diff: simply the data.
-      memcpy(top_blob_diff, top_blob_data, sizeof(Dtype) * top_blob->count());
+      caffe_copy(top_blob->count(), top_blob_data, top_blob_diff);
     }
     loss /= 2.;
   } else {
@@ -236,7 +234,7 @@ Dtype GradientChecker<Dtype>::GetObjAndGradient(vector<Blob<Dtype>*>* top,
     for (int i = 0; i < top->size(); ++i) {
       Blob<Dtype>* top_blob = (*top)[i];
       Dtype* top_blob_diff = top_blob->mutable_cpu_diff();
-      memset(top_blob_diff, 0, sizeof(Dtype) * top_blob->count());
+      caffe_set(top_blob->count(), Dtype(0), top_blob_diff);
     }
     loss = (*top)[top_id]->cpu_data()[top_data_id];
     (*top)[top_id]->mutable_cpu_diff()[top_data_id] = 1.;

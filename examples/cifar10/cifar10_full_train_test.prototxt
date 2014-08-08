@@ -1,4 +1,16 @@
-name: "CIFAR10_full_test"
+name: "CIFAR10_full"
+layers {
+  name: "cifar"
+  type: DATA
+  top: "data"
+  top: "label"
+  data_param {
+    source: "cifar10-leveldb/cifar-train-leveldb"
+    mean_file: "mean.binaryproto"
+    batch_size: 100
+  }
+  include: { phase: TRAIN }
+}
 layers {
   name: "cifar"
   type: DATA
@@ -9,6 +21,7 @@ layers {
     mean_file: "mean.binaryproto"
     batch_size: 100
   }
+  include: { phase: TEST }
 }
 layers {
   name: "conv1"
@@ -167,15 +180,17 @@ layers {
   }
 }
 layers {
-  name: "prob"
-  type: SOFTMAX
-  bottom: "ip1"
-  top: "prob"
-}
-layers {
   name: "accuracy"
   type: ACCURACY
-  bottom: "prob"
+  bottom: "ip1"
   bottom: "label"
   top: "accuracy"
+  include: { phase: TEST }
+}
+layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "ip1"
+  bottom: "label"
+  top: "loss"
 }

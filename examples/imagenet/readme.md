@@ -12,7 +12,7 @@ Yangqing's Recipe on Brewing ImageNet
     "All your braincells are belong to us."
         - Caffeine
 
-We are going to describe a reference implementation for the approach first proposed by Krizhevsky, Sutskever, and Hinton in their [NIPS 2012 paper](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf). Since training the whole model takes some time and energy, we provide a model, trained in the same way as we describe here, to help fight global warming. If you would like to simply use the pretrained model, check out the [Pretrained ImageNet](getting_pretrained_models.html) page. *Note that the pretrained model is for academic research / non-commercial use only*.
+We are going to describe a reference implementation for the approach first proposed by Krizhevsky, Sutskever, and Hinton in their [NIPS 2012 paper](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf). Since training the whole model takes some time and energy, we provide a model, trained in the same way as we describe here, to help fight global warming. If you would like to simply use the pretrained model, check out the [Pretrained ImageNet](../../getting_pretrained_models.html) page. *Note that the pretrained model is for academic research / non-commercial use only*.
 
 To clarify, by ImageNet we actually mean the ILSVRC12 challenge, but you can easily train on the whole of ImageNet as well, just with more disk space, and a little longer training time.
 
@@ -33,7 +33,7 @@ You will first need to prepare some auxiliary data for training. This data can b
 
 The training and validation input are described in `train.txt` and `val.txt` as text listing all the files and their labels. Note that we use a different indexing for labels than the ILSVRC devkit: we sort the synset names in their ASCII order, and then label them from 0 to 999. See `synset_words.txt` for the synset/name mapping.
 
-You will also need to resize the images to 256x256: we do not explicitly do this because in a cluster environment, one may benefit from resizing images in a parallel fashion, using mapreduce. For example, Yangqing used his lightedweighted [mincepie](https://github.com/Yangqing/mincepie) package to do mapreduce on the Berkeley cluster. If you would things to be rather simple and straightforward, you can also use shell commands, something like:
+You may want to resize the images to 256x256 in advance. By default, we do not explicitly do this because in a cluster environment, one may benefit from resizing images in a parallel fashion, using mapreduce. For example, Yangqing used his lightedweighted [mincepie](https://github.com/Yangqing/mincepie) package to do mapreduce on the Berkeley cluster. If you would things to be rather simple and straightforward, you can also use shell commands, something like:
 
     for name in /path/to/imagenet/val/*.JPEG; do
         convert -resize 256x256\! $name $name
@@ -41,7 +41,8 @@ You will also need to resize the images to 256x256: we do not explicitly do this
 
 Go to `$CAFFE_ROOT/examples/imagenet/` for the rest of this guide.
 
-Take a look at `create_imagenet.sh`. Set the paths to the train and val dirs as needed. Now simply create the leveldbs with `./create_imagenet.sh`. Note that `ilsvrc12_train_leveldb` and `ilsvrc12_val_leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
+Take a look at `create_imagenet.sh`. Set the paths to the train and val dirs as needed, and set "RESIZE=true" to resize all images to 256x256 if you haven't resized the images in advance.
+Now simply create the leveldbs with `./create_imagenet.sh`. Note that `ilsvrc12_train_leveldb` and `ilsvrc12_val_leveldb` should not exist before this execution. It will be created by the script. `GLOG_logtostderr=1` simply dumps more information for you to inspect, and you can safely ignore it.
 
 Compute Image Mean
 ------------------
@@ -72,12 +73,11 @@ We will also lay out a protocol buffer for running the solver. Let's make a few 
 * The network will be trained with momentum 0.9 and a weight decay of 0.0005.
 * For every 10,000 iterations, we will take a snapshot of the current status.
 
-Sound good? This is implemented in `examples/imagenet/imagenet_solver.prototxt`. Again, you will need to change the first two lines:
+Sound good? This is implemented in `examples/imagenet/imagenet_solver.prototxt`. Again, you will need to change the first line:
 
-    train_net: "imagenet_train.prototxt"
-    test_net: "imagenet_val.prototxt"
+    net: "imagenet_train_val.prototxt"
 
-to point to the actual path if you have changed them.
+to point to the actual path if you have changed it.
 
 Training ImageNet
 -----------------
@@ -102,4 +102,4 @@ Parting Words
 
 Hope you liked this recipe! Many researchers have gone further since the ILSVRC 2012 challenge, changing the network architecture and/or finetuning the various parameters in the network. The recent ILSVRC 2013 challenge suggests that there are quite some room for improvement. **Caffe allows one to explore different network choices  more easily, by simply writing different prototxt files** - isn't that exciting?
 
-And since now you have a trained network, check out how to use it: [Running Pretrained ImageNet](getting_pretrained_models.html). This time we will use Python, but if you have wrappers for other languages, please kindly send a pull request!
+And since now you have a trained network, check out how to use it: [Running Pretrained ImageNet](../../getting_pretrained_models.html). This time we will use Python, but if you have wrappers for other languages, please kindly send a pull request!

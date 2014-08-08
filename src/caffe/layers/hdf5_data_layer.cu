@@ -1,4 +1,3 @@
-// Copyright 2014 BVLC and contributors.
 /*
 TODO:
 - only load parts of the file, in accordance with a prototxt param "max_mem"
@@ -14,8 +13,6 @@ TODO:
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
-
-using std::string;
 
 namespace caffe {
 
@@ -40,23 +37,14 @@ Dtype HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
       current_row_ = 0;
     }
-    CUDA_CHECK(cudaMemcpy(
-            &(*top)[0]->mutable_gpu_data()[i * data_count],
-            &data_blob_.cpu_data()[current_row_ * data_count],
-            sizeof(Dtype) * data_count,
-            cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(
-            &(*top)[1]->mutable_gpu_data()[i * label_data_count],
-            &label_blob_.cpu_data()[current_row_ * label_data_count],
-            sizeof(Dtype) * label_data_count,
-            cudaMemcpyHostToDevice));
+    caffe_copy(data_count,
+        &data_blob_.cpu_data()[current_row_ * data_count],
+        &(*top)[0]->mutable_gpu_data()[i * data_count]);
+    caffe_copy(label_data_count,
+        &label_blob_.cpu_data()[current_row_ * label_data_count],
+        &(*top)[1]->mutable_gpu_data()[i * label_data_count]);
   }
   return Dtype(0.);
-}
-
-template <typename Dtype>
-void HDF5DataLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
 }
 
 INSTANTIATE_CLASS(HDF5DataLayer);

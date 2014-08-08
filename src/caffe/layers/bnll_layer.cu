@@ -1,12 +1,8 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <algorithm>
 #include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
-
-using std::max;
 
 namespace caffe {
 
@@ -45,9 +41,9 @@ __global__ void BNLLBackward(const int n, const Dtype* in_diff,
 
 template <typename Dtype>
 void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
+    const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
-  if (propagate_down) {
+  if (propagate_down[0]) {
     const Dtype* bottom_data = (*bottom)[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
