@@ -78,8 +78,22 @@ class ConvolutionLayer : public Layer<Dtype> {
   int width_;
   int num_output_;
   int group_;
+  int mem_group_size;
   Blob<Dtype> col_buffer_;
+  Blob<Dtype> bias_buffer_;
+  Blob<Dtype> trans_buffer_;
+  Dtype* row_sumer_;
+
   shared_ptr<SyncedMemory> bias_multiplier_;
+
+  //for calling batched operations
+  const Dtype** batch_left_ptr_list;
+  const Dtype** batch_right_ptr_list;
+  Dtype** batch_result_ptr_list;
+  const Dtype ** d_batch_left_ptr_list;
+  const Dtype ** d_batch_right_ptr_list;
+  Dtype ** d_batch_result_ptr_list;
+
   bool bias_term_;
   int M_;
   int K_;

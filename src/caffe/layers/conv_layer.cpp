@@ -19,6 +19,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   stride_ = this->layer_param_.convolution_param().stride();
   group_ = this->layer_param_.convolution_param().group();
   pad_ = this->layer_param_.convolution_param().pad();
+  mem_group_size = this->layer_param_.convolution_param().mem_group_size();
+  LOG(INFO)<< "Grouping im2col at size "<<mem_group_size;
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
@@ -31,7 +33,8 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   int height_out = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
   int width_out = (width_ + 2 * pad_ - kernel_size_) / stride_ + 1;
   col_buffer_.Reshape(
-      1, channels_ * kernel_size_ * kernel_size_, height_out, width_out);
+      mem_group_size, channels_ * kernel_size_ * kernel_size_, height_out, width_out);
+
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
@@ -41,6 +44,17 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   K_ = channels_ * kernel_size_ * kernel_size_ / group_;
   N_ = height_out * width_out;
   (*top)[0]->Reshape(bottom[0]->num(), num_output_, height_out, width_out);
+  bias_buffer_.Reshape(
+  1, 1,num_output_, N_);
+  trans_buffer_.Reshape(
+    mem_group_size,1,M_, N_);
+
+  CUDA_CHECK(cudaMalloc(&row_sumer_, num_*sizeof(Dtype)));
+  Dtype *temp = new Dtype[num_];
+  for(int i = 0; i<num_; i++) temp[i] = (Dtype)1.;
+  CUBLAS_CHECK(cublasSetVector(num_, sizeof(Dtype), temp, 1, row_sumer_, 1));
+  delete temp;
+
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
@@ -74,6 +88,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         bias_multiplier_data[i] = 1.;
     }
   }
+
 }
 
 
@@ -91,6 +106,8 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // First, im2col
     im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
                       width_, kernel_size_, pad_, stride_, col_data);
+  //bu_im2col_gpu(bottom_data + bottom[0]->offset(n), channels_, height_,
+ //                     width_, kernel_size_, pad_, stride_, col_data, 1);
     // Second, innerproduct with groups
     for (int g = 0; g < group_; ++g) {
       caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,

@@ -25,6 +25,7 @@ layers {
     bias_filler {
       type: "constant"
     }
+    mem_group_size: 32
   }
 }
 layers {
@@ -53,6 +54,7 @@ layers {
     bias_filler {
       type: "constant"
     }
+    mem_group_size: 32
   }
 }
 layers {
