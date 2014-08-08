@@ -1,17 +1,10 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <map>
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 
 #include "caffe/common.hpp"
 #include "caffe/util/insert_splits.hpp"
-
-using std::map;
-using std::ostringstream;
-using std::pair;
-using std::make_pair;
 
 namespace caffe {
 

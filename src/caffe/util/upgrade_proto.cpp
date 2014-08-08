@@ -1,19 +1,14 @@
-// Copyright 2014 BVLC and contributors.
-
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
 
 #include <map>
 #include <string>
 
 #include "caffe/common.hpp"
+#include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
-#include "caffe/proto/caffe.pb.h"
-
-using std::map;
-using std::string;
 
 namespace caffe {
 
@@ -85,11 +80,13 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
       LayerParameter source_layer = param.layers(top_idx);
       if (source_layer.layer().type() == "padding") {
         // This layer has a padding layer as input -- check that it is a conv
-        // layer and takes only one input.  Also check that the padding layer
-        // input has only one input and one output.  Other cases have undefined
-        // behavior in Caffe.
-        CHECK_EQ(layer_param.type(), "conv") << "Padding layer input to "
-            "non-convolutional layer type " << layer_param.type();
+        // layer or a pooling layer and takes only one input.  Also check that
+        // the padding layer input has only one input and one output.  Other
+        // cases have undefined behavior in Caffe.
+        CHECK((layer_param.type() == "conv") || (layer_param.type() == "pool"))
+            << "Padding layer input to "
+            "non-convolutional / non-pooling layer type "
+            << layer_param.type();
         CHECK_EQ(layer_connection.bottom_size(), 1)
             << "Conv Layer takes a single blob as input.";
         CHECK_EQ(source_layer.bottom_size(), 1)
@@ -189,6 +186,8 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
     if (v0_layer_param.has_pad()) {
       if (type == "conv") {
         layer_param->mutable_convolution_param()->set_pad(v0_layer_param.pad());
+      } else if (type == "pool") {
+        layer_param->mutable_pooling_param()->set_pad(v0_layer_param.pad());
       } else {
         LOG(ERROR) << "Unknown parameter pad for layer type " << type;
         is_fully_compatible = false;

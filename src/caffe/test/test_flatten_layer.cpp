@@ -1,24 +1,21 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/test/test_gradient_check_util.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-
-template <typename Dtype>
-class FlattenLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class FlattenLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
  protected:
   FlattenLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
@@ -38,12 +35,12 @@ class FlattenLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(FlattenLayerTest, Dtypes);
+TYPED_TEST_CASE(FlattenLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(FlattenLayerTest, TestSetup) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  FlattenLayer<TypeParam> layer(layer_param);
+  FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3 * 6 * 5);
@@ -51,10 +48,10 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 1);
 }
 
-TYPED_TEST(FlattenLayerTest, TestCPU) {
+TYPED_TEST(FlattenLayerTest, Test) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  FlattenLayer<TypeParam> layer(layer_param);
-  Caffe::set_mode(Caffe::CPU);
+  FlattenLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   for (int c = 0; c < 3 * 6 * 5; ++c) {
@@ -65,34 +62,11 @@ TYPED_TEST(FlattenLayerTest, TestCPU) {
   }
 }
 
-TYPED_TEST(FlattenLayerTest, TestGPU) {
+TYPED_TEST(FlattenLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  FlattenLayer<TypeParam> layer(layer_param);
-  Caffe::set_mode(Caffe::GPU);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  for (int c = 0; c < 3 * 6 * 5; ++c) {
-    EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
-        this->blob_bottom_->data_at(0, c / (6 * 5), (c / 5) % 6, c % 5));
-    EXPECT_EQ(this->blob_top_->data_at(1, c, 0, 0),
-        this->blob_bottom_->data_at(1, c / (6 * 5), (c / 5) % 6, c % 5));
-  }
-}
-
-TYPED_TEST(FlattenLayerTest, TestCPUGradient) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
-  FlattenLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
-  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-}
-
-TYPED_TEST(FlattenLayerTest, TestGPUGradient) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::GPU);
-  FlattenLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  FlattenLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }

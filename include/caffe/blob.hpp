@@ -1,11 +1,10 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_BLOB_HPP_
 #define CAFFE_BLOB_HPP_
 
 #include "caffe/common.hpp"
-#include "caffe/syncedmem.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/syncedmem.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -13,8 +12,8 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : num_(0), channels_(0), height_(0), width_(0), count_(0), data_(),
-       diff_() {}
+       : data_(), diff_(), num_(0), channels_(0), height_(0), width_(0),
+       count_(0) {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
   void Reshape(const int num, const int channels, const int height,
@@ -74,6 +73,10 @@ class Blob {
   void Update();
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
+
+  // Compute the sum of absolute values (L1 norm) of the data or diff.
+  Dtype asum_data() const;
+  Dtype asum_diff() const;
 
   // Set the data_/diff_ shared_ptr to point to the SyncedMemory holding the
   // data_/diff_ of Blob other -- useful in layers which simply perform a copy

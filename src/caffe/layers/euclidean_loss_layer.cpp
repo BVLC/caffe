@@ -1,16 +1,9 @@
-// Copyright 2014 BVLC and contributors.
-
-#include <algorithm>
-#include <cmath>
-#include <cfloat>
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
-
-using std::max;
+#include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -35,19 +28,31 @@ Dtype EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       diff_.mutable_cpu_data());
   Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
   Dtype loss = dot / bottom[0]->num() / Dtype(2);
+  if (top->size() == 1) {
+    (*top)[0]->mutable_cpu_data()[0] = loss;
+  }
   return loss;
 }
 
 template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down, vector<Blob<Dtype>*>* bottom) {
-  caffe_cpu_axpby(
-      (*bottom)[0]->count(),              // count
-      Dtype(1) / (*bottom)[0]->num(),     // alpha
-      diff_.cpu_data(),                   // a
-      Dtype(0),                           // beta
-      (*bottom)[0]->mutable_cpu_diff());  // b
+    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  for (int i = 0; i < 2; ++i) {
+    if (propagate_down[i]) {
+      const Dtype sign = (i == 0) ? 1 : -1;
+      caffe_cpu_axpby(
+          (*bottom)[i]->count(),              // count
+          sign / (*bottom)[i]->num(),         // alpha
+          diff_.cpu_data(),                   // a
+          Dtype(0),                           // beta
+          (*bottom)[i]->mutable_cpu_diff());  // b
+    }
+  }
 }
+
+#ifdef CPU_ONLY
+STUB_GPU(EuclideanLossLayer);
+#endif
 
 INSTANTIATE_CLASS(EuclideanLossLayer);
 

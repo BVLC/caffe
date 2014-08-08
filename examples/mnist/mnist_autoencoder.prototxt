@@ -4,10 +4,22 @@ layers {
   name: "data"
   type: DATA
   data_param {
+    source: "mnist-train-leveldb"
+    scale: 0.0039215684
+    batch_size: 100
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  top: "data"
+  name: "data"
+  type: DATA
+  data_param {
     source: "mnist-test-leveldb"
     scale: 0.0039215684
     batch_size: 100
   }
+  include: { phase: TEST }
 }
 layers {
   bottom: "data"
@@ -20,8 +32,21 @@ layers {
   top: "encode1"
   name: "encode1"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 1000
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layers {
@@ -35,8 +60,21 @@ layers {
   top: "encode2"
   name: "encode2"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 500
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layers {
@@ -50,8 +88,21 @@ layers {
   top: "encode3"
   name: "encode3"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 250
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layers {
@@ -71,6 +122,15 @@ layers {
   weight_decay: 0
   inner_product_param {
     num_output: 30
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layers {
@@ -84,6 +144,15 @@ layers {
   weight_decay: 0
   inner_product_param {
     num_output: 250
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layers {
@@ -97,8 +166,21 @@ layers {
   top: "decode3"
   name: "decode3"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 500
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layers {
@@ -112,8 +194,21 @@ layers {
   top: "decode2"
   name: "decode2"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 1000
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layers {
@@ -127,19 +222,42 @@ layers {
   top: "decode1"
   name: "decode1"
   type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 1
+  weight_decay: 1
+  weight_decay: 0
   inner_product_param {
     num_output: 784
+    weight_filler {
+      type: "gaussian"
+      std: 1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
+}
+layers {
+  bottom: "decode1"
+  bottom: "flatdata"
+  name: "loss"
+  type: SIGMOID_CROSS_ENTROPY_LOSS
+  include: { phase: TRAIN }
 }
 layers {
   bottom: "decode1"
   top: "decode1neuron"
   name: "decode1neuron"
   type: SIGMOID
+  include: { phase: TEST }
 }
 layers {
   bottom: "decode1neuron"
   bottom: "flatdata"
   name: "loss"
   type: EUCLIDEAN_LOSS
+  top: "loss"
+  include: { phase: TEST }
 }

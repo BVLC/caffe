@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <vector>
 
 #include "caffe/layer.hpp"
@@ -10,8 +8,7 @@ namespace caffe {
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
      vector<Blob<Dtype>*>* top) {
-  CHECK_EQ(bottom.size(), 0) << "Memory Data Layer takes no blobs as input.";
-  CHECK_EQ(top->size(), 2) << "Memory Data Layer takes two blobs as output.";
+  Layer<Dtype>::SetUp(bottom, top);
   batch_size_ = this->layer_param_.memory_data_param().batch_size();
   datum_channels_ = this->layer_param_.memory_data_param().channels();
   datum_height_ = this->layer_param_.memory_data_param().height();

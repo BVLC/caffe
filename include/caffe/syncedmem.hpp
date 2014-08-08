@@ -1,11 +1,10 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_SYNCEDMEM_HPP_
 #define CAFFE_SYNCEDMEM_HPP_
 
 #include <cstdlib>
 
 #include "caffe/common.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 

@@ -1,24 +1,21 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cstring>
 #include <vector>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/test/test_gradient_check_util.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
-
-template <typename Dtype>
-class Im2colLayerTest : public ::testing::Test {
+template <typename TypeParam>
+class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
  protected:
   Im2colLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
@@ -37,16 +34,16 @@ class Im2colLayerTest : public ::testing::Test {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(Im2colLayerTest, Dtypes);
+TYPED_TEST_CASE(Im2colLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(Im2colLayerTest, TestSetup) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
-  Im2colLayer<TypeParam> layer(layer_param);
+  Im2colLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 27);
@@ -54,31 +51,14 @@ TYPED_TEST(Im2colLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
-TYPED_TEST(Im2colLayerTest, TestCPU) {
+TYPED_TEST(Im2colLayerTest, TestForward) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
-  Im2colLayer<TypeParam> layer(layer_param);
-  Caffe::set_mode(Caffe::CPU);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // We are lazy and will only check the top left block
-  for (int c = 0; c < 27; ++c) {
-    EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
-        this->blob_bottom_->data_at(0, (c / 9), (c / 3) % 3, c % 3));
-  }
-}
-
-TYPED_TEST(Im2colLayerTest, TestGPU) {
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  Im2colLayer<TypeParam> layer(layer_param);
-  Caffe::set_mode(Caffe::GPU);
+  Im2colLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // We are lazy and will only check the top left block
@@ -88,31 +68,51 @@ TYPED_TEST(Im2colLayerTest, TestGPU) {
   }
 }
 
-TYPED_TEST(Im2colLayerTest, TestCPUGradient) {
+TYPED_TEST(Im2colLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
-  Caffe::set_mode(Caffe::CPU);
-  Im2colLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  Im2colLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
 
-TYPED_TEST(Im2colLayerTest, TestGPUGradient) {
+
+TYPED_TEST(Im2colLayerTest, TestRect) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
+  convolution_param->set_kernel_h(5);
+  convolution_param->set_kernel_w(3);
   convolution_param->set_stride(2);
-  Caffe::set_mode(Caffe::GPU);
-  Im2colLayer<TypeParam> layer(layer_param);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2);
+  Im2colLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // We are lazy and will only check the top left block
+  for (int c = 0; c < 45; ++c) {
+    EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
+        this->blob_bottom_->data_at(0, (c / 15), (c / 3) % 5, c % 3));
+  }
+}
+
+
+TYPED_TEST(Im2colLayerTest, TestRectGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_h(5);
+  convolution_param->set_kernel_w(3);
+  convolution_param->set_stride(2);
+  Im2colLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
-
 
 }  // namespace caffe

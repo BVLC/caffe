@@ -57,9 +57,9 @@ def main(argv):
     )
     parser.add_argument(
         "--crop_mode",
-        default="center_only",
+        default="selective_search",
         choices=CROP_MODES,
-        help="Image crop mode"
+        help="How to generate windows for detection."
     )
     parser.add_argument(
         "--gpu",
@@ -76,8 +76,12 @@ def main(argv):
     parser.add_argument(
         "--input_scale",
         type=float,
-        default=255,
-        help="Multiply input features by this scale before input to net"
+        help="Multiply input features by this scale to finish input preprocessing."
+    )
+    parser.add_argument(
+        "--raw_scale",
+        type=float,
+        help="Multiply raw input by this scale before preprocessing."
     )
     parser.add_argument(
         "--channel_swap",
@@ -86,14 +90,26 @@ def main(argv):
              "RGB -> BGR since BGR is the Caffe default by way of OpenCV."
 
     )
+    parser.add_argument(
+        "--context_pad",
+        type=int,
+        default='16',
+        help="Amount of surrounding context to collect in input window."
+    )
     args = parser.parse_args()
 
-    channel_swap = [int(s) for s in args.channel_swap.split(',')]
+    mean, channel_swap = None, None
+    if args.mean_file:
+        mean = np.load(args.mean_file)
+    if args.channel_swap:
+        channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
     # Make detector.
     detector = caffe.Detector(args.model_def, args.pretrained_model,
-            gpu=args.gpu, mean_file=args.mean_file,
-            input_scale=args.input_scale, channel_swap=channel_swap)
+            gpu=args.gpu, mean=mean,
+            input_scale=args.input_scale, raw_scale=args.raw_scale,
+            channel_swap=channel_swap,
+            context_pad=args.context_pad)
 
     if args.gpu:
         print 'GPU mode'

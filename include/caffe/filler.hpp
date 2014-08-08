@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 // Fillers are random number generators that fills a blob using the specified
 // algorithm. The expectation is that they are only going to be used during
 // initialization time and will not involve any GPUs.
@@ -9,11 +7,11 @@
 
 #include <string>
 
-#include "caffe/common.hpp"
 #include "caffe/blob.hpp"
+#include "caffe/common.hpp"
+#include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 

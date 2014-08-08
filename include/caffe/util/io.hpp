@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
@@ -8,16 +6,15 @@
 #include "google/protobuf/message.h"
 #include "hdf5.h"
 #include "hdf5_hl.h"
-#include "caffe/proto/caffe.pb.h"
 
 #include "caffe/blob.hpp"
-
-using std::string;
-using ::google::protobuf::Message;
+#include "caffe/proto/caffe.pb.h"
 
 #define HDF5_NUM_DIMS 4
 
 namespace caffe {
+
+using ::google::protobuf::Message;
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto);
 
@@ -61,12 +58,18 @@ inline void WriteProtoToBinaryFile(
 }
 
 bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, Datum* datum);
+    const int height, const int width, const bool is_color, Datum* datum);
+
+inline bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, Datum* datum) {
+  return ReadImageToDatum(filename, label, height, width, true, datum);
+}
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
+
 
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
