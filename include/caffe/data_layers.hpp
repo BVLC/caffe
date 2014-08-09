@@ -1,10 +1,10 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
+#include <opencv2/opencv.hpp>
 #include <string>
 #include <utility>
 #include <vector>
-#include <opencv2/opencv.hpp>
 
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"

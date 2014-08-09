@@ -1,12 +1,11 @@
 // Copyright 2014 BVLC and contributors.
 
-#include <cuda_runtime.h>
-
 #include <string>
 
 #include "gtest/gtest.h"
-#include "caffe/common.hpp"
+
 #include "caffe/blob.hpp"
+#include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/util/format.hpp"
 

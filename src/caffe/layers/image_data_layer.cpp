@@ -28,15 +28,15 @@ void ProcessImageDatum(
     // We only do random crop when we do training.
     if (Caffe::phase() == Caffe::TRAIN) {
       // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-      h_off = rand() % (height - crop_size);
+      h_off = caffe_rng_rand() % (height - crop_size);
       // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-      w_off = rand() % (width - crop_size);
+      w_off = caffe_rng_rand() % (width - crop_size);
     } else {
       h_off = (height - crop_size) / 2;
       w_off = (width - crop_size) / 2;
     }
     // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-    if (mirror && rand() % 2) {
+    if (mirror && caffe_rng_rand() % 2) {
       // Copy mirrored version
       for (int c = 0; c < channels; ++c) {
         for (int h = 0; h < crop_size; ++h) {
@@ -133,7 +133,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
-  if (this->layer_param_.has_source()) {
+  if (this->layer_param_.image_data_param().has_source()) {
     // Finally, join the thread
     JoinPrefetchThread();
   }
@@ -151,8 +151,9 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
-  (*top)[1]->Reshape(this->layer_param_.batchsize(), 1, 1, 1);
-  if (this->layer_param_.image_data_param().has_source()) { 
+  (*top)[1]->Reshape(this->layer_param_.image_data_param().batch_size(),
+                     1, 1, 1);
+  if (this->layer_param_.image_data_param().has_source()) {
     // Read the file with filenames and labels
     const string& source = this->layer_param_.image_data_param().source();
     LOG(INFO) << "Opening file " << source;
@@ -175,7 +176,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     // Check if we would need to randomly skip a few data points
     if (this->layer_param_.image_data_param().rand_skip()) {
       // NOLINT_NEXT_LINE(runtime/threadsafe_fn)
-      unsigned int skip = rand() %
+      unsigned int skip = caffe_rng_rand() %
           this->layer_param_.image_data_param().rand_skip();
       LOG(INFO) << "Skipping first " << skip << " data points.";
       CHECK_GT(lines_.size(), skip) << "Not enought points to skip";
@@ -188,7 +189,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     // image
     const int crop_size = this->layer_param_.image_data_param().crop_size();
     SetUpWithDatum(crop_size, datum, top);
-    if (this->layer_param_.has_source()) {
+    if (this->layer_param_.image_data_param().has_source()) {
       DLOG(INFO) << "Initializing prefetch";
       CreatePrefetchThread();
       DLOG(INFO) << "Prefetch initialized.";
@@ -213,20 +214,18 @@ void ImageDataLayer<Dtype>::SetUpWithDatum(
     CHECK_GT(datum_width_, crop_size);
     (*top)[0]->Reshape(this->layer_param_.image_data_param().batch_size(),
                        datum.channels(), crop_size, crop_size);
-    prefetch_data_.reset(
-        new Blob<Dtype>(this->layer_param_.image_data_param().batch_size(),
-                        datum.channels(), crop_size, crop_size));
+    prefetch_data_.Reshape(this->layer_param_.image_data_param().batch_size(),
+                           datum.channels(), crop_size, crop_size);
   } else {
     (*top)[0]->Reshape(
         this->layer_param_.image_data_param().batch_size(), datum.channels(),
         datum.height(), datum.width());
-    prefetch_data_.reset(new Blob<Dtype>(
+    prefetch_data_.Reshape(
         this->layer_param_.image_data_param().batch_size(), datum.channels(),
-        datum.height(), datum.width()));
+        datum.height(), datum.width());
   }
-  prefetch_label_.reset(
-      new Blob<Dtype>(this->layer_param_.image_data_param().batch_size(),
-                      1, 1, 1));
+  prefetch_label_.Reshape(this->layer_param_.image_data_param().batch_size(),
+                          1, 1, 1);
 
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
   << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
@@ -235,7 +234,7 @@ void ImageDataLayer<Dtype>::SetUpWithDatum(
   // check if we want to have mean
   if (this->layer_param_.image_data_param().has_mean_file()) {
     BlobProto blob_proto;
-    string mean_file = image_data_param.mean_file();
+    string mean_file = this->layer_param_.image_data_param().mean_file();
     LOG(INFO) << "Loading mean file from" << mean_file;
     ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
@@ -319,7 +318,6 @@ void ImageDataLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
   //   and process the images in multiple threads with boost::thread
   Datum datum;
   int item_id = 0;
-  int data_index;
   OpenCVImageToDatum(images[item_id], labels[item_id], new_height, new_width,
                      &datum);
   if (!is_datum_set_up_) {
@@ -332,8 +330,8 @@ void ImageDataLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
   const int size = this->datum_size_;
   const Dtype* mean = this->data_mean_.cpu_data();
   const Dtype scale = this->layer_param_.image_data_param().scale();
-  Dtype* top_data = this->prefetch_data_->mutable_cpu_data();
-  Dtype* top_label = this->prefetch_label_->mutable_cpu_data();
+  Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
+  Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   ProcessImageDatum<Dtype>(channels, height, width, size, crop_size, mirror,
                            mean, scale, datum, item_id, top_data, top_label);
   int image_id;
@@ -348,7 +346,7 @@ void ImageDataLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
 
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {  
+      vector<Blob<Dtype>*>* top) {
   if (this->layer_param_.image_data_param().has_source()) {
     // First, join the thread
     JoinPrefetchThread();

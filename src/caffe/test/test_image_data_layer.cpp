@@ -82,7 +82,7 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   // Go through the data 5 times
   for (int iter = 0; iter < 5; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    const TypeParam* data = this->blob_top_data_->cpu_data();
+    const Dtype* data = this->blob_top_data_->cpu_data();
     for (int i = 0, index = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
       for (int c = 0; c < 3; ++c) {
@@ -157,7 +157,7 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
     }
     EXPECT_EQ(5, values_to_indices.size());
     EXPECT_GT(5, num_in_order);
-    const TypeParam* data = this->blob_top_data_->cpu_data();
+    const Dtype* data = this->blob_top_data_->cpu_data();
     for (int i = 0, index = 0; i < 5; ++i) {
       EXPECT_GE(this->blob_top_label_->cpu_data()[i], 0);
       EXPECT_LE(this->blob_top_label_->cpu_data()[i], 5);
@@ -174,11 +174,12 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
 }
 
 TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabels) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_shuffle(true);
-  ImageDataLayer<TypeParam> layer(param);
+  ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
   EXPECT_EQ(this->blob_top_data_->channels(), 0);
@@ -198,7 +199,7 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabels) {
   // Go through the data 5 times
   for (int iter = 0; iter < 5; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    const TypeParam* data = this->blob_top_data_->cpu_data();
+    const Dtype* data = this->blob_top_data_->cpu_data();
     for (int i = 0, index = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
       for (int c = 0; c < 3; ++c) {
@@ -214,13 +215,14 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabels) {
 }
 
 TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsResize) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_shuffle(false);
   image_data_param->set_new_height(256);
   image_data_param->set_new_width(256);
-  ImageDataLayer<TypeParam> layer(param);
+  ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
   EXPECT_EQ(this->blob_top_data_->channels(), 0);
@@ -240,19 +242,19 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsResize) {
   // Go through the data 50 times
   for (int iter = 0; iter < 5; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    const TypeParam* data = this->blob_top_data_->cpu_data();
-    for (int i = 0, index = 0; i < 5; ++i) {
+    for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
   }
 }
 
 TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsShuffle) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_shuffle(true);
-  ImageDataLayer<TypeParam> layer(param);
+  ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
   EXPECT_EQ(this->blob_top_data_->channels(), 0);
@@ -272,7 +274,7 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsShuffle) {
   // Go through the data 5 times
   for (int iter = 0; iter < 5; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    const TypeParam* data = this->blob_top_data_->cpu_data();
+    const Dtype* data = this->blob_top_data_->cpu_data();
     for (int i = 0, index = 0; i < 5; ++i) {
       EXPECT_GE(this->blob_top_label_->cpu_data()[i], 0);
       EXPECT_LE(this->blob_top_label_->cpu_data()[i], 5);
