@@ -75,7 +75,7 @@ bool ReadImageToDatum(const string& filename, const int label,
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
-  return OpenCVImageToDatum(cv_img, label, height, width, is_color, datum);
+  return OpenCVImageToDatum(cv_img, label, height, width, datum, is_color);
 }
 
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.

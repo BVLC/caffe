@@ -63,4 +63,34 @@ TYPED_TEST(FormatTest, TestOpenCVImageToDatum) {
   }
 }
 
+TYPED_TEST(FormatTest, OpenCVImageToBlob) {
+  cv::Mat cv_img = cv::imread(this->image_file_path_, CV_LOAD_IMAGE_COLOR);
+  Blob<TypeParam> blob;
+  int label = 1001;
+  OpenCVImageToBlob<TypeParam>(cv_img, label, 128, 256, &blob);
+  EXPECT_EQ(blob.num(), 1);
+  EXPECT_EQ(blob.channels(), 3);
+  EXPECT_EQ(blob.height(), 128);
+  EXPECT_EQ(blob.width(), 256);
+  // Cases without resizing
+  int heights[] = {-1, 0, cv_img.rows, cv_img.rows, cv_img.rows};
+  int widths[] = {cv_img.cols, cv_img.cols, 0, -1, cv_img.cols};
+  for (int i = 0; i < 3; ++i) {
+    OpenCVImageToBlob<TypeParam>(cv_img, ++label, heights[i], widths[i], &blob);
+    EXPECT_EQ(blob.num(), 1);
+    EXPECT_EQ(blob.channels(), 3);
+    EXPECT_EQ(blob.height(), cv_img.rows);
+    EXPECT_EQ(blob.width(), cv_img.cols);
+    const TypeParam* data = blob.cpu_data();
+    for (int c = 0; c < 3; ++c) {
+      for (int h = 0; h < cv_img.rows; ++h) {
+        for (int w = 0; w < cv_img.cols; ++w) {
+          EXPECT_EQ(static_cast<TypeParam>(cv_img.at<cv::Vec3b>(h, w)[c]),
+                    data[blob.offset(0, c, h, w)]);
+        }
+      }
+    }
+  }
+}
+
 }  // namespace caffe
