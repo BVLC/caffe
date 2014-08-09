@@ -78,6 +78,30 @@ bool ReadImageToDatum(const string& filename, const int label,
   return OpenCVImageToDatum(cv_img, label, height, width, datum, is_color);
 }
 
+template <typename Dtype>
+bool ReadImageToBlob(
+    const string& filename, const int label, const int height,
+    const int width, const bool is_color, Blob<Dtype>* blob) {
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+  cv::Mat cv_img = cv::imread(filename, cv_read_flag);
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return false;
+  }
+  return OpenCVImageToBlob<Dtype>(cv_img, label, height, width, blob,
+                                  is_color);
+}
+
+template
+bool ReadImageToBlob<float>(
+    const string& filename, const int label, const int height,
+    const int width, const bool is_color, Blob<float>* datum);
+template
+bool ReadImageToBlob<double>(
+    const string& filename, const int label, const int height,
+    const int width, const bool is_color, Blob<double>* datum);
+
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
