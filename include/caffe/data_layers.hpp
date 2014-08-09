@@ -191,7 +191,7 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_IMAGE_DATA;
   }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:

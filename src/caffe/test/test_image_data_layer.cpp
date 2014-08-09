@@ -25,13 +25,14 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   ImageDataLayerTest()
-      : seed_(1701),
+      : batch_size_(5), seed_(1701),
         filename_(new string(tmpnam(NULL))),
+        blob_bottom_data_(new Blob<Dtype>()),
+        blob_bottom_label_(new Blob<Dtype>()),
         blob_top_data_(new Blob<Dtype>()),
-        blob_top_label_(new Blob<Dtype>()) {}
+        blob_top_label_(new Blob<Dtype>()),
+        image_(cv::imread("examples/images/cat.jpg", CV_LOAD_IMAGE_COLOR)) {}
   virtual void SetUp() {
-    blob_top_vec_.push_back(blob_top_data_);
-    blob_top_vec_.push_back(blob_top_label_);
     Caffe::set_random_seed(seed_);
     // Create a Vector of files with labels
     std::ofstream outfile(filename_->c_str(), std::ofstream::out);
@@ -41,7 +42,13 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
       labels_.push_back(i);
     }
     outfile.close();
-    image_ = cv::imread("examples/images/cat.jpg", CV_LOAD_IMAGE_COLOR);
+    blob_bottom_data_->Reshape(batch_size_, image_.channels(), image_.rows,
+                            image_.cols);
+    blob_bottom_vec_.push_back(blob_bottom_data_);
+    blob_bottom_label_->Reshape(batch_size_, 1, 1, 1);
+    blob_bottom_vec_.push_back(blob_bottom_label_);
+    blob_top_vec_.push_back(blob_top_data_);
+    blob_top_vec_.push_back(blob_top_label_);
   }
 
   virtual ~ImageDataLayerTest() {
@@ -49,13 +56,16 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_label_;
   }
 
-  int seed_;
+  const int batch_size_;
+  const int seed_;
   shared_ptr<string> filename_;
-  Blob<Dtype>* const blob_top_data_;
-  Blob<Dtype>* const blob_top_label_;
+  Blob<Dtype>* blob_bottom_data_;
+  Blob<Dtype>* blob_bottom_label_;
+  Blob<Dtype>* blob_top_data_;
+  Blob<Dtype>* blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
-  cv::Mat image_;
+  const cv::Mat image_;
   vector<int> labels_;
 };
 
@@ -181,11 +191,14 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabels) {
   image_data_param->set_shuffle(true);
   image_data_param->set_data_from_disk(false);
   ImageDataLayer<Dtype> layer(param);
+  this->blob_bottom_vec_[0]->Reshape(
+      image_data_param->batch_size(), this->image_.channels(),
+      this->image_.rows, this->image_.cols);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 0);
-  EXPECT_EQ(this->blob_top_data_->channels(), 0);
-  EXPECT_EQ(this->blob_top_data_->height(), 0);
-  EXPECT_EQ(this->blob_top_data_->width(), 0);
+  EXPECT_EQ(this->blob_top_data_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), this->image_.rows);
+  EXPECT_EQ(this->blob_top_data_->width(), this->image_.cols);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
@@ -225,11 +238,14 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsResize) {
   image_data_param->set_new_width(256);
   image_data_param->set_data_from_disk(false);
   ImageDataLayer<Dtype> layer(param);
+  this->blob_bottom_vec_[0]->Reshape(
+      image_data_param->batch_size(), this->image_.channels(),
+      this->image_.rows, this->image_.cols);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 0);
-  EXPECT_EQ(this->blob_top_data_->channels(), 0);
-  EXPECT_EQ(this->blob_top_data_->height(), 0);
-  EXPECT_EQ(this->blob_top_data_->width(), 0);
+  EXPECT_EQ(this->blob_top_data_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), 256);
+  EXPECT_EQ(this->blob_top_data_->width(), 256);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
@@ -258,11 +274,14 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsShuffle) {
   image_data_param->set_shuffle(true);
   image_data_param->set_data_from_disk(false);
   ImageDataLayer<Dtype> layer(param);
+  this->blob_bottom_vec_[0]->Reshape(
+      image_data_param->batch_size(), this->image_.channels(),
+      this->image_.rows, this->image_.cols);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 0);
-  EXPECT_EQ(this->blob_top_data_->channels(), 0);
-  EXPECT_EQ(this->blob_top_data_->height(), 0);
-  EXPECT_EQ(this->blob_top_data_->width(), 0);
+  EXPECT_EQ(this->blob_top_data_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), this->image_.rows);
+  EXPECT_EQ(this->blob_top_data_->width(), this->image_.cols);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);

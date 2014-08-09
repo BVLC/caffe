@@ -153,9 +153,7 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
-  // labels
-  (*top)[1]->Reshape(this->layer_param_.image_data_param().batch_size(),
-                     1, 1, 1);
+  const int batch_size = this->layer_param_.image_data_param().batch_size();
   const int crop_size = this->layer_param_.image_data_param().crop_size();
   if (this->layer_param_.image_data_param().data_from_disk()) {
     CHECK(this->layer_param_.image_data_param().has_source());
@@ -199,7 +197,19 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     DLOG(INFO) << "Initializing prefetch";
     CreatePrefetchThread();
     DLOG(INFO) << "Prefetch initialized.";
+  } else {
+    const int channels = bottom[0]->channels();
+    int height = bottom[0]->height();
+    int width = bottom[0]->width();
+    if (new_height > 0 && new_width > 0) {
+      height = new_height;
+      width = new_width;
+    }
+    Blob<Dtype> data(batch_size, channels, height, width);
+    SetUpWithBlob(crop_size, data, top);
   }
+  // labels
+  (*top)[1]->Reshape(batch_size, 1, 1, 1);
 }
 
 template<typename Dtype>
