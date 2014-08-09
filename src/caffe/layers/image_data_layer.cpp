@@ -136,7 +136,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
-  if (this->layer_param_.image_data_param().has_source()) {
+  if (this->layer_param_.image_data_param().data_from_disk()) {
     // Finally, join the thread
     JoinPrefetchThread();
   }
@@ -153,9 +153,13 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
-  // Read the file with filenames and labels
+  // labels
   (*top)[1]->Reshape(this->layer_param_.image_data_param().batch_size(),
                      1, 1, 1);
+  const int crop_size = this->layer_param_.image_data_param().crop_size();
+  if (this->layer_param_.image_data_param().data_from_disk()) {
+    CHECK(this->layer_param_.image_data_param().has_source());
+  }
   if (this->layer_param_.image_data_param().has_source()) {
     // Read the file with filenames and labels
     const string& source = this->layer_param_.image_data_param().source();
@@ -167,13 +171,13 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       lines_.push_back(std::make_pair(filename, label));
     }
     if (this->layer_param_.image_data_param().shuffle()) {
-    // randomly shuffle data
-    LOG(INFO) << "Shuffling data";
-    const unsigned int prefetch_rng_seed = caffe_rng_rand();
-    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
-    ShuffleImages();
-  }
-  LOG(INFO) << "A total of " << lines_.size() << " images.";
+      // randomly shuffle data
+      LOG(INFO) << "Shuffling data";
+      const unsigned int prefetch_rng_seed = caffe_rng_rand();
+      prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+      ShuffleImages();
+    }
+    LOG(INFO) << "A total of " << lines_.size() << " images.";
 
     lines_id_ = 0;
     // Check if we would need to randomly skip a few data points
@@ -191,14 +195,11 @@ void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
         lines_[lines_id_].first, lines_[lines_id_].second,
         new_height, new_width, true, &data));
     // image
-    const int crop_size = this->layer_param_.image_data_param().crop_size();
     SetUpWithBlob(crop_size, data, top);
-    if (this->layer_param_.image_data_param().has_source()) {
-      DLOG(INFO) << "Initializing prefetch";
-      CreatePrefetchThread();
-      DLOG(INFO) << "Prefetch initialized.";
-    }
-  }  // if (this->layer_param_.image_data_param().has_source()) {
+    DLOG(INFO) << "Initializing prefetch";
+    CreatePrefetchThread();
+    DLOG(INFO) << "Prefetch initialized.";
+  }
 }
 
 template<typename Dtype>
@@ -352,7 +353,7 @@ void ImageDataLayer<Dtype>::AddImagesAndLabels(const vector<cv::Mat>& images,
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  if (this->layer_param_.image_data_param().has_source()) {
+  if (this->layer_param_.image_data_param().data_from_disk()) {
     // First, join the thread
     JoinPrefetchThread();
   }
@@ -362,7 +363,7 @@ Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
              (*top)[1]->mutable_cpu_data());
   // Start a new prefetch thread
-  if (this->layer_param_.image_data_param().has_source()) {
+  if (this->layer_param_.image_data_param().data_from_disk()) {
     CreatePrefetchThread();
   }
   return Dtype(0.);

@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <opencv2/opencv.hpp>
 #include <string>
 

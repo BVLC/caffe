@@ -179,6 +179,7 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabels) {
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_shuffle(true);
+  image_data_param->set_data_from_disk(false);
   ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
@@ -222,6 +223,7 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsResize) {
   image_data_param->set_shuffle(false);
   image_data_param->set_new_height(256);
   image_data_param->set_new_width(256);
+  image_data_param->set_data_from_disk(false);
   ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
@@ -254,6 +256,7 @@ TYPED_TEST(ImageDataLayerTest, TestAddImagesAndLabelsShuffle) {
   ImageDataParameter* image_data_param = param.mutable_image_data_param();
   image_data_param->set_batch_size(5);
   image_data_param->set_shuffle(true);
+  image_data_param->set_data_from_disk(false);
   ImageDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 0);
