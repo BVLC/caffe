@@ -205,12 +205,13 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 35 (last added: MVN)
+  // LayerType next available ID: 36 (last added: ABSVAL)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
     // the type is unspecified).
     NONE = 0;
+    ABSVAL = 35;
     ACCURACY = 1;
     ARGMAX = 30;
     BNLL = 2;

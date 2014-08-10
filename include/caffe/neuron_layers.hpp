@@ -38,6 +38,36 @@ class NeuronLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 };
 
+/* AbsVal Layer
+  y = |x|
+
+  y' = 1    if x > 0
+     = -1   if x < 0
+*/
+template <typename Dtype>
+class AbsValLayer : public NeuronLayer<Dtype> {
+ public:
+  explicit AbsValLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_ABSVAL;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
 /* BNLLLayer
 
   y = x + log(1 + exp(-x))  if x > 0
