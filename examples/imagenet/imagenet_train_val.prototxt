@@ -336,4 +336,5 @@ layers {
   type: SOFTMAX_LOSS
   bottom: "fc8"
   bottom: "label"
+  top: "loss"
 }
