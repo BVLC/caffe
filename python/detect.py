@@ -76,11 +76,12 @@ def main(argv):
     parser.add_argument(
         "--input_scale",
         type=float,
-        help="Multiply input features by this scale to finish input preprocessing."
+        help="Multiply input features by this scale to finish preprocessing."
     )
     parser.add_argument(
         "--raw_scale",
         type=float,
+        default=255.0,
         help="Multiply raw input by this scale before preprocessing."
     )
     parser.add_argument(
