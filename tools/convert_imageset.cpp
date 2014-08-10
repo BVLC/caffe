@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
   if (argc != 4) {
-    fputs("Use --help to see detailed description of usage\n", stdout);
+    gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/convert_imageset");
     return 1;
   }
 
