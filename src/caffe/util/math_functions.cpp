@@ -206,6 +206,16 @@ void caffe_exp<double>(const int n, const double* a, double* y) {
   vdExp(n, a, y);
 }
 
+template <>
+void caffe_abs<float>(const int n, const float* a, float* y) {
+    vsAbs(n, a, y);
+}
+
+template <>
+void caffe_abs<double>(const int n, const double* a, double* y) {
+    vdAbs(n, a, y);
+}
+
 unsigned int caffe_rng_rand() {
   return (*caffe_rng())();
 }
@@ -349,7 +359,6 @@ double caffe_cpu_asum<double>(const int n, const double* x) {
 
 INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sign);
 INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sgnbit);
-INSTANTIATE_CAFFE_CPU_UNARY_FUNC(fabs);
 
 template <>
 void caffe_cpu_scale<float>(const int n, const float alpha, const float *x,
