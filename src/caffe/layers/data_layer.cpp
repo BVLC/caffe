@@ -173,9 +173,8 @@ void DataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   case DataParameter_DB_LEVELDB:
     {
     leveldb::DB* db_temp;
-    leveldb::Options options;
+    leveldb::Options options = GetLevelDBOptions();
     options.create_if_missing = false;
-    options.max_open_files = 100;
     LOG(INFO) << "Opening leveldb " << this->layer_param_.data_param().source();
     leveldb::Status status = leveldb::DB::Open(
         options, this->layer_param_.data_param().source(), &db_temp);
