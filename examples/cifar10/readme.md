@@ -4,6 +4,7 @@ category: example
 description: Train and test Caffe on CIFAR-10 data.
 include_in_docs: true
 layout: default
+priority: 5
 ---
 
 Alex's CIFAR-10 tutorial, Caffe style

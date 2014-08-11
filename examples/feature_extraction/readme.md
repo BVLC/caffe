@@ -4,6 +4,7 @@ description: Extract AlexNet features using the Caffe binary.
 category: example
 include_in_docs: true
 layout: default
+priority: 10
 ---
 
 Extracting Features
