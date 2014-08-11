@@ -12,6 +12,11 @@
 
 #define HDF5_NUM_DIMS 4
 
+namespace leveldb {
+// Forward declaration for leveldb::Options to be used in GetlevelDBOptions().
+class Options;
+}
+
 namespace caffe {
 
 using ::google::protobuf::Message;
@@ -70,6 +75,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
+leveldb::Options GetLevelDBOptions();
 
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
