@@ -1,6 +1,7 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
+#include <opencv2/opencv.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -182,11 +183,15 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual ~ImageDataLayer();
   virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  void SetUpWithBlob(const int crop_size, const Blob<Dtype>& blob,
+                     vector<Blob<Dtype>*>* top);
+  virtual void AddImagesAndLabels(const vector<cv::Mat>& images,
+                                  const vector<int>& labels);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_IMAGE_DATA;
   }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinBottomBlobs() const { return 0; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
@@ -209,14 +214,16 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   shared_ptr<Caffe::RNG> prefetch_rng_;
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
-  int datum_channels_;
-  int datum_height_;
-  int datum_width_;
-  int datum_size_;
+  int data_channels_;
+  int data_height_;
+  int data_width_;
+  int data_size_;
   Blob<Dtype> prefetch_data_;
   Blob<Dtype> prefetch_label_;
   Blob<Dtype> data_mean_;
   Caffe::Phase phase_;
+  bool is_data_set_up_;
+  vector<Blob<Dtype>*>* top_;
 };
 
 /* MemoryDataLayer

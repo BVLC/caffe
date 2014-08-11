@@ -70,6 +70,10 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
+template <typename Dtype>
+bool ReadImageToBlob(
+    const string& filename, const int label, const int height,
+    const int width, const bool is_color, Blob<Dtype>* blob);
 
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
