@@ -1,17 +1,15 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cmath>
 #include <cstring>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
-#include "caffe/test/test_gradient_check_util.hpp"
+#include "gtest/gtest.h"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
 
@@ -72,9 +70,96 @@ TYPED_TEST(MVNLayerTest, TestForward) {
   }
 }
 
+TYPED_TEST(MVNLayerTest, TestForwardMeanOnly) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.ParseFromString("mvn_param{normalize_variance: false}");
+  MVNLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Test mean
+  int num = this->blob_bottom_->num();
+  int channels = this->blob_bottom_->channels();
+  int height = this->blob_bottom_->height();
+  int width = this->blob_bottom_->width();
+
+  for (int i = 0; i < num; ++i) {
+    for (int j = 0; j < channels; ++j) {
+      Dtype sum = 0, var = 0;
+      for (int k = 0; k < height; ++k) {
+        for (int l = 0; l < width; ++l) {
+          Dtype data = this->blob_top_->data_at(i, j, k, l);
+          sum += data;
+          var += data * data;
+        }
+      }
+      sum /= height * width;
+
+      const Dtype kErrorBound = 0.001;
+      // expect zero mean
+      EXPECT_NEAR(0, sum, kErrorBound);
+    }
+  }
+}
+
+TYPED_TEST(MVNLayerTest, TestForwardAcrossChannels) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.ParseFromString("mvn_param{across_channels: true}");
+  MVNLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Test mean
+  int num = this->blob_bottom_->num();
+  int channels = this->blob_bottom_->channels();
+  int height = this->blob_bottom_->height();
+  int width = this->blob_bottom_->width();
+
+  for (int i = 0; i < num; ++i) {
+    Dtype sum = 0, var = 0;
+    for (int j = 0; j < channels; ++j) {
+      for (int k = 0; k < height; ++k) {
+        for (int l = 0; l < width; ++l) {
+          Dtype data = this->blob_top_->data_at(i, j, k, l);
+          sum += data;
+          var += data * data;
+        }
+      }
+    }
+    sum /= height * width * channels;
+    var /= height * width * channels;
+
+    const Dtype kErrorBound = 0.001;
+    // expect zero mean
+    EXPECT_NEAR(0, sum, kErrorBound);
+    // expect unit variance
+    EXPECT_NEAR(1, var, kErrorBound);
+  }
+}
+
 TYPED_TEST(MVNLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
+  MVNLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
+TYPED_TEST(MVNLayerTest, TestGradientMeanOnly) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.ParseFromString("mvn_param{normalize_variance: false}");
+  MVNLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
+TYPED_TEST(MVNLayerTest, TestGradientAcrossChannels) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.ParseFromString("mvn_param{across_channels: true}");
   MVNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
