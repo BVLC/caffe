@@ -64,6 +64,13 @@ Options:
   -p PORT, --port=PORT  which port to serve content on
 </code></pre>
 
+<h2 id="how-are-the-maximally-accurate-results-generated">How are the “maximally accurate” results generated?</h2>
+
+<p>In a nutshell: ImageNet predictions are made at the leaf nodes, but the organization of the project allows leaf nodes to be united via more general parent nodes, with ‘entity’ at the very top.
+To give “maximally accurate” results, we “back off” from maximally specific predictions to maintain a high accuracy.
+The <code>bet_file</code> that is loaded in the demo provides the graph structure and names of all relevant ImageNet nodes as well as measures of information gain between them.
+Please see the “Hedging your bets” paper from <a href="http://www.image-net.org/projects/hedging/">CVPR 2012</a> for further information.</p>
+
 
       </section>
   </div>
