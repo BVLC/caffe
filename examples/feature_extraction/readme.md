@@ -1,6 +1,6 @@
 ---
 title: Feature extraction with Caffe C++ code.
-description: Extract AlexNet features using the Caffe binary.
+description: Extract CaffeNet / AlexNet features using the Caffe utility.
 category: example
 include_in_docs: true
 layout: default
@@ -10,8 +10,8 @@ priority: 10
 Extracting Features
 ===================
 
-In this tutorial, we will extract features using a pre-trained model.
-Follow instructions for [setting up caffe](installation.html) and for [getting](getting_pretrained_models.html) the pre-trained ImageNet model.
+In this tutorial, we will extract features using a pre-trained model with the included C++ utility.
+Follow instructions for [installing Caffe](../../installation.html) and for [downloading the reference model](../../getting_pretrained_models.html) for ImageNet.
 If you need detailed information about the tools below, please consult their source code, in which additional documentation is usually provided.
 
 Select data to run on
