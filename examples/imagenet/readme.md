@@ -4,6 +4,7 @@ description: Train and test "CaffeNet" on ImageNet challenge data.
 category: example
 include_in_docs: true
 layout: default
+priority: 1
 ---
 
 Yangqing's Recipe on Brewing ImageNet
