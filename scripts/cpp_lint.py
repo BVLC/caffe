@@ -154,6 +154,7 @@ _ERROR_CATEGORIES = [
   'build/namespaces',
   'build/printf_format',
   'build/storage_class',
+  'caffe/alt_fn',
   'caffe/random_fn',
   'legal/copyright',
   'readability/alt_tokens',
@@ -1557,6 +1558,37 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
           'Multi-line string ("...") found.  This lint script doesn\'t '
           'do well with such strings, and may give bogus warnings.  '
           'Use C++11 raw strings or concatenation instead.')
+
+
+caffe_alt_function_list = (
+    ('memset', ['caffe_set', 'caffe_memset']),
+    ('cudaMemset', ['caffe_gpu_set', 'caffe_gpu_memset']),
+    ('memcpy', ['caffe_copy', 'caffe_memcpy']),
+    ('cudaMemcpy', ['caffe_copy', 'caffe_gpu_memcpy']),
+    )
+
+
+def CheckCaffeAlternatives(filename, clean_lines, linenum, error):
+  """Checks for C(++) functions for which a Caffe substitute should be used.
+
+  For certain native C functions (memset, memcpy), there is a Caffe alternative
+  which should be used instead.
+
+  Args:
+    filename: The name of the current file.
+    clean_lines: A CleansedLines instance containing the file.
+    linenum: The number of the line to check.
+    error: The function to call with any errors found.
+  """
+  line = clean_lines.elided[linenum]
+  for function, alts in caffe_alt_function_list:
+    ix = line.find(function + '(')
+    if ix >= 0 and (ix == 0 or (not line[ix - 1].isalnum() and
+                                line[ix - 1] not in ('_', '.', '>'))):
+      disp_alts = ['%s(...)' % alt for alt in alts]
+      error(filename, linenum, 'caffe/alt_fn', 2,
+            'Use Caffe function %s instead of %s(...).' %
+                (' or '.join(disp_alts), function))
 
 
 c_random_function_list = (
@@ -4560,6 +4592,7 @@ def ProcessLine(filename, file_extension, clean_lines, line,
   CheckForNonStandardConstructs(filename, clean_lines, line,
                                 nesting_state, error)
   CheckVlogArguments(filename, clean_lines, line, error)
+  CheckCaffeAlternatives(filename, clean_lines, line, error)
   CheckCaffeRandom(filename, clean_lines, line, error)
   CheckPosixThreading(filename, clean_lines, line, error)
   CheckInvalidIncrement(filename, clean_lines, line, error)
