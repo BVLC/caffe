@@ -234,6 +234,7 @@ class LRNLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
+
 /* PoolingLayer
 */
 template <typename Dtype>
