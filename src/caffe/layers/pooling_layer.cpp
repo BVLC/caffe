@@ -3,9 +3,9 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/syncedmem.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -127,12 +127,12 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // Initialize
     if (use_top_mask) {
       top_mask = (*top)[1]->mutable_cpu_data();
-      caffe_set(top_count, Dtype(-1), top_mask);
+      GetDevice<Dtype>(Caffe::CPU)->set(top_count, Dtype(-1), top_mask);
     } else {
       mask = max_idx_.mutable_cpu_data();
-      caffe_set(top_count, -1, mask);
+      GetDevice<int>(Caffe::CPU)->set(top_count, -1, mask);
     }
-    caffe_set(top_count, Dtype(-FLT_MAX), top_data);
+    GetDevice<Dtype>(Caffe::CPU)->set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
@@ -223,7 +223,8 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
-  caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
+  GetDevice<Dtype>(Caffe::CPU)->set((*bottom)[0]->count(), Dtype(0),
+                                    bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;  // suppress warnings about uninitialized variables

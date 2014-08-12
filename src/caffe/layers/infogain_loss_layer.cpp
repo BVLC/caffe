@@ -5,7 +5,6 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -38,7 +37,7 @@ void InfogainLossLayer<Dtype>::FurtherSetUp(
 
 
 template <typename Dtype>
-Dtype InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype InfogainLossLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
@@ -66,7 +65,7 @@ Dtype InfogainLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void InfogainLossLayer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {

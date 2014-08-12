@@ -4,7 +4,6 @@
 #include <cstdlib>
 
 #include "caffe/common.hpp"
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -48,6 +47,9 @@ class SyncedMemory {
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
+
+  const void* const_data();
+  void* mutable_data();
 
  private:
   void to_cpu();

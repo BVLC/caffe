@@ -57,6 +57,7 @@ class AccuracyLayerTest : public ::testing::Test {
 TYPED_TEST_CASE(AccuracyLayerTest, TestDtypes);
 
 TYPED_TEST(AccuracyLayerTest, TestSetup) {
+  Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -67,6 +68,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetup) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
+  Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   AccuracyParameter* accuracy_param =
       layer_param.mutable_accuracy_param();
@@ -80,8 +82,8 @@ TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
-  LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
+  LayerParameter layer_param;
   AccuracyLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
@@ -107,6 +109,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
 }
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
+  Caffe::set_mode(Caffe::CPU);
   LayerParameter layer_param;
   AccuracyParameter* accuracy_param = layer_param.mutable_accuracy_param();
   accuracy_param->set_top_k(this->top_k_);

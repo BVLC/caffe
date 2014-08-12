@@ -67,6 +67,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   // Test that the layer setup got the correct parameters.
   HDF5DataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+
+  // Test that the layer setup got the correct parameters.
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);

@@ -14,9 +14,9 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 #include "caffe/vision_layers.hpp"
 
@@ -31,7 +31,6 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::InternalThreadEntry() {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
-
   Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
@@ -51,7 +50,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
-  caffe_set(prefetch_data_.count(), Dtype(0), top_data);
+  GetDevice<Dtype>(Caffe::CPU)->set(prefetch_data_.count(), Dtype(0), top_data);
 
   const int num_fg = static_cast<int>(static_cast<float>(batch_size)
       * fg_fraction);
@@ -426,23 +425,19 @@ unsigned int WindowDataLayer<Dtype>::PrefetchRand() {
 }
 
 template <typename Dtype>
-Dtype WindowDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype WindowDataLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
-  caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
-             (*top)[0]->mutable_cpu_data());
-  caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
-             (*top)[1]->mutable_cpu_data());
+  this->device_->copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
+      (*top)[0]->mutable_data());
+  this->device_->copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
+      (*top)[1]->mutable_data());
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);
 }
-
-#ifdef CPU_ONLY
-STUB_GPU_FORWARD(WindowDataLayer, Forward);
-#endif
 
 INSTANTIATE_CLASS(WindowDataLayer);
 

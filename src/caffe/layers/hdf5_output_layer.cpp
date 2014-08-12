@@ -39,7 +39,7 @@ void HDF5OutputLayer<Dtype>::SaveBlobs() {
 }
 
 template <typename Dtype>
-Dtype HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+Dtype HDF5OutputLayer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   CHECK_GE(bottom.size(), 2);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
@@ -51,24 +51,16 @@ Dtype HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
 
   for (int i = 0; i < bottom[0]->num(); ++i) {
-    caffe_copy(data_datum_dim, &bottom[0]->cpu_data()[i * data_datum_dim],
-        &data_blob_.mutable_cpu_data()[i * data_datum_dim]);
-    caffe_copy(label_datum_dim, &bottom[1]->cpu_data()[i * label_datum_dim],
-        &label_blob_.mutable_cpu_data()[i * label_datum_dim]);
+    this->device_->copy(data_datum_dim,
+        &bottom[0]->cpu_data()[i * data_datum_dim],
+        &data_blob_.mutable_data()[i * data_datum_dim]);
+    this->device_->copy(label_datum_dim,
+        &bottom[1]->cpu_data()[i * label_datum_dim],
+        &label_blob_.mutable_data()[i * label_datum_dim]);
   }
   SaveBlobs();
   return Dtype(0.);
 }
-
-template <typename Dtype>
-void HDF5OutputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
-  return;
-}
-
-#ifdef CPU_ONLY
-STUB_GPU(HDF5OutputLayer);
-#endif
 
 INSTANTIATE_CLASS(HDF5OutputLayer);
 

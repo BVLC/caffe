@@ -5,8 +5,8 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/util/im2col.hpp"
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -87,11 +87,12 @@ TYPED_TEST(Im2colKernelTest, TestGPU) {
 
   // CPU Version
   for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-    im2col_cpu(this->blob_bottom_->cpu_data() + this->blob_bottom_->offset(n),
-      this->channels_, this->height_, this->width_,
-      this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
-      this->stride_, this->stride_,
-      cpu_data + this->blob_top_cpu_->offset(n));
+    GetDevice<TypeParam>(Caffe::CPU)->im2col(
+        this->blob_bottom_->cpu_data() + this->blob_bottom_->offset(n),
+        this->channels_, this->height_, this->width_,
+        this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
+        this->stride_, this->stride_,
+        cpu_data + this->blob_top_cpu_->offset(n));
   }
 
   // GPU version

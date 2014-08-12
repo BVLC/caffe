@@ -3,9 +3,9 @@
 #include <cmath>
 #include <vector>
 
+#include "caffe/device.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -19,7 +19,7 @@ void MultinomialLogisticLossLayer<Dtype>::FurtherSetUp(
 }
 
 template <typename Dtype>
-Dtype MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
+Dtype MultinomialLogisticLossLayer<Dtype>::Forward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
@@ -39,7 +39,7 @@ Dtype MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
+void MultinomialLogisticLossLayer<Dtype>::Backward(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
@@ -52,7 +52,8 @@ void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     int num = (*bottom)[0]->num();
     int dim = (*bottom)[0]->count() / (*bottom)[0]->num();
-    caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
+    GetDevice<Dtype>(Caffe::CPU)->set((*bottom)[0]->count(), Dtype(0),
+                                      bottom_diff);
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
       Dtype prob = std::max(
