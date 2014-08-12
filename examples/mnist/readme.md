@@ -4,6 +4,7 @@ description: Train and test "LeNet" on MNIST data.
 category: example
 include_in_docs: true
 layout: default
+priority: 1
 ---
 
 # Training MNIST with Caffe

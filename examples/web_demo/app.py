@@ -113,15 +113,16 @@ class ImagenetClassifier(object):
             raise Exception(
                 "File for {} is missing. Should be at: {}".format(key, val))
     default_args['image_dim'] = 227
-    default_args['gpu_mode'] = True
+    default_args['raw_scale'] = 255.
+    default_args['gpu_mode'] = False
 
     def __init__(self, model_def_file, pretrained_model_file, mean_file,
-                 class_labels_file, bet_file, image_dim, gpu_mode=False):
+                 raw_scale, class_labels_file, bet_file, image_dim, gpu_mode):
         logging.info('Loading net and associated files...')
         self.net = caffe.Classifier(
-            model_def_file, pretrained_model_file, input_scale=255,
-            image_dims=(image_dim, image_dim), gpu=gpu_mode,
-            mean_file=mean_file, channel_swap=(2, 1, 0)
+            model_def_file, pretrained_model_file,
+            image_dims=(image_dim, image_dim), raw_scale=raw_scale,
+            mean=np.load(mean_file), channel_swap=(2, 1, 0), gpu=gpu_mode
         )
 
         with open(class_labels_file) as f:
@@ -197,7 +198,13 @@ def start_from_terminal(app):
         '-p', '--port',
         help="which port to serve content on",
         type='int', default=5000)
+    parser.add_option(
+        '-g', '--gpu',
+        help="use gpu mode",
+        action='store_true', default=False)
+
     opts, args = parser.parse_args()
+    ImagenetClassifier.default_args.update({'gpu_mode': opts.gpu})
 
     # Initialize classifier
     app.clf = ImagenetClassifier(**ImagenetClassifier.default_args)
