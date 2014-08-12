@@ -1,13 +1,9 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_DEVICES_GPU_H_
 #define CAFFE_DEVICES_GPU_H_
 
 #ifndef CPU_ONLY
 
-extern "C" {
-#include <cblas.h>
-}
+#include "caffe/util/mkl_alternate.hpp"
 
 #include "caffe/device.hpp"
 
@@ -36,7 +32,18 @@ class GPUDevice : public Device<Dtype> {
   /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y);
 
+  virtual inline void copy_void(const size_t N, const void *X, void* Y) {
+    if (X != Y) {
+      // NOLINT_NEXT_LINE(caffe/alt_fn)
+      CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));
+    }
+  }
+
   virtual void set(const int N, const Dtype alpha, Dtype *X);
+
+  virtual inline void set_void(const size_t N, const int alpha, void *X) {
+    CUDA_CHECK(cudaMemset(X, alpha, N));  // NOLINT(caffe/alt_fn)
+  }
 
   virtual void add_scalar(const int N, const Dtype alpha, Dtype *X);
 

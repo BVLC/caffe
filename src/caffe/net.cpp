@@ -1,8 +1,8 @@
 #include <map>
 #include <set>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/device.hpp"

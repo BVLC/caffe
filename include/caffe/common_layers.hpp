@@ -120,16 +120,12 @@ class MVNLayer : public Layer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
- protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+  virtual void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
+ protected:
   Blob<Dtype> mean_, variance_, temp_;
 
   // sum_multiplier is just used to carry out sum using blas

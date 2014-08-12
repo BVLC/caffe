@@ -1,7 +1,7 @@
-#include <cstdio>
 #include <math.h>
 
 #include <algorithm>
+#include <cstdio>
 #include <string>
 #include <vector>
 

@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/syncedmem.hpp"
 
 namespace caffe {
@@ -21,7 +22,7 @@ inline void SyncedMemory::to_cpu() {
   switch (head_) {
   case UNINITIALIZED:
     CaffeMallocHost(&cpu_ptr_, size_);
-    caffe_memset(size_, 0, cpu_ptr_);
+    GetDevice<float>(Caffe::CPU)->set_void(size_, 0, cpu_ptr_);
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
     break;
@@ -31,7 +32,7 @@ inline void SyncedMemory::to_cpu() {
       CaffeMallocHost(&cpu_ptr_, size_);
       own_cpu_data_ = true;
     }
-    CUDA_CHECK(cudaMemcpy(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDefault));
+    GetDevice<float>(Caffe::GPU)->copy_void(size_, gpu_ptr_, cpu_ptr_);
     head_ = SYNCED;
 #else
     NO_GPU;
@@ -48,14 +49,14 @@ inline void SyncedMemory::to_gpu() {
   switch (head_) {
   case UNINITIALIZED:
     CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-    caffe_gpu_memset(size_, 0, gpu_ptr_);
+    GetDevice<float>(Caffe::GPU)->set_void(size_, 0, gpu_ptr_);
     head_ = HEAD_AT_GPU;
     break;
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
       CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     }
-    CUDA_CHECK(cudaMemcpy(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyDefault));
+    GetDevice<float>(Caffe::GPU)->copy_void(size_, cpu_ptr_, gpu_ptr_);
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:

@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <math_functions.h>  // CUDA's, not caffe's, for fabs, signbit
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>  // thrust::plus
@@ -23,7 +21,7 @@ __global__ void set_kernel(const int n, const Dtype alpha, Dtype* y) {
 template <typename Dtype>
 void GPUDevice<Dtype>::set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
-    CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));
+    CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));  // NOLINT(caffe/alt_fn)
     return;
   }
   // NOLINT_NEXT_LINE(whitespace/operators)

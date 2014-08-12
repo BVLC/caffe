@@ -1,15 +1,9 @@
-// Copyright 2014 BVLC and contributors.
-
-extern "C" {
-#include <cblas.h>
-}
-
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
 
-#include <limits>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <limits>
 
 #include "caffe/common.hpp"
 #include "caffe/devices/cpu.hpp"
@@ -137,13 +131,13 @@ void CPUDevice<unsigned int>::axpby(const int N, const unsigned int alpha,
 
 template<typename Dtype>
 void CPUDevice<Dtype>::copy(const int N, const Dtype *X, Dtype *Y) {
-  memcpy(Y, X, sizeof(Dtype) * N);
+  memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
 }
 
 template<typename Dtype>
 void CPUDevice<Dtype>::set(const int N, const Dtype alpha, Dtype *X) {
   if (alpha == 0) {
-    memset(X, 0, sizeof(Dtype) * N);
+    memset(X, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
     return;
   }
   std::fill_n(X, N, alpha);

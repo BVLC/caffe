@@ -1,13 +1,8 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_DEVICE_H_
 #define CAFFE_DEVICE_H_
 
-extern "C" {
-#include <cblas.h>
-}
-
 #include "caffe/common.hpp"
+#include "caffe/util/mkl_alternate.hpp"
 
 namespace caffe {
 
@@ -34,7 +29,15 @@ class Device {
   /* NOLINT_NEXT_LINE(build/include_what_you_use) */
   virtual void copy(const int N, const Dtype *X, Dtype *Y) { NOT_IMPLEMENTED; }
 
+  virtual inline void copy_void(const size_t N, const void *X, void* Y) {
+    NOT_IMPLEMENTED;
+  }
+
   virtual void set(const int N, const Dtype alpha, Dtype *X) {
+    NOT_IMPLEMENTED;
+  }
+
+  virtual inline void set_void(const size_t N, const int alpha, void *X) {
     NOT_IMPLEMENTED;
   }
 
