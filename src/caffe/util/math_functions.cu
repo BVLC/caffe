@@ -78,7 +78,8 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
 
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
-    CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));
+    CUDA_CHECK(cudaMemcpyAsync(Y, X, N, cudaMemcpyDefault,
+                               Caffe::cuda_memcpy_async_stream()));
   }
 }
 

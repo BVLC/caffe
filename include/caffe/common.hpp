@@ -156,6 +156,11 @@ class Caffe {
   static void SetDevice(const int device_id);
   // Prints the current GPU status.
   static void DeviceQuery();
+#ifndef CPU_ONLY
+  inline static cudaStream_t cuda_memcpy_async_stream() {
+    return Get().cuda_memcpy_async_stream_;
+  }
+#endif
 
  protected:
 #ifndef CPU_ONLY
@@ -167,6 +172,9 @@ class Caffe {
   Brew mode_;
   Phase phase_;
   static shared_ptr<Caffe> singleton_;
+#ifndef CPU_ONLY
+  cudaStream_t cuda_memcpy_async_stream_;
+#endif
 
  private:
   // The private constructor to avoid duplicate instantiation.
