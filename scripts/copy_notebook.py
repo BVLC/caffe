@@ -19,7 +19,7 @@ content = json.load(open(filename))
 if 'include_in_docs' in content['metadata'] and content['metadata']['include_in_docs']:
     yaml_frontmatter = ['---']
     for key, val in content['metadata'].iteritems():
-        if key == 'name':
+        if key == 'example_name':
             key = 'title'
             if val == '':
                 val = os.path.basename(filename)
