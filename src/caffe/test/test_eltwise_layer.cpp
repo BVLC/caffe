@@ -124,6 +124,27 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeff) {
   }
 }
 
+TYPED_TEST(EltwiseLayerTest, TestMax) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_MAX);
+  shared_ptr<EltwiseLayer<Dtype> > layer(
+      new EltwiseLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  const Dtype* data = this->blob_top_->cpu_data();
+  const int count = this->blob_top_->count();
+  const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
+  const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
+  const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_GE(data[i], in_data_a[i]);
+	EXPECT_GE(data[i], in_data_b[i]);
+	EXPECT_GE(data[i], in_data_c[i]);
+  }
+}
+
 TYPED_TEST(EltwiseLayerTest, TestProdGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -154,6 +175,17 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeffGradient) {
   eltwise_param->add_coeff(1);
   eltwise_param->add_coeff(-0.5);
   eltwise_param->add_coeff(2);
+  EltwiseLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
+TYPED_TEST(EltwiseLayerTest, TestMaxGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_MAX);
   EltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
