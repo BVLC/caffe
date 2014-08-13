@@ -8,9 +8,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void MVNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void MVNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
   mean_.Reshape(bottom[0]->num(), bottom[0]->channels(),
@@ -26,7 +25,7 @@ void MVNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -85,8 +84,6 @@ Dtype MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     caffe_add(temp_.count(), bottom_data, temp_.cpu_data(), top_data);
   }
-
-  return Dtype(0);
 }
 
 template <typename Dtype>

@@ -11,9 +11,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void AccuracyLayer<Dtype>::SetUp(
+void AccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   top_k_ = this->layer_param_.accuracy_param().top_k();
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number.";
@@ -26,7 +25,7 @@ void AccuracyLayer<Dtype>::SetUp(
 }
 
 template <typename Dtype>
-Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   Dtype accuracy = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -56,9 +55,7 @@ Dtype AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // LOG(INFO) << "Accuracy: " << accuracy;
   (*top)[0]->mutable_cpu_data()[0] = accuracy / num;
-
   // Accuracy layer should not be used as a loss function.
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(AccuracyLayer);

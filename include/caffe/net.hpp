@@ -90,6 +90,9 @@ class Net {
   inline vector<vector<bool> >& bottom_need_backward() {
     return bottom_need_backward_;
   }
+  inline vector<Dtype>& blob_loss_weights() {
+    return blob_loss_weights_;
+  }
   // returns the parameters
   inline vector<shared_ptr<Blob<Dtype> > >& params() { return params_; }
   // returns the parameter learning rate multipliers
@@ -163,6 +166,9 @@ class Net {
   // top_vecs stores the vectors containing the output for each layer
   vector<vector<Blob<Dtype>*> > top_vecs_;
   vector<vector<int> > top_id_vecs_;
+  // Vector of weight in the loss (or objective) function of each net blob,
+  // indexed by blob_id.
+  vector<Dtype> blob_loss_weights_;
   vector<int> param_owners_;
   vector<string> param_display_names_;
   vector<pair<int, int> > param_layer_indices_;

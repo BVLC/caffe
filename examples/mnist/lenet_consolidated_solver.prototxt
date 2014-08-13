@@ -192,7 +192,6 @@ net_param {
     bottom: "ip2"
     bottom: "label"
     top: "accuracy"
-    include: { phase: TEST }
   }
   layers {
     name: "loss"

@@ -8,7 +8,7 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -68,8 +68,6 @@ Dtype MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
     caffe_gpu_add(temp_.count(), bottom_data, temp_.gpu_data(), top_data);
   }
-
-  return Dtype(0);
 }
 
 template <typename Dtype>
