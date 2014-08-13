@@ -6,17 +6,15 @@ include_in_docs: true
 priority: 1
 ---
 
-Yangqing's Recipe on Brewing ImageNet
-=====================================
+Brewing ImageNet
+================
 
-    "All your braincells are belong to us."
-        - Caffeine
-
-We are going to describe a reference implementation for the approach first proposed by Krizhevsky, Sutskever, and Hinton in their [NIPS 2012 paper](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf). Since training the whole model takes some time and energy, we provide a model, trained in the same way as we describe here, to help fight global warming. If you would like to simply use the pretrained model, check out the [Pretrained ImageNet](../../getting_pretrained_models.html) page. *Note that the pretrained model is for academic research / non-commercial use only*.
+We are going to describe a reference implementation for the approach first proposed by Krizhevsky, Sutskever, and Hinton in their [NIPS 2012 paper](http://books.nips.cc/papers/files/nips25/NIPS2012_0534.pdf).
+Since training the whole model takes some time and energy, we provide a model, trained in the same way as we describe here, to help fight global warming.
+If you would like to simply use the pretrained model, check out the [Pretrained ImageNet](../../getting_pretrained_models.html) page.
+*Note that the pretrained model is for academic research / non-commercial use only*.
 
 To clarify, by ImageNet we actually mean the ILSVRC12 challenge, but you can easily train on the whole of ImageNet as well, just with more disk space, and a little longer training time.
-
-(If you don't get the quote, visit [Yann LeCun's fun page](http://yann.lecun.com/ex/fun/).
 
 Data Preparation
 ----------------
@@ -100,11 +98,13 @@ We all experience times when the power goes out, or we feel like rewarding ourse
 
     ./resume_training.sh
 
-where in the script `caffe_imagenet_train_1000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
+where in the script `imagenet_train_1000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
 
 Parting Words
 -------------
 
-Hope you liked this recipe! Many researchers have gone further since the ILSVRC 2012 challenge, changing the network architecture and/or finetuning the various parameters in the network. The recent ILSVRC 2013 challenge suggests that there are quite some room for improvement. **Caffe allows one to explore different network choices  more easily, by simply writing different prototxt files** - isn't that exciting?
+Hope you liked this recipe!
+Many researchers have gone further since the ILSVRC 2012 challenge, changing the network architecture and/or finetuning the various parameters in the network.
+**Caffe allows one to explore different network choices  more easily, by simply writing different prototxt files** - isn't that exciting?
 
-And since now you have a trained network, check out how to use it: [Running Pretrained ImageNet](../../getting_pretrained_models.html). This time we will use Python, but if you have wrappers for other languages, please kindly send a pull request!
+And since now you have a trained network, check out how to use it with the Python interface: [Running Pretrained ImageNet](../../getting_pretrained_models.html).
