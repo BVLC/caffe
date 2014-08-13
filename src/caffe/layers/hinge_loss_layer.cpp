@@ -11,7 +11,7 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -30,11 +30,14 @@ Dtype HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         Dtype(0), 1 + bottom_diff[i * dim + j]);
     }
   }
+  Dtype* loss = (*top)[0]->mutable_cpu_data();
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    return caffe_cpu_asum(count, bottom_diff) / num;
+    loss[0] = caffe_cpu_asum(count, bottom_diff) / num;
+    break;
   case HingeLossParameter_Norm_L2:
-    return caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    loss[0] = caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    break;
   default:
     LOG(FATAL) << "Unknown Norm";
   }
@@ -58,13 +61,14 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       bottom_diff[i * dim + static_cast<int>(label[i])] *= -1;
     }
 
+    const Dtype loss_weight = top[0]->cpu_diff()[0];
     switch (this->layer_param_.hinge_loss_param().norm()) {
     case HingeLossParameter_Norm_L1:
       caffe_cpu_sign(count, bottom_diff, bottom_diff);
-      caffe_scal(count, Dtype(1. / num), bottom_diff);
+      caffe_scal(count, loss_weight / num, bottom_diff);
       break;
     case HingeLossParameter_Norm_L2:
-      caffe_scal(count, Dtype(2. / num), bottom_diff);
+      caffe_scal(count, loss_weight * 2 / num, bottom_diff);
       break;
     default:
       LOG(FATAL) << "Unknown Norm";

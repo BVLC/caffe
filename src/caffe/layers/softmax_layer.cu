@@ -39,7 +39,7 @@ __global__ void kernel_exp(const int num, const Dtype* data, Dtype* out) {
 }
 
 template <typename Dtype>
-Dtype SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -68,7 +68,6 @@ Dtype SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   kernel_softmax_div<Dtype><<<CAFFE_GET_BLOCKS(num * dim),
                               CAFFE_CUDA_NUM_THREADS>>>(
       num, dim, scale_data, top_data);
-  return Dtype(0);
 }
 
 // TODO(Yangqing): implement the GPU version of softmax.

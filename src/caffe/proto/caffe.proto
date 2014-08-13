@@ -180,10 +180,14 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 35 (last added: mvn_param)
+// LayerParameter next available ID: 36 (last added: loss_weight)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
+  // The amount of weight to assign each top blob in the objective.
+  // Each layer assigns a default value, usually of either 0 or 1,
+  // to each top blob.
+  repeated float loss_weight = 35;
   optional string name = 4; // the layer name
 
   // Rules controlling whether and when a layer is included in the network,

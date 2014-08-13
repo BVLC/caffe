@@ -7,7 +7,7 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype EltwiseLayer<Dtype>::Forward_gpu(
+void EltwiseLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -29,7 +29,6 @@ Dtype EltwiseLayer<Dtype>::Forward_gpu(
   default:
     LOG(FATAL) << "Unknown elementwise operation.";
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>

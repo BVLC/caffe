@@ -123,10 +123,9 @@ ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
 }
 
 template <typename Dtype>
-void ImageDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void ImageDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
-  const int new_height  = this->layer_param_.image_data_param().new_height();
+  const int new_height = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_width();
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
@@ -252,7 +251,7 @@ unsigned int ImageDataLayer<Dtype>::PrefetchRand() {
 }
 
 template <typename Dtype>
-Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // First, join the thread
   JoinPrefetchThread();
@@ -263,7 +262,6 @@ Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
              (*top)[1]->mutable_cpu_data());
   // Start a new prefetch thread
   CreatePrefetchThread();
-  return Dtype(0.);
 }
 
 #ifdef CPU_ONLY

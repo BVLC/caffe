@@ -7,9 +7,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void EltwiseLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   CHECK(this->layer_param().eltwise_param().coeff_size() == 0
       || this->layer_param().eltwise_param().coeff_size() == bottom.size()) <<
       "Eltwise Layer takes one coefficient per bottom blob.";
@@ -39,7 +38,7 @@ void EltwiseLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype EltwiseLayer<Dtype>::Forward_cpu(
+void EltwiseLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -60,7 +59,6 @@ Dtype EltwiseLayer<Dtype>::Forward_cpu(
   default:
     LOG(FATAL) << "Unknown elementwise operation.";
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>
