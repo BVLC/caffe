@@ -57,17 +57,17 @@ which will make `data/ilsvrc12/imagenet_mean.binaryproto`.
 Network Definition
 ------------------
 
-The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at `examples/imagenet/imagenet_train.prototxt`. Note the paths in the data layer - if you have not followed the exact paths in this guide you will need to change the following lines:
+The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at `examples/imagenet/imagenet_train_val.prototxt`. Note the paths in the data layer - if you have not followed the exact paths in this guide you will need to change the following lines:
 
     source: "ilvsrc12_train_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
 
-to point to your own leveldb and image mean. Likewise, do the same for `examples/imagenet/imagenet_val.prototxt`.
+to point to your own leveldb and image mean.
 
-If you look carefully at `imagenet_train.prototxt` and `imagenet_val.prototxt`, you will notice that they are largely the same, with the only difference being the data layer sources, and the last layer: in training, we will be using a `softmax_loss` layer to compute the loss function and to initialize the backpropagation, while in validation we will be using an `accuracy` layer to inspect how well we do in terms of accuracy.
+If you look carefully at `imagenet_train_val.prototxt`, you will notice several `include: { phase: TRAIN }` and `include: { phase: TEST }` sections. These sections allow us to define two related networks in one file: the network used for training and the network used for testing. These two networks are almost identical, sharing all layers except for the input and output layers. The `TRAIN` network has an input layer, `data`, which randomly mirrors input images, whereas the `TEST` network's `data` layer does not. Both networks output the softmax loss, but only the `TEST` network also outputs accuracy. In training, the `softmax_loss` layer is used to compute the loss function and to initialize the backpropagation, while in validation we will be using an `accuracy` layer to inspect how well we do in terms of accuracy.
 
 We will also lay out a protocol buffer for running the solver. Let's make a few plans:
-* We will run in batches of 256, and run a total of 4,500,000 iterations (about 90 epochs).
+* We will run in batches of 256, and run a total of 450,000 iterations (about 90 epochs).
 * For every 1,000 iterations, we test the learned net on the validation data.
 * We set the initial learning rate to 0.01, and decrease it every 100,000 iterations (about 20 epochs).
 * Information will be displayed every 20 epochs.
