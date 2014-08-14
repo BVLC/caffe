@@ -1,4 +1,4 @@
-function [scores, maxlabel] = matcaffe_demo(im, use_gpu)
+function varargout = matcaffe_demo(im, use_gpu)
 % scores = matcaffe_demo(im, use_gpu)
 %
 % Demo of the matlab wrapper using the ILSVRC network.
@@ -71,7 +71,6 @@ scores = caffe('forward', input_data);
 toc;
 
 scores = scores{1};
-size(scores)
 scores = squeeze(scores);
 scores = mean(scores,2);
 
@@ -79,6 +78,13 @@ scores = mean(scores,2);
 
 print_top_scores(scores, 10);
 
+
+if nargout > 0
+  varargout{1} = scores;
+end
+if nargout > 1
+  varargout{2} = maxlabel;
+end
 
 function print_top_scores(score, num_to_print)
 % Print the top N scores
