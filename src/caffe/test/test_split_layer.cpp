@@ -8,6 +8,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/proto/caffe.pb.h"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/vision_layers.hpp"
 
@@ -75,34 +76,11 @@ TYPED_TEST(SplitLayerTest, Test) {
   }
 }
 
-TYPED_TEST(SplitLayerTest, TestInPlace) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  SplitLayer<Dtype> layer(layer_param);
-  this->blob_top_vec_[0] = this->blob_bottom_vec_[0];
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    Dtype bottom_value = this->blob_bottom_->cpu_data()[i];
-    EXPECT_EQ(bottom_value, this->blob_top_b_->cpu_data()[i]);
-  }
-}
-
 TYPED_TEST(SplitLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   SplitLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
-  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
-}
-
-TYPED_TEST(SplitLayerTest, TestGradientInPlace) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  SplitLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-2);
-  this->blob_top_vec_[0] = this->blob_bottom_vec_[0];
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));
 }
@@ -545,6 +523,135 @@ TEST_F(SplitLayerInsertionTest, TestNoInsertionWithInPlace) {
   this->RunInsertionTest(input_proto, input_proto);
 }
 
+TEST_F(SplitLayerInsertionTest, TestLossInsertion) {
+  const string& input_proto =
+      "name: 'UnsharedWeightsNetwork' "
+      "force_backward: true "
+      "layers: { "
+      "  name: 'data' "
+      "  type: DUMMY_DATA "
+      "  dummy_data_param { "
+      "    num: 5 "
+      "    channels: 2 "
+      "    height: 3 "
+      "    width: 4 "
+      "    data_filler { "
+      "      type: 'gaussian' "
+      "      std: 0.01 "
+      "    } "
+      "  } "
+      "  top: 'data' "
+      "} "
+      "layers: { "
+      "  name: 'innerproduct1' "
+      "  type: INNER_PRODUCT "
+      "  inner_product_param { "
+      "    num_output: 10 "
+      "    bias_term: false "
+      "    weight_filler { "
+      "      type: 'gaussian' "
+      "      std: 10 "
+      "    } "
+      "  } "
+      "  param: 'unsharedweights1' "
+      "  bottom: 'data' "
+      "  top: 'innerproduct1' "
+      "  loss_weight: 2.5 "
+      "} "
+      "layers: { "
+      "  name: 'innerproduct2' "
+      "  type: INNER_PRODUCT "
+      "  inner_product_param { "
+      "    num_output: 10 "
+      "    bias_term: false "
+      "    weight_filler { "
+      "      type: 'gaussian' "
+      "      std: 10 "
+      "    } "
+      "  } "
+      "  param: 'unsharedweights2' "
+      "  bottom: 'data' "
+      "  top: 'innerproduct2' "
+      "} "
+      "layers: { "
+      "  name: 'loss' "
+      "  type: EUCLIDEAN_LOSS "
+      "  bottom: 'innerproduct1' "
+      "  bottom: 'innerproduct2' "
+      "} ";
+  const string& expected_output_proto =
+      "name: 'UnsharedWeightsNetwork' "
+      "force_backward: true "
+      "layers: { "
+      "  name: 'data' "
+      "  type: DUMMY_DATA "
+      "  dummy_data_param { "
+      "    num: 5 "
+      "    channels: 2 "
+      "    height: 3 "
+      "    width: 4 "
+      "    data_filler { "
+      "      type: 'gaussian' "
+      "      std: 0.01 "
+      "    } "
+      "  } "
+      "  top: 'data' "
+      "} "
+      "layers: { "
+      "  name: 'data_data_0_split' "
+      "  type: SPLIT "
+      "  bottom: 'data' "
+      "  top: 'data_data_0_split_0' "
+      "  top: 'data_data_0_split_1' "
+      "} "
+      "layers: { "
+      "  name: 'innerproduct1' "
+      "  type: INNER_PRODUCT "
+      "  inner_product_param { "
+      "    num_output: 10 "
+      "    bias_term: false "
+      "    weight_filler { "
+      "      type: 'gaussian' "
+      "      std: 10 "
+      "    } "
+      "  } "
+      "  param: 'unsharedweights1' "
+      "  bottom: 'data_data_0_split_0' "
+      "  top: 'innerproduct1' "
+      "} "
+      "layers: { "
+      "  name: 'innerproduct1_innerproduct1_0_split' "
+      "  type: SPLIT "
+      "  bottom: 'innerproduct1' "
+      "  top: 'innerproduct1_innerproduct1_0_split_0' "
+      "  top: 'innerproduct1_innerproduct1_0_split_1' "
+      "  loss_weight: 2.5 "
+      "  loss_weight: 0 "
+      "} "
+      "layers: { "
+      "  name: 'innerproduct2' "
+      "  type: INNER_PRODUCT "
+      "  inner_product_param { "
+      "    num_output: 10 "
+      "    bias_term: false "
+      "    weight_filler { "
+      "      type: 'gaussian' "
+      "      std: 10 "
+      "    } "
+      "  } "
+      "  param: 'unsharedweights2' "
+      "  bottom: 'data_data_0_split_1' "
+      "  top: 'innerproduct2' "
+      "} "
+      "layers: { "
+      "  name: 'loss' "
+      "  type: EUCLIDEAN_LOSS "
+      "  bottom: 'innerproduct1_innerproduct1_0_split_1' "
+      "  bottom: 'innerproduct2' "
+      "} ";
+  this->RunInsertionTest(input_proto, expected_output_proto);
+}
+
 TEST_F(SplitLayerInsertionTest, TestInsertion) {
   const string& input_proto =
       "name: 'TestNetwork' "
@@ -596,14 +703,14 @@ TEST_F(SplitLayerInsertionTest, TestInsertion) {
       "  name: 'data_data_0_split' "
       "  type: SPLIT "
       "  bottom: 'data' "
-      "  top: 'data' "
+      "  top: 'data_data_0_split_0' "
       "  top: 'data_data_0_split_1' "
       "  top: 'data_data_0_split_2' "
       "} "
       "layers: { "
       "  name: 'innerprod1' "
       "  type: INNER_PRODUCT "
-      "  bottom: 'data' "
+      "  bottom: 'data_data_0_split_0' "
       "  top: 'innerprod1' "
       "} "
       "layers: { "
@@ -616,7 +723,7 @@ TEST_F(SplitLayerInsertionTest, TestInsertion) {
       "  name: 'innerprod2_innerprod2_0_split' "
       "  type: SPLIT "
       "  bottom: 'innerprod2' "
-      "  top: 'innerprod2' "
+      "  top: 'innerprod2_innerprod2_0_split_0' "
       "  top: 'innerprod2_innerprod2_0_split_1' "
       "} "
       "layers: { "
@@ -629,7 +736,7 @@ TEST_F(SplitLayerInsertionTest, TestInsertion) {
       "  name: 'loss1' "
       "  type: EUCLIDEAN_LOSS "
       "  bottom: 'innerprod1' "
-      "  bottom: 'innerprod2' "
+      "  bottom: 'innerprod2_innerprod2_0_split_0' "
       "} "
       "layers: { "
       "  name: 'loss2' "
@@ -697,26 +804,26 @@ TEST_F(SplitLayerInsertionTest, TestInsertionTwoTop) {
       "  name: 'data_data_0_split' "
       "  type: SPLIT "
       "  bottom: 'data' "
-      "  top: 'data' "
+      "  top: 'data_data_0_split_0' "
       "  top: 'data_data_0_split_1' "
       "} "
       "layers: { "
       "  name: 'label_data_1_split' "
       "  type: SPLIT "
       "  bottom: 'label' "
-      "  top: 'label' "
+      "  top: 'label_data_1_split_0' "
       "  top: 'label_data_1_split_1' "
       "} "
       "layers: { "
       "  name: 'innerprod1' "
       "  type: INNER_PRODUCT "
-      "  bottom: 'data' "
+      "  bottom: 'data_data_0_split_0' "
       "  top: 'innerprod1' "
       "} "
       "layers: { "
       "  name: 'innerprod2' "
       "  type: INNER_PRODUCT "
-      "  bottom: 'label' "
+      "  bottom: 'label_data_1_split_0' "
       "  top: 'innerprod2' "
       "} "
       "layers: { "
@@ -783,13 +890,13 @@ TEST_F(SplitLayerInsertionTest, TestInputInsertion) {
       "  name: 'data_input_0_split' "
       "  type: SPLIT "
       "  bottom: 'data' "
-      "  top: 'data' "
+      "  top: 'data_input_0_split_0' "
       "  top: 'data_input_0_split_1' "
       "} "
       "layers: { "
       "  name: 'innerprod1' "
       "  type: INNER_PRODUCT "
-      "  bottom: 'data' "
+      "  bottom: 'data_input_0_split_0' "
       "  top: 'innerprod1' "
       "} "
       "layers: { "
@@ -858,13 +965,13 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
       "  name: 'data_data_0_split' "
       "  type: SPLIT "
       "  bottom: 'data' "
-      "  top: 'data' "
+      "  top: 'data_data_0_split_0' "
       "  top: 'data_data_0_split_1' "
       "} "
       "layers: { "
       "  name: 'innerprod1' "
       "  type: INNER_PRODUCT "
-      "  bottom: 'data' "
+      "  bottom: 'data_data_0_split_0' "
       "  top: 'innerprod1' "
       "} "
       "layers: { "
@@ -877,13 +984,13 @@ TEST_F(SplitLayerInsertionTest, TestWithInPlace) {
       "  name: 'innerprod1_relu1_0_split' "
       "  type: SPLIT "
       "  bottom: 'innerprod1' "
-      "  top: 'innerprod1' "
+      "  top: 'innerprod1_relu1_0_split_0' "
       "  top: 'innerprod1_relu1_0_split_1' "
       "} "
       "layers: { "
       "  name: 'innerprod2' "
       "  type: INNER_PRODUCT "
-      "  bottom: 'innerprod1' "
+      "  bottom: 'innerprod1_relu1_0_split_0' "
       "  top: 'innerprod2' "
       "} "
       "layers: { "

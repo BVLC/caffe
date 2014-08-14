@@ -9,9 +9,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void SoftmaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void SoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
   sum_multiplier_.Reshape(1, bottom[0]->channels(),
@@ -24,7 +23,7 @@ void SoftmaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -52,7 +51,6 @@ Dtype SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < num; ++i) {
     caffe_scal<Dtype>(dim, Dtype(1.) / scale_data[i], top_data + i * dim);
   }
-  return Dtype(0);
 }
 
 template <typename Dtype>

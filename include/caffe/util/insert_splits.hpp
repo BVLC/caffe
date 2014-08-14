@@ -12,7 +12,7 @@ namespace caffe {
 void InsertSplits(const NetParameter& param, NetParameter* param_split);
 
 void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
-    const int blob_idx, const int split_count,
+    const int blob_idx, const int split_count, const float loss_weight,
     LayerParameter* split_layer_param);
 
 string SplitLayerName(const string& layer_name, const string& blob_name,
