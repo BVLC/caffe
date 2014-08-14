@@ -77,6 +77,23 @@ scores = mean(scores,2);
 
 [~,maxlabel] = max(scores);
 
+print_top_scores(scores, 10);
+
+
+function print_top_scores(score, num_to_print)
+% Print the top N scores
+
+score_rank = sort_rank(score);
+[label, label_idx] = get_imagenet_labels;
+
+
+t = table(label, label_idx, score);
+t = sortrows(t, 'score', 'descend');
+
+fprintf('Top Scores:\n');
+
+disp(t(1:num_to_print, :));
+
 % ------------------------------------------------------------------------
 function images = prepare_image(im)
 % ------------------------------------------------------------------------
