@@ -57,17 +57,22 @@ which will make `data/ilsvrc12/imagenet_mean.binaryproto`.
 Network Definition
 ------------------
 
-The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at `examples/imagenet/imagenet_train.prototxt`. Note the paths in the data layer - if you have not followed the exact paths in this guide you will need to change the following lines:
+The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at `examples/imagenet/imagenet_train_val.prototxt`. Note the paths in the data layer --- if you have not followed the exact paths in this guide you will need to change the following lines:
 
     source: "ilvsrc12_train_leveldb"
     mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
 
-to point to your own leveldb and image mean. Likewise, do the same for `examples/imagenet/imagenet_val.prototxt`.
+to point to your own leveldb and image mean.
 
-If you look carefully at `imagenet_train.prototxt` and `imagenet_val.prototxt`, you will notice that they are largely the same, with the only difference being the data layer sources, and the last layer: in training, we will be using a `softmax_loss` layer to compute the loss function and to initialize the backpropagation, while in validation we will be using an `accuracy` layer to inspect how well we do in terms of accuracy.
+If you look carefully at `imagenet_train_val.prototxt`, you will notice several `include` sections specifying either `phase: TRAIN` or `phase: TEST`. These sections allow us to define two closely related networks in one file: the network used for training and the network used for testing. These two networks are almost identical, sharing all layers except for those marked with `include { phase: TRAIN }` or `include { phase: TEST }`. In this case, only the input layers and one output layer are different.
+
+**Input layer differences:** The training network's `data` input layer draws its data from `ilsvrc12_train_leveldb` and randomly mirrors the input image. The testing network's `data` layer takes data from `ilsvrc12_val_leveldb` and does not perform random mirroring.
+
+**Output layer differences:** Both networks output the `softmax_loss` layer, which in training is used to compute the loss function and to initialize the backpropagation, while in validation this loss is simply reported. The testing network also has a second output layer, `accuracy`, which is used to report the accuracy on the test set. In the process of training, the test network will occasionally be instantiated and tested on the test set, producing lines like `Test score #0: xxx` and `Test score #1: xxx`. In this case score 0 is the accuracy (which will start around 1/1000 = 0.001 for an untrained network) and score 1 is the loss (which will start around 7 for an untrained network).
 
 We will also lay out a protocol buffer for running the solver. Let's make a few plans:
-* We will run in batches of 256, and run a total of 4,500,000 iterations (about 90 epochs).
+
+* We will run in batches of 256, and run a total of 450,000 iterations (about 90 epochs).
 * For every 1,000 iterations, we test the learned net on the validation data.
 * We set the initial learning rate to 0.01, and decrease it every 100,000 iterations (about 20 epochs).
 * Information will be displayed every 20 epochs.
