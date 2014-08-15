@@ -1,36 +1,40 @@
-function  matcaffe_init(use_gpu, model_def_file, model_file)
-% matcaffe_init(model_def_file, model_file, use_gpu)
+function  matcaffe_init(varargin)
 % Initilize matcaffe wrapper
+% matcaffe_init(varargin)
+% 
+% PARAMETERS
+% b_use_gpu
+% model_def_file
+% model_file
+% b_force: if false (default) and model is already initialized, do not re-initialize; if
+%  true, re-initialize regardless
 
-if nargin < 1
-  % By default use CPU
-  use_gpu = 0;
-end
-if nargin < 2 || isempty(model_def_file)
-  % By default use imagenet_deploy
-  model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
-end
-if nargin < 3 || isempty(model_file)
-  % By default use caffe reference model
-  model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
-end
+% Modified by Daniel Golden (dan at cellscope dot com) August 2014
 
+%% Parse input arguments
+p = inputParser;
+p.addParameter('b_use_gpu', false);
+p.addParameter('model_def_file', fullfile(getenv('CAFFE_HOME'), 'examples/imagenet/imagenet_deploy.prototxt'));
+p.addParameter('model_file', fullfile(getenv('CAFFE_HOME'), 'examples/imagenet/caffe_reference_imagenet_model'));
+p.addParameter('b_force', false);
+p.parse(varargin{:});
 
-if caffe('is_initialized') == 0
-  if exist(model_file, 'file') == 0
+%% Go
+if p.Results.b_force || caffe('is_initialized') == 0
+  if exist(p.Results.model_file, 'file') == 0
     % NOTE: you'll have to get the pre-trained ILSVRC network
     error('You need a network model file');
   end
-  if ~exist(model_def_file,'file')
+  if ~exist(p.Results.model_def_file,'file')
     % NOTE: you'll have to get network definition
     error('You need the network prototxt definition');
   end
-  caffe('init', model_def_file, model_file)
+  caffe('init', p.Results.model_def_file, p.Results.model_file)
 end
 fprintf('Done with init\n');
 
 % set to use GPU or CPU
-if use_gpu
+if p.Results.b_use_gpu
   fprintf('Using GPU Mode\n');
   caffe('set_mode_gpu');
 else
