@@ -171,10 +171,12 @@ message NetStateRule {
   optional int32 min_level = 2;
   optional int32 max_level = 3;
 
-  // A customizable set of stages.
-  // The net must have ALL of the specified stages to meet the rule.
+  // Customizable sets of stages to include or exclude.
+  // The net must have ALL of the specified stages and NONE of the specified
+  // "not_stage"s to meet the rule.
   // (Use multiple NetStateRules to specify conjunctions of stages.)
   repeated string stage = 4;
+  repeated string not_stage = 5;
 }
 
 // NOTE
