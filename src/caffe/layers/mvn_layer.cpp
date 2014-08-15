@@ -18,8 +18,12 @@ void MVNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       1, 1);
   temp_.Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
-  sum_multiplier_.Reshape(1, 1,
-      bottom[0]->height(), bottom[0]->width());
+  if (this->layer_param_.mvn_param().across_channels())
+      sum_multiplier_.Reshape(1, bottom[0]->channels(),
+            bottom[0]->height(), bottom[0]->width());
+  else
+      sum_multiplier_.Reshape(1, 1,
+            bottom[0]->height(), bottom[0]->width());
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
 }
