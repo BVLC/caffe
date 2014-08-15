@@ -10,6 +10,8 @@ function varargout = matcaffe_getscores(im, varargin)
 % b_force_init: force initialization of model (e.g., if using a new model definition)
 %  (default: false)
 % prediction_type: one of 'imagenet' (default) or 'features' for feature extractor
+% b_print_results: print top image matches (only valid if prediction_type = 'imagenet')
+%  (default: true)
 %
 % OUTPUTS
 % scores: 1000-dimensional ILSVRC score vector
@@ -28,9 +30,10 @@ function varargout = matcaffe_getscores(im, varargin)
 p = inputParser;
 p.addParameter('b_force_init', false);
 p.addParameter('prediction_type', 'imagenet');
+p.addParameter('b_print_results', true);
 p.parse(varargin{:});
 
-%%
+%% Go
 
 init(p.Results.prediction_type, p.Results.b_force_init);
 
@@ -57,7 +60,7 @@ scores = mean(scores,2);
 
 [~,maxlabel] = max(scores);
 
-if strcmp(p.Results.prediction_type, 'imagenet')
+if strcmp(p.Results.prediction_type, 'imagenet') && p.Results.b_print_results
   % If we're doing imagenet classifications, show the top results
   score_table = print_top_scores(scores, 10);
   plot_top_scores(score_table, 10);
