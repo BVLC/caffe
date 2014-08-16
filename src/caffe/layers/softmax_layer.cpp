@@ -18,7 +18,7 @@ void SoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < sum_multiplier_.count(); ++i) {
     multiplier_data[i] = 1.;
   }
-  scale_.Reshape(1, 1, bottom[0]->height(), bottom[0]->width());
+  scale_.Reshape(bottom[0]->num(), 1, bottom[0]->height(), bottom[0]->width());
 }
 
 template <typename Dtype>
