@@ -357,7 +357,8 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     } else {
       LOG(INFO) << "Input " << top_id << " -> " << blob_name;
     }
-    shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+    shared_ptr<Blob<Dtype> > blob_pointer(layer_param ?
+        GetTopBlob<Dtype>(layer_param, top_id) : new Blob<Dtype>());
     const int blob_id = blobs_.size();
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);

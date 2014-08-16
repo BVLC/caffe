@@ -85,12 +85,26 @@ void* Caffe::RNG::generator() {
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
-    : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
-    mode_(Caffe::CPU), phase_(Caffe::TRAIN) {
+    : cublas_handle_(NULL),
+      cusparse_handle_(NULL),
+      curand_generator_(NULL),
+      random_generator_(),
+      mode_(Caffe::CPU),
+      phase_(Caffe::TRAIN) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Cublas handle. Cublas won't be available.";
+  }
+  if (cusparseCreate(&cusparse_handle_) != CUSPARSE_STATUS_SUCCESS) {
+    LOG(ERROR) << "Cannot create Cusparse handle. Cusparse won't be available.";
+  }
+  if (cusparseCreateMatDescr(&cusparse_mat_descr_) != CUSPARSE_STATUS_SUCCESS) {
+    LOG(ERROR) << "Cannot create Cusparse mat description. "
+        "Cusparse won't be available.";
+  } else {
+    cusparseSetMatType(cusparse_mat_descr_, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(cusparse_mat_descr_, CUSPARSE_INDEX_BASE_ZERO);
   }
   // Try to create a curand handler.
   if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
@@ -103,6 +117,10 @@ Caffe::Caffe()
 
 Caffe::~Caffe() {
   if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+  if (cusparse_handle_)
+    CUSPARSE_CHECK(cusparseDestroy(cusparse_handle_));
+  if (cusparse_mat_descr_)
+    CUSPARSE_CHECK(cusparseDestroyMatDescr(cusparse_mat_descr_));
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
@@ -136,10 +154,18 @@ void Caffe::SetDevice(const int device_id) {
   // may perform initialization using the GPU.
   CUDA_CHECK(cudaSetDevice(device_id));
   if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
+  if (Get().cusparse_handle_)
+    CUSPARSE_CHECK(cusparseDestroy(Get().cusparse_handle_));
+  if (Get().cusparse_mat_descr_)
+    CUSPARSE_CHECK(cusparseDestroyMatDescr(Get().cusparse_mat_descr_));
   if (Get().curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
   }
   CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
+  CUSPARSE_CHECK(cusparseCreate(&Get().cusparse_handle_));
+  CUSPARSE_CHECK(cusparseCreateMatDescr(&Get().cusparse_mat_descr_));
+  cusparseSetMatType(Get().cusparse_mat_descr_, CUSPARSE_MATRIX_TYPE_GENERAL);
+  cusparseSetMatIndexBase(Get().cusparse_mat_descr_, CUSPARSE_INDEX_BASE_ZERO);
   CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
@@ -232,6 +258,32 @@ const char* cublasGetErrorString(cublasStatus_t error) {
 #endif
   }
   return "Unknown cublas status";
+}
+
+const char* cusparseGetErrorString(cusparseStatus_t error) {
+  switch (error) {
+  case CUSPARSE_STATUS_SUCCESS:
+    return "CUSPARSE_STATUS_SUCCESS";
+  case CUSPARSE_STATUS_NOT_INITIALIZED:
+    return "CUSPARSE_STATUS_NOT_INITIALIZED";
+  case CUSPARSE_STATUS_ALLOC_FAILED:
+    return "CUSPARSE_STATUS_ALLOC_FAILED";
+  case CUSPARSE_STATUS_INVALID_VALUE:
+    return "CUSPARSE_STATUS_INVALID_VALUE";
+  case CUSPARSE_STATUS_ARCH_MISMATCH:
+    return "CUSPARSE_STATUS_ARCH_MISMATCH";
+  case CUSPARSE_STATUS_MAPPING_ERROR:
+    return "CUSPARSE_STATUS_MAPPING_ERROR";
+  case CUSPARSE_STATUS_EXECUTION_FAILED:
+    return "CUSPARSE_STATUS_EXECUTION_FAILED";
+  case CUSPARSE_STATUS_INTERNAL_ERROR:
+    return "CUSPARSE_STATUS_INTERNAL_ERROR";
+  case CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
+    return "CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
+  case CUSPARSE_STATUS_ZERO_PIVOT:
+    return "CUSPARSE_STATUS_ZERO_PIVOT";
+  }
+  return "Unknown CUSPARSE status";
 }
 
 const char* curandGetErrorString(curandStatus_t error) {

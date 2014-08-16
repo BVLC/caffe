@@ -37,7 +37,7 @@ class Blob {
    * an error; either Net::Forward or Net::Reshape need to be called to
    * propagate the new input shape to higher layers.
    */
-  void Reshape(const int num, const int channels, const int height,
+  virtual void Reshape(const int num, const int channels, const int height,
     const int width);
   void ReshapeLike(const Blob& other);
   inline int num() const { return num_; }
@@ -69,38 +69,39 @@ class Blob {
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
-  inline Dtype data_at(const int n, const int c, const int h,
+  virtual inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {
     return *(cpu_data() + offset(n, c, h, w));
   }
 
-  inline Dtype diff_at(const int n, const int c, const int h,
+  virtual inline Dtype diff_at(const int n, const int c, const int h,
       const int w) const {
     return *(cpu_diff() + offset(n, c, h, w));
   }
 
-  inline const shared_ptr<SyncedMemory>& data() const {
+  virtual inline const shared_ptr<SyncedMemory>& data() const {
     CHECK(data_);
     return data_;
   }
 
-  inline const shared_ptr<SyncedMemory>& diff() const {
+  virtual inline const shared_ptr<SyncedMemory>& diff() const {
     CHECK(diff_);
     return diff_;
   }
 
-  const Dtype* cpu_data() const;
-  void set_cpu_data(Dtype* data);
-  const Dtype* gpu_data() const;
-  const Dtype* cpu_diff() const;
-  const Dtype* gpu_diff() const;
-  Dtype* mutable_cpu_data();
-  Dtype* mutable_gpu_data();
-  Dtype* mutable_cpu_diff();
-  Dtype* mutable_gpu_diff();
-  void Update();
-  void FromProto(const BlobProto& proto);
-  void ToProto(BlobProto* proto, bool write_diff = false) const;
+  virtual const Dtype* cpu_data() const;
+  virtual void set_cpu_data(Dtype* data);
+  virtual void set_gpu_data(Dtype* data);
+  virtual const Dtype* gpu_data() const;
+  virtual const Dtype* cpu_diff() const;
+  virtual const Dtype* gpu_diff() const;
+  virtual Dtype* mutable_cpu_data();
+  virtual Dtype* mutable_gpu_data();
+  virtual Dtype* mutable_cpu_diff();
+  virtual Dtype* mutable_gpu_diff();
+  virtual void Update();
+  virtual void FromProto(const BlobProto& proto);
+  virtual void ToProto(BlobProto* proto, bool write_diff = false) const;
 
   /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;

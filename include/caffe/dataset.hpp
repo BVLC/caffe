@@ -61,6 +61,9 @@ template <>
 struct DefaultCoder<caffe::Datum> : public DefaultCoder<Message> { };
 
 template <>
+struct DefaultCoder<caffe::SparseDatum> : public DefaultCoder<Message> { };
+
+template <>
 struct DefaultCoder<string> {
   static bool serialize(string obj, string* serialized) {
     *serialized = obj;
@@ -236,6 +239,7 @@ class Dataset {
 #define INSTANTIATE_DATASET(type) \
   template class type<string, string>; \
   template class type<string, vector<char> >; \
-  template class type<string, caffe::Datum>;
+  template class type<string, caffe::Datum>; \
+  template class type<string, caffe::SparseDatum>;
 
 #endif  // CAFFE_DATASET_H_

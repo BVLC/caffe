@@ -41,13 +41,16 @@ class SyncedMemory {
  public:
   SyncedMemory()
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
+        own_cpu_data_(false), own_gpu_data_(false) {}
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
+        own_cpu_data_(false), own_gpu_data_(false) {}
   ~SyncedMemory();
   const void* cpu_data();
-  void set_cpu_data(void* data);
+
+  // if size if -1 the size is not changed
+  void set_cpu_data(void* data, int size=-1);
+  void set_gpu_data(void* data, int size=-1);
   const void* gpu_data();
   void* mutable_cpu_data();
   void* mutable_gpu_data();
@@ -58,11 +61,13 @@ class SyncedMemory {
  private:
   void to_cpu();
   void to_gpu();
+  void clear_data();
   void* cpu_ptr_;
   void* gpu_ptr_;
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
+  bool own_gpu_data_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

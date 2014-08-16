@@ -7,6 +7,7 @@
 
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
+#include "leveldb/db.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -16,6 +17,7 @@
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/sparse_blob.hpp"
 
 namespace caffe {
 
@@ -102,6 +104,54 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   shared_ptr<Dataset<string, Datum> > dataset_;
   Dataset<string, Datum>::const_iterator iter_;
+};
+
+
+template <typename Dtype>
+class DataLayerSparseInput : public Layer<Dtype>, public InternalThread {
+ public:
+  explicit DataLayerSparseInput(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~DataLayerSparseInput();
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+       const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+       const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_DATA_SPARSE_INPUT;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 2; }
+
+ protected:
+  virtual void CreatePrefetchThread();
+  virtual void JoinPrefetchThread();
+  virtual void InternalThreadEntry();
+
+  Caffe::Phase phase_;
+  bool output_labels_;
+
+  int datum_size_;
+  shared_ptr<SparseBlob<Dtype> > prefetch_data_;
+  shared_ptr<SparseBlob<Dtype> > prefetch_data_copy_;
+  shared_ptr<Blob<Dtype> > prefetch_label_;
+  shared_ptr<Blob<Dtype> > prefetch_label_copy_;
+  shared_ptr<Dataset<string, SparseDatum> > dataset_;
+  Dataset<string, SparseDatum>::const_iterator iter_;
 };
 
 /**
