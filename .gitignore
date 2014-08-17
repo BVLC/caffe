@@ -65,6 +65,5 @@ _site
 # Eclipse Project settings
 *.*project
 
-
 # CMake generated files
 *.gen.cmake
