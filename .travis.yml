@@ -10,17 +10,18 @@ compiler:
 # building on Linux.)
 #   - clang
 
-  
 before_install:
   - echo $LANG
   - echo $LC_ALL
+  - export NUM_THREADS=4
+  - alias make="make --jobs=$NUM_THREADS"
   - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
   - sudo apt-get -y update
   - sudo apt-get -y install wget git curl python-dev python-numpy libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-dev libboost-system-dev libboost-python-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc cmake
 
 install:
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
-  - cd /tmp/glog-0.3.3 && ./configure && make -j4 && sudo make install -j4 && cd -
+  - cd /tmp/glog-0.3.3 && ./configure && make && sudo make install && cd -
   - wget https://github.com/schuhschuh/gflags/archive/master.zip -O /tmp/gflags-master.zip && pushd /tmp/ && unzip gflags-master.zip && cd gflags-master && mkdir build && cd build && export CXXFLAGS="-fPIC" && cmake .. && make VERBOSE=1 && sudo make install && popd
   - curl http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_6.0-37_amd64.deb -o /tmp/cuda_install.deb && sudo dpkg -i /tmp/cuda_install.deb && rm /tmp/cuda_install.deb
   - sudo apt-get -y update
@@ -32,45 +33,44 @@ install:
   # manually since we did a partial installation.)
   - sudo ln -s /usr/local/cuda-6.0 /usr/local/cuda
   - curl https://gitorious.org/mdb/mdb/archive/7f038d0f15bec57b4c07aa3f31cd5564c88a1897.tar.gz -o /tmp/mdb.tar.gz && tar -C /tmp -xzvf /tmp/mdb.tar.gz && rm /tmp/mdb.tar.gz
-  - cd /tmp/mdb-mdb/libraries/liblmdb/ && make -j4 && sudo make install -j4 && cd -
+  - cd /tmp/mdb-mdb/libraries/liblmdb/ && make && sudo make install && cd -
 
 before_script:
   - mv Makefile.config.example Makefile.config
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-  - export NUM_THREADS=4
 
 script:
-  # CMake build.
+  # CMake build
   - mkdir build
   - cd build
-  ## CPU-GPU: build only.
+  ## CPU-GPU: build only
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release ..
-  - make --keep-going --jobs=$NUM_THREADS
+  - make --keep-going
   - make clean && rm -rf *
    ## CPU-only: comprehensive
   - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
-  - make --keep-going --jobs=$NUM_THREADS
-  - make runtest --keep-going --jobs=$NUM_THREADS
-  - make lint --jobs=$NUM_THREADS
-  - make clean && rm -rf *
-    ## Cleaning
+  - make --keep-going
+  - make runtest
+  - make lint
+  - make clean
+    ## Cleanup CMake build
   - cd ..
-  - rm -r build
+  - rm -rf build
 
   # Make build
-  ## CPU-GPU: build only.
+  ## CPU-GPU: build only
   - export CPU_ONLY=0
-  - make --keep-going --jobs=$NUM_THREADS all
+  - make --keep-going all
   - make clean
-  ## CPU-only: comprehensive.
+  ## CPU-only: comprehensive
   - export CPU_ONLY=1
-  - make --keep-going --jobs=$NUM_THREADS all test warn lint
+  - make --keep-going all test warn lint
   - make runtest
-  - make --jobs=$NUM_THREADS all
-  - make --jobs=$NUM_THREADS test
-  - make --jobs=$NUM_THREADS warn
-  - make --jobs=$NUM_THREADS lint
-  - make --jobs=$NUM_THREADS pycaffe
+  - make all
+  - make test
+  - make warn
+  - make lint
+  - make pycaffe
 
 notifications:
 # Emails are sent to the committer's git-configured email address by default,
