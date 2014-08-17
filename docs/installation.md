@@ -210,6 +210,27 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST demo](mnist.html) and the pretrained [ImageNet example](imagenet.html).
 
+### Compilation using CMake (beta)
+
+In lieu of manually editing `Makefile.config` to tell Caffe where dependencies are located, Caffe also provides a CMake-based build system (currently in "beta").
+It requires CMake version >= 2.8.8.
+The basic installation steps are as follows:
+
+    mkdir build
+    cd build
+    cmake ..
+    make all
+    make runtest
+
+#### Ubuntu 12.04
+
+Note that in Ubuntu 12.04, Aptitude will install version CMake 2.8.7 by default, which is not supported by Caffe's CMake build (requires at least 2.8.8).
+As a workaround, if you are using Ubuntu 12.04 you can try the following steps to install (or upgrade to) CMake 2.8.9:
+
+    sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
+    sudo apt-get -y update
+    sudo apt-get install cmake
+
 ## Hardware Questions
 
 **Laboratory Tested Hardware**: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability >= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.

@@ -1,0 +1,4 @@
+#define CUDA_TEST_DEVICE @CUDA_TEST_DEVICE@
+#define CMAKE_SOURCE_DIR "@CMAKE_SOURCE_DIR@/src/"
+#define EXAMPLES_SOURCE_DIR "@CMAKE_SOURCE_DIR@/examples/"
+#define CMAKE_EXT ".gen.cmake"
