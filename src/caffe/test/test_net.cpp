@@ -1618,6 +1618,69 @@ TEST_F(FilterNetTest, TestFilterInByMultipleStage2) {
   this->RunFilterNetTest(input_proto, input_proto);
 }
 
+TEST_F(FilterNetTest, TestFilterInByNotStage) {
+  const string& input_proto =
+      "state: { stage: 'mystage' } "
+      "name: 'TestNetwork' "
+      "layers: { "
+      "  name: 'data' "
+      "  type: DATA "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layers: { "
+      "  name: 'innerprod' "
+      "  type: INNER_PRODUCT "
+      "  bottom: 'data' "
+      "  top: 'innerprod' "
+      "  include: { not_stage: 'myotherstage' } "
+      "} "
+      "layers: { "
+      "  name: 'loss' "
+      "  type: SOFTMAX_LOSS "
+      "  bottom: 'innerprod' "
+      "  bottom: 'label' "
+      "  include: { not_stage: 'myotherstage' } "
+      "} ";
+  this->RunFilterNetTest(input_proto, input_proto);
+}
+
+TEST_F(FilterNetTest, TestFilterOutByNotStage) {
+  const string& input_proto =
+      "state: { stage: 'mystage' } "
+      "name: 'TestNetwork' "
+      "layers: { "
+      "  name: 'data' "
+      "  type: DATA "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layers: { "
+      "  name: 'innerprod' "
+      "  type: INNER_PRODUCT "
+      "  bottom: 'data' "
+      "  top: 'innerprod' "
+      "  include: { not_stage: 'mystage' } "
+      "} "
+      "layers: { "
+      "  name: 'loss' "
+      "  type: SOFTMAX_LOSS "
+      "  bottom: 'innerprod' "
+      "  bottom: 'label' "
+      "  include: { not_stage: 'mystage' } "
+      "} ";
+  const string& output_proto =
+      "state: { stage: 'mystage' } "
+      "name: 'TestNetwork' "
+      "layers: { "
+      "  name: 'data' "
+      "  type: DATA "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} ";
+  this->RunFilterNetTest(input_proto, output_proto);
+}
+
 TEST_F(FilterNetTest, TestFilterOutByMinLevel) {
   const string& input_proto =
       "name: 'TestNetwork' "
