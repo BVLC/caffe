@@ -173,7 +173,8 @@ To edit the formulae in turn, run
 
 After this, run
 
-    for x in snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+    for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+    brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
     brew install --build-from-source --with-python --fresh -vd boost
 
 **Note** that `brew install --build-from-source --fresh -vd boost` is fine if you do not need the Caffe Python wrapper.
