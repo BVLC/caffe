@@ -7,7 +7,7 @@ project( Test )
 
 # Configuration
 set(TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)    # test executables are going to be placed there
-set(TEST_EXT .bin)               # test executable extension
+set(TEST_EXT .testbin)           # test executable extension
 set(ALL_TEST test${TEST_EXT})    # name of an executable comprising of all tests
 set(RUN_TEST runtest)            # dummy target for running tests
 
