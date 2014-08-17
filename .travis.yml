@@ -13,8 +13,11 @@ compiler:
 before_install:
   - echo $LANG
   - echo $LC_ALL
+  - export NUM_THREADS=4
+  - alias make="make --jobs=$NUM_THREADS"
+  - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
   - sudo apt-get -y update
-  - sudo apt-get -y install wget git curl python-dev python-numpy libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc
+  - sudo apt-get -y install wget git curl python-dev python-numpy libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-dev libboost-system-dev libboost-python-dev libhdf5-serial-dev protobuf-compiler libatlas-dev libatlas-base-dev bc cmake
 
 install:
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz -O /tmp/glog-0.3.3.tar.gz && tar -C /tmp -xzvf /tmp/glog-0.3.3.tar.gz && rm /tmp/glog-0.3.3.tar.gz
@@ -35,22 +38,39 @@ install:
 before_script:
   - mv Makefile.config.example Makefile.config
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-  - export NUM_THREADS=4
 
 script:
-  # CPU-GPU: build only.
-  - export CPU_ONLY=0
-  - make --keep-going --jobs=$NUM_THREADS all
-  - make clean
-  # CPU-only: comprehensive.
-  - export CPU_ONLY=1
-  - make --keep-going --jobs=$NUM_THREADS all test warn lint
+  # CMake build
+  - mkdir build
+  - cd build
+  ## CPU-GPU: build only
+  - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release ..
+  - make --keep-going
+  - make clean && rm -rf *
+   ## CPU-only: comprehensive
+  - cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
+  - make --keep-going
   - make runtest
-  - make --jobs=$NUM_THREADS all
-  - make --jobs=$NUM_THREADS test
-  - make --jobs=$NUM_THREADS warn
-  - make --jobs=$NUM_THREADS lint
-  - make --jobs=$NUM_THREADS pycaffe
+  - make lint
+  - make clean
+    ## Cleanup CMake build
+  - cd ..
+  - rm -rf build
+
+  # Make build
+  ## CPU-GPU: build only
+  - export CPU_ONLY=0
+  - make --keep-going all
+  - make clean
+  ## CPU-only: comprehensive
+  - export CPU_ONLY=1
+  - make --keep-going all test warn lint
+  - make runtest
+  - make all
+  - make test
+  - make warn
+  - make lint
+  - make pycaffe
 
 notifications:
 # Emails are sent to the committer's git-configured email address by default,
