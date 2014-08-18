@@ -95,6 +95,10 @@ template <typename Dtype>
 Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y);
 
 template <typename Dtype>
+Dtype caffe_cpu_strided_dot(const int n, const Dtype* x, const int incx,
+    const Dtype* y, const int incy);
+
+template <typename Dtype>
 int caffe_cpu_hamming_distance(const int n, const Dtype* x, const Dtype* y);
 
 // Returns the sum of the absolute values of the elements of vector x
