@@ -186,10 +186,10 @@ int time() {
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
     }
     LOG(INFO) << layername << "\tforward: " << timer.MilliSeconds() <<
-        " milli seconds.";
+        " milliseconds.";
   }
   LOG(INFO) << "Forward pass: " << forward_timer.MilliSeconds() <<
-      " milli seconds.";
+      " milliseconds.";
   Timer backward_timer;
   backward_timer.Start();
   for (int i = layers.size() - 1; i >= 0; --i) {
@@ -200,12 +200,12 @@ int time() {
                           &bottom_vecs[i]);
     }
     LOG(INFO) << layername << "\tbackward: "
-        << timer.MilliSeconds() << " milli seconds.";
+        << timer.MilliSeconds() << " milliseconds.";
   }
   LOG(INFO) << "Backward pass: " << backward_timer.MilliSeconds() <<
-      " milli seconds.";
+      " milliseconds.";
   LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() <<
-      " milli seconds.";
+      " milliseconds.";
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
 }
