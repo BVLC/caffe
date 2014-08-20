@@ -1,12 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-//
-// This is a simple script that allows one to quickly train a network whose
-// parameters are specified by text format protocol buffers.
-// Usage:
-//    train_net net_proto_file solver_proto_file [resume_point_file]
-
-#include <cstring>
-
 #include "caffe/caffe.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
