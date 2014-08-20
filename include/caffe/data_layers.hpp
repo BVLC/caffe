@@ -12,6 +12,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/data_transformer.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
@@ -24,12 +25,12 @@ namespace caffe {
 
 // TODO: DataLayer, ImageDataLayer, and WindowDataLayer all have the
 // same basic structure and a lot of duplicated code.
-
 template <typename Dtype>
 class DataLayer : public Layer<Dtype>, public InternalThread {
  public:
   explicit DataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param),
+        data_transformer_(param.data_param().transform_param()) {}
   virtual ~DataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -53,11 +54,10 @@ class DataLayer : public Layer<Dtype>, public InternalThread {
 
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
-  virtual unsigned int PrefetchRand();
   // The thread's function
   virtual void InternalThreadEntry();
 
-  shared_ptr<Caffe::RNG> prefetch_rng_;
+  DataTransformer<Dtype> data_transformer_;
 
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
