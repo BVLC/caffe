@@ -89,6 +89,17 @@ int train() {
 
   LOG(INFO) << "Starting Optimization";
   caffe::SGDSolver<float> solver(solver_param);
+
+  // Set device id and mode
+  if (FLAGS_gpu >= 0) {
+    LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
+    Caffe::SetDevice(FLAGS_gpu);
+    Caffe::set_mode(Caffe::GPU);
+  } else if (!solver_param.has_solver_mode()) {
+    LOG(INFO) << "Use CPU.";
+    Caffe::set_mode(Caffe::CPU);
+  }
+
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver.Solve(FLAGS_snapshot);
