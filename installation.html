@@ -200,7 +200,8 @@ In other <code>ENV</code> settings, things may not work as expected.</p>
 <p>Simply run the following:</p>
 
 <pre><code>brew install --build-from-source --with-python boost
-for x in snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv; do brew install $x; done
+brew install --with-python protobuf
+for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew install $x; done
 </code></pre>
 
 <p>Building boost from source is needed to link against your local Python (exceptions might be raised during some OS X installs, but <strong>ignore</strong> these and continue). If you do not need the Python wrapper, simply doing <code>brew install boost</code> is fine.</p>
@@ -241,7 +242,8 @@ Make sure that Homebrew doesn’t install any software dependencies in the backg
 
 <p>After this, run</p>
 
-<pre><code>for x in snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+<pre><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
 brew install --build-from-source --with-python --fresh -vd boost
 </code></pre>
 

@@ -91,23 +91,30 @@ Now simply create the leveldbs with <code>./create_imagenet.sh</code>. Note that
 
 <h2 id="network-definition">Network Definition</h2>
 
-<p>The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at <code>examples/imagenet/imagenet_train.prototxt</code>. Note the paths in the data layer - if you have not followed the exact paths in this guide you will need to change the following lines:</p>
+<p>The network definition follows strictly the one in Krizhevsky et al. You can find the detailed definition at <code>examples/imagenet/imagenet_train_val.prototxt</code>. Note the paths in the data layer — if you have not followed the exact paths in this guide you will need to change the following lines:</p>
 
 <pre><code>source: "ilvsrc12_train_leveldb"
 mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
 </code></pre>
 
-<p>to point to your own leveldb and image mean. Likewise, do the same for <code>examples/imagenet/imagenet_val.prototxt</code>.</p>
+<p>to point to your own leveldb and image mean.</p>
 
-<p>If you look carefully at <code>imagenet_train.prototxt</code> and <code>imagenet_val.prototxt</code>, you will notice that they are largely the same, with the only difference being the data layer sources, and the last layer: in training, we will be using a <code>softmax_loss</code> layer to compute the loss function and to initialize the backpropagation, while in validation we will be using an <code>accuracy</code> layer to inspect how well we do in terms of accuracy.</p>
+<p>If you look carefully at <code>imagenet_train_val.prototxt</code>, you will notice several <code>include</code> sections specifying either <code>phase: TRAIN</code> or <code>phase: TEST</code>. These sections allow us to define two closely related networks in one file: the network used for training and the network used for testing. These two networks are almost identical, sharing all layers except for those marked with <code>include { phase: TRAIN }</code> or <code>include { phase: TEST }</code>. In this case, only the input layers and one output layer are different.</p>
 
-<p>We will also lay out a protocol buffer for running the solver. Let’s make a few plans:
-* We will run in batches of 256, and run a total of 4,500,000 iterations (about 90 epochs).
-* For every 1,000 iterations, we test the learned net on the validation data.
-* We set the initial learning rate to 0.01, and decrease it every 100,000 iterations (about 20 epochs).
-* Information will be displayed every 20 epochs.
-* The network will be trained with momentum 0.9 and a weight decay of 0.0005.
-* For every 10,000 iterations, we will take a snapshot of the current status.</p>
+<p><strong>Input layer differences:</strong> The training network’s <code>data</code> input layer draws its data from <code>ilsvrc12_train_leveldb</code> and randomly mirrors the input image. The testing network’s <code>data</code> layer takes data from <code>ilsvrc12_val_leveldb</code> and does not perform random mirroring.</p>
+
+<p><strong>Output layer differences:</strong> Both networks output the <code>softmax_loss</code> layer, which in training is used to compute the loss function and to initialize the backpropagation, while in validation this loss is simply reported. The testing network also has a second output layer, <code>accuracy</code>, which is used to report the accuracy on the test set. In the process of training, the test network will occasionally be instantiated and tested on the test set, producing lines like <code>Test score #0: xxx</code> and <code>Test score #1: xxx</code>. In this case score 0 is the accuracy (which will start around 1/1000 = 0.001 for an untrained network) and score 1 is the loss (which will start around 7 for an untrained network).</p>
+
+<p>We will also lay out a protocol buffer for running the solver. Let’s make a few plans:</p>
+
+<ul>
+  <li>We will run in batches of 256, and run a total of 450,000 iterations (about 90 epochs).</li>
+  <li>For every 1,000 iterations, we test the learned net on the validation data.</li>
+  <li>We set the initial learning rate to 0.01, and decrease it every 100,000 iterations (about 20 epochs).</li>
+  <li>Information will be displayed every 20 epochs.</li>
+  <li>The network will be trained with momentum 0.9 and a weight decay of 0.0005.</li>
+  <li>For every 10,000 iterations, we will take a snapshot of the current status.</li>
+</ul>
 
 <p>Sound good? This is implemented in <code>examples/imagenet/imagenet_solver.prototxt</code>. Again, you will need to change the first line:</p>
 
