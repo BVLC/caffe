@@ -310,8 +310,8 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
         layer_param->mutable_data_param()->mutable_transform_param()->
             set_scale(v0_layer_param.scale());
       } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_scale(
-           v0_layer_param.scale());
+        layer_param->mutable_image_data_param()->mutable_transform_param()->
+            set_scale(v0_layer_param.scale());
       } else {
         LOG(ERROR) << "Unknown parameter scale for layer type " << type;
         is_fully_compatible = false;
@@ -322,8 +322,8 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
         layer_param->mutable_data_param()->mutable_transform_param()->
             set_mean_file(v0_layer_param.meanfile());
       } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_mean_file(
-            v0_layer_param.meanfile());
+        layer_param->mutable_image_data_param()->mutable_transform_param()->
+            set_mean_file(v0_layer_param.meanfile());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_mean_file(
             v0_layer_param.meanfile());
@@ -355,8 +355,8 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
         layer_param->mutable_data_param()->mutable_transform_param()->
             set_crop_size(v0_layer_param.cropsize());
       } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_crop_size(
-            v0_layer_param.cropsize());
+        layer_param->mutable_image_data_param()->mutable_transform_param()->
+            set_crop_size(v0_layer_param.cropsize());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_crop_size(
             v0_layer_param.cropsize());
@@ -370,8 +370,8 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
         layer_param->mutable_data_param()->mutable_transform_param()->
             set_mirror(v0_layer_param.mirror());
       } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_mirror(
-            v0_layer_param.mirror());
+        layer_param->mutable_image_data_param()->mutable_transform_param()->
+            set_mirror(v0_layer_param.mirror());
       } else if (type == "window_data") {
         layer_param->mutable_window_data_param()->set_mirror(
             v0_layer_param.mirror());

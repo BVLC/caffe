@@ -11,7 +11,6 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
                                        const Datum& datum,
                                        const Dtype* mean,
                                        Dtype* transformed_data) {
-
   const string& data = datum.data();
   const int channels = datum.channels();
   const int height = datum.height();

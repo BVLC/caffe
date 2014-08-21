@@ -178,7 +178,8 @@ template <typename Dtype>
 class ImageDataLayer : public Layer<Dtype>, public InternalThread {
  public:
   explicit ImageDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param),
+        data_transformer_(param.data_param().transform_param()) {}
   virtual ~ImageDataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -203,10 +204,11 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
-  virtual unsigned int PrefetchRand();
   virtual void InternalThreadEntry();
 
+  DataTransformer<Dtype> data_transformer_;
   shared_ptr<Caffe::RNG> prefetch_rng_;
+
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
   int datum_channels_;
