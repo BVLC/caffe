@@ -315,17 +315,6 @@ void caffe_rng_bernoulli<double>(const int n, const double p, unsigned int* r);
 template
 void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
 
-template <typename Dtype>
-Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y) {
-  return caffe_cpu_strided_dot(n, x, 1, y, 1);
-}
-
-template
-float caffe_cpu_dot<float>(const int n, const float* x, const float* y);
-
-template
-double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
-
 template <>
 float caffe_cpu_strided_dot<float>(const int n, const float* x, const int incx,
     const float* y, const int incy) {
@@ -337,6 +326,17 @@ double caffe_cpu_strided_dot<double>(const int n, const double* x,
     const int incx, const double* y, const int incy) {
   return cblas_ddot(n, x, incx, y, incy);
 }
+
+template <typename Dtype>
+Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y) {
+  return caffe_cpu_strided_dot(n, x, 1, y, 1);
+}
+
+template
+float caffe_cpu_dot<float>(const int n, const float* x, const float* y);
+
+template
+double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
 
 template <>
 int caffe_cpu_hamming_distance<float>(const int n, const float* x,
