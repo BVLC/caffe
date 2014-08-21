@@ -28,6 +28,21 @@ message Datum {
   repeated float float_data = 6;
 }
 
+message DataIteratorParameter {
+  enum DataIteratorType {
+    NONE = 0;
+    HDF5 = 1;
+    IMAGE = 2;
+    LEVELDB = 3;
+    MEMORY = 4;
+    WINDOW = 5;
+  }
+  optional string name = 1;
+  optional DataIteratorType type = 2;
+  
+  optional ImageDataParameter image_data_param = 11;  
+}
+
 message FillerParameter {
   // The filler type.
   optional string type = 1 [default = 'constant'];
@@ -456,6 +471,9 @@ message ImageDataParameter {
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 9 [default = 0];
   optional uint32 new_width = 10 [default = 0];
+  
+  // The base path of the images
+  optional string base_path = 11;
 }
 
 // Message that stores parameters InfogainLossLayer
