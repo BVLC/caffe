@@ -367,17 +367,26 @@ message DataParameter {
   // Specify the data source.
   optional string source = 1;
   // Specify the batch size.
-  optional uint32 batch_size = 3;
+  optional uint32 batch_size = 4;
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
-  optional uint32 rand_skip = 4 [default = 0];
-
+  optional uint32 rand_skip = 7 [default = 0];
+  optional DB backend = 8 [default = LEVELDB];
   // Parameters for data pre-processing.
-  optional TransformationParameter transform_param = 5;
-
-  optional DB backend = 6 [default = LEVELDB];
+  optional TransformationParameter transform_param = 9;
+  // DEPRECATED. See TransformParameter. For data pre-processing, we can do
+  // simple scaling and subtracting the data mean, if provided. Note that the
+  // mean subtraction is always carried out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // DEPRECATED. See TransformParameter. Specify if we would like to randomly
+  // crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // DEPRECATED. See TransformParameter. Specify if we want to randomly mirror
+  // data.
+  optional bool mirror = 6 [default = false];
 }
 
 // Message that stores parameters used by DropoutLayer
@@ -445,19 +454,30 @@ message ImageDataParameter {
   // Specify the data source.
   optional string source = 1;
   // Specify the batch size.
-  optional uint32 batch_size = 2;
+  optional uint32 batch_size = 4;
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
-  optional uint32 rand_skip = 3 [default = 0];
+  optional uint32 rand_skip = 7 [default = 0];
   // Whether or not ImageLayer should shuffle the list of files at every epoch.
-  optional bool shuffle = 4 [default = false];
+  optional bool shuffle = 8 [default = false];
   // It will also resize images if new_height or new_width are not zero.
-  optional uint32 new_height = 5 [default = 0];
-  optional uint32 new_width = 6 [default = 0];
+  optional uint32 new_height = 9 [default = 0];
+  optional uint32 new_width = 10 [default = 0];
   // Parameters for data pre-processing.
-  optional TransformationParameter transform_param = 7;
+  optional TransformationParameter transform_param = 11;
+  // DEPRECATED. See TransformParameter. For data pre-processing, we can do
+  // simple scaling and subtracting the data mean, if provided. Note that the
+  // mean subtraction is always carried out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // DEPRECATED. See TransformParameter. Specify if we would like to randomly
+  // crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // DEPRECATED. See TransformParameter. Specify if we want to randomly mirror
+  // data.
+  optional bool mirror = 6 [default = false];
 }
 
 // Message that stores parameters InfogainLossLayer
