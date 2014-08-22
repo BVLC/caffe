@@ -547,6 +547,75 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
   }
 }
 
+bool NetNeedsDataUpgrade(const NetParameter& net_param) {
+  for (int i = 0; i < net_param.layers_size(); ++i) {
+    if (net_param.layers(i).type() == LayerParameter_LayerType_DATA) {
+      DataParameter layer_param = net_param.layers(i).data_param();
+      if (layer_param.has_scale()) { return true; }
+      if (layer_param.has_mean_file()) { return true; }
+      if (layer_param.has_crop_size()) { return true; }
+      if (layer_param.has_mirror()) { return true; }
+    }
+    if (net_param.layers(i).type() == LayerParameter_LayerType_IMAGE_DATA) {
+      ImageDataParameter layer_param = net_param.layers(i).image_data_param();
+      if (layer_param.has_scale()) { return true; }
+      if (layer_param.has_mean_file()) { return true; }
+      if (layer_param.has_crop_size()) { return true; }
+      if (layer_param.has_mirror()) { return true; }
+    }
+  }
+  return false;
+}
+
+void UpgradeNetDataTransformation(NetParameter* net_param) {
+  for (int i = 0; i < net_param->layers_size(); ++i) {
+    if (net_param->layers(i).type() == LayerParameter_LayerType_DATA) {
+      DataParameter* layer_param =
+          net_param->mutable_layers(i)->mutable_data_param();
+      TransformationParameter* transform_param =
+          layer_param->mutable_transform_param();
+      if (layer_param->has_scale()) {
+        transform_param->set_scale(layer_param->scale());
+        layer_param->clear_scale();
+      }
+      if (layer_param->has_mean_file()) {
+        transform_param->set_mean_file(layer_param->mean_file());
+        layer_param->clear_mean_file();
+      }
+      if (layer_param->has_crop_size()) {
+        transform_param->set_crop_size(layer_param->crop_size());
+        layer_param->clear_crop_size();
+      }
+      if (layer_param->has_mirror()) {
+        transform_param->set_mirror(layer_param->mirror());
+        layer_param->clear_mirror();
+      }
+    }
+    if (net_param->layers(i).type() == LayerParameter_LayerType_IMAGE_DATA) {
+      ImageDataParameter* layer_param =
+          net_param->mutable_layers(i)->mutable_image_data_param();
+      TransformationParameter* transform_param =
+          layer_param->mutable_transform_param();
+      if (layer_param->has_scale()) {
+        transform_param->set_scale(layer_param->scale());
+        layer_param->clear_scale();
+      }
+      if (layer_param->has_mean_file()) {
+        transform_param->set_mean_file(layer_param->mean_file());
+        layer_param->clear_mean_file();
+      }
+      if (layer_param->has_crop_size()) {
+        transform_param->set_crop_size(layer_param->crop_size());
+        layer_param->clear_crop_size();
+      }
+      if (layer_param->has_mirror()) {
+        transform_param->set_mirror(layer_param->mirror());
+        layer_param->clear_mirror();
+      }
+    }
+  }
+}
+
 void NetParameterToPrettyPrint(const NetParameter& param,
                                NetParameterPrettyPrint* pretty_param) {
   pretty_param->Clear();
@@ -585,6 +654,16 @@ void UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
         << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
         << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
         << "weights upgrade this and any other net protos to the new format.";
+  }
+  // NetParameter uses old style data transformation fields; try to upgrade it.
+  if (NetNeedsDataUpgrade(*param)) {
+    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
+               << "transformation parameters: " << param_file;
+    UpgradeNetDataTransformation(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+              << "data transformation parameters.";
+    LOG(ERROR) << "Note that future Caffe releases will only support "
+               << "transform_param messages for transformation fields.";
   }
 }
 
