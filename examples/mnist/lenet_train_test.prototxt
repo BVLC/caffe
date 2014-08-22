@@ -6,8 +6,10 @@ layers {
   top: "label"
   data_param {
     source: "mnist-train-leveldb"
-    scale: 0.00390625
     batch_size: 64
+    transform_param {
+      scale: 0.00390625
+    }
   }
   include: { phase: TRAIN }
 }
@@ -18,8 +20,10 @@ layers {
   top: "label"
   data_param {
     source: "mnist-test-leveldb"
-    scale: 0.00390625
     batch_size: 100
+    transform_param {
+      scale: 0.00390625
+    }
   }
   include: { phase: TEST }
 }

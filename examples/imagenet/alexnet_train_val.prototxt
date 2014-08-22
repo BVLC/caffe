@@ -6,10 +6,12 @@ layers {
   top: "label"
   data_param {
     source: "ilsvrc12_train_leveldb"
-    mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
     batch_size: 256
-    crop_size: 227
-    mirror: true
+    transform_param {
+      crop_size: 227
+      mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
+      mirror: true
+    }
   }
   include: { phase: TRAIN }
 }
@@ -20,10 +22,12 @@ layers {
   top: "label"
   data_param {
     source: "ilsvrc12_val_leveldb"
-    mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
     batch_size: 50
-    crop_size: 227
-    mirror: false
+    transform_param {
+      crop_size: 227
+      mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
+      mirror: false
+    }
   }
   include: { phase: TEST }
 }
