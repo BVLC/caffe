@@ -65,6 +65,8 @@ class SGDSolver : public Solver<Dtype> {
   explicit SGDSolver(const string& param_file)
       : Solver<Dtype>(param_file) {}
 
+  const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+
  protected:
   virtual void PreSolve();
   Dtype GetLearningRate();
