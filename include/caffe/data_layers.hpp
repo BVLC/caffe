@@ -179,7 +179,7 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
  public:
   explicit ImageDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
-        data_transformer_(param.data_param().transform_param()) {}
+        data_transformer_(param.image_data_param().transform_param()) {}
   virtual ~ImageDataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
