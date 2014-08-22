@@ -118,9 +118,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_scale(scale);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        data_param->mutable_transform_param();
+    transform_param->set_scale(scale);
+
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
     EXPECT_EQ(blob_top_data_->num(), 5);
@@ -150,12 +154,17 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype scale = 3;
     LayerParameter param;
     Caffe::set_random_seed(1701);
+
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_scale(scale);
-    data_param->set_crop_size(1);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        data_param->mutable_transform_param();
+    transform_param->set_scale(scale);
+    transform_param->set_crop_size(1);
+
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
     EXPECT_EQ(blob_top_data_->num(), 5);
@@ -198,10 +207,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_crop_size(1);
-    data_param->set_mirror(true);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        data_param->mutable_transform_param();
+    transform_param->set_crop_size(1);
+    transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701.
     Caffe::set_random_seed(seed_);
@@ -249,10 +261,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_crop_size(1);
-    data_param->set_mirror(true);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        data_param->mutable_transform_param();
+    transform_param->set_crop_size(1);
+    transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701, srand seed 1701.
     Caffe::set_random_seed(seed_);
