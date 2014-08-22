@@ -20,22 +20,11 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   Dtype* top_data = prefetch_data_.mutable_cpu_data();
   Dtype* top_label = prefetch_label_.mutable_cpu_data();
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
-  const Dtype scale = image_data_param.scale();
   const int batch_size = image_data_param.batch_size();
-  const int crop_size = image_data_param.crop_size();
-  const bool mirror = image_data_param.mirror();
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
 
-  if (mirror && crop_size == 0) {
-    LOG(FATAL) << "Current implementation requires mirror and crop_size to be "
-        << "set at the same time.";
-  }
   // datum scales
-  const int channels = datum_channels_;
-  const int height = datum_height_;
-  const int width = datum_width_;
-  const int size = datum_size_;
   const int lines_size = lines_.size();
   const Dtype* mean = data_mean_.cpu_data();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
@@ -46,62 +35,9 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
           new_height, new_width, &datum)) {
       continue;
     }
-    const string& data = datum.data();
-    if (crop_size) {
-      CHECK(data.size()) << "Image cropping only support uint8 data";
-      int h_off, w_off;
-      // We only do random crop when we do training.
-      if (phase_ == Caffe::TRAIN) {
-        h_off = PrefetchRand() % (height - crop_size);
-        w_off = PrefetchRand() % (width - crop_size);
-      } else {
-        h_off = (height - crop_size) / 2;
-        w_off = (width - crop_size) / 2;
-      }
-      if (mirror && PrefetchRand() % 2) {
-        // Copy mirrored version
-        for (int c = 0; c < channels; ++c) {
-          for (int h = 0; h < crop_size; ++h) {
-            for (int w = 0; w < crop_size; ++w) {
-              int top_index = ((item_id * channels + c) * crop_size + h)
-                              * crop_size + (crop_size - 1 - w);
-              int data_index = (c * height + h + h_off) * width + w + w_off;
-              Dtype datum_element =
-                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-              top_data[top_index] = (datum_element - mean[data_index]) * scale;
-            }
-          }
-        }
-      } else {
-        // Normal copy
-        for (int c = 0; c < channels; ++c) {
-          for (int h = 0; h < crop_size; ++h) {
-            for (int w = 0; w < crop_size; ++w) {
-              int top_index = ((item_id * channels + c) * crop_size + h)
-                              * crop_size + w;
-              int data_index = (c * height + h + h_off) * width + w + w_off;
-              Dtype datum_element =
-                  static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
-              top_data[top_index] = (datum_element - mean[data_index]) * scale;
-            }
-          }
-        }
-      }
-    } else {
-      // Just copy the whole data
-      if (data.size()) {
-        for (int j = 0; j < size; ++j) {
-          Dtype datum_element =
-              static_cast<Dtype>(static_cast<uint8_t>(data[j]));
-          top_data[item_id * size + j] = (datum_element - mean[j]) * scale;
-        }
-      } else {
-        for (int j = 0; j < size; ++j) {
-          top_data[item_id * size + j] =
-              (datum.float_data(j) - mean[j]) * scale;
-        }
-      }
-    }
+
+    // Apply transformations (mirror, crop...) to the data
+    data_transformer_.Transform(item_id, datum, mean, top_data);
 
     top_label[item_id] = datum.label();
     // go to the next iter
@@ -163,9 +99,11 @@ void ImageDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
                          new_height, new_width, &datum));
   // image
-  const int crop_size = this->layer_param_.image_data_param().crop_size();
+  const int crop_size = this->layer_param_.image_data_param()
+      .transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
-  const string& mean_file = this->layer_param_.image_data_param().mean_file();
+  const string& mean_file = this->layer_param_.image_data_param()
+      .transform_param().mean_file();
   if (crop_size > 0) {
     (*top)[0]->Reshape(batch_size, datum.channels(), crop_size, crop_size);
     prefetch_data_.Reshape(batch_size, datum.channels(), crop_size, crop_size);
@@ -189,7 +127,7 @@ void ImageDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(datum_height_, crop_size);
   CHECK_GT(datum_width_, crop_size);
   // check if we want to have mean
-  if (this->layer_param_.image_data_param().has_mean_file()) {
+  if (this->layer_param_.image_data_param().transform_param().has_mean_file()) {
     BlobProto blob_proto;
     LOG(INFO) << "Loading mean file from" << mean_file;
     ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
@@ -217,15 +155,9 @@ void ImageDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   phase_ = Caffe::phase();
-  const bool prefetch_needs_rand =
-      this->layer_param_.image_data_param().shuffle() ||
-      this->layer_param_.image_data_param().crop_size();
-  if (prefetch_needs_rand) {
-    const unsigned int prefetch_rng_seed = caffe_rng_rand();
-    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
-  } else {
-    prefetch_rng_.reset();
-  }
+
+  data_transformer_.InitRand();
+
   // Create the thread.
   CHECK(!StartInternalThread()) << "Pthread execution failed";
 }
@@ -241,13 +173,6 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 template <typename Dtype>
 void ImageDataLayer<Dtype>::JoinPrefetchThread() {
   CHECK(!WaitForInternalThreadToExit()) << "Pthread joining failed";
-}
-
-template <typename Dtype>
-unsigned int ImageDataLayer<Dtype>::PrefetchRand() {
-  caffe::rng_t* prefetch_rng =
-      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
-  return (*prefetch_rng)();
 }
 
 template <typename Dtype>
