@@ -15,7 +15,7 @@ class InternalThread {
   InternalThread() {}
   virtual ~InternalThread() {}
 
-  /** Returns true if the thread was successfully started **/
+  /** Returns 0 if the thread was successfully started **/
   bool StartInternalThread() {
     return pthread_create(&_thread, NULL, InternalThreadEntryFunc, this);
   }
