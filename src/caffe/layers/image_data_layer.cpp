@@ -159,7 +159,7 @@ void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   data_transformer_.InitRand();
 
   // Create the thread.
-  CHECK(!StartInternalThread()) << "Pthread execution failed";
+  CHECK(StartInternalThread()) << "Pthread execution failed";
 }
 
 template <typename Dtype>

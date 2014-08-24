@@ -408,7 +408,7 @@ void WindowDataLayer<Dtype>::CreatePrefetchThread() {
     prefetch_rng_.reset();
   }
   // Create the thread.
-  CHECK(!StartInternalThread()) << "Pthread execution failed.";
+  CHECK(StartInternalThread()) << "Pthread execution failed.";
 }
 
 template <typename Dtype>

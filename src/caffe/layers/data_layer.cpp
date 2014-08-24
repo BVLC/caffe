@@ -244,7 +244,7 @@ void DataLayer<Dtype>::CreatePrefetchThread() {
 
   data_transformer_.InitRand();
 
-  CHECK(!StartInternalThread()) << "Pthread execution failed";
+  CHECK(StartInternalThread()) << "Pthread execution failed";
 }
 
 template <typename Dtype>
