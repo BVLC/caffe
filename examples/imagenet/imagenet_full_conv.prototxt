@@ -2,8 +2,8 @@ name: "CaffeNetConv"
 input: "data"
 input_dim: 1
 input_dim: 3
-input_dim: 454
-input_dim: 454
+input_dim: 451
+input_dim: 451
 layers {
   name: "conv1"
   type: CONVOLUTION
