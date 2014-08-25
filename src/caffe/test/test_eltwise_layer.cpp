@@ -124,11 +124,24 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeff) {
   }
 }
 
-TYPED_TEST(EltwiseLayerTest, TestProdGradient) {
+TYPED_TEST(EltwiseLayerTest, TestStableProdGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
   eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  eltwise_param->set_stable_prod_grad(true);
+  EltwiseLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
+TYPED_TEST(EltwiseLayerTest, TestUnstableProdGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+  eltwise_param->set_stable_prod_grad(false);
   EltwiseLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
