@@ -39,7 +39,7 @@ The choice is yours:
 
 * [ATLAS](http://math-atlas.sourceforge.net/): free, open source, and so the default for Caffe.
     + Ubuntu: `sudo apt-get install libatlas-base-dev`
-    + CentOS/RHEL: `sudo yum install libatlas-devel`
+    + CentOS/RHEL/Fedora: `sudo yum install atlas-devel`
     + OS X: already installed as the [Accelerate / vecLib Framework](https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html).
 * [Intel MKL](http://software.intel.com/en-us/intel-mkl): commercial and optimized for Intel CPUs, with a free trial and [student](http://software.intel.com/en-us/intel-education-offerings) licenses.
     1. Install MKL.
@@ -60,7 +60,9 @@ You can install the dependencies with
 
 but we highly recommend first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
 
-For **Ubuntu**, if you use the default Python you will need to `apt-get install` the `python-dev` package to have the Python headers for building the wrapper.
+For **Ubuntu**, if you use the default Python you will need to `sudo apt-get install` the `python-dev` package to have the Python headers for building the wrapper.
+
+For **Fedora**, if you use the default Python you will need to `sudo yum install` the `python-devel` package to have the Python headers for building the wrapper.
 
 For **OS X**, Anaconda is the preferred Python. If you decide against it, please use Homebrew -- but beware of potential linking errors!
 
@@ -82,15 +84,21 @@ On **Ubuntu**, most of the dependencies can be installed with
 
     sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
 
-And on **CentOS / RHEL**, you can install via yum with
-
-    sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
-
 and for **Ubuntu 14.04** the rest of the dependencies can be installed with
 
     sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
 
-For **Ubuntu 12.04 and CentOS / RHEL** the only exceptions to package installation are the Google flags library, Google logging library, and LMDB. To install these, do:
+Keep reading to find out how to manually build and install the Google flags library, Google logging library and LMDB on **Ubuntu 12.04**.
+
+On **CentOS / RHEL / Fedora**, most of the dependencies can be installed with
+
+    sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
+    
+The Google flags library, Google logging library and LMDB already made their ways into newer versions of **CentOS / RHEL / Fedora** so it is better to first attempt to install them using `yum`
+
+    sudo yum install gflags-devel glog-devel lmdb
+
+**Finally** in case you couldn't find those 3 libraries in your distribution's repositories, here are the instructions to follow for manually building and installing them on **Ubuntu 12.04 / CentOS / RHEL / Fedora**
 
     # glog
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
