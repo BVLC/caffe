@@ -96,7 +96,7 @@ Keep reading to find out how to manually build and install the Google flags libr
 On **CentOS / RHEL / Fedora**, most of the dependencies can be installed with
 
     sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
-
+    
 The Google flags library, Google logging library and LMDB already made their ways into newer versions of **CentOS / RHEL / Fedora** so it is better to first attempt to install them using `yum`
 
     sudo yum install gflags-devel glog-devel lmdb-devel
