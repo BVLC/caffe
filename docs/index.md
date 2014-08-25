@@ -66,7 +66,7 @@ Please cite Caffe in your publications if it helps your research:
        Author = {Yangqing Jia},
        Title = { {Caffe}: An Open Source Convolutional Architecture for Fast Feature Embedding},
        Year  = {2013},
-       Howpublished = {\url{http://caffe.berkeleyvision.org/}
+       Howpublished = {\url{http://caffe.berkeleyvision.org/}}
     }
 
 If you do publish a paper where Caffe helped your research, we encourage you to update the [publications wiki](https://github.com/BVLC/caffe/wiki/Publications).
