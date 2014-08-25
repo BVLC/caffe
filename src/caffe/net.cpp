@@ -108,6 +108,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       if (layer->loss(top_id)) {
         LOG(INFO) << "    with loss weight " << layer->loss(top_id);
       }
+      memory_used_ += top_vecs_[layer_id][top_id]->count();
     }
     DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
     const int blobs_lr_size = layer_param.blobs_lr_size();
@@ -374,7 +375,6 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
       top_id_vecs_[layer_id].push_back(blob_id);
       top_vecs_[layer_id].push_back(blob_pointer.get());
     }
-    memory_used_ += blob_pointer->count();
   }
   if (available_blobs) { available_blobs->insert(blob_name); }
 }
