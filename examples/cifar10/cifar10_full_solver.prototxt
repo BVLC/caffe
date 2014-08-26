@@ -23,9 +23,4 @@ max_iter: 60000
 snapshot: 10000
 snapshot_prefix: "cifar10_full"
 # solver mode: CPU or GPU
-# Note: there seems to be a bug with CPU computation in the pooling layers,
-# and changing to solver_mode: CPU may result in NaNs on this example.
-# If you want to train a variant of this architecture on the
-# CPU, try changing the pooling regions from WITHIN_CHANNEL to ACROSS_CHANNELS
-# in both cifar_full_train.prototxt and cifar_full_test.prototxt.
 solver_mode: GPU
