@@ -107,7 +107,8 @@ class AdaGradSolver : public SGDSolver<Dtype> {
  protected:
   virtual void ComputeUpdateValue();
   void constructor_sanity_check() {
-    CHECK_EQ(0, this->param_.momentum()) << "Momentum cannot be used with AdaGrad.";
+    CHECK_EQ(0, this->param_.momentum())
+        << "Momentum cannot be used with AdaGrad.";
   }
 
   DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
