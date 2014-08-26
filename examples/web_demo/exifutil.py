@@ -23,7 +23,13 @@ def open_oriented_im(im_path):
         if exif is not None and 274 in exif:
             orientation = exif[274]
             im = apply_orientation(im, orientation)
-    return np.asarray(im).astype(np.float32) / 255.
+    img = np.asarray(im).astype(np.float32) / 255.
+    if img.ndim == 2:
+        img = img[:, :, np.newaxis]
+        img = np.tile(img, (1, 1, 3))
+    elif img.shape[2] == 4:
+        img = img[:, :, :3]
+    return img
 
 
 def apply_orientation(im, orientation):
