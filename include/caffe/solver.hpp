@@ -100,12 +100,15 @@ template <typename Dtype>
 class AdaGradSolver : public SGDSolver<Dtype> {
  public:
   explicit AdaGradSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) {}
+      : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
   explicit AdaGradSolver(const string& param_file)
-      : SGDSolver<Dtype>(param_file) {}
+      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
 
  protected:
   virtual void ComputeUpdateValue();
+  void constructor_sanity_check() {
+    CHECK_EQ(0, this->param_.momentum()) << "Momentum cannot be used with AdaGrad.";
+  }
 
   DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
 };
