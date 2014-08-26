@@ -88,7 +88,8 @@ int train() {
   caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   LOG(INFO) << "Starting Optimization";
-  shared_ptr<caffe::Solver<float>> solver(caffe::GetSolver<float>(solver_param));
+  shared_ptr<caffe::Solver<float>>
+    solver(caffe::GetSolver<float>(solver_param));
 
   // Set device id and mode
   if (FLAGS_gpu >= 0) {
