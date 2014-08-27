@@ -146,16 +146,46 @@ static mxArray* do_forward_prefilled(mxArray* mx_loss) {
   return mx_out;
 }
 
+static mxArray* do_backward_prefilled() {
+  vector<Blob<float>*>& input_blobs = net_->input_blobs();
+  LOG(INFO) << "Start";
+  net_->Backward();
+  LOG(INFO) << "End";
+  mxArray* mx_out = mxCreateCellMatrix(input_blobs.size(), 1);
+  for (unsigned int i = 0; i < input_blobs.size(); ++i) {
+    // internally data is stored as (width, height, channels, num)
+    // where width is the fastest dimension
+    mwSize dims[4] = {input_blobs[i]->width(), input_blobs[i]->height(),
+      input_blobs[i]->channels(), input_blobs[i]->num()};
+    mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+    mxSetCell(mx_out, i, mx_blob);
+    float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(data_ptr, input_blobs[i]->cpu_diff(),
+          sizeof(float) * input_blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      cudaMemcpy(data_ptr, input_blobs[i]->gpu_diff(),
+          sizeof(float) * input_blobs[i]->count(), cudaMemcpyDeviceToHost);
+      break;
+    default:
+      LOG(FATAL) << "Unknown Caffe mode.";
+    }  // switch (Caffe::mode())
+  }
+
+  return mx_out;
+}
 
 static mxArray* do_backward(const mxArray* const top_diff) {
   vector<Blob<float>*>& output_blobs = net_->output_blobs();
-  vector<Blob<float>*>& input_blobs = net_->input_blobs();
   CHECK_EQ(static_cast<unsigned int>(mxGetDimensions(top_diff)[0]),
       output_blobs.size());
   // First, copy the output diff
   for (unsigned int i = 0; i < output_blobs.size(); ++i) {
     const mxArray* const elem = mxGetCell(top_diff, i);
-    CHECK_EQ(output_blobs[i]->count(),mxGetNumberOfElements(elem));
+    CHECK_EQ(output_blobs[i]->count(),mxGetNumberOfElements(elem)) <<
+      "output_blobs[i]->count() don't match with numel(top_diff{i})";
     const float* const data_ptr =
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {
@@ -171,9 +201,41 @@ static mxArray* do_backward(const mxArray* const top_diff) {
       LOG(FATAL) << "Unknown Caffe mode.";
     }  // switch (Caffe::mode())
   }
+  // vector<Blob<float>*>& input_blobs = net_->input_blobs();
   // LOG(INFO) << "Start";
-  net_->Backward();
+  // net_->Backward();
   // LOG(INFO) << "End";
+  // mxArray* mx_out = mxCreateCellMatrix(input_blobs.size(), 1);
+  // for (unsigned int i = 0; i < input_blobs.size(); ++i) {
+  //   // internally data is stored as (width, height, channels, num)
+  //   // where width is the fastest dimension
+  //   mwSize dims[4] = {input_blobs[i]->width(), input_blobs[i]->height(),
+  //     input_blobs[i]->channels(), input_blobs[i]->num()};
+  //   mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+  //   mxSetCell(mx_out, i, mx_blob);
+  //   float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
+  //   switch (Caffe::mode()) {
+  //   case Caffe::CPU:
+  //     memcpy(data_ptr, input_blobs[i]->cpu_diff(),
+  //         sizeof(float) * input_blobs[i]->count());
+  //     break;
+  //   case Caffe::GPU:
+  //     cudaMemcpy(data_ptr, input_blobs[i]->gpu_diff(),
+  //         sizeof(float) * input_blobs[i]->count(), cudaMemcpyDeviceToHost);
+  //     break;
+  //   default:
+  //     LOG(FATAL) << "Unknown Caffe mode.";
+  //   }  // switch (Caffe::mode())
+  // }
+
+  return do_backward_prefilled();
+}
+
+static mxArray* do_backward_prefilled() {
+  vector<Blob<float>*>& input_blobs = net_->input_blobs();
+  LOG(INFO) << "Start";
+  net_->Backward();
+  LOG(INFO) << "End";
   mxArray* mx_out = mxCreateCellMatrix(input_blobs.size(), 1);
   for (unsigned int i = 0; i < input_blobs.size(); ++i) {
     // internally data is stored as (width, height, channels, num)
@@ -197,7 +259,6 @@ static mxArray* do_backward(const mxArray* const top_diff) {
 
   return mx_out;
 }
-
 
 static mxArray* do_get_weights() {
   const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
@@ -834,8 +895,21 @@ static void backward(MEX_ARGS) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
     mexErrMsgTxt("Wrong number of arguments");
   }
+  if (nrhs == 0) {
+    //Backward without arguments behaves as backward_prefilled
+    plhs[0] = do_backward_prefilled();
+  } else {
+    plhs[0] = do_backward(prhs[0]);
+  }
+}
 
-  plhs[0] = do_backward(prhs[0]);
+static void backward_prefilled(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+
+  plhs[0] = do_backward_prefilled();
 }
 
 static void is_initialized(MEX_ARGS) {
@@ -881,34 +955,35 @@ struct handler_registry {
 
 static handler_registry handlers[] = {
   // Public API functions
-  { "forward",            forward         },
-  { "backward",           backward        },
-  { "forward_prefilled",  forward_prefilled},
-  { "init",               init            },
-  { "init_net",           init_net        },
-  { "load_net",           load_net        },
-  { "save_net",           save_net        },
-  { "is_initialized",     is_initialized  },
-  { "set_mode_cpu",       set_mode_cpu    },
-  { "set_mode_gpu",       set_mode_gpu    },
-  { "set_phase_train",    set_phase_train },
-  { "set_phase_test",     set_phase_test  },
-  { "set_device",         set_device      },
-  { "get_weights",        get_weights     },
-  { "set_weights",        set_weights     },
-  { "get_layer_weights",  get_layer_weights},
-  { "set_layer_weights",  set_layer_weights},
-  { "get_layers_info",    get_layers_info },
-  { "get_blobs_info",     get_blobs_info  },
-  { "get_blob_data",      get_blob_data   },
-  { "get_blob_diff",      get_blob_diff   },
-  { "get_all_data",       get_all_data    },
-  { "get_all_diff",       get_all_diff    },
-  { "get_init_key",       get_init_key    },
-  { "reset",              reset           },
-  { "read_mean",          read_mean       },
+  { "forward",            forward           },
+  { "backward",           backward          },
+  { "forward_prefilled",  forward_prefilled },
+  { "backward_prefilled", backward_prefilled},
+  { "init",               init              },
+  { "init_net",           init_net          },
+  { "load_net",           load_net          },
+  { "save_net",           save_net          },
+  { "is_initialized",     is_initialized    },
+  { "set_mode_cpu",       set_mode_cpu      },
+  { "set_mode_gpu",       set_mode_gpu      },
+  { "set_phase_train",    set_phase_train   },
+  { "set_phase_test",     set_phase_test    },
+  { "set_device",         set_device        },
+  { "get_weights",        get_weights       },
+  { "set_weights",        set_weights       },
+  { "get_layer_weights",  get_layer_weights },
+  { "set_layer_weights",  set_layer_weights },
+  { "get_layers_info",    get_layers_info   },
+  { "get_blobs_info",     get_blobs_info    },
+  { "get_blob_data",      get_blob_data     },
+  { "get_blob_diff",      get_blob_diff     },
+  { "get_all_data",       get_all_data      },
+  { "get_all_diff",       get_all_diff      },
+  { "get_init_key",       get_init_key      },
+  { "reset",              reset             },
+  { "read_mean",          read_mean         },
   // The end.
-  { "END",                NULL            },
+  { "END",                NULL              },
 };
 
 
