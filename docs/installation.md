@@ -193,6 +193,38 @@ If you're not using Anaconda, include `hdf5` in the list above.
 **Note** that in order to build the caffe python wrappers you must install boost using the --with-python option:
 
     brew install --build-from-source --with-python --fresh -vd boost
+    
+**Note** that Homebrew maintains itself as a separate git repository and making the above `brew edit FORMULA` changes will change files in your local copy of homebrew's master branch. By default, this will prevent you from updating Homebrew using `brew update`, as you will get an error message like the following:
+
+    $ brew update
+    error: Your local changes to the following files would be overwritten by merge:
+      Library/Formula/lmdb.rb
+    Please, commit your changes or stash them before you can merge.
+    Aborting
+    Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
+    
+One solution is to commit your changes to a separate Homebrew branch, run `brew update`, and rebase your changes onto the updated master, as follows:
+
+    cd /usr/local
+    git checkout -b caffe
+    git add .
+    git commit -m "Update Caffe dependencies to use libstdc++"
+    git checkout master
+    brew update
+    git rebase master caffe
+    # Resolve any merge conflicts here
+    git checkout caffe
+    
+At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place. You may still get the following error:
+
+    $ brew update
+    error: Your local changes to the following files would be overwritten by merge:
+	opencv.rb
+    Please, commit your changes or stash them before you can merge.
+    Aborting
+    Error: Failed to update tap: homebrew/science
+
+but non-OpenCV packages will still update as expected.
 
 #### Windows
 
