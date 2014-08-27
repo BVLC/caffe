@@ -312,8 +312,11 @@ static void do_set_layer_weights(const mxArray* const layer_name,
         // internally data is stored as (width, height, channels, num)
         // where width is the fastest dimension
         const mxArray* const elem = mxGetCell(mx_layer_weights, j);
-        const mwSize* dims = mxGetDimensions(elem);
+        mwSize dims[4] = {layer_blobs[j]->width(), layer_blobs[j]->height(),
+            layer_blobs[j]->channels(), layer_blobs[j]->num()};
         LOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+        const mwSize* dims_elem = mxGetDimensions(elem);
+        LOG(INFO) << dims_elem[0] << " " << dims_elem[1];
         const float* const data_ptr =
             reinterpret_cast<const float* const>(mxGetPr(elem));
         LOG(INFO) << "elem: " << data_ptr[0] << " " << data_ptr[1];
@@ -551,6 +554,23 @@ static void load_net(MEX_ARGS) {
   }
 }
 
+static void save_net(MEX_ARGS) {
+  if (nrhs != 1) {
+    LOG(ERROR) << "Only given " << nrhs << " arguments";
+    mexErrMsgTxt("Wrong number of arguments");
+  }
+  if (net_) {
+  char* model_file = mxArrayToString(prhs[0]);
+  NetParameter net_param;
+  net_->ToProto(&net_param, false);
+  WriteProtoToBinaryFile(net_param, model_file);
+  CheckFile(string(model_file));
+  mxFree(model_file);
+  } else {
+    mexErrMsgTxt("Need to have a network to save");
+  }
+}
+
 static void reset(MEX_ARGS) {
   if (net_) {
     net_.reset();
@@ -625,6 +645,7 @@ static handler_registry handlers[] = {
   { "init",               init            },
   { "init_net",           init_net        },
   { "load_net",           load_net        },
+  { "save_net",           save_net        },
   { "is_initialized",     is_initialized  },
   { "set_mode_cpu",       set_mode_cpu    },
   { "set_mode_gpu",       set_mode_gpu    },
