@@ -68,26 +68,29 @@ end
 net.set_phase_test;
 fprintf('Done with set_phase_test\n');
 
-% prepare oversampled input
+% prepare oversampled input (4 corners + center)x flipped
 % input_data is Height x Width x Channel x Num
 tic;
 input_data = prepare_image(im);
 toc;
 
-% do forward pass to get scores
+% Do forward pass to get scores
 % scores are now Width x Height x Channels x Num
 tic;
 scores = net.forward({input_data});
 toc;
 
-% One can permute back Width and Height.
+% Get scores of each class
 scores = scores{1};
 size(scores)
 scores = squeeze(scores);
+% Find the maximum score and its label
 [~,maxlabels] = max(scores);
 
+% Assign the scores to the output_diff to be able to backpropagate it
 output_diff(1,1,:,:) = scores;
 
+% Compute gradients based on the scores
 tic;
 gradients = net.backward({output_diff});
 toc;
