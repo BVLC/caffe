@@ -172,7 +172,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 
 template <typename Dtype>
 void ImageDataLayer<Dtype>::JoinPrefetchThread() {
-  CHECK(!WaitForInternalThreadToExit()) << "Thread joining failed";
+  CHECK(WaitForInternalThreadToExit()) << "Thread joining failed";
 }
 
 template <typename Dtype>

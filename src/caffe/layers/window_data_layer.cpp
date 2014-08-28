@@ -413,7 +413,7 @@ void WindowDataLayer<Dtype>::CreatePrefetchThread() {
 
 template <typename Dtype>
 void WindowDataLayer<Dtype>::JoinPrefetchThread() {
-  CHECK(!WaitForInternalThreadToExit()) << "Thread joining failed.";
+  CHECK(WaitForInternalThreadToExit()) << "Thread joining failed.";
 }
 
 template <typename Dtype>
