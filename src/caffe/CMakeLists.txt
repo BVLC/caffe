@@ -57,7 +57,7 @@ find_package(LMDB REQUIRED)
 include_directories(${LMDB_INCLUDE_DIR})
 
 #    Boost
-find_package(Boost 1.46 COMPONENTS system REQUIRED)
+find_package(Boost 1.46 COMPONENTS system thread REQUIRED)
 include_directories( ${Boost_INCLUDE_DIR} )
 link_directories( ${Boost_LIBRARY_DIRS} )
 
@@ -99,14 +99,15 @@ if(NOT CPU_ONLY)
 endif()
 
 target_link_libraries(caffe proto
-        ${GLOG_LIBRARIES}
+        ${BLAS_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
         ${GFLAGS_LIBRARIES}
+        ${GLOG_LIBRARIES}
         ${HDF5_LIBRARIES}
-        ${OpenCV_LIBS}
         ${LEVELDB_LIBS}
         ${LMDB_LIBRARIES}
-        ${BLAS_LIBRARIES}
-        ${CMAKE_THREAD_LIBS_INIT}
+        ${OpenCV_LIBS}
 )
 
 #set output directory
