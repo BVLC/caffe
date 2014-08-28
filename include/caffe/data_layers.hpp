@@ -30,16 +30,18 @@ class BaseDataLayer : public Layer<Dtype> {
       : Layer<Dtype>(param),
         data_transformer_(param.data_param().transform_param()) {}
   virtual ~BaseDataLayer() {}
+  // LayerSetUp: implements common data layer setup functionality, and calls
+  // DataLayerSetUp to do special data layer setup for individual layer types.
+  // This method may not be overridden.
+  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
 
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) = 0;
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) = 0;
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
 
  protected:
   DataTransformer<Dtype> data_transformer_;
@@ -49,6 +51,7 @@ class BaseDataLayer : public Layer<Dtype> {
   int datum_size_;
   Blob<Dtype> data_mean_;
   Caffe::Phase phase_;
+  bool output_labels_;
 };
 
 template <typename Dtype>
@@ -59,10 +62,15 @@ class BasePrefetchingDataLayer :
       : BaseDataLayer<Dtype>(param) {}
   virtual ~BasePrefetchingDataLayer() {}
 
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
   // The thread's function
-  virtual void InternalThreadEntry() = 0;
+  virtual void InternalThreadEntry() {}
 
  protected:
   Blob<Dtype> prefetch_data_;
@@ -70,13 +78,12 @@ class BasePrefetchingDataLayer :
 };
 
 template <typename Dtype>
-class DataLayer : public Layer<Dtype>, public InternalThread {
+class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit DataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param),
-        data_transformer_(param.data_param().transform_param()) {}
+      : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~DataLayer();
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -87,21 +94,7 @@ class DataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-
-  virtual void CreatePrefetchThread();
-  virtual void JoinPrefetchThread();
-  // The thread's function
   virtual void InternalThreadEntry();
-
-  DataTransformer<Dtype> data_transformer_;
 
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
@@ -112,16 +105,6 @@ class DataLayer : public Layer<Dtype>, public InternalThread {
   MDB_txn* mdb_txn_;
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
-
-  int datum_channels_;
-  int datum_height_;
-  int datum_width_;
-  int datum_size_;
-  Blob<Dtype> prefetch_data_;
-  Blob<Dtype> prefetch_label_;
-  Blob<Dtype> data_mean_;
-  bool output_labels_;
-  Caffe::Phase phase_;
 };
 
 template <typename Dtype>
