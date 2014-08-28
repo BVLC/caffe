@@ -161,7 +161,7 @@ endif
 LIBRARIES += \
 	glog gflags pthread protobuf leveldb snappy \
 	lmdb \
-	boost_system \
+	boost_system boost_thread \
 	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
