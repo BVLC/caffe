@@ -6,7 +6,7 @@ sudo apt-get install \
     wget git curl \
     python-dev python-numpy \
     libleveldb-dev libsnappy-dev libopencv-dev \
-    libboost-dev libboost-system-dev libboost-python-dev \
+    libboost-dev libboost-system-dev libboost-python-dev libboost-thread-dev \
     libprotobuf-dev protobuf-compiler \
     libatlas-dev libatlas-base-dev \
     libhdf5-serial-dev \

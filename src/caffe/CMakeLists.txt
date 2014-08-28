@@ -99,14 +99,15 @@ if(NOT CPU_ONLY)
 endif()
 
 target_link_libraries(caffe proto
-        ${GLOG_LIBRARIES}
+        ${BLAS_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
         ${GFLAGS_LIBRARIES}
+        ${GLOG_LIBRARIES}
         ${HDF5_LIBRARIES}
-        ${OpenCV_LIBS}
         ${LEVELDB_LIBS}
         ${LMDB_LIBRARIES}
-        ${BLAS_LIBRARIES}
-        ${CMAKE_THREAD_LIBS_INIT}
+        ${OpenCV_LIBS}
 )
 
 #set output directory
