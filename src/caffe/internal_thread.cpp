@@ -1,9 +1,6 @@
-#include <iostream>
-
 #include "caffe/internal_thread.hpp"
 
 namespace caffe {
-using namespace std;
 
 InternalThread::~InternalThread() {
   WaitForInternalThreadToExit();
