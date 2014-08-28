@@ -36,17 +36,21 @@ fi
 echo "Creating train leveldb..."
 
 GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
+    --resize_height=$RESIZE_HEIGHT \
+    --resize_width=$RESIZE_WIDTH \
+    --shuffle \
     $TRAIN_DATA_ROOT \
     $DATA/train.txt \
-    ilsvrc12_train_leveldb 1
-    $RESIZE_HEIGHT $RESIZE_WIDTH
+    ilsvrc12_train_leveldb
 
 echo "Creating val leveldb..."
 
 GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
+    --resize_height=$RESIZE_HEIGHT \
+    --resize_width=$RESIZE_WIDTH \
+    --shuffle \
     $VAL_DATA_ROOT \
     $DATA/val.txt \
-    ilsvrc12_val_leveldb 1
-    $RESIZE_HEIGHT $RESIZE_WIDTH
+    ilsvrc12_val_leveldb
 
 echo "Done."
