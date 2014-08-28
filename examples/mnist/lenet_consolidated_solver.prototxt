@@ -22,7 +22,7 @@ display: 100
 max_iter: 10000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "lenet"
+snapshot_prefix: "examples/mnist/lenet"
 # Set a random_seed for repeatable results.
 # (For results that vary due to random initialization, comment out the below
 # line, or set to a negative integer -- e.g. "random_seed: -1")
@@ -50,7 +50,7 @@ net_param {
     top: "data"
     top: "label"
     data_param {
-      source: "mnist-train-leveldb"
+      source: "examples/mnist/mnist_train_leveldb"
       batch_size: 64
       transform_param {
         scale: 0.00390625
@@ -64,7 +64,7 @@ net_param {
     top: "data"
     top: "label"
     data_param {
-      source: "mnist-test-leveldb"
+      source: "examples/mnist/mnist_test_leveldb"
       batch_size: 100
       transform_param {
         scale: 0.00390625
@@ -81,7 +81,7 @@ net_param {
     top: "data"
     top: "label"
     data_param {
-      source: "mnist-train-leveldb"
+      source: "examples/mnist/mnist_train_leveldb"
       batch_size: 100
       transform_param {
         scale: 0.00390625

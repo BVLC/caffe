@@ -1,7 +1,5 @@
 #!/usr/bin/env sh
 
-TOOLS=../../build/tools
-
 if [ -z "$1" ]; then
   echo "Using CPU! To time GPU mode, use:"
   echo "    ./time_imagenet.sh <device ID>"
@@ -12,6 +10,8 @@ else
   GPU="--gpu=$1"
 fi
 
-$TOOLS/caffe time --model=imagenet_train_val.prototxt ${GPU}
+./build/tools/caffe time \
+  --model=examples/imagenet/imagenet_train_val.prototxt \
+  ${GPU}
 
 echo "Done."
