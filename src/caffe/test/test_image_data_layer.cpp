@@ -1,5 +1,3 @@
-#include <fstream>  // NOLINT(readability/streams)
-#include <iostream>  // NOLINT(readability/streams)
 #include <map>
 #include <string>
 #include <vector>
@@ -13,9 +11,6 @@
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-
-using std::map;
-using std::string;
 
 namespace caffe {
 

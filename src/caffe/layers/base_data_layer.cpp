@@ -1,3 +1,5 @@
+#include <vector>
+
 #include "caffe/data_layers.hpp"
 
 namespace caffe {

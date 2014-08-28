@@ -269,12 +269,12 @@ class MemoryDataLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
-class WindowDataLayer : public Layer<Dtype>, public InternalThread {
+class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit WindowDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual ~WindowDataLayer();
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+  virtual ~WindowDataLayer() {}
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -284,24 +284,10 @@ class WindowDataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-
-  virtual void CreatePrefetchThread();
-  virtual void JoinPrefetchThread();
   virtual unsigned int PrefetchRand();
   virtual void InternalThreadEntry();
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
-  Blob<Dtype> prefetch_data_;
-  Blob<Dtype> prefetch_label_;
-  Blob<Dtype> data_mean_;
   vector<std::pair<std::string, vector<int> > > image_database_;
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
