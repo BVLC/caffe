@@ -50,6 +50,10 @@ static mxArray* do_forward(const mxArray* const bottom) {
       input_blobs.size());
   for (unsigned int i = 0; i < input_blobs.size(); ++i) {
     const mxArray* const elem = mxGetCell(bottom, i);
+    CHECK(mxIsSingle(elem))
+        << "MatCaffe require single-precision float point data";
+    CHECK_EQ(mxGetNumberOfElements(elem), input_blobs[i]->count())
+        << "MatCaffe input size does not match the input size of the network";
     const float* const data_ptr =
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {

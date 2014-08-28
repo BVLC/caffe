@@ -7,7 +7,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void DummyDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const int num_top = top->size();
   const DummyDataParameter& param = this->layer_param_.dummy_data_param();
@@ -32,7 +32,7 @@ void DummyDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // If refill_[i] is false, Forward does nothing for Blob i. We use this to
   // avoid wastefully refilling "constant" Blobs in every forward pass.
   // We first fill refill_ in with the INVERSE of its final values.
-  // The first time we run Forward from the SetUp method, we'll fill only the
+  // The first time we run Forward from the LayerSetUp method, we'll fill only
   // Blobs for which refill_ is normally false.  These Blobs will never be
   // filled again.
   refill_.clear();
@@ -82,7 +82,7 @@ void DummyDataLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < top->size(); ++i) {
     const int filler_id = (fillers_.size() > 1) ? i : 0;
@@ -90,7 +90,6 @@ Dtype DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       fillers_[filler_id]->Fill((*top)[i]);
     }
   }
-  return Dtype(0.);
 }
 
 INSTANTIATE_CLASS(DummyDataLayer);

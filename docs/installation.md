@@ -193,6 +193,38 @@ If you're not using Anaconda, include `hdf5` in the list above.
 **Note** that in order to build the caffe python wrappers you must install boost using the --with-python option:
 
     brew install --build-from-source --with-python --fresh -vd boost
+    
+**Note** that Homebrew maintains itself as a separate git repository and making the above `brew edit FORMULA` changes will change files in your local copy of homebrew's master branch. By default, this will prevent you from updating Homebrew using `brew update`, as you will get an error message like the following:
+
+    $ brew update
+    error: Your local changes to the following files would be overwritten by merge:
+      Library/Formula/lmdb.rb
+    Please, commit your changes or stash them before you can merge.
+    Aborting
+    Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
+    
+One solution is to commit your changes to a separate Homebrew branch, run `brew update`, and rebase your changes onto the updated master, as follows:
+
+    cd /usr/local
+    git checkout -b caffe
+    git add .
+    git commit -m "Update Caffe dependencies to use libstdc++"
+    git checkout master
+    brew update
+    git rebase master caffe
+    # Resolve any merge conflicts here
+    git checkout caffe
+    
+At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place. You may still get the following error:
+
+    $ brew update
+    error: Your local changes to the following files would be overwritten by merge:
+	opencv.rb
+    Please, commit your changes or stash them before you can merge.
+    Aborting
+    Error: Failed to update tap: homebrew/science
+
+but non-OpenCV packages will still update as expected.
 
 #### Windows
 
@@ -219,6 +251,27 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 *Speed*: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
+
+### Compilation using CMake (beta)
+
+In lieu of manually editing `Makefile.config` to tell Caffe where dependencies are located, Caffe also provides a CMake-based build system (currently in "beta").
+It requires CMake version >= 2.8.8.
+The basic installation steps are as follows:
+
+    mkdir build
+    cd build
+    cmake ..
+    make all
+    make runtest
+
+#### Ubuntu 12.04
+
+Note that in Ubuntu 12.04, Aptitude will install version CMake 2.8.7 by default, which is not supported by Caffe's CMake build (requires at least 2.8.8).
+As a workaround, if you are using Ubuntu 12.04 you can try the following steps to install (or upgrade to) CMake 2.8.9:
+
+    sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
+    sudo apt-get -y update
+    sudo apt-get install cmake
 
 ## Hardware Questions
 

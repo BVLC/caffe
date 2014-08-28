@@ -7,7 +7,7 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype EltwiseLayer<Dtype>::Forward_gpu(
+void EltwiseLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -29,7 +29,6 @@ Dtype EltwiseLayer<Dtype>::Forward_gpu(
   default:
     LOG(FATAL) << "Unknown elementwise operation.";
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>
@@ -44,7 +43,21 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = (*bottom)[i]->mutable_gpu_diff();
       switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD:
-        caffe_gpu_div(count, top_data, bottom_data, bottom_diff);
+        if (stable_prod_grad_) {
+          bool initialized = false;
+          for (int j = 0; j < bottom->size(); ++j) {
+            if (i == j) { continue; }
+            if (!initialized) {
+              caffe_copy(count, (*bottom)[j]->gpu_data(), bottom_diff);
+              initialized = true;
+            } else {
+              caffe_gpu_mul(count, (*bottom)[j]->gpu_data(), bottom_diff,
+                            bottom_diff);
+            }
+          }
+        } else {
+          caffe_gpu_div(count, top_data, bottom_data, bottom_diff);
+        }
         caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_SUM:

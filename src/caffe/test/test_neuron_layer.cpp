@@ -70,6 +70,29 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
 
+TYPED_TEST(NeuronLayerTest, TestAbsVal) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  AbsValLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data    = this->blob_top_->cpu_data();
+  const int count = this->blob_bottom_->count();
+  for (int i = 0; i < count; ++i) {
+    EXPECT_EQ(top_data[i], fabs(bottom_data[i]));
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestAbsGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  AbsValLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
 TYPED_TEST(NeuronLayerTest, TestReLU) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;

@@ -171,19 +171,25 @@ message NetStateRule {
   optional int32 min_level = 2;
   optional int32 max_level = 3;
 
-  // A customizable set of stages.
-  // The net must have ALL of the specified stages to meet the rule.
+  // Customizable sets of stages to include or exclude.
+  // The net must have ALL of the specified stages and NONE of the specified
+  // "not_stage"s to meet the rule.
   // (Use multiple NetStateRules to specify conjunctions of stages.)
   repeated string stage = 4;
+  repeated string not_stage = 5;
 }
 
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 34 (last added: exclude)
+// LayerParameter next available ID: 36 (last added: loss_weight)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
+  // The amount of weight to assign each top blob in the objective.
+  // Each layer assigns a default value, usually of either 0 or 1,
+  // to each top blob.
+  repeated float loss_weight = 35;
   optional string name = 4; // the layer name
 
   // Rules controlling whether and when a layer is included in the network,
@@ -201,12 +207,13 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 34 (last added: SLICE)
+  // LayerType next available ID: 36 (last added: ABSVAL)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
     // the type is unspecified).
     NONE = 0;
+    ABSVAL = 35;
     ACCURACY = 1;
     ARGMAX = 30;
     BNLL = 2;
@@ -228,6 +235,7 @@ message LayerParameter {
     LRN = 15;
     MEMORY_DATA = 29;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
+    MVN = 34;
     POOLING = 17;
     POWER = 26;
     RELU = 18;
@@ -285,6 +293,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 25;
   optional HingeLossParameter hinge_loss_param = 29;
   optional SliceParameter slice_param = 31;
+  optional MVNParameter mvn_param = 34;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
@@ -335,6 +344,20 @@ message ConvolutionParameter {
   optional FillerParameter bias_filler = 8; // The filler for the bias
 }
 
+// Message that stores parameters used to apply transformation
+// to the data layer's data
+message TransformationParameter {
+  // For data pre-processing, we can do simple scaling and subtracting the
+  // data mean, if provided. Note that the mean subtraction is always carried
+  // out before scaling.
+  optional float scale = 1 [default = 1];
+  // Specify if we want to randomly mirror data.
+  optional bool mirror = 2 [default = false];
+  // Specify if we would like to randomly crop an image.
+  optional uint32 crop_size = 3 [default = 0];
+  optional string mean_file = 4;
+}
+
 // Message that stores parameters used by DataLayer
 message DataParameter {
   enum DB {
@@ -343,23 +366,27 @@ message DataParameter {
   }
   // Specify the data source.
   optional string source = 1;
-  // For data pre-processing, we can do simple scaling and subtracting the
-  // data mean, if provided. Note that the mean subtraction is always carried
-  // out before scaling.
-  optional float scale = 2 [default = 1];
-  optional string mean_file = 3;
   // Specify the batch size.
   optional uint32 batch_size = 4;
-  // Specify if we would like to randomly crop an image.
-  optional uint32 crop_size = 5 [default = 0];
-  // Specify if we want to randomly mirror data.
-  optional bool mirror = 6 [default = false];
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
+  // Parameters for data pre-processing.
+  optional TransformationParameter transform_param = 9;
+  // DEPRECATED. See TransformParameter. For data pre-processing, we can do
+  // simple scaling and subtracting the data mean, if provided. Note that the
+  // mean subtraction is always carried out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // DEPRECATED. See TransformParameter. Specify if we would like to randomly
+  // crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // DEPRECATED. See TransformParameter. Specify if we want to randomly mirror
+  // data.
+  optional bool mirror = 6 [default = false];
 }
 
 // Message that stores parameters used by DropoutLayer
@@ -393,6 +420,10 @@ message EltwiseParameter {
   }
   optional EltwiseOp operation = 1 [default = SUM]; // element-wise operation
   repeated float coeff = 2; // blob-wise coefficient for SUM operation
+
+  // Whether to use an asymptotically slower (for >2 inputs) but stabler method
+  // of computing the gradient for the PROD operation. (No effect for SUM op.)
+  optional bool stable_prod_grad = 3 [default = true];
 }
 
 // Message that stores parameters used by ThresholdLayer
@@ -426,17 +457,8 @@ message HingeLossParameter {
 message ImageDataParameter {
   // Specify the data source.
   optional string source = 1;
-  // For data pre-processing, we can do simple scaling and subtracting the
-  // data mean, if provided. Note that the mean subtraction is always carried
-  // out before scaling.
-  optional float scale = 2 [default = 1];
-  optional string mean_file = 3;
   // Specify the batch size.
   optional uint32 batch_size = 4;
-  // Specify if we would like to randomly crop an image.
-  optional uint32 crop_size = 5 [default = 0];
-  // Specify if we want to randomly mirror data.
-  optional bool mirror = 6 [default = false];
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
@@ -447,6 +469,19 @@ message ImageDataParameter {
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 9 [default = 0];
   optional uint32 new_width = 10 [default = 0];
+  // Parameters for data pre-processing.
+  optional TransformationParameter transform_param = 11;
+  // DEPRECATED. See TransformParameter. For data pre-processing, we can do
+  // simple scaling and subtracting the data mean, if provided. Note that the
+  // mean subtraction is always carried out before scaling.
+  optional float scale = 2 [default = 1];
+  optional string mean_file = 3;
+  // DEPRECATED. See TransformParameter. Specify if we would like to randomly
+  // crop an image.
+  optional uint32 crop_size = 5 [default = 0];
+  // DEPRECATED. See TransformParameter. Specify if we want to randomly mirror
+  // data.
+  optional bool mirror = 6 [default = false];
 }
 
 // Message that stores parameters InfogainLossLayer
@@ -481,6 +516,15 @@ message MemoryDataParameter {
   optional uint32 channels = 2;
   optional uint32 height = 3;
   optional uint32 width = 4;
+}
+
+// Message that stores parameters used by MVNLayer
+message MVNParameter {
+  // This parameter can be set to false to normalize mean only
+  optional bool normalize_variance = 1 [default = true];
+
+  // This parameter can be set to true to perform DNN-like MVN
+  optional bool across_channels = 2 [default = false];
 }
 
 // Message that stores parameters used by PoolingLayer

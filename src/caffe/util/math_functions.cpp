@@ -56,7 +56,7 @@ void caffe_axpy<double>(const int N, const double alpha, const double* X,
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
-    memset(Y, 0, sizeof(Dtype) * N);
+    memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
     return;
   }
   for (int i = 0; i < N; ++i) {
@@ -87,12 +87,13 @@ void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
     if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
+      // NOLINT_NEXT_LINE(caffe/alt_fn)
       CUDA_CHECK(cudaMemcpy(Y, X, sizeof(Dtype) * N, cudaMemcpyDefault));
 #else
       NO_GPU;
 #endif
     } else {
-      memcpy(Y, X, sizeof(Dtype) * N);
+      memcpy(Y, X, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
     }
   }
 }
@@ -205,6 +206,16 @@ void caffe_exp<double>(const int n, const double* a, double* y) {
   vdExp(n, a, y);
 }
 
+template <>
+void caffe_abs<float>(const int n, const float* a, float* y) {
+    vsAbs(n, a, y);
+}
+
+template <>
+void caffe_abs<double>(const int n, const double* a, double* y) {
+    vdAbs(n, a, y);
+}
+
 unsigned int caffe_rng_rand() {
   return (*caffe_rng())();
 }
@@ -305,14 +316,27 @@ template
 void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
 
 template <>
-float caffe_cpu_dot<float>(const int n, const float* x, const float* y) {
-  return cblas_sdot(n, x, 1, y, 1);
+float caffe_cpu_strided_dot<float>(const int n, const float* x, const int incx,
+    const float* y, const int incy) {
+  return cblas_sdot(n, x, incx, y, incy);
 }
 
 template <>
-double caffe_cpu_dot<double>(const int n, const double* x, const double* y) {
-  return cblas_ddot(n, x, 1, y, 1);
+double caffe_cpu_strided_dot<double>(const int n, const double* x,
+    const int incx, const double* y, const int incy) {
+  return cblas_ddot(n, x, incx, y, incy);
 }
+
+template <typename Dtype>
+Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y) {
+  return caffe_cpu_strided_dot(n, x, 1, y, 1);
+}
+
+template
+float caffe_cpu_dot<float>(const int n, const float* x, const float* y);
+
+template
+double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
 
 template <>
 int caffe_cpu_hamming_distance<float>(const int n, const float* x,
@@ -348,7 +372,6 @@ double caffe_cpu_asum<double>(const int n, const double* x) {
 
 INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sign);
 INSTANTIATE_CAFFE_CPU_UNARY_FUNC(sgnbit);
-INSTANTIATE_CAFFE_CPU_UNARY_FUNC(fabs);
 
 template <>
 void caffe_cpu_scale<float>(const int n, const float alpha, const float *x,
@@ -362,18 +385,6 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
                              double* y) {
   cblas_dcopy(n, x, 1, y, 1);
   cblas_dscal(n, alpha, y, 1);
-}
-
-
-using std::signbit;
-bool caffe_signbit(float arg) {
-    return signbit(arg);
-}
-bool caffe_signbit(double arg) {
-    return signbit(arg);
-}
-bool caffe_signbit(long double arg) {
-    return signbit(arg);
 }
 
 }  // namespace caffe

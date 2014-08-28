@@ -7,9 +7,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void EltwiseLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   CHECK(this->layer_param().eltwise_param().coeff_size() == 0
       || this->layer_param().eltwise_param().coeff_size() == bottom.size()) <<
       "Eltwise Layer takes one coefficient per bottom blob.";
@@ -36,10 +35,11 @@ void EltwiseLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
       coeffs_[i] = this->layer_param().eltwise_param().coeff(i);
     }
   }
+  stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 }
 
 template <typename Dtype>
-Dtype EltwiseLayer<Dtype>::Forward_cpu(
+void EltwiseLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const int count = (*top)[0]->count();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -60,7 +60,6 @@ Dtype EltwiseLayer<Dtype>::Forward_cpu(
   default:
     LOG(FATAL) << "Unknown elementwise operation.";
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>
@@ -75,7 +74,21 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       Dtype* bottom_diff = (*bottom)[i]->mutable_cpu_diff();
       switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD:
-        caffe_div(count, top_data, bottom_data, bottom_diff);
+        if (stable_prod_grad_) {
+          bool initialized = false;
+          for (int j = 0; j < bottom->size(); ++j) {
+            if (i == j) { continue; }
+            if (!initialized) {
+              caffe_copy(count, (*bottom)[j]->cpu_data(), bottom_diff);
+              initialized = true;
+            } else {
+              caffe_mul(count, (*bottom)[j]->cpu_data(), bottom_diff,
+                        bottom_diff);
+            }
+          }
+        } else {
+          caffe_div(count, top_data, bottom_data, bottom_diff);
+        }
         caffe_mul(count, bottom_diff, top_diff, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_SUM:

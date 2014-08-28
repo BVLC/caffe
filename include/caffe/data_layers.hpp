@@ -12,6 +12,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/data_transformer.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
@@ -24,14 +25,14 @@ namespace caffe {
 
 // TODO: DataLayer, ImageDataLayer, and WindowDataLayer all have the
 // same basic structure and a lot of duplicated code.
-
 template <typename Dtype>
 class DataLayer : public Layer<Dtype>, public InternalThread {
  public:
   explicit DataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param),
+        data_transformer_(param.data_param().transform_param()) {}
   virtual ~DataLayer();
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -42,9 +43,9 @@ class DataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
@@ -53,11 +54,10 @@ class DataLayer : public Layer<Dtype>, public InternalThread {
 
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
-  virtual unsigned int PrefetchRand();
   // The thread's function
   virtual void InternalThreadEntry();
 
-  shared_ptr<Caffe::RNG> prefetch_rng_;
+  DataTransformer<Dtype> data_transformer_;
 
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
@@ -85,7 +85,7 @@ class DummyDataLayer : public Layer<Dtype> {
  public:
   explicit DummyDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -95,7 +95,7 @@ class DummyDataLayer : public Layer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
@@ -112,7 +112,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   explicit HDF5DataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual ~HDF5DataLayer();
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -122,9 +122,9 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
@@ -145,7 +145,7 @@ class HDF5OutputLayer : public Layer<Dtype> {
  public:
   explicit HDF5OutputLayer(const LayerParameter& param);
   virtual ~HDF5OutputLayer();
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {}
 
   virtual inline LayerParameter_LayerType type() const {
@@ -158,9 +158,9 @@ class HDF5OutputLayer : public Layer<Dtype> {
   inline std::string file_name() const { return file_name_; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
@@ -178,9 +178,10 @@ template <typename Dtype>
 class ImageDataLayer : public Layer<Dtype>, public InternalThread {
  public:
   explicit ImageDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param),
+        data_transformer_(param.image_data_param().transform_param()) {}
   virtual ~ImageDataLayer();
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -190,9 +191,9 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
@@ -203,10 +204,11 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
 
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
-  virtual unsigned int PrefetchRand();
   virtual void InternalThreadEntry();
 
+  DataTransformer<Dtype> data_transformer_;
   shared_ptr<Caffe::RNG> prefetch_rng_;
+
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
   int datum_channels_;
@@ -226,7 +228,7 @@ class MemoryDataLayer : public Layer<Dtype> {
  public:
   explicit MemoryDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -244,7 +246,7 @@ class MemoryDataLayer : public Layer<Dtype> {
   int batch_size() { return batch_size_; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
@@ -268,7 +270,7 @@ class WindowDataLayer : public Layer<Dtype>, public InternalThread {
   explicit WindowDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual ~WindowDataLayer();
-  virtual void SetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -278,9 +280,9 @@ class WindowDataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual Dtype Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual Dtype Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
