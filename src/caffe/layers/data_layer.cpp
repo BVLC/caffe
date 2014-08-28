@@ -244,12 +244,12 @@ void DataLayer<Dtype>::CreatePrefetchThread() {
 
   data_transformer_.InitRand();
 
-  CHECK(StartInternalThread()) << "Pthread execution failed";
+  CHECK(StartInternalThread()) << "Thread execution failed";
 }
 
 template <typename Dtype>
 void DataLayer<Dtype>::JoinPrefetchThread() {
-  CHECK(!WaitForInternalThreadToExit()) << "Pthread joining failed";
+  CHECK(!WaitForInternalThreadToExit()) << "Thread joining failed";
 }
 
 template <typename Dtype>
