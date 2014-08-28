@@ -14,6 +14,11 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+BasePrefetchingDataLayer<Dtype>::~BasePrefetchingDataLayer<Dtype>() {
+  JoinPrefetchThread();
+}
+
+template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::CreatePrefetchThread() {
   this->phase_ = Caffe::phase();
   this->data_transformer_.InitRand();

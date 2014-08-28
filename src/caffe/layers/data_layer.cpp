@@ -78,7 +78,6 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
-  this->JoinPrefetchThread();
   // clean up the database resources
   switch (this->layer_param_.data_param().backend()) {
   case DataParameter_DB_LEVELDB:

@@ -60,7 +60,7 @@ class BasePrefetchingDataLayer :
  public:
   explicit BasePrefetchingDataLayer(const LayerParameter& param)
       : BaseDataLayer<Dtype>(param) {}
-  virtual ~BasePrefetchingDataLayer() {}
+  virtual ~BasePrefetchingDataLayer();
 
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -202,13 +202,12 @@ class HDF5OutputLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
-class ImageDataLayer : public Layer<Dtype>, public InternalThread {
+class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit ImageDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param),
-        data_transformer_(param.image_data_param().transform_param()) {}
-  virtual ~ImageDataLayer();
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+  virtual ~ImageDataLayer() {}
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -218,34 +217,12 @@ class ImageDataLayer : public Layer<Dtype>, public InternalThread {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-
-  virtual void ShuffleImages();
-
-  virtual void CreatePrefetchThread();
-  virtual void JoinPrefetchThread();
-  virtual void InternalThreadEntry();
-
-  DataTransformer<Dtype> data_transformer_;
   shared_ptr<Caffe::RNG> prefetch_rng_;
+  virtual void ShuffleImages();
+  virtual void InternalThreadEntry();
 
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
-  int datum_channels_;
-  int datum_height_;
-  int datum_width_;
-  int datum_size_;
-  Blob<Dtype> prefetch_data_;
-  Blob<Dtype> prefetch_label_;
-  Blob<Dtype> data_mean_;
-  Caffe::Phase phase_;
 };
 
 /* MemoryDataLayer
