@@ -54,6 +54,11 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 }
 
 template <typename Dtype>
+ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
+  this->JoinPrefetchThread();
+}
+
+template <typename Dtype>
 void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const int new_height = this->layer_param_.image_data_param().new_height();
