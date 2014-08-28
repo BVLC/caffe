@@ -9,6 +9,7 @@
 #include "hdf5.h"
 #include "leveldb/db.h"
 #include "lmdb.h"
+#include <opencv2/opencv.hpp>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -42,6 +43,11 @@ class BaseDataLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
+
+  int datum_channels() const { return datum_channels_; }
+  int datum_height() const { return datum_height_; }
+  int datum_width() const { return datum_width_; }
+  int datum_size() const { return datum_size_; }
 
  protected:
   DataTransformer<Dtype> data_transformer_;
@@ -228,10 +234,10 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 /* MemoryDataLayer
 */
 template <typename Dtype>
-class MemoryDataLayer : public Layer<Dtype> {
+class MemoryDataLayer : public BaseDataLayer<Dtype> {
  public:
   explicit MemoryDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : BaseDataLayer<Dtype>(param), is_data_set_up_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
@@ -244,28 +250,22 @@ class MemoryDataLayer : public Layer<Dtype> {
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
-  int datum_channels() { return datum_channels_; }
-  int datum_height() { return datum_height_; }
-  int datum_width() { return datum_width_; }
+
+  virtual void AddImagesAndLabels(const vector<cv::Mat>& images,
+                                  const vector<int>& labels);
+
   int batch_size() { return batch_size_; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
 
   Dtype* data_;
   Dtype* labels_;
-  int datum_channels_;
-  int datum_height_;
-  int datum_width_;
-  int datum_size_;
   int batch_size_;
   int n_;
   int pos_;
+  bool is_data_set_up_;
 };
 
 template <typename Dtype>

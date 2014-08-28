@@ -529,6 +529,7 @@ message MemoryDataParameter {
   optional uint32 channels = 2;
   optional uint32 height = 3;
   optional uint32 width = 4;
+  optional TransformationParameter transform_param = 5;
 }
 
 // Message that stores parameters used by MVNLayer
