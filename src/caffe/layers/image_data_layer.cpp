@@ -4,11 +4,11 @@
 #include <utility>
 #include <vector>
 
+#include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
-#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -101,7 +101,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       .transform_param().mean_file();
   if (crop_size > 0) {
     (*top)[0]->Reshape(batch_size, datum.channels(), crop_size, crop_size);
-    this->prefetch_data_.Reshape(batch_size, datum.channels(), crop_size, crop_size);
+    this->prefetch_data_.Reshape(batch_size, datum.channels(), crop_size,
+                                 crop_size);
   } else {
     (*top)[0]->Reshape(batch_size, datum.channels(), datum.height(),
                        datum.width());
