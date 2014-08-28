@@ -5,8 +5,8 @@ layers {
   top: "data"
   top: "label"
   window_data_param {
-    source: "window_file_2007_trainval.txt"
-    mean_file: "../../data/ilsvrc12/imagenet_mean.binaryproto"
+    source: "examples/finetune_pascal_detection/window_file_2007_trainval.txt"
+    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
     batch_size: 128
     crop_size: 227
     mirror: true

@@ -23,6 +23,6 @@ fi
 
 echo "Downloading..."
 
-wget http://dl.caffe.berkeleyvision.org/caffe_alexnet_model
+wget http://dl.caffe.berkeleyvision.org/$MODEL examples/imagenet/$MODEL
 
 echo "Done. Please run this command again to verify that checksum = $CHECKSUM."
