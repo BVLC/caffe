@@ -238,6 +238,11 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
 }
 
 template <typename Dtype>
+WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
+  this->JoinPrefetchThread();
+}
+
+template <typename Dtype>
 void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // LayerSetUp runs through the window_file and creates two structures
