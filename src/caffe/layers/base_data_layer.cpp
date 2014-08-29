@@ -19,12 +19,12 @@ template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::CreatePrefetchThread() {
   this->phase_ = Caffe::phase();
   this->data_transformer_.InitRand();
-  CHECK(StartInternalThread()) << "Pthread execution failed";
+  CHECK(StartInternalThread()) << "Thread execution failed";
 }
 
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::JoinPrefetchThread() {
-  CHECK(!WaitForInternalThreadToExit()) << "Pthread joining failed";
+  CHECK(WaitForInternalThreadToExit()) << "Thread joining failed";
 }
 
 template <typename Dtype>

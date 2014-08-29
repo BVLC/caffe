@@ -12,6 +12,9 @@ InternalThread::~InternalThread() {
 }
 
 bool InternalThread::StartInternalThread() {
+  if (!WaitForInternalThreadToExit()) {
+    return false;
+  }
   try {
     thread_ = new caffe::Thread
         (&InternalThread::InternalThreadEntry, this);
