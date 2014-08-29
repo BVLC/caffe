@@ -1,4 +1,4 @@
-net: "mnist_autoencoder.prototxt"
+net: "examples/mnist/mnist_autoencoder.prototxt"
 test_iter: 50
 test_interval: 100
 test_compute_loss: true
@@ -8,7 +8,7 @@ display: 20
 max_iter: 4000000
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "mnist_autoencoder_train"
+snapshot_prefix: "examples/mnist/mnist_autoencoder"
 momentum: 0.9
 # solver mode: CPU or GPU
 solver_mode: GPU
