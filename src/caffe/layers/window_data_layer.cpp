@@ -375,32 +375,6 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   (*top)[1]->Reshape(batch_size, 1, 1, 1);
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
-
-  // check if we want to have mean
-  if (this->layer_param_.window_data_param().has_mean_file()) {
-    const string& mean_file =
-        this->layer_param_.window_data_param().mean_file();
-    LOG(INFO) << "Loading mean file from" << mean_file;
-    BlobProto blob_proto;
-    ReadProtoFromBinaryFileOrDie(mean_file, &blob_proto);
-    this->data_mean_.FromProto(blob_proto);
-    CHECK_EQ(this->data_mean_.num(), 1);
-    CHECK_EQ(this->data_mean_.width(), this->data_mean_.height());
-    CHECK_EQ(this->data_mean_.channels(), channels);
-  } else {
-    // Simply initialize an all-empty mean.
-    this->data_mean_.Reshape(1, channels, crop_size, crop_size);
-  }
-  // Now, start the prefetch thread. Before calling prefetch, we make two
-  // cpu_data calls so that the prefetch thread does not accidentally make
-  // simultaneous cudaMalloc calls when the main thread is running. In some
-  // GPUs this seems to cause failures if we do not so.
-  this->prefetch_data_.mutable_cpu_data();
-  this->prefetch_label_.mutable_cpu_data();
-  this->data_mean_.cpu_data();
-  DLOG(INFO) << "Initializing prefetch";
-  this->CreatePrefetchThread();
-  DLOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>

@@ -21,8 +21,13 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   (*top)[0]->Reshape(batch_size_, this->datum_channels_, this->datum_height_,
                      this->datum_width_);
   (*top)[1]->Reshape(batch_size_, 1, 1, 1);
+  added_data_.Reshape(batch_size_, this->datum_channels_, this->datum_height_,
+                      this->datum_width_);
+  added_label_.Reshape(batch_size_, 1, 1, 1);
   data_ = NULL;
   labels_ = NULL;
+  added_data_.cpu_data();
+  added_label_.cpu_data();
 }
 
 template <typename Dtype>
@@ -69,13 +74,13 @@ void MemoryDataLayer<Dtype>::AddImagesAndLabels(
   Datum datum;
   Dtype* top_data = added_data_.mutable_cpu_data();
   Dtype* top_label = added_label_.mutable_cpu_data();
-  const Dtype* mean = this->data_mean_.cpu_data();
   for (int batch_item_id = 0; batch_item_id < num_images; ++batch_item_id) {
     OpenCVImageToDatum(
         images[batch_item_id], labels[batch_item_id], this->datum_height_,
         this->datum_width_, &datum);
     // Apply data transformations (mirror, scale, crop...)
-    this->data_transformer_.Transform(batch_item_id, datum, mean, top_data);
+    this->data_transformer_.Transform(batch_item_id, datum, this->mean_,
+                                      top_data);
     top_label[batch_item_id] = labels[batch_item_id];
   }
   // num_images == batch_size_

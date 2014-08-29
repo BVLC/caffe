@@ -28,15 +28,12 @@ namespace caffe {
 template <typename Dtype>
 class BaseDataLayer : public Layer<Dtype> {
  public:
-  explicit BaseDataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param),
-        transform_param_(param.transform_param()),
-        data_transformer_(transform_param_) {}
+  explicit BaseDataLayer(const LayerParameter& param);
   virtual ~BaseDataLayer() {}
   // LayerSetUp: implements common data layer setup functionality, and calls
   // DataLayerSetUp to do special data layer setup for individual layer types.
-  // This method may not be overridden.
-  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  // This method may not be overridden except by the BasePrefetchingDataLayer.
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {}
@@ -59,6 +56,7 @@ class BaseDataLayer : public Layer<Dtype> {
   int datum_width_;
   int datum_size_;
   Blob<Dtype> data_mean_;
+  const Dtype* mean_;
   Caffe::Phase phase_;
   bool output_labels_;
 };
@@ -70,6 +68,11 @@ class BasePrefetchingDataLayer :
   explicit BasePrefetchingDataLayer(const LayerParameter& param)
       : BaseDataLayer<Dtype>(param) {}
   virtual ~BasePrefetchingDataLayer() {}
+  // LayerSetUp: implements common data layer setup functionality, and calls
+  // DataLayerSetUp to do special data layer setup for individual layer types.
+  // This method may not be overridden.
+  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);

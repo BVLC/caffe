@@ -26,7 +26,6 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   }
   const int batch_size = this->layer_param_.data_param().batch_size();
 
-  const Dtype* mean = this->data_mean_.cpu_data();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     switch (this->layer_param_.data_param().backend()) {
@@ -46,7 +45,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     }
 
     // Apply data transformations (mirror, scale, crop...)
-    this->data_transformer_.Transform(item_id, datum, mean, top_data);
+    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
 
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
@@ -202,37 +201,6 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->datum_height_ = datum.height();
   this->datum_width_ = datum.width();
   this->datum_size_ = datum.channels() * datum.height() * datum.width();
-  CHECK_GT(this->datum_height_, crop_size);
-  CHECK_GT(this->datum_width_, crop_size);
-  // check if we want to have mean
-  if (this->transform_param_.has_mean_file()) {
-    const string& mean_file =
-        this->transform_param_.mean_file();
-    LOG(INFO) << "Loading mean file from" << mean_file;
-    BlobProto blob_proto;
-    ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
-    this->data_mean_.FromProto(blob_proto);
-    CHECK_EQ(this->data_mean_.num(), 1);
-    CHECK_EQ(this->data_mean_.channels(), this->datum_channels_);
-    CHECK_EQ(this->data_mean_.height(), this->datum_height_);
-    CHECK_EQ(this->data_mean_.width(), this->datum_width_);
-  } else {
-    // Simply initialize an all-empty mean.
-    this->data_mean_.Reshape(1, this->datum_channels_, this->datum_height_,
-                             this->datum_width_);
-  }
-  // Now, start the prefetch thread. Before calling prefetch, we make two
-  // cpu_data calls so that the prefetch thread does not accidentally make
-  // simultaneous cudaMalloc calls when the main thread is running. In some
-  // GPUs this seems to cause failures if we do not so.
-  this->prefetch_data_.mutable_cpu_data();
-  if (this->output_labels_) {
-    this->prefetch_label_.mutable_cpu_data();
-  }
-  this->data_mean_.cpu_data();
-  DLOG(INFO) << "Initializing prefetch";
-  this->CreatePrefetchThread();
-  DLOG(INFO) << "Prefetch initialized.";
 }
 
 INSTANTIATE_CLASS(DataLayer);
