@@ -26,7 +26,6 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 
   // datum scales
   const int lines_size = lines_.size();
-  const Dtype* mean = this->data_mean_.cpu_data();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     CHECK_GT(lines_size, lines_id_);
@@ -37,7 +36,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     }
 
     // Apply transformations (mirror, crop...) to the data
-    this->data_transformer_.Transform(item_id, datum, mean, top_data);
+    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
 
     top_label[item_id] = datum.label();
     // go to the next iter
@@ -101,7 +100,6 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // image
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
-  const string& mean_file = this->layer_param_.transform_param().mean_file();
   if (crop_size > 0) {
     (*top)[0]->Reshape(batch_size, datum.channels(), crop_size, crop_size);
     this->prefetch_data_.Reshape(batch_size, datum.channels(), crop_size,
@@ -123,33 +121,6 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->datum_height_ = datum.height();
   this->datum_width_ = datum.width();
   this->datum_size_ = datum.channels() * datum.height() * datum.width();
-  CHECK_GT(this->datum_height_, crop_size);
-  CHECK_GT(this->datum_width_, crop_size);
-  // check if we want to have mean
-  if (this->layer_param_.transform_param().has_mean_file()) {
-    BlobProto blob_proto;
-    LOG(INFO) << "Loading mean file from" << mean_file;
-    ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
-    this->data_mean_.FromProto(blob_proto);
-    CHECK_EQ(this->data_mean_.num(), 1);
-    CHECK_EQ(this->data_mean_.channels(), this->datum_channels_);
-    CHECK_EQ(this->data_mean_.height(), this->datum_height_);
-    CHECK_EQ(this->data_mean_.width(), this->datum_width_);
-  } else {
-    // Simply initialize an all-empty mean.
-    this->data_mean_.Reshape(1, this->datum_channels_, this->datum_height_,
-                             this->datum_width_);
-  }
-  // Now, start the prefetch thread. Before calling prefetch, we make two
-  // cpu_data calls so that the prefetch thread does not accidentally make
-  // simultaneous cudaMalloc calls when the main thread is running. In some
-  // GPUs this seems to cause failures if we do not so.
-  this->prefetch_data_.mutable_cpu_data();
-  this->prefetch_label_.mutable_cpu_data();
-  this->data_mean_.cpu_data();
-  DLOG(INFO) << "Initializing prefetch";
-  this->CreatePrefetchThread();
-  DLOG(INFO) << "Prefetch initialized.";
 }
 
 template <typename Dtype>
