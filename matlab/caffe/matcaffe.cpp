@@ -3,7 +3,6 @@
 // caffe::Caffe functions so that one could easily call it from matlab.
 // Note that for matlab, we will simply use float as the data type.
 
-#include <boost/shared_ptr.hpp>
 // these need to be included after boost on OS X
 #include <string>  // NOLINT(build/include_order)
 #include <vector>  // NOLINT(build/include_order)
