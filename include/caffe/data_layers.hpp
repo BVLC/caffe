@@ -254,6 +254,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
 
+  virtual void AddImages(const vector<cv::Mat>& images,
+                         const bool is_color_images = true);
   virtual void AddImagesAndLabels(const vector<cv::Mat>& images,
                                   const vector<int>& labels,
                                   const bool is_color_images = true);
