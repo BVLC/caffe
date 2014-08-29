@@ -58,6 +58,13 @@ data/*
 *leveldb
 *lmdb
 
+# LevelDB files
+*.ldb
+LOCK
+LOG*
+CURRENT
+MANIFEST-*
+
 # Generated documentation
 docs/_site
 docs/gathered
