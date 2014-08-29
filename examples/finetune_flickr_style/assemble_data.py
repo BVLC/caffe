@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Form a subset of the Flickr Style data, download images to dirname, and write
 Caffe ImagesDataLayer training file.
