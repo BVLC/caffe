@@ -31,7 +31,7 @@ class DataTransformer {
    * @param datum
    *    Datum containing the data to be transformed.
    * @param mean
-   * @param top_data
+   * @param transformed_data
    *    This is meant to be the top blob's data. The transformed data will be
    *    written at the appropriate place within the blob's data.
    */
