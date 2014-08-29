@@ -102,7 +102,8 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Opening leveldb " << db_path;
     leveldb::Status status = leveldb::DB::Open(
         options, db_path, &db);
-    CHECK(status.ok()) << "Failed to open leveldb " << db_path;
+    CHECK(status.ok()) << "Failed to open leveldb " << db_path
+        << ". Is it already existing?";
     batch = new leveldb::WriteBatch();
   } else if (db_backend == "lmdb") {  // lmdb
     LOG(INFO) << "Opening lmdb " << db_path;
@@ -116,7 +117,7 @@ int main(int argc, char** argv) {
     CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
         << "mdb_txn_begin failed";
     CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
-        << "mdb_open failed";
+        << "mdb_open failed. Does the lmdb already exist? ";
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
