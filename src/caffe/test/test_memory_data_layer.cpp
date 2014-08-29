@@ -1,4 +1,5 @@
-#include <string>
+#include <opencv2/opencv.hpp>
+
 #include <vector>
 
 #include "caffe/data_layers.hpp"
@@ -17,7 +18,9 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
     : data_(new Blob<Dtype>()),
       labels_(new Blob<Dtype>()),
       data_blob_(new Blob<Dtype>()),
-      label_blob_(new Blob<Dtype>()) {}
+      label_blob_(new Blob<Dtype>()) {
+  }
+
   virtual void SetUp() {
     batch_size_ = 8;
     batches_ = 12;
@@ -33,6 +36,10 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
     labels_->Reshape(batches_ * batch_size_, 1, 1, 1);
     filler.Fill(this->data_);
     filler.Fill(this->labels_);
+    image_ = cv::imread("examples/images/cat.jpg", CV_LOAD_IMAGE_COLOR);
+    for (int i = 0; i < batch_size_; ++i) {
+      image_labels_.push_back(i);
+    }
   }
 
   virtual ~MemoryDataLayerTest() {
@@ -55,6 +62,8 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const label_blob_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+  cv::Mat image_;
+  vector<int> image_labels_;
 };
 
 TYPED_TEST_CASE(MemoryDataLayerTest, TestDtypesAndDevices);
@@ -111,55 +120,65 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
   }
 }
 
-TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
+TYPED_TEST(MemoryDataLayerTest, TestAddImagesAndLabels) {
   typedef typename TypeParam::Dtype Dtype;
 
   LayerParameter param;
   MemoryDataParameter* memory_data_param = param.mutable_memory_data_param();
   memory_data_param->set_batch_size(this->batch_size_);
-  memory_data_param->set_channels(this->channels_);
-  memory_data_param->set_height(this->height_);
-  memory_data_param->set_width(this->width_);
+  memory_data_param->set_channels(this->image_.channels());
+  memory_data_param->set_height(this->image_.rows);
+  memory_data_param->set_width(this->image_.cols);
   MemoryDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-
-  vector<Datum> datum_vector(this->batch_size_);
-  const size_t count = this->channels_ * this->height_ * this->width_;
-  size_t pixel_index = 0;
-  for (int i = 0; i < this->batch_size_; ++i) {
-    LOG(ERROR) << "i " << i;
-    datum_vector[i].set_channels(this->channels_);
-    datum_vector[i].set_height(this->height_);
-    datum_vector[i].set_width(this->width_);
-    datum_vector[i].set_label(i);
-    vector<char> pixels(count);
-    for (int j = 0; j < count; ++j) {
-      pixels[j] = pixel_index++ % 256;
-    }
-    datum_vector[i].set_data(&(pixels[0]), count);
-  }
-
-  layer.AddDatumVector(datum_vector);
-
-  int data_index;
+  cv::Mat image = this->image_;
+  vector<cv::Mat> images(this->batch_size_, image);
+  layer.AddImagesAndLabels(images, this->image_labels_);
   // Go through the data 5 times
   for (int iter = 0; iter < 5; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
     const Dtype* data = this->data_blob_->cpu_data();
-    size_t index = 0;
-    for (int i = 0; i < this->batch_size_; ++i) {
-      const string& data_string = datum_vector[i].data();
+    for (int i = 0, index = 0; i < this->batch_size_; ++i) {
       EXPECT_EQ(i, this->label_blob_->cpu_data()[i]);
-      for (int c = 0; c < this->channels_; ++c) {
-        for (int h = 0; h < this->height_; ++h) {
-          for (int w = 0; w < this->width_; ++w) {
-            data_index = (c * this->height_ + h) * this->width_ + w;
-            EXPECT_EQ(static_cast<Dtype>(
-                static_cast<uint8_t>(data_string[data_index])),
+      for (int c = 0; c < image.channels(); ++c) {
+        for (int h = 0; h < image.rows; ++h) {
+          for (int w = 0; w < image.cols; ++w) {
+            EXPECT_EQ(static_cast<uint8_t>(image.at<cv::Vec3b>(h, w)[c]),
                       data[index++]);
           }
         }
       }
+    }
+  }
+}
+
+TYPED_TEST(MemoryDataLayerTest, TestAddImagesAndLabelsResize) {
+  typedef typename TypeParam::Dtype Dtype;
+
+  const int channels = 3;
+  const int resize_height = 256;
+  const int resize_width = 256;
+  LayerParameter param;
+  MemoryDataParameter* memory_data_param = param.mutable_memory_data_param();
+  memory_data_param->set_batch_size(this->batch_size_);
+  memory_data_param->set_channels(channels);
+  memory_data_param->set_height(resize_height);
+  memory_data_param->set_width(resize_width);
+  MemoryDataLayer<Dtype> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  EXPECT_EQ(this->data_blob_->num(), this->batch_size_);
+  EXPECT_EQ(this->data_blob_->channels(), channels);
+  EXPECT_EQ(this->data_blob_->height(), resize_height);
+  EXPECT_EQ(this->data_blob_->width(), resize_width);
+  cv::Mat image = this->image_;
+  vector<cv::Mat> images(this->batch_size_, image);
+  layer.AddImagesAndLabels(images, this->image_labels_);
+  // Go through the data 5 times
+  for (int iter = 0; iter < 5; ++iter) {
+    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    const Dtype* label_data = this->label_blob_->cpu_data();
+    for (int i = 0; i < this->batch_size_; ++i) {
+      EXPECT_EQ(i, label_data[i]);
     }
   }
 }

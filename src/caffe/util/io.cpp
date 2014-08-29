@@ -193,7 +193,7 @@ void hdf5_save_nd_dataset<double>(
 
 bool OpenCVImageToDatum(
     const cv::Mat& image, const int label, const int resize_height,
-    const int resize_width, Datum* datum, const bool is_color) {
+    const int resize_width, Datum* datum, const bool is_color_image) {
   cv::Mat cv_img;
   CHECK(image.data) << "Image data must not be NULL";
   CHECK_GT(image.rows, 0) << "Image resize_height must be positive";
@@ -204,26 +204,28 @@ bool OpenCVImageToDatum(
   } else {
     cv_img = image;
   }
-  int num_channels = (is_color ? 3 : 1);
-  datum->set_channels(num_channels);
-  datum->set_height(cv_img.rows);
-  datum->set_width(cv_img.cols);
+  const int channels = image.channels();
+  const int height = cv_img.rows;
+  const int width = cv_img.cols;
+  datum->set_channels(channels);
+  datum->set_height(height);
+  datum->set_width(width);
   datum->set_label(label);
   datum->clear_data();
   datum->clear_float_data();
   string* datum_string = datum->mutable_data();
-  if (is_color) {
-    for (int c = 0; c < num_channels; ++c) {
-      for (int h = 0; h < cv_img.rows; ++h) {
-        for (int w = 0; w < cv_img.cols; ++w) {
+  if (is_color_image) {
+    for (int c = 0; c < channels; ++c) {
+      for (int h = 0; h < height; ++h) {
+        for (int w = 0; w < width; ++w) {
           datum_string->push_back(
             static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
         }
       }
     }
   } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
-    for (int h = 0; h < cv_img.rows; ++h) {
-      for (int w = 0; w < cv_img.cols; ++w) {
+    for (int h = 0; h < height; ++h) {
+      for (int w = 0; w < width; ++w) {
         datum_string->push_back(
           static_cast<char>(cv_img.at<uchar>(h, w)));
         }
@@ -232,50 +234,84 @@ bool OpenCVImageToDatum(
   return true;
 }
 
-template <typename Dtype>
-bool OpenCVImageToBlob(
-    const cv::Mat& image, const int label, const int resize_height,
-    const int resize_width, Blob<Dtype>* blob, const bool is_color) {
-  cv::Mat cv_img;
-  CHECK(image.data) << "Image data must not be NULL";
-  CHECK_GT(image.rows, 0) << "Image height must be positive";
-  CHECK_GT(image.cols, 0) << "Image width must be positive";
-  if (resize_height > 0 && resize_width > 0 &&
-      (image.rows != resize_height || image.cols != resize_width)) {
-    cv::resize(image, cv_img, cv::Size(resize_width, resize_height));
-  } else {
-    cv_img = image;
-  }
-  const int num_channels = is_color ? 3 : 1;
-  blob->Reshape(1, num_channels, cv_img.rows, cv_img.cols);
+template <typename MatType, typename Dtype>
+bool OpenCVMatToBlob(
+    const cv::Mat& mat, Blob<Dtype>* blob) {
+  CHECK(mat.data) << "Mat data must not be NULL";
+  CHECK_GT(mat.rows, 0) << "Mat height must be positive";
+  CHECK_GT(mat.cols, 0) << "Mat width must be positive";
+  const int channels = mat.channels();
+  const int height = mat.rows;
+  const int width = mat.cols;
+  blob->Reshape(1, channels, height, width);
   Dtype* data = blob->mutable_cpu_data();
-  if (is_color) {
-    for (int c = 0; c < num_channels; ++c) {
-      for (int h = 0; h < cv_img.rows; ++h) {
-        for (int w = 0; w < cv_img.cols; ++w) {
-          data[blob->offset(0, c, h, w)] =
-            static_cast<Dtype>(cv_img.at<cv::Vec3b>(h, w)[c]);
-        }
+  int index;
+// How the image matrix is stored in the memory?
+// http://docs.opencv.org/doc/tutorials/core/how_to_scan_images/how_to_scan_images.html#how-the-image-matrix-is-stored-in-the-memory
+  for (int h = 0; h < height; ++h) {
+    const MatType* ptr = mat.ptr<MatType>(h);
+    index = 0;
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < channels; ++c) {
+         data[blob->offset(0, c, h, w)] = ptr[index++];
       }
     }
-  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
-    for (int h = 0; h < cv_img.rows; ++h) {
-      for (int w = 0; w < cv_img.cols; ++w) {
-        data[blob->offset(0, 0, h, w)] =
-          static_cast<Dtype>(cv_img.at<uchar>(h, w));
-        }
-      }
   }
   return true;
 }
 
 template
-bool OpenCVImageToBlob<float>(
-    const cv::Mat& image, const int label, const int resize_height,
-    const int resize_width, Blob<float>* blob, const bool is_color);
+bool OpenCVMatToBlob<uchar, float>(const cv::Mat& mat, Blob<float>* blob);
 template
-bool OpenCVImageToBlob<double>(
-    const cv::Mat& image, const int label, const int resize_height,
-    const int resize_width, Blob<double>* blob, const bool is_color);
+bool OpenCVMatToBlob<float, float>(const cv::Mat& mat, Blob<float>* blob);
+template
+bool OpenCVMatToBlob<uchar, double>(const cv::Mat& image, Blob<double>* blob);
+template
+bool OpenCVMatToBlob<float, double>(const cv::Mat& image, Blob<double>* blob);
+template
+bool OpenCVMatToBlob<double, double>(const cv::Mat& image, Blob<double>* blob);
+
+template <typename Dtype>
+bool BlobToOpenCVMat(const Blob<Dtype>& blob, cv::Mat* mat) {
+  const int num = blob.num();
+  CHECK_EQ(num, 1);
+  const int channels = blob.channels();
+  const int height = blob.height();
+  const int width = blob.width();
+  CHECK_LE(channels, CV_CN_MAX);
+
+  int data_type;
+  if (sizeof(Dtype) == sizeof(float)) {
+    data_type = CV_32F;
+  } else {
+    data_type = CV_64F;
+  }
+  mat->create(height, width, CV_MAKETYPE(data_type, channels));
+  if (blob.count() == 0) {
+    return true;
+  }
+
+  CHECK(mat->data) << "Mat data must not be NULL";
+  CHECK_GT(mat->rows, 0) << "Mat height must be positive";
+  CHECK_GT(mat->cols, 0) << "Mat width must be positive";
+  const Dtype* data = blob.cpu_data();
+  Dtype* ptr;
+  int index;
+  for (int h = 0; h < height; ++h) {
+    ptr = mat->ptr<Dtype>(h);
+    index = 0;
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < channels; ++c) {
+         ptr[index++] = data[blob.offset(0, c, h, w)];
+      }
+    }
+  }
+  return true;
+}
+
+template
+bool BlobToOpenCVMat<float>(const Blob<float>& blob, cv::Mat* image);
+template
+bool BlobToOpenCVMat<double>(const Blob<double>& blob, cv::Mat* image);
 
 }  // namespace caffe

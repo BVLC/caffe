@@ -95,12 +95,13 @@ void hdf5_save_nd_dataset(
 
 bool OpenCVImageToDatum(
     const cv::Mat& image, const int label, const int height,
-    const int width, Datum* datum, const bool is_color = true);
+    const int width, Datum* datum, const bool is_color_image = true);
+
+template <typename MatType, typename Dtype>
+bool OpenCVMatToBlob(const cv::Mat& mat, Blob<Dtype>* blob);
 
 template <typename Dtype>
-bool OpenCVImageToBlob(
-    const cv::Mat& image, const int label, const int resize_height,
-    const int resize_width, Blob<Dtype>* blob, const bool is_color = true);
+bool BlobToOpenCVMat(const Blob<Dtype>& blob, cv::Mat* mat);
 
 }  // namespace caffe
 
