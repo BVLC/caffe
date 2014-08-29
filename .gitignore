@@ -47,11 +47,16 @@ python/caffe/proto/
 # User's build configuration
 Makefile.config
 
-# Data and examples are either
+# Data and models are either
 # 1. reference, and not casually committed
 # 2. custom, and live on their own unless they're deliberated contributed
 data/*
-examples/*
+*model
+*_iter_*
+*.solverstate
+*.binaryproto
+*leveldb
+*lmdb
 
 # Generated documentation
 docs/_site

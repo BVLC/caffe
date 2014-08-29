@@ -4,7 +4,7 @@ layers {
   name: "data"
   type: DATA
   data_param {
-    source: "mnist-train-leveldb"
+    source: "examples/mnist/mnist_train_leveldb"
     batch_size: 100
     transform_param {
       scale: 0.0039215684
@@ -17,7 +17,7 @@ layers {
   name: "data"
   type: DATA
   data_param {
-    source: "mnist-test-leveldb"
+    source: "examples/mnist/mnist_test_leveldb"
     batch_size: 100
     transform_param {
       scale: 0.0039215684

@@ -1,4 +1,4 @@
-net: "imagenet_train_val.prototxt"
+net: "examples/imagenet/imagenet_train_val.prototxt"
 test_iter: 1000
 test_interval: 1000
 base_lr: 0.01
@@ -10,5 +10,5 @@ max_iter: 450000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "caffe_imagenet_train"
+snapshot_prefix: "examples/imagenet/caffe_imagenet"
 solver_mode: GPU

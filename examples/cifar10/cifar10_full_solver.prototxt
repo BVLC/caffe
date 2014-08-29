@@ -2,7 +2,7 @@
 # then another factor of 10 after 10 more epochs (5000 iters)
 
 # The train/test net protocol buffer definition
-net: "cifar10_full_train_test.prototxt"
+net: "examples/cifar10/cifar10_full_train_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of CIFAR10, we have test batch size 100 and 100 test iterations,
 # covering the full 10,000 testing images.
@@ -21,6 +21,6 @@ display: 200
 max_iter: 60000
 # snapshot intermediate results
 snapshot: 10000
-snapshot_prefix: "cifar10_full"
+snapshot_prefix: "examples/cifar10/cifar10_full"
 # solver mode: CPU or GPU
 solver_mode: GPU
