@@ -7,9 +7,9 @@ layers {
   data_param {
     source: "examples/cifar10/cifar10_train_leveldb"
     batch_size: 100
-    transform_param {
-      mean_file: "examples/cifar10/mean.binaryproto"
-    }
+  }
+  transform_param {
+    mean_file: "examples/cifar10/mean.binaryproto"
   }
   include: { phase: TRAIN }
 }
@@ -21,9 +21,9 @@ layers {
   data_param {
     source: "examples/cifar10/cifar10_test_leveldb"
     batch_size: 100
-    transform_param {
-      mean_file: "examples/cifar10/mean.binaryproto"
-    }
+  }
+  transform_param {
+    mean_file: "examples/cifar10/mean.binaryproto"
   }
   include: { phase: TEST }
 }

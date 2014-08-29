@@ -30,7 +30,8 @@ class BaseDataLayer : public Layer<Dtype> {
  public:
   explicit BaseDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param),
-        data_transformer_(param.data_param().transform_param()) {}
+        transform_param_(param.transform_param()),
+        data_transformer_(transform_param_) {}
   virtual ~BaseDataLayer() {}
   // LayerSetUp: implements common data layer setup functionality, and calls
   // DataLayerSetUp to do special data layer setup for individual layer types.
@@ -51,6 +52,7 @@ class BaseDataLayer : public Layer<Dtype> {
   int datum_size() const { return datum_size_; }
 
  protected:
+  TransformationParameter transform_param_;
   DataTransformer<Dtype> data_transformer_;
   int datum_channels_;
   int datum_height_;
@@ -238,8 +240,8 @@ template <typename Dtype>
 class MemoryDataLayer : public BaseDataLayer<Dtype> {
  public:
   explicit MemoryDataLayer(const LayerParameter& param)
-      : BaseDataLayer<Dtype>(param), is_data_set_up_(false) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      : BaseDataLayer<Dtype>(param), has_new_data_(false) {}
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -253,7 +255,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   void Reset(Dtype* data, Dtype* label, int n);
 
   virtual void AddImagesAndLabels(const vector<cv::Mat>& images,
-                                  const vector<int>& labels);
+                                  const vector<int>& labels,
+                                  const bool is_color_images = true);
 
   int batch_size() { return batch_size_; }
 
@@ -261,12 +264,14 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
+  int batch_size_;
   Dtype* data_;
   Dtype* labels_;
-  int batch_size_;
   int n_;
   int pos_;
-  bool is_data_set_up_;
+  Blob<Dtype> added_data_;
+  Blob<Dtype> added_label_;
+  bool has_new_data_;
 };
 
 template <typename Dtype>

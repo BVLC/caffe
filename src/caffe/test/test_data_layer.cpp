@@ -118,7 +118,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_scale(scale);
 
     DataLayer<Dtype> layer(param);
@@ -157,7 +157,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_scale(scale);
     transform_param->set_crop_size(1);
 
@@ -207,7 +207,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_crop_size(1);
     transform_param->set_mirror(true);
 
@@ -261,7 +261,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_crop_size(1);
     transform_param->set_mirror(true);
 
