@@ -1,6 +1,8 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
+#include <opencv2/opencv.hpp>
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -9,7 +11,6 @@
 #include "hdf5.h"
 #include "leveldb/db.h"
 #include "lmdb.h"
-#include <opencv2/opencv.hpp>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
