@@ -64,6 +64,106 @@ static int init_key = -2;
 //
 // The actual forward function. It takes in a cell array of 4-D arrays as
 // input and outputs a cell array.
+// 
+// 
+// Functions to copy data from mxarray to blobs and viceversa
+// 
+
+static mxArray* blob_data_to_mxarray(const Blob<float>* blob) {
+  mwSize dims[4] = {blob->width(), blob->height(),
+                    blob->channels(), blob->num()};
+  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+  mxArray* mx_blob_data = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+  float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    caffe_copy(blob->count(), blob->cpu_data(), blob_data_ptr);
+    break;
+  case Caffe::GPU:
+    caffe_copy(blob->count(), blob->gpu_data(), blob_data_ptr);
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
+  return mx_blob_data;
+}
+
+static void mxarray_to_blob_data(const mxArray* data, Blob<float>* blob) {
+  mwSize dims[4] = {blob->width(), blob->height(),
+                    blob->channels(), blob->num()};
+  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+  CHECK_EQ_MEX(blob->count(),mxGetNumberOfElements(data),
+    "blob->count() don't match with numel(data)");
+  const float* const data_ptr =
+      reinterpret_cast<const float* const>(mxGetPr(data));
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    caffe_copy(blob->count(), data_ptr, blob->mutable_cpu_data());
+    break;
+  case Caffe::GPU:
+    caffe_copy(blob->count(), data_ptr, blob->mutable_gpu_data());
+    break;
+  default:
+    LOG(FATAL) << "Unknown Caffe mode.";
+  }  // switch (Caffe::mode())
+}
+
+static mxArray* blob_diff_to_mxarray(const Blob<float>* blob) {
+  mwSize dims[4] = {blob->width(), blob->height(),
+                    blob->channels(), blob->num()};
+  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+  mxArray* mx_blob_data = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+  float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    caffe_copy(blob->count(), blob->cpu_diff(), blob_data_ptr);
+    break;
+  case Caffe::GPU:
+    caffe_copy(blob->count(), blob->gpu_diff(), blob_data_ptr);
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
+  return mx_blob_data;
+}
+
+static void mxarray_to_blob_diff(const mxArray* data, Blob<float>* blob) {
+  mwSize dims[4] = {blob->width(), blob->height(),
+                    blob->channels(), blob->num()};
+  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
+  CHECK_EQ_MEX(blob->count(),mxGetNumberOfElements(data),
+    "blob->count() don't match with numel(data)");
+  const float* const data_ptr =
+      reinterpret_cast<const float* const>(mxGetPr(data));
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    caffe_copy(blob->count(), data_ptr, blob->mutable_cpu_diff());
+    break;
+  case Caffe::GPU:
+    caffe_copy(blob->count(), data_ptr, blob->mutable_gpu_diff());
+    break;
+  default:
+    LOG(FATAL) << "Unknown Caffe mode.";
+  }  // switch (Caffe::mode())
+}
+
+static mxArray* blobs_data_to_cell(const vector<Blob<float>* >& blobs) {
+  mxArray* mx_out = mxCreateCellMatrix(blobs.size(), 1);
+  for (unsigned int i = 0; i < blobs.size(); ++i) {
+    mxArray* mx_blob =  blob_data_to_mxarray(blobs[i]);
+    mxSetCell(mx_out, i, mx_blob);
+  }
+  return mx_out;
+}
+
+static mxArray* blobs_diff_to_cell(const vector<Blob<float>* >& blobs) {
+  mxArray* mx_out = mxCreateCellMatrix(blobs.size(), 1);
+  for (unsigned int i = 0; i < blobs.size(); ++i) {
+    mxArray* mx_blob =  blob_diff_to_mxarray(blobs[i]);
+    mxSetCell(mx_out, i, mx_blob);
+  }
+  return mx_out;
+}
 
 // TODO(matcaffe) no loss pointer arg
 static mxArray* do_forward_prefilled(mxArray* mx_loss) {
@@ -168,7 +268,7 @@ static mxArray* do_get_weights() {
         // Copy weights
         mx_layer_weights = blobs_data_to_cell(layer_blobs);
         // Create Struct
-        mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_cells);
+        mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_weights);
         mxSetField(mx_layers, mx_layer_index, "layer_name",
             mxCreateString(layer_names[i].c_str()));
         mx_layer_index++;        
@@ -202,7 +302,7 @@ static mxArray* do_get_layer_weights(const mxArray* const layer_name) {
       //   // where width is the fastest dimension
       //   mxArray* mx_weights = blob_data_to_mxarray(layer_blobs[j]);
       //   mxSetCell(mx_layer_weights, j, mx_weights);
-      }
+      // }
     }
   }
   return mx_layer_weights;
@@ -320,101 +420,7 @@ static mxArray* do_get_blobs_info() {
   return mx_blobs;
 }
 
-static MxArray* blob_data_to_mxarray(const Blob<float>* blob) {
-  mwSize dims[4] = {blob->width(), blob->height(),
-                    blob->channels(), blob->num()};
-  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
-  mx_blob_data = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
-  float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    caffe_copy(blob->count(), blob->cpu_data(), blob_data_ptr);
-    break;
-  case Caffe::GPU:
-    caffe_copy(blob->count(), blob->gpu_data(), blob_data_ptr);
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-  }
-  return mx_blob_data;
-}
 
-static void mxarray_to_blob_data(const MxArray* data, Blob<float>& blob) {
-  mwSize dims[4] = {blob->width(), blob->height(),
-                    blob->channels(), blob->num()};
-  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
-  CHECK_EQ_MEX(blob->count(),mxGetNumberOfElements(data),
-    "blob->count() don't match with numel(data)");
-  const float* const data_ptr =
-      reinterpret_cast<const float* const>(mxGetPr(data));
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    caffe_copy(blob->count(), data_ptr, blob->mutable_cpu_data());
-    break;
-  case Caffe::GPU:
-    caffe_copy(blob->count(), data_ptr, blob->mutable_gpu_data());
-    break;
-  default:
-    LOG(FATAL) << "Unknown Caffe mode.";
-  }  // switch (Caffe::mode())
-}
-
-static MxArray* blob_diff_to_mxarray(const Blob<float>* blob) {
-  mwSize dims[4] = {blob->width(), blob->height(),
-                    blob->channels(), blob->num()};
-  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
-  mx_blob_data = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
-  float* blob_data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob_data));
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    caffe_copy(blob->count(), blob->cpu_diff(), blob_data_ptr);
-    break;
-  case Caffe::GPU:
-    caffe_copy(blob->count(), blob->gpu_diff(), blob_data_ptr);
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-  }
-  return mx_blob_data;
-}
-
-static void mxarray_to_blob_diff(const MxArray* data, Blob<float>& blob) {
-  mwSize dims[4] = {blob->width(), blob->height(),
-                    blob->channels(), blob->num()};
-  DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
-  CHECK_EQ_MEX(blob->count(),mxGetNumberOfElements(data),
-    "blob->count() don't match with numel(data)");
-  const float* const data_ptr =
-      reinterpret_cast<const float* const>(mxGetPr(data));
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    caffe_copy(blob->count(), data_ptr, blob->mutable_cpu_diff());
-    break;
-  case Caffe::GPU:
-    caffe_copy(blob->count(), data_ptr, blob->mutable_gpu_diff());
-    break;
-  default:
-    LOG(FATAL) << "Unknown Caffe mode.";
-  }  // switch (Caffe::mode())
-}
-
-static mxArray* blobs_data_to_cell(const vector<Blob<float>* >* blobs) {
-  mxArray* mx_out = mxCreateCellMatrix(blobs.size(), 1);
-  for (unsigned int i = 0; i < output_blobs.size(); ++i) {
-    mxArray* mx_blob =  blob_data_to_mxarray(blobs[i]);
-    mxSetCell(mx_out, i, mx_blob);
-  }
-  return mx_out;
-}
-
-static mxArray* blobs_diff_to_cell(const vector<Blob<float>* >* blobs) {
-  mxArray* mx_out = mxCreateCellMatrix(blobs.size(), 1);
-  for (unsigned int i = 0; i < output_blobs.size(); ++i) {
-    mxArray* mx_blob =  blob_diff_to_mxarray(blobs[i]);
-    mxSetCell(mx_out, i, mx_blob);
-  }
-  return mx_out;
-}
 
 static mxArray* do_get_blob_data(const mxArray* const blob_name) {
   // const vector<shared_ptr<Blob<float> > >& blobs = net_->blobs();
