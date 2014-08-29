@@ -5,6 +5,7 @@
 EXAMPLE=examples/mnist
 DATA=data/mnist
 BUILD=build/examples/mnist
+
 BACKEND="lmdb"
 
 echo "Creating ${BACKEND}..."
