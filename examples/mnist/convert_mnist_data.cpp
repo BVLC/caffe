@@ -6,10 +6,11 @@
 // The MNIST dataset could be downloaded at
 //    http://yann.lecun.com/exdb/mnist/
 
-#include <gflags/gflags.h>  // GFLAGS
+#include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
 #include <leveldb/db.h>
+#include <leveldb/write_batch.h>
 #include <lmdb.h>
 #include <stdint.h>
 #include <sys/stat.h>
@@ -66,6 +67,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   leveldb::Options options;
   options.create_if_missing = true;
   options.error_if_exists = true;
+  options.write_buffer_size = 268435456;
+  leveldb::WriteBatch* batch = NULL;
 
   // Open new db
   if (db_backend == "leveldb") {  // leveldb
@@ -73,6 +76,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         options, db_filename, &db);
     CHECK(status.ok()) << "Failed to open leveldb " << db_filename
         << ". Is it already existing?";
+    batch = new leveldb::WriteBatch();
   } else if (db_backend == "lmdb") {  // lmdb
     CHECK_EQ(mkdir(db_filename, 0744), 0)
         << "mkdir " << db_filename << "failed";
@@ -94,6 +98,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   const int kMaxKeyLength = 10;
   char key[kMaxKeyLength];
   std::string value;
+  int count = 0;
 
   caffe::Datum datum;
   datum.set_channels(1);
@@ -112,7 +117,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 
     // Put in db
     if (db_backend == "leveldb") {  // leveldb
-      db->Put(leveldb::WriteOptions(), keystr, value);
+      batch->Put(keystr, value);
     } else if (db_backend == "lmdb") {  // lmdb
       mdb_data.mv_size = value.size();
       mdb_data.mv_data = reinterpret_cast<void*>(&value[0]);
@@ -120,24 +125,41 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       mdb_key.mv_data = reinterpret_cast<void*>(&keystr[0]);
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
-      CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS)
-          << "mdb_txn_commit failed";
-      CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
-          << "mdb_txn_begin failed";
     } else {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }
-  }
 
-  if (db_backend == "leveldb") {  // leveldb
-    delete db;
-  } else if (db_backend == "lmdb") {  // lmdb
-    mdb_close(mdb_env, mdb_dbi);
-    mdb_env_close(mdb_env);
-  } else {
-    LOG(FATAL) << "Unknown db backend " << db_backend;
+    if (++count % 1000 == 0) {
+      // Commit txn
+      if (db_backend == "leveldb") {  // leveldb
+        db->Write(leveldb::WriteOptions(), batch);
+        delete batch;
+        batch = new leveldb::WriteBatch();
+      } else if (db_backend == "lmdb") {  // lmdb
+        CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS)
+            << "mdb_txn_commit failed";
+        CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
+            << "mdb_txn_begin failed";
+      } else {
+        LOG(FATAL) << "Unknown db backend " << db_backend;
+      }
+    }
   }
-
+  // write the last batch
+  if (count % 1000 != 0) {
+    if (db_backend == "leveldb") {  // leveldb
+      db->Write(leveldb::WriteOptions(), batch);
+      delete batch;
+      delete db;
+    } else if (db_backend == "lmdb") {  // lmdb
+      CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS) << "mdb_txn_commit failed";
+      mdb_close(mdb_env, mdb_dbi);
+      mdb_env_close(mdb_env);
+    } else {
+      LOG(FATAL) << "Unknown db backend " << db_backend;
+    }
+    LOG(ERROR) << "Processed " << count << " files.";
+  }
   delete pixels;
 }
 
