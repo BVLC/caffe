@@ -88,6 +88,10 @@ static mxArray* blob_data_to_mxarray(const Blob<float>* blob) {
   return mx_blob_data;
 }
 
+static mxArray* blob_data_to_mxarray(const shared_ptr<Blob<float> > blob) {
+  return blob_data_to_mxarray(blob.get());
+}
+
 static void mxarray_to_blob_data(const mxArray* data, Blob<float>* blob) {
   mwSize dims[4] = {blob->width(), blob->height(),
                     blob->channels(), blob->num()};
@@ -108,6 +112,11 @@ static void mxarray_to_blob_data(const mxArray* data, Blob<float>* blob) {
   }  // switch (Caffe::mode())
 }
 
+static void mxarray_to_blob_data(const mxArray* data,
+    shared_ptr<Blob<float> > blob) {
+  mxarray_to_blob_data(data, blob.get());
+}
+
 static mxArray* blob_diff_to_mxarray(const Blob<float>* blob) {
   mwSize dims[4] = {blob->width(), blob->height(),
                     blob->channels(), blob->num()};
@@ -125,6 +134,10 @@ static mxArray* blob_diff_to_mxarray(const Blob<float>* blob) {
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
   }
   return mx_blob_data;
+}
+
+static mxArray* blob_diff_to_mxarray(const shared_ptr<Blob<float> > blob) {
+  return blob_diff_to_mxarray(blob.get());
 }
 
 static void mxarray_to_blob_diff(const mxArray* data, Blob<float>* blob) {
@@ -147,7 +160,22 @@ static void mxarray_to_blob_diff(const mxArray* data, Blob<float>* blob) {
   }  // switch (Caffe::mode())
 }
 
+static void mxarray_to_blob_diff(const mxArray* data,
+    shared_ptr<Blob<float> > blob) {
+  mxarray_to_blob_diff(data, blob.get());
+}
+
 static mxArray* blobs_data_to_cell(const vector<Blob<float>* >& blobs) {
+  mxArray* mx_out = mxCreateCellMatrix(blobs.size(), 1);
+  for (unsigned int i = 0; i < blobs.size(); ++i) {
+    mxArray* mx_blob =  blob_data_to_mxarray(blobs[i]);
+    mxSetCell(mx_out, i, mx_blob);
+  }
+  return mx_out;
+}
+
+static mxArray* blobs_data_to_cell(
+                const vector<shared_ptr<Blob<float> > >& blobs) {
   mxArray* mx_out = mxCreateCellMatrix(blobs.size(), 1);
   for (unsigned int i = 0; i < blobs.size(); ++i) {
     mxArray* mx_blob =  blob_data_to_mxarray(blobs[i]);
@@ -165,17 +193,22 @@ static mxArray* blobs_diff_to_cell(const vector<Blob<float>* >& blobs) {
   return mx_out;
 }
 
+static mxArray* blobs_diff_to_cell(
+                const vector<shared_ptr<Blob<float> > >& blobs) {
+  mxArray* mx_out = mxCreateCellMatrix(blobs.size(), 1);
+  for (unsigned int i = 0; i < blobs.size(); ++i) {
+    mxArray* mx_blob =  blob_diff_to_mxarray(blobs[i]);
+    mxSetCell(mx_out, i, mx_blob);
+  }
+  return mx_out;
+}
+
 // TODO(matcaffe) no loss pointer arg
 static mxArray* do_forward_prefilled(mxArray* mx_loss) {
   float* loss_ptr = reinterpret_cast<float*>(mxGetPr(mx_loss));
   const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled(loss_ptr);
   DLOG(INFO) << "loss: " << mxGetScalar(mx_loss);
   mxArray* mx_out = blobs_data_to_cell(output_blobs);
-  // mxArray* mx_out = mxCreateCellMatrix(output_blobs.size(), 1);
-  // for (unsigned int i = 0; i < output_blobs.size(); ++i) {
-  //   mxArray* mx_blob =  blob_data_to_mxarray(output_blobs[i]);
-  //   mxSetCell(mx_out, i, mx_blob);
-  // }
   return mx_out;
 }
 
@@ -248,7 +281,7 @@ static mxArray* do_get_weights() {
   mxArray* mx_layers;
   {
     const mwSize dims[2] = {num_layers, 1};
-    const char* fnames[2] = {"layer_name", "weights"};
+    const char* fnames[2] = {"layer_names", "weights"};
     mx_layers = mxCreateStructArray(2, dims, 2, fnames);
   }
 
@@ -269,7 +302,7 @@ static mxArray* do_get_weights() {
         mx_layer_weights = blobs_data_to_cell(layer_blobs);
         // Create Struct
         mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_weights);
-        mxSetField(mx_layers, mx_layer_index, "layer_name",
+        mxSetField(mx_layers, mx_layer_index, "layer_names",
             mxCreateString(layer_names[i].c_str()));
         mx_layer_index++;        
       }
@@ -332,7 +365,6 @@ static void do_set_layer_weights(const mxArray* const layer_name,
         // where width is the fastest dimension
         const mxArray* const elem = mxGetCell(mx_layer_weights, j);
         mxarray_to_blob_data(elem, layer_blobs[j]);
-        }
       }
     }
   }
@@ -539,7 +571,7 @@ static void set_weights(MEX_ARGS) {
   }
   int num_layers = mxGetNumberOfElements(mx_weights);
   for (int i = 0; i < num_layers; ++i) {
-    const mxArray* layer_name= mxGetField(mx_weights,i,"layer_name");
+    const mxArray* layer_name= mxGetField(mx_weights,i,"layer_names");
     const mxArray* weights= mxGetField(mx_weights,i,"weights");
     do_set_layer_weights(layer_name,weights);
   }
