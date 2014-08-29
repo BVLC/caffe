@@ -99,11 +99,9 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
                          new_height, new_width, &datum));
   // image
-  const int crop_size = this->layer_param_.image_data_param()
-      .transform_param().crop_size();
+  const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
-  const string& mean_file = this->layer_param_.image_data_param()
-      .transform_param().mean_file();
+  const string& mean_file = this->layer_param_.transform_param().mean_file();
   if (crop_size > 0) {
     (*top)[0]->Reshape(batch_size, datum.channels(), crop_size, crop_size);
     this->prefetch_data_.Reshape(batch_size, datum.channels(), crop_size,
@@ -128,7 +126,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(this->datum_height_, crop_size);
   CHECK_GT(this->datum_width_, crop_size);
   // check if we want to have mean
-  if (this->layer_param_.image_data_param().transform_param().has_mean_file()) {
+  if (this->layer_param_.transform_param().has_mean_file()) {
     BlobProto blob_proto;
     LOG(INFO) << "Loading mean file from" << mean_file;
     ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
