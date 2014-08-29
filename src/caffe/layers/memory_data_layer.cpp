@@ -47,6 +47,13 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+void MemoryDataLayer<Dtype>::AddImages(
+    const vector<cv::Mat>& images, const bool is_color_images) {
+  const vector<int> fake_labels(images.size(), 0);
+  AddImagesAndLabels(images, fake_labels, is_color_images);
+}
+
+template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddImagesAndLabels(
     const vector<cv::Mat>& images, const vector<int>& labels,
     const bool is_color_images) {
