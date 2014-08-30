@@ -42,7 +42,7 @@ class InternalThread {
       with the code you want your thread to run. */
   virtual void InternalThreadEntry() {}
 
-  caffe::ThreadWrapper* thread_;
+  caffe::Thread* thread_;
 };
 
 }  // namespace caffe
