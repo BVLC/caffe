@@ -59,7 +59,7 @@ data/*
 *lmdb
 
 # LevelDB files
-*.ldb
+*.sst
 LOCK
 LOG*
 CURRENT
