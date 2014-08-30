@@ -75,7 +75,6 @@ layers {
   bottom: "conv2"
   top: "pool2"
   pooling_param {
-    norm_region: WITHIN_CHANNEL
     pool: AVE
     kernel_size: 3
     stride: 2
@@ -87,6 +86,7 @@ layers {
   bottom: "pool2"
   top: "norm2"
   lrn_param {
+    norm_region: WITHIN_CHANNEL
     local_size: 3
     alpha: 5e-05
     beta: 0.75
