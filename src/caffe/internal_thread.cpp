@@ -1,5 +1,7 @@
 #include "caffe/internal_thread.hpp"
 
+#include "caffe/util/thread_wrapper.hpp"
+
 namespace caffe {
 
 InternalThread::~InternalThread() {
@@ -11,7 +13,8 @@ InternalThread::~InternalThread() {
 
 bool InternalThread::StartInternalThread() {
   try {
-    thread_ = new boost::thread(&InternalThread::InternalThreadEntry, this);
+    thread_ = new caffe::ThreadWrapper
+        (&InternalThread::InternalThreadEntry, this);
   } catch (...) {
     return false;
   }
