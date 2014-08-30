@@ -15,18 +15,27 @@
 
 namespace caffe {
 
-/* ArgmaxLayer
-  Compute the index of the max value across all (channels x height x width).
-  [In the future, can take specific dimension.]
-  Intended for use after a classification layer to produce prediction.
-  If parameter out_max_val is set to true, then output is a vector of pairs
-  (max_ind, max_val) for each image.
-
-  NOTE: does not implement Backwards operation.
-*/
+/**
+ * @brief Compute the index of the @f$ K @f$ max values for each datum across
+ *        all dimensions @f$ (C \times H \times W) @f$.
+ *
+ * Intended for use after a classification layer to produce a prediction.
+ * If parameter out_max_val is set to true, output is a vector of pairs
+ * (max_ind, max_val) for each image.
+ *
+ * NOTE: does not implement Backwards operation.
+ */
 template <typename Dtype>
 class ArgMaxLayer : public Layer<Dtype> {
  public:
+  /**
+   * @param param provides ArgMaxParameter argmax_param,
+   *     with ArgMaxLayer options:
+   *   - top_k (\b optional uint, default 1).
+   *     the number @f$ K @f$ of maximal items to output.
+   *   - out_max_val (\b optional bool, default false).
+   *     if set, output a vector of pairs (max_ind, max_val) for each image.
+   */
   explicit ArgMaxLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -39,8 +48,20 @@ class ArgMaxLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times 1 \times K \times 1) @f$ or, if out_max_val
+   *      @f$ (N \times 2 \times K \times 1) @f$
+   *      the computed outputs @f$
+   *       y_n = \arg\max\limits_i x_{ni}
+   *      @f$ (for @f$ K = 1 @f$).
+   */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  /// @brief Not implemented (non-differentiable function)
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
     NOT_IMPLEMENTED;
@@ -49,10 +70,10 @@ class ArgMaxLayer : public Layer<Dtype> {
   size_t top_k_;
 };
 
-/* ConcatLayer
-  Takes at least two blobs and concatenates them along either num or
-  channel dim, outputting the result.
-*/
+/**
+ * @brief Takes at least two Blob%s and concatenates them along either the num
+ *        or channel dimension, outputting the result.
+ */
 template <typename Dtype>
 class ConcatLayer : public Layer<Dtype> {
  public:
@@ -68,10 +89,49 @@ class ConcatLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+  /**
+   * @param bottom input Blob vector (length 2+)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x_1 @f$
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x_2 @f$
+   *   -# ...
+   *   - K @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x_K @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
+   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
+   *      the concatenated output @f$
+   *        y = [\begin{array}{cccc} x_1 & x_2 & ... & x_K \end{array}]
+   *      @f$
+   */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the concatenate inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *        respect to the outputs
+   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
+   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to concatenated outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length K), into which the top gradient
+   *        @f$ \frac{\partial E}{\partial y} @f$ is deconcatenated back to the
+   *        inputs @f$
+   *        \left[ \begin{array}{cccc}
+   *          \frac{\partial E}{\partial x_1} &
+   *          \frac{\partial E}{\partial x_2} &
+   *          ... &
+   *          \frac{\partial E}{\partial x_K}
+   *        \end{array} \right] =
+   *        \frac{\partial E}{\partial y}
+   *        @f$
+   */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -86,9 +146,12 @@ class ConcatLayer : public Layer<Dtype> {
   int concat_dim_;
 };
 
-/* EltwiseLayer
-  Compute elementwise operations like product or sum.
-*/
+/**
+ * @brief Compute elementwise operations, such as product and sum,
+ *        along multiple input Blobs.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class EltwiseLayer : public Layer<Dtype> {
  public:
@@ -119,8 +182,16 @@ class EltwiseLayer : public Layer<Dtype> {
   bool stable_prod_grad_;
 };
 
-/* FlattenLayer
-*/
+/**
+ * @brief Reshapes the input Blob into flat vectors.
+ *
+ * Note: because this layer does not change the input values -- merely the
+ * dimensions -- it can simply copy the input. The copy happens "virtually"
+ * (thus taking effectively 0 real time) by setting, in Forward, the data
+ * pointer of the top Blob to that of the bottom Blob (see Blob::ShareData),
+ * and in Backward, the diff pointer of the bottom Blob to that of the top Blob
+ * (see Blob::ShareDiff).
+ */
 template <typename Dtype>
 class FlattenLayer : public Layer<Dtype> {
  public:
@@ -136,10 +207,28 @@ class FlattenLayer : public Layer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
+  /**
+   * @param bottom input Blob vector (length 2+)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times CHW \times 1 \times 1) @f$
+   *      the outputs -- i.e., the (virtually) copied, flattened inputs
+   */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the concatenate inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *        respect to the outputs
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length K), into which the top error
+   *        gradient is (virtually) copied
+   */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -148,8 +237,12 @@ class FlattenLayer : public Layer<Dtype> {
   int count_;
 };
 
-/* InnerProductLayer
-*/
+/**
+ * @brief Also known as a "fully-connected" layer, computes an inner product
+ *        with a set of learned weights, and (optionally) adds biases.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class InnerProductLayer : public Layer<Dtype> {
  public:
@@ -181,7 +274,10 @@ class InnerProductLayer : public Layer<Dtype> {
   Blob<Dtype> bias_multiplier_;
 };
 
-/* MVNLayer
+/**
+ * @brief Normalizes the input to have 0-mean and/or unit (1) variance.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
 template <typename Dtype>
 class MVNLayer : public Layer<Dtype> {
@@ -209,12 +305,15 @@ class MVNLayer : public Layer<Dtype> {
 
   Blob<Dtype> mean_, variance_, temp_;
 
-  // sum_multiplier is just used to carry out sum using blas
+  /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
 };
 
-/* SoftmaxLayer
-*/
+/**
+ * @brief Computes the softmax function.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class SoftmaxLayer : public Layer<Dtype> {
  public:
@@ -239,14 +338,18 @@ class SoftmaxLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  // sum_multiplier is just used to carry out sum using blas
+  /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
-  // scale is an intermediate blob to hold temporary results.
+  /// scale is an intermediate Blob to hold temporary results.
   Blob<Dtype> scale_;
 };
 
-/* SplitLayer
-*/
+/**
+ * @brief Creates a "split" path in the network by copying the bottom Blob
+ *        into multiple top Blob%s to be used by multiple consuming layers.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class SplitLayer : public Layer<Dtype> {
  public:
@@ -274,10 +377,12 @@ class SplitLayer : public Layer<Dtype> {
   int count_;
 };
 
-/* SliceLayer
-  Takes one blobs and slices it along either num or channel dim,
-  outputting the result into as many top blobs as needed.
-*/
+/**
+ * @brief Takes a Blob and slices it along either the num or channel dimension,
+ *        outputting multiple sliced Blob results.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class SliceLayer : public Layer<Dtype> {
  public:
