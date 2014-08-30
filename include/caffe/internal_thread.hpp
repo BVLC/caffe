@@ -1,11 +1,23 @@
 #ifndef CAFFE_INTERNAL_THREAD_HPP_
 #define CAFFE_INTERNAL_THREAD_HPP_
 
-#include <boost/thread.hpp>
-
 #include "caffe/common.hpp"
 
 namespace caffe {
+
+/**
+ * A minimal wrapper for boost::thread to force host compilation for boost
+ * Defined in caffe/util/thread_wrapper.cpp
+ */
+class ThreadWrapper {
+ public:
+  template<typename Callable, class A1>
+  ThreadWrapper(Callable func, A1 a1);
+  void join();
+  bool joinable();
+ private:
+  void* thread_;
+};
 
 /**
  * Virutal class encapsulate boost::thread for use in base class
@@ -30,7 +42,7 @@ class InternalThread {
       with the code you want your thread to run. */
   virtual void InternalThreadEntry() {}
 
-  boost::thread* thread_;
+  caffe::ThreadWrapper* thread_;
 };
 
 }  // namespace caffe
