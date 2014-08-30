@@ -16,8 +16,12 @@
 
 namespace caffe {
 
-/* ConvolutionLayer
-*/
+/**
+ * @brief Convolves the input image with a bank of learned filters,
+ *        and (optionally) adds biases.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class ConvolutionLayer : public Layer<Dtype> {
  public:
@@ -60,8 +64,13 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
 };
 
-/* Im2colLayer
-*/
+/**
+ * @brief A helper for image operations that rearranges image regions into
+ *        column vectors.  Used by ConvolutionLayer to perform convolution
+ *        by matrix multiplication.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class Im2colLayer : public Layer<Dtype> {
  public:
@@ -98,9 +107,11 @@ class Im2colLayer : public Layer<Dtype> {
 template <typename Dtype> class PoolingLayer;
 template <typename Dtype> class SplitLayer;
 
-/* LRNLayer
-  Local Response Normalization
-*/
+/**
+ * @brief Normalize the input in a local region across or within feature maps.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class LRNLayer : public Layer<Dtype> {
  public:
@@ -171,8 +182,11 @@ class LRNLayer : public Layer<Dtype> {
 };
 
 
-/* PoolingLayer
-*/
+/**
+ * @brief Pools the input image by taking the max, average, etc. within regions.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
 template <typename Dtype>
 class PoolingLayer : public Layer<Dtype> {
  public:
