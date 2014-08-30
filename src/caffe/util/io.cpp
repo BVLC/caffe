@@ -193,9 +193,14 @@ void hdf5_save_nd_dataset<double>(
 
 bool OpenCVImageToDatum(
     const cv::Mat& image, const int label, const int resize_height,
-    const int resize_width, Datum* datum, const bool is_color_image) {
+    const int resize_width, Datum* datum) {
   cv::Mat cv_img;
   CHECK(image.data) << "Image data must not be NULL";
+  const int depth = image.depth();
+  CHECK(depth == CV_8U || depth == CV_8S) <<
+      "Image data type must be unsigned or signed byte";
+  const int channels = image.channels();
+  CHECK(channels == 3 || channels == 1) << "Image channels must be 3 or 1";
   CHECK_GT(image.rows, 0) << "Image resize_height must be positive";
   CHECK_GT(image.cols, 0) << "Image resize_width must be positive";
   if (resize_height > 0 && resize_width > 0 &&
@@ -204,7 +209,6 @@ bool OpenCVImageToDatum(
   } else {
     cv_img = image;
   }
-  const int channels = image.channels();
   const int height = cv_img.rows;
   const int width = cv_img.cols;
   datum->set_channels(channels);
@@ -214,7 +218,7 @@ bool OpenCVImageToDatum(
   datum->clear_data();
   datum->clear_float_data();
   string* datum_string = datum->mutable_data();
-  if (is_color_image) {
+  if (channels == 3) {
     for (int c = 0; c < channels; ++c) {
       for (int h = 0; h < height; ++h) {
         for (int w = 0; w < width; ++w) {
@@ -223,13 +227,17 @@ bool OpenCVImageToDatum(
         }
       }
     }
-  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
-    for (int h = 0; h < height; ++h) {
-      for (int w = 0; w < width; ++w) {
-        datum_string->push_back(
-          static_cast<char>(cv_img.at<uchar>(h, w)));
+  } else if (channels == 1) {
+    if (cv_img.isContinuous()) {
+      datum->set_data(cv_img.data, height * width);
+    } else {
+      for (int h = 0; h < height; ++h) {
+        for (int w = 0; w < width; ++w) {
+          datum_string->push_back(
+            static_cast<char>(cv_img.at<uint8_t>(h, w)));
         }
       }
+    }
   }
   return true;
 }

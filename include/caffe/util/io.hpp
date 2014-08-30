@@ -95,7 +95,7 @@ void hdf5_save_nd_dataset(
 
 bool OpenCVImageToDatum(
     const cv::Mat& image, const int label, const int height,
-    const int width, Datum* datum, const bool is_color_image = true);
+    const int width, Datum* datum);
 
 template <typename MatType, typename Dtype>
 bool OpenCVMatToBlob(const cv::Mat& mat, Blob<Dtype>* blob);

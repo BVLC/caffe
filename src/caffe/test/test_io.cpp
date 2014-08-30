@@ -18,6 +18,7 @@ class IOTest : public ::testing::Test {
     resize_width_(256) {
   }
   virtual ~IOTest() {}
+
   const int resize_height_;
   const int resize_width_;
 };
@@ -25,53 +26,59 @@ class IOTest : public ::testing::Test {
 typedef ::testing::Types<float, double> Dtypes;
 TYPED_TEST_CASE(IOTest, Dtypes);
 
+#define TestOpenCVImageToDatumChannels(num_channels) \
+  do { \
+    const int channels = num_channels; \
+    const int height = 200; \
+    const int width = 300; \
+    cv::Mat image(height, width, CV_MAKETYPE(CV_8U, channels)); \
+    typedef cv::Vec<uchar, channels> VecUchar; \
+    for (int c = 0; c < channels; ++c) { \
+      for (int h = 0; h < height; ++h) { \
+        for (int w = 0; w < width; ++w) { \
+          image.at<VecUchar>(h, w)[c] = ((c * height + h) * width + w) % 256; \
+        } \
+      } \
+    } \
+    Datum* datum; \
+    int label = 1001; \
+    string data; \
+    int index; \
+    datum = new Datum(); \
+    OpenCVImageToDatum(image, label, this->resize_height_, \
+                       this->resize_width_, datum); \
+    EXPECT_EQ(datum->channels(), channels); \
+    EXPECT_EQ(datum->height(), this->resize_height_); \
+    EXPECT_EQ(datum->width(), this->resize_width_); \
+    EXPECT_EQ(datum->label(), label); \
+    delete datum; \
+    /* Cases without resizing */ \
+    int heights[] = {-1, 0, image.rows, image.rows, image.rows}; \
+    int widths[] = {image.cols, image.cols, 0, -1, image.cols}; \
+    for (int i = 0; i < 5; ++i) { \
+      datum = new Datum(); \
+      OpenCVImageToDatum(image, ++label, heights[i], widths[i], datum); \
+      EXPECT_EQ(datum->channels(), channels); \
+      EXPECT_EQ(datum->height(), image.rows); \
+      EXPECT_EQ(datum->width(), image.cols); \
+      EXPECT_EQ(datum->label(), label); \
+      data = datum->data(); \
+      index = 0; \
+      for (int c = 0; c < channels; ++c) { \
+        for (int h = 0; h < image.rows; ++h) { \
+          for (int w = 0; w < image.cols; ++w) { \
+            EXPECT_EQ(static_cast<char>(image.at<VecUchar>(h, w)[c]), \
+                      data[index++]); \
+          } \
+        } \
+      } \
+      delete datum; \
+    } \
+  } while (0)
+
 TYPED_TEST(IOTest, TestOpenCVImageToDatum) {
-  const int channels = 3;
-  const int height = 200;
-  const int width = 300;
-  cv::Mat image(height, width, CV_MAKETYPE(CV_8U, channels));
-  typedef cv::Vec<uchar, channels> VecUchar;
-  for (int c = 0; c < channels; ++c) {
-    for (int h = 0; h < height; ++h) {
-      for (int w = 0; w < width; ++w) {
-        image.at<VecUchar>(h, w)[c] = ((c * height + h) * width + w) % 256;
-      }
-    }
-  }
-  Datum* datum;
-  int label = 1001;
-  string data;
-  int index;
-  datum = new Datum();
-  OpenCVImageToDatum(image, label, this->resize_height_, this->resize_width_,
-                     datum);
-  EXPECT_EQ(datum->channels(), 3);
-  EXPECT_EQ(datum->height(), this->resize_height_);
-  EXPECT_EQ(datum->width(), this->resize_width_);
-  EXPECT_EQ(datum->label(), label);
-  delete datum;
-  // Cases without resizing
-  int heights[] = {-1, 0, image.rows, image.rows, image.rows};
-  int widths[] = {image.cols, image.cols, 0, -1, image.cols};
-  for (int i = 0; i < 3; ++i) {
-    datum = new Datum();
-    OpenCVImageToDatum(image, ++label, heights[i], widths[i], datum);
-    EXPECT_EQ(datum->channels(), 3);
-    EXPECT_EQ(datum->height(), image.rows);
-    EXPECT_EQ(datum->width(), image.cols);
-    EXPECT_EQ(datum->label(), label);
-    data = datum->data();
-    index = 0;
-    for (int c = 0; c < 3; ++c) {
-      for (int h = 0; h < image.rows; ++h) {
-        for (int w = 0; w < image.cols; ++w) {
-          EXPECT_EQ(static_cast<char>(image.at<VecUchar>(h, w)[c]),
-                    data[index++]);
-        }
-      }
-    }
-    delete datum;
-  }
+  TestOpenCVImageToDatumChannels(3);
+  TestOpenCVImageToDatumChannels(1);
 }
 
 TYPED_TEST(IOTest, OpenCVMatToBlob) {
