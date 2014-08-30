@@ -8,6 +8,13 @@
 
 namespace caffe {
 
+/**
+ * @brief A wrapper around SyncedMemory holders serving as the basic
+ *        computational unit through which Layer%s, Net%s, and Solver%s
+ *        interact.
+ *
+ * TODO(dox): more thorough description.
+ */
 template <typename Dtype>
 class Blob {
  public:
@@ -36,8 +43,15 @@ class Blob {
     CHECK_LE(w, width_);
     return ((n * channels_ + c) * height_ + h) * width_ + w;
   }
-  // Copy from source. If copy_diff is false, we copy the data; if copy_diff
-  // is true, we copy the diff.
+  /**
+   * @brief Copy from a source Blob.
+   *
+   * @param source the Blob to copy from
+   * @param copy_diff if false, copy the data; if true, copy the diff
+   * @param reshape if false, require this Blob to be pre-shaped to the shape
+   *        of other (and die otherwise); if true, Reshape this Blob to other's
+   *        shape if necessary
+   */
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
@@ -74,16 +88,28 @@ class Blob {
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
 
-  // Compute the sum of absolute values (L1 norm) of the data or diff.
+  /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;
+  /// @brief Compute the sum of absolute values (L1 norm) of the diff.
   Dtype asum_diff() const;
 
-  // Set the data_/diff_ shared_ptr to point to the SyncedMemory holding the
-  // data_/diff_ of Blob other -- useful in layers which simply perform a copy
-  // in their forward or backward pass.
-  // This deallocates the SyncedMemory holding this blob's data/diff, as
-  // shared_ptr calls its destructor when reset with the = operator.
+  /**
+   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
+   *        data_ of Blob other -- useful in Layer&s which simply perform a copy
+   *        in their Forward pass.
+   *
+   * This deallocates the SyncedMemory holding this Blob's data_, as
+   * shared_ptr calls its destructor when reset with the "=" operator.
+   */
   void ShareData(const Blob& other);
+  /**
+   * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
+   *        diff_ of Blob other -- useful in Layer&s which simply perform a copy
+   *        in their Forward pass.
+   *
+   * This deallocates the SyncedMemory holding this Blob's diff_, as
+   * shared_ptr calls its destructor when reset with the "=" operator.
+   */
   void ShareDiff(const Blob& other);
 
  protected:
