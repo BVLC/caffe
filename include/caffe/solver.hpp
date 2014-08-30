@@ -8,6 +8,12 @@
 
 namespace caffe {
 
+/**
+ * @brief An interface for classes that perform optimization on Net%s.
+ *
+ * Requires implementation of ComputeUpdateValue to compute a parameter update
+ * given the current state of the Net parameters.
+ */
 template <typename Dtype>
 class Solver {
  public:
@@ -57,6 +63,10 @@ class Solver {
 };
 
 
+/**
+ * @brief Optimizes the parameters of a Net using
+ *        stochastic gradient descent (SGD) with momentum.
+ */
 template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
