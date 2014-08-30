@@ -14,7 +14,7 @@
 
 namespace leveldb {
 // Forward declaration for leveldb::Options to be used in GetlevelDBOptions().
-class Options;
+struct Options;
 }
 
 namespace caffe {
