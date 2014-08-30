@@ -7,12 +7,12 @@ namespace caffe {
 
 /**
  * A minimal wrapper for boost::thread to force host compilation for boost
- * Defined in caffe/util/thread_wrapper.cpp
+ * Defined in caffe/util/thread.hpp
  */
-class ThreadWrapper {
+class Thread {
  public:
   template<typename Callable, class A1>
-  ThreadWrapper(Callable func, A1 a1);
+  Thread(Callable func, A1 a1);
   void join();
   bool joinable();
  private:
@@ -20,7 +20,7 @@ class ThreadWrapper {
 };
 
 /**
- * Virutal class encapsulate boost::thread for use in base class
+ * Virtual class encapsulate boost::thread for use in base class
  * The child class will acquire the ability to run a single thread,
  * by reimplementing the virutal function InternalThreadEntry.
  */

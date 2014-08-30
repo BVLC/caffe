@@ -1,6 +1,6 @@
 #include "caffe/internal_thread.hpp"
 
-#include "caffe/util/thread_wrapper.hpp"
+#include "caffe/util/thread.hpp"
 
 namespace caffe {
 
