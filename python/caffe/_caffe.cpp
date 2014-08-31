@@ -172,6 +172,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("height",   &PyBlob<float>::height)
       .add_property("width",    &PyBlob<float>::width)
       .add_property("count",    &PyBlob<float>::count)
+      .def("reshape",           &PyBlob<float>::Reshape)
       .add_property("data",     &PyBlobWrap::get_data)
       .add_property("diff",     &PyBlobWrap::get_diff);
 
