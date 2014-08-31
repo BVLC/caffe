@@ -22,13 +22,7 @@
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
 
-using boost::python::dict;
-using boost::python::extract;
-using boost::python::len;
-using boost::python::list;
-using boost::python::object;
-using boost::python::handle;
-using boost::python::vector_indexing_suite;
+namespace bp = boost::python;
 
 namespace caffe {
 
@@ -78,28 +72,28 @@ class PyBlobWrap : public PyBlob {
   PyBlobWrap(PyObject *p, const PyBlob &blob)
       : PyBlob(blob), self_(p) {}
 
-  object get_data() {
+  bp::object get_data() {
       npy_intp dims[] = {num(), channels(), height(), width()};
 
       PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
                                                 blob_->mutable_cpu_data());
       PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
       Py_INCREF(self_);
-      handle<> h(obj);
+      bp::handle<> h(obj);
 
-      return object(h);
+      return bp::object(h);
   }
 
-  object get_diff() {
+  bp::object get_diff() {
       npy_intp dims[] = {num(), channels(), height(), width()};
 
       PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
                                                 blob_->mutable_cpu_diff());
       PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
       Py_INCREF(self_);
-      handle<> h(obj);
+      bp::handle<> h(obj);
 
-      return object(h);
+      return bp::object(h);
   }
 
  private:
@@ -189,7 +183,7 @@ struct PyNet {
     net_->BackwardFromTo(start, end);
   }
 
-  void set_input_arrays(object data_obj, object labels_obj) {
+  void set_input_arrays(bp::object data_obj, bp::object labels_obj) {
     // check that this network has an input MemoryDataLayer
     shared_ptr<MemoryDataLayer<float> > md_layer =
       boost::dynamic_pointer_cast<MemoryDataLayer<float> >(net_->layers()[0]);
@@ -254,8 +248,8 @@ struct PyNet {
     return result;
   }
 
-  list inputs() {
-    list input_blob_names;
+  bp::list inputs() {
+    bp::list input_blob_names;
     for (int i = 0; i < net_->input_blob_indices().size(); ++i) {
       input_blob_names.append(
           net_->blob_names()[net_->input_blob_indices()[i]]);
@@ -263,8 +257,8 @@ struct PyNet {
     return input_blob_names;
   }
 
-  list outputs() {
-    list output_blob_names;
+  bp::list outputs() {
+    bp::list output_blob_names;
     for (int i = 0; i < net_->output_blob_indices().size(); ++i) {
       output_blob_names.append(
           net_->blob_names()[net_->output_blob_indices()[i]]);
@@ -275,13 +269,13 @@ struct PyNet {
   // The pointer to the internal caffe::Net instant.
   shared_ptr<Net<float> > net_;
   // Input preprocessing configuration attributes.
-  dict mean_;
-  dict input_scale_;
-  dict raw_scale_;
-  dict channel_swap_;
+  bp::dict mean_;
+  bp::dict input_scale_;
+  bp::dict raw_scale_;
+  bp::dict channel_swap_;
   // if taking input from an ndarray, we need to hold references
-  object input_data_;
-  object input_labels_;
+  bp::object input_data_;
+  bp::object input_labels_;
 };
 
 class PySGDSolver {
@@ -313,9 +307,9 @@ class PySGDSolver {
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
-  boost::python::class_<PyNet, shared_ptr<PyNet> >(
-      "Net", boost::python::init<string, string>())
-      .def(boost::python::init<string>())
+  bp::class_<PyNet, shared_ptr<PyNet> >(
+      "Net", bp::init<string, string>())
+      .def(bp::init<string>())
       .def("_forward",              &PyNet::Forward)
       .def("_backward",             &PyNet::Backward)
       .def("set_mode_cpu",          &PyNet::set_mode_cpu)
@@ -334,8 +328,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("_set_input_arrays",     &PyNet::set_input_arrays)
       .def("save",                  &PyNet::save);
 
-  boost::python::class_<PyBlob, PyBlobWrap>(
-      "Blob", boost::python::no_init)
+  bp::class_<PyBlob, PyBlobWrap>(
+      "Blob", bp::no_init)
       .add_property("name",     &PyBlob::name)
       .add_property("num",      &PyBlob::num)
       .add_property("channels", &PyBlob::channels)
@@ -345,22 +339,22 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("data",     &PyBlobWrap::get_data)
       .add_property("diff",     &PyBlobWrap::get_diff);
 
-  boost::python::class_<PyLayer>(
-      "Layer", boost::python::no_init)
+  bp::class_<PyLayer>(
+      "Layer", bp::no_init)
       .add_property("name",  &PyLayer::name)
       .add_property("blobs", &PyLayer::blobs);
 
-  boost::python::class_<PySGDSolver, boost::noncopyable>(
-      "SGDSolver", boost::python::init<string>())
+  bp::class_<PySGDSolver, boost::noncopyable>(
+      "SGDSolver", bp::init<string>())
       .add_property("net", &PySGDSolver::net)
       .def("solve",        &PySGDSolver::Solve)
       .def("solve",        &PySGDSolver::SolveResume);
 
-  boost::python::class_<vector<PyBlob> >("BlobVec")
-      .def(vector_indexing_suite<vector<PyBlob>, true>());
+  bp::class_<vector<PyBlob> >("BlobVec")
+      .def(bp::vector_indexing_suite<vector<PyBlob>, true>());
 
-  boost::python::class_<vector<PyLayer> >("LayerVec")
-      .def(vector_indexing_suite<vector<PyLayer>, true>());
+  bp::class_<vector<PyLayer> >("LayerVec")
+      .def(bp::vector_indexing_suite<vector<PyLayer>, true>());
 
   import_array();
 }
