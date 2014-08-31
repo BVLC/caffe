@@ -47,9 +47,9 @@ static void CheckFile(const string& filename) {
 
 // wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
 // to Python
-class CaffeBlob {
+class PyBlob {
  public:
-  CaffeBlob(const shared_ptr<Blob<float> > &blob, const string& name)
+  PyBlob(const shared_ptr<Blob<float> > &blob, const string& name)
       : blob_(blob), name_(name) {}
 
   string name() const { return name_; }
@@ -60,7 +60,7 @@ class CaffeBlob {
   int count() const { return blob_->count(); }
 
   // this is here only to satisfy boost's vector_indexing_suite
-  bool operator == (const CaffeBlob &other) {
+  bool operator == (const PyBlob &other) {
       return this->blob_ == other.blob_;
   }
 
@@ -73,10 +73,10 @@ class CaffeBlob {
 // We need another wrapper (used as boost::python's HeldType) that receives a
 // self PyObject * which we can use as ndarray.base, so that data/diff memory
 // is not freed while still being used in Python.
-class CaffeBlobWrap : public CaffeBlob {
+class PyBlobWrap : public PyBlob {
  public:
-  CaffeBlobWrap(PyObject *p, const CaffeBlob &blob)
-      : CaffeBlob(blob), self_(p) {}
+  PyBlobWrap(PyObject *p, const PyBlob &blob)
+      : PyBlob(blob), self_(p) {}
 
   object get_data() {
       npy_intp dims[] = {num(), channels(), height(), width()};
@@ -107,22 +107,22 @@ class CaffeBlobWrap : public CaffeBlob {
 };
 
 
-class CaffeLayer {
+class PyLayer {
  public:
-  CaffeLayer(const shared_ptr<Layer<float> > &layer, const string &name)
+  PyLayer(const shared_ptr<Layer<float> > &layer, const string &name)
     : layer_(layer), name_(name) {}
 
   string name() const { return name_; }
-  vector<CaffeBlob> blobs() {
-    vector<CaffeBlob> result;
+  vector<PyBlob> blobs() {
+    vector<PyBlob> result;
     for (int i = 0; i < layer_->blobs().size(); ++i) {
-      result.push_back(CaffeBlob(layer_->blobs()[i], name_));
+      result.push_back(PyBlob(layer_->blobs()[i], name_));
     }
     return result;
   }
 
   // this is here only to satisfy boost's vector_indexing_suite
-  bool operator == (const CaffeLayer &other) {
+  bool operator == (const PyLayer &other) {
       return this->layer_ == other.layer_;
   }
 
@@ -132,22 +132,22 @@ class CaffeLayer {
 };
 
 
-// A simple wrapper over CaffeNet that runs the forward process.
-struct CaffeNet {
+// A simple wrapper over PyNet that runs the forward process.
+struct PyNet {
   // For cases where parameters will be determined later by the Python user,
   // create a Net with unallocated parameters (which will not be zero-filled
   // when accessed).
-  explicit CaffeNet(string param_file) {
+  explicit PyNet(string param_file) {
     Init(param_file);
   }
 
-  CaffeNet(string param_file, string pretrained_param_file) {
+  PyNet(string param_file, string pretrained_param_file) {
     Init(param_file);
     CheckFile(pretrained_param_file);
     net_->CopyTrainedLayersFrom(pretrained_param_file);
   }
 
-  explicit CaffeNet(shared_ptr<Net<float> > net)
+  explicit PyNet(shared_ptr<Net<float> > net)
       : net_(net) {}
 
   void Init(string param_file) {
@@ -156,7 +156,7 @@ struct CaffeNet {
   }
 
 
-  virtual ~CaffeNet() {}
+  virtual ~PyNet() {}
 
   // Generate Python exceptions for badly shaped or discontiguous arrays.
   inline void check_contiguous_array(PyArrayObject* arr, string name,
@@ -238,18 +238,18 @@ struct CaffeNet {
   void set_phase_test() { Caffe::set_phase(Caffe::TEST); }
   void set_device(int device_id) { Caffe::SetDevice(device_id); }
 
-  vector<CaffeBlob> blobs() {
-    vector<CaffeBlob> result;
+  vector<PyBlob> blobs() {
+    vector<PyBlob> result;
     for (int i = 0; i < net_->blobs().size(); ++i) {
-      result.push_back(CaffeBlob(net_->blobs()[i], net_->blob_names()[i]));
+      result.push_back(PyBlob(net_->blobs()[i], net_->blob_names()[i]));
     }
     return result;
   }
 
-  vector<CaffeLayer> layers() {
-    vector<CaffeLayer> result;
+  vector<PyLayer> layers() {
+    vector<PyLayer> result;
     for (int i = 0; i < net_->layers().size(); ++i) {
-      result.push_back(CaffeLayer(net_->layers()[i], net_->layer_names()[i]));
+      result.push_back(PyLayer(net_->layers()[i], net_->layer_names()[i]));
     }
     return result;
   }
@@ -284,19 +284,19 @@ struct CaffeNet {
   object input_labels_;
 };
 
-class CaffeSGDSolver {
+class PySGDSolver {
  public:
-  explicit CaffeSGDSolver(const string& param_file) {
-    // as in CaffeNet, (as a convenience, not a guarantee), create a Python
+  explicit PySGDSolver(const string& param_file) {
+    // as in PyNet, (as a convenience, not a guarantee), create a Python
     // exception if param_file can't be opened
     CheckFile(param_file);
     solver_.reset(new SGDSolver<float>(param_file));
     // we need to explicitly store the net wrapper, rather than constructing
     // it on the fly, so that it can hold references to Python objects
-    net_.reset(new CaffeNet(solver_->net()));
+    net_.reset(new PyNet(solver_->net()));
   }
 
-  shared_ptr<CaffeNet> net() { return net_; }
+  shared_ptr<PyNet> net() { return net_; }
   void Solve() { return solver_->Solve(); }
   void SolveResume(const string& resume_file) {
     CheckFile(resume_file);
@@ -304,7 +304,7 @@ class CaffeSGDSolver {
   }
 
  protected:
-  shared_ptr<CaffeNet> net_;
+  shared_ptr<PyNet> net_;
   shared_ptr<SGDSolver<float> > solver_;
 };
 
@@ -313,54 +313,54 @@ class CaffeSGDSolver {
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
-  boost::python::class_<CaffeNet, shared_ptr<CaffeNet> >(
+  boost::python::class_<PyNet, shared_ptr<PyNet> >(
       "Net", boost::python::init<string, string>())
       .def(boost::python::init<string>())
-      .def("_forward",              &CaffeNet::Forward)
-      .def("_backward",             &CaffeNet::Backward)
-      .def("set_mode_cpu",          &CaffeNet::set_mode_cpu)
-      .def("set_mode_gpu",          &CaffeNet::set_mode_gpu)
-      .def("set_phase_train",       &CaffeNet::set_phase_train)
-      .def("set_phase_test",        &CaffeNet::set_phase_test)
-      .def("set_device",            &CaffeNet::set_device)
-      .add_property("_blobs",       &CaffeNet::blobs)
-      .add_property("layers",       &CaffeNet::layers)
-      .add_property("inputs",       &CaffeNet::inputs)
-      .add_property("outputs",      &CaffeNet::outputs)
-      .add_property("mean",         &CaffeNet::mean_)
-      .add_property("input_scale",  &CaffeNet::input_scale_)
-      .add_property("raw_scale",    &CaffeNet::raw_scale_)
-      .add_property("channel_swap", &CaffeNet::channel_swap_)
-      .def("_set_input_arrays",     &CaffeNet::set_input_arrays)
-      .def("save",                  &CaffeNet::save);
+      .def("_forward",              &PyNet::Forward)
+      .def("_backward",             &PyNet::Backward)
+      .def("set_mode_cpu",          &PyNet::set_mode_cpu)
+      .def("set_mode_gpu",          &PyNet::set_mode_gpu)
+      .def("set_phase_train",       &PyNet::set_phase_train)
+      .def("set_phase_test",        &PyNet::set_phase_test)
+      .def("set_device",            &PyNet::set_device)
+      .add_property("_blobs",       &PyNet::blobs)
+      .add_property("layers",       &PyNet::layers)
+      .add_property("inputs",       &PyNet::inputs)
+      .add_property("outputs",      &PyNet::outputs)
+      .add_property("mean",         &PyNet::mean_)
+      .add_property("input_scale",  &PyNet::input_scale_)
+      .add_property("raw_scale",    &PyNet::raw_scale_)
+      .add_property("channel_swap", &PyNet::channel_swap_)
+      .def("_set_input_arrays",     &PyNet::set_input_arrays)
+      .def("save",                  &PyNet::save);
 
-  boost::python::class_<CaffeBlob, CaffeBlobWrap>(
+  boost::python::class_<PyBlob, PyBlobWrap>(
       "Blob", boost::python::no_init)
-      .add_property("name",     &CaffeBlob::name)
-      .add_property("num",      &CaffeBlob::num)
-      .add_property("channels", &CaffeBlob::channels)
-      .add_property("height",   &CaffeBlob::height)
-      .add_property("width",    &CaffeBlob::width)
-      .add_property("count",    &CaffeBlob::count)
-      .add_property("data",     &CaffeBlobWrap::get_data)
-      .add_property("diff",     &CaffeBlobWrap::get_diff);
+      .add_property("name",     &PyBlob::name)
+      .add_property("num",      &PyBlob::num)
+      .add_property("channels", &PyBlob::channels)
+      .add_property("height",   &PyBlob::height)
+      .add_property("width",    &PyBlob::width)
+      .add_property("count",    &PyBlob::count)
+      .add_property("data",     &PyBlobWrap::get_data)
+      .add_property("diff",     &PyBlobWrap::get_diff);
 
-  boost::python::class_<CaffeLayer>(
+  boost::python::class_<PyLayer>(
       "Layer", boost::python::no_init)
-      .add_property("name",  &CaffeLayer::name)
-      .add_property("blobs", &CaffeLayer::blobs);
+      .add_property("name",  &PyLayer::name)
+      .add_property("blobs", &PyLayer::blobs);
 
-  boost::python::class_<CaffeSGDSolver, boost::noncopyable>(
+  boost::python::class_<PySGDSolver, boost::noncopyable>(
       "SGDSolver", boost::python::init<string>())
-      .add_property("net", &CaffeSGDSolver::net)
-      .def("solve",        &CaffeSGDSolver::Solve)
-      .def("solve",        &CaffeSGDSolver::SolveResume);
+      .add_property("net", &PySGDSolver::net)
+      .def("solve",        &PySGDSolver::Solve)
+      .def("solve",        &PySGDSolver::SolveResume);
 
-  boost::python::class_<vector<CaffeBlob> >("BlobVec")
-      .def(vector_indexing_suite<vector<CaffeBlob>, true>());
+  boost::python::class_<vector<PyBlob> >("BlobVec")
+      .def(vector_indexing_suite<vector<PyBlob>, true>());
 
-  boost::python::class_<vector<CaffeLayer> >("LayerVec")
-      .def(vector_indexing_suite<vector<CaffeLayer>, true>());
+  boost::python::class_<vector<PyLayer> >("LayerVec")
+      .def(vector_indexing_suite<vector<PyLayer>, true>());
 
   import_array();
 }
