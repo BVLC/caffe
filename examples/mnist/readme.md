@@ -260,21 +260,21 @@ Alternatively you can use example images from the testing dataset. You could try
 
     cd $CAFFE_ROOT/examples/mnist
 
-First extract fifty from the MNIST dataset as a numpy array of dimensions (50,28,28,1).
-If no options are passed it will extract 100 images of hand-written figure 2.
+First extract fifty images from the MNIST dataset as a numpy array of dimensions (50,28,28,1).
+If no options are passed it will extract 100 images of hand-written digit "2".
 
-    ./mnist_examples --figure 3 --count 50
+    ./mnist_examples --digit 3 --count 50
 
 The script should have written the array in a file `mnist-sample.npy`. Now you can make predictions using the model
 you just trained. Notice the classifier options can be edited, for instance if you are not using GPU. Also to be able to deal with single-channel image we set the swap_channel to channel 0.
 
     ./classify_mnist.sh
 
-The script should output a hundred predictions in file `predictions.npy`. This can be read using a simple pretty-printer that we provide : 
+The script should output fifty predictions in file `predictions.npy`. This can be read using a simplistic pretty-printer that we provide : 
 
     ./read_npy predictions.npy  
 
-And here we go, almost all the predictions predict the right figure! 
+And here we go, almost all predictions point to the right digit! 
 The output format is one row per input image, each vector displaying probabilities for each class.
 
 ### Um... How about GPU training?
