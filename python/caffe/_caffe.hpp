@@ -31,6 +31,9 @@ class PyBlob {
   int height() const { return blob_->height(); }
   int width() const { return blob_->width(); }
   int count() const { return blob_->count(); }
+  void Reshape(const int n, const int c, const int h, const int w) {
+    return blob_->Reshape(n, c, h, w);
+  }
 
   // this is here only to satisfy boost's vector_indexing_suite
   bool operator == (const PyBlob &other) {
