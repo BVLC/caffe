@@ -2,17 +2,14 @@
 // caffe::Caffe functions so that one could easily call it from Python.
 // Note that for Python, we will simply use float as the data type.
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-#include "boost/python.hpp"
-#include "boost/python/suite/indexing/vector_indexing_suite.hpp"
-#include "numpy/arrayobject.h"
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 // these need to be included after boost on OS X
 #include <string>  // NOLINT(build/include_order)
 #include <vector>  // NOLINT(build/include_order)
 #include <fstream>  // NOLINT
 
+#include "_caffe.hpp"
 #include "caffe/caffe.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -21,8 +18,6 @@
 #define NPY_ARRAY_C_CONTIGUOUS NPY_C_CONTIGUOUS
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
-
-namespace bp = boost::python;
 
 namespace caffe {
 
@@ -39,276 +34,113 @@ static void CheckFile(const string& filename) {
     f.close();
 }
 
-// wrap shared_ptr<Blob> in a class that we construct in C++ and pass
-// to Python
-template <typename Dtype>
-class PyBlob {
- public:
-  PyBlob(const shared_ptr<Blob<Dtype> > &blob, const string& name)
-      : blob_(blob), name_(name) {}
+bp::object PyBlobWrap::get_data() {
+  npy_intp dims[] = {num(), channels(), height(), width()};
 
-  string name() const { return name_; }
-  int num() const { return blob_->num(); }
-  int channels() const { return blob_->channels(); }
-  int height() const { return blob_->height(); }
-  int width() const { return blob_->width(); }
-  int count() const { return blob_->count(); }
+  PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+                                            blob_->mutable_cpu_data());
+  PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
+  Py_INCREF(self_);
+  bp::handle<> h(obj);
 
-  // this is here only to satisfy boost's vector_indexing_suite
-  bool operator == (const PyBlob &other) {
-      return this->blob_ == other.blob_;
+  return bp::object(h);
+}
+
+bp::object PyBlobWrap::get_diff() {
+  npy_intp dims[] = {num(), channels(), height(), width()};
+
+  PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+                                            blob_->mutable_cpu_diff());
+  PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
+  Py_INCREF(self_);
+  bp::handle<> h(obj);
+
+  return bp::object(h);
+}
+
+PyNet::PyNet(string param_file, string pretrained_param_file) {
+  Init(param_file);
+  CheckFile(pretrained_param_file);
+  net_->CopyTrainedLayersFrom(pretrained_param_file);
+}
+
+void PyNet::Init(string param_file) {
+  CheckFile(param_file);
+  net_.reset(new Net<float>(param_file));
+}
+
+void PyNet::check_contiguous_array(PyArrayObject* arr, string name,
+    int channels, int height, int width) {
+  if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
+    throw std::runtime_error(name + " must be C contiguous");
+  }
+  if (PyArray_NDIM(arr) != 4) {
+    throw std::runtime_error(name + " must be 4-d");
+  }
+  if (PyArray_TYPE(arr) != NPY_FLOAT32) {
+    throw std::runtime_error(name + " must be float32");
+  }
+  if (PyArray_DIMS(arr)[1] != channels) {
+    throw std::runtime_error(name + " has wrong number of channels");
+  }
+  if (PyArray_DIMS(arr)[2] != height) {
+    throw std::runtime_error(name + " has wrong height");
+  }
+  if (PyArray_DIMS(arr)[3] != width) {
+    throw std::runtime_error(name + " has wrong width");
+  }
+}
+
+void PyNet::set_input_arrays(bp::object data_obj, bp::object labels_obj) {
+  // check that this network has an input MemoryDataLayer
+  shared_ptr<MemoryDataLayer<float> > md_layer =
+    boost::dynamic_pointer_cast<MemoryDataLayer<float> >(net_->layers()[0]);
+  if (!md_layer) {
+    throw std::runtime_error("set_input_arrays may only be called if the"
+        " first layer is a MemoryDataLayer");
   }
 
- protected:
-  shared_ptr<Blob<Dtype> > blob_;
-  string name_;
-};
-
-
-// We need another wrapper (used as boost::python's HeldType) that receives a
-// self PyObject * which we can use as ndarray.base, so that data/diff memory
-// is not freed while still being used in Python.
-class PyBlobWrap : public PyBlob<float> {
- public:
-  PyBlobWrap(PyObject *p, const PyBlob<float> &blob)
-      : PyBlob<float>(blob), self_(p) {}
-
-  bp::object get_data() {
-      npy_intp dims[] = {num(), channels(), height(), width()};
-
-      PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
-                                                blob_->mutable_cpu_data());
-      PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
-      Py_INCREF(self_);
-      bp::handle<> h(obj);
-
-      return bp::object(h);
+  // check that we were passed appropriately-sized contiguous memory
+  PyArrayObject* data_arr =
+      reinterpret_cast<PyArrayObject*>(data_obj.ptr());
+  PyArrayObject* labels_arr =
+      reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+  check_contiguous_array(data_arr, "data array", md_layer->datum_channels(),
+      md_layer->datum_height(), md_layer->datum_width());
+  check_contiguous_array(labels_arr, "labels array", 1, 1, 1);
+  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
+    throw std::runtime_error("data and labels must have the same first"
+        " dimension");
+  }
+  if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
+    throw std::runtime_error("first dimensions of input arrays must be a"
+        " multiple of batch size");
   }
 
-  bp::object get_diff() {
-      npy_intp dims[] = {num(), channels(), height(), width()};
+  // hold references
+  input_data_ = data_obj;
+  input_labels_ = labels_obj;
 
-      PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
-                                                blob_->mutable_cpu_diff());
-      PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
-      Py_INCREF(self_);
-      bp::handle<> h(obj);
+  md_layer->Reset(static_cast<float*>(PyArray_DATA(data_arr)),
+      static_cast<float*>(PyArray_DATA(labels_arr)),
+      PyArray_DIMS(data_arr)[0]);
+}
 
-      return bp::object(h);
-  }
+PySGDSolver::PySGDSolver(const string& param_file) {
+  // as in PyNet, (as a convenience, not a guarantee), create a Python
+  // exception if param_file can't be opened
+  CheckFile(param_file);
+  solver_.reset(new SGDSolver<float>(param_file));
+  // we need to explicitly store the net wrapper, rather than constructing
+  // it on the fly, so that it can hold references to Python objects
+  net_.reset(new PyNet(solver_->net()));
+}
 
- private:
-  PyObject *self_;
-};
+void PySGDSolver::SolveResume(const string& resume_file) {
+  CheckFile(resume_file);
+  return solver_->Solve(resume_file);
+}
 
-
-class PyLayer {
- public:
-  PyLayer(const shared_ptr<Layer<float> > &layer, const string &name)
-    : layer_(layer), name_(name) {}
-
-  string name() const { return name_; }
-  vector<PyBlob<float> > blobs() {
-    vector<PyBlob<float> > result;
-    for (int i = 0; i < layer_->blobs().size(); ++i) {
-      result.push_back(PyBlob<float>(layer_->blobs()[i], name_));
-    }
-    return result;
-  }
-
-  // this is here only to satisfy boost's vector_indexing_suite
-  bool operator == (const PyLayer &other) {
-      return this->layer_ == other.layer_;
-  }
-
- protected:
-  shared_ptr<Layer<float> > layer_;
-  string name_;
-};
-
-
-// A simple wrapper over PyNet that runs the forward process.
-class PyNet {
- public:
-  // For cases where parameters will be determined later by the Python user,
-  // create a Net with unallocated parameters (which will not be zero-filled
-  // when accessed).
-  explicit PyNet(string param_file) {
-    Init(param_file);
-  }
-
-  PyNet(string param_file, string pretrained_param_file) {
-    Init(param_file);
-    CheckFile(pretrained_param_file);
-    net_->CopyTrainedLayersFrom(pretrained_param_file);
-  }
-
-  explicit PyNet(shared_ptr<Net<float> > net)
-      : net_(net) {}
-
-  void Init(string param_file) {
-    CheckFile(param_file);
-    net_.reset(new Net<float>(param_file));
-  }
-
-
-  virtual ~PyNet() {}
-
-  // Generate Python exceptions for badly shaped or discontiguous arrays.
-  inline void check_contiguous_array(PyArrayObject* arr, string name,
-      int channels, int height, int width) {
-    if (!(PyArray_FLAGS(arr) & NPY_ARRAY_C_CONTIGUOUS)) {
-      throw std::runtime_error(name + " must be C contiguous");
-    }
-    if (PyArray_NDIM(arr) != 4) {
-      throw std::runtime_error(name + " must be 4-d");
-    }
-    if (PyArray_TYPE(arr) != NPY_FLOAT32) {
-      throw std::runtime_error(name + " must be float32");
-    }
-    if (PyArray_DIMS(arr)[1] != channels) {
-      throw std::runtime_error(name + " has wrong number of channels");
-    }
-    if (PyArray_DIMS(arr)[2] != height) {
-      throw std::runtime_error(name + " has wrong height");
-    }
-    if (PyArray_DIMS(arr)[3] != width) {
-      throw std::runtime_error(name + " has wrong width");
-    }
-  }
-
-  void Forward(int start, int end) {
-    net_->ForwardFromTo(start, end);
-  }
-
-  void Backward(int start, int end) {
-    net_->BackwardFromTo(start, end);
-  }
-
-  void set_input_arrays(bp::object data_obj, bp::object labels_obj) {
-    // check that this network has an input MemoryDataLayer
-    shared_ptr<MemoryDataLayer<float> > md_layer =
-      boost::dynamic_pointer_cast<MemoryDataLayer<float> >(net_->layers()[0]);
-    if (!md_layer) {
-      throw std::runtime_error("set_input_arrays may only be called if the"
-          " first layer is a MemoryDataLayer");
-    }
-
-    // check that we were passed appropriately-sized contiguous memory
-    PyArrayObject* data_arr =
-        reinterpret_cast<PyArrayObject*>(data_obj.ptr());
-    PyArrayObject* labels_arr =
-        reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
-    check_contiguous_array(data_arr, "data array", md_layer->datum_channels(),
-        md_layer->datum_height(), md_layer->datum_width());
-    check_contiguous_array(labels_arr, "labels array", 1, 1, 1);
-    if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
-      throw std::runtime_error("data and labels must have the same first"
-          " dimension");
-    }
-    if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
-      throw std::runtime_error("first dimensions of input arrays must be a"
-          " multiple of batch size");
-    }
-
-    // hold references
-    input_data_ = data_obj;
-    input_labels_ = labels_obj;
-
-    md_layer->Reset(static_cast<float*>(PyArray_DATA(data_arr)),
-        static_cast<float*>(PyArray_DATA(labels_arr)),
-        PyArray_DIMS(data_arr)[0]);
-  }
-
-  // save the network weights to binary proto for net surgeries.
-  void save(string filename) {
-    NetParameter net_param;
-    net_->ToProto(&net_param, false);
-    WriteProtoToBinaryFile(net_param, filename.c_str());
-  }
-
-  // The caffe::Caffe utility functions.
-  void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
-  void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
-  void set_phase_train() { Caffe::set_phase(Caffe::TRAIN); }
-  void set_phase_test() { Caffe::set_phase(Caffe::TEST); }
-  void set_device(int device_id) { Caffe::SetDevice(device_id); }
-
-  vector<PyBlob<float> > blobs() {
-    vector<PyBlob<float> > result;
-    for (int i = 0; i < net_->blobs().size(); ++i) {
-      result.push_back(PyBlob<float>(net_->blobs()[i], net_->blob_names()[i]));
-    }
-    return result;
-  }
-
-  vector<PyLayer> layers() {
-    vector<PyLayer> result;
-    for (int i = 0; i < net_->layers().size(); ++i) {
-      result.push_back(PyLayer(net_->layers()[i], net_->layer_names()[i]));
-    }
-    return result;
-  }
-
-  bp::list inputs() {
-    bp::list input_blob_names;
-    for (int i = 0; i < net_->input_blob_indices().size(); ++i) {
-      input_blob_names.append(
-          net_->blob_names()[net_->input_blob_indices()[i]]);
-    }
-    return input_blob_names;
-  }
-
-  bp::list outputs() {
-    bp::list output_blob_names;
-    for (int i = 0; i < net_->output_blob_indices().size(); ++i) {
-      output_blob_names.append(
-          net_->blob_names()[net_->output_blob_indices()[i]]);
-    }
-    return output_blob_names;
-  }
-
-  // Input preprocessing configuration attributes. These are public for
-  // direct access from Python.
-  bp::dict mean_;
-  bp::dict input_scale_;
-  bp::dict raw_scale_;
-  bp::dict channel_swap_;
-
- protected:
-  // The pointer to the internal caffe::Net instant.
-  shared_ptr<Net<float> > net_;
-  // if taking input from an ndarray, we need to hold references
-  bp::object input_data_;
-  bp::object input_labels_;
-};
-
-class PySGDSolver {
- public:
-  explicit PySGDSolver(const string& param_file) {
-    // as in PyNet, (as a convenience, not a guarantee), create a Python
-    // exception if param_file can't be opened
-    CheckFile(param_file);
-    solver_.reset(new SGDSolver<float>(param_file));
-    // we need to explicitly store the net wrapper, rather than constructing
-    // it on the fly, so that it can hold references to Python objects
-    net_.reset(new PyNet(solver_->net()));
-  }
-
-  shared_ptr<PyNet> net() { return net_; }
-  void Solve() { return solver_->Solve(); }
-  void SolveResume(const string& resume_file) {
-    CheckFile(resume_file);
-    return solver_->Solve(resume_file);
-  }
-
- protected:
-  shared_ptr<PyNet> net_;
-  shared_ptr<SGDSolver<float> > solver_;
-};
-
-
-// The boost_python module definition.
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
