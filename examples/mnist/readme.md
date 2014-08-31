@@ -256,16 +256,16 @@ which you can deploy as a trained model in your application, if you are training
 ## Using the model to make predictions
 
 Ideally you would create your own image, maybe with a drawing program or by scanning your own hand-written digit. 
-Alternatively you can use examples from the testing dataset, we provided 3 helper scripts to do just that.
+Alternatively you can use example images from the testing dataset. You could try to adapt the classification IPython notebook that can be found in the examples folder or you can use the 3 helper scripts we provide if you only have shell access.
 
     cd $CAFFE_ROOT/examples/mnist
 
-First extract a hundred images from the MNIST dataset as numpy arrays of dimension (100,28,28,1).
-This is practical to deal with the single-channel gray level image.
+First extract fifty from the MNIST dataset as a numpy array of dimensions (50,28,28,1).
+If no options are passed it will extract 100 images of hand-written figure 2.
 
-    ./mnist_examples.py
+    ./mnist_examples --figure 3 --count 50
 
-The script should have written the array in a file `mnist-predict-100-twos.npy`. Now you can make predictions using the model
+The script should have written the array in a file `mnist-sample.npy`. Now you can make predictions using the model
 you just trained. Notice the classifier options can be edited, for instance if you are not using GPU. Also to be able to deal with single-channel image we set the swap_channel to channel 0.
 
     ./classify_mnist.sh
@@ -274,7 +274,8 @@ The script should output a hundred predictions in file `predictions.npy`. This c
 
     ./read_npy predictions.npy  
 
-And here we go, almost all the predictions predict the right figure. The output format is one row per input image, each vector displaying probabilities for each class.
+And here we go, almost all the predictions predict the right figure! 
+The output format is one row per input image, each vector displaying probabilities for each class.
 
 ### Um... How about GPU training?
 

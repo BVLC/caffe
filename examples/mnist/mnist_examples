@@ -4,11 +4,18 @@ import os, struct
 import numpy as np
 from array import array as pyarray
 from numpy import append, array, int8, uint8, zeros
- 
+import argparse
+
+parser = argparse.ArgumentParser(description='Extracts images from the MNIST dataset as numpy array')
+parser.add_argument("--figure",help='the hand-written figure you want to predict, e.g. 2',type=int,default=2)
+parser.add_argument("--count",help='how many images you want to predict, e.g. 100',type=int,default=100)
+args = parser.parse_args()
+
+
 def read(digits, dataset = "training", path = "."):
     """
     Loads MNIST files into 3D numpy arrays
- 
+    As tweaked by Gustav Larsson http://g.sweyla.com/blog/2012/mnist-numpy/ 
     Adapted from: http://abel.ee.ucla.edu/cvxopt/_downloads/mnist.py
     """
  
@@ -43,15 +50,15 @@ def read(digits, dataset = "training", path = "."):
     return images, labels
  
 """
-Let's read a hundred test images for figure "2" for instance
-
+Let's read a hundred test images for the figure passed as argument
 """
+
 CAFFE_ROOT = '../../'  # this file is expected to be in {caffe_root}/examples/mnist
 
-images, labels = read([2], 'testing', os.path.join(CAFFE_ROOT,'data/mnist'))
+images, labels = read([args.figure], 'testing', os.path.join(CAFFE_ROOT,'data/mnist'))
  
-outputs = zeros((100,28,28,1),dtype=float)
-outputs[:,:,:,0] = images[0:100] * (1.0/256)
+outputs = zeros((args.count,28,28,1),dtype=float)
+outputs[:,:,:,0] = images[0:args.count] * (1.0/256)
  
-np.save('mnist-predict-100-twos.npy', outputs)
+np.save('mnist-sample.npy', outputs)
 
