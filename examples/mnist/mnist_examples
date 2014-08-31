@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+
+import os, struct
+import numpy as np
+from array import array as pyarray
+from numpy import append, array, int8, uint8, zeros
+import argparse
+
+CAFFE_ROOT = '../../' 
+
+parser = argparse.ArgumentParser(description='Extracts images from the MNIST dataset as numpy array')
+parser.add_argument("--digit",help='the hand-written digit you want to predict, e.g. 2',type=int,default=2)
+parser.add_argument("--count",help='how many images you want to predict, e.g. 100',type=int,default=100)
+parser.add_argument("--output",help='name of output file',default='mnist-sample.npy')
+args = parser.parse_args()
+
+def read(digits, dataset = "training", path = "."):
+    """
+    Loads MNIST files into 3D numpy arrays
+    As tweaked by Gustav Larsson http://g.sweyla.com/blog/2012/mnist-numpy/ 
+    Adapted from: http://abel.ee.ucla.edu/cvxopt/_downloads/mnist.py
+    """
+ 
+    files = { "training" :
+               { "img" : os.path.join(path, 'train-images-idx3-ubyte'),
+                 "lbl" : os.path.join(path, 'train-labels-idx1-ubyte') },
+              "testing":
+               { "img" : os.path.join(path, 't10k-images-idx3-ubyte'),
+                 "lbl" : os.path.join(path, 't10k-labels-idx1-ubyte') } }
+    
+    try:
+    	fname_img = files[dataset]["img"]
+	fname_lbl = files[dataset]["lbl"]
+    except (TypeError, KeyError, ValueError):
+	print( "dataset must be 'testing' or 'training'" )
+    else:
+        try:
+            flbl = open(fname_lbl, 'rb')
+        except IOError:
+            print('could not open labels file')
+        else:
+            magic_nr, size = struct.unpack(">II", flbl.read(8))
+            lbl = pyarray("b", flbl.read())
+            flbl.close()
+        try:
+            fimg = open(fname_img, 'rb')
+        except IOError:
+            print('could not open images file')
+        else:
+            magic_nr, size, rows, cols = struct.unpack(">IIII", fimg.read(16))
+            img = pyarray("B", fimg.read())
+            fimg.close()
+        try:
+            ind = [ k for k in xrange(size) if lbl[k] in digits ]
+            N = len(ind)
+ 
+            images = zeros((N, rows, cols), dtype=uint8)
+            labels = zeros((N, 1), dtype=int8)
+        
+            for i in xrange(len(ind)):
+               images[i] = array(img[ ind[i]*rows*cols : (ind[i]+1)*rows*cols ]).reshape((rows, cols))
+               labels[i] = lbl[ind[i]]
+ 
+            return images, labels
+        except Exception:
+           print('something went wrong')
+ 
+"""
+Let's read test images for the digit passed as argument to the script
+TODO: add sampling, output labels for downstream side-by-side comparison with predictions
+"""
+
+try:
+    images, labels = read([args.digit], 'testing', os.path.join(CAFFE_ROOT,'data/mnist'))
+except: 
+    print('could not load images and labels')
+else:
+    outputs = zeros((args.count,28,28,1),dtype=float)
+
+    """
+    our classifier expects values between [0,1) and MNIST is 0-255
+    we do the scaling here although it could also be done with optional argument to classify
+    """
+
+    outputs[:,:,:,0] = images[0:args.count] * (1.0/256)
+
+    np.save(args.output, outputs)
+

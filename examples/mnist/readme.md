@@ -253,6 +253,30 @@ The final model, stored as a binary protobuf file, is stored at
 
 which you can deploy as a trained model in your application, if you are training on a real-world application dataset.
 
+## Using the model to make predictions
+
+Ideally you would create your own image, maybe with a drawing program or by scanning your own hand-written digit. 
+Alternatively you can use example images from the testing dataset. You could try to adapt the classification IPython notebook that can be found in the examples folder or you can use the 3 helper scripts we provide if you only have shell access.
+
+    cd $CAFFE_ROOT/examples/mnist
+
+First, extract fifty images of hand-written digit "3" from the MNIST dataset as a numpy array of dimensions (50,28,28,1).
+If no options are passed the script will extract 100 images of hand-written digit "2".
+
+    ./mnist_examples --digit 3 --count 50 
+
+The script should have written the array in a file `mnist-sample.npy`. Now you can make predictions using the model
+you just trained. Notice the classifier options can be edited, for instance if you are not using GPU. Also to be able to deal with single-channel image we set the swap_channel to channel 0.
+
+    ./classify_mnist.sh
+
+The script should output fifty predictions in file `predictions.npy`. This can be read using a simplistic pretty-printer that we provide : 
+
+    ./read_npy predictions.npy  
+
+And here we go, almost all predictions point to the right digit! 
+The output format is one row per input image, each vector displaying probabilities for each class.
+
 ### Um... How about GPU training?
 
 You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in `lenet_solver.prototxt`:
