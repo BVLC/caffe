@@ -23,10 +23,9 @@ namespace caffe {
 template <typename Dtype>
 class PyBlob {
  public:
-  PyBlob(const shared_ptr<Blob<Dtype> > &blob, const string& name)
-      : blob_(blob), name_(name) {}
+  explicit PyBlob(const shared_ptr<Blob<Dtype> > &blob)
+      : blob_(blob) {}
 
-  string name() const { return name_; }
   int num() const { return blob_->num(); }
   int channels() const { return blob_->channels(); }
   int height() const { return blob_->height(); }
@@ -40,7 +39,6 @@ class PyBlob {
 
  protected:
   shared_ptr<Blob<Dtype> > blob_;
-  string name_;
 };
 
 // We need another wrapper (used as boost::python's HeldType) that receives a
@@ -60,16 +58,12 @@ class PyBlobWrap : public PyBlob<float> {
 
 class PyLayer {
  public:
-  PyLayer(const shared_ptr<Layer<float> > &layer, const string &name)
-    : layer_(layer), name_(name) {}
+  explicit PyLayer(const shared_ptr<Layer<float> > &layer)
+    : layer_(layer) {}
 
-  string name() const { return name_; }
   vector<PyBlob<float> > blobs() {
-    vector<PyBlob<float> > result;
-    for (int i = 0; i < layer_->blobs().size(); ++i) {
-      result.push_back(PyBlob<float>(layer_->blobs()[i], name_));
-    }
-    return result;
+    return vector<PyBlob<float> >(layer_->blobs().begin(),
+        layer_->blobs().end());
   }
 
   // this is here only to satisfy boost's vector_indexing_suite
@@ -79,7 +73,6 @@ class PyLayer {
 
  protected:
   shared_ptr<Layer<float> > layer_;
-  string name_;
 };
 
 class PyNet {
@@ -120,19 +113,11 @@ class PyNet {
   void set_device(int device_id) { Caffe::SetDevice(device_id); }
 
   vector<PyBlob<float> > blobs() {
-    vector<PyBlob<float> > result;
-    for (int i = 0; i < net_->blobs().size(); ++i) {
-      result.push_back(PyBlob<float>(net_->blobs()[i], net_->blob_names()[i]));
-    }
-    return result;
+    return vector<PyBlob<float> >(net_->blobs().begin(), net_->blobs().end());
   }
 
   vector<PyLayer> layers() {
-    vector<PyLayer> result;
-    for (int i = 0; i < net_->layers().size(); ++i) {
-      result.push_back(PyLayer(net_->layers()[i], net_->layer_names()[i]));
-    }
-    return result;
+    return vector<PyLayer>(net_->layers().begin(), net_->layers().end());
   }
 
   bp::list inputs() {

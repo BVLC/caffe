@@ -167,7 +167,6 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<PyBlob<float>, PyBlobWrap>(
       "Blob", bp::no_init)
-      .add_property("name",     &PyBlob<float>::name)
       .add_property("num",      &PyBlob<float>::num)
       .add_property("channels", &PyBlob<float>::channels)
       .add_property("height",   &PyBlob<float>::height)
@@ -178,7 +177,6 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<PyLayer>(
       "Layer", bp::no_init)
-      .add_property("name",  &PyLayer::name)
       .add_property("blobs", &PyLayer::blobs);
 
   bp::class_<PySGDSolver, boost::noncopyable>(
