@@ -39,11 +39,12 @@ static void CheckFile(const string& filename) {
     f.close();
 }
 
-// wrap shared_ptr<Blob<float> > in a class that we construct in C++ and pass
+// wrap shared_ptr<Blob> in a class that we construct in C++ and pass
 // to Python
+template <typename Dtype>
 class PyBlob {
  public:
-  PyBlob(const shared_ptr<Blob<float> > &blob, const string& name)
+  PyBlob(const shared_ptr<Blob<Dtype> > &blob, const string& name)
       : blob_(blob), name_(name) {}
 
   string name() const { return name_; }
@@ -59,7 +60,7 @@ class PyBlob {
   }
 
  protected:
-  shared_ptr<Blob<float> > blob_;
+  shared_ptr<Blob<Dtype> > blob_;
   string name_;
 };
 
@@ -67,10 +68,10 @@ class PyBlob {
 // We need another wrapper (used as boost::python's HeldType) that receives a
 // self PyObject * which we can use as ndarray.base, so that data/diff memory
 // is not freed while still being used in Python.
-class PyBlobWrap : public PyBlob {
+class PyBlobWrap : public PyBlob<float> {
  public:
-  PyBlobWrap(PyObject *p, const PyBlob &blob)
-      : PyBlob(blob), self_(p) {}
+  PyBlobWrap(PyObject *p, const PyBlob<float> &blob)
+      : PyBlob<float>(blob), self_(p) {}
 
   bp::object get_data() {
       npy_intp dims[] = {num(), channels(), height(), width()};
@@ -107,10 +108,10 @@ class PyLayer {
     : layer_(layer), name_(name) {}
 
   string name() const { return name_; }
-  vector<PyBlob> blobs() {
-    vector<PyBlob> result;
+  vector<PyBlob<float> > blobs() {
+    vector<PyBlob<float> > result;
     for (int i = 0; i < layer_->blobs().size(); ++i) {
-      result.push_back(PyBlob(layer_->blobs()[i], name_));
+      result.push_back(PyBlob<float>(layer_->blobs()[i], name_));
     }
     return result;
   }
@@ -233,10 +234,10 @@ class PyNet {
   void set_phase_test() { Caffe::set_phase(Caffe::TEST); }
   void set_device(int device_id) { Caffe::SetDevice(device_id); }
 
-  vector<PyBlob> blobs() {
-    vector<PyBlob> result;
+  vector<PyBlob<float> > blobs() {
+    vector<PyBlob<float> > result;
     for (int i = 0; i < net_->blobs().size(); ++i) {
-      result.push_back(PyBlob(net_->blobs()[i], net_->blob_names()[i]));
+      result.push_back(PyBlob<float>(net_->blobs()[i], net_->blob_names()[i]));
     }
     return result;
   }
@@ -332,14 +333,14 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("_set_input_arrays",     &PyNet::set_input_arrays)
       .def("save",                  &PyNet::save);
 
-  bp::class_<PyBlob, PyBlobWrap>(
+  bp::class_<PyBlob<float>, PyBlobWrap>(
       "Blob", bp::no_init)
-      .add_property("name",     &PyBlob::name)
-      .add_property("num",      &PyBlob::num)
-      .add_property("channels", &PyBlob::channels)
-      .add_property("height",   &PyBlob::height)
-      .add_property("width",    &PyBlob::width)
-      .add_property("count",    &PyBlob::count)
+      .add_property("name",     &PyBlob<float>::name)
+      .add_property("num",      &PyBlob<float>::num)
+      .add_property("channels", &PyBlob<float>::channels)
+      .add_property("height",   &PyBlob<float>::height)
+      .add_property("width",    &PyBlob<float>::width)
+      .add_property("count",    &PyBlob<float>::count)
       .add_property("data",     &PyBlobWrap::get_data)
       .add_property("diff",     &PyBlobWrap::get_diff);
 
@@ -354,8 +355,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("solve",        &PySGDSolver::Solve)
       .def("solve",        &PySGDSolver::SolveResume);
 
-  bp::class_<vector<PyBlob> >("BlobVec")
-      .def(bp::vector_indexing_suite<vector<PyBlob>, true>());
+  bp::class_<vector<PyBlob<float> > >("BlobVec")
+      .def(bp::vector_indexing_suite<vector<PyBlob<float> >, true>());
 
   bp::class_<vector<PyLayer> >("LayerVec")
       .def(bp::vector_indexing_suite<vector<PyLayer>, true>());
