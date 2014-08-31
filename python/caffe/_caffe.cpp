@@ -127,7 +127,8 @@ class PyLayer {
 
 
 // A simple wrapper over PyNet that runs the forward process.
-struct PyNet {
+class PyNet {
+ public:
   // For cases where parameters will be determined later by the Python user,
   // create a Net with unallocated parameters (which will not be zero-filled
   // when accessed).
@@ -266,13 +267,16 @@ struct PyNet {
     return output_blob_names;
   }
 
-  // The pointer to the internal caffe::Net instant.
-  shared_ptr<Net<float> > net_;
-  // Input preprocessing configuration attributes.
+  // Input preprocessing configuration attributes. These are public for
+  // direct access from Python.
   bp::dict mean_;
   bp::dict input_scale_;
   bp::dict raw_scale_;
   bp::dict channel_swap_;
+
+ protected:
+  // The pointer to the internal caffe::Net instant.
+  shared_ptr<Net<float> > net_;
   // if taking input from an ndarray, we need to hold references
   bp::object input_data_;
   bp::object input_labels_;
