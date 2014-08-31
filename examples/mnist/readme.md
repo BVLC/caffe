@@ -253,26 +253,26 @@ The final model, stored as a binary protobuf file, is stored at
 
 which you can deploy as a trained model in your application, if you are training on a real-world application dataset.
 
-### Using the model to make predictions
+## Using the model to make predictions
 
 Ideally you would create your own image, maybe with a drawing program or by scanning your own hand-written digit. 
 Alternatively you can use examples from the testing dataset, we provided 3 helper scripts to do just that.
 
     cd $CAFFE_ROOT/examples/mnist
 
-First extract a hundred images from the MNIST dataset as numpy arrays of dimmension (100,28,28,1).
+First extract a hundred images from the MNIST dataset as numpy arrays of dimension (100,28,28,1).
 This is practical to deal with the single-channel gray level image.
 
     ./mnist_examples.py
 
 The script should have written the array in a file `mnist-predict-100-twos.npy`. Now you can make predictions using the model
-you just trained. Notice the classifier options can be edited, for instance if you are not using GPU.
+you just trained. Notice the classifier options can be edited, for instance if you are not using GPU. Also to be able to deal with single-channel image we set the swap_channel to channel 0.
 
     ./classify_mnist.sh
 
 The script should output a hundred predictions in file `predictions.npy`. This can be read using a simple pretty-printer that we provide : 
 
-    ./read_predictions.py predictions.npy  
+    ./read_npy predictions.npy  
 
 And here we go, almost all the predictions predict the right figure. The output format is one row per input image, each vector displaying probabilities for each class.
 
