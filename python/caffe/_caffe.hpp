@@ -181,6 +181,10 @@ class PySGDSolver {
   shared_ptr<SGDSolver<float> > solver_;
 };
 
+// Declare the module init function created by boost::python, so that we can
+// use this module from C++ when embedding Python.
+PyMODINIT_FUNC init_caffe(void);
+
 }  // namespace caffe
 
 #endif
