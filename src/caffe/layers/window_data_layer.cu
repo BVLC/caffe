@@ -1,7 +1,3 @@
-//
-// Based on data_layer.cpp by Yangqing Jia.
-
-#include <pthread.h>
 #include <stdint.h>
 
 #include <string>

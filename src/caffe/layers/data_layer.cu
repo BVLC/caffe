@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "leveldb/db.h"
-#include "pthread.h"
 #include "stdint.h"
 
 #include "caffe/layer.hpp"

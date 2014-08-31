@@ -1,6 +1,3 @@
-//
-// Based on data_layer.cpp by Yangqing Jia.
-
 #include <stdint.h>
 
 #include <algorithm>
