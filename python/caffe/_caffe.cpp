@@ -22,8 +22,6 @@
 #define PyArray_SetBaseObject(arr, x) (PyArray_BASE(arr) = (x))
 #endif
 
-
-using namespace caffe;  // NOLINT(build/namespaces)
 using boost::python::dict;
 using boost::python::extract;
 using boost::python::len;
@@ -31,6 +29,8 @@ using boost::python::list;
 using boost::python::object;
 using boost::python::handle;
 using boost::python::vector_indexing_suite;
+
+namespace caffe {
 
 // for convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
@@ -364,3 +364,5 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   import_array();
 }
+
+}  // namespace caffe
