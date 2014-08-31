@@ -50,7 +50,8 @@ net_param {
     top: "data"
     top: "label"
     data_param {
-      source: "examples/mnist/mnist_train_leveldb"
+      source: "examples/mnist/mnist_train_lmdb"
+      backend: LMDB
       batch_size: 64
       transform_param {
         scale: 0.00390625
@@ -64,7 +65,8 @@ net_param {
     top: "data"
     top: "label"
     data_param {
-      source: "examples/mnist/mnist_test_leveldb"
+      source: "examples/mnist/mnist_test_lmdb"
+      backend: LMDB
       batch_size: 100
       transform_param {
         scale: 0.00390625
@@ -81,7 +83,8 @@ net_param {
     top: "data"
     top: "label"
     data_param {
-      source: "examples/mnist/mnist_train_leveldb"
+      source: "examples/mnist/mnist_train_lmdb"
+      backend: LMDB
       batch_size: 100
       transform_param {
         scale: 0.00390625
