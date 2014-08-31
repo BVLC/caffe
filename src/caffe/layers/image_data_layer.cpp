@@ -12,7 +12,7 @@
 
 namespace caffe {
 
-// This function is used to create a pthread that prefetches the data.
+// This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void ImageDataLayer<Dtype>::InternalThreadEntry() {
   Datum datum;
