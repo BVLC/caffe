@@ -198,6 +198,9 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<string> >("StringVec")
       .def(bp::vector_indexing_suite<vector<string> >());
 
+  bp::class_<vector<bool> >("BoolVec")
+      .def(bp::vector_indexing_suite<vector<bool> >());
+
   import_array();
 }
 
