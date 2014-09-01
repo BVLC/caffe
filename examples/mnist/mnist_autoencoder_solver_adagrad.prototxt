@@ -7,8 +7,8 @@ test_interval: 500
 test_compute_loss: true
 base_lr: 0.01
 lr_policy: "fixed"
-display: 20
-max_iter: 4000000
+display: 100
+max_iter: 65000
 weight_decay: 0.0005
 snapshot: 10000
 snapshot_prefix: "mnist_autoencoder_train"
