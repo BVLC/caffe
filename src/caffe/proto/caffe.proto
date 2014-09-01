@@ -388,6 +388,7 @@ message ConvolutionParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
+    CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
 }
@@ -579,6 +580,7 @@ message PoolingParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
+    CUDNN = 2;
   }
   optional Engine engine = 11 [default = DEFAULT];
 }
@@ -602,6 +604,7 @@ message ReLUParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
+    CUDNN = 2;
   }
   optional Engine engine = 2 [default = DEFAULT];
 }
@@ -611,6 +614,7 @@ message SigmoidParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
+    CUDNN = 2;
   }
   optional Engine engine = 1 [default = DEFAULT];
 }
@@ -630,6 +634,7 @@ message SoftmaxParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
+    CUDNN = 2;
   }
   optional Engine engine = 1 [default = DEFAULT];
 }
@@ -639,6 +644,7 @@ message TanHParameter {
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
+    CUDNN = 2;
   }
   optional Engine engine = 1 [default = DEFAULT];
 }
