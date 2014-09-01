@@ -1,6 +1,9 @@
-net: "mnist_autoencoder.prototxt"
-test_iter: 50
-test_interval: 100
+net: "examples/mnist/mnist_autoencoder.prototxt"
+test_state: { stage: 'test-on-train' }
+test_iter: 500
+test_state: { stage: 'test-on-test' }
+test_iter: 100
+test_interval: 500
 test_compute_loss: true
 base_lr: 0.0001
 lr_policy: "fixed"
@@ -8,7 +11,7 @@ display: 20
 max_iter: 4000000
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "mnist_autoencoder_train"
+snapshot_prefix: "examples/mnist/mnist_autoencoder_nesterov_train"
 momentum: 0.95
 # solver mode: CPU or GPU
 solver_mode: GPU
