@@ -202,10 +202,6 @@ message NetStateRule {
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
-  // The amount of weight to assign each top blob in the objective.
-  // Each layer assigns a default value, usually of either 0 or 1,
-  // to each top blob.
-  repeated float loss_weight = 35;
   optional string name = 4; // the layer name
 
   // Rules controlling whether and when a layer is included in the network,
@@ -288,6 +284,11 @@ message LayerParameter {
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 8;
 
+  // The amount of weight to assign each top blob in the objective.
+  // Each layer assigns a default value, usually of either 0 or 1,
+  // to each top blob.
+  repeated float loss_weight = 35;
+
   optional AccuracyParameter accuracy_param = 27;
   optional ArgMaxParameter argmax_param = 23;
   optional ConcatParameter concat_param = 9;
@@ -298,19 +299,19 @@ message LayerParameter {
   optional EltwiseParameter eltwise_param = 24;
   optional HDF5DataParameter hdf5_data_param = 13;
   optional HDF5OutputParameter hdf5_output_param = 14;
+  optional HingeLossParameter hinge_loss_param = 29;
   optional ImageDataParameter image_data_param = 15;
   optional InfogainLossParameter infogain_loss_param = 16;
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
   optional MemoryDataParameter memory_data_param = 22;
+  optional MVNParameter mvn_param = 34;
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional ReLUParameter relu_param = 30;
-  optional WindowDataParameter window_data_param = 20;
-  optional ThresholdParameter threshold_param = 25;
-  optional HingeLossParameter hinge_loss_param = 29;
   optional SliceParameter slice_param = 31;
-  optional MVNParameter mvn_param = 34;
+  optional ThresholdParameter threshold_param = 25;
+  optional WindowDataParameter window_data_param = 20;
   
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
