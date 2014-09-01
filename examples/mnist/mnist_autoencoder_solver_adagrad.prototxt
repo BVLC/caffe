@@ -1,6 +1,9 @@
-net: "mnist_autoencoder.prototxt"
-test_iter: 50
-test_interval: 100
+net: "examples/mnist/mnist_autoencoder.prototxt"
+test_state: { stage: 'test-on-train' }
+test_iter: 500
+test_state: { stage: 'test-on-test' }
+test_iter: 100
+test_interval: 500
 test_compute_loss: true
 base_lr: 0.01
 lr_policy: "fixed"
