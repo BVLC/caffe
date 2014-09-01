@@ -18,24 +18,20 @@ using std::ostringstream;
 namespace caffe {
 
 template <typename TypeParam>
-class SGDSolverTest : public MultiDeviceTest<TypeParam> {
+class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  SGDSolverTest() :
+  GradientBasedSolverTest() :
       seed_(1701), num_(5), channels_(3), height_(10), width_(10) {}
 
-  // MockSGDSolver: an SGDSolver with public history.
-  class MockSGDSolver : public SGDSolver<Dtype> {
-   public:
-    explicit MockSGDSolver(const SolverParameter& param) :
-        SGDSolver<Dtype>(param) {}
-    vector<shared_ptr<Blob<Dtype> > >& history() { return this->history_; }
-  };
-
-  shared_ptr<MockSGDSolver> solver_;
+  shared_ptr<SGDSolver<Dtype> > solver_;
   int seed_;
   int num_, channels_, height_, width_;
+  Dtype delta_;  // Stability constant for AdaGrad.
+
+  virtual SolverParameter_SolverType solver_type() = 0;
+  virtual void InitSolver(const SolverParameter& param) = 0;
 
   virtual void InitSolverFromProtoString(const string& proto) {
     SolverParameter param;
@@ -54,7 +50,9 @@ class SGDSolverTest : public MultiDeviceTest<TypeParam> {
       default:
         LOG(FATAL) << "Unknown Caffe mode: " << Caffe::mode();
     }
-    solver_.reset(new MockSGDSolver(param));
+    InitSolver(param);
+    delta_ = (solver_type() == SolverParameter_SolverType_ADAGRAD) ?
+         param.delta() : 0;
   }
 
   void RunLeastSquaresSolver(const Dtype learning_rate,
@@ -189,16 +187,32 @@ class SGDSolverTest : public MultiDeviceTest<TypeParam> {
       // Add the weight decay to the gradient.
       grad += weight_decay *
           ((i == D) ? bias.cpu_data()[0] : weights.cpu_data()[i]);
-      // Finally, add any momentum.
+      // Finally, compute update.
       const vector<shared_ptr<Blob<Dtype> > >& history = solver_->history();
       ASSERT_EQ(2, history.size());  // 1 blob for weights, 1 for bias
       Dtype update_value = learning_rate * grad;
+      const Dtype history_value = (i == D) ?
+            history[1]->cpu_data()[0] : history[0]->cpu_data()[i];
+      const Dtype temp = momentum * history_value;
+      switch (solver_type()) {
+      case SolverParameter_SolverType_SGD:
+        update_value += temp;
+        break;
+      case SolverParameter_SolverType_NESTEROV:
+        update_value += temp;
+        // step back then over-step
+        update_value = (1 + momentum) * update_value - temp;
+        break;
+      case SolverParameter_SolverType_ADAGRAD:
+        update_value /= std::sqrt(history_value + grad * grad) + delta_;
+        break;
+      default:
+        LOG(FATAL) << "Unknown solver type: " << solver_type();
+      }
       if (i == D) {
-        update_value += momentum * history[1]->cpu_data()[0];
         updated_bias.mutable_cpu_diff()[0] = update_value;
         updated_bias.mutable_cpu_data()[0] = bias.cpu_data()[0] - update_value;
       } else {
-        update_value += momentum * history[0]->cpu_data()[i];
         updated_weights.mutable_cpu_diff()[i] = update_value;
         updated_weights.mutable_cpu_data()[i] =
             weights.cpu_data()[i] - update_value;
@@ -238,20 +252,22 @@ class SGDSolverTest : public MultiDeviceTest<TypeParam> {
     EXPECT_NEAR(expected_updated_bias, solver_updated_bias, error_margin);
 
     // Check the solver's history -- should contain the previous update value.
-    vector<shared_ptr<Blob<Dtype> > >& history = this->solver_->history();
-    ASSERT_EQ(2, history.size());
-    for (int i = 0; i < D; ++i) {
-      const Dtype expected_history = updated_weights.cpu_diff()[i];
-      const Dtype solver_history = history[0]->cpu_data()[i];
+    if (solver_type() == SolverParameter_SolverType_SGD) {
+      const vector<shared_ptr<Blob<Dtype> > >& history = solver_->history();
+      ASSERT_EQ(2, history.size());
+      for (int i = 0; i < D; ++i) {
+        const Dtype expected_history = updated_weights.cpu_diff()[i];
+        const Dtype solver_history = history[0]->cpu_data()[i];
+        const Dtype error_margin_hist = std::max(kMinPrecision, kPrecision *
+            std::min(fabs(expected_history), fabs(solver_history)));
+        EXPECT_NEAR(expected_history, solver_history, error_margin_hist);
+      }
+      const Dtype expected_history = updated_bias.cpu_diff()[0];
+      const Dtype solver_history = history[1]->cpu_data()[0];
       const Dtype error_margin_hist = std::max(kMinPrecision, kPrecision *
           std::min(fabs(expected_history), fabs(solver_history)));
       EXPECT_NEAR(expected_history, solver_history, error_margin_hist);
     }
-    const Dtype expected_history = updated_bias.cpu_diff()[0];
-    const Dtype solver_history = history[1]->cpu_data()[0];
-    const Dtype error_margin_hist = std::max(kMinPrecision, kPrecision *
-        std::min(fabs(expected_history), fabs(solver_history)));
-    EXPECT_NEAR(expected_history, solver_history, error_margin_hist);
   }
 
   // Test that the correct update is computed for a regularized least squares
@@ -286,6 +302,21 @@ class SGDSolverTest : public MultiDeviceTest<TypeParam> {
 
     // Check that the solver's solution matches ours.
     CheckLeastSquaresUpdate(updated_params);
+  }
+};
+
+
+template <typename TypeParam>
+class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
+ protected:
+  virtual void InitSolver(const SolverParameter& param) {
+    this->solver_.reset(new SGDSolver<Dtype>(param));
+  }
+
+  virtual SolverParameter_SolverType solver_type() {
+    return SolverParameter_SolverType_SGD;
   }
 };
 
@@ -332,6 +363,118 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithMomentumMultiIter) {
 }
 
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverything) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.01;
+  const Dtype kWeightDecay = 0.1;
+  const Dtype kMomentum = 0.9;
+  const int kNumIters = 5;
+  for (int i = 0; i <= kNumIters; ++i) {
+    this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+
+template <typename TypeParam>
+class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
+ protected:
+  virtual void InitSolver(const SolverParameter& param) {
+    this->solver_.reset(new AdaGradSolver<Dtype>(param));
+  }
+  virtual SolverParameter_SolverType solver_type() {
+    return SolverParameter_SolverType_ADAGRAD;
+  }
+};
+
+TYPED_TEST_CASE(AdaGradSolverTest, TestDtypesAndDevices);
+
+TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdate) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->TestLeastSquaresUpdate();
+}
+
+TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdateLROneTenth) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.1;
+  this->TestLeastSquaresUpdate(kLearningRate);
+}
+
+TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdateWithWeightDecay) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 1.0;
+  const Dtype kWeightDecay = 0.5;
+  this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay);
+}
+
+TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdateWithEverything) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.01;
+  const Dtype kWeightDecay = 0.1;
+  const Dtype kMomentum = 0.0;
+  const int kNumIters = 5;
+  for (int i = 0; i <= kNumIters; ++i) {
+    this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+
+template <typename TypeParam>
+class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
+ protected:
+  virtual void InitSolver(const SolverParameter& param) {
+    this->solver_.reset(new NesterovSolver<Dtype>(param));
+  }
+  virtual SolverParameter_SolverType solver_type() {
+    return SolverParameter_SolverType_NESTEROV;
+  }
+};
+
+TYPED_TEST_CASE(NesterovSolverTest, TestDtypesAndDevices);
+
+TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdate) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->TestLeastSquaresUpdate();
+}
+
+TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdateLROneTenth) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.1;
+  this->TestLeastSquaresUpdate(kLearningRate);
+}
+
+TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdateWithWeightDecay) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 1.0;
+  const Dtype kWeightDecay = 0.5;
+  this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay);
+}
+
+TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdateWithMomentum) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 1.0;
+  const Dtype kWeightDecay = 0.0;
+  const Dtype kMomentum = 0.5;
+  const int kNumIters = 1;
+  for (int i = 0; i <= kNumIters; ++i) {
+    this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+TYPED_TEST(NesterovSolverTest, TestLeastSquaresUpdateWithMomentumMultiIter) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 1.0;
+  const Dtype kWeightDecay = 0.0;
+  const Dtype kMomentum = 0.5;
+  const int kNumIters = 5;
+  for (int i = 0; i <= kNumIters; ++i) {
+    this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
+  }
+}
+
+TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdateWithEverything) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
   const Dtype kWeightDecay = 0.1;
