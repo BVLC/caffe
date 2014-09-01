@@ -253,8 +253,15 @@ endif
 # Debugging
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
+	NVCCFLAGS += -G
 else
 	COMMON_FLAGS += -DNDEBUG -O2
+endif
+
+# cuDNN acceleration configuration.
+ifeq ($(USE_CUDNN), 1)
+	LIBRARIES += cudnn
+	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
 # CPU-only configuration
@@ -299,7 +306,7 @@ LIBRARY_DIRS += $(BLAS_LIB)
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
-NVCCFLAGS := -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -fPIC $(COMMON_FLAGS) $(WARNINGS)
