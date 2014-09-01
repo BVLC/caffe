@@ -13,3 +13,5 @@ momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000
 snapshot_prefix: "examples/finetune_flickr_style/flickr_style"
+# uncomment the following to default to CPU mode solving
+# solver_mode: CPU
