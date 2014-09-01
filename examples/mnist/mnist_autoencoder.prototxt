@@ -248,22 +248,22 @@ layers {
 layers {
   bottom: "decode1"
   bottom: "flatdata"
+  top: "cross_entropy_loss"
   name: "loss"
   type: SIGMOID_CROSS_ENTROPY_LOSS
-  include: { phase: TRAIN }
+  loss_weight: 1
 }
 layers {
   bottom: "decode1"
   top: "decode1neuron"
   name: "decode1neuron"
   type: SIGMOID
-  include: { phase: TEST }
 }
 layers {
   bottom: "decode1neuron"
   bottom: "flatdata"
+  top: "l2_error"
   name: "loss"
   type: EUCLIDEAN_LOSS
-  top: "loss"
-  include: { phase: TEST }
+  loss_weight: 0
 }
