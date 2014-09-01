@@ -23,8 +23,15 @@ namespace caffe {
 template <typename Dtype>
 class PyBlob {
  public:
+  // Construct from shared_ptr: memory will be correctly managed,
+  // even if Python holds onto a Blob beyond the life of its Net.
   explicit PyBlob(const shared_ptr<Blob<Dtype> > &blob)
       : blob_(blob) {}
+  // Construct from raw pointer: memory will become invalid once the
+  // owning Net is deleted. This exists only so that the raw Blob*s
+  // used in the layer interface can be passed to embedded Python.
+  explicit PyBlob(Blob<Dtype>* blob)
+      : blob_(blob, null_deleter()) {}
 
   int num() const { return blob_->num(); }
   int channels() const { return blob_->channels(); }
@@ -42,6 +49,13 @@ class PyBlob {
 
  protected:
   shared_ptr<Blob<Dtype> > blob_;
+
+ private:
+  // A dummy class that lets us use raw pointers as shared_ptrs to get
+  // around the fact that layers take around raw pointers.
+  struct null_deleter {
+    void operator()(void const*) const { }
+  };
 };
 
 // We need another wrapper (used as boost::python's HeldType) that receives a
