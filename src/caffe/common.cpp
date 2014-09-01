@@ -224,6 +224,10 @@ const char* cublasGetErrorString(cublasStatus_t error) {
   case CUBLAS_STATUS_NOT_SUPPORTED:
     return "CUBLAS_STATUS_NOT_SUPPORTED";
 #endif
+#if CUDA_VERSION >= 6050
+  case CUBLAS_STATUS_LICENSE_ERROR:
+    return "CUBLAS_STATUS_LICENSE_ERROR";
+#endif
   }
   return "Unknown cublas status";
 }
