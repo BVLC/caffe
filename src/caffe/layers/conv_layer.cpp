@@ -66,11 +66,11 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(channels_ % group_, 0);
   // The im2col result buffer would only hold one image at a time to avoid
   // overly large memory usage.
-  int height_out =
+  height_out_ =
       (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  int width_out = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+  width_out_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
   col_buffer_.Reshape(
-      1, channels_ * kernel_h_ * kernel_w_, height_out, width_out);
+      1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
@@ -78,9 +78,9 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Figure out the dimensions for individual gemms.
   M_ = num_output_ / group_;
   K_ = channels_ * kernel_h_ * kernel_w_ / group_;
-  N_ = height_out * width_out;
+  N_ = height_out_ * width_out_;
   for (int top_id = 0; top_id < top->size(); ++top_id) {
-    (*top)[top_id]->Reshape(num_, num_output_, height_out, width_out);
+    (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {

@@ -22,6 +22,10 @@ ConvolutionLayer<Dtype>* GetConvolutionLayer(const string& name,
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
     return new ConvolutionLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == ConvolutionParameter_Engine_CUDNN) {
+    return new CuDNNConvolutionLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
