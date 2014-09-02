@@ -318,9 +318,9 @@ class ReLULayer : public NeuronLayer<Dtype> {
    *      the computed outputs are @f$ y = \max(0, x) + \nu \min(0, x) @f$.
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
 
   /**
    * @brief Computes the error gradient w.r.t. the ReLU inputs.
@@ -350,6 +350,31 @@ class ReLULayer : public NeuronLayer<Dtype> {
    *        \end{array} \right.
    *      @f$.
    */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+};
+
+/**
+ * @brief standard Caffe implementation of ReLULayer.
+ */
+template <typename Dtype>
+class CaffeReLULayer : public ReLULayer<Dtype> {
+ public:
+  explicit CaffeReLULayer(const LayerParameter& param)
+      : ReLULayer<Dtype>(param) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_RELU;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -386,9 +411,9 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
    *      @f$
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
 
   /**
    * @brief Computes the error gradient w.r.t. the sigmoid inputs.
@@ -407,6 +432,31 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
    *            = \frac{\partial E}{\partial y} y (1 - y)
    *      @f$ if propagate_down[0]
    */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+};
+
+/**
+ * @brief standard Caffe implementation of SigmoidLayer.
+ */
+template <typename Dtype>
+class CaffeSigmoidLayer : public SigmoidLayer<Dtype> {
+ public:
+  explicit CaffeSigmoidLayer(const LayerParameter& param)
+      : SigmoidLayer<Dtype>(param) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_SIGMOID;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -443,9 +493,9 @@ class TanHLayer : public NeuronLayer<Dtype> {
    *      @f$
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
 
   /**
    * @brief Computes the error gradient w.r.t. the sigmoid inputs.
@@ -466,6 +516,31 @@ class TanHLayer : public NeuronLayer<Dtype> {
    *            = \frac{\partial E}{\partial y} (1 - y^2)
    *      @f$ if propagate_down[0]
    */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
+};
+
+/**
+ * @brief standard Caffe implementation of TanHLayer.
+ */
+template <typename Dtype>
+class CaffeTanHLayer : public TanHLayer<Dtype> {
+ public:
+  explicit CaffeTanHLayer(const LayerParameter& param)
+      : TanHLayer<Dtype>(param) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_TANH;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
