@@ -43,6 +43,57 @@ template PoolingLayer<float>* GetPoolingLayer(const string& name,
 template PoolingLayer<double>* GetPoolingLayer(const string& name,
     const LayerParameter& param);
 
+// Get relu layer according to engine.
+template <typename Dtype>
+ReLULayer<Dtype>* GetReLULayer(const string& name,
+    const LayerParameter& param) {
+  ReLUParameter_Engine engine = param.relu_param().engine();
+  if (engine == ReLUParameter_Engine_CAFFE) {
+    return new CaffeReLULayer<Dtype>(param);
+  } else {
+    LOG(FATAL) << "Layer " << name << " has unknown engine.";
+  }
+}
+
+template ReLULayer<float>* GetReLULayer(const string& name,
+    const LayerParameter& param);
+template ReLULayer<double>* GetReLULayer(const string& name,
+    const LayerParameter& param);
+
+// Get sigmoid layer according to engine.
+template <typename Dtype>
+SigmoidLayer<Dtype>* GetSigmoidLayer(const string& name,
+    const LayerParameter& param) {
+  SigmoidParameter_Engine engine = param.sigmoid_param().engine();
+  if (engine == SigmoidParameter_Engine_CAFFE) {
+    return new CaffeSigmoidLayer<Dtype>(param);
+  } else {
+    LOG(FATAL) << "Layer " << name << " has unknown engine.";
+  }
+}
+
+template SigmoidLayer<float>* GetSigmoidLayer(const string& name,
+    const LayerParameter& param);
+template SigmoidLayer<double>* GetSigmoidLayer(const string& name,
+    const LayerParameter& param);
+
+// Get tanh layer according to engine.
+template <typename Dtype>
+TanHLayer<Dtype>* GetTanHLayer(const string& name,
+    const LayerParameter& param) {
+  TanHParameter_Engine engine = param.tanh_param().engine();
+  if (engine == TanHParameter_Engine_CAFFE) {
+    return new CaffeTanHLayer<Dtype>(param);
+  } else {
+    LOG(FATAL) << "Layer " << name << " has unknown engine.";
+  }
+}
+
+template TanHLayer<float>* GetTanHLayer(const string& name,
+    const LayerParameter& param);
+template TanHLayer<double>* GetTanHLayer(const string& name,
+    const LayerParameter& param);
+
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,
 // but we will leave it this way for now.
@@ -102,11 +153,11 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   case LayerParameter_LayerType_POWER:
     return new PowerLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
-    return new ReLULayer<Dtype>(param);
+    return GetReLULayer<Dtype>(name, param);
   case LayerParameter_LayerType_SILENCE:
     return new SilenceLayer<Dtype>(param);
   case LayerParameter_LayerType_SIGMOID:
-    return new SigmoidLayer<Dtype>(param);
+    return GetSigmoidLayer<Dtype>(name, param);
   case LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS:
     return new SigmoidCrossEntropyLossLayer<Dtype>(param);
   case LayerParameter_LayerType_SLICE:
@@ -118,7 +169,7 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   case LayerParameter_LayerType_SPLIT:
     return new SplitLayer<Dtype>(param);
   case LayerParameter_LayerType_TANH:
-    return new TanHLayer<Dtype>(param);
+    return GetTanHLayer<Dtype>(name, param);
   case LayerParameter_LayerType_WINDOW_DATA:
     return new WindowDataLayer<Dtype>(param);
   case LayerParameter_LayerType_NONE:
