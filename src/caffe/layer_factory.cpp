@@ -26,6 +26,22 @@ template ConvolutionLayer<float>* GetConvolutionLayer(const string& name,
 template ConvolutionLayer<double>* GetConvolutionLayer(const string& name,
     const LayerParameter& param);
 
+// Get pooling layer according to engine.
+template <typename Dtype>
+PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
+    const LayerParameter& param) {
+  PoolingParameter_Engine engine = param.pooling_param().engine();
+  if (engine == PoolingParameter_Engine_CAFFE) {
+    return new CaffePoolingLayer<Dtype>(param);
+  } else {
+    LOG(FATAL) << "Layer " << name << " has unknown engine.";
+  }
+}
+
+template PoolingLayer<float>* GetPoolingLayer(const string& name,
+    const LayerParameter& param);
+template PoolingLayer<double>* GetPoolingLayer(const string& name,
+    const LayerParameter& param);
 
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,
@@ -82,7 +98,7 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
     return new MultinomialLogisticLossLayer<Dtype>(param);
   case LayerParameter_LayerType_POOLING:
-    return new PoolingLayer<Dtype>(param);
+    return GetPoolingLayer<Dtype>(name, param);
   case LayerParameter_LayerType_POWER:
     return new PowerLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
