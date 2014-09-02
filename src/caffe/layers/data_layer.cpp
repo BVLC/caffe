@@ -14,68 +14,6 @@
 
 namespace caffe {
 
-// This function is used to create a thread that prefetches the data.
-template <typename Dtype>
-void DataLayer<Dtype>::InternalThreadEntry() {
-  Datum datum;
-  CHECK(this->prefetch_data_.count());
-  Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
-  Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
-  if (this->output_labels_) {
-    top_label = this->prefetch_label_.mutable_cpu_data();
-  }
-  const int batch_size = this->layer_param_.data_param().batch_size();
-
-  for (int item_id = 0; item_id < batch_size; ++item_id) {
-    // get a blob
-    switch (this->layer_param_.data_param().backend()) {
-    case DataParameter_DB_LEVELDB:
-      CHECK(iter_);
-      CHECK(iter_->Valid());
-      datum.ParseFromString(iter_->value().ToString());
-      break;
-    case DataParameter_DB_LMDB:
-      CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
-              &mdb_value_, MDB_GET_CURRENT), MDB_SUCCESS);
-      datum.ParseFromArray(mdb_value_.mv_data,
-          mdb_value_.mv_size);
-      break;
-    default:
-      LOG(FATAL) << "Unknown database backend";
-    }
-
-    // Apply data transformations (mirror, scale, crop...)
-    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
-
-    if (this->output_labels_) {
-      top_label[item_id] = datum.label();
-    }
-
-    // go to the next iter
-    switch (this->layer_param_.data_param().backend()) {
-    case DataParameter_DB_LEVELDB:
-      iter_->Next();
-      if (!iter_->Valid()) {
-        // We have reached the end. Restart from the first.
-        DLOG(INFO) << "Restarting data prefetching from start.";
-        iter_->SeekToFirst();
-      }
-      break;
-    case DataParameter_DB_LMDB:
-      if (mdb_cursor_get(mdb_cursor_, &mdb_key_,
-              &mdb_value_, MDB_NEXT) != MDB_SUCCESS) {
-        // We have reached the end. Restart from the first.
-        DLOG(INFO) << "Restarting data prefetching from start.";
-        CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
-                &mdb_value_, MDB_FIRST), MDB_SUCCESS);
-      }
-      break;
-    default:
-      LOG(FATAL) << "Unknown database backend";
-    }
-  }
-}
-
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
@@ -201,6 +139,68 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->datum_height_ = datum.height();
   this->datum_width_ = datum.width();
   this->datum_size_ = datum.channels() * datum.height() * datum.width();
+}
+
+// This function is used to create a thread that prefetches the data.
+template <typename Dtype>
+void DataLayer<Dtype>::InternalThreadEntry() {
+  Datum datum;
+  CHECK(this->prefetch_data_.count());
+  Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
+  Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
+  if (this->output_labels_) {
+    top_label = this->prefetch_label_.mutable_cpu_data();
+  }
+  const int batch_size = this->layer_param_.data_param().batch_size();
+
+  for (int item_id = 0; item_id < batch_size; ++item_id) {
+    // get a blob
+    switch (this->layer_param_.data_param().backend()) {
+    case DataParameter_DB_LEVELDB:
+      CHECK(iter_);
+      CHECK(iter_->Valid());
+      datum.ParseFromString(iter_->value().ToString());
+      break;
+    case DataParameter_DB_LMDB:
+      CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
+              &mdb_value_, MDB_GET_CURRENT), MDB_SUCCESS);
+      datum.ParseFromArray(mdb_value_.mv_data,
+          mdb_value_.mv_size);
+      break;
+    default:
+      LOG(FATAL) << "Unknown database backend";
+    }
+
+    // Apply data transformations (mirror, scale, crop...)
+    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
+
+    if (this->output_labels_) {
+      top_label[item_id] = datum.label();
+    }
+
+    // go to the next iter
+    switch (this->layer_param_.data_param().backend()) {
+    case DataParameter_DB_LEVELDB:
+      iter_->Next();
+      if (!iter_->Valid()) {
+        // We have reached the end. Restart from the first.
+        DLOG(INFO) << "Restarting data prefetching from start.";
+        iter_->SeekToFirst();
+      }
+      break;
+    case DataParameter_DB_LMDB:
+      if (mdb_cursor_get(mdb_cursor_, &mdb_key_,
+              &mdb_value_, MDB_NEXT) != MDB_SUCCESS) {
+        // We have reached the end. Restart from the first.
+        DLOG(INFO) << "Restarting data prefetching from start.";
+        CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
+                &mdb_value_, MDB_FIRST), MDB_SUCCESS);
+      }
+      break;
+    default:
+      LOG(FATAL) << "Unknown database backend";
+    }
+  }
 }
 
 INSTANTIATE_CLASS(DataLayer);
