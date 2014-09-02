@@ -64,10 +64,10 @@ static int init_key = -2;
 //
 // The actual forward function. It takes in a cell array of 4-D arrays as
 // input and outputs a cell array.
-// 
-// 
+//
+//
 // Functions to copy data from mxarray to blobs and viceversa
-// 
+//
 
 static mxArray* blob_data_to_mxarray(const Blob<float>* blob) {
   mwSize dims[4] = {blob->width(), blob->height(),
@@ -84,6 +84,7 @@ static mxArray* blob_data_to_mxarray(const Blob<float>* blob) {
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    mexErrMsgTxt("Unknown caffe mode");
   }
   return mx_blob_data;
 }
@@ -96,7 +97,7 @@ static void mxarray_to_blob_data(const mxArray* data, Blob<float>* blob) {
   mwSize dims[4] = {blob->width(), blob->height(),
                     blob->channels(), blob->num()};
   DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
-  CHECK_EQ_MEX(blob->count(),mxGetNumberOfElements(data),
+  CHECK_EQ_MEX(blob->count(), mxGetNumberOfElements(data),
     "blob->count() don't match with numel(data)");
   const float* const data_ptr =
       reinterpret_cast<const float* const>(mxGetPr(data));
@@ -109,6 +110,7 @@ static void mxarray_to_blob_data(const mxArray* data, Blob<float>* blob) {
     break;
   default:
     LOG(FATAL) << "Unknown Caffe mode.";
+    mexErrMsgTxt("Unknown caffe mode");
   }  // switch (Caffe::mode())
 }
 
@@ -132,6 +134,7 @@ static mxArray* blob_diff_to_mxarray(const Blob<float>* blob) {
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+    mexErrMsgTxt("Unknown caffe mode");
   }
   return mx_blob_data;
 }
@@ -144,7 +147,7 @@ static void mxarray_to_blob_diff(const mxArray* data, Blob<float>* blob) {
   mwSize dims[4] = {blob->width(), blob->height(),
                     blob->channels(), blob->num()};
   DLOG(INFO) << dims[0] << " " << dims[1] << " " << dims[2] << " " << dims[3];
-  CHECK_EQ_MEX(blob->count(),mxGetNumberOfElements(data),
+  CHECK_EQ_MEX(blob->count(), mxGetNumberOfElements(data),
     "blob->count() don't match with numel(data)");
   const float* const data_ptr =
       reinterpret_cast<const float* const>(mxGetPr(data));
@@ -157,6 +160,7 @@ static void mxarray_to_blob_diff(const mxArray* data, Blob<float>* blob) {
     break;
   default:
     LOG(FATAL) << "Unknown Caffe mode.";
+    mexErrMsgTxt("Unknown caffe mode");
   }  // switch (Caffe::mode())
 }
 
@@ -304,7 +308,7 @@ static mxArray* do_get_weights() {
         mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_weights);
         mxSetField(mx_layers, mx_layer_index, "layer_names",
             mxCreateString(layer_names[i].c_str()));
-        mx_layer_index++;        
+        mx_layer_index++;
       }
     }
   }
@@ -321,7 +325,7 @@ static mxArray* do_get_layer_weights(const mxArray* const layer_name) {
 
   for (unsigned int i = 0; i < layers.size(); ++i) {
     DLOG(INFO) << layer_names[i];
-    if (strcmp(layer_names[i].c_str(),c_layer_name) == 0) {
+    if (strcmp(layer_names[i].c_str(), c_layer_name) == 0) {
       vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
       if (layer_blobs.size() == 0) {
         continue;
@@ -351,13 +355,14 @@ static void do_set_layer_weights(const mxArray* const layer_name,
 
   for (unsigned int i = 0; i < layers.size(); ++i) {
     DLOG(INFO) << layer_names[i];
-    if (strcmp(layer_names[i].c_str(),c_layer_name) == 0) {
+    if (strcmp(layer_names[i].c_str(), c_layer_name) == 0) {
       vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
       if (layer_blobs.size() == 0) {
         continue;
       }
       DLOG(INFO) << "Found layer " << layer_names[i];
-      CHECK_EQ_MEX(static_cast<unsigned int>(mxGetDimensions(mx_layer_weights)[0]),
+      CHECK_EQ_MEX(static_cast<unsigned int>(
+        mxGetDimensions(mx_layer_weights)[0]),
         layer_blobs.size(), "Num of cells don't match layer_blobs.size");
       DLOG(INFO) << "layer_blobs.size() = " << layer_blobs.size();
       for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
@@ -428,7 +433,8 @@ static mxArray* do_get_blobs_info() {
   mxArray* mx_blobs;
   {
     const int num_blobs[1] = {blobs.size()};
-    const char* fnames[6] = {"name", "num", "channels", "height", "width", "count"};
+    const char* fnames[6] = {"name", "num", "channels",
+      "height", "width", "count"};
     mx_blobs = mxCreateStructArray(1, num_blobs, 6, fnames);
   }
 
@@ -463,7 +469,7 @@ static mxArray* do_get_blob_data(const mxArray* const blob_name) {
 
   mxArray* mx_blob_data = NULL;
   if (net_->has_blob(c_blob_name)) {
-   mx_blob_data = blob_data_to_mxarray(net_->blob_by_name(c_blob_name).get()); 
+    mx_blob_data = blob_data_to_mxarray(net_->blob_by_name(c_blob_name).get());
   }
 
   // for (unsigned int i = 0; i < blobs.size(); ++i) {
@@ -485,7 +491,7 @@ static mxArray* do_get_blob_diff(const mxArray* const blob_name) {
 
   mxArray* mx_blob_diff = NULL;
   if (net_->has_blob(c_blob_name)) {
-   mx_blob_diff = blob_diff_to_mxarray(net_->blob_by_name(c_blob_name).get()); 
+    mx_blob_diff = blob_diff_to_mxarray(net_->blob_by_name(c_blob_name).get());
   }
 
   // for (unsigned int i = 0; i < blobs.size(); ++i) {
@@ -518,7 +524,7 @@ static mxArray* do_get_all_data() {
     mxArray* mx_blob_data = blob_data_to_mxarray(blobs[i]);
     mxSetField(mx_all_data, i, "name",
         mxCreateString(blob_names[i].c_str()));
-    mxSetField(mx_all_data, i, "data",mx_blob_data);
+    mxSetField(mx_all_data, i, "data", mx_blob_data);
   }
   return mx_all_data;
 }
@@ -543,7 +549,7 @@ static mxArray* do_get_all_diff() {
     mxArray* mx_blob_diff = blob_diff_to_mxarray(blobs[i]);
     mxSetField(mx_all_diff, i, "name",
         mxCreateString(blob_names[i].c_str()));
-    mxSetField(mx_all_diff, i, "diff",mx_blob_diff);
+    mxSetField(mx_all_diff, i, "diff", mx_blob_diff);
   }
   return mx_all_diff;
 }
@@ -571,18 +577,18 @@ static void set_weights(MEX_ARGS) {
   }
   int num_layers = mxGetNumberOfElements(mx_weights);
   for (int i = 0; i < num_layers; ++i) {
-    const mxArray* layer_name= mxGetField(mx_weights,i,"layer_names");
-    const mxArray* weights= mxGetField(mx_weights,i,"weights");
-    do_set_layer_weights(layer_name,weights);
+    const mxArray* layer_name= mxGetField(mx_weights, i, "layer_names");
+    const mxArray* weights= mxGetField(mx_weights, i, "weights");
+    do_set_layer_weights(layer_name, weights);
   }
 }
 
 static void set_layer_weights(MEX_ARGS) {
   if (nrhs != 2) {
     LOG(ERROR) << "Only given " << nrhs << " arguments";
-    mexErrMsgTxt("Wrong number of arguments you need layer_name and cell of weights");
+    mexErrMsgTxt("You need 2 arguments layer_name and cell of weights");
   }
-  do_set_layer_weights(prhs[0],prhs[1]);
+  do_set_layer_weights(prhs[0], prhs[1]);
 }
 
 static void get_layers_info(MEX_ARGS) {
@@ -631,6 +637,22 @@ static void set_mode_cpu(MEX_ARGS) {
 
 static void set_mode_gpu(MEX_ARGS) {
   Caffe::set_mode(Caffe::GPU);
+}
+
+static void get_mode(MEX_ARGS) {
+  int mode = Caffe::mode();
+  if (mode == Caffe::CPU) {
+    // CPU mode
+    plhs[0] = mxCreateString("CPU");
+  }
+  if (mode == Caffe::GPU) {
+    // GPU mode
+    plhs[0] = mxCreateString("GPU");
+  }
+}
+
+static void set_phase_train(MEX_ARGS) {
+  Caffe::set_phase(Caffe::TRAIN);
 }
 
 static void set_device(MEX_ARGS) {
@@ -759,7 +781,7 @@ static void reset(MEX_ARGS) {
   if (net_) {
     net_.reset();
     init_key = -2;
-    LOG(INFO) << "Network reset, call init before use it again";
+    mexWarnMsgTxt("Network reset, call init before use it again");
   }
 }
 
@@ -772,10 +794,10 @@ static void forward(MEX_ARGS) {
 
   plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
   if (nrhs == 0) {
-    //Forward without arguments behaves as forward_prefilled
+    // Forward without arguments behaves as forward_prefilled
     plhs[0] = do_forward_prefilled(plhs[1]);
   } else {
-    plhs[0] = do_forward(prhs[0],plhs[1]);
+    plhs[0] = do_forward(prhs[0], plhs[1]);
   }
 }
 
@@ -785,7 +807,6 @@ static void forward_prefilled(MEX_ARGS) {
   }
   plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
   plhs[0] = do_forward_prefilled(plhs[1]);
-
 }
 
 static void set_input_blobs(MEX_ARGS) {
@@ -802,7 +823,7 @@ static void backward(MEX_ARGS) {
     mex_error("Too many input arguments.");
   }
   if (nrhs == 0) {
-    //Backward without arguments behaves as backward_prefilled
+    // Backward without arguments behaves as backward_prefilled
     plhs[0] = do_backward_prefilled();
   } else {
     plhs[0] = do_backward(prhs[0]);
