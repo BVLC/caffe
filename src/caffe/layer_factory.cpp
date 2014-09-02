@@ -6,6 +6,27 @@
 
 namespace caffe {
 
+// GetLayer() defines the overall layer factory. The Get*Layer() functions
+// define factories for layers with multiple computational engines.
+
+// Get convolution layer according to engine.
+template <typename Dtype>
+ConvolutionLayer<Dtype>* GetConvolutionLayer(const string& name,
+    const LayerParameter& param) {
+  ConvolutionParameter_Engine engine = param.convolution_param().engine();
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
+    return new CaffeConvolutionLayer<Dtype>(param);
+  } else {
+    LOG(FATAL) << "Layer " << name << " has unknown engine.";
+  }
+}
+
+template ConvolutionLayer<float>* GetConvolutionLayer(const string& name,
+    const LayerParameter& param);
+template ConvolutionLayer<double>* GetConvolutionLayer(const string& name,
+    const LayerParameter& param);
+
+
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,
 // but we will leave it this way for now.
@@ -25,7 +46,7 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   case LayerParameter_LayerType_CONCAT:
     return new ConcatLayer<Dtype>(param);
   case LayerParameter_LayerType_CONVOLUTION:
-    return new ConvolutionLayer<Dtype>(param);
+    return GetConvolutionLayer<Dtype>(name, param);
   case LayerParameter_LayerType_DATA:
     return new DataLayer<Dtype>(param);
   case LayerParameter_LayerType_DROPOUT:

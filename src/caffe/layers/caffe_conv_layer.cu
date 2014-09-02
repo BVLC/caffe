@@ -9,8 +9,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+void CaffeConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>&
+    bottom, vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = (*top)[i]->mutable_gpu_data();
@@ -19,20 +19,21 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     int weight_offset = M_ * K_;
     int col_offset = K_ * N_;
     int top_offset = M_ * N_;
-    for (int n = 0; n < num_; ++n) {
+    for (int n = 0; n < this->num_; ++n) {
       // First, im2col
-      im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
-          width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+      im2col_gpu(bottom_data + bottom[i]->offset(n), this->channels_,
+          this->height_, this->width_, this->kernel_h_, this->kernel_w_,
+          this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_,
           col_data);
       // Second, innerproduct with groups
-      for (int g = 0; g < group_; ++g) {
+      for (int g = 0; g < this->group_; ++g) {
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
           (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
           (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
       }
       // third, add bias
-      if (bias_term_) {
-        caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
+      if (this->bias_term_) {
+        caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, this->num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->gpu_data(),
             bias_multiplier_.gpu_data(),
             (Dtype)1., top_data + (*top)[i]->offset(n));
@@ -42,7 +43,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void CaffeConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
@@ -52,7 +53,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
   }
   Dtype* bias_diff = NULL;
-  if (bias_term_ && this->param_propagate_down_[1]) {
+  if (this->bias_term_ && this->param_propagate_down_[1]) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
     caffe_gpu_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
   }
@@ -62,10 +63,10 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = NULL;
     // Bias gradient, if necessary.
-    if (bias_term_ && this->param_propagate_down_[1]) {
+    if (this->bias_term_ && this->param_propagate_down_[1]) {
       top_diff = top[i]->gpu_diff();
-      for (int n = 0; n < num_; ++n) {
-        caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
+      for (int n = 0; n < this->num_; ++n) {
+        caffe_gpu_gemv<Dtype>(CblasNoTrans, this->num_output_, N_,
             1., top_diff + top[0]->offset(n),
             bias_multiplier_.gpu_data(), 1.,
             bias_diff);
@@ -79,15 +80,16 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* col_diff = col_buffer_.mutable_gpu_diff();
       const Dtype* bottom_data = (*bottom)[i]->gpu_data();
       Dtype* bottom_diff = (*bottom)[i]->mutable_gpu_diff();
-      for (int n = 0; n < num_; ++n) {
+      for (int n = 0; n < this->num_; ++n) {
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
-        im2col_gpu(bottom_data + (*bottom)[i]->offset(n), channels_, height_,
-                   width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                   stride_h_, stride_w_, col_data);
+        im2col_gpu(bottom_data + (*bottom)[i]->offset(n), this->channels_,
+            this->height_, this->width_, this->kernel_h_, this->kernel_w_,
+            this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_,
+            col_data);
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          for (int g = 0; g < group_; ++g) {
+          for (int g = 0; g < this->group_; ++g) {
             caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
                 (Dtype)1., top_diff + top[i]->offset(n) + top_offset * g,
                 col_data + col_offset * g, (Dtype)1.,
@@ -96,16 +98,17 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
         // gradient w.r.t. bottom data, if necessary
         if (propagate_down[i]) {
-          for (int g = 0; g < group_; ++g) {
+          for (int g = 0; g < this->group_; ++g) {
             caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
                 (Dtype)1., weight + weight_offset * g,
                 top_diff + top[i]->offset(n) + top_offset * g,
                 (Dtype)0., col_diff + col_offset * g);
           }
           // col2im back to the data
-          col2im_gpu(col_diff, channels_, height_, width_,
-              kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-              bottom_diff + (*bottom)[i]->offset(n));
+          col2im_gpu(col_diff, this->channels_, this->height_, this->width_,
+              this->kernel_h_, this->kernel_w_, this->pad_h_, this->pad_w_,
+              this->stride_h_, this->stride_w_, bottom_diff +
+              (*bottom)[i]->offset(n));
         }
       }
     }
@@ -113,6 +116,6 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(ConvolutionLayer);
+INSTANTIATE_CLASS(CaffeConvolutionLayer);
 
 }  // namespace caffe
