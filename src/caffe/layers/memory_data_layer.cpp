@@ -31,6 +31,29 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
+  CHECK(!has_new_data_) <<
+      "Can't add Datum when earlier ones haven't been consumed"
+      << " by the upper layers";
+  size_t num = datum_vector.size();
+  CHECK_GT(num, 0) << "There is no datum to add";
+  CHECK_EQ(num, batch_size_) <<
+      "The number of added datum must be equal to the batch size";
+
+  Dtype* top_data = added_data_.mutable_cpu_data();
+  Dtype* top_label = added_label_.mutable_cpu_data();
+  for (int batch_item_id = 0; batch_item_id < num; ++batch_item_id) {
+    // Apply data transformations (mirror, scale, crop...)
+    this->data_transformer_.Transform(
+        batch_item_id, datum_vector[batch_item_id], this->mean_, top_data);
+    top_label[batch_item_id] = datum_vector[batch_item_id].label();
+  }
+  // num_images == batch_size_
+  Reset(top_data, top_label, batch_size_);
+  has_new_data_ = true;
+}
+
+template <typename Dtype>
 void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   CHECK(data);
   CHECK(labels);
