@@ -192,6 +192,9 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<PyLayer> >("LayerVec")
       .def(bp::vector_indexing_suite<vector<PyLayer>, true>());
 
+  bp::class_<vector<string> >("StringVec")
+      .def(bp::vector_indexing_suite<vector<string> >());
+
   import_array();
 }
 
