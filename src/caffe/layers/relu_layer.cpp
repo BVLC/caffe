@@ -9,21 +9,14 @@ namespace caffe {
 template <typename Dtype>
 void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
-  ReLUParameter relu_param = this->layer_param_.relu_param();
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
-  Dtype negative_slope = relu_param.negative_slope();
+  Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
   for (int i = 0; i < count; ++i) {
     top_data[i] = std::max(bottom_data[i], Dtype(0))
         + negative_slope * std::min(bottom_data[i], Dtype(0));
   }
-  // Default computation engine.
-#ifdef CAFFE_ENGINE
-  if (relu_param.engine() == ReLUParameter_Engine_DEFAULT) {
-    relu_param.set_engine(ReLUParameter_Engine_CAFFE);
-  }
-#endif
 }
 
 template <typename Dtype>

@@ -96,12 +96,6 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
   }
-  // Default computation engine.
-#ifdef CAFFE_ENGINE
-  if (pool_param.engine() == PoolingParameter_Engine_DEFAULT) {
-    pool_param.set_engine(PoolingParameter_Engine_CAFFE);
-  }
-#endif
 }
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
