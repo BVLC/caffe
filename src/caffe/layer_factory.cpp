@@ -94,6 +94,23 @@ template TanHLayer<float>* GetTanHLayer(const string& name,
 template TanHLayer<double>* GetTanHLayer(const string& name,
     const LayerParameter& param);
 
+// Get softmax layer according to engine.
+template <typename Dtype>
+SoftmaxLayer<Dtype>* GetSoftmaxLayer(const string& name,
+    const LayerParameter& param) {
+  SoftmaxParameter_Engine engine = param.softmax_param().engine();
+  if (engine == SoftmaxParameter_Engine_CAFFE) {
+    return new CaffeSoftmaxLayer<Dtype>(param);
+  } else {
+    LOG(FATAL) << "Layer " << name << " has unknown engine.";
+  }
+}
+
+template SoftmaxLayer<float>* GetSoftmaxLayer(const string& name,
+    const LayerParameter& param);
+template SoftmaxLayer<double>* GetSoftmaxLayer(const string& name,
+    const LayerParameter& param);
+
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,
 // but we will leave it this way for now.
@@ -163,7 +180,7 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   case LayerParameter_LayerType_SLICE:
     return new SliceLayer<Dtype>(param);
   case LayerParameter_LayerType_SOFTMAX:
-    return new SoftmaxLayer<Dtype>(param);
+    return GetSoftmaxLayer<Dtype>(name, param);
   case LayerParameter_LayerType_SOFTMAX_LOSS:
     return new SoftmaxWithLossLayer<Dtype>(param);
   case LayerParameter_LayerType_SPLIT:

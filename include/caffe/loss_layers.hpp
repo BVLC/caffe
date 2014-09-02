@@ -567,8 +567,8 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_top_vec_;
 };
 
-// Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.
-template <typename Dtype> class SoftmaxLayer;
+// Forward declare CaffeSoftmaxLayer for use in SoftmaxWithLossLayer.
+template <typename Dtype> class CaffeSoftmaxLayer;
 
 /**
  * @brief Computes the multinomial logistic loss for a one-of-many
@@ -603,7 +603,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
  public:
   explicit SoftmaxWithLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param),
-        softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
+        softmax_layer_(new CaffeSoftmaxLayer<Dtype>(param)) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
@@ -657,7 +657,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   /// The internal SoftmaxLayer used to map predictions to a distribution.
-  shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;
+  shared_ptr<CaffeSoftmaxLayer<Dtype> > softmax_layer_;
   /// prob stores the output probability predictions from the SoftmaxLayer.
   Blob<Dtype> prob_;
   /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
