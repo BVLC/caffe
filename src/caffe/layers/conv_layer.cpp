@@ -12,6 +12,7 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
+  // Check configuration.
   CHECK(!conv_param.has_kernel_size() !=
       !(conv_param.has_kernel_h() && conv_param.has_kernel_w()))
       << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
@@ -112,6 +113,12 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+  // Default computation engine.
+#ifdef CAFFE_ENGINE
+  if (conv_param.engine() == ConvolutionParameter_Engine_DEFAULT) {
+    conv_param.set_engine(ConvolutionParameter_Engine_CAFFE);
+  }
+#endif
 }
 
 

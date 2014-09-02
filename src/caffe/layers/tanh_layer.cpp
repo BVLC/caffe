@@ -12,6 +12,7 @@ namespace caffe {
 template <typename Dtype>
 void TanHLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
+  TanHParameter tanh_param = this->layer_param_.tanh_param();
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   Dtype exp2x;
@@ -20,6 +21,12 @@ void TanHLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     exp2x = exp(2 * bottom_data[i]);
     top_data[i] = (exp2x - Dtype(1)) / (exp2x + Dtype(1));
   }
+  // Default computation engine.
+#ifdef CAFFE_ENGINE
+  if (tanh_param.engine() == TanHParameter_Engine_DEFAULT) {
+    tanh_param.set_engine(TanHParameter_Engine_CAFFE);
+  }
+#endif
 }
 
 template <typename Dtype>

@@ -11,6 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+  SoftmaxParameter softmax_param = this->layer_param_.softmax_param();
   (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
   sum_multiplier_.Reshape(1, bottom[0]->channels(), 1, 1);
@@ -19,6 +20,12 @@ void SoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     multiplier_data[i] = 1.;
   }
   scale_.Reshape(bottom[0]->num(), 1, bottom[0]->height(), bottom[0]->width());
+  // Default computation engine.
+#ifdef CAFFE_ENGINE
+  if (softmax_param.engine() == SoftmaxParameter_Engine_DEFAULT) {
+    softmax_param.set_engine(SoftmaxParameter_Engine_CAFFE);
+  }
+#endif
 }
 
 template <typename Dtype>

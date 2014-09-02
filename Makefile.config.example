@@ -1,6 +1,9 @@
 ## Refer to http://caffe.berkeleyvision.org/installation.html
 # Contributions simplifying and improving our build system are welcome!
 
+# Computation engine switch: currently only the standard Caffe engine.
+ENGINE := caffe
+
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
