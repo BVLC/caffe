@@ -123,6 +123,9 @@ class PyNet {
     return vector<PyLayer>(net_->layers().begin(), net_->layers().end());
   }
 
+  vector<string> blob_names() { return net_->blob_names(); }
+  vector<string> layer_names() { return net_->layer_names(); }
+
   bp::list inputs() {
     bp::list input_blob_names;
     for (int i = 0; i < net_->input_blob_indices().size(); ++i) {

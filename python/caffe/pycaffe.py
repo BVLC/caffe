@@ -21,7 +21,7 @@ def _Net_blobs(self):
     An OrderedDict (bottom to top, i.e., input to output) of network
     blobs indexed by name
     """
-    return OrderedDict([(bl.name, bl) for bl in self._blobs])
+    return OrderedDict(zip(self._blob_names, self._blobs))
 
 
 @property
@@ -31,7 +31,8 @@ def _Net_params(self):
     parameters indexed by name; each is a list of multiple blobs (e.g.,
     weights and biases)
     """
-    return OrderedDict([(lr.name, lr.blobs) for lr in self.layers
+    return OrderedDict([(name, lr.blobs)
+                        for name, lr in zip(self._layer_names, self.layers)
                         if len(lr.blobs) > 0])
 
 def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
@@ -53,12 +54,12 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
         blobs = []
 
     if start is not None:
-        start_ind = [lr.name for lr in self.layers].index(start)
+        start_ind = list(self._layer_names).index(start)
     else:
         start_ind = 0
 
     if end is not None:
-        end_ind = [lr.name for lr in self.layers].index(end)
+        end_ind = list(self._layer_names).index(end)
         outputs = set([end] + blobs)
     else:
         end_ind = len(self.layers) - 1
@@ -100,12 +101,12 @@ def _Net_backward(self, diffs=None, start=None, end=None, **kwargs):
         diffs = []
 
     if start is not None:
-        start_ind = [lr.name for lr in self.layers].index(start)
+        start_ind = list(self._layer_names).index(start)
     else:
         start_ind = len(self.layers) - 1
 
     if end is not None:
-        end_ind = [lr.name for lr in self.layers].index(end)
+        end_ind = list(self._layer_names).index(end)
         outputs = set([end] + diffs)
     else:
         end_ind = 0
