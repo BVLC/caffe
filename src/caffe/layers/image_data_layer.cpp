@@ -12,46 +12,6 @@
 
 namespace caffe {
 
-// This function is used to create a thread that prefetches the data.
-template <typename Dtype>
-void ImageDataLayer<Dtype>::InternalThreadEntry() {
-  Datum datum;
-  CHECK(this->prefetch_data_.count());
-  Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
-  Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
-  ImageDataParameter image_data_param = this->layer_param_.image_data_param();
-  const int batch_size = image_data_param.batch_size();
-  const int new_height = image_data_param.new_height();
-  const int new_width = image_data_param.new_width();
-
-  // datum scales
-  const int lines_size = lines_.size();
-  for (int item_id = 0; item_id < batch_size; ++item_id) {
-    // get a blob
-    CHECK_GT(lines_size, lines_id_);
-    if (!ReadImageToDatum(lines_[lines_id_].first,
-          lines_[lines_id_].second,
-          new_height, new_width, &datum)) {
-      continue;
-    }
-
-    // Apply transformations (mirror, crop...) to the data
-    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
-
-    top_label[item_id] = datum.label();
-    // go to the next iter
-    lines_id_++;
-    if (lines_id_ >= lines_size) {
-      // We have reached the end. Restart from the first.
-      DLOG(INFO) << "Restarting data prefetching from start.";
-      lines_id_ = 0;
-      if (this->layer_param_.image_data_param().shuffle()) {
-        ShuffleImages();
-      }
-    }
-  }
-}
-
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
   this->JoinPrefetchThread();
@@ -128,6 +88,46 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
+}
+
+// This function is used to create a thread that prefetches the data.
+template <typename Dtype>
+void ImageDataLayer<Dtype>::InternalThreadEntry() {
+  Datum datum;
+  CHECK(this->prefetch_data_.count());
+  Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
+  Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
+  ImageDataParameter image_data_param = this->layer_param_.image_data_param();
+  const int batch_size = image_data_param.batch_size();
+  const int new_height = image_data_param.new_height();
+  const int new_width = image_data_param.new_width();
+
+  // datum scales
+  const int lines_size = lines_.size();
+  for (int item_id = 0; item_id < batch_size; ++item_id) {
+    // get a blob
+    CHECK_GT(lines_size, lines_id_);
+    if (!ReadImageToDatum(lines_[lines_id_].first,
+          lines_[lines_id_].second,
+          new_height, new_width, &datum)) {
+      continue;
+    }
+
+    // Apply transformations (mirror, crop...) to the data
+    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
+
+    top_label[item_id] = datum.label();
+    // go to the next iter
+    lines_id_++;
+    if (lines_id_ >= lines_size) {
+      // We have reached the end. Restart from the first.
+      DLOG(INFO) << "Restarting data prefetching from start.";
+      lines_id_ = 0;
+      if (this->layer_param_.image_data_param().shuffle()) {
+        ShuffleImages();
+      }
+    }
+  }
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);
