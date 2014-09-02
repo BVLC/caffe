@@ -52,15 +52,15 @@ class ConvolutionLayer : public Layer<Dtype> {
   int num_;
   int channels_;
   int pad_h_, pad_w_;
-  int height_;
-  int width_;
-  int num_output_;
+  int height_, width_;
   int group_;
+  int num_output_;
+  int height_out_, width_out_;
   bool bias_term_;
-  int height_out_;
-  int width_out_;
 };
 
+/* CaffeConvolutionLayer
+*/
 template <typename Dtype>
 class CaffeConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
@@ -68,13 +68,6 @@ class CaffeConvolutionLayer : public ConvolutionLayer<Dtype> {
       : ConvolutionLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_CONVOLUTION;
-  }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -86,9 +79,7 @@ class CaffeConvolutionLayer : public ConvolutionLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  int M_;
-  int K_;
-  int N_;
+  int M_, K_, N_;
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
 };
@@ -127,8 +118,7 @@ class Im2colLayer : public Layer<Dtype> {
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int channels_;
-  int height_;
-  int width_;
+  int height_, width_;
   int pad_h_, pad_w_;
 };
 
@@ -227,14 +217,6 @@ class PoolingLayer : public Layer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_POOLING;
   }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  // MAX POOL layers can output an extra top blob for the mask;
-  // others can only output the pooled inputs.
-  virtual inline int MaxTopBlobs() const {
-    return (this->layer_param_.pooling_param().pool() ==
-            PoolingParameter_PoolMethod_MAX) ? 2 : 1;
-  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -250,15 +232,11 @@ class PoolingLayer : public Layer<Dtype> {
   int stride_h_, stride_w_;
   int pad_h_, pad_w_;
   int channels_;
-  int height_;
-  int width_;
-  int pooled_height_;
-  int pooled_width_;
-  Blob<Dtype> rand_idx_;
-  Blob<int> max_idx_;
+  int height_, width_;
+  int pooled_height_, pooled_width_;
 };
 
-/* PoolingLayer
+/* CaffePoolingLayer
 */
 template <typename Dtype>
 class CaffePoolingLayer : public PoolingLayer<Dtype> {
@@ -268,9 +246,6 @@ class CaffePoolingLayer : public PoolingLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_POOLING;
-  }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
   // MAX POOL layers can output an extra top blob for the mask;

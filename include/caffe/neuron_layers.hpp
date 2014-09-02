@@ -365,10 +365,6 @@ class CaffeReLULayer : public ReLULayer<Dtype> {
   explicit CaffeReLULayer(const LayerParameter& param)
       : ReLULayer<Dtype>(param) {}
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_RELU;
-  }
-
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -446,10 +442,6 @@ class CaffeSigmoidLayer : public SigmoidLayer<Dtype> {
  public:
   explicit CaffeSigmoidLayer(const LayerParameter& param)
       : SigmoidLayer<Dtype>(param) {}
-
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_SIGMOID;
-  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -530,10 +522,6 @@ class CaffeTanHLayer : public TanHLayer<Dtype> {
  public:
   explicit CaffeTanHLayer(const LayerParameter& param)
       : TanHLayer<Dtype>(param) {}
-
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_TANH;
-  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
