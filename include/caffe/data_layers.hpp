@@ -1,8 +1,6 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
-#include <opencv2/opencv.hpp>
-
 #include <string>
 #include <utility>
 #include <vector>
@@ -256,12 +254,6 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
-
-  virtual void AddImages(const vector<cv::Mat>& images,
-                         const bool is_color_images = true);
-  virtual void AddImagesAndLabels(const vector<cv::Mat>& images,
-                                  const vector<int>& labels,
-                                  const bool is_color_images = true);
 
   int batch_size() { return batch_size_; }
 
