@@ -15,12 +15,19 @@ inline Dtype sigmoid(Dtype x) {
 template <typename Dtype>
 void SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
+  SigmoidParameter sigmoid_param = this->layer_param_.sigmoid_param();
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
   for (int i = 0; i < count; ++i) {
     top_data[i] = sigmoid(bottom_data[i]);
   }
+  // Default computation engine.
+#ifdef CAFFE_ENGINE
+  if (sigmoid_param.engine() == SigmoidParameter_Engine_DEFAULT) {
+    sigmoid_param.set_engine(SigmoidParameter_Engine_CAFFE);
+  }
+#endif
 }
 
 template <typename Dtype>
