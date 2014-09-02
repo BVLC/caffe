@@ -46,7 +46,7 @@ TYPED_TEST(MaxPoolingDropoutTest, TestSetup) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
-  PoolingLayer<Dtype> max_layer(layer_param);
+  CaffePoolingLayer<Dtype> max_layer(layer_param);
   max_layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   DropoutLayer<Dtype> dropout_layer(layer_param);
   dropout_layer.SetUp(this->blob_top_vec_, &(this->blob_top_vec_));
@@ -63,7 +63,7 @@ TYPED_TEST(MaxPoolingDropoutTest, TestForward) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
-  PoolingLayer<Dtype> layer(layer_param);
+  CaffePoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   const Dtype* top_data = this->blob_top_->cpu_data();
@@ -93,7 +93,7 @@ TYPED_TEST(MaxPoolingDropoutTest, TestBackward) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
-  PoolingLayer<Dtype> layer(layer_param);
+  CaffePoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   for (int i = 0; i < this->blob_top_->count(); ++i) {

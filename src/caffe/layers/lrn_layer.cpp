@@ -53,7 +53,7 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           PoolingParameter_PoolMethod_AVE);
       pool_param.mutable_pooling_param()->set_pad(pre_pad_);
       pool_param.mutable_pooling_param()->set_kernel_size(size_);
-      pool_layer_.reset(new PoolingLayer<Dtype>(pool_param));
+      pool_layer_.reset(new CaffePoolingLayer<Dtype>(pool_param));
       pool_layer_->SetUp(square_top_vec_, &pool_top_vec_);
       CHECK_EQ(pool_output_.num(), num_);
       CHECK_EQ(pool_output_.channels(), channels_);
