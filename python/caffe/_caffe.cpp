@@ -156,6 +156,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("set_device",            &PyNet::set_device)
       .add_property("_blobs",       &PyNet::blobs)
       .add_property("layers",       &PyNet::layers)
+      .add_property("_blob_names",  &PyNet::blob_names)
+      .add_property("_layer_names", &PyNet::layer_names)
       .add_property("inputs",       &PyNet::inputs)
       .add_property("outputs",      &PyNet::outputs)
       .add_property("mean",         &PyNet::mean_)
