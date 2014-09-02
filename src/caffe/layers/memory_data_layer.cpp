@@ -51,43 +51,6 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   has_new_data_ = false;
 }
 
-template <typename Dtype>
-void MemoryDataLayer<Dtype>::AddImages(
-    const vector<cv::Mat>& images, const bool is_color_images) {
-  const vector<int> fake_labels(images.size(), 0);
-  AddImagesAndLabels(images, fake_labels, is_color_images);
-}
-
-template <typename Dtype>
-void MemoryDataLayer<Dtype>::AddImagesAndLabels(
-    const vector<cv::Mat>& images, const vector<int>& labels,
-    const bool is_color_images) {
-  CHECK(!has_new_data_) <<
-      "There are pending images that haven't been consumed";
-  size_t num_images = images.size();
-  CHECK_GT(num_images, 0) << "There is no image to add";
-  CHECK_EQ(num_images, batch_size_) <<
-      "The number of added images must be equal to the batch size";
-  CHECK_EQ(num_images, labels.size()) <<
-      "The number of images must be equal to the number of labels";
-
-  Datum datum;
-  Dtype* top_data = added_data_.mutable_cpu_data();
-  Dtype* top_label = added_label_.mutable_cpu_data();
-  for (int batch_item_id = 0; batch_item_id < num_images; ++batch_item_id) {
-    OpenCVImageToDatum(
-        images[batch_item_id], labels[batch_item_id], this->datum_height_,
-        this->datum_width_, &datum);
-    // Apply data transformations (mirror, scale, crop...)
-    this->data_transformer_.Transform(batch_item_id, datum, this->mean_,
-                                      top_data);
-    top_label[batch_item_id] = labels[batch_item_id];
-  }
-  // num_images == batch_size_
-  Reset(top_data, top_label, batch_size_);
-  has_new_data_ = true;
-}
-
 INSTANTIATE_CLASS(MemoryDataLayer);
 
 }  // namespace caffe
