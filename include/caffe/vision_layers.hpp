@@ -39,13 +39,13 @@ class ConvolutionLayer : public Layer<Dtype> {
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      vector<Blob<Dtype>*>* top) = 0;
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) = 0;
 
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
@@ -56,12 +56,41 @@ class ConvolutionLayer : public Layer<Dtype> {
   int width_;
   int num_output_;
   int group_;
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
   bool bias_term_;
+  int height_out_;
+  int width_out_;
+};
+
+template <typename Dtype>
+class CaffeConvolutionLayer : public ConvolutionLayer<Dtype> {
+ public:
+  explicit CaffeConvolutionLayer(const LayerParameter& param)
+      : ConvolutionLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_CONVOLUTION;
+  }
+  virtual inline int MinBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline bool EqualNumBottomTopBlobs() const { return true; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
   int M_;
   int K_;
   int N_;
+  Blob<Dtype> col_buffer_;
+  Blob<Dtype> bias_multiplier_;
 };
 
 /**
