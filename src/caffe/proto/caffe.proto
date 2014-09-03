@@ -195,7 +195,7 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 36 (last added: loss_weight)
+// LayerParameter next available ID: 37 (last added: transform_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -307,11 +307,28 @@ message LayerParameter {
   optional HingeLossParameter hinge_loss_param = 29;
   optional SliceParameter slice_param = 31;
   optional MVNParameter mvn_param = 34;
+  
+  // Parameters for data pre-processing.
+  optional TransformationParameter transform_param = 36;
 
   // DEPRECATED: The layer parameters specified as a V0LayerParameter.
   // This should never be used by any code except to upgrade to the new
   // LayerParameter specification.
   optional V0LayerParameter layer = 1;
+}
+
+// Message that stores parameters used to apply transformation
+// to the data layer's data
+message TransformationParameter {
+  // For data pre-processing, we can do simple scaling and subtracting the
+  // data mean, if provided. Note that the mean subtraction is always carried
+  // out before scaling.
+  optional float scale = 1 [default = 1];
+  // Specify if we want to randomly mirror data.
+  optional bool mirror = 2 [default = false];
+  // Specify if we would like to randomly crop an image.
+  optional uint32 crop_size = 3 [default = 0];
+  optional string mean_file = 4;
 }
 
 // Message that stores parameters used by AccuracyLayer
@@ -357,20 +374,6 @@ message ConvolutionParameter {
   optional FillerParameter bias_filler = 8; // The filler for the bias
 }
 
-// Message that stores parameters used to apply transformation
-// to the data layer's data
-message TransformationParameter {
-  // For data pre-processing, we can do simple scaling and subtracting the
-  // data mean, if provided. Note that the mean subtraction is always carried
-  // out before scaling.
-  optional float scale = 1 [default = 1];
-  // Specify if we want to randomly mirror data.
-  optional bool mirror = 2 [default = false];
-  // Specify if we would like to randomly crop an image.
-  optional uint32 crop_size = 3 [default = 0];
-  optional string mean_file = 4;
-}
-
 // Message that stores parameters used by DataLayer
 message DataParameter {
   enum DB {
@@ -387,17 +390,15 @@ message DataParameter {
   // be larger than the number of keys in the leveldb.
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
-  // Parameters for data pre-processing.
-  optional TransformationParameter transform_param = 9;
-  // DEPRECATED. See TransformParameter. For data pre-processing, we can do
+  // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
   // simple scaling and subtracting the data mean, if provided. Note that the
   // mean subtraction is always carried out before scaling.
   optional float scale = 2 [default = 1];
   optional string mean_file = 3;
-  // DEPRECATED. See TransformParameter. Specify if we would like to randomly
+  // DEPRECATED. See TransformationParameter. Specify if we would like to randomly
   // crop an image.
   optional uint32 crop_size = 5 [default = 0];
-  // DEPRECATED. See TransformParameter. Specify if we want to randomly mirror
+  // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
 }
@@ -482,17 +483,15 @@ message ImageDataParameter {
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 9 [default = 0];
   optional uint32 new_width = 10 [default = 0];
-  // Parameters for data pre-processing.
-  optional TransformationParameter transform_param = 11;
-  // DEPRECATED. See TransformParameter. For data pre-processing, we can do
+  // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
   // simple scaling and subtracting the data mean, if provided. Note that the
   // mean subtraction is always carried out before scaling.
   optional float scale = 2 [default = 1];
   optional string mean_file = 3;
-  // DEPRECATED. See TransformParameter. Specify if we would like to randomly
+  // DEPRECATED. See TransformationParameter. Specify if we would like to randomly
   // crop an image.
   optional uint32 crop_size = 5 [default = 0];
-  // DEPRECATED. See TransformParameter. Specify if we want to randomly mirror
+  // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
 }

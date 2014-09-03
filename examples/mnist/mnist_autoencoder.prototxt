@@ -7,9 +7,9 @@ layers {
     source: "examples/mnist/mnist_train_lmdb"
     backend: LMDB
     batch_size: 100
-    transform_param {
-      scale: 0.0039215684
-    }
+  }
+  transform_param {
+    scale: 0.0039215684
   }
   include: { phase: TRAIN }
 }
@@ -21,9 +21,9 @@ layers {
     source: "examples/mnist/mnist_train_lmdb"
     backend: LMDB
     batch_size: 100
-    transform_param {
-      scale: 0.0039215684
-    }
+  }
+  transform_param {
+    scale: 0.0039215684
   }
   include: {
     phase: TEST

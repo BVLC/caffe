@@ -155,6 +155,7 @@ _ERROR_CATEGORIES = [
   'build/printf_format',
   'build/storage_class',
   'caffe/alt_fn',
+  'caffe/data_layer_setup',
   'caffe/random_fn',
   'legal/copyright',
   'readability/alt_tokens',
@@ -1589,6 +1590,45 @@ def CheckCaffeAlternatives(filename, clean_lines, linenum, error):
       error(filename, linenum, 'caffe/alt_fn', 2,
             'Use Caffe function %s instead of %s(...).' %
                 (' or '.join(disp_alts), function))
+
+
+def CheckCaffeDataLayerSetUp(filename, clean_lines, linenum, error):
+  """Except the base classes, Caffe DataLayer should define DataLayerSetUp
+     instead of LayerSetUp.
+     
+  The base DataLayers define common SetUp steps, the subclasses should
+  not override them.
+  
+  Args:
+    filename: The name of the current file.
+    clean_lines: A CleansedLines instance containing the file.
+    linenum: The number of the line to check.
+    error: The function to call with any errors found.
+  """
+  line = clean_lines.elided[linenum]
+  ix = line.find('DataLayer<Dtype>::LayerSetUp')
+  if ix >= 0 and (
+       line.find('void DataLayer<Dtype>::LayerSetUp') != -1 or
+       line.find('void ImageDataLayer<Dtype>::LayerSetUp') != -1 or
+       line.find('void MemoryDataLayer<Dtype>::LayerSetUp') != -1 or
+       line.find('void WindowDataLayer<Dtype>::LayerSetUp') != -1):
+      error(filename, linenum, 'caffe/data_layer_setup', 2,
+            'Except the base classes, Caffe DataLayer should define'
+            + ' DataLayerSetUp instead of LayerSetUp. The base DataLayers'
+            + ' define common SetUp steps, the subclasses should'
+            + ' not override them.')
+  ix = line.find('DataLayer<Dtype>::DataLayerSetUp')
+  if ix >= 0 and (
+       line.find('void Base') == -1 and
+       line.find('void DataLayer<Dtype>::DataLayerSetUp') == -1 and
+       line.find('void ImageDataLayer<Dtype>::DataLayerSetUp') == -1 and
+       line.find('void MemoryDataLayer<Dtype>::DataLayerSetUp') == -1 and
+       line.find('void WindowDataLayer<Dtype>::DataLayerSetUp') == -1):
+      error(filename, linenum, 'caffe/data_layer_setup', 2,
+            'Except the base classes, Caffe DataLayer should define'
+            + ' DataLayerSetUp instead of LayerSetUp. The base DataLayers'
+            + ' define common SetUp steps, the subclasses should'
+            + ' not override them.')
 
 
 c_random_function_list = (
@@ -4593,6 +4633,7 @@ def ProcessLine(filename, file_extension, clean_lines, line,
                                 nesting_state, error)
   CheckVlogArguments(filename, clean_lines, line, error)
   CheckCaffeAlternatives(filename, clean_lines, line, error)
+  CheckCaffeDataLayerSetUp(filename, clean_lines, line, error)
   CheckCaffeRandom(filename, clean_lines, line, error)
   CheckPosixThreading(filename, clean_lines, line, error)
   CheckInvalidIncrement(filename, clean_lines, line, error)

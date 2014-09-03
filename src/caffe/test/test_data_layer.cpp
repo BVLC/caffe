@@ -1,9 +1,8 @@
 #include <string>
 #include <vector>
 
-#include "leveldb/db.h"
-
 #include "gtest/gtest.h"
+#include "leveldb/db.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -12,9 +11,6 @@
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-
-using std::string;
-using std::stringstream;
 
 namespace caffe {
 
@@ -122,7 +118,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_scale(scale);
 
     DataLayer<Dtype> layer(param);
@@ -161,7 +157,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_scale(scale);
     transform_param->set_crop_size(1);
 
@@ -211,7 +207,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_crop_size(1);
     transform_param->set_mirror(true);
 
@@ -265,7 +261,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     data_param->set_backend(backend_);
 
     TransformationParameter* transform_param =
-        data_param->mutable_transform_param();
+        param.mutable_transform_param();
     transform_param->set_crop_size(1);
     transform_param->set_mirror(true);
 

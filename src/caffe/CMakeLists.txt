@@ -86,6 +86,16 @@ if(NOT CPU_ONLY)
             -gencode arch=compute_35,code=sm_35
     )
     
+# https://github.com/ComputationalRadiationPhysics/picongpu/blob/master/src/picongpu/CMakeLists.txt
+    # work-arounds
+if(Boost_VERSION EQUAL 105500)
+    # see https://svn.boost.org/trac/boost/ticket/9392
+    message(STATUS "Boost: Applying noinline work around")
+    # avoid warning for CMake >= 2.8.12
+    set(CUDA_NVCC_FLAGS
+      "${CUDA_NVCC_FLAGS} \"-DBOOST_NOINLINE=__attribute__((noinline))\" ")
+endif(Boost_VERSION EQUAL 105500)
+
     #    cuda sources
     file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
     file(GLOB_RECURSE TEST_CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cu)

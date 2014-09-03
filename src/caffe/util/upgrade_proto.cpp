@@ -306,31 +306,12 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
       }
     }
     if (v0_layer_param.has_scale()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->mutable_transform_param()->
-            set_scale(v0_layer_param.scale());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->mutable_transform_param()->
-            set_scale(v0_layer_param.scale());
-      } else {
-        LOG(ERROR) << "Unknown parameter scale for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_scale(v0_layer_param.scale());
     }
     if (v0_layer_param.has_meanfile()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->mutable_transform_param()->
-            set_mean_file(v0_layer_param.meanfile());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->mutable_transform_param()->
-            set_mean_file(v0_layer_param.meanfile());
-      } else if (type == "window_data") {
-        layer_param->mutable_window_data_param()->set_mean_file(
-            v0_layer_param.meanfile());
-      } else {
-        LOG(ERROR) << "Unknown parameter meanfile for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_mean_file(v0_layer_param.meanfile());
     }
     if (v0_layer_param.has_batchsize()) {
       if (type == "data") {
@@ -351,34 +332,12 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
       }
     }
     if (v0_layer_param.has_cropsize()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->mutable_transform_param()->
-            set_crop_size(v0_layer_param.cropsize());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->mutable_transform_param()->
-            set_crop_size(v0_layer_param.cropsize());
-      } else if (type == "window_data") {
-        layer_param->mutable_window_data_param()->set_crop_size(
-            v0_layer_param.cropsize());
-      } else {
-        LOG(ERROR) << "Unknown parameter cropsize for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_crop_size(v0_layer_param.cropsize());
     }
     if (v0_layer_param.has_mirror()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->mutable_transform_param()->
-            set_mirror(v0_layer_param.mirror());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->mutable_transform_param()->
-            set_mirror(v0_layer_param.mirror());
-      } else if (type == "window_data") {
-        layer_param->mutable_window_data_param()->set_mirror(
-            v0_layer_param.mirror());
-      } else {
-        LOG(ERROR) << "Unknown parameter mirror for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_mirror(v0_layer_param.mirror());
     }
     if (v0_layer_param.has_rand_skip()) {
       if (type == "data") {
@@ -567,52 +526,36 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   return false;
 }
 
+#define CONVERT_LAYER_TRANSFORM_PARAM(TYPE, Name, param_name) \
+  do { \
+    if (net_param->layers(i).type() == LayerParameter_LayerType_##TYPE) { \
+      Name##Parameter* layer_param = \
+          net_param->mutable_layers(i)->mutable_##param_name##_param(); \
+      TransformationParameter* transform_param = \
+          net_param->mutable_layers(i)->mutable_transform_param(); \
+      if (layer_param->has_scale()) { \
+        transform_param->set_scale(layer_param->scale()); \
+        layer_param->clear_scale(); \
+      } \
+      if (layer_param->has_mean_file()) { \
+        transform_param->set_mean_file(layer_param->mean_file()); \
+        layer_param->clear_mean_file(); \
+      } \
+      if (layer_param->has_crop_size()) { \
+        transform_param->set_crop_size(layer_param->crop_size()); \
+        layer_param->clear_crop_size(); \
+      } \
+      if (layer_param->has_mirror()) { \
+        transform_param->set_mirror(layer_param->mirror()); \
+        layer_param->clear_mirror(); \
+      } \
+    } \
+  } while (0)
+
 void UpgradeNetDataTransformation(NetParameter* net_param) {
   for (int i = 0; i < net_param->layers_size(); ++i) {
-    if (net_param->layers(i).type() == LayerParameter_LayerType_DATA) {
-      DataParameter* layer_param =
-          net_param->mutable_layers(i)->mutable_data_param();
-      TransformationParameter* transform_param =
-          layer_param->mutable_transform_param();
-      if (layer_param->has_scale()) {
-        transform_param->set_scale(layer_param->scale());
-        layer_param->clear_scale();
-      }
-      if (layer_param->has_mean_file()) {
-        transform_param->set_mean_file(layer_param->mean_file());
-        layer_param->clear_mean_file();
-      }
-      if (layer_param->has_crop_size()) {
-        transform_param->set_crop_size(layer_param->crop_size());
-        layer_param->clear_crop_size();
-      }
-      if (layer_param->has_mirror()) {
-        transform_param->set_mirror(layer_param->mirror());
-        layer_param->clear_mirror();
-      }
-    }
-    if (net_param->layers(i).type() == LayerParameter_LayerType_IMAGE_DATA) {
-      ImageDataParameter* layer_param =
-          net_param->mutable_layers(i)->mutable_image_data_param();
-      TransformationParameter* transform_param =
-          layer_param->mutable_transform_param();
-      if (layer_param->has_scale()) {
-        transform_param->set_scale(layer_param->scale());
-        layer_param->clear_scale();
-      }
-      if (layer_param->has_mean_file()) {
-        transform_param->set_mean_file(layer_param->mean_file());
-        layer_param->clear_mean_file();
-      }
-      if (layer_param->has_crop_size()) {
-        transform_param->set_crop_size(layer_param->crop_size());
-        layer_param->clear_crop_size();
-      }
-      if (layer_param->has_mirror()) {
-        transform_param->set_mirror(layer_param->mirror());
-        layer_param->clear_mirror();
-      }
-    }
+    CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
+    CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
   }
 }
 

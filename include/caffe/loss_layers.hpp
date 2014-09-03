@@ -5,10 +5,6 @@
 #include <utility>
 #include <vector>
 
-#include "boost/scoped_ptr.hpp"
-#include "hdf5.h"
-#include "leveldb/db.h"
-
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"

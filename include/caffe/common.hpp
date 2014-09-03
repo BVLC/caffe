@@ -6,9 +6,14 @@
 #include <glog/logging.h>
 
 #include <cmath>
+#include <fstream>  // NOLINT(readability/streams)
+#include <iostream>  // NOLINT(readability/streams)
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
+#include <utility>  // pair
+#include <vector>
 
 #include "caffe/util/device_alternate.hpp"
 
@@ -88,6 +93,7 @@ using std::ostringstream;
 using std::pair;
 using std::set;
 using std::string;
+using std::stringstream;
 using std::vector;
 
 // A global initialization function that you should call in your main function.
