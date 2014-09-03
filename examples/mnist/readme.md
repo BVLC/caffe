@@ -30,7 +30,7 @@ The design of LeNet contains the essence of CNNs that are still used in larger m
 
 ## Define the MNIST Network
 
-This section explains the prototxt file `lenet_train.prototxt` used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at [src/caffe/proto/caffe.proto](https://github.com/Yangqing/caffe/blob/master/src/caffe/proto/caffe.proto).
+This section explains the prototxt file `lenet_train.prototxt` used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at `$CAFFE_ROOT/src/caffe/proto/caffe.proto`.
 
 Specifically, we will write a `caffe::NetParameter` (or in python, `caffe.proto.caffe_pb2.NetParameter`) protobuf. We will start by giving the network a name:
 
