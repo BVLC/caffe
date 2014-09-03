@@ -43,6 +43,8 @@ Tested on Ubuntu, Red Hat, OS X.
 BVLC provides ready-to-use models for non-commercial use.
 * [Developing & Contributing](/development.html)<br />
 Guidelines for development and contributing to Caffe.
+* [API Documentation](/doxygen/)<br />
+Developer documentation automagically generated from code comments.
 
 ### Examples
 

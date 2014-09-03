@@ -188,6 +188,26 @@ ALL_BUILD_DIRS := $(sort \
 		$(DISTRIBUTE_SUBDIRS))
 
 ##############################
+# Set directory for Doxygen-generated documentation
+##############################
+DOXYGEN_CONFIG_FILE ?= ./.Doxyfile
+# should be the same as OUTPUT_DIRECTORY in the .Doxyfile
+DOXYGEN_OUTPUT_DIR ?= ./doxygen
+DOXYGEN_COMMAND ?= doxygen
+# All the files that might have Doxygen documentation.
+DOXYGEN_SOURCES := $(shell find \
+	src/$(PROJECT) \
+	include/$(PROJECT) \
+	python/ \
+	matlab/ \
+	examples \
+	tools \
+	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh" -or \
+        -name "*.py" -or -name "*.m")
+DOXYGEN_SOURCES += $(DOXYGEN_CONFIG_FILE)
+
+
+##############################
 # Configure build
 ##############################
 
@@ -301,7 +321,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 ##############################
 # Define build targets
 ##############################
-.PHONY: all test clean linecount lint lintclean tools examples $(DIST_ALIASES) \
+.PHONY: all test clean docs linecount lint lintclean tools examples $(DIST_ALIASES) \
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
@@ -316,6 +336,12 @@ lint: $(EMPTY_LINT_REPORT)
 
 lintclean:
 	@ $(RM) -r $(LINT_OUTPUT_DIR) $(EMPTY_LINT_REPORT) $(NONEMPTY_LINT_REPORT)
+
+docs: $(DOXYGEN_OUTPUT_DIR)
+	@ cd ./docs ; ln -sfn ../$(DOXYGEN_OUTPUT_DIR)/html doxygen
+
+$(DOXYGEN_OUTPUT_DIR): $(DOXYGEN_CONFIG_FILE) $(DOXYGEN_SOURCES)
+	$(DOXYGEN_COMMAND) $(DOXYGEN_CONFIG_FILE)
 
 $(EMPTY_LINT_REPORT): $(LINT_OUTPUTS) | $(BUILD_DIR)
 	@ cat $(LINT_OUTPUTS) > $@
