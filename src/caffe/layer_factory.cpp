@@ -14,6 +14,11 @@ template <typename Dtype>
 ConvolutionLayer<Dtype>* GetConvolutionLayer(const string& name,
     const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
+  if (engine == ConvolutionParameter_Engine_DEFAULT) {
+#ifdef CAFFE_ENGINE
+    engine = ConvolutionParameter_Engine_CAFFE;
+#endif
+  }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
     return new CaffeConvolutionLayer<Dtype>(param);
   } else {
@@ -31,6 +36,11 @@ template <typename Dtype>
 PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
     const LayerParameter& param) {
   PoolingParameter_Engine engine = param.pooling_param().engine();
+  if (engine == PoolingParameter_Engine_DEFAULT) {
+#ifdef CAFFE_ENGINE
+    engine = PoolingParameter_Engine_CAFFE;
+#endif
+  }
   if (engine == PoolingParameter_Engine_CAFFE) {
     return new CaffePoolingLayer<Dtype>(param);
   } else {
@@ -48,6 +58,11 @@ template <typename Dtype>
 ReLULayer<Dtype>* GetReLULayer(const string& name,
     const LayerParameter& param) {
   ReLUParameter_Engine engine = param.relu_param().engine();
+  if (engine == ReLUParameter_Engine_DEFAULT) {
+#ifdef CAFFE_ENGINE
+    engine = ReLUParameter_Engine_CAFFE;
+#endif
+  }
   if (engine == ReLUParameter_Engine_CAFFE) {
     return new CaffeReLULayer<Dtype>(param);
   } else {
@@ -65,6 +80,11 @@ template <typename Dtype>
 SigmoidLayer<Dtype>* GetSigmoidLayer(const string& name,
     const LayerParameter& param) {
   SigmoidParameter_Engine engine = param.sigmoid_param().engine();
+  if (engine == SigmoidParameter_Engine_DEFAULT) {
+#ifdef CAFFE_ENGINE
+    engine = SigmoidParameter_Engine_CAFFE;
+#endif
+  }
   if (engine == SigmoidParameter_Engine_CAFFE) {
     return new CaffeSigmoidLayer<Dtype>(param);
   } else {
@@ -82,6 +102,11 @@ template <typename Dtype>
 TanHLayer<Dtype>* GetTanHLayer(const string& name,
     const LayerParameter& param) {
   TanHParameter_Engine engine = param.tanh_param().engine();
+  if (engine == TanHParameter_Engine_DEFAULT) {
+#ifdef CAFFE_ENGINE
+    engine = TanHParameter_Engine_CAFFE;
+#endif
+  }
   if (engine == TanHParameter_Engine_CAFFE) {
     return new CaffeTanHLayer<Dtype>(param);
   } else {
@@ -99,6 +124,11 @@ template <typename Dtype>
 SoftmaxLayer<Dtype>* GetSoftmaxLayer(const string& name,
     const LayerParameter& param) {
   SoftmaxParameter_Engine engine = param.softmax_param().engine();
+  if (engine == SoftmaxParameter_Engine_DEFAULT) {
+#ifdef CAFFE_ENGINE
+    engine = SoftmaxParameter_Engine_CAFFE;
+#endif
+  }
   if (engine == SoftmaxParameter_Engine_CAFFE) {
     return new CaffeSoftmaxLayer<Dtype>(param);
   } else {
