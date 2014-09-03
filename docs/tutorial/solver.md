@@ -1,10 +1,10 @@
 ---
 layout: default
 ---
-# Solver Optimization
+# Solver
 
 The solver orchestrates model optimization by coordinating the network's forward inference and backward gradients to form parameter updates that attempt to improve the loss.
-The responsibilities of learning are divided between the solver for overseeing the optimization and generating parameter updates and the network for yielding loss and gradients.
+The responsibilities of learning are divided between the Solver for overseeing the optimization and generating parameter updates and the Net for yielding loss and gradients.
 
 The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAGRAD), and Nesterov's Accelerated Gradient (NAG).
 
@@ -17,8 +17,8 @@ The solver
 
 where each iteration
 
-1. calls network forward to make the output and loss
-2. calls network backward to make the gradients
+1. calls network forward to compute the output and loss
+2. calls network backward to compute the gradients
 3. incorporates the gradients into parameter updates according to the solver method
 4. updates the solver state according to learning rate, history, and method
 
@@ -29,34 +29,125 @@ Like Caffe models, Caffe solvers run in CPU / GPU modes.
 ## Methods
 
 The solver methods address the general optimization problem of loss minimization.
-The optimization objective is the average loss over instances
+For dataset $$D$$, the optimization objective is the average loss over all $$|D|$$ data instances throughout the dataset
 
-$L(W) = \frac{1}{N} \sum_i f_W^{(i)}\left(X^{(i)}\right) + \lambda r(W)$
+$$L(W) = \frac{1}{|D|} \sum_i^{|D|} f_W\left(X^{(i)}\right) + \lambda r(W)$$
 
-where $f_W^{(i)}$ is the loss on instance $i$ with data $X^{(i)}$ in a mini-batch of size $N$ and $r(W)$ is a regularization term with weight $\lambda$.
+where $$f_W\left(X^{(i)}\right)$$ is the loss on data instance $$X^{(i)}$$ and $$r(W)$$ is a regularization term with weight $$\lambda$$.
+$$|D|$$ can be very large, so in practice, in each solver iteration we use a stochastic approximation of this objective, drawing a mini-batch of $$N << |D|$$ instances:
 
-The model computes $f_W$ in the forward pass and the gradient $\nabla f_W$ in the backward pass.
+$$L(W) \approx \frac{1}{N} \sum_i^N f_W\left(X^{(i)}\right) + \lambda r(W)$$
 
-The gradient of the loss $\nabla L(W)$ is formed by the solver from the model gradient $\nabla f_W$, the regularlization gradient $r(W)$, and other particulars to each method.
-The method then computes the parameter update $\Delta W$ to update the weights and iterate.
+The model computes $$f_W$$ in the forward pass and the gradient $$\nabla f_W$$ in the backward pass.
+
+The parameter update $$\Delta W$$ is formed by the solver from the error gradient $$\nabla f_W$$, the regularization gradient $$r(W)$$, and other particulars to each method.
 
 ### SGD
 
-Stochastic gradient descent (SGD)
+**Stochastic gradient descent** (`solver_type: SGD`) updates the weights $$ W $$ by a linear combination of the negative gradient $$ \nabla L(W) $$ and the previous weight update $$ V_t $$.
+The **learning rate** $$ \alpha $$ is the weight of the negative gradient.
+The **momentum** $$ \mu $$ is the weight of the previous update.
 
-TODO Bottou pointer
+Formally, we have the following formulas to compute the update value $$ V_{t+1} $$ and the updated weights $$ W_{t+1} $$ at iteration $$ t+1 $$, given the previous weight update $$ V_t $$ and current weights $$ W_t $$:
 
-### ADAGRAD
+$$
+V_{t+1} = \mu V_t - \alpha \nabla L(W_t)
+$$
 
-The adaptive gradient (ADAGRAD)
+$$
+W_{t+1} = W_t + V_{t+1}
+$$
 
-TODO cite Duchi
+The learning "hyperparameters" ($$\alpha$$ and $$\mu$$) might require a bit of tuning for best results.
+If you're not sure where to start, take a look at the "Rules of thumb" below, and for further information you might refer to Leon Bottou's [Stochastic Gradient Descent Tricks](http://research.microsoft.com/pubs/192769/tricks-2012.pdf) [1].
+
+[1] L. Bottou.
+    [Stochastic Gradient Descent Tricks](http://research.microsoft.com/pubs/192769/tricks-2012.pdf).
+    *Neural Networks: Tricks of the Trade*: Springer, 2012.
+
+#### Rules of thumb for setting the learning rate $$ \alpha $$ and momentum $$ \mu $$
+
+A good strategy for deep learning with SGD is to initialize the learning rate $$ \alpha $$ to a value around $$ \alpha \approx 0.01 = 10^{-2} $$, and dropping it by a constant factor (e.g., 10) throughout training when the loss begins to reach an apparent "plateau", repeating this several times.
+Generally, you probably want to use a momentum $$ \mu = 0.9 $$ or similar value.
+By smoothing the weight updates across iterations, momentum tends to make deep learning with SGD both stabler and faster.
+
+This was the strategy used by Krizhevsky et al. [1] in their famously winning CNN entry to the ILSVRC-2012 competition, and Caffe makes this strategy easy to implement in a `SolverParameter`, as in our reproduction of [1] at `./examples/imagenet/alexnet_solver.prototxt`.
+
+To use a learning rate policy like this, you can put the following lines somewhere in your solver prototxt file:
+
+    base_lr: 0.01     # begin training at a learning rate of 0.01 = 1e-2
+
+    lr_policy: "step" # learning rate policy: drop the learning rate in "steps"
+                      # by a factor of gamma every stepsize iterations
+
+    gamma: 0.1        # drop the learning rate by a factor of 10
+                      # (i.e., multiply it by a factor of gamma = 0.1)
+
+    stepsize: 100000  # drop the learning rate every 100K iterations
+
+    max_iter: 350000  # train for 350K iterations total
+
+    momentum: 0.9
+
+Under the above settings, we'll always use `momentum` $$ \mu = 0.9 $$.
+We'll begin training at a `base_lr` of $$ \alpha = 0.01 = 10^{-2} $$ for the first 100,000 iterations, then multiply the learning rate by `gamma` ($$ \gamma $$) and train at $$ \alpha' = \alpha \gamma = (0.01) (0.1) = 0.001 = 10^{-3} $$ for iterations 100K-200K, then at $$ \alpha'' = 10^{-4} $$ for iterations 200K-300K, and finally train until iteration 350K (since we have `max_iter: 350000`) at $$ \alpha''' = 10^{-5} $$.
+
+Note that the momentum setting $$ \mu $$ effectively multiplies the size of your updates by a factor of $$ \frac{1}{1 - \mu} $$ after many iterations of training, so if you increase $$ \mu $$, it may be a good idea to **decrease** $$ \alpha $$ accordingly (and vice versa).
+
+For example, with $$ \mu = 0.9 $$, we have an effective update size multiplier of $$ \frac{1}{1 - 0.9} = 10 $$.
+If we increased the momentum to $$ \mu = 0.99 $$, we've increased our update size multiplier to 100, so we should drop $$ \alpha $$ (`base_lr`) by a factor of 10.
+
+Note also that the above settings are merely guidelines, and they're definitely not guaranteed to be optimal (or even work at all!) in every situation.
+If learning diverges (e.g., you start to see very large or `NaN` or `inf` loss values or outputs), try dropping the `base_lr` (e.g., `base_lr: 0.001`) and re-training, repeating this until you find a `base_lr` value that works.
+
+[1] A. Krizhevsky, I. Sutskever, and G. Hinton.
+    [ImageNet Classification with Deep Convolutional Neural Networks](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf).
+    *Advances in Neural Information Processing Systems*, 2012.
+
+### AdaGrad
+
+The **adaptive gradient** (`solver_type: ADAGRAD`) method (Duchi et al. [1]) is a gradient-based optimization method (like SGD) that attempts to "find needles in haystacks in the form of very predictive but rarely seen features," in Duchi et al.'s words.
+Given the update information from all previous iterations $$ \left( \nabla L(W) \right)_{t'} $$ for $$ t' \in \{1, 2, ..., t\} $$,
+the update formulas proposed by [1] are as follows, specified for each component $$i$$ of the weights $$W$$:
+
+$$
+(W_{t+1})_i =
+(W_t)_i +
+\frac{\alpha}{
+    \sqrt{\sum_{t'=1}^{t} \left( \nabla L(W) \right)_{t',i}^2}
+}
+$$
+
+Note that in practice, for weights $$ W \in \mathcal{R}^d $$, AdaGrad implementations (including the one in Caffe) use only $$ \mathcal{O}(d) $$ extra storage for the historical gradient information (rather than the $$ \mathcal{O}(dt) $$ storage that would be necessary to store each historical gradient individually).
+
+[1] J. Duchi, E. Hazan, and Y. Singer.
+    [Adaptive Subgradient Methods for Online Learning and Stochastic Optimization](http://www.magicbroom.info/Papers/DuchiHaSi10.pdf).
+    *The Journal of Machine Learning Research*, 2011.
 
 ### NAG
 
-Nesterov's accelerated gradient (NAG)
+**Nesterov's accelerated gradient** (`solver_type: NAG`) was proposed by Nesterov [1] as an "optimal" method of convex optimization, achieving a convergence rate of $$ \mathcal{O}(1/t^2) $$ rather than the $$ \mathcal{O}(1/t) $$.
+Though the required assumptions to achieve the $$ \mathcal{O}(1/t^2) $$ convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].
 
-TODO cite ???
+The weight update formulas look very similar to the SGD updates given above:
+
+$$
+V_{t+1} = \mu V_t - \alpha \nabla L(W_t + \mu V_t)
+$$
+
+$$
+W_{t+1} = W_t + V_{t+1}
+$$
+
+What distinguishes the method from SGD is the weight setting $$ W $$ on which we compute the error gradient $$ \nabla L(W) $$ -- in NAG we take the gradient on weights with added momentum $$ \nabla L(W_t + \mu V_t) $$; in SGD we simply take the gradient $$ \nabla L(W_t) $$ on the current weights themselves.
+
+[1] Y. Nesterov.
+    A Method of Solving a Convex Programming Problem with Convergence Rate $$\mathcal{O}(1/\sqrt{k})$$.
+    *Soviet Mathematics Doklady*, 1983.
+
+[2] I. Sutskever, J. Martens, G. Dahl, and G. Hinton.
+    [On the Importance of Initialization and Momentum in Deep Learning](http://www.cs.toronto.edu/~fritz/absps/momentum.pdf).
+    *Proceedings of the 30th International Conference on Machine Learning*, 2013.
 
 ## Scaffolding
 
@@ -149,8 +240,9 @@ Completion
 ## Updating Parameters
 
 The actual weight update is made by the solver then applied to the net parameters in `Solver::ComputeUpdateValue()`.
-
-TODO
+The `ComputeUpdateValue` method incorporates any weight decay $$ r(W) $$ into the weight gradients (which currently just contain the error gradients) to get the final gradient with respect to each network weight.
+Then these gradients are scaled by the learning rate $$ \alpha $$ and the update to subtract is stored in each parameter Blob's `diff` field.
+Finally, the `Blob::Update` method is called on each parameter blob, which performs the final update (subtracting the Blob's `diff` from its `data`).
 
 ## Snapshotting and Resuming
 
@@ -168,7 +260,7 @@ Snapshotting is configured by:
     # File path prefix for snapshotting model weights and solver state.
     # Note: this is relative to the invocation of the `caffe` utility, not the
     # solver definition file.
-    snapshot_prefix: /path/to/model
+    snapshot_prefix: "/path/to/model"
     # Snapshot the diff along with the weights. This can help debugging training
     # but takes more storage.
     snapshot_diff: false

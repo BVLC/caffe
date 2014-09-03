@@ -24,7 +24,7 @@ and these principles direct the project.
 - [Nets, Layers, and Blobs](net_layer_blob.html): the anatomy of a Caffe model.
 - [Forward / Backward](forward_backward.html): the essential computations of layered compositional models.
 - [Loss](loss.html): the task to be learned is defined by the loss.
-- [Solver Optimization](solver.html): the solver coordinates model optimization.
+- [Solver](solver.html): the solver coordinates model optimization.
 - [Layer Catalogue](layers.html): the layer is the fundamental unit of modeling and computation -- Caffe's catalogue includes layers for state-of-the-art models.
 - [Interfaces](interfaces.html): command line, Python, and MATLAB Caffe.
 
