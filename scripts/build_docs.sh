@@ -12,6 +12,9 @@ cd $ROOT_DIR
 # Gather docs.
 scripts/gather_examples.sh
 
+# Generate developer docs.
+make docs
+
 # Display docs using web server.
 cd docs
 jekyll serve -w -s . -d _site --port=$PORT
