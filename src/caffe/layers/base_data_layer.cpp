@@ -46,6 +46,7 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     data_mean_.Reshape(1, datum_channels_, datum_height_, datum_width_);
   }
   mean_ = data_mean_.cpu_data();
+  data_transformer_.InitRand();
 }
 
 template <typename Dtype>
