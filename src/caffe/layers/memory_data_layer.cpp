@@ -37,8 +37,8 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
       << " by the upper layers";
   size_t num = datum_vector.size();
   CHECK_GT(num, 0) << "There is no datum to add";
-  CHECK_EQ(num, batch_size_) <<
-      "The number of added datum must be equal to the batch size";
+  CHECK_LE(num, batch_size_) <<
+      "The number of added datum must be no greater than the batch size";
 
   Dtype* top_data = added_data_.mutable_cpu_data();
   Dtype* top_label = added_label_.mutable_cpu_data();

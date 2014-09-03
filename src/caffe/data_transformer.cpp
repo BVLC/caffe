@@ -21,8 +21,6 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
   const bool mirror = param_.mirror();
   const Dtype scale = param_.scale();
 
-
-
   if (mirror && crop_size == 0) {
     LOG(FATAL) << "Current implementation requires mirror and crop_size to be "
                << "set at the same time.";
