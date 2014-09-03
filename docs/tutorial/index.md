@@ -28,6 +28,10 @@ and these principles direct the project.
 - [Layer Catalogue](layers.html): the layer is the fundamental unit of modeling and computation -- Caffe's catalogue includes layers for state-of-the-art models.
 - [Interfaces](interfaces.html): command line, Python, and MATLAB Caffe.
 
+For a closer look at a few details:
+
+- [Caffeinated Convolution](convolution.html): how Caffe computes convolutions.
+
 ## Deeper Learning
 
 There are helpful references freely online for deep learning that complement our hands-on tutorial.
