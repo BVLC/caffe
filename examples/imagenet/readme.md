@@ -87,16 +87,20 @@ Training ImageNet
 
 Ready? Let's train.
 
-    ./train_imagenet.sh
+    ./build/tools/caffe train --solver=examples/imagenet/imagenet_solver.prototxt
 
-Sit back and enjoy! On my K20 machine, every 20 iterations take about 36 seconds to run, so effectively about 7 ms per image for the full forward-backward pass. About 2.5 ms of this is on forward, and the rest is backward. If you are interested in dissecting the computation time, you can look at `examples/net_speed_benchmark.cpp`, but it was written purely for debugging purpose, so you may need to figure a few things out yourself.
+Sit back and enjoy!
+
+On my K20 machine, every 20 iterations take about 36 seconds to run, so effectively about 7 ms per image for the full forward-backward pass. About 2.5 ms of this is on forward, and the rest is backward. If you are interested in dissecting the computation time, you can run
+
+    ./build/tools/caffe time --model=models/bvlc_reference_caffenet/train_val.prototxt
 
 Resume Training?
 ----------------
 
 We all experience times when the power goes out, or we feel like rewarding ourself a little by playing Battlefield (does someone still remember Quake?). Since we are snapshotting intermediate results during training, we will be able to resume from snapshots. This can be done as easy as:
 
-    ./resume_training.sh
+    ./build/tools/caffe train --solver=examples/imagenet/imagenet_solver.prototxt --snapshot=examples/imagenet/caffe_imagenet_10000.solverstate
 
 where in the script `imagenet_train_1000.solverstate` is the solver state snapshot that stores all necessary information to recover the exact solver state (including the parameters, momentum history, etc).
 
