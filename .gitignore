@@ -70,7 +70,8 @@ MANIFEST-*
 docs/_site
 docs/gathered
 _site
-doxygen/
+doxygen
+docs/dev
 
 # Sublime Text settings
 *.sublime-workspace

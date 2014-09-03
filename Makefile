@@ -191,7 +191,8 @@ ALL_BUILD_DIRS := $(sort \
 # Set directory for Doxygen-generated documentation
 ##############################
 DOXYGEN_CONFIG_FILE ?= ./.Doxyfile
-DOXYGEN_OUTPUT_DIR ?= ./doxygen # should be the same as OUTPUT_DIRECTORY in the .Doxyfile
+# should be the same as OUTPUT_DIRECTORY in the .Doxyfile
+DOXYGEN_OUTPUT_DIR ?= ./doxygen
 DOXYGEN_COMMAND ?= doxygen
 # All the files that might have Doxygen documentation.
 DOXYGEN_SOURCES := $(shell find \
@@ -337,6 +338,7 @@ lintclean:
 	@ $(RM) -r $(LINT_OUTPUT_DIR) $(EMPTY_LINT_REPORT) $(NONEMPTY_LINT_REPORT)
 
 docs: $(DOXYGEN_OUTPUT_DIR)
+	@ cd ./docs ; ln -sfn ../$(DOXYGEN_OUTPUT_DIR)/html doxygen
 
 $(DOXYGEN_OUTPUT_DIR): $(DOXYGEN_CONFIG_FILE) $(DOXYGEN_SOURCES)
 	$(DOXYGEN_COMMAND) $(DOXYGEN_CONFIG_FILE)
