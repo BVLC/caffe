@@ -38,12 +38,14 @@ For a closer look at a few details:
 There are helpful references freely online for deep learning that complement our hands-on tutorial.
 These cover introductory and advanced material, background and history, and the latest advances.
 
+The [Tutorial on Deep Learning for Vision](https://sites.google.com/site/deeplearningcvpr2014/) from CVPR '14 is a good companion tutorial for researchers.
+Once you have the framework and practice foundations from the Caffe tutorial, explore the fundamental ideas and advanced research directions in the CVPR '14 tutorial.
+
 A broad introduction is given in the free online draft of [Neural Networks and Deep Learning](http://neuralnetworksanddeeplearning.com/index.html) by Michael Nielsen. In particular the chapters on using neural nets and how backpropagation works are helpful if you are new to the subject.
 
-These recent academic tutorials explain deep learning for researchers in machine learning and vision:
+These recent academic tutorials cover deep learning for researchers in machine learning and vision:
 
 - [Deep Learning Tutorial](http://www.cs.nyu.edu/~yann/talks/lecun-ranzato-icml2013.pdf) by Yann LeCun (NYU, Facebook) and Marc'Aurelio Ranzato (Facebook). ICML 2013 tutorial.
-- [Large-Scale Visual Recognition: Deep Learning Tutorial](https://docs.google.com/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxsc3ZydHV0b3JpYWxjdnByMTR8Z3g6Njg5MmZkZTM1MDhhZWNmZA) by Marc'Aurelio Ranzato (Facebook). CPVR 2014 tutorial.
 - [LISA Deep Learning Tutorial](http://deeplearning.net/tutorial/deeplearning.pdf) by the LISA Lab directed by Yoshua Bengio (U. Montréal).
 
 For an exposition of neural networks in circuits and code, check out [Understanding Neural Networks from a Programmer's Perspective](http://karpathy.github.io/neuralnets/) by Andrej Karpathy (Stanford).
