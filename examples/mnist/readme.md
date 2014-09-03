@@ -179,7 +179,7 @@ The `softmax_loss` layer implements both the softmax and the multinomial logisti
 Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt`:
 
     # The train/test net protocol buffer definition
-    net: "lenet_train_test.prototxt"
+    net: "examples/mnist/lenet_train_test.prototxt"
     # test_iter specifies how many forward passes the test should carry out.
     # In the case of MNIST, we have test batch size 100 and 100 test iterations,
     # covering the full 10,000 testing images.
@@ -200,9 +200,9 @@ Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/example
     max_iter: 10000
     # snapshot intermediate results
     snapshot: 5000
-    snapshot_prefix: "lenet"
-    # solver mode: 0 for CPU and 1 for GPU
-    solver_mode: 1
+    snapshot_prefix: "examples/mnist/lenet"
+    # solver mode: CPU or GPU
+    solver_mode: GPU
 
 ## Training and Testing the Model
 
