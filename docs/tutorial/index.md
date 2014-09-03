@@ -27,6 +27,7 @@ and these principles direct the project.
 - [Solver](solver.html): the solver coordinates model optimization.
 - [Layer Catalogue](layers.html): the layer is the fundamental unit of modeling and computation -- Caffe's catalogue includes layers for state-of-the-art models.
 - [Interfaces](interfaces.html): command line, Python, and MATLAB Caffe.
+- [Data](data.html): how to caffeinate data for model input.
 
 For a closer look at a few details:
 
