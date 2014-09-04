@@ -106,6 +106,9 @@ message SolverParameter {
   // The number of iterations between two testing phases.
   optional int32 test_interval = 4 [default = 0];
   optional bool test_compute_loss = 19 [default = false];
+  // If true, run an initial test pass before the first iteration,
+  // ensuring memory availability and printing the starting value of the loss.
+  optional bool test_initialization = 32 [default = true];
   optional float base_lr = 5; // The base learning rate
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
