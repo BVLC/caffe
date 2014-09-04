@@ -1,6 +1,5 @@
 ---
-layout: default
-title: Caffe
+title: Installation
 ---
 
 # Installation

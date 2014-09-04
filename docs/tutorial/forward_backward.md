@@ -1,5 +1,4 @@
 ---
-layout: default
 ---
 # Forward and Backward
 

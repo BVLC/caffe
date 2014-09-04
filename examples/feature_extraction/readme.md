@@ -3,7 +3,6 @@ title: Feature extraction with Caffe C++ code.
 description: Extract CaffeNet / AlexNet features using the Caffe utility.
 category: example
 include_in_docs: true
-layout: default
 priority: 10
 ---
 
