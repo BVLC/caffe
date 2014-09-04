@@ -34,7 +34,7 @@ All steps are to be done from the caffe root directory.
 The dataset is distributed as a list of URLs with corresponding labels.
 Using a script, we will download a small subset of the data and split it into train and val sets.
 
-    caffe % ./examples/finetune_flickr_style/assemble_data.py -h
+    caffe % ./models/finetune_flickr_style/assemble_data.py -h
     usage: assemble_data.py [-h] [-s SEED] [-i IMAGES] [-w WORKERS]
 
     Download a subset of Flickr Style to a directory
@@ -48,7 +48,7 @@ Using a script, we will download a small subset of the data and split it into tr
                             num workers used to download images. -x uses (all - x)
                             cores.
 
-    caffe % python examples/finetune_flickr_style/assemble_data.py --workers=-1 --images=2000 --seed 831486
+    caffe % python models/finetune_flickr_style/assemble_data.py --workers=-1 --images=2000 --seed 831486
     Downloading 2000 images with 7 workers...
     Writing train/val for 1939 successfully downloaded images.
 
@@ -56,17 +56,17 @@ This script downloads images and writes train/val file lists into `data/flickr_s
 With this random seed there are 1,557 train images and 382 test images.
 The prototxts in this example assume this, and also assume the presence of the ImageNet mean file (run `get_ilsvrc_aux.sh` from `data/ilsvrc12` to obtain this if you haven't yet).
 
-We'll also need the ImageNet-trained model, which you can obtain by running `get_caffe_reference_imagenet_model.sh` from `examples/imagenet`.
+We'll also need the ImageNet-trained model, which you can obtain by running `./scripts/download_model_binary.py models/bvlc_reference_caffenet`.
 
 Now we can train! (You can fine-tune in CPU mode by leaving out the `-gpu` flag.)
 
-    caffe % ./build/tools/caffe train -solver examples/finetune_flickr_style/flickr_style_solver.prototxt -weights examples/imagenet/caffe_reference_imagenet_model -gpu 0
+    caffe % ./build/tools/caffe train -solver models/finetune_flickr_style/flickr_style_solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel -gpu 0
 
     [...]
 
     I0828 22:10:04.025378  9718 solver.cpp:46] Solver scaffolding done.
     I0828 22:10:04.025388  9718 caffe.cpp:95] Use GPU with device ID 0
-    I0828 22:10:04.192004  9718 caffe.cpp:107] Finetuning from examples/imagenet/caffe_reference_imagenet_model
+    I0828 22:10:04.192004  9718 caffe.cpp:107] Finetuning from models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel
 
     [...]
 
@@ -149,10 +149,16 @@ This model is only beginning to learn.
 Fine-tuning can be feasible when training from scratch would not be for lack of time or data.
 Even in CPU mode each pass through the training set takes ~100 s. GPU fine-tuning is of course faster still and can learn a useful model in minutes or hours instead of days or weeks.
 Furthermore, note that the model has only trained on < 2,000 instances. Transfer learning a new task like style recognition from the ImageNet pretraining can require much less data than training from scratch.
+
 Now try fine-tuning to your own tasks and data!
+
+## Trained model
+
+We provide a model trained on all 80K images, with final accuracy of 98%.
+Simply do `./scripts/download_model_binary.py models/finetune_flickr_style` to obtain it.
 
 ## License
 
 The Flickr Style dataset as distributed here contains only URLs to images.
 Some of the images may have copyright.
-Training a category-recognition model for research/non-commercial use may constitute fair use of this data.
+Training a category-recognition model for research/non-commercial use may constitute fair use of this data, but the result should not be used for commercial purposes.

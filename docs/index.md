@@ -38,8 +38,8 @@ Slides about the Caffe architecture, *updated 03/14*.
 A 4-page report for the ACM Multimedia Open Source competition.
 - [Installation instructions](/installation.html)<br />
 Tested on Ubuntu, Red Hat, OS X.
-* [Pre-trained models](/getting_pretrained_models.html)<br />
-BVLC provides ready-to-use models for non-commercial use.
+* [Model Zoo](/model_zoo.html)<br />
+BVLC suggests a standard distribution format for Caffe models, and provides trained models.
 * [Developing & Contributing](/development.html)<br />
 Guidelines for development and contributing to Caffe.
 * [API Documentation](/doxygen/)<br />

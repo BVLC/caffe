@@ -1,3 +1,4 @@
+# This file is for the net_surgery.ipynb example notebook.
 name: "CaffeNetConv"
 input: "data"
 input_dim: 1
