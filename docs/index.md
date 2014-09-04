@@ -39,7 +39,7 @@ A 4-page report for the ACM Multimedia Open Source competition.
 - [Installation instructions](/installation.html)<br />
 Tested on Ubuntu, Red Hat, OS X.
 * [Model Zoo](/model_zoo.html)<br />
-BVLC suggests a standard distribution format for Caffe models, and provides trained models for non-commercial use.
+BVLC suggests a standard distribution format for Caffe models, and provides trained models.
 * [Developing & Contributing](/development.html)<br />
 Guidelines for development and contributing to Caffe.
 * [API Documentation](/doxygen/)<br />
