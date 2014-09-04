@@ -23,7 +23,7 @@ layers {
   top: "data"
   top: "label"
   image_data_param {
-    source: "data/flickr_style/train.txt"
+    source: "data/flickr_style/test.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
