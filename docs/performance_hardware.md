@@ -1,6 +1,5 @@
 ---
-layout: default
-title: Caffe
+title: Performance and Hardware Configuration
 ---
 
 # Performance and Hardware Configuration
