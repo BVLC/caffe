@@ -257,7 +257,8 @@ else
 	COMMON_FLAGS += -DNDEBUG -O2
 endif
 
-# Computation engine configuration
+# Computation engine configuration (default is standard Caffe)
+ENGINE ?= caffe
 ifeq ($(ENGINE), caffe)
 	COMMON_FLAGS += -DCAFFE_ENGINE
 endif
