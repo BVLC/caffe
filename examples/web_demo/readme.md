@@ -2,7 +2,6 @@
 title: Web demo
 description: Image classification demo running as a Flask web server.
 category: example
-layout: default
 include_in_docs: true
 priority: 10
 ---
