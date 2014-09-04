@@ -82,7 +82,7 @@ Ready? Let's train.
 
 Sit back and enjoy!
 
-On my K20 machine, every 20 iterations take about 36 seconds to run, so effectively about 7 ms per image for the full forward-backward pass. About 2.5 ms of this is on forward, and the rest is backward. If you are interested in dissecting the computation time, you can run
+On a K40 machine, every 20 iterations take about 26.5 seconds to run (while a on a K20 this takes 36 seconds), so effectively about 5.2 ms per image for the full forward-backward pass. About 2 ms of this is on forward, and the rest is backward. If you are interested in dissecting the computation time, you can run
 
     ./build/tools/caffe time --model=models/bvlc_reference_caffenet/train_val.prototxt
 
