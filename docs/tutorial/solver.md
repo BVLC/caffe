@@ -39,7 +39,7 @@ $$L(W) \approx \frac{1}{N} \sum_i^N f_W\left(X^{(i)}\right) + \lambda r(W)$$
 
 The model computes $$f_W$$ in the forward pass and the gradient $$\nabla f_W$$ in the backward pass.
 
-The parameter update $$\Delta W$$ is formed by the solver from the error gradient $$\nabla f_W$$, the regularization gradient $$r(W)$$, and other particulars to each method.
+The parameter update $$\Delta W$$ is formed by the solver from the error gradient $$\nabla f_W$$, the regularization gradient $$\nabla r(W)$$, and other particulars to each method.
 
 ### SGD
 
@@ -111,9 +111,9 @@ the update formulas proposed by [1] are as follows, specified for each component
 
 $$
 (W_{t+1})_i =
-(W_t)_i +
-\frac{\alpha}{
-    \sqrt{\sum_{t'=1}^{t} \left( \nabla L(W) \right)_{t',i}^2}
+(W_t)_i - \alpha
+\frac{\left( \nabla L(W_t) \right)_{i}}{
+    \sqrt{\sum_{t'=1}^{t} \left( \nabla L(W_{t'}) \right)_i^2}
 }
 $$
 
