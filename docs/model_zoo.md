@@ -3,7 +3,6 @@
 # Caffe Model Zoo
 
 Lots of people have used Caffe to train models of different architectures and applied to different problems, ranging from simple regression to AlexNet-alikes to Siamese networks for image similarity to speech applications.
-
 To lower the friction of sharing these models, we introduce the model zoo framework:
 
 - A standard format for packaging Caffe model info.
@@ -26,12 +25,12 @@ User-provided models are posted to a public-editable [wiki page](https://github.
 A caffe model is distributed as a directory containing:
 
 - Solver/model prototxt(s)
-- Readme.md containing
+- `readme.md` containing
     - YAML frontmatter
         - Caffe version used to train this model (tagged release or commit hash).
         - [optional] file URL and SHA1 of the trained `.caffemodel`.
         - [optional] github gist id.
-    - Information about what data the model was trained on, explanation of modeling choices, etc.
+    - Information about what data the model was trained on, modeling choices, etc.
     - License information.
 - [optional] Other helpful scripts.
 
@@ -39,8 +38,11 @@ A caffe model is distributed as a directory containing:
 
 Github Gist is a good format for model info distribution because it can contain multiple files, is versionable, and has in-browser syntax highlighting and markdown rendering.
 
-- `scripts/download_model_from_gist.sh <gist_id>`: downloads the non-binary files from a Gist into `<dirname>`
 - `scripts/upload_model_to_gist.sh <dirname>`: uploads non-binary files in the model directory as a Github Gist and prints the Gist ID. If `gist_id` is already part of the `<dirname>/readme.md` frontmatter, then updates existing Gist.
+
+Try doing `scripts/upload_model_to_gist.sh models/bvlc_alexnet` to test the uploading (don't forget to delete the uploaded gist afterward).
+
+Downloading models is not yet supported as a script (there is no good commandline tool for this right now), so simply go to the Gist URL and click "Download Gist" for now.
 
 ### Hosting trained models
 
@@ -49,13 +51,3 @@ We host our BVLC-provided models on our own server.
 Dropbox also works fine (tip: make sure that `?dl=1` is appended to the end of the URL).
 
 - `scripts/download_model_binary.py <dirname>`: downloads the `.caffemodel` from the URL specified in the `<dirname>/readme.md` frontmatter and confirms SHA1.
-
-
-## Tasks
-
-x get the imagenet example to work with the new prototxt location
-x make wiki page for user-submitted models
-- add flickr model to the user-submitted models wiki page
-x make docs section listing bvlc-distributed models
-- write the publish_model_as_gist script
-- write the download_model_from_gist script

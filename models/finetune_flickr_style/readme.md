@@ -5,6 +5,7 @@ caffemodel_url: http://dl.caffe.berkeleyvision.org/finetune_flickr_style.caffemo
 license: non-commercial
 sha1: 443ad95a61fb0b5cd3cee55951bcc1f299186b5e
 caffe_commit: 41751046f18499b84dbaf529f64c0e664e2a09fe
+gist_id: 034c6ac3865563b69e60
 ---
 
 This model is trained exactly as described in `docs/finetune_flickr_style/readme.md`, using all 80000 images.
