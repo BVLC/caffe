@@ -56,7 +56,7 @@ This script downloads images and writes train/val file lists into `data/flickr_s
 With this random seed there are 1,557 train images and 382 test images.
 The prototxts in this example assume this, and also assume the presence of the ImageNet mean file (run `get_ilsvrc_aux.sh` from `data/ilsvrc12` to obtain this if you haven't yet).
 
-We'll also need the ImageNet-trained model, which you can obtain by running `get_caffe_reference_imagenet_model.sh` from `models/imagenet`.
+We'll also need the ImageNet-trained model, which you can obtain by running `./scripts/download_model_binary.py models/bvlc_reference_caffenet`.
 
 Now we can train! (You can fine-tune in CPU mode by leaving out the `-gpu` flag.)
 
