@@ -60,13 +60,13 @@ We'll also need the ImageNet-trained model, which you can obtain by running `get
 
 Now we can train! (You can fine-tune in CPU mode by leaving out the `-gpu` flag.)
 
-    caffe % ./build/tools/caffe train -solver examples/finetune_flickr_style/flickr_style_solver.prototxt -weights examples/imagenet/caffe_reference_imagenet_model -gpu 0
+    caffe % ./build/tools/caffe train -solver examples/finetune_flickr_style/flickr_style_solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel -gpu 0
 
     [...]
 
     I0828 22:10:04.025378  9718 solver.cpp:46] Solver scaffolding done.
     I0828 22:10:04.025388  9718 caffe.cpp:95] Use GPU with device ID 0
-    I0828 22:10:04.192004  9718 caffe.cpp:107] Finetuning from examples/imagenet/caffe_reference_imagenet_model
+    I0828 22:10:04.192004  9718 caffe.cpp:107] Finetuning from models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel
 
     [...]
 
