@@ -5,14 +5,14 @@ layers {
   top: "data"
   top: "label"
   image_data_param {
-    source: "$CAFFE_DIR/examples/_temp/file_list.txt"
+    source: "examples/_temp/file_list.txt"
     batch_size: 50
     new_height: 256
     new_width: 256
   }
   transform_param {
     crop_size: 227
-    mean_file: "$CAFFE_DIR/data/ilsvrc12/imagenet_mean.binaryproto"
+    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
     mirror: false
   }
 }

@@ -34,6 +34,8 @@ layers {
 layers {
   name: "conv1"
   type: CONVOLUTION
+  bottom: "data"
+  top: "conv1"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -51,8 +53,6 @@ layers {
       value: 0
     }
   }
-  bottom: "data"
-  top: "conv1"
 }
 layers {
   name: "relu1"
@@ -63,28 +63,30 @@ layers {
 layers {
   name: "norm1"
   type: LRN
+  bottom: "conv1"
+  top: "norm1"
   lrn_param {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
   }
-  bottom: "conv1"
-  top: "norm1"
 }
 layers {
   name: "pool1"
   type: POOLING
+  bottom: "norm1"
+  top: "pool1"
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
-  bottom: "norm1"
-  top: "pool1"
 }
 layers {
   name: "conv2"
   type: CONVOLUTION
+  bottom: "pool1"
+  top: "conv2"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -103,8 +105,6 @@ layers {
       value: 0.1
     }
   }
-  bottom: "pool1"
-  top: "conv2"
 }
 layers {
   name: "relu2"
@@ -115,28 +115,30 @@ layers {
 layers {
   name: "norm2"
   type: LRN
+  bottom: "conv2"
+  top: "norm2"
   lrn_param {
     local_size: 5
     alpha: 0.0001
     beta: 0.75
   }
-  bottom: "conv2"
-  top: "norm2"
 }
 layers {
   name: "pool2"
   type: POOLING
+  bottom: "norm2"
+  top: "pool2"
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
-  bottom: "norm2"
-  top: "pool2"
 }
 layers {
   name: "conv3"
   type: CONVOLUTION
+  bottom: "pool2"
+  top: "conv3"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -154,8 +156,6 @@ layers {
       value: 0
     }
   }
-  bottom: "pool2"
-  top: "conv3"
 }
 layers {
   name: "relu3"
@@ -166,6 +166,8 @@ layers {
 layers {
   name: "conv4"
   type: CONVOLUTION
+  bottom: "conv3"
+  top: "conv4"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -184,8 +186,6 @@ layers {
       value: 0.1
     }
   }
-  bottom: "conv3"
-  top: "conv4"
 }
 layers {
   name: "relu4"
@@ -196,6 +196,8 @@ layers {
 layers {
   name: "conv5"
   type: CONVOLUTION
+  bottom: "conv4"
+  top: "conv5"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -214,8 +216,6 @@ layers {
       value: 0.1
     }
   }
-  bottom: "conv4"
-  top: "conv5"
 }
 layers {
   name: "relu5"
@@ -226,17 +226,19 @@ layers {
 layers {
   name: "pool5"
   type: POOLING
+  bottom: "conv5"
+  top: "pool5"
   pooling_param {
     pool: MAX
     kernel_size: 3
     stride: 2
   }
-  bottom: "conv5"
-  top: "pool5"
 }
 layers {
   name: "fc6"
   type: INNER_PRODUCT
+  bottom: "pool5"
+  top: "fc6"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -252,8 +254,6 @@ layers {
       value: 0.1
     }
   }
-  bottom: "pool5"
-  top: "fc6"
 }
 layers {
   name: "relu6"
@@ -264,15 +264,17 @@ layers {
 layers {
   name: "drop6"
   type: DROPOUT
+  bottom: "fc6"
+  top: "fc6"
   dropout_param {
     dropout_ratio: 0.5
   }
-  bottom: "fc6"
-  top: "fc6"
 }
 layers {
   name: "fc7"
   type: INNER_PRODUCT
+  bottom: "fc6"
+  top: "fc7"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -288,8 +290,6 @@ layers {
       value: 0.1
     }
   }
-  bottom: "fc6"
-  top: "fc7"
 }
 layers {
   name: "relu7"
@@ -300,15 +300,17 @@ layers {
 layers {
   name: "drop7"
   type: DROPOUT
+  bottom: "fc7"
+  top: "fc7"
   dropout_param {
     dropout_ratio: 0.5
   }
-  bottom: "fc7"
-  top: "fc7"
 }
 layers {
   name: "fc8"
   type: INNER_PRODUCT
+  bottom: "fc7"
+  top: "fc8"
   blobs_lr: 1
   blobs_lr: 2
   weight_decay: 1
@@ -324,8 +326,6 @@ layers {
       value: 0
     }
   }
-  bottom: "fc7"
-  top: "fc8"
 }
 layers {
   name: "accuracy"
