@@ -3,7 +3,6 @@ title: Fine-tuning for style recognition
 description: Fine-tune the ImageNet-trained CaffeNet on the "Flickr Style" dataset.
 category: example
 include_in_docs: true
-layout: default
 priority: 5
 ---
 
