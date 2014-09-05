@@ -38,6 +38,8 @@ Consult performance [details](/performance_hardware.html).
 Slides about the Caffe architecture, *updated 03/14*.
 - [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br />
 A 4-page report for the ACM Multimedia Open Source competition.
+- [Caffe Tutorial](/tutorial)<br />
+DIY deep learning with this hands-on tutorial to Caffe.
 - [Installation instructions](/installation.html)<br />
 Tested on Ubuntu, Red Hat, OS X.
 * [Model Zoo](/model_zoo.html)<br />
