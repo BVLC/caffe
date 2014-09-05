@@ -27,7 +27,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 * CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
 * Options (`ConvolutionParameter convolution_param`)
-    - Required | `num_output` ($c_o$), the number of filters
+    - Required: `num_output` ($c_o$), the number of filters
     - Required: `kernel_size` or (`kernel_h`, `kernel_w`), specifies height & width of each filter
     - Strongly recommended (default `type: 'constant' value: 0`): `weight_filler`
     - Optional (default `true`): `bias_term`, specifies whether to learn and apply a set of additive biases to the filter outputs
@@ -108,11 +108,13 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 
 ### Activation / Neuron Layers
 
-#### ReLU / Rectified-Linear
+#### ReLU / Rectified-Linear and Leaky-ReLU
 
 * LayerType: `RELU`
 * CPU implementation: `./src/caffe/layers/relu_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
+* Options (`ReLUParameter relu_param`)
+    - Optional (default 0): `negative_slope`, specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
 * Input
     - $n \times c \times h \times w$
 * Output
@@ -126,7 +128,7 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
           top: "conv1"
         }
 
-The `RELU` layer computes the element-wise max of 0 and the input. It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
+Given an input value x, The `RELU` layer computes the output as x if x > 0 and negative_slope * x if x <= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
 
 #### Sigmoid
 
