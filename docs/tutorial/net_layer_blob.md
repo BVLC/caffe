@@ -122,7 +122,7 @@ is defined by
       top: "loss"
     }
 
-The Net explains its initialization as it goes:
+Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers' `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:
 
     I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
     name: "LogReg"
@@ -159,9 +159,7 @@ The Net explains its initialization as it goes:
     I0902 22:52:17.941818 2079114000 net.cpp:219] Network initialization done.
     I0902 22:52:17.941824 2079114000 net.cpp:220] Memory required for data: 201476
 
-Model initialization is handled by `Net::Init()`.
-
-The network is run on CPU or GPU by setting a single switch. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.
+Note that the construction of the network is device agnostic - recall our earlier explanation that blobs and layers hide implementation details from the model definition. After construction, the network is run on either CPU or GPU by setting a single switch defined in `Caffe::mode()` and set by `Caffe::set_mode()`. Layers come with corresponding CPU and GPU routines that produce identical results (up to numerical errors, and with tests to guard it). The CPU / GPU switch is seamless and independent of the model definition. For research and deployment alike it is best to divide model and implementation.
 
 ### Model format
 
