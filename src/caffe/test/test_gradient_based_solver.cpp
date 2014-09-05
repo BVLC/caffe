@@ -356,7 +356,7 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithMomentumMultiIter) {
   const Dtype kLearningRate = 1.0;
   const Dtype kWeightDecay = 0.0;
   const Dtype kMomentum = 0.5;
-  const int kNumIters = 5;
+  const int kNumIters = 4;
   for (int i = 0; i <= kNumIters; ++i) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
@@ -367,7 +367,7 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverything) {
   const Dtype kLearningRate = 0.01;
   const Dtype kWeightDecay = 0.1;
   const Dtype kMomentum = 0.9;
-  const int kNumIters = 5;
+  const int kNumIters = 4;
   for (int i = 0; i <= kNumIters; ++i) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
@@ -412,7 +412,7 @@ TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdateWithEverything) {
   const Dtype kLearningRate = 0.01;
   const Dtype kWeightDecay = 0.1;
   const Dtype kMomentum = 0.0;
-  const int kNumIters = 5;
+  const int kNumIters = 4;
   for (int i = 0; i <= kNumIters; ++i) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
@@ -468,7 +468,7 @@ TYPED_TEST(NesterovSolverTest, TestLeastSquaresUpdateWithMomentumMultiIter) {
   const Dtype kLearningRate = 1.0;
   const Dtype kWeightDecay = 0.0;
   const Dtype kMomentum = 0.5;
-  const int kNumIters = 5;
+  const int kNumIters = 4;
   for (int i = 0; i <= kNumIters; ++i) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
@@ -479,7 +479,7 @@ TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdateWithEverything) {
   const Dtype kLearningRate = 0.01;
   const Dtype kWeightDecay = 0.1;
   const Dtype kMomentum = 0.9;
-  const int kNumIters = 5;
+  const int kNumIters = 4;
   for (int i = 0; i <= kNumIters; ++i) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
