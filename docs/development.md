@@ -3,7 +3,7 @@ title: Developing and Contributing
 ---
 # Development
 
-Caffe is developed with active participation of the community.<br />
+Caffe is developed with active participation of the community.<br>
 The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions!
 
 The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements).

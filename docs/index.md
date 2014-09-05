@@ -34,33 +34,33 @@ Consult performance [details](/performance_hardware.html).
 
 ## Documentation
 
-- [Introductory slides](http://dl.caffe.berkeleyvision.org/caffe-presentation.pdf)<br />
+- [Introductory slides](http://dl.caffe.berkeleyvision.org/caffe-presentation.pdf)<br>
 Slides about the Caffe architecture, *updated 03/14*.
-- [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br />
+- [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br>
 A 4-page report for the ACM Multimedia Open Source competition.
-- [Caffe Tutorial](/tutorial)<br />
+- [Caffe Tutorial](/tutorial)<br>
 DIY deep learning with this hands-on tutorial to Caffe.
-- [Installation instructions](/installation.html)<br />
+- [Installation instructions](/installation.html)<br>
 Tested on Ubuntu, Red Hat, OS X.
-* [Model Zoo](/model_zoo.html)<br />
+* [Model Zoo](/model_zoo.html)<br>
 BVLC suggests a standard distribution format for Caffe models, and provides trained models.
-* [Developing & Contributing](/development.html)<br />
+* [Developing & Contributing](/development.html)<br>
 Guidelines for development and contributing to Caffe.
-* [API Documentation](/doxygen/)<br />
+* [API Documentation](/doxygen/)<br>
 Developer documentation automagically generated from code comments.
 
 ### Examples
 
 {% assign examples = site.pages | where:'category','example' | sort: 'priority' %}
 {% for page in examples %}
-- <div><a href="{{page.url}}">{{page.title}}</a><br />{{page.description}}</div>
+- <div><a href="{{page.url}}">{{page.title}}</a><br>{{page.description}}</div>
 {% endfor %}
 
 ### Notebook examples
 
 {% assign notebooks = site.pages | where:'category','notebook' %}
 {% for page in notebooks %}
-- <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br />{{page.description}}</div>
+- <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br>{{page.description}}</div>
 {% endfor %}
 
 ## Citing Caffe
