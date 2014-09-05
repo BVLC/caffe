@@ -1,4 +1,5 @@
 ---
+title: Layer Catalogue
 ---
 # Layers
 

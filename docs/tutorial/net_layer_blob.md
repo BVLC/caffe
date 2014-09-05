@@ -1,4 +1,5 @@
 ---
+title: Nets, Layers, and Blobs
 ---
 # Nets, Layers, and Blobs: anatomy of a Caffe model
 

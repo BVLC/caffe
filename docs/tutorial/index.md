@@ -1,4 +1,5 @@
 ---
+title: Caffe Tutorial
 ---
 # Caffe Tutorial
 

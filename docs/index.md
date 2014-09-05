@@ -1,5 +1,7 @@
 ---
+title: Deep Learning Framework
 ---
+
 # Caffe
 
 Caffe is a deep learning framework developed with cleanliness, readability, and speed in mind.

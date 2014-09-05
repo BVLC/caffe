@@ -1,4 +1,5 @@
 ---
+title: Model Zoo
 ---
 # Caffe Model Zoo
 
