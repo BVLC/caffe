@@ -108,17 +108,65 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 
 ### Activation / Neuron Layers
 
-#### ReLU / Rectified-Linear and Leaky ReLU
+#### ReLU / Rectified-Linear
 
-`RELU`
+* LayerType: `RELU`
+* CPU implementation: `./src/caffe/layers/relu_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
+* Input
+    - $n \times c \times h \times w$
+* Output
+    - $n \times c \times h \times w$
+* Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
+
+        layers {
+          name: "relu1"
+          type: RELU
+          bottom: "conv1"
+          top: "conv1"
+        }
+
+The `RELU` layer computes the element-wise max of 0 and the input. It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
 
 #### Sigmoid
 
-`SIGMOID`
+* LayerType: `SIGMOID`
+* CPU implementation: `./src/caffe/layers/sigmoid_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/sigmoid_layer.cu`
+* Input
+    - $n \times c \times h \times w$
+* Output
+    - $n \times c \times h \times w$
+* Sample (as seen in `./examples/imagenet/mnist_autoencoder.prototxt`)
+
+        layers {
+          name: "encode1neuron"
+          bottom: "encode1"
+          top: "encode1neuron"
+          type: SIGMOID
+        }
+
+The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 
 #### TanH / Hyperbolic Tangent
 
-`TANH`
+* LayerType: `TANH`
+* CPU implementation: `./src/caffe/layers/tanh_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/tanh_layer.cu`
+* Input
+    - $n \times c \times h \times w$
+* Output
+    - $n \times c \times h \times w$
+* Sample
+
+        layers {
+          name: "encode1neuron"
+          bottom: "encode1"
+          top: "encode1neuron"
+          type: TANH
+        }
+
+The `TANH` layer computes the output as tanh(x) for each input element x.
 
 #### Absolute Value
 
