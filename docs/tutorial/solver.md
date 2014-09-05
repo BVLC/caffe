@@ -1,4 +1,5 @@
 ---
+title: Solver / Model Optimization
 ---
 # Solver
 

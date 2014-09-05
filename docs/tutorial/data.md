@@ -1,4 +1,5 @@
 ---
+title: Data
 ---
 # Data: Ins and Outs
 

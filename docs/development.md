@@ -1,5 +1,5 @@
 ---
-title: Development
+title: Developing and Contributing
 ---
 # Development
 

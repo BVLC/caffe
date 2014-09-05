@@ -1,4 +1,5 @@
 ---
+title: Forward and Backward for Inference and Learning
 ---
 # Forward and Backward
 
