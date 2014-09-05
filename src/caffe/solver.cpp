@@ -184,7 +184,8 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       Snapshot();
     }
 
-    if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
+    if (param_.test_interval() && iter_ % param_.test_interval() == 0
+        && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
     }
 
