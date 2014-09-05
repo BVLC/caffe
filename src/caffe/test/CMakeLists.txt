@@ -10,6 +10,7 @@ set(TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)    # test executables are go
 set(TEST_EXT .testbin)           # test executable extension
 set(ALL_TEST test${TEST_EXT})    # name of an executable comprising of all tests
 set(RUN_TEST runtest)            # dummy target for running tests
+set(TEST_MAIN_LIB test_main_lib) # name of a dummy lib containing main function
 
 #    Generate config files
 add_definitions(-DCMAKE_BUILD)    # definition needed in order to include CMake's generated files
@@ -42,20 +43,30 @@ if(NOT CPU_ONLY)
     set(TEST_CPP_SOURCES ${TEST_CPP_SOURCES} ${TEST_CU_SOURCES})
 endif()
 
+add_library(${TEST_MAIN_LIB} EXCLUDE_FROM_ALL ${TEST_MAIN})
+target_link_libraries(${TEST_MAIN_LIB} gtest caffe)
+
 #    Build each test separately
 foreach(source ${TEST_CPP_SOURCES})
     get_filename_component(name ${source} NAME_WE)
     set(TEST_NAME ${name}${TEST_EXT})
-    add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_MAIN} ${source} ../blob.cpp)
-    target_link_libraries(${TEST_NAME} gtest caffe)
+    
+    add_library(${TEST_NAME}.lib OBJECT ${source})
+    set(TEST_OBJ_LIB $<TARGET_OBJECTS:${TEST_NAME}.lib>)
+    add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_OBJ_LIB}) 
+    
+    target_link_libraries(${TEST_NAME} ${TEST_MAIN_LIB})
     #    output dir
     set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+    
+    # Targets and object libs
     set(TEST_TARGETS ${TEST_TARGETS} ${TEST_NAME})
+    set(TEST_OBJ_LIBS ${TEST_OBJ_LIBS} ${TEST_OBJ_LIB})
 endforeach()
 
 #    Build a compound test excluded from the ALL target
-add_executable(${ALL_TEST} EXCLUDE_FROM_ALL ${TEST_CPP_SOURCES} ${TEST_MAIN})
-target_link_libraries(${ALL_TEST} gtest caffe)
+add_executable(${ALL_TEST} EXCLUDE_FROM_ALL ${TEST_OBJ_LIBS} )
+target_link_libraries(${ALL_TEST} ${TEST_MAIN_LIB})
 add_dependencies(${ALL_TEST} ${TEST_TARGETS})
 #    output dir
 set_target_properties(${ALL_TEST} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
