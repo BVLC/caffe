@@ -9,14 +9,40 @@
 #define CUDNN_CHECK(condition) \
   do { \
     cudnnStatus_t status = condition; \
-    CHECK_EQ(status, CUDNN_STATUS_SUCCESS) << " cuDNN error."; \
+    CHECK_EQ(status, CUDNN_STATUS_SUCCESS) << " "\
+      << cudnnGetErrorString(status); \
   } while (0)
+
+inline const char* cudnnGetErrorString(cudnnStatus_t status) {
+  switch (status) {
+    case CUDNN_STATUS_SUCCESS:
+      return "CUDNN_STATUS_SUCCESS";
+    case CUDNN_STATUS_NOT_INITIALIZED:
+      return "CUDNN_STATUS_NOT_INITIALIZED";
+    case CUDNN_STATUS_ALLOC_FAILED:
+      return "CUDNN_STATUS_ALLOC_FAILED";
+    case CUDNN_STATUS_BAD_PARAM:
+      return "CUDNN_STATUS_BAD_PARAM";
+    case CUDNN_STATUS_INTERNAL_ERROR:
+      return "CUDNN_STATUS_INTERNAL_ERROR";
+    case CUDNN_STATUS_INVALID_VALUE:
+      return "CUDNN_STATUS_INVALID_VALUE";
+    case CUDNN_STATUS_ARCH_MISMATCH:
+      return "CUDNN_STATUS_ARCH_MISMATCH";
+    case CUDNN_STATUS_MAPPING_ERROR:
+      return "CUDNN_STATUS_MAPPING_ERROR";
+    case CUDNN_STATUS_EXECUTION_FAILED:
+      return "CUDNN_STATUS_EXECUTION_FAILED";
+    case CUDNN_STATUS_NOT_SUPPORTED:
+      return "CUDNN_STATUS_NOT_SUPPORTED";
+    case CUDNN_STATUS_LICENSE_ERROR:
+      return "CUDNN_STATUS_LICENSE_ERROR";
+  }
+  return "Unknown cudnn status";
+}
 
 namespace caffe {
 
-// TODO(cudnn): check existence, add to CUDN_CHECK
-// const char* cudnnGetErrorString(curandStatus_t error);
-//
 namespace cudnn {
 
 template <typename Dtype> class dataType;
@@ -86,6 +112,7 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* conv,
 }
 
 }  // namespace cudnn
+
 }  // namespace caffe
 
 #endif  // USE_CUDNN
