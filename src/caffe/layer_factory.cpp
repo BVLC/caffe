@@ -49,6 +49,10 @@ PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
   }
   if (engine == PoolingParameter_Engine_CAFFE) {
     return new PoolingLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == PoolingParameter_Engine_CUDNN) {
+    return new CuDNNPoolingLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
