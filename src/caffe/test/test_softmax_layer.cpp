@@ -40,7 +40,7 @@ TYPED_TEST_CASE(SoftmaxLayerTest, TestDtypesAndDevices);
 TYPED_TEST(SoftmaxLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  CaffeSoftmaxLayer<Dtype> layer(layer_param);
+  SoftmaxLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
   // Test sum
@@ -74,7 +74,7 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
 TYPED_TEST(SoftmaxLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  CaffeSoftmaxLayer<Dtype> layer(layer_param);
+  SoftmaxLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
       &(this->blob_top_vec_));

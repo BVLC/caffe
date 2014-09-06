@@ -86,7 +86,7 @@ __global__ void kernel_channel_dot(const int num, const int channels,
 }
 
 template <typename Dtype>
-void CaffeSoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -125,7 +125,7 @@ void CaffeSoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void CaffeSoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
@@ -148,6 +148,7 @@ void CaffeSoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
 }
 
-INSTANTIATE_CLASS(CaffeSoftmaxLayer);
+INSTANTIATE_CLASS(SoftmaxLayer);
+
 
 }  // namespace caffe

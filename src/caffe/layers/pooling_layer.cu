@@ -151,7 +151,7 @@ __global__ void StoPoolForwardTest(const int nthreads,
 
 
 template <typename Dtype>
-void CaffePoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -169,18 +169,17 @@ void CaffePoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), this->channels_, this->height_,
-        this->width_, this->pooled_height_, this->pooled_width_,
-        this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_,
-        this->pad_h_, this->pad_w_, top_data, mask, top_mask);
+        count, bottom_data, bottom[0]->num(), channels_,
+        height_, width_, pooled_height_, pooled_width_, kernel_h_,
+        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
+        mask, top_mask);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
     AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), this->channels_, this->height_,
-        this->width_, this->pooled_height_, this->pooled_width_,
-        this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_,
-        this->pad_h_, this->pad_w_, top_data);
+        count, bottom_data, bottom[0]->num(), channels_,
+        height_, width_, pooled_height_, pooled_width_, kernel_h_,
+        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     if (Caffe::phase() == Caffe::TRAIN) {
@@ -190,18 +189,17 @@ void CaffePoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       // NOLINT_NEXT_LINE(whitespace/operators)
       StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count),
                                    CAFFE_CUDA_NUM_THREADS>>>(
-          count, bottom_data, bottom[0]->num(), this->channels_, this->height_,
-          this->width_, this->pooled_height_, this->pooled_width_,
-          this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_,
+          count, bottom_data, bottom[0]->num(), channels_,
+          height_, width_, pooled_height_, pooled_width_, kernel_h_,
+          kernel_w_, stride_h_, stride_w_,
           rand_idx_.mutable_gpu_data(), top_data);
     } else {
       // NOLINT_NEXT_LINE(whitespace/operators)
       StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count),
                                   CAFFE_CUDA_NUM_THREADS>>>(
-          count, bottom_data, bottom[0]->num(), this->channels_, this->height_,
-          this->width_, this->pooled_height_, this->pooled_width_,
-          this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_,
-          top_data);
+          count, bottom_data, bottom[0]->num(), channels_,
+          height_, width_, pooled_height_, pooled_width_, kernel_h_,
+          kernel_w_, stride_h_, stride_w_, top_data);
     }
     break;
   default:
@@ -326,7 +324,7 @@ __global__ void StoPoolBackward(const int nthreads,
 
 
 template <typename Dtype>
-void CaffePoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   if (!propagate_down[0]) {
     return;
@@ -348,25 +346,24 @@ void CaffePoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, mask, top_mask, top[0]->num(), this->channels_,
-        this->height_, this->width_, this->pooled_height_, this->pooled_width_,
-        this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_,
-        this->pad_h_, this->pad_w_, bottom_diff);
+        count, top_diff, mask, top_mask, top[0]->num(), channels_,
+        height_, width_, pooled_height_, pooled_width_,
+        kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
+        bottom_diff);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
     AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, top[0]->num(), this->channels_, this->height_,
-        this->width_, this->pooled_height_, this->pooled_width_,
-        this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_,
-        this->pad_h_, this->pad_w_, bottom_diff);
+        count, top_diff, top[0]->num(), channels_,
+        height_, width_, pooled_height_, pooled_width_, kernel_h_,
+        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     // NOLINT_NEXT_LINE(whitespace/operators)
     StoPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, rand_idx_.gpu_data(), top_diff, top[0]->num(), this->channels_,
-        this->height_, this->width_, this->pooled_height_, this->pooled_width_,
-        this->kernel_h_, this->kernel_w_, this->stride_h_, this->stride_w_,
+        count, rand_idx_.gpu_data(), top_diff,
+        top[0]->num(), channels_, height_, width_, pooled_height_,
+        pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_,
         bottom_diff);
     break;
   default:
@@ -376,7 +373,7 @@ void CaffePoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(CaffePoolingLayer);
+INSTANTIATE_CLASS(PoolingLayer);
 
 
 }  // namespace caffe
