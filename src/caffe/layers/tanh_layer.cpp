@@ -1,3 +1,6 @@
+// TanH neuron activation function layer.
+// Adapted from ReLU layer code written by Yangqing Jia
+
 #include <algorithm>
 #include <vector>
 
@@ -7,7 +10,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void CaffeTanHLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void TanHLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -20,7 +23,7 @@ void CaffeTanHLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void CaffeTanHLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void TanHLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[0]) {
@@ -37,9 +40,9 @@ void CaffeTanHLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(CaffeTanHLayer);
+STUB_GPU(TanHLayer);
 #endif
 
-INSTANTIATE_CLASS(CaffeTanHLayer);
+INSTANTIATE_CLASS(TanHLayer);
 
 }  // namespace caffe

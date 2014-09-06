@@ -18,7 +18,7 @@ ConvolutionLayer<Dtype>* GetConvolutionLayer(const string& name,
     engine = ConvolutionParameter_Engine_CAFFE;
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
-    return new CaffeConvolutionLayer<Dtype>(param);
+    return new ConvolutionLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -38,7 +38,7 @@ PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
     engine = PoolingParameter_Engine_CAFFE;
   }
   if (engine == PoolingParameter_Engine_CAFFE) {
-    return new CaffePoolingLayer<Dtype>(param);
+    return new PoolingLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -58,7 +58,7 @@ ReLULayer<Dtype>* GetReLULayer(const string& name,
     engine = ReLUParameter_Engine_CAFFE;
   }
   if (engine == ReLUParameter_Engine_CAFFE) {
-    return new CaffeReLULayer<Dtype>(param);
+    return new ReLULayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -78,7 +78,7 @@ SigmoidLayer<Dtype>* GetSigmoidLayer(const string& name,
     engine = SigmoidParameter_Engine_CAFFE;
   }
   if (engine == SigmoidParameter_Engine_CAFFE) {
-    return new CaffeSigmoidLayer<Dtype>(param);
+    return new SigmoidLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -98,7 +98,7 @@ TanHLayer<Dtype>* GetTanHLayer(const string& name,
     engine = TanHParameter_Engine_CAFFE;
   }
   if (engine == TanHParameter_Engine_CAFFE) {
-    return new CaffeTanHLayer<Dtype>(param);
+    return new TanHLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -118,7 +118,7 @@ SoftmaxLayer<Dtype>* GetSoftmaxLayer(const string& name,
     engine = SoftmaxParameter_Engine_CAFFE;
   }
   if (engine == SoftmaxParameter_Engine_CAFFE) {
-    return new CaffeSoftmaxLayer<Dtype>(param);
+    return new SoftmaxLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include "caffe/layer.hpp"
@@ -7,39 +8,42 @@
 namespace caffe {
 
 template <typename Dtype>
-void CaffeReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+inline Dtype sigmoid(Dtype x) {
+  return 1. / (1. + exp(-x));
+}
+
+template <typename Dtype>
+void SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
-  Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
   for (int i = 0; i < count; ++i) {
-    top_data[i] = std::max(bottom_data[i], Dtype(0))
-        + negative_slope * std::min(bottom_data[i], Dtype(0));
+    top_data[i] = sigmoid(bottom_data[i]);
   }
 }
 
 template <typename Dtype>
-void CaffeReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void SigmoidLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[0]) {
-    const Dtype* bottom_data = (*bottom)[0]->cpu_data();
+    const Dtype* top_data = top[0]->cpu_data();
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const int count = (*bottom)[0]->count();
-    Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     for (int i = 0; i < count; ++i) {
-      bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
-          + negative_slope * (bottom_data[i] <= 0));
+      const Dtype sigmoid_x = top_data[i];
+      bottom_diff[i] = top_diff[i] * sigmoid_x * (1. - sigmoid_x);
     }
   }
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(CaffeReLULayer);
+STUB_GPU(SigmoidLayer);
 #endif
 
-INSTANTIATE_CLASS(CaffeReLULayer);
+INSTANTIATE_CLASS(SigmoidLayer);
+
 
 }  // namespace caffe
