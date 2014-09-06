@@ -16,8 +16,7 @@ void CuDNNSoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   SoftmaxLayer<Dtype>::LayerSetUp(bottom, top);
   // Initialize CUDNN.
-  cudnnStatus_t stat = cudnnCreate(&handle_);
-  CHECK_EQ(stat,CUDNN_STATUS_SUCCESS) << "Could not create a CUDNN handle.";
+  CUDNN_CHECK(cudnnCreate(&handle_));
   int N = bottom[0]->num();
   int K = bottom[0]->channels();
   int H = bottom[0]->height();

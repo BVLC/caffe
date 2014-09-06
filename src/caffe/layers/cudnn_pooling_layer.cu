@@ -20,10 +20,8 @@ void CuDNNPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
-  cudnnStatus_t stat = cudnnPoolingForward(handle_, pooling_desc_,
-      bottom_desc_, bottom_data, top_desc_, top_data);
-  CHECK_EQ(stat,CUDNN_STATUS_SUCCESS)
-      << "Error in cudnnPoolingForward.";
+  CUDNN_CHECK(cudnnPoolingForward(handle_, pooling_desc_,
+      bottom_desc_, bottom_data, top_desc_, top_data));
 }
 
 template <typename Dtype>
@@ -43,10 +41,9 @@ void CuDNNPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* bottom_data = (*bottom)[0]->gpu_data();
   Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-  cudnnStatus_t stat = cudnnPoolingBackward(handle_, pooling_desc_,
+  CUDNN_CHECK(cudnnPoolingBackward(handle_, pooling_desc_,
       top_desc_, top_data, top_desc_, top_diff,
-      bottom_desc_, bottom_data, bottom_desc_, bottom_diff);
-  CHECK_EQ(stat,CUDNN_STATUS_SUCCESS) << "Error in cudnnPoolingBackward.";
+      bottom_desc_, bottom_data, bottom_desc_, bottom_diff));
 }
 
 INSTANTIATE_CLASS(CuDNNPoolingLayer);
