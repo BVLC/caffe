@@ -19,46 +19,46 @@ def read(digits, dataset = "training", path = "."):
     Load MNIST files into 3D numpy arrays, scaled over unit interval
     """
  
-    files = { "training" :
+    CONF  = { "training" :
                { "img" : os.path.join(path, 'train-images-idx3-ubyte'),
                  "lbl" : os.path.join(path, 'train-labels-idx1-ubyte'),
-                 "n"   : 60000 },
+                 "size" : 60000 },
               "testing":
                { "img" : os.path.join(path, 't10k-images-idx3-ubyte'),
                  "lbl" : os.path.join(path, 't10k-labels-idx1-ubyte'),
-                 "n"   : 10000 } }
+                 "size" : 10000 } }
     
     try:
-    	fname_img = files[dataset]["img"]
-	fname_lbl = files[dataset]["lbl"]
-        n         = files[dataset]["n"]
+    	IMAGES_FILE = CONF[dataset]["img"]
+	LABELS_FILE = CONF[dataset]["lbl"]
+        N           = CONF[dataset]["size"]
     except (TypeError, KeyError, ValueError):
 	print( "dataset must be 'testing' or 'training'" )
     else:
         try:
-            f = open(fname_lbl, 'rb')
+            f = open(LABELS_FILE, 'rb')
         except IOError:
-            print('could not open labels file')
+            print('Could not open labels file')
         else:
             f.read(8) # skip the header
-            labels = np.fromstring(f.read(n), dtype=np.uint8)
+            labels = np.fromstring(f.read(N), dtype=np.uint8)
             f.close()
             try:
-                f = open(fname_img, 'rb')
+                f = open(IMAGES_FILE, 'rb')
             except IOError:
-                print('could not open images file')
+                print('Could not open images file')
             else:
-                f.read(16)
-                images = np.fromstring(f.read(n * 28 * 28), dtype=np.uint8)
+                f.read(16) # skip the header
+                images = np.fromstring(f.read(N * 28 * 28), dtype=np.uint8)
                 f.close()
                 # select digits we are interested in
-                ind = [ k for k in xrange(n) if labels[k] in digits ]
-                N = len(ind)
+                ind = [ k for k in xrange(N) if labels[k] in digits ]
+                n  = len(ind)
                 # init return values
-                digits_we_want = zeros((N, 28, 28), dtype=np.float32)
-                labels_we_want = zeros((N, 1), dtype=np.uint8)
-
-                for i in xrange(len(ind)):
+                digits_we_want = zeros((n, 28, 28), dtype=np.float32)
+                labels_we_want = zeros((n, 1), dtype=np.uint8)
+                # fill return values with expected images and labels
+                for i in xrange(n):
                     startIdx = ind[i]*28*28
                     endIdx   = (ind[i]+1)*28*28
                     digits_we_want[i] = images[startIdx:endIdx].reshape((28,28)).astype(np.float32) / 255.
