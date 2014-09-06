@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser(description='Pretty-prints content of any .npy 
 parser.add_argument("input_file",help='the numpy data file you want to read')
 args = parser.parse_args()
 
+np.set_printoptions(threshold=np.nan)
 np.set_printoptions(precision=2)
 
 print(np.load(args.input_file))

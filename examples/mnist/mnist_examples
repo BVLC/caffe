@@ -16,54 +16,55 @@ args = parser.parse_args()
 
 def read(digits, dataset = "training", path = "."):
     """
-    Loads MNIST files into 3D numpy arrays
-    As tweaked by Gustav Larsson http://g.sweyla.com/blog/2012/mnist-numpy/ 
-    Adapted from: http://abel.ee.ucla.edu/cvxopt/_downloads/mnist.py
+    Load MNIST files into 3D numpy arrays, scaled over unit interval
     """
  
     files = { "training" :
                { "img" : os.path.join(path, 'train-images-idx3-ubyte'),
-                 "lbl" : os.path.join(path, 'train-labels-idx1-ubyte') },
+                 "lbl" : os.path.join(path, 'train-labels-idx1-ubyte'),
+                 "n"   : 60000 },
               "testing":
                { "img" : os.path.join(path, 't10k-images-idx3-ubyte'),
-                 "lbl" : os.path.join(path, 't10k-labels-idx1-ubyte') } }
+                 "lbl" : os.path.join(path, 't10k-labels-idx1-ubyte'),
+                 "n"   : 10000 } }
     
     try:
     	fname_img = files[dataset]["img"]
 	fname_lbl = files[dataset]["lbl"]
+        n         = files[dataset]["n"]
     except (TypeError, KeyError, ValueError):
 	print( "dataset must be 'testing' or 'training'" )
     else:
         try:
-            flbl = open(fname_lbl, 'rb')
+            f = open(fname_lbl, 'rb')
         except IOError:
             print('could not open labels file')
         else:
-            magic_nr, size = struct.unpack(">II", flbl.read(8))
-            lbl = pyarray("b", flbl.read())
-            flbl.close()
-        try:
-            fimg = open(fname_img, 'rb')
-        except IOError:
-            print('could not open images file')
-        else:
-            magic_nr, size, rows, cols = struct.unpack(">IIII", fimg.read(16))
-            img = pyarray("B", fimg.read())
-            fimg.close()
-        try:
-            ind = [ k for k in xrange(size) if lbl[k] in digits ]
-            N = len(ind)
- 
-            images = zeros((N, rows, cols), dtype=uint8)
-            labels = zeros((N, 1), dtype=int8)
+            f.read(8) # skip the header
+            labels = np.fromstring(f.read(n), dtype=np.uint8)
+            f.close()
+            try:
+                f = open(fname_img, 'rb')
+            except IOError:
+                print('could not open images file')
+            else:
+                f.read(16)
+                images = np.fromstring(f.read(n * 28 * 28), dtype=np.uint8)
+                f.close()
+                # select digits we are interested in
+                ind = [ k for k in xrange(n) if labels[k] in digits ]
+                N = len(ind)
+                # init return values
+                digits_we_want = zeros((N, 28, 28), dtype=np.float32)
+                labels_we_want = zeros((N, 1), dtype=np.uint8)
+
+                for i in xrange(len(ind)):
+                    startIdx = ind[i]*28*28
+                    endIdx   = (ind[i]+1)*28*28
+                    digits_we_want[i] = images[startIdx:endIdx].reshape((28,28)).astype(np.float32) / 255.
+                    labels_we_want[i] = labels[ind[i]]                
         
-            for i in xrange(len(ind)):
-               images[i] = array(img[ ind[i]*rows*cols : (ind[i]+1)*rows*cols ]).reshape((rows, cols))
-               labels[i] = lbl[ind[i]]
- 
-            return images, labels
-        except Exception:
-           print('something went wrong')
+                return digits_we_want, labels_we_want
  
 """
 Let's read test images for the digit passed as argument to the script
@@ -79,10 +80,8 @@ else:
 
     """
     our classifier expects values between [0,1) and MNIST is 0-255
-    we do the scaling here although it could also be done with optional argument to classify
+    this is already handled by the reader above and no further scaling is necessary
     """
-
-    outputs[:,:,:,0] = images[0:args.count] * (1.0/256)
-
+    outputs[:,:,:,0] = images[0:args.count]
     np.save(args.output, outputs)
 
