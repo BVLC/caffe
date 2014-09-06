@@ -116,7 +116,37 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 
 #### Hinge / Margin
 
-`HINGE_LOSS`
+* LayerType: `HINGE_LOSS`
+* CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
+* CUDA GPU implementation: `NOT_AVAILABLE`
+* Options (`HingeLossParameter hinge_loss_param`)
+    - Optional (default L1): `norm`, the norm used. Currently L1, L2
+* Inputs
+    - `n * c * h * w` Predictions
+    - `n * 1 * 1 * 1` Labels
+* Output
+    - `1 * 1 * 1 * 1` Computed Loss
+* Samples
+
+      # L1 Norm
+      layers {
+        name: "loss"
+        type: HINGE_LOSS
+        bottom: "pred"
+        bottom: "label"
+      }
+
+      # L2 Norm
+      layers {
+        name: "loss"
+        type: HINGE_LOSS
+        bottom: "pred"
+        bottom: "label"
+        top: "loss"
+        hinge_loss_param {
+          norm: L2
+        }
+      }
 
 #### Sigmoid Cross-Entropy
 
