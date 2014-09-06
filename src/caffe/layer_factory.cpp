@@ -157,6 +157,10 @@ SoftmaxLayer<Dtype>* GetSoftmaxLayer(const string& name,
   }
   if (engine == SoftmaxParameter_Engine_CAFFE) {
     return new SoftmaxLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == SoftmaxParameter_Engine_CUDNN) {
+    return new CuDNNSoftmaxLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
