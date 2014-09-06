@@ -257,12 +257,6 @@ else
 	COMMON_FLAGS += -DNDEBUG -O2
 endif
 
-# Computation engine configuration (default is standard Caffe)
-ENGINE ?= caffe
-ifeq ($(ENGINE), caffe)
-	COMMON_FLAGS += -DCAFFE_ENGINE
-endif
-
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
 	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
