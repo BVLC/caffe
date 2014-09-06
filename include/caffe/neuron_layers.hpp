@@ -356,6 +356,31 @@ class ReLULayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of ReLULayer.
+ */
+template <typename Dtype>
+class CuDNNReLULayer : public ReLULayer<Dtype> {
+ public:
+  explicit CuDNNReLULayer(const LayerParameter& param)
+      : ReLULayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual ~CuDNNReLULayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  cudnnHandle_t             handle_;
+  cudnnTensor4dDescriptor_t bottom_desc_;
+  cudnnTensor4dDescriptor_t top_desc_;
+};
+#endif
+
 /**
  * @brief Sigmoid function non-linearity @f$
  *         y = (1 + \exp(-x))^{-1}
@@ -412,6 +437,31 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 };
+
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of SigmoidLayer.
+ */
+template <typename Dtype>
+class CuDNNSigmoidLayer : public SigmoidLayer<Dtype> {
+ public:
+  explicit CuDNNSigmoidLayer(const LayerParameter& param)
+      : SigmoidLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual ~CuDNNSigmoidLayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  cudnnHandle_t             handle_;
+  cudnnTensor4dDescriptor_t bottom_desc_;
+  cudnnTensor4dDescriptor_t top_desc_;
+};
+#endif
 
 /**
  * @brief TanH hyperbolic tangent non-linearity @f$
@@ -471,6 +521,31 @@ class TanHLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 };
+
+#ifdef USE_CUDNN
+/**
+ * @brief CuDNN acceleration of TanHLayer.
+ */
+template <typename Dtype>
+class CuDNNTanHLayer : public TanHLayer<Dtype> {
+ public:
+  explicit CuDNNTanHLayer(const LayerParameter& param)
+      : TanHLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual ~CuDNNTanHLayer();
+
+ protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  cudnnHandle_t             handle_;
+  cudnnTensor4dDescriptor_t bottom_desc_;
+  cudnnTensor4dDescriptor_t top_desc_;
+};
+#endif
 
 /**
  * @brief Tests whether the input exceeds a threshold: outputs 1 for inputs

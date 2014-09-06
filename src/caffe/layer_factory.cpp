@@ -76,6 +76,10 @@ ReLULayer<Dtype>* GetReLULayer(const string& name,
   }
   if (engine == ReLUParameter_Engine_CAFFE) {
     return new ReLULayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == ReLUParameter_Engine_CUDNN) {
+    return new CuDNNReLULayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -99,6 +103,10 @@ SigmoidLayer<Dtype>* GetSigmoidLayer(const string& name,
   }
   if (engine == SigmoidParameter_Engine_CAFFE) {
     return new SigmoidLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == SigmoidParameter_Engine_CUDNN) {
+    return new CuDNNSigmoidLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -122,6 +130,10 @@ TanHLayer<Dtype>* GetTanHLayer(const string& name,
   }
   if (engine == TanHParameter_Engine_CAFFE) {
     return new TanHLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == TanHParameter_Engine_CUDNN) {
+    return new CuDNNTanHLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
