@@ -281,23 +281,82 @@ The `BNLL` (binomial normal log likelihood) layer computes the output as log(1 +
 
 #### Inner Product
 
-`INNER_PRODUCT`
+* LayerType: `INNER_PRODUCT`
+* CPU implementation: `./src/caffe/layers/inner_product_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/inner_product_layer.cu`
+* Options (`InnerProductParameter inner_product_param`)
+    - Required: `num_output` (`c_o`), the number of filters
+    - Strongly recommended (default `type: 'constant' value: 0`): `weight_filler`
+    - Optional (default `type: 'constant' value: 0`): `bias_filler`
+    - Optional (default `true`): `bias_term`, specifies whether to learn and apply a set of additive biases to the filter outputs
+* Input
+    - `n * c_i * h_i * w_i`
+* Output
+    - `n * c_o * 1 * 1`
+* Sample
+
+    layers {
+      name: "fc8"
+      type: INNER_PRODUCT
+      blobs_lr: 1          # learning rate multiplier for the filters
+      blobs_lr: 2          # learning rate multiplier for the biases
+      weight_decay: 1      # weight decay multiplier for the filters
+      weight_decay: 0      # weight decay multiplier for the biases
+      inner_product_param {
+        num_output: 1000
+        weight_filler {
+          type: "gaussian"
+          std: 0.01
+        }
+        bias_filler {
+          type: "constant"
+          value: 0
+        }
+      }
+      bottom: "fc7"
+      top: "fc8"
+    }
+
+The `INNER_PRODUCT` layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob's height and width set to 1).
 
 #### Splitting
 
-`SPLIT`
+The `SPLIT` layer is a utility layer that splits an input blob to multiple output blobs. This is used when a blob is fed into multiple output layers.
 
 #### Flattening
 
-`FLATTEN`
+The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * h * w` to a simple vector output of shape `n * (c*h*w) * 1 * 1`.
 
 #### Concatenation
 
-`CONCAT`
+* LayerType: `CONCAT`
+* CPU implementation: `./src/caffe/layers/concat_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/concat_layer.cu`
+* Options (`ConcatParameter concat_param`)
+    - Optional (default 1): `concat_dim`, 0 for concatenation along num and 1 for channels.
+* Input
+    - `n_i * c_i * h * w` for each input blob i from 1 to K.
+* Output
+    - if `concat_dim = 0`: `(n_1 + n_2 + ... + n_K) * c_1 * h * w`, and all input `c_i` should be the same.
+    - if `concat_dim = 1`: `n_1 * (c_1 + c_2 + ... + c_K) * h * w`, and all input `n_i` should be the same.
+* Sample
+
+        layers {
+          name: "concat"
+          bottom: "in1"
+          bottom: "in2"
+          top: "out"
+          type: CONCAT
+          concat_param {
+            concat_dim: 1
+          }
+        }
+
+The `CONCAT` layer is a utility layer that concatenates its multiple input blobs to one single output blob. Currently, the layer supports concatenation along num or channels only.
 
 #### Slicing
 
-`SLICE`
+The `SLICE` layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.
 
 #### Elementwise Operations
 
