@@ -14,9 +14,7 @@ void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   PoolingLayer<Dtype>::LayerSetUp(bottom, top);
 
-  // TODO(cudnn) check
-  cudnnStatus_t stat = cudnnCreate(&handle_);
-  CHECK_EQ(stat,CUDNN_STATUS_SUCCESS) << "Could not create a CUDNN handle.";
+  CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_, bottom[0]->num(),
       this->channels_, this->height_, this->width_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_, bottom[0]->num(),

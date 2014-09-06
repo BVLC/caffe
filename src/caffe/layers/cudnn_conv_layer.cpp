@@ -26,16 +26,9 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
 
   for (int g = 0; g < this->group_ * CUDNN_STREAMS_PER_GROUP; g++) {
-    // TODO(cudnn) check
-    cudaError_t err = cudaStreamCreate(&stream_[g]);
-    CHECK_EQ(err, cudaSuccess) << "Error creating a CUDA stream.";
-
-    // TODO(cudnn) check
-    cudnnStatus_t stat;
-    stat = cudnnCreate(&handle_[g]);
-    CHECK_EQ(stat, CUDNN_STATUS_SUCCESS) << "Could not create a CUDNN handle.";
-    stat = cudnnSetStream(handle_[g], stream_[g]);
-    CHECK_EQ(stat, CUDNN_STATUS_SUCCESS) << "Could not set CUDNN stream.";
+    CUDA_CHECK(cudaStreamCreate(&stream_[g]));
+    CUDNN_CHECK(cudnnCreate(&handle_[g]));
+    CUDNN_CHECK(cudnnSetStream(handle_[g], stream_[g]));
   }
 
   // Set the indexing parameters.
