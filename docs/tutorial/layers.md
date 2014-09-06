@@ -18,7 +18,7 @@ A typical "image" in the real-world may have one color channel ($c = 1$), as in 
 But in this context, the distinguishing characteristic of an image is its spatial structure: usually an image has some non-trivial height $h > 1$ and width $w > 1$.
 This 2D geometry naturally lends itself to certain decisions about how to process the input.
 In particular, most of the vision layers work by applying a particular operation to some region of the input to produce a corresponding region of the output.
-In contrast, other layers (with few exceptions) ignore the spatial structure of the input, treating it as "one big vector" with dimension $$ c h w $$.
+In contrast, other layers (with few exceptions) ignore the spatial structure of the input, effectively treating it as "one big vector" with dimension $$ c h w $$.
 
 
 #### Convolution
@@ -27,17 +27,17 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 * CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
 * Options (`ConvolutionParameter convolution_param`)
-    - Required: `num_output` ($c_o$), the number of filters
+    - Required: `num_output` (`c_o`), the number of filters
     - Required: `kernel_size` or (`kernel_h`, `kernel_w`), specifies height & width of each filter
     - Strongly recommended (default `type: 'constant' value: 0`): `weight_filler`
     - Optional (default `true`): `bias_term`, specifies whether to learn and apply a set of additive biases to the filter outputs
     - Optional (default 0): `pad` or (`pad_h`, `pad_w`), specifies the number of pixels to (implicitly) add to each side of the input
     - Optional (default 1): `stride` or (`stride_h`, `stride_w`), specifies the intervals at which to apply the filters to the input
-    - Optional (default 1): `group` ($g$) if $>1$, restricts the connectivity of each filter to a subset of the input.  In particular, the input to the $i^{th}$ group of $n_f / g$ filters is the $i^{th}$ group of $c_i / g$ input channels.
+    - Optional (default 1): `group` (g). If g > 1, we restrict the connectivity of each filter to a subset of the input. Specifically, the input and output channels are separated to g groups separately, and the i-th output group channels will be only connected to the i-th input group channels.
 * Input
-    - $n \times c_i \times h_i \times w_i$ (repeated $K \ge 1$ times)
+    - `n * c_i * h_i * w_i`
 * Output
-    - $n \times c_o \times h_o \times w_o$ (repeated $K$ times)
+    - `n * c_o * h_o * w_o`, where `h_o = (h_i + 2 * pad_h - kernel_h) / stride_h + 1` and `w_o` likewise.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
         layers {
@@ -66,58 +66,41 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 
 The `CONVOLUTION` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
 
-#### Pooling**
+#### Pooling
 
-`POOLING`
-
-#### Local Response Normalization
-
-* LayerType: `LRN`
-* CPU implementation: `./src/caffe/layers/lrn_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/lrn_layer.cu`
-* Options (`ConvolutionParameter convolution_param`)
-    - Required: `num_output` ($c_o$), the number of filters
+* LayerType: `POOLING`
+* CPU implementation: `./src/caffe/layers/pooling_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/pooling_layer.cu`
+* Options (`PoolingParameter pooling_param`)
+    - Optional (default MAX): `pool`, the pooling method. Currently MAX, AVE, or STOCHASTIC
     - Required: `kernel_size` or (`kernel_h`, `kernel_w`), specifies height & width of each filter
-    - Strongly recommended (default `type: 'constant' value: 0`): `weight_filler`
-    - Optional (default `true`): `bias_term`, specifies whether to learn and apply a set of additive biases to the filter outputs
     - Optional (default 0): `pad` or (`pad_h`, `pad_w`), specifies the number of pixels to (implicitly) add to each side of the input
     - Optional (default 1): `stride` or (`stride_h`, `stride_w`), specifies the intervals at which to apply the filters to the input
-    - Optional (default 1): `group` ($g$) if $>1$, restricts the connectivity of each filter to a subset of the input.  In particular, the input to the $i^{th}$ group of $n_f / g$ filters is the $i^{th}$ group of $c_i / g$ input channels.
 * Input
-    - $n \times c_i \times h_i \times w_i$ (repeated $K \ge 1$ times)
+    - `n * c * h_i * w_i`
 * Output
-    - $n \times c_o \times h_o \times w_o$ (repeated $K$ times)
+    - `n * c * h_o * w_o`, where h_o and w_o are computed in the same way as convolution.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
-        layers {
-          name: "conv1"
-          type: CONVOLUTION
-          bottom: "data"
-          top: "conv1"
-          blobs_lr: 1          # learning rate multiplier for the filters
-          blobs_lr: 2          # learning rate multiplier for the biases
-          weight_decay: 1      # weight decay multiplier for the filters
-          weight_decay: 0      # weight decay multiplier for the biases
-          convolution_param {
-            num_output: 96     # learn 96 filters
-            kernel_size: 11    # each filter is 11x11
-            stride: 4          # step 4 pixels between each filter application
-            weight_filler {
-              type: "gaussian" # initialize the filters from a Gaussian
-              std: 0.01        # distribution with stdev 0.01 (default mean: 0)
-            }
-            bias_filler {
-              type: "constant" # initialize the biases to zero (0)
-              value: 0
-            }
-          }
-        }
+    layers {
+      name: "pool1"
+      type: POOLING
+      bottom: "conv1"
+      top: "pool1"
+      pooling_param {
+        pool: MAX
+        kernel_size: 3
+        stride: 2
+      }
+    }
 
-The `CONVOLUTION` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
+#### Local Response Normalization (LRN)
+
+`LRN`
 
 #### im2col
 
-`IM2COL` is a helper for doing the image-to-column transformation that you most likely do not need to know about.
+`IM2COL` is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe's original convolution to do matrix multiplication by laying out all patches into a matrix.
 
 ### Loss Layers
 
@@ -152,9 +135,9 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 In general, activation / Neuron layers are element-wise operators, taking one bottom blob and producing one top blob of the same size. In the layers below, we will ignore the input and out sizes as they are identical:
 
 * Input
-    - $n \times c \times h \times w$
+    - n * c * h * w
 * Output
-    - $n \times c \times h \times w$
+    - n * c * h * w
 
 #### ReLU / Rectified-Linear and Leaky-ReLU
 
