@@ -28,41 +28,41 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
 * Options (`ConvolutionParameter convolution_param`)
     - Required: `num_output` (`c_o`), the number of filters
-    - Required: `kernel_size` or (`kernel_h`, `kernel_w`), specifies height & width of each filter
+    - Required: `kernel_size` (or `kernel_h` and `kernel_w`), specifies height and width of each filter
     - Strongly recommended (default `type: 'constant' value: 0`): `weight_filler`
     - Optional (default `true`): `bias_term`, specifies whether to learn and apply a set of additive biases to the filter outputs
-    - Optional (default 0): `pad` or (`pad_h`, `pad_w`), specifies the number of pixels to (implicitly) add to each side of the input
-    - Optional (default 1): `stride` or (`stride_h`, `stride_w`), specifies the intervals at which to apply the filters to the input
-    - Optional (default 1): `group` (g). If g > 1, we restrict the connectivity of each filter to a subset of the input. Specifically, the input and output channels are separated to g groups separately, and the i-th output group channels will be only connected to the i-th input group channels.
+    - Optional (default 0): `pad` (or `pad_h` and `pad_w`), specifies the number of pixels to (implicitly) add to each side of the input
+    - Optional (default 1): `stride` (or `stride_h` and `stride_w`), specifies the intervals at which to apply the filters to the input
+    - Optional (default 1): `group` (g). If g > 1, we restrict the connectivity of each filter to a subset of the input. Specifically, the input and output channels are separated into g groups, and the $$i$$th output group channels will be only connected to the $$i$$th input group channels.
 * Input
     - `n * c_i * h_i * w_i`
 * Output
     - `n * c_o * h_o * w_o`, where `h_o = (h_i + 2 * pad_h - kernel_h) / stride_h + 1` and `w_o` likewise.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
-        layers {
-          name: "conv1"
-          type: CONVOLUTION
-          bottom: "data"
-          top: "conv1"
-          blobs_lr: 1          # learning rate multiplier for the filters
-          blobs_lr: 2          # learning rate multiplier for the biases
-          weight_decay: 1      # weight decay multiplier for the filters
-          weight_decay: 0      # weight decay multiplier for the biases
-          convolution_param {
-            num_output: 96     # learn 96 filters
-            kernel_size: 11    # each filter is 11x11
-            stride: 4          # step 4 pixels between each filter application
-            weight_filler {
-              type: "gaussian" # initialize the filters from a Gaussian
-              std: 0.01        # distribution with stdev 0.01 (default mean: 0)
-            }
-            bias_filler {
-              type: "constant" # initialize the biases to zero (0)
-              value: 0
-            }
+      layers {
+        name: "conv1"
+        type: CONVOLUTION
+        bottom: "data"
+        top: "conv1"
+        blobs_lr: 1          # learning rate multiplier for the filters
+        blobs_lr: 2          # learning rate multiplier for the biases
+        weight_decay: 1      # weight decay multiplier for the filters
+        weight_decay: 0      # weight decay multiplier for the biases
+        convolution_param {
+          num_output: 96     # learn 96 filters
+          kernel_size: 11    # each filter is 11x11
+          stride: 4          # step 4 pixels between each filter application
+          weight_filler {
+            type: "gaussian" # initialize the filters from a Gaussian
+            std: 0.01        # distribution with stdev 0.01 (default mean: 0)
+          }
+          bias_filler {
+            type: "constant" # initialize the biases to zero (0)
+            value: 0
           }
         }
+      }
 
 The `CONVOLUTION` layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.
 
