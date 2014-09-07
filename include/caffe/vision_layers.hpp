@@ -52,16 +52,15 @@ class ConvolutionLayer : public Layer<Dtype> {
   int num_;
   int channels_;
   int pad_h_, pad_w_;
-  int height_;
-  int width_;
-  int num_output_;
+  int height_, width_;
   int group_;
+  int num_output_;
+  int height_out_, width_out_;
+  bool bias_term_;
+  // For the Caffe matrix multiplication convolution.
+  int M_, K_, N_;
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
-  bool bias_term_;
-  int M_;
-  int K_;
-  int N_;
 };
 
 /**
@@ -98,8 +97,7 @@ class Im2colLayer : public Layer<Dtype> {
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int channels_;
-  int height_;
-  int width_;
+  int height_, width_;
   int pad_h_, pad_w_;
 };
 
@@ -221,10 +219,8 @@ class PoolingLayer : public Layer<Dtype> {
   int stride_h_, stride_w_;
   int pad_h_, pad_w_;
   int channels_;
-  int height_;
-  int width_;
-  int pooled_height_;
-  int pooled_width_;
+  int height_, width_;
+  int pooled_height_, pooled_width_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
 };
