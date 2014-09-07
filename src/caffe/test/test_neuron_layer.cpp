@@ -169,6 +169,38 @@ TYPED_TEST(NeuronLayerTest, TestSigmoidGradient) {
       &(this->blob_top_vec_));
 }
 
+TYPED_TEST(NeuronLayerTest, TestTanH) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  TanHLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  // Test exact values
+  for (int i = 0; i < this->blob_bottom_->num(); ++i) {
+    for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+      for (int k = 0; k < this->blob_bottom_->height(); ++k) {
+        for (int l = 0; l < this->blob_bottom_->width(); ++l) {
+          EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
+             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
+             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
+          EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
+             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
+             (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
+        }
+      }
+    }
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestTanHGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  TanHLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
+      &(this->blob_top_vec_));
+}
+
 TYPED_TEST(NeuronLayerTest, TestDropoutHalf) {
   const float kDropoutRatio = 0.5;
   this->TestDropoutForward(kDropoutRatio);
