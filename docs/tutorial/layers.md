@@ -201,12 +201,12 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
         - `negative_slope` [default 0]: specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
-        layers {
-          name: "relu1"
-          type: RELU
-          bottom: "conv1"
-          top: "conv1"
-        }
+      layers {
+        name: "relu1"
+        type: RELU
+        bottom: "conv1"
+        top: "conv1"
+      }
 
 Given an input value x, The `RELU` layer computes the output as x if x > 0 and negative_slope * x if x <= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.
 
@@ -217,12 +217,12 @@ Given an input value x, The `RELU` layer computes the output as x if x > 0 and n
 * CUDA GPU implementation: `./src/caffe/layers/sigmoid_layer.cu`
 * Sample (as seen in `./examples/imagenet/mnist_autoencoder.prototxt`)
 
-        layers {
-          name: "encode1neuron"
-          bottom: "encode1"
-          top: "encode1neuron"
-          type: SIGMOID
-        }
+      layers {
+        name: "encode1neuron"
+        bottom: "encode1"
+        top: "encode1neuron"
+        type: SIGMOID
+      }
 
 The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 
@@ -233,12 +233,12 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 * CUDA GPU implementation: `./src/caffe/layers/tanh_layer.cu`
 * Sample
 
-        layers {
-          name: "layer"
-          bottom: "in"
-          top: "out"
-          type: TANH
-        }
+      layers {
+        name: "layer"
+        bottom: "in"
+        top: "out"
+        type: TANH
+      }
 
 The `TANH` layer computes the output as tanh(x) for each input element x.
 
@@ -249,12 +249,12 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 * CUDA GPU implementation: `./src/caffe/layers/absval_layer.cu`
 * Sample
 
-        layers {
-          name: "layer"
-          bottom: "in"
-          top: "out"
-          type: ABSVAL
-        }
+      layers {
+        name: "layer"
+        bottom: "in"
+        top: "out"
+        type: ABSVAL
+      }
 
 The `ABSVAL` layer computes the output as abs(x) for each input element x.
 
@@ -270,17 +270,17 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
         - `shift` [default 0]
 * Sample
 
-        layers {
-          name: "layer"
-          bottom: "in"
-          top: "out"
-          type: POWER
-          power_param {
-            power: 1
-            scale: 1
-            shift: 0
-          }
+      layers {
+        name: "layer"
+        bottom: "in"
+        top: "out"
+        type: POWER
+        power_param {
+          power: 1
+          scale: 1
+          shift: 0
         }
+      }
 
 The `POWER` layer computes the output as (shift + scale * x) ^ power for each input element x.
 
@@ -291,12 +291,12 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 * CUDA GPU implementation: `./src/caffe/layers/bnll_layer.cu`
 * Sample
 
-        layers {
-          name: "layer"
-          bottom: "in"
-          top: "out"
-          type: BNLL
-        }
+      layers {
+        name: "layer"
+        bottom: "in"
+        top: "out"
+        type: BNLL
+      }
 
 The `BNLL` (binomial normal log likelihood) layer computes the output as log(1 + exp(x)) for each input element x.
 
@@ -399,16 +399,16 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
     - if `concat_dim = 1`: `n_1 * (c_1 + c_2 + ... + c_K) * h * w`, and all input `n_i` should be the same.
 * Sample
 
-        layers {
-          name: "concat"
-          bottom: "in1"
-          bottom: "in2"
-          top: "out"
-          type: CONCAT
-          concat_param {
-            concat_dim: 1
-          }
+      layers {
+        name: "concat"
+        bottom: "in1"
+        bottom: "in2"
+        top: "out"
+        type: CONCAT
+        concat_param {
+          concat_dim: 1
         }
+      }
 
 The `CONCAT` layer is a utility layer that concatenates its multiple input blobs to one single output blob. Currently, the layer supports concatenation along num or channels only.
 
