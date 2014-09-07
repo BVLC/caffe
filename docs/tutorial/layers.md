@@ -123,17 +123,21 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 
 #### Softmax
 
-`SOFTMAX_LOSS`
+* LayerType: `SOFTMAX_LOSS`
+
+The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It's conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.
 
 #### Sum-of-Squares / Euclidean
 
-`EUCLIDEAN_LOSS`
+* LayerType: `EUCLIDEAN_LOSS`
+
+The Euclidean loss layer computes the sum of squares of differences of its two inputs, $$\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2$$.
 
 #### Hinge / Margin
 
 * LayerType: `HINGE_LOSS`
 * CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
-* CUDA GPU implementation: `NOT_AVAILABLE`
+* CUDA GPU implementation: none yet
 * Parameters (`HingeLossParameter hinge_loss_param`)
     - Optional
         - `norm` [default L1]: the norm used. Currently L1, L2
@@ -163,6 +167,8 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
           norm: L2
         }
       }
+
+The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 
 #### Sigmoid Cross-Entropy
 
