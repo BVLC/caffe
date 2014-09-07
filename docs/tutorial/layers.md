@@ -303,25 +303,60 @@ The `BNLL` (binomial normal log likelihood) layer computes the output as log(1 +
 
 ### Data Layers
 
+Data enters Caffe through data layers: they lie at the bottom of nets. Data can come from efficient databases (LevelDB or LMDB), directly from memory, or, when efficiency is not critical, from files on disk in HDF5 or common image formats.
+
+Common input preprocessing (mean subtraction, scaling, random cropping, and mirroring) is available by specifying `TransformationParameter`s.
+
 #### Database
 
-`DATA`
+* LayerType: `DATA`
+* Parameters
+    - Required
+        - `source`: the name of the directory containing the database
+        - `batch_size`: the number of inputs to process at one time
+    - Optional
+        - `rand_skip`: skip up to this number of inputs at the beginning; useful for asynchronous sgd
+        - `backend` [default `LEVELDB`]: choose whether to use a `LEVELDB` or `LMDB`
+
+
 
 #### In-Memory
 
-`MEMORY_DATA`
+* LayerType: `MEMORY_DATA`
+* Parameters
+    - Required
+        - `batch_size`, `channels`, `height`, `width`: specify the size of input chunks to read from memory
+
+The memory data layer reads data directly from memory, without copying it. In order to use it, one must call `MemoryDataLayer::Reset` (from C++) or `Net.set_input_arrays` (from Python) in order to specify a source of contiguous data (as 4D row major array), which is read one batch-sized chunk at a time.
 
 #### HDF5 Input
 
-`HDF5_DATA`
+* LayerType: `HDF5_DATA`
+* Parameters
+    - Required
+        - `source`: the name of the file to read from
+        - `batch_size`
 
 #### HDF5 Output
 
-`HDF5_OUTPUT`
+* LayerType: `HDF5_OUTPUT`
+* Parameters
+    - Required
+        - `file_name`: name of file to write to
+
+The HDF5 output layer performs the opposite function of the other layers in this section: it writes its input blobs to disk.
 
 #### Images
 
-`IMAGE_DATA`
+* LayerType: `IMAGE_DATA`
+* Parameters
+    - Required
+        - `source`: name of a text file, with each line giving an image filename and label
+        - `batch_size`: number of images to batch together
+    - Optional
+        - `rand_skip`
+        - `shuffle` [default false]
+        - `new_height`, `new_width`: if provided, resize all images to this size
 
 #### Windows
 
