@@ -82,17 +82,17 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
     - `n * c * h_o * w_o`, where h_o and w_o are computed in the same way as convolution.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
-    layers {
-      name: "pool1"
-      type: POOLING
-      bottom: "conv1"
-      top: "pool1"
-      pooling_param {
-        pool: MAX
-        kernel_size: 3
-        stride: 2
+      layers {
+        name: "pool1"
+        type: POOLING
+        bottom: "conv1"
+        top: "pool1"
+        pooling_param {
+          pool: MAX
+          kernel_size: 3 # pool over a 3x3 region
+          stride: 2      # step two pixels (in the bottom blob) between pooling regions
+        }
       }
-    }
 
 #### Local Response Normalization (LRN)
 
