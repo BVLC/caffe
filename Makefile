@@ -151,7 +151,13 @@ NONEMPTY_WARN_REPORT := $(BUILD_DIR)/$(WARNS_EXT)
 # Derive include and lib directories
 ##############################
 CUDA_INCLUDE_DIR := $(CUDA_DIR)/include
-CUDA_LIB_DIR := $(CUDA_DIR)/lib64 $(CUDA_DIR)/lib
+
+CUDA_LIB_DIR :=
+# add <cuda>/lib64 only if it exists
+ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
+	CUDA_LIB_DIR += $(CUDA_DIR)/lib64
+endif
+CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
 INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
 ifneq ($(CPU_ONLY), 1)
