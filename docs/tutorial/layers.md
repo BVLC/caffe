@@ -387,27 +387,27 @@ The HDF5 output layer performs the opposite function of the other layers in this
     - `n * c_o * 1 * 1`
 * Sample
 
-    layers {
-      name: "fc8"
-      type: INNER_PRODUCT
-      blobs_lr: 1          # learning rate multiplier for the filters
-      blobs_lr: 2          # learning rate multiplier for the biases
-      weight_decay: 1      # weight decay multiplier for the filters
-      weight_decay: 0      # weight decay multiplier for the biases
-      inner_product_param {
-        num_output: 1000
-        weight_filler {
-          type: "gaussian"
-          std: 0.01
+      layers {
+        name: "fc8"
+        type: INNER_PRODUCT
+        blobs_lr: 1          # learning rate multiplier for the filters
+        blobs_lr: 2          # learning rate multiplier for the biases
+        weight_decay: 1      # weight decay multiplier for the filters
+        weight_decay: 0      # weight decay multiplier for the biases
+        inner_product_param {
+          num_output: 1000
+          weight_filler {
+            type: "gaussian"
+            std: 0.01
+          }
+          bias_filler {
+            type: "constant"
+            value: 0
+          }
         }
-        bias_filler {
-          type: "constant"
-          value: 0
-        }
+        bottom: "fc7"
+        top: "fc8"
       }
-      bottom: "fc7"
-      top: "fc8"
-    }
 
 The `INNER_PRODUCT` layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob's height and width set to 1).
 
