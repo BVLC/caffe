@@ -27,13 +27,16 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 * CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
 * Options (`ConvolutionParameter convolution_param`)
-    - Required: `num_output` (`c_o`), the number of filters
-    - Required: `kernel_size` (or `kernel_h` and `kernel_w`), specifies height and width of each filter
-    - Strongly recommended (default `type: 'constant' value: 0`): `weight_filler`
-    - Optional (default `true`): `bias_term`, specifies whether to learn and apply a set of additive biases to the filter outputs
-    - Optional (default 0): `pad` (or `pad_h` and `pad_w`), specifies the number of pixels to (implicitly) add to each side of the input
-    - Optional (default 1): `stride` (or `stride_h` and `stride_w`), specifies the intervals at which to apply the filters to the input
-    - Optional (default 1): `group` (g). If g > 1, we restrict the connectivity of each filter to a subset of the input. Specifically, the input and output channels are separated into g groups, and the $$i$$th output group channels will be only connected to the $$i$$th input group channels.
+    - Required
+        - `num_output` (`c_o`): the number of filters
+        - `kernel_size` (or `kernel_h` and `kernel_w`): specifies height and width of each filter
+    - Strongly Recommended
+        - `weight_filler` [default `type: 'constant' value: 0`]
+    - Optional
+        - `bias_term` [default `true`]: specifies whether to learn and apply a set of additive biases to the filter outputs
+        - `pad` (or `pad_h` and `pad_w`) [default 0]: specifies the number of pixels to (implicitly) add to each side of the input
+        - `stride` (or `stride_h` and `stride_w`) [default 1]: specifies the intervals at which to apply the filters to the input
+        - `group` (g) [default 1]: If g > 1, we restrict the connectivity of each filter to a subset of the input. Specifically, the input and output channels are separated into g groups, and the $$i$$th output group channels will be only connected to the $$i$$th input group channels.
 * Input
     - `n * c_i * h_i * w_i`
 * Output
@@ -72,10 +75,12 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 * CPU implementation: `./src/caffe/layers/pooling_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/pooling_layer.cu`
 * Options (`PoolingParameter pooling_param`)
-    - Optional (default MAX): `pool`, the pooling method. Currently MAX, AVE, or STOCHASTIC
-    - Required: `kernel_size` or (`kernel_h`, `kernel_w`), specifies height & width of each filter
-    - Optional (default 0): `pad` or (`pad_h`, `pad_w`), specifies the number of pixels to (implicitly) add to each side of the input
-    - Optional (default 1): `stride` or (`stride_h`, `stride_w`), specifies the intervals at which to apply the filters to the input
+    - Required
+        - `kernel_size` (or `kernel_h` and `kernel_w`): specifies height and width of each filter
+    - Optional
+        - `pool` [default MAX]: the pooling method. Currently MAX, AVE, or STOCHASTIC
+        - `pad` (or `pad_h` and `pad_w`) [default 0]: specifies the number of pixels to (implicitly) add to each side of the input
+        - `stride` (or `stride_h` and `stride_w`) [default 1]: specifies the intervals at which to apply the filters to the input
 * Input
     - `n * c * h_i * w_i`
 * Output
@@ -100,10 +105,11 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 * CPU Implementation: `./src/caffe/layers/lrn_layer.cpp`
 * CUDA GPU Implementation: `./src/caffe/layers/lrn_layer.cu`
 * Options (`LRNParameter lrn_param`)
-    - Optional (default 5): `local_size`, the number of channels to sum over (for cross channel LRN) or the side length of the square region to sum over (for within channel LRN)
-    - Optional (default 1): `alpha`, the scaling parameter (see below)
-    - Optional (default 5): `beta`, the exponent (see below)
-    - Optional (default `ACROSS_CHANNELS`): `norm_region`, whether to sum over adjacent channels (`ACROSS_CHANNELS`) or nearby spatial locaitons (`WITHIN_CHANNEL`)
+    - Optional
+        - `local_size` [default 5]: the number of channels to sum over (for cross channel LRN) or the side length of the square region to sum over (for within channel LRN)
+        - `alpha` [default 1]: the scaling parameter (see below)
+        - `beta` [default 5]: the exponent (see below)
+        - `norm_region` [default `ACROSS_CHANNELS`]: whether to sum over adjacent channels (`ACROSS_CHANNELS`) or nearby spatial locaitons (`WITHIN_CHANNEL`)
 
 The local response normalization layer performs a kind of "lateral inhibition" by normalizing over local input regions. In `ACROSS_CHANNELS` mode, the local regions extend across nearby channels, but have no spatial extent (i.e., they have shape `local_size x 1 x 1`). In `WITHIN_CHANNEL` mode, the local regions extend spatially, but are in separate channels (i.e., they have shape `1 x local_size x local_size`). Each input value is divided by $$(1 + (\alpha/n) \sum_i x_i)^\beta$$, where $$n$$ is the size of each local region, and the sum is taken over the region centered at that value (zero padding is added where necessary).
 
@@ -129,7 +135,8 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 * CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
 * CUDA GPU implementation: `NOT_AVAILABLE`
 * Options (`HingeLossParameter hinge_loss_param`)
-    - Optional (default L1): `norm`, the norm used. Currently L1, L2
+    - Optional
+        - `norm` [default L1]: the norm used. Currently L1, L2
 * Inputs
     - `n * c * h * w` Predictions
     - `n * 1 * 1 * 1` Labels
@@ -184,7 +191,8 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 * CPU implementation: `./src/caffe/layers/relu_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
 * Options (`ReLUParameter relu_param`)
-    - Optional (default 0): `negative_slope`, specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
+    - Optional
+        - `negative_slope` [default 0]: specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
 
         layers {
@@ -250,9 +258,10 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 * CPU implementation: `./src/caffe/layers/power_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/power_layer.cu`
 * Options (`PowerParameter power_param`)
-    - Optional (default 1): `power`
-    - Optional (default 1): `scale`
-    - Optional (default 0): `shift`
+    - Optional
+        - `power` [default 1]
+        - `scale` [default 1]
+        - `shift` [default 0]
 * Sample
 
         layers {
@@ -324,10 +333,13 @@ The `BNLL` (binomial normal log likelihood) layer computes the output as log(1 +
 * CPU implementation: `./src/caffe/layers/inner_product_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/inner_product_layer.cu`
 * Options (`InnerProductParameter inner_product_param`)
-    - Required: `num_output` (`c_o`), the number of filters
-    - Strongly recommended (default `type: 'constant' value: 0`): `weight_filler`
-    - Optional (default `type: 'constant' value: 0`): `bias_filler`
-    - Optional (default `true`): `bias_term`, specifies whether to learn and apply a set of additive biases to the filter outputs
+    - Required
+        - `num_output` (`c_o`): the number of filters
+    - Strongly recommended
+        - `weight_filler` [default `type: 'constant' value: 0`]
+    - Optional
+        - `bias_filler` [default `type: 'constant' value: 0`]
+        - `bias_term` [default `true`]: specifies whether to learn and apply a set of additive biases to the filter outputs
 * Input
     - `n * c_i * h_i * w_i`
 * Output
@@ -372,7 +384,8 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 * CPU implementation: `./src/caffe/layers/concat_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/concat_layer.cu`
 * Options (`ConcatParameter concat_param`)
-    - Optional (default 1): `concat_dim`, 0 for concatenation along num and 1 for channels.
+    - Optional
+        - `concat_dim` [default 1]: 0 for concatenation along num and 1 for channels.
 * Input
     - `n_i * c_i * h * w` for each input blob i from 1 to K.
 * Output
