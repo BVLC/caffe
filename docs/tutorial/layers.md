@@ -14,11 +14,11 @@ TODO complete list of layers linking to headings
 * Header: `./include/caffe/vision_layers.hpp`
 
 Vision layers usually take *images* as input and produce other *images* as output.
-A typical "image" in the real-world may have one color channel ($c = 1$), as in a grayscale image, or three color channels ($c = 3$) as in an RGB (red, green, blue) image.
-But in this context, the distinguishing characteristic of an image is its spatial structure: usually an image has some non-trivial height $h > 1$ and width $w > 1$.
+A typical "image" in the real-world may have one color channel ($$c = 1$$), as in a grayscale image, or three color channels ($$c = 3$$) as in an RGB (red, green, blue) image.
+But in this context, the distinguishing characteristic of an image is its spatial structure: usually an image has some non-trivial height $$h > 1$$ and width $$w > 1$$.
 This 2D geometry naturally lends itself to certain decisions about how to process the input.
 In particular, most of the vision layers work by applying a particular operation to some region of the input to produce a corresponding region of the output.
-In contrast, other layers (with few exceptions) ignore the spatial structure of the input, effectively treating it as "one big vector" with dimension $$ c h w $$.
+In contrast, other layers (with few exceptions) ignore the spatial structure of the input, effectively treating it as "one big vector" with dimension $$chw$$.
 
 
 #### Convolution
