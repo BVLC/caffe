@@ -96,7 +96,16 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 
 #### Local Response Normalization (LRN)
 
-`LRN`
+* LayerType: `LRN`
+* CPU Implementation: `./src/caffe/layers/lrn_layer.cpp`
+* CUDA GPU Implementation: `./src/caffe/layers/lrn_layer.cu`
+* Options (`LRNParameter lrn_param`)
+    - Optional (default 5): `local_size`, the number of channels to sum over (for cross channel LRN) or the side length of the square region to sum over (for within channel LRN)
+    - Optional (default 1): `alpha`, the scaling parameter (see below)
+    - Optional (default 5): `beta`, the exponent (see below)
+    - Optional (default `ACROSS_CHANNELS`): `norm_region`, whether to sum over adjacent channels (`ACROSS_CHANNELS`) or nearby spatial locaitons (`WITHIN_CHANNEL`)
+
+The local response normalization layer performs a kind of "lateral inhibition" by normalizing over local input regions. In `ACROSS_CHANNELS` mode, the local regions extend across nearby channels, but have no spatial extent (i.e., they have shape `local_size x 1 x 1`). In `WITHIN_CHANNEL` mode, the local regions extend spatially, but are in separate channels (i.e., they have shape `1 x local_size x local_size`). Each input value is divided by $$(1 + (\alpha/n) \sum_i x_i)^\beta$$, where $$n$$ is the size of each local region, and the sum is taken over the region centered at that value (zero padding is added where necessary).
 
 #### im2col
 
