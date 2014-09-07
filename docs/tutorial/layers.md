@@ -26,7 +26,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 * LayerType: `CONVOLUTION`
 * CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
-* Options (`ConvolutionParameter convolution_param`)
+* Parameters (`ConvolutionParameter convolution_param`)
     - Required
         - `num_output` (`c_o`): the number of filters
         - `kernel_size` (or `kernel_h` and `kernel_w`): specifies height and width of each filter
@@ -74,7 +74,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 * LayerType: `POOLING`
 * CPU implementation: `./src/caffe/layers/pooling_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/pooling_layer.cu`
-* Options (`PoolingParameter pooling_param`)
+* Parameters (`PoolingParameter pooling_param`)
     - Required
         - `kernel_size` (or `kernel_h` and `kernel_w`): specifies height and width of each filter
     - Optional
@@ -104,7 +104,7 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 * LayerType: `LRN`
 * CPU Implementation: `./src/caffe/layers/lrn_layer.cpp`
 * CUDA GPU Implementation: `./src/caffe/layers/lrn_layer.cu`
-* Options (`LRNParameter lrn_param`)
+* Parameters (`LRNParameter lrn_param`)
     - Optional
         - `local_size` [default 5]: the number of channels to sum over (for cross channel LRN) or the side length of the square region to sum over (for within channel LRN)
         - `alpha` [default 1]: the scaling parameter (see below)
@@ -134,7 +134,7 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 * LayerType: `HINGE_LOSS`
 * CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
 * CUDA GPU implementation: `NOT_AVAILABLE`
-* Options (`HingeLossParameter hinge_loss_param`)
+* Parameters (`HingeLossParameter hinge_loss_param`)
     - Optional
         - `norm` [default L1]: the norm used. Currently L1, L2
 * Inputs
@@ -190,7 +190,7 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 * LayerType: `RELU`
 * CPU implementation: `./src/caffe/layers/relu_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
-* Options (`ReLUParameter relu_param`)
+* Parameters (`ReLUParameter relu_param`)
     - Optional
         - `negative_slope` [default 0]: specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
 * Sample (as seen in `./examples/imagenet/imagenet_train_val.prototxt`)
@@ -257,7 +257,7 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 * LayerType: `POWER`
 * CPU implementation: `./src/caffe/layers/power_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/power_layer.cu`
-* Options (`PowerParameter power_param`)
+* Parameters (`PowerParameter power_param`)
     - Optional
         - `power` [default 1]
         - `scale` [default 1]
@@ -332,7 +332,7 @@ The `BNLL` (binomial normal log likelihood) layer computes the output as log(1 +
 * LayerType: `INNER_PRODUCT`
 * CPU implementation: `./src/caffe/layers/inner_product_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/inner_product_layer.cu`
-* Options (`InnerProductParameter inner_product_param`)
+* Parameters (`InnerProductParameter inner_product_param`)
     - Required
         - `num_output` (`c_o`): the number of filters
     - Strongly recommended
@@ -383,7 +383,7 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 * LayerType: `CONCAT`
 * CPU implementation: `./src/caffe/layers/concat_layer.cpp`
 * CUDA GPU implementation: `./src/caffe/layers/concat_layer.cu`
-* Options (`ConcatParameter concat_param`)
+* Parameters (`ConcatParameter concat_param`)
     - Optional
         - `concat_dim` [default 1]: 0 for concatenation along num and 1 for channels.
 * Input
