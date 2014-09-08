@@ -8,6 +8,7 @@
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -21,11 +22,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   DataLayerTest()
       : backend_(DataParameter_DB_LEVELDB),
-        filename_(new string(tmpnam(NULL))),
         blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
         seed_(1701) {}
   virtual void SetUp() {
+    filename_.reset(new string());
+    MakeTempDir(filename_.get());
+    *filename_ += "/db";
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
   }
