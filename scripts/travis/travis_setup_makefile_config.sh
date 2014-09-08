@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 mv Makefile.config.example Makefile.config
 
 if $WITH_CUDA; then
