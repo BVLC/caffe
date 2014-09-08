@@ -69,8 +69,7 @@ class ConvolutionLayer : public Layer<Dtype> {
  *        Fallback to ConvolutionLayer for CPU mode.
 */
 template <typename Dtype>
-class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype>
-{
+class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param) {}
