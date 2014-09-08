@@ -33,8 +33,8 @@ Consult performance [details](/performance_hardware.html).
 
 ## Documentation
 
-- [Introductory slides](http://dl.caffe.berkeleyvision.org/caffe-presentation.pdf)<br />
-Slides about the Caffe architecture, *updated 03/14*.
+- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br />
+Caffe tutorial slides.
 - [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br />
 A 4-page report for the ACM Multimedia Open Source competition.
 - [Installation instructions](/installation.html)<br />
