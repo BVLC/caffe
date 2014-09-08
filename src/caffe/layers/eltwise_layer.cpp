@@ -1,5 +1,5 @@
-#include <vector>
 #include <cfloat>
+#include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -77,19 +77,18 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     bottom_data_b = bottom[1]->cpu_data();
     for (int idx = 0; idx < count; ++idx) {
       if (bottom_data_a[idx] > bottom_data_b[idx]) {
-        top_data[idx] = bottom_data_a[idx]; // maxval
-        mask[idx] = 0; // maxid
+        top_data[idx] = bottom_data_a[idx];  // maxval
+        mask[idx] = 0;  // maxid
       } else {
-        top_data[idx] = bottom_data_b[idx]; // maxval
-        mask[idx] = 1; // maxid
+        top_data[idx] = bottom_data_b[idx];  // maxval
+        mask[idx] = 1;  // maxid
       }
     }
     // bottom 2++
-    bottom_data_a = top_data;
     for (int blob_idx = 2; blob_idx < bottom.size(); ++blob_idx) {
       bottom_data_b = bottom[blob_idx]->cpu_data();
       for (int idx = 0; idx < count; ++idx) {
-        if (bottom_data_a[idx] < bottom_data_b[idx]) {
+        if (bottom_data_b[idx] > top_data[idx]) {
           top_data[idx] = bottom_data_b[idx];  // maxval
           mask[idx] = blob_idx;  // maxid
         }
