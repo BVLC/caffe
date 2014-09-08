@@ -16,9 +16,16 @@ ConvolutionLayer<Dtype>* GetConvolutionLayer(const string& name,
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = ConvolutionParameter_Engine_CUDNN;
+#endif
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
     return new ConvolutionLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == ConvolutionParameter_Engine_CUDNN) {
+    return new CuDNNConvolutionLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -36,9 +43,16 @@ PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
   PoolingParameter_Engine engine = param.pooling_param().engine();
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = PoolingParameter_Engine_CUDNN;
+#endif
   }
   if (engine == PoolingParameter_Engine_CAFFE) {
     return new PoolingLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == PoolingParameter_Engine_CUDNN) {
+    return new CuDNNPoolingLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -56,9 +70,16 @@ ReLULayer<Dtype>* GetReLULayer(const string& name,
   ReLUParameter_Engine engine = param.relu_param().engine();
   if (engine == ReLUParameter_Engine_DEFAULT) {
     engine = ReLUParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = ReLUParameter_Engine_CUDNN;
+#endif
   }
   if (engine == ReLUParameter_Engine_CAFFE) {
     return new ReLULayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == ReLUParameter_Engine_CUDNN) {
+    return new CuDNNReLULayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -76,9 +97,16 @@ SigmoidLayer<Dtype>* GetSigmoidLayer(const string& name,
   SigmoidParameter_Engine engine = param.sigmoid_param().engine();
   if (engine == SigmoidParameter_Engine_DEFAULT) {
     engine = SigmoidParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = SigmoidParameter_Engine_CUDNN;
+#endif
   }
   if (engine == SigmoidParameter_Engine_CAFFE) {
     return new SigmoidLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == SigmoidParameter_Engine_CUDNN) {
+    return new CuDNNSigmoidLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -96,9 +124,16 @@ TanHLayer<Dtype>* GetTanHLayer(const string& name,
   TanHParameter_Engine engine = param.tanh_param().engine();
   if (engine == TanHParameter_Engine_DEFAULT) {
     engine = TanHParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = TanHParameter_Engine_CUDNN;
+#endif
   }
   if (engine == TanHParameter_Engine_CAFFE) {
     return new TanHLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == TanHParameter_Engine_CUDNN) {
+    return new CuDNNTanHLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
@@ -116,9 +151,16 @@ SoftmaxLayer<Dtype>* GetSoftmaxLayer(const string& name,
   SoftmaxParameter_Engine engine = param.softmax_param().engine();
   if (engine == SoftmaxParameter_Engine_DEFAULT) {
     engine = SoftmaxParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = SoftmaxParameter_Engine_CUDNN;
+#endif
   }
   if (engine == SoftmaxParameter_Engine_CAFFE) {
     return new SoftmaxLayer<Dtype>(param);
+#ifdef USE_CUDNN
+  } else if (engine == SoftmaxParameter_Engine_CUDNN) {
+    return new CuDNNSoftmaxLayer<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << name << " has unknown engine.";
   }
