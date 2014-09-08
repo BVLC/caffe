@@ -1,5 +1,5 @@
-#include <vector>
 #include <cfloat>
+#include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -31,7 +31,7 @@ __global__ void MaxForward(const int nthreads, const Dtype* bottom_data_a,
   }
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   int* mask = NULL;
@@ -68,7 +68,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template<typename Dtype>
+template <typename Dtype>
 __global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
     const int blob_idx, const int* mask, Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
@@ -80,7 +80,7 @@ __global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
   }
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
   const int* mask = NULL;
@@ -119,8 +119,8 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         break;
       case EltwiseParameter_EltwiseOp_MAX:
         mask = max_idx_->gpu_data();
-        // NOLINT_NEXT_LINE(whitespace/operators)
-        MaxBackward<Dtype> <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        MaxBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
+            <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
             count, top_diff, i, mask, bottom_diff);
         break;
       default:
