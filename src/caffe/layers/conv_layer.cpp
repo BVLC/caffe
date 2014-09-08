@@ -203,7 +203,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
         // gradient w.r.t. bottom data, if necessary
         if (propagate_down[i]) {
-          if(weight==NULL) {
+          if (weight == NULL) {
             weight = this->blobs_[0]->cpu_data();
           }
           for (int g = 0; g < group_; ++g) {
