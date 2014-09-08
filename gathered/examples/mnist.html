@@ -60,13 +60,13 @@ cd $CAFFE_ROOT/examples/mnist
 
 <p>Before we actually run the training program, let’s explain what will happen. We will use the <a href="http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf">LeNet</a> network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.</p>
 
-<p>The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in <code>CAFFE_ROOT/data/lenet.prototxt</code>.</p>
+<p>The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in <code>CAFFE_ROOT/examples/lenet.prototxt</code>.</p>
 
 <h2 id="define-the-mnist-network">Define the MNIST Network</h2>
 
 <p>This section explains the prototxt file <code>lenet_train.prototxt</code> used in the MNIST demo. We assume that you are familiar with <a href="https://developers.google.com/protocol-buffers/docs/overview">Google Protobuf</a>, and assume that you have read the protobuf definitions used by Caffe, which can be found at <a href="https://github.com/Yangqing/caffe/blob/master/src/caffe/proto/caffe.proto">src/caffe/proto/caffe.proto</a>.</p>
 
-<p>Specifically, we will write a <code>caffe::NetParameter</code> (or in python, <code>caffe.proto.caffe_pb2.NetParameter</code>) protubuf. We will start by giving the network a name:</p>
+<p>Specifically, we will write a <code>caffe::NetParameter</code> (or in python, <code>caffe.proto.caffe_pb2.NetParameter</code>) protobuf. We will start by giving the network a name:</p>
 
 <pre><code>name: "LeNet"
 </code></pre>

@@ -88,7 +88,7 @@ The choice is yours:</p>
   <li><a href="http://math-atlas.sourceforge.net/">ATLAS</a>: free, open source, and so the default for Caffe.
     <ul>
       <li>Ubuntu: <code>sudo apt-get install libatlas-base-dev</code></li>
-      <li>CentOS/RHEL: <code>sudo yum install libatlas-devel</code></li>
+      <li>CentOS/RHEL/Fedora: <code>sudo yum install atlas-devel</code></li>
       <li>OS X: already installed as the <a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html">Accelerate / vecLib Framework</a>.</li>
     </ul>
   </li>
@@ -119,7 +119,9 @@ The choice is yours:</p>
 
 <p>but we highly recommend first installing the <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> Python distribution, which provides most of the necessary packages, as well as the <code>hdf5</code> library dependency.</p>
 
-<p>For <strong>Ubuntu</strong>, if you use the default Python you will need to <code>apt-get install</code> the <code>python-dev</code> package to have the Python headers for building the wrapper.</p>
+<p>For <strong>Ubuntu</strong>, if you use the default Python you will need to <code>sudo apt-get install</code> the <code>python-dev</code> package to have the Python headers for building the wrapper.</p>
+
+<p>For <strong>Fedora</strong>, if you use the default Python you will need to <code>sudo yum install</code> the <code>python-devel</code> package to have the Python headers for building the wrapper.</p>
 
 <p>For <strong>OS X</strong>, Anaconda is the preferred Python. If you decide against it, please use Homebrew – but beware of potential linking errors!</p>
 
@@ -142,17 +144,24 @@ The choice is yours:</p>
 <pre><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
 </code></pre>
 
-<p>And on <strong>CentOS / RHEL</strong>, you can install via yum with</p>
-
-<pre><code>sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
-</code></pre>
-
 <p>and for <strong>Ubuntu 14.04</strong> the rest of the dependencies can be installed with</p>
 
 <pre><code>sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
 </code></pre>
 
-<p>For <strong>Ubuntu 12.04 and CentOS / RHEL</strong> the only exceptions to package installation are the Google flags library, Google logging library, and LMDB. To install these, do:</p>
+<p>Keep reading to find out how to manually build and install the Google flags library, Google logging library and LMDB on <strong>Ubuntu 12.04</strong>.</p>
+
+<p>On <strong>CentOS / RHEL / Fedora</strong>, most of the dependencies can be installed with</p>
+
+<pre><code>sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
+</code></pre>
+
+<p>The Google flags library, Google logging library and LMDB already made their ways into newer versions of <strong>CentOS / RHEL / Fedora</strong> so it is better to first attempt to install them using <code>yum</code></p>
+
+<pre><code>sudo yum install gflags-devel glog-devel lmdb-devel
+</code></pre>
+
+<p><strong>Finally</strong> in case you couldn’t find those extra libraries mentioned above in your distribution’s repositories, here are the instructions to follow for manually building and installing them on <strong>Ubuntu 12.04 / CentOS / RHEL / Fedora</strong> (or practically on any Linux distribution)</p>
 
 <pre><code># glog
 wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
@@ -257,13 +266,48 @@ If you’re not using Anaconda, include <code>hdf5</code> in the list above.</p>
 <pre><code>brew install --build-from-source --with-python --fresh -vd boost
 </code></pre>
 
+<p><strong>Note</strong> that Homebrew maintains itself as a separate git repository and making the above <code>brew edit FORMULA</code> changes will change files in your local copy of homebrew’s master branch. By default, this will prevent you from updating Homebrew using <code>brew update</code>, as you will get an error message like the following:</p>
+
+<pre><code>$ brew update
+error: Your local changes to the following files would be overwritten by merge:
+  Library/Formula/lmdb.rb
+Please, commit your changes or stash them before you can merge.
+Aborting
+Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
+</code></pre>
+
+<p>One solution is to commit your changes to a separate Homebrew branch, run <code>brew update</code>, and rebase your changes onto the updated master, as follows:</p>
+
+<pre><code>cd /usr/local
+git checkout -b caffe
+git add .
+git commit -m "Update Caffe dependencies to use libstdc++"
+git checkout master
+brew update
+git rebase master caffe
+# Resolve any merge conflicts here
+git checkout caffe
+</code></pre>
+
+<p>At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place. You may still get the following error:</p>
+
+<pre><code>$ brew update
+error: Your local changes to the following files would be overwritten by merge:
+opencv.rb
+Please, commit your changes or stash them before you can merge.
+Aborting
+Error: Failed to update tap: homebrew/science
+</code></pre>
+
+<p>but non-OpenCV packages will still update as expected.</p>
+
 <h4 id="windows">Windows</h4>
 
 <p>There is an unofficial Windows port of Caffe at <a href="https://github.com/niuzhiheng/caffe">niuzhiheng/caffe:windows</a>. Thanks <a href="https://github.com/niuzhiheng">@niuzhiheng</a>!</p>
 
 <h2 id="compilation">Compilation</h2>
 
-<p>Now that you have the prerequisites, edit your <code>Makefile.config</code> to change the paths for your setup.
+<p>Now that you have the prerequisites, edit your <code>Makefile.config</code> to change the paths for your setup (you should especially uncomment and set <code>BLAS_LIB</code> accordingly on distributions like <strong>CentOS / RHEL / Fedora</strong> where ATLAS is installed under <code>/usr/lib[64]/atlas</code>)
 The defaults should work, but uncomment the relevant lines if using Anaconda Python.</p>
 
 <pre><code>cp Makefile.config.example Makefile.config
