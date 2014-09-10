@@ -48,7 +48,7 @@ class Layer {
    *
    * @param bottom the preshaped input blobs
    * @param top
-   *     the allocated but unshaped output blobs, to be shaped by LayerSetUp
+   *     the allocated but unshaped output blobs, to be shaped by Reshape
    *
    * Checks that the number of bottom and top blobs is correct.
    * Calls LayerSetUp to do special layer setup for individual layer types.
@@ -62,21 +62,38 @@ class Layer {
   }
 
   /**
-   * @brief Does layer-specific setup: your layer should implement this.
+   * @brief Does layer-specific setup: your layer should implement this function
+   *        as well as Reshape.
    *
    * @param bottom
    *     the preshaped input blobs, whose data fields store the input data for
    *     this layer
    * @param top
-   *     the allocated but unshaped output blobs, to be initialized by LayerSetUp
+   *     the allocated but unshaped output blobs
    *
-   * This method should be used to do layer-specific setup. At a minimum, this
-   * includes reshaping the empty top blobs to the shape as dictated by the
-   * shapes of the bottom blobs and any relevant parameters from the
-   * <code>layer_param_</code>.
+   * This method should do one-time layer specific setup. This includes reading
+   * and processing relevent parameters from the <code>layer_param_</code>.
+   * Setting up the shapes of top blobs and internal buffers should be done in
+   * <code>Reshape</code>, which will be called before the forward pass to
+   * adjust the top blob sizes.
    */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) { NOT_IMPLEMENTED; }
+
+  /**
+   * @brief Adjust the shapes of top blobs and internal buffers to accomodate
+   *        the shapes of the bottom blobs.
+   *
+   * @param bottom the input blobs, with the requested input shapes
+   * @param top the top blobs, which should be reshaped as needed
+   *
+   * This method should reshape top blobs as needed according to the shapes
+   * of the bottom (input) blobs, as well as reshaping any internal buffers
+   * and making any other necessary adjustments so that the layer can
+   * accomodate the bottom blobs.
+   */
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) = 0;
 
   /**
    * @brief Given the bottom blobs, compute the top blobs and the loss.
