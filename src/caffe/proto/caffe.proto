@@ -450,6 +450,7 @@ message EltwiseParameter {
   enum EltwiseOp {
     PROD = 0;
     SUM = 1;
+    MAX = 2;
   }
   optional EltwiseOp operation = 1 [default = SUM]; // element-wise operation
   repeated float coeff = 2; // blob-wise coefficient for SUM operation
