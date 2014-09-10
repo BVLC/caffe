@@ -40,6 +40,9 @@ class BaseDataLayer : public Layer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {}
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
 
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
@@ -134,6 +137,9 @@ class DummyDataLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DUMMY_DATA;
@@ -166,6 +172,9 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual ~HDF5DataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HDF5_DATA;
@@ -203,6 +212,9 @@ class HDF5OutputLayer : public Layer<Dtype> {
   explicit HDF5OutputLayer(const LayerParameter& param);
   virtual ~HDF5OutputLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {}
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {}
 
   virtual inline LayerParameter_LayerType type() const {
