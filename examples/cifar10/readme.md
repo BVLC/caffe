@@ -3,7 +3,6 @@ title: CIFAR-10 tutorial
 category: example
 description: Train and test Caffe on CIFAR-10 data.
 include_in_docs: true
-layout: default
 priority: 5
 ---
 
@@ -43,7 +42,7 @@ Training the model is simple after you have written the network definition proto
     cd $CAFFE_ROOT/examples/cifar10
     ./train_quick.sh
 
-`train_quick.sh` is a simple script, so have a look inside. `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `caffe.bin` with the `train` action, and the solver protobuf text file as its argument.
+`train_quick.sh` is a simple script, so have a look inside. The main tool for training is `caffe` with the `train` action, and the solver protobuf text file as its argument.
 
 When you run the code, you will see a lot of messages flying by like this:
 

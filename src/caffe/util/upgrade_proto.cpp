@@ -306,30 +306,12 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
       }
     }
     if (v0_layer_param.has_scale()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->set_scale(v0_layer_param.scale());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_scale(
-           v0_layer_param.scale());
-      } else {
-        LOG(ERROR) << "Unknown parameter scale for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_scale(v0_layer_param.scale());
     }
     if (v0_layer_param.has_meanfile()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->set_mean_file(
-            v0_layer_param.meanfile());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_mean_file(
-            v0_layer_param.meanfile());
-      } else if (type == "window_data") {
-        layer_param->mutable_window_data_param()->set_mean_file(
-            v0_layer_param.meanfile());
-      } else {
-        LOG(ERROR) << "Unknown parameter meanfile for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_mean_file(v0_layer_param.meanfile());
     }
     if (v0_layer_param.has_batchsize()) {
       if (type == "data") {
@@ -350,33 +332,12 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
       }
     }
     if (v0_layer_param.has_cropsize()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->set_crop_size(
-            v0_layer_param.cropsize());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_crop_size(
-            v0_layer_param.cropsize());
-      } else if (type == "window_data") {
-        layer_param->mutable_window_data_param()->set_crop_size(
-            v0_layer_param.cropsize());
-      } else {
-        LOG(ERROR) << "Unknown parameter cropsize for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_crop_size(v0_layer_param.cropsize());
     }
     if (v0_layer_param.has_mirror()) {
-      if (type == "data") {
-        layer_param->mutable_data_param()->set_mirror(v0_layer_param.mirror());
-      } else if (type == "images") {
-        layer_param->mutable_image_data_param()->set_mirror(
-            v0_layer_param.mirror());
-      } else if (type == "window_data") {
-        layer_param->mutable_window_data_param()->set_mirror(
-            v0_layer_param.mirror());
-      } else {
-        LOG(ERROR) << "Unknown parameter mirror for layer type " << type;
-        is_fully_compatible = false;
-      }
+      layer_param->mutable_transform_param()->
+          set_mirror(v0_layer_param.mirror());
     }
     if (v0_layer_param.has_rand_skip()) {
       if (type == "data") {
@@ -545,6 +506,59 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
   }
 }
 
+bool NetNeedsDataUpgrade(const NetParameter& net_param) {
+  for (int i = 0; i < net_param.layers_size(); ++i) {
+    if (net_param.layers(i).type() == LayerParameter_LayerType_DATA) {
+      DataParameter layer_param = net_param.layers(i).data_param();
+      if (layer_param.has_scale()) { return true; }
+      if (layer_param.has_mean_file()) { return true; }
+      if (layer_param.has_crop_size()) { return true; }
+      if (layer_param.has_mirror()) { return true; }
+    }
+    if (net_param.layers(i).type() == LayerParameter_LayerType_IMAGE_DATA) {
+      ImageDataParameter layer_param = net_param.layers(i).image_data_param();
+      if (layer_param.has_scale()) { return true; }
+      if (layer_param.has_mean_file()) { return true; }
+      if (layer_param.has_crop_size()) { return true; }
+      if (layer_param.has_mirror()) { return true; }
+    }
+  }
+  return false;
+}
+
+#define CONVERT_LAYER_TRANSFORM_PARAM(TYPE, Name, param_name) \
+  do { \
+    if (net_param->layers(i).type() == LayerParameter_LayerType_##TYPE) { \
+      Name##Parameter* layer_param = \
+          net_param->mutable_layers(i)->mutable_##param_name##_param(); \
+      TransformationParameter* transform_param = \
+          net_param->mutable_layers(i)->mutable_transform_param(); \
+      if (layer_param->has_scale()) { \
+        transform_param->set_scale(layer_param->scale()); \
+        layer_param->clear_scale(); \
+      } \
+      if (layer_param->has_mean_file()) { \
+        transform_param->set_mean_file(layer_param->mean_file()); \
+        layer_param->clear_mean_file(); \
+      } \
+      if (layer_param->has_crop_size()) { \
+        transform_param->set_crop_size(layer_param->crop_size()); \
+        layer_param->clear_crop_size(); \
+      } \
+      if (layer_param->has_mirror()) { \
+        transform_param->set_mirror(layer_param->mirror()); \
+        layer_param->clear_mirror(); \
+      } \
+    } \
+  } while (0)
+
+void UpgradeNetDataTransformation(NetParameter* net_param) {
+  for (int i = 0; i < net_param->layers_size(); ++i) {
+    CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
+    CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
+  }
+}
+
 void NetParameterToPrettyPrint(const NetParameter& param,
                                NetParameterPrettyPrint* pretty_param) {
   pretty_param->Clear();
@@ -565,10 +579,7 @@ void NetParameterToPrettyPrint(const NetParameter& param,
   }
 }
 
-void ReadNetParamsFromTextFileOrDie(const string& param_file,
-                                    NetParameter* param) {
-  CHECK(ReadProtoFromTextFile(param_file, param))
-      << "Failed to parse NetParameter file: " << param_file;
+void UpgradeNetAsNeeded(const string& param_file, NetParameter* param) {
   if (NetNeedsUpgrade(*param)) {
     // NetParameter was specified using the old style (V0LayerParameter); try to
     // upgrade it.
@@ -583,32 +594,34 @@ void ReadNetParamsFromTextFileOrDie(const string& param_file,
                 << "V0LayerParameter";
     }
     LOG(ERROR) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text.bin to "
-        << "upgrade this and any other network proto files to the new format.";
+        << "V0NetParameter; use ./build/tools/upgrade_net_proto_text for "
+        << "prototxt and ./build/tools/upgrade_net_proto_binary for model "
+        << "weights upgrade this and any other net protos to the new format.";
   }
+  // NetParameter uses old style data transformation fields; try to upgrade it.
+  if (NetNeedsDataUpgrade(*param)) {
+    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
+               << "transformation parameters: " << param_file;
+    UpgradeNetDataTransformation(param);
+    LOG(INFO) << "Successfully upgraded file specified using deprecated "
+              << "data transformation parameters.";
+    LOG(ERROR) << "Note that future Caffe releases will only support "
+               << "transform_param messages for transformation fields.";
+  }
+}
+
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param) {
+  CHECK(ReadProtoFromTextFile(param_file, param))
+      << "Failed to parse NetParameter file: " << param_file;
+  UpgradeNetAsNeeded(param_file, param);
 }
 
 void ReadNetParamsFromBinaryFileOrDie(const string& param_file,
                                       NetParameter* param) {
   CHECK(ReadProtoFromBinaryFile(param_file, param))
       << "Failed to parse NetParameter file: " << param_file;
-  if (NetNeedsUpgrade(*param)) {
-    // NetParameter was specified using the old style (V0LayerParameter); try to
-    // upgrade it.
-    LOG(ERROR) << "Attempting to upgrade input file specified using deprecated "
-               << "V0LayerParameter: " << param_file;
-    NetParameter original_param(*param);
-    if (!UpgradeV0Net(original_param, param)) {
-      LOG(ERROR) << "Warning: had one or more problems upgrading "
-          << "V0NetParameter to NetParameter (see above); continuing anyway.";
-    } else {
-      LOG(INFO) << "Successfully upgraded file specified using deprecated "
-                << "V0LayerParameter";
-    }
-    LOG(ERROR) << "Note that future Caffe releases will not support "
-        << "V0NetParameter; use ./build/tools/upgrade_net_proto_binary.bin to "
-        << "upgrade this and any other network proto files to the new format.";
-  }
+  UpgradeNetAsNeeded(param_file, param);
 }
 
 }  // namespace caffe

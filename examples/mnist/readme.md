@@ -3,7 +3,6 @@ title: MNIST Tutorial
 description: Train and test "LeNet" on MNIST data.
 category: example
 include_in_docs: true
-layout: default
 priority: 1
 ---
 
@@ -26,11 +25,11 @@ If it complains that `wget` or `gunzip` are not installed, you need to install t
 
 Before we actually run the training program, let's explain what will happen. We will use the [LeNet](http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf) network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.
 
-The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in `CAFFE_ROOT/examples/lenet.prototxt`.
+The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt`.
 
 ## Define the MNIST Network
 
-This section explains the prototxt file `lenet_train.prototxt` used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at [src/caffe/proto/caffe.proto](https://github.com/Yangqing/caffe/blob/master/src/caffe/proto/caffe.proto).
+This section explains the prototxt file `lenet_train.prototxt` used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at `$CAFFE_ROOT/src/caffe/proto/caffe.proto`.
 
 Specifically, we will write a `caffe::NetParameter` (or in python, `caffe.proto.caffe_pb2.NetParameter`) protobuf. We will start by giving the network a name:
 
@@ -102,7 +101,7 @@ Phew. Pooling layers are actually much easier to define:
 
 This says we will perform max pooling with a pool kernel size 2 and a stride of 2 (so no overlapping between neighboring pooling regions).
 
-Similarly, you can write up the second convolution and pooling layers. Check `data/lenet.prototxt` for details.
+Similarly, you can write up the second convolution and pooling layers. Check `$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt` for details.
 
 ### Writing the Fully Connected Layer
 
@@ -176,10 +175,10 @@ The `softmax_loss` layer implements both the softmax and the multinomial logisti
 
 ## Define the MNIST Solver
 
-Check out the comments explaining each line in the prototxt:
+Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt`:
 
     # The train/test net protocol buffer definition
-    net: "lenet_train_test.prototxt"
+    net: "examples/mnist/lenet_train_test.prototxt"
     # test_iter specifies how many forward passes the test should carry out.
     # In the case of MNIST, we have test batch size 100 and 100 test iterations,
     # covering the full 10,000 testing images.
@@ -200,9 +199,9 @@ Check out the comments explaining each line in the prototxt:
     max_iter: 10000
     # snapshot intermediate results
     snapshot: 5000
-    snapshot_prefix: "lenet"
-    # solver mode: 0 for CPU and 1 for GPU
-    solver_mode: 1
+    snapshot_prefix: "examples/mnist/lenet"
+    # solver mode: CPU or GPU
+    solver_mode: GPU
 
 ## Training and Testing the Model
 
@@ -211,7 +210,7 @@ Training the model is simple after you have written the network definition proto
     cd $CAFFE_ROOT/examples/mnist
     ./train_lenet.sh
 
-`train_lenet.sh` is a simple script, but here are a few explanations: `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `caffe.bin` with action `train`, with the solver protobuf text file as its argument.
+`train_lenet.sh` is a simple script, but here is a quick explanation: the main tool for training is `caffe` with action `train` and the solver protobuf text file as its argument.
 
 When you run the code, you will see a lot of messages flying by like this:
 

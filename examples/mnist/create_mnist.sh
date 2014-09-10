@@ -1,15 +1,21 @@
 #!/usr/bin/env sh
-# This script converts the mnist data into leveldb format.
+# This script converts the mnist data into leveldb/lmdb format,
+# depending on the value assigned to $BACKEND.
 
-EXAMPLES=../../build/examples/mnist
-DATA=../../data/mnist
+EXAMPLE=examples/mnist
+DATA=data/mnist
+BUILD=build/examples/mnist
 
-echo "Creating leveldb..."
+BACKEND="lmdb"
 
-rm -rf mnist-train-leveldb
-rm -rf mnist-test-leveldb
+echo "Creating ${BACKEND}..."
 
-$EXAMPLES/convert_mnist_data.bin $DATA/train-images-idx3-ubyte $DATA/train-labels-idx1-ubyte mnist-train-leveldb
-$EXAMPLES/convert_mnist_data.bin $DATA/t10k-images-idx3-ubyte $DATA/t10k-labels-idx1-ubyte mnist-test-leveldb
+rm -rf $EXAMPLE/mnist_train_${BACKEND}
+rm -rf $EXAMPLE/mnist_test_${BACKEND}
+
+$BUILD/convert_mnist_data.bin $DATA/train-images-idx3-ubyte \
+  $DATA/train-labels-idx1-ubyte $EXAMPLE/mnist_train_${BACKEND} --backend=${BACKEND}
+$BUILD/convert_mnist_data.bin $DATA/t10k-images-idx3-ubyte \
+  $DATA/t10k-labels-idx1-ubyte $EXAMPLE/mnist_test_${BACKEND} --backend=${BACKEND}
 
 echo "Done."

@@ -9,9 +9,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   CHECK(!conv_param.has_kernel_size() !=
       !(conv_param.has_kernel_h() && conv_param.has_kernel_w()))
@@ -67,11 +66,11 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(channels_ % group_, 0);
   // The im2col result buffer would only hold one image at a time to avoid
   // overly large memory usage.
-  int height_out =
+  height_out_ =
       (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  int width_out = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+  width_out_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
   col_buffer_.Reshape(
-      1, channels_ * kernel_h_ * kernel_w_, height_out, width_out);
+      1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
@@ -79,9 +78,9 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   // Figure out the dimensions for individual gemms.
   M_ = num_output_ / group_;
   K_ = channels_ * kernel_h_ * kernel_w_ / group_;
-  N_ = height_out * width_out;
+  N_ = height_out_ * width_out_;
   for (int top_id = 0; top_id < top->size(); ++top_id) {
-    (*top)[top_id]->Reshape(num_, num_output_, height_out, width_out);
+    (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
@@ -117,7 +116,7 @@ void ConvolutionLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 
 
 template <typename Dtype>
-Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
@@ -147,7 +146,6 @@ Dtype ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>
@@ -205,6 +203,9 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
         // gradient w.r.t. bottom data, if necessary
         if (propagate_down[i]) {
+          if (weight == NULL) {
+            weight = this->blobs_[0]->cpu_data();
+          }
           for (int g = 0; g < group_; ++g) {
             caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
                 (Dtype)1., weight + weight_offset * g,

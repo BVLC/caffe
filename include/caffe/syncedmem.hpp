@@ -31,6 +31,12 @@ inline void CaffeFreeHost(void* ptr) {
 }
 
 
+/**
+ * @brief Manages memory allocation and synchronization between the host (CPU)
+ *        and device (GPU).
+ *
+ * TODO(dox): more thorough description.
+ */
 class SyncedMemory {
  public:
   SyncedMemory()

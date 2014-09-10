@@ -1,20 +1,17 @@
 #include <string>
 #include <vector>
 
-#include "leveldb/db.h"
-
 #include "gtest/gtest.h"
+#include "leveldb/db.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-
-using std::string;
-using std::stringstream;
 
 namespace caffe {
 
@@ -25,11 +22,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   DataLayerTest()
       : backend_(DataParameter_DB_LEVELDB),
-        filename_(new string(tmpnam(NULL))),
         blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
         seed_(1701) {}
   virtual void SetUp() {
+    filename_.reset(new string());
+    MakeTempDir(filename_.get());
+    *filename_ += "/db";
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
   }
@@ -118,9 +117,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_scale(scale);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        param.mutable_transform_param();
+    transform_param->set_scale(scale);
+
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
     EXPECT_EQ(blob_top_data_->num(), 5);
@@ -150,12 +153,17 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype scale = 3;
     LayerParameter param;
     Caffe::set_random_seed(1701);
+
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_scale(scale);
-    data_param->set_crop_size(1);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        param.mutable_transform_param();
+    transform_param->set_scale(scale);
+    transform_param->set_crop_size(1);
+
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
     EXPECT_EQ(blob_top_data_->num(), 5);
@@ -198,10 +206,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_crop_size(1);
-    data_param->set_mirror(true);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        param.mutable_transform_param();
+    transform_param->set_crop_size(1);
+    transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701.
     Caffe::set_random_seed(seed_);
@@ -249,10 +260,13 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
-    data_param->set_crop_size(1);
-    data_param->set_mirror(true);
     data_param->set_source(filename_->c_str());
     data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        param.mutable_transform_param();
+    transform_param->set_crop_size(1);
+    transform_param->set_mirror(true);
 
     // Get crop sequence with Caffe seed 1701, srand seed 1701.
     Caffe::set_random_seed(seed_);

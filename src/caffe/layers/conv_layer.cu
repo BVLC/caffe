@@ -9,7 +9,7 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -39,7 +39,6 @@ Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>
@@ -97,6 +96,9 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
         // gradient w.r.t. bottom data, if necessary
         if (propagate_down[i]) {
+          if (weight == NULL) {
+            weight = this->blobs_[0]->gpu_data();
+          }
           for (int g = 0; g < group_; ++g) {
             caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
                 (Dtype)1., weight + weight_offset * g,

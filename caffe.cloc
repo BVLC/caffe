@@ -27,7 +27,7 @@ C/C++ Header
     extension h
     extension hh
     extension hpp
-Cuda
+CUDA
     filter remove_matches ^\s*//
     filter remove_inline //.*$
     filter call_regexp_common C

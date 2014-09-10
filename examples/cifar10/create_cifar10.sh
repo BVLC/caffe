@@ -1,19 +1,18 @@
 #!/usr/bin/env sh
 # This script converts the cifar data into leveldb format.
 
-EXAMPLES=../../build/examples/cifar10
-DATA=../../data/cifar10
-TOOLS=../../build/tools
+EXAMPLE=examples/cifar10
+DATA=data/cifar10
 
 echo "Creating leveldb..."
 
-rm -rf cifar10-leveldb
-mkdir cifar10-leveldb
+rm -rf $EXAMPLE/cifar10_train_leveldb $EXAMPLE/cifar10_test_leveldb
 
-$EXAMPLES/convert_cifar_data.bin $DATA ./cifar10-leveldb
+./build/examples/cifar10/convert_cifar_data.bin $DATA $EXAMPLE
 
 echo "Computing image mean..."
 
-$TOOLS/compute_image_mean.bin ./cifar10-leveldb/cifar-train-leveldb mean.binaryproto
+./build/tools/compute_image_mean $EXAMPLE/cifar10_train_leveldb \
+  $EXAMPLE/mean.binaryproto
 
 echo "Done."

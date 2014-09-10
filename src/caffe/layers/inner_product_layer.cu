@@ -10,7 +10,7 @@
 namespace caffe {
 
 template <typename Dtype>
-Dtype InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
@@ -22,7 +22,6 @@ Dtype InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         bias_multiplier_.gpu_data(),
         this->blobs_[1]->gpu_data(), (Dtype)1., top_data);
   }
-  return Dtype(0);
 }
 
 template <typename Dtype>

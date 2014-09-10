@@ -29,10 +29,20 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
 
 LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
+// Return true iff any layer contains deprecated data transformation parameters.
+bool NetNeedsDataUpgrade(const NetParameter& net_param);
+
+// Perform all necessary transformations to upgrade old transformation fields
+// into a TransformationParameter.
+void UpgradeNetDataTransformation(NetParameter* net_param);
+
 // Convert a NetParameter to NetParameterPrettyPrint used for dumping to
 // proto text files.
 void NetParameterToPrettyPrint(const NetParameter& param,
                                NetParameterPrettyPrint* pretty_param);
+
+// Check for deprecations and upgrade the NetParameter as needed.
+void UpgradeNetAsNeeded(NetParameter* param);
 
 // Read parameters from a file into a NetParameter proto message.
 void ReadNetParamsFromTextFileOrDie(const string& param_file,

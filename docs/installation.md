@@ -1,6 +1,5 @@
 ---
-layout: default
-title: Caffe
+title: Installation
 ---
 
 # Installation
@@ -16,7 +15,7 @@ We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
 
 Caffe depends on several software packages.
 
-* [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
+* [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
 * [OpenCV](http://opencv.org/).
 * [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 is tested)
@@ -26,12 +25,16 @@ Caffe depends on several software packages.
 * For the MATLAB wrapper
     * MATLAB with the `mex` compiler.
 
-**CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
+**cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic.
+
+**CPU-only Caffe**: for cold-brewed CPU-only Caffe uncomment the `CPU_ONLY := 1` flag in `Makefile.config` to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.
 
 ### CUDA and BLAS
 
 Caffe requires the CUDA `nvcc` compiler to compile its GPU code and CUDA driver for GPU operation.
 To install CUDA, go to the [NVIDIA CUDA website](https://developer.nvidia.com/cuda-downloads) and follow installation instructions there. Install the library and the latest standalone driver separately; the driver bundled with the library is usually out-of-date. **Warning!** The 331.* CUDA driver series has a critical performance issue: do not use it.
+
+For best performance, Caffe can be accelerated by [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). Register for free at the cuDNN site, install it, then continue with these installation instructions. To compile with cuDNN set the `USE_CUDNN := 1` flag set in your `Makefile.config`.
 
 Caffe requires BLAS as the backend of its matrix and vector computations.
 There are several implementations of this library.
@@ -93,7 +96,7 @@ Keep reading to find out how to manually build and install the Google flags libr
 On **CentOS / RHEL / Fedora**, most of the dependencies can be installed with
 
     sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
-    
+
 The Google flags library, Google logging library and LMDB already made their ways into newer versions of **CentOS / RHEL / Fedora** so it is better to first attempt to install them using `yum`
 
     sudo yum install gflags-devel glog-devel lmdb-devel
@@ -193,7 +196,7 @@ If you're not using Anaconda, include `hdf5` in the list above.
 **Note** that in order to build the caffe python wrappers you must install boost using the --with-python option:
 
     brew install --build-from-source --with-python --fresh -vd boost
-    
+
 **Note** that Homebrew maintains itself as a separate git repository and making the above `brew edit FORMULA` changes will change files in your local copy of homebrew's master branch. By default, this will prevent you from updating Homebrew using `brew update`, as you will get an error message like the following:
 
     $ brew update
@@ -202,7 +205,7 @@ If you're not using Anaconda, include `hdf5` in the list above.
     Please, commit your changes or stash them before you can merge.
     Aborting
     Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
-    
+
 One solution is to commit your changes to a separate Homebrew branch, run `brew update`, and rebase your changes onto the updated master, as follows:
 
     cd /usr/local
@@ -214,7 +217,7 @@ One solution is to commit your changes to a separate Homebrew branch, run `brew 
     git rebase master caffe
     # Resolve any merge conflicts here
     git checkout caffe
-    
+
 At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place. You may still get the following error:
 
     $ brew update
@@ -241,6 +244,8 @@ The defaults should work, but uncomment the relevant lines if using Anaconda Pyt
     make test
     make runtest
 
+To compile with cuDNN acceleration, you should uncomment the `USE_CUDNN := 1` switch in `Makefile.config`.
+
 If there is no GPU in your machine, you should switch to CPU-only Caffe by uncommenting `CPU_ONLY := 1` in `Makefile.config`.
 
 To compile the Python and MATLAB wrappers do `make pycaffe` and `make matcaffe` respectively.
@@ -251,6 +256,27 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 *Speed*: for a faster build, compile in parallel by doing `make all -j8` where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
+
+### Compilation using CMake (beta)
+
+In lieu of manually editing `Makefile.config` to tell Caffe where dependencies are located, Caffe also provides a CMake-based build system (currently in "beta").
+It requires CMake version >= 2.8.8.
+The basic installation steps are as follows:
+
+    mkdir build
+    cd build
+    cmake ..
+    make all
+    make runtest
+
+#### Ubuntu 12.04
+
+Note that in Ubuntu 12.04, Aptitude will install version CMake 2.8.7 by default, which is not supported by Caffe's CMake build (requires at least 2.8.8).
+As a workaround, if you are using Ubuntu 12.04 you can try the following steps to install (or upgrade to) CMake 2.8.9:
+
+    sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
+    sudo apt-get -y update
+    sudo apt-get install cmake
 
 ## Hardware Questions
 

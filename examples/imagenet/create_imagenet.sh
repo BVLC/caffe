@@ -2,8 +2,9 @@
 # Create the imagenet leveldb inputs
 # N.B. set the path to the imagenet train + val data dirs
 
-TOOLS=../../build/tools
-DATA=../../data/ilsvrc12
+EXAMPLE=examples/imagenet
+DATA=data/ilsvrc12
+TOOLS=build/tools
 
 TRAIN_DATA_ROOT=/path/to/imagenet/train/
 VAL_DATA_ROOT=/path/to/imagenet/val/
@@ -35,18 +36,22 @@ fi
 
 echo "Creating train leveldb..."
 
-GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
+GLOG_logtostderr=1 $TOOLS/convert_imageset \
+    --resize_height=$RESIZE_HEIGHT \
+    --resize_width=$RESIZE_WIDTH \
+    --shuffle \
     $TRAIN_DATA_ROOT \
     $DATA/train.txt \
-    ilsvrc12_train_leveldb 1
-    $RESIZE_HEIGHT $RESIZE_WIDTH
+    $EXAMPLE/ilsvrc12_train_leveldb
 
 echo "Creating val leveldb..."
 
-GLOG_logtostderr=1 $TOOLS/convert_imageset.bin \
+GLOG_logtostderr=1 $TOOLS/convert_imageset \
+    --resize_height=$RESIZE_HEIGHT \
+    --resize_width=$RESIZE_WIDTH \
+    --shuffle \
     $VAL_DATA_ROOT \
     $DATA/val.txt \
-    ilsvrc12_val_leveldb 1
-    $RESIZE_HEIGHT $RESIZE_WIDTH
+    $EXAMPLE/ilsvrc12_val_leveldb
 
 echo "Done."

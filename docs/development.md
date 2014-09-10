@@ -1,10 +1,9 @@
 ---
-layout: default
-title: Development
+title: Developing and Contributing
 ---
 # Development
 
-Caffe is developed with active participation of the community.<br />
+Caffe is developed with active participation of the community.<br>
 The [BVLC](http://bvlc.eecs.berkeley.edu/) maintainers welcome all contributions!
 
 The exact details of contributions are recorded by versioning and cited in our [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements).
@@ -44,7 +43,7 @@ Use this if you want more stability.
 
 ### Issues & Pull Request Protocol
 
-Use Github Issues to report [bugs], propose features, and ask [questions].
+Use Github Issues to report [bugs], propose features, and ask development [questions].
 Large-scale development work is guided by [milestones], which are sets of Issues selected for concurrent release (integration from `dev` to `master`).
 
 Please note that since the core developers are largely researchers, we may work on a feature in isolation for some time before releasing it to the community, so as to claim honest academic contribution.
@@ -52,12 +51,14 @@ We do release things as soon as a reasonable technical report may be written, an
 
 When you are ready to start developing your feature or fixing a bug, follow this protocol:
 
-- Do new development in [feature branches] with descriptive names.
-- Bring your work up-to-date by [rebasing] onto the latest `dev`.
+- Develop in [feature branches] with descriptive names.
+    - For new development branch off `dev`.
+    - For documentation and fixes for `master` branch off `master`.
+- Bring your work up-to-date by [rebasing] onto the latest `dev` / `master`.
 (Polish your changes by [interactive rebase], if you'd like.)
-- [Pull request] your contribution to `BVLC/caffe`'s `dev` branch for discussion and review.
+- [Pull request] your contribution to `BVLC/caffe`'s `dev` / `master` branch for discussion and review.
   - Make PRs *as soon as development begins*, to let discussion guide development.
-  - A PR is only ready for merge review when it is a fast-forward merge to dev, and all code is documented, linted, and tested -- that means your PR must include tests!
+  - A PR is only ready for merge review when it is a fast-forward merge, and all code is documented, linted, and tested -- that means your PR must include tests!
 - When the PR satisfies the above properties, use comments to request maintainer review.
 
 Below is a poetic presentation of the protocol in code form.
