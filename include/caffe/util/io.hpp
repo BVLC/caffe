@@ -22,33 +22,40 @@ namespace caffe {
 
 using ::google::protobuf::Message;
 
+static inline boost::filesystem::path unique_tmp_path() {
+  boost::system::error_code error;
+  const boost::filesystem::path tmp_path =
+      boost::filesystem::temp_directory_path(error);
+  const string pattern =
+      (tmp_path / "caffe_test.%%%%-%%%%-%%%%-%%%%").string();
+  boost::filesystem::path path;
+  do {
+    path = boost::filesystem::unique_path(pattern, error);
+  } while (boost::system::errc::success != error.value()
+      || boost::filesystem::exists(path));
+  return path;
+}
+
 inline void MakeTempFilename(string* temp_filename) {
   temp_filename->clear();
-  const string pattern = "/tmp/caffe_test.%%%%-%%%%-%%%%-%%%%";
-  boost::filesystem::path path = boost::filesystem::unique_path(pattern);
-  while (boost::filesystem::exists(path)) {
-    path = boost::filesystem::unique_path(pattern);
-  }
-  *temp_filename = path.string();
+  *temp_filename = unique_tmp_path().string();
 }
 
 inline void MakeTempDir(string* temp_dirname) {
   temp_dirname->clear();
-  const string pattern = "/tmp/caffe_test.%%%%-%%%%-%%%%-%%%%";
-  boost::filesystem::path path = boost::filesystem::unique_path(pattern);
-  while (boost::filesystem::exists(path)) {
-    path = boost::filesystem::unique_path(pattern);
-  }
-  while (!boost::filesystem::exists(path)) {
+  const boost::filesystem::path path = unique_tmp_path();
+  boost::system::error_code error;
+  do {
     try {
-      if (boost::filesystem::create_directories(path)) {
+      if (boost::filesystem::create_directories(path, error)) {
         break;
       }
     } catch (...) {
       LOG(ERROR) << "Failed to create a temporary directory at: "
           << path.string();
     }
-  }
+  } while (boost::system::errc::success != error.value()
+      || !boost::filesystem::exists(path));
   *temp_dirname = path.string();
 }
 
@@ -86,41 +93,38 @@ inline void ReadProtoFromBinaryFileOrDie(const string& filename,
   ReadProtoFromBinaryFileOrDie(filename.c_str(), proto);
 }
 
-
 void WriteProtoToBinaryFile(const Message& proto, const char* filename);
-inline void WriteProtoToBinaryFile(
-    const Message& proto, const string& filename) {
+inline void WriteProtoToBinaryFile(const Message& proto,
+                                   const string& filename) {
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
 
-bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color, Datum* datum);
+bool ReadImageToDatum(const string& filename, const int label, const int height,
+                      const int width, const bool is_color, Datum* datum);
 
 inline bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, Datum* datum) {
+                             const int height, const int width, Datum* datum) {
   return ReadImageToDatum(filename, label, height, width, true, datum);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int label,
-    Datum* datum) {
+                             Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
 leveldb::Options GetLevelDBOptions();
 
-template <typename Dtype>
-void hdf5_load_nd_dataset_helper(
-  hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
-  Blob<Dtype>* blob);
+template<typename Dtype>
+void hdf5_load_nd_dataset_helper(hid_t file_id, const char* dataset_name_,
+                                 int min_dim, int max_dim, Blob<Dtype>* blob);
 
-template <typename Dtype>
-void hdf5_load_nd_dataset(
-  hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
-  Blob<Dtype>* blob);
+template<typename Dtype>
+void hdf5_load_nd_dataset(hid_t file_id, const char* dataset_name_, int min_dim,
+                          int max_dim, Blob<Dtype>* blob);
 
-template <typename Dtype>
-void hdf5_save_nd_dataset(
-  const hid_t file_id, const string dataset_name, const Blob<Dtype>& blob);
+template<typename Dtype>
+void hdf5_save_nd_dataset(const hid_t file_id, const string dataset_name,
+                          const Blob<Dtype>& blob);
 
 }  // namespace caffe
 
