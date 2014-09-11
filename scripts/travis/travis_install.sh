@@ -67,12 +67,12 @@ if $WITH_CUDA; then
 fi
 
 # Install LMDB
-LMDB_URL=https://gitorious.org/mdb/mdb/archive/7f038d0f15bec57b4c07aa3f31cd5564c88a1897.tar.gz
-LMDB_FILE=/tmp/mdb.tar.gz
+LMDB_URL=ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.39.tgz
+LMDB_FILE=/tmp/openldap.tgz
 pushd .
 curl $LMDB_URL -o $LMDB_FILE && \
     tar -C /tmp -xzvf $LMDB_FILE && \
-    cd /tmp/mdb-mdb/libraries/liblmdb/ && \
+    cd /tmp/openldap*/libraries/liblmdb/ && \
     make && sudo make install || \
     (echo "LMDB install failed"; exit 1)
 popd
