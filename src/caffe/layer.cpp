@@ -16,10 +16,10 @@ template <typename Dtype>
 Layer<Dtype>* GetLayer(const LayerParameter& param) {
   const string& name = param.name();
   const LayerParameter_Engine& engine = param.engine();
-  LayerFactory<Dtype>* caffe_layer_factory =
+  CaffeLayerFactory<Dtype>* caffe_layer_factory =
       new CaffeLayerFactory<Dtype>();
 #ifdef USE_CUDNN
-  LayerFactory<Dtype>* cudnn_layer_factory =
+  CaffeLayerFactory<Dtype>* cudnn_layer_factory =
       new CuDNNLayerFactory<Dtype>();
 #endif
   switch (engine) {

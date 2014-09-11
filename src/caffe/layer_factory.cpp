@@ -9,81 +9,51 @@ namespace caffe {
 // GetLayer() defines the overall layer factory. The *LayerFactory classes
 // define factories for layers of different computational engines.
 
+#define LAYER_CASE(TYPE, Type) \
+  case LayerParameter_LayerType_##TYPE: \
+    return Get##Type##Layer(param)
+
 template <typename Dtype>
-Layer<Dtype>* CaffeLayerFactory<Dtype>::GetLayer(const LayerParameter& param) {
+Layer<Dtype>* CaffeLayerFactory<Dtype>::GetLayer(const LayerParameter&
+                                                 param) {
   const string& name = param.name();
   const LayerParameter_LayerType& type = param.type();
   switch (type) {
-  case LayerParameter_LayerType_ACCURACY:
-    return new AccuracyLayer<Dtype>(param);
-  case LayerParameter_LayerType_ABSVAL:
-    return new AbsValLayer<Dtype>(param);
-  case LayerParameter_LayerType_ARGMAX:
-    return new ArgMaxLayer<Dtype>(param);
-  case LayerParameter_LayerType_BNLL:
-    return new BNLLLayer<Dtype>(param);
-  case LayerParameter_LayerType_CONCAT:
-    return new ConcatLayer<Dtype>(param);
-  case LayerParameter_LayerType_CONVOLUTION:
-    return new ConvolutionLayer<Dtype>(param);
-  case LayerParameter_LayerType_DATA:
-    return new DataLayer<Dtype>(param);
-  case LayerParameter_LayerType_DROPOUT:
-    return new DropoutLayer<Dtype>(param);
-  case LayerParameter_LayerType_DUMMY_DATA:
-    return new DummyDataLayer<Dtype>(param);
-  case LayerParameter_LayerType_EUCLIDEAN_LOSS:
-    return new EuclideanLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_ELTWISE:
-    return new EltwiseLayer<Dtype>(param);
-  case LayerParameter_LayerType_FLATTEN:
-    return new FlattenLayer<Dtype>(param);
-  case LayerParameter_LayerType_HDF5_DATA:
-    return new HDF5DataLayer<Dtype>(param);
-  case LayerParameter_LayerType_HDF5_OUTPUT:
-    return new HDF5OutputLayer<Dtype>(param);
-  case LayerParameter_LayerType_HINGE_LOSS:
-    return new HingeLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_IMAGE_DATA:
-    return new ImageDataLayer<Dtype>(param);
-  case LayerParameter_LayerType_IM2COL:
-    return new Im2colLayer<Dtype>(param);
-  case LayerParameter_LayerType_INFOGAIN_LOSS:
-    return new InfogainLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_INNER_PRODUCT:
-    return new InnerProductLayer<Dtype>(param);
-  case LayerParameter_LayerType_LRN:
-    return new LRNLayer<Dtype>(param);
-  case LayerParameter_LayerType_MEMORY_DATA:
-    return new MemoryDataLayer<Dtype>(param);
-  case LayerParameter_LayerType_MVN:
-    return new MVNLayer<Dtype>(param);
-  case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
-    return new MultinomialLogisticLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_POOLING:
-    return new PoolingLayer<Dtype>(param);
-  case LayerParameter_LayerType_POWER:
-    return new PowerLayer<Dtype>(param);
-  case LayerParameter_LayerType_RELU:
-    return new ReLULayer<Dtype>(param);
-  case LayerParameter_LayerType_SILENCE:
-    return new SilenceLayer<Dtype>(param);
-  case LayerParameter_LayerType_SIGMOID:
-    return new SigmoidLayer<Dtype>(param);
-  case LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS:
-    return new SigmoidCrossEntropyLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_SLICE:
-    return new SliceLayer<Dtype>(param);
-  case LayerParameter_LayerType_SOFTMAX:
-    return new SoftmaxLayer<Dtype>(param);
-  case LayerParameter_LayerType_SOFTMAX_LOSS:
-    return new SoftmaxWithLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_SPLIT:
-    return new SplitLayer<Dtype>(param);
-  case LayerParameter_LayerType_TANH:
-    return new TanHLayer<Dtype>(param);
-  case LayerParameter_LayerType_WINDOW_DATA:
-    return new WindowDataLayer<Dtype>(param);
+  LAYER_CASE(ACCURACY, Accuracy);
+  LAYER_CASE(ABSVAL, AbsVal);
+  LAYER_CASE(ARGMAX, ArgMax);
+  LAYER_CASE(BNLL, BNLL);
+  LAYER_CASE(CONCAT, Concat);
+  LAYER_CASE(CONVOLUTION, Convolution);
+  LAYER_CASE(DATA, Data);
+  LAYER_CASE(DROPOUT, Dropout);
+  LAYER_CASE(DUMMY_DATA, DummyData);
+  LAYER_CASE(EUCLIDEAN_LOSS, EuclideanLoss);
+  LAYER_CASE(ELTWISE, Eltwise);
+  LAYER_CASE(FLATTEN, Flatten);
+  LAYER_CASE(HDF5_DATA, HDF5Data);
+  LAYER_CASE(HDF5_OUTPUT, HDF5Output);
+  LAYER_CASE(HINGE_LOSS, HingeLoss);
+  LAYER_CASE(IMAGE_DATA, ImageData);
+  LAYER_CASE(IM2COL, Im2col);
+  LAYER_CASE(INFOGAIN_LOSS, InfogainLoss);
+  LAYER_CASE(INNER_PRODUCT, InnerProduct);
+  LAYER_CASE(LRN, LRN);
+  LAYER_CASE(MEMORY_DATA, MemoryData);
+  LAYER_CASE(MVN, MVN);
+  LAYER_CASE(MULTINOMIAL_LOGISTIC_LOSS, MultinomialLogisticLoss);
+  LAYER_CASE(POOLING, Pooling);
+  LAYER_CASE(POWER, Power);
+  LAYER_CASE(RELU, ReLU);
+  LAYER_CASE(SILENCE, Silence);
+  LAYER_CASE(SIGMOID, Sigmoid);
+  LAYER_CASE(SIGMOID_CROSS_ENTROPY_LOSS, SigmoidCrossEntropyLoss);
+  LAYER_CASE(SLICE, Slice);
+  LAYER_CASE(SOFTMAX, Softmax);
+  LAYER_CASE(SOFTMAX_LOSS, SoftmaxWithLoss);
+  LAYER_CASE(SPLIT, Split);
+  LAYER_CASE(TANH, TanH);
+  LAYER_CASE(WINDOW_DATA, WindowData);
   case LayerParameter_LayerType_NONE:
     LOG(FATAL) << "Layer " << name << " has unspecified type.";
   default:
@@ -96,90 +66,6 @@ Layer<Dtype>* CaffeLayerFactory<Dtype>::GetLayer(const LayerParameter& param) {
 INSTANTIATE_CLASS(CaffeLayerFactory);
 
 #ifdef USE_CUDNN
-template <typename Dtype>
-Layer<Dtype>* CuDNNLayerFactory<Dtype>::GetLayer(const LayerParameter& param) {
-  const string& name = param.name();
-  const LayerParameter_LayerType& type = param.type();
-  switch (type) {
-  case LayerParameter_LayerType_ACCURACY:
-    return new AccuracyLayer<Dtype>(param);
-  case LayerParameter_LayerType_ABSVAL:
-    return new AbsValLayer<Dtype>(param);
-  case LayerParameter_LayerType_ARGMAX:
-    return new ArgMaxLayer<Dtype>(param);
-  case LayerParameter_LayerType_BNLL:
-    return new BNLLLayer<Dtype>(param);
-  case LayerParameter_LayerType_CONCAT:
-    return new ConcatLayer<Dtype>(param);
-  case LayerParameter_LayerType_CONVOLUTION:
-    return new CuDNNConvolutionLayer<Dtype>(param);
-  case LayerParameter_LayerType_DATA:
-    return new DataLayer<Dtype>(param);
-  case LayerParameter_LayerType_DROPOUT:
-    return new DropoutLayer<Dtype>(param);
-  case LayerParameter_LayerType_DUMMY_DATA:
-    return new DummyDataLayer<Dtype>(param);
-  case LayerParameter_LayerType_EUCLIDEAN_LOSS:
-    return new EuclideanLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_ELTWISE:
-    return new EltwiseLayer<Dtype>(param);
-  case LayerParameter_LayerType_FLATTEN:
-    return new FlattenLayer<Dtype>(param);
-  case LayerParameter_LayerType_HDF5_DATA:
-    return new HDF5DataLayer<Dtype>(param);
-  case LayerParameter_LayerType_HDF5_OUTPUT:
-    return new HDF5OutputLayer<Dtype>(param);
-  case LayerParameter_LayerType_HINGE_LOSS:
-    return new HingeLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_IMAGE_DATA:
-    return new ImageDataLayer<Dtype>(param);
-  case LayerParameter_LayerType_IM2COL:
-    return new Im2colLayer<Dtype>(param);
-  case LayerParameter_LayerType_INFOGAIN_LOSS:
-    return new InfogainLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_INNER_PRODUCT:
-    return new InnerProductLayer<Dtype>(param);
-  case LayerParameter_LayerType_LRN:
-    return new LRNLayer<Dtype>(param);
-  case LayerParameter_LayerType_MEMORY_DATA:
-    return new MemoryDataLayer<Dtype>(param);
-  case LayerParameter_LayerType_MVN:
-    return new MVNLayer<Dtype>(param);
-  case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
-    return new MultinomialLogisticLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_POOLING:
-    return new CuDNNPoolingLayer<Dtype>(param);
-  case LayerParameter_LayerType_POWER:
-    return new PowerLayer<Dtype>(param);
-  case LayerParameter_LayerType_RELU:
-    return new CuDNNReLULayer<Dtype>(param);
-  case LayerParameter_LayerType_SILENCE:
-    return new SilenceLayer<Dtype>(param);
-  case LayerParameter_LayerType_SIGMOID:
-    return new CuDNNSigmoidLayer<Dtype>(param);
-  case LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS:
-    return new SigmoidCrossEntropyLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_SLICE:
-    return new SliceLayer<Dtype>(param);
-  case LayerParameter_LayerType_SOFTMAX:
-    return new CuDNNSoftmaxLayer<Dtype>(param);
-  case LayerParameter_LayerType_SOFTMAX_LOSS:
-    return new SoftmaxWithLossLayer<Dtype>(param);
-  case LayerParameter_LayerType_SPLIT:
-    return new SplitLayer<Dtype>(param);
-  case LayerParameter_LayerType_TANH:
-    return new CuDNNTanHLayer<Dtype>(param);
-  case LayerParameter_LayerType_WINDOW_DATA:
-    return new WindowDataLayer<Dtype>(param);
-  case LayerParameter_LayerType_NONE:
-    LOG(FATAL) << "Layer " << name << " has unspecified type.";
-  default:
-    LOG(FATAL) << "Layer " << name << " has unknown type " << type;
-  }
-  // just to suppress old compiler warnings.
-  return (Layer<Dtype>*)(NULL);
-}
-
 INSTANTIATE_CLASS(CuDNNLayerFactory);
 #endif
 
