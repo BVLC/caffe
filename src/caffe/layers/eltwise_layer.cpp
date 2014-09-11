@@ -17,6 +17,20 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       == EltwiseParameter_EltwiseOp_PROD
       && this->layer_param().eltwise_param().coeff_size())) <<
       "Eltwise layer only takes coefficients for summation.";
+  op_ = this->layer_param_.eltwise_param().operation();
+  // Blob-wise coefficients for the elementwise operation.
+  coeffs_ = vector<Dtype>(bottom.size(), 1);
+  if (this->layer_param().eltwise_param().coeff_size()) {
+    for (int i = 0; i < bottom.size(); ++i) {
+      coeffs_[i] = this->layer_param().eltwise_param().coeff(i);
+    }
+  }
+  stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
+}
+
+template <typename Dtype>
+void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   const int num = bottom[0]->num();
   const int channels = bottom[0]->channels();
   const int height = bottom[0]->height();
@@ -28,15 +42,6 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(width, bottom[i]->width());
   }
   (*top)[0]->Reshape(num, channels, height, width);
-  op_ = this->layer_param_.eltwise_param().operation();
-  // Blob-wise coefficients for the elementwise operation.
-  coeffs_ = vector<Dtype>(bottom.size(), 1);
-  if (this->layer_param().eltwise_param().coeff_size()) {
-    for (int i = 0; i < bottom.size(); ++i) {
-      coeffs_[i] = this->layer_param().eltwise_param().coeff(i);
-    }
-  }
-  stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
   // If max operation, we will initialize the vector index part.
   if (this->layer_param_.eltwise_param().operation() ==
       EltwiseParameter_EltwiseOp_MAX && top->size() == 1) {
