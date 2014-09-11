@@ -31,15 +31,10 @@ TYPED_TEST_CASE(IOTest, Dtypes);
     const int channels = num_channels; \
     const int height = 200; \
     const int width = 300; \
-    cv::Mat image(height, width, CV_MAKETYPE(CV_8U, channels)); \
+    cv::Mat image; \
+    image.create(height, width, CV_MAKETYPE(CV_8U, channels)); \
     typedef cv::Vec<uchar, channels> VecUchar; \
-    for (int c = 0; c < channels; ++c) { \
-      for (int h = 0; h < height; ++h) { \
-        for (int w = 0; w < width; ++w) { \
-          image.at<VecUchar>(h, w)[c] = ((c * height + h) * width + w) % 256; \
-        } \
-      } \
-    } \
+    cv::randu(image, cv::Scalar::all(0), cv::Scalar::all(255)); \
     Datum* datum; \
     int label = 1001; \
     string data; \

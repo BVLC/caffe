@@ -55,15 +55,14 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddImages(
-    const vector<cv::Mat>& images, const bool is_color_images) {
+    const vector<cv::Mat>& images) {
   const vector<int> fake_labels(images.size(), 0);
-  AddImagesAndLabels(images, fake_labels, is_color_images);
+  AddImagesAndLabels(images, fake_labels);
 }
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddImagesAndLabels(
-    const vector<cv::Mat>& images, const vector<int>& labels,
-    const bool is_color_images) {
+    const vector<cv::Mat>& images, const vector<int>& labels) {
   CHECK(!has_new_data_) <<
       "There are pending images that haven't been consumed";
   size_t num_images = images.size();

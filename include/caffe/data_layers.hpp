@@ -1,6 +1,7 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
+#include <opencv2/core/core.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -17,6 +18,21 @@
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+
+/****************************************************************************************\
+*          exchange-add operation for atomic operations on reference counters            *
+\****************************************************************************************/
+
+#if defined __GNUC__ && defined __clang__ && __clang_major__ >= 3 \
+    && !defined __ANDROID__ && !defined __EMSCRIPTEN__ && !defined(__CUDACC__)
+#    ifdef __ATOMIC_ACQ_REL
+#      define CV_XADD(addr, delta) __c11_atomic_fetch_add \
+    (_Atomic(static_cast<int*>(addr), delta, __ATOMIC_ACQ_REL)
+#    else
+#      define CV_XADD(addr, delta) \
+    __atomic_fetch_add(_Atomic(static_cast<int*>(addr), delta, 4)
+#    endif
+#endif
 
 namespace caffe {
 
@@ -296,6 +312,10 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
+
+  virtual void AddImages(const vector<cv::Mat>& images);
+  virtual void AddImagesAndLabels(const vector<cv::Mat>& images,
+                                  const vector<int>& labels);
 
   int batch_size() { return batch_size_; }
 

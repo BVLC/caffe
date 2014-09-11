@@ -5,8 +5,6 @@
 #include <leveldb/db.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <stdint.h>
 
 #include <algorithm>
@@ -18,6 +16,13 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
+#ifndef CV_LOAD_IMAGE_COLOR
+#define CV_LOAD_IMAGE_COLOR 1
+#endif
+
+#ifndef CV_LOAD_IMAGE_GRAYSCALE
+#define CV_LOAD_IMAGE_GRAYSCALE 0
+#endif
 namespace caffe {
 
 using google::protobuf::io::FileInputStream;
