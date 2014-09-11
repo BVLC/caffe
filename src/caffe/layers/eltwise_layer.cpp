@@ -40,8 +40,7 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // If max operation, we will initialize the vector index part.
   if (this->layer_param_.eltwise_param().operation() ==
       EltwiseParameter_EltwiseOp_MAX && top->size() == 1) {
-    max_idx_.reset(new Blob<int>(bottom[0]->num(), channels,
-                                 height, width));
+    max_idx_.Reshape(bottom[0]->num(), channels, height, width);
   }
 }
 
@@ -69,7 +68,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     break;
   case EltwiseParameter_EltwiseOp_MAX:
     // Initialize
-    mask = max_idx_->mutable_cpu_data();
+    mask = max_idx_.mutable_cpu_data();
     caffe_set(count, -1, mask);
     caffe_set(count, Dtype(-FLT_MAX), top_data);
     // bottom 0 & 1
@@ -138,7 +137,7 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         }
         break;
       case EltwiseParameter_EltwiseOp_MAX:
-        mask = max_idx_->cpu_data();
+        mask = max_idx_.cpu_data();
         for (int index = 0; index < count; ++index) {
           Dtype gradient = 0;
           if (mask[index] == i) {
