@@ -6,12 +6,24 @@
 
 namespace caffe {
 
+template<typename Dtype>
+DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
+    : param_(param) {
+  phase_ = Caffe::phase();
+    // check if we want to have mean
+  if (param_.has_mean_file()) {
+    const string& mean_file = param.mean_file();
+    LOG(INFO) << "Loading mean file from" << mean_file;
+    BlobProto blob_proto;
+    ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
+    data_mean_.FromProto(blob_proto);
+  }
+}
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const int batch_item_id,
                                        const Datum& datum,
                                        Dtype* transformed_data) {
-
   CHECK_GT(datum.channels(), 0);
   CHECK_GE(datum.height(), param_.crop_size());
   CHECK_GE(datum.height(), param_.crop_size());
