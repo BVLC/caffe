@@ -16,19 +16,16 @@ compiler: gcc
 
 before_install:
   - export NUM_THREADS=4
-  - alias make="make --jobs=$NUM_THREADS"
   - export SCRIPTS=./scripts/travis
-  - set -e  # fail when a script fails
 
 install:
-  - source $SCRIPTS/travis_install.sh
+  - sudo -E $SCRIPTS/travis_install.sh
 
 before_script:
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-  - if ! $WITH_CMAKE; then source $SCRIPTS/travis_setup_makefile_config.sh; fi
+  - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
 
-script:
-  - if $WITH_CUDA; then source $SCRIPTS/travis_build.sh; else source $SCRIPTS/travis_build_and_test.sh; fi
+script: $SCRIPTS/travis_build_and_test.sh
 
 notifications:
 # Emails are sent to the committer's git-configured email address by default,
