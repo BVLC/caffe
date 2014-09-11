@@ -8,9 +8,9 @@
 namespace caffe {
 
 template <typename Dtype>
-void EuclideanLossLayer<Dtype>::LayerSetUp(
+void EuclideanLossLayer<Dtype>::Reshape(
   const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  LossLayer<Dtype>::LayerSetUp(bottom, top);
+  LossLayer<Dtype>::Reshape(bottom, top);
   CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
   CHECK_EQ(bottom[0]->height(), bottom[1]->height());
   CHECK_EQ(bottom[0]->width(), bottom[1]->width());
