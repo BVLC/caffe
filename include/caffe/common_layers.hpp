@@ -40,6 +40,8 @@ class ArgMaxLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ARGMAX;
@@ -80,6 +82,8 @@ class ConcatLayer : public Layer<Dtype> {
   explicit ConcatLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -159,6 +163,8 @@ class EltwiseLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ELTWISE;
@@ -198,7 +204,7 @@ class FlattenLayer : public Layer<Dtype> {
  public:
   explicit FlattenLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -251,6 +257,8 @@ class InnerProductLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_INNER_PRODUCT;
@@ -285,7 +293,7 @@ class MVNLayer : public Layer<Dtype> {
  public:
   explicit MVNLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -319,7 +327,7 @@ class SilenceLayer : public Layer<Dtype> {
  public:
   explicit SilenceLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {}
 
   virtual inline LayerParameter_LayerType type() const {
@@ -351,7 +359,7 @@ class SoftmaxLayer : public Layer<Dtype> {
  public:
   explicit SoftmaxLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -388,6 +396,8 @@ class CuDNNSoftmaxLayer : public SoftmaxLayer<Dtype> {
       : SoftmaxLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
   virtual ~CuDNNSoftmaxLayer();
 
  protected:
@@ -413,7 +423,7 @@ class SplitLayer : public Layer<Dtype> {
  public:
   explicit SplitLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -447,6 +457,8 @@ class SliceLayer : public Layer<Dtype> {
   explicit SliceLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {

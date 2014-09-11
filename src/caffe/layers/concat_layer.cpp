@@ -14,7 +14,11 @@ void ConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     "concat_dim should be >= 0";
   CHECK_LE(concat_dim_, 1) <<
     "For now concat_dim <=1, it can only concat num and channels";
+}
 
+template <typename Dtype>
+void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   // Initialize with the first blob.
   count_ = bottom[0]->count();
   num_ = bottom[0]->num();

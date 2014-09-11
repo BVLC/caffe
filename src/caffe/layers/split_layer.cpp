@@ -7,7 +7,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void SplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   count_ = bottom[0]->count();
   for (int i = 0; i < top->size(); ++i) {
