@@ -14,18 +14,7 @@ namespace caffe {
 template <typename Dtype>
 class DataTransformer {
  public:
-  explicit DataTransformer(const TransformationParameter& param)
-    : param_(param) {
-    phase_ = Caffe::phase();
-      // check if we want to have mean
-    if (param_.has_mean_file()) {
-      const string& mean_file = param.mean_file();
-      LOG(INFO) << "Loading mean file from" << mean_file;
-      BlobProto blob_proto;
-      ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
-      data_mean_.FromProto(blob_proto);
-    }
-  }
+  explicit DataTransformer(const TransformationParameter& param);
   virtual ~DataTransformer() {}
 
   void InitRand();

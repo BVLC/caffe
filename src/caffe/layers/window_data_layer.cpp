@@ -170,7 +170,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // data mean
   if (this->layer_param_.window_data_param().has_mean_file()) {
-    const string& mean_file = 
+    const string& mean_file =
           this->layer_param_.window_data_param().mean_file();
     LOG(INFO) << "Loading mean file from" << mean_file;
     BlobProto blob_proto;

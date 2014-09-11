@@ -134,7 +134,6 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
         1, 1, 1);
   }
-
 }
 
 // This function is used to create a thread that prefetches the data.
