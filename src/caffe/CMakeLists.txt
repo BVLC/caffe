@@ -99,25 +99,16 @@ if(WITH_CUDA)
             -gencode arch=compute_50,code=sm_50
             -gencode arch=compute_50,code=compute_50
     )
-endif()
-    
-#    cuDNN
-if(WITH_CUDA)
-    set(CUDNN_LIBRARIES cudnn)
-    ## TODO: replace USE_CUDNN with HAVE_CUDNN in the code and Makefile
-    add_definitions(-DUSE_CUDNN)
-    add_definitions(-DHAVE_CUDNN)
-endif()
 
 # https://github.com/ComputationalRadiationPhysics/picongpu/blob/master/src/picongpu/CMakeLists.txt
     # work-arounds
-if(Boost_VERSION EQUAL 105500)
-    # see https://svn.boost.org/trac/boost/ticket/9392
-    message(STATUS "Boost: Applying noinline work around")
-    # avoid warning for CMake >= 2.8.12
-    set(CUDA_NVCC_FLAGS
-      "${CUDA_NVCC_FLAGS} \"-DBOOST_NOINLINE=__attribute__((noinline))\" ")
-endif(Boost_VERSION EQUAL 105500)
+    if(Boost_VERSION EQUAL 105500)
+        # see https://svn.boost.org/trac/boost/ticket/9392
+        message(STATUS "Boost: Applying noinline work around")
+        # avoid warning for CMake >= 2.8.12
+        set(CUDA_NVCC_FLAGS
+          "${CUDA_NVCC_FLAGS} \"-DBOOST_NOINLINE=__attribute__((noinline))\" ")
+    endif(Boost_VERSION EQUAL 105500)
 
     #    cuda sources
     file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
@@ -129,6 +120,14 @@ endif(Boost_VERSION EQUAL 105500)
         ${CUDA_CUBLAS_LIBRARIES}
         ${CUDA_curand_LIBRARY}
     )
+endif()
+    
+#    cuDNN
+if(WITH_CUDA)
+    set(CUDNN_LIBRARIES cudnn)
+    ## TODO: replace USE_CUDNN with HAVE_CUDNN in the code and Makefile
+    add_definitions(-DUSE_CUDNN)
+    add_definitions(-DHAVE_CUDNN)
 endif()
 
 target_link_libraries(caffe proto
