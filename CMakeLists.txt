@@ -8,10 +8,11 @@ option(CPU_ONLY "Build Caffe without GPU support" OFF)
 option(WITH_LMDB "Include LMDB support" ON)
 option(WITH_HDF5 "Include HDF5 support" ON)
 
+option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_PYTHON "Build Python wrapper" OFF)
 option(BUILD_MATLAB "Build Matlab wrapper" OFF)
-option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
+option(BUILD_TESTS "Build tests" ON)
 
 if(NOT BLAS)
     set(BLAS atlas)
@@ -57,7 +58,6 @@ endif()
 
 ###    Subdirectories    ##########################################################################
 
-add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)
 
@@ -74,6 +74,11 @@ endif()
 if(BUILD_MATLAB)
     message(STATUS "Matlab enabled")
     add_subdirectory(matlab)
+endif()
+
+if(BUILD_TESTS)
+    message(STATUS "Tests enabled")
+    add_subdirectory(src/gtest)
 endif()
 
 ###    Lint Target Setup    ##########################################################################
