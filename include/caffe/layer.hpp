@@ -80,7 +80,7 @@ class Layer {
    * adjust the top blob sizes.
    */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) { NOT_IMPLEMENTED; }
+      vector<Blob<Dtype>*>* top) {}
 
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accomodate
