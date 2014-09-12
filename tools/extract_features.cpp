@@ -4,8 +4,10 @@
 
 #include "boost/algorithm/string.hpp"
 #include "google/protobuf/text_format.h"
+#ifdef HAVE_LEVELDB
 #include "leveldb/db.h"
 #include "leveldb/write_batch.h"
+#endif
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -26,6 +28,10 @@ int main(int argc, char** argv) {
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv) {
+#ifndef HAVE_LEVELDB
+  LOG(FATAL) << "No DB library available to save the features";
+#endif
+
   ::google::InitGoogleLogging(argv[0]);
   const int num_required_args = 6;
   if (argc < num_required_args) {
@@ -42,6 +48,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     " and leveldbs must be equal.";
     return 1;
   }
+
   int arg_pos = num_required_args;
 
   arg_pos = num_required_args;
@@ -114,6 +121,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         << " in the network " << feature_extraction_proto;
   }
 
+#ifdef HAVE_LEVELDB
   leveldb::Options options;
   options.error_if_exists = true;
   options.create_if_missing = true;
@@ -128,15 +136,18 @@ int feature_extraction_pipeline(int argc, char** argv) {
     CHECK(status.ok()) << "Failed to open leveldb " << leveldb_names[i];
     feature_dbs.push_back(shared_ptr<leveldb::DB>(db));
   }
+#endif
 
   int num_mini_batches = atoi(argv[++arg_pos]);
 
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
+#ifdef HAVE_LEVELDB
   vector<shared_ptr<leveldb::WriteBatch> > feature_batches(
       num_features,
       shared_ptr<leveldb::WriteBatch>(new leveldb::WriteBatch()));
+#endif
   const int kMaxKeyStrLength = 100;
   char key_str[kMaxKeyStrLength];
   vector<Blob<float>*> input_vec;
@@ -163,14 +174,18 @@ int feature_extraction_pipeline(int argc, char** argv) {
         string value;
         datum.SerializeToString(&value);
         snprintf(key_str, kMaxKeyStrLength, "%d", image_indices[i]);
+#ifdef HAVE_LEVELDB
         feature_batches[i]->Put(string(key_str), value);
+#endif
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
-          feature_dbs[i]->Write(leveldb::WriteOptions(),
-                                feature_batches[i].get());
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
+#ifdef HAVE_LEVELDB
+          feature_dbs[i]->Write(leveldb::WriteOptions(),
+                                feature_batches[i].get());
           feature_batches[i].reset(new leveldb::WriteBatch());
+#endif
         }
       }  // for (int n = 0; n < batch_size; ++n)
     }  // for (int i = 0; i < num_features; ++i)
@@ -178,7 +193,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
     if (image_indices[i] % 1000 != 0) {
+#ifdef HAVE_LEVELDB
       feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i].get());
+#endif
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
         " query images for feature blob " << blob_names[i];

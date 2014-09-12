@@ -15,8 +15,11 @@
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+#ifdef HAVE_LEVELDB
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
+#endif
+
 #ifdef HAVE_LMDB
 #include <lmdb.h>
 #endif
@@ -40,20 +43,39 @@ DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
 DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
+#ifdef HAVE_LEVELDB
 DEFINE_string(backend, "leveldb", "The backend for storing the result");
+#else
+DEFINE_string(backend, "", "The backend for storing the result");
+#endif
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 
 int main(int argc, char** argv) {
+#ifndef HAVE_LEVELDB
+#ifndef HAVE_LMDB
+  LOG(FATAL) << "No DB library available to save the converted dataset";
+#endif
+#endif
+
   ::google::InitGoogleLogging(argv[0]);
 
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
 #endif
 
-  gflags::SetUsageMessage("Convert a set of images to the leveldb"
+  gflags::SetUsageMessage("Convert a set of images to the "
+#ifdef HAVE_LEVELDB
+      "leveldb"
 #ifdef HAVE_LMDB
       "/lmdb"
+#endif
+#else
+#ifdef HAVE_LMDB
+      "lmdb"
+#else
+      "non-specified"
+#endif
 #endif
       "\n"
         "format used as input for Caffe.\n"
@@ -90,13 +112,7 @@ int main(int argc, char** argv) {
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
   // Open new db
-#ifdef HAVE_LMDB
-  // lmdb
-  MDB_env *mdb_env;
-  MDB_dbi mdb_dbi;
-  MDB_val mdb_key, mdb_data;
-  MDB_txn *mdb_txn;
-#endif
+#ifdef HAVE_LEVELDB
   // leveldb
   leveldb::DB* db;
   leveldb::Options options;
@@ -104,15 +120,29 @@ int main(int argc, char** argv) {
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
   leveldb::WriteBatch* batch = NULL;
+#endif
+
+#ifdef HAVE_LMDB
+  // lmdb
+  MDB_env *mdb_env;
+  MDB_dbi mdb_dbi;
+  MDB_val mdb_key, mdb_data;
+  MDB_txn *mdb_txn;
+#endif
 
   // Open db
-  if (db_backend == "leveldb") {  // leveldb
+  if (db_backend == "") {
+    LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+  } else if (db_backend == "leveldb") {  // leveldb
     LOG(INFO) << "Opening leveldb " << db_path;
     leveldb::Status status = leveldb::DB::Open(
         options, db_path, &db);
     CHECK(status.ok()) << "Failed to open leveldb " << db_path
         << ". Is it already existing?";
     batch = new leveldb::WriteBatch();
+#endif
+
 #ifdef HAVE_LMDB
   } else if (db_backend == "lmdb") {  // lmdb
     LOG(INFO) << "Opening lmdb " << db_path;
@@ -162,8 +192,13 @@ int main(int argc, char** argv) {
     string keystr(key_cstr);
 
     // Put in db
-    if (db_backend == "leveldb") {  // leveldb
+    if (db_backend == "") {
+      LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+    } else if (db_backend == "leveldb") {  // leveldb
       batch->Put(keystr, value);
+#endif
+
 #ifdef HAVE_LMDB
     } else if (db_backend == "lmdb") {  // lmdb
       mdb_data.mv_size = value.size();
@@ -179,10 +214,15 @@ int main(int argc, char** argv) {
 
     if (++count % 1000 == 0) {
       // Commit txn
-      if (db_backend == "leveldb") {  // leveldb
+      if (db_backend == "") {
+        LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+      } else if (db_backend == "leveldb") {  // leveldb
         db->Write(leveldb::WriteOptions(), batch);
         delete batch;
         batch = new leveldb::WriteBatch();
+#endif
+
 #ifdef HAVE_LMDB
       } else if (db_backend == "lmdb") {  // lmdb
         CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS)
@@ -198,10 +238,15 @@ int main(int argc, char** argv) {
   }
   // write the last batch
   if (count % 1000 != 0) {
-    if (db_backend == "leveldb") {  // leveldb
+    if (db_backend == "") {
+      LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+    } else if (db_backend == "leveldb") {  // leveldb
       db->Write(leveldb::WriteOptions(), batch);
       delete batch;
       delete db;
+#endif
+
 #ifdef HAVE_LMDB
     } else if (db_backend == "lmdb") {  // lmdb
       CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS) << "mdb_txn_commit failed";

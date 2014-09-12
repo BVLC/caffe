@@ -9,7 +9,11 @@
 #ifdef HAVE_HDF5
 #include "hdf5.h"
 #endif
+
+#ifdef HAVE_LEVELDB
 #include "leveldb/db.h"
+#endif
+
 #ifdef HAVE_LMDB
 #include "lmdb.h"
 #endif
@@ -117,9 +121,12 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void InternalThreadEntry();
 
+#ifdef HAVE_LEVELDB
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
+#endif
+
 #ifdef HAVE_LMDB
   // LMDB
   MDB_env* mdb_env_;

@@ -7,7 +7,9 @@ MAKE="make --jobs=$NUM_THREADS --keep-going"
 if $WITH_CMAKE; then
   mkdir build
   cd build
-  cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON -DWITH_LMDB=ON -DWITH_HDF5=ON ..
+  cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON \
+    -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON -DWITH_HDF5=ON -DWITH_LEVELDB=ON \
+    -DWITH_LMDB=ON ..
   $MAKE
   if ! $WITH_CUDA; then
     $MAKE runtest
@@ -19,7 +21,7 @@ else
   if ! $WITH_CUDA; then
     export CPU_ONLY=1
   fi
-  WITH_LMDB=1 WITH_HDF5=1 $MAKE all test pycaffe warn lint || true
+  WITH_HDF5=1 WITH_LEVELDB=1 WITH_LMDB=1 $MAKE all test pycaffe warn lint || true
   if ! $WITH_CUDA; then
     $MAKE runtest
   fi

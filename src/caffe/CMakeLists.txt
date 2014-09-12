@@ -45,15 +45,19 @@ find_package(OpenCV REQUIRED core highgui imgproc)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 #    LevelDB
-find_package(LevelDB REQUIRED)
-include_directories(${LEVELDB_INCLUDE})
-if(LEVELDB_FOUND)
-    find_package(Snappy REQUIRED)
-    include_directories(${SNAPPY_INCLUDE_DIR})
-    set(LEVELDB_LIBS
-        ${LEVELDB_LIBS}
-        ${SNAPPY_LIBS}
-    )
+if(WITH_LEVELDB)
+    message(STATUS "LevelDB enabled")
+    find_package(LevelDB REQUIRED)
+    include_directories(${LEVELDB_INCLUDE})
+    if(LEVELDB_FOUND)
+        find_package(Snappy REQUIRED)
+        include_directories(${SNAPPY_INCLUDE_DIR})
+        set(LEVELDB_LIBS
+            ${LEVELDB_LIBS}
+            ${SNAPPY_LIBS}
+        )
+    endif()
+    add_definitions(-DHAVE_LEVELDB)
 endif()
 
 #    LMDB

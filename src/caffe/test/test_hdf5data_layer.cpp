@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "leveldb/db.h"
-
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"

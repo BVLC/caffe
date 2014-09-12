@@ -17,10 +17,12 @@
 #define HDF5_NUM_DIMS 4
 #endif
 
+#ifdef HAVE_LEVELDB
 namespace leveldb {
 // Forward declaration for leveldb::Options to be used in GetlevelDBOptions().
 struct Options;
 }
+#endif
 
 namespace caffe {
 
@@ -106,7 +108,9 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
+#ifdef HAVE_LEVELDB
 leveldb::Options GetLevelDBOptions();
+#endif
 
 #ifdef HAVE_HDF5
 template <typename Dtype>

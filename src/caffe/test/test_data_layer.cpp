@@ -2,7 +2,9 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#ifdef HAVE_LEVELDB
 #include "leveldb/db.h"
+#endif
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -33,6 +35,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_label_);
   }
 
+#ifdef HAVE_LEVELDB
   // Fill the LevelDB with data: if unique_pixels, each pixel is unique but
   // all images are the same; else each image is unique but all pixels within
   // an image are the same.
@@ -63,6 +66,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
     delete db;
   }
+#endif
 
 #ifdef HAVE_LMDB
   // Fill the LMDB with data: unique_pixels has same meaning as in FillLevelDB.
@@ -327,6 +331,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
 TYPED_TEST_CASE(DataLayerTest, TestDtypesAndDevices);
 
+#ifdef HAVE_LEVELDB
 TYPED_TEST(DataLayerTest, TestReadLevelDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
   this->FillLevelDB(unique_pixels);
@@ -364,6 +369,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->FillLevelDB(unique_pixels);
   this->TestReadCrop();
 }
+#endif
 
 #ifdef HAVE_LMDB
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
