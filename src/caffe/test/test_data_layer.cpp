@@ -64,6 +64,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     delete db;
   }
 
+#ifdef HAVE_LMDB
   // Fill the LMDB with data: unique_pixels has same meaning as in FillLevelDB.
   void FillLMDB(const bool unique_pixels) {
     backend_ = DataParameter_DB_LMDB;
@@ -111,6 +112,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     mdb_close(env, dbi);
     mdb_env_close(env);
   }
+#endif
 
   void TestRead() {
     const Dtype scale = 3;
@@ -363,6 +365,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->TestReadCrop();
 }
 
+#ifdef HAVE_LMDB
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
   this->FillLMDB(unique_pixels);
@@ -400,5 +403,6 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   this->FillLMDB(unique_pixels);
   this->TestReadCrop();
 }
+#endif
 
 }  // namespace caffe

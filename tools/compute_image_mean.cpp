@@ -1,6 +1,8 @@
 #include <glog/logging.h>
 #include <leveldb/db.h>
+#ifdef HAVE_LMDB
 #include <lmdb.h>
+#endif
 #include <stdint.h>
 
 #include <algorithm>
@@ -18,7 +20,11 @@ int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc < 3 || argc > 4) {
     LOG(ERROR) << "Usage: compute_image_mean input_leveldb output_file"
-               << " db_backend[leveldb or lmdb]";
+               << " db_backend[leveldb"
+#ifdef HAVE_LMDB
+               << " or lmdb"
+#endif
+               <<"]";
     return 1;
   }
 
@@ -32,12 +38,14 @@ int main(int argc, char** argv) {
   leveldb::Options options;
   options.create_if_missing = false;
   leveldb::Iterator* it = NULL;
+#ifdef HAVE_LMDB
   // lmdb
   MDB_env* mdb_env;
   MDB_dbi mdb_dbi;
   MDB_val mdb_key, mdb_value;
   MDB_txn* mdb_txn;
   MDB_cursor* mdb_cursor;
+#endif
 
   // Open db
   if (db_backend == "leveldb") {  // leveldb
@@ -49,6 +57,7 @@ int main(int argc, char** argv) {
     read_options.fill_cache = false;
     it = db->NewIterator(read_options);
     it->SeekToFirst();
+#ifdef HAVE_LMDB
   } else if (db_backend == "lmdb") {  // lmdb
     LOG(INFO) << "Opening lmdb " << argv[1];
     CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
@@ -63,6 +72,7 @@ int main(int argc, char** argv) {
         << "mdb_cursor_open failed";
     CHECK_EQ(mdb_cursor_get(mdb_cursor, &mdb_key, &mdb_value, MDB_FIRST),
         MDB_SUCCESS);
+#endif
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
@@ -73,8 +83,10 @@ int main(int argc, char** argv) {
   // load first datum
   if (db_backend == "leveldb") {
     datum.ParseFromString(it->value().ToString());
+#ifdef HAVE_LMDB
   } else if (db_backend == "lmdb") {
     datum.ParseFromArray(mdb_value.mv_data, mdb_value.mv_size);
+#endif
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
@@ -114,6 +126,7 @@ int main(int argc, char** argv) {
         LOG(ERROR) << "Processed " << count << " files.";
       }
     }
+#ifdef HAVE_LMDB
   } else if (db_backend == "lmdb") {  // lmdb
     CHECK_EQ(mdb_cursor_get(mdb_cursor, &mdb_key, &mdb_value, MDB_FIRST),
         MDB_SUCCESS);
@@ -141,6 +154,7 @@ int main(int argc, char** argv) {
       }
     } while (mdb_cursor_get(mdb_cursor, &mdb_key, &mdb_value, MDB_NEXT)
         == MDB_SUCCESS);
+#endif
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
@@ -158,11 +172,13 @@ int main(int argc, char** argv) {
   // Clean up
   if (db_backend == "leveldb") {
     delete db;
+#ifdef HAVE_LMDB
   } else if (db_backend == "lmdb") {
     mdb_cursor_close(mdb_cursor);
     mdb_close(mdb_env, mdb_dbi);
     mdb_txn_abort(mdb_txn);
     mdb_env_close(mdb_env);
+#endif
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }

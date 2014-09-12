@@ -167,7 +167,6 @@ ifneq ($(CPU_ONLY), 1)
 endif
 LIBRARIES += pthread \
 	glog gflags protobuf leveldb snappy \
-	lmdb \
 	boost_system \
 	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
@@ -308,6 +307,11 @@ else
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
+
+ifneq ($(WITH_LMDB), 0)
+	COMMON_FLAGS += -DHAVE_LMDB
+	LIBRARIES += lmdb
+endif
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))

@@ -53,8 +53,12 @@ if(LEVELDB_FOUND)
 endif()
 
 #    LMDB
-find_package(LMDB REQUIRED)
-include_directories(${LMDB_INCLUDE_DIR})
+if(WITH_LMDB)
+    message(STATUS "LMDB enabled")
+    find_package(LMDB REQUIRED)
+    include_directories(${LMDB_INCLUDE_DIR})
+    add_definitions(-DHAVE_LMDB)    
+endif()    
 
 #    Boost
 find_package(Boost 1.46 COMPONENTS system thread REQUIRED)
