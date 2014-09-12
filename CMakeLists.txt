@@ -6,6 +6,7 @@ project( Caffe )
 option(CPU_ONLY "Build Caffe without GPU support" OFF)
 
 option(WITH_CUDA "Include NVIDIA CUDA support" ON)
+option(WITH_CUDNN "Include NVIDIA CUDNN support" OFF)
 option(WITH_HDF5 "Include HDF5 support" ON)
 option(WITH_LEVELDB "Include LEVELDB support" ON)
 option(WITH_LMDB "Include LMDB support" ON)

@@ -100,6 +100,14 @@ if(WITH_CUDA)
             -gencode arch=compute_50,code=compute_50
     )
 endif()
+    
+#    cuDNN
+if(WITH_CUDA)
+    set(CUDNN_LIBRARIES cudnn)
+    ## TODO: replace USE_CUDNN with HAVE_CUDNN in the code and Makefile
+    add_definitions(-DUSE_CUDNN)
+    add_definitions(-DHAVE_CUDNN)
+endif()
 
 # https://github.com/ComputationalRadiationPhysics/picongpu/blob/master/src/picongpu/CMakeLists.txt
     # work-arounds
@@ -126,6 +134,7 @@ endif()
 target_link_libraries(caffe proto
         ${BLAS_LIBRARIES}
         ${Boost_LIBRARIES}
+        ${CUDNN_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         ${GFLAGS_LIBRARIES}
         ${GLOG_LIBRARIES}

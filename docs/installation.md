@@ -27,13 +27,15 @@ Caffe depends on several software packages.
 #### Optional
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
-    + You can disable it with the CMake flag: -DWITH_CUDA=OFF
+    + Enabled by default. You can disable it with the CMake flag: -DWITH_CUDA=OFF
+* [cuDNN](https://developer.nvidia.com/cuDNN)
+    + Disabled by default. You can enable it with the CMake flag: -DWITH_CUDNN=ON
 * [HDF5](http://www.hdfgroup.org/HDF5/)
-    + You can disable it with the CMake flag: -DWITH_HDF5=OFF
+    + Enabled by default. You can disable it with the CMake flag: -DWITH_HDF5=OFF
 * [LevelDB](http://code.google.com/p/leveldb/) and its dependency [snappy](http://code.google.com/p/snappy/).
-    + You can disable it with the CMake flag: -DWITH_LEVELDB=OFF
+    + Enabled by default. You can disable it with the CMake flag: -DWITH_LEVELDB=OFF
 * [LMDB](http://symas.com/mdb/)
-    + You can disable it with the CMake flag: -DWITH_LDMB=OFF
+    + Enabled by default. You can disable it with the CMake flag: -DWITH_LDMB=OFF
 
 * For the Python wrapper
     * `Python 2.7`, `numpy (>= 1.7)`, boost-provided `boost.python`
