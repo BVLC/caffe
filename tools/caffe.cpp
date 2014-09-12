@@ -235,6 +235,9 @@ int time() {
     const caffe::string& layername = layers[i]->layer_param().name();
     timer.Start();
     for (int j = 0; j < FLAGS_iterations; ++j) {
+      // Although Reshape should be essentially free, we include it here
+      // so that we will notice Reshape performance bugs.
+      layers[i]->Reshape(bottom_vecs[i], &top_vecs[i]);
       layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
     }
     LOG(INFO) << layername << "\tforward: " << timer.MilliSeconds() <<
