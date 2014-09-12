@@ -149,6 +149,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def(bp::init<string>())
       .def("_forward",              &PyNet::Forward)
       .def("_backward",             &PyNet::Backward)
+      .def("reshape",               &PyNet::Reshape)
       .def("set_mode_cpu",          &PyNet::set_mode_cpu)
       .def("set_mode_gpu",          &PyNet::set_mode_gpu)
       .def("set_phase_train",       &PyNet::set_phase_train)

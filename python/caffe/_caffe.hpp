@@ -98,6 +98,7 @@ class PyNet {
 
   void Forward(int start, int end) { net_->ForwardFromTo(start, end); }
   void Backward(int start, int end) { net_->BackwardFromTo(start, end); }
+  void Reshape() { net_->Reshape(); }
 
   void set_input_arrays(bp::object data_obj, bp::object labels_obj);
 
