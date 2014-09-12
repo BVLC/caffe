@@ -67,6 +67,14 @@ class Net {
   void BackwardFrom(int start);
   void BackwardTo(int end);
 
+  /**
+   * @brief Reshape all layers from bottom to top.
+   *
+   * This is useful to propagate changes to layer sizes without running
+   * a forward pass, e.g. to compute output feature size.
+   */
+  void Reshape();
+
   Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
     Dtype loss;
     Forward(bottom, &loss);
