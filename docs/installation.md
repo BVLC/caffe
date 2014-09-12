@@ -15,11 +15,25 @@ We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
 
 Caffe depends on several software packages.
 
-* [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
-* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
-* [OpenCV](http://opencv.org/).
+#### Required
+
+* [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS)
 * [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 is tested)
-* `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`, `lmdb`
+* [gflags](http://code.google.com/p/gflags/)
+* [glog](http://code.google.com/p/google-glog/)
+* [OpenCV](http://opencv.org/)
+* [Protocol Buffers](http://code.google.com/p/protobuf/)
+
+#### Optional
+
+* [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
+* [HDF5](http://www.hdfgroup.org/HDF5/)
+    + You can disable it with the CMake flag: -DWITH_HDF5=OFF
+* [LevelDB](http://code.google.com/p/leveldb/) and its dependency [snappy](http://code.google.com/p/snappy/).
+    + You can disable it with the CMake flag: -DWITH_LEVELDB=OFF
+* [LMDB](http://symas.com/mdb/)
+    + You can disable it with the CMake flag: -DWITH_LDMB=OFF
+
 * For the Python wrapper
     * `Python 2.7`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For the MATLAB wrapper
