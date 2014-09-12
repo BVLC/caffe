@@ -51,13 +51,15 @@ class Layer {
    *     the allocated but unshaped output blobs, to be shaped by Reshape
    *
    * Checks that the number of bottom and top blobs is correct.
-   * Calls LayerSetUp to do special layer setup for individual layer types.
+   * Calls LayerSetUp to do special layer setup for individual layer types,
+   * followed by Reshape to set up sizes of top blobs and internal buffers.
    * Sets up the loss weight multiplier blobs for any non-zero loss weights.
    * This method may not be overridden.
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
     CheckBlobCounts(bottom, *top);
     LayerSetUp(bottom, top);
+    Reshape(bottom, top);
     SetLossWeights(top);
   }
 
