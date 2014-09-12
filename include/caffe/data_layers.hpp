@@ -6,7 +6,9 @@
 #include <vector>
 
 #include "boost/scoped_ptr.hpp"
+#ifdef HAVE_HDF5
 #include "hdf5.h"
+#endif
 #include "leveldb/db.h"
 #ifdef HAVE_LMDB
 #include "lmdb.h"
@@ -22,8 +24,10 @@
 
 namespace caffe {
 
+#ifdef HAVE_HDF5
 #define HDF5_DATA_DATASET_NAME "data"
 #define HDF5_DATA_LABEL_NAME "label"
+#endif
 
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
@@ -157,6 +161,7 @@ class DummyDataLayer : public Layer<Dtype> {
   vector<bool> refill_;
 };
 
+#ifdef HAVE_HDF5
 /**
  * @brief Provides data to the Net from HDF5 files.
  *
@@ -234,6 +239,7 @@ class HDF5OutputLayer : public Layer<Dtype> {
   Blob<Dtype> data_blob_;
   Blob<Dtype> label_blob_;
 };
+#endif
 
 /**
  * @brief Provides data to the Net from image files.

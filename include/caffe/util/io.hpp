@@ -5,13 +5,17 @@
 #include <string>
 
 #include "google/protobuf/message.h"
+#ifdef HAVE_HDF5
 #include "hdf5.h"
 #include "hdf5_hl.h"
+#endif
 
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#ifdef HAVE_HDF5
 #define HDF5_NUM_DIMS 4
+#endif
 
 namespace leveldb {
 // Forward declaration for leveldb::Options to be used in GetlevelDBOptions().
@@ -104,6 +108,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 
 leveldb::Options GetLevelDBOptions();
 
+#ifdef HAVE_HDF5
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
   hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
@@ -117,6 +122,7 @@ void hdf5_load_nd_dataset(
 template <typename Dtype>
 void hdf5_save_nd_dataset(
   const hid_t file_id, const string dataset_name, const Blob<Dtype>& blob);
+#endif
 
 }  // namespace caffe
 

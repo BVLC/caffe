@@ -33,8 +33,12 @@ elseif(BLAS STREQUAL "mkl")
 endif()
 
 #    HDF5
-find_package(HDF5 COMPONENTS HL REQUIRED)
-include_directories(${HDF5_INCLUDE_DIRS})
+if(WITH_HDF5)
+    message(STATUS "HDF5 enabled")
+    find_package(HDF5 COMPONENTS HL REQUIRED)
+    include_directories(${HDF5_INCLUDE_DIRS})
+    add_definitions(-DHAVE_HDF5)
+endif()
 
 #    OpenCV
 find_package(OpenCV REQUIRED core highgui imgproc)
@@ -57,8 +61,8 @@ if(WITH_LMDB)
     message(STATUS "LMDB enabled")
     find_package(LMDB REQUIRED)
     include_directories(${LMDB_INCLUDE_DIR})
-    add_definitions(-DHAVE_LMDB)    
-endif()    
+    add_definitions(-DHAVE_LMDB)
+endif()
 
 #    Boost
 find_package(Boost 1.46 COMPONENTS system thread REQUIRED)

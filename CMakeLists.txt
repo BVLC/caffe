@@ -6,6 +6,7 @@ project( Caffe )
 option(CPU_ONLY "Build Caffe without GPU support" OFF)
 
 option(WITH_LMDB "Include LMDB support" ON)
+option(WITH_HDF5 "Include HDF5 support" ON)
 
 option(BUILD_PYTHON "Build Python wrapper" OFF)
 option(BUILD_MATLAB "Build Matlab wrapper" OFF)

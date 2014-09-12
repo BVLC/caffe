@@ -1,3 +1,5 @@
+#ifdef HAVE_HDF5
+
 #include <vector>
 
 #include "hdf5.h"
@@ -72,3 +74,5 @@ STUB_GPU(HDF5OutputLayer);
 INSTANTIATE_CLASS(HDF5OutputLayer);
 
 }  // namespace caffe
+
+#endif  // #ifdef HAVE_HDF5

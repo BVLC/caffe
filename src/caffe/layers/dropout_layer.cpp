@@ -1,5 +1,6 @@
 // TODO (sergeyk): effect should not be dependent on phase. wasted memcpy.
 
+#include <climits>
 #include <vector>
 
 #include "caffe/common.hpp"

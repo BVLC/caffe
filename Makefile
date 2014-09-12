@@ -168,7 +168,6 @@ endif
 LIBRARIES += pthread \
 	glog gflags protobuf leveldb snappy \
 	boost_system \
-	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
@@ -311,6 +310,11 @@ LIBRARY_DIRS += $(BLAS_LIB)
 ifneq ($(WITH_LMDB), 0)
 	COMMON_FLAGS += -DHAVE_LMDB
 	LIBRARIES += lmdb
+endif
+
+ifneq ($(WITH_HDF5), 0)
+	COMMON_FLAGS += -DHAVE_HDF5
+	LIBRARIES += hdf5_hl hdf5
 endif
 
 # Complete build flags.
