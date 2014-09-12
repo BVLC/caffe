@@ -5,6 +5,7 @@ project( Caffe )
 
 option(CPU_ONLY "Build Caffe without GPU support" OFF)
 
+option(WITH_CUDA "Include NVIDIA CUDA support" ON)
 option(WITH_HDF5 "Include HDF5 support" ON)
 option(WITH_LEVELDB "Include LEVELDB support" ON)
 option(WITH_LMDB "Include LMDB support" ON)
@@ -37,7 +38,8 @@ set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}) # set release flags
 
 #    Global Definitions
 if(CPU_ONLY)
-    add_definitions(-DCPU_ONLY)
+    message("CPU_ONLY is deprecated, use WITH_CUDA=ON or WITH_CUDA=OFF")
+    set(WITH_CUDA OFF)
 endif()
 
 #    Include Directories
@@ -52,9 +54,12 @@ set(CMAKE_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/CMakeScripts)
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SCRIPT_DIR})
 
 #    CUDA is required globally
-if(NOT CPU_ONLY)
+if(WITH_CUDA)
+    message(STATUS "NVIDIA CUDA enabled")
     find_package(CUDA 5.5 REQUIRED)
     include_directories(${CUDA_INCLUDE_DIRS})
+else()
+    add_definitions(-DCPU_ONLY)
 endif()
 
 ###    Subdirectories    ##########################################################################

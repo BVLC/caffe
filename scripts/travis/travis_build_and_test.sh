@@ -7,8 +7,13 @@ MAKE="make --jobs=$NUM_THREADS --keep-going"
 if $WITH_CMAKE; then
   mkdir build
   cd build
+  if ! $WITH_CUDA; then
+    export WITH_CUDA=OFF
+  else
+    export WITH_CUDA=ON
+  fi
   cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON \
-    -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON -DWITH_HDF5=ON -DWITH_LEVELDB=ON \
+    -DCMAKE_BUILD_TYPE=Release -DWITH_CUDA=$WITH_CUDA -DWITH_HDF5=ON -DWITH_LEVELDB=ON \
     -DWITH_LMDB=ON ..
   $MAKE
   if ! $WITH_CUDA; then

@@ -90,14 +90,17 @@ add_library(caffe ${CPP_SOURCES})
 add_dependencies(caffe proto)
 
 #    CUDA
-if(NOT CPU_ONLY)
+if(WITH_CUDA)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
             -gencode arch=compute_20,code=sm_20
             -gencode arch=compute_20,code=sm_21
             -gencode arch=compute_30,code=sm_30
             -gencode arch=compute_35,code=sm_35
+            -gencode arch=compute_50,code=sm_50
+            -gencode arch=compute_50,code=compute_50
     )
-    
+endif()
+
 # https://github.com/ComputationalRadiationPhysics/picongpu/blob/master/src/picongpu/CMakeLists.txt
     # work-arounds
 if(Boost_VERSION EQUAL 105500)

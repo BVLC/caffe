@@ -27,6 +27,7 @@ Caffe depends on several software packages.
 #### Optional
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
+    + You can disable it with the CMake flag: -DWITH_CUDA=OFF
 * [HDF5](http://www.hdfgroup.org/HDF5/)
     + You can disable it with the CMake flag: -DWITH_HDF5=OFF
 * [LevelDB](http://code.google.com/p/leveldb/) and its dependency [snappy](http://code.google.com/p/snappy/).
