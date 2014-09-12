@@ -23,6 +23,20 @@ class Blob {
        count_(0), capacity_(0) {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
+  /**
+   * @brief Change the dimensions of the blob, allocating new memory if
+   *        necessary.
+   *
+   * This function can be called both to create an initial allocation
+   * of memory, and to adjust the dimensions of a top blob during Layer::Reshape
+   * or Layer::Forward. When changing the size of blob, memory will only be
+   * reallocated if sufficient memory does not already exist, and excess memory
+   * will never be freed.
+   *
+   * Note that reshaping an input blob and immediately calling Net::Backward is
+   * an error; either Net::Forward or Net::Reshape need to be called to
+   * propagate the new input shape to higher layers.
+   */
   void Reshape(const int num, const int channels, const int height,
     const int width);
   void ReshapeLike(const Blob& other);
