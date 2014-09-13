@@ -1,12 +1,10 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <vector>
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-#include "caffe/util/im2col.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -109,7 +107,7 @@ void CCCPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // Gradient with respect to bias
   if (bias_term_ && this->param_propagate_down_[1]) {
     bias_diff = this->blobs_[1]->mutable_cpu_diff();
-    memset(bias_diff, 0, sizeof(Dtype) * this->blobs_[1]->count());
+    caffe_memset(sizeof(Dtype) * this->blobs_[1]->count(), 0, bias_diff);
     for (int n = 0; n < num_; ++n) {
       caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_,
           width_ * height_, (Dtype)1., top_diff + top[0]->offset(n),
@@ -120,7 +118,7 @@ void CCCPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   if (this->param_propagate_down_[0] || propagate_down[0]) {
     if (this->param_propagate_down_[0]) {
-      memset(weight_diff, 0, sizeof(Dtype) * this->blobs_[0]->count());
+      caffe_memset(sizeof(Dtype) * this->blobs_[0]->count(), 0, weight_diff);
     }
     for (int n = 0; n < num_; ++n) {
       if (this->param_propagate_down_[0]) {
