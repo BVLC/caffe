@@ -7,8 +7,8 @@ MAKE="make --jobs=$NUM_THREADS"
 
 # Install apt packages where the Ubuntu 12.04 default and ppa works for Caffe
 
-#This ppa is for gflags and glog
-add-aptrepository -y ppa:tuleu/precise-backports
+# This ppa is for gflags and glog
+add-apt-repository -y ppa:tuleu/precise-backports
 apt-get -y update
 apt-get install \
     wget git curl \
