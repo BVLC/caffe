@@ -57,7 +57,7 @@ popd
 
 # Install CUDA, if needed
 if $WITH_CUDA; then
-  CUDA_URL=http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_6.0-37_amd64.deb
+  CUDA_URL=http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1204/x86_64/cuda-repo-ubuntu1204_6.5-14_amd64.deb
   CUDA_FILE=/tmp/cuda_install.deb
   curl $CUDA_URL -o $CUDA_FILE
   dpkg -i $CUDA_FILE
@@ -65,11 +65,11 @@ if $WITH_CUDA; then
   apt-get -y update
   # Install the minimal CUDA subpackages required to test Caffe build.
   # For a full CUDA installation, add 'cuda' to the list of packages.
-  apt-get -y install cuda-core-6-0 cuda-extra-libs-6-0
+  apt-get -y install cuda-core-6-5 cuda-cublas-6-5 cuda-cublas-dev-6-5 cuda-cudart-6-5 cuda-cudart-dev-6-5 cuda-curand-6-5 cuda-curand-dev-6-5
   # Create CUDA symlink at /usr/local/cuda
   # (This would normally be created by the CUDA installer, but we create it
   # manually since we did a partial installation.)
-  ln -s /usr/local/cuda-6.0 /usr/local/cuda
+  ln -s /usr/local/cuda-6.5 /usr/local/cuda
 fi
 
 # Install LMDB
