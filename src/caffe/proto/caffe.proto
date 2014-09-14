@@ -120,7 +120,7 @@ message SolverParameter {
   optional float momentum = 11; // The momentum value.
   optional float weight_decay = 12; // The weight decay.
   // regularization types supported: L1 and L2
-  // controled by weight_decay
+  // controlled by weight_decay
   optional string regularization_type = 29 [default = "L2"];
   optional int32 stepsize = 13; // the stepsize for learning rate policy "step"
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
