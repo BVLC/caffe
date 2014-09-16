@@ -308,20 +308,21 @@ void Solver<Dtype>::Snapshot() {
   // For intermediate results, we will also dump the gradient values.
   net_->ToProto(&net_param, param_.snapshot_diff());
   string filename(param_.snapshot_prefix());
+  string model_filename, snapshot_filename;
   const int kBufferSize = 20;
   char iter_str_buffer[kBufferSize];
   snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
   filename += iter_str_buffer;
-  filename += ".caffemodel";
-  LOG(INFO) << "Snapshotting to " << filename;
-  WriteProtoToBinaryFile(net_param, filename.c_str());
+  model_filename = filename + ".caffemodel";
+  LOG(INFO) << "Snapshotting to " << model_filename;
+  WriteProtoToBinaryFile(net_param, model_filename.c_str());
   SolverState state;
   SnapshotSolverState(&state);
   state.set_iter(iter_);
-  state.set_learned_net(filename);
-  filename += ".solverstate";
-  LOG(INFO) << "Snapshotting solver state to " << filename;
-  WriteProtoToBinaryFile(state, filename.c_str());
+  state.set_learned_net(model_filename);
+  snapshot_filename = filename + ".solverstate";
+  LOG(INFO) << "Snapshotting solver state to " << snapshot_filename;
+  WriteProtoToBinaryFile(state, snapshot_filename.c_str());
 }
 
 template <typename Dtype>
