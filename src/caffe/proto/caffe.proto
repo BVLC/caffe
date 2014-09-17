@@ -63,7 +63,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 33 (last added: test_initialization)
+// SolverParameter next available ID: 34 (last added: average_loss)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -113,6 +113,8 @@ message SolverParameter {
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
   optional int32 display = 6;
+  // Display the cost averaged over the last average_cost iterations
+  optional int32 average_loss = 33 [default = 1];
   optional int32 max_iter = 7; // the maximum number of iterations
   optional string lr_policy = 8; // The learning rate decay policy.
   optional float gamma = 9; // The parameter to compute the learning rate.
