@@ -8,7 +8,7 @@ priority: 1
 
 # Training MNIST with Caffe
 
-We will assume that you have caffe successfully compiled. If not, please refer to the [Installation page](installation.html). In this tutorial, we will assume that your caffe installation is located at `CAFFE_ROOT`.
+We will assume that you have caffe successfully compiled. If not, please refer to the [Installation page](/installation.html). In this tutorial, we will assume that your caffe installation is located at `CAFFE_ROOT`.
 
 ## Prepare Datasets
 
@@ -29,7 +29,7 @@ The design of LeNet contains the essence of CNNs that are still used in larger m
 
 ## Define the MNIST Network
 
-This section explains the prototxt file `lenet_train.prototxt` used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at `$CAFFE_ROOT/src/caffe/proto/caffe.proto`.
+This section explains the prototxt file `lenet.prototxt` used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at `$CAFFE_ROOT/src/caffe/proto/caffe.proto`.
 
 Specifically, we will write a `caffe::NetParameter` (or in python, `caffe.proto.caffe_pb2.NetParameter`) protobuf. We will start by giving the network a name:
 
@@ -203,9 +203,23 @@ Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/example
     # solver mode: CPU or GPU
     solver_mode: GPU
 
+## Additional Notes
+
+Note that the train and test protocol definition for the network is in the `lenet_train_test.prototxt` file which differs from the `lenet.prototxt` file. In `lenet_train_test.prototxt file`, layers may include one additional definition, like the one below:
+
+
+    layers {
+      
+      // Other layer definitions
+
+      include: { phase: TRAIN }
+    }
+
+This layer will be used only in training phase. If we change `TRAIN` with `TEST`, then this layer will be used only in test phase. Otherwise this layer will be used in both training and test phase. Thus `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for training and one for testing.
+
 ## Training and Testing the Model
 
-Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_mnist.sh`, or the following command directly:
+Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_lenet.sh`, or the following command directly:
 
     cd $CAFFE_ROOT/examples/mnist
     ./train_lenet.sh
