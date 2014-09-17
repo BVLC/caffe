@@ -169,6 +169,13 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // resume_file above.
   const int start_iter = iter_;
 
+  int average_loss = this->param_.average_loss();
+
+  CHECK_GE(average_loss, 1) << "average_cost should be non-negative.";
+
+  vector<Dtype> losses;
+  Dtype smoothed_loss;
+
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
@@ -187,8 +194,17 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
     Dtype loss = net_->ForwardBackward(bottom_vec);
+    if (losses.size() < average_loss) {
+      losses.push_back(loss);
+      int size = losses.size();
+      smoothed_loss = (smoothed_loss * (size - 1) + loss) / size;
+    } else {
+      int idx = (iter_ - start_iter) % average_loss;
+      smoothed_loss += (loss - losses[idx]) / average_loss;
+      losses[idx] = loss;
+    }
     if (display) {
-      LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
+      LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
