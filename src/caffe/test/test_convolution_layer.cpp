@@ -13,6 +13,93 @@
 
 namespace caffe {
 
+// Reference convolution for checking results:
+// accumulate through explicit loops over input, output, and filters.
+template <typename Dtype>
+void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
+    const vector<shared_ptr<Blob<Dtype> > >& weights,
+    Blob<Dtype>* out) {
+  // Kernel size, stride, and pad
+  int kernel_h, kernel_w;
+  if (conv_param->has_kernel_size()) {
+    kernel_h = kernel_w = conv_param->kernel_size();
+  } else {
+    kernel_h = conv_param->kernel_h();
+    kernel_w = conv_param->kernel_w();
+  }
+  int pad_h, pad_w;
+  if (!conv_param->has_pad_h()) {
+    pad_h = pad_w = conv_param->pad();
+  } else {
+    pad_h = conv_param->pad_h();
+    pad_w = conv_param->pad_w();
+  }
+  int stride_h, stride_w;
+  if (!conv_param->has_stride_h()) {
+    stride_h = stride_w = conv_param->stride();
+  } else {
+    stride_h = conv_param->stride_h();
+    stride_w = conv_param->stride_w();
+  }
+  // Groups
+  int groups = conv_param->group();
+  int o_g = out->channels() / groups;
+  int k_g = in->channels() / groups;
+  int o_head, k_head;
+  // Convolution
+  const Dtype* in_data = in->cpu_data();
+  const Dtype* weight_data = weights[0]->cpu_data();
+  Dtype* out_data = out->mutable_cpu_data();
+  for (int n = 0; n < out->num(); n++) {
+    for (int g = 0; g < groups; g++) {
+      o_head = o_g * g;
+      k_head = k_g * g;
+      for (int o = 0; o < o_g; o++) {
+        for (int k = 0; k < k_g; k++) {
+          for (int y = 0; y < out->height(); y++) {
+            for (int x = 0; x < out->width(); x++) {
+              for (int p = 0; p < kernel_h; p++) {
+                for (int q = 0; q < kernel_w; q++) {
+                  int in_y = y * stride_h - pad_h + p;
+                  int in_x = x * stride_w - pad_w + q;
+                  if (in_y >= 0 && in_y < in->height()
+                    && in_x >= 0 && in_x < in->width()) {
+                    out_data[out->offset(n, o + o_head, y, x)] +=
+                        in_data[in->offset(n, k + k_head, in_y, in_x)]
+                        * weight_data[weights[0]->offset(o + o_head, k, p, q)];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  // Bias
+  if (conv_param->bias_term()) {
+    const Dtype* bias_data = weights[1]->cpu_data();
+    for (int n = 0; n < out->num(); n++) {
+      for (int o = 0; o < out->channels(); o++) {
+        for (int y = 0; y < out->height(); y++) {
+          for (int x = 0; x < out->width(); x++) {
+            out_data[out->offset(n, o, y, x)] += bias_data[o];
+          }
+        }
+      }
+    }
+  }
+}
+
+template void caffe_conv(const Blob<float>* in,
+    ConvolutionParameter* conv_param,
+    const vector<shared_ptr<Blob<float> > >& weights,
+    Blob<float>* out);
+template void caffe_conv(const Blob<double>* in,
+    ConvolutionParameter* conv_param,
+    const vector<shared_ptr<Blob<double> > >& weights,
+    Blob<double>* out);
+
 template <typename TypeParam>
 class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
@@ -41,10 +128,17 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_2_;
   }
 
+  virtual Blob<Dtype>* MakeReferenceTop(Blob<Dtype>* top) {
+    this->ref_blob_top_.reset(new Blob<Dtype>());
+    this->ref_blob_top_->ReshapeLike(*top);
+    return this->ref_blob_top_.get();
+  }
+
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -90,14 +184,6 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   // We will simply see if the convolution layer carries out averaging well.
   typedef typename TypeParam::Dtype Dtype;
-  shared_ptr<ConstantFiller<Dtype> > filler;
-  FillerParameter filler_param;
-  filler_param.set_value(1.);
-  filler.reset(new ConstantFiller<Dtype>(filler_param));
-  filler->Fill(this->blob_bottom_);
-  filler_param.set_value(2.);
-  filler.reset(new ConstantFiller<Dtype>(filler_param));
-  filler->Fill(this->blob_bottom_2_);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
   LayerParameter layer_param;
@@ -114,34 +200,28 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // After the convolution, the output should all have output values 27.1
-  const Dtype* top_data = this->blob_top_->cpu_data();
+  // Check against reference convolution.
+  const Dtype* top_data;
+  const Dtype* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], 27.1, 1e-4);
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
+  caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
-  for (int i = 0; i < this->blob_top_2_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], 54.1, 1e-4);
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   // We will simply see if the convolution layer carries out averaging well.
   typedef typename TypeParam::Dtype Dtype;
-  FillerParameter filler_param;
-  filler_param.set_value(1.);
-  ConstantFiller<Dtype> filler(filler_param);
-  filler.Fill(this->blob_bottom_);
-  Dtype* bottom_data = this->blob_bottom_->mutable_cpu_data();
-  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
-      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
-        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
-          bottom_data[this->blob_bottom_->offset(n, c, h, w)] = c;
-        }
-      }
-    }
-  }
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -157,17 +237,15 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // After the convolution, the output should all have output values 9.1
-  const Dtype* top_data = this->blob_top_->cpu_data();
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
-          Dtype data = top_data[this->blob_top_->offset(n, c, h, w)];
-          EXPECT_NEAR(data, c * 9 + 0.1, 1e-4);
-        }
-      }
-    }
+  // Check against reference convolution.
+  const Dtype* top_data;
+  const Dtype* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
 
@@ -330,10 +408,17 @@ class CuDNNConvolutionLayerTest : public ::testing::Test {
     delete blob_top_2_;
   }
 
+  virtual Blob<Dtype>* MakeReferenceTop(Blob<Dtype>* top) {
+    this->ref_blob_top_.reset(new Blob<Dtype>());
+    this->ref_blob_top_->ReshapeLike(*top);
+    return this->ref_blob_top_.get();
+  }
+
   Blob<Dtype>* const blob_bottom_;
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -342,6 +427,8 @@ TYPED_TEST_CASE(CuDNNConvolutionLayerTest, TestDtypes);
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
   Caffe::set_mode(Caffe::GPU);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -379,6 +466,8 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
   // We will simply see if the convolution layer carries out averaging well.
   Caffe::set_mode(Caffe::GPU);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
   shared_ptr<ConstantFiller<TypeParam> > filler;
   FillerParameter filler_param;
   filler_param.set_value(1.);
@@ -403,34 +492,28 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
       new CuDNNConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // After the convolution, the output should all have output values 27.1
-  const TypeParam* top_data = this->blob_top_->cpu_data();
+  // Check against reference convolution.
+  const TypeParam* top_data;
+  const TypeParam* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
   for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], 27.1, 1e-4);
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
+  caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
-  for (int i = 0; i < this->blob_top_2_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], 54.1, 1e-4);
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
   // We will simply see if the convolution layer carries out averaging well.
   Caffe::set_mode(Caffe::GPU);
-  FillerParameter filler_param;
-  filler_param.set_value(1.);
-  ConstantFiller<TypeParam> filler(filler_param);
-  filler.Fill(this->blob_bottom_);
-  TypeParam* bottom_data = this->blob_bottom_->mutable_cpu_data();
-  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-    for (int c = 0; c < this->blob_bottom_->channels(); ++c) {
-      for (int h = 0; h < this->blob_bottom_->height(); ++h) {
-        for (int w = 0; w < this->blob_bottom_->width(); ++w) {
-          bottom_data[this->blob_bottom_->offset(n, c, h, w)] = c;
-        }
-      }
-    }
-  }
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -446,17 +529,15 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
       new CuDNNConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
   layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  // After the convolution, the output should all have output values 9.1
-  const TypeParam* top_data = this->blob_top_->cpu_data();
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++c) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
-          TypeParam data = top_data[this->blob_top_->offset(n, c, h, w)];
-          EXPECT_NEAR(data, c * 9 + 0.1, 1e-4);
-        }
-      }
-    }
+  // Check against reference convolution.
+  const TypeParam* top_data;
+  const TypeParam* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
 }
 
