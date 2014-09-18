@@ -43,7 +43,7 @@ Github Gist is a good format for model info distribution because it can contain 
 
 Try doing `scripts/upload_model_to_gist.sh models/bvlc_alexnet` to test the uploading (don't forget to delete the uploaded gist afterward).
 
-Downloading models is not yet supported as a script (there is no good commandline tool for this right now), so simply go to the Gist URL and click "Download Gist" for now.
+Downloading model info is done just as easily with `scripts/download_model_from_gist.sh <gist_id> <dirname>`.
 
 ### Hosting trained models
 
