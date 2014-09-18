@@ -14,10 +14,6 @@ template <typename Dtype>
 void InfogainLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
-  CHECK_EQ(bottom[1]->channels(), 1);
-  CHECK_EQ(bottom[1]->height(), 1);
-  CHECK_EQ(bottom[1]->width(), 1);
-  Blob<Dtype>* infogain = NULL;
   if (bottom.size() < 3) {
     CHECK(this->layer_param_.infogain_loss_param().has_source())
         << "Infogain matrix source must be specified.";
@@ -25,10 +21,22 @@ void InfogainLossLayer<Dtype>::LayerSetUp(
     ReadProtoFromBinaryFile(
       this->layer_param_.infogain_loss_param().source(), &blob_proto);
     infogain_.FromProto(blob_proto);
+  }
+}
+
+template <typename Dtype>
+void InfogainLossLayer<Dtype>::Reshape(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  LossLayer<Dtype>::Reshape(bottom, top);
+  Blob<Dtype>* infogain = NULL;
+  if (bottom.size() < 3) {
     infogain = &infogain_;
   } else {
     infogain = bottom[2];
   }
+  CHECK_EQ(bottom[1]->channels(), 1);
+  CHECK_EQ(bottom[1]->height(), 1);
+  CHECK_EQ(bottom[1]->width(), 1);
   const int num = bottom[0]->num();
   const int dim = bottom[0]->count() / num;
   CHECK_EQ(infogain->num(), 1);

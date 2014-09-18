@@ -16,6 +16,11 @@ void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(top_k_, 1) << " top k must not be less than 1.";
   CHECK_LE(top_k_, bottom[0]->count() / bottom[0]->num())
       << "top_k must be less than or equal to the number of classes.";
+}
+
+template <typename Dtype>
+void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   if (out_max_val_) {
     // Produces max_ind and max_val
     (*top)[0]->Reshape(bottom[0]->num(), 2, top_k_, 1);

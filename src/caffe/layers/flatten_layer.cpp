@@ -7,7 +7,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void FlattenLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   int channels_out = bottom[0]->channels() * bottom[0]->height()
       * bottom[0]->width();

@@ -17,6 +17,13 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   softmax_top_vec_.clear();
   softmax_top_vec_.push_back(&prob_);
   softmax_layer_->SetUp(softmax_bottom_vec_, &softmax_top_vec_);
+}
+
+template <typename Dtype>
+void SoftmaxWithLossLayer<Dtype>::Reshape(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  LossLayer<Dtype>::Reshape(bottom, top);
+  softmax_layer_->Reshape(softmax_bottom_vec_, &softmax_top_vec_);
   if (top->size() >= 2) {
     // softmax output
     (*top)[1]->ReshapeLike(*bottom[0]);

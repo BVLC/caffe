@@ -18,6 +18,11 @@ void SliceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   std::copy(slice_param.slice_point().begin(),
       slice_param.slice_point().end(),
       std::back_inserter(slice_point_));
+}
+
+template <typename Dtype>
+void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   count_ = 0;
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
@@ -50,7 +55,6 @@ void SliceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
          count_ += (*top)[i]->count();
       }
     }
-
   } else {
     if (slice_dim_ == 0) {
       CHECK_EQ(num_ % top->size(), 0)

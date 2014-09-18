@@ -47,47 +47,18 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_h_ = conv_param.stride_h();
     stride_w_ = conv_param.stride_w();
   }
-  num_ = bottom[0]->num();
+  // Configure output channels and groups.
   channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
-  // TODO: generalize to handle inputs of different shapes.
-  for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
-    CHECK_EQ(num_, bottom[bottom_id]->num()) << "Inputs must have same num.";
-    CHECK_EQ(channels_, bottom[bottom_id]->channels())
-        << "Inputs must have same channels.";
-    CHECK_EQ(height_, bottom[bottom_id]->height())
-        << "Inputs must have same height.";
-    CHECK_EQ(width_, bottom[bottom_id]->width())
-        << "Inputs must have same width.";
-  }
-  // Configure output channels, groups, and spatial dimensions.
   num_output_ = this->layer_param_.convolution_param().num_output();
   CHECK_GT(num_output_, 0);
   group_ = this->layer_param_.convolution_param().group();
   CHECK_EQ(channels_ % group_, 0);
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
-  height_out_ =
-      (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  width_out_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
-  for (int top_id = 0; top_id < top->size(); ++top_id) {
-    (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
-  }
-  // Prepare the matrix multiplication computation.
-  // Each input will be convolved as a single GEMM.
-  M_ = num_output_ / group_;
-  K_ = channels_ * kernel_h_ * kernel_w_ / group_;
-  N_ = height_out_ * width_out_;
-  // The im2col result buffer holds one image at a time to avoid
-  // overly large memory usage.
-  col_buffer_.Reshape(
-      1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
   bias_term_ = this->layer_param_.convolution_param().bias_term();
-  // Check if we need to set up the weights.
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
@@ -112,15 +83,53 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
+  // Propagate gradients to the parameters (as directed by backward pass).
+  this->param_propagate_down_.resize(this->blobs_.size(), true);
+}
+
+template <typename Dtype>
+void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  num_ = bottom[0]->num();
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
+  CHECK_EQ(bottom[0]->channels(), channels_) << "Input size incompatible with"
+    " convolution kernel.";
+  // TODO: generalize to handle inputs of different shapes.
+  for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
+    CHECK_EQ(num_, bottom[bottom_id]->num()) << "Inputs must have same num.";
+    CHECK_EQ(channels_, bottom[bottom_id]->channels())
+        << "Inputs must have same channels.";
+    CHECK_EQ(height_, bottom[bottom_id]->height())
+        << "Inputs must have same height.";
+    CHECK_EQ(width_, bottom[bottom_id]->width())
+        << "Inputs must have same width.";
+  }
+  // Shape the tops.
+  height_out_ =
+      (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
+  width_out_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
+  for (int top_id = 0; top_id < top->size(); ++top_id) {
+    (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
+  }
+  // Prepare the matrix multiplication computation.
+  // Each input will be convolved as a single GEMM.
+  M_ = num_output_ / group_;
+  K_ = channels_ * kernel_h_ * kernel_w_ / group_;
+  N_ = height_out_ * width_out_;
+  // The im2col result buffer will only hold one image at a time to avoid
+  // overly large memory usage.
+  col_buffer_.Reshape(
+      1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
+  for (int top_id = 0; top_id < top->size(); ++top_id) {
+    (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
+  }
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
-  // Propagate gradients to the parameters (as directed by backward pass).
-  this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
-
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,

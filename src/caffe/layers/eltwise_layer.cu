@@ -53,7 +53,7 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case EltwiseParameter_EltwiseOp_MAX:
-    mask = max_idx_->mutable_gpu_data();
+    mask = max_idx_.mutable_gpu_data();
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxForward<Dtype> <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, bottom[0]->gpu_data(), bottom[1]->gpu_data(), 0, top_data, mask);
@@ -118,7 +118,7 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
         break;
       case EltwiseParameter_EltwiseOp_MAX:
-        mask = max_idx_->gpu_data();
+        mask = max_idx_.gpu_data();
         MaxBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
             <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
             count, top_diff, i, mask, bottom_diff);
