@@ -14,13 +14,10 @@ include_directories(${GFLAGS_INCLUDE_DIRS})
 #   BLAS
 if(BLAS STREQUAL "atlas")
 
-    #find_package(Atlas REQUIRED)
-    #include_directories(${Atlas_INCLUDE_DIR})
-    #set(BLAS_LIBRARIES ${Atlas_LIBRARIES})
+    find_package(Atlas REQUIRED)
+    include_directories(${Atlas_INCLUDE_DIR})
+    set(BLAS_LIBRARIES ${Atlas_LIBRARIES})
     
-    find_package(ATLAS REQUIRED)
-    include_directories(${ATLAS_INCLUDES})
-    set(BLAS_LIBRARIES ${ATLAS_LIBRARIES})
  
 elseif(BLAS STREQUAL "open")
 
