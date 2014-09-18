@@ -192,8 +192,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(4);
-  convolution_param->mutable_weight_filler()->set_type("constant");
-  convolution_param->mutable_weight_filler()->set_value(1);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<Dtype> > layer(
@@ -229,8 +228,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   convolution_param->set_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  convolution_param->mutable_weight_filler()->set_type("constant");
-  convolution_param->mutable_weight_filler()->set_value(1);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<Dtype> > layer(
@@ -468,24 +466,13 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  shared_ptr<ConstantFiller<TypeParam> > filler;
-  FillerParameter filler_param;
-  filler_param.set_value(1.);
-  filler.reset(new ConstantFiller<TypeParam>(filler_param));
-  filler->Fill(this->blob_bottom_);
-  filler_param.set_value(2.);
-  filler.reset(new ConstantFiller<TypeParam>(filler_param));
-  filler->Fill(this->blob_bottom_2_);
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
   convolution_param->set_kernel_size(3);
   convolution_param->set_stride(2);
   convolution_param->set_num_output(4);
-  convolution_param->mutable_weight_filler()->set_type("constant");
-  convolution_param->mutable_weight_filler()->set_value(1);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<TypeParam> > layer(
@@ -521,8 +508,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
   convolution_param->set_stride(2);
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  convolution_param->mutable_weight_filler()->set_type("constant");
-  convolution_param->mutable_weight_filler()->set_value(1);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<TypeParam> > layer(
