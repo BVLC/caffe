@@ -8,7 +8,7 @@ priority: 1
 
 # Training MNIST with Caffe
 
-We will assume that you have caffe successfully compiled. If not, please refer to the [Installation page](installation.html). In this tutorial, we will assume that your caffe installation is located at `CAFFE_ROOT`.
+We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](/installation.html). In this tutorial, we will assume that your Caffe installation is located at `CAFFE_ROOT`.
 
 ## Prepare Datasets
 
@@ -29,7 +29,7 @@ The design of LeNet contains the essence of CNNs that are still used in larger m
 
 ## Define the MNIST Network
 
-This section explains the prototxt file `lenet_train.prototxt` used in the MNIST demo. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at `$CAFFE_ROOT/src/caffe/proto/caffe.proto`.
+This section explains the `lenet_train_test.prototxt` model definition that specifies the LeNet model for MNIST handwritten digit classification. We assume that you are familiar with [Google Protobuf](https://developers.google.com/protocol-buffers/docs/overview), and assume that you have read the protobuf definitions used by Caffe, which can be found at `$CAFFE_ROOT/src/caffe/proto/caffe.proto`.
 
 Specifically, we will write a `caffe::NetParameter` (or in python, `caffe.proto.caffe_pb2.NetParameter`) protobuf. We will start by giving the network a name:
 
@@ -173,6 +173,25 @@ Finally, we will write the loss!
 
 The `softmax_loss` layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the `label` provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to `ip2`. This is where all magic starts.
 
+
+### Additional Notes: Writing Layer Rules
+
+Layer definitions can include rules for whether and when they are included in the network definition, like the one below:
+
+    layers {
+      // ...layer definition...
+      include: { phase: TRAIN }
+    }
+
+This is a rule, which controls layer inclusion in the network, based on current network's state.
+You can refer to `$CAFFE_ROOT/src/caffe/proto/caffe.proto` for more information about layer rules and model schema.
+
+In the above example, this layer will be included only in `TRAIN` phase.
+If we change `TRAIN` with `TEST`, then this layer will be used only in test phase.
+By default, that is without layer rules, a layer is always included in the network.
+Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for the training phase and one for the testing phase.
+Also, there is an `ACCURACY` layer which is included only in `TEST` phase for reporting the model accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
+
 ## Define the MNIST Solver
 
 Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt`:
@@ -203,9 +222,10 @@ Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/example
     # solver mode: CPU or GPU
     solver_mode: GPU
 
+
 ## Training and Testing the Model
 
-Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_mnist.sh`, or the following command directly:
+Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_lenet.sh`, or the following command directly:
 
     cd $CAFFE_ROOT/examples/mnist
     ./train_lenet.sh
