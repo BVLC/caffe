@@ -13,12 +13,20 @@ void CuDNNSigmoidLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   SigmoidLayer<Dtype>::LayerSetUp(bottom, top);
   // initialize cuDNN
   CUDNN_CHECK(cudnnCreate(&handle_));
+  cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
+  cudnn::createTensor4dDesc<Dtype>(&top_desc_);
+}
+
+template <typename Dtype>
+void CuDNNSigmoidLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  SigmoidLayer<Dtype>::Reshape(bottom, top);
   const int N = bottom[0]->num();
   const int K = bottom[0]->channels();
   const int H = bottom[0]->height();
   const int W = bottom[0]->width();
-  cudnn::createTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
-  cudnn::createTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
+  cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
+  cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
 }
 
 template <typename Dtype>

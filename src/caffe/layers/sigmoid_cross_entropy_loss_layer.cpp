@@ -12,13 +12,20 @@ template <typename Dtype>
 void SigmoidCrossEntropyLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
-  CHECK_EQ(bottom[0]->count(), bottom[1]->count()) <<
-      "SIGMOID_CROSS_ENTROPY_LOSS layer inputs must have the same count.";
   sigmoid_bottom_vec_.clear();
   sigmoid_bottom_vec_.push_back(bottom[0]);
   sigmoid_top_vec_.clear();
   sigmoid_top_vec_.push_back(sigmoid_output_.get());
   sigmoid_layer_->SetUp(sigmoid_bottom_vec_, &sigmoid_top_vec_);
+}
+
+template <typename Dtype>
+void SigmoidCrossEntropyLossLayer<Dtype>::Reshape(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  LossLayer<Dtype>::Reshape(bottom, top);
+  CHECK_EQ(bottom[0]->count(), bottom[1]->count()) <<
+      "SIGMOID_CROSS_ENTROPY_LOSS layer inputs must have the same count.";
+  sigmoid_layer_->Reshape(sigmoid_bottom_vec_, &sigmoid_top_vec_);
 }
 
 template <typename Dtype>

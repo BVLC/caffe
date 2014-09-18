@@ -14,14 +14,20 @@ template <typename Dtype>
 void DropoutLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   NeuronLayer<Dtype>::LayerSetUp(bottom, top);
-  // Set up the cache for random number generation
-  rand_vec_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-      bottom[0]->height(), bottom[0]->width());
   threshold_ = this->layer_param_.dropout_param().dropout_ratio();
   DCHECK(threshold_ > 0.);
   DCHECK(threshold_ < 1.);
   scale_ = 1. / (1. - threshold_);
   uint_thres_ = static_cast<unsigned int>(UINT_MAX * threshold_);
+}
+
+template <typename Dtype>
+void DropoutLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
+  NeuronLayer<Dtype>::Reshape(bottom, top);
+  // Set up the cache for random number generation
+  rand_vec_.Reshape(bottom[0]->num(), bottom[0]->channels(),
+      bottom[0]->height(), bottom[0]->width());
 }
 
 template <typename Dtype>
