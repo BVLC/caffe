@@ -10,7 +10,7 @@ template <typename Dtype>
 __global__ void LRNFillScale(const int nthreads, const Dtype* in,
     const int num, const int channels, const int height,
     const int width, const int size, const Dtype alpha_over_size,
-    Dtype* scale) {
+    const Dtype k, Dtype* scale) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local offset
     int w = index % width;
@@ -33,20 +33,20 @@ __global__ void LRNFillScale(const int nthreads, const Dtype* in,
     // until we reach size, nothing needs to be subtracted
     while (head < size) {
       accum_scale += in[head * step] * in[head * step];
-      scale[(head - post_pad) * step] = 1. + accum_scale * alpha_over_size;
+      scale[(head - post_pad) * step] = k + accum_scale * alpha_over_size;
       ++head;
     }
     // both add and subtract
     while (head < channels) {
       accum_scale += in[head * step] * in[head * step];
       accum_scale -= in[(head - size) * step] * in[(head - size) * step];
-      scale[(head - post_pad) * step] = 1. + accum_scale * alpha_over_size;
+      scale[(head - post_pad) * step] = k + accum_scale * alpha_over_size;
       ++head;
     }
     // subtract only
     while (head < channels + post_pad) {
       accum_scale -= in[(head - size) * step] * in[(head - size) * step];
-      scale[(head - post_pad) * step] = 1. + accum_scale * alpha_over_size;
+      scale[(head - post_pad) * step] = k + accum_scale * alpha_over_size;
       ++head;
     }
   }
@@ -90,7 +90,7 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
   // NOLINT_NEXT_LINE(whitespace/operators)
   LRNFillScale<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
       n_threads, bottom_data, num_, channels_, height_, width_, size_,
-      alpha_ / size_, scale_data);
+      alpha_ / size_, k_, scale_data);
   CUDA_POST_KERNEL_CHECK;
   n_threads = bottom[0]->count();
   // NOLINT_NEXT_LINE(whitespace/operators)
