@@ -173,6 +173,22 @@ Finally, we will write the loss!
 
 The `softmax_loss` layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the `label` provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to `ip2`. This is where all magic starts.
 
+
+### Additional Notes: Writing Layer Rules
+
+The train and test protocol definition for the network is in the `lenet_train_test.prototxt` file, which differs from the `lenet.prototxt` file. In `lenet_train_test.prototxt` file, layers may include an additional definition, like the one below:
+
+
+    layers {
+      // Other layer definitions
+      include: { phase: TRAIN }
+    }
+
+This definition is a rule, which controls whether and when a layer is included in the network, based on current network's state. You can refeer to `$CAFFE_ROOT/src/caffe/proto/caffe.proto` for more information about layer's parameters.
+
+In the above example, this layer will be included only in `TRAIN` phase. If we change `TRAIN` with `TEST`, then this layer will be used only in test phase. Otherwise this layer will be used in both training and test phase. Thus, `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for the training phase and one for the testing phase. Also, there is an `ACCURACY` layer which is included only in `TEST` phase, because we want our network to report its accuracy every 100 iteration, as defined in `lenet_solver.prototxt`.
+
+
 ## Define the MNIST Solver
 
 Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt`:
@@ -203,19 +219,6 @@ Check out the comments explaining each line in the prototxt `$CAFFE_ROOT/example
     # solver mode: CPU or GPU
     solver_mode: GPU
 
-## Additional Notes
-
-Note that the train and test protocol definition for the network is in the `lenet_train_test.prototxt` file which differs from the `lenet.prototxt` file. In `lenet_train_test.prototxt file`, layers may include one additional definition, like the one below:
-
-
-    layers {
-      
-      // Other layer definitions
-
-      include: { phase: TRAIN }
-    }
-
-This layer will be used only in training phase. If we change `TRAIN` with `TEST`, then this layer will be used only in test phase. Otherwise this layer will be used in both training and test phase. Thus `lenet_train_test.prototxt` has two `DATA` layers defined (with different `batch_size`), one for training and one for testing.
 
 ## Training and Testing the Model
 
