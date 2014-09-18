@@ -11,6 +11,7 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+  // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   CHECK(!conv_param.has_kernel_size() !=
       !(conv_param.has_kernel_h() && conv_param.has_kernel_w()))
@@ -46,7 +47,6 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_h_ = conv_param.stride_h();
     stride_w_ = conv_param.stride_w();
   }
-  group_ = this->layer_param_.convolution_param().group();
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
@@ -61,28 +61,33 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(width_, bottom[bottom_id]->width())
         << "Inputs must have same width.";
   }
+  // Configure output channels, groups, and spatial dimensions.
   num_output_ = this->layer_param_.convolution_param().num_output();
   CHECK_GT(num_output_, 0);
+  group_ = this->layer_param_.convolution_param().group();
   CHECK_EQ(channels_ % group_, 0);
-  // The im2col result buffer would only hold one image at a time to avoid
-  // overly large memory usage.
+  CHECK_EQ(num_output_ % group_, 0)
+      << "Number of output should be multiples of group.";
   height_out_ =
       (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
   width_out_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
-  col_buffer_.Reshape(
-      1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
-  // Set the parameters
-  CHECK_EQ(num_output_ % group_, 0)
-      << "Number of output should be multiples of group.";
-  bias_term_ = this->layer_param_.convolution_param().bias_term();
-  // Figure out the dimensions for individual gemms.
-  M_ = num_output_ / group_;
-  K_ = channels_ * kernel_h_ * kernel_w_ / group_;
-  N_ = height_out_ * width_out_;
   for (int top_id = 0; top_id < top->size(); ++top_id) {
     (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
-  // Check if we need to set up the weights
+  // Prepare the matrix multiplication computation.
+  // Each input will be convolved as a single GEMM.
+  M_ = num_output_ / group_;
+  K_ = channels_ * kernel_h_ * kernel_w_ / group_;
+  N_ = height_out_ * width_out_;
+  // The im2col result buffer holds one image at a time to avoid
+  // overly large memory usage.
+  col_buffer_.Reshape(
+      1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
+  // Handle the parameters: weights and biases.
+  // - blobs_[0] holds the filter weights
+  // - blobs_[1] holds the biases (optional)
+  bias_term_ = this->layer_param_.convolution_param().bias_term();
+  // Check if we need to set up the weights.
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
@@ -91,14 +96,15 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     } else {
       this->blobs_.resize(1);
     }
-    // Intialize the weight
+    // Initialize and fill the weights:
+    // output channels x input channels per-group x kernel height x kernel width
     this->blobs_[0].reset(new Blob<Dtype>(
         num_output_, channels_ / group_, kernel_h_, kernel_w_));
-    // fill the weights
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
         this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
-    // If necessary, initialize and fill the bias term
+    // If necessary, initialize and fill the biases:
+    // 1 x 1 x 1 x output channels
     if (bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, num_output_));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
@@ -106,11 +112,12 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
-  // Set up the all ones "bias multiplier" for adding bias using blas
+  // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
+  // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
 
@@ -123,21 +130,22 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* top_data = (*top)[i]->mutable_cpu_data();
     Dtype* col_data = col_buffer_.mutable_cpu_data();
     const Dtype* weight = this->blobs_[0]->cpu_data();
-    int weight_offset = M_ * K_;
-    int col_offset = K_ * N_;
-    int top_offset = M_ * N_;
+    int weight_offset = M_ * K_;  // number of filter parameters in a group
+    int col_offset = K_ * N_;  // number of values in an input region / column
+    int top_offset = M_ * N_;  // number of values in an output region / column
     for (int n = 0; n < num_; ++n) {
-      // First, im2col
+      // im2col transformation: unroll input regions for filtering
+      // into column matrix for multplication.
       im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
           width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
           col_data);
-      // Second, innerproduct with groups
+      // Take inner products for groups.
       for (int g = 0; g < group_; ++g) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
           (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
           (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
       }
-      // third, add bias
+      // Add bias.
       if (bias_term_) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->cpu_data(),
@@ -201,7 +209,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                 weight_diff + weight_offset * g);
           }
         }
-        // gradient w.r.t. bottom data, if necessary
+        // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
           if (weight == NULL) {
             weight = this->blobs_[0]->cpu_data();
