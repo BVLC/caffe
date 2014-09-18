@@ -14,6 +14,7 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   pre_pad_ = (size_ - 1) / 2;
   alpha_ = this->layer_param_.lrn_param().alpha();
   beta_ = this->layer_param_.lrn_param().beta();
+  k_ = this->layer_param_.lrn_param().k();
   if (this->layer_param_.lrn_param().norm_region() ==
       LRNParameter_NormRegion_WITHIN_CHANNEL) {
     // Set up split_layer_ to use inputs in the numerator and denominator.
@@ -110,7 +111,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   Dtype* scale_data = scale_.mutable_cpu_data();
   // start with the constant value
   for (int i = 0; i < scale_.count(); ++i) {
-    scale_data[i] = 1.;
+    scale_data[i] = k_;
   }
   Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);
   Dtype* padded_square_data = padded_square.mutable_cpu_data();
