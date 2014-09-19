@@ -58,7 +58,7 @@ Developer documentation automagically generated from code comments.
 
 ### Notebook examples
 
-{% assign notebooks = site.pages | where:'category','notebook' %}
+{% assign notebooks = site.pages | where:'category','notebook' | sort: 'priority' %}
 {% for page in notebooks %}
 - <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br>{{page.description}}</div>
 {% endfor %}
