@@ -189,6 +189,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new BNLLLayer<Dtype>(param);
   case LayerParameter_LayerType_CONCAT:
     return new ConcatLayer<Dtype>(param);
+  case LayerParameter_LayerType_CONTRASTIVE_LOSS:
+    return new ContrastiveLossLayer<Dtype>(param);
   case LayerParameter_LayerType_CONVOLUTION:
     return GetConvolutionLayer<Dtype>(name, param);
   case LayerParameter_LayerType_DATA:
