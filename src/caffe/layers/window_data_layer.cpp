@@ -30,7 +30,7 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 
 template <typename Dtype>
 void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   // LayerSetUp runs through the window_file and creates two structures
   // that hold windows: one for foreground (object) windows and one
   // for background (non-object) windows. We use an overlap threshold
@@ -152,20 +152,20 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int crop_size = this->layer_param_.window_data_param().crop_size();
   CHECK_GT(crop_size, 0);
   const int batch_size = this->layer_param_.window_data_param().batch_size();
-  (*top)[0]->Reshape(batch_size, channels, crop_size, crop_size);
+  top[0]->Reshape(batch_size, channels, crop_size, crop_size);
   this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
 
-  LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
-      << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
-      << (*top)[0]->width();
+  LOG(INFO) << "output data size: " << top[0]->num() << ","
+      << top[0]->channels() << "," << top[0]->height() << ","
+      << top[0]->width();
   // datum size
-  this->datum_channels_ = (*top)[0]->channels();
-  this->datum_height_ = (*top)[0]->height();
-  this->datum_width_ = (*top)[0]->width();
+  this->datum_channels_ = top[0]->channels();
+  this->datum_height_ = top[0]->height();
+  this->datum_width_ = top[0]->width();
   this->datum_size_ =
-      (*top)[0]->channels() * (*top)[0]->height() * (*top)[0]->width();
+      top[0]->channels() * top[0]->height() * top[0]->width();
   // label
-  (*top)[1]->Reshape(batch_size, 1, 1, 1);
+  top[1]->Reshape(batch_size, 1, 1, 1);
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
 }
 

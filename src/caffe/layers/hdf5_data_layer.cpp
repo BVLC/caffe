@@ -51,7 +51,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   // Read the source to parse the filenames.
   const string& source = this->layer_param_.hdf5_data_param().source();
   LOG(INFO) << "Loading filename from " << source;
@@ -74,21 +74,21 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Reshape blobs.
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
-  (*top)[0]->Reshape(batch_size, data_blob_.channels(),
+  top[0]->Reshape(batch_size, data_blob_.channels(),
                      data_blob_.width(), data_blob_.height());
-  (*top)[1]->Reshape(batch_size, label_blob_.channels(),
+  top[1]->Reshape(batch_size, label_blob_.channels(),
                      label_blob_.width(), label_blob_.height());
-  LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
-      << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
-      << (*top)[0]->width();
+  LOG(INFO) << "output data size: " << top[0]->num() << ","
+      << top[0]->channels() << "," << top[0]->height() << ","
+      << top[0]->width();
 }
 
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
-  const int data_count = (*top)[0]->count() / (*top)[0]->num();
-  const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
+  const int data_count = top[0]->count() / top[0]->num();
+  const int label_data_count = top[1]->count() / top[1]->num();
 
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == data_blob_.num()) {
@@ -103,10 +103,10 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       current_row_ = 0;
     }
     caffe_copy(data_count, &data_blob_.cpu_data()[current_row_ * data_count],
-               &(*top)[0]->mutable_cpu_data()[i * data_count]);
+               &top[0]->mutable_cpu_data()[i * data_count]);
     caffe_copy(label_data_count,
                &label_blob_.cpu_data()[current_row_ * label_data_count],
-               &(*top)[1]->mutable_cpu_data()[i * label_data_count]);
+               &top[1]->mutable_cpu_data()[i * label_data_count]);
   }
 }
 

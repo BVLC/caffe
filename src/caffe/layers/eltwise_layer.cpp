@@ -9,7 +9,7 @@ namespace caffe {
 
 template <typename Dtype>
 void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   CHECK(this->layer_param().eltwise_param().coeff_size() == 0
       || this->layer_param().eltwise_param().coeff_size() == bottom.size()) <<
       "Eltwise Layer takes one coefficient per bottom blob.";
@@ -30,7 +30,7 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   const int num = bottom[0]->num();
   const int channels = bottom[0]->channels();
   const int height = bottom[0]->height();
@@ -41,22 +41,22 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(height, bottom[i]->height());
     CHECK_EQ(width, bottom[i]->width());
   }
-  (*top)[0]->Reshape(num, channels, height, width);
+  top[0]->Reshape(num, channels, height, width);
   // If max operation, we will initialize the vector index part.
   if (this->layer_param_.eltwise_param().operation() ==
-      EltwiseParameter_EltwiseOp_MAX && top->size() == 1) {
+      EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
     max_idx_.Reshape(bottom[0]->num(), channels, height, width);
   }
 }
 
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Forward_cpu(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   int* mask = NULL;
   const Dtype* bottom_data_a = NULL;
   const Dtype* bottom_data_b = NULL;
-  const int count = (*top)[0]->count();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  const int count = top[0]->count();
+  Dtype* top_data = top[0]->mutable_cpu_data();
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
     caffe_mul(count, bottom[0]->cpu_data(), bottom[1]->cpu_data(), top_data);
@@ -106,26 +106,26 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int* mask = NULL;
   const int count = top[0]->count();
   const Dtype* top_data = top[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
-  for (int i = 0; i < bottom->size(); ++i) {
+  for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
-      const Dtype* bottom_data = (*bottom)[i]->cpu_data();
-      Dtype* bottom_diff = (*bottom)[i]->mutable_cpu_diff();
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
       switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD:
         if (stable_prod_grad_) {
           bool initialized = false;
-          for (int j = 0; j < bottom->size(); ++j) {
+          for (int j = 0; j < bottom.size(); ++j) {
             if (i == j) { continue; }
             if (!initialized) {
-              caffe_copy(count, (*bottom)[j]->cpu_data(), bottom_diff);
+              caffe_copy(count, bottom[j]->cpu_data(), bottom_diff);
               initialized = true;
             } else {
-              caffe_mul(count, (*bottom)[j]->cpu_data(), bottom_diff,
+              caffe_mul(count, bottom[j]->cpu_data(), bottom_diff,
                         bottom_diff);
             }
           }
