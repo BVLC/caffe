@@ -22,9 +22,9 @@ __global__ void DropoutForward(const int n, const Dtype* in,
 
 template <typename Dtype>
 void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = (*top)[0]->mutable_gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
   if (Caffe::phase() == Caffe::TRAIN) {
     unsigned int* mask =
@@ -52,14 +52,14 @@ __global__ void DropoutBackward(const int n, const Dtype* in_diff,
 template <typename Dtype>
 void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
+    const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
     const Dtype* top_diff = top[0]->gpu_diff();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
     if (Caffe::phase() == Caffe::TRAIN) {
       const unsigned int* mask =
           static_cast<const unsigned int*>(rand_vec_.gpu_data());
-      const int count = (*bottom)[0]->count();
+      const int count = bottom[0]->count();
       // NOLINT_NEXT_LINE(whitespace/operators)
       DropoutBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
         CAFFE_CUDA_NUM_THREADS>>>(

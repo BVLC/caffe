@@ -15,8 +15,8 @@ BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
 
 template <typename Dtype>
 void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
-  if (top->size() == 1) {
+      const vector<Blob<Dtype>*>& top) {
+  if (top.size() == 1) {
     output_labels_ = false;
   } else {
     output_labels_ = true;
@@ -51,7 +51,7 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   BaseDataLayer<Dtype>::LayerSetUp(bottom, top);
   // Now, start the prefetch thread. Before calling prefetch, we make two
   // cpu_data calls so that the prefetch thread does not accidentally make
@@ -80,15 +80,15 @@ void BasePrefetchingDataLayer<Dtype>::JoinPrefetchThread() {
 
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
   caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
-             (*top)[0]->mutable_cpu_data());
+             top[0]->mutable_cpu_data());
   if (this->output_labels_) {
     caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
-               (*top)[1]->mutable_cpu_data());
+               top[1]->mutable_cpu_data());
   }
   // Start a new prefetch thread
   CreatePrefetchThread();

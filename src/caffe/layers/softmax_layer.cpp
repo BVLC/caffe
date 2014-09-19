@@ -9,8 +9,8 @@ namespace caffe {
 
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
-  (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
+      const vector<Blob<Dtype>*>& top) {
+  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
   sum_multiplier_.Reshape(1, bottom[0]->channels(), 1, 1);
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
@@ -22,9 +22,9 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
   int num = bottom[0]->num();
   int channels = bottom[0]->channels();
@@ -52,8 +52,8 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         top_data + i * dim, sum_multiplier_.cpu_data(), 0., scale_data);
     // division
     for (int j = 0; j < channels; j++) {
-      caffe_div(spatial_dim, top_data + (*top)[0]->offset(i, j), scale_data,
-          top_data + (*top)[0]->offset(i, j));
+      caffe_div(spatial_dim, top_data + top[0]->offset(i, j), scale_data,
+          top_data + top[0]->offset(i, j));
     }
   }
 }
@@ -61,10 +61,10 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
+    const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   const Dtype* top_data = top[0]->cpu_data();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   Dtype* scale_data = scale_.mutable_cpu_data();
   int num = top[0]->num();
   int channels = top[0]->channels();

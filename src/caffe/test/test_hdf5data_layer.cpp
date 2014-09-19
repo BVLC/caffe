@@ -67,7 +67,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 
   // Test that the layer setup got the correct parameters.
   HDF5DataLayer<Dtype> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
   EXPECT_EQ(this->blob_top_data_->height(), height);
@@ -78,12 +78,12 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
 
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   // Go through the data 10 times (5 batches).
   const int data_size = num_cols * height * width;
   for (int iter = 0; iter < 10; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
     // On even iterations, we're reading the first half of the data.
     // On odd iterations, we're reading the second half of the data.
