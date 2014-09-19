@@ -13,7 +13,7 @@ inline Dtype sigmoid(Dtype x) {
 }
 
 template <typename Dtype>
-Dtype SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -21,7 +21,6 @@ Dtype SigmoidLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < count; ++i) {
     top_data[i] = sigmoid(bottom_data[i]);
   }
-  return Dtype(0);
 }
 
 template <typename Dtype>

@@ -11,16 +11,20 @@
 namespace caffe {
 
 template <typename Dtype>
-void LossLayer<Dtype>::SetUp(
+void LossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
+  // LossLayers have a non-zero (1) loss by default.
+  if (this->layer_param_.loss_weight_size() == 0) {
+    this->layer_param_.add_loss_weight(Dtype(1));
+  }
+}
+
+template <typename Dtype>
+void LossLayer<Dtype>::Reshape(
+    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
       << "The data and label should have the same number.";
-  if (top->size() == 1) {
-  // Layers should copy the loss in the top blob
-    (*top)[0]->Reshape(1, 1, 1, 1);
-  }
-  FurtherSetUp(bottom, top);
+  (*top)[0]->Reshape(1, 1, 1, 1);
 }
 
 INSTANTIATE_CLASS(LossLayer);

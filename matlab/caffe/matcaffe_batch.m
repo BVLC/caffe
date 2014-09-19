@@ -27,9 +27,8 @@ if ischar(list_im)
     filename = list_im;
     list_im = read_cell(filename);
 end
-% Adjust the batch size to match with imagenet_deploy.prototxt
+% Adjust the batch size and dim to match with models/bvlc_reference_caffenet/deploy.prototxt
 batch_size = 10;
-% Adjust dim to the output size of imagenet_deploy.prototxt
 dim = 1000;
 disp(list_im)
 if mod(length(list_im),batch_size)

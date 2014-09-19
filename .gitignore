@@ -47,18 +47,38 @@ python/caffe/proto/
 # User's build configuration
 Makefile.config
 
-# Data and examples are either
+# Data and models are either
 # 1. reference, and not casually committed
 # 2. custom, and live on their own unless they're deliberated contributed
 data/*
-examples/*
+models/*
+*.caffemodel
+*.solverstate
+*.binaryproto
+*leveldb
+*lmdb
+
+# LevelDB files
+*.sst
+*.ldb
+LOCK
+LOG*
+CURRENT
+MANIFEST-*
 
 # Generated documentation
 docs/_site
 docs/gathered
 _site
+doxygen
+docs/dev
 
 # Sublime Text settings
 *.sublime-workspace
 *.sublime-project
 
+# Eclipse Project settings
+*.*project
+
+# CMake generated files
+*.gen.cmake

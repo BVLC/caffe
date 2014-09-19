@@ -1,6 +1,7 @@
 ---
-layout: default
+title: Deep Learning Framework
 ---
+
 # Caffe
 
 Caffe is a deep learning framework developed with cleanliness, readability, and speed in mind.
@@ -33,29 +34,33 @@ Consult performance [details](/performance_hardware.html).
 
 ## Documentation
 
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br />
+- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br>
 Caffe tutorial slides.
-- [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br />
+- [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br>
 A 4-page report for the ACM Multimedia Open Source competition.
-- [Installation instructions](/installation.html)<br />
+- [Caffe Tutorial](/tutorial)<br>
+DIY deep learning with this hands-on tutorial to Caffe.
+- [Installation instructions](/installation.html)<br>
 Tested on Ubuntu, Red Hat, OS X.
-* [Pre-trained models](/getting_pretrained_models.html)<br />
-BVLC provides ready-to-use models for non-commercial use.
-* [Developing & Contributing](/development.html)<br />
+* [Model Zoo](/model_zoo.html)<br>
+BVLC suggests a standard distribution format for Caffe models, and provides trained models.
+* [Developing & Contributing](/development.html)<br>
 Guidelines for development and contributing to Caffe.
+* [API Documentation](/doxygen/)<br>
+Developer documentation automagically generated from code comments.
 
 ### Examples
 
 {% assign examples = site.pages | where:'category','example' | sort: 'priority' %}
 {% for page in examples %}
-- <div><a href="{{page.url}}">{{page.title}}</a><br />{{page.description}}</div>
+- <div><a href="{{page.url}}">{{page.title}}</a><br>{{page.description}}</div>
 {% endfor %}
 
 ### Notebook examples
 
-{% assign notebooks = site.pages | where:'category','notebook' %}
+{% assign notebooks = site.pages | where:'category','notebook' | sort: 'priority' %}
 {% for page in notebooks %}
-- <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br />{{page.description}}</div>
+- <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/{{page.original_path}}">{{page.title}}</a><br>{{page.description}}</div>
 {% endfor %}
 
 ## Citing Caffe

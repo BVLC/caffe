@@ -7,88 +7,95 @@
 namespace caffe {
 
 template <typename Dtype>
-void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
+  size_ = this->layer_param_.lrn_param().local_size();
+  CHECK_EQ(size_ % 2, 1) << "LRN only supports odd values for local_size";
+  pre_pad_ = (size_ - 1) / 2;
+  alpha_ = this->layer_param_.lrn_param().alpha();
+  beta_ = this->layer_param_.lrn_param().beta();
+  if (this->layer_param_.lrn_param().norm_region() ==
+      LRNParameter_NormRegion_WITHIN_CHANNEL) {
+    // Set up split_layer_ to use inputs in the numerator and denominator.
+    split_top_vec_.clear();
+    split_top_vec_.push_back(&product_input_);
+    split_top_vec_.push_back(&square_input_);
+    LayerParameter split_param;
+    split_layer_.reset(new SplitLayer<Dtype>(split_param));
+    split_layer_->SetUp(bottom, &split_top_vec_);
+    // Set up square_layer_ to square the inputs.
+    square_bottom_vec_.clear();
+    square_top_vec_.clear();
+    square_bottom_vec_.push_back(&square_input_);
+    square_top_vec_.push_back(&square_output_);
+    LayerParameter square_param;
+    square_param.mutable_power_param()->set_power(Dtype(2));
+    square_layer_.reset(new PowerLayer<Dtype>(square_param));
+    square_layer_->SetUp(square_bottom_vec_, &square_top_vec_);
+    // Set up pool_layer_ to sum over square neighborhoods of the input.
+    pool_top_vec_.clear();
+    pool_top_vec_.push_back(&pool_output_);
+    LayerParameter pool_param;
+    pool_param.mutable_pooling_param()->set_pool(
+        PoolingParameter_PoolMethod_AVE);
+    pool_param.mutable_pooling_param()->set_pad(pre_pad_);
+    pool_param.mutable_pooling_param()->set_kernel_size(size_);
+    pool_layer_.reset(new PoolingLayer<Dtype>(pool_param));
+    pool_layer_->SetUp(square_top_vec_, &pool_top_vec_);
+    // Set up power_layer_ to compute (1 + alpha_/N^2 s)^-beta_, where s is
+    // the sum of a squared neighborhood (the output of pool_layer_).
+    power_top_vec_.clear();
+    power_top_vec_.push_back(&power_output_);
+    LayerParameter power_param;
+    power_param.mutable_power_param()->set_power(-beta_);
+    power_param.mutable_power_param()->set_scale(alpha_);
+    power_param.mutable_power_param()->set_shift(Dtype(1));
+    power_layer_.reset(new PowerLayer<Dtype>(power_param));
+    power_layer_->SetUp(pool_top_vec_, &power_top_vec_);
+    // Set up a product_layer_ to compute outputs by multiplying inputs by the
+    // inverse demoninator computed by the power layer.
+    product_bottom_vec_.clear();
+    product_bottom_vec_.push_back(&product_input_);
+    product_bottom_vec_.push_back(&power_output_);
+    LayerParameter product_param;
+    EltwiseParameter* eltwise_param = product_param.mutable_eltwise_param();
+    eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+    product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
+    product_layer_->SetUp(product_bottom_vec_, top);
+  }
+}
+
+template <typename Dtype>
+void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
-  size_ = this->layer_param_.lrn_param().local_size();
-  pre_pad_ = (size_ - 1) / 2;
-  alpha_ = this->layer_param_.lrn_param().alpha();
-  beta_ = this->layer_param_.lrn_param().beta();
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
     (*top)[0]->Reshape(num_, channels_, height_, width_);
     scale_.Reshape(num_, channels_, height_, width_);
     break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    {
-      // Set up split_layer_ to use inputs in the numerator and denominator.
-      split_top_vec_.clear();
-      split_top_vec_.push_back(bottom[0]);
-      split_top_vec_.push_back(&square_input_);
-      LayerParameter split_param;
-      split_layer_.reset(new SplitLayer<Dtype>(split_param));
-      split_layer_->SetUp(bottom, &split_top_vec_);
-      // Set up square_layer_ to square the inputs.
-      square_input_.Reshape(num_, channels_, height_, width_);
-      square_bottom_vec_.clear();
-      square_top_vec_.clear();
-      square_bottom_vec_.push_back(&square_input_);
-      square_top_vec_.push_back(&square_output_);
-      LayerParameter square_param;
-      square_param.mutable_power_param()->set_power(Dtype(2));
-      square_layer_.reset(new PowerLayer<Dtype>(square_param));
-      square_layer_->SetUp(square_bottom_vec_, &square_top_vec_);
-      CHECK_EQ(square_output_.num(), num_);
-      CHECK_EQ(square_output_.channels(), channels_);
-      CHECK_EQ(square_output_.height(), height_);
-      CHECK_EQ(square_output_.width(), width_);
-      // Set up pool_layer_ to sum over square neighborhoods of the input.
-      pool_top_vec_.clear();
-      pool_top_vec_.push_back(&pool_output_);
-      LayerParameter pool_param;
-      pool_param.mutable_pooling_param()->set_pool(
-          PoolingParameter_PoolMethod_AVE);
-      pool_param.mutable_pooling_param()->set_pad(pre_pad_);
-      pool_param.mutable_pooling_param()->set_kernel_size(size_);
-      pool_layer_.reset(new PoolingLayer<Dtype>(pool_param));
-      pool_layer_->SetUp(square_top_vec_, &pool_top_vec_);
-      CHECK_EQ(pool_output_.num(), num_);
-      CHECK_EQ(pool_output_.channels(), channels_);
-      CHECK_EQ(pool_output_.height(), height_);
-      CHECK_EQ(pool_output_.width(), width_);
-      // Set up power_layer_ to compute (1 + alpha_/N^2 s)^-beta_, where s is
-      // the sum of a squared neighborhood (the output of pool_layer_).
-      power_top_vec_.clear();
-      power_top_vec_.push_back(&power_output_);
-      LayerParameter power_param;
-      power_param.mutable_power_param()->set_power(-beta_);
-      power_param.mutable_power_param()->set_scale(alpha_);
-      power_param.mutable_power_param()->set_shift(Dtype(1));
-      power_layer_.reset(new PowerLayer<Dtype>(power_param));
-      power_layer_->SetUp(pool_top_vec_, &power_top_vec_);
-      CHECK_EQ(power_output_.num(), num_);
-      CHECK_EQ(power_output_.channels(), channels_);
-      CHECK_EQ(power_output_.height(), height_);
-      CHECK_EQ(power_output_.width(), width_);
-      // Set up a product_layer_ to compute outputs by multiplying inputs by the
-      // inverse demoninator computed by the power layer.
-      product_bottom_vec_.clear();
-      product_bottom_vec_.push_back(bottom[0]);
-      product_bottom_vec_.push_back(&power_output_);
-      LayerParameter product_param;
-      EltwiseParameter* eltwise_param = product_param.mutable_eltwise_param();
-      eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
-      product_layer_.reset(new EltwiseLayer<Dtype>(product_param));
-      product_layer_->SetUp(product_bottom_vec_, top);
-      CHECK_EQ((*top)[0]->num(), num_);
-      CHECK_EQ((*top)[0]->channels(), channels_);
-      CHECK_EQ((*top)[0]->height(), height_);
-      CHECK_EQ((*top)[0]->width(), width_);
-    }
+    split_layer_->Reshape(bottom, &split_top_vec_);
+    square_layer_->Reshape(square_bottom_vec_, &square_top_vec_);
+    pool_layer_->Reshape(square_top_vec_, &pool_top_vec_);
+    power_layer_->Reshape(pool_top_vec_, &power_top_vec_);
+    product_layer_->Reshape(product_bottom_vec_, top);
+    break;
+  }
+}
+
+template <typename Dtype>
+void LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+    vector<Blob<Dtype>*>* top) {
+  switch (this->layer_param_.lrn_param().norm_region()) {
+  case LRNParameter_NormRegion_ACROSS_CHANNELS:
+    CrossChannelForward_cpu(bottom, top);
+    break;
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    WithinChannelForward(bottom, top);
     break;
   default:
     LOG(FATAL) << "Unknown normalization region.";
@@ -96,21 +103,7 @@ void LRNLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
-  switch (this->layer_param_.lrn_param().norm_region()) {
-  case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    return CrossChannelForward_cpu(bottom, top);
-  case LRNParameter_NormRegion_WITHIN_CHANNEL:
-    return WithinChannelForward(bottom, top);
-  default:
-    LOG(FATAL) << "Unknown normalization region.";
-    return Dtype(0);
-  }
-}
-
-template <typename Dtype>
-Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
+void LRNLayer<Dtype>::CrossChannelForward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -154,19 +147,16 @@ Dtype LRNLayer<Dtype>::CrossChannelForward_cpu(
   // In the end, compute output
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
-
-  return Dtype(0.);
 }
 
 template <typename Dtype>
-Dtype LRNLayer<Dtype>::WithinChannelForward(
+void LRNLayer<Dtype>::WithinChannelForward(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   split_layer_->Forward(bottom, &split_top_vec_);
   square_layer_->Forward(square_bottom_vec_, &square_top_vec_);
   pool_layer_->Forward(square_top_vec_, &pool_top_vec_);
   power_layer_->Forward(pool_top_vec_, &power_top_vec_);
   product_layer_->Forward(product_bottom_vec_, top);
-  return Dtype(0.);
 }
 
 template <typename Dtype>

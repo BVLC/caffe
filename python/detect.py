@@ -46,13 +46,13 @@ def main(argv):
     parser.add_argument(
         "--model_def",
         default=os.path.join(pycaffe_dir,
-                "../examples/imagenet/imagenet_deploy.prototxt"),
+                "../models/bvlc_reference_caffenet/deploy.prototxt.prototxt"),
         help="Model definition file."
     )
     parser.add_argument(
         "--pretrained_model",
         default=os.path.join(pycaffe_dir,
-                "../examples/imagenet/caffe_reference_imagenet_model"),
+                "../models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel"),
         help="Trained model weights file."
     )
     parser.add_argument(

@@ -9,14 +9,18 @@
 namespace caffe {
 
 template <typename Dtype>
-void ArgMaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   out_max_val_ = this->layer_param_.argmax_param().out_max_val();
   top_k_ = this->layer_param_.argmax_param().top_k();
   CHECK_GE(top_k_, 1) << " top k must not be less than 1.";
   CHECK_LE(top_k_, bottom[0]->count() / bottom[0]->num())
       << "top_k must be less than or equal to the number of classes.";
+}
+
+template <typename Dtype>
+void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   if (out_max_val_) {
     // Produces max_ind and max_val
     (*top)[0]->Reshape(bottom[0]->num(), 2, top_k_, 1);
@@ -27,7 +31,7 @@ void ArgMaxLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -51,7 +55,6 @@ Dtype ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
-  return Dtype(0);
 }
 
 INSTANTIATE_CLASS(ArgMaxLayer);

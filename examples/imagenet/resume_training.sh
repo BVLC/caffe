@@ -1,9 +1,5 @@
 #!/usr/bin/env sh
 
-TOOLS=../../build/tools
-
-$TOOLS/caffe train\
-    --solver=imagenet_solver.prototxt \
-    --snapshot=caffe_imagenet_train_10000.solverstate
-
-echo "Done."
+./build/tools/caffe train \
+    --solver=models/bvlc_reference_caffenet/solver.prototxt \
+    --snapshot=models/bvlc_reference_caffenet/caffenet_train_10000.solverstate

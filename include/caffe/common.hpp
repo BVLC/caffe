@@ -6,9 +6,14 @@
 #include <glog/logging.h>
 
 #include <cmath>
+#include <fstream>  // NOLINT(readability/streams)
+#include <iostream>  // NOLINT(readability/streams)
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
+#include <utility>  // pair
+#include <vector>
 
 #include "caffe/util/device_alternate.hpp"
 
@@ -36,41 +41,6 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
-#ifndef CPU_ONLY
-
-// CUDA: various checks for different function calls.
-#define CUDA_CHECK(condition) \
-  /* Code block avoids redefinition of cudaError_t error */ \
-  do { \
-    cudaError_t error = condition; \
-    CHECK_EQ(error, cudaSuccess) << " " << cudaGetErrorString(error); \
-  } while (0)
-
-#define CUBLAS_CHECK(condition) \
-  do { \
-    cublasStatus_t status = condition; \
-    CHECK_EQ(status, CUBLAS_STATUS_SUCCESS) << " " \
-      << caffe::cublasGetErrorString(status); \
-  } while (0)
-
-#define CURAND_CHECK(condition) \
-  do { \
-    curandStatus_t status = condition; \
-    CHECK_EQ(status, CURAND_STATUS_SUCCESS) << " " \
-      << caffe::curandGetErrorString(status); \
-  } while (0)
-
-// CUDA: grid stride looping
-#define CUDA_KERNEL_LOOP(i, n) \
-  for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
-       i < (n); \
-       i += blockDim.x * gridDim.x)
-
-// CUDA: check for error after kernel execution and exit loudly if there is one.
-#define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
-
-#endif  // CPU_ONLY
-
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
@@ -88,6 +58,7 @@ using std::ostringstream;
 using std::pair;
 using std::set;
 using std::string;
+using std::stringstream;
 using std::vector;
 
 // A global initialization function that you should call in your main function.
@@ -174,28 +145,6 @@ class Caffe {
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
-
-#ifndef CPU_ONLY
-
-// NVIDIA_CUDA-5.5_Samples/common/inc/helper_cuda.h
-const char* cublasGetErrorString(cublasStatus_t error);
-const char* curandGetErrorString(curandStatus_t error);
-
-// CUDA: thread number configuration.
-// Use 1024 threads per block, which requires cuda sm_2x or above,
-// or fall back to attempt compatibility (best of luck to you).
-#if __CUDA_ARCH__ >= 200
-    const int CAFFE_CUDA_NUM_THREADS = 1024;
-#else
-    const int CAFFE_CUDA_NUM_THREADS = 512;
-#endif
-
-// CUDA: number of blocks for threads.
-inline int CAFFE_GET_BLOCKS(const int N) {
-  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
-}
-
-#endif  // CPU_ONLY
 
 }  // namespace caffe
 

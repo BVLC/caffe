@@ -6,6 +6,7 @@
 
 #include "glog/logging.h"
 
+#include "caffe/common.hpp"
 #include "caffe/util/device_alternate.hpp"
 #include "caffe/util/mkl_alternate.hpp"
 
@@ -37,6 +38,10 @@ void caffe_copy(const int N, const Dtype *X, Dtype *Y);
 
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype *X);
+
+inline void caffe_memset(const size_t N, const int alpha, void* X) {
+  memset(X, alpha, N);  // NOLINT(caffe/alt_fn)
+}
 
 template <typename Dtype>
 void caffe_add_scalar(const int N, const Dtype alpha, Dtype *X);
@@ -84,7 +89,14 @@ template <typename Dtype>
 void caffe_exp(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
+void caffe_abs(const int n, const Dtype* a, Dtype* y);
+
+template <typename Dtype>
 Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y);
+
+template <typename Dtype>
+Dtype caffe_cpu_strided_dot(const int n, const Dtype* x, const int incx,
+    const Dtype* y, const int incy);
 
 template <typename Dtype>
 int caffe_cpu_hamming_distance(const int n, const Dtype* x, const Dtype* y);
@@ -125,11 +137,10 @@ inline char caffe_sign(Dtype val) {
 DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
 
 // This returns a nonzero value if the input has its sign bit set.
-// The name sngbit is meant to avoid conflicts with std::signbit in the macro
-bool caffe_signbit(float arg);
-bool caffe_signbit(double arg);
-bool caffe_signbit(long double arg);
-DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, y[i] = caffe_signbit(x[i]));
+// The name sngbit is meant to avoid conflicts with std::signbit in the macro.
+// The extra parens are needed because CUDA < 6.5 defines signbit as a macro,
+// and we don't want that to expand here when CUDA headers are also included.
+DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, y[i] = (std::signbit)(x[i]));
 
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
 
@@ -165,6 +176,14 @@ void caffe_gpu_memcpy(const size_t N, const void *X, void *Y);
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype *X);
 
+inline void caffe_gpu_memset(const size_t N, const int alpha, void* X) {
+#ifndef CPU_ONLY
+  CUDA_CHECK(cudaMemset(X, alpha, N));  // NOLINT(caffe/alt_fn)
+#else
+  NO_GPU;
+#endif
+}
+
 template <typename Dtype>
 void caffe_gpu_add_scalar(const int N, const Dtype alpha, Dtype *X);
 
@@ -182,6 +201,9 @@ void caffe_gpu_mul(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_abs(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);

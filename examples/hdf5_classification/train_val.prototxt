@@ -1,0 +1,59 @@
+name: "LogisticRegressionNet"
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+  hdf5_data_param {
+    source: "examples/hdf5_classification/data/train.txt"
+    batch_size: 10
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+  hdf5_data_param {
+    source: "examples/hdf5_classification/data/test.txt"
+    batch_size: 10
+  }
+  include: { phase: TEST }
+}
+layers {
+  name: "fc1"
+  type: INNER_PRODUCT
+  bottom: "data"
+  top: "fc1"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "fc1"
+  bottom: "label"
+  top: "loss"
+}
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "fc1"
+  bottom: "label"
+  top: "accuracy"
+  include: { phase: TEST }
+}

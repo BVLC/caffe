@@ -8,6 +8,12 @@
 
 namespace caffe {
 
+/**
+ * @brief An interface for classes that perform optimization on Net%s.
+ *
+ * Requires implementation of ComputeUpdateValue to compute a parameter update
+ * given the current state of the Net parameters.
+ */
 template <typename Dtype>
 class Solver {
  public:
@@ -46,6 +52,7 @@ class Solver {
   // function that restores the state from a SolverState protocol buffer.
   void Restore(const char* resume_file);
   virtual void RestoreSolverState(const SolverState& state) = 0;
+  void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
   int iter_;
@@ -56,6 +63,10 @@ class Solver {
 };
 
 
+/**
+ * @brief Optimizes the parameters of a Net using
+ *        stochastic gradient descent (SGD) with momentum.
+ */
 template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
@@ -64,6 +75,8 @@ class SGDSolver : public Solver<Dtype> {
   explicit SGDSolver(const string& param_file)
       : Solver<Dtype>(param_file) {}
 
+  const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+
  protected:
   virtual void PreSolve();
   Dtype GetLearningRate();
@@ -71,11 +84,62 @@ class SGDSolver : public Solver<Dtype> {
   virtual void SnapshotSolverState(SolverState * state);
   virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
-  vector<shared_ptr<Blob<Dtype> > > history_;
+  // update maintains update related data and is not needed in snapshots.
+  // temp maintains other information that might be needed in computation
+  //   of gradients/updates and is not needed in snapshots
+  vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
 
+template <typename Dtype>
+class NesterovSolver : public SGDSolver<Dtype> {
+ public:
+  explicit NesterovSolver(const SolverParameter& param)
+      : SGDSolver<Dtype>(param) {}
+  explicit NesterovSolver(const string& param_file)
+      : SGDSolver<Dtype>(param_file) {}
+
+ protected:
+  virtual void ComputeUpdateValue();
+
+  DISABLE_COPY_AND_ASSIGN(NesterovSolver);
+};
+
+template <typename Dtype>
+class AdaGradSolver : public SGDSolver<Dtype> {
+ public:
+  explicit AdaGradSolver(const SolverParameter& param)
+      : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
+  explicit AdaGradSolver(const string& param_file)
+      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+
+ protected:
+  virtual void ComputeUpdateValue();
+  void constructor_sanity_check() {
+    CHECK_EQ(0, this->param_.momentum())
+        << "Momentum cannot be used with AdaGrad.";
+  }
+
+  DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
+};
+
+template <typename Dtype>
+Solver<Dtype>* GetSolver(const SolverParameter& param) {
+  SolverParameter_SolverType type = param.solver_type();
+
+  switch (type) {
+  case SolverParameter_SolverType_SGD:
+      return new SGDSolver<Dtype>(param);
+  case SolverParameter_SolverType_NESTEROV:
+      return new NesterovSolver<Dtype>(param);
+  case SolverParameter_SolverType_ADAGRAD:
+      return new AdaGradSolver<Dtype>(param);
+  default:
+      LOG(FATAL) << "Unknown SolverType: " << type;
+  }
+  return (Solver<Dtype>*) NULL;
+}
 
 }  // namespace caffe
 

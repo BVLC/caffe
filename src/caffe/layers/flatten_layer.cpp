@@ -7,9 +7,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   int channels_out = bottom[0]->channels() * bottom[0]->height()
       * bottom[0]->width();
   (*top)[0]->Reshape(bottom[0]->num(), channels_out, 1, 1);
@@ -19,10 +18,9 @@ void FlattenLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   (*top)[0]->ShareData(*bottom[0]);
-  return Dtype(0.);
 }
 
 template <typename Dtype>
