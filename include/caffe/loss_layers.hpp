@@ -33,9 +33,9 @@ class AccuracyLayer : public Layer<Dtype> {
   explicit AccuracyLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_ACCURACY;
@@ -70,12 +70,12 @@ class AccuracyLayer : public Layer<Dtype> {
    *      @f$
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
 
   /// @brief Not implemented -- AccuracyLayer cannot be used as a loss.
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     for (int i = 0; i < propagate_down.size(); ++i) {
       if (propagate_down[i]) { NOT_IMPLEMENTED; }
     }
@@ -98,9 +98,9 @@ class LossLayer : public Layer<Dtype> {
   explicit LossLayer(const LayerParameter& param)
      : Layer<Dtype>(param) {}
   virtual void LayerSetUp(
-      const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
   virtual void Reshape(
-      const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
   virtual inline int ExactNumBottomBlobs() const { return 2; }
 
@@ -151,7 +151,7 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   explicit ContrastiveLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), diff_() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline int ExactNumBottomBlobs() const { return 3; }
   virtual inline LayerParameter_LayerType type() const {
@@ -168,9 +168,9 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
  protected:
   /// @copydoc ContrastiveLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the Contrastive error gradient w.r.t. the inputs.
@@ -198,9 +198,9 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
    *      propagate_down[1]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   Blob<Dtype> diff_;  // cached for backward pass
   Blob<Dtype> dist_sq_;  // cached for backward pass
@@ -240,7 +240,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   explicit EuclideanLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), diff_() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_EUCLIDEAN_LOSS;
@@ -257,9 +257,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
  protected:
   /// @copydoc EuclideanLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the Euclidean error gradient w.r.t. the inputs.
@@ -295,9 +295,9 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
    *      @f$ if propagate_down[1]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   Blob<Dtype> diff_;
 };
@@ -358,7 +358,7 @@ class HingeLossLayer : public LossLayer<Dtype> {
  protected:
   /// @copydoc HingeLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the hinge loss error gradient w.r.t. the predictions.
@@ -388,7 +388,7 @@ class HingeLossLayer : public LossLayer<Dtype> {
    *      the labels -- ignored as we can't compute their error gradients
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
 
 /**
@@ -429,9 +429,9 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   explicit InfogainLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), infogain_() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should
   // be the infogain matrix.  (Otherwise the infogain matrix is loaded from a
@@ -447,7 +447,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
  protected:
   /// @copydoc InfogainLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the infogain loss error gradient w.r.t. the predictions.
@@ -482,7 +482,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
    *      gradient computation is not implemented.
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   Blob<Dtype> infogain_;
 };
@@ -522,7 +522,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
   explicit MultinomialLogisticLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS;
@@ -531,7 +531,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
  protected:
   /// @copydoc MultinomialLogisticLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the multinomial logistic loss error gradient w.r.t. the
@@ -562,7 +562,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
    *      the labels -- ignored as we can't compute their error gradients
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
 
 /**
@@ -602,9 +602,9 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
           sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
           sigmoid_output_(new Blob<Dtype>()) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS;
@@ -613,9 +613,9 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
  protected:
   /// @copydoc SigmoidCrossEntropyLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the sigmoid cross-entropy loss error gradient w.r.t. the
@@ -648,9 +648,9 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
    *      the labels -- ignored as we can't compute their error gradients
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   /// The internal SigmoidLayer used to map predictions to probabilities.
   shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
@@ -700,9 +700,9 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
       : LossLayer<Dtype>(param),
         softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
@@ -717,9 +717,9 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
  protected:
   /// @copydoc SoftmaxWithLossLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
+      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the softmax loss error gradient w.r.t. the predictions.
@@ -749,9 +749,9 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
    *      the labels -- ignored as we can't compute their error gradients
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<SoftmaxLayer<Dtype> > softmax_layer_;

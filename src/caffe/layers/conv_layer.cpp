@@ -10,7 +10,7 @@ namespace caffe {
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   CHECK(!conv_param.has_kernel_size() !=
@@ -89,7 +89,7 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   num_ = bottom[0]->num();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
@@ -109,8 +109,8 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   height_out_ =
       (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
   width_out_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
-  for (int top_id = 0; top_id < top->size(); ++top_id) {
-    (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
+  for (int top_id = 0; top_id < top.size(); ++top_id) {
+    top[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
   // Prepare the matrix multiplication computation.
   // Each input will be convolved as a single GEMM.
@@ -121,8 +121,8 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // overly large memory usage.
   col_buffer_.Reshape(
       1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
-  for (int top_id = 0; top_id < top->size(); ++top_id) {
-    (*top)[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
+  for (int top_id = 0; top_id < top.size(); ++top_id) {
+    top[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
@@ -133,10 +133,10 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
-    Dtype* top_data = (*top)[i]->mutable_cpu_data();
+    Dtype* top_data = top[i]->mutable_cpu_data();
     Dtype* col_data = col_buffer_.mutable_cpu_data();
     const Dtype* weight = this->blobs_[0]->cpu_data();
     int weight_offset = M_ * K_;  // number of filter parameters in a group
@@ -152,14 +152,14 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int g = 0; g < group_; ++g) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
           (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
-          (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
+          (Dtype)0., top_data + top[i]->offset(n) + top_offset * g);
       }
       // Add bias.
       if (bias_term_) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->cpu_data(),
             bias_multiplier_.cpu_data(),
-            (Dtype)1., top_data + (*top)[i]->offset(n));
+            (Dtype)1., top_data + top[i]->offset(n));
       }
     }
   }
@@ -167,7 +167,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
   if (this->param_propagate_down_[0]) {
@@ -201,12 +201,12 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
       Dtype* col_data = col_buffer_.mutable_cpu_data();
       Dtype* col_diff = col_buffer_.mutable_cpu_diff();
-      const Dtype* bottom_data = (*bottom)[i]->cpu_data();
-      Dtype* bottom_diff = (*bottom)[i]->mutable_cpu_diff();
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
       for (int n = 0; n < num_; ++n) {
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
-        im2col_cpu(bottom_data + (*bottom)[i]->offset(n), channels_, height_,
+        im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
                    width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
                    stride_h_, stride_w_, col_data);
         // gradient w.r.t. weight. Note that we will accumulate diffs.
@@ -232,7 +232,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           // col2im back to the data
           col2im_cpu(col_diff, channels_, height_, width_,
               kernel_h_, kernel_w_, pad_h_, pad_w_,
-              stride_h_, stride_w_, bottom_diff + (*bottom)[i]->offset(n));
+              stride_h_, stride_w_, bottom_diff + bottom[i]->offset(n));
         }
       }
     }
