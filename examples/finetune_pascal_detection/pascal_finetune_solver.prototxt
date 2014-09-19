@@ -1,5 +1,5 @@
-train_net: "examples/finetuning_pascal_detection/pascal_finetune_train.prototxt"
-test_net: "examples/finetuning_pascal_detection/pascal_finetune_val.prototxt"
+train_net: "examples/finetune_pascal_detection/pascal_finetune_train.prototxt"
+test_net: "examples/finetune_pascal_detection/pascal_finetune_val.prototxt"
 test_iter: 100
 test_interval: 1000
 base_lr: 0.001
@@ -11,4 +11,4 @@ max_iter: 100000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "examples/finetuning_pascal_detection/pascal_det_finetune"
+snapshot_prefix: "examples/finetune_pascal_detection/pascal_det_finetune"
