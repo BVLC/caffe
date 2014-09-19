@@ -57,8 +57,8 @@ TYPED_TEST(SoftmaxWithLossLayerTest, TestGradient) {
   layer_param.add_loss_weight(3);
   SoftmaxWithLossLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
 }
 
 }  // namespace caffe

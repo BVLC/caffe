@@ -37,8 +37,8 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
     layer_param.mutable_power_param()->set_scale(scale);
     layer_param.mutable_power_param()->set_shift(shift);
     PowerLayer<Dtype> layer(layer_param);
-    layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-    layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     // Now, check values
     const Dtype* bottom_data = this->blob_bottom_->cpu_data();
     const Dtype* top_data = this->blob_top_->cpu_data();
@@ -75,8 +75,8 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
       }
     }
     GradientChecker<Dtype> checker(1e-2, 1e-2, 1701, 0., 0.01);
-    checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
-        &(this->blob_top_vec_));
+    checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+        this->blob_top_vec_);
   }
 
   Blob<Dtype>* const blob_bottom_;
