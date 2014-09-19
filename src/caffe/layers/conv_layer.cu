@@ -8,8 +8,9 @@
 
 namespace caffe {
 
+/// @brief refer to CPU forward -- the BLAS implementation is the same.
 template <typename Dtype>
-Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -20,17 +21,18 @@ Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     int col_offset = K_ * N_;
     int top_offset = M_ * N_;
     for (int n = 0; n < num_; ++n) {
-      // First, im2col
+      // im2col transformation: unroll input regions for filtering
+      // into column matrix for multplication.
       im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
           width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
           col_data);
-      // Second, innerproduct with groups
+      // Take inner products for groups.
       for (int g = 0; g < group_; ++g) {
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
           (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
           (Dtype)0., top_data + (*top)[i]->offset(n) + top_offset * g);
       }
-      // third, add bias
+      // Add bias.
       if (bias_term_) {
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
             N_, 1, (Dtype)1., this->blobs_[1]->gpu_data(),
@@ -39,9 +41,9 @@ Dtype ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
-  return Dtype(0.);
 }
 
+/// @brief refer to CPU backward -- the BLAS implementation is the same.
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
@@ -97,6 +99,9 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
         // gradient w.r.t. bottom data, if necessary
         if (propagate_down[i]) {
+          if (weight == NULL) {
+            weight = this->blobs_[0]->gpu_data();
+          }
           for (int g = 0; g < group_; ++g) {
             caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
                 (Dtype)1., weight + weight_offset * g,

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <map>
 #include <set>
 #include <string>
@@ -73,18 +74,41 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
     }
-    for (int top_id = 0; top_id < layer_param.top_size(); ++top_id) {
+    int num_top = layer_param.top_size();
+    for (int top_id = 0; top_id < num_top; ++top_id) {
       AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
     }
+    // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
+    // specified fewer than the required number (as specified by
+    // ExactNumTopBlobs() or MinTopBlobs()), allocate them here.
+    Layer<Dtype>* layer = layers_[layer_id].get();
+    if (layer->AutoTopBlobs()) {
+      const int needed_num_top =
+          std::max(layer->MinTopBlobs(), layer->ExactNumTopBlobs());
+      for (; num_top < needed_num_top; ++num_top) {
+        // Add "anonymous" top blobs -- do not modify available_blobs or
+        // blob_name_to_idx as we don't want these blobs to be usable as input
+        // to other layers.
+        AppendTop(param, layer_id, num_top, NULL, NULL);
+      }
+    }
     // After this layer is connected, set it up.
-    // LOG(INFO) << "Setting up " << layer_names_[layer_id];
+    LOG(INFO) << "Setting up " << layer_names_[layer_id];
     layers_[layer_id]->SetUp(bottom_vecs_[layer_id], &top_vecs_[layer_id]);
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
+        blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
+      }
+      blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
       LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
           << top_vecs_[layer_id][top_id]->channels() << " "
           << top_vecs_[layer_id][top_id]->height() << " "
           << top_vecs_[layer_id][top_id]->width() << " ("
           << top_vecs_[layer_id][top_id]->count() << ")";
+      if (layer->loss(top_id)) {
+        LOG(INFO) << "    with loss weight " << layer->loss(top_id);
+      }
+      memory_used_ += top_vecs_[layer_id][top_id]->count();
     }
     DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
     const int blobs_lr_size = layer_param.blobs_lr_size();
@@ -122,13 +146,41 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
     if (need_backward) {
-      LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
       for (int top_id = 0; top_id < top_id_vecs_[layer_id].size(); ++top_id) {
         blob_need_backward_[top_id_vecs_[layer_id][top_id]] = true;
       }
+    }
+  }
+  // Go through the net backwards to determine which blobs contribute to the
+  // loss.  We can skip backward computation for blobs that don't contribute
+  // to the loss.
+  set<string> blobs_under_loss;
+  for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
+    bool layer_contributes_loss = false;
+    for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
+      if (layers_[layer_id]->loss(top_id) ||
+          (blobs_under_loss.find(blob_name) != blobs_under_loss.end())) {
+        layer_contributes_loss = true;
+        break;
+      }
+    }
+    if (!layer_contributes_loss) { layer_need_backward_[layer_id] = false; }
+    if (layer_need_backward_[layer_id]) {
+      LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
     } else {
       LOG(INFO) << layer_names_[layer_id]
                 << " does not need backward computation.";
+    }
+    for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
+         ++bottom_id) {
+      if (layer_contributes_loss) {
+        const string& blob_name =
+            blob_names_[bottom_id_vecs_[layer_id][bottom_id]];
+        blobs_under_loss.insert(blob_name);
+      } else {
+        bottom_need_backward_[layer_id][bottom_id] = false;
+      }
     }
   }
   // Handle force_backward if needed.
@@ -231,7 +283,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
     if (state.level() < rule.min_level()) {
       LOG(INFO) << "The NetState level (" << state.level()
           << ") is above the min_level (" << rule.min_level()
-          << " specified by a rule in layer " << layer_name;
+          << ") specified by a rule in layer " << layer_name;
       return false;
     }
   }
@@ -240,24 +292,36 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
     if (state.level() > rule.max_level()) {
       LOG(INFO) << "The NetState level (" << state.level()
           << ") is above the max_level (" << rule.max_level()
-          << " specified by a rule in layer " << layer_name;
+          << ") specified by a rule in layer " << layer_name;
       return false;
     }
   }
-  // Check whether the rule is broken due to stage. If stage is specified,
-  // the NetState must contain ALL of the rule's stages to meet it.
-  if (rule.stage_size()) {
-    for (int i = 0; i < rule.stage_size(); ++i) {
-      // Check that the NetState contains the rule's ith stage.
-      bool has_stage = false;
-      for (int j = 0; !has_stage && j < state.stage_size(); ++j) {
-        if (rule.stage(i) == state.stage(j)) { has_stage = true; }
-      }
-      if (!has_stage) {
-        LOG(INFO) << "The NetState did not contain stage '" << rule.stage(i)
-                  << "' specified by a rule in layer " << layer_name;
-        return false;
-      }
+  // Check whether the rule is broken due to stage. The NetState must
+  // contain ALL of the rule's stages to meet it.
+  for (int i = 0; i < rule.stage_size(); ++i) {
+    // Check that the NetState contains the rule's ith stage.
+    bool has_stage = false;
+    for (int j = 0; !has_stage && j < state.stage_size(); ++j) {
+      if (rule.stage(i) == state.stage(j)) { has_stage = true; }
+    }
+    if (!has_stage) {
+      LOG(INFO) << "The NetState did not contain stage '" << rule.stage(i)
+                << "' specified by a rule in layer " << layer_name;
+      return false;
+    }
+  }
+  // Check whether the rule is broken due to not_stage. The NetState must
+  // contain NONE of the rule's not_stages to meet it.
+  for (int i = 0; i < rule.not_stage_size(); ++i) {
+    // Check that the NetState contains the rule's ith not_stage.
+    bool has_stage = false;
+    for (int j = 0; !has_stage && j < state.stage_size(); ++j) {
+      if (rule.not_stage(i) == state.stage(j)) { has_stage = true; }
+    }
+    if (has_stage) {
+      LOG(INFO) << "The NetState contained a not_stage '" << rule.not_stage(i)
+                << "' specified by a rule in layer " << layer_name;
+      return false;
     }
   }
   return true;
@@ -272,15 +336,17 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
   shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
     (new LayerParameter(param.layers(layer_id))) : NULL);
   const string& blob_name = layer_param ?
-      layer_param->top(top_id) : param.input(top_id);
+      (layer_param->top_size() > top_id ?
+          layer_param->top(top_id) : "(automatic)") : param.input(top_id);
   // Check if we are doing in-place computation
-  if (layer_param && layer_param->bottom_size() > top_id &&
+  if (blob_name_to_idx && layer_param && layer_param->bottom_size() > top_id &&
       blob_name == layer_param->bottom(top_id)) {
     // In-place computation
     LOG(INFO) << layer_param->name() << " -> " << blob_name << " (in-place)";
     top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
     top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
-  } else if (blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
+  } else if (blob_name_to_idx &&
+             blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
     // raise an error.
     LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
@@ -296,7 +362,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
     blob_need_backward_.push_back(false);
-    (*blob_name_to_idx)[blob_name] = blob_id;
+    if (blob_name_to_idx) { (*blob_name_to_idx)[blob_name] = blob_id; }
     if (layer_id == -1) {
       // Set the (explicitly specified) dimensions of the input blob.
       blob_pointer->Reshape(param.input_dim(top_id * 4),
@@ -309,9 +375,8 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
       top_id_vecs_[layer_id].push_back(blob_id);
       top_vecs_[layer_id].push_back(blob_pointer.get());
     }
-    memory_used_ += blob_pointer->count();
   }
-  available_blobs->insert(blob_name);
+  if (available_blobs) { available_blobs->insert(blob_name); }
 }
 
 // Helper for Net::Init: add a new bottom blob to the net.
@@ -439,6 +504,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
+    layers_[i]->Reshape(bottom_vecs_[i], &top_vecs_[i]);
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
@@ -612,6 +678,13 @@ void Net<Dtype>::BackwardTo(int end) {
 template <typename Dtype>
 void Net<Dtype>::Backward() {
   BackwardFromTo(layers_.size() - 1, 0);
+}
+
+template <typename Dtype>
+void Net<Dtype>::Reshape() {
+  for (int i = 0; i < layers_.size(); ++i) {
+    layers_[i]->Reshape(bottom_vecs_[i], &top_vecs_[i]);
+  }
 }
 
 template <typename Dtype>

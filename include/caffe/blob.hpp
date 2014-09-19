@@ -8,14 +8,35 @@
 
 namespace caffe {
 
+/**
+ * @brief A wrapper around SyncedMemory holders serving as the basic
+ *        computational unit through which Layer%s, Net%s, and Solver%s
+ *        interact.
+ *
+ * TODO(dox): more thorough description.
+ */
 template <typename Dtype>
 class Blob {
  public:
   Blob()
        : data_(), diff_(), num_(0), channels_(0), height_(0), width_(0),
-       count_(0) {}
+       count_(0), capacity_(0) {}
   explicit Blob(const int num, const int channels, const int height,
     const int width);
+  /**
+   * @brief Change the dimensions of the blob, allocating new memory if
+   *        necessary.
+   *
+   * This function can be called both to create an initial allocation
+   * of memory, and to adjust the dimensions of a top blob during Layer::Reshape
+   * or Layer::Forward. When changing the size of blob, memory will only be
+   * reallocated if sufficient memory does not already exist, and excess memory
+   * will never be freed.
+   *
+   * Note that reshaping an input blob and immediately calling Net::Backward is
+   * an error; either Net::Forward or Net::Reshape need to be called to
+   * propagate the new input shape to higher layers.
+   */
   void Reshape(const int num, const int channels, const int height,
     const int width);
   void ReshapeLike(const Blob& other);
@@ -23,7 +44,7 @@ class Blob {
   inline int channels() const { return channels_; }
   inline int height() const { return height_; }
   inline int width() const { return width_; }
-  inline int count() const {return count_; }
+  inline int count() const { return count_; }
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     CHECK_GE(n, 0);
@@ -36,8 +57,15 @@ class Blob {
     CHECK_LE(w, width_);
     return ((n * channels_ + c) * height_ + h) * width_ + w;
   }
-  // Copy from source. If copy_diff is false, we copy the data; if copy_diff
-  // is true, we copy the diff.
+  /**
+   * @brief Copy from a source Blob.
+   *
+   * @param source the Blob to copy from
+   * @param copy_diff if false, copy the data; if true, copy the diff
+   * @param reshape if false, require this Blob to be pre-shaped to the shape
+   *        of other (and die otherwise); if true, Reshape this Blob to other's
+   *        shape if necessary
+   */
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
@@ -74,16 +102,28 @@ class Blob {
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
 
-  // Compute the sum of absolute values (L1 norm) of the data or diff.
+  /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;
+  /// @brief Compute the sum of absolute values (L1 norm) of the diff.
   Dtype asum_diff() const;
 
-  // Set the data_/diff_ shared_ptr to point to the SyncedMemory holding the
-  // data_/diff_ of Blob other -- useful in layers which simply perform a copy
-  // in their forward or backward pass.
-  // This deallocates the SyncedMemory holding this blob's data/diff, as
-  // shared_ptr calls its destructor when reset with the = operator.
+  /**
+   * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
+   *        data_ of Blob other -- useful in Layer&s which simply perform a copy
+   *        in their Forward pass.
+   *
+   * This deallocates the SyncedMemory holding this Blob's data_, as
+   * shared_ptr calls its destructor when reset with the "=" operator.
+   */
   void ShareData(const Blob& other);
+  /**
+   * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
+   *        diff_ of Blob other -- useful in Layer&s which simply perform a copy
+   *        in their Forward pass.
+   *
+   * This deallocates the SyncedMemory holding this Blob's diff_, as
+   * shared_ptr calls its destructor when reset with the "=" operator.
+   */
   void ShareDiff(const Blob& other);
 
  protected:
@@ -94,6 +134,7 @@ class Blob {
   int height_;
   int width_;
   int count_;
+  int capacity_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

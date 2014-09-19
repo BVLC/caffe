@@ -1,0 +1,20 @@
+net: "examples/mnist/mnist_autoencoder.prototxt"
+test_state: { stage: 'test-on-train' }
+test_iter: 500
+test_state: { stage: 'test-on-test' }
+test_iter: 100
+test_interval: 500
+test_compute_loss: true
+base_lr: 0.01
+lr_policy: "step"
+gamma: 0.1
+stepsize: 10000
+display: 100
+max_iter: 65000
+weight_decay: 0.0005
+snapshot: 10000
+snapshot_prefix: "examples/mnist/mnist_autoencoder_nesterov_train"
+momentum: 0.95
+# solver mode: CPU or GPU
+solver_mode: GPU
+solver_type: NESTEROV

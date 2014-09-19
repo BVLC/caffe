@@ -8,9 +8,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void SliceLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void SliceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  Layer<Dtype>::SetUp(bottom, top);
   const SliceParameter& slice_param = this->layer_param_.slice_param();
   slice_dim_ = slice_param.slice_dim();
   CHECK_GE(slice_dim_, 0);
@@ -19,6 +18,11 @@ void SliceLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
   std::copy(slice_param.slice_point().begin(),
       slice_param.slice_point().end(),
       std::back_inserter(slice_point_));
+}
+
+template <typename Dtype>
+void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   count_ = 0;
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
@@ -51,7 +55,6 @@ void SliceLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
          count_ += (*top)[i]->count();
       }
     }
-
   } else {
     if (slice_dim_ == 0) {
       CHECK_EQ(num_ % top->size(), 0)
@@ -73,7 +76,7 @@ void SliceLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->mutable_cpu_data();
   if (slice_dim_ == 0) {
@@ -98,7 +101,6 @@ Dtype SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       offset_channel += blob->channels();
     }
   }  // slice_dim_ is guaranteed to be 0 or 1 by SetUp.
-  return Dtype(0.);
 }
 
 template <typename Dtype>

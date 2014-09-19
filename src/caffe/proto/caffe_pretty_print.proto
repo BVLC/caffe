@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package caffe;
 
-import "caffe/proto/caffe.proto";
+import "caffe.proto";
 
 // A near-duplicate of NetParameter with fields re-numbered to beautify
 // automatic prototext dumps.  The main practical purpose is to print inputs
