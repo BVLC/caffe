@@ -55,7 +55,10 @@ install(TARGETS pycaffe DESTINATION python/caffe)
 
 #Add a symlink named "_caffe.so" that can be imported by python
 ADD_CUSTOM_COMMAND(TARGET pycaffe POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-    $<TARGET_FILE_NAME:pycaffe> ${CMAKE_BINARY_DIR}/_caffe.so)
-    INSTALL(PROGRAMS ${CMAKE_BINARY_DIR}/_caffe.so DESTINATION python/caffe)
+    #COMMAND ${CMAKE_COMMAND} -E create_symlink
+    #$<TARGET_FILE_NAME:pycaffe> ${CMAKE_BINARY_DIR}/_caffe.so)
+    COMMAND ln -sf $<TARGET_FILE_NAME:pycaffe> ${CMAKE_BINARY_DIR}/_caffe.so)
+
+
+INSTALL(PROGRAMS ${CMAKE_BINARY_DIR}/_caffe.so DESTINATION python/caffe)
 
