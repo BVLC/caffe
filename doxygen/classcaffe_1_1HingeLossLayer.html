@@ -123,8 +123,11 @@ virtual LayerParameter_LayerType&#160;</td><td class="memItemRight" valign="bott
 &#160;</td><td class="memItemRight" valign="bottom"><b>LossLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:a16e133050e2d97c6f024ea74e3ba4ead inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html#a00f614a20793dcd2a70d93ac0c0a053a">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
-<tr class="memdesc:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this.  <a href="#a00f614a20793dcd2a70d93ac0c0a053a">More...</a><br /></td></tr>
+<tr class="memdesc:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this function as well as Reshape.  <a href="#a00f614a20793dcd2a70d93ac0c0a053a">More...</a><br /></td></tr>
 <tr class="separator:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafb637144a77ca7bfe5c3194bbe0d484 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html#aafb637144a77ca7bfe5c3194bbe0d484">Reshape</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:aafb637144a77ca7bfe5c3194bbe0d484 inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs.  <a href="#aafb637144a77ca7bfe5c3194bbe0d484">More...</a><br /></td></tr>
+<tr class="separator:aafb637144a77ca7bfe5c3194bbe0d484 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html#a8a2e16d4691640c34e589aac4ec42e28">ExactNumBottomBlobs</a> () const </td></tr>
 <tr class="memdesc:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the exact number of bottom blobs required by the layer, or -1 if no exact number is required.  <a href="#a8a2e16d4691640c34e589aac4ec42e28">More...</a><br /></td></tr>
 <tr class="separator:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -380,7 +383,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:02 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:47 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>

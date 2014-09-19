@@ -1,10 +1,14 @@
 <!doctype html>
 <html>
   <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>
-      Caffe | Caffe
+      Caffe | Installation
     </title>
 
     <link rel="stylesheet" href="/stylesheets/reset.css">
@@ -56,7 +60,7 @@ We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
 <p>Caffe depends on several software packages.</p>
 
 <ul>
-  <li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> library version 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)</li>
+  <li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)</li>
   <li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> (provided via ATLAS, MKL, or OpenBLAS).</li>
   <li><a href="http://opencv.org/">OpenCV</a>.</li>
   <li><a href="http://www.boost.org/">Boost</a> (&gt;= 1.55, although only 1.55 is tested)</li>
@@ -73,12 +77,16 @@ We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
   </li>
 </ul>
 
-<p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code>CPU_ONLY := 1</code> in <code>Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
+<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code>USE_CUDNN := 1</code> flag in <code>Makefile.config</code> when installing Caffe. Acceleration is automatic.</p>
+
+<p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code>CPU_ONLY := 1</code> flag in <code>Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
 
 <h3 id="cuda-and-blas">CUDA and BLAS</h3>
 
 <p>Caffe requires the CUDA <code>nvcc</code> compiler to compile its GPU code and CUDA driver for GPU operation.
 To install CUDA, go to the <a href="https://developer.nvidia.com/cuda-downloads">NVIDIA CUDA website</a> and follow installation instructions there. Install the library and the latest standalone driver separately; the driver bundled with the library is usually out-of-date. <strong>Warning!</strong> The 331.* CUDA driver series has a critical performance issue: do not use it.</p>
+
+<p>For best performance, Caffe can be accelerated by <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. Register for free at the cuDNN site, install it, then continue with these installation instructions. To compile with cuDNN set the <code>USE_CUDNN := 1</code> flag set in your <code>Makefile.config</code>.</p>
 
 <p>Caffe requires BLAS as the backend of its matrix and vector computations.
 There are several implementations of this library.
@@ -317,6 +325,8 @@ make test
 make runtest
 </code></pre>
 
+<p>To compile with cuDNN acceleration, you should uncomment the <code>USE_CUDNN := 1</code> switch in <code>Makefile.config</code>.</p>
+
 <p>If there is no GPU in your machine, you should switch to CPU-only Caffe by uncommenting <code>CPU_ONLY := 1</code> in <code>Makefile.config</code>.</p>
 
 <p>To compile the Python and MATLAB wrappers do <code>make pycaffe</code> and <code>make matcaffe</code> respectively.
@@ -327,6 +337,29 @@ Be sure to set your MATLAB and Python paths in <code>Makefile.config</code> firs
 <p><em>Speed</em>: for a faster build, compile in parallel by doing <code>make all -j8</code> where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).</p>
 
 <p>Now that you have installed Caffe, check out the <a href="gathered/examples/mnist.html">MNIST tutorial</a> and the <a href="gathered/examples/imagenet.html">reference ImageNet model tutorial</a>.</p>
+
+<h3 id="compilation-using-cmake-beta">Compilation using CMake (beta)</h3>
+
+<p>In lieu of manually editing <code>Makefile.config</code> to tell Caffe where dependencies are located, Caffe also provides a CMake-based build system (currently in “beta”).
+It requires CMake version &gt;= 2.8.8.
+The basic installation steps are as follows:</p>
+
+<pre><code>mkdir build
+cd build
+cmake ..
+make all
+make runtest
+</code></pre>
+
+<h4 id="ubuntu-1204">Ubuntu 12.04</h4>
+
+<p>Note that in Ubuntu 12.04, Aptitude will install version CMake 2.8.7 by default, which is not supported by Caffe’s CMake build (requires at least 2.8.8).
+As a workaround, if you are using Ubuntu 12.04 you can try the following steps to install (or upgrade to) CMake 2.8.9:</p>
+
+<pre><code>sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
+sudo apt-get -y update
+sudo apt-get install cmake
+</code></pre>
 
 <h2 id="hardware-questions">Hardware Questions</h2>
 

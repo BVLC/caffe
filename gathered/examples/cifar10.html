@@ -1,6 +1,10 @@
 <!doctype html>
 <html>
   <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>
@@ -44,7 +48,7 @@
 
 <p>Alex Krizhevsky’s <a href="https://code.google.com/p/cuda-convnet/">cuda-convnet</a> details the model definitions, parameters, and training procedure for good performance on CIFAR-10. This example reproduces his results in Caffe.</p>
 
-<p>We will assume that you have Caffe successfully compiled. If not, please refer to the <a href="installation.html">Installation page</a>. In this tutorial, we will assume that your caffe installation is located at <code>CAFFE_ROOT</code>.</p>
+<p>We will assume that you have Caffe successfully compiled. If not, please refer to the <a href="/installation.html">Installation page</a>. In this tutorial, we will assume that your caffe installation is located at <code>CAFFE_ROOT</code>.</p>
 
 <p>We thank @chyojn for the pull request that defined the model schemas and solver configurations.</p>
 
@@ -64,17 +68,17 @@ cd $CAFFE_ROOT/examples/cifar10
 
 <h2 id="the-model">The Model</h2>
 
-<p>The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the <code>CAFFE_ROOT/examples/cifar10</code> directory’s <code>cifar10_quick_train.prototxt</code>.</p>
+<p>The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the <code>CAFFE_ROOT/examples/cifar10</code> directory’s <code>cifar10_quick_train_test.prototxt</code>.</p>
 
 <h2 id="training-and-testing-the-quick-model">Training and Testing the “Quick” Model</h2>
 
-<p>Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run <code>train_quick.sh</code>, or the following command directly:</p>
+<p>Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to <a href="../examples/mnist.html">MNIST Tutorial</a>). Simply run <code>train_quick.sh</code>, or the following command directly:</p>
 
 <pre><code>cd $CAFFE_ROOT/examples/cifar10
 ./train_quick.sh
 </code></pre>
 
-<p><code>train_quick.sh</code> is a simple script, so have a look inside. <code>GLOG_logtostderr=1</code> is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is <code>caffe.bin</code> with the <code>train</code> action, and the solver protobuf text file as its argument.</p>
+<p><code>train_quick.sh</code> is a simple script, so have a look inside. The main tool for training is <code>caffe</code> with the <code>train</code> action, and the solver protobuf text file as its argument.</p>
 
 <p>When you run the code, you will see a lot of messages flying by like this:</p>
 

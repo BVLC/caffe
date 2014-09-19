@@ -115,9 +115,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aea3a6d5454ee1a0db7cdb6c59bcfc5c8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aea3a6d5454ee1a0db7cdb6c59bcfc5c8"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>EuclideanLossLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:aea3a6d5454ee1a0db7cdb6c59bcfc5c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58a4db1e251eeb1e45d2f957a38038e5"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1EuclideanLossLayer.html#a58a4db1e251eeb1e45d2f957a38038e5">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
-<tr class="memdesc:a58a4db1e251eeb1e45d2f957a38038e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this.  <a href="#a58a4db1e251eeb1e45d2f957a38038e5">More...</a><br /></td></tr>
-<tr class="separator:a58a4db1e251eeb1e45d2f957a38038e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a294463f3d2a77c84d95a0c27d9a829bb"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1EuclideanLossLayer.html#a294463f3d2a77c84d95a0c27d9a829bb">Reshape</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:a294463f3d2a77c84d95a0c27d9a829bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs.  <a href="#a294463f3d2a77c84d95a0c27d9a829bb">More...</a><br /></td></tr>
+<tr class="separator:a294463f3d2a77c84d95a0c27d9a829bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac2ef07f6aa25f31c1e955f66b60b4e84"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2ef07f6aa25f31c1e955f66b60b4e84"></a>
 virtual LayerParameter_LayerType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1EuclideanLossLayer.html#ac2ef07f6aa25f31c1e955f66b60b4e84">type</a> () const </td></tr>
 <tr class="memdesc:ac2ef07f6aa25f31c1e955f66b60b4e84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the layer type as an enum value. <br /></td></tr>
@@ -128,6 +128,9 @@ virtual LayerParameter_LayerType&#160;</td><td class="memItemRight" valign="bott
 <tr class="memitem:a16e133050e2d97c6f024ea74e3ba4ead inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16e133050e2d97c6f024ea74e3ba4ead"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LossLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:a16e133050e2d97c6f024ea74e3ba4ead inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html#a00f614a20793dcd2a70d93ac0c0a053a">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this function as well as Reshape.  <a href="#a00f614a20793dcd2a70d93ac0c0a053a">More...</a><br /></td></tr>
+<tr class="separator:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html#a8a2e16d4691640c34e589aac4ec42e28">ExactNumBottomBlobs</a> () const </td></tr>
 <tr class="memdesc:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the exact number of bottom blobs required by the layer, or -1 if no exact number is required.  <a href="#a8a2e16d4691640c34e589aac4ec42e28">More...</a><br /></td></tr>
 <tr class="separator:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -408,7 +411,7 @@ template&lt;typename Dtype &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a58a4db1e251eeb1e45d2f957a38038e5"></a>
+<a class="anchor" id="a294463f3d2a77c84d95a0c27d9a829bb"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -418,7 +421,7 @@ template&lt;typename Dtype &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classcaffe_1_1EuclideanLossLayer.html">caffe::EuclideanLossLayer</a>&lt; Dtype &gt;::LayerSetUp </td>
+          <td class="memname">void <a class="el" href="classcaffe_1_1EuclideanLossLayer.html">caffe::EuclideanLossLayer</a>&lt; Dtype &gt;::Reshape </td>
           <td>(</td>
           <td class="paramtype">const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;&#160;</td>
           <td class="paramname"><em>bottom</em>, </td>
@@ -442,17 +445,17 @@ template&lt;typename Dtype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Does layer-specific setup: your layer should implement this. </p>
+<p>Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">bottom</td><td>the preshaped input blobs, whose data fields store the input data for this layer </td></tr>
-    <tr><td class="paramname">top</td><td>the allocated but unshaped output blobs, to be initialized by LayerSetUp</td></tr>
+    <tr><td class="paramname">bottom</td><td>the input blobs, with the requested input shapes </td></tr>
+    <tr><td class="paramname">top</td><td>the top blobs, which should be reshaped as needed</td></tr>
   </table>
   </dd>
 </dl>
-<p>This method should be used to do layer-specific setup. At a minimum, this includes reshaping the empty top blobs to the shape as dictated by the shapes of the bottom blobs and any relevant parameters from the <code>layer_param_</code>. </p>
+<p>This method should reshape top blobs as needed according to the shapes of the bottom (input) blobs, as well as reshaping any internal buffers and making any other necessary adjustments so that the layer can accomodate the bottom blobs. </p>
 
-<p>Reimplemented from <a class="el" href="classcaffe_1_1LossLayer.html#a00f614a20793dcd2a70d93ac0c0a053a">caffe::LossLayer&lt; Dtype &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classcaffe_1_1LossLayer.html#aafb637144a77ca7bfe5c3194bbe0d484">caffe::LossLayer&lt; Dtype &gt;</a>.</p>
 
 </div>
 </div>
@@ -463,7 +466,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:01 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:46 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>

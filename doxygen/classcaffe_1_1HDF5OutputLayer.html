@@ -115,8 +115,11 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>HDF5OutputLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:acf9e02d15a72cb6838e8fd2860e046b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b3d6e02ae889972ea7b50f9324adc80"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1HDF5OutputLayer.html#a4b3d6e02ae889972ea7b50f9324adc80">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
-<tr class="memdesc:a4b3d6e02ae889972ea7b50f9324adc80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this.  <a href="#a4b3d6e02ae889972ea7b50f9324adc80">More...</a><br /></td></tr>
+<tr class="memdesc:a4b3d6e02ae889972ea7b50f9324adc80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this function as well as Reshape.  <a href="#a4b3d6e02ae889972ea7b50f9324adc80">More...</a><br /></td></tr>
 <tr class="separator:a4b3d6e02ae889972ea7b50f9324adc80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4307f13214739bf6521676a62dc8298"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1HDF5OutputLayer.html#ab4307f13214739bf6521676a62dc8298">Reshape</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:ab4307f13214739bf6521676a62dc8298"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs.  <a href="#ab4307f13214739bf6521676a62dc8298">More...</a><br /></td></tr>
+<tr class="separator:ab4307f13214739bf6521676a62dc8298"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9a6d6a6c60a5f6bc647750c52a799318"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a6d6a6c60a5f6bc647750c52a799318"></a>
 virtual LayerParameter_LayerType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1HDF5OutputLayer.html#a9a6d6a6c60a5f6bc647750c52a799318">type</a> () const </td></tr>
 <tr class="memdesc:a9a6d6a6c60a5f6bc647750c52a799318"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the layer type as an enum value. <br /></td></tr>
@@ -352,17 +355,65 @@ template&lt;typename Dtype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Does layer-specific setup: your layer should implement this. </p>
+<p>Does layer-specific setup: your layer should implement this function as well as Reshape. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">bottom</td><td>the preshaped input blobs, whose data fields store the input data for this layer </td></tr>
-    <tr><td class="paramname">top</td><td>the allocated but unshaped output blobs, to be initialized by LayerSetUp</td></tr>
+    <tr><td class="paramname">top</td><td>the allocated but unshaped output blobs</td></tr>
   </table>
   </dd>
 </dl>
-<p>This method should be used to do layer-specific setup. At a minimum, this includes reshaping the empty top blobs to the shape as dictated by the shapes of the bottom blobs and any relevant parameters from the <code>layer_param_</code>. </p>
+<p>This method should do one-time layer specific setup. This includes reading and processing relevent parameters from the <code>layer_param_</code>. Setting up the shapes of top blobs and internal buffers should be done in <code>Reshape</code>, which will be called before the forward pass to adjust the top blob sizes. </p>
 
 <p>Reimplemented from <a class="el" href="classcaffe_1_1Layer.html#a11a81d8a3722fcbceab72e6a964695e2">caffe::Layer&lt; Dtype &gt;</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ab4307f13214739bf6521676a62dc8298"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void <a class="el" href="classcaffe_1_1HDF5OutputLayer.html">caffe::HDF5OutputLayer</a>&lt; Dtype &gt;::Reshape </td>
+          <td>(</td>
+          <td class="paramtype">const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;&#160;</td>
+          <td class="paramname"><em>bottom</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *&#160;</td>
+          <td class="paramname"><em>top</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">bottom</td><td>the input blobs, with the requested input shapes </td></tr>
+    <tr><td class="paramname">top</td><td>the top blobs, which should be reshaped as needed</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>This method should reshape top blobs as needed according to the shapes of the bottom (input) blobs, as well as reshaping any internal buffers and making any other necessary adjustments so that the layer can accomodate the bottom blobs. </p>
+
+<p>Implements <a class="el" href="classcaffe_1_1Layer.html#a288c68a7fc6882fd3f0bc40126bf61f9">caffe::Layer&lt; Dtype &gt;</a>.</p>
 
 </div>
 </div>
@@ -373,7 +424,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:02 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:47 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>

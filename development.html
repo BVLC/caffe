@@ -1,10 +1,14 @@
 <!doctype html>
 <html>
   <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>
-      Caffe | Development
+      Caffe | Developing and Contributing
     </title>
 
     <link rel="stylesheet" href="/stylesheets/reset.css">
@@ -84,7 +88,7 @@ Use this if you want more stability.</li>
 
 <h3 id="issues--pull-request-protocol">Issues &amp; Pull Request Protocol</h3>
 
-<p>Use Github Issues to report <a href="https://github.com/BVLC/caffe/issues?labels=bug&amp;page=1&amp;state=open">bugs</a>, propose features, and ask <a href="https://github.com/BVLC/caffe/issues?labels=question&amp;page=1&amp;state=open">questions</a>.
+<p>Use Github Issues to report <a href="https://github.com/BVLC/caffe/issues?labels=bug&amp;page=1&amp;state=open">bugs</a>, propose features, and ask development <a href="https://github.com/BVLC/caffe/issues?labels=question&amp;page=1&amp;state=open">questions</a>.
 Large-scale development work is guided by <a href="https://github.com/BVLC/caffe/issues?milestone=1">milestones</a>, which are sets of Issues selected for concurrent release (integration from <code>dev</code> to <code>master</code>).</p>
 
 <p>Please note that since the core developers are largely researchers, we may work on a feature in isolation for some time before releasing it to the community, so as to claim honest academic contribution.
@@ -93,13 +97,18 @@ We do release things as soon as a reasonable technical report may be written, an
 <p>When you are ready to start developing your feature or fixing a bug, follow this protocol:</p>
 
 <ul>
-  <li>Do new development in <a href="https://www.atlassian.com/git/workflows#!workflow-feature-branch">feature branches</a> with descriptive names.</li>
-  <li>Bring your work up-to-date by <a href="http://git-scm.com/book/en/Git-Branching-Rebasing">rebasing</a> onto the latest <code>dev</code>.
+  <li>Develop in <a href="https://www.atlassian.com/git/workflows#!workflow-feature-branch">feature branches</a> with descriptive names.
+    <ul>
+      <li>For new development branch off <code>dev</code>.</li>
+      <li>For documentation and fixes for <code>master</code> branch off <code>master</code>.</li>
+    </ul>
+  </li>
+  <li>Bring your work up-to-date by <a href="http://git-scm.com/book/en/Git-Branching-Rebasing">rebasing</a> onto the latest <code>dev</code> / <code>master</code>.
 (Polish your changes by <a href="https://help.github.com/articles/interactive-rebase">interactive rebase</a>, if you’d like.)</li>
-  <li><a href="https://help.github.com/articles/using-pull-requests">Pull request</a> your contribution to <code>BVLC/caffe</code>’s <code>dev</code> branch for discussion and review.
+  <li><a href="https://help.github.com/articles/using-pull-requests">Pull request</a> your contribution to <code>BVLC/caffe</code>’s <code>dev</code> / <code>master</code> branch for discussion and review.
     <ul>
       <li>Make PRs <em>as soon as development begins</em>, to let discussion guide development.</li>
-      <li>A PR is only ready for merge review when it is a fast-forward merge to dev, and all code is documented, linted, and tested – that means your PR must include tests!</li>
+      <li>A PR is only ready for merge review when it is a fast-forward merge, and all code is documented, linted, and tested – that means your PR must include tests!</li>
     </ul>
   </li>
   <li>When the PR satisfies the above properties, use comments to request maintainer review.</li>

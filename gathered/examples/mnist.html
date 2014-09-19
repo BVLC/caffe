@@ -1,6 +1,10 @@
 <!doctype html>
 <html>
   <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>
@@ -42,7 +46,7 @@
 
       <h1 id="training-mnist-with-caffe">Training MNIST with Caffe</h1>
 
-<p>We will assume that you have caffe successfully compiled. If not, please refer to the <a href="installation.html">Installation page</a>. In this tutorial, we will assume that your caffe installation is located at <code>CAFFE_ROOT</code>.</p>
+<p>We will assume that you have Caffe successfully compiled. If not, please refer to the <a href="/installation.html">Installation page</a>. In this tutorial, we will assume that your Caffe installation is located at <code>CAFFE_ROOT</code>.</p>
 
 <h2 id="prepare-datasets">Prepare Datasets</h2>
 
@@ -60,11 +64,11 @@ cd $CAFFE_ROOT/examples/mnist
 
 <p>Before we actually run the training program, let’s explain what will happen. We will use the <a href="http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf">LeNet</a> network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.</p>
 
-<p>The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in <code>CAFFE_ROOT/examples/lenet.prototxt</code>.</p>
+<p>The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in <code>$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt</code>.</p>
 
 <h2 id="define-the-mnist-network">Define the MNIST Network</h2>
 
-<p>This section explains the prototxt file <code>lenet_train.prototxt</code> used in the MNIST demo. We assume that you are familiar with <a href="https://developers.google.com/protocol-buffers/docs/overview">Google Protobuf</a>, and assume that you have read the protobuf definitions used by Caffe, which can be found at <a href="https://github.com/Yangqing/caffe/blob/master/src/caffe/proto/caffe.proto">src/caffe/proto/caffe.proto</a>.</p>
+<p>This section explains the <code>lenet_train_test.prototxt</code> model definition that specifies the LeNet model for MNIST handwritten digit classification. We assume that you are familiar with <a href="https://developers.google.com/protocol-buffers/docs/overview">Google Protobuf</a>, and assume that you have read the protobuf definitions used by Caffe, which can be found at <code>$CAFFE_ROOT/src/caffe/proto/caffe.proto</code>.</p>
 
 <p>Specifically, we will write a <code>caffe::NetParameter</code> (or in python, <code>caffe.proto.caffe_pb2.NetParameter</code>) protobuf. We will start by giving the network a name:</p>
 
@@ -140,7 +144,7 @@ cd $CAFFE_ROOT/examples/mnist
 
 <p>This says we will perform max pooling with a pool kernel size 2 and a stride of 2 (so no overlapping between neighboring pooling regions).</p>
 
-<p>Similarly, you can write up the second convolution and pooling layers. Check <code>data/lenet.prototxt</code> for details.</p>
+<p>Similarly, you can write up the second convolution and pooling layers. Check <code>$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt</code> for details.</p>
 
 <h3 id="writing-the-fully-connected-layer">Writing the Fully Connected Layer</h3>
 
@@ -216,12 +220,31 @@ cd $CAFFE_ROOT/examples/mnist
 
 <p>The <code>softmax_loss</code> layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the <code>label</code> provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to <code>ip2</code>. This is where all magic starts.</p>
 
+<h3 id="additional-notes-writing-layer-rules">Additional Notes: Writing Layer Rules</h3>
+
+<p>Layer definitions can include rules for whether and when they are included in the network definition, like the one below:</p>
+
+<pre><code>layers {
+  // ...layer definition...
+  include: { phase: TRAIN }
+}
+</code></pre>
+
+<p>This is a rule, which controls layer inclusion in the network, based on current network’s state.
+You can refer to <code>$CAFFE_ROOT/src/caffe/proto/caffe.proto</code> for more information about layer rules and model schema.</p>
+
+<p>In the above example, this layer will be included only in <code>TRAIN</code> phase.
+If we change <code>TRAIN</code> with <code>TEST</code>, then this layer will be used only in test phase.
+By default, that is without layer rules, a layer is always included in the network.
+Thus, <code>lenet_train_test.prototxt</code> has two <code>DATA</code> layers defined (with different <code>batch_size</code>), one for the training phase and one for the testing phase.
+Also, there is an <code>ACCURACY</code> layer which is included only in <code>TEST</code> phase for reporting the model accuracy every 100 iteration, as defined in <code>lenet_solver.prototxt</code>.</p>
+
 <h2 id="define-the-mnist-solver">Define the MNIST Solver</h2>
 
-<p>Check out the comments explaining each line in the prototxt:</p>
+<p>Check out the comments explaining each line in the prototxt <code>$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt</code>:</p>
 
 <pre><code># The train/test net protocol buffer definition
-net: "lenet_train_test.prototxt"
+net: "examples/mnist/lenet_train_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of MNIST, we have test batch size 100 and 100 test iterations,
 # covering the full 10,000 testing images.
@@ -242,20 +265,20 @@ display: 100
 max_iter: 10000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "lenet"
-# solver mode: 0 for CPU and 1 for GPU
-solver_mode: 1
+snapshot_prefix: "examples/mnist/lenet"
+# solver mode: CPU or GPU
+solver_mode: GPU
 </code></pre>
 
 <h2 id="training-and-testing-the-model">Training and Testing the Model</h2>
 
-<p>Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run <code>train_mnist.sh</code>, or the following command directly:</p>
+<p>Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run <code>train_lenet.sh</code>, or the following command directly:</p>
 
 <pre><code>cd $CAFFE_ROOT/examples/mnist
 ./train_lenet.sh
 </code></pre>
 
-<p><code>train_lenet.sh</code> is a simple script, but here are a few explanations: <code>GLOG_logtostderr=1</code> is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is <code>caffe.bin</code> with action <code>train</code>, with the solver protobuf text file as its argument.</p>
+<p><code>train_lenet.sh</code> is a simple script, but here is a quick explanation: the main tool for training is <code>caffe</code> with action <code>train</code> and the solver protobuf text file as its argument.</p>
 
 <p>When you run the code, you will see a lot of messages flying by like this:</p>
 

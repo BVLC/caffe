@@ -1,10 +1,14 @@
 <!doctype html>
 <html>
   <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>
-      Caffe 
+      Caffe | Deep Learning Framework
     </title>
 
     <link rel="stylesheet" href="/stylesheets/reset.css">
@@ -77,19 +81,23 @@ Consult performance <a href="/performance_hardware.html">details</a>.
 Caffe tutorial slides.</li>
   <li><a href="http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf">ACM MM paper</a><br />
 A 4-page report for the ACM Multimedia Open Source competition.</li>
+  <li><a href="/tutorial">Caffe Tutorial</a><br />
+DIY deep learning with this hands-on tutorial to Caffe.</li>
   <li><a href="/installation.html">Installation instructions</a><br />
 Tested on Ubuntu, Red Hat, OS X.</li>
-  <li><a href="/getting_pretrained_models.html">Pre-trained models</a><br />
-BVLC provides ready-to-use models for non-commercial use.</li>
+  <li><a href="/model_zoo.html">Model Zoo</a><br />
+BVLC suggests a standard distribution format for Caffe models, and provides trained models.</li>
   <li><a href="/development.html">Developing &amp; Contributing</a><br />
 Guidelines for development and contributing to Caffe.</li>
+  <li><a href="/doxygen/">API Documentation</a><br />
+Developer documentation automagically generated from code comments.</li>
 </ul>
 
 <h3 id="examples">Examples</h3>
 
 <ul>
   <li>
-    <div><a href="/gathered/examples/imagenet.html">ImageNet tutorial</a><br />Train and test "CaffeNet" on ImageNet challenge data.</div>
+    <div><a href="/gathered/examples/imagenet.html">ImageNet tutorial</a><br />Train and test "CaffeNet" on ImageNet data.</div>
   </li>
   <li>
     <div><a href="/gathered/examples/mnist.html">MNIST Tutorial</a><br />Train and test "LeNet" on MNIST data.</div>
@@ -98,10 +106,16 @@ Guidelines for development and contributing to Caffe.</li>
     <div><a href="/gathered/examples/cifar10.html">CIFAR-10 tutorial</a><br />Train and test Caffe on CIFAR-10 data.</div>
   </li>
   <li>
+    <div><a href="/gathered/examples/finetune_flickr_style.html">Fine-tuning for style recognition</a><br />Fine-tune the ImageNet-trained CaffeNet on the "Flickr Style" dataset.</div>
+  </li>
+  <li>
     <div><a href="/gathered/examples/feature_extraction.html">Feature extraction with Caffe C++ code.</a><br />Extract CaffeNet / AlexNet features using the Caffe utility.</div>
   </li>
   <li>
     <div><a href="/gathered/examples/web_demo.html">Web demo</a><br />Image classification demo running as a Flask web server.</div>
+  </li>
+  <li>
+    <div><a href="/gathered/examples/siamese.html">Siamese Network Tutorial</a><br />Train and test a siamese network on MNIST data.</div>
   </li>
 </ul>
 
@@ -112,13 +126,19 @@ Guidelines for development and contributing to Caffe.</li>
     <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/classification.ipynb">ImageNet classification</a><br />Use the pre-trained ImageNet model to classify images with the Python interface.</div>
   </li>
   <li>
-    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection.ipynb">R-CNN detection</a><br />Run a pretrained model as a detector in Python.</div>
-  </li>
-  <li>
     <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb">Filter visualization</a><br />Extracting features and visualizing trained filters with an example image, viewed layer-by-layer.</div>
   </li>
   <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/detection.ipynb">R-CNN detection</a><br />Run a pretrained model as a detector in Python.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/hdf5_classification.ipynb">Off-the-shelf SGD for classification</a><br />Use Caffe as a generic SGD optimizer to train logistic regression on non-image HDF5 data.</div>
+  </li>
+  <li>
     <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/net_surgery.ipynb">Editing model parameters</a><br />How to do net surgery and manually change model parameters, making a fully-convolutional classifier for dense feature extraction.</div>
+  </li>
+  <li>
+    <div><a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/siamese/mnist_siamese.ipynb">Siamese network embedding</a><br />Extracting features and plotting the Siamese network embedding.</div>
   </li>
 </ul>
 

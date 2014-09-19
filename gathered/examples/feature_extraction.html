@@ -1,6 +1,10 @@
 <!doctype html>
 <html>
   <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>
@@ -43,7 +47,9 @@
       <h1 id="extracting-features">Extracting Features</h1>
 
 <p>In this tutorial, we will extract features using a pre-trained model with the included C++ utility.
-Follow instructions for <a href="../../installation.html">installing Caffe</a> and for <a href="../../getting_pretrained_models.html">downloading the reference model</a> for ImageNet.
+Note that we recommend using the Python interface for this task, as for example in the <a href="http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/filter_visualization.ipynb">filter visualization example</a>.</p>
+
+<p>Follow instructions for <a href="../../installation.html">installing Caffe</a> and run <code>scripts/download_model_binary.py models/bvlc_reference_caffenet</code> from caffe root directory.
 If you need detailed information about the tools below, please consult their source code, in which additional documentation is usually provided.</p>
 
 <h2 id="select-data-to-run-on">Select data to run on</h2>
@@ -69,7 +75,7 @@ We’re going to use the images that ship with caffe.</p>
 <p>In practice, subtracting the mean image from a dataset significantly improves classification accuracies.
 Download the mean image of the ILSVRC dataset.</p>
 
-<pre><code>data/ilsvrc12/get_ilsvrc_aux.sh
+<pre><code>./data/ilsvrc12/get_ilsvrc_aux.sh
 </code></pre>
 
 <p>We will use <code>data/ilsvrc212/imagenet_mean.binaryproto</code> in the network definition prototxt.</p>
@@ -80,13 +86,11 @@ We’ll be using the <code>ImageDataLayer</code>, which will load and resize ima
 <pre><code>cp examples/feature_extraction/imagenet_val.prototxt examples/_temp
 </code></pre>
 
-<p>Edit <code>examples/_temp/imagenet_val.prototxt</code> to use correct path for your setup (replace <code>$CAFFE_DIR</code>)</p>
-
 <h2 id="extract-features">Extract Features</h2>
 
 <p>Now everything necessary is in place.</p>
 
-<pre><code>build/tools/extract_features.bin examples/imagenet/caffe_reference_imagenet_model examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10
+<pre><code>./build/tools/extract_features.bin models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel examples/_temp/imagenet_val.prototxt fc7 examples/_temp/features 10
 </code></pre>
 
 <p>The name of feature blob that you extract is <code>fc7</code>, which represents the highest level feature of the reference model.

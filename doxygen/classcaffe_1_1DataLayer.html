@@ -133,7 +133,7 @@ virtual LayerParameter_LayerType&#160;</td><td class="memItemRight" valign="bott
 &#160;</td><td class="memItemRight" valign="bottom"><b>BasePrefetchingDataLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:a527e2b51c73759ea5f7e28ced6a371ef inherit pub_methods_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a060110e5147036d1b8fb757311d4a6 inherit pub_methods_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html#a8a060110e5147036d1b8fb757311d4a6">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
-<tr class="memdesc:a8a060110e5147036d1b8fb757311d4a6 inherit pub_methods_classcaffe_1_1BasePrefetchingDataLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this.  <a href="#a8a060110e5147036d1b8fb757311d4a6">More...</a><br /></td></tr>
+<tr class="memdesc:a8a060110e5147036d1b8fb757311d4a6 inherit pub_methods_classcaffe_1_1BasePrefetchingDataLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this function as well as Reshape.  <a href="#a8a060110e5147036d1b8fb757311d4a6">More...</a><br /></td></tr>
 <tr class="separator:a8a060110e5147036d1b8fb757311d4a6 inherit pub_methods_classcaffe_1_1BasePrefetchingDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9dd83c3c003c02e24883a6482f337961 inherit pub_methods_classcaffe_1_1BasePrefetchingDataLayer"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9dd83c3c003c02e24883a6482f337961"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html#a9dd83c3c003c02e24883a6482f337961">Forward_cpu</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
@@ -153,6 +153,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>JoinPrefetchT
 <tr class="memitem:abf8b0153155bc04864ebeeb4c117d7a1 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf8b0153155bc04864ebeeb4c117d7a1"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>BaseDataLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:abf8b0153155bc04864ebeeb4c117d7a1 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19a2e860f57d26b385d46755f5e43fa6 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BaseDataLayer.html#a19a2e860f57d26b385d46755f5e43fa6">Reshape</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:a19a2e860f57d26b385d46755f5e43fa6 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs.  <a href="#a19a2e860f57d26b385d46755f5e43fa6">More...</a><br /></td></tr>
+<tr class="separator:a19a2e860f57d26b385d46755f5e43fa6 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84cacc7e09ef766a8301a3d59faa1345 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a84cacc7e09ef766a8301a3d59faa1345"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BaseDataLayer.html#a84cacc7e09ef766a8301a3d59faa1345">Backward_cpu</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;top, const vector&lt; bool &gt; &amp;propagate_down, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *bottom)</td></tr>
 <tr class="memdesc:a84cacc7e09ef766a8301a3d59faa1345 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Using the CPU device, compute the gradients for any parameters and for the bottom blobs if propagate_down is true. <br /></td></tr>
@@ -435,7 +438,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:00 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:45 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>

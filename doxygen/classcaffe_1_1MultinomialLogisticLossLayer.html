@@ -114,9 +114,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1c9567f9901885ec4737cf9315d52081"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c9567f9901885ec4737cf9315d52081"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>MultinomialLogisticLossLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:a1c9567f9901885ec4737cf9315d52081"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae59fcb10578d883ae9e896159cf9a69e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1MultinomialLogisticLossLayer.html#ae59fcb10578d883ae9e896159cf9a69e">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
-<tr class="memdesc:ae59fcb10578d883ae9e896159cf9a69e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this.  <a href="#ae59fcb10578d883ae9e896159cf9a69e">More...</a><br /></td></tr>
-<tr class="separator:ae59fcb10578d883ae9e896159cf9a69e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c466dc4a388dbf2d2e8de9c1556f56a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1MultinomialLogisticLossLayer.html#a8c466dc4a388dbf2d2e8de9c1556f56a">Reshape</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:a8c466dc4a388dbf2d2e8de9c1556f56a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs.  <a href="#a8c466dc4a388dbf2d2e8de9c1556f56a">More...</a><br /></td></tr>
+<tr class="separator:a8c466dc4a388dbf2d2e8de9c1556f56a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34db3140c6b1d6ef91f8a41b786958ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34db3140c6b1d6ef91f8a41b786958ba"></a>
 virtual LayerParameter_LayerType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1MultinomialLogisticLossLayer.html#a34db3140c6b1d6ef91f8a41b786958ba">type</a> () const </td></tr>
 <tr class="memdesc:a34db3140c6b1d6ef91f8a41b786958ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the layer type as an enum value. <br /></td></tr>
@@ -125,6 +125,9 @@ virtual LayerParameter_LayerType&#160;</td><td class="memItemRight" valign="bott
 <tr class="memitem:a16e133050e2d97c6f024ea74e3ba4ead inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16e133050e2d97c6f024ea74e3ba4ead"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LossLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:a16e133050e2d97c6f024ea74e3ba4ead inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html#a00f614a20793dcd2a70d93ac0c0a053a">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this function as well as Reshape.  <a href="#a00f614a20793dcd2a70d93ac0c0a053a">More...</a><br /></td></tr>
+<tr class="separator:a00f614a20793dcd2a70d93ac0c0a053a inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memItemLeft" align="right" valign="top">virtual int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1LossLayer.html#a8a2e16d4691640c34e589aac4ec42e28">ExactNumBottomBlobs</a> () const </td></tr>
 <tr class="memdesc:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the exact number of bottom blobs required by the layer, or -1 if no exact number is required.  <a href="#a8a2e16d4691640c34e589aac4ec42e28">More...</a><br /></td></tr>
 <tr class="separator:a8a2e16d4691640c34e589aac4ec42e28 inherit pub_methods_classcaffe_1_1LossLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -373,7 +376,7 @@ template&lt;typename Dtype &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ae59fcb10578d883ae9e896159cf9a69e"></a>
+<a class="anchor" id="a8c466dc4a388dbf2d2e8de9c1556f56a"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -383,7 +386,7 @@ template&lt;typename Dtype &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classcaffe_1_1MultinomialLogisticLossLayer.html">caffe::MultinomialLogisticLossLayer</a>&lt; Dtype &gt;::LayerSetUp </td>
+          <td class="memname">void <a class="el" href="classcaffe_1_1MultinomialLogisticLossLayer.html">caffe::MultinomialLogisticLossLayer</a>&lt; Dtype &gt;::Reshape </td>
           <td>(</td>
           <td class="paramtype">const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;&#160;</td>
           <td class="paramname"><em>bottom</em>, </td>
@@ -407,17 +410,17 @@ template&lt;typename Dtype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Does layer-specific setup: your layer should implement this. </p>
+<p>Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">bottom</td><td>the preshaped input blobs, whose data fields store the input data for this layer </td></tr>
-    <tr><td class="paramname">top</td><td>the allocated but unshaped output blobs, to be initialized by LayerSetUp</td></tr>
+    <tr><td class="paramname">bottom</td><td>the input blobs, with the requested input shapes </td></tr>
+    <tr><td class="paramname">top</td><td>the top blobs, which should be reshaped as needed</td></tr>
   </table>
   </dd>
 </dl>
-<p>This method should be used to do layer-specific setup. At a minimum, this includes reshaping the empty top blobs to the shape as dictated by the shapes of the bottom blobs and any relevant parameters from the <code>layer_param_</code>. </p>
+<p>This method should reshape top blobs as needed according to the shapes of the bottom (input) blobs, as well as reshaping any internal buffers and making any other necessary adjustments so that the layer can accomodate the bottom blobs. </p>
 
-<p>Reimplemented from <a class="el" href="classcaffe_1_1LossLayer.html#a00f614a20793dcd2a70d93ac0c0a053a">caffe::LossLayer&lt; Dtype &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classcaffe_1_1LossLayer.html#aafb637144a77ca7bfe5c3194bbe0d484">caffe::LossLayer&lt; Dtype &gt;</a>.</p>
 
 </div>
 </div>
@@ -428,7 +431,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:04 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:49 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>

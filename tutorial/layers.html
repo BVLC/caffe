@@ -1,0 +1,723 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Layer Catalogue
+    </title>
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="layers">Layers</h1>
+
+<p>To create a Caffe model you need to define the model architecture in a protocol buffer definition file (prototxt).</p>
+
+<p>Caffe layers and their parameters are defined in the protocol buffer definitions for the project in <a href="https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto">caffe.proto</a>. The latest definitions are in the <a href="https://github.com/BVLC/caffe/blob/dev/src/caffe/proto/caffe.proto">dev caffe.proto</a>.</p>
+
+<p>TODO complete list of layers linking to headings</p>
+
+<h3 id="vision-layers">Vision Layers</h3>
+
+<ul>
+  <li>Header: <code>./include/caffe/vision_layers.hpp</code></li>
+</ul>
+
+<p>Vision layers usually take <em>images</em> as input and produce other <em>images</em> as output.
+A typical “image” in the real-world may have one color channel (<script type="math/tex">c = 1</script>), as in a grayscale image, or three color channels (<script type="math/tex">c = 3</script>) as in an RGB (red, green, blue) image.
+But in this context, the distinguishing characteristic of an image is its spatial structure: usually an image has some non-trivial height <script type="math/tex">h > 1</script> and width <script type="math/tex">w > 1</script>.
+This 2D geometry naturally lends itself to certain decisions about how to process the input.
+In particular, most of the vision layers work by applying a particular operation to some region of the input to produce a corresponding region of the output.
+In contrast, other layers (with few exceptions) ignore the spatial structure of the input, effectively treating it as “one big vector” with dimension <script type="math/tex">chw</script>.</p>
+
+<h4 id="convolution">Convolution</h4>
+
+<ul>
+  <li>LayerType: <code>CONVOLUTION</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/convolution_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/convolution_layer.cu</code></li>
+  <li>Parameters (<code>ConvolutionParameter convolution_param</code>)
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>num_output</code> (<code>c_o</code>): the number of filters</li>
+          <li><code>kernel_size</code> (or <code>kernel_h</code> and <code>kernel_w</code>): specifies height and width of each filter</li>
+        </ul>
+      </li>
+      <li>Strongly Recommended
+        <ul>
+          <li><code>weight_filler</code> [default <code>type: 'constant' value: 0</code>]</li>
+        </ul>
+      </li>
+      <li>Optional
+        <ul>
+          <li><code>bias_term</code> [default <code>true</code>]: specifies whether to learn and apply a set of additive biases to the filter outputs</li>
+          <li><code>pad</code> (or <code>pad_h</code> and <code>pad_w</code>) [default 0]: specifies the number of pixels to (implicitly) add to each side of the input</li>
+          <li><code>stride</code> (or <code>stride_h</code> and <code>stride_w</code>) [default 1]: specifies the intervals at which to apply the filters to the input</li>
+          <li><code>group</code> (g) [default 1]: If g &gt; 1, we restrict the connectivity of each filter to a subset of the input. Specifically, the input and output channels are separated into g groups, and the <script type="math/tex">i</script>th output group channels will be only connected to the <script type="math/tex">i</script>th input group channels.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Input
+    <ul>
+      <li><code>n * c_i * h_i * w_i</code></li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li><code>n * c_o * h_o * w_o</code>, where <code>h_o = (h_i + 2 * pad_h - kernel_h) / stride_h + 1</code> and <code>w_o</code> likewise.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample (as seen in <code>./examples/imagenet/imagenet_train_val.prototxt</code>)</p>
+
+    <pre><code>layers {
+  name: "conv1"
+  type: CONVOLUTION
+  bottom: "data"
+  top: "conv1"
+  blobs_lr: 1          # learning rate multiplier for the filters
+  blobs_lr: 2          # learning rate multiplier for the biases
+  weight_decay: 1      # weight decay multiplier for the filters
+  weight_decay: 0      # weight decay multiplier for the biases
+  convolution_param {
+    num_output: 96     # learn 96 filters
+    kernel_size: 11    # each filter is 11x11
+    stride: 4          # step 4 pixels between each filter application
+    weight_filler {
+      type: "gaussian" # initialize the filters from a Gaussian
+      std: 0.01        # distribution with stdev 0.01 (default mean: 0)
+    }
+    bias_filler {
+      type: "constant" # initialize the biases to zero (0)
+      value: 0
+    }
+  }
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>CONVOLUTION</code> layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.</p>
+
+<h4 id="pooling">Pooling</h4>
+
+<ul>
+  <li>LayerType: <code>POOLING</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/pooling_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/pooling_layer.cu</code></li>
+  <li>Parameters (<code>PoolingParameter pooling_param</code>)
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>kernel_size</code> (or <code>kernel_h</code> and <code>kernel_w</code>): specifies height and width of each filter</li>
+        </ul>
+      </li>
+      <li>Optional
+        <ul>
+          <li><code>pool</code> [default MAX]: the pooling method. Currently MAX, AVE, or STOCHASTIC</li>
+          <li><code>pad</code> (or <code>pad_h</code> and <code>pad_w</code>) [default 0]: specifies the number of pixels to (implicitly) add to each side of the input</li>
+          <li><code>stride</code> (or <code>stride_h</code> and <code>stride_w</code>) [default 1]: specifies the intervals at which to apply the filters to the input</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Input
+    <ul>
+      <li><code>n * c * h_i * w_i</code></li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li><code>n * c * h_o * w_o</code>, where h_o and w_o are computed in the same way as convolution.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample (as seen in <code>./examples/imagenet/imagenet_train_val.prototxt</code>)</p>
+
+    <pre><code>layers {
+  name: "pool1"
+  type: POOLING
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3 # pool over a 3x3 region
+    stride: 2      # step two pixels (in the bottom blob) between pooling regions
+  }
+}
+</code></pre>
+  </li>
+</ul>
+
+<h4 id="local-response-normalization-lrn">Local Response Normalization (LRN)</h4>
+
+<ul>
+  <li>LayerType: <code>LRN</code></li>
+  <li>CPU Implementation: <code>./src/caffe/layers/lrn_layer.cpp</code></li>
+  <li>CUDA GPU Implementation: <code>./src/caffe/layers/lrn_layer.cu</code></li>
+  <li>Parameters (<code>LRNParameter lrn_param</code>)
+    <ul>
+      <li>Optional
+        <ul>
+          <li><code>local_size</code> [default 5]: the number of channels to sum over (for cross channel LRN) or the side length of the square region to sum over (for within channel LRN)</li>
+          <li><code>alpha</code> [default 1]: the scaling parameter (see below)</li>
+          <li><code>beta</code> [default 5]: the exponent (see below)</li>
+          <li><code>norm_region</code> [default <code>ACROSS_CHANNELS</code>]: whether to sum over adjacent channels (<code>ACROSS_CHANNELS</code>) or nearby spatial locaitons (<code>WITHIN_CHANNEL</code>)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>The local response normalization layer performs a kind of “lateral inhibition” by normalizing over local input regions. In <code>ACROSS_CHANNELS</code> mode, the local regions extend across nearby channels, but have no spatial extent (i.e., they have shape <code>local_size x 1 x 1</code>). In <code>WITHIN_CHANNEL</code> mode, the local regions extend spatially, but are in separate channels (i.e., they have shape <code>1 x local_size x local_size</code>). Each input value is divided by <script type="math/tex">(1 + (\alpha/n) \sum_i x_i)^\beta</script>, where <script type="math/tex">n</script> is the size of each local region, and the sum is taken over the region centered at that value (zero padding is added where necessary).</p>
+
+<h4 id="im2col">im2col</h4>
+
+<p><code>IM2COL</code> is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe’s original convolution to do matrix multiplication by laying out all patches into a matrix.</p>
+
+<h3 id="loss-layers">Loss Layers</h3>
+
+<p>Loss drives learning by comparing an output to a target and assigning cost to minimize. The loss itself is computed by the forward pass and the gradient w.r.t. to the loss is computed by the backward pass.</p>
+
+<h4 id="softmax">Softmax</h4>
+
+<ul>
+  <li>LayerType: <code>SOFTMAX_LOSS</code></li>
+</ul>
+
+<p>The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It’s conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.</p>
+
+<h4 id="sum-of-squares--euclidean">Sum-of-Squares / Euclidean</h4>
+
+<ul>
+  <li>LayerType: <code>EUCLIDEAN_LOSS</code></li>
+</ul>
+
+<p>The Euclidean loss layer computes the sum of squares of differences of its two inputs, <script type="math/tex">\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2</script>.</p>
+
+<h4 id="hinge--margin">Hinge / Margin</h4>
+
+<ul>
+  <li>LayerType: <code>HINGE_LOSS</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/hinge_loss_layer.cpp</code></li>
+  <li>CUDA GPU implementation: none yet</li>
+  <li>Parameters (<code>HingeLossParameter hinge_loss_param</code>)
+    <ul>
+      <li>Optional
+        <ul>
+          <li><code>norm</code> [default L1]: the norm used. Currently L1, L2</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Inputs
+    <ul>
+      <li><code>n * c * h * w</code> Predictions</li>
+      <li><code>n * 1 * 1 * 1</code> Labels</li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li><code>1 * 1 * 1 * 1</code> Computed Loss</li>
+    </ul>
+  </li>
+  <li>
+    <p>Samples</p>
+
+    <pre><code># L1 Norm
+layers {
+  name: "loss"
+  type: HINGE_LOSS
+  bottom: "pred"
+  bottom: "label"
+}
+
+# L2 Norm
+layers {
+  name: "loss"
+  type: HINGE_LOSS
+  bottom: "pred"
+  bottom: "label"
+  top: "loss"
+  hinge_loss_param {
+    norm: L2
+  }
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The hinge loss layer computes a one-vs-all hinge or squared hinge loss.</p>
+
+<h4 id="sigmoid-cross-entropy">Sigmoid Cross-Entropy</h4>
+
+<p><code>SIGMOID_CROSS_ENTROPY_LOSS</code></p>
+
+<h4 id="infogain">Infogain</h4>
+
+<p><code>INFOGAIN_LOSS</code></p>
+
+<h4 id="accuracy-and-top-k">Accuracy and Top-k</h4>
+
+<p><code>ACCURACY</code> scores the output as the accuracy of output with respect to target – it is not actually a loss and has no backward step.</p>
+
+<h3 id="activation--neuron-layers">Activation / Neuron Layers</h3>
+
+<p>In general, activation / Neuron layers are element-wise operators, taking one bottom blob and producing one top blob of the same size. In the layers below, we will ignore the input and out sizes as they are identical:</p>
+
+<ul>
+  <li>Input
+    <ul>
+      <li>n * c * h * w</li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li>n * c * h * w</li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="relu--rectified-linear-and-leaky-relu">ReLU / Rectified-Linear and Leaky-ReLU</h4>
+
+<ul>
+  <li>LayerType: <code>RELU</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/relu_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/relu_layer.cu</code></li>
+  <li>Parameters (<code>ReLUParameter relu_param</code>)
+    <ul>
+      <li>Optional
+        <ul>
+          <li><code>negative_slope</code> [default 0]: specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample (as seen in <code>./examples/imagenet/imagenet_train_val.prototxt</code>)</p>
+
+    <pre><code>layers {
+  name: "relu1"
+  type: RELU
+  bottom: "conv1"
+  top: "conv1"
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>Given an input value x, The <code>RELU</code> layer computes the output as x if x &gt; 0 and negative_slope * x if x &lt;= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.</p>
+
+<h4 id="sigmoid">Sigmoid</h4>
+
+<ul>
+  <li>LayerType: <code>SIGMOID</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/sigmoid_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/sigmoid_layer.cu</code></li>
+  <li>
+    <p>Sample (as seen in <code>./examples/imagenet/mnist_autoencoder.prototxt</code>)</p>
+
+    <pre><code>layers {
+  name: "encode1neuron"
+  bottom: "encode1"
+  top: "encode1neuron"
+  type: SIGMOID
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>SIGMOID</code> layer computes the output as sigmoid(x) for each input element x.</p>
+
+<h4 id="tanh--hyperbolic-tangent">TanH / Hyperbolic Tangent</h4>
+
+<ul>
+  <li>LayerType: <code>TANH</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/tanh_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/tanh_layer.cu</code></li>
+  <li>
+    <p>Sample</p>
+
+    <pre><code>layers {
+  name: "layer"
+  bottom: "in"
+  top: "out"
+  type: TANH
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>TANH</code> layer computes the output as tanh(x) for each input element x.</p>
+
+<h4 id="absolute-value">Absolute Value</h4>
+
+<ul>
+  <li>LayerType: <code>ABSVAL</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/absval_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/absval_layer.cu</code></li>
+  <li>
+    <p>Sample</p>
+
+    <pre><code>layers {
+  name: "layer"
+  bottom: "in"
+  top: "out"
+  type: ABSVAL
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>ABSVAL</code> layer computes the output as abs(x) for each input element x.</p>
+
+<h4 id="power">Power</h4>
+
+<ul>
+  <li>LayerType: <code>POWER</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/power_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/power_layer.cu</code></li>
+  <li>Parameters (<code>PowerParameter power_param</code>)
+    <ul>
+      <li>Optional
+        <ul>
+          <li><code>power</code> [default 1]</li>
+          <li><code>scale</code> [default 1]</li>
+          <li><code>shift</code> [default 0]</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample</p>
+
+    <pre><code>layers {
+  name: "layer"
+  bottom: "in"
+  top: "out"
+  type: POWER
+  power_param {
+    power: 1
+    scale: 1
+    shift: 0
+  }
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>POWER</code> layer computes the output as (shift + scale * x) ^ power for each input element x.</p>
+
+<h4 id="bnll">BNLL</h4>
+
+<ul>
+  <li>LayerType: <code>BNLL</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/bnll_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/bnll_layer.cu</code></li>
+  <li>
+    <p>Sample</p>
+
+    <pre><code>layers {
+  name: "layer"
+  bottom: "in"
+  top: "out"
+  type: BNLL
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>BNLL</code> (binomial normal log likelihood) layer computes the output as log(1 + exp(x)) for each input element x.</p>
+
+<h3 id="data-layers">Data Layers</h3>
+
+<p>Data enters Caffe through data layers: they lie at the bottom of nets. Data can come from efficient databases (LevelDB or LMDB), directly from memory, or, when efficiency is not critical, from files on disk in HDF5 or common image formats.</p>
+
+<p>Common input preprocessing (mean subtraction, scaling, random cropping, and mirroring) is available by specifying <code>TransformationParameter</code>s.</p>
+
+<h4 id="database">Database</h4>
+
+<ul>
+  <li>LayerType: <code>DATA</code></li>
+  <li>Parameters
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>source</code>: the name of the directory containing the database</li>
+          <li><code>batch_size</code>: the number of inputs to process at one time</li>
+        </ul>
+      </li>
+      <li>Optional
+        <ul>
+          <li><code>rand_skip</code>: skip up to this number of inputs at the beginning; useful for asynchronous sgd</li>
+          <li><code>backend</code> [default <code>LEVELDB</code>]: choose whether to use a <code>LEVELDB</code> or <code>LMDB</code></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="in-memory">In-Memory</h4>
+
+<ul>
+  <li>LayerType: <code>MEMORY_DATA</code></li>
+  <li>Parameters
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>batch_size</code>, <code>channels</code>, <code>height</code>, <code>width</code>: specify the size of input chunks to read from memory</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>The memory data layer reads data directly from memory, without copying it. In order to use it, one must call <code>MemoryDataLayer::Reset</code> (from C++) or <code>Net.set_input_arrays</code> (from Python) in order to specify a source of contiguous data (as 4D row major array), which is read one batch-sized chunk at a time.</p>
+
+<h4 id="hdf5-input">HDF5 Input</h4>
+
+<ul>
+  <li>LayerType: <code>HDF5_DATA</code></li>
+  <li>Parameters
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>source</code>: the name of the file to read from</li>
+          <li><code>batch_size</code></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="hdf5-output">HDF5 Output</h4>
+
+<ul>
+  <li>LayerType: <code>HDF5_OUTPUT</code></li>
+  <li>Parameters
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>file_name</code>: name of file to write to</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>The HDF5 output layer performs the opposite function of the other layers in this section: it writes its input blobs to disk.</p>
+
+<h4 id="images">Images</h4>
+
+<ul>
+  <li>LayerType: <code>IMAGE_DATA</code></li>
+  <li>Parameters
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>source</code>: name of a text file, with each line giving an image filename and label</li>
+          <li><code>batch_size</code>: number of images to batch together</li>
+        </ul>
+      </li>
+      <li>Optional
+        <ul>
+          <li><code>rand_skip</code></li>
+          <li><code>shuffle</code> [default false]</li>
+          <li><code>new_height</code>, <code>new_width</code>: if provided, resize all images to this size</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h4 id="windows">Windows</h4>
+
+<p><code>WINDOW_DATA</code></p>
+
+<h4 id="dummy">Dummy</h4>
+
+<p><code>DUMMY_DATA</code> is for development and debugging. See <code>DummyDataParameter</code>.</p>
+
+<h3 id="common-layers">Common Layers</h3>
+
+<h4 id="inner-product">Inner Product</h4>
+
+<ul>
+  <li>LayerType: <code>INNER_PRODUCT</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/inner_product_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/inner_product_layer.cu</code></li>
+  <li>Parameters (<code>InnerProductParameter inner_product_param</code>)
+    <ul>
+      <li>Required
+        <ul>
+          <li><code>num_output</code> (<code>c_o</code>): the number of filters</li>
+        </ul>
+      </li>
+      <li>Strongly recommended
+        <ul>
+          <li><code>weight_filler</code> [default <code>type: 'constant' value: 0</code>]</li>
+        </ul>
+      </li>
+      <li>Optional
+        <ul>
+          <li><code>bias_filler</code> [default <code>type: 'constant' value: 0</code>]</li>
+          <li><code>bias_term</code> [default <code>true</code>]: specifies whether to learn and apply a set of additive biases to the filter outputs</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Input
+    <ul>
+      <li><code>n * c_i * h_i * w_i</code></li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li><code>n * c_o * 1 * 1</code></li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample</p>
+
+    <pre><code>layers {
+  name: "fc8"
+  type: INNER_PRODUCT
+  blobs_lr: 1          # learning rate multiplier for the filters
+  blobs_lr: 2          # learning rate multiplier for the biases
+  weight_decay: 1      # weight decay multiplier for the filters
+  weight_decay: 0      # weight decay multiplier for the biases
+  inner_product_param {
+    num_output: 1000
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+  bottom: "fc7"
+  top: "fc8"
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>INNER_PRODUCT</code> layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob’s height and width set to 1).</p>
+
+<h4 id="splitting">Splitting</h4>
+
+<p>The <code>SPLIT</code> layer is a utility layer that splits an input blob to multiple output blobs. This is used when a blob is fed into multiple output layers.</p>
+
+<h4 id="flattening">Flattening</h4>
+
+<p>The <code>FLATTEN</code> layer is a utility layer that flattens an input of shape <code>n * c * h * w</code> to a simple vector output of shape <code>n * (c*h*w) * 1 * 1</code>.</p>
+
+<h4 id="concatenation">Concatenation</h4>
+
+<ul>
+  <li>LayerType: <code>CONCAT</code></li>
+  <li>CPU implementation: <code>./src/caffe/layers/concat_layer.cpp</code></li>
+  <li>CUDA GPU implementation: <code>./src/caffe/layers/concat_layer.cu</code></li>
+  <li>Parameters (<code>ConcatParameter concat_param</code>)
+    <ul>
+      <li>Optional
+        <ul>
+          <li><code>concat_dim</code> [default 1]: 0 for concatenation along num and 1 for channels.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Input
+    <ul>
+      <li><code>n_i * c_i * h * w</code> for each input blob i from 1 to K.</li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li>if <code>concat_dim = 0</code>: <code>(n_1 + n_2 + ... + n_K) * c_1 * h * w</code>, and all input <code>c_i</code> should be the same.</li>
+      <li>if <code>concat_dim = 1</code>: <code>n_1 * (c_1 + c_2 + ... + c_K) * h * w</code>, and all input <code>n_i</code> should be the same.</li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample</p>
+
+    <pre><code>layers {
+  name: "concat"
+  bottom: "in1"
+  bottom: "in2"
+  top: "out"
+  type: CONCAT
+  concat_param {
+    concat_dim: 1
+  }
+}
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>CONCAT</code> layer is a utility layer that concatenates its multiple input blobs to one single output blob. Currently, the layer supports concatenation along num or channels only.</p>
+
+<h4 id="slicing">Slicing</h4>
+
+<p>The <code>SLICE</code> layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.</p>
+
+<h4 id="elementwise-operations">Elementwise Operations</h4>
+
+<p><code>ELTWISE</code></p>
+
+<h4 id="argmax">Argmax</h4>
+
+<p><code>ARGMAX</code></p>
+
+<h4 id="softmax-1">Softmax</h4>
+
+<p><code>SOFTMAX</code></p>
+
+<h4 id="mean-variance-normalization">Mean-Variance Normalization</h4>
+
+<p><code>MVN</code></p>
+
+
+      </section>
+  </div>
+  </body>
+</html>

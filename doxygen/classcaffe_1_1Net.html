@@ -143,6 +143,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>BackwardFrom</b> (int
 <tr class="memitem:a1c2d3c2909120250cc29cc98401e39d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c2d3c2909120250cc29cc98401e39d8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>BackwardTo</b> (int end)</td></tr>
 <tr class="separator:a1c2d3c2909120250cc29cc98401e39d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8417af82aa83be45d39aab735bdead1d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a8417af82aa83be45d39aab735bdead1d">Reshape</a> ()</td></tr>
+<tr class="memdesc:a8417af82aa83be45d39aab735bdead1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reshape all layers from bottom to top.  <a href="#a8417af82aa83be45d39aab735bdead1d">More...</a><br /></td></tr>
+<tr class="separator:a8417af82aa83be45d39aab735bdead1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac735151133dcdc9e4ece8eca6c8c3835"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac735151133dcdc9e4ece8eca6c8c3835"></a>
 Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>ForwardBackward</b> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom)</td></tr>
 <tr class="separator:ac735151133dcdc9e4ece8eca6c8c3835"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -468,6 +471,26 @@ template&lt;typename Dtype &gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a8417af82aa83be45d39aab735bdead1d"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classcaffe_1_1Net.html">caffe::Net</a>&lt; Dtype &gt;::Reshape </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reshape all layers from bottom to top. </p>
+<p>This is useful to propagate changes to layer sizes without running a forward pass, e.g. to compute output feature size. </p>
+
+</div>
+</div>
 <h2 class="groupheader">Member Data Documentation</h2>
 <a class="anchor" id="a3eef6ff47640210c6d8d6affb1fd86f8"></a>
 <div class="memitem">
@@ -522,7 +545,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:04 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:49 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>

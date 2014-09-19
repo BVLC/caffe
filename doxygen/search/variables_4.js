@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['net_5finput_5fblob_5findices_5f',['net_input_blob_indices_',['../classcaffe_1_1Net.html#a083a9a4c3919721c833b53d5571a7400',1,'caffe::Net']]]
+  ['m_5f',['M_',['../classcaffe_1_1ConvolutionLayer.html#a6a5386d7cc7b6b53653cdc9d17925116',1,'caffe::ConvolutionLayer']]],
+  ['memory_5fused_5f',['memory_used_',['../classcaffe_1_1Net.html#a84349f399faa4246f8395e63c9334d56',1,'caffe::Net']]]
 ];

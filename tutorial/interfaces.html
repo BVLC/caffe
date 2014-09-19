@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | Interfaces
+    </title>
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="interfaces">Interfaces</h1>
+
+<p>Caffe has command line, Python, and MATLAB interfaces for day-to-day usage, interfacing with research code, and rapid prototyping. While Caffe is a C++ library at heart and it exposes a modular interface for development, not every occasion calls for custom compilation. The cmdcaffe, pycaffe, and matcaffe interfaces are here for you.</p>
+
+<h2 id="command-line">Command Line</h2>
+
+<p>The command line interface – cmdcaffe – is the <code>caffe</code> tool for model training, scoring, and diagnostics. Run <code>caffe</code> without any arguments for help. This tool and others are found in caffe/build/tools. (The following example calls require completing the LeNet / MNIST example first.)</p>
+
+<p><strong>Training</strong>: <code>caffe train</code> learns models from scratch, resumes learning from saved snapshots, and fine-tunes models to new data and tasks. All training requires a solver configuration through the <code>-solver solver.prototxt</code> argument. Resuming requires the <code>-snapshot model_iter_1000.solverstate</code> argument to load the solver snapshot. Fine-tuning requires the <code>-weights model.caffemodel</code> argument for the model initialization.</p>
+
+<pre><code># train LeNet
+caffe train -solver examples/mnist/lenet_solver.prototxt
+# train on GPU 2
+caffe train -solver examples/mnist/lenet_solver.prototxt -gpu 2
+# resume training from the half-way point snapshot
+caffe train -solver examples/mnist/lenet_solver.prototxt -snapshot examples/mnist/lenet_iter_5000.solverstate
+</code></pre>
+
+<p>For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but the training call alone is</p>
+
+<pre><code># fine-tune CaffeNet model weights for style recognition
+caffe train -solver examples/finetuning_on_flickr_style/solver.prototxt -weights models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel
+</code></pre>
+
+<p><strong>Testing</strong>: <code>caffe test</code> scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.</p>
+
+<pre><code>#
+# score the learned LeNet model on the validation set as defined in the model architeture lenet_train_test.prototxt
+caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000 -gpu 0 -iterations 100
+</code></pre>
+
+<p><strong>Benchmarking</strong>: <code>caffe time</code> benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.</p>
+
+<pre><code># (These example calls require you complete the LeNet / MNIST example first.)
+# time LeNet training on CPU for 10 iterations
+caffe time -model examples/mnist/lenet_train_test.prototxt -iterations 10
+# time a model architecture with the given weights on the first GPU for 10 iterations
+# time LeNet training on GPU for the default 50 iterations
+caffe time -model examples/mnist/lenet_train_test.prototxt -gpu 0
+</code></pre>
+
+<p><strong>Diagnostics</strong>: <code>caffe device_query</code> reports GPU details for reference and checking device ordinals for running on a given device in multi-GPU machines.</p>
+
+<pre><code># query the first device
+caffe device_query -gpu 0
+</code></pre>
+
+<h2 id="python">Python</h2>
+
+<p>The Python interface – pycaffe – is the <code>caffe</code> module and its scripts in caffe/python. <code>import caffe</code> to load models, do forward and backward, handle IO, visualize networks, and even instrument model solving. All model data, derivatives, and parameters are exposed for reading and writing.</p>
+
+<ul>
+  <li><code>caffe.Net</code> is the central interface for loading, configuring, and running models. <code>caffe.Classsifier</code> and <code>caffe.Detector</code> provide convenience interfaces for common tasks.</li>
+  <li><code>caffe.SGDSolver</code> exposes the solving interface.</li>
+  <li><code>caffe.io</code> handles input / output with preprocessing and protocol buffers.</li>
+  <li><code>caffe.draw</code> visualizes network architectures.</li>
+  <li>Caffe blobs are exposed as numpy ndarrays for ease-of-use and efficiency.</li>
+</ul>
+
+<p>Tutorial IPython notebooks are found in caffe/examples: do <code>ipython notebook caffe/examples</code> to try them. For developer reference docstrings can be found throughout the code.</p>
+
+<p>Compile pycaffe by <code>make pycaffe</code>. The module dir caffe/python/caffe should be installed in your PYTHONPATH for <code>import caffe</code>.</p>
+
+<h2 id="matlab">MATLAB</h2>
+
+<p>The MATLAB interface – matcaffe – is the <code>caffe</code> mex and its helper m-files in caffe/matlab. Load models, do forward and backward, extract output and read-only model weights, and load the binaryproto format mean as a matrix.</p>
+
+<p>A MATLAB demo is in caffe/matlab/caffe/matcaffe_demo.m</p>
+
+<p>Note that MATLAB matrices and memory are in column-major layout counter to Caffe’s row-major layout! Double-check your work accordingly.</p>
+
+<p>Compile matcaffe by <code>make matcaffe</code>.</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>

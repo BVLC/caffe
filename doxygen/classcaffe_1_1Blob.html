@@ -105,8 +105,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a379df830aad9b3cae253e1ddb0863844"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a379df830aad9b3cae253e1ddb0863844"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Blob</b> (const int num, const int channels, const int height, const int width)</td></tr>
 <tr class="separator:a379df830aad9b3cae253e1ddb0863844"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad0e0a9a4f49478e89161c6afe4e341a0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Reshape</b> (const int num, const int channels, const int height, const int width)</td></tr>
+<tr class="memitem:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#ad0e0a9a4f49478e89161c6afe4e341a0">Reshape</a> (const int num, const int channels, const int height, const int width)</td></tr>
+<tr class="memdesc:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the dimensions of the blob, allocating new memory if necessary.  <a href="#ad0e0a9a4f49478e89161c6afe4e341a0">More...</a><br /></td></tr>
 <tr class="separator:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8dee739aaa4253f73c44904784ce417"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8dee739aaa4253f73c44904784ce417"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ReshapeLike</b> (const <a class="el" href="classcaffe_1_1Blob.html">Blob</a> &amp;other)</td></tr>
@@ -248,6 +248,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>width_</b></td></tr>
 <tr class="memitem:acf06ea13a3a14f77c178a525c35a3ea0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf06ea13a3a14f77c178a525c35a3ea0"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>count_</b></td></tr>
 <tr class="separator:acf06ea13a3a14f77c178a525c35a3ea0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33b722653651763f4cf07c3658a6de33"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33b722653651763f4cf07c3658a6de33"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>capacity_</b></td></tr>
+<tr class="separator:a33b722653651763f4cf07c3658a6de33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename Dtype&gt;<br />
@@ -300,6 +303,50 @@ template&lt;typename Dtype&gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="ad0e0a9a4f49478e89161c6afe4e341a0"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classcaffe_1_1Blob.html">caffe::Blob</a>&lt; Dtype &gt;::Reshape </td>
+          <td>(</td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>num</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>channels</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>height</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int&#160;</td>
+          <td class="paramname"><em>width</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Change the dimensions of the blob, allocating new memory if necessary. </p>
+<p>This function can be called both to create an initial allocation of memory, and to adjust the dimensions of a top blob during <a class="el" href="classcaffe_1_1Layer.html#a288c68a7fc6882fd3f0bc40126bf61f9" title="Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs...">Layer::Reshape</a> or <a class="el" href="classcaffe_1_1Layer.html#a31d00947960a1334be6e45c9a43d8d58" title="Given the bottom blobs, compute the top blobs and the loss. ">Layer::Forward</a>. When changing the size of blob, memory will only be reallocated if sufficient memory does not already exist, and excess memory will never be freed.</p>
+<p>Note that reshaping an input blob and immediately calling <a class="el" href="classcaffe_1_1Net.html#a7a1a6d17347106dd1284b1b6d28cb4e9">Net::Backward</a> is an error; either <a class="el" href="classcaffe_1_1Net.html#ad12d1ab8e1beb2e407e82454b174f83a" title="Run forward using a set of bottom blobs, and return the result. ">Net::Forward</a> or <a class="el" href="classcaffe_1_1Net.html#a8417af82aa83be45d39aab735bdead1d" title="Reshape all layers from bottom to top. ">Net::Reshape</a> need to be called to propagate the new input shape to higher layers. </p>
+
+</div>
+</div>
 <a class="anchor" id="a8fce5a816a2b9629686db69108610d93"></a>
 <div class="memitem">
 <div class="memproto">
@@ -349,7 +396,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:00 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:44 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>

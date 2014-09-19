@@ -114,7 +114,7 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>BasePrefetchingDataLayer</b> (const LayerParameter &amp;param)</td></tr>
 <tr class="separator:a527e2b51c73759ea5f7e28ced6a371ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a060110e5147036d1b8fb757311d4a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html#a8a060110e5147036d1b8fb757311d4a6">LayerSetUp</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
-<tr class="memdesc:a8a060110e5147036d1b8fb757311d4a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this.  <a href="#a8a060110e5147036d1b8fb757311d4a6">More...</a><br /></td></tr>
+<tr class="memdesc:a8a060110e5147036d1b8fb757311d4a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does layer-specific setup: your layer should implement this function as well as Reshape.  <a href="#a8a060110e5147036d1b8fb757311d4a6">More...</a><br /></td></tr>
 <tr class="separator:a8a060110e5147036d1b8fb757311d4a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9dd83c3c003c02e24883a6482f337961"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9dd83c3c003c02e24883a6482f337961"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BasePrefetchingDataLayer.html#a9dd83c3c003c02e24883a6482f337961">Forward_cpu</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
@@ -140,6 +140,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>InternalThrea
 <tr class="memitem:a7a12c701d84cbd35b06b67f8fc0e3a30 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a12c701d84cbd35b06b67f8fc0e3a30"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>DataLayerSetUp</b> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
 <tr class="separator:a7a12c701d84cbd35b06b67f8fc0e3a30 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19a2e860f57d26b385d46755f5e43fa6 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BaseDataLayer.html#a19a2e860f57d26b385d46755f5e43fa6">Reshape</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;bottom, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *top)</td></tr>
+<tr class="memdesc:a19a2e860f57d26b385d46755f5e43fa6 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs.  <a href="#a19a2e860f57d26b385d46755f5e43fa6">More...</a><br /></td></tr>
+<tr class="separator:a19a2e860f57d26b385d46755f5e43fa6 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84cacc7e09ef766a8301a3d59faa1345 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a84cacc7e09ef766a8301a3d59faa1345"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1BaseDataLayer.html#a84cacc7e09ef766a8301a3d59faa1345">Backward_cpu</a> (const vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &amp;top, const vector&lt; bool &gt; &amp;propagate_down, vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; *bottom)</td></tr>
 <tr class="memdesc:a84cacc7e09ef766a8301a3d59faa1345 inherit pub_methods_classcaffe_1_1BaseDataLayer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Using the CPU device, compute the gradients for any parameters and for the bottom blobs if propagate_down is true. <br /></td></tr>
@@ -344,15 +347,15 @@ template&lt;typename Dtype &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Does layer-specific setup: your layer should implement this. </p>
+<p>Does layer-specific setup: your layer should implement this function as well as Reshape. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">bottom</td><td>the preshaped input blobs, whose data fields store the input data for this layer </td></tr>
-    <tr><td class="paramname">top</td><td>the allocated but unshaped output blobs, to be initialized by LayerSetUp</td></tr>
+    <tr><td class="paramname">top</td><td>the allocated but unshaped output blobs</td></tr>
   </table>
   </dd>
 </dl>
-<p>This method should be used to do layer-specific setup. At a minimum, this includes reshaping the empty top blobs to the shape as dictated by the shapes of the bottom blobs and any relevant parameters from the <code>layer_param_</code>. </p>
+<p>This method should do one-time layer specific setup. This includes reading and processing relevent parameters from the <code>layer_param_</code>. Setting up the shapes of top blobs and internal buffers should be done in <code>Reshape</code>, which will be called before the forward pass to adjust the top blob sizes. </p>
 
 <p>Reimplemented from <a class="el" href="classcaffe_1_1BaseDataLayer.html#aa8d72a4861486993bf21bc702cc9766e">caffe::BaseDataLayer&lt; Dtype &gt;</a>.</p>
 
@@ -365,7 +368,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 8 2014 12:11:00 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 18 2014 22:25:44 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.8
 </small></address>
