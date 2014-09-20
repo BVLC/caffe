@@ -117,8 +117,8 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     // this->data_transformer_.Transform(item_id, cv_img, top_data);
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_.Transform(cv_img, &(this->transformed_data_));    
-    
+    this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
+
     top_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
     lines_id_++;

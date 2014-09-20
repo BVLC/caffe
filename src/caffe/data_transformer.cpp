@@ -1,11 +1,12 @@
+#include <opencv2/core/core.hpp>
+
 #include <string>
+#include <vector>
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
-
-#include <opencv2/core/core.hpp>
 
 namespace caffe {
 
@@ -117,7 +118,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
-   
+
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
   const int width = transformed_blob->width();
@@ -133,7 +134,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand() % 2;
   const bool has_mean_file = param_.has_mean_file();
-  const bool has_unit8 = data.size()>0;
+  const bool has_unit8 = data.size() > 0;
 
   int h_off = 0;
   int w_off = 0;
@@ -154,7 +155,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
-  
+
   Dtype* mean = NULL;
   if (has_mean_file) {
     CHECK_EQ(datum_channels, data_mean_.channels());
@@ -218,7 +219,6 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
-
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
   const int img_width = cv_img.cols;
@@ -238,7 +238,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand() % 2;
   const bool has_mean_file = param_.has_mean_file();
-  
+
   int h_off = 0;
   int w_off = 0;
   if (crop_size) {
@@ -297,12 +297,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
                                        Blob<Dtype>* transformed_blob) {
-
   const int input_num = input_blob->num();
   const int input_channels = input_blob->channels();
   const int input_height = input_blob->height();
   const int input_width = input_blob->width();
- 
+
   const int num = transformed_blob->num();
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
@@ -346,7 +345,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
       int offset = input_blob->offset(n);
       caffe_sub(data_mean_.count(), input_data + offset,
             data_mean_.cpu_data(), input_data + offset);
-    } 
+    }
   }
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
@@ -373,7 +372,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
       }
     }
   }
-  if (scale!=Dtype(1)) {
+  if (scale != Dtype(1)) {
     DLOG(INFO) << "Scale: " << scale;
     caffe_scal(size, scale, transformed_data);
   }
