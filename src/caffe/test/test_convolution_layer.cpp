@@ -182,7 +182,6 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
-  // We will simply see if the convolution layer carries out averaging well.
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -219,7 +218,6 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
-  // We will simply see if the convolution layer carries out averaging well.
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -462,7 +460,6 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
-  // We will simply see if the convolution layer carries out averaging well.
   Caffe::set_mode(Caffe::GPU);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -499,7 +496,6 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
 }
 
 TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
-  // We will simply see if the convolution layer carries out averaging well.
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
