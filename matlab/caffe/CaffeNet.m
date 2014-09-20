@@ -135,7 +135,6 @@ classdef CaffeNet < handle
         end
         function res = backward(self,diff)
             if (is_initialized(self))
-                assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
                 if nargin < 2
                     res = caffe('backward');
                 else
@@ -150,7 +149,6 @@ classdef CaffeNet < handle
         end
         function res = backward_prefilled(self)
             if (is_initialized(self))
-                assert(strcmp(self.phase,'TRAIN'),'Network should be in TRAIN phase');
                 res = caffe('backward_prefilled');
             end
         end

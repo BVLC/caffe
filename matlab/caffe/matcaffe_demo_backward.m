@@ -65,8 +65,8 @@ if exist('use_gpu', 'var')
 end
 
 % put into test mode
-net.set_phase_train;
-fprintf('Done with set_phase_train\n');
+net.set_phase_test;
+fprintf('Done with set_phase_test\n');
 
 % prepare oversampled input
 % input_data is Height x Width x Channel x Num
