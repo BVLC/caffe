@@ -47,6 +47,10 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_h_ = conv_param.stride_h();
     stride_w_ = conv_param.stride_w();
   }
+  // Special case: im2col is the identity for 1x1 convolution with stride 1
+  // and no padding, so flag for skipping the buffer and transformation.
+  is_1x1_ = kernel_w_ == 1 && kernel_h_ == 1
+      && stride_h_ == 1 && stride_w_ == 1 && pad_h_ == 0 && pad_w_ == 0;
   // Configure output channels and groups.
   channels_ = bottom[0]->channels();
   num_output_ = this->layer_param_.convolution_param().num_output();
@@ -137,7 +141,10 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    Dtype* col_data = col_buffer_.mutable_cpu_data();
+    Dtype* col_data = NULL;
+    if (!is_1x1_) {
+      col_data = col_buffer_.mutable_cpu_data();
+    }
     const Dtype* weight = this->blobs_[0]->cpu_data();
     int weight_offset = M_ * K_;  // number of filter parameters in a group
     int col_offset = K_ * N_;  // number of values in an input region / column
@@ -145,9 +152,13 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < num_; ++n) {
       // im2col transformation: unroll input regions for filtering
       // into column matrix for multplication.
-      im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
-          width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-          col_data);
+      if (!is_1x1_) {
+        im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
+            width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+            col_data);
+      } else {  // special case for 1x1 convolution
+        col_data = bottom[i]->mutable_cpu_data() + bottom[i]->offset(n);
+      }
       // Take inner products for groups.
       for (int g = 0; g < group_; ++g) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
@@ -199,16 +210,25 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       if (!top_diff) {
         top_diff = top[i]->cpu_diff();
       }
-      Dtype* col_data = col_buffer_.mutable_cpu_data();
-      Dtype* col_diff = col_buffer_.mutable_cpu_diff();
+      Dtype* col_data = NULL;
+      Dtype* col_diff = NULL;
+      if (!is_1x1_) {
+        col_data = col_buffer_.mutable_cpu_data();
+        col_diff = col_buffer_.mutable_cpu_diff();
+      }
       const Dtype* bottom_data = bottom[i]->cpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
       for (int n = 0; n < num_; ++n) {
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
-        im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
-                   width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                   stride_h_, stride_w_, col_data);
+        if (!is_1x1_) {
+          im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
+                    width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+                    stride_h_, stride_w_, col_data);
+        } else {
+          col_data = bottom[i]->mutable_cpu_data() + bottom[i]->offset(n);
+          col_diff = bottom[i]->mutable_cpu_diff() + bottom[i]->offset(n);
+        }
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < group_; ++g) {
@@ -230,9 +250,11 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                 (Dtype)0., col_diff + col_offset * g);
           }
           // col2im back to the data
-          col2im_cpu(col_diff, channels_, height_, width_,
-              kernel_h_, kernel_w_, pad_h_, pad_w_,
-              stride_h_, stride_w_, bottom_diff + bottom[i]->offset(n));
+          if (!is_1x1_) {
+            col2im_cpu(col_diff, channels_, height_, width_,
+                kernel_h_, kernel_w_, pad_h_, pad_w_,
+                stride_h_, stride_w_, bottom_diff + bottom[i]->offset(n));
+          }
         }
       }
     }
