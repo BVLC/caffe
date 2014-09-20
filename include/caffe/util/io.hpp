@@ -1,13 +1,14 @@
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
+#include <opencv2/core/core.hpp>
+
 #include <unistd.h>
 #include <string>
 
 #include "google/protobuf/message.h"
 #include "hdf5.h"
 #include "hdf5_hl.h"
-#include <opencv2/core/core.hpp>
 
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -103,10 +104,10 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
-cv::Mat ReadImageToCVMat(const string& filename, 
+cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color);
 
-inline cv::Mat ReadImageToCVMat(const string& filename, 
+inline cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width) {
   return ReadImageToCVMat(filename, height, width, true);
 }
