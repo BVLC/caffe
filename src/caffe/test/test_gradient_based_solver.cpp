@@ -206,6 +206,10 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       case SolverParameter_SolverType_ADAGRAD:
         update_value /= std::sqrt(history_value + grad * grad) + delta_;
         break;
+      case SolverParameter_SolverType_ADADELTA:
+        update_value /= std::sqrt(momentum * history_value +
+                                  (1 - momentum) * grad * grad) + delta_;
+        break;
       default:
         LOG(FATAL) << "Unknown solver type: " << solver_type();
       }
@@ -480,6 +484,41 @@ TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdateWithEverything) {
   for (int i = 0; i <= kNumIters; ++i) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
+}
+
+
+template <typename TypeParam>
+class AdaDeltaSolverTest : public GradientBasedSolverTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
+ protected:
+  virtual void InitSolver(const SolverParameter& param) {
+    this->solver_.reset(new AdaDeltaSolver<Dtype>(param));
+  }
+
+  virtual SolverParameter_SolverType solver_type() {
+    return SolverParameter_SolverType_ADADELTA;
+  }
+};
+
+TYPED_TEST_CASE(AdaDeltaSolverTest, TestDtypesAndDevices);
+
+TYPED_TEST(AdaDeltaSolverTest, TestLeastSquaresUpdate) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->TestLeastSquaresUpdate();
+}
+
+TYPED_TEST(AdaDeltaSolverTest, TestLeastSquaresUpdateLROneTenth) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 0.1;
+  this->TestLeastSquaresUpdate(kLearningRate);
+}
+
+TYPED_TEST(AdaDeltaSolverTest, TestLeastSquaresUpdateWithWeightDecay) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kLearningRate = 1.0;
+  const Dtype kWeightDecay = 0.5;
+  this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay);
 }
 
 }  // namespace caffe
