@@ -21,31 +21,8 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     output_labels_ = true;
   }
+  // The subclasses should setup the size of bottom and top
   DataLayerSetUp(bottom, top);
-  // The subclasses should setup the datum channels, height and width
-  CHECK_GT(datum_channels_, 0);
-  CHECK_GT(datum_height_, 0);
-  CHECK_GT(datum_width_, 0);
-  if (transform_param_.crop_size() > 0) {
-    CHECK_GE(datum_height_, transform_param_.crop_size());
-    CHECK_GE(datum_width_, transform_param_.crop_size());
-  }
-  // check if we want to have mean
-  if (transform_param_.has_mean_file()) {
-    const string& mean_file = transform_param_.mean_file();
-    LOG(INFO) << "Loading mean file from" << mean_file;
-    BlobProto blob_proto;
-    ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
-    data_mean_.FromProto(blob_proto);
-    CHECK_GE(data_mean_.num(), 1);
-    CHECK_GE(data_mean_.channels(), datum_channels_);
-    CHECK_GE(data_mean_.height(), datum_height_);
-    CHECK_GE(data_mean_.width(), datum_width_);
-  } else {
-    // Simply initialize an all-empty mean.
-    data_mean_.Reshape(1, datum_channels_, datum_height_, datum_width_);
-  }
-  mean_ = data_mean_.cpu_data();
   data_transformer_.InitRand();
 }
 

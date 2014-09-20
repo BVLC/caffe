@@ -76,11 +76,6 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   top[1]->Reshape(batch_size, 1, 1, 1);
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
-  // datum size
-  this->datum_channels_ = datum.channels();
-  this->datum_height_ = datum.height();
-  this->datum_width_ = datum.width();
-  this->datum_size_ = datum.channels() * datum.height() * datum.width();
 }
 
 template <typename Dtype>
@@ -114,7 +109,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     }
 
     // Apply transformations (mirror, crop...) to the data
-    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
+    this->data_transformer_.Transform(item_id, datum, top_data);
 
     top_label[item_id] = datum.label();
     // go to the next iter
