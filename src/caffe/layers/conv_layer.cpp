@@ -122,7 +122,8 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   K_ = channels_ * kernel_h_ * kernel_w_ / group_;
   N_ = height_out_ * width_out_;
   // The im2col result buffer will only hold one image at a time to avoid
-  // overly large memory usage.
+  // overly large memory usage. In the special case of 1x1 convolution
+  // it goes lazily unused to save memory.
   col_buffer_.Reshape(
       1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
   for (int top_id = 0; top_id < top.size(); ++top_id) {
@@ -141,9 +142,9 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    Dtype* col_data = NULL;
+    Dtype* col_buff = NULL;
     if (!is_1x1_) {
-      col_data = col_buffer_.mutable_cpu_data();
+      col_buff = col_buffer_.mutable_cpu_data();
     }
     const Dtype* weight = this->blobs_[0]->cpu_data();
     int weight_offset = M_ * K_;  // number of filter parameters in a group
@@ -155,14 +156,14 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       if (!is_1x1_) {
         im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
             width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-            col_data);
+            col_buff);
       } else {  // special case for 1x1 convolution
-        col_data = bottom[i]->mutable_cpu_data() + bottom[i]->offset(n);
+        col_buff = bottom[i]->mutable_cpu_data() + bottom[i]->offset(n);
       }
       // Take inner products for groups.
       for (int g = 0; g < group_; ++g) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-          (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+          (Dtype)1., weight + weight_offset * g, col_buff + col_offset * g,
           (Dtype)0., top_data + top[i]->offset(n) + top_offset * g);
       }
       // Add bias.
@@ -210,11 +211,9 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       if (!top_diff) {
         top_diff = top[i]->cpu_diff();
       }
-      Dtype* col_data = NULL;
-      Dtype* col_diff = NULL;
+      Dtype* col_buff = NULL;
       if (!is_1x1_) {
-        col_data = col_buffer_.mutable_cpu_data();
-        col_diff = col_buffer_.mutable_cpu_diff();
+        col_buff = col_buffer_.mutable_cpu_data();
       }
       const Dtype* bottom_data = bottom[i]->cpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
@@ -224,17 +223,16 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         if (!is_1x1_) {
           im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
                     width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                    stride_h_, stride_w_, col_data);
+                    stride_h_, stride_w_, col_buff);
         } else {
-          col_data = bottom[i]->mutable_cpu_data() + bottom[i]->offset(n);
-          col_diff = bottom[i]->mutable_cpu_diff() + bottom[i]->offset(n);
+          col_buff = bottom[i]->mutable_cpu_data() + bottom[i]->offset(n);
         }
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < group_; ++g) {
             caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
                 (Dtype)1., top_diff + top[i]->offset(n) + top_offset * g,
-                col_data + col_offset * g, (Dtype)1.,
+                col_buff + col_offset * g, (Dtype)1.,
                 weight_diff + weight_offset * g);
           }
         }
@@ -243,15 +241,18 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           if (weight == NULL) {
             weight = this->blobs_[0]->cpu_data();
           }
+          if (is_1x1_) {
+            col_buff = bottom[i]->mutable_cpu_diff() + bottom[i]->offset(n);
+          }
           for (int g = 0; g < group_; ++g) {
             caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
                 (Dtype)1., weight + weight_offset * g,
                 top_diff + top[i]->offset(n) + top_offset * g,
-                (Dtype)0., col_diff + col_offset * g);
+                (Dtype)0., col_buff + col_offset * g);
           }
           // col2im back to the data
           if (!is_1x1_) {
-            col2im_cpu(col_diff, channels_, height_, width_,
+            col2im_cpu(col_buff, channels_, height_, width_,
                 kernel_h_, kernel_w_, pad_h_, pad_w_,
                 stride_h_, stride_w_, bottom_diff + bottom[i]->offset(n));
           }

@@ -15,9 +15,9 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
-    Dtype* col_data = NULL;
+    Dtype* col_buff = NULL;
     if (!is_1x1_) {
-      col_data = col_buffer_.mutable_gpu_data();
+      col_buff = col_buffer_.mutable_gpu_data();
     }
     const Dtype* weight = this->blobs_[0]->gpu_data();
     int weight_offset = M_ * K_;
@@ -29,14 +29,14 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       if (!is_1x1_) {
         im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
             width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-            col_data);
+            col_buff);
       } else {
-        col_data = bottom[i]->mutable_gpu_data() + bottom[i]->offset(n);
+        col_buff = bottom[i]->mutable_gpu_data() + bottom[i]->offset(n);
       }
       // Take inner products for groups.
       for (int g = 0; g < group_; ++g) {
         caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, K_,
-          (Dtype)1., weight + weight_offset * g, col_data + col_offset * g,
+          (Dtype)1., weight + weight_offset * g, col_buff + col_offset * g,
           (Dtype)0., top_data + top[i]->offset(n) + top_offset * g);
       }
       // Add bias.
@@ -85,11 +85,9 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       if (!top_diff) {
         top_diff = top[i]->gpu_diff();
       }
-      Dtype* col_data = NULL;
-      Dtype* col_diff = NULL;
+      Dtype* col_buff = NULL;
       if (!is_1x1_) {
-        col_data = col_buffer_.mutable_gpu_data();
-        col_diff = col_buffer_.mutable_gpu_diff();
+        col_buff = col_buffer_.mutable_gpu_data();
       }
       const Dtype* bottom_data = bottom[i]->gpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
@@ -99,17 +97,16 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         if (!is_1x1_) {
           im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
                     width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                    stride_h_, stride_w_, col_data);
+                    stride_h_, stride_w_, col_buff);
         } else {
-          col_data = bottom[i]->mutable_gpu_data() + bottom[i]->offset(n);
-          col_diff = bottom[i]->mutable_gpu_diff() + bottom[i]->offset(n);
+          col_buff = bottom[i]->mutable_gpu_data() + bottom[i]->offset(n);
         }
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < group_; ++g) {
             caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
                 (Dtype)1., top_diff + top[i]->offset(n) + top_offset * g,
-                col_data + col_offset * g, (Dtype)1.,
+                col_buff + col_offset * g, (Dtype)1.,
                 weight_diff + weight_offset * g);
           }
         }
@@ -118,15 +115,18 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           if (weight == NULL) {
             weight = this->blobs_[0]->gpu_data();
           }
+          if (is_1x1_) {
+            col_buff = bottom[i]->mutable_gpu_diff() + bottom[i]->offset(n);
+          }
           for (int g = 0; g < group_; ++g) {
             caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
                 (Dtype)1., weight + weight_offset * g,
                 top_diff + top[i]->offset(n) + top_offset * g,
-                (Dtype)0., col_diff + col_offset * g);
+                (Dtype)0., col_buff + col_offset * g);
           }
           // col2im back to the data
           if (!is_1x1_) {
-            col2im_gpu(col_diff, channels_, height_, width_,
+            col2im_gpu(col_buff, channels_, height_, width_,
                 kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
                 bottom_diff + bottom[i]->offset(n));
           }
