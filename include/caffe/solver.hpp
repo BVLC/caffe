@@ -159,6 +159,27 @@ class RMSPropSolver : public SGDSolver<Dtype> {
 };
 
 template <typename Dtype>
+class AdaDeltaSolver : public SGDSolver<Dtype> {
+ public:
+  explicit AdaDeltaSolver(const SolverParameter& param)
+      : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
+  explicit AdaDeltaSolver(const string& param_file)
+      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+
+ protected:
+  virtual void PreSolve();
+  virtual void ComputeUpdateValue();
+  void constructor_sanity_check() {
+    CHECK_EQ(0, this->param_.base_lr())
+        << "Learning rate cannot be used with AdaDelta.";
+    CHECK_EQ("", this->param_.lr_policy())
+        << "Learning rate policy cannot be applied to AdaDelta.";
+  }
+
+  DISABLE_COPY_AND_ASSIGN(AdaDeltaSolver);
+};
+
+template <typename Dtype>
 Solver<Dtype>* GetSolver(const SolverParameter& param) {
   SolverParameter_SolverType type = param.solver_type();
 
@@ -171,6 +192,8 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
       return new AdaGradSolver<Dtype>(param);
   case SolverParameter_SolverType_RMSPROP:
       return new RMSPropSolver<Dtype>(param);
+  case SolverParameter_SolverType_ADADELTA:
+      return new AdaDeltaSolver<Dtype>(param);
   default:
       LOG(FATAL) << "Unknown SolverType: " << type;
   }
