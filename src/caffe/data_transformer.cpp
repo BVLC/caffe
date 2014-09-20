@@ -6,6 +6,24 @@
 
 namespace caffe {
 
+
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(const int batch_item_id,
+                                       const Datum& datum,
+                                       Dtype* transformed_data) {
+
+  CHECK_GT(datum.channels(), 0);
+  CHECK_GE(datum.height(), param_.crop_size());
+  CHECK_GE(datum.height(), param_.crop_size());
+  const int size = datum.channels() * datum.height() * datum.width();
+  if (data_mean_.count() < size) {
+    data_mean_.Reshape(1, datum.channels(), datum.height(), datum.width());
+    LOG(INFO) << "Transform without mean";
+  }
+  const Dtype* mean = data_mean_.cpu_data();
+  Transform(batch_item_id, datum, mean, transformed_data);
+}
+
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const int batch_item_id,
                                        const Datum& datum,

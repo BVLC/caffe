@@ -10,19 +10,16 @@ template <typename Dtype>
 void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
      const vector<Blob<Dtype>*>& top) {
   batch_size_ = this->layer_param_.memory_data_param().batch_size();
-  this->datum_channels_ = this->layer_param_.memory_data_param().channels();
-  this->datum_height_ = this->layer_param_.memory_data_param().height();
-  this->datum_width_ = this->layer_param_.memory_data_param().width();
-  this->datum_size_ = this->datum_channels_ * this->datum_height_ *
-      this->datum_width_;
-  CHECK_GT(batch_size_ * this->datum_size_, 0) <<
+  channels_ = this->layer_param_.memory_data_param().channels();
+  height_ = this->layer_param_.memory_data_param().height();
+  width_ = this->layer_param_.memory_data_param().width();
+  size_ = channels_ * height_ * width_;
+  CHECK_GT(batch_size_ * size_, 0) <<
       "batch_size, channels, height, and width must be specified and"
       " positive in memory_data_param";
-  top[0]->Reshape(batch_size_, this->datum_channels_, this->datum_height_,
-                     this->datum_width_);
+  top[0]->Reshape(batch_size_, channels_, height_, width_);
   top[1]->Reshape(batch_size_, 1, 1, 1);
-  added_data_.Reshape(batch_size_, this->datum_channels_, this->datum_height_,
-                      this->datum_width_);
+  added_data_.Reshape(batch_size_, channels_, height_, width_);
   added_label_.Reshape(batch_size_, 1, 1, 1);
   data_ = NULL;
   labels_ = NULL;
@@ -45,7 +42,7 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   for (int batch_item_id = 0; batch_item_id < num; ++batch_item_id) {
     // Apply data transformations (mirror, scale, crop...)
     this->data_transformer_.Transform(
-        batch_item_id, datum_vector[batch_item_id], this->mean_, top_data);
+        batch_item_id, datum_vector[batch_item_id], top_data);
     top_label[batch_item_id] = datum_vector[batch_item_id].label();
   }
   // num_images == batch_size_
@@ -68,7 +65,7 @@ template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
-  top[0]->set_cpu_data(data_ + pos_ * this->datum_size_);
+  top[0]->set_cpu_data(data_ + pos_ * size_);
   top[1]->set_cpu_data(labels_ + pos_);
   pos_ = (pos_ + batch_size_) % n_;
   has_new_data_ = false;

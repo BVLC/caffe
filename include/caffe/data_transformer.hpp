@@ -3,6 +3,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/io.hpp"
 
 namespace caffe {
 
@@ -16,6 +17,14 @@ class DataTransformer {
   explicit DataTransformer(const TransformationParameter& param)
     : param_(param) {
     phase_ = Caffe::phase();
+      // check if we want to have mean
+    if (param_.has_mean_file()) {
+      const string& mean_file = param.mean_file();
+      LOG(INFO) << "Loading mean file from" << mean_file;
+      BlobProto blob_proto;
+      ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
+      data_mean_.FromProto(blob_proto);
+    }
   }
   virtual ~DataTransformer() {}
 
@@ -30,13 +39,13 @@ class DataTransformer {
    *    writing position in the top blob's data
    * @param datum
    *    Datum containing the data to be transformed.
-   * @param mean
    * @param transformed_data
    *    This is meant to be the top blob's data. The transformed data will be
    *    written at the appropriate place within the blob's data.
    */
+
   void Transform(const int batch_item_id, const Datum& datum,
-                 const Dtype* mean, Dtype* transformed_data);
+                 Dtype* transformed_data);
 
  protected:
    /**
@@ -49,12 +58,15 @@ class DataTransformer {
    */
   virtual int Rand(int n);
 
+  void Transform(const int batch_item_id, const Datum& datum,
+                 const Dtype* mean, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
 
 
   shared_ptr<Caffe::RNG> rng_;
   Caffe::Phase phase_;
+  Blob<Dtype> data_mean_;
 };
 
 }  // namespace caffe
