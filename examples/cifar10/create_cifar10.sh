@@ -13,6 +13,6 @@ rm -rf $EXAMPLE/cifar10_train_leveldb $EXAMPLE/cifar10_test_leveldb
 echo "Computing image mean..."
 
 ./build/tools/compute_image_mean $EXAMPLE/cifar10_train_leveldb \
-  $EXAMPLE/mean.binaryproto
+  $EXAMPLE/mean.binaryproto leveldb
 
 echo "Done."
