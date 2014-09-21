@@ -1,17 +1,12 @@
-// This program converts a set of images to a leveldb by storing them as Datum
-// proto buffers.
+// This program converts a set of images to a lmdb/leveldb by storing them
+// as Datum proto buffers.
 // Usage:
-//   convert_imageset [-g] ROOTFOLDER/ LISTFILE DB_NAME RANDOM_SHUFFLE[0 or 1]
-//                     [resize_height] [resize_width]
+//   convert_imageset [FLAGS] ROOTFOLDER/ LISTFILE DB_NAME
+//
 // where ROOTFOLDER is the root folder that holds all the images, and LISTFILE
 // should be a list of files as well as their labels, in the format as
 //   subfolder1/file1.JPEG 7
 //   ....
-// if RANDOM_SHUFFLE is 1, a random shuffle will be carried out before we
-// process the file lines.
-// Optional flag -g indicates the images should be read as
-// single-channel grayscale. If omitted, grayscale images will be
-// converted to color.
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -38,7 +33,7 @@ DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
 DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
-DEFINE_string(backend, "leveldb", "The backend for storing the result");
+DEFINE_string(backend, "lmdb", "The backend for storing the result");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 
