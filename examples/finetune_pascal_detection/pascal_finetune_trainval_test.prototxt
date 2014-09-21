@@ -5,17 +5,41 @@ layers {
   top: "data"
   top: "label"
   window_data_param {
-    source: "examples/finetune_pascal_detection/window_file_2007_test.txt"
-    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+    source: "examples/finetune_pascal_detection/window_file_2007_trainval.txt"
     batch_size: 128
-    crop_size: 227
-    mirror: true
     fg_threshold: 0.5
     bg_threshold: 0.5
     fg_fraction: 0.25
     context_pad: 16
     crop_mode: "warp"
   }
+  transform_param {
+    mirror: true
+    crop_size: 227
+    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: WINDOW_DATA
+  top: "data"
+  top: "label"
+  window_data_param {
+    source: "examples/finetune_pascal_detection/window_file_2007_test.txt"
+    batch_size: 128
+    fg_threshold: 0.5
+    bg_threshold: 0.5
+    fg_fraction: 0.25
+    context_pad: 16
+    crop_mode: "warp"
+  }
+  transform_param {
+    mirror: true
+    crop_size: 227
+    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+  }
+  include: { phase: TEST }
 }
 layers {
   name: "conv1"
@@ -314,17 +338,16 @@ layers {
   }
 }
 layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "fc8_pascal"
+  bottom: "label"
+}
+layers {
   name: "accuracy"
   type: ACCURACY
   bottom: "fc8_pascal"
   bottom: "label"
   top: "accuracy"
+  include { phase: TEST }
 }
-layers {
-  name: "prob"
-  type: SOFTMAX_LOSS
-  bottom: "fc8_pascal"
-  bottom: "label"
-  top: "loss"
-}
-
