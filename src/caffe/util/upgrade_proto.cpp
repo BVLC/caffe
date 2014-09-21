@@ -285,6 +285,14 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
         is_fully_compatible = false;
       }
     }
+    if (v0_layer_param.has_k()) {
+      if (type == "lrn") {
+        layer_param->mutable_lrn_param()->set_k(v0_layer_param.k());
+      } else {
+        LOG(ERROR) << "Unknown parameter k for layer type " << type;
+        is_fully_compatible = false;
+      }
+    }
     if (v0_layer_param.has_source()) {
       if (type == "data") {
         layer_param->mutable_data_param()->set_source(v0_layer_param.source());
