@@ -716,6 +716,7 @@ message V0LayerParameter {
   optional uint32 local_size = 13 [default = 5]; // for local response norm
   optional float alpha = 14 [default = 1.]; // for local response norm
   optional float beta = 15 [default = 0.75]; // for local response norm
+  optional float k = 22 [default = 1.];
 
   // For data layers, specify the data source
   optional string source = 16;
