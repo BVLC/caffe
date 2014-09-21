@@ -55,8 +55,8 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << this->layer_param_.window_data_param().fg_fraction();
 
   const bool prefetch_needs_rand =
-      this->layer_param_.window_data_param().mirror() ||
-      this->layer_param_.window_data_param().crop_size();
+      this->transform_param_.mirror() ||
+      this->transform_param_.crop_size();
   if (prefetch_needs_rand) {
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
@@ -149,7 +149,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << this->layer_param_.window_data_param().crop_mode();
 
   // image
-  int crop_size = this->layer_param_.window_data_param().crop_size();
+  const int crop_size = this->transform_param_.crop_size();
   CHECK_GT(crop_size, 0);
   const int batch_size = this->layer_param_.window_data_param().batch_size();
   (*top)[0]->Reshape(batch_size, channels, crop_size, crop_size);
@@ -187,9 +187,9 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
   const int batch_size = this->layer_param_.window_data_param().batch_size();
-  const int crop_size = this->layer_param_.window_data_param().crop_size();
   const int context_pad = this->layer_param_.window_data_param().context_pad();
-  const bool mirror = this->layer_param_.window_data_param().mirror();
+  const int crop_size = this->transform_param_.crop_size();
+  const bool mirror = this->transform_param_.mirror();
   const float fg_fraction =
       this->layer_param_.window_data_param().fg_fraction();
   const Dtype* mean = this->data_mean_.cpu_data();
