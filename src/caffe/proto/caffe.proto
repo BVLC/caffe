@@ -232,6 +232,8 @@ message LayerParameter {
     CONCAT = 3;
     CONTRASTIVE_LOSS = 37;
     CONVOLUTION = 4;
+    // Sparse-kernel convolutional layer
+    CONVOLUTION_SK = 40;
     DATA = 5;
     DROPOUT = 6;
     DUMMY_DATA = 32;
@@ -250,6 +252,8 @@ message LayerParameter {
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     MVN = 34;
     POOLING = 17;
+    // Sparse-kernel pooling layer
+    POOLING_SK = 41;
     POWER = 26;
     RELU = 18;
     SIGMOID = 19;
@@ -399,6 +403,9 @@ message ConvolutionParameter {
     CUDNN = 2;
   }
   optional Engine engine = 15 [default = DEFAULT];
+  optional uint32 kstride = 16 [default = 1]; // The stride of kernel pixel (equal in Y, X)
+  optional uint32 kstride_h = 17; // The kernel pixel stride height
+  optional uint32 kstride_w = 18; // The kernel pixel stride width
 }
 
 // Message that stores parameters used by DataLayer
@@ -592,6 +599,9 @@ message PoolingParameter {
     CUDNN = 2;
   }
   optional Engine engine = 11 [default = DEFAULT];
+  optional uint32 kstride = 12 [default = 1]; // The stride (equal in Y, X) of kernel pixels
+  optional uint32 kstride_h = 13; // The kernel pixel stride height
+  optional uint32 kstride_w = 14; // The kernel pixel stride width
 }
 
 // Message that stores parameters used by PowerLayer

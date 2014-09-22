@@ -251,6 +251,10 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return GetTanHLayer<Dtype>(name, param);
   case LayerParameter_LayerType_WINDOW_DATA:
     return new WindowDataLayer<Dtype>(param);
+  case LayerParameter_LayerType_CONVOLUTION_SK:
+    return new ConvolutionSKLayer<Dtype>(param);
+  case LayerParameter_LayerType_POOLING_SK:
+      return new PoolingSKLayer<Dtype>(param);
   case LayerParameter_LayerType_NONE:
     LOG(FATAL) << "Layer " << name << " has unspecified type.";
   default:
