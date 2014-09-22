@@ -324,9 +324,12 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       }
 
       cv::Rect roi(x1, y1, x2-x1+1, y2-y1+1);
-      cv::Mat cv_cropped_img = cv_img(roi);
-      cv::resize(cv_cropped_img, cv_cropped_img,
-          cv_crop_size, 0, 0, cv::INTER_LINEAR);
+      cv::Mat cv_cropped_img;
+      {
+        cv::Mat cv_cropped_img_tmp = cv_img(roi);
+        cv::resize(cv_cropped_img_tmp, cv_cropped_img,
+            cv_crop_size, 0, 0, cv::INTER_LINEAR);
+      }
 
       // horizontal flip at random
       if (do_mirror) {
