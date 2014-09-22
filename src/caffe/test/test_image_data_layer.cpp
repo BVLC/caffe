@@ -61,7 +61,7 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   image_data_param->set_source(this->filename_.c_str());
   image_data_param->set_shuffle(false);
   ImageDataLayer<Dtype> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
   EXPECT_EQ(this->blob_top_data_->height(), 360);
@@ -72,7 +72,7 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
   for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
@@ -89,7 +89,7 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
   image_data_param->set_new_width(256);
   image_data_param->set_shuffle(false);
   ImageDataLayer<Dtype> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
   EXPECT_EQ(this->blob_top_data_->height(), 256);
@@ -100,7 +100,7 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
   for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
     }
@@ -115,7 +115,7 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   image_data_param->set_source(this->filename_.c_str());
   image_data_param->set_shuffle(true);
   ImageDataLayer<Dtype> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
   EXPECT_EQ(this->blob_top_data_->height(), 360);
@@ -126,7 +126,7 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
   for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     map<Dtype, int> values_to_indices;
     int num_in_order = 0;
     for (int i = 0; i < 5; ++i) {

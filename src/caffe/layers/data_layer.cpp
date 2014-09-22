@@ -34,7 +34,7 @@ DataLayer<Dtype>::~DataLayer<Dtype>() {
 
 template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   // Initialize DB
   switch (this->layer_param_.data_param().backend()) {
   case DataParameter_DB_LEVELDB:
@@ -114,23 +114,23 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // image
   int crop_size = this->layer_param_.transform_param().crop_size();
   if (crop_size > 0) {
-    (*top)[0]->Reshape(this->layer_param_.data_param().batch_size(),
+    top[0]->Reshape(this->layer_param_.data_param().batch_size(),
                        datum.channels(), crop_size, crop_size);
     this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
         datum.channels(), crop_size, crop_size);
   } else {
-    (*top)[0]->Reshape(
+    top[0]->Reshape(
         this->layer_param_.data_param().batch_size(), datum.channels(),
         datum.height(), datum.width());
     this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
         datum.channels(), datum.height(), datum.width());
   }
-  LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
-      << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
-      << (*top)[0]->width();
+  LOG(INFO) << "output data size: " << top[0]->num() << ","
+      << top[0]->channels() << "," << top[0]->height() << ","
+      << top[0]->width();
   // label
   if (this->output_labels_) {
-    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
+    top[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
     this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
         1, 1, 1);
   }
