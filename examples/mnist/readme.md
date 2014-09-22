@@ -19,7 +19,7 @@ You will first need to download and convert the data format from the MNIST websi
     cd $CAFFE_ROOT/examples/mnist
     ./create_mnist.sh
 
-If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be two datasets, `mnist-train-leveldb`, and `mnist-test-leveldb`.
+If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be two datasets, `mnist_train_lmdb`, and `mnist_test_lmdb`.
 
 ## LeNet: the MNIST Classification Model
 
@@ -37,13 +37,14 @@ Specifically, we will write a `caffe::NetParameter` (or in python, `caffe.proto.
 
 ### Writing the Data Layer
 
-Currently, we will read the MNIST data from the leveldb we created earlier in the demo. This is defined by a data layer:
+Currently, we will read the MNIST data from the lmdb we created earlier in the demo. This is defined by a data layer:
 
     layers {
       name: "mnist"
       type: DATA
       data_param {
-        source: "mnist-train-leveldb"
+        source: "mnist_train_lmdb"
+        backend: LMDB
         batch_size: 64
         scale: 0.00390625
       }
@@ -51,7 +52,7 @@ Currently, we will read the MNIST data from the leveldb we created earlier in th
       top: "label"
     }
 
-Specifically, this layer has name `mnist`, type `data`, and it reads the data from the given leveldb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range \[0,1\). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the `data` blob, and one is the `label` blob.
+Specifically, this layer has name `mnist`, type `data`, and it reads the data from the given lmdb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range \[0,1\). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the `data` blob, and one is the `label` blob.
 
 ### Writing the Convolution Layer
 

@@ -1,6 +1,5 @@
-//
-// This script converts the MNIST dataset to the leveldb format used
-// by caffe to perform classification.
+// This script converts the MNIST dataset to a lmdb (default) or
+// leveldb (--backend=leveldb) format used by caffe to load data.
 // Usage:
 //    convert_mnist_data [FLAGS] input_image_file input_label_file
 //                        output_db_file
@@ -176,7 +175,7 @@ int main(int argc, char** argv) {
 #endif
 
   gflags::SetUsageMessage("This script converts the MNIST dataset to\n"
-        "the leveldb/lmdb format used by Caffe to perform classification.\n"
+        "the lmdb/leveldb format used by Caffe to load data.\n"
         "Usage:\n"
         "    convert_mnist_data [FLAGS] input_image_file input_label_file "
         "output_db_file\n"
