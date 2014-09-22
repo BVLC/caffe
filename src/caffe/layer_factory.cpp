@@ -249,6 +249,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new SplitLayer<Dtype>(param);
   case LayerParameter_LayerType_TANH:
     return GetTanHLayer<Dtype>(name, param);
+  case LayerParameter_LayerType_TOPK:
+    return new TopKLayer<Dtype>(param);
   case LayerParameter_LayerType_WINDOW_DATA:
     return new WindowDataLayer<Dtype>(param);
   case LayerParameter_LayerType_NONE:

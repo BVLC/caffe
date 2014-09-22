@@ -219,7 +219,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 38 (last added: CONTRASTIVE_LOSS)
+  // LayerType next available ID: 39 (last added: TOPK)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -260,6 +260,7 @@ message LayerParameter {
     SPLIT = 22;
     SLICE = 33;
     TANH = 23;
+    TOPK = 38;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
   }
@@ -316,6 +317,7 @@ message LayerParameter {
   optional SliceParameter slice_param = 31;
   optional TanHParameter tanh_param = 37;
   optional ThresholdParameter threshold_param = 25;
+  optional TopKParameter topk_param = 41;
   optional WindowDataParameter window_data_param = 20;
 
   // Parameters for data pre-processing.
@@ -656,6 +658,12 @@ message TanHParameter {
     CUDNN = 2;
   }
   optional Engine engine = 1 [default = DEFAULT];
+}
+
+// Message that stores parameters used by TopKLayer
+message TopKParameter {
+  optional uint32 k = 10; // number of non-zero outputs in train time = k.
+  optional float a = 3; // number of non-zero outputs in test time = a*k.  
 }
 
 // Message that stores parameters used by WindowDataLayer
