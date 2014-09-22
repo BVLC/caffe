@@ -71,6 +71,7 @@ or different classes (`sim`).
       top: "sim"
       data_param {
         source: "examples/siamese/mnist-siamese-train-leveldb"
+        backend: LEVELDB
         scale: 0.00390625
         batch_size: 64
       }

@@ -6,6 +6,7 @@ layers {
   top: "sim"
   data_param {
     source: "examples/siamese/mnist_siamese_train_leveldb"
+    backend: LEVELDB
     scale: 0.00390625
     batch_size: 64
   }
@@ -18,6 +19,7 @@ layers {
   top: "sim"
   data_param {
     source: "examples/siamese/mnist_siamese_test_leveldb"
+    backend: LEVELDB
     scale: 0.00390625
     batch_size: 100
   }
