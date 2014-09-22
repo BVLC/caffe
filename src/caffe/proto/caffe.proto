@@ -344,6 +344,7 @@ message TransformationParameter {
   // Specify if we would like to randomly crop an image.
   optional uint32 crop_size = 3 [default = 0];
   optional string mean_file = 4;
+  optional bool invert_channels = 5 [default = false];
 }
 
 // Message that stores parameters used by AccuracyLayer
