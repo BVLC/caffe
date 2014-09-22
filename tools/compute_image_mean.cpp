@@ -17,12 +17,12 @@ using std::max;
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
   if (argc < 3 || argc > 4) {
-    LOG(ERROR) << "Usage: compute_image_mean input_leveldb output_file"
+    LOG(ERROR) << "Usage: compute_image_mean input_db output_file"
                << " db_backend[leveldb or lmdb]";
     return 1;
   }
 
-  string db_backend = "leveldb";
+  string db_backend = "lmdb";
   if (argc == 4) {
     db_backend = string(argv[3]);
   }

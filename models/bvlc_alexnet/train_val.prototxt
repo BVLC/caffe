@@ -5,7 +5,8 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "examples/imagenet/ilsvrc12_train_leveldb"
+    source: "examples/imagenet/ilsvrc12_train_lmdb"
+    backend: LMDB
     batch_size: 256
   }
   transform_param {
@@ -21,7 +22,8 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "examples/imagenet/ilsvrc12_val_leveldb"
+    source: "examples/imagenet/ilsvrc12_val_lmdb"
+    backend: LMDB
     batch_size: 50
   }
   transform_param {
