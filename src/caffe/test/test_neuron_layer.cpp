@@ -99,6 +99,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
   }
 
+
     void TestTopKForward(const unsigned int k = 10) {
     LayerParameter layer_param;
     layer_param.mutable_topk_param()->set_k(k);
@@ -109,23 +110,25 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     // Now, check values
     const Dtype* bottom_data = this->blob_bottom_->cpu_data();
     const Dtype* top_data = this->blob_top_->cpu_data();
+    const uint* mask_data = layer.mask_.cpu_data();
     const int num = this->blob_bottom_->num();
-    const int single_count = this->blob_bottom_->count() / this->blob_bottom_->num();
+
+    const int single_count = this->blob_bottom_->count() /
+    this->blob_bottom_->num();
 
     for (int n = 0; n < num; ++n) {
-
         std::vector<Dtype> values;
         values.reserve(single_count);
-        for (int c=0; c < single_count; c++) {
+        for (int c = 0; c < single_count; c++) {
          values.push_back(bottom_data[c]);
         }
 
-        //Getting top k values in brute-force way
+        // Getting top k values in brute-force way
         std::vector<unsigned int> idxs;
         for (int i = 0; i < single_count; ++i) {
            Dtype max_el = -99999999999;
            unsigned int max_idx;
-            for (int j=0; j < values.size(); ++j) {
+            for (int j = 0; j < values.size(); ++j) {
               if (values[j] > max_el) {
                   max_el = values[j];
                   max_idx = j;
@@ -137,14 +140,16 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
 
         for (int i = 0; i < k; ++i) {
             EXPECT_EQ(top_data[idxs[i]], bottom_data[idxs[i]]);
+            EXPECT_EQ(mask_data[idxs[i]], uint(1));
           }
 
         for (int i = k; i < single_count; ++i) {
             EXPECT_EQ(top_data[idxs[i]], Dtype(0));
+            EXPECT_EQ(mask_data[idxs[i]], uint(0));
           }
-
         bottom_data += this->blob_bottom_->offset(1);
         top_data += this->blob_top_->offset(1);
+        mask_data += layer.mask_.offset(1);
       }
   }
 };
