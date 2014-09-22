@@ -98,6 +98,55 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     GradientChecker<Dtype> checker(1e-2, 1e-3);
     checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
   }
+
+    void TestTopKForward(const unsigned int k = 10) {
+    LayerParameter layer_param;
+    layer_param.mutable_topk_param()->set_k(k);
+    Caffe::set_phase(Caffe::TRAIN);
+    TopKLayer<Dtype> layer(layer_param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    // Now, check values
+    const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+    const Dtype* top_data = this->blob_top_->cpu_data();
+    const int num = this->blob_bottom_->num();
+    const int single_count = this->blob_bottom_->count() / this->blob_bottom_->num();
+
+    for (int n = 0; n < num; ++n) {
+
+        std::vector<Dtype> values;
+        values.reserve(single_count);
+        for (int c=0; c < single_count; c++) {
+         values.push_back(bottom_data[c]);
+        }
+
+        //Getting top k values in brute-force way
+        std::vector<unsigned int> idxs;
+        for (int i = 0; i < single_count; ++i) {
+           Dtype max_el = -99999999999;
+           unsigned int max_idx;
+            for (int j=0; j < values.size(); ++j) {
+              if (values[j] > max_el) {
+                  max_el = values[j];
+                  max_idx = j;
+                }
+              }
+          idxs.push_back(max_idx);
+          values[max_idx] = Dtype(-9999999999);
+          }
+
+        for (int i = 0; i < k; ++i) {
+            EXPECT_EQ(top_data[idxs[i]], bottom_data[idxs[i]]);
+          }
+
+        for (int i = k; i < single_count; ++i) {
+            EXPECT_EQ(top_data[idxs[i]], Dtype(0));
+          }
+
+        bottom_data += this->blob_bottom_->offset(1);
+        top_data += this->blob_top_->offset(1);
+      }
+  }
 };
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
@@ -323,6 +372,17 @@ TYPED_TEST(NeuronLayerTest, TestDropoutHalf) {
 TYPED_TEST(NeuronLayerTest, TestDropoutThreeQuarters) {
   const float kDropoutRatio = 0.75;
   this->TestDropoutForward(kDropoutRatio);
+}
+
+
+TYPED_TEST(NeuronLayerTest, TestTopKTen) {
+  const unsigned int k = 10;
+  this->TestTopKForward(k);
+}
+
+TYPED_TEST(NeuronLayerTest, TestTopKFifty) {
+  const unsigned int k = 50;
+  this->TestTopKForward(k);
 }
 
 TYPED_TEST(NeuronLayerTest, TestDropoutTestPhase) {
