@@ -1,27 +1,36 @@
 function scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
-% s = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
+% scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
 %
 % Demo of the matlab wrapper using the VGG networks: https://gist.github.com/ksimonyan/5c9129cfb8f0359eaf67
 % described in the BMVC-2014 paper "Return of the Devil in the Details: Delving Deep into Convolutional Nets"
 %
-% input
+% INPUT
 %   im - color image as uint8 HxWx3
 %   use_gpu - 1 to use the GPU, 0 to use the CPU
 %   model_def_file - network configuration (.prototxt file)
 %   model_file - network weights (.caffemodel file)
 %   mean_file - mean RGB image as uint8 HxWx3 (.mat file)
 %
-% output
+% OUTPUT
 %   scores   1000-dimensional ILSVRC score vector
 %
-% You may need to do the following before you start matlab:
-%  $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda-5.5/lib64
-%  $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
-% Or the equivalent based on where things are installed on your system
-%
+% EXAMPLE USAGE
+%  model_def_file = 'zoo/VGG_CNN_F_deploy.prototxt';
+%  model_file = 'zoo/VGG_CNN_F.caffemodel';
+%  mean_file = 'zoo/VGG_mean.mat';
+%  use_gpu = true;
+%  im = imread('../../examples/images/cat.jpg');
+%  scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file);
+% 
 % NOTES
 %  the network is trained on RGB images and expects an RGB input
 %  the image crops are prepared as described in the paper (the aspect ratio is preserved)
+%
+% PREREQUISITES
+%  You may need to do the following before you start matlab:
+%   $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda/lib64
+%   $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+%  Or the equivalent based on where things are installed on your system
 
 % init caffe network (spews logging info)
 matcaffe_init(use_gpu, model_def_file, model_file);
