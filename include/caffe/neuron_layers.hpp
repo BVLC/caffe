@@ -311,10 +311,13 @@ class TopKLayer : public NeuronLayer<Dtype> {
       : NeuronLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
      const vector<Blob<Dtype>*>& top);
-   
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_TOPK;
   }
+  Blob<uint> mask_;
 
  protected:
   /**
@@ -333,8 +336,8 @@ class TopKLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<unsigned int> idxs_;
-  Blob<unsigned int> mask_;
+  Blob<uint> idxs_;
+
 
   ///
   uint uint_k_;
