@@ -1,11 +1,15 @@
-function [scores, maxlabel] = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
-% scores = matcaffe_demo(im, use_gpu)
+function scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
+% s = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
 %
-% Demo of the matlab wrapper using the ILSVRC network.
+% Demo of the matlab wrapper using the VGG networks: https://gist.github.com/ksimonyan/5c9129cfb8f0359eaf67
+% described in the BMVC-2014 paper "Return of the Devil in the Details: Delving Deep into Convolutional Nets"
 %
 % input
-%   im       color image as uint8 HxWx3
-%   use_gpu  1 to use the GPU, 0 to use the CPU
+%   im - color image as uint8 HxWx3
+%   use_gpu - 1 to use the GPU, 0 to use the CPU
+%   model_def_file - network configuration (.prototxt file)
+%   model_file - network weights (.caffemodel file)
+%   mean_file - mean RGB image as uint8 HxWx3 (.mat file)
 %
 % output
 %   scores   1000-dimensional ILSVRC score vector
@@ -15,36 +19,9 @@ function [scores, maxlabel] = matcaffe_demo_vgg(im, use_gpu, model_def_file, mod
 %  $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 % Or the equivalent based on where things are installed on your system
 %
-% Usage:
-%  im = imread('../../examples/images/cat.jpg');
-%  scores = matcaffe_demo(im, 1);
-%  [score, class] = max(scores);
-% Five things to be aware of:
-%   caffe uses row-major order
-%   matlab uses column-major order
-%   caffe uses BGR color channel order
-%   matlab uses RGB color channel order
-%   images need to have the data mean subtracted
-
-% Data coming in from matlab needs to be in the order 
-%   [width, height, channels, images]
-% where width is the fastest dimension.
-% Here is the rough matlab for putting image data into the correct
-% format:
-%   % convert from uint8 to single
-%   im = single(im);
-%   % reshape to a fixed size (e.g., 227x227)
-%   im = imresize(im, [IMAGE_DIM IMAGE_DIM], 'bilinear');
-%   % permute from RGB to BGR and subtract the data mean (already in BGR)
-%   im = im(:,:,[3 2 1]) - data_mean;
-%   % flip width and height to make width the fastest dimension
-%   im = permute(im, [2 1 3]);
-
-% If you have multiple images, cat them with cat(4, ...)
-
-% The actual forward function. It takes in a cell array of 4-D arrays as
-% input and outputs a cell array. 
-
+% NOTES
+%  the network is trained on RGB images and expects an RGB input
+%  the image crops are prepared as described in the paper (the aspect ratio is preserved)
 
 % init caffe network (spews logging info)
 matcaffe_init(use_gpu, model_def_file, model_file);
