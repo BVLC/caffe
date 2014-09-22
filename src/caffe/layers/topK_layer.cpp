@@ -11,36 +11,39 @@
 
 namespace caffe {
 
-template <typename T>
-std::vector<unsigned int> sort_indexes(const std::vector<T> &v, const int sortAscend = 1) {
+template <typename Container>
+struct compare_indirect_index_ascend
+  {
+  const Container& container;
+  compare_indirect_index_ascend( const Container& container ): container( container ) { }
+  bool operator () ( size_t lindex, size_t rindex ) const
+    {
+    return container[ lindex ] < container[ rindex ];
+    }
+  };
 
-  std::vector<unsigned int> idx(v.size());
-  for (unsigned int i = 0; i != idx.size(); ++i) {
+template <typename Container>
+struct compare_indirect_index_descend
+  {
+  const Container& container;
+  compare_indirect_index_descend( const Container& container ): container( container ) { }
+  bool operator () ( size_t lindex, size_t rindex ) const
+    {
+    return container[ lindex ] > container[ rindex ];
+    }
+  };
+
+template <typename T>
+std::vector<size_t> sort_indexes(const std::vector<T> &v, const int sortAscend = 1) {
+  std::vector<size_t> idx(v.size());
+  for (size_t i = 0; i != idx.size(); ++i) {
       idx[i] = i;
     }
   if (sortAscend) {
-     struct comparator_ascend {
-        comparator_ascend(const std::vector<T>* v__) {
-          v_ = v__;
-        }
-        bool operator () (unsigned int i1,unsigned int i2) {
-          return (*v_)[i1] < (*v_)[i2];
-        }
-         const std::vector<T>* v_;
-      };
-      std::sort(idx.begin(), idx.end(),comparator_ascend(&v));
+      std::sort(idx.begin(), idx.end(),compare_indirect_index_ascend <std::vector<T> > ( v ) );
   }
   else {
-      struct comparator_descend {
-        comparator_descend(const std::vector<T>* v__) {
-          v_ = v__;
-        }
-        bool operator () (unsigned int i1,unsigned int i2) {
-          return (*v_)[i1] < (*v_)[i2];
-        }
-      const std::vector<T>* v_;
-      };
-std::sort(idx.begin(), idx.end(),comparator_descend(&v));
+      std::sort(idx.begin(), idx.end(),compare_indirect_index_descend <std::vector<T> > ( v ) );
   }
   return idx;
 }
@@ -86,7 +89,7 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
             std::vector<Dtype> values;
             values.assign(bottom_data, bottom_data + single_count);
 
-            std::vector<unsigned int> idxs = sort_indexes(values,0);
+            std::vector<size_t> idxs = sort_indexes(values,0);
 
             for (uint i = 0; i < uint_k_; ++i) {
                 top_data[idxs[i]] =  bottom_data[idxs[i]];
