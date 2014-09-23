@@ -1,15 +1,14 @@
 function scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
 % scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file)
 %
-% Demo of the matlab wrapper using the VGG networks: https://gist.github.com/ksimonyan/5c9129cfb8f0359eaf67
-% described in the BMVC-2014 paper "Return of the Devil in the Details: Delving Deep into Convolutional Nets"
+% Demo of the matlab wrapper using the networks described in the BMVC-2014 paper "Return of the Devil in the Details: Delving Deep into Convolutional Nets"
 %
 % INPUT
 %   im - color image as uint8 HxWx3
 %   use_gpu - 1 to use the GPU, 0 to use the CPU
 %   model_def_file - network configuration (.prototxt file)
 %   model_file - network weights (.caffemodel file)
-%   mean_file - mean RGB image as uint8 HxWx3 (.mat file)
+%   mean_file - mean BGR image as uint8 HxWx3 (.mat file)
 %
 % OUTPUT
 %   scores   1000-dimensional ILSVRC score vector
@@ -23,7 +22,6 @@ function scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mea
 %  scores = matcaffe_demo_vgg(im, use_gpu, model_def_file, model_file, mean_file);
 % 
 % NOTES
-%  the network is trained on RGB images and expects an RGB input
 %  the image crops are prepared as described in the paper (the aspect ratio is preserved)
 %
 % PREREQUISITES
@@ -71,6 +69,9 @@ if size(im, 1) < size(im, 2)
 else
     im = imresize(im, [NaN IMAGE_DIM]);
 end
+
+% RGB -> BGR
+im = im(:, :, [3 2 1]);
 
 % oversample (4 corners, center, and their x-axis flips)
 images = zeros(CROPPED_DIM, CROPPED_DIM, 3, 10, 'single');
