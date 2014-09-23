@@ -54,7 +54,7 @@ template <typename Dtype>
 void TopKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   NeuronLayer<Dtype>::Reshape(bottom, top);
-  idxs_.Reshape(1, bottom[0]->channels(),
+  idxs_.Reshape(bottom[0]->num(), bottom[0]->channels(),
         bottom[0]->height(), bottom[0]->width());
   mask_.Reshape(bottom[0]->num(), bottom[0]->channels(),
         bottom[0]->height(), bottom[0]->width());
@@ -88,10 +88,8 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const int single_count = bottom[0]->count() / bottom[0]->num();
 
     caffe_set(count, Dtype(0), top_data);
-
-    for (int i = 0; i < count; ++i) {
-        mask[i] = 0;
-      }
+    memset(mask, 0, sizeof(uint) * count);
+//    caffe_set(count, uint(0), mask);
 
     for (int n = 0; n < num; ++n) {
             std::vector<Dtype> values;
