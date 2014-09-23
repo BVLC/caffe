@@ -26,6 +26,9 @@ message Datum {
   optional int32 label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
+  // Optionally, the label could be vector
+  repeated int32 multi_label = 7;
+  repeated float multi_float_label = 8;
 }
 
 message FillerParameter {
@@ -248,6 +251,7 @@ message LayerParameter {
     INFOGAIN_LOSS = 13;
     INNER_PRODUCT = 14;
     LRN = 15;
+    MAP_DATA = 42;
     MEMORY_DATA = 29;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     MVN = 34;
@@ -264,6 +268,7 @@ message LayerParameter {
     SPLIT = 22;
     SLICE = 33;
     TANH = 23;
+    VECTOR_LABEL_DATA = 43;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
   }

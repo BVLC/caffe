@@ -195,6 +195,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return GetConvolutionLayer<Dtype>(name, param);
   case LayerParameter_LayerType_DATA:
     return new DataLayer<Dtype>(param);
+  case LayerParameter_LayerType_VECTOR_LABEL_DATA:
+    return new VectorLabelDataLayer<Dtype>(param);
   case LayerParameter_LayerType_DROPOUT:
     return new DropoutLayer<Dtype>(param);
   case LayerParameter_LayerType_DUMMY_DATA:
@@ -221,6 +223,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new InnerProductLayer<Dtype>(param);
   case LayerParameter_LayerType_LRN:
     return new LRNLayer<Dtype>(param);
+  case LayerParameter_LayerType_MAP_DATA:
+    return new MapDataLayer<Dtype>(param);
   case LayerParameter_LayerType_MEMORY_DATA:
     return new MemoryDataLayer<Dtype>(param);
   case LayerParameter_LayerType_MVN:
