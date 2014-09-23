@@ -1,5 +1,5 @@
 # 0
-examples/images/fish-bike.jpg
+@CMAKE_SOURCE_DIR@/examples/images/fish-bike.jpg
 3
 323
 481
@@ -7,7 +7,7 @@ examples/images/fish-bike.jpg
 2 0.700 10 100 70 150
 0 0.100 50 130 100 140
 # 1
-examples/images/cat.jpg
+@CMAKE_SOURCE_DIR@/examples/images/cat.jpg
 3
 360
 480

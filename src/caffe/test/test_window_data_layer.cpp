@@ -36,45 +36,24 @@ class WindowDataLayerTest : public MultiDeviceTest<TypeParam> {
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
-    source_ = "src/caffe/test/test_data/sample_window.txt";
-    batch_size_ = 4;
-    fg_threshold_ = 0.5;
-    bg_threshold_ = 0.5;
-    fg_fraction_ = 0.25;
-    context_pad_ = 0;
-    crop_mode_ = "warp";
-    scale_ = 1;
-    mirror_ = true;
-    crop_size_ = 10;
-    mean_file_ = "src/caffe/test/test_data/sample_mean.binaryproto";
   }
-  enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
-  void load_window_data();
-  unsigned int PrefetchRand() {
-    CHECK(prefetch_rng_);
-    caffe::rng_t* prefetch_rng =
-      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
-    return (*prefetch_rng)();
-  }
-
   virtual ~WindowDataLayerTest() {
     delete blob_top_data_;
     delete blob_top_label_;
     delete blob_data_;
     delete blob_label_;
   }
-
-  string source_;
-  int batch_size_;
-  float fg_threshold_;
-  float bg_threshold_;
-  float fg_fraction_;
-  int context_pad_;
-  string crop_mode_;
-  float scale_;
-  bool mirror_;
-  int crop_size_;
-  string mean_file_;
+  enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
+  void load_window_data_and_label(string source, int batch_size,
+    float fg_threshold, float bg_threshold, float fg_fraction, int context_pad,
+    string crop_mode, float scale, bool mirror, int crop_size,
+    string mean_file);
+  unsigned int PrefetchRand() {
+    CHECK(prefetch_rng_);
+    caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+    return (*prefetch_rng)();
+  }
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
 
@@ -87,7 +66,10 @@ class WindowDataLayerTest : public MultiDeviceTest<TypeParam> {
 };
 
 template <typename TypeParam>
-void WindowDataLayerTest<TypeParam>::load_window_data() {
+void WindowDataLayerTest<TypeParam>::load_window_data_and_label(string source,
+    int batch_size, float fg_threshold, float bg_threshold, float fg_fraction,
+    int context_pad, string crop_mode, float scale, bool mirror, int crop_size,
+    string mean_file) {
   typedef typename TypeParam::Dtype Dtype;
 
   const unsigned int prefetch_rng_seed = caffe_rng_rand();
@@ -95,15 +77,15 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
 
   // Load mean
   BlobProto blob_proto;
-  ReadProtoFromBinaryFile(mean_file_, &blob_proto);
+  ReadProtoFromBinaryFile(mean_file, &blob_proto);
   Blob<Dtype> blob_mean;
   blob_mean.FromProto(blob_proto);
 
   // Load window file
   vector<vector<float> > fg_windows, bg_windows;
   vector<std::pair<std::string, vector<int> > > image_database;
-  std::ifstream infile(source_.c_str());
-  CHECK(infile.good()) << "Failed to open window file " << source_;
+  std::ifstream infile(source.c_str());
+  CHECK(infile.good()) << "Failed to open window file " << source;
   string hashtag;
   int image_index;
   if (!(infile >> hashtag >> image_index)) {
@@ -134,11 +116,11 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
       window[X2] = x2;
       window[Y2] = y2;
       // add window to foreground list or background list
-      if (overlap >= fg_threshold_) {
+      if (overlap >= fg_threshold) {
         int label = window[LABEL];
         CHECK_GT(label, 0);
         fg_windows.push_back(window);
-      } else if (overlap < bg_threshold_) {
+      } else if (overlap < bg_threshold) {
         // background window, force label and overlap to 0
         window[LABEL] = 0;
         window[OVERLAP] = 0;
@@ -148,23 +130,23 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
   } while (infile >> hashtag >> image_index);
 
   // Load window data
-  blob_data_->Reshape(batch_size_, 3, crop_size_, crop_size_);
-  blob_label_->Reshape(batch_size_, 1, 1, 1);
+  blob_data_->Reshape(batch_size, 3, crop_size, crop_size);
+  blob_label_->Reshape(batch_size, 1, 1, 1);
   Dtype* top_data = blob_data_->mutable_cpu_data();
   Dtype* top_label = blob_label_->mutable_cpu_data();
   const Dtype* mean = blob_mean.cpu_data();
-  const int mean_off = (blob_mean.width() - crop_size_) / 2;
+  const int mean_off = (blob_mean.width() - crop_size) / 2;
   const int mean_width = blob_mean.width();
   const int mean_height = blob_mean.height();
-  cv::Size cv_crop_size(crop_size_, crop_size_);
-  bool use_square = (crop_mode_ == "square") ? true : false;
+  cv::Size cv_crop_size(crop_size, crop_size);
+  bool use_square = (crop_mode == "square") ? true : false;
 
   // zero out batch
   caffe_set(blob_data_->count(), Dtype(0), top_data);
 
-  const int num_fg = static_cast<int>(static_cast<float>(batch_size_)
-      * fg_fraction_);
-  const int num_samples[2] = { batch_size_ - num_fg, num_fg };
+  const int num_fg = static_cast<int>(static_cast<float>(batch_size)
+      * fg_fraction);
+  const int num_samples[2] = { batch_size - num_fg, num_fg };
   int item_id = 0;
   // sample from bg set then fg set
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
@@ -175,20 +157,15 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
           fg_windows[rand_index % fg_windows.size()] :
           bg_windows[rand_index % bg_windows.size()];
       bool do_mirror = false;
-      if (mirror_ && PrefetchRand() % 2) {
+      if (mirror && PrefetchRand() % 2) {
         do_mirror = true;
       }
       // load the image containing the window
       pair<std::string, vector<int> > image =
           image_database[window[IMAGE_INDEX]];
-
       cv::Mat cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
-      if (!cv_img.data) {
-        LOG(ERROR) << "Could not open or find file " << image.first;
-        return;
-      }
+      CHECK(cv_img.data) << "Could not open or find file " << image.first;
       const int channels = cv_img.channels();
-
       // crop window out of image and warp it
       int x1 = window[X1];
       int y1 = window[Y1];
@@ -196,12 +173,12 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
       int y2 = window[Y2];
       int pad_w = 0;
       int pad_h = 0;
-      if (context_pad_ > 0 || use_square) {
+      if (context_pad > 0 || use_square) {
         // scale factor by which to expand the original region
         // such that after warping the expanded region to crop_size x crop_size
         // there's exactly context_pad amount of padding on each side
-        Dtype context_scale = static_cast<Dtype>(crop_size_) /
-            static_cast<Dtype>(crop_size_ - 2*context_pad_);
+        Dtype context_scale = static_cast<Dtype>(crop_size) /
+            static_cast<Dtype>(crop_size - 2*context_pad);
 
         // compute the expanded region
         Dtype half_height = static_cast<Dtype>(y2-y1+1)/2.0;
@@ -244,20 +221,20 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
 
         // scale factors that would be used to warp the unclipped
         // expanded region
-        Dtype scale_x =
-            static_cast<Dtype>(crop_size_)/static_cast<Dtype>(unclipped_width);
-        Dtype scale_y =
-            static_cast<Dtype>(crop_size_)/static_cast<Dtype>(unclipped_height);
+        Dtype scalex =
+            static_cast<Dtype>(crop_size)/static_cast<Dtype>(unclipped_width);
+        Dtype scaley =
+            static_cast<Dtype>(crop_size)/static_cast<Dtype>(unclipped_height);
 
         // size to warp the clipped expanded region to
         cv_crop_size.width =
-            static_cast<int>(round(static_cast<Dtype>(clipped_width)*scale_x));
+            static_cast<int>(round(static_cast<Dtype>(clipped_width)*scalex));
         cv_crop_size.height =
-            static_cast<int>(round(static_cast<Dtype>(clipped_height)*scale_y));
-        pad_x1 = static_cast<int>(round(static_cast<Dtype>(pad_x1)*scale_x));
-        pad_x2 = static_cast<int>(round(static_cast<Dtype>(pad_x2)*scale_x));
-        pad_y1 = static_cast<int>(round(static_cast<Dtype>(pad_y1)*scale_y));
-        pad_y2 = static_cast<int>(round(static_cast<Dtype>(pad_y2)*scale_y));
+            static_cast<int>(round(static_cast<Dtype>(clipped_height)*scaley));
+        pad_x1 = static_cast<int>(round(static_cast<Dtype>(pad_x1)*scalex));
+        pad_x2 = static_cast<int>(round(static_cast<Dtype>(pad_x2)*scalex));
+        pad_y1 = static_cast<int>(round(static_cast<Dtype>(pad_y1)*scaley));
+        pad_y2 = static_cast<int>(round(static_cast<Dtype>(pad_y2)*scaley));
 
         pad_h = pad_y1;
         // if we're mirroring, we mirror the padding too (to be pedantic)
@@ -268,11 +245,11 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
         }
         // ensure that the warped, clipped region plus the padding fits in the
         // crop_size x crop_size image (it might not due to rounding)
-        if (pad_h + cv_crop_size.height > crop_size_) {
-          cv_crop_size.height = crop_size_ - pad_h;
+        if (pad_h + cv_crop_size.height > crop_size) {
+          cv_crop_size.height = crop_size - pad_h;
         }
-        if (pad_w + cv_crop_size.width > crop_size_) {
-          cv_crop_size.width = crop_size_ - pad_w;
+        if (pad_w + cv_crop_size.width > crop_size) {
+          cv_crop_size.width = crop_size - pad_w;
         }
       }
       cv::Rect roi(x1, y1, x2-x1+1, y2-y1+1);
@@ -289,12 +266,12 @@ void WindowDataLayerTest<TypeParam>::load_window_data() {
           for (int w = 0; w < cv_cropped_img.cols; ++w) {
             Dtype pixel =
                 static_cast<Dtype>(cv_cropped_img.at<cv::Vec3b>(h, w)[c]);
-            top_data[((item_id * channels + c) * crop_size_ + h + pad_h)
-                     * crop_size_ + w + pad_w]
+            top_data[((item_id * channels + c) * crop_size + h + pad_h)
+                     * crop_size + w + pad_w]
                 = (pixel
                     - mean[(c * mean_height + h + mean_off + pad_h)
                            * mean_width + w + mean_off + pad_w])
-                  * scale_;
+                  * scale;
           }
         }
       }
@@ -311,52 +288,70 @@ TYPED_TEST_CASE(WindowDataLayerTest, TestDtypesAndDevices);
 TYPED_TEST(WindowDataLayerTest, TestRead) {
   typedef typename TypeParam::Dtype Dtype;
 
+  int seed = 1234;
   LayerParameter param;
+
+  // Set up WindowDataParameter
+  string source = string(CMAKE_SOURCE_DIR \
+      "caffe/test/test_data/sample_window.txt" CMAKE_EXT);
+  int batch_size = 4;
+  float fg_threshold = 0.5;
+  float bg_threshold = 0.5;
+  float fg_fraction = 0.25;
+  int context_pad = 0;
+  string crop_mode = "warp";
   WindowDataParameter* window_data_param = param.mutable_window_data_param();
-  window_data_param->set_source(this->source_);
-  window_data_param->set_batch_size(this->batch_size_);
-  window_data_param->set_fg_threshold(this->fg_threshold_);
-  window_data_param->set_bg_threshold(this->bg_threshold_);
-  window_data_param->set_fg_fraction(this->fg_fraction_);
-  window_data_param->set_context_pad(this->context_pad_);
+  window_data_param->set_source(source);
+  window_data_param->set_batch_size(batch_size);
+  window_data_param->set_fg_threshold(fg_threshold);
+  window_data_param->set_bg_threshold(bg_threshold);
+  window_data_param->set_fg_fraction(fg_fraction);
+  window_data_param->set_context_pad(context_pad);
+
+  // Set up TransformationParameter
+  float scale = 1;
+  bool mirror = true;
+  int crop_size = 10;
+  string mean_file = string(CMAKE_SOURCE_DIR \
+      "caffe/test/test_data/sample_mean.binaryproto");
   TransformationParameter* transform_param = param.mutable_transform_param();
-  transform_param->set_scale(this->scale_);
-  transform_param->set_mirror(this->mirror_);
-  transform_param->set_crop_size(this->crop_size_);
-  transform_param->set_mean_file(this->mean_file_);
+  transform_param->set_scale(scale);
+  transform_param->set_mirror(mirror);
+  transform_param->set_crop_size(crop_size);
+  transform_param->set_mean_file(mean_file);
 
   // Test that the layer setup got the correct parameters.
-  int seed = 1234;
   Caffe::set_random_seed(seed);
   WindowDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), this->batch_size_);
+  layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), this->crop_size_);
-  EXPECT_EQ(this->blob_top_data_->width(), this->crop_size_);
-
-  EXPECT_EQ(this->blob_top_label_->num(), this->batch_size_);
+  EXPECT_EQ(this->blob_top_data_->height(), crop_size);
+  EXPECT_EQ(this->blob_top_data_->width(), crop_size);
+  EXPECT_EQ(this->blob_top_label_->num(), batch_size);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
 
-  layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+  // Load window data (and label) and compare them with forward results
   Caffe::set_random_seed(seed);
-
-  this->load_window_data();
+  this->load_window_data_and_label(source, batch_size, fg_threshold,
+    bg_threshold, fg_fraction, context_pad, crop_mode, scale, mirror, crop_size,
+    mean_file);
 
   // Compare results
   int data_count = this->blob_data_->count();
   const Dtype* data_top = this->blob_top_data_->cpu_data();
   const Dtype* data = this->blob_data_->cpu_data();
   for (int i = 0; i < data_count; ++i) {
-    CHECK_EQ(data_top[i], data[i]);
+    EXPECT_EQ(data_top[i], data[i]);
   }
   int label_count = this->blob_label_->count();
   const Dtype* label_top = this->blob_top_label_->cpu_data();
   const Dtype* label = this->blob_label_->cpu_data();
   for (int i = 0; i < label_count; ++i) {
-    CHECK_EQ(label_top[i], label[i]);
+    EXPECT_EQ(label_top[i], label[i]);
   }
 }
 
