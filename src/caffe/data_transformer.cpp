@@ -16,11 +16,20 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
   phase_ = Caffe::phase();
     // check if we want to have mean
   if (param_.has_mean_file()) {
+    CHECK_EQ(param_.mean_value_size(), 0) <<
+      "Cannot specify mean_file and mean_value at the same time";
     const string& mean_file = param.mean_file();
     LOG(INFO) << "Loading mean file from" << mean_file;
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
+  }
+  if (param_.mean_value_size() > 0) {
+    CHECK(param_.has_mean_file() == false) <<
+      "Cannot specify mean_file and mean_value at the same time";
+    for (int c = 0; c < param_.mean_value_size(); ++c) {
+      mean_values_.push_back(param_.mean_value(c));
+    }
   }
 }
 
@@ -37,6 +46,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const bool do_mirror = param_.mirror() && Rand() % 2;
   const bool has_mean_file = param_.has_mean_file();
   const bool has_unit8 = data.size() > 0;
+  const bool has_mean_values = mean_values_.size() > 0;
 
   CHECK_GT(datum_channels, 0);
   CHECK_GE(datum_height, crop_size);
@@ -48,6 +58,16 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     CHECK_EQ(datum_height, data_mean_.height());
     CHECK_EQ(datum_width, data_mean_.width());
     mean = data_mean_.mutable_cpu_data();
+  }
+  if (has_mean_values) {
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+     "Specify either 1 mean_value or as many as channels: " << datum_channels;
+    if (datum_channels > 1 && mean_values_.size() == 1) {
+      // Replicate the mean_value for simplicity
+      for (int c = 1; c < datum_channels; ++c) {
+        mean_values_.push_back(mean_values_[0]);
+      }
+    }
   }
 
   int height = datum_height;
@@ -89,7 +109,12 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           transformed_data[top_index] =
             (datum_element - mean[data_index]) * scale;
         } else {
-          transformed_data[top_index] = datum_element * scale;
+          if (has_mean_values) {
+            transformed_data[top_index] =
+              (datum_element - mean_values_[c]) * scale;
+          } else {
+            transformed_data[top_index] = datum_element * scale;
+          }
         }
       }
     }
@@ -178,6 +203,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand() % 2;
   const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
 
   int h_off = 0;
   int w_off = 0;
@@ -206,6 +232,22 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
       int offset = input_blob->offset(n);
       caffe_sub(data_mean_.count(), input_data + offset,
             data_mean_.cpu_data(), input_data + offset);
+    }
+  }
+
+  if (has_mean_values) {
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == input_channels) <<
+     "Specify either 1 mean_value or as many as channels: " << input_channels;
+    if (mean_values_.size() == 1) {
+      caffe_add_scalar(input_blob->count(), -(mean_values_[0]), input_data);
+    } else {
+      for (int n = 0; n < input_num; ++n) {
+        for (int c = 0; c < input_channels; ++c) {
+          int offset = input_blob->offset(n, c);
+          caffe_add_scalar(input_height * input_width, -(mean_values_[c]),
+            input_data + offset);
+        }
+      }
     }
   }
 

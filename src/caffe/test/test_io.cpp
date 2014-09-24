@@ -121,7 +121,8 @@ TEST_F(IOTest, TestReadImageToDatumContent) {
   for (int c = 0; c < datum.channels(); ++c) {
     for (int h = 0; h < datum.height(); ++h) {
       for (int w = 0; w < datum.width(); ++w) {
-        EXPECT_TRUE(data[index++] == static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+        EXPECT_TRUE(data[index++] ==
+          static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
       }
     }
   }
