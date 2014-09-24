@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Create the imagenet leveldb inputs
+# Create the imagenet lmdb inputs
 # N.B. set the path to the imagenet train + val data dirs
 
 EXAMPLE=examples/imagenet
@@ -34,7 +34,7 @@ if [ ! -d "$VAL_DATA_ROOT" ]; then
   exit 1
 fi
 
-echo "Creating train leveldb..."
+echo "Creating train lmdb..."
 
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
@@ -42,9 +42,9 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --shuffle \
     $TRAIN_DATA_ROOT \
     $DATA/train.txt \
-    $EXAMPLE/ilsvrc12_train_leveldb
+    $EXAMPLE/ilsvrc12_train_lmdb
 
-echo "Creating val leveldb..."
+echo "Creating val lmdb..."
 
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
@@ -52,6 +52,6 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --shuffle \
     $VAL_DATA_ROOT \
     $DATA/val.txt \
-    $EXAMPLE/ilsvrc12_val_leveldb
+    $EXAMPLE/ilsvrc12_val_lmdb
 
 echo "Done."
