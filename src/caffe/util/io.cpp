@@ -86,13 +86,21 @@ cv::Mat ReadImageToCVMat(const string& filename,
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
+  if (cv_img.data) {
+    CVMatToDatum(cv_img, datum);
+    datum->set_label(label);
+    return true;
+  } else {
+    return false;
+  }
+}
 
+void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   CHECK(cv_img.depth() == CV_8U) <<
       "Image data type must be unsigned byte";
   datum->set_channels(cv_img.channels());
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
-  datum->set_label(label);
   datum->clear_data();
   datum->clear_float_data();
   int datum_channels = datum->channels();
@@ -111,8 +119,8 @@ bool ReadImageToDatum(const string& filename, const int label,
     }
   }
   datum->set_data(buffer);
-  return true;
 }
+
 
 leveldb::Options GetLevelDBOptions() {
   // In default, we will return the leveldb option and set the max open files

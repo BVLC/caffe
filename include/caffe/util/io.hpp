@@ -126,6 +126,8 @@ inline cv::Mat ReadImageToCVMat(const string& filename) {
   return ReadImageToCVMat(filename, 0, 0, true);
 }
 
+void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
+
 leveldb::Options GetLevelDBOptions();
 
 template <typename Dtype>
