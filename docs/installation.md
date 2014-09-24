@@ -101,7 +101,7 @@ The Google flags library, Google logging library and LMDB already made their way
 
     sudo yum install gflags-devel glog-devel lmdb-devel
 
-**Finally** in case you couldn't find those extra libraries mentioned above in your distribution's repositories, here are the instructions to follow for manually building and installing them on **Ubuntu 12.04 / CentOS / RHEL / Fedora** (or practically on any Linux distribution). On Centos 6, you must manually install lmdb instead install it using "yum install". 
+**Finally** in case you couldn't find those extra libraries mentioned above in your distribution's repositories, here are the instructions to follow for manually building and installing them on **Ubuntu 12.04 / CentOS / RHEL / Fedora** (or practically on any Linux distribution). On **Centos 6**, if you install `lmdb` library using `yum install lmdb-devel`. The installed library is too old. The compilation will fail. You need to manually install `lmdb` library from source code as follows.
 
     # glog
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
