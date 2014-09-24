@@ -85,7 +85,7 @@ Developing custom layers requires minimal effort by the compositionality of the 
 
 The net jointly defines a function and its gradient by composition and auto-differentiation. The composition of every layer's output computes the function to do a given task, and the composition of every layer's backward computes the gradient from the loss to learn the task. Caffe models are end-to-end machine learning engines.
 
-The net is a set of layers connected in a computation graph -- a DAG / directed acyclic graph to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.
+The net is a set of layers connected in a computation graph -- a DAG (directed acyclic graph) to be exact. Caffe does all the bookkeeping for any DAG of layers to ensure correctness of the forward and backward passes. A typical net begins with a data layer that loads from disk and ends with a loss layer that computes the objective for a task such as classification or reconstruction.
 
 The net is defined as a set of layers and their connections in a plaintext modeling language.
 A simple logistic regression classifier
@@ -122,9 +122,9 @@ is defined by
       top: "loss"
     }
 
-It is easily to understand that this `.prototxt` file, creates a network (named `LogReg`), with three layer. Furthermore, it defines network's DAG by using the `top:` and `bottom:` definitions in every layer, except from the `DATA` layer, where there is no `bottom:` definitios, and `source:` is used to import our data in to the network. In this case, our input data are located in a leveldb (key-value pair) database, and we only need . 
+It is easily to understand that this `.prototxt` file, creates a network (named `LogReg`), with three layers. Furthermore, it defines network's DAG by using the `top:` and `bottom:` definitions in every layer. The only exception is in the `DATA` layer, where there is no `bottom:` definition, and `source:` is used to import our data into the network. In this case, our input data are located in a leveldb (key-value pair) database, and we only need to specify our `source:`'s name in the `data_param` part of layer's definition. 
 
-Model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers' `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:
+In general, model initialization is handled by `Net::Init()`. The initialization mainly does two things: scaffolding the overall DAG by creating the blobs and layers (for C++ geeks: the network will retain ownership of the blobs and layers during its lifetime), and calls the layers' `SetUp()` function. It also does a set of other bookkeeping things, such as validating the correctness of the overall network architecture. Also, during initialization the Net explains its initialization by logging to INFO as it goes:
 
     I0902 22:52:17.931977 2079114000 net.cpp:39] Initializing net from parameters:
     name: "LogReg"
