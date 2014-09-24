@@ -150,9 +150,82 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
-  Datum datum;
-  CVMatToDatum(cv_img, &datum);
-  Transform(datum, transformed_blob);
+  // Datum datum;
+  // CVMatToDatum(cv_img, &datum);
+  // Transform(datum, transformed_blob);
+
+  const int img_channels = cv_img.channels();
+  const int img_height = cv_img.rows;
+  const int img_width = cv_img.cols;
+
+  const int channels = transformed_blob->channels();
+  const int height = transformed_blob->height();
+  const int width = transformed_blob->width();
+
+  CHECK_EQ(img_channels, channels);
+  CHECK_GE(img_height, height);
+  CHECK_GE(img_width, width);
+
+  CHECK_EQ(transformed_blob->num(), 1) <<
+    "transformed_blob should have num() = 1";
+
+  const int crop_size = param_.crop_size();
+  const Dtype scale = param_.scale();
+  const bool do_mirror = param_.mirror() && Rand() % 2;
+  const bool has_mean_file = param_.has_mean_file();
+  
+  int h_off = 0;
+  int w_off = 0;
+  if (crop_size) {
+    CHECK_EQ(crop_size, height);
+    CHECK_EQ(crop_size, width);
+    // We only do random crop when we do training.
+    if (phase_ == Caffe::TRAIN) {
+      h_off = Rand() % (img_height - crop_size);
+      w_off = Rand() % (img_width - crop_size);
+    } else {
+      h_off = (img_height - crop_size) / 2;
+      w_off = (img_width - crop_size) / 2;
+    }
+  } else {
+    CHECK_EQ(img_height, height);
+    CHECK_EQ(img_width, width);
+  }
+
+  Dtype* mean = NULL;
+  if (has_mean_file) {
+    CHECK_EQ(img_channels, data_mean_.channels());
+    CHECK_EQ(img_height, data_mean_.height());
+    CHECK_EQ(img_width, data_mean_.width());
+    mean = data_mean_.mutable_cpu_data();
+  }
+
+  Dtype* transformed_data = transformed_blob->mutable_cpu_data();
+  Dtype pixel;
+  int top_index;
+  for (int c = 0; c < channels; ++c) {
+    int top_index_c = c * height;
+    int mean_index_c = c * img_height + h_off;
+    for (int h = 0; h < height; ++h) {
+      int top_index_h = (top_index_c + h) * width;
+      int mean_index_h = (mean_index_c + h) * img_width + w_off;
+      for (int w = 0; w < width; ++w) {
+        if (do_mirror) {
+          top_index = top_index_h + (width - 1 - w);
+        } else {
+          top_index = top_index_h + w;
+        }
+        pixel = static_cast<Dtype>(
+              cv_img.at<cv::Vec3b>(h + h_off, w + w_off)[c]);
+        if (has_mean_file) {
+          int mean_index = mean_index_h + w;
+          transformed_data[top_index] = (pixel - mean[mean_index]) * scale;
+        } else {
+          transformed_data[top_index] = pixel * scale;
+        }
+      }
+    }
+  }
 }
 
 template<typename Dtype>
