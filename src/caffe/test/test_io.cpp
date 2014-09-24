@@ -1,3 +1,8 @@
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <string>
 
 #include "gtest/gtest.h"
@@ -11,6 +16,51 @@ namespace caffe {
 
 class IOTest : public ::testing::Test {};
 
+bool ReadImageToDatumReference(const string& filename, const int label,
+    const int height, const int width, const bool is_color, Datum* datum) {
+  cv::Mat cv_img;
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+
+  cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
+  if (!cv_img_origin.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return false;
+  }
+  if (height > 0 && width > 0) {
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+    cv_img = cv_img_origin;
+  }
+
+  int num_channels = (is_color ? 3 : 1);
+  datum->set_channels(num_channels);
+  datum->set_height(cv_img.rows);
+  datum->set_width(cv_img.cols);
+  datum->set_label(label);
+  datum->clear_data();
+  datum->clear_float_data();
+  string* datum_string = datum->mutable_data();
+  if (is_color) {
+    for (int c = 0; c < num_channels; ++c) {
+      for (int h = 0; h < cv_img.rows; ++h) {
+        for (int w = 0; w < cv_img.cols; ++w) {
+          datum_string->push_back(
+            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+        }
+      }
+    }
+  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
+    for (int h = 0; h < cv_img.rows; ++h) {
+      for (int w = 0; w < cv_img.cols; ++w) {
+        datum_string->push_back(
+          static_cast<char>(cv_img.at<uchar>(h, w)));
+        }
+      }
+  }
+  return true;
+}
+
 TEST_F(IOTest, TestReadImageToDatum) {
   string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
   Datum datum;
@@ -18,6 +68,43 @@ TEST_F(IOTest, TestReadImageToDatum) {
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
+}
+
+TEST_F(IOTest, TestReadImageToDatumReference) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum, datum_ref;
+  ReadImageToDatum(filename, 0, 0, 0, true, &datum);
+  ReadImageToDatumReference(filename, 0, 0, 0, true, &datum_ref);
+  EXPECT_EQ(datum.channels(), datum_ref.channels());
+  EXPECT_EQ(datum.height(), datum_ref.height());
+  EXPECT_EQ(datum.width(), datum_ref.width());
+  EXPECT_EQ(datum.data().size(), datum_ref.data().size());
+
+  const string& data = datum.data();
+  const string& data_ref = datum.data();
+
+  for (int i = 0; i < datum.data().size(); ++i) {
+    EXPECT_TRUE(data[i] == data_ref[i]);
+  }
+}
+
+
+TEST_F(IOTest, TestReadImageToDatumReferenceResized) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum, datum_ref;
+  ReadImageToDatum(filename, 0, 100, 200, true, &datum);
+  ReadImageToDatumReference(filename, 0, 100, 200, true, &datum_ref);
+  EXPECT_EQ(datum.channels(), datum_ref.channels());
+  EXPECT_EQ(datum.height(), datum_ref.height());
+  EXPECT_EQ(datum.width(), datum_ref.width());
+  EXPECT_EQ(datum.data().size(), datum_ref.data().size());
+
+  const string& data = datum.data();
+  const string& data_ref = datum.data();
+
+  for (int i = 0; i < datum.data().size(); ++i) {
+    EXPECT_TRUE(data[i] == data_ref[i]);
+  }
 }
 
 TEST_F(IOTest, TestReadImageToDatumContent) {
