@@ -170,6 +170,7 @@ class MapDataLayer : public BasePrefetchingDataLayer<Dtype> {
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
+  const Dtype* label_mean_;
 };
 
 /**
