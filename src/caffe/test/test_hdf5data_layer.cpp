@@ -1,7 +1,7 @@
+#ifdef HAVE_HDF5
+
 #include <string>
 #include <vector>
-
-#include "leveldb/db.h"
 
 #include "gtest/gtest.h"
 
@@ -122,3 +122,5 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 }
 
 }  // namespace caffe
+
+#endif  // #ifdef HAVE_HDF5

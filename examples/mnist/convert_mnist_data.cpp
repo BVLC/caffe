@@ -10,9 +10,14 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
+#ifdef HAVE_LEVELDB
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
+#endif
+
+#ifdef HAVE_LMDB
 #include <lmdb.h>
+#endif
 #include <stdint.h>
 #include <sys/stat.h>
 
@@ -24,7 +29,13 @@
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
 
+#if defined HAVE_LMDB
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
+#elif defined HAVE_LEVELDB
+DEFINE_string(backend, "leveldb", "The backend for storing the result");
+#else
+DEFINE_string(backend, "", "The backend for storing the result");
+#endif
 
 uint32_t swap_endian(uint32_t val) {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
@@ -61,11 +72,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   image_file.read(reinterpret_cast<char*>(&cols), 4);
   cols = swap_endian(cols);
 
-  // lmdb
-  MDB_env *mdb_env;
-  MDB_dbi mdb_dbi;
-  MDB_val mdb_key, mdb_data;
-  MDB_txn *mdb_txn;
+#ifdef HAVE_LEVELDB
   // leveldb
   leveldb::DB* db;
   leveldb::Options options;
@@ -73,15 +80,30 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
   leveldb::WriteBatch* batch = NULL;
+#endif
+
+#ifdef HAVE_LMDB
+  // lmdb
+  MDB_env *mdb_env;
+  MDB_dbi mdb_dbi;
+  MDB_val mdb_key, mdb_data;
+  MDB_txn *mdb_txn;
+#endif
 
   // Open db
-  if (db_backend == "leveldb") {  // leveldb
+  if (db_backend == "") {
+    LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+  } else if (db_backend == "leveldb") {  // leveldb
     LOG(INFO) << "Opening leveldb " << db_path;
     leveldb::Status status = leveldb::DB::Open(
         options, db_path, &db);
     CHECK(status.ok()) << "Failed to open leveldb " << db_path
         << ". Is it already existing?";
     batch = new leveldb::WriteBatch();
+#endif
+
+#ifdef HAVE_LMDB
   } else if (db_backend == "lmdb") {  // lmdb
     LOG(INFO) << "Opening lmdb " << db_path;
     CHECK_EQ(mkdir(db_path, 0744), 0)
@@ -95,6 +117,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         << "mdb_txn_begin failed";
     CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
         << "mdb_open failed. Does the lmdb already exist? ";
+#endif
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
@@ -123,8 +146,14 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     string keystr(key_cstr);
 
     // Put in db
-    if (db_backend == "leveldb") {  // leveldb
+    if (db_backend == "") {
+      LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+    } else if (db_backend == "leveldb") {  // leveldb
       batch->Put(keystr, value);
+#endif
+
+#ifdef HAVE_LMDB
     } else if (db_backend == "lmdb") {  // lmdb
       mdb_data.mv_size = value.size();
       mdb_data.mv_data = reinterpret_cast<void*>(&value[0]);
@@ -132,21 +161,29 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       mdb_key.mv_data = reinterpret_cast<void*>(&keystr[0]);
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
+#endif
     } else {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }
 
     if (++count % 1000 == 0) {
       // Commit txn
-      if (db_backend == "leveldb") {  // leveldb
+      if (db_backend == "") {
+        LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+      } else if (db_backend == "leveldb") {  // leveldb
         db->Write(leveldb::WriteOptions(), batch);
         delete batch;
         batch = new leveldb::WriteBatch();
+#endif
+
+#ifdef HAVE_LMDB
       } else if (db_backend == "lmdb") {  // lmdb
         CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS)
             << "mdb_txn_commit failed";
         CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
             << "mdb_txn_begin failed";
+#endif
       } else {
         LOG(FATAL) << "Unknown db backend " << db_backend;
       }
@@ -154,14 +191,21 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   }
   // write the last batch
   if (count % 1000 != 0) {
-    if (db_backend == "leveldb") {  // leveldb
+    if (db_backend == "") {
+      LOG(FATAL) << "Unknown db backend " << db_backend;
+#ifdef HAVE_LEVELDB
+    } else if (db_backend == "leveldb") {  // leveldb
       db->Write(leveldb::WriteOptions(), batch);
       delete batch;
       delete db;
+#endif
+
+#ifdef HAVE_LMDB
     } else if (db_backend == "lmdb") {  // lmdb
       CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS) << "mdb_txn_commit failed";
       mdb_close(mdb_env, mdb_dbi);
       mdb_env_close(mdb_env);
+#endif
     } else {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }
@@ -171,12 +215,31 @@ void convert_dataset(const char* image_filename, const char* label_filename,
 }
 
 int main(int argc, char** argv) {
+#ifndef HAVE_LEVELDB
+#ifndef HAVE_LMDB
+  LOG(FATAL) << "No DB library available to save the converted dataset";
+#endif
+#endif
+
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
 #endif
 
   gflags::SetUsageMessage("This script converts the MNIST dataset to\n"
-        "the leveldb/lmdb format used by Caffe to perform classification.\n"
+        "the "
+#ifdef HAVE_LEVELDB
+      "leveldb"
+#ifdef HAVE_LMDB
+      "/lmdb"
+#endif
+#else
+#ifdef HAVE_LMDB
+      "lmdb"
+#else
+      "non-specified"
+#endif
+#endif
+        " format used by Caffe to perform classification.\n"
         "Usage:\n"
         "    convert_mnist_data [FLAGS] input_image_file input_label_file "
         "output_db_file\n"

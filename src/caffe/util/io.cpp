@@ -2,7 +2,9 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
+#ifdef HAVE_LEVELDB
 #include <leveldb/db.h>
+#endif
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
@@ -111,6 +113,7 @@ bool ReadImageToDatum(const string& filename, const int label,
   return true;
 }
 
+#ifdef HAVE_LEVELDB
 leveldb::Options GetLevelDBOptions() {
   // In default, we will return the leveldb option and set the max open files
   // in order to avoid using up the operating system's limit.
@@ -118,7 +121,9 @@ leveldb::Options GetLevelDBOptions() {
   options.max_open_files = 100;
   return options;
 }
+#endif
 
+#ifdef HAVE_HDF5
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
@@ -190,5 +195,6 @@ void hdf5_save_nd_dataset<double>(
       file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
   CHECK_GE(status, 0) << "Failed to make double dataset " << dataset_name;
 }
+#endif  // #ifdef HAVE_HDF5
 
 }  // namespace caffe

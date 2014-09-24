@@ -1,4 +1,6 @@
+#ifdef HAVE_LEVELDB
 #include <leveldb/db.h>
+#endif
 #include <stdint.h>
 
 #include <string>
@@ -19,14 +21,19 @@ DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
   // clean up the database resources
   switch (this->layer_param_.data_param().backend()) {
+#ifdef HAVE_LEVELDB
   case DataParameter_DB_LEVELDB:
     break;  // do nothing
+#endif
+
+#ifdef HAVE_LMDB
   case DataParameter_DB_LMDB:
     mdb_cursor_close(mdb_cursor_);
     mdb_close(mdb_env_, mdb_dbi_);
     mdb_txn_abort(mdb_txn_);
     mdb_env_close(mdb_env_);
     break;
+#endif
   default:
     LOG(FATAL) << "Unknown database backend";
   }
@@ -37,6 +44,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Initialize DB
   switch (this->layer_param_.data_param().backend()) {
+#ifdef HAVE_LEVELDB
   case DataParameter_DB_LEVELDB:
     {
     leveldb::DB* db_temp;
@@ -53,6 +61,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     iter_->SeekToFirst();
     }
     break;
+#endif
+
+#ifdef HAVE_LMDB
   case DataParameter_DB_LMDB:
     CHECK_EQ(mdb_env_create(&mdb_env_), MDB_SUCCESS) << "mdb_env_create failed";
     CHECK_EQ(mdb_env_set_mapsize(mdb_env_, 1099511627776), MDB_SUCCESS);  // 1TB
@@ -69,6 +80,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_FIRST),
         MDB_SUCCESS) << "mdb_cursor_get failed";
     break;
+#endif
   default:
     LOG(FATAL) << "Unknown database backend";
   }
@@ -80,12 +92,16 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       switch (this->layer_param_.data_param().backend()) {
+#ifdef HAVE_LEVELDB
       case DataParameter_DB_LEVELDB:
         iter_->Next();
         if (!iter_->Valid()) {
           iter_->SeekToFirst();
         }
         break;
+#endif
+
+#ifdef HAVE_LMDB
       case DataParameter_DB_LMDB:
         if (mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_NEXT)
             != MDB_SUCCESS) {
@@ -93,6 +109,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                    MDB_FIRST), MDB_SUCCESS);
         }
         break;
+#endif
       default:
         LOG(FATAL) << "Unknown database backend";
       }
@@ -101,12 +118,17 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   switch (this->layer_param_.data_param().backend()) {
+#ifdef HAVE_LEVELDB
   case DataParameter_DB_LEVELDB:
     datum.ParseFromString(iter_->value().ToString());
     break;
+#endif
+
+#ifdef HAVE_LMDB
   case DataParameter_DB_LMDB:
     datum.ParseFromArray(mdb_value_.mv_data, mdb_value_.mv_size);
     break;
+#endif
   default:
     LOG(FATAL) << "Unknown database backend";
   }
@@ -156,17 +178,22 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     switch (this->layer_param_.data_param().backend()) {
+#ifdef HAVE_LEVELDB
     case DataParameter_DB_LEVELDB:
       CHECK(iter_);
       CHECK(iter_->Valid());
       datum.ParseFromString(iter_->value().ToString());
       break;
+#endif
+
+#ifdef HAVE_LMDB
     case DataParameter_DB_LMDB:
       CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_,
               &mdb_value_, MDB_GET_CURRENT), MDB_SUCCESS);
       datum.ParseFromArray(mdb_value_.mv_data,
           mdb_value_.mv_size);
       break;
+#endif
     default:
       LOG(FATAL) << "Unknown database backend";
     }
@@ -180,6 +207,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
     // go to the next iter
     switch (this->layer_param_.data_param().backend()) {
+#ifdef HAVE_LEVELDB
     case DataParameter_DB_LEVELDB:
       iter_->Next();
       if (!iter_->Valid()) {
@@ -188,6 +216,9 @@ void DataLayer<Dtype>::InternalThreadEntry() {
         iter_->SeekToFirst();
       }
       break;
+#endif
+
+#ifdef HAVE_LMDB
     case DataParameter_DB_LMDB:
       if (mdb_cursor_get(mdb_cursor_, &mdb_key_,
               &mdb_value_, MDB_NEXT) != MDB_SUCCESS) {
@@ -197,6 +228,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
                 &mdb_value_, MDB_FIRST), MDB_SUCCESS);
       }
       break;
+#endif
     default:
       LOG(FATAL) << "Unknown database backend";
     }

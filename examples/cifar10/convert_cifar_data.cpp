@@ -11,7 +11,9 @@
 
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
+#ifdef HAVE_LEVELDB
 #include "leveldb/db.h"
+#endif
 #include "stdint.h"
 
 #include "caffe/proto/caffe.pb.h"
@@ -32,10 +34,12 @@ void read_image(std::ifstream* file, int* label, char* buffer) {
 }
 
 void convert_dataset(const string& input_folder, const string& output_folder) {
+#ifdef HAVE_LEVELDB
   // Leveldb options
   leveldb::Options options;
   options.create_if_missing = true;
   options.error_if_exists = true;
+#endif
   // Data buffer
   int label;
   char str_buffer[kCIFARImageNBytes];
@@ -46,11 +50,13 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
   datum.set_width(kCIFARSize);
 
   LOG(INFO) << "Writing Training data";
+#ifdef HAVE_LEVELDB
   leveldb::DB* train_db;
   leveldb::Status status;
   status = leveldb::DB::Open(options, output_folder + "/cifar10_train_leveldb",
       &train_db);
   CHECK(status.ok()) << "Failed to open leveldb.";
+#endif
   for (int fileid = 0; fileid < kCIFARTrainBatches; ++fileid) {
     // Open files
     LOG(INFO) << "Training Batch " << fileid + 1;
@@ -65,14 +71,18 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
       datum.SerializeToString(&value);
       snprintf(str_buffer, kCIFARImageNBytes, "%05d",
           fileid * kCIFARBatchSize + itemid);
+#ifdef HAVE_LEVELDB
       train_db->Put(leveldb::WriteOptions(), string(str_buffer), value);
+#endif
     }
   }
 
   LOG(INFO) << "Writing Testing data";
+#ifdef HAVE_LEVELDB
   leveldb::DB* test_db;
   CHECK(leveldb::DB::Open(options, output_folder + "/cifar10_test_leveldb",
       &test_db).ok()) << "Failed to open leveldb.";
+#endif
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
@@ -83,14 +93,21 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
     datum.set_data(str_buffer, kCIFARImageNBytes);
     datum.SerializeToString(&value);
     snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
+#ifdef HAVE_LEVELDB
     test_db->Put(leveldb::WriteOptions(), string(str_buffer), value);
+#endif
   }
 
+#ifdef HAVE_LEVELDB
   delete train_db;
   delete test_db;
+#endif
 }
 
 int main(int argc, char** argv) {
+#ifndef HAVE_LEVELDB
+  LOG(FATAL) << "No DB library available to save the converted dataset";
+#endif
   if (argc != 3) {
     printf("This script converts the CIFAR dataset to the leveldb format used\n"
            "by caffe to perform classification.\n"

@@ -33,28 +33,40 @@ elseif(BLAS STREQUAL "mkl")
 endif()
 
 #    HDF5
-find_package(HDF5 COMPONENTS HL REQUIRED)
-include_directories(${HDF5_INCLUDE_DIRS})
+if(WITH_HDF5)
+    message(STATUS "HDF5 enabled")
+    find_package(HDF5 COMPONENTS HL REQUIRED)
+    include_directories(${HDF5_INCLUDE_DIRS})
+    add_definitions(-DHAVE_HDF5)
+endif()
 
 #    OpenCV
 find_package(OpenCV REQUIRED core highgui imgproc)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 #    LevelDB
-find_package(LevelDB REQUIRED)
-include_directories(${LEVELDB_INCLUDE})
-if(LEVELDB_FOUND)
-    find_package(Snappy REQUIRED)
-    include_directories(${SNAPPY_INCLUDE_DIR})
-    set(LEVELDB_LIBS
-        ${LEVELDB_LIBS}
-        ${SNAPPY_LIBS}
-    )
+if(WITH_LEVELDB)
+    message(STATUS "LevelDB enabled")
+    find_package(LevelDB REQUIRED)
+    include_directories(${LEVELDB_INCLUDE})
+    if(LEVELDB_FOUND)
+        find_package(Snappy REQUIRED)
+        include_directories(${SNAPPY_INCLUDE_DIR})
+        set(LEVELDB_LIBS
+            ${LEVELDB_LIBS}
+            ${SNAPPY_LIBS}
+        )
+    endif()
+    add_definitions(-DHAVE_LEVELDB)
 endif()
 
 #    LMDB
-find_package(LMDB REQUIRED)
-include_directories(${LMDB_INCLUDE_DIR})
+if(WITH_LMDB)
+    message(STATUS "LMDB enabled")
+    find_package(LMDB REQUIRED)
+    include_directories(${LMDB_INCLUDE_DIR})
+    add_definitions(-DHAVE_LMDB)
+endif()
 
 #    Boost
 find_package(Boost 1.46 COMPONENTS system thread REQUIRED)
@@ -78,23 +90,25 @@ add_library(caffe ${CPP_SOURCES})
 add_dependencies(caffe proto)
 
 #    CUDA
-if(NOT CPU_ONLY)
+if(WITH_CUDA)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
             -gencode arch=compute_20,code=sm_20
             -gencode arch=compute_20,code=sm_21
             -gencode arch=compute_30,code=sm_30
             -gencode arch=compute_35,code=sm_35
+            -gencode arch=compute_50,code=sm_50
+            -gencode arch=compute_50,code=compute_50
     )
-    
+
 # https://github.com/ComputationalRadiationPhysics/picongpu/blob/master/src/picongpu/CMakeLists.txt
     # work-arounds
-if(Boost_VERSION EQUAL 105500)
-    # see https://svn.boost.org/trac/boost/ticket/9392
-    message(STATUS "Boost: Applying noinline work around")
-    # avoid warning for CMake >= 2.8.12
-    set(CUDA_NVCC_FLAGS
-      "${CUDA_NVCC_FLAGS} \"-DBOOST_NOINLINE=__attribute__((noinline))\" ")
-endif(Boost_VERSION EQUAL 105500)
+    if(Boost_VERSION EQUAL 105500)
+        # see https://svn.boost.org/trac/boost/ticket/9392
+        message(STATUS "Boost: Applying noinline work around")
+        # avoid warning for CMake >= 2.8.12
+        set(CUDA_NVCC_FLAGS
+          "${CUDA_NVCC_FLAGS} \"-DBOOST_NOINLINE=__attribute__((noinline))\" ")
+    endif(Boost_VERSION EQUAL 105500)
 
     #    cuda sources
     file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
@@ -107,10 +121,19 @@ endif(Boost_VERSION EQUAL 105500)
         ${CUDA_curand_LIBRARY}
     )
 endif()
+    
+#    cuDNN
+if(WITH_CUDA)
+    set(CUDNN_LIBRARIES cudnn)
+    ## TODO: replace USE_CUDNN with HAVE_CUDNN in the code and Makefile
+    add_definitions(-DUSE_CUDNN)
+    add_definitions(-DHAVE_CUDNN)
+endif()
 
 target_link_libraries(caffe proto
         ${BLAS_LIBRARIES}
         ${Boost_LIBRARIES}
+        ${CUDNN_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         ${GFLAGS_LIBRARIES}
         ${GLOG_LIBRARIES}
@@ -126,7 +149,9 @@ set_target_properties(caffe PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
 )
 
-add_subdirectory(test)
+if(BUILD_TESTS)
+    add_subdirectory(test)
+endif()
 
 ###    Install    #################################################################################
 

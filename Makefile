@@ -166,10 +166,8 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 LIBRARIES += pthread \
-	glog gflags protobuf leveldb snappy \
-	lmdb \
+	glog gflags protobuf \
 	boost_system \
-	hdf5_hl hdf5 \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
@@ -308,6 +306,21 @@ else
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
+
+ifneq ($(WITH_HDF5), 0)
+	COMMON_FLAGS += -DHAVE_HDF5
+	LIBRARIES += hdf5_hl hdf5
+endif
+
+ifneq ($(WITH_LMDB), 0)
+	COMMON_FLAGS += -DHAVE_LEVELDB
+	LIBRARIES += leveldb snappy
+endif
+
+ifneq ($(WITH_LMDB), 0)
+	COMMON_FLAGS += -DHAVE_LMDB
+	LIBRARIES += lmdb
+endif
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))

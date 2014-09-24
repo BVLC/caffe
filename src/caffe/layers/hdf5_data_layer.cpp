@@ -1,3 +1,5 @@
+#ifdef HAVE_HDF5
+
 /*
 TODO:
 - load file in a separate thread ("prefetch")
@@ -117,3 +119,5 @@ STUB_GPU_FORWARD(HDF5DataLayer, Forward);
 INSTANTIATE_CLASS(HDF5DataLayer);
 
 }  // namespace caffe
+
+#endif  // #ifdef HAVE_HDF5
