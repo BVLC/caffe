@@ -1,5 +1,3 @@
-// TODO (sergeyk): effect should not be dependent on phase. wasted memcpy.
-
 #include <algorithm>
 #include <vector>
 
@@ -54,8 +52,6 @@ template <typename Dtype>
 void TopKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   NeuronLayer<Dtype>::Reshape(bottom, top);
-  idxs_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-        bottom[0]->height(), bottom[0]->width());
   mask_.Reshape(bottom[0]->num(), bottom[0]->channels(),
         bottom[0]->height(), bottom[0]->width());
 }
@@ -88,8 +84,7 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const int single_count = bottom[0]->count() / bottom[0]->num();
 
     caffe_set(count, Dtype(0), top_data);
-    memset(mask, 0, sizeof(uint) * count);
-//    caffe_set(count, uint(0), mask);
+    caffe_memset(sizeof(uint) * count, 0, mask);
 
     for (int n = 0; n < num; ++n) {
             std::vector<Dtype> values;
