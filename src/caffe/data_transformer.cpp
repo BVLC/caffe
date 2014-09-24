@@ -31,13 +31,13 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
     int h_off, w_off;
     // We only do random crop when we do training.
     if (phase_ == Caffe::TRAIN) {
-      h_off = Rand() % (height - crop_size);
-      w_off = Rand() % (width - crop_size);
+      h_off = Rand(height - crop_size + 1);
+      w_off = Rand(width - crop_size + 1);
     } else {
       h_off = (height - crop_size) / 2;
       w_off = (width - crop_size) / 2;
     }
-    if (mirror && Rand() % 2) {
+    if (mirror && (Rand(2) == 1)) {
       // Copy mirrored version
       for (int c = 0; c < channels; ++c) {
         for (int h = 0; h < crop_size; ++h) {
@@ -99,11 +99,12 @@ void DataTransformer<Dtype>::InitRand() {
 }
 
 template <typename Dtype>
-unsigned int DataTransformer<Dtype>::Rand() {
+int DataTransformer<Dtype>::Rand(int n) {
   CHECK(rng_);
+  CHECK_GT(n, 0);
   caffe::rng_t* rng =
       static_cast<caffe::rng_t*>(rng_->generator());
-  return (*rng)();
+  return ((*rng)() % n);
 }
 
 INSTANTIATE_CLASS(DataTransformer);
