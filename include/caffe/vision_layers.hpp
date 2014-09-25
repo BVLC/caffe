@@ -246,6 +246,7 @@ class LRNLayer : public Layer<Dtype> {
   int pre_pad_;
   Dtype alpha_;
   Dtype beta_;
+  Dtype k_;
   int num_;
   int channels_;
   int height_;

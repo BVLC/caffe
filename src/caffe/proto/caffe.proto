@@ -548,6 +548,7 @@ message LRNParameter {
     WITHIN_CHANNEL = 1;
   }
   optional NormRegion norm_region = 4 [default = ACROSS_CHANNELS];
+  optional float k = 5 [default = 1.];
 }
 
 // Message that stores parameters used by MemoryDataLayer
@@ -715,6 +716,7 @@ message V0LayerParameter {
   optional uint32 local_size = 13 [default = 5]; // for local response norm
   optional float alpha = 14 [default = 1.]; // for local response norm
   optional float beta = 15 [default = 0.75]; // for local response norm
+  optional float k = 22 [default = 1.];
 
   // For data layers, specify the data source
   optional string source = 16;
