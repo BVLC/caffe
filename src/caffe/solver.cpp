@@ -15,13 +15,13 @@ namespace caffe {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_() {
+    : iter_(), iter_total_(&iter_), net_() {
   Init(param);
 }
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file)
-    : net_() {
+    : iter_(), iter_total_(&iter_), net_() {
   SolverParameter param;
   ReadProtoFromTextFile(param_file, &param);
   Init(param);
@@ -32,6 +32,11 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   LOG(INFO) << "Initializing solver from parameters: " << std::endl
             << param.DebugString();
   param_ = param;
+  if (param_.solver_mode() == SolverParameter::GPU &&
+      param_.has_device_id()) {
+    Caffe::SetDevice(param_.device_id());
+  }
+  Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
   if (param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
   }
@@ -351,17 +356,18 @@ template <typename Dtype>
 Dtype SGDSolver<Dtype>::GetLearningRate() {
   Dtype rate;
   const string& lr_policy = this->param_.lr_policy();
+  int iter = *(this->iter_total_);
   if (lr_policy == "fixed") {
     rate = this->param_.base_lr();
   } else if (lr_policy == "step") {
-    int current_step = this->iter_ / this->param_.stepsize();
+    int current_step = iter / this->param_.stepsize();
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), current_step);
   } else if (lr_policy == "exp") {
-    rate = this->param_.base_lr() * pow(this->param_.gamma(), this->iter_);
+    rate = this->param_.base_lr() * pow(this->param_.gamma(), iter);
   } else if (lr_policy == "inv") {
     rate = this->param_.base_lr() *
-        pow(Dtype(1) + this->param_.gamma() * this->iter_,
+        pow(Dtype(1) + this->param_.gamma() * iter,
             - this->param_.power());
   } else {
     LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;
