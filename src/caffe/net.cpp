@@ -94,7 +94,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     // After this layer is connected, set it up.
     LOG(INFO) << "Setting up " << layer_names_[layer_id];
-    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], &top_vecs_[layer_id]);
+    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
@@ -504,8 +504,8 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
-    layers_[i]->Reshape(bottom_vecs_[i], &top_vecs_[i]);
-    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], &top_vecs_[i]);
+    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
+    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
@@ -570,7 +570,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
       layers_[i]->Backward(
-          top_vecs_[i], bottom_need_backward_[i], &bottom_vecs_[i]);
+          top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }
@@ -683,7 +683,7 @@ void Net<Dtype>::Backward() {
 template <typename Dtype>
 void Net<Dtype>::Reshape() {
   for (int i = 0; i < layers_.size(); ++i) {
-    layers_[i]->Reshape(bottom_vecs_[i], &top_vecs_[i]);
+    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
   }
 }
 

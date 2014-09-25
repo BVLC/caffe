@@ -237,8 +237,8 @@ int time() {
     for (int j = 0; j < FLAGS_iterations; ++j) {
       // Although Reshape should be essentially free, we include it here
       // so that we will notice Reshape performance bugs.
-      layers[i]->Reshape(bottom_vecs[i], &top_vecs[i]);
-      layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
+      layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
+      layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
     }
     LOG(INFO) << layername << "\tforward: " << timer.MilliSeconds() <<
         " milliseconds.";
@@ -252,7 +252,7 @@ int time() {
     timer.Start();
     for (int j = 0; j < FLAGS_iterations; ++j) {
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
-                          &bottom_vecs[i]);
+                          bottom_vecs[i]);
     }
     LOG(INFO) << layername << "\tbackward: "
         << timer.MilliSeconds() << " milliseconds.";
