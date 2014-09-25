@@ -39,7 +39,15 @@ class DataTransformer {
                  const Dtype* mean, Dtype* transformed_data);
 
  protected:
-  virtual unsigned int Rand();
+   /**
+   * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
+   * 
+   * @param n
+   *    The upperbound (exclusive) value of the random number.
+   * @return 
+   *    A uniformly random integer value from ({0, 1, ..., n-1}).
+   */
+  virtual int Rand(int n);
 
   // Tranformation parameters
   TransformationParameter param_;
