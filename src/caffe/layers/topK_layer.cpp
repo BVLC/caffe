@@ -50,7 +50,7 @@ std::vector<size_t> kth_element_idxs(const std::vector<Dtype> &v,
 }
 #else
 template <typename Dtype>
-std::vector<size_t> sort_indexes(const std::vector<Dtype> &v,
+std::vector<size_t> sort_idxs(const std::vector<Dtype> &v,
                                  const int sortAscend = 1) {
   std::vector<size_t> idx(v.size());
   for (size_t i = 0; i != idx.size(); ++i) {
