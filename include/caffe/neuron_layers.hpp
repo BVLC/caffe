@@ -334,8 +334,6 @@ class TopKLayer : public NeuronLayer<Dtype> {
 
 //  Blob<uint> idxs_;
 
-
-  ///
   uint uint_k_;
 };
 

@@ -31,8 +31,26 @@ struct compare_indirect_index_descend {
     }
 };
 
-template <typename T>
-std::vector<size_t> sort_indexes(const std::vector<T> &v,
+#if __cplusplus > 199711L
+template <typename Dtype>
+std::vector<size_t> kth_element_idxs(const std::vector<Dtype> &v,
+  const size_t k, const int sortAscend = 1) {
+  std::vector<size_t> idx(v.size());
+  for (size_t i = 0; i != idx.size(); ++i) {
+      idx[i] = i;
+    }
+  if (sortAscend) {
+      std::nth_element(idx.begin(), idx.begin() + k, idx.end(),
+                compare_indirect_index_ascend <std::vector<Dtype> > (v));
+    } else {
+      std::nth_element(idx.begin(), idx.begin() + k, idx.end(),
+                compare_indirect_index_descend <std::vector<Dtype> > (v));
+    }
+  return idx;
+}
+#else
+template <typename Dtype>
+std::vector<size_t> sort_indexes(const std::vector<Dtype> &v,
                                  const int sortAscend = 1) {
   std::vector<size_t> idx(v.size());
   for (size_t i = 0; i != idx.size(); ++i) {
@@ -40,13 +58,14 @@ std::vector<size_t> sort_indexes(const std::vector<T> &v,
     }
   if (sortAscend) {
       std::sort(idx.begin(), idx.end(),
-                compare_indirect_index_ascend <std::vector<T> > (v));
+                compare_indirect_index_ascend <std::vector<Dtype> > (v));
   } else {
       std::sort(idx.begin(), idx.end(),
-                compare_indirect_index_descend <std::vector<T> > (v));
+                compare_indirect_index_descend <std::vector<Dtype> > (v));
   }
   return idx;
 }
+#endif
 
 template <typename Dtype>
 void TopKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -87,11 +106,13 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     caffe_memset(sizeof(uint) * count, 0, mask);
 
     for (int n = 0; n < num; ++n) {
-            std::vector<Dtype> values;
-            values.assign(bottom_data, bottom_data + single_count);
-
-            std::vector<size_t> idxs = sort_indexes(values, 0);
-
+            std::vector<Dtype> vals;
+            vals.assign(bottom_data, bottom_data + single_count);
+#if __cplusplus > 199711L
+            const std::vector<size_t> idxs = kth_element_idxs(vals, uint_k_, 0);
+#else
+            const std::vector<size_t> idxs = sort_idxs(vals, 0);
+#endif
             for (size_t i = 0; i < uint_k_; ++i) {
                 top_data[idxs[i]] =  bottom_data[idxs[i]];
                 mask[idxs[i]] = static_cast<uint>(1);
@@ -117,11 +138,6 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       }
   }
 
-#ifdef CPU_ONLY
-  STUB_GPU(TopKLayer);
-#endif
-
   INSTANTIATE_CLASS(TopKLayer);
-
 
 }  // namespace caffe
