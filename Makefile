@@ -252,6 +252,7 @@ ifeq ($(OSX), 1)
 	endif
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
 	LIBRARIES += boost_thread-mt
+        NVCCFLAGS += -DOSX
 endif
 
 # Custom compiler
