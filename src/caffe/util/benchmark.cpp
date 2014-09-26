@@ -66,8 +66,10 @@ float Timer::MicroSeconds() {
   }
   if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
-    CUDA_CHECK(cudaEventElapsedTime(&elapsed_microseconds_, start_gpu_,
+    CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
                                     stop_gpu_));
+    // Cuda only measure milliseconds
+    elapsed_microseconds_ = elapsed_milliseconds_ / 1000;
 #else
       NO_GPU;
 #endif
