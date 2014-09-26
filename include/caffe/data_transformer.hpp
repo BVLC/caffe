@@ -1,7 +1,9 @@
 #ifndef CAFFE_DATA_TRANSFORMER_HPP
 #define CAFFE_DATA_TRANSFORMER_HPP
 
+#ifndef OSX
 #include <opencv2/core/core.hpp>
+#endif
 
 #include <vector>
 
@@ -49,7 +51,9 @@ class DataTransformer {
   void Transform(const vector<Datum> & datum_vector,
                 Blob<Dtype>* transformed_blob);
 
+#ifndef OSX
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+#endif
 
   void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
 

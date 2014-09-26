@@ -1,7 +1,9 @@
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
+#ifndef OSX
 #include <opencv2/core/core.hpp>
+#endif
 
 #include <unistd.h>
 #include <string>
@@ -109,6 +111,7 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, true, datum);
 }
 
+#ifndef OSX
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color);
 
@@ -127,6 +130,7 @@ inline cv::Mat ReadImageToCVMat(const string& filename) {
 }
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
+#endif
 
 leveldb::Options GetLevelDBOptions();
 
