@@ -60,7 +60,8 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // First, join the thread
   if (this->timer_forward_.has_run_at_least_once()) {
-    DLOG(INFO) << "Proccessing: " << this->timer_forward_.MilliSeconds() << "ms.";
+    DLOG(INFO) << "Proccessing: " <<
+                this->timer_forward_.MilliSeconds() << "ms.";
   }
   JoinPrefetchThread();
   DLOG(INFO) << "Thread joined";
