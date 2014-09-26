@@ -8,7 +8,6 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -143,8 +142,6 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void DataLayer<Dtype>::InternalThreadEntry() {
-  Timer batch_timer;
-  batch_timer.Start();
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
@@ -204,7 +201,6 @@ void DataLayer<Dtype>::InternalThreadEntry() {
       LOG(FATAL) << "Unknown database backend";
     }
   }
-  DLOG(INFO) << "Prefetch: " << batch_timer.MilliSeconds() << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);
