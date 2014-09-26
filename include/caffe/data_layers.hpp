@@ -20,9 +20,6 @@
 
 namespace caffe {
 
-#define HDF5_DATA_DATASET_NAME "data"
-#define HDF5_DATA_LABEL_NAME "label"
-
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
  *
@@ -197,8 +194,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   unsigned int num_files_;
   unsigned int current_file_;
   hsize_t current_row_;
-  Blob<Dtype> data_blob_;
-  Blob<Dtype> label_blob_;
+  std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
 };
 
 /**
