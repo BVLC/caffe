@@ -143,53 +143,43 @@ Layer<Dtype>* GetSoftmaxLayer(const LayerParameter& param) {
 }
 
 // Layers that have a specific creator function.
-REGISTER_LAYER_CREATOR(LayerParameter_LayerType_CONVOLUTION,
-                       GetConvolutionLayer, ConvolutionLayer);
-REGISTER_LAYER_CREATOR(LayerParameter_LayerType_POOLING,
-                       GetPoolingLayer, PoolingLayer);
-REGISTER_LAYER_CREATOR(LayerParameter_LayerType_RELU,
-                       GetReLULayer, ReLULayer);
-REGISTER_LAYER_CREATOR(LayerParameter_LayerType_SIGMOID,
-                       GetSigmoidLayer, SigmoidLayer);
-REGISTER_LAYER_CREATOR(LayerParameter_LayerType_SOFTMAX,
-                       GetSoftmaxLayer, SoftmaxLayer);
-REGISTER_LAYER_CREATOR(LayerParameter_LayerType_TANH,
-                       GetTanHLayer, TanHLayer);
+REGISTER_LAYER_CREATOR(CONVOLUTION, GetConvolutionLayer);
+REGISTER_LAYER_CREATOR(POOLING, GetPoolingLayer);
+REGISTER_LAYER_CREATOR(RELU, GetReLULayer);
+REGISTER_LAYER_CREATOR(SIGMOID, GetSigmoidLayer);
+REGISTER_LAYER_CREATOR(SOFTMAX, GetSoftmaxLayer);
+REGISTER_LAYER_CREATOR(TANH, GetTanHLayer);
+
 // Layers that use their constructor as their default creator.
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_ACCURACY, AccuracyLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_ABSVAL, AbsValLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_ARGMAX, ArgMaxLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_BNLL, BNLLLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_CONCAT, ConcatLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_CONTRASTIVE_LOSS,
-                     ContrastiveLossLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_DATA, DataLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_DROPOUT, DropoutLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_DUMMY_DATA, DummyDataLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_EUCLIDEAN_LOSS,
-                     EuclideanLossLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_ELTWISE, EltwiseLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_FLATTEN, FlattenLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_HDF5_DATA, HDF5DataLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_HDF5_OUTPUT, HDF5OutputLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_HINGE_LOSS, HingeLossLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_IMAGE_DATA, ImageDataLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_IM2COL, Im2colLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_INFOGAIN_LOSS, InfogainLossLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_INNER_PRODUCT, InnerProductLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_LRN, LRNLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_MEMORY_DATA, MemoryDataLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_MVN, MVNLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS,
-                     MultinomialLogisticLossLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_POWER, PowerLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_SILENCE, SilenceLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_SIGMOID_CROSS_ENTROPY_LOSS,
-                     SigmoidCrossEntropyLossLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_SLICE, SliceLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_SOFTMAX_LOSS,
-                     SoftmaxWithLossLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_SPLIT, SplitLayer);
-REGISTER_LAYER_CLASS(LayerParameter_LayerType_WINDOW_DATA, WindowDataLayer);
+REGISTER_LAYER_CLASS(ACCURACY, AccuracyLayer);
+REGISTER_LAYER_CLASS(ABSVAL, AbsValLayer);
+REGISTER_LAYER_CLASS(ARGMAX, ArgMaxLayer);
+REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
+REGISTER_LAYER_CLASS(CONCAT, ConcatLayer);
+REGISTER_LAYER_CLASS(CONTRASTIVE_LOSS, ContrastiveLossLayer);
+REGISTER_LAYER_CLASS(DATA, DataLayer);
+REGISTER_LAYER_CLASS(DROPOUT, DropoutLayer);
+REGISTER_LAYER_CLASS(DUMMY_DATA, DummyDataLayer);
+REGISTER_LAYER_CLASS(EUCLIDEAN_LOSS, EuclideanLossLayer);
+REGISTER_LAYER_CLASS(ELTWISE, EltwiseLayer);
+REGISTER_LAYER_CLASS(FLATTEN, FlattenLayer);
+REGISTER_LAYER_CLASS(HDF5_DATA, HDF5DataLayer);
+REGISTER_LAYER_CLASS(HDF5_OUTPUT, HDF5OutputLayer);
+REGISTER_LAYER_CLASS(HINGE_LOSS, HingeLossLayer);
+REGISTER_LAYER_CLASS(IMAGE_DATA, ImageDataLayer);
+REGISTER_LAYER_CLASS(IM2COL, Im2colLayer);
+REGISTER_LAYER_CLASS(INFOGAIN_LOSS, InfogainLossLayer);
+REGISTER_LAYER_CLASS(INNER_PRODUCT, InnerProductLayer);
+REGISTER_LAYER_CLASS(LRN, LRNLayer);
+REGISTER_LAYER_CLASS(MEMORY_DATA, MemoryDataLayer);
+REGISTER_LAYER_CLASS(MVN, MVNLayer);
+REGISTER_LAYER_CLASS(MULTINOMIAL_LOGISTIC_LOSS, MultinomialLogisticLossLayer);
+REGISTER_LAYER_CLASS(POWER, PowerLayer);
+REGISTER_LAYER_CLASS(SILENCE, SilenceLayer);
+REGISTER_LAYER_CLASS(SIGMOID_CROSS_ENTROPY_LOSS, SigmoidCrossEntropyLossLayer);
+REGISTER_LAYER_CLASS(SLICE, SliceLayer);
+REGISTER_LAYER_CLASS(SOFTMAX_LOSS, SoftmaxWithLossLayer);
+REGISTER_LAYER_CLASS(SPLIT, SplitLayer);
+REGISTER_LAYER_CLASS(WINDOW_DATA, WindowDataLayer);
 
 }  // namespace caffe

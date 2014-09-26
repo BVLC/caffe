@@ -1,3 +1,41 @@
+// This file defines a layer factory that allows one to register layers. During
+// runtime, registered layers could be called by passing a LayerParameter:
+//     LayerRegistry<Dtype>::CreateLayer(param);
+//
+// There are two ways to register a layer. Assuming that we have a layer like:
+//
+//   template <typename Dtype>
+//   class MyAwesomeLayer : public Layer<Dtype> {
+//     // your implementations
+//   };
+//
+// and its type is defined in the protobuffer as
+//
+//   enum LayerType {
+//     // other definitions
+//     AWESOME = 46,
+//   }
+//
+// If the layer is going to be created simply by its constructor, in your c++
+// file, add the following line:
+//
+//    REGISTER_LAYER_CLASS(AWESOME, MyAwesomeLayer);
+//
+// Or, if the layer is going to be created by another creator function, in the
+// format of:
+//
+//    template <typename Dtype>
+//    Layer<Dtype*> GetMyAwesomeLayer(const LayerParameter& param) {
+//      // your implementation
+//    }
+//
+// (for example, when your layer has multiple backends, see GetConvolutionLayer
+// for a use case), then you can register the creator function instead, like
+//
+// REGISTER_LAYER_CREATOR(AWESOME, GetMyAwesomeLayer)
+//
+// Note that each layer type should only be registered once.
+
 #ifndef CAFFE_LAYER_FACTORY_H_
 #define CAFFE_LAYER_FACTORY_H_
 
@@ -55,9 +93,11 @@ class LayerRegisterer {
 };
 
 
-#define REGISTER_LAYER_CREATOR(type, creator, classname)                       \
-  static LayerRegisterer<float> g_creator_f_##classname(type, creator<float>); \
-  static LayerRegisterer<double> g_creator_d_##classname(type, creator<double>)
+#define REGISTER_LAYER_CREATOR(type, creator)                                  \
+  static LayerRegisterer<float> g_creator_f_##type(                            \
+      LayerParameter_LayerType_##type, creator<float>);                        \
+  static LayerRegisterer<double> g_creator_d_##type(                           \
+      LayerParameter_LayerType_##type, creator<double>)
 
 #define REGISTER_LAYER_CLASS(type, clsname)                                    \
   template <typename Dtype>                                                    \
@@ -65,9 +105,9 @@ class LayerRegisterer {
     return new clsname<Dtype>(param);                                          \
   }                                                                            \
   static LayerRegisterer<float> g_creator_f_##clsname(                         \
-      type, Creator_##clsname<float>);                                         \
+      LayerParameter_LayerType_##type, Creator_##clsname<float>);                \
   static LayerRegisterer<double> g_creator_d_##clsname(                        \
-      type, Creator_##clsname<double>)
+      LayerParameter_LayerType_##type, Creator_##clsname<double>)
 
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,
