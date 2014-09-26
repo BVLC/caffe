@@ -7,6 +7,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/device_alternate.hpp"
 
@@ -468,10 +469,6 @@ void Layer<Dtype>::ToProto(LayerParameter* param, bool write_diff) {
     blobs_[i]->ToProto(param->add_blobs(), write_diff);
   }
 }
-
-// The layer factory function
-template <typename Dtype>
-Layer<Dtype>* GetLayer(const LayerParameter& param);
 
 }  // namespace caffe
 
