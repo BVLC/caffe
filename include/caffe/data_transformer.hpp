@@ -25,9 +25,7 @@ class DataTransformer {
 
   /**
    * @brief Initialize the Random number generations if needed by the
-   *    transformation. Currently:
-   *    needs_rand = param_.mirror() ||
-   *      (phase_ == Caffe::TRAIN && param_.crop_size());
+   *    transformation.
    */
   void InitRand();
 

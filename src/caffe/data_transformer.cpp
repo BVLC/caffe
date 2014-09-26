@@ -16,7 +16,7 @@ template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
     : param_(param) {
   phase_ = Caffe::phase();
-    // check if we want to have mean
+  // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
       "Cannot specify mean_file and mean_value at the same time";
@@ -26,6 +26,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
   }
+  // check if we want to use mean_value
   if (param_.mean_value_size() > 0) {
     CHECK(param_.has_mean_file() == false) <<
       "Cannot specify mean_file and mean_value at the same time";
@@ -216,8 +217,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
     if (phase_ == Caffe::TRAIN) {
-      h_off = Rand(height - crop_size + 1);
-      w_off = Rand(width - crop_size + 1);
+      h_off = Rand(input_height - crop_size + 1);
+      w_off = Rand(input_width - crop_size + 1);
     } else {
       h_off = (input_height - crop_size) / 2;
       w_off = (input_width - crop_size) / 2;

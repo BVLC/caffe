@@ -330,20 +330,11 @@ layers {
   }
 }
 layers {
-  name: "top-1"
+  name: "accuracy"
   type: ACCURACY
   bottom: "fc8"
   bottom: "label"
-  top: "top-1"
-  include: { phase: TEST }
-}
-layers {
-  name: "top-5"
-  type: ACCURACY
-  bottom: "fc8"
-  bottom: "label"
-  top: "top-5"
-  accuracy_param: { top_k: 5 }
+  top: "accuracy"
   include: { phase: TEST }
 }
 layers {
