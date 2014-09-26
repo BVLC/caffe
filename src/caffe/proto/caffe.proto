@@ -686,8 +686,9 @@ message ThresholdParameter {
 }
 // Message that stores parameters used by TopKLayer
 message TopKParameter {
-  optional uint32 k = 10; // number of non-zero outputs in train time = k.
-  optional float a = 3; // number of non-zero outputs in test time = a*k.  
+  optional uint32 k = 1; // number of non-zero outputs in train time = k.
+  optional float a = 2; // number of non-zero outputs in test time = a*k.
+  optional bool across_channels = 3 [default = false]; // top K are selected across channels.
 }
 
 // Message that stores parameters used by WindowDataLayer

@@ -33,12 +33,8 @@ struct compare_indirect_index_descend {
 
 #if __cplusplus > 199711L
 template <typename Dtype>
-std::vector<size_t> kth_element_idxs(const std::vector<Dtype> &v,
-  const size_t k, const int sortAscend = 1) {
-  std::vector<size_t> idx(v.size());
-  for (size_t i = 0; i != idx.size(); ++i) {
-      idx[i] = i;
-    }
+void kth_element_idxs(const std::vector<Dtype> &v,
+  std::vector<size_t> &idx, const size_t k, const int sortAscend = 1) {
   if (sortAscend) {
       std::nth_element(idx.begin(), idx.begin() + k, idx.end(),
                 compare_indirect_index_ascend <std::vector<Dtype> > (v));
@@ -46,16 +42,12 @@ std::vector<size_t> kth_element_idxs(const std::vector<Dtype> &v,
       std::nth_element(idx.begin(), idx.begin() + k, idx.end(),
                 compare_indirect_index_descend <std::vector<Dtype> > (v));
     }
-  return idx;
+  return;
 }
 #else
 template <typename Dtype>
-std::vector<size_t> sort_idxs(const std::vector<Dtype> &v,
+void sort_idxs(const std::vector<Dtype> &v, std::vector<size_t> &idx,
                                  const int sortAscend = 1) {
-  std::vector<size_t> idx(v.size());
-  for (size_t i = 0; i != idx.size(); ++i) {
-      idx[i] = i;
-    }
   if (sortAscend) {
       std::sort(idx.begin(), idx.end(),
                 compare_indirect_index_ascend <std::vector<Dtype> > (v));
@@ -63,7 +55,7 @@ std::vector<size_t> sort_idxs(const std::vector<Dtype> &v,
       std::sort(idx.begin(), idx.end(),
                 compare_indirect_index_descend <std::vector<Dtype> > (v));
   }
-  return idx;
+  return;
 }
 #endif
 
@@ -85,9 +77,13 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   uint_k_ = this->layer_param_.topk_param().k() *
             this->layer_param_.topk_param().a();
   }
-
+  channels4norm =
+    this->layer_param_.topk_param().across_channels() ? bottom[0]->channels() : 1;
   DCHECK_GT(uint_k_, 0);
   DCHECK(uint_k_ <= bottom[0]->count() / bottom[0]->num());
+
+  DCHECK_GT(channels4norm, 0);
+  DCHECK(channels4norm <= bottom[0]->channels());
   }
 
   template <typename Dtype>
@@ -95,23 +91,56 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                      const vector<Blob<Dtype>*>& top) {
     const Dtype* bottom_data = bottom[0]->cpu_data();
     Dtype* top_data = top[0]->mutable_cpu_data();
-
     uint* mask = mask_.mutable_cpu_data();
 
     const int count = bottom[0]->count();
     const int num = bottom[0]->num();
+    const int channels = bottom[0]->channels();
+    const int height = bottom[0]->height();
+    const int width = bottom[0]->width();
     const int single_count = bottom[0]->count() / bottom[0]->num();
 
     caffe_set(count, Dtype(0), top_data);
     caffe_memset(sizeof(uint) * count, 0, mask);
 
+    if (channels4norm > 1) {  // For convolutional layers
+        for (int n = 0; n < num; ++n) {
+            for (int h = 0; h < height; ++h) {
+                for (int w = 0; w < width; ++w) {
+                std::vector<Dtype> vals(channels);
+                std::vector<size_t> idxs(channels);
+                for (int c = 0; c < channels; ++c) {
+                    const size_t idx = (c * height + h) * width + w;
+                    idxs[c] = idx;
+                    vals[c] = bottom_data[idx];
+                  }
+    #if __cplusplus > 199711L
+                kth_element_idxs(vals, idxs, uint_k_, 0);
+    #else
+                sort_idxs(vals, idxs, 0);
+    #endif
+                for (size_t i = 0; i < uint_k_; ++i) {
+                    top_data[idxs[i]] =  bottom_data[idxs[i]];
+                    mask[idxs[i]] = static_cast<uint>(1);
+                  }
+                }
+              }
+           mask += mask_.offset(1);
+           bottom_data += bottom[0]->offset(1);
+           top_data += top[0]->offset(1);
+          }
+      } else {  // For full-connected layers
     for (int n = 0; n < num; ++n) {
             std::vector<Dtype> vals;
             vals.assign(bottom_data, bottom_data + single_count);
+            std::vector<size_t> idxs(vals.size());
+            for (size_t i = 0; i != idxs.size(); ++i) {
+                idxs[i] = i;
+              }
 #if __cplusplus > 199711L
-            const std::vector<size_t> idxs = kth_element_idxs(vals, uint_k_, 0);
+            kth_element_idxs(vals, idxs, uint_k_, 0);
 #else
-            const std::vector<size_t> idxs = sort_idxs(vals, 0);
+            sort_idxs(vals, idxs, 0);
 #endif
             for (size_t i = 0; i < uint_k_; ++i) {
                 top_data[idxs[i]] =  bottom_data[idxs[i]];
@@ -121,6 +150,7 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
             bottom_data += bottom[0]->offset(1);
             top_data += top[0]->offset(1);
           }
+      }
       }
 
   template <typename Dtype>
