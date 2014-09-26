@@ -17,6 +17,7 @@
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -51,6 +52,7 @@ class BaseDataLayer : public Layer<Dtype> {
   DataTransformer<Dtype> data_transformer_;
   Caffe::Phase phase_;
   bool output_labels_;
+  Timer timer_forward_;
 };
 
 template <typename Dtype>
@@ -79,6 +81,7 @@ class BasePrefetchingDataLayer :
  protected:
   Blob<Dtype> prefetch_data_;
   Blob<Dtype> prefetch_label_;
+  Blob<Dtype> transformed_data_;
 };
 
 template <typename Dtype>

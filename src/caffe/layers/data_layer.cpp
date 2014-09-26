@@ -8,6 +8,7 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -118,12 +119,15 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                        datum.channels(), crop_size, crop_size);
     this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
         datum.channels(), crop_size, crop_size);
+    this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size);
   } else {
     top[0]->Reshape(
         this->layer_param_.data_param().batch_size(), datum.channels(),
         datum.height(), datum.width());
     this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
         datum.channels(), datum.height(), datum.width());
+    this->transformed_data_.Reshape(1, datum.channels(),
+      datum.height(), datum.width());
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -139,10 +143,13 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void DataLayer<Dtype>::InternalThreadEntry() {
-  Datum datum;
+  Timer batch_timer;
+  batch_timer.Start();
   CHECK(this->prefetch_data_.count());
+  CHECK(this->transformed_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
+
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
@@ -150,6 +157,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
+    Datum datum;
     switch (this->layer_param_.data_param().backend()) {
     case DataParameter_DB_LEVELDB:
       CHECK(iter_);
@@ -165,10 +173,10 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     default:
       LOG(FATAL) << "Unknown database backend";
     }
-
     // Apply data transformations (mirror, scale, crop...)
-    this->data_transformer_.Transform(item_id, datum, top_data);
-
+    int offset = this->prefetch_data_.offset(item_id);
+    this->transformed_data_.set_cpu_data(top_data + offset);
+    this->data_transformer_.Transform(datum, &(this->transformed_data_));    
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
     }
@@ -196,6 +204,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
       LOG(FATAL) << "Unknown database backend";
     }
   }
+  DLOG(INFO) << "Prefetch: " << batch_timer.MilliSeconds() << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);
