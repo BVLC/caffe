@@ -85,46 +85,32 @@ cv::Mat ReadImageToCVMat(const string& filename,
 
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
-  cv::Mat cv_img;
-  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
-    CV_LOAD_IMAGE_GRAYSCALE);
+  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
 
-  cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
-  if (!cv_img_origin.data) {
-    LOG(ERROR) << "Could not open or find file " << filename;
-    return false;
-  }
-  if (height > 0 && width > 0) {
-    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
-  } else {
-    cv_img = cv_img_origin;
-  }
-
-  int num_channels = (is_color ? 3 : 1);
-  datum->set_channels(num_channels);
+  CHECK(cv_img.depth() == CV_8U) <<
+      "Image data type must be unsigned byte";
+  datum->set_channels(cv_img.channels());
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
   datum->set_label(label);
   datum->clear_data();
   datum->clear_float_data();
-  string* datum_string = datum->mutable_data();
-  if (is_color) {
-    for (int c = 0; c < num_channels; ++c) {
-      for (int h = 0; h < cv_img.rows; ++h) {
-        for (int w = 0; w < cv_img.cols; ++w) {
-          datum_string->push_back(
-            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
-        }
+  int datum_channels = datum->channels();
+  int datum_height = datum->height();
+  int datum_width = datum->width();
+  int datum_size = datum_channels * datum_height * datum_width;
+  std::string buffer(datum_size, ' ');
+  for (int h = 0; h < datum_height; ++h) {
+    const uchar* ptr = cv_img.ptr<uchar>(h);
+    int img_index = 0;
+    for (int w = 0; w < datum_width; ++w) {
+      for (int c = 0; c < datum_channels; ++c) {
+        int datum_index = (c * datum_height + h) * datum_width + w;
+        buffer[datum_index] = static_cast<char>(ptr[img_index++]);
       }
     }
-  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
-    for (int h = 0; h < cv_img.rows; ++h) {
-      for (int w = 0; w < cv_img.cols; ++w) {
-        datum_string->push_back(
-          static_cast<char>(cv_img.at<uchar>(h, w)));
-        }
-      }
   }
+  datum->set_data(buffer);
   return true;
 }
 
