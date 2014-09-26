@@ -177,7 +177,6 @@ class HDF5DataLayer : public Layer<Dtype> {
     return LayerParameter_LayerType_HDF5_DATA;
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
