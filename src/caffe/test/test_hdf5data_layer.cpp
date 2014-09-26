@@ -57,6 +57,9 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   // The data file we are reading has 10 rows and 8 columns,
   // with values from 0 to 10*8 reshaped in row-major order.
   LayerParameter param;
+  param.add_top("data");
+  param.add_top("label");
+
   HDF5DataParameter* hdf5_data_param = param.mutable_hdf5_data_param();
   int batch_size = 5;
   hdf5_data_param->set_batch_size(batch_size);
