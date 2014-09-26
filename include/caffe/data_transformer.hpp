@@ -44,8 +44,6 @@ class DataTransformer {
    *    within the blob's data.
    */
 
-  void Transform(const Datum& datum, Dtype* transformed_data);
-
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
 
   void Transform(const vector<Datum> & datum_vector,
@@ -66,6 +64,7 @@ class DataTransformer {
    */
   virtual int Rand(int n);
 
+  void Transform(const Datum& datum, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
 
