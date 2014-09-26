@@ -37,15 +37,15 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK_LE(num, batch_size_) <<
       "The number of added datum must be no greater than the batch size";
 
-  Dtype* top_data = added_data_.mutable_cpu_data();
+  // Apply data transformations (mirror, scale, crop...)
+  this->data_transformer_.Transform(datum_vector, &added_data_);
+  // Copy Labels
   Dtype* top_label = added_label_.mutable_cpu_data();
-  for (int batch_item_id = 0; batch_item_id < num; ++batch_item_id) {
-    // Apply data transformations (mirror, scale, crop...)
-    this->data_transformer_.Transform(
-        batch_item_id, datum_vector[batch_item_id], top_data);
-    top_label[batch_item_id] = datum_vector[batch_item_id].label();
+  for (int item_id = 0; item_id < num; ++item_id) {
+    top_label[item_id] = datum_vector[item_id].label();
   }
   // num_images == batch_size_
+  Dtype* top_data = added_data_.mutable_cpu_data();
   Reset(top_data, top_label, batch_size_);
   has_new_data_ = true;
 }

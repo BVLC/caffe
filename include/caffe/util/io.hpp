@@ -7,6 +7,7 @@
 #include "google/protobuf/message.h"
 #include "hdf5.h"
 #include "hdf5_hl.h"
+#include <opencv2/core/core.hpp>
 
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -100,6 +101,23 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
   return ReadImageToDatum(filename, label, 0, 0, datum);
+}
+
+cv::Mat ReadImageToCVMat(const string& filename, 
+    const int height, const int width, const bool is_color);
+
+inline cv::Mat ReadImageToCVMat(const string& filename, 
+    const int height, const int width) {
+  return ReadImageToCVMat(filename, height, width, true);
+}
+
+inline cv::Mat ReadImageToCVMat(const string& filename,
+    const bool is_color) {
+  return ReadImageToCVMat(filename, 0, 0, is_color);
+}
+
+inline cv::Mat ReadImageToCVMat(const string& filename) {
+  return ReadImageToCVMat(filename, 0, 0, true);
 }
 
 leveldb::Options GetLevelDBOptions();

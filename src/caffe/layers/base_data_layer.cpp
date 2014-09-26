@@ -59,16 +59,23 @@ template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   // First, join the thread
+  if (this->timer_forward_.has_run_at_least_once()) {
+    DLOG(INFO) << "Proccessing: " << this->timer_forward_.MilliSeconds() << "ms.";
+  }
   JoinPrefetchThread();
+  DLOG(INFO) << "Thread joined";
   // Copy the data
   caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
              top[0]->mutable_cpu_data());
+  DLOG(INFO) << "Prefetch copied";
   if (this->output_labels_) {
     caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
                top[1]->mutable_cpu_data());
   }
   // Start a new prefetch thread
+  DLOG(INFO) << "CreatePrefetchThread";
   CreatePrefetchThread();
+  this->timer_forward_.Start();
 }
 
 #ifdef CPU_ONLY

@@ -1,9 +1,11 @@
 #ifndef CAFFE_DATA_TRANSFORMER_HPP
 #define CAFFE_DATA_TRANSFORMER_HPP
 
+#include <opencv2/core/core.hpp>
+
+#include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/io.hpp"
 
 namespace caffe {
 
@@ -33,8 +35,15 @@ class DataTransformer {
    *    written at the appropriate place within the blob's data.
    */
 
-  void Transform(const int batch_item_id, const Datum& datum,
-                 Dtype* transformed_data);
+  void Transform(const Datum& datum, Dtype* transformed_data);
+
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
+
+  void Transform(const vector<Datum> & datum_vector, Blob<Dtype>* transformed_blob);
+
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+
+  void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
 
  protected:
    /**
@@ -47,8 +56,6 @@ class DataTransformer {
    */
   virtual int Rand(int n);
 
-  void Transform(const int batch_item_id, const Datum& datum,
-                 const Dtype* mean, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
 

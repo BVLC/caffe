@@ -7,6 +7,7 @@ namespace caffe {
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  DLOG(INFO) << "Processing: " << this->timer_forward_.MilliSeconds() << "ms.";
   // First, join the thread
   JoinPrefetchThread();
   // Copy the data
@@ -18,6 +19,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   }
   // Start a new prefetch thread
   CreatePrefetchThread();
+  this->timer_forward_.Start();
 }
 
 INSTANTIATE_CLASS(BasePrefetchingDataLayer);
