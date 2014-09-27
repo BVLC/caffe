@@ -16,7 +16,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     Dtype* col_buff = NULL;
-    if (!is_1x1_) {
+    if (!skip_col_buff_) {
       col_buff = col_buffer_.mutable_gpu_data();
     }
     const Dtype* weight = this->blobs_[0]->gpu_data();
@@ -26,7 +26,7 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < num_; ++n) {
       // im2col transformation: unroll input regions for filtering
       // into column matrix for multplication.
-      if (!is_1x1_) {
+      if (!skip_col_buff_) {
         im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
             width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
             col_buff);
@@ -86,7 +86,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         top_diff = top[i]->gpu_diff();
       }
       Dtype* col_buff = NULL;
-      if (!is_1x1_) {
+      if (!skip_col_buff_) {
         col_buff = col_buffer_.mutable_gpu_data();
       }
       const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -94,7 +94,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < num_; ++n) {
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
-        if (!is_1x1_) {
+        if (!skip_col_buff_) {
           im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
                     width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
                     stride_h_, stride_w_, col_buff);
@@ -115,7 +115,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           if (weight == NULL) {
             weight = this->blobs_[0]->gpu_data();
           }
-          if (is_1x1_) {
+          if (skip_col_buff_) {
             col_buff = bottom[i]->mutable_gpu_diff() + bottom[i]->offset(n);
           }
           for (int g = 0; g < group_; ++g) {
@@ -125,7 +125,7 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                 (Dtype)0., col_buff + col_offset * g);
           }
           // col2im back to the data
-          if (!is_1x1_) {
+          if (!skip_col_buff_) {
             col2im_gpu(col_buff, channels_, height_, width_,
                 kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
                 bottom_diff + bottom[i]->offset(n));
