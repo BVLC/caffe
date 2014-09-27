@@ -142,7 +142,9 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       (height_ == kernel_h_ || kernel_h_ == 1)) ||
     (stride_h_ == kernel_h_ && height_ % kernel_h_ == 0 &&
       (width_ == kernel_w_ || kernel_w_ == 1)));
-  LOG(INFO) << "skip_col_buff: " << skip_col_buff_;
+  if (skip_col_buff_) {
+    LOG(INFO) << "Skipping use of col_buff";
+  }
 }
 
 template <typename Dtype>
