@@ -18,7 +18,9 @@ endif
 
 # The target shared library name
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
-LIBRARY_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
+STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
+DYNAMIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
+STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
 
 ##############################
 # Get all source files
@@ -126,7 +128,7 @@ TEST_CU_BINS := $(addsuffix .testbin,$(addprefix $(TEST_BIN_DIR)/, \
 TEST_CXX_BINS := $(addsuffix .testbin,$(addprefix $(TEST_BIN_DIR)/, \
 		$(foreach obj,$(TEST_CXX_OBJS),$(basename $(notdir $(obj))))))
 TEST_BINS := $(TEST_CXX_BINS) $(TEST_CU_BINS)
-# TEST_ALL_BIN is the test binary that links caffe source objects directly.
+# TEST_ALL_BIN is the test binary that links caffe statically.
 TEST_ALL_BIN := $(TEST_BIN_DIR)/test_all.testbin
 # TEST_ALL_DYNINK_BIN is the test binary that links caffe as a dynamic library.
 TEST_ALL_DYNLINK_BIN := $(TEST_BIN_DIR)/test_all_dynamic_link.testbin
@@ -341,7 +343,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 	py mat py$(PROJECT) mat$(PROJECT) proto runtest \
 	superclean supercleanlist supercleanfiles warn everything
 
-all: $(LIBRARY_NAME) tools examples
+all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples
 
 everything: all py$(PROJECT) mat$(PROJECT) test warn lint runtest
 
@@ -390,16 +392,16 @@ py$(PROJECT): py
 
 py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 
-$(PY$(PROJECT)_SO): $(OBJS) $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX_SRC)
+$(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX_SRC)
 	$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
-		$(OBJS) $(LINKFLAGS) $(PYTHON_LDFLAGS)
+		$(STATIC_LINK_COMMAND) $(LINKFLAGS) $(PYTHON_LDFLAGS)
 	@ echo
 
 mat$(PROJECT): mat
 
 mat: $(MAT$(PROJECT)_SO)
 
-$(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(OBJS)
+$(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	@ if [ -z "$(MATLAB_DIR)" ]; then \
 		echo "MATLAB_DIR must be specified in $(CONFIG_FILE)" \
 			"to build mat$(PROJECT)."; \
@@ -408,7 +410,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(OBJS)
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) \
 			CXX="$(CXX)" \
 			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
-			CXXLIBS="\$$CXXLIBS $(OBJS) $(LDFLAGS)" -output $@
+			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS)" -output $@
 	@ echo
 
 runtest: $(TEST_ALL_BIN) $(TEST_ALL_DYNLINK_BIN)
@@ -447,8 +449,12 @@ $(BUILD_DIR)/.linked:
 $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
-$(LIBRARY_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+$(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)
+	@ echo
+
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+	ar rcs $@ $(OBJS)
 	@ echo
 
 $(TEST_BUILD_DIR)/%.o: src/$(PROJECT)/test/%.cpp $(HXX_SRCS) $(TEST_HXX_SRCS) \
@@ -465,28 +471,28 @@ $(TEST_BUILD_DIR)/%.cuo: src/$(PROJECT)/test/%.cu $(HXX_SRCS) $(TEST_HXX_SRCS) \
 	@ cat $@.$(WARNS_EXT)
 	@ echo
 
-$(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(OBJS) \
+$(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(OBJS) \
+	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
-$(TEST_ALL_DYNLINK_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(LIBRARY_NAME) \
+$(TEST_ALL_DYNLINK_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(DYNAMIC_NAME) \
 		| $(TEST_BIN_DIR)
 	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(LIB_BUILD_DIR)
 	@ echo
 
 
-$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.cuo $(GTEST_OBJ) $(OBJS) \
+$(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.cuo $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(OBJS) \
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
-$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(OBJS) \
+$(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_BUILD_DIR)/%.o $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(OBJS) \
+	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
@@ -495,12 +501,12 @@ $(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
 	@ $(RM) $@
 	@ ln -s $(abspath $<) $@
 
-$(TOOL_BINS): %.bin : %.o $(OBJS)
-	$(CXX) $< $(OBJS) -o $@ $(LINKFLAGS) $(LDFLAGS)
+$(TOOL_BINS): %.bin : %.o $(STATIC_NAME)
+	$(CXX) $< $(STATIC_LINK_COMMAND) -o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
-$(EXAMPLE_BINS): %.bin : %.o $(OBJS)
-	$(CXX) $< $(OBJS) -o $@ $(LINKFLAGS) $(LDFLAGS)
+$(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
+	$(CXX) $< $(STATIC_LINK_COMMAND) -o $@ $(LINKFLAGS) $(LDFLAGS)
 	@ echo
 
 $(LAYER_BUILD_DIR)/%.o: src/$(PROJECT)/layers/%.cpp $(HXX_SRCS) \
@@ -618,6 +624,7 @@ $(DISTRIBUTE_DIR): all py $(HXX_SRCS) | $(DISTRIBUTE_SUBDIRS)
 	cp $(TOOL_BINS) $(DISTRIBUTE_DIR)/bin
 	cp $(EXAMPLE_BINS) $(DISTRIBUTE_DIR)/bin
 	# add libraries
-	cp $(LIBRARY_NAME) $(DISTRIBUTE_DIR)/lib
+	cp $(STATIC_NAME) $(DISTRIBUTE_DIR)/lib
+	cp $(DYNAMIC_NAME) $(DISTRIBUTE_DIR)/lib
 	# add python - it's not the standard way, indeed...
 	cp -r python $(DISTRIBUTE_DIR)/python
