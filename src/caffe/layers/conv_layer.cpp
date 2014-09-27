@@ -131,20 +131,17 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
   // Special case: im2col is the identity for no padding and one of:
-  // 1x1 convolution with stride 1
-  // bottom height x width == kernel_w x kernel_h
-  // or stride alings with kernel
+  // 1x1: convolution with stride 1
+  // Single: bottom height x width == kernel_w x kernel_h
+  // or cases where stride alings with kernel in memory
   // so flag for skipping the buffer and transformation.
   skip_col_buff_ = (pad_h_ == 0 && pad_w_ == 0) &&
     ((kernel_w_ == 1 && kernel_h_ == 1 && stride_h_ == 1 && stride_w_ == 1) ||
     (width_ == kernel_w_ && height_ == kernel_h_) ||
-    (stride_w_ == kernel_w_ && width_ % kernel_w_ == 0 &&
-      (height_ == kernel_h_ || kernel_h_ == 1)) ||
-    (stride_h_ == kernel_h_ && height_ % kernel_h_ == 0 &&
-      (width_ == kernel_w_ || kernel_w_ == 1)));
-  if (skip_col_buff_) {
-    LOG(INFO) << "Skipping use of col_buff";
-  }
+    (stride_w_ == kernel_w_ && width_ % kernel_w_ == 0
+      && kernel_h_ == 1) ||
+    (stride_h_ == kernel_h_ && height_ % kernel_h_ == 0
+      && kernel_w_ == width_));
 }
 
 template <typename Dtype>
