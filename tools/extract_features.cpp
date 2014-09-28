@@ -142,9 +142,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   vector<Blob<float>*> input_vec;
   vector<int> image_indices(num_features, 0);
 
-  std::cout << "num_features=" << num_features << std::endl;
-  std::cout << "num_mini_batches=" << num_mini_batches << std::endl;
-  static const int CHUNK_SIZE = 100;
+  const int DB_BATCH_SIZE = 100;
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
     for (int i = 0; i < num_features; ++i) {
@@ -170,12 +168,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         snprintf(key_str, kMaxKeyStrLength, "%d", image_indices[i]);
         feature_batches[i]->Put(string(key_str), value);
         ++image_indices[i];
-        if (image_indices[i] % CHUNK_SIZE == 0) {
-          std::cout << "feature blob num: " << feature_blob->num() << std::endl;
-          std::cout << "feature blob chans: " << feature_blob->channels() << std::endl;
-          std::cout << "feature blob height: " << feature_blob->height() << std::endl;
-          std::cout << "feature blob width: " << feature_blob->width() << std::endl;
-
+        if (image_indices[i] % DB_BATCH_SIZE == 0) {
           feature_dbs[i]->Write(leveldb::WriteOptions(),
                                 feature_batches[i].get());
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
@@ -187,7 +180,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   }  // for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
-    if (image_indices[i] % CHUNK_SIZE != 0) {
+    if (image_indices[i] % DB_BATCH_SIZE != 0) {
       feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i].get());
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
