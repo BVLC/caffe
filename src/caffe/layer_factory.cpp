@@ -41,7 +41,7 @@ template <typename Dtype>
 PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
     const LayerParameter& param) {
   const PoolingParameter& p_param = param.pooling_param();
-  const PoolingParameter_Engine& engine = p_param.engine();
+  PoolingParameter_Engine engine = p_param.engine();
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
