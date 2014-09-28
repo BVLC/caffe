@@ -53,6 +53,8 @@ PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     if (p_param.pad_h() || p_param.pad_w() || param.top_size() > 1) {
+      LOG(INFO) << "CUDNN does not support padding or multiple tops. "
+                << "Using Caffe's own pooling layer.";
       return new PoolingLayer<DType>(param);
     }
     return new CuDNNPoolingLayer<Dtype>(param);
