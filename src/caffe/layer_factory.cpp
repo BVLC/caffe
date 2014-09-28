@@ -40,7 +40,8 @@ template ConvolutionLayer<double>* GetConvolutionLayer(const string& name,
 template <typename Dtype>
 PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
     const LayerParameter& param) {
-  PoolingParameter_Engine engine = param.pooling_param().engine();
+  const PoolingParameter& p_param = param.pooling_param();
+  const PoolingParameter_Engine& engine = p_param.engine();
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
@@ -51,6 +52,9 @@ PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
     return new PoolingLayer<Dtype>(param);
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
+    if (p_param.pad_h() || p_param.pad_w() || param.top_size() > 1) {
+      return new PoolingLayer<DType>(param);
+    }
     return new CuDNNPoolingLayer<Dtype>(param);
 #endif
   } else {
