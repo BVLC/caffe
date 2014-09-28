@@ -13,7 +13,10 @@ template <typename Dtype>
 void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   PoolingLayer<Dtype>::LayerSetUp(bottom, top);
-
+  // Sanity check: CUDNN currently only supports pad=0 and top.size()=1 cases.
+  CHECK_EQ(pad_h_, 0);
+  CHECK_EQ(pad_w_, 0);
+  CHECK_EQ(top.size(), 1);
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
