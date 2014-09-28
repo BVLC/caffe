@@ -104,10 +104,7 @@ class LayerRegisterer {
   Layer<Dtype>* Creator_##clsname(const LayerParameter& param) {               \
     return new clsname<Dtype>(param);                                          \
   }                                                                            \
-  static LayerRegisterer<float> g_creator_f_##clsname(                         \
-      LayerParameter_LayerType_##type, Creator_##clsname<float>);              \
-  static LayerRegisterer<double> g_creator_d_##clsname(                        \
-      LayerParameter_LayerType_##type, Creator_##clsname<double>)
+  REGISTER_LAYER_CREATOR(type, Creator_##clsname)
 
 // A function to get a specific layer from the specification given in
 // LayerParameter. Ideally this would be replaced by a factory pattern,
