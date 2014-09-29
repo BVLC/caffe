@@ -21,6 +21,10 @@
 //   'source' field specifies the window_file
 //   'crop_size' indicates the desired warped size
 
+#if CV_VERSION_MAJOR == 3
+const int CV_LOAD_IMAGE_COLOR = cv::IMREAD_COLOR;
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
@@ -233,7 +237,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       pair<std::string, vector<int> > image =
           image_database_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
 
-      cv::Mat cv_img = cv::imread(image.first, cv::IMREAD_COLOR);
+      cv::Mat cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
       if (!cv_img.data) {
         LOG(ERROR) << "Could not open or find file " << image.first;
         return;
