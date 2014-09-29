@@ -47,8 +47,8 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file " << filename;
-  
-  //MinTopBlobs==1 guarantees at least one top blob
+
+  // MinTopBlobs==1 guarantees at least one top blob
   int num = hdf_blobs_[0]->num();
   for (int i = 1; i < top_size; ++i) {
       CHECK_EQ(hdf_blobs_[i]->num(), num);
