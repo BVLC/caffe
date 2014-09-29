@@ -291,7 +291,7 @@ ifeq ($(BLAS), mkl)
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 else ifeq ($(BLAS), open)
 	# OpenBLAS
-	LIBRARIES += blas
+	LIBRARIES += openblas
 else
 	# ATLAS
 	ifeq ($(LINUX), 1)
