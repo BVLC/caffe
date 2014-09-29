@@ -1,6 +1,7 @@
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
+#include <opencv2/core/core.hpp>
 #include <unistd.h>
 #include <string>
 
@@ -10,7 +11,6 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
-
 #define HDF5_NUM_DIMS 4
 
 namespace leveldb {
@@ -82,24 +82,28 @@ inline void ReadProtoFromBinaryFileOrDie(const string& filename,
   ReadProtoFromBinaryFileOrDie(filename.c_str(), proto);
 }
 
-
 void WriteProtoToBinaryFile(const Message& proto, const char* filename);
 inline void WriteProtoToBinaryFile(
     const Message& proto, const string& filename) {
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
 
+bool cvMatToDatum(const cv::Mat & cv_img, const int label, Datum* datum);
+
+cv::Mat AspectResizeToSquare(const cv::Mat &in_img, const int new_size);
+
 bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color, Datum* datum);
+    const int height, const int width, const bool is_color,
+    Datum* datum, const bool keep_aspect_ratio = false);
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, Datum* datum) {
-  return ReadImageToDatum(filename, label, height, width, true, datum);
+  return ReadImageToDatum(filename, label, height, width, true, datum, false);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     Datum* datum) {
-  return ReadImageToDatum(filename, label, 0, 0, datum);
+  return ReadImageToDatum(filename, label, 0, 0, true, datum, false);
 }
 
 leveldb::Options GetLevelDBOptions();

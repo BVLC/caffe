@@ -33,6 +33,8 @@ DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
 DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
+DEFINE_bool(keep_aspect, false,
+    "Keep the aspect ratio when resizing to square. Black pixels padding");
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
@@ -128,7 +130,8 @@ int main(int argc, char** argv) {
 
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     if (!ReadImageToDatum(root_folder + lines[line_id].first,
-        lines[line_id].second, resize_height, resize_width, is_color, &datum)) {
+        lines[line_id].second, resize_height,
+        resize_width, is_color, &datum, FLAGS_keep_aspect)) {
       continue;
     }
     if (!data_size_initialized) {

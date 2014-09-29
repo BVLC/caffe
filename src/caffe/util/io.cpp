@@ -66,8 +66,73 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
+cv::Mat AspectResizeToSquare(const cv::Mat &in_img, const int new_size) {
+    cv::Mat img_resized, out_img;
+
+    if (in_img.channels() == 3) {  // Color
+        out_img = cv::Mat::zeros(new_size, new_size, CV_8UC3);
+      } else {  // Grayscale
+        out_img = cv::Mat::zeros(new_size, new_size, CV_8U);
+      }
+    cv::Rect roi;
+    float origAspect = static_cast<double> (in_img.cols) /
+                       static_cast<double> (in_img.rows);
+    if (origAspect > 1) {
+        cv::resize(in_img, img_resized,
+          cv::Size(new_size, floor(new_size/origAspect)), 0, 0, CV_INTER_AREA);
+        cv::Size resSize = img_resized.size();
+        int padding = floor((new_size - resSize.height) / 2.0);
+        roi = cv::Rect(0, padding, new_size, resSize.height);
+    } else {
+        cv::resize(in_img, img_resized,
+          cv::Size(floor(new_size*origAspect), new_size), 0, 0, CV_INTER_AREA);
+        cv::Size resSize = img_resized.size();
+        int padding = floor((new_size - resSize.width) / 2.0);
+        roi = cv::Rect(padding, 0, resSize.width, new_size);
+    }
+    cv::Mat roiImg = out_img(roi);
+    img_resized.copyTo(roiImg);
+    return out_img;
+}
+
+bool cvMatToDatum(const cv::Mat & cv_img, const int label, Datum* datum) {
+  const unsigned int num_channels = cv_img.channels();
+  const unsigned int height = cv_img.rows;
+  const unsigned int width = cv_img.cols;
+
+  datum->set_channels(num_channels);
+  datum->set_height(height);
+  datum->set_width(width);
+  datum->set_label(label);
+  datum->clear_data();
+  datum->clear_float_data();
+  string* datum_string = datum->mutable_data();
+
+  if (num_channels == 3) {
+  for (unsigned int c = 0; c < num_channels; ++c) {
+      for (unsigned int h = 0; h < height; ++h) {
+          const cv::Vec3b *cv_img_data = cv_img.ptr<cv::Vec3b>(h);
+          for (unsigned int w = 0; w < width; ++w) {
+              datum_string->push_back(static_cast<char>(cv_img_data[w][c]));
+              // Much faster, than at<>;
+            }
+        }
+    }
+  } else {
+        for (unsigned int h = 0; h < height; ++h) {
+            const uchar *cv_img_data = cv_img.ptr<uchar>(h);
+            for (unsigned int w = 0; w < width; ++w) {
+                datum_string->push_back(static_cast<uchar>(cv_img_data[w]));
+                // Much faster, than at<>;
+              }
+          }
+  }
+  return true;
+}
+
 bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color, Datum* datum) {
+    const int height, const int width, const bool is_color,
+    Datum* datum, const bool keep_aspect_ratio) {
   cv::Mat cv_img;
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
@@ -78,37 +143,15 @@ bool ReadImageToDatum(const string& filename, const int label,
     return false;
   }
   if (height > 0 && width > 0) {
-    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+        if (keep_aspect_ratio) {
+            cv_img = AspectResizeToSquare(cv_img_origin, height);
+          } else {
+            cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+          }
   } else {
     cv_img = cv_img_origin;
   }
-
-  int num_channels = (is_color ? 3 : 1);
-  datum->set_channels(num_channels);
-  datum->set_height(cv_img.rows);
-  datum->set_width(cv_img.cols);
-  datum->set_label(label);
-  datum->clear_data();
-  datum->clear_float_data();
-  string* datum_string = datum->mutable_data();
-  if (is_color) {
-    for (int c = 0; c < num_channels; ++c) {
-      for (int h = 0; h < cv_img.rows; ++h) {
-        for (int w = 0; w < cv_img.cols; ++w) {
-          datum_string->push_back(
-            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
-        }
-      }
-    }
-  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
-    for (int h = 0; h < cv_img.rows; ++h) {
-      for (int w = 0; w < cv_img.cols; ++w) {
-        datum_string->push_back(
-          static_cast<char>(cv_img.at<uchar>(h, w)));
-        }
-      }
-  }
-  return true;
+  return cvMatToDatum(cv_img, label, datum);
 }
 
 leveldb::Options GetLevelDBOptions() {
