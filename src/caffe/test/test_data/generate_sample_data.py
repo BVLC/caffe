@@ -7,7 +7,7 @@ import h5py
 
 num_cols = 8
 num_rows = 10
-height = 5
+height = 6
 width = 5
 total_size = num_cols * num_rows * height * width
 

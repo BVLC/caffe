@@ -75,9 +75,9 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Reshape blobs.
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   top[0]->Reshape(batch_size, data_blob_.channels(),
-                     data_blob_.width(), data_blob_.height());
+                  data_blob_.height(), data_blob_.width());
   top[1]->Reshape(batch_size, label_blob_.channels(),
-                     label_blob_.width(), label_blob_.height());
+                  label_blob_.height(), label_blob_.width());
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
