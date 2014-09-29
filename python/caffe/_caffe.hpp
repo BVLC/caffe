@@ -181,6 +181,7 @@ class PySGDSolver {
   vector<shared_ptr<PyNet> > test_nets() { return test_nets_; }
   int iter() { return solver_->iter(); }
   void Solve() { return solver_->Solve(); }
+  void Step(int iters) { solver_->Step(iters); }
   void SolveResume(const string& resume_file);
 
  protected:
