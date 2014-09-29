@@ -62,7 +62,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   hdf5_data_param->set_batch_size(batch_size);
   hdf5_data_param->set_source(*(this->filename));
   int num_cols = 8;
-  int height = 5;
+  int height = 6;
   int width = 5;
 
   // Test that the layer setup got the correct parameters.
@@ -93,8 +93,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
 
     // Every two iterations we are reading the second file,
     // which has the same labels, but data is offset by total data size,
-    // which is 2000 (see generate_sample_data).
-    int file_offset = (iter % 4 < 2) ? 0 : 2000;
+    // which is 2400 (see generate_sample_data).
+    int file_offset = (iter % 4 < 2) ? 0 : 2400;
 
     for (int i = 0; i < batch_size; ++i) {
       EXPECT_EQ(
