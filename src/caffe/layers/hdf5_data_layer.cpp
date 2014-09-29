@@ -36,7 +36,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   int top_size = this->layer_param_.top_size();
   hdf_blobs_.resize(top_size);
 
-  const int MIN_DATA_DIM = 2;
+  const int MIN_DATA_DIM = 1;
   const int MAX_DATA_DIM = 4;
 
   for (int i = 0; i < top_size; ++i) {
@@ -47,8 +47,8 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file " << filename;
-  CHECK_GE(hdf_blobs_.size(), 1)
-      << "At least one 'top' must be specified for HDF5 data layer";
+  
+  //MinTopBlobs==1 guarantees at least one top blob
   int num = hdf_blobs_[0]->num();
   for (int i = 1; i < top_size; ++i) {
       CHECK_EQ(hdf_blobs_[i]->num(), num);
@@ -85,10 +85,6 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < top_size; ++i) {
        (*top)[i]->Reshape(batch_size, hdf_blobs_[i]->channels(),
                           hdf_blobs_[i]->height(), hdf_blobs_[i]->width());
-       LOG(INFO) << "output '" << this->layer_param_.top(i) << "' size: "
-           << (*top)[i]->num() << "," << (*top)[i]->channels()
-           << "," << (*top)[i]->height() << ","
-           << (*top)[i]->width();
   }
 }
 
@@ -110,10 +106,10 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       current_row_ = 0;
     }
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
-        int data_count = (*top)[j]->count() / (*top)[j]->num();
-        caffe_copy(data_count,
-                &hdf_blobs_[j]->cpu_data()[current_row_ * data_count],
-                &(*top)[j]->mutable_cpu_data()[i * data_count]);
+        int data_dim = (*top)[j]->count() / (*top)[j]->num();
+        caffe_copy(data_dim,
+                &hdf_blobs_[j]->cpu_data()[current_row_ * data_dim],
+                &(*top)[j]->mutable_cpu_data()[i * data_dim]);
     }
   }
 }
