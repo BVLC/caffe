@@ -17,7 +17,8 @@ if(BLAS STREQUAL "atlas")
     find_package(Atlas REQUIRED)
     include_directories(${Atlas_INCLUDE_DIR})
     set(BLAS_LIBRARIES ${Atlas_LIBRARIES})
-
+    
+ 
 elseif(BLAS STREQUAL "open")
 
     find_package(OpenBLAS REQUIRED)
