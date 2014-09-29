@@ -55,32 +55,35 @@ class LayerRegistry {
   typedef Layer<Dtype>* (*Creator)(const LayerParameter&);
   typedef std::map<LayerParameter_LayerType, Creator> CreatorRegistry;
 
+  static CreatorRegistry& Registry() {
+    static CreatorRegistry* g_registry_ = new CreatorRegistry();
+    return *g_registry_;
+  }
+
   // Adds a creator.
   static void AddCreator(const LayerParameter_LayerType& type,
                          Creator creator) {
-    CHECK_EQ(registry_.count(type), 0)
+    CreatorRegistry& registry = Registry();
+    CHECK_EQ(registry.count(type), 0)
         << "Layer type " << type << " already registered.";
-    registry_[type] = creator;
+    registry[type] = creator;
   }
 
   // Get a layer using a LayerParameter.
   static Layer<Dtype>* CreateLayer(const LayerParameter& param) {
     LOG(INFO) << "Creating layer " << param.name();
     const LayerParameter_LayerType& type = param.type();
-    CHECK_EQ(registry_.count(type), 1);
-    return registry_[type](param);
+    CreatorRegistry& registry = Registry();
+    CHECK_EQ(registry.count(type), 1);
+    return registry[type](param);
   }
 
  private:
   // Layer registry should never be instantiated - everything is done with its
   // static variables.
   LayerRegistry() {}
-  static CreatorRegistry registry_;
 };
 
-// Static variables for the templated layer factory registry.
-template <typename Dtype>
-typename LayerRegistry<Dtype>::CreatorRegistry LayerRegistry<Dtype>::registry_;
 
 template <typename Dtype>
 class LayerRegisterer {

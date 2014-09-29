@@ -7,11 +7,6 @@
 
 namespace caffe {
 
-template <>
-LayerRegistry<float>::CreatorRegistry LayerRegistry<float>::registry_;
-template <>
-LayerRegistry<double>::CreatorRegistry LayerRegistry<double>::registry_;
-
 // GetLayer() defines the overall layer factory. The Get*Layer() functions
 // define factories for layers with multiple computational engines.
 
