@@ -3,6 +3,9 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/vision_layers.hpp"
+#ifdef USE_PYTHON_LAYER
+#include "caffe/python_layer.hpp"
+#endif
 
 namespace caffe {
 
@@ -237,6 +240,13 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return GetPoolingLayer<Dtype>(name, param);
   case LayerParameter_LayerType_POWER:
     return new PowerLayer<Dtype>(param);
+  case LayerParameter_LayerType_PYTHON:
+#ifdef USE_PYTHON_LAYER
+    return new PythonLayer<Dtype>(param);
+#else
+    LOG(FATAL) << "Attempt to use PythonLayer, but built without "
+                  "USE_PYTHON_LAYER option.";
+#endif
   case LayerParameter_LayerType_RELU:
     return GetReLULayer<Dtype>(name, param);
   case LayerParameter_LayerType_SILENCE:

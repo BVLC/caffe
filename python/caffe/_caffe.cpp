@@ -37,7 +37,7 @@ static void CheckFile(const string& filename) {
 bp::object PyBlobWrap::get_data() {
   npy_intp dims[] = {num(), channels(), height(), width()};
 
-  PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+  PyObject* obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
                                             blob_->mutable_cpu_data());
   PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
   Py_INCREF(self_);
@@ -49,9 +49,9 @@ bp::object PyBlobWrap::get_data() {
 bp::object PyBlobWrap::get_diff() {
   npy_intp dims[] = {num(), channels(), height(), width()};
 
-  PyObject *obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
+  PyObject* obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32,
                                             blob_->mutable_cpu_diff());
-  PyArray_SetBaseObject(reinterpret_cast<PyArrayObject *>(obj), self_);
+  PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(obj), self_);
   Py_INCREF(self_);
   bp::handle<> h(obj);
 
@@ -197,6 +197,9 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<vector<string> >("StringVec")
       .def(bp::vector_indexing_suite<vector<string> >());
+
+  bp::class_<vector<bool> >("BoolVec")
+      .def(bp::vector_indexing_suite<vector<bool> >());
 
   import_array();
 }
