@@ -159,6 +159,16 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
+template <typename Dtype>
+void ImageDataLayer<Dtype>::Reset() {
+  // If shuffle is set, Reset would need to somehow re-initialize the RNG state
+  // for a working implementation.
+  if (this->layer_param_.image_data_param().shuffle()) {
+    LOG(FATAL) << "Reset not implemented for ImageDataLayer with shuffle";
+  }
+  lines_id_ = 0;
+}
+
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
 
