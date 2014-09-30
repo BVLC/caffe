@@ -248,6 +248,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual ~ImageDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Reset();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_IMAGE_DATA;
