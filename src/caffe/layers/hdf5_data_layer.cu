@@ -26,7 +26,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         current_file_ += 1;
         if (current_file_ == num_files_) {
           current_file_ = 0;
-          LOG(INFO) << "looping around to first file";
+          DLOG(INFO) << "Looping around to first file.";
         }
         LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
       }
