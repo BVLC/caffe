@@ -59,6 +59,9 @@ class Solver {
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
 
+  /// @brief Specifies whether each test net should be "Reset" on each test.
+  vector<bool> test_net_reset_;
+
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 

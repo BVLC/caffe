@@ -88,7 +88,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 36 (last added: clip_gradients)
+// SolverParameter next available ID: 37 (last added: test_net_reset)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -127,6 +127,16 @@ message SolverParameter {
 
   // The number of iterations for each test net.
   repeated int32 test_iter = 3;
+
+  // Specify whether to "reset" each test net at the beginning of each test,
+  // such that each test is performed on the same subset of the data.
+  // This feature is not implemented for all layer types -- for example, it is
+  // unimplemented for the WINDOW_DATA layer.
+  //
+  // This should be unspecified (in which case it is set to false for all test
+  // nets), specified once (in which case the setting is applied to all test
+  // nets), or specified exactly once per test net.
+  repeated bool test_net_reset = 36;
 
   // The number of iterations between two testing phases.
   optional int32 test_interval = 4 [default = 0];
