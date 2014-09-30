@@ -170,11 +170,13 @@ class PySGDSolver {
   explicit PySGDSolver(const string& param_file);
 
   shared_ptr<PyNet> net() { return net_; }
+  vector<shared_ptr<PyNet> > test_nets() { return test_nets_; }
   void Solve() { return solver_->Solve(); }
   void SolveResume(const string& resume_file);
 
  protected:
   shared_ptr<PyNet> net_;
+  vector<shared_ptr<PyNet> > test_nets_;
   shared_ptr<SGDSolver<float> > solver_;
 };
 
