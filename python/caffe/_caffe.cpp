@@ -2,6 +2,7 @@
 // caffe::Caffe functions so that one could easily call it from Python.
 // Note that for Python, we will simply use float as the data type.
 
+#include <boost/make_shared.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 // these need to be included after boost on OS X
@@ -134,6 +135,9 @@ PySGDSolver::PySGDSolver(const string& param_file) {
   // we need to explicitly store the net wrapper, rather than constructing
   // it on the fly, so that it can hold references to Python objects
   net_.reset(new PyNet(solver_->net()));
+  for (int i = 0; i < solver_->test_nets().size(); ++i) {
+    test_nets_.push_back(boost::make_shared<PyNet>(solver_->test_nets()[i]));
+  }
 }
 
 void PySGDSolver::SolveResume(const string& resume_file) {
@@ -185,9 +189,10 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<PySGDSolver, boost::noncopyable>(
       "SGDSolver", bp::init<string>())
-      .add_property("net", &PySGDSolver::net)
-      .def("solve",        &PySGDSolver::Solve)
-      .def("solve",        &PySGDSolver::SolveResume);
+      .add_property("net",       &PySGDSolver::net)
+      .add_property("test_nets", &PySGDSolver::test_nets)
+      .def("solve",              &PySGDSolver::Solve)
+      .def("solve",              &PySGDSolver::SolveResume);
 
   bp::class_<vector<shared_ptr<PyNet> > >("NetVec")
       .def(bp::vector_indexing_suite<vector<shared_ptr<PyNet> >, true>());
