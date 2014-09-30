@@ -75,6 +75,15 @@ class Net {
    */
   void Reshape();
 
+  /**
+   * @brief Resets the internal state of all Layer&s (not including any
+   *        parameter Blob&s, which keep their values).
+   *
+   * This is called by the Solver on each test Net to give consistent results
+   * between test instances (e.g., test on the same part of the dataset).
+   */
+  void Reset();
+
   Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
     Dtype loss;
     Forward(bottom, &loss);
