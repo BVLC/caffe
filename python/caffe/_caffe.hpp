@@ -152,6 +152,11 @@ class PyNet {
   bp::dict raw_scale_;
   bp::dict channel_swap_;
 
+  // this is here only to satisfy boost's vector_indexing_suite
+  bool operator == (const PyNet &other) {
+      return this->net_ == other.net_;
+  }
+
  protected:
   // The pointer to the internal caffe::Net instance.
   shared_ptr<Net<float> > net_;

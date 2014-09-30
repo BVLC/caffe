@@ -189,6 +189,9 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("solve",        &PySGDSolver::Solve)
       .def("solve",        &PySGDSolver::SolveResume);
 
+  bp::class_<vector<shared_ptr<PyNet> > >("NetVec")
+      .def(bp::vector_indexing_suite<vector<shared_ptr<PyNet> >, true>());
+
   bp::class_<vector<PyBlob<float> > >("BlobVec")
       .def(bp::vector_indexing_suite<vector<PyBlob<float> >, true>());
 
