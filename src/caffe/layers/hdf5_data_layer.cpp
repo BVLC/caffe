@@ -29,8 +29,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   DLOG(INFO) << "Loading HDF5 file: " << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
-    LOG(ERROR) << "Failed opening HDF5 file: " << filename;
-    return;
+    LOG(FATAL) << "Failed opening HDF5 file: " << filename;
   }
 
   int top_size = this->layer_param_.top_size();
