@@ -68,6 +68,8 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     while (source_file >> line) {
       hdf_filenames_.push_back(line);
     }
+  } else {
+    LOG(FATAL) << "Failed to open source file: " << source;
   }
   source_file.close();
   num_files_ = hdf_filenames_.size();
