@@ -152,6 +152,19 @@ void Solver<Dtype>::InitTestNets() {
         << "Creating test net (#" << i << ") specified by " << sources[i];
     test_nets_[i].reset(new Net<Dtype>(net_params[i]));
   }
+
+  // Setup test_net_reset_ -- default to not resetting any test nets.
+  test_net_reset_.resize(test_nets_.size(), false);
+  if (param_.test_net_reset_size() == 1) {
+    test_net_reset_.assign(test_nets_.size(), param_.test_net_reset(0));
+  } else if (param_.test_net_reset_size() > 0) {
+    CHECK_EQ(num_test_net_instances, param_.test_net_reset_size())
+        << "test_net_reset must be specified 0, 1, or "
+        << num_test_net_instances << " times (once for each test net).";
+    for (int i = 0; i < num_test_net_instances; ++i) {
+      test_net_reset_[i] = param_.test_net_reset(i);
+    }
+  }
 }
 
 template <typename Dtype>
@@ -262,6 +275,10 @@ template <typename Dtype>
 void Solver<Dtype>::Test(const int test_net_id) {
   LOG(INFO) << "Iteration " << iter_
             << ", Testing net (#" << test_net_id << ")";
+  // Reset the test net as specified by test_net_reset.
+  if (test_net_reset_[test_net_id]) {
+    test_nets_[test_net_id]->Reset();
+  }
   // We need to set phase to test before running.
   Caffe::set_phase(Caffe::TEST);
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
