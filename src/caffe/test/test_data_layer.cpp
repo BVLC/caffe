@@ -104,6 +104,67 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
+  void TestReset() {
+    const Dtype scale = 3;
+    LayerParameter param;
+    param.set_phase(TRAIN);
+    DataParameter* data_param = param.mutable_data_param();
+    data_param->set_batch_size(2);
+    data_param->set_source(filename_->c_str());
+    data_param->set_backend(backend_);
+
+    TransformationParameter* transform_param =
+        param.mutable_transform_param();
+    transform_param->set_scale(scale);
+
+    Caffe::set_random_seed(seed_);
+    DataLayer<Dtype> layer(param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    EXPECT_EQ(blob_top_data_->num(), 2);
+    EXPECT_EQ(blob_top_data_->channels(), 2);
+    EXPECT_EQ(blob_top_data_->height(), 3);
+    EXPECT_EQ(blob_top_data_->width(), 4);
+    EXPECT_EQ(blob_top_label_->num(), 2);
+    EXPECT_EQ(blob_top_label_->channels(), 1);
+    EXPECT_EQ(blob_top_label_->height(), 1);
+    EXPECT_EQ(blob_top_label_->width(), 1);
+
+    // Run Forward kNumIters times and save the result.
+    const int kNumIters = 3;
+    vector<shared_ptr<Blob<Dtype> > > output_data(kNumIters);
+    vector<shared_ptr<Blob<Dtype> > > output_label(kNumIters);
+    for (int iter = 0; iter < kNumIters; ++iter) {
+      layer.Forward(blob_bottom_vec_, blob_top_vec_);
+      const bool kCopyDiff = false;
+      const bool kReshape = true;
+      output_data[iter].reset(new Blob<Dtype>());
+      output_data[iter]->CopyFrom(*blob_top_data_, kCopyDiff, kReshape);
+      output_label[iter].reset(new Blob<Dtype>());
+      output_label[iter]->CopyFrom(*blob_top_label_, kCopyDiff, kReshape);
+    }
+
+    // Call Reset; run Forward kNumIters times again and verify that we get the
+    // same outputs.
+    layer.Reset();
+    for (int iter = 0; iter < kNumIters; ++iter) {
+      layer.Forward(blob_bottom_vec_, blob_top_vec_);
+      ASSERT_EQ(blob_top_data_->count(), output_data[iter]->count());
+      const Dtype* current_data_output = blob_top_data_->cpu_data();
+      const Dtype* previous_data_output = output_data[iter]->cpu_data();
+      for (int i = 0; i < blob_top_data_->count(); ++i) {
+        EXPECT_EQ(current_data_output[i], previous_data_output[i])
+            << "mismatch: iter = " << iter << "; i = " << i;
+      }
+      ASSERT_EQ(blob_top_label_->count(), output_label[iter]->count());
+      const Dtype* current_label_output = blob_top_label_->cpu_data();
+      const Dtype* previous_label_output = output_label[iter]->cpu_data();
+      for (int i = 0; i < blob_top_label_->count(); ++i) {
+        EXPECT_EQ(current_label_output[i], previous_label_output[i])
+            << "mismatch: iter = " << iter << "; i = " << i;
+      }
+    }
+  }
+
   void TestReshape(DataParameter_DB backend) {
     const int num_inputs = 5;
     // Save data of varying shapes.
@@ -386,6 +447,13 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   this->TestReadCrop(TEST);
 }
 
+TYPED_TEST(DataLayerTest, TestResetLevelDB) {
+  Caffe::set_random_seed(this->seed_);
+  const bool unique_pixels = false;  // all pixels the same; images different
+  this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
+  this->TestReset();
+}
+
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
@@ -422,6 +490,13 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
   this->TestReadCrop(TEST);
+}
+
+TYPED_TEST(DataLayerTest, TestResetLMDB) {
+  Caffe::set_random_seed(this->seed_);
+  const bool unique_pixels = false;  // all pixels the same; images different
+  this->Fill(unique_pixels, DataParameter_DB_LMDB);
+  this->TestReset();
 }
 
 }  // namespace caffe

@@ -27,17 +27,10 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Initialize DB
   db_.reset(db::GetDB(this->layer_param_.data_param().backend()));
   db_->Open(this->layer_param_.data_param().source(), db::READ);
-  cursor_.reset(db_->NewCursor());
 
-  // Check if we should randomly skip a few data points
-  if (this->layer_param_.data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-                        this->layer_param_.data_param().rand_skip();
-    LOG(INFO) << "Skipping first " << skip << " data points.";
-    while (skip-- > 0) {
-      cursor_->Next();
-    }
-  }
+  // Initialize the cursor and rand_skip.
+  Reset();
+
   // Read a data point, to initialize the prefetch and top blobs.
   Datum datum;
   datum.ParseFromString(cursor_->value());
@@ -118,6 +111,38 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+}
+
+template <typename Dtype>
+void DataLayer<Dtype>::Reset() {
+  // Make sure prefetch thread is not running before we potentially destroy
+  // the existing cursor with the cursor_.reset(...) call.
+  this->JoinPrefetchThread();
+  cursor_.reset(db_->NewCursor());
+  // Check if we should randomly skip a few data points
+  if (this->layer_param_.data_param().rand_skip()) {
+    if (!skip_initialized_) {
+      skip_ = caffe_rng_rand() % this->layer_param_.data_param().rand_skip();
+      skip_initialized_ = true;
+    }
+    LOG(INFO) << "Skipping first " << skip_ << " data points.";
+    int skip = skip_;
+    while (skip-- > 0) {
+      cursor_->Next();
+    }
+  }
+
+  // If this is not the initial call to Reset (i.e., the layer was already fully
+  // set up), need to CreatePrefetchThread as prefetch_data_ currently holds
+  // the previous batch (from the previous call to CreatePrefetchThread, before
+  // Reset was called).
+  //
+  // Otherwise (if this *is* ths initial call to Reset, as indicated by
+  // this->data_transformer_ being NULL), BasePrefetchingDataLayer::LayerSetUp
+  // will do CreatePrefetchThread, so we skip it here.
+  if (this->data_transformer_) {
+    this->CreatePrefetchThread();
+  }
 }
 
 INSTANTIATE_CLASS(DataLayer);
