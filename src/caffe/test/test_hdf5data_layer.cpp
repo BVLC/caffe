@@ -34,7 +34,7 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
     LOG(INFO)<< "Using sample HDF5 data file " << filename;
   }
 
-  void TestRead() {
+  void TestRead(const bool reset) {
     // Create LayerParameter with the known parameters.
     // The data file we are reading has 10 rows and 8 columns,
     // with values from 0 to 10*8 reshaped in row-major order.
@@ -71,7 +71,13 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
 
     // Go through the data 10 times (5 batches).
     const int data_size = num_cols * height * width;
+    bool reset_done = false;
     for (int iter = 0; iter < 10; ++iter) {
+      if (reset && !reset_done && iter == 5) {
+        layer.Reset();
+        iter = 0;
+        reset_done = true;  // avoid infinite loop after setting iter = 0
+      }
       layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
       // On even iterations, we're reading the first half of the data.
@@ -132,7 +138,13 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
 TYPED_TEST_CASE(HDF5DataLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(HDF5DataLayerTest, TestRead) {
-  this->TestRead();
+  const bool kReset = false;
+  this->TestRead(kReset);
+}
+
+TYPED_TEST(HDF5DataLayerTest, TestReset) {
+  const bool kReset = true;
+  this->TestRead(kReset);
 }
 
 }  // namespace caffe
