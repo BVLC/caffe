@@ -87,6 +87,36 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   }
 }
 
+TYPED_TEST(ImageDataLayerTest, TestReset) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter param;
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(2);
+  image_data_param->set_source(this->filename_.c_str());
+  image_data_param->set_shuffle(false);
+  ImageDataLayer<Dtype> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  ASSERT_EQ(this->blob_top_label_->num_axes(), 1);
+  EXPECT_EQ(this->blob_top_label_->shape(0), 2);
+  // Forward twice; check that we get labels 0, 1, 2, 3.
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(0, this->blob_top_label_->cpu_data()[0]);
+  EXPECT_EQ(1, this->blob_top_label_->cpu_data()[1]);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(2, this->blob_top_label_->cpu_data()[0]);
+  EXPECT_EQ(3, this->blob_top_label_->cpu_data()[1]);
+  // Reset
+  layer.Reset();
+  // Forward once; Reset; Forward again; check that we get 0, 1, 0, 1.
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(0, this->blob_top_label_->cpu_data()[0]);
+  EXPECT_EQ(1, this->blob_top_label_->cpu_data()[1]);
+  layer.Reset();
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(0, this->blob_top_label_->cpu_data()[0]);
+  EXPECT_EQ(1, this->blob_top_label_->cpu_data()[1]);
+}
+
 TYPED_TEST(ImageDataLayerTest, TestResize) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
