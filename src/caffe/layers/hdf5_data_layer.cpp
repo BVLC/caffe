@@ -40,8 +40,8 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   const int MAX_DATA_DIM = 4;
 
   for (int i = 0; i < top_size; ++i) {
-      hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
-      hdf5_load_nd_dataset(file_id, this->layer_param_.top(i).c_str(),
+    hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
+    hdf5_load_nd_dataset(file_id, this->layer_param_.top(i).c_str(),
         MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get());
   }
 
@@ -51,7 +51,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   // MinTopBlobs==1 guarantees at least one top blob
   int num = hdf_blobs_[0]->num();
   for (int i = 1; i < top_size; ++i) {
-      CHECK_EQ(hdf_blobs_[i]->num(), num);
+    CHECK_EQ(hdf_blobs_[i]->num(), num);
   }
   LOG(INFO) << "Successully loaded " << hdf_blobs_[0]->num() << " rows";
 }
