@@ -167,6 +167,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+  virtual void Reset();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HDF5_DATA;

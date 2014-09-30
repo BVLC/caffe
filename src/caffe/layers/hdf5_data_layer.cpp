@@ -73,12 +73,10 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   source_file.close();
   num_files_ = hdf_filenames_.size();
-  current_file_ = 0;
   LOG(INFO) << "Number of HDF5 files: " << num_files_;
 
   // Load the first HDF5 file and initialize the line counter.
-  LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
-  current_row_ = 0;
+  Reset();
 
   // Reshape blobs.
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
@@ -87,6 +85,13 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     top[i]->Reshape(batch_size, hdf_blobs_[i]->channels(),
                     hdf_blobs_[i]->height(), hdf_blobs_[i]->width());
   }
+}
+
+template <typename Dtype>
+void HDF5DataLayer<Dtype>::Reset() {
+  current_file_ = 0;
+  LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+  current_row_ = 0;
 }
 
 template <typename Dtype>
