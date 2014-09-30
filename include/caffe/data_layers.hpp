@@ -86,10 +86,12 @@ template <typename Dtype>
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit DataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype>(param),
+        skip_initialized_(false) {}
   virtual ~DataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Reset();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DATA;
@@ -110,6 +112,9 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   MDB_txn* mdb_txn_;
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
+
+  unsigned int skip_;
+  bool skip_initialized_;
 };
 
 /**
