@@ -99,6 +99,20 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+void DummyDataLayer<Dtype>::Reset() {
+  // If refill_ is set for any of the top Blobs, Reset would need to
+  // somehow re-initialize the RNG state for a working implementation.
+  // Otherwise, all the fillers are ConstantFillers and we can trivially
+  // Reset by doing nothing.
+  for (int i = 0; i < refill_.size(); ++i) {
+    if (refill_[i]) {
+      LOG(FATAL) << "DummyDataLayer::Reset not implemented for "
+                 << "non-deterministic outputs.";
+    }
+  }
+}
+
+template <typename Dtype>
 void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < top.size(); ++i) {
