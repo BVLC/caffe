@@ -309,6 +309,9 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual ~WindowDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  // Reset isn't implemented for WindowDataLayer -- for a working
+  // implementation, the RNG would need to be reset to its initial state.
+  virtual void Reset() { NOT_IMPLEMENTED; }
 
   virtual inline const char* type() const { return "WindowData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
