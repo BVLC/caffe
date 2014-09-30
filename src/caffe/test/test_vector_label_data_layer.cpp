@@ -85,8 +85,8 @@ class VectorLabelDataLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_data_->height(), 3);
     EXPECT_EQ(blob_top_data_->width(), 4);
     EXPECT_EQ(blob_top_label_->num(), 5);
-    EXPECT_EQ(blob_top_label_->channels(), 1);
-    EXPECT_EQ(blob_top_label_->height(), 10);
+    EXPECT_EQ(blob_top_label_->channels(), 10);
+    EXPECT_EQ(blob_top_label_->height(), 1);
     EXPECT_EQ(blob_top_label_->width(), 1);
 
     for (int iter = 0; iter < 100; ++iter) {
@@ -128,8 +128,8 @@ class VectorLabelDataLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_data_->height(), 1);
     EXPECT_EQ(blob_top_data_->width(), 1);
     EXPECT_EQ(blob_top_label_->num(), 5);
-    EXPECT_EQ(blob_top_label_->channels(), 1);
-    EXPECT_EQ(blob_top_label_->height(), 10);
+    EXPECT_EQ(blob_top_label_->channels(), 10);
+    EXPECT_EQ(blob_top_label_->height(), 1);
     EXPECT_EQ(blob_top_label_->width(), 1);
 
     for (int iter = 0; iter < 2; ++iter) {

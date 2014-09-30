@@ -73,9 +73,9 @@ void VectorLabelDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bot
   if (this->output_labels_) {
     int label_size = std::max(datum.multi_label_size(), datum.multi_float_label_size());
     CHECK_GE(label_size, 1) << "Vector label size must greater than 0.";
-    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, label_size, 1);
+    (*top)[1]->Reshape(this->layer_param_.data_param().batch_size(), label_size, 1, 1);
     this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
-        1, label_size, 1);
+        label_size, 1, 1);
   }
   // datum size
   this->datum_channels_ = datum.channels();
