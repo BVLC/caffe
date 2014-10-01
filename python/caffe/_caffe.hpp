@@ -153,7 +153,7 @@ class PyNet {
   bp::dict channel_swap_;
 
  protected:
-  // The pointer to the internal caffe::Net instant.
+  // The pointer to the internal caffe::Net instance.
   shared_ptr<Net<float> > net_;
   // if taking input from an ndarray, we need to hold references
   bp::object input_data_;
