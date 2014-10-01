@@ -191,6 +191,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       "SGDSolver", bp::init<string>())
       .add_property("net",       &PySGDSolver::net)
       .add_property("test_nets", &PySGDSolver::test_nets)
+      .add_property("iter",      &PySGDSolver::iter)
       .def("solve",              &PySGDSolver::Solve)
       .def("solve",              &PySGDSolver::SolveResume);
 
