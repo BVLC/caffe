@@ -130,10 +130,10 @@ def main(argv):
     # Detect.
     if args.crop_mode == 'list':
         # Unpack sequence of (image filename, windows).
-        images_windows = (
+        images_windows = [
             (ix, inputs.iloc[np.where(inputs.index == ix)][COORD_COLS].values)
             for ix in inputs.index.unique()
-        )
+        ]
         detections = detector.detect_windows(images_windows)
     else:
         detections = detector.detect_selective_search(inputs)
