@@ -22,14 +22,18 @@ class EltwiseLayerTest : public MultiDeviceTest<TypeParam> {
       : blob_bottom_a_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_bottom_b_(new Blob<Dtype>(2, 3, 4, 5)),
         blob_bottom_c_(new Blob<Dtype>(2, 3, 4, 5)),
+        blob_bottom_coeff_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {
-    // fill the values
+    vector<int> coeff_shape(2);
+    coeff_shape[0] = 3; coeff_shape[1] = 2;
+    blob_bottom_coeff_->Reshape(coeff_shape);
     Caffe::set_random_seed(1701);
     FillerParameter filler_param;
     UniformFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_a_);
     filler.Fill(this->blob_bottom_b_);
     filler.Fill(this->blob_bottom_c_);
+    filler.Fill(this->blob_bottom_coeff_);
     blob_bottom_vec_.push_back(blob_bottom_a_);
     blob_bottom_vec_.push_back(blob_bottom_b_);
     blob_bottom_vec_.push_back(blob_bottom_c_);
@@ -39,11 +43,13 @@ class EltwiseLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_bottom_a_;
     delete blob_bottom_b_;
     delete blob_bottom_c_;
+    delete blob_bottom_coeff_;
     delete blob_top_;
   }
   Blob<Dtype>* const blob_bottom_a_;
   Blob<Dtype>* const blob_bottom_b_;
   Blob<Dtype>* const blob_bottom_c_;
+  Blob<Dtype>* const blob_bottom_coeff_;
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
@@ -126,6 +132,37 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeff) {
   }
 }
 
+TYPED_TEST(EltwiseLayerTest, TestSumBlobCoeff) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
+  eltwise_param->set_coeff_blob(true);
+  eltwise_param->add_coeff(1);
+  eltwise_param->add_coeff(-0.5);
+  eltwise_param->add_coeff(2);
+  shared_ptr<EltwiseLayer<Dtype> > layer(
+      new EltwiseLayer<Dtype>(layer_param));
+  this->blob_bottom_vec_.push_back(this->blob_bottom_coeff_);
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  const Dtype* data = this->blob_top_->cpu_data();
+  const int count = this->blob_top_->count();
+  const int num = this->blob_top_->num();
+  const int dim = count / num;
+  const Dtype* coeff_data = this->blob_bottom_coeff_->cpu_data();
+  for (int n = 0; n < num; ++n) {
+    for (int d = 0; d < dim; ++d) {
+      Dtype sum = 0;
+      for (int i = 0; i < this->blob_bottom_vec_.size() - 1; ++i) {
+        const Dtype coeff = coeff_data[i * num + n] * eltwise_param->coeff(i);
+        sum += coeff * this->blob_bottom_vec_[i]->cpu_data()[n * dim + d];
+      }
+      EXPECT_NEAR(data[n * dim + d], sum, 1e-4);
+    }
+  }
+}
+
 TYPED_TEST(EltwiseLayerTest, TestStableProdGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -173,6 +210,26 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeffGradient) {
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+TYPED_TEST(EltwiseLayerTest, TestSumBlobCoeffGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
+  eltwise_param->set_coeff_blob(true);
+  eltwise_param->add_coeff(1);
+  eltwise_param->add_coeff(-0.5);
+  eltwise_param->add_coeff(2);
+  EltwiseLayer<Dtype> layer(layer_param);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_coeff_);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 1);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 2);
 }
 
 TYPED_TEST(EltwiseLayerTest, TestMax) {

@@ -48,8 +48,20 @@ void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   case EltwiseParameter_EltwiseOp_SUM:
     caffe_gpu_set(count, Dtype(0.), top_data);
     // TODO(shelhamer) does cuBLAS optimize to sum for coeff = 1?
-    for (int i = 0; i < bottom.size(); ++i) {
-      caffe_gpu_axpy(count, coeffs_[i], bottom[i]->gpu_data(), top_data);
+    for (int i = 0; i < bottom.size() - coeff_blob_; ++i) {
+      if (coeff_blob_) {
+        const int num = bottom[i]->num();
+        const int dim = bottom[i]->count() / num;
+        const Dtype* bottom_data = bottom[i]->gpu_data();
+        const Dtype* coeff_data = bottom[bottom.size() - 1]->cpu_data();
+        for (int j = 0; j < num; ++j, bottom_data += dim, top_data += dim) {
+          const Dtype coeff = coeffs_[i] * coeff_data[i * num + j];
+          caffe_gpu_axpy(dim, coeff, bottom_data, top_data);
+        }
+        top_data = top[0]->mutable_gpu_data();
+      } else {
+        caffe_gpu_axpy(count, coeffs_[i], bottom[i]->gpu_data(), top_data);
+      }
     }
     break;
   case EltwiseParameter_EltwiseOp_MAX:
@@ -86,10 +98,10 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int* mask = NULL;
   const int count = top[0]->count();
   const Dtype* top_data = top[0]->gpu_data();
-  const Dtype* top_diff = top[0]->gpu_diff();
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int i = 0; i < bottom.size() - coeff_blob_; ++i) {
     if (propagate_down[i]) {
       const Dtype* bottom_data = bottom[i]->gpu_data();
+      const Dtype* top_diff = top[0]->gpu_diff();
       Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
       switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD:
@@ -111,7 +123,15 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_SUM:
-        if (coeffs_[i] == Dtype(1.)) {
+        if (coeff_blob_) {
+          const int num = bottom[i]->num();
+          const int dim = bottom[i]->count() / num;
+          const Dtype* coeff_data = bottom[bottom.size() - 1]->cpu_data();
+          for (int j = 0; j < num; ++j, bottom_diff += dim, top_diff += dim) {
+            const Dtype coeff = coeffs_[i] * coeff_data[i * num + j];
+            caffe_gpu_scale(dim, coeff, top_diff, bottom_diff);
+          }
+        } else if (coeffs_[i] == Dtype(1.)) {
           caffe_copy(count, top_diff, bottom_diff);
         } else {
           caffe_gpu_scale(count, coeffs_[i], top_diff, bottom_diff);

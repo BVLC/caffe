@@ -498,6 +498,10 @@ message EltwiseParameter {
   // Whether to use an asymptotically slower (for >2 inputs) but stabler method
   // of computing the gradient for the PROD operation. (No effect for SUM op.)
   optional bool stable_prod_grad = 3 [default = true];
+
+  // If true and the EltwiseOp is SUM, the last bottom blob is a singleton
+  // coefficient for the first N-1 bottom blobs, with shape (N-1, 1, 1, 1).
+  optional bool coeff_blob = 4 [default = false];
 }
 
 // Message that stores parameters used by EmbedLayer

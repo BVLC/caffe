@@ -10,18 +10,23 @@ namespace caffe {
 template <typename Dtype>
 void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK(this->layer_param().eltwise_param().coeff_size() == 0
-      || this->layer_param().eltwise_param().coeff_size() == bottom.size()) <<
-      "Eltwise Layer takes one coefficient per bottom blob.";
-  CHECK(!(this->layer_param().eltwise_param().operation()
-      == EltwiseParameter_EltwiseOp_PROD
-      && this->layer_param().eltwise_param().coeff_size())) <<
-      "Eltwise layer only takes coefficients for summation.";
   op_ = this->layer_param_.eltwise_param().operation();
+  coeff_blob_ = this->layer_param().eltwise_param().coeff_blob();
+  if (coeff_blob_) {
+    CHECK_EQ(op_, EltwiseParameter_EltwiseOp_SUM)
+        << "coeff_blob option only implemented for the SUM operation";
+  }
+  const int coeff_size = this->layer_param().eltwise_param().coeff_size();
+  CHECK(coeff_size == 0 || (!coeff_blob_ && coeff_size == bottom.size())
+                        || (coeff_blob_ && coeff_size == bottom.size() - 1)) <<
+      "Eltwise Layer takes one coefficient per bottom blob.";
+  CHECK(op_ == EltwiseParameter_EltwiseOp_SUM
+      || this->layer_param().eltwise_param().coeff_size() == 0) <<
+      "Eltwise layer only takes coefficients for summation.";
   // Blob-wise coefficients for the elementwise operation.
   coeffs_ = vector<Dtype>(bottom.size(), 1);
-  if (this->layer_param().eltwise_param().coeff_size()) {
-    for (int i = 0; i < bottom.size(); ++i) {
+  if (coeff_size) {
+    for (int i = 0; i < bottom.size() - coeff_blob_; ++i) {
       coeffs_[i] = this->layer_param().eltwise_param().coeff(i);
     }
   }
@@ -32,7 +37,19 @@ template <typename Dtype>
 void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   for (int i = 1; i < bottom.size(); ++i) {
-    CHECK(bottom[i]->shape() == bottom[0]->shape());
+    if (coeff_blob_ && i == bottom.size() - 1) {
+      CHECK_EQ(i, bottom[i]->shape(0))
+          << "Dimension of coeff blob axis 0 must equal the number of bottom "
+          << "blobs (not including the coeff blob itself).";
+      for (int input_axis = 0, coeff_axis = 1;
+           coeff_axis < bottom[i]->num_axes(); ++input_axis, ++coeff_axis) {
+        CHECK_EQ(bottom[0]->shape(input_axis), bottom[i]->shape(coeff_axis))
+            << "Each axis i >= 1 of the coeff blob must match the (i-1)th "
+            << "axis of the input.";
+      }
+    } else {
+      CHECK(bottom[i]->shape() == bottom[0]->shape());
+    }
   }
   top[0]->ReshapeLike(*bottom[0]);
   // If max operation, we will initialize the vector index part.
@@ -60,8 +77,21 @@ void EltwiseLayer<Dtype>::Forward_cpu(
   case EltwiseParameter_EltwiseOp_SUM:
     caffe_set(count, Dtype(0), top_data);
     // TODO(shelhamer) does BLAS optimize to sum for coeff = 1?
-    for (int i = 0; i < bottom.size(); ++i) {
-      caffe_axpy(count, coeffs_[i], bottom[i]->cpu_data(), top_data);
+    for (int i = 0; i < bottom.size() - coeff_blob_; ++i) {
+      if (coeff_blob_) {
+        const int num = bottom[bottom.size() - 1]->count() /
+                        (bottom.size() - 1);
+        const int dim = bottom[i]->count() / num;
+        const Dtype* bottom_data = bottom[i]->cpu_data();
+        const Dtype* coeff_data = bottom[bottom.size() - 1]->cpu_data();
+        for (int j = 0; j < num; ++j, bottom_data += dim, top_data += dim) {
+          const Dtype coeff = coeffs_[i] * coeff_data[i * num + j];
+          caffe_axpy(dim, coeff, bottom_data, top_data);
+        }
+        top_data = top[0]->mutable_cpu_data();
+      } else {
+        caffe_axpy(count, coeffs_[i], bottom[i]->cpu_data(), top_data);
+      }
     }
     break;
   case EltwiseParameter_EltwiseOp_MAX:
@@ -104,7 +134,7 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const int count = top[0]->count();
   const Dtype* top_data = top[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int i = 0; i < bottom.size() - coeff_blob_; ++i) {
     if (propagate_down[i]) {
       const Dtype* bottom_data = bottom[i]->cpu_data();
       Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
@@ -128,7 +158,16 @@ void EltwiseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_mul(count, bottom_diff, top_diff, bottom_diff);
         break;
       case EltwiseParameter_EltwiseOp_SUM:
-        if (coeffs_[i] == Dtype(1)) {
+        if (coeff_blob_) {
+          const int num = bottom[bottom.size() - 1]->count() /
+                          (bottom.size() - 1);
+          const int dim = bottom[i]->count() / num;
+          const Dtype* coeff_data = bottom[bottom.size() - 1]->cpu_data();
+          for (int j = 0; j < num; ++j, bottom_diff += dim, top_diff += dim) {
+            const Dtype coeff = coeffs_[i] * coeff_data[i * num + j];
+            caffe_cpu_scale(dim, coeff, top_diff, bottom_diff);
+          }
+        } else if (coeffs_[i] == Dtype(1.)) {
           caffe_copy(count, top_diff, bottom_diff);
         } else {
           caffe_cpu_scale(count, coeffs_[i], top_diff, bottom_diff);
