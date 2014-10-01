@@ -285,10 +285,10 @@ void Solver<Dtype>::Test(const int test_net_id) {
     LOG(INFO) << "Test loss: " << loss;
   }
   for (int i = 0; i < test_score.size(); ++i) {
-    const string& output_name = test_net->blob_names()[
-        test_net->output_blob_indices()[test_score_output_id[i]]];
-    const Dtype loss_weight =
-        test_net->blob_loss_weights()[test_net->output_blob_indices()[i]];
+    const int output_blob_index =
+        test_net->output_blob_indices()[test_score_output_id[i]];
+    const string& output_name = test_net->blob_names()[output_blob_index];
+    const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
     if (loss_weight) {
