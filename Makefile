@@ -20,7 +20,6 @@ endif
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
 STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
 DYNAMIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).so
-STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
 
 ##############################
 # Get all source files
@@ -228,6 +227,7 @@ else ifeq ($(UNAME), Darwin)
 	OSX := 1
 endif
 
+# Linux
 ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
@@ -257,6 +257,15 @@ endif
 # Custom compiler
 ifdef CUSTOM_CXX
 	CXX := $(CUSTOM_CXX)
+endif
+
+# Static linking
+ifneq (,$(findstring clang++,$(CXX)))
+	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
+else ifneq (,$(findstring g++,$(CXX)))
+	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
+else
+	$(error Cannot static link with the $(CXX) compiler.)
 endif
 
 # Debugging
