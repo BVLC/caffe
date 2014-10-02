@@ -31,6 +31,7 @@ class Solver {
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
+  int iter() { return iter_; }
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
