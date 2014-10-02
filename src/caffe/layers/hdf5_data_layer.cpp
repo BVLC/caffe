@@ -53,6 +53,10 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
     CHECK_EQ(hdf_blobs_[i]->num(), num);
   }
   DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->num() << " rows";
+  permutation_.clear();
+  permutation_.resize(hdf_blobs_[0]->num());
+  for(int i=0;i<hdf_blobs_[0]->num();i++)
+    permutation_[i] = i;
 }
 
 template <typename Dtype>
@@ -90,6 +94,13 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+void HDF5DataLayer<Dtype>::ShuffleData(const hsize_t max_val){
+  LOG(INFO) << "shuffle data";
+  std::random_shuffle(permutation_.begin(), permutation_.end());
+}
+
+
+template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
@@ -102,13 +113,17 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           DLOG(INFO) << "Looping around to first file.";
         }
         LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+        if(this->layer_param_.hdf5_data_param().shuffle())
+          ShuffleData(hdf_blobs_[0]->num());
       }
       current_row_ = 0;
+      if(this->layer_param_.hdf5_data_param().shuffle())
+        ShuffleData(hdf_blobs_[0]->num());
     }
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->num();
       caffe_copy(data_dim,
-          &hdf_blobs_[j]->cpu_data()[current_row_ * data_dim],
+          &hdf_blobs_[j]->cpu_data()[permutation_[current_row_] * data_dim],
           &top[j]->mutable_cpu_data()[i * data_dim]);
     }
   }
