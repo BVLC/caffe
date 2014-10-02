@@ -40,8 +40,8 @@ TYPED_TEST(MVNLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   MVNLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Test mean
   int num = this->blob_bottom_->num();
   int channels = this->blob_bottom_->channels();
@@ -75,8 +75,8 @@ TYPED_TEST(MVNLayerTest, TestForwardMeanOnly) {
   LayerParameter layer_param;
   layer_param.ParseFromString("mvn_param{normalize_variance: false}");
   MVNLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Test mean
   int num = this->blob_bottom_->num();
   int channels = this->blob_bottom_->channels();
@@ -107,8 +107,8 @@ TYPED_TEST(MVNLayerTest, TestForwardAcrossChannels) {
   LayerParameter layer_param;
   layer_param.ParseFromString("mvn_param{across_channels: true}");
   MVNLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Test mean
   int num = this->blob_bottom_->num();
   int channels = this->blob_bottom_->channels();
@@ -142,8 +142,8 @@ TYPED_TEST(MVNLayerTest, TestGradient) {
   LayerParameter layer_param;
   MVNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 TYPED_TEST(MVNLayerTest, TestGradientMeanOnly) {
@@ -152,8 +152,8 @@ TYPED_TEST(MVNLayerTest, TestGradientMeanOnly) {
   layer_param.ParseFromString("mvn_param{normalize_variance: false}");
   MVNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 TYPED_TEST(MVNLayerTest, TestGradientAcrossChannels) {
@@ -162,8 +162,8 @@ TYPED_TEST(MVNLayerTest, TestGradientAcrossChannels) {
   layer_param.ParseFromString("mvn_param{across_channels: true}");
   MVNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 }  // namespace caffe

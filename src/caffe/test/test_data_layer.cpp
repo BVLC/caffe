@@ -125,7 +125,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     transform_param->set_scale(scale);
 
     DataLayer<Dtype> layer(param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_data_->num(), 5);
     EXPECT_EQ(blob_top_data_->channels(), 2);
     EXPECT_EQ(blob_top_data_->height(), 3);
@@ -136,7 +136,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_label_->width(), 1);
 
     for (int iter = 0; iter < 100; ++iter) {
-      layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+      layer.Forward(blob_bottom_vec_, blob_top_vec_);
       for (int i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
@@ -165,7 +165,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     transform_param->set_crop_size(1);
 
     DataLayer<Dtype> layer(param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_data_->num(), 5);
     EXPECT_EQ(blob_top_data_->channels(), 2);
     EXPECT_EQ(blob_top_data_->height(), 1);
@@ -176,7 +176,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     EXPECT_EQ(blob_top_label_->width(), 1);
 
     for (int iter = 0; iter < 2; ++iter) {
-      layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+      layer.Forward(blob_bottom_vec_, blob_top_vec_);
       for (int i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
@@ -219,9 +219,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     vector<vector<Dtype> > crop_sequence;
     {
       DataLayer<Dtype> layer1(param);
-      layer1.SetUp(blob_bottom_vec_, &blob_top_vec_);
+      layer1.SetUp(blob_bottom_vec_, blob_top_vec_);
       for (int iter = 0; iter < 2; ++iter) {
-        layer1.Forward(blob_bottom_vec_, &blob_top_vec_);
+        layer1.Forward(blob_bottom_vec_, blob_top_vec_);
         for (int i = 0; i < 5; ++i) {
           EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
         }
@@ -240,9 +240,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     // Check that the sequence is the same as the original.
     Caffe::set_random_seed(seed_);
     DataLayer<Dtype> layer2(param);
-    layer2.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer2.SetUp(blob_bottom_vec_, blob_top_vec_);
     for (int iter = 0; iter < 2; ++iter) {
-      layer2.Forward(blob_bottom_vec_, &blob_top_vec_);
+      layer2.Forward(blob_bottom_vec_, blob_top_vec_);
       for (int i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
@@ -274,9 +274,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     vector<vector<Dtype> > crop_sequence;
     {
       DataLayer<Dtype> layer1(param);
-      layer1.SetUp(blob_bottom_vec_, &blob_top_vec_);
+      layer1.SetUp(blob_bottom_vec_, blob_top_vec_);
       for (int iter = 0; iter < 2; ++iter) {
-        layer1.Forward(blob_bottom_vec_, &blob_top_vec_);
+        layer1.Forward(blob_bottom_vec_, blob_top_vec_);
         for (int i = 0; i < 5; ++i) {
           EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
         }
@@ -295,9 +295,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     // srand with 1701. Check that the sequence differs from the original.
     srand(seed_);
     DataLayer<Dtype> layer2(param);
-    layer2.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer2.SetUp(blob_bottom_vec_, blob_top_vec_);
     for (int iter = 0; iter < 2; ++iter) {
-      layer2.Forward(blob_bottom_vec_, &blob_top_vec_);
+      layer2.Forward(blob_bottom_vec_, blob_top_vec_);
       for (int i = 0; i < 5; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }

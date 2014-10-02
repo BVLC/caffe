@@ -73,7 +73,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
       blob_bottom_->mutable_cpu_data()[i + 14] = 3;
     }
     PoolingLayer<Dtype> layer(layer_param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
     EXPECT_EQ(blob_top_->height(), 2);
@@ -84,7 +84,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_EQ(blob_top_mask_->height(), 2);
       EXPECT_EQ(blob_top_mask_->width(), 4);
     }
-    layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
     // Expected output: 2x 2 channels of:
     //     [9 5 5 8]
     //     [9 5 5 8]
@@ -171,7 +171,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
     PoolingLayer<Dtype> layer(layer_param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
     EXPECT_EQ(blob_top_->height(), 4);
@@ -182,7 +182,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_EQ(blob_top_mask_->height(), 4);
       EXPECT_EQ(blob_top_mask_->width(), 5);
     }
-    layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
     // Expected output: 2x 2 channels of:
     // [35    32    26    27    27]
     // [32    33    33    27    27]
@@ -296,7 +296,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
     PoolingLayer<Dtype> layer(layer_param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
     EXPECT_EQ(blob_top_->height(), 5);
@@ -307,7 +307,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_EQ(blob_top_mask_->height(), 5);
       EXPECT_EQ(blob_top_mask_->width(), 4);
     }
-    layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
     // Expected output: 2x 2 channels of:
     // [35    32    26    26]
     // [32    32    27    27]
@@ -377,7 +377,7 @@ TYPED_TEST(PoolingLayerTest, TestSetup) {
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
   PoolingLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
   EXPECT_EQ(this->blob_top_->height(), 3);
@@ -393,7 +393,7 @@ TYPED_TEST(PoolingLayerTest, TestSetupPadded) {
   pooling_param->set_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
   PoolingLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
   EXPECT_EQ(this->blob_top_->height(), 4);
@@ -407,8 +407,8 @@ TYPED_TEST(PoolingLayerTest, PrintBackward) {
   layer_param.set_stride(2);
   layer_param.set_pool(LayerParameter_PoolMethod_MAX);
   PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
   }
@@ -419,7 +419,7 @@ TYPED_TEST(PoolingLayerTest, PrintBackward) {
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = i;
   }
-  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+  layer.Backward(this->blob_top_vec_, true, this->blob_bottom_vec_);
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     cout << "bottom diff " << i << " " << this->blob_bottom_->cpu_diff()[i] << endl;
   }
@@ -452,8 +452,8 @@ TYPED_TEST(PoolingLayerTest, TestGradientMax) {
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-4, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
     }
   }
 }
@@ -481,12 +481,12 @@ TYPED_TEST(PoolingLayerTest, TestForwardMaxPadded) {
   this->blob_bottom_->mutable_cpu_data()[7] = 2;
   this->blob_bottom_->mutable_cpu_data()[8] = 1;
   PoolingLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Dtype epsilon = 1e-8;
   // Output:
   //     [ 1 4 4 ]
@@ -516,8 +516,8 @@ TYPED_TEST(PoolingLayerTest, TestGradientMaxTopMask) {
       this->blob_top_vec_.push_back(this->blob_top_mask_);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-4, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
       this->blob_top_vec_.pop_back();
     }
   }
@@ -537,12 +537,12 @@ TYPED_TEST(PoolingLayerTest, TestForwardAve) {
   ConstantFiller<Dtype> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   PoolingLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Dtype epsilon = 1e-5;
   EXPECT_NEAR(this->blob_top_->cpu_data()[0], 8.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4.0 / 3, epsilon);
@@ -567,8 +567,8 @@ TYPED_TEST(PoolingLayerTest, TestGradientAve) {
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-2, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
     }
   }
 }
@@ -586,8 +586,8 @@ TYPED_TEST(PoolingLayerTest, TestGradientAvePadded) {
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-2, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
     }
   }
 }
@@ -651,7 +651,7 @@ class CuDNNPoolingLayerTest : public ::testing::Test {
       blob_bottom_->mutable_cpu_data()[i + 14] = 3;
     }
     CuDNNPoolingLayer<Dtype> layer(layer_param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
     EXPECT_EQ(blob_top_->height(), 2);
@@ -662,7 +662,7 @@ class CuDNNPoolingLayerTest : public ::testing::Test {
       EXPECT_EQ(blob_top_mask_->height(), 2);
       EXPECT_EQ(blob_top_mask_->width(), 4);
     }
-    layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
     // Expected output: 2x 2 channels of:
     //     [9 5 5 8]
     //     [9 5 5 8]
@@ -749,7 +749,7 @@ class CuDNNPoolingLayerTest : public ::testing::Test {
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
     CuDNNPoolingLayer<Dtype> layer(layer_param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
     EXPECT_EQ(blob_top_->height(), 4);
@@ -760,7 +760,7 @@ class CuDNNPoolingLayerTest : public ::testing::Test {
       EXPECT_EQ(blob_top_mask_->height(), 4);
       EXPECT_EQ(blob_top_mask_->width(), 5);
     }
-    layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
     // Expected output: 2x 2 channels of:
     // [35    32    26    27    27]
     // [32    33    33    27    27]
@@ -874,7 +874,7 @@ class CuDNNPoolingLayerTest : public ::testing::Test {
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
     CuDNNPoolingLayer<Dtype> layer(layer_param);
-    layer.SetUp(blob_bottom_vec_, &blob_top_vec_);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
     EXPECT_EQ(blob_top_->height(), 5);
@@ -885,7 +885,7 @@ class CuDNNPoolingLayerTest : public ::testing::Test {
       EXPECT_EQ(blob_top_mask_->height(), 5);
       EXPECT_EQ(blob_top_mask_->width(), 4);
     }
-    layer.Forward(blob_bottom_vec_, &blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
     // Expected output: 2x 2 channels of:
     // [35    32    26    26]
     // [32    32    27    27]
@@ -955,13 +955,16 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestSetupCuDNN) {
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
   CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
+// This test and all following cuDNN pooling tests with padding are commented
+// for now, since cuDNN pooling does not currently support padding.
+/*
 TYPED_TEST(CuDNNPoolingLayerTest, TestSetupPaddedCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
@@ -971,12 +974,13 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestSetupPaddedCuDNN) {
   pooling_param->set_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
   CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
   EXPECT_EQ(this->blob_top_->height(), 4);
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
+*/
 
 /*
 TYPED_TEST(CuDNNPoolingLayerTest, PrintBackwardCuDNN) {
@@ -986,8 +990,8 @@ TYPED_TEST(CuDNNPoolingLayerTest, PrintBackwardCuDNN) {
   layer_param.set_stride(2);
   layer_param.set_pool(LayerParameter_PoolMethod_MAX);
   CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
   }
@@ -998,7 +1002,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, PrintBackwardCuDNN) {
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = i;
   }
-  layer.Backward(this->blob_top_vec_, true, &(this->blob_bottom_vec_));
+  layer.Backward(this->blob_top_vec_, true, this->blob_bottom_vec_);
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     cout << "bottom diff " << i << " " << this->blob_bottom_->cpu_diff()[i] << endl;
   }
@@ -1012,6 +1016,9 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxCuDNN) {
   this->TestForwardRectWide();
 }
 
+// Currently, cuDNN does not support a top mask, so we comment this and
+// the corresponding backward test.
+/*
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxTopMaskCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   this->blob_top_vec_.push_back(this->blob_top_mask_);
@@ -1019,6 +1026,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxTopMaskCuDNN) {
   this->TestForwardRectHigh();
   this->TestForwardRectWide();
 }
+*/
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxCuDNN) {
   Caffe::set_mode(Caffe::GPU);
@@ -1029,16 +1037,18 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxCuDNN) {
       pooling_param->set_kernel_h(kernel_h);
       pooling_param->set_kernel_w(kernel_w);
       pooling_param->set_stride(2);
-      pooling_param->set_pad(1);
+      // currenty, cuDNN pooling does not support padding
+      pooling_param->set_pad(0);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       CuDNNPoolingLayer<TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-4, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
     }
   }
 }
 
+/*
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxPaddedCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
@@ -1062,12 +1072,12 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxPaddedCuDNN) {
   this->blob_bottom_->mutable_cpu_data()[7] = 2;
   this->blob_bottom_->mutable_cpu_data()[8] = 1;
   CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   TypeParam epsilon = 1e-8;
   // Output:
   //     [ 1 4 4 ]
@@ -1083,7 +1093,9 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardMaxPaddedCuDNN) {
   EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[8], 1, epsilon);
 }
+*/
 
+/*
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxTopMaskCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
@@ -1097,12 +1109,13 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxTopMaskCuDNN) {
       this->blob_top_vec_.push_back(this->blob_top_mask_);
       CuDNNPoolingLayer<TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-4, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
       this->blob_top_vec_.pop_back();
     }
   }
 }
+*/
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
   Caffe::set_mode(Caffe::GPU);
@@ -1110,7 +1123,9 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(1);
-  pooling_param->set_pad(1);
+  // Currently, cuDNN pooling does not support padding, so we use
+  // a simplified version of this test.
+  pooling_param->set_pad(0);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
   this->blob_bottom_->Reshape(1, 1, 3, 3);
   FillerParameter filler_param;
@@ -1118,22 +1133,14 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
   ConstantFiller<TypeParam> filler(filler_param);
   filler.Fill(this->blob_bottom_);
   CuDNNPoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
-  EXPECT_EQ(this->blob_top_->height(), 3);
-  EXPECT_EQ(this->blob_top_->width(), 3);
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   TypeParam epsilon = 1e-5;
-  EXPECT_NEAR(this->blob_top_->cpu_data()[0], 8.0 / 9, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4.0 / 3, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[2], 8.0 / 9, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[3], 4.0 / 3, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[4], 2.0    , epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[5], 4.0 / 3, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[6], 8.0 / 9, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[7], 4.0 / 3, epsilon);
-  EXPECT_NEAR(this->blob_top_->cpu_data()[8], 8.0 / 9, epsilon);
+  EXPECT_NEAR(this->blob_top_->cpu_data()[0], 2.0, epsilon);
 }
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAveCuDNN) {
@@ -1148,12 +1155,13 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAveCuDNN) {
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
       CuDNNPoolingLayer<TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-2, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
     }
   }
 }
 
+/*
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAvePaddedCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
@@ -1167,11 +1175,12 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAvePaddedCuDNN) {
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
       CuDNNPoolingLayer<TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-2, 1e-2);
-      checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-          &(this->blob_top_vec_));
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+          this->blob_top_vec_);
     }
   }
 }
+*/
 
 #endif
 
