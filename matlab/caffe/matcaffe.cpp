@@ -372,7 +372,7 @@ static handler_registry handlers[] = {
  ** matlab entry point: caffe(api_command, arg1, arg2, ...)
  **/
 void mexFunction(MEX_ARGS) {
-  mexLock(); // Avoid clearing the mex file.
+  mexLock();  // Avoid clearing the mex file.
   if (nrhs == 0) {
     LOG(ERROR) << "No API command given";
     mexErrMsgTxt("An API command is requires");
