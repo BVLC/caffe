@@ -470,11 +470,6 @@ message EltwiseParameter {
   optional bool stable_prod_grad = 3 [default = true];
 }
 
-// Message that stores parameters used by ThresholdLayer
-message ThresholdParameter {
-  optional float threshold = 1 [default = 0]; // Strictly Positive values
-}
-
 // Message that stores parameters used by HDF5DataLayer
 message HDF5DataParameter {
   // Specify the data source.
@@ -641,7 +636,7 @@ message SliceParameter {
   repeated uint32 slice_point = 2;
 }
 
-// Message that stores parameters used by SoftmaxLayer, SoftMaxWithLossLayer
+// Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
 message SoftmaxParameter {
   enum Engine {
     DEFAULT = 0;
@@ -651,7 +646,7 @@ message SoftmaxParameter {
   optional Engine engine = 1 [default = DEFAULT];
 }
 
-// Message that stores parameters used by SigmoidLayer
+// Message that stores parameters used by TanHLayer
 message TanHParameter {
   enum Engine {
     DEFAULT = 0;
@@ -659,6 +654,11 @@ message TanHParameter {
     CUDNN = 2;
   }
   optional Engine engine = 1 [default = DEFAULT];
+}
+
+// Message that stores parameters used by ThresholdLayer
+message ThresholdParameter {
+  optional float threshold = 1 [default = 0]; // Strictly positive values
 }
 
 // Message that stores parameters used by WindowDataLayer
