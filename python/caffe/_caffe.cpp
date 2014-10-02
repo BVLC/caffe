@@ -148,6 +148,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       "Net", bp::init<string, string>())
       .def(bp::init<string>())
       .def("copy_from",             &PyNet::CopyTrainedLayersFrom)
+      .def("share_with",            &PyNet::ShareTrainedLayersWith)
       .def("_forward",              &PyNet::Forward)
       .def("_backward",             &PyNet::Backward)
       .def("reshape",               &PyNet::Reshape)
