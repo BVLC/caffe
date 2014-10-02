@@ -71,8 +71,8 @@ class Caffe {
  public:
   ~Caffe();
   inline static Caffe& Get() {
-    if (!singleton_.get()) {
-      singleton_.reset(new Caffe());
+    if (!singleton_) {
+      singleton_ = new Caffe();
     }
     return *singleton_;
   }
@@ -137,7 +137,10 @@ class Caffe {
 
   Brew mode_;
   Phase phase_;
-  static shared_ptr<Caffe> singleton_;
+
+  // Make sure each thread can have different values. TODO Instances will not
+  // be properly destroyed until process exit.
+  static __thread Caffe *singleton_;
 
  private:
   // The private constructor to avoid duplicate instantiation.

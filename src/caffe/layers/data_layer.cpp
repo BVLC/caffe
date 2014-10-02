@@ -1,5 +1,6 @@
 #include <leveldb/db.h>
 #include <stdint.h>
+#include <sys/stat.h>
 
 #include <string>
 #include <vector>
@@ -53,12 +54,19 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     iter_->SeekToFirst();
     }
     break;
-  case DataParameter_DB_LMDB:
+  case DataParameter_DB_LMDB: {
     CHECK_EQ(mdb_env_create(&mdb_env_), MDB_SUCCESS) << "mdb_env_create failed";
     CHECK_EQ(mdb_env_set_mapsize(mdb_env_, 1099511627776), MDB_SUCCESS);  // 1TB
+    // No locking, assume db is not written to at the same time, otherwise
+    // LMDB tries to lock the file, which fails if it's read-only
+    unsigned int flags = MDB_RDONLY|MDB_NOTLS|MDB_NOLOCK;
+    struct stat st_buf;
+    stat (this->layer_param_.data_param().source().c_str(), &st_buf);
+    if (S_ISREG (st_buf.st_mode)) // Allow DB to be stand-alone file
+      flags |= MDB_NOSUBDIR;
     CHECK_EQ(mdb_env_open(mdb_env_,
              this->layer_param_.data_param().source().c_str(),
-             MDB_RDONLY|MDB_NOTLS, 0664), MDB_SUCCESS) << "mdb_env_open failed";
+             flags, 0664), MDB_SUCCESS) << "mdb_env_open failed";
     CHECK_EQ(mdb_txn_begin(mdb_env_, NULL, MDB_RDONLY, &mdb_txn_), MDB_SUCCESS)
         << "mdb_txn_begin failed";
     CHECK_EQ(mdb_open(mdb_txn_, NULL, 0, &mdb_dbi_), MDB_SUCCESS)
@@ -68,6 +76,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LOG(INFO) << "Opening lmdb " << this->layer_param_.data_param().source();
     CHECK_EQ(mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_FIRST),
         MDB_SUCCESS) << "mdb_cursor_get failed";
+    }
     break;
   default:
     LOG(FATAL) << "Unknown database backend";
