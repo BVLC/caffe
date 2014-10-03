@@ -94,10 +94,14 @@ class Blob {
   const Dtype* gpu_data() const;
   const Dtype* cpu_diff() const;
   const Dtype* gpu_diff() const;
+  const Dtype* gpu_mpi_holding() const;
+  const Dtype* cpu_mpi_holding() const;
   Dtype* mutable_cpu_data();
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
+  Dtype* mutable_gpu_mpi_holding();
+  Dtype* mutable_cpu_mpi_holding();
   void Update();
   void FromProto(const BlobProto& proto);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
@@ -129,6 +133,7 @@ class Blob {
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
+  shared_ptr<SyncedMemory> mpi_holding_;
   int num_;
   int channels_;
   int height_;

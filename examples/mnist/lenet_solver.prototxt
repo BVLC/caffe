@@ -15,7 +15,7 @@ lr_policy: "inv"
 gamma: 0.0001
 power: 0.75
 # Display every 100 iterations
-display: 100
+display: 200
 # The maximum number of iterations
 max_iter: 10000
 # snapshot intermediate results

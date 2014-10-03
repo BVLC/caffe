@@ -270,6 +270,15 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
+ifeq ($(USE_MPI), 1)
+	LIBRARIES += mpi mpi_cxx
+	COMMON_FLAGS += -DUSE_MPI
+	MPI_INCLUDE = /usr/local/openmpi/include
+	MPI_LIB = /usr/local/openmpi/lib
+	INCLUDE_DIRS += $(MPI_INCLUDE)
+	LIBRARY_DIRS += $(MPI_LIB)
+endif
+
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
 	OBJS := $(PROTO_OBJS) $(CXX_OBJS)
@@ -316,6 +325,7 @@ NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -fPIC $(COMMON_FLAGS) $(WARNINGS)
+LDFLAGS += -L$(MPI_LIB)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
