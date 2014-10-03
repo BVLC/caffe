@@ -7,6 +7,10 @@
 
 #include "caffe/caffe.hpp"
 
+#ifdef USE_MPI
+#include "mpi.h"
+#endif
+
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
@@ -267,6 +271,10 @@ int time() {
 RegisterBrewFunction(time);
 
 int main(int argc, char** argv) {
+
+#ifdef USE_MPI
+	MPI_Init(&argc, &argv);
+#endif
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Usage message.
@@ -278,10 +286,25 @@ int main(int argc, char** argv) {
       "  device_query    show GPU diagnostic information\n"
       "  time            benchmark model execution time");
   // Run tool or show usage.
+#ifdef USE_MPI
+  int my_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+#endif
+
+
+
   caffe::GlobalInit(&argc, &argv);
+
+#ifdef USE_MPI
+  FLAGS_gpu = my_rank;
+  LOG(INFO)<<FLAGS_gpu;
+#endif
   if (argc == 2) {
     return GetBrewFunction(caffe::string(argv[1]))();
   } else {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
+#ifdef USE_MPI
+  MPI_Finalize();
+#endif
 }

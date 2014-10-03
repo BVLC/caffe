@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 
+#ifdef USE_MPI
+	#include <mpi.h>
+#endif
+
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
@@ -187,6 +191,11 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
     Dtype loss = net_->ForwardBackward(bottom_vec);
+#ifdef USE_MPI
+    int myrank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    if (myrank==0){
+#endif
     if (display) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
@@ -209,8 +218,12 @@ void Solver<Dtype>::Solve(const char* resume_file) {
         }
       }
     }
+#ifdef USE_MPI
+    }
+#endif
 
     ComputeUpdateValue();
+
     net_->Update();
   }
   // Always save a snapshot after optimization, unless overridden by setting
@@ -399,9 +412,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
   // get the learning rate
   Dtype rate = GetLearningRate();
-  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
-  }
+//  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+//    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+//  }
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();
@@ -445,6 +458,21 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
 #ifndef CPU_ONLY
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
       // Compute the value to history, and then copy them to the blob's diff.
+
+#ifdef USE_MPI
+    	double mpi_start, mpi_end;
+    // Here we will communicate between porcesses and add all diffs
+    	mpi_start = MPI_Wtime();
+    	MPI_Allreduce(net_params[param_id]->cpu_diff(),
+    			net_params[param_id]->mutable_cpu_mpi_holding(),
+    			net_params[param_id]->count(),
+    			MPI_FLOAT,
+    			MPI_SUM,
+    			MPI_COMM_WORLD);
+    	caffe_copy(net_params[param_id]->count(), net_params[param_id]->gpu_mpi_holding(), net_params[param_id]->mutable_gpu_diff());
+    	mpi_end = MPI_Wtime();
+//    	LOG(INFO)<<"MPI Call: "<<mpi_end-mpi_start<<" seconds";
+#endif
       Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
