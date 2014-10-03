@@ -3,6 +3,7 @@
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
+#include <Python.h>
 #include <boost/python.hpp>
 #include <boost/shared_ptr.hpp>
 #include <numpy/arrayobject.h>
