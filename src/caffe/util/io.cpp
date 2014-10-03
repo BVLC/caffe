@@ -5,8 +5,6 @@
 #include <leveldb/db.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <stdint.h>
 
 #include <algorithm>
@@ -18,6 +16,13 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
+#ifndef CV_LOAD_IMAGE_COLOR
+#define CV_LOAD_IMAGE_COLOR 1
+#endif
+
+#ifndef CV_LOAD_IMAGE_GRAYSCALE
+#define CV_LOAD_IMAGE_GRAYSCALE 0
+#endif
 namespace caffe {
 
 using google::protobuf::io::FileInputStream;
@@ -193,5 +198,136 @@ void hdf5_save_nd_dataset<double>(
       file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
   CHECK_GE(status, 0) << "Failed to make double dataset " << dataset_name;
 }
+
+bool OpenCVImageToDatum(
+    const cv::Mat& image, const int label, const int resize_height,
+    const int resize_width, Datum* datum) {
+  cv::Mat cv_img;
+  CHECK(image.data) << "Image data must not be NULL";
+  const int depth = image.depth();
+  CHECK(depth == CV_8U || depth == CV_8S) <<
+      "Image data type must be unsigned or signed byte";
+  const int channels = image.channels();
+  CHECK(channels == 3 || channels == 1) << "Image channels must be 3 or 1";
+  CHECK_GT(image.rows, 0) << "Image resize_height must be positive";
+  CHECK_GT(image.cols, 0) << "Image resize_width must be positive";
+  if (resize_height > 0 && resize_width > 0 &&
+      (image.rows != resize_height || image.cols != resize_width)) {
+    cv::resize(image, cv_img, cv::Size(resize_width, resize_height));
+  } else {
+    cv_img = image;
+  }
+  const int height = cv_img.rows;
+  const int width = cv_img.cols;
+  datum->set_channels(channels);
+  datum->set_height(height);
+  datum->set_width(width);
+  datum->set_label(label);
+  datum->clear_data();
+  datum->clear_float_data();
+  string* datum_string = datum->mutable_data();
+  if (channels == 3) {
+    for (int c = 0; c < channels; ++c) {
+      for (int h = 0; h < height; ++h) {
+        for (int w = 0; w < width; ++w) {
+          datum_string->push_back(
+            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+        }
+      }
+    }
+  } else if (channels == 1) {
+    if (cv_img.isContinuous()) {
+      datum->set_data(cv_img.data, height * width);
+    } else {
+      for (int h = 0; h < height; ++h) {
+        for (int w = 0; w < width; ++w) {
+          datum_string->push_back(
+            static_cast<char>(cv_img.at<uint8_t>(h, w)));
+        }
+      }
+    }
+  }
+  return true;
+}
+
+template <typename MatType, typename Dtype>
+bool OpenCVMatToBlob(
+    const cv::Mat& mat, Blob<Dtype>* blob) {
+  CHECK(mat.data) << "Mat data must not be NULL";
+  CHECK_GT(mat.rows, 0) << "Mat height must be positive";
+  CHECK_GT(mat.cols, 0) << "Mat width must be positive";
+  const int channels = mat.channels();
+  const int height = mat.rows;
+  const int width = mat.cols;
+  blob->Reshape(1, channels, height, width);
+  Dtype* data = blob->mutable_cpu_data();
+  int index;
+// How the image matrix is stored in the memory?
+// http://docs.opencv.org/doc/tutorials/core/how_to_scan_images/how_to_scan_images.html#how-the-image-matrix-is-stored-in-the-memory
+  for (int h = 0; h < height; ++h) {
+    const MatType* ptr = mat.ptr<MatType>(h);
+    index = 0;
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < channels; ++c) {
+         data[blob->offset(0, c, h, w)] = ptr[index++];
+      }
+    }
+  }
+  return true;
+}
+
+template
+bool OpenCVMatToBlob<uchar, float>(const cv::Mat& mat, Blob<float>* blob);
+template
+bool OpenCVMatToBlob<float, float>(const cv::Mat& mat, Blob<float>* blob);
+template
+bool OpenCVMatToBlob<uchar, double>(const cv::Mat& image, Blob<double>* blob);
+template
+bool OpenCVMatToBlob<float, double>(const cv::Mat& image, Blob<double>* blob);
+template
+bool OpenCVMatToBlob<double, double>(const cv::Mat& image, Blob<double>* blob);
+
+template <typename Dtype>
+bool BlobToOpenCVMat(const Blob<Dtype>& blob, cv::Mat* mat) {
+  const int num = blob.num();
+  CHECK_EQ(num, 1);
+  const int channels = blob.channels();
+  const int height = blob.height();
+  const int width = blob.width();
+  CHECK_LE(channels, CV_CN_MAX);
+
+  int data_type;
+  if (sizeof(Dtype) == sizeof(float)) {
+    data_type = CV_32F;
+  } else {
+    data_type = CV_64F;
+  }
+  mat->create(height, width, CV_MAKETYPE(data_type, channels));
+  if (blob.count() == 0) {
+    return true;
+  }
+
+  CHECK(mat->data) << "Mat data must not be NULL";
+  CHECK_GT(mat->rows, 0) << "Mat height must be positive";
+  CHECK_GT(mat->cols, 0) << "Mat width must be positive";
+  const Dtype* data = blob.cpu_data();
+  Dtype* ptr;
+  int index;
+  for (int h = 0; h < height; ++h) {
+    ptr = mat->ptr<Dtype>(h);
+    index = 0;
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < channels; ++c) {
+         ptr[index++] = data[blob.offset(0, c, h, w)];
+      }
+    }
+  }
+  return true;
+}
+
+template
+bool BlobToOpenCVMat<float>(const Blob<float>& blob, cv::Mat* image);
+template
+bool BlobToOpenCVMat<double>(const Blob<double>& blob, cv::Mat* image);
 
 }  // namespace caffe

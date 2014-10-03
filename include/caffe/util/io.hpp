@@ -1,7 +1,10 @@
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
+#include <opencv2/opencv.hpp>
+
 #include <unistd.h>
+
 #include <string>
 
 #include "google/protobuf/message.h"
@@ -117,6 +120,16 @@ void hdf5_load_nd_dataset(
 template <typename Dtype>
 void hdf5_save_nd_dataset(
   const hid_t file_id, const string dataset_name, const Blob<Dtype>& blob);
+
+bool OpenCVImageToDatum(
+    const cv::Mat& image, const int label, const int height,
+    const int width, Datum* datum);
+
+template <typename MatType, typename Dtype>
+bool OpenCVMatToBlob(const cv::Mat& mat, Blob<Dtype>* blob);
+
+template <typename Dtype>
+bool BlobToOpenCVMat(const Blob<Dtype>& blob, cv::Mat* mat);
 
 }  // namespace caffe
 
