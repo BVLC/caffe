@@ -200,7 +200,7 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 41 (last added: contrastive_loss_param)
+// LayerParameter next available ID: 42 (last added: exp_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -221,7 +221,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 38 (last added: CONTRASTIVE_LOSS)
+  // LayerType next available ID: 39 (last added: EXP)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -239,6 +239,7 @@ message LayerParameter {
     DUMMY_DATA = 32;
     EUCLIDEAN_LOSS = 7;
     ELTWISE = 25;
+    EXP = 38;
     FLATTEN = 8;
     HDF5_DATA = 9;
     HDF5_OUTPUT = 10;
@@ -301,6 +302,7 @@ message LayerParameter {
   optional DropoutParameter dropout_param = 12;
   optional DummyDataParameter dummy_data_param = 26;
   optional EltwiseParameter eltwise_param = 24;
+  optional ExpParameter exp_param = 41;
   optional HDF5DataParameter hdf5_data_param = 13;
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional HingeLossParameter hinge_loss_param = 29;
@@ -468,6 +470,16 @@ message EltwiseParameter {
   // Whether to use an asymptotically slower (for >2 inputs) but stabler method
   // of computing the gradient for the PROD operation. (No effect for SUM op.)
   optional bool stable_prod_grad = 3 [default = true];
+}
+
+// Message that stores parameters used by ExpLayer
+message ExpParameter {
+  // ExpLayer computes outputs y = base ^ (shift + scale * x), for base > 0.
+  // Or if base is set to the default (-1), base is set to e,
+  // so y = exp(shift + scale * x).
+  optional float base = 1 [default = -1.0];
+  optional float scale = 2 [default = 1.0];
+  optional float shift = 3 [default = 0.0];
 }
 
 // Message that stores parameters used by HDF5DataLayer
