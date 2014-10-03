@@ -29,6 +29,13 @@ set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC) # set global flags
 set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}) # set debug flags
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}) # set release flags
 
+#    Link Flags
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")  # clang++
+  set(CAFFE_STATIC_LINK -Wl,-force_load $(STATIC_NAME))
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")  # g++
+  set(CAFFE_STATIC_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
+endif()
+
 #    Global Definitions
 if(CPU_ONLY)
     add_definitions(-DCPU_ONLY)
@@ -77,7 +84,7 @@ endif()
 set(LINT_TARGET lint)
 set(LINT_SCRIPT ${CMAKE_SCRIPT_DIR}/lint.cmake)
 add_custom_target(
-    ${LINT_TARGET} 
+    ${LINT_TARGET}
     COMMAND ${CMAKE_COMMAND} -P ${LINT_SCRIPT}
 )
 
