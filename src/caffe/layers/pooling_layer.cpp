@@ -14,18 +14,8 @@ using std::min;
 using std::max;
 
 template <typename Dtype>
-void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
+void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  // Set the max number of top blobs before calling base Layer::SetUp.
-  // If doing MAX pooling, we can optionally output an extra top Blob
-  // for the mask.  Otherwise, we only have one top Blob.
-  if (this->layer_param_.pooling_param().pool() ==
-      PoolingParameter_PoolMethod_MAX) {
-    max_top_blobs_ = 2;
-  } else {
-    max_top_blobs_ = 1;
-  }
-  Layer<Dtype>::SetUp(bottom, top);
   PoolingParameter pool_param = this->layer_param_.pooling_param();
   CHECK(!pool_param.has_kernel_size() !=
       !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
@@ -70,6 +60,11 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_LT(pad_h_, kernel_h_);
     CHECK_LT(pad_w_, kernel_w_);
   }
+}
+
+template <typename Dtype>
+void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
@@ -111,7 +106,7 @@ void PoolingLayer<Dtype>::SetUp(const vector<Blob<Dtype>*>& bottom,
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
 // case?
 template <typename Dtype>
-Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
@@ -210,7 +205,6 @@ Dtype PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   default:
     LOG(FATAL) << "Unknown pooling method.";
   }
-  return Dtype(0.);
 }
 
 template <typename Dtype>

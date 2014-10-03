@@ -1,7 +1,7 @@
 # reduce the learning rate after 8 epochs (4000 iters) by a factor of 10
 
 # The train/test net protocol buffer definition
-net: "cifar10_quick_train_test.prototxt"
+net: "examples/cifar10/cifar10_quick_train_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of MNIST, we have test batch size 100 and 100 test iterations,
 # covering the full 10,000 testing images.
@@ -20,6 +20,6 @@ display: 100
 max_iter: 5000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "cifar10_quick"
+snapshot_prefix: "examples/cifar10/cifar10_quick"
 # solver mode: CPU or GPU
 solver_mode: GPU

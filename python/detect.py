@@ -46,13 +46,13 @@ def main(argv):
     parser.add_argument(
         "--model_def",
         default=os.path.join(pycaffe_dir,
-                "../examples/imagenet/imagenet_deploy.prototxt"),
+                "../models/bvlc_reference_caffenet/deploy.prototxt.prototxt"),
         help="Model definition file."
     )
     parser.add_argument(
         "--pretrained_model",
         default=os.path.join(pycaffe_dir,
-                "../examples/imagenet/caffe_reference_imagenet_model"),
+                "../models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel"),
         help="Trained model weights file."
     )
     parser.add_argument(
@@ -130,10 +130,10 @@ def main(argv):
     # Detect.
     if args.crop_mode == 'list':
         # Unpack sequence of (image filename, windows).
-        images_windows = (
+        images_windows = [
             (ix, inputs.iloc[np.where(inputs.index == ix)][COORD_COLS].values)
             for ix in inputs.index.unique()
-        )
+        ]
         detections = detector.detect_windows(images_windows)
     else:
         detections = detector.detect_selective_search(inputs)

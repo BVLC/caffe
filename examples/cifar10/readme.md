@@ -3,7 +3,6 @@ title: CIFAR-10 tutorial
 category: example
 description: Train and test Caffe on CIFAR-10 data.
 include_in_docs: true
-layout: default
 priority: 5
 ---
 
@@ -12,7 +11,7 @@ Alex's CIFAR-10 tutorial, Caffe style
 
 Alex Krizhevsky's [cuda-convnet](https://code.google.com/p/cuda-convnet/) details the model definitions, parameters, and training procedure for good performance on CIFAR-10. This example reproduces his results in Caffe.
 
-We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](installation.html). In this tutorial, we will assume that your caffe installation is located at `CAFFE_ROOT`.
+We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](/installation.html). In this tutorial, we will assume that your caffe installation is located at `CAFFE_ROOT`.
 
 We thank @chyojn for the pull request that defined the model schemas and solver configurations.
 
@@ -33,17 +32,17 @@ If it complains that `wget` or `gunzip` are not installed, you need to install t
 The Model
 ---------
 
-The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the `CAFFE_ROOT/examples/cifar10` directory's `cifar10_quick_train.prototxt`.
+The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the `CAFFE_ROOT/examples/cifar10` directory's `cifar10_quick_train_test.prototxt`.
 
 Training and Testing the "Quick" Model
 --------------------------------------
 
-Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run `train_quick.sh`, or the following command directly:
+Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to [MNIST Tutorial](../examples/mnist.html)). Simply run `train_quick.sh`, or the following command directly:
 
     cd $CAFFE_ROOT/examples/cifar10
     ./train_quick.sh
 
-`train_quick.sh` is a simple script, so have a look inside. `GLOG_logtostderr=1` is the google logging flag that prints all the logging messages directly to stderr. The main tool for training is `caffe.bin` with the `train` action, and the solver protobuf text file as its argument.
+`train_quick.sh` is a simple script, so have a look inside. The main tool for training is `caffe` with the `train` action, and the solver protobuf text file as its argument.
 
 When you run the code, you will see a lot of messages flying by like this:
 

@@ -29,12 +29,17 @@ int main(int argc, char** argv) {
     return 2;
   }
   bool need_upgrade = NetNeedsUpgrade(net_param);
+  bool need_data_upgrade = NetNeedsDataUpgrade(net_param);
   bool success = true;
   if (need_upgrade) {
     NetParameter v0_net_param(net_param);
     success = UpgradeV0Net(v0_net_param, &net_param);
   } else {
     LOG(ERROR) << "File already in V1 proto format: " << argv[1];
+  }
+
+  if (need_data_upgrade) {
+    UpgradeNetDataTransformation(&net_param);
   }
 
   // Convert to a NetParameterPrettyPrint to print fields in desired
