@@ -66,6 +66,38 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype empirical_dropout_ratio = 1 - num_kept / Dtype(count);
     EXPECT_NEAR(empirical_dropout_ratio, dropout_ratio, 1.96 * std_error);
   }
+
+  void TestExpForward(const float base, const float scale, const float shift) {
+    LayerParameter layer_param;
+    layer_param.mutable_exp_param()->set_base(base);
+    layer_param.mutable_exp_param()->set_scale(scale);
+    layer_param.mutable_exp_param()->set_shift(shift);
+    ExpLayer<Dtype> layer(layer_param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    layer.Forward(blob_bottom_vec_, blob_top_vec_);
+    const Dtype kDelta = 2e-4;
+    const Dtype* bottom_data = blob_bottom_->cpu_data();
+    const Dtype* top_data = blob_top_->cpu_data();
+    for (int i = 0; i < blob_bottom_->count(); ++i) {
+      const Dtype bottom_val = bottom_data[i];
+      const Dtype top_val = top_data[i];
+      if (base == -1) {
+        EXPECT_NEAR(top_val, exp(shift + scale * bottom_val), kDelta);
+      } else {
+        EXPECT_NEAR(top_val, pow(base, shift + scale * bottom_val), kDelta);
+      }
+    }
+  }
+
+  void TestExpGradient(const float base, const float scale, const float shift) {
+    LayerParameter layer_param;
+    layer_param.mutable_exp_param()->set_base(base);
+    layer_param.mutable_exp_param()->set_scale(scale);
+    layer_param.mutable_exp_param()->set_shift(shift);
+    ExpLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-2, 1e-3);
+    checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
+  }
 };
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
@@ -199,6 +231,88 @@ TYPED_TEST(NeuronLayerTest, TestTanHGradient) {
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpLayer) {
+  typedef typename TypeParam::Dtype Dtype;
+  // Test default base of "-1" -- should actually set base := e.
+  const Dtype kBase = -1;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestExpForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  // Test default base of "-1" -- should actually set base := e.
+  const Dtype kBase = -1;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestExpGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpLayerBase2) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestExpForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpGradientBase2) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 0;
+  this->TestExpGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpLayerBase2Shift1) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 1;
+  this->TestExpForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpGradientBase2Shift1) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 1;
+  const Dtype kShift = 1;
+  this->TestExpGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpLayerBase2Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 0;
+  this->TestExpForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpGradientBase2Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 0;
+  this->TestExpGradient(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpLayerBase2Shift1Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 1;
+  this->TestExpForward(kBase, kScale, kShift);
+}
+
+TYPED_TEST(NeuronLayerTest, TestExpGradientBase2Shift1Scale3) {
+  typedef typename TypeParam::Dtype Dtype;
+  const Dtype kBase = 2;
+  const Dtype kScale = 3;
+  const Dtype kShift = 1;
+  this->TestExpGradient(kBase, kScale, kShift);
 }
 
 TYPED_TEST(NeuronLayerTest, TestDropoutHalf) {
