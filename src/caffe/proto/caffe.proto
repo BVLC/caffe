@@ -602,6 +602,9 @@ message PoolingParameter {
     CUDNN = 2;
   }
   optional Engine engine = 11 [default = DEFAULT];
+  // If global_pooling then it will pool over the size of the bottom by doing
+  // kernel_h = bottom->height and kernel_w = bottom->width
+  optional bool global_pooling = 12 [default = false];
 }
 
 // Message that stores parameters used by PowerLayer
