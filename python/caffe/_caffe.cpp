@@ -2,8 +2,8 @@
 // caffe::Caffe functions so that one could easily call it from Python.
 // Note that for Python, we will simply use float as the data type.
 
-#include <boost/make_shared.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/make_shared.hpp>  // NOLINT(build/include_alpha)
 
 // these need to be included after boost on OS X
 #include <string>  // NOLINT(build/include_order)
