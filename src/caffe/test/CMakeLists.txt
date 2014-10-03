@@ -32,12 +32,12 @@ set(IN_FILES             # generator input files
     ${TEST_DATA_FILE}
 )
 
-foreach(in_file ${IN_FILES})    
+foreach(in_file ${IN_FILES})
     configure_file(
         ${in_file}${IN_EXT}
         ${in_file}${GEN_EXT}
-    )    
-endforeach()       
+    )
+endforeach()
 
 include_directories(
         ${Caffe_SOURCE_DIR}
@@ -45,26 +45,24 @@ include_directories(
 )
 
 # Remove main from test sources and prepare an Object lib with main
-file(GLOB TEST_MAIN ${TEST_MAIN}) 
+file(GLOB TEST_MAIN ${TEST_MAIN})
 list(REMOVE_ITEM TEST_CPP_SOURCES ${TEST_MAIN})
 add_library(main_obj EXCLUDE_FROM_ALL OBJECT ${TEST_MAIN})
-
-set(CAFFE_WHOLE_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
 
 #    Build each test separately from *.cpp files
 foreach(source ${TEST_CPP_SOURCES})
     test_name(TEST_NAME ${source})
-    
+
     #
     add_library(${TEST_NAME}.obj EXCLUDE_FROM_ALL OBJECT ${source})
     set(TEST_OBJ_LIB $<TARGET_OBJECTS:${TEST_NAME}.obj>)
-    
-    add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_OBJ_LIB} $<TARGET_OBJECTS:main_obj>)     
-    target_link_libraries(${TEST_NAME} gtest ${CAFFE_WHOLE_LINK})
-    
+
+    add_executable(${TEST_NAME} EXCLUDE_FROM_ALL ${TEST_OBJ_LIB} $<TARGET_OBJECTS:main_obj>)
+    target_link_libraries(${TEST_NAME} gtest ${CAFFE_STATIC_LINK})
+
     #    output dir
     set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
-    
+
     # Targets and object libs
     set(TEST_TARGETS ${TEST_TARGETS} ${TEST_NAME})
     set(TEST_OBJ_LIBS ${TEST_OBJ_LIBS} ${TEST_OBJ_LIB})
@@ -73,15 +71,15 @@ endforeach()
 #    Build each test separately from *.cu files
 foreach(source ${TEST_CU_SOURCES})
     test_name(TEST_NAME ${source})
-    
+
     cuda_add_library(${TEST_NAME}.lib EXCLUDE_FROM_ALL ${source})
-    
-    add_executable(${TEST_NAME} EXCLUDE_FROM_ALL $<TARGET_OBJECTS:main_obj>)     
-    target_link_libraries(${TEST_NAME} ${TEST_NAME}.lib gtest ${CAFFE_WHOLE_LINK})
-    
+
+    add_executable(${TEST_NAME} EXCLUDE_FROM_ALL $<TARGET_OBJECTS:main_obj>)
+    target_link_libraries(${TEST_NAME} ${TEST_NAME}.lib gtest ${CAFFE_STATIC_LINK})
+
     #    output dir
     set_target_properties(${TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
-    
+
     # Targets and object libs
     set(TEST_TARGETS ${TEST_TARGETS} ${TEST_NAME})
     set(TEST_CU_LIBS ${TEST_CU_LIBS} ${TEST_NAME}.lib)
@@ -92,7 +90,7 @@ add_executable(${ALL_TEST} EXCLUDE_FROM_ALL ${TEST_OBJ_LIBS} $<TARGET_OBJECTS:ma
 if(NOT CPU_ONLY)
     target_link_libraries(${ALL_TEST} ${TEST_CU_LIBS})
 endif()
-target_link_libraries(${ALL_TEST} gtest ${CAFFE_WHOLE_LINK})
+target_link_libraries(${ALL_TEST} gtest ${CAFFE_STATIC_LINK})
 add_dependencies(${ALL_TEST} ${TEST_TARGETS})
 
 #    Output directory

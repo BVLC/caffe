@@ -10,7 +10,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 file(GLOB_RECURSE Python_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-set(CAFFE_WHOLE_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
 add_library(pycaffe SHARED ${Python_SOURCES})
 target_link_libraries(pycaffe caffe ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
 
