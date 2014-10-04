@@ -1,7 +1,5 @@
-# The training protocol buffer definition
-train_net: "lenet_train.prototxt"
-# The testing protocol buffer definition
-test_net: "lenet_test.prototxt"
+# The train/test net protocol buffer definition
+net: "examples/mnist/lenet_train_test.prototxt"
 # test_iter specifies how many forward passes the test should carry out.
 # In the case of MNIST, we have test batch size 100 and 100 test iterations,
 # covering the full 10,000 testing images.
@@ -27,7 +25,6 @@ display: 100
 max_iter: 10000
 # snapshot intermediate results
 snapshot: 5000
-snapshot_prefix: "lenet"
-# solver mode: 0 for CPU and 1 for GPU
-solver_mode: 1
-device_id: 1
+snapshot_prefix: "examples/mnist/lenet_multistep"
+# solver mode: CPU or GPU
+solver_mode: GPU
