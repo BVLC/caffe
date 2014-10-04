@@ -46,20 +46,9 @@ class BaseDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
-  int datum_channels() const { return datum_channels_; }
-  int datum_height() const { return datum_height_; }
-  int datum_width() const { return datum_width_; }
-  int datum_size() const { return datum_size_; }
-
  protected:
   TransformationParameter transform_param_;
   DataTransformer<Dtype> data_transformer_;
-  int datum_channels_;
-  int datum_height_;
-  int datum_width_;
-  int datum_size_;
-  Blob<Dtype> data_mean_;
-  const Dtype* mean_;
   Caffe::Phase phase_;
   bool output_labels_;
 };
@@ -90,6 +79,7 @@ class BasePrefetchingDataLayer :
  protected:
   Blob<Dtype> prefetch_data_;
   Blob<Dtype> prefetch_label_;
+  Blob<Dtype> transformed_data_;
 };
 
 template <typename Dtype>
@@ -294,12 +284,15 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   void Reset(Dtype* data, Dtype* label, int n);
 
   int batch_size() { return batch_size_; }
+  int channels() { return channels_; }
+  int height() { return height_; }
+  int width() { return width_; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  int batch_size_;
+  int batch_size_, channels_, height_, width_, size_;
   Dtype* data_;
   Dtype* labels_;
   int n_;
@@ -339,6 +332,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
+  Blob<Dtype> data_mean_;
 };
 
 }  // namespace caffe

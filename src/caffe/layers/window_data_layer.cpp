@@ -158,15 +158,21 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
-  // datum size
-  this->datum_channels_ = top[0]->channels();
-  this->datum_height_ = top[0]->height();
-  this->datum_width_ = top[0]->width();
-  this->datum_size_ =
-      top[0]->channels() * top[0]->height() * top[0]->width();
   // label
   top[1]->Reshape(batch_size, 1, 1, 1);
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
+
+  // data mean
+  if (this->transform_param_.has_mean_file()) {
+    const string& mean_file =
+          this->transform_param_.mean_file();
+    LOG(INFO) << "Loading mean file from" << mean_file;
+    BlobProto blob_proto;
+    ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
+    data_mean_.FromProto(blob_proto);
+  } else {
+    data_mean_.Reshape(1, channels, crop_size, crop_size);
+  }
 }
 
 template <typename Dtype>

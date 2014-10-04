@@ -22,6 +22,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int new_height = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_width();
+  const bool is_color  = this->layer_param_.image_data_param().is_color();
+
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
@@ -53,22 +55,23 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_GT(lines_.size(), skip) << "Not enough points to skip";
     lines_id_ = skip;
   }
-  // Read a data point, and use it to initialize the top blob.
-  Datum datum;
-  CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
-                         new_height, new_width, &datum));
+  // Read an image, and use it to initialize the top blob.
+  cv::Mat cv_img = ReadImageToCVMat(lines_[lines_id_].first,
+                                    new_height, new_width, is_color);
+  const int channels = cv_img.channels();
+  const int height = cv_img.rows;
+  const int width = cv_img.cols;
   // image
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   if (crop_size > 0) {
-    top[0]->Reshape(batch_size, datum.channels(), crop_size, crop_size);
-    this->prefetch_data_.Reshape(batch_size, datum.channels(), crop_size,
-                                 crop_size);
+    top[0]->Reshape(batch_size, channels, crop_size, crop_size);
+    this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
+    this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
   } else {
-    top[0]->Reshape(batch_size, datum.channels(), datum.height(),
-                       datum.width());
-    this->prefetch_data_.Reshape(batch_size, datum.channels(), datum.height(),
-        datum.width());
+    top[0]->Reshape(batch_size, channels, height, width);
+    this->prefetch_data_.Reshape(batch_size, channels, height, width);
+    this->transformed_data_.Reshape(1, channels, height, width);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -76,11 +79,6 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   top[1]->Reshape(batch_size, 1, 1, 1);
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
-  // datum size
-  this->datum_channels_ = datum.channels();
-  this->datum_height_ = datum.height();
-  this->datum_width_ = datum.width();
-  this->datum_size_ = datum.channels() * datum.height() * datum.width();
 }
 
 template <typename Dtype>
@@ -93,30 +91,32 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void ImageDataLayer<Dtype>::InternalThreadEntry() {
-  Datum datum;
   CHECK(this->prefetch_data_.count());
+  CHECK(this->transformed_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
+  const bool is_color = image_data_param.is_color();
 
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     CHECK_GT(lines_size, lines_id_);
-    if (!ReadImageToDatum(lines_[lines_id_].first,
-          lines_[lines_id_].second,
-          new_height, new_width, &datum)) {
+    cv::Mat cv_img = ReadImageToCVMat(lines_[lines_id_].first,
+                                    new_height, new_width, is_color);
+    if (!cv_img.data) {
       continue;
     }
+    // Apply transformations (mirror, crop...) to the image
+    int offset = this->prefetch_data_.offset(item_id);
+    this->transformed_data_.set_cpu_data(top_data + offset);
+    this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
 
-    // Apply transformations (mirror, crop...) to the data
-    this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
-
-    top_label[item_id] = datum.label();
+    top_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {
