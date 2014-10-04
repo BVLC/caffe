@@ -73,7 +73,7 @@ class MapDataLayerTest : public MultiDeviceTest<TypeParam> {
   }
 
   void TestRead() {
-    const Dtype scale = 1;
+    const Dtype scale = 3;
     LayerParameter param;
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);

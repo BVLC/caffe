@@ -19,6 +19,21 @@ MapDataLayer<Dtype>::~MapDataLayer<Dtype>(){
   this->JoinPrefetchThread();
 }
 
+template<typename Dtype>
+TransformationParameter MapDataLayer<Dtype>::label_trans_param(
+      const TransformationParameter& trans_param){
+  // Initialize label_transformer and set scale to 1
+  // and clear mean file
+  int crop_size = trans_param.crop_size();
+  bool mirror = trans_param.mirror();
+
+  TransformationParameter label_transform_param;
+  label_transform_param.set_scale(1);
+  label_transform_param.set_crop_size(crop_size);
+  label_transform_param.set_mirror(mirror);
+  return label_transform_param;
+}
+
 template <typename Dtype>
 void MapDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -117,7 +132,7 @@ void MapDataLayer<Dtype>::InternalThreadEntry() {
 
     // Apply data and label transformations (mirror, scale, crop...)
     this->data_transformer_.Transform(item_id, dataMap, this->mean_, top_data);
-    this->data_transformer_.Transform(item_id, labelMap, this->label_mean_, top_label);
+    this->label_transformer_.Transform(item_id, labelMap, this->label_mean_, top_label);
 
     iter_->Next();
     if (!iter_->Valid()) {

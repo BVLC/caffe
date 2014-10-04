@@ -153,7 +153,8 @@ template<typename Dtype>
 class MapDataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit MapDataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype>(param),
+        label_transformer_(label_trans_param(param.transform_param())) {}
   virtual ~MapDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
@@ -166,11 +167,16 @@ class MapDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
  protected:
   virtual void InternalThreadEntry();
+  DataTransformer<Dtype> label_transformer_;
 
   // LEVELDB
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
   const Dtype* label_mean_;
+
+ private:
+  static TransformationParameter label_trans_param(
+            const TransformationParameter& trans_param);
 };
 
 /**
