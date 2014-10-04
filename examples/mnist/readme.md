@@ -282,3 +282,6 @@ You just did! All the training was carried out on the GPU. In fact, if you would
 and you will be using CPU for training. Isn't that easy?
 
 MNIST is a small dataset, so training with GPU does not really introduce too much benefit due to communication overheads. On larger datasets with more complex models, such as ImageNet, the computation speed difference will be more significant.
+
+### How to reduce the learning rate a fixed steps?
+Look at lenet_multistep_solver.prototxt
