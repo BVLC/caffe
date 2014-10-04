@@ -14,11 +14,15 @@ endif()
 include_directories(${PROTOBUF_INCLUDE_DIR})
 file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
 PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
+PROTOBUF_GENERATE_PYTHON(ProtoSourcesPy ${ProtoFiles})
+
+add_custom_target(protoPy DEPENDS ${ProtoSourcesPy})
 
 add_library(proto
         ${ProtoSources}
         ${ProtoHeaders}
-)
+        )
+   
 
 target_link_libraries(proto ${PROTOBUF_LIBRARIES})
 
@@ -35,3 +39,8 @@ foreach(header ${ProtoHeaders})
 )
 
 endforeach(header)
+
+file(WRITE __init__.py)
+install(PROGRAMS __init__.py       DESTINATION python/caffe/proto)
+install(PROGRAMS ${ProtoSourcesPy} DESTINATION python/caffe/proto)
+
