@@ -46,13 +46,13 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       slices.push_back(num_ - prev);
       for (int i = 0; i < top.size(); ++i) {
         top[i]->Reshape(slices[i], channels_, height_, width_);
-         count_ += top[i]->count();
+        count_ += top[i]->count();
       }
     } else {
       slices.push_back(channels_ - prev);
       for (int i = 0; i < top.size(); ++i) {
         top[i]->Reshape(num_, slices[i], height_, width_);
-         count_ += top[i]->count();
+        count_ += top[i]->count();
       }
     }
   } else {
