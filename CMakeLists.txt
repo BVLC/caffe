@@ -21,6 +21,11 @@ if(NOT CUDA_TEST_DEVICE)
     set(CUDA_TEST_DEVICE -1)
 endif()
 
+if(APPLE)
+    # ask gtest to use internal tuple to avoid conflicting with clang compiler
+    add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=1)
+endif()
+
 #    Install Prefix
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Default install path" FORCE )
