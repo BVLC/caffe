@@ -10,7 +10,11 @@ option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
 
 if(NOT BLAS)
-    set(BLAS atlas)
+    if(APPLE)
+        set(BLAS veclib) # Accelerate / vecLib Framework from OS X
+    else()
+        set(BLAS atlas)
+    endif()
 endif()
 
 if(NOT CUDA_TEST_DEVICE)
