@@ -121,11 +121,21 @@ elseif(BLAS STREQUAL "mkl")
     include_directories(${MKL_INCLUDE_DIR})
     set(BLAS_LIBRARIES ${MKL_LIBRARIES})
 
+elseif(BLAS STREQUAL "veclib")
+
+    find_package(vecLib REQUIRED)
+    include_directories(${vecLib_INCLUDE_DIR})
+    set(BLAS_LIBRARIES ${vecLib_LIBRARY})
+
 endif()
 
 #    HDF5
 find_package(HDF5 COMPONENTS HL REQUIRED)
 include_directories(${HDF5_INCLUDE_DIRS})
+
+#    OpenCV
+find_package(OpenCV REQUIRED core highgui imgproc)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 #    LevelDB
 find_package(LevelDB REQUIRED)
