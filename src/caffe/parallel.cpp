@@ -17,6 +17,7 @@
 #include <net/if.h>
 #include <cuda_runtime.h>
 #include <unistd.h>
+#include <iomanip>
 
 #include <caffe/caffe.hpp>
 #include "caffe/filler.hpp"
@@ -47,8 +48,7 @@ static size_t align(const size_t len) {
 }
 
 template<typename Dtype>
-Params<Dtype>::Params(const vector<shared_ptr<Blob<Dtype> > >& blobs,
-    const string& file_map) :
+Params<Dtype>::Params(const vector<shared_ptr<Blob<Dtype> > >& blobs, const string& file_map) :
     len_used_(len<Dtype>(blobs)), len_buff_(align<Dtype>(len_used_)) {
 
   bool exists = false;
@@ -127,7 +127,7 @@ void Meter::show(std::ostream& s) {
   if (unit_size_)
     s << (int) (per_s * unit_size_ / (1024 * 1024)) << " mb";
   else
-    s << (int) per_s;
+    s << std::setprecision(2) << per_s;
   s << "/s)";
 }
 
@@ -144,19 +144,15 @@ GPUSync<Dtype>::GPUSync(Params<Dtype>& params, Solver<Dtype>& solver) :
     Sync<Dtype>(params), //
     device_(device()), chunks_(chunks(params.len_used())), //
     cpu_(params.cpu()), //
-    calls_("calls", 2 * CHUNK * sizeof(Dtype)), cycles_("cycles") {
+    calls_("calls", CHUNK * sizeof(Dtype)), cycles_("cycles") {
 
   const size_t size = params.len_buff() * sizeof(Dtype);
 
   CUDA_CHECK(cudaMalloc((void** ) &gpu_, size));
   CUDA_CHECK(cudaMemcpy(gpu_, params.cpu(), size, cudaMemcpyHostToDevice));
 
-  CaffeMallocHost((void**) &last_, size);
-  memcpy(last_, cpu_, size);
-
-  CUDA_CHECK(cudaMalloc((void** ) &chunk1_, CHUNK * sizeof(Dtype)));
-  CUDA_CHECK(cudaMalloc((void** ) &chunk2_, CHUNK * sizeof(Dtype)));
-  CaffeMallocHost((void**) &tmp_, CHUNK * sizeof(Dtype));
+  CUDA_CHECK(cudaMalloc((void** ) &last_, size));
+  CUDA_CHECK(cudaMemcpy(last_, gpu_, size, cudaMemcpyDeviceToDevice));
 
   // Replace GPU weights
   vector<shared_ptr<Blob<Dtype> > > &blobs = solver.net()->params();
@@ -177,37 +173,45 @@ GPUSync<Dtype>::GPUSync(Params<Dtype>& params, Solver<Dtype>& solver) :
 
 template<typename Dtype>
 GPUSync<Dtype>::~GPUSync() {
+  CUDA_CHECK(cudaFree((void* ) last_));
   CUDA_CHECK(cudaFree((void* ) gpu_));
-  CaffeFreeHost((void*) last_);
-  CUDA_CHECK(cudaFree((void* ) chunk1_));
-  CUDA_CHECK(cudaFree((void* ) chunk2_));
-  CaffeFreeHost((void*) tmp_);
 }
 
 template<typename Dtype>
 void GPUSync<Dtype>::run() {
   CUDA_CHECK(cudaSetDevice(device_));
-  uint32_t chunk = 0;
+  cudaStream_t stream;
+  cudaStreamCreate(&stream);
+
+  // Current cpu values when invoking kernel, gradients on the way back
+  Dtype* chunk;
+  Dtype* tmp;
+  CUDA_CHECK(cudaMalloc((void** ) &chunk, CHUNK * sizeof(Dtype)));
+  CaffeMallocHost((void**) &tmp, CHUNK * sizeof(Dtype));
+
   const size_t csize = CHUNK * sizeof(Dtype);
   const cudaMemcpyKind put = cudaMemcpyHostToDevice;
   const cudaMemcpyKind get = cudaMemcpyDeviceToHost;
+  uint32_t index = 0;
+
   for (;;) {
-    const size_t off = chunk * CHUNK;
-    CUDA_CHECK(cudaMemcpy(chunk1_, &last_[off], csize, put));
-    memcpy(&last_[off], &cpu_[off], csize);
-    CUDA_CHECK(cudaMemcpy(chunk2_, &last_[off], csize, put));
-    GPUSync_kernel<Dtype>(gpu_, chunk1_, chunk2_, off);
-    CUDA_CHECK(cudaMemcpy(tmp_, chunk2_, csize, get));
-    for (size_t i = 0; i < CHUNK; ++i) {
-      cpu_[off + i] += tmp_[i];
-      last_[off + i] += tmp_[i];
-    }
-    if (++chunk == chunks_) {
-      chunk = 0;
+    const size_t off = index * CHUNK;
+    CUDA_CHECK(cudaMemcpyAsync(chunk, &cpu_[off], csize, put, stream));
+    GPUSync_kernel<Dtype>(gpu_, last_, chunk, off, stream);
+    CUDA_CHECK(cudaMemcpyAsync(tmp, chunk, csize, get, stream));
+    cudaStreamSynchronize(stream);
+    for (size_t i = 0; i < CHUNK; ++i)
+      cpu_[off + i] += tmp[i];
+    if (++index == chunks_) {
+      index = 0;
       cycles_++;
     }
     calls_++;
   }
+
+  CaffeFreeHost((void*) tmp);
+  CUDA_CHECK(cudaFree((void* ) chunk));
+  cudaStreamDestroy(stream);
 }
 
 //

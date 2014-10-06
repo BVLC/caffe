@@ -173,8 +173,8 @@ protected:
 template<typename Dtype>
 class GPUSync: public Sync<Dtype>, public PThread {
 public:
-  // TODO bug? larger gets more bandwidth but makes boxes unresponsive
-  static const int CHUNK = 0x10000;
+  // TODO bench, auto tune?
+  static const int CHUNK = 0x100000;
 
   GPUSync(Params<Dtype>& params, Solver<Dtype>& solver);
 
@@ -201,21 +201,15 @@ protected:
   const uint32_t chunks_;
 
   Dtype* cpu_;
-  Dtype* last_;
   Dtype* gpu_;
-
-  // chunk1 contains last known gpu values
-  // chunk2 contains current cpu values, then gradients back
-  Dtype* chunk1_;
-  Dtype* chunk2_;
-  Dtype* tmp_;
+  Dtype* last_;
 
   // Perf counters
   Meter calls_, cycles_;
 };
 
 template<typename Dtype>
-void GPUSync_kernel(Dtype* gpu, Dtype* chunk1, Dtype* chunk2, size_t off);
+void GPUSync_kernel(Dtype* gpu, Dtype* last, Dtype* chunk, size_t off, cudaStream_t& stream);
 
 // Base class for distributed sync
 template<typename Dtype, typename Node>

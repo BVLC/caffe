@@ -6,23 +6,21 @@ namespace caffe {
 
 template<typename Dtype>
 __global__
-void GPUSyncKernel(Dtype* gpu, Dtype* chunk1, Dtype* chunk2, size_t off) {
+void GPUSyncKernel(Dtype* gpu, Dtype* last, Dtype* chunk, size_t off) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
-  Dtype d = gpu[off + i] - chunk1[i];
-  gpu[off + i] = chunk2[i] + d;
-  chunk2[i] = d;
+  Dtype d = gpu[off + i] - last[off + i];
+  gpu[off + i] = last[off + i] = chunk[i] + d;
+  chunk[i] = d;
 }
 
 template<typename Dtype>
-void GPUSync_kernel(Dtype* gpu, Dtype* chunk1, Dtype* chunk2, size_t off) {
+void GPUSync_kernel(Dtype* gpu, Dtype* last, Dtype* chunk, size_t off, cudaStream_t& stream) {
   int threadsPerBlock = 256; // TODO bench
   int blocksPerGrid = GPUSync<Dtype>::CHUNK / threadsPerBlock;
-  GPUSyncKernel<<<blocksPerGrid, threadsPerBlock>>>(gpu, chunk1, chunk2, off);
+  GPUSyncKernel<<<blocksPerGrid, threadsPerBlock, 0, stream>>>(gpu, last, chunk, off);
   CUDA_POST_KERNEL_CHECK;
 }
 
-// Explicit instantiation
-
-template void GPUSync_kernel<float>(float* gpu, float* chunk1, float* chunk2, size_t off);
-template void GPUSync_kernel<double>(double* gpu, double* chunk1, double* chunk2, size_t off);
+template void GPUSync_kernel<float>(float* gpu, float* last, float* chunk, size_t off, cudaStream_t& stream);
+template void GPUSync_kernel<double>(double* gpu, double* last, double* chunk, size_t off, cudaStream_t& stream);
 }
