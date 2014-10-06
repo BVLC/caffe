@@ -171,7 +171,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
   int average_loss = this->param_.average_loss();
 
-  CHECK_GE(average_loss, 1) << "average_cost should be non-negative.";
+  CHECK_GE(average_loss, 1) << "average_loss should be non-negative.";
 
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
