@@ -111,13 +111,13 @@ endif()
 target_link_libraries(caffe proto
         ${BLAS_LIBRARIES}
         ${Boost_LIBRARIES}
-        ${CMAKE_THREAD_LIBS_INIT}
         ${GFLAGS_LIBRARIES}
         ${GLOG_LIBRARIES}
         ${HDF5_LIBRARIES}
         ${LEVELDB_LIBS}
         ${LMDB_LIBRARIES}
         ${OpenCV_LIBS}
+        ${CMAKE_THREAD_LIBS_INIT}
 )
 
 #set output directory
