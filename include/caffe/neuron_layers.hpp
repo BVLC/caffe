@@ -353,7 +353,6 @@ class PowerLayer : public NeuronLayer<Dtype> {
   Dtype diff_scale_;
 };
 
-/////////////////////////
 /**
  * @brief Retains top K maximum values, sets others to 0.
  *
@@ -398,13 +397,9 @@ class TopKLayer : public NeuronLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-//  Blob<uint> idxs_;
-
   uint uint_k_;
   uint channels4norm;
 };
-
-///////////////////////////
 
 /**
  * @brief Rectified Linear Unit non-linearity @f$ y = \max(0, x) @f$.
