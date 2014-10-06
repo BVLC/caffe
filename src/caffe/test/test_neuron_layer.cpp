@@ -99,7 +99,6 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
   }
 
-
     void TestTopKForward(const unsigned int k = 10) {
     LayerParameter layer_param;
     layer_param.mutable_topk_param()->set_k(k);
@@ -152,6 +151,14 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
         mask_data += layer.mask_.offset(1);
       }
   }
+
+    void TestTopKGradient(const unsigned int k) {
+      LayerParameter layer_param;
+      layer_param.mutable_topk_param()->set_k(k);
+      ExpLayer<Dtype> layer(layer_param);
+      GradientChecker<Dtype> checker(1e-2, 1e-3);
+      checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
+    }
 };
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
@@ -379,17 +386,6 @@ TYPED_TEST(NeuronLayerTest, TestDropoutThreeQuarters) {
   this->TestDropoutForward(kDropoutRatio);
 }
 
-
-TYPED_TEST(NeuronLayerTest, TestTopKTen) {
-  const unsigned int k = 10;
-  this->TestTopKForward(k);
-}
-
-TYPED_TEST(NeuronLayerTest, TestTopKFifty) {
-  const unsigned int k = 50;
-  this->TestTopKForward(k);
-}
-
 TYPED_TEST(NeuronLayerTest, TestDropoutTestPhase) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -449,6 +445,35 @@ TYPED_TEST(NeuronLayerTest, TestBNLLGradient) {
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestTopKOne) {
+  const unsigned int k = 1;
+  this->TestTopKForward(k);
+}
+TYPED_TEST(NeuronLayerTest, TestTopKTen) {
+  const unsigned int k = 10;
+  this->TestTopKForward(k);
+}
+
+TYPED_TEST(NeuronLayerTest, TestTopKFifty) {
+  const unsigned int k = 50;
+  this->TestTopKForward(k);
+}
+
+TYPED_TEST(NeuronLayerTest, TestTopKOneGradient) {
+  const unsigned int k = 1;
+  this->TestTopKGradient(k);
+}
+
+TYPED_TEST(NeuronLayerTest, TestTopKTenGradient) {
+  const unsigned int k = 10;
+  this->TestTopKGradient(k);
+}
+
+TYPED_TEST(NeuronLayerTest, TestTopKFiftyGradient) {
+  const unsigned int k = 50;
+  this->TestTopKGradient(k);
 }
 
 #ifdef USE_CUDNN

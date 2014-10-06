@@ -34,8 +34,9 @@ struct compare_indirect_index_descend {
 #if __cplusplus > 199711L
 template <typename Dtype>
 void kth_element_idxs(const std::vector<Dtype> &v,
-  std::vector<size_t> &idx, const size_t k, const int sortAscend = 1) {
-  if (sortAscend) {
+  // NOLINT_NEXT_LINE(runtime/references)
+std::vector<size_t> &idx, const size_t k, const int ascend) {
+  if (ascend) {
       std::nth_element(idx.begin(), idx.begin() + k, idx.end(),
                 compare_indirect_index_ascend <std::vector<Dtype> > (v));
     } else {
@@ -46,9 +47,9 @@ void kth_element_idxs(const std::vector<Dtype> &v,
 }
 #else
 template <typename Dtype>
-void sort_idxs(const std::vector<Dtype> &v, std::vector<size_t> &idx,
-                                 const int sortAscend = 1) {
-  if (sortAscend) {
+void sort_idxs(const std::vector<Dtype> &v,
+std::vector<size_t> &idx, const int ascend) {  // NOLINT(runtime/references)
+  if (ascend) {
       std::sort(idx.begin(), idx.end(),
                 compare_indirect_index_ascend <std::vector<Dtype> > (v));
   } else {
@@ -78,7 +79,7 @@ void TopKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
             this->layer_param_.topk_param().a();
   }
   channels4norm =
-    this->layer_param_.topk_param().across_channels() ? bottom[0]->channels() : 1;
+  this->layer_param_.topk_param().across_channels() ? bottom[0]->channels() : 1;
   DCHECK_GT(uint_k_, 0);
   DCHECK(uint_k_ <= bottom[0]->count() / bottom[0]->num());
 

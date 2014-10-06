@@ -1,0 +1,65 @@
+name: "MNISTAutoencoder"
+input: "data"
+input_dim: 1
+input_dim: 1
+input_dim: 28
+input_dim: 28
+force_backward: true
+layers {
+  bottom: "data"
+  top: "flatdata"
+  name: "flatdata"
+  type: FLATTEN
+}
+layers {
+  bottom: "data"
+  top: "encode1"
+  name: "encode1"
+  type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 1000
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  bottom: "encode1"
+  top: "neuron1"
+  name: "neuron1"
+  type: TOPK
+  topk_param {
+  k: 100
+  a: 1
+  }
+}
+layers {
+  bottom: "neuron1"
+  top: "decode1"
+  name: "decode1"
+  type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 784
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
