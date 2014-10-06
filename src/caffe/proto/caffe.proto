@@ -113,7 +113,7 @@ message SolverParameter {
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
   optional int32 display = 6;
-  // Display the cost averaged over the last average_cost iterations
+  // Display the loss averaged over the last average_loss iterations
   optional int32 average_loss = 33 [default = 1];
   optional int32 max_iter = 7; // the maximum number of iterations
   optional string lr_policy = 8; // The learning rate decay policy.
