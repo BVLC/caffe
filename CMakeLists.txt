@@ -3,14 +3,14 @@ project( Caffe )
 
 ###    Build Options     ##########################################################################
 
-option(CPU_ONLY "Build Caffe without GPU support" ON)
+option(CPU_ONLY "Build Caffe without GPU support" OFF)
 option(BUILD_PYTHON "Build Python wrapper" OFF)
 option(BUILD_MATLAB "Build Matlab wrapper" OFF)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
 
 if(NOT BLAS)
-    set(BLAS open)
+    set(BLAS atlas)
 endif()
 
 if(NOT CUDA_TEST_DEVICE)
