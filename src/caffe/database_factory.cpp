@@ -15,6 +15,7 @@ shared_ptr<Database> DatabaseFactory(const DataParameter_DB& type) {
     return shared_ptr<Database>(new LmdbDatabase());
   default:
     LOG(FATAL) << "Unknown database type " << type;
+    return shared_ptr<Database>();
   }
 }
 
@@ -25,6 +26,7 @@ shared_ptr<Database> DatabaseFactory(const string& type) {
     return DatabaseFactory(DataParameter_DB_LMDB);
   } else {
     LOG(FATAL) << "Unknown database type " << type;
+    return shared_ptr<Database>();
   }
 }
 
