@@ -276,4 +276,84 @@ TEST_F(IOTest, TestCVMatToDatumReference) {
   }
 }
 
+TEST_F(IOTest, TestReadFileToDatum) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  EXPECT_TRUE(datum.encoded());
+  EXPECT_EQ(datum.label(), -1);
+  EXPECT_EQ(datum.data().size(), 140391);
+}
+
+TEST_F(IOTest, TestDecodeDatum) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  EXPECT_TRUE(DecodeDatum(&datum));
+  EXPECT_FALSE(DecodeDatum(&datum));
+  Datum datum_ref;
+  ReadImageToDatumReference(filename, 0, 0, 0, true, &datum_ref);
+  EXPECT_EQ(datum.channels(), datum_ref.channels());
+  EXPECT_EQ(datum.height(), datum_ref.height());
+  EXPECT_EQ(datum.width(), datum_ref.width());
+  EXPECT_EQ(datum.data().size(), datum_ref.data().size());
+
+  const string& data = datum.data();
+  const string& data_ref = datum_ref.data();
+  for (int i = 0; i < datum.data().size(); ++i) {
+    EXPECT_TRUE(data[i] == data_ref[i]);
+  }
+}
+
+TEST_F(IOTest, TestDecodeDatumToCVMat) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  cv::Mat cv_img = DecodeDatumToCVMat(datum);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 360);
+  EXPECT_EQ(cv_img.cols, 480);
+}
+
+TEST_F(IOTest, TestDecodeDatumToCVMatResized) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  cv::Mat cv_img = DecodeDatumToCVMat(datum, 100, 200);
+  EXPECT_EQ(cv_img.channels(), 3);
+  EXPECT_EQ(cv_img.rows, 100);
+  EXPECT_EQ(cv_img.cols, 200);
+}
+
+TEST_F(IOTest, TestDecodeDatumToCVMatResizedGray) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  const bool is_color = false;
+  cv::Mat cv_img = DecodeDatumToCVMat(datum, 200, 100, is_color);
+  EXPECT_EQ(cv_img.channels(), 1);
+  EXPECT_EQ(cv_img.rows, 200);
+  EXPECT_EQ(cv_img.cols, 100);
+}
+
+TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
+  string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
+  Datum datum;
+  EXPECT_TRUE(ReadFileToDatum(filename, &datum));
+  cv::Mat cv_img = DecodeDatumToCVMat(datum);
+  cv::Mat cv_img_ref = ReadImageToCVMat(filename);
+  EXPECT_EQ(cv_img_ref.channels(), cv_img.channels());
+  EXPECT_EQ(cv_img_ref.rows, cv_img.rows);
+  EXPECT_EQ(cv_img_ref.cols, cv_img.cols);
+
+  for (int c = 0; c < datum.channels(); ++c) {
+    for (int h = 0; h < datum.height(); ++h) {
+      for (int w = 0; w < datum.width(); ++w) {
+        EXPECT_TRUE(cv_img.at<cv::Vec3b>(h, w)[c]==
+          cv_img_ref.at<cv::Vec3b>(h, w)[c]);
+      }
+    }
+  }
+}
+
 }  // namespace caffe

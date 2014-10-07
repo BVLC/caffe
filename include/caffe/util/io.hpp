@@ -113,17 +113,17 @@ inline bool ReadImageToDatum(const string& filename, const int label,
 }
 
 bool DecodeDatum(const int height, const int width, const bool is_color,
-  Datum& datum);
+  Datum* datum);
 
-inline bool DecodeDatum(const int height, const int width, Datum& datum) {
+inline bool DecodeDatum(const int height, const int width, Datum* datum) {
   return DecodeDatum(height, width, true, datum);
 }
 
-inline bool DecodeDatum(const bool is_color, Datum& datum) {
+inline bool DecodeDatum(const bool is_color, Datum* datum) {
   return DecodeDatum(0, 0, is_color, datum);
 }
 
-inline bool DecodeDatum(Datum& datum) {
+inline bool DecodeDatum(Datum* datum) {
   return DecodeDatum(0, 0, true, datum);
 }
 
