@@ -139,10 +139,10 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum,
 // if height and width are set it will resize it
 // If Datum is not encoded will do nothing
 bool DecodeDatum(const int height, const int width, const bool is_color,
-                Datum& datum) {
-  if (datum.encoded()) {
-    cv::Mat cv_img = DecodeDatumToCVMat(datum, height, width, is_color);
-    CVMatToDatum(cv_img, &datum);
+                Datum* datum) {
+  if (datum->encoded()) {
+    cv::Mat cv_img = DecodeDatumToCVMat((*datum), height, width, is_color);
+    CVMatToDatum(cv_img, datum);
     return true;
   } else {
     return false;
