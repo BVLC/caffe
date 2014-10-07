@@ -17,11 +17,6 @@
 
 #define HDF5_NUM_DIMS 4
 
-namespace leveldb {
-// Forward declaration for leveldb::Options to be used in GetlevelDBOptions().
-struct Options;
-}
-
 namespace caffe {
 
 using ::google::protobuf::Message;
@@ -131,8 +126,6 @@ inline cv::Mat ReadImageToCVMat(const string& filename) {
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 #endif
-
-leveldb::Options GetLevelDBOptions();
 
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
