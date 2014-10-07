@@ -20,7 +20,7 @@ class LmdbDatabase : public Database {
   ~LmdbDatabase() { this->close(); }
 
   void open(const string& filename, Mode mode);
-  void put(const string& key, const string& value);
+  void put(buffer_t* key, buffer_t* value);
   void commit();
   void close();
 
@@ -37,13 +37,13 @@ class LmdbDatabase : public Database {
           cursor_(cursor) { }
 
     MDB_cursor* cursor_;
-    pair<string, string> kv_pair_;
+    pair<buffer_t, buffer_t> kv_pair_;
   };
 
   bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const;
   void increment(shared_ptr<DatabaseState> state) const;
-  pair<string, string>& dereference(shared_ptr<DatabaseState> state) const;
+  pair<buffer_t, buffer_t>& dereference(shared_ptr<DatabaseState> state) const;
 
   MDB_env *env_;
   MDB_dbi dbi_;

@@ -108,14 +108,15 @@ int main(int argc, char** argv) {
       }
     }
     // sequential
-    snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
+    int length = snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
         lines[line_id].first.c_str());
-    std::string value;
-    datum.SerializeToString(&value);
-    std::string keystr(key_cstr);
+    Database::buffer_t value(datum.ByteSize());
+    datum.SerializeWithCachedSizesToArray(
+        reinterpret_cast<unsigned char*>(value.data()));
+    Database::buffer_t keystr(key_cstr, key_cstr + length);
 
     // Put in db
-    database->put(keystr, value);
+    database->put(&keystr, &value);
 
     if (++count % 1000 == 0) {
       // Commit txn

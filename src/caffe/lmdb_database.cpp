@@ -19,9 +19,13 @@ void LmdbDatabase::open(const string& filename, Mode mode) {
                                                 << "failed";
   }
 
-  CHECK_EQ(mdb_env_create(&env_), MDB_SUCCESS) << "mdb_env_create failed";
-  CHECK_EQ(mdb_env_set_mapsize(env_, 1099511627776), MDB_SUCCESS)  // 1TB
-      << "mdb_env_set_mapsize failed";
+  int retval;
+  retval = mdb_env_create(&env_);
+  CHECK_EQ(retval, MDB_SUCCESS) << "mdb_env_create failed "
+      << mdb_strerror(retval);
+  retval = mdb_env_set_mapsize(env_, 1099511627776);
+  CHECK_EQ(retval, MDB_SUCCESS)  // 1TB
+      << "mdb_env_set_mapsize failed " << mdb_strerror(retval);
 
   int flag1 = 0;
   int flag2 = 0;
@@ -30,27 +34,31 @@ void LmdbDatabase::open(const string& filename, Mode mode) {
     flag2 = MDB_RDONLY;
   }
 
-  CHECK_EQ(mdb_env_open(env_, filename.c_str(), flag1, 0664), MDB_SUCCESS)
-      << "mdb_env_open failed";
-  CHECK_EQ(mdb_txn_begin(env_, NULL, flag2, &txn_), MDB_SUCCESS)
-      << "mdb_txn_begin failed";
-  CHECK_EQ(mdb_open(txn_, NULL, 0, &dbi_), MDB_SUCCESS) << "mdb_open failed";
+  retval = mdb_env_open(env_, filename.c_str(), flag1, 0664);
+  CHECK_EQ(retval, MDB_SUCCESS)
+      << "mdb_env_open failed " << mdb_strerror(retval);
+  retval = mdb_txn_begin(env_, NULL, flag2, &txn_);
+  CHECK_EQ(retval, MDB_SUCCESS)
+      << "mdb_txn_begin failed " << mdb_strerror(retval);
+  retval = mdb_open(txn_, NULL, 0, &dbi_);
+  CHECK_EQ(retval, MDB_SUCCESS) << "mdb_open failed" << mdb_strerror(retval);
 }
 
-void LmdbDatabase::put(const string& key, const string& value) {
-  LOG(INFO) << "LMDB: Put " << key;
+void LmdbDatabase::put(buffer_t* key, buffer_t* value) {
+  LOG(INFO) << "LMDB: Put";
 
   MDB_val mdbkey, mdbdata;
-  mdbdata.mv_size = value.size();
-  mdbdata.mv_data = const_cast<char*>(&value[0]);
-  mdbkey.mv_size = key.size();
-  mdbkey.mv_data = const_cast<char*>(&key[0]);
+  mdbdata.mv_size = value->size();
+  mdbdata.mv_data = value->data();
+  mdbkey.mv_size = key->size();
+  mdbkey.mv_data = key->data();
 
   CHECK_NOTNULL(txn_);
   CHECK_NE(0, dbi_);
 
-  CHECK_EQ(mdb_put(txn_, dbi_, &mdbkey, &mdbdata, 0), MDB_SUCCESS)
-      << "mdb_put failed";
+  int retval = mdb_put(txn_, dbi_, &mdbkey, &mdbdata, 0);
+  CHECK_EQ(retval, MDB_SUCCESS)
+      << "mdb_put failed " << mdb_strerror(retval);
 }
 
 void LmdbDatabase::commit() {
@@ -58,7 +66,9 @@ void LmdbDatabase::commit() {
 
   CHECK_NOTNULL(txn_);
 
-  CHECK_EQ(mdb_txn_commit(txn_), MDB_SUCCESS) << "mdb_txn_commit failed";
+  int retval = mdb_txn_commit(txn_);
+  CHECK_EQ(retval, MDB_SUCCESS) << "mdb_txn_commit failed "
+      << mdb_strerror(retval);
 }
 
 void LmdbDatabase::close() {
@@ -79,10 +89,13 @@ void LmdbDatabase::close() {
 
 LmdbDatabase::const_iterator LmdbDatabase::begin() const {
   MDB_cursor* cursor;
-  CHECK_EQ(mdb_cursor_open(txn_, dbi_, &cursor), MDB_SUCCESS);
+  int retval;
+  retval = mdb_cursor_open(txn_, dbi_, &cursor);
+  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
   MDB_val key;
   MDB_val val;
-  CHECK_EQ(mdb_cursor_get(cursor, &key, &val, MDB_FIRST), MDB_SUCCESS);
+  retval = mdb_cursor_get(cursor, &key, &val, MDB_FIRST);
+  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
 
   shared_ptr<DatabaseState> state(new LmdbState(cursor));
   return const_iterator(this, state);
@@ -122,15 +135,20 @@ void LmdbDatabase::increment(shared_ptr<DatabaseState> state) const {
 
   MDB_cursor*& cursor = lmdb_state->cursor_;
 
+  CHECK_NOTNULL(cursor);
+
   MDB_val key;
   MDB_val val;
-  if (MDB_SUCCESS != mdb_cursor_get(cursor, &key, &val, MDB_NEXT)) {
+  int retval = mdb_cursor_get(cursor, &key, &val, MDB_NEXT);
+  if (MDB_NOTFOUND == retval) {
     mdb_cursor_close(cursor);
     cursor = NULL;
+  } else {
+    CHECK_EQ(MDB_SUCCESS, retval) << mdb_strerror(retval);
   }
 }
 
-pair<string, string>& LmdbDatabase::dereference(
+pair<Database::buffer_t, Database::buffer_t>& LmdbDatabase::dereference(
     shared_ptr<DatabaseState> state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(state);
@@ -139,14 +157,19 @@ pair<string, string>& LmdbDatabase::dereference(
 
   MDB_cursor*& cursor = lmdb_state->cursor_;
 
+  CHECK_NOTNULL(cursor);
+
   MDB_val mdb_key;
   MDB_val mdb_val;
-  CHECK_EQ(mdb_cursor_get(cursor, &mdb_key, &mdb_val, MDB_GET_CURRENT),
-      MDB_SUCCESS);
+  int retval = mdb_cursor_get(cursor, &mdb_key, &mdb_val, MDB_GET_CURRENT);
+  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+
+  char* key_data = reinterpret_cast<char*>(mdb_key.mv_data);
+  char* value_data = reinterpret_cast<char*>(mdb_val.mv_data);
 
   lmdb_state->kv_pair_ = make_pair(
-    string(reinterpret_cast<char*>(mdb_key.mv_data), mdb_key.mv_size),
-    string(reinterpret_cast<char*>(mdb_val.mv_data), mdb_val.mv_size));
+    buffer_t(key_data, key_data + mdb_key.mv_size),
+    buffer_t(value_data, value_data + mdb_val.mv_size));
 
   return lmdb_state->kv_pair_;
 }

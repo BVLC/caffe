@@ -42,11 +42,15 @@ void LeveldbDatabase::open(const string& filename, Mode mode) {
   batch_.reset(new leveldb::WriteBatch());
 }
 
-void LeveldbDatabase::put(const string& key, const string& value) {
-  LOG(INFO) << "LevelDB: Put " << key;
+void LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
+  LOG(INFO) << "LevelDB: Put";
 
   CHECK_NOTNULL(batch_.get());
-  batch_->Put(key, value);
+
+  leveldb::Slice key_slice(key->data(), key->size());
+  leveldb::Slice value_slice(value->data(), value->size());
+
+  batch_->Put(key_slice, value_slice);
 }
 
 void LeveldbDatabase::commit() {
@@ -130,7 +134,7 @@ void LeveldbDatabase::increment(shared_ptr<DatabaseState> state) const {
   }
 }
 
-pair<string, string>& LeveldbDatabase::dereference(
+pair<Database::buffer_t, Database::buffer_t>& LeveldbDatabase::dereference(
     shared_ptr<DatabaseState> state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(state);
@@ -143,8 +147,10 @@ pair<string, string>& LeveldbDatabase::dereference(
 
   CHECK(iter->Valid());
 
-  leveldb_state->kv_pair_ = make_pair(iter->key().ToString(),
-      iter->value().ToString());
+  leveldb_state->kv_pair_ = make_pair(
+      buffer_t(iter->key().data(), iter->key().data() + iter->key().size()),
+      buffer_t(iter->value().data(),
+          iter->value().data() + iter->value().size()));
   return leveldb_state->kv_pair_;
 }
 

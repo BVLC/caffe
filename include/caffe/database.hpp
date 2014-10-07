@@ -5,6 +5,7 @@
 #include <iterator>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "caffe/common.hpp"
 
@@ -18,8 +19,10 @@ class Database {
     ReadOnly
   };
 
+  typedef vector<char> buffer_t;
+
   virtual void open(const string& filename, Mode mode) = 0;
-  virtual void put(const string& key, const string& value) = 0;
+  virtual void put(buffer_t* key, buffer_t* value) = 0;
   virtual void commit() = 0;
   virtual void close() = 0;
 
@@ -38,10 +41,10 @@ class Database {
   class DatabaseState;
 
  public:
-  class iterator :
-      public std::iterator<std::forward_iterator_tag, pair<string, string> > {
+  class iterator : public std::iterator<
+      std::forward_iterator_tag, pair<buffer_t, buffer_t> > {
    public:
-    typedef pair<string, string> T;
+    typedef pair<buffer_t, buffer_t> T;
     typedef T value_type;
     typedef T& reference_type;
     typedef T* pointer_type;
@@ -94,7 +97,7 @@ class Database {
   virtual bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const = 0;
   virtual void increment(shared_ptr<DatabaseState> state) const = 0;
-  virtual pair<string, string>& dereference(
+  virtual pair<buffer_t, buffer_t>& dereference(
       shared_ptr<DatabaseState> state) const = 0;
 };
 
