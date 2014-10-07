@@ -54,7 +54,12 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       }
       stringstream ss;
       ss << i;
-      database->put(ss.str(), datum.SerializeAsString());
+      string key_str = ss.str();
+      Database::buffer_t key(key_str.c_str(), key_str.c_str() + key_str.size());
+      Database::buffer_t value(datum.ByteSize());
+      datum.SerializeWithCachedSizesToArray(
+          reinterpret_cast<unsigned char*>(value.data()));
+      database->put(&key, &value);
     }
     database->close();
   }

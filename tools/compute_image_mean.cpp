@@ -35,7 +35,8 @@ int main(int argc, char** argv) {
   BlobProto sum_blob;
   int count = 0;
   // load first datum
-  datum.ParseFromString(database->begin()->second);
+  const Database::buffer_t& first_blob = database->begin()->second;
+  datum.ParseFromArray(first_blob.data(), first_blob.size());
 
   sum_blob.set_num(1);
   sum_blob.set_channels(datum.channels());
@@ -51,7 +52,8 @@ int main(int argc, char** argv) {
   for (Database::const_iterator iter = database->begin();
       iter != database->end(); ++iter) {
     // just a dummy operation
-    datum.ParseFromString(iter->second);
+    const Database::buffer_t& blob = iter->second;
+    datum.ParseFromArray(blob.data(), blob.size());
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),
         datum.float_data_size());
