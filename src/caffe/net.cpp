@@ -708,10 +708,14 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
-      CHECK_EQ(target_blobs[j]->num(), source_layer.blobs(j).num());
-      CHECK_EQ(target_blobs[j]->channels(), source_layer.blobs(j).channels());
-      CHECK_EQ(target_blobs[j]->height(), source_layer.blobs(j).height());
-      CHECK_EQ(target_blobs[j]->width(), source_layer.blobs(j).width());
+      // CHECK_EQ(target_blobs[j]->num(), source_layer.blobs(j).num());
+      // CHECK_EQ(target_blobs[j]->channels(), source_layer.blobs(j).channels());
+      // CHECK_EQ(target_blobs[j]->height(), source_layer.blobs(j).height());
+      // CHECK_EQ(target_blobs[j]->width(), source_layer.blobs(j).width());
+      // only check the total number
+      int count = source_layer.blobs(j).num() * source_layer.blobs(j).channels() * \
+          source_layer.blobs(j).height() * source_layer.blobs(j).width();
+      CHECK_EQ(target_blobs[j]->count(), count);
       target_blobs[j]->FromProto(source_layer.blobs(j));
     }
   }

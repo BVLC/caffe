@@ -16,16 +16,7 @@ using std::max;
 template <typename Dtype>
 void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
-  // Set the max number of top blobs before calling base Layer::SetUp.
-  // If doing MAX pooling, we can optionally output an extra top Blob
-  // for the mask.  Otherwise, we only have one top Blob.
-  if (this->layer_param_.pooling_param().pool() ==
-      PoolingParameter_PoolMethod_MAX) {
-    max_top_blobs_ = 2;
-  } else {
-    max_top_blobs_ = 1;
-  }
-  Layer<Dtype>::SetUp(bottom, top);
+  // Layer<Dtype>::SetUp(bottom, top);
   PoolingParameter pool_param = this->layer_param_.pooling_param();
   CHECK(!pool_param.has_kernel_size() !=
       !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
@@ -78,7 +69,11 @@ void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     kstride_h_ = pool_param.kstride_h();
     kstride_w_ = pool_param.kstride_w();
   }
+}
 
+template<typename Dtype>
+void PoolingSKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top) {
   int ext_kernel_h = (kernel_h_ - 1) * kstride_h_ + 1;
   int ext_kernel_w = (kernel_w_ - 1) * kstride_w_ + 1;
 
@@ -107,12 +102,6 @@ void PoolingSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
   }
-}
-
-template<typename Dtype>
-void PoolingSKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
-  LOG(FATAL) << "Reshape() not implemented for PoolingSKLayer.";
 }
 
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first

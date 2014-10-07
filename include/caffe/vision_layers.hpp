@@ -337,7 +337,12 @@ class PoolingSKLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return max_top_blobs_; }
+  // Set the max number of top blobs before calling base Layer::SetUp.
+  // If doing MAX pooling, we can optionally output an extra top Blob
+  // for the mask.  Otherwise, we only have one top Blob.
+  virtual inline int MaxTopBlobs() const {
+    return (this->layer_param_.pooling_param().pool() ==
+        PoolingParameter_PoolMethod_MAX) ? 2 : 1;  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -349,7 +354,6 @@ class PoolingSKLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
-  int max_top_blobs_;
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
   int kstride_h_, kstride_w_;
