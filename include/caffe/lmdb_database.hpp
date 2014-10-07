@@ -14,13 +14,20 @@ namespace caffe {
 class LmdbDatabase : public Database {
  public:
   LmdbDatabase()
-      : dbi_(0) { }
+      : env_(NULL),
+        dbi_(0),
+        txn_(NULL) { }
   ~LmdbDatabase() { this->close(); }
 
   void open(const string& filename, Mode mode);
   void put(const string& key, const string& value);
   void commit();
   void close();
+
+  const_iterator begin() const;
+  const_iterator cbegin() const;
+  const_iterator end() const;
+  const_iterator cend() const;
 
  protected:
   class LmdbState : public Database::DatabaseState {
@@ -38,15 +45,9 @@ class LmdbDatabase : public Database {
   void increment(shared_ptr<DatabaseState> state) const;
   pair<string, string>& dereference(shared_ptr<DatabaseState> state) const;
 
- protected:
-  const_iterator begin() const;
-  const_iterator cbegin() const;
-  const_iterator end() const;
-  const_iterator cend() const;
-
-  MDB_env *env_ = NULL;
+  MDB_env *env_;
   MDB_dbi dbi_;
-  MDB_txn *txn_ = NULL;
+  MDB_txn *txn_;
 };
 
 }  // namespace caffe

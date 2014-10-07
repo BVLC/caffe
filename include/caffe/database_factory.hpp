@@ -5,6 +5,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/database.hpp"
+#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 

@@ -19,6 +19,11 @@ class LeveldbDatabase : public Database {
   void commit();
   void close();
 
+  const_iterator begin() const;
+  const_iterator cbegin() const;
+  const_iterator end() const;
+  const_iterator cend() const;
+
   ~LeveldbDatabase() { this->close(); }
 
  protected:
@@ -37,12 +42,6 @@ class LeveldbDatabase : public Database {
   void increment(shared_ptr<DatabaseState> state) const;
   pair<string, string>& dereference(shared_ptr<DatabaseState> state) const;
 
-  const_iterator begin() const;
-  const_iterator cbegin() const;
-  const_iterator end() const;
-  const_iterator cend() const;
-
- protected:
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::WriteBatch> batch_;
 };
