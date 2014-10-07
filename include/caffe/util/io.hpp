@@ -88,6 +88,12 @@ inline void WriteProtoToBinaryFile(
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
 
+bool ReadFileToDatum(const string& filename, const int label, Datum* datum);
+
+inline bool ReadFileToDatum(const string& filename, Datum* datum) {
+  return ReadFileToDatum(filename, -1, datum);
+}
+
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum);
 
@@ -106,6 +112,21 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, true, datum);
 }
 
+bool DecodeDatum(const int height, const int width, const bool is_color,
+  Datum& datum);
+
+inline bool DecodeDatum(const int height, const int width, Datum& datum) {
+  return DecodeDatum(height, width, true, datum);
+}
+
+inline bool DecodeDatum(const bool is_color, Datum& datum) {
+  return DecodeDatum(0, 0, is_color, datum);
+}
+
+inline bool DecodeDatum(Datum& datum) {
+  return DecodeDatum(0, 0, true, datum);
+}
+
 #ifndef OSX
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color);
@@ -122,6 +143,23 @@ inline cv::Mat ReadImageToCVMat(const string& filename,
 
 inline cv::Mat ReadImageToCVMat(const string& filename) {
   return ReadImageToCVMat(filename, 0, 0, true);
+}
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const int height, const int width, const bool is_color);
+
+inline cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const int height, const int width) {
+  return DecodeDatumToCVMat(datum, height, width, true);
+}
+
+inline cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const bool is_color) {
+  return DecodeDatumToCVMat(datum, 0, 0, is_color);
+}
+
+inline cv::Mat DecodeDatumToCVMat(const Datum& datum) {
+  return DecodeDatumToCVMat(datum, 0, 0, true);
 }
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
