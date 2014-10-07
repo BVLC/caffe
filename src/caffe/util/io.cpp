@@ -83,6 +83,20 @@ cv::Mat ReadImageToCVMat(const string& filename,
   return cv_img;
 }
 
+cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width) {
+  return ReadImageToCVMat(filename, height, width, true);
+}
+
+cv::Mat ReadImageToCVMat(const string& filename,
+    const bool is_color) {
+  return ReadImageToCVMat(filename, 0, 0, is_color);
+}
+
+cv::Mat ReadImageToCVMat(const string& filename) {
+  return ReadImageToCVMat(filename, 0, 0, true);
+}
+
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
@@ -133,6 +147,20 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum,
     LOG(ERROR) << "Could not decode datum ";
   }
   return cv_img;
+}
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const int height, const int width) {
+  return DecodeDatumToCVMat(datum, height, width, true);
+}
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const bool is_color) {
+  return DecodeDatumToCVMat(datum, 0, 0, is_color);
+}
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum) {
+  return DecodeDatumToCVMat(datum, 0, 0, true);
 }
 
 // If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
