@@ -95,21 +95,76 @@ bool ReadImageToDatum(const string& filename, const int label,
   }
 }
 
+bool ReadFileToDatum(const string& filename, const int label,
+    Datum* datum) {
+  std::streampos size;
+
+  fstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
+  if (file.is_open()) {
+    size = file.tellg();
+    std::string buffer(size, ' ');
+    file.seekg(0, ios::beg);
+    file.read(&buffer[0], size);
+    file.close();
+    datum->set_data(buffer);
+    datum->set_label(label);
+    datum->set_encoded(true);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const int height, const int width, const bool is_color) {
+  cv::Mat cv_img;
+  CHECK(datum.encoded()) << "Datum not encoded";
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+  const string& data = datum.data();
+  std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
+  if (height > 0 && width > 0) {
+    cv::Mat cv_img_origin = cv::imdecode(cv::Mat(vec_data), cv_read_flag);
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else {
+    cv_img = cv::imdecode(vec_data, cv_read_flag);
+  }
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not decode datum ";
+  }
+  return cv_img;
+}
+
+// If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
+// if height and width are set it will resize it
+// If Datum is not encoded will do nothing
+bool DecodeDatum(const int height, const int width, const bool is_color,
+                Datum& datum) {
+  if (datum.encoded()) {
+    cv::Mat cv_img = DecodeDatumToCVMat(datum, height, width, is_color);
+    CVMatToDatum(cv_img, &datum);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
-  CHECK(cv_img.depth() == CV_8U) <<
-      "Image data type must be unsigned byte";
+  CHECK(cv_img.depth() == CV_8U || cv_img.depth() == CV_8S) <<
+      "Image data type must be unsigned or signed byte";
   datum->set_channels(cv_img.channels());
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
   datum->clear_data();
   datum->clear_float_data();
+  datum->set_encoded(false);
   int datum_channels = datum->channels();
   int datum_height = datum->height();
   int datum_width = datum->width();
   int datum_size = datum_channels * datum_height * datum_width;
   std::string buffer(datum_size, ' ');
   for (int h = 0; h < datum_height; ++h) {
-    const uchar* ptr = cv_img.ptr<uchar>(h);
+    const char* ptr = cv_img.ptr<char>(h);
     int img_index = 0;
     for (int w = 0; w < datum_width; ++w) {
       for (int c = 0; c < datum_channels; ++c) {
