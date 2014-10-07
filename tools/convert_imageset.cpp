@@ -36,6 +36,8 @@ DEFINE_bool(shuffle, false,
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
+DEFINE_bool(check_size, false,
+    "When this option is on, check that all the datum have the same size");
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
@@ -58,6 +60,7 @@ int main(int argc, char** argv) {
   }
 
   bool is_color = !FLAGS_gray;
+  bool check_size = FLAGS_check_size;
   std::ifstream infile(argv[2]);
   std::vector<std::pair<string, int> > lines;
   string filename;
@@ -131,13 +134,15 @@ int main(int argc, char** argv) {
         lines[line_id].second, resize_height, resize_width, is_color, &datum)) {
       continue;
     }
-    if (!data_size_initialized) {
-      data_size = datum.channels() * datum.height() * datum.width();
-      data_size_initialized = true;
-    } else {
-      const string& data = datum.data();
-      CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
-          << data.size();
+    if (check_size) {
+      if (!data_size_initialized) {
+        data_size = datum.channels() * datum.height() * datum.width();
+        data_size_initialized = true;
+      } else {
+        const string& data = datum.data();
+        CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
+            << data.size();
+      }
     }
     // sequential
     snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,

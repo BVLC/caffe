@@ -148,14 +148,14 @@ int feature_extraction_pipeline(int argc, char** argv) {
           ->blob_by_name(blob_names[i]);
       int batch_size = feature_blob->num();
       int dim_features = feature_blob->count() / batch_size;
-      Dtype* feature_blob_data;
+      const Dtype* feature_blob_data;
       for (int n = 0; n < batch_size; ++n) {
         datum.set_height(dim_features);
         datum.set_width(1);
         datum.set_channels(1);
         datum.clear_data();
         datum.clear_float_data();
-        feature_blob_data = feature_blob->mutable_cpu_data() +
+        feature_blob_data = feature_blob->cpu_data() +
             feature_blob->offset(n);
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);

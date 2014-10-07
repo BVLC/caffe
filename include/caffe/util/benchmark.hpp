@@ -14,6 +14,7 @@ class Timer {
   void Start();
   void Stop();
   float MilliSeconds();
+  float MicroSeconds();
   float Seconds();
 
   inline bool initted() { return initted_; }
@@ -33,6 +34,7 @@ class Timer {
   boost::posix_time::ptime start_cpu_;
   boost::posix_time::ptime stop_cpu_;
   float elapsed_milliseconds_;
+  float elapsed_microseconds_;
 };
 
 }  // namespace caffe

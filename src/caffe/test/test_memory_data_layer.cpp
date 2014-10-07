@@ -70,7 +70,7 @@ TYPED_TEST(MemoryDataLayerTest, TestSetup) {
   md_param->set_width(this->width_);
   shared_ptr<Layer<Dtype> > layer(
       new MemoryDataLayer<Dtype>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->data_blob_->num(), this->batch_size_);
   EXPECT_EQ(this->data_blob_->channels(), this->channels_);
   EXPECT_EQ(this->data_blob_->height(), this->height_);
@@ -93,12 +93,12 @@ TYPED_TEST(MemoryDataLayerTest, TestForward) {
   md_param->set_width(this->width_);
   shared_ptr<MemoryDataLayer<Dtype> > layer(
       new MemoryDataLayer<Dtype>(layer_param));
-  layer->DataLayerSetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer->DataLayerSetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Reset(this->data_->mutable_cpu_data(),
       this->labels_->mutable_cpu_data(), this->data_->num());
   for (int i = 0; i < this->batches_ * 6; ++i) {
     int batch_num = i % this->batches_;
-    layer->Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+    layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     for (int j = 0; j < this->data_blob_->count(); ++j) {
       EXPECT_EQ(this->data_blob_->cpu_data()[j],
           this->data_->cpu_data()[
@@ -121,7 +121,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   memory_data_param->set_height(this->height_);
   memory_data_param->set_width(this->width_);
   MemoryDataLayer<Dtype> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   vector<Datum> datum_vector(this->batch_size_);
   const size_t count = this->channels_ * this->height_ * this->width_;
@@ -144,7 +144,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   int data_index;
   // Go through the data 5 times
   for (int iter = 0; iter < 5; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype* data = this->data_blob_->cpu_data();
     size_t index = 0;
     for (int i = 0; i < this->batch_size_; ++i) {
