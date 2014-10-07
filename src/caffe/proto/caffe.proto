@@ -540,6 +540,7 @@ message ImageDataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+  optional string root_folder = 12 [default = ""];
 }
 
 // Message that stores parameters InfogainLossLayer

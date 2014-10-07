@@ -193,8 +193,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_LE(width, img_width);
   CHECK_GE(num, 1);
 
-  CHECK(cv_img.depth() == CV_8U || cv_img.depth() == CV_8S) <<
-      "Image data type must be unsigned or signed byte";
+  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
@@ -238,22 +237,19 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       h_off = (img_height - crop_size) / 2;
       w_off = (img_width - crop_size) / 2;
     }
-    cv::Rect roi(h_off, w_off, crop_size, crop_size);
+    cv::Rect roi(w_off, h_off, crop_size, crop_size);
     cv_cropped_img = cv_img(roi);
   } else {
     CHECK_EQ(img_height, height);
     CHECK_EQ(img_width, width);
   }
-  
-  // if (do_mirror) {
-  //   cv::flip(cv_cropped_img, cv_cropped_img, 1);
-  // }
+
   CHECK(cv_cropped_img.data);
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
   for (int h = 0; h < height; ++h) {
-    const char* ptr = cv_cropped_img.ptr<char>(h);
+    const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
     int img_index = 0;
     for (int w = 0; w < width; ++w) {
       for (int c = 0; c < img_channels; ++c) {

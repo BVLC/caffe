@@ -150,8 +150,7 @@ bool DecodeDatum(const int height, const int width, const bool is_color,
 }
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
-  CHECK(cv_img.depth() == CV_8U || cv_img.depth() == CV_8S) <<
-      "Image data type must be unsigned or signed byte";
+  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   datum->set_channels(cv_img.channels());
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
@@ -164,7 +163,7 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   int datum_size = datum_channels * datum_height * datum_width;
   std::string buffer(datum_size, ' ');
   for (int h = 0; h < datum_height; ++h) {
-    const char* ptr = cv_img.ptr<char>(h);
+    const uchar* ptr = cv_img.ptr<uchar>(h);
     int img_index = 0;
     for (int w = 0; w < datum_width; ++w) {
       for (int c = 0; c < datum_channels; ++c) {
