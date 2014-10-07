@@ -2,7 +2,6 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
-#include <leveldb/db.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
@@ -120,15 +119,6 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
     }
   }
   datum->set_data(buffer);
-}
-
-
-leveldb::Options GetLevelDBOptions() {
-  // In default, we will return the leveldb option and set the max open files
-  // in order to avoid using up the operating system's limit.
-  leveldb::Options options;
-  options.max_open_files = 100;
-  return options;
 }
 
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
