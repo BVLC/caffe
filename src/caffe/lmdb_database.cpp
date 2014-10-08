@@ -14,9 +14,9 @@ void LmdbDatabase::open(const string& filename, Mode mode) {
   CHECK(NULL == txn_);
   CHECK_EQ(0, dbi_);
 
-  if (mode != ReadOnly) {
+  if (mode == New) {
     CHECK_EQ(mkdir(filename.c_str(), 0744), 0) << "mkdir " << filename
-                                                << "failed";
+                                                << " failed";
   }
 
   int retval;
@@ -66,17 +66,18 @@ void LmdbDatabase::commit() {
 
   CHECK_NOTNULL(txn_);
 
-  int retval = mdb_txn_commit(txn_);
+  int retval;
+  retval = mdb_txn_commit(txn_);
   CHECK_EQ(retval, MDB_SUCCESS) << "mdb_txn_commit failed "
       << mdb_strerror(retval);
+
+  retval = mdb_txn_begin(env_, NULL, 0, &txn_);
+  CHECK_EQ(retval, MDB_SUCCESS)
+      << "mdb_txn_begin failed " << mdb_strerror(retval);
 }
 
 void LmdbDatabase::close() {
   LOG(INFO) << "LMDB: Close";
-
-  if (env_ && dbi_ && txn_) {
-    this->commit();
-  }
 
   if (env_ && dbi_) {
     mdb_close(env_, dbi_);

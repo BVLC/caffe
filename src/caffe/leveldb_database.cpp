@@ -66,9 +66,6 @@ void LeveldbDatabase::commit() {
 void LeveldbDatabase::close() {
   LOG(INFO) << "LevelDB: Close";
 
-  if (batch_ && db_) {
-    this->commit();
-  }
   batch_.reset();
   db_.reset();
 }
