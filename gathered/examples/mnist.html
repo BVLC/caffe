@@ -58,7 +58,7 @@ cd $CAFFE_ROOT/examples/mnist
 ./create_mnist.sh
 </code></pre>
 
-<p>If it complains that <code>wget</code> or <code>gunzip</code> are not installed, you need to install them respectively. After running the script there should be two datasets, <code>mnist-train-leveldb</code>, and <code>mnist-test-leveldb</code>.</p>
+<p>If it complains that <code>wget</code> or <code>gunzip</code> are not installed, you need to install them respectively. After running the script there should be two datasets, <code>mnist_train_lmdb</code>, and <code>mnist_test_lmdb</code>.</p>
 
 <h2 id="lenet-the-mnist-classification-model">LeNet: the MNIST Classification Model</h2>
 
@@ -77,13 +77,14 @@ cd $CAFFE_ROOT/examples/mnist
 
 <h3 id="writing-the-data-layer">Writing the Data Layer</h3>
 
-<p>Currently, we will read the MNIST data from the leveldb we created earlier in the demo. This is defined by a data layer:</p>
+<p>Currently, we will read the MNIST data from the lmdb we created earlier in the demo. This is defined by a data layer:</p>
 
 <pre><code>layers {
   name: "mnist"
   type: DATA
   data_param {
-    source: "mnist-train-leveldb"
+    source: "mnist_train_lmdb"
+    backend: LMDB
     batch_size: 64
     scale: 0.00390625
   }
@@ -92,7 +93,7 @@ cd $CAFFE_ROOT/examples/mnist
 }
 </code></pre>
 
-<p>Specifically, this layer has name <code>mnist</code>, type <code>data</code>, and it reads the data from the given leveldb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range [0,1). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the <code>data</code> blob, and one is the <code>label</code> blob.</p>
+<p>Specifically, this layer has name <code>mnist</code>, type <code>data</code>, and it reads the data from the given lmdb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range [0,1). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the <code>data</code> blob, and one is the <code>label</code> blob.</p>
 
 <h3 id="writing-the-convolution-layer">Writing the Convolution Layer</h3>
 

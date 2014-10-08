@@ -206,7 +206,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
   </li>
 </ul>
 
-<p>The local response normalization layer performs a kind of “lateral inhibition” by normalizing over local input regions. In <code>ACROSS_CHANNELS</code> mode, the local regions extend across nearby channels, but have no spatial extent (i.e., they have shape <code>local_size x 1 x 1</code>). In <code>WITHIN_CHANNEL</code> mode, the local regions extend spatially, but are in separate channels (i.e., they have shape <code>1 x local_size x local_size</code>). Each input value is divided by <script type="math/tex">(1 + (\alpha/n) \sum_i x_i)^\beta</script>, where <script type="math/tex">n</script> is the size of each local region, and the sum is taken over the region centered at that value (zero padding is added where necessary).</p>
+<p>The local response normalization layer performs a kind of “lateral inhibition” by normalizing over local input regions. In <code>ACROSS_CHANNELS</code> mode, the local regions extend across nearby channels, but have no spatial extent (i.e., they have shape <code>local_size x 1 x 1</code>). In <code>WITHIN_CHANNEL</code> mode, the local regions extend spatially, but are in separate channels (i.e., they have shape <code>1 x local_size x local_size</code>). Each input value is divided by <script type="math/tex">(1 + (\alpha/n) \sum_i x_i^2)^\beta</script>, where <script type="math/tex">n</script> is the size of each local region, and the sum is taken over the region centered at that value (zero padding is added where necessary).</p>
 
 <h4 id="im2col">im2col</h4>
 
