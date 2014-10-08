@@ -3,6 +3,7 @@
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
+#include "caffe/util/loop_convolution.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
@@ -265,10 +266,115 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 template <typename Dtype>
 void LoopConvolutionLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  const Dtype* weight_data;
+  const Dtype* bias_data;
+  int num_ig = this->channels_ / this->group_;
+  int num_og = this->num_output_ / this->group_;
+  weight_data = this->blobs_[0]->cpu_data();
+  if (this->bias_term_) {
+    bias_data = this->blobs_[1]->cpu_data();
+  }
+
   for (int i = 0; i < bottom.size(); ++i) {
-    caffe_conv<Dtype>(
-        bottom[i], this->layer_param_.mutable_convolution_param(),
-        this->blobs_, top[i]);
+    const Dtype* bottom_data = bottom[i]->cpu_data();
+    Dtype* top_data = top[i]->mutable_cpu_data();
+    caffe_set(top[i]->count(), Dtype(0), top_data);
+    for (int n = 0; n < this->num_; n++) {
+      // Convolution
+      for (int g = 0; g < this->group_; g++) {
+        conv_filter(
+            bottom_data + bottom[i]->offset(n, g * num_ig),
+            weight_data + this->blobs_[0]->offset(g * num_og),
+            top_data + top[i]->offset(n, g * num_og),
+            this->channels_, this->height_, this->width_,
+            this->num_output_, this->kernel_h_, this->kernel_w_,
+            this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_);
+      }
+      // Bias
+      if (this->bias_term_) {
+        for (int s = 0; s < this->height_out_ * this->width_out_; s++) {
+          for (int o = 0; o < this->num_output_; o++) {
+            int oi = top[i]->offset(
+                n, o, s / this->width_out_, s % this->width_out_);
+            top_data[oi] += bias_data[o];
+          }
+        }
+      }
+    }  // num loop end
+  }  // blob loop end
+}
+
+template <typename Dtype>
+void LoopConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+
+  const Dtype* weight = NULL;
+  Dtype* weight_diff = NULL;
+  if (this->param_propagate_down_[0]) {
+    weight = this->blobs_[0]->cpu_data();
+    weight_diff = this->blobs_[0]->mutable_cpu_diff();
+    caffe_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
+  }
+  Dtype* bias_diff = NULL;
+  if (this->bias_term_ && this->param_propagate_down_[1]) {
+    bias_diff = this->blobs_[1]->mutable_cpu_diff();
+    caffe_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
+  }
+  int num_ig = this->channels_ / this->group_;
+  int num_og = this->num_output_ / this->group_;
+  int N_ = this->height_out_ * this->width_out_;
+  for (int i = 0; i < top.size(); ++i) {
+    const Dtype* top_diff = NULL;
+    // Bias gradient, if necessary.
+    if (this->bias_term_ && this->param_propagate_down_[1]) {
+      top_diff = top[i]->cpu_diff();
+      for (int n = 0; n < this->num_; ++n) {
+        caffe_cpu_gemv<Dtype>(CblasNoTrans, this->num_output_, N_,
+            1., top_diff + top[0]->offset(n),
+            this->bias_multiplier_.cpu_data(), 1.,
+            bias_diff);
+      }
+    }
+
+    if (this->param_propagate_down_[0] || propagate_down[i]) {
+      if (!top_diff) {
+        top_diff = top[i]->cpu_diff();
+      }
+
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
+      caffe_set(bottom[i]->count(), Dtype(0), bottom_diff);
+      for (int n = 0; n < this->num_; ++n) {
+        // gradient w.r.t. weight. Note that we will accumulate diffs.
+        if (this->param_propagate_down_[0]) {
+          for (int g = 0; g < this->group_; ++g) {
+            conv_weight(
+                bottom_data + bottom[i]->offset(n, g * num_ig),
+                weight_diff + this->blobs_[0]->offset(g * num_og),
+                top_diff + top[i]->offset(n, g * num_og),
+                this->channels_, this->height_, this->width_,
+                this->num_output_, this->kernel_h_, this->kernel_w_,
+                this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_);
+          }
+        }
+
+        // gradient w.r.t. bottom data, if necessary.
+        if (propagate_down[i]) {
+          if (weight == NULL) {
+            weight = this->blobs_[0]->cpu_data();
+          }
+          for (int g = 0; g < this->group_; ++g) {
+            conv_image(
+                bottom_diff + bottom[i]->offset(n, g * num_ig),
+                weight + this->blobs_[0]->offset(g * num_og),
+                top_diff + top[i]->offset(n, g * num_og),
+                this->channels_, this->height_, this->width_,
+                this->num_output_, this->kernel_h_, this->kernel_w_,
+                this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_);
+          }
+        }
+      }
+    }
   }
 }
 

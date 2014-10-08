@@ -170,6 +170,23 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
 };
 #endif
 
+/*
+ * @brief Loop Convolution
+ *
+*/
+template <typename Dtype>
+class LoopConvolutionLayer : public ConvolutionLayer<Dtype> {
+ public:
+  explicit LoopConvolutionLayer(const LayerParameter& param)
+      : ConvolutionLayer<Dtype>(param) {}
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+};
+
 /**
  * @brief A helper for image operations that rearranges image regions into
  *        column vectors.  Used by ConvolutionLayer to perform convolution
