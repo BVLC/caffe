@@ -35,8 +35,10 @@ int main(int argc, char** argv) {
   BlobProto sum_blob;
   int count = 0;
   // load first datum
-  const Database::buffer_t& first_blob = database->begin()->second;
+  Database::const_iterator iter = database->begin();
+  const Database::buffer_t& first_blob = iter->second;
   datum.ParseFromArray(first_blob.data(), first_blob.size());
+  iter = database->end();
 
   sum_blob.set_num(1);
   sum_blob.set_channels(datum.channels());

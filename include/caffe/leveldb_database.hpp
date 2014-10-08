@@ -24,8 +24,6 @@ class LeveldbDatabase : public Database {
   const_iterator end() const;
   const_iterator cend() const;
 
-  ~LeveldbDatabase() { this->close(); }
-
  protected:
   class LeveldbState : public Database::DatabaseState {
    public:

@@ -17,7 +17,6 @@ class LmdbDatabase : public Database {
       : env_(NULL),
         dbi_(0),
         txn_(NULL) { }
-  ~LmdbDatabase() { this->close(); }
 
   void open(const string& filename, Mode mode);
   void put(buffer_t* key, buffer_t* value);
