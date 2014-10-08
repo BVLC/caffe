@@ -49,14 +49,94 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 #    CMake Scripts dir
 set(CMAKE_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/CMakeScripts)
 
-#	CMake module path for custom module finding
+#	 CMake module path for custom module finding
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SCRIPT_DIR})
 
-#    CUDA is required globally
+###    Dependencies    ##########################################################################
+
+#    Boost
+find_package(Boost 1.46 COMPONENTS system thread REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIRS})
+
+#    CUDA
 if(NOT CPU_ONLY)
     find_package(CUDA 5.5 REQUIRED)
     include_directories(${CUDA_INCLUDE_DIRS})
+
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
+            -gencode arch=compute_20,code=sm_20
+            -gencode arch=compute_20,code=sm_21
+            -gencode arch=compute_30,code=sm_30
+            -gencode arch=compute_35,code=sm_35
+    )
+
+    # https://github.com/ComputationalRadiationPhysics/picongpu/blob/master/src/picongpu/CMakeLists.txt
+    # work-arounds
+    if(Boost_VERSION EQUAL 105500)
+        # see https://svn.boost.org/trac/boost/ticket/9392
+        message(STATUS "Boost: Applying noinline work around")
+        # avoid warning for CMake >= 2.8.12
+        set(CUDA_NVCC_FLAGS
+          "${CUDA_NVCC_FLAGS} \"-DBOOST_NOINLINE=__attribute__((noinline))\" ")
+    endif(Boost_VERSION EQUAL 105500)
 endif()
+
+#    Threads
+find_package(Threads REQUIRED)
+
+#	 Google-glog
+find_package(Glog REQUIRED)
+include_directories(${GLOG_INCLUDE_DIRS})
+
+#    Google-gflags
+find_package(GFlags REQUIRED)
+include_directories(${GFLAGS_INCLUDE_DIRS})
+
+#    BLAS
+if(BLAS STREQUAL "atlas")
+
+    find_package(Atlas REQUIRED)
+    include_directories(${Atlas_INCLUDE_DIR})
+    set(BLAS_LIBRARIES ${Atlas_LIBRARIES})
+
+elseif(BLAS STREQUAL "open")
+
+    find_package(OpenBLAS REQUIRED)
+    include_directories(${OpenBLAS_INCLUDE_DIR})
+    set(BLAS_LIBRARIES ${OpenBLAS_LIB})
+
+elseif(BLAS STREQUAL "mkl")
+
+    find_package(MKL REQUIRED)
+    include_directories(${MKL_INCLUDE_DIR})
+    set(BLAS_LIBRARIES ${MKL_LIBRARIES})
+
+endif()
+
+#    HDF5
+find_package(HDF5 COMPONENTS HL REQUIRED)
+include_directories(${HDF5_INCLUDE_DIRS})
+
+#    LevelDB
+find_package(LevelDB REQUIRED)
+include_directories(${LEVELDB_INCLUDE})
+if(LEVELDB_FOUND)
+    find_package(Snappy REQUIRED)
+    include_directories(${SNAPPY_INCLUDE_DIR})
+    set(LEVELDB_LIBS
+        ${LEVELDB_LIBS}
+        ${SNAPPY_LIBS}
+    )
+endif()
+
+#    LMDB
+find_package(LMDB REQUIRED)
+include_directories(${LMDB_INCLUDE_DIR})
+
+#    OpenCV
+find_package(OpenCV REQUIRED core highgui imgproc)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 ###    Subdirectories    ##########################################################################
 
