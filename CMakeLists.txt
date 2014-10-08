@@ -40,7 +40,7 @@ set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}) # set release flags
 
 #    Link Flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")  # clang++
-  set(CAFFE_STATIC_LINK -Wl,-force_load $(STATIC_NAME))
+  set(CAFFE_STATIC_LINK -Wl,-force_load caffe)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")  # g++
   set(CAFFE_STATIC_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
 endif()
