@@ -714,6 +714,10 @@ message WindowDataParameter {
   // warp: cropped window is warped to a fixed size and aspect ratio
   // square: the tightest square around the window is cropped
   optional string crop_mode = 11 [default = "warp"];
+  // cache_images: will load all images in memory for faster access
+  optional bool cache_images = 12 [default = false];
+  // append root_folder to locate images
+  optional string root_folder = 13 [default = ""];
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters
