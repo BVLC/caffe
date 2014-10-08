@@ -6,12 +6,11 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
+#include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
-
-#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -147,25 +146,29 @@ TYPED_TEST(ConvolutionLayerTest, TestLoopConvolution) {
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
   shared_ptr<Layer<Dtype> > layer(
-      new LoopConvolutionLayer<Dtype>(layer_param));
+      new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Check against reference convolution.
+  // Check against LoopConvolutionLayer.
+  layer->ToProto(&layer_param);  // put learnable params into layer_param
+  shared_ptr<Layer<Dtype> > layer_ref(
+      new LoopConvolutionLayer<Dtype>(layer_param));
+  shared_ptr<Blob<Dtype> > ref_blob_top_2(new Blob<Dtype>());
+  vector<Blob<Dtype>*> ref_blob_top_vec;
+  this->ref_blob_top_.reset(new Blob<Dtype>());
+  ref_blob_top_vec.push_back(this->ref_blob_top_.get());
+  ref_blob_top_vec.push_back(ref_blob_top_2.get());
+  layer_ref->SetUp(this->blob_bottom_vec_, ref_blob_top_vec);
+  layer_ref->Forward(this->blob_bottom_vec_, ref_blob_top_vec);
   const Dtype* top_data;
   const Dtype* ref_top_data;
-  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
-      this->MakeReferenceTop(this->blob_top_));
-  top_data = this->blob_top_->cpu_data();
-  ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
-  }
-  caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
-      this->MakeReferenceTop(this->blob_top_2_));
-  top_data = this->blob_top_2_->cpu_data();
-  ref_top_data = this->ref_blob_top_->cpu_data();
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  for (int n = 0; n < this->blob_top_vec_.size(); n++) {
+    EXPECT_EQ(this->blob_top_vec_[n]->count(), ref_blob_top_vec[n]->count());
+    top_data = this->blob_top_vec_[n]->cpu_data();
+    ref_top_data = ref_blob_top_vec[n]->cpu_data();
+    for (int i = 0; i < this->blob_top_vec_[n]->count(); ++i) {
+      EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    }
   }
 }
 
@@ -333,6 +336,24 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
   ConvolutionLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(ConvolutionLayerTest, TestGradientLoopConvolution) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  LoopConvolutionLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
