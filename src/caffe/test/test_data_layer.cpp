@@ -61,6 +61,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
           reinterpret_cast<unsigned char*>(value.data()));
       database->put(&key, &value);
     }
+    database->commit();
     database->close();
   }
 
