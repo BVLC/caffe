@@ -329,10 +329,11 @@ void LoopConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       top_diff = top[i]->cpu_diff();
       for (int n = 0; n < this->num_; ++n) {
-        caffe_cpu_gemv<Dtype>(CblasNoTrans, this->num_output_, N_,
-            1., top_diff + top[0]->offset(n),
-            this->bias_multiplier_.cpu_data(), 1.,
-            bias_diff);
+        for (int o = 0; o < this->num_output_; o++) {
+          for (int s = 0; s < this->height_out_ * this->width_out_; s++) {
+            bias_diff[o] += top_diff[top[0]->offset(n, o) + s];
+          }
+        }
       }
     }
 
