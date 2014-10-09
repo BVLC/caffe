@@ -34,7 +34,7 @@ All steps are to be done from the caffe root directory.
 The dataset is distributed as a list of URLs with corresponding labels.
 Using a script, we will download a small subset of the data and split it into train and val sets.
 
-    caffe % ./models/finetune_flickr_style/assemble_data.py -h
+    caffe % ./examples/finetune_flickr_style/assemble_data.py -h
     usage: assemble_data.py [-h] [-s SEED] [-i IMAGES] [-w WORKERS]
 
     Download a subset of Flickr Style to a directory
@@ -48,7 +48,7 @@ Using a script, we will download a small subset of the data and split it into tr
                             num workers used to download images. -x uses (all - x)
                             cores.
 
-    caffe % python models/finetune_flickr_style/assemble_data.py --workers=-1 --images=2000 --seed 831486
+    caffe % python examples/finetune_flickr_style/assemble_data.py --workers=-1 --images=2000 --seed 831486
     Downloading 2000 images with 7 workers...
     Writing train/val for 1939 successfully downloaded images.
 
