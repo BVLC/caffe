@@ -259,13 +259,13 @@ ifdef CUSTOM_CXX
 endif
 
 # Static linking
-ifneq (,$(findstring clang++,$(CXX)))
-	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
-else ifneq (,$(findstring g++,$(CXX)))
+#ifneq (,$(findstring clang++,$(CXX)))
+#	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
+#else ifneq (,$(findstring g++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
-else
-	$(error Cannot static link with the $(CXX) compiler.)
-endif
+#else
+#	$(error Cannot static link with the $(CXX) compiler.)
+#endif
 
 # Debugging
 ifeq ($(DEBUG), 1)
@@ -325,7 +325,7 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
-NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+NVCCFLAGS += -ccbin=gcc -Xcompiler -fPIC $(COMMON_FLAGS)
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
