@@ -12,7 +12,7 @@ language: cpp
 # Cache Ubuntu apt packages.
 cache: apt
 
-compiler: gcc
+compiler: clang
 
 before_install:
   - export NUM_THREADS=4
