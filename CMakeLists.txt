@@ -136,6 +136,10 @@ include_directories(${LMDB_INCLUDE_DIR})
 
 #    OpenCV
 find_package(OpenCV REQUIRED core highgui imgproc)
+string(COMPARE LESS "3.0" ${OpenCV_VERSION} OPENCV3)
+if(OPENCV3)
+	find_package(OpenCV REQUIRED core highgui imgproc imgcodecs)
+endif()
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 ###    Subdirectories    ##########################################################################

@@ -9,6 +9,9 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#if CV_MAJOR_VERSION>=3
+#include "opencv2/imgcodecs/imgcodecs.hpp"
+#endif
 
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
@@ -233,7 +236,11 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       pair<std::string, vector<int> > image =
           image_database_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
 
+#if CV_MAJOR_VERSION>=3
+      cv::Mat cv_img = cv::imread(image.first, cv::IMREAD_COLOR);
+#else
       cv::Mat cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
+#endif
       if (!cv_img.data) {
         LOG(ERROR) << "Could not open or find file " << image.first;
         return;
