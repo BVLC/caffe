@@ -212,6 +212,8 @@ Do <code>brew edit opencv</code> and change the lines that look like the two lin
 <p><strong>NOTE</strong>: We find that everything compiles successfully if <code>$LD_LIBRARY_PATH</code> is not set at all, and <code>$DYLD_FALLBACK_LIBRARY_PATH</code> is set to to provide CUDA, Python, and other relevant libraries (e.g. <code>/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib</code>).
 In other <code>ENV</code> settings, things may not work as expected.</p>
 
+<p><strong>NOTE</strong>: There is currently a conflict between boost 1.56 and CUDA in some configurations. Check the <a href="https://github.com/BVLC/caffe/issues/1193#issuecomment-57491906">conflict description</a> and try downgrading to 1.55.</p>
+
 <h4 id="specific-instructions">10.8-specific Instructions</h4>
 
 <p>Simply run the following:</p>
