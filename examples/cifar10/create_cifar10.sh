@@ -3,7 +3,7 @@
 
 EXAMPLE=examples/cifar10
 DATA=data/cifar10
-DBTYPE=leveldb
+DBTYPE=lmdb
 
 echo "Creating $DBTYPE..."
 
