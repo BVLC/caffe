@@ -170,8 +170,8 @@ endif
 LIBRARIES += glog gflags protobuf leveldb snappy \
 	lmdb \
 	boost_system \
-	hdf5_hl hdf5 \
-	opencv_core opencv_highgui opencv_imgproc
+	hdf5_hl hdf5 
+
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -331,6 +331,7 @@ NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
+    -Wl,--start-group `pkg-config opencv --libs` -Wl,--end-group \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 
