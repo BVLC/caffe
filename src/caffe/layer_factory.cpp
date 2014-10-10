@@ -181,6 +181,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
   switch (type) {
   case LayerParameter_LayerType_ACCURACY:
     return new AccuracyLayer<Dtype>(param);
+  case LayerParameter_LayerType_ACCURACY_REGRESSION:
+    return new AccuracyRegressionLayer<Dtype>(param);
   case LayerParameter_LayerType_ABSVAL:
     return new AbsValLayer<Dtype>(param);
   case LayerParameter_LayerType_ARGMAX:
