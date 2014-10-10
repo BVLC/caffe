@@ -18,7 +18,7 @@ Caffe depends on several software packages.
 * [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
 * [OpenCV](http://opencv.org/).
-* [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 is tested)
+* [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 and 1.56 are tested)
 * `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`, `lmdb`
 * For the Python wrapper
     * `Python 2.7`, `numpy (>= 1.7)`, boost-provided `boost.python`
@@ -145,7 +145,7 @@ In other `ENV` settings, things may not work as expected.
 
 Simply run the following:
 
-    brew install --build-from-source --with-python boost
+    brew install --build-from-source boost boost-python
     brew install --with-python protobuf
     for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew install $x; done
 
@@ -186,16 +186,16 @@ After this, run
 
     for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
     brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --with-python --fresh -vd boost
+    brew install --build-from-source --fresh -vd boost boost-python
 
 **Note** that `brew install --build-from-source --fresh -vd boost` is fine if you do not need the Caffe Python wrapper.
 
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
 
-**Note** that in order to build the caffe python wrappers you must install boost using the --with-python option:
+**Note** that in order to build the Caffe Python wrappers you must install `boost` and `boost-python`:
 
-    brew install --build-from-source --with-python --fresh -vd boost
+    brew install --build-from-source --fresh -vd boost boost-python
 
 **Note** that Homebrew maintains itself as a separate git repository and making the above `brew edit FORMULA` changes will change files in your local copy of homebrew's master branch. By default, this will prevent you from updating Homebrew using `brew update`, as you will get an error message like the following:
 
