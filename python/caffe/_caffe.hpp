@@ -98,6 +98,12 @@ class PyNet {
   inline void check_contiguous_array(PyArrayObject* arr, string name,
       int channels, int height, int width);
 
+  void CopyTrainedLayersFrom(const string filename) {
+    net_->CopyTrainedLayersFrom(filename);
+  }
+  void ShareTrainedLayersWith(PyNet* other) {
+    net_->ShareTrainedLayersWith(other->net_.get());
+  }
   void Forward(int start, int end) { net_->ForwardFromTo(start, end); }
   void Backward(int start, int end) { net_->BackwardFromTo(start, end); }
   void Reshape() { net_->Reshape(); }
