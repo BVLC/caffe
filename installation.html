@@ -63,7 +63,7 @@ We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
   <li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)</li>
   <li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> (provided via ATLAS, MKL, or OpenBLAS).</li>
   <li><a href="http://opencv.org/">OpenCV</a>.</li>
-  <li><a href="http://www.boost.org/">Boost</a> (&gt;= 1.55, although only 1.55 is tested)</li>
+  <li><a href="http://www.boost.org/">Boost</a> (&gt;= 1.55, although only 1.55 and 1.56 are tested)</li>
   <li><code>glog</code>, <code>gflags</code>, <code>protobuf</code>, <code>leveldb</code>, <code>snappy</code>, <code>hdf5</code>, <code>lmdb</code></li>
   <li>For the Python wrapper
     <ul>
@@ -216,7 +216,7 @@ In other <code>ENV</code> settings, things may not work as expected.</p>
 
 <p>Simply run the following:</p>
 
-<pre><code>brew install --build-from-source --with-python boost
+<pre><code>brew install --build-from-source boost boost-python
 brew install --with-python protobuf
 for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew install $x; done
 </code></pre>
@@ -261,7 +261,7 @@ Make sure that Homebrew doesn’t install any software dependencies in the backg
 
 <pre><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
 brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
-brew install --build-from-source --with-python --fresh -vd boost
+brew install --build-from-source --fresh -vd boost boost-python
 </code></pre>
 
 <p><strong>Note</strong> that <code>brew install --build-from-source --fresh -vd boost</code> is fine if you do not need the Caffe Python wrapper.</p>
@@ -269,9 +269,9 @@ brew install --build-from-source --with-python --fresh -vd boost
 <p><strong>Note</strong> that the HDF5 dependency is provided by Anaconda Python in this case.
 If you’re not using Anaconda, include <code>hdf5</code> in the list above.</p>
 
-<p><strong>Note</strong> that in order to build the caffe python wrappers you must install boost using the –with-python option:</p>
+<p><strong>Note</strong> that in order to build the Caffe Python wrappers you must install <code>boost</code> and <code>boost-python</code>:</p>
 
-<pre><code>brew install --build-from-source --with-python --fresh -vd boost
+<pre><code>brew install --build-from-source --fresh -vd boost boost-python
 </code></pre>
 
 <p><strong>Note</strong> that Homebrew maintains itself as a separate git repository and making the above <code>brew edit FORMULA</code> changes will change files in your local copy of homebrew’s master branch. By default, this will prevent you from updating Homebrew using <code>brew update</code>, as you will get an error message like the following:</p>
