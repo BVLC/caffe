@@ -34,9 +34,6 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         }
 
         LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
-        // shuffle data
-        if(this->layer_param_.hdf5_data_param().shuffle())
-            ShuffleData();
       }
       current_row_ = 0;
       // shuffle data
