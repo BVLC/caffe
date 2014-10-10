@@ -141,6 +141,8 @@ Do `brew edit opencv` and change the lines that look like the two lines below to
 **NOTE**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
 In other `ENV` settings, things may not work as expected.
 
+**NOTE**: There is currently a conflict between boost 1.56 and CUDA in some configurations. Check the [conflict description](https://github.com/BVLC/caffe/issues/1193#issuecomment-57491906) and try downgrading to 1.55.
+
 #### 10.8-specific Instructions
 
 Simply run the following:
