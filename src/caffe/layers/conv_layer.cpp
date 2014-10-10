@@ -282,7 +282,7 @@ void LoopConvolutionLayer<Dtype>::Forward_cpu(
     for (int n = 0; n < this->num_; n++) {
       // Convolution
       for (int g = 0; g < this->group_; g++) {
-        conv_filter(
+        conv_top(
             bottom_data + bottom[i]->offset(n, g * num_ig),
             weight_data + this->blobs_[0]->offset(g * num_og),
             top_data + top[i]->offset(n, g * num_og),
@@ -365,7 +365,7 @@ void LoopConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             weight = this->blobs_[0]->cpu_data();
           }
           for (int g = 0; g < this->group_; ++g) {
-            conv_image(
+            conv_bottom(
                 bottom_diff + bottom[i]->offset(n, g * num_ig),
                 weight + this->blobs_[0]->offset(g * num_og),
                 top_diff + top[i]->offset(n, g * num_og),
