@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>
-      Caffe | MNIST Tutorial
+      Caffe | LeNet MNIST Tutorial
     </title>
 
     <link rel="stylesheet" href="/stylesheets/reset.css">
@@ -52,10 +52,9 @@
 
 <p>You will first need to download and convert the data format from the MNIST website. To do this, simply run the following commands:</p>
 
-<pre><code>cd $CAFFE_ROOT/data/mnist
-./get_mnist.sh
-cd $CAFFE_ROOT/examples/mnist
-./create_mnist.sh
+<pre><code>cd $CAFFE_ROOT
+./data/mnist/get_mnist.sh
+./examples/mnist/create_mnist.sh
 </code></pre>
 
 <p>If it complains that <code>wget</code> or <code>gunzip</code> are not installed, you need to install them respectively. After running the script there should be two datasets, <code>mnist_train_lmdb</code>, and <code>mnist_test_lmdb</code>.</p>
@@ -275,8 +274,8 @@ solver_mode: GPU
 
 <p>Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run <code>train_lenet.sh</code>, or the following command directly:</p>
 
-<pre><code>cd $CAFFE_ROOT/examples/mnist
-./train_lenet.sh
+<pre><code>cd $CAFFE_ROOT
+./examples/mnist/train_lenet.sh
 </code></pre>
 
 <p><code>train_lenet.sh</code> is a simple script, but here is a quick explanation: the main tool for training is <code>caffe</code> with action <code>train</code> and the solver protobuf text file as its argument.</p>
