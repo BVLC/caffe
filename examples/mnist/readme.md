@@ -6,7 +6,7 @@ include_in_docs: true
 priority: 1
 ---
 
-# Training MNIST with Caffe
+# Training LeNet on MNIST with Caffe
 
 We will assume that you have Caffe successfully compiled. If not, please refer to the [Installation page](/installation.html). In this tutorial, we will assume that your Caffe installation is located at `CAFFE_ROOT`.
 
