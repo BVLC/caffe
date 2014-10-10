@@ -47,6 +47,11 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   CHECK_GE(status, 0) << "Failed to close HDF5 file " << filename;
   CHECK_EQ(data_blob_.num(), label_blob_.num());
   LOG(INFO) << "Successully loaded " << data_blob_.num() << " rows";
+  // initialize permutation
+  permutation_.clear();
+  permutation_.resize(data_blob_.num());
+  for(int i=0;i<data_blob_.num();i++)
+    permutation_[i] = i;
 }
 
 template <typename Dtype>
@@ -83,6 +88,15 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->width();
 }
 
+/**
+ * shuffle data
+ */
+template <typename Dtype>
+void HDF5DataLayer<Dtype>::ShuffleData(){
+  LOG(INFO) << "shuffle data";
+  std::random_shuffle(permutation_.begin(), permutation_.end());
+}
+
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -101,11 +115,14 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
       }
       current_row_ = 0;
+      // shuffle data
+      if(this->layer_param_.hdf5_data_param().shuffle())
+          ShuffleData();
     }
-    caffe_copy(data_count, &data_blob_.cpu_data()[current_row_ * data_count],
+    caffe_copy(data_count, &data_blob_.cpu_data()[permutation_[current_row_] * data_count],
                &(*top)[0]->mutable_cpu_data()[i * data_count]);
     caffe_copy(label_data_count,
-               &label_blob_.cpu_data()[current_row_ * label_data_count],
+               &label_blob_.cpu_data()[permutation_[current_row_] * label_data_count],
                &(*top)[1]->mutable_cpu_data()[i * label_data_count]);
   }
 }

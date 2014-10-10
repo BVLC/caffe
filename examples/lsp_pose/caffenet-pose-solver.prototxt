@@ -1,0 +1,15 @@
+net: "caffenet-pose-lsp-train-val.prototxt"
+test_iter: 10
+test_interval: 1000
+base_lr: 0.001
+# The learning rate policy
+lr_policy: "step"
+gamma: 0.75
+stepsize: 10000
+display: 20
+max_iter: 100000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 1000
+snapshot_prefix: "pose_caffenet_train"
+solver_mode: GPU

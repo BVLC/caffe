@@ -43,7 +43,7 @@ void AccuracyRegressionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
 	  for (int j = 0; j < dim; ++j) { //xczhang change here!
 		accuracy += sqrt((bottom_data[i * dim + j]-bottom_label[i * dim + j])*(bottom_data[i * dim + j]-bottom_label[i * dim + j]));
 	  }
-	  accuracy /= num;
+
 /*    // Top-k accuracy
     std::vector<std::pair<Dtype, int> > bottom_data_vector;
     for (int j = 0; j < dim; ++j) {
@@ -63,7 +63,7 @@ void AccuracyRegressionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  (*top)[0]->mutable_cpu_data()[0] = accuracy / num;
+  (*top)[0]->mutable_cpu_data()[0] = accuracy / num / Dtype(2);
   // Accuracy layer should not be used as a loss function.
 }
 

@@ -34,14 +34,20 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         }
 
         LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+        // shuffle data
+        if(this->layer_param_.hdf5_data_param().shuffle())
+            ShuffleData();
       }
       current_row_ = 0;
+      // shuffle data
+      if(this->layer_param_.hdf5_data_param().shuffle())
+          ShuffleData();
     }
     caffe_copy(data_count,
-        &data_blob_.cpu_data()[current_row_ * data_count],
+        &data_blob_.cpu_data()[permutation_[current_row_] * data_count],
         &(*top)[0]->mutable_gpu_data()[i * data_count]);
     caffe_copy(label_data_count,
-        &label_blob_.cpu_data()[current_row_ * label_data_count],
+        &label_blob_.cpu_data()[permutation_[current_row_] * label_data_count],
         &(*top)[1]->mutable_gpu_data()[i * label_data_count]);
   }
 }
