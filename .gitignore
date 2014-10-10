@@ -1,5 +1,8 @@
 ## General
 
+# training LOG file
+*.log
+
 # Compiled Object files
 *.slo
 *.lo
