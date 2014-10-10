@@ -38,7 +38,7 @@ void ExpLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(ExpLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(ExpLayer);
 
 
 }  // namespace caffe

@@ -59,7 +59,7 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(ReLULayer);
+INSTANTIATE_LAYER_GPU_FUNCS(ReLULayer);
 
 
 }  // namespace caffe
