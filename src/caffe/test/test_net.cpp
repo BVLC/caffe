@@ -1155,7 +1155,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   for (int i = 0; i < num_params; ++i) {
     const Dtype param_asum =
        caffe_cpu_asum(params2[i]->count(), params2[i]->cpu_diff());
-    EXPECT_EQ(param_asum, param_asums[i]);
+    EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
   }
 
   // Change a subset of the learning rates to zero; check that we see zero
@@ -1172,9 +1172,9 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
     const Dtype param_asum =
        caffe_cpu_asum(params3[i]->count(), params3[i]->cpu_diff());
     if (i == 1 || i == 2) {
-      EXPECT_EQ(0, param_asum);
+      EXPECT_FLOAT_EQ(0, param_asum);
     } else {
-      EXPECT_EQ(param_asum, param_asums[i]);
+      EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
     }
   }
 
@@ -1191,9 +1191,9 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
     const Dtype param_asum =
        caffe_cpu_asum(params4[i]->count(), params4[i]->cpu_diff());
     if (i == 0 || i == 3) {
-      EXPECT_EQ(0, param_asum);
+      EXPECT_FLOAT_EQ(0, param_asum);
     } else {
-      EXPECT_EQ(param_asum, param_asums[i]);
+      EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
     }
   }
 }
