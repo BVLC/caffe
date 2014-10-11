@@ -15,6 +15,25 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
 file(GLOB ProtoFiles "${CMAKE_CURRENT_SOURCE_DIR}/*.proto")
 PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${ProtoFiles})
 
+if(BUILD_PYTHON)
+	include(${CMAKE_MODULE_PATH}/ProtobufPython.cmake)
+    PROTOBUF_GENERATE_PYTHON(ProtoPython ${ProtoFiles})
+
+    file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/python/caffe/proto)
+
+    foreach(header ${ProtoPython})
+
+        ADD_CUSTOM_COMMAND(TARGET protopython
+            COMMAND cmake -E copy ${header}
+            ${CMAKE_SOURCE_DIR}/python/caffe/proto/
+            DEPENDS ${header}
+        )
+
+    endforeach(header)
+
+    install(FILES ${ProtoPython} DESTINATION python/caffe/proto/)
+endif()
+
 add_library(proto
         ${ProtoSources}
         ${ProtoHeaders}
