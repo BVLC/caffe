@@ -45,7 +45,7 @@ void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       this->bottom_desc_, bottom_data, this->bottom_desc_, bottom_diff));
 }
 
-INSTANTIATE_CLASS(CuDNNReLULayer);
+INSTANTIATE_LAYER_GPU_FUNCS(CuDNNReLULayer);
 
 }  // namespace caffe
 #endif

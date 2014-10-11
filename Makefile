@@ -168,9 +168,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 LIBRARIES += glog gflags protobuf leveldb snappy \
-	lmdb \
-	boost_system \
-	hdf5_hl hdf5 \
+	lmdb boost_system hdf5_hl hdf5 m \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
@@ -235,7 +233,8 @@ ifeq ($(LINUX), 1)
 		WARNINGS += -Wno-uninitialized
 	endif
 	# boost::thread is reasonably called boost_thread (compare OS X)
-	LIBRARIES += boost_thread
+	# We will also explicitly add stdc++ to the link target.
+	LIBRARIES += boost_thread stdc++
 endif
 
 # OS X:
