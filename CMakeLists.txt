@@ -135,7 +135,7 @@ find_package(LMDB REQUIRED)
 include_directories(${LMDB_INCLUDE_DIR})
 
 #    OpenCV
-find_package(OpenCV REQUIRED core highgui imgproc)
+find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 ###    Subdirectories    ##########################################################################
