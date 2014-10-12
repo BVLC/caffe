@@ -32,15 +32,15 @@ int main(int argc, char** argv) {
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-  const int num_required_args = 6;
+  const int num_required_args = 7;
   if (argc < num_required_args) {
     LOG(ERROR)<<
     "This program takes in a trained network and an input data layer, and then"
     " extract features of the input data produced by the net.\n"
     "Usage: extract_features  pretrained_net_param"
     "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
-    "  save_feature_database_name1[,name2,...]  num_mini_batches  [CPU/GPU]"
-    "  [DEVICE_ID=0]\n"
+    "  save_feature_database_name1[,name2,...]  num_mini_batches  db_type"
+    "  [CPU/GPU] [DEVICE_ID=0]\n"
     "Note: you can extract multiple features in one pass by specifying"
     " multiple feature blob names and database names seperated by ','."
     " The names cannot contain white space characters and the number of blobs"
@@ -119,15 +119,15 @@ int feature_extraction_pipeline(int argc, char** argv) {
         << " in the network " << feature_extraction_proto;
   }
 
+  int num_mini_batches = atoi(argv[++arg_pos]);
+
   std::vector<shared_ptr<Database> > feature_dbs;
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening database " << database_names[i];
-    shared_ptr<Database> database = DatabaseFactory("leveldb");
+    shared_ptr<Database> database = DatabaseFactory(argv[++arg_pos]);
     database->open(database_names.at(i), Database::New);
     feature_dbs.push_back(database);
   }
-
-  int num_mini_batches = atoi(argv[++arg_pos]);
 
   LOG(ERROR)<< "Extacting Features";
 
