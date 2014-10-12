@@ -14,16 +14,19 @@ void LeveldbDatabase::open(const string& filename, Mode mode) {
     LOG(INFO) << " mode NEW";
     options.error_if_exists = true;
     options.create_if_missing = true;
+    read_only_ = false;
     break;
   case ReadWrite:
     LOG(INFO) << " mode RW";
     options.error_if_exists = false;
     options.create_if_missing = true;
+    read_only_ = false;
     break;
   case ReadOnly:
     LOG(INFO) << " mode RO";
     options.error_if_exists = false;
     options.create_if_missing = false;
+    read_only_ = true;
     break;
   default:
     LOG(FATAL) << "unknown mode " << mode;
@@ -45,6 +48,8 @@ void LeveldbDatabase::open(const string& filename, Mode mode) {
 void LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
   LOG(INFO) << "LevelDB: Put";
 
+  CHECK(!read_only_);
+
   CHECK_NOTNULL(batch_.get());
 
   leveldb::Slice key_slice(key->data(), key->size());
@@ -53,8 +58,25 @@ void LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
   batch_->Put(key_slice, value_slice);
 }
 
+void LeveldbDatabase::get(buffer_t* key, buffer_t* value) {
+  LOG(INFO) << "LevelDB: Get";
+
+  leveldb::Slice key_slice(key->data(), key->size());
+
+  string value_string;
+  leveldb::Status status =
+      db_->Get(leveldb::ReadOptions(), key_slice, &value_string);
+  CHECK(status.ok()) << "leveldb get failed";
+
+  Database::buffer_t temp_value(value_string.data(),
+      value_string.data() + value_string.size());
+  value->swap(temp_value);
+}
+
 void LeveldbDatabase::commit() {
   LOG(INFO) << "LevelDB: Commit";
+
+  CHECK(!read_only_);
 
   CHECK_NOTNULL(db_.get());
   CHECK_NOTNULL(batch_.get());

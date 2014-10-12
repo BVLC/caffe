@@ -14,12 +14,24 @@ void LmdbDatabase::open(const string& filename, Mode mode) {
   CHECK(NULL == txn_);
   CHECK_EQ(0, dbi_);
 
-  if (mode == New) {
-    CHECK_EQ(mkdir(filename.c_str(), 0744), 0) << "mkdir " << filename
-                                                << " failed";
+  int retval;
+  if (mode != ReadOnly) {
+    retval = mkdir(filename.c_str(), 0744);
+    switch (mode) {
+    case New:
+      CHECK_EQ(0, retval) << "mkdir " << filename << " failed";
+      break;
+    case ReadWrite:
+      if (-1 == retval) {
+        CHECK_EQ(EEXIST, errno) << "mkdir " << filename << " failed ("
+            << strerror(errno) << ")";
+      }
+      break;
+    default:
+      LOG(FATAL) << "Invalid mode " << mode;
+    }
   }
 
-  int retval;
   retval = mdb_env_create(&env_);
   CHECK_EQ(retval, MDB_SUCCESS) << "mdb_env_create failed "
       << mdb_strerror(retval);
@@ -59,6 +71,30 @@ void LmdbDatabase::put(buffer_t* key, buffer_t* value) {
   int retval = mdb_put(txn_, dbi_, &mdbkey, &mdbdata, 0);
   CHECK_EQ(retval, MDB_SUCCESS)
       << "mdb_put failed " << mdb_strerror(retval);
+}
+
+void LmdbDatabase::get(buffer_t* key, buffer_t* value) {
+  LOG(INFO) << "LMDB: Get";
+
+  MDB_val mdbkey, mdbdata;
+  mdbkey.mv_data = key->data();
+  mdbkey.mv_size = key->size();
+
+  int retval;
+  MDB_txn* get_txn;
+  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &get_txn);
+  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
+      << mdb_strerror(retval);
+
+  retval = mdb_get(get_txn, dbi_, &mdbkey, &mdbdata);
+  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_get failed " << mdb_strerror(retval);
+
+  mdb_txn_abort(get_txn);
+
+  Database::buffer_t temp_value(reinterpret_cast<char*>(mdbdata.mv_data),
+      reinterpret_cast<char*>(mdbdata.mv_data) + mdbdata.mv_size);
+
+  value->swap(temp_value);
 }
 
 void LmdbDatabase::commit() {

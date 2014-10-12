@@ -28,6 +28,7 @@ class Database {
 
   virtual void open(const string& filename, Mode mode) = 0;
   virtual void put(buffer_t* key, buffer_t* value) = 0;
+  virtual void get(buffer_t* key, buffer_t* value) = 0;
   virtual void commit() = 0;
   virtual void close() = 0;
 

@@ -16,6 +16,7 @@ class LeveldbDatabase : public Database {
  public:
   void open(const string& filename, Mode mode);
   void put(buffer_t* key, buffer_t* value);
+  void get(buffer_t* key, buffer_t* value);
   void commit();
   void close();
 
@@ -42,6 +43,7 @@ class LeveldbDatabase : public Database {
 
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::WriteBatch> batch_;
+  bool read_only_;
 };
 
 }  // namespace caffe
