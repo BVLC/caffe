@@ -131,7 +131,7 @@ void LeveldbDatabase::increment(shared_ptr<DatabaseState> state) const {
   }
 }
 
-pair<Database::buffer_t, Database::buffer_t>& LeveldbDatabase::dereference(
+Database::KV& LeveldbDatabase::dereference(
     shared_ptr<DatabaseState> state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(state);
@@ -144,10 +144,14 @@ pair<Database::buffer_t, Database::buffer_t>& LeveldbDatabase::dereference(
 
   CHECK(iter->Valid());
 
-  leveldb_state->kv_pair_ = make_pair(
-      buffer_t(iter->key().data(), iter->key().data() + iter->key().size()),
-      buffer_t(iter->value().data(),
-          iter->value().data() + iter->value().size()));
+  Database::buffer_t temp_key(buffer_t(iter->key().data(),
+      iter->key().data() + iter->key().size()));
+
+  Database::buffer_t temp_value(buffer_t(iter->value().data(),
+      iter->value().data() + iter->value().size()));
+
+  leveldb_state->kv_pair_.key.swap(temp_key);
+  leveldb_state->kv_pair_.value.swap(temp_value);
   return leveldb_state->kv_pair_;
 }
 

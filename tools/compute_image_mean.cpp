@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   int count = 0;
   // load first datum
   Database::const_iterator iter = database->begin();
-  const Database::buffer_t& first_blob = iter->second;
+  const Database::buffer_t& first_blob = iter->value;
   datum.ParseFromArray(first_blob.data(), first_blob.size());
   iter = database->end();
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   for (Database::const_iterator iter = database->begin();
       iter != database->end(); ++iter) {
     // just a dummy operation
-    const Database::buffer_t& blob = iter->second;
+    const Database::buffer_t& blob = iter->value;
     datum.ParseFromArray(blob.data(), blob.size());
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),

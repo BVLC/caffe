@@ -32,13 +32,13 @@ class LeveldbDatabase : public Database {
           iter_(iter) { }
 
     shared_ptr<leveldb::Iterator> iter_;
-    pair<buffer_t, buffer_t> kv_pair_;
+    KV kv_pair_;
   };
 
   bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const;
   void increment(shared_ptr<DatabaseState> state) const;
-  pair<buffer_t, buffer_t>& dereference(shared_ptr<DatabaseState> state) const;
+  Database::KV& dereference(shared_ptr<DatabaseState> state) const;
 
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::WriteBatch> batch_;
