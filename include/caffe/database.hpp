@@ -21,6 +21,11 @@ class Database {
 
   typedef vector<char> buffer_t;
 
+  struct KV {
+    buffer_t key;
+    buffer_t value;
+  };
+
   virtual void open(const string& filename, Mode mode) = 0;
   virtual void put(buffer_t* key, buffer_t* value) = 0;
   virtual void commit() = 0;
@@ -41,10 +46,9 @@ class Database {
   class DatabaseState;
 
  public:
-  class iterator : public std::iterator<
-      std::forward_iterator_tag, pair<buffer_t, buffer_t> > {
+  class iterator : public std::iterator<std::forward_iterator_tag, KV> {
    public:
-    typedef pair<buffer_t, buffer_t> T;
+    typedef KV T;
     typedef T value_type;
     typedef T& reference_type;
     typedef T* pointer_type;
@@ -97,7 +101,7 @@ class Database {
   virtual bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const = 0;
   virtual void increment(shared_ptr<DatabaseState> state) const = 0;
-  virtual pair<buffer_t, buffer_t>& dereference(
+  virtual KV& dereference(
       shared_ptr<DatabaseState> state) const = 0;
 };
 

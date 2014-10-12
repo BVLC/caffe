@@ -149,8 +149,7 @@ void LmdbDatabase::increment(shared_ptr<DatabaseState> state) const {
   }
 }
 
-pair<Database::buffer_t, Database::buffer_t>& LmdbDatabase::dereference(
-    shared_ptr<DatabaseState> state) const {
+Database::KV& LmdbDatabase::dereference(shared_ptr<DatabaseState> state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(state);
 
@@ -168,9 +167,13 @@ pair<Database::buffer_t, Database::buffer_t>& LmdbDatabase::dereference(
   char* key_data = reinterpret_cast<char*>(mdb_key.mv_data);
   char* value_data = reinterpret_cast<char*>(mdb_val.mv_data);
 
-  lmdb_state->kv_pair_ = make_pair(
-    buffer_t(key_data, key_data + mdb_key.mv_size),
-    buffer_t(value_data, value_data + mdb_val.mv_size));
+  Database::buffer_t temp_key(key_data, key_data + mdb_key.mv_size);
+
+  Database::buffer_t temp_value(value_data,
+      value_data + mdb_val.mv_size);
+
+  lmdb_state->kv_pair_.key.swap(temp_key);
+  lmdb_state->kv_pair_.value.swap(temp_value);
 
   return lmdb_state->kv_pair_;
 }

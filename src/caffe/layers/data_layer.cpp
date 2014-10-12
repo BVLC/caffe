@@ -48,7 +48,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Read a data point, and use it to initialize the top blob.
   CHECK(iter_ != database_->end());
   Datum datum;
-  datum.ParseFromArray(iter_->second.data(), iter_->second.size());
+  datum.ParseFromArray(iter_->value.data(), iter_->value.size());
 
   // image
   int crop_size = this->layer_param_.transform_param().crop_size();
@@ -94,7 +94,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     Datum datum;
     CHECK(iter_ != database_->end());
-    datum.ParseFromArray(iter_->second.data(), iter_->second.size());
+    datum.ParseFromArray(iter_->value.data(), iter_->value.size());
 
     // Apply data transformations (mirror, scale, crop...)
     int offset = this->prefetch_data_.offset(item_id);

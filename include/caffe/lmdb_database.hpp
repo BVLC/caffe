@@ -36,13 +36,13 @@ class LmdbDatabase : public Database {
           cursor_(cursor) { }
 
     MDB_cursor* cursor_;
-    pair<buffer_t, buffer_t> kv_pair_;
+    KV kv_pair_;
   };
 
   bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const;
   void increment(shared_ptr<DatabaseState> state) const;
-  pair<buffer_t, buffer_t>& dereference(shared_ptr<DatabaseState> state) const;
+  Database::KV& dereference(shared_ptr<DatabaseState> state) const;
 
   MDB_env *env_;
   MDB_dbi dbi_;
