@@ -86,10 +86,12 @@ template <typename Dtype>
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit DataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype>(param),
+        skip_initialized_(false) {}
   virtual ~DataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Reset();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DATA;
@@ -110,6 +112,9 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   MDB_txn* mdb_txn_;
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
+
+  unsigned int skip_;
+  bool skip_initialized_;
 };
 
 /**
@@ -127,6 +132,7 @@ class DummyDataLayer : public Layer<Dtype> {
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+  virtual void Reset();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DUMMY_DATA;
@@ -162,6 +168,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+  virtual void Reset();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HDF5_DATA;
@@ -242,6 +249,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual ~ImageDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Reset();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_IMAGE_DATA;
@@ -316,6 +324,9 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual ~WindowDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  // Reset isn't implemented for WindowDataLayer -- for a working
+  // implementation, the RNG would need to be reset to its initial state.
+  virtual void Reset() { NOT_IMPLEMENTED; }
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_WINDOW_DATA;
