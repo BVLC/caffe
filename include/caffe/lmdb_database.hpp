@@ -20,6 +20,7 @@ class LmdbDatabase : public Database {
 
   void open(const string& filename, Mode mode);
   void put(buffer_t* key, buffer_t* value);
+  void get(buffer_t* key, buffer_t* value);
   void commit();
   void close();
 
@@ -44,9 +45,9 @@ class LmdbDatabase : public Database {
   void increment(shared_ptr<DatabaseState> state) const;
   Database::KV& dereference(shared_ptr<DatabaseState> state) const;
 
-  MDB_env *env_;
+  MDB_env* env_;
   MDB_dbi dbi_;
-  MDB_txn *txn_;
+  MDB_txn* txn_;
 };
 
 }  // namespace caffe
