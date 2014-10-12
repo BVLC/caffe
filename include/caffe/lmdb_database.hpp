@@ -32,11 +32,35 @@ class LmdbDatabase : public Database {
  protected:
   class LmdbState : public Database::DatabaseState {
    public:
-    explicit LmdbState(MDB_cursor* cursor)
+    explicit LmdbState(MDB_cursor* cursor, MDB_txn* txn, const MDB_dbi* dbi)
         : Database::DatabaseState(),
-          cursor_(cursor) { }
+          cursor_(cursor),
+          txn_(txn),
+          dbi_(dbi) { }
+
+    shared_ptr<DatabaseState> clone() {
+      MDB_cursor* new_cursor;
+
+      if (cursor_) {
+        int retval;
+        retval = mdb_cursor_open(txn_, *dbi_, &new_cursor);
+        CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+        MDB_val key;
+        MDB_val val;
+        retval = mdb_cursor_get(cursor_, &key, &val, MDB_GET_CURRENT);
+        CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+        retval = mdb_cursor_get(new_cursor, &key, &val, MDB_SET);
+        CHECK_EQ(MDB_SUCCESS, retval) << mdb_strerror(retval);
+      } else {
+        new_cursor = cursor_;
+      }
+
+      return shared_ptr<DatabaseState>(new LmdbState(new_cursor, txn_, dbi_));
+    }
 
     MDB_cursor* cursor_;
+    MDB_txn* txn_;
+    const MDB_dbi* dbi_;
     KV kv_pair_;
   };
 
