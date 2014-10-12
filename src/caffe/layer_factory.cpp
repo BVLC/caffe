@@ -259,6 +259,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new ConvolutionSKLayer<Dtype>(param);
   case LayerParameter_LayerType_POOLING_SK:
       return new PoolingSKLayer<Dtype>(param);
+  case LayerParameter_LayerType_THRESHOLD:
+      return new ThresholdLayer<Dtype>(param);
   case LayerParameter_LayerType_NONE:
     LOG(FATAL) << "Layer " << name << " has unspecified type.";
   default:
