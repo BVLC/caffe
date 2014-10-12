@@ -134,12 +134,12 @@ LmdbDatabase::const_iterator LmdbDatabase::begin() const {
   retval = mdb_cursor_get(cursor, &key, &val, MDB_FIRST);
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
 
-  shared_ptr<DatabaseState> state(new LmdbState(cursor));
+  shared_ptr<DatabaseState> state(new LmdbState(cursor, txn_, &dbi_));
   return const_iterator(this, state);
 }
 
 LmdbDatabase::const_iterator LmdbDatabase::end() const {
-  shared_ptr<DatabaseState> state(new LmdbState(NULL));
+  shared_ptr<DatabaseState> state(new LmdbState(NULL, txn_, &dbi_));
   return const_iterator(this, state);
 }
 

@@ -99,13 +99,13 @@ LeveldbDatabase::const_iterator LeveldbDatabase::begin() const {
   if (!iter->Valid()) {
     iter.reset();
   }
-  shared_ptr<DatabaseState> state(new LeveldbState(iter));
+  shared_ptr<DatabaseState> state(new LeveldbState(db_, iter));
   return const_iterator(this, state);
 }
 
 LeveldbDatabase::const_iterator LeveldbDatabase::end() const {
   shared_ptr<leveldb::Iterator> iter;
-  shared_ptr<DatabaseState> state(new LeveldbState(iter));
+  shared_ptr<DatabaseState> state(new LeveldbState(db_, iter));
   return const_iterator(this, state);
 }
 

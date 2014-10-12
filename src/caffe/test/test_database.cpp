@@ -34,6 +34,32 @@ class DatabaseTest : public MultiDeviceTest<TypeParam> {
     Database::buffer_t value(kValue, kValue + 5);
     return value;
   }
+
+  Database::buffer_t TestAltKey() {
+    const char* kKey = "foo";
+    Database::buffer_t key(kKey, kKey + 3);
+    return key;
+  }
+
+  Database::buffer_t TestAltValue() {
+    const char* kValue = "bar";
+    Database::buffer_t value(kValue, kValue + 3);
+    return value;
+  }
+
+  bool BufferEq(const Database::buffer_t& buf1,
+      const Database::buffer_t& buf2) {
+    if (buf1.size() != buf2.size()) {
+      return false;
+    }
+    for (size_t i = 0; i < buf1.size(); ++i) {
+      if (buf1.at(i) != buf2.at(i)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 };
 
 TYPED_TEST_CASE(DatabaseTest, TestDtypesAndDevices);
@@ -114,6 +140,87 @@ TYPED_TEST(DatabaseTest, TestIteratorsLevelDB) {
   EXPECT_EQ(kNumExamples, count);
 }
 
+TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLevelDB) {
+  string name = this->DBName();
+  shared_ptr<Database> database = DatabaseFactory("leveldb");
+  database->open(name, Database::New);
+
+  Database::buffer_t key1 = this->TestAltKey();
+  Database::buffer_t value1 = this->TestAltValue();
+
+  Database::buffer_t key2 = this->TestKey();
+  Database::buffer_t value2 = this->TestValue();
+
+  database->put(&key1, &value1);
+  database->put(&key2, &value2);
+  database->commit();
+
+  Database::const_iterator iter1 = database->begin();
+
+  EXPECT_FALSE(database->end() == iter1);
+
+  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
+
+  Database::const_iterator iter2 = ++iter1;
+
+  EXPECT_FALSE(database->end() == iter1);
+  EXPECT_FALSE(database->end() == iter2);
+
+  EXPECT_TRUE(this->BufferEq(iter2->key, key2));
+
+  Database::const_iterator iter3 = ++iter2;
+
+  EXPECT_TRUE(database->end() == iter3);
+
+  iter1 = database->end();
+  iter2 = database->end();
+  iter3 = database->end();
+
+  database->close();
+}
+
+TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLevelDB) {
+  string name = this->DBName();
+  shared_ptr<Database> database = DatabaseFactory("leveldb");
+  database->open(name, Database::New);
+
+  Database::buffer_t key1 = this->TestAltKey();
+  Database::buffer_t value1 = this->TestAltValue();
+
+  Database::buffer_t key2 = this->TestKey();
+  Database::buffer_t value2 = this->TestValue();
+
+  database->put(&key1, &value1);
+  database->put(&key2, &value2);
+  database->commit();
+
+  Database::const_iterator iter1 = database->begin();
+
+  EXPECT_FALSE(database->end() == iter1);
+
+  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
+
+  Database::const_iterator iter2 = iter1++;
+
+  EXPECT_FALSE(database->end() == iter1);
+  EXPECT_FALSE(database->end() == iter2);
+
+  EXPECT_TRUE(this->BufferEq(iter2->key, key1));
+  EXPECT_TRUE(this->BufferEq(iter1->key, key2));
+
+  Database::const_iterator iter3 = iter1++;
+
+  EXPECT_FALSE(database->end() == iter3);
+  EXPECT_TRUE(this->BufferEq(iter3->key, key2));
+  EXPECT_TRUE(database->end() == iter1);
+
+  iter1 = database->end();
+  iter2 = database->end();
+  iter3 = database->end();
+
+  database->close();
+}
+
 TYPED_TEST(DatabaseTest, TestNewPutLevelDBPasses) {
   string name = this->DBName();
   shared_ptr<Database> database = DatabaseFactory("leveldb");
@@ -155,10 +262,7 @@ TYPED_TEST(DatabaseTest, TestNewGetLevelDBPasses) {
 
   database->get(&key, &new_val);
 
-  EXPECT_EQ(val.size(), new_val.size());
-  for (size_t i = 0; i < val.size(); ++i) {
-    EXPECT_EQ(val.at(i), new_val.at(i));
-  }
+  EXPECT_TRUE(this->BufferEq(val, new_val));
 
   database->close();
 }
@@ -220,10 +324,7 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetLevelDBPasses) {
 
   database->get(&key, &new_val);
 
-  EXPECT_EQ(val.size(), new_val.size());
-  for (size_t i = 0; i < val.size(); ++i) {
-    EXPECT_EQ(val.at(i), new_val.at(i));
-  }
+  EXPECT_TRUE(this->BufferEq(val, new_val));
 
   database->close();
 }
@@ -288,10 +389,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLevelDBPasses) {
 
   database->get(&key, &new_val);
 
-  EXPECT_EQ(val.size(), new_val.size());
-  for (size_t i = 0; i < val.size(); ++i) {
-    EXPECT_EQ(val.at(i), new_val.at(i));
-  }
+  EXPECT_TRUE(this->BufferEq(val, new_val));
 }
 
 TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLevelDBFails) {
@@ -389,6 +487,87 @@ TYPED_TEST(DatabaseTest, TestIteratorsLMDB) {
   EXPECT_EQ(kNumExamples, count);
 }
 
+TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLMDB) {
+  string name = this->DBName();
+  shared_ptr<Database> database = DatabaseFactory("lmdb");
+  database->open(name, Database::New);
+
+  Database::buffer_t key1 = this->TestAltKey();
+  Database::buffer_t value1 = this->TestAltValue();
+
+  Database::buffer_t key2 = this->TestKey();
+  Database::buffer_t value2 = this->TestValue();
+
+  database->put(&key1, &value1);
+  database->put(&key2, &value2);
+  database->commit();
+
+  Database::const_iterator iter1 = database->begin();
+
+  EXPECT_FALSE(database->end() == iter1);
+
+  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
+
+  Database::const_iterator iter2 = ++iter1;
+
+  EXPECT_FALSE(database->end() == iter1);
+  EXPECT_FALSE(database->end() == iter2);
+
+  EXPECT_TRUE(this->BufferEq(iter2->key, key2));
+
+  Database::const_iterator iter3 = ++iter2;
+
+  EXPECT_TRUE(database->end() == iter3);
+
+  iter1 = database->end();
+  iter2 = database->end();
+  iter3 = database->end();
+
+  database->close();
+}
+
+TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLMDB) {
+  string name = this->DBName();
+  shared_ptr<Database> database = DatabaseFactory("lmdb");
+  database->open(name, Database::New);
+
+  Database::buffer_t key1 = this->TestAltKey();
+  Database::buffer_t value1 = this->TestAltValue();
+
+  Database::buffer_t key2 = this->TestKey();
+  Database::buffer_t value2 = this->TestValue();
+
+  database->put(&key1, &value1);
+  database->put(&key2, &value2);
+  database->commit();
+
+  Database::const_iterator iter1 = database->begin();
+
+  EXPECT_FALSE(database->end() == iter1);
+
+  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
+
+  Database::const_iterator iter2 = iter1++;
+
+  EXPECT_FALSE(database->end() == iter1);
+  EXPECT_FALSE(database->end() == iter2);
+
+  EXPECT_TRUE(this->BufferEq(iter2->key, key1));
+  EXPECT_TRUE(this->BufferEq(iter1->key, key2));
+
+  Database::const_iterator iter3 = iter1++;
+
+  EXPECT_FALSE(database->end() == iter3);
+  EXPECT_TRUE(this->BufferEq(iter3->key, key2));
+  EXPECT_TRUE(database->end() == iter1);
+
+  iter1 = database->end();
+  iter2 = database->end();
+  iter3 = database->end();
+
+  database->close();
+}
+
 TYPED_TEST(DatabaseTest, TestNewPutLMDBPasses) {
   string name = this->DBName();
   shared_ptr<Database> database = DatabaseFactory("lmdb");
@@ -430,10 +609,7 @@ TYPED_TEST(DatabaseTest, TestNewGetLMDBPasses) {
 
   database->get(&key, &new_val);
 
-  EXPECT_EQ(val.size(), new_val.size());
-  for (size_t i = 0; i < val.size(); ++i) {
-    EXPECT_EQ(val.at(i), new_val.at(i));
-  }
+  EXPECT_TRUE(this->BufferEq(val, new_val));
 
   database->close();
 }
@@ -494,10 +670,7 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetLMDBPasses) {
 
   database->get(&key, &new_val);
 
-  EXPECT_EQ(val.size(), new_val.size());
-  for (size_t i = 0; i < val.size(); ++i) {
-    EXPECT_EQ(val.at(i), new_val.at(i));
-  }
+  EXPECT_TRUE(this->BufferEq(val, new_val));
 
   database->close();
 }
@@ -562,10 +735,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLMDBPasses) {
 
   database->get(&key, &new_val);
 
-  EXPECT_EQ(val.size(), new_val.size());
-  for (size_t i = 0; i < val.size(); ++i) {
-    EXPECT_EQ(val.at(i), new_val.at(i));
-  }
+  EXPECT_TRUE(this->BufferEq(val, new_val));
 }
 
 TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLMDBFails) {

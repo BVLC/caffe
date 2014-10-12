@@ -62,6 +62,20 @@ class Database {
           state_(state) { }
     ~iterator() { }
 
+    iterator(const iterator& other)
+        : parent_(other.parent_),
+          state_(other.state_->clone()) { }
+
+    iterator& operator=(iterator copy) {
+      copy.swap(*this);
+      return *this;
+    }
+
+    void swap(iterator& other) throw() {
+      std::swap(this->parent_, other.parent_);
+      std::swap(this->state_, other.state_);
+    }
+
     bool operator==(const iterator& other) const {
       return parent_->equal(state_, other.state_);
     }
@@ -97,6 +111,7 @@ class Database {
   class DatabaseState {
    public:
     virtual ~DatabaseState() { }
+    virtual shared_ptr<DatabaseState> clone() = 0;
   };
 
   virtual bool equal(shared_ptr<DatabaseState> state1,

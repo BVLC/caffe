@@ -28,10 +28,26 @@ class LeveldbDatabase : public Database {
  protected:
   class LeveldbState : public Database::DatabaseState {
    public:
-    explicit LeveldbState(shared_ptr<leveldb::Iterator> iter)
+    explicit LeveldbState(shared_ptr<leveldb::DB> db,
+        shared_ptr<leveldb::Iterator> iter)
         : Database::DatabaseState(),
+          db_(db),
           iter_(iter) { }
 
+    shared_ptr<DatabaseState> clone() {
+      shared_ptr<leveldb::Iterator> new_iter;
+
+      if (iter_.get()) {
+        new_iter.reset(db_->NewIterator(leveldb::ReadOptions()));
+        CHECK(iter_->Valid());
+        new_iter->Seek(iter_->key());
+        CHECK(new_iter->Valid());
+      }
+
+      return shared_ptr<DatabaseState>(new LeveldbState(db_, new_iter));
+    }
+
+    shared_ptr<leveldb::DB> db_;
     shared_ptr<leveldb::Iterator> iter_;
     KV kv_pair_;
   };
