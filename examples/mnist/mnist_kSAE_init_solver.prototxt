@@ -1,0 +1,15 @@
+net: "mnist_kSAE.prototxt"
+test_state: { stage: 'test-on-test' }
+test_iter: 100
+test_interval: 1000
+test_compute_loss: true
+base_lr: 0.01
+lr_policy: "fixed"
+display: 100
+max_iter: 20000
+weight_decay: 0.0005
+snapshot: 10000
+snapshot_prefix: "examples/mnist/mnist_kSAE_init"
+momentum: 0.9
+# solver mode: CPU or GPU
+solver_mode: CPU

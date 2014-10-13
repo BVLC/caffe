@@ -87,7 +87,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 };
 
 /**
@@ -351,6 +351,54 @@ class PowerLayer : public NeuronLayer<Dtype> {
   Dtype shift_;
   /// @brief Result of @f$ \alpha \gamma @f$
   Dtype diff_scale_;
+};
+
+/**
+ * @brief Retains top K maximum values, sets others to 0.
+ *
+ * @param bottom input Blob vector (length 1)
+ *   -# @f$ (N \times C \times H \times W) @f$
+ *      the inputs @f$ x @f$
+ * @param top output Blob vector (length 1)
+ *   -# @f$ (N \times C \times H \times W) @f$
+ *      the computed outputs @f$ y = |x| @f$
+ */
+template <typename Dtype>
+class TopKLayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+   * @param param provides TopKParameter topk_param,
+   *     with TopKLayer options:
+   *   - k.
+   *     Sets the number of top k non-zero outputs.
+   */
+  explicit TopKLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+     const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_TOPK;
+  }
+  Blob<uint> mask_;
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs.    */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  uint uint_k_;
+  uint channels4norm;
 };
 
 /**
