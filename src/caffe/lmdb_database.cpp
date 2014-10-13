@@ -9,7 +9,7 @@
 namespace caffe {
 
 bool LmdbDatabase::open(const string& filename, Mode mode) {
-  LOG(INFO) << "LMDB: Open " << filename;
+  DLOG(INFO) << "LMDB: Open " << filename;
 
   CHECK(NULL == env_);
   CHECK(NULL == txn_);
@@ -79,7 +79,7 @@ bool LmdbDatabase::open(const string& filename, Mode mode) {
 }
 
 bool LmdbDatabase::put(const key_type& key, const value_type& value) {
-  LOG(INFO) << "LMDB: Put";
+  DLOG(INFO) << "LMDB: Put";
 
   // MDB_val::mv_size is not const, so we need to make a local copy.
   key_type local_key = key;
@@ -104,7 +104,7 @@ bool LmdbDatabase::put(const key_type& key, const value_type& value) {
 }
 
 bool LmdbDatabase::get(const key_type& key, value_type* value) {
-  LOG(INFO) << "LMDB: Get";
+  DLOG(INFO) << "LMDB: Get";
 
   key_type local_key = key;
 
@@ -137,7 +137,7 @@ bool LmdbDatabase::get(const key_type& key, value_type* value) {
 }
 
 bool LmdbDatabase::commit() {
-  LOG(INFO) << "LMDB: Commit";
+  DLOG(INFO) << "LMDB: Commit";
 
   CHECK_NOTNULL(txn_);
 
@@ -158,7 +158,7 @@ bool LmdbDatabase::commit() {
 }
 
 void LmdbDatabase::close() {
-  LOG(INFO) << "LMDB: Close";
+  DLOG(INFO) << "LMDB: Close";
 
   if (env_ && dbi_) {
     mdb_close(env_, dbi_);
@@ -170,7 +170,7 @@ void LmdbDatabase::close() {
 }
 
 void LmdbDatabase::keys(vector<key_type>* keys) {
-  LOG(INFO) << "LMDB: Keys";
+  DLOG(INFO) << "LMDB: Keys";
 
   keys->clear();
   for (Database::const_iterator iter = begin(); iter != end(); ++iter) {

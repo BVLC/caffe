@@ -7,30 +7,30 @@
 namespace caffe {
 
 bool LeveldbDatabase::open(const string& filename, Mode mode) {
-  LOG(INFO) << "LevelDB: Open " << filename;
+  DLOG(INFO) << "LevelDB: Open " << filename;
 
   leveldb::Options options;
   switch (mode) {
   case New:
-    LOG(INFO) << " mode NEW";
+    DLOG(INFO) << " mode NEW";
     options.error_if_exists = true;
     options.create_if_missing = true;
     read_only_ = false;
     break;
   case ReadWrite:
-    LOG(INFO) << " mode RW";
+    DLOG(INFO) << " mode RW";
     options.error_if_exists = false;
     options.create_if_missing = true;
     read_only_ = false;
     break;
   case ReadOnly:
-    LOG(INFO) << " mode RO";
+    DLOG(INFO) << " mode RO";
     options.error_if_exists = false;
     options.create_if_missing = false;
     read_only_ = true;
     break;
   default:
-    LOG(FATAL) << "unknown mode " << mode;
+    DLOG(FATAL) << "unknown mode " << mode;
   }
   options.write_buffer_size = 268435456;
   options.max_open_files = 100;
@@ -53,7 +53,7 @@ bool LeveldbDatabase::open(const string& filename, Mode mode) {
 }
 
 bool LeveldbDatabase::put(const key_type& key, const value_type& value) {
-  LOG(INFO) << "LevelDB: Put";
+  DLOG(INFO) << "LevelDB: Put";
 
   if (read_only_) {
     LOG(ERROR) << "put can not be used on a database in ReadOnly mode";
@@ -71,7 +71,7 @@ bool LeveldbDatabase::put(const key_type& key, const value_type& value) {
 }
 
 bool LeveldbDatabase::get(const key_type& key, value_type* value) {
-  LOG(INFO) << "LevelDB: Get";
+  DLOG(INFO) << "LevelDB: Get";
 
   leveldb::Slice key_slice(key.data(), key.size());
 
@@ -92,7 +92,7 @@ bool LeveldbDatabase::get(const key_type& key, value_type* value) {
 }
 
 bool LeveldbDatabase::commit() {
-  LOG(INFO) << "LevelDB: Commit";
+  DLOG(INFO) << "LevelDB: Commit";
 
   if (read_only_) {
     LOG(ERROR) << "commit can not be used on a database in ReadOnly mode";
@@ -110,18 +110,17 @@ bool LeveldbDatabase::commit() {
 }
 
 void LeveldbDatabase::close() {
-  LOG(INFO) << "LevelDB: Close";
+  DLOG(INFO) << "LevelDB: Close";
 
   batch_.reset();
   db_.reset();
 }
 
 void LeveldbDatabase::keys(vector<key_type>* keys) {
-  LOG(INFO) << "LevelDB: Keys";
+  DLOG(INFO) << "LevelDB: Keys";
 
   keys->clear();
   for (Database::const_iterator iter = begin(); iter != end(); ++iter) {
-    LOG(INFO) << "KEY";
     keys->push_back(iter->key);
   }
 }
@@ -159,8 +158,6 @@ bool LeveldbDatabase::equal(shared_ptr<DatabaseState> state1,
 
   shared_ptr<LeveldbState> leveldb_state2 =
       boost::dynamic_pointer_cast<LeveldbState>(state2);
-
-  LOG(INFO) << leveldb_state1 << " " << leveldb_state2;
 
   // The KV store doesn't really have any sort of ordering,
   // so while we can do a sequential scan over the collection,
