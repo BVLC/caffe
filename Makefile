@@ -293,6 +293,7 @@ else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
 else ifeq ($(BLAS), atlas-centos7)
+	# On centos 7 atlas and cblas are compiled together into a single library called tatlas.
 	LIBRARIES += tatlas
 else
 	# ATLAS
