@@ -22,7 +22,12 @@
 #include "caffe/solver.hpp"
 #include "caffe/util/io.hpp"
 
-using namespace caffe;  // NOLINT(build/namespaces)
+using boost::shared_ptr;
+using caffe::Blob;
+using caffe::BlobProto;
+using caffe::Caffe;
+using caffe::Net;
+using caffe::NetParameter;
 
 int main(int argc, char** argv) {
   Caffe::set_mode(Caffe::GPU);
@@ -37,7 +42,7 @@ int main(int argc, char** argv) {
   }
   caffe_net->CopyTrainedLayersFrom(argv[2]);
 
-  vector<Blob<float>* > input_vec;
+  std::vector<Blob<float>* > input_vec;
   shared_ptr<Blob<float> > input_blob(new Blob<float>());
   if (strcmp(argv[3], "none") != 0) {
     BlobProto input_blob_proto;
@@ -46,7 +51,7 @@ int main(int argc, char** argv) {
     input_vec.push_back(input_blob.get());
   }
 
-  string output_prefix(argv[4]);
+  std::string output_prefix(argv[4]);
   // Run the network without training.
   LOG(ERROR) << "Performing Forward";
   caffe_net->Forward(input_vec);
@@ -62,8 +67,8 @@ int main(int argc, char** argv) {
   }
   // Now, let's dump all the layers
 
-  const vector<string>& blob_names = caffe_net->blob_names();
-  const vector<shared_ptr<Blob<float> > >& blobs = caffe_net->blobs();
+  const std::vector<std::string>& blob_names = caffe_net->blob_names();
+  const std::vector<shared_ptr<Blob<float> > >& blobs = caffe_net->blobs();
   for (int blobid = 0; blobid < caffe_net->blobs().size(); ++blobid) {
     // Serialize blob
     LOG(ERROR) << "Dumping " << blob_names[blobid];
