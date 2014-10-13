@@ -51,7 +51,7 @@ bool LeveldbDatabase::open(const string& filename, Mode mode) {
   return true;
 }
 
-bool LeveldbDatabase::put(const buffer_t& key, const buffer_t& value) {
+bool LeveldbDatabase::put(const key_type& key, const value_type& value) {
   LOG(INFO) << "LevelDB: Put";
 
   if (read_only_) {
@@ -69,7 +69,7 @@ bool LeveldbDatabase::put(const buffer_t& key, const buffer_t& value) {
   return true;
 }
 
-bool LeveldbDatabase::get(const buffer_t& key, buffer_t* value) {
+bool LeveldbDatabase::get(const key_type& key, value_type* value) {
   LOG(INFO) << "LevelDB: Get";
 
   leveldb::Slice key_slice(key.data(), key.size());
@@ -83,7 +83,7 @@ bool LeveldbDatabase::get(const buffer_t& key, buffer_t* value) {
     return false;
   }
 
-  Database::buffer_t temp_value(value_string.data(),
+  Database::value_type temp_value(value_string.data(),
       value_string.data() + value_string.size());
   value->swap(temp_value);
 
@@ -189,10 +189,10 @@ Database::KV& LeveldbDatabase::dereference(
 
   CHECK(iter->Valid());
 
-  Database::buffer_t temp_key(buffer_t(iter->key().data(),
+  Database::key_type temp_key(key_type(iter->key().data(),
       iter->key().data() + iter->key().size()));
 
-  Database::buffer_t temp_value(buffer_t(iter->value().data(),
+  Database::value_type temp_value(value_type(iter->value().data(),
       iter->value().data() + iter->value().size()));
 
   leveldb_state->kv_pair_.key.swap(temp_key);

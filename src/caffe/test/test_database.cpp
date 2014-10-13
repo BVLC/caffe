@@ -23,32 +23,32 @@ class DatabaseTest : public MultiDeviceTest<TypeParam> {
     return filename;
   }
 
-  Database::buffer_t TestKey() {
+  Database::key_type TestKey() {
     const char* kKey = "hello";
-    Database::buffer_t key(kKey, kKey + 5);
+    Database::key_type key(kKey, kKey + 5);
     return key;
   }
 
-  Database::buffer_t TestValue() {
+  Database::value_type TestValue() {
     const char* kValue = "world";
-    Database::buffer_t value(kValue, kValue + 5);
+    Database::value_type value(kValue, kValue + 5);
     return value;
   }
 
-  Database::buffer_t TestAltKey() {
+  Database::key_type TestAltKey() {
     const char* kKey = "foo";
-    Database::buffer_t key(kKey, kKey + 3);
+    Database::key_type key(kKey, kKey + 3);
     return key;
   }
 
-  Database::buffer_t TestAltValue() {
+  Database::value_type TestAltValue() {
     const char* kValue = "bar";
-    Database::buffer_t value(kValue, kValue + 3);
+    Database::value_type value(kValue, kValue + 3);
     return value;
   }
 
-  bool BufferEq(const Database::buffer_t& buf1,
-      const Database::buffer_t& buf2) {
+  template <typename T>
+  bool BufferEq(const T& buf1, const T& buf2) {
     if (buf1.size() != buf2.size()) {
       return false;
     }
@@ -124,8 +124,8 @@ TYPED_TEST(DatabaseTest, TestIteratorsLevelDB) {
     string key = ss.str();
     ss << " here be data";
     string value = ss.str();
-    Database::buffer_t key_buf(key.data(), key.data() + key.size());
-    Database::buffer_t val_buf(value.data(), value.data() + value.size());
+    Database::key_type key_buf(key.data(), key.data() + key.size());
+    Database::value_type val_buf(value.data(), value.data() + value.size());
     EXPECT_TRUE(database->put(key_buf, val_buf));
   }
   EXPECT_TRUE(database->commit());
@@ -145,11 +145,11 @@ TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLevelDB) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key1 = this->TestAltKey();
-  Database::buffer_t value1 = this->TestAltValue();
+  Database::key_type key1 = this->TestAltKey();
+  Database::value_type value1 = this->TestAltValue();
 
-  Database::buffer_t key2 = this->TestKey();
-  Database::buffer_t value2 = this->TestValue();
+  Database::key_type key2 = this->TestKey();
+  Database::value_type value2 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
   EXPECT_TRUE(database->put(key2, value2));
@@ -180,11 +180,11 @@ TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLevelDB) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key1 = this->TestAltKey();
-  Database::buffer_t value1 = this->TestAltValue();
+  Database::key_type key1 = this->TestAltKey();
+  Database::value_type value1 = this->TestAltValue();
 
-  Database::buffer_t key2 = this->TestKey();
-  Database::buffer_t value2 = this->TestValue();
+  Database::key_type key2 = this->TestKey();
+  Database::value_type value2 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
   EXPECT_TRUE(database->put(key2, value2));
@@ -218,8 +218,8 @@ TYPED_TEST(DatabaseTest, TestNewPutLevelDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -243,14 +243,14 @@ TYPED_TEST(DatabaseTest, TestNewGetLevelDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_TRUE(database->get(key, &new_val));
 
@@ -264,12 +264,12 @@ TYPED_TEST(DatabaseTest, TestNewGetNoCommitLevelDBFails) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_FALSE(database->get(key, &new_val));
 }
@@ -280,8 +280,8 @@ TYPED_TEST(DatabaseTest, TestReadWritePutLevelDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::ReadWrite));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -305,14 +305,14 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetLevelDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_TRUE(database->get(key, &new_val));
 
@@ -326,12 +326,12 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetNoCommitLevelDBFails) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_FALSE(database->get(key, &new_val));
 }
@@ -344,8 +344,8 @@ TYPED_TEST(DatabaseTest, TestReadOnlyPutLevelDBFails) {
 
   EXPECT_TRUE(database->open(name, Database::ReadOnly));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_FALSE(database->put(key, val));
 }
@@ -366,8 +366,8 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLevelDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -377,7 +377,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLevelDBPasses) {
 
   EXPECT_TRUE(database->open(name, Database::ReadOnly));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_TRUE(database->get(key, &new_val));
 
@@ -389,8 +389,8 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLevelDBFails) {
   shared_ptr<Database> database = DatabaseFactory("leveldb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -398,7 +398,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLevelDBFails) {
 
   EXPECT_TRUE(database->open(name, Database::ReadOnly));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_FALSE(database->get(key, &new_val));
 }
@@ -463,8 +463,8 @@ TYPED_TEST(DatabaseTest, TestIteratorsLMDB) {
     string key = ss.str();
     ss << " here be data";
     string value = ss.str();
-    Database::buffer_t key_buf(key.data(), key.data() + key.size());
-    Database::buffer_t val_buf(value.data(), value.data() + value.size());
+    Database::key_type key_buf(key.data(), key.data() + key.size());
+    Database::value_type val_buf(value.data(), value.data() + value.size());
     EXPECT_TRUE(database->put(key_buf, val_buf));
   }
   EXPECT_TRUE(database->commit());
@@ -484,11 +484,11 @@ TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLMDB) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key1 = this->TestAltKey();
-  Database::buffer_t value1 = this->TestAltValue();
+  Database::key_type key1 = this->TestAltKey();
+  Database::value_type value1 = this->TestAltValue();
 
-  Database::buffer_t key2 = this->TestKey();
-  Database::buffer_t value2 = this->TestValue();
+  Database::key_type key2 = this->TestKey();
+  Database::value_type value2 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
   EXPECT_TRUE(database->put(key2, value2));
@@ -519,11 +519,11 @@ TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLMDB) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key1 = this->TestAltKey();
-  Database::buffer_t value1 = this->TestAltValue();
+  Database::key_type key1 = this->TestAltKey();
+  Database::value_type value1 = this->TestAltValue();
 
-  Database::buffer_t key2 = this->TestKey();
-  Database::buffer_t value2 = this->TestValue();
+  Database::key_type key2 = this->TestKey();
+  Database::value_type value2 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
   EXPECT_TRUE(database->put(key2, value2));
@@ -557,8 +557,8 @@ TYPED_TEST(DatabaseTest, TestNewPutLMDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -582,14 +582,14 @@ TYPED_TEST(DatabaseTest, TestNewGetLMDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_TRUE(database->get(key, &new_val));
 
@@ -603,12 +603,12 @@ TYPED_TEST(DatabaseTest, TestNewGetNoCommitLMDBFails) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_FALSE(database->get(key, &new_val));
 }
@@ -618,8 +618,8 @@ TYPED_TEST(DatabaseTest, TestReadWritePutLMDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::ReadWrite));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -643,14 +643,14 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetLMDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_TRUE(database->get(key, &new_val));
 
@@ -664,12 +664,12 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetNoCommitLMDBFails) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_FALSE(database->get(key, &new_val));
 }
@@ -682,8 +682,8 @@ TYPED_TEST(DatabaseTest, TestReadOnlyPutLMDBFails) {
 
   EXPECT_TRUE(database->open(name, Database::ReadOnly));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_FALSE(database->put(key, val));
 }
@@ -704,8 +704,8 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLMDBPasses) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -715,7 +715,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLMDBPasses) {
 
   EXPECT_TRUE(database->open(name, Database::ReadOnly));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_TRUE(database->get(key, &new_val));
 
@@ -727,8 +727,8 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLMDBFails) {
   shared_ptr<Database> database = DatabaseFactory("lmdb");
   EXPECT_TRUE(database->open(name, Database::New));
 
-  Database::buffer_t key = this->TestKey();
-  Database::buffer_t val = this->TestValue();
+  Database::key_type key = this->TestKey();
+  Database::value_type val = this->TestValue();
 
   EXPECT_TRUE(database->put(key, val));
 
@@ -736,7 +736,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLMDBFails) {
 
   EXPECT_TRUE(database->open(name, Database::ReadOnly));
 
-  Database::buffer_t new_val;
+  Database::value_type new_val;
 
   EXPECT_FALSE(database->get(key, &new_val));
 }

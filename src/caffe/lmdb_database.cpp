@@ -77,12 +77,12 @@ bool LmdbDatabase::open(const string& filename, Mode mode) {
   return true;
 }
 
-bool LmdbDatabase::put(const buffer_t& key, const buffer_t& value) {
+bool LmdbDatabase::put(const key_type& key, const value_type& value) {
   LOG(INFO) << "LMDB: Put";
 
   // MDB_val::mv_size is not const, so we need to make a local copy.
-  buffer_t local_key = key;
-  buffer_t local_value = value;
+  key_type local_key = key;
+  value_type local_value = value;
 
   MDB_val mdbkey, mdbdata;
   mdbdata.mv_size = local_value.size();
@@ -102,10 +102,10 @@ bool LmdbDatabase::put(const buffer_t& key, const buffer_t& value) {
   return true;
 }
 
-bool LmdbDatabase::get(const buffer_t& key, buffer_t* value) {
+bool LmdbDatabase::get(const key_type& key, value_type* value) {
   LOG(INFO) << "LMDB: Get";
 
-  buffer_t local_key = key;
+  key_type local_key = key;
 
   MDB_val mdbkey, mdbdata;
   mdbkey.mv_data = local_key.data();
@@ -127,7 +127,7 @@ bool LmdbDatabase::get(const buffer_t& key, buffer_t* value) {
 
   mdb_txn_abort(get_txn);
 
-  Database::buffer_t temp_value(reinterpret_cast<char*>(mdbdata.mv_data),
+  Database::value_type temp_value(reinterpret_cast<char*>(mdbdata.mv_data),
       reinterpret_cast<char*>(mdbdata.mv_data) + mdbdata.mv_size);
 
   value->swap(temp_value);
@@ -247,9 +247,9 @@ Database::KV& LmdbDatabase::dereference(shared_ptr<DatabaseState> state) const {
   char* key_data = reinterpret_cast<char*>(mdb_key.mv_data);
   char* value_data = reinterpret_cast<char*>(mdb_val.mv_data);
 
-  Database::buffer_t temp_key(key_data, key_data + mdb_key.mv_size);
+  Database::key_type temp_key(key_data, key_data + mdb_key.mv_size);
 
-  Database::buffer_t temp_value(value_data,
+  Database::value_type temp_value(value_data,
       value_data + mdb_val.mv_size);
 
   lmdb_state->kv_pair_.key.swap(temp_key);

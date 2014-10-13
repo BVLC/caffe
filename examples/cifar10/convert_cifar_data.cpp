@@ -60,12 +60,12 @@ void convert_dataset(const string& input_folder, const string& output_folder,
       read_image(&data_file, &label, str_buffer);
       datum.set_label(label);
       datum.set_data(str_buffer, kCIFARImageNBytes);
-      Database::buffer_t value(datum.ByteSize());
+      Database::value_type value(datum.ByteSize());
       datum.SerializeWithCachedSizesToArray(
           reinterpret_cast<unsigned char*>(value.data()));
       int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d",
           fileid * kCIFARBatchSize + itemid);
-      Database::buffer_t key(str_buffer, str_buffer + length);
+      Database::key_type key(str_buffer, str_buffer + length);
       CHECK(train_database->put(key, value));
     }
   }
@@ -84,11 +84,11 @@ void convert_dataset(const string& input_folder, const string& output_folder,
     read_image(&data_file, &label, str_buffer);
     datum.set_label(label);
     datum.set_data(str_buffer, kCIFARImageNBytes);
-    Database::buffer_t value(datum.ByteSize());
+    Database::value_type value(datum.ByteSize());
     datum.SerializeWithCachedSizesToArray(
         reinterpret_cast<unsigned char*>(value.data()));
     int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
-    Database::buffer_t key(str_buffer, str_buffer + length);
+    Database::key_type key(str_buffer, str_buffer + length);
     CHECK(test_database->put(key, value));
   }
   CHECK(test_database->commit());
