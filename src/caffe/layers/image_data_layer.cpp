@@ -131,5 +131,5 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);
-
+REGISTER_LAYER_CLASS(IMAGE_DATA, ImageDataLayer);
 }  // namespace caffe

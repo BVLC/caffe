@@ -41,6 +41,5 @@ STUB_GPU(AbsValLayer);
 #endif
 
 INSTANTIATE_CLASS(AbsValLayer);
-
-
+REGISTER_LAYER_CLASS(ABSVAL, AbsValLayer);
 }  // namespace caffe
