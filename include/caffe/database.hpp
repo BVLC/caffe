@@ -27,8 +27,8 @@ class Database {
   };
 
   virtual bool open(const string& filename, Mode mode) = 0;
-  virtual bool put(buffer_t* key, buffer_t* value) = 0;
-  virtual bool get(buffer_t* key, buffer_t* value) = 0;
+  virtual bool put(const buffer_t& key, const buffer_t& value) = 0;
+  virtual bool get(const buffer_t& key, buffer_t* value) = 0;
   virtual bool commit() = 0;
   virtual void close() = 0;
 

@@ -66,7 +66,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
       int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d",
           fileid * kCIFARBatchSize + itemid);
       Database::buffer_t key(str_buffer, str_buffer + length);
-      CHECK(train_database->put(&key, &value));
+      CHECK(train_database->put(key, value));
     }
   }
   CHECK(train_database->commit());
@@ -89,7 +89,7 @@ void convert_dataset(const string& input_folder, const string& output_folder,
         reinterpret_cast<unsigned char*>(value.data()));
     int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
     Database::buffer_t key(str_buffer, str_buffer + length);
-    CHECK(test_database->put(&key, &value));
+    CHECK(test_database->put(key, value));
   }
   CHECK(test_database->commit());
   test_database->close();

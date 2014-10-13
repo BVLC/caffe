@@ -59,7 +59,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       Database::buffer_t value(datum.ByteSize());
       datum.SerializeWithCachedSizesToArray(
           reinterpret_cast<unsigned char*>(value.data()));
-      CHECK(database->put(&key, &value));
+      CHECK(database->put(key, value));
     }
     CHECK(database->commit());
     database->close();

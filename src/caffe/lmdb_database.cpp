@@ -77,14 +77,18 @@ bool LmdbDatabase::open(const string& filename, Mode mode) {
   return true;
 }
 
-bool LmdbDatabase::put(buffer_t* key, buffer_t* value) {
+bool LmdbDatabase::put(const buffer_t& key, const buffer_t& value) {
   LOG(INFO) << "LMDB: Put";
 
+  // MDB_val::mv_size is not const, so we need to make a local copy.
+  buffer_t local_key = key;
+  buffer_t local_value = value;
+
   MDB_val mdbkey, mdbdata;
-  mdbdata.mv_size = value->size();
-  mdbdata.mv_data = value->data();
-  mdbkey.mv_size = key->size();
-  mdbkey.mv_data = key->data();
+  mdbdata.mv_size = local_value.size();
+  mdbdata.mv_data = local_value.data();
+  mdbkey.mv_size = local_key.size();
+  mdbkey.mv_data = local_key.data();
 
   CHECK_NOTNULL(txn_);
   CHECK_NE(0, dbi_);
@@ -98,12 +102,14 @@ bool LmdbDatabase::put(buffer_t* key, buffer_t* value) {
   return true;
 }
 
-bool LmdbDatabase::get(buffer_t* key, buffer_t* value) {
+bool LmdbDatabase::get(const buffer_t& key, buffer_t* value) {
   LOG(INFO) << "LMDB: Get";
 
+  buffer_t local_key = key;
+
   MDB_val mdbkey, mdbdata;
-  mdbkey.mv_data = key->data();
-  mdbkey.mv_size = key->size();
+  mdbkey.mv_data = local_key.data();
+  mdbkey.mv_size = local_key.size();
 
   int retval;
   MDB_txn* get_txn;
