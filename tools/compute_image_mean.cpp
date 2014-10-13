@@ -38,7 +38,6 @@ int main(int argc, char** argv) {
   Database::const_iterator iter = database->begin();
   const Database::buffer_t& first_blob = iter->value;
   datum.ParseFromArray(first_blob.data(), first_blob.size());
-  iter = database->end();
 
   sum_blob.set_num(1);
   sum_blob.set_channels(datum.channels());

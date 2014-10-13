@@ -18,10 +18,6 @@ template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
   // clean up the database resources
-
-  // Very important to invalidate iterators before closing the database.
-  // TODO(kmatzen): Figure out a better design to avoid this.
-  iter_ = database_->end();
   database_->close();
 }
 

@@ -34,6 +34,14 @@ class LeveldbDatabase : public Database {
           db_(db),
           iter_(iter) { }
 
+    ~LeveldbState() {
+      // This order is very important.
+      // Iterators must be destroyed before their associated DB
+      // is destroyed.
+      iter_.reset();
+      db_.reset();
+    }
+
     shared_ptr<DatabaseState> clone() {
       shared_ptr<leveldb::Iterator> new_iter;
 

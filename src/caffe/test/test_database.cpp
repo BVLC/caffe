@@ -172,10 +172,6 @@ TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLevelDB) {
 
   EXPECT_TRUE(database->end() == iter3);
 
-  iter1 = database->end();
-  iter2 = database->end();
-  iter3 = database->end();
-
   database->close();
 }
 
@@ -213,10 +209,6 @@ TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLevelDB) {
   EXPECT_FALSE(database->end() == iter3);
   EXPECT_TRUE(this->BufferEq(iter3->key, key2));
   EXPECT_TRUE(database->end() == iter1);
-
-  iter1 = database->end();
-  iter2 = database->end();
-  iter3 = database->end();
 
   database->close();
 }
@@ -519,10 +511,6 @@ TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLMDB) {
 
   EXPECT_TRUE(database->end() == iter3);
 
-  iter1 = database->end();
-  iter2 = database->end();
-  iter3 = database->end();
-
   database->close();
 }
 
@@ -560,10 +548,6 @@ TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLMDB) {
   EXPECT_FALSE(database->end() == iter3);
   EXPECT_TRUE(this->BufferEq(iter3->key, key2));
   EXPECT_TRUE(database->end() == iter1);
-
-  iter1 = database->end();
-  iter2 = database->end();
-  iter3 = database->end();
 
   database->close();
 }
