@@ -158,6 +158,29 @@ class XavierFiller : public Filler<Dtype> {
 };
 
 
+template <typename Dtype>
+class TestLocalWeightConvolutionFiller : public Filler<Dtype> {
+ public:
+  explicit TestLocalWeightConvolutionFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    LOG(INFO) << "Doing mutable cpu";
+    LOG(INFO) << "blobs" << blob;
+    Dtype* data = blob->mutable_cpu_data();
+    LOG(INFO) << "Done Doing mutable cpu";
+    CHECK_EQ(blob->channels(), 1);
+
+    for (int n=0; n<blob->num(); n++) {
+      for (int j=0; j<blob->height(); j++) {
+        for (int i=0; i<blob->width(); i++) {
+          *(data+blob->offset(n, 0, j, i)) = i;
+        }
+      }
+    }
+  }
+};
+
+
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
@@ -177,6 +200,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new UniformFiller<Dtype>(param);
   } else if (type == "xavier") {
     return new XavierFiller<Dtype>(param);
+  } else if (type == "test_local_weight_convolution") {
+    return new TestLocalWeightConvolutionFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
