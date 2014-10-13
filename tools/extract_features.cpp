@@ -161,7 +161,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         int length = snprintf(key_str, kMaxKeyStrLength, "%d",
             image_indices[i]);
         Database::buffer_t key(key_str, key_str + length);
-        CHECK(feature_dbs.at(i)->put(&key, &value));
+        CHECK(feature_dbs.at(i)->put(key, value));
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           CHECK(feature_dbs.at(i)->commit());

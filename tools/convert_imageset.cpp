@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     Database::buffer_t keystr(key_cstr, key_cstr + length);
 
     // Put in db
-    CHECK(database->put(&keystr, &value));
+    CHECK(database->put(keystr, value));
 
     if (++count % 1000 == 0) {
       // Commit txn

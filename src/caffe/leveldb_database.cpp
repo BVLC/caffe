@@ -51,7 +51,7 @@ bool LeveldbDatabase::open(const string& filename, Mode mode) {
   return true;
 }
 
-bool LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
+bool LeveldbDatabase::put(const buffer_t& key, const buffer_t& value) {
   LOG(INFO) << "LevelDB: Put";
 
   if (read_only_) {
@@ -61,18 +61,18 @@ bool LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
 
   CHECK_NOTNULL(batch_.get());
 
-  leveldb::Slice key_slice(key->data(), key->size());
-  leveldb::Slice value_slice(value->data(), value->size());
+  leveldb::Slice key_slice(key.data(), key.size());
+  leveldb::Slice value_slice(value.data(), value.size());
 
   batch_->Put(key_slice, value_slice);
 
   return true;
 }
 
-bool LeveldbDatabase::get(buffer_t* key, buffer_t* value) {
+bool LeveldbDatabase::get(const buffer_t& key, buffer_t* value) {
   LOG(INFO) << "LevelDB: Get";
 
-  leveldb::Slice key_slice(key->data(), key->size());
+  leveldb::Slice key_slice(key.data(), key.size());
 
   string value_string;
   leveldb::Status status =

@@ -126,7 +126,7 @@ TYPED_TEST(DatabaseTest, TestIteratorsLevelDB) {
     string value = ss.str();
     Database::buffer_t key_buf(key.data(), key.data() + key.size());
     Database::buffer_t val_buf(value.data(), value.data() + value.size());
-    EXPECT_TRUE(database->put(&key_buf, &val_buf));
+    EXPECT_TRUE(database->put(key_buf, val_buf));
   }
   EXPECT_TRUE(database->commit());
 
@@ -151,8 +151,8 @@ TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLevelDB) {
   Database::buffer_t key2 = this->TestKey();
   Database::buffer_t value2 = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key1, &value1));
-  EXPECT_TRUE(database->put(&key2, &value2));
+  EXPECT_TRUE(database->put(key1, value1));
+  EXPECT_TRUE(database->put(key2, value2));
   EXPECT_TRUE(database->commit());
 
   Database::const_iterator iter1 = database->begin();
@@ -190,8 +190,8 @@ TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLevelDB) {
   Database::buffer_t key2 = this->TestKey();
   Database::buffer_t value2 = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key1, &value1));
-  EXPECT_TRUE(database->put(&key2, &value2));
+  EXPECT_TRUE(database->put(key1, value1));
+  EXPECT_TRUE(database->put(key2, value2));
   EXPECT_TRUE(database->commit());
 
   Database::const_iterator iter1 = database->begin();
@@ -229,7 +229,7 @@ TYPED_TEST(DatabaseTest, TestNewPutLevelDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
@@ -254,13 +254,13 @@ TYPED_TEST(DatabaseTest, TestNewGetLevelDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
   Database::buffer_t new_val;
 
-  EXPECT_TRUE(database->get(&key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_val));
 
   EXPECT_TRUE(this->BufferEq(val, new_val));
 
@@ -275,11 +275,11 @@ TYPED_TEST(DatabaseTest, TestNewGetNoCommitLevelDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   Database::buffer_t new_val;
 
-  EXPECT_FALSE(database->get(&key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_val));
 }
 
 
@@ -291,7 +291,7 @@ TYPED_TEST(DatabaseTest, TestReadWritePutLevelDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
@@ -316,13 +316,13 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetLevelDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
   Database::buffer_t new_val;
 
-  EXPECT_TRUE(database->get(&key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_val));
 
   EXPECT_TRUE(this->BufferEq(val, new_val));
 
@@ -337,11 +337,11 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetNoCommitLevelDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   Database::buffer_t new_val;
 
-  EXPECT_FALSE(database->get(&key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_val));
 }
 
 TYPED_TEST(DatabaseTest, TestReadOnlyPutLevelDBFails) {
@@ -355,7 +355,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyPutLevelDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_FALSE(database->put(&key, &val));
+  EXPECT_FALSE(database->put(key, val));
 }
 
 TYPED_TEST(DatabaseTest, TestReadOnlyCommitLevelDBFails) {
@@ -377,7 +377,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLevelDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
@@ -387,7 +387,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLevelDBPasses) {
 
   Database::buffer_t new_val;
 
-  EXPECT_TRUE(database->get(&key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_val));
 
   EXPECT_TRUE(this->BufferEq(val, new_val));
 }
@@ -400,7 +400,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLevelDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   database->close();
 
@@ -408,7 +408,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLevelDBFails) {
 
   Database::buffer_t new_val;
 
-  EXPECT_FALSE(database->get(&key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_val));
 }
 
 TYPED_TEST(DatabaseTest, TestNewDoesntExistLMDBPasses) {
@@ -473,7 +473,7 @@ TYPED_TEST(DatabaseTest, TestIteratorsLMDB) {
     string value = ss.str();
     Database::buffer_t key_buf(key.data(), key.data() + key.size());
     Database::buffer_t val_buf(value.data(), value.data() + value.size());
-    EXPECT_TRUE(database->put(&key_buf, &val_buf));
+    EXPECT_TRUE(database->put(key_buf, val_buf));
   }
   EXPECT_TRUE(database->commit());
 
@@ -498,8 +498,8 @@ TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLMDB) {
   Database::buffer_t key2 = this->TestKey();
   Database::buffer_t value2 = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key1, &value1));
-  EXPECT_TRUE(database->put(&key2, &value2));
+  EXPECT_TRUE(database->put(key1, value1));
+  EXPECT_TRUE(database->put(key2, value2));
   EXPECT_TRUE(database->commit());
 
   Database::const_iterator iter1 = database->begin();
@@ -537,8 +537,8 @@ TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLMDB) {
   Database::buffer_t key2 = this->TestKey();
   Database::buffer_t value2 = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key1, &value1));
-  EXPECT_TRUE(database->put(&key2, &value2));
+  EXPECT_TRUE(database->put(key1, value1));
+  EXPECT_TRUE(database->put(key2, value2));
   EXPECT_TRUE(database->commit());
 
   Database::const_iterator iter1 = database->begin();
@@ -576,7 +576,7 @@ TYPED_TEST(DatabaseTest, TestNewPutLMDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
@@ -601,13 +601,13 @@ TYPED_TEST(DatabaseTest, TestNewGetLMDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
   Database::buffer_t new_val;
 
-  EXPECT_TRUE(database->get(&key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_val));
 
   EXPECT_TRUE(this->BufferEq(val, new_val));
 
@@ -622,11 +622,11 @@ TYPED_TEST(DatabaseTest, TestNewGetNoCommitLMDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   Database::buffer_t new_val;
 
-  EXPECT_FALSE(database->get(&key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_val));
 }
 
 TYPED_TEST(DatabaseTest, TestReadWritePutLMDBPasses) {
@@ -637,7 +637,7 @@ TYPED_TEST(DatabaseTest, TestReadWritePutLMDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
@@ -662,13 +662,13 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetLMDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
   Database::buffer_t new_val;
 
-  EXPECT_TRUE(database->get(&key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_val));
 
   EXPECT_TRUE(this->BufferEq(val, new_val));
 
@@ -683,11 +683,11 @@ TYPED_TEST(DatabaseTest, TestReadWriteGetNoCommitLMDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   Database::buffer_t new_val;
 
-  EXPECT_FALSE(database->get(&key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_val));
 }
 
 TYPED_TEST(DatabaseTest, TestReadOnlyPutLMDBFails) {
@@ -701,7 +701,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyPutLMDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_FALSE(database->put(&key, &val));
+  EXPECT_FALSE(database->put(key, val));
 }
 
 TYPED_TEST(DatabaseTest, TestReadOnlyCommitLMDBFails) {
@@ -723,7 +723,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLMDBPasses) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   EXPECT_TRUE(database->commit());
 
@@ -733,7 +733,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetLMDBPasses) {
 
   Database::buffer_t new_val;
 
-  EXPECT_TRUE(database->get(&key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_val));
 
   EXPECT_TRUE(this->BufferEq(val, new_val));
 }
@@ -746,7 +746,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLMDBFails) {
   Database::buffer_t key = this->TestKey();
   Database::buffer_t val = this->TestValue();
 
-  EXPECT_TRUE(database->put(&key, &val));
+  EXPECT_TRUE(database->put(key, val));
 
   database->close();
 
@@ -754,7 +754,7 @@ TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLMDBFails) {
 
   Database::buffer_t new_val;
 
-  EXPECT_FALSE(database->get(&key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_val));
 }
 
 }  // namespace caffe

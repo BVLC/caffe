@@ -19,8 +19,8 @@ class LmdbDatabase : public Database {
         txn_(NULL) { }
 
   bool open(const string& filename, Mode mode);
-  bool put(buffer_t* key, buffer_t* value);
-  bool get(buffer_t* key, buffer_t* value);
+  bool put(const buffer_t& key, const buffer_t& value);
+  bool get(const buffer_t& key, buffer_t* value);
   bool commit();
   void close();
 
