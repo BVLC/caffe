@@ -88,5 +88,5 @@ STUB_GPU(Im2colLayer);
 #endif
 
 INSTANTIATE_CLASS(Im2colLayer);
-
+REGISTER_LAYER_CLASS(IM2COL, Im2colLayer);
 }  // namespace caffe

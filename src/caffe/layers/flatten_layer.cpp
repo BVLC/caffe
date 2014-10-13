@@ -34,5 +34,5 @@ STUB_GPU(FlattenLayer);
 #endif
 
 INSTANTIATE_CLASS(FlattenLayer);
-
+REGISTER_LAYER_CLASS(FLATTEN, FlattenLayer);
 }  // namespace caffe
