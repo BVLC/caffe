@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   shared_ptr<Database> database = DatabaseFactory(db_backend);
 
   // Open db
-  database->open(db_path, Database::New);
+  CHECK(database->open(db_path, Database::New));
 
   // Storing to db
   std::string root_folder(argv[1]);
@@ -116,17 +116,17 @@ int main(int argc, char** argv) {
     Database::buffer_t keystr(key_cstr, key_cstr + length);
 
     // Put in db
-    database->put(&keystr, &value);
+    CHECK(database->put(&keystr, &value));
 
     if (++count % 1000 == 0) {
       // Commit txn
-      database->commit();
+      CHECK(database->commit());
       LOG(ERROR) << "Processed " << count << " files.";
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
-    database->commit();
+    CHECK(database->commit());
     LOG(ERROR) << "Processed " << count << " files.";
   }
   database->close();

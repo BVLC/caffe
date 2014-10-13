@@ -40,7 +40,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     backend_ = backend;
     LOG(INFO) << "Using temporary database " << *filename_;
     shared_ptr<Database> database = DatabaseFactory(backend_);
-    database->open(*filename_, Database::New);
+    CHECK(database->open(*filename_, Database::New));
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
@@ -59,9 +59,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       Database::buffer_t value(datum.ByteSize());
       datum.SerializeWithCachedSizesToArray(
           reinterpret_cast<unsigned char*>(value.data()));
-      database->put(&key, &value);
+      CHECK(database->put(&key, &value));
     }
-    database->commit();
+    CHECK(database->commit());
     database->close();
   }
 

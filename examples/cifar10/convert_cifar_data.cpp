@@ -38,8 +38,8 @@ void read_image(std::ifstream* file, int* label, char* buffer) {
 void convert_dataset(const string& input_folder, const string& output_folder,
     const string& db_type) {
   shared_ptr<Database> train_database = DatabaseFactory(db_type);
-  train_database->open(output_folder + "/cifar10_train_" + db_type,
-      Database::New);
+  CHECK(train_database->open(output_folder + "/cifar10_train_" + db_type,
+      Database::New));
   // Data buffer
   int label;
   char str_buffer[kCIFARImageNBytes];
@@ -66,16 +66,16 @@ void convert_dataset(const string& input_folder, const string& output_folder,
       int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d",
           fileid * kCIFARBatchSize + itemid);
       Database::buffer_t key(str_buffer, str_buffer + length);
-      train_database->put(&key, &value);
+      CHECK(train_database->put(&key, &value));
     }
   }
-  train_database->commit();
+  CHECK(train_database->commit());
   train_database->close();
 
   LOG(INFO) << "Writing Testing data";
   shared_ptr<Database> test_database = DatabaseFactory(db_type);
-  test_database->open(output_folder + "/cifar10_test_" + db_type,
-      Database::New);
+  CHECK(test_database->open(output_folder + "/cifar10_test_" + db_type,
+      Database::New));
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
@@ -89,9 +89,9 @@ void convert_dataset(const string& input_folder, const string& output_folder,
         reinterpret_cast<unsigned char*>(value.data()));
     int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
     Database::buffer_t key(str_buffer, str_buffer + length);
-    test_database->put(&key, &value);
+    CHECK(test_database->put(&key, &value));
   }
-  test_database->commit();
+  CHECK(test_database->commit());
   test_database->close();
 }
 

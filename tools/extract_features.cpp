@@ -125,7 +125,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening database " << database_names[i];
     shared_ptr<Database> database = DatabaseFactory(argv[++arg_pos]);
-    database->open(database_names.at(i), Database::New);
+    CHECK(database->open(database_names.at(i), Database::New));
     feature_dbs.push_back(database);
   }
 
@@ -161,10 +161,10 @@ int feature_extraction_pipeline(int argc, char** argv) {
         int length = snprintf(key_str, kMaxKeyStrLength, "%d",
             image_indices[i]);
         Database::buffer_t key(key_str, key_str + length);
-        feature_dbs.at(i)->put(&key, &value);
+        CHECK(feature_dbs.at(i)->put(&key, &value));
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
-          feature_dbs.at(i)->commit();
+          CHECK(feature_dbs.at(i)->commit());
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
         }
@@ -174,7 +174,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
     if (image_indices[i] % 1000 != 0) {
-      feature_dbs.at(i)->commit();
+      CHECK(feature_dbs.at(i)->commit());
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
         " query images for feature blob " << blob_names[i];

@@ -14,10 +14,10 @@ namespace caffe {
 
 class LeveldbDatabase : public Database {
  public:
-  void open(const string& filename, Mode mode);
-  void put(buffer_t* key, buffer_t* value);
-  void get(buffer_t* key, buffer_t* value);
-  void commit();
+  bool open(const string& filename, Mode mode);
+  bool put(buffer_t* key, buffer_t* value);
+  bool get(buffer_t* key, buffer_t* value);
+  bool commit();
   void close();
 
   const_iterator begin() const;
