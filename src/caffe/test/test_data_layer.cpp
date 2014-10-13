@@ -39,8 +39,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   void Fill(const bool unique_pixels, DataParameter_DB backend) {
     backend_ = backend;
     LOG(INFO) << "Using temporary database " << *filename_;
-    shared_ptr<Database> database = DatabaseFactory(backend_);
-    CHECK(database->open(*filename_, Database::New));
+    shared_ptr<Database<string, Datum> > database =
+        DatabaseFactory<string, Datum>(backend_);
+    CHECK(database->open(*filename_, Database<string, Datum>::New));
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
@@ -54,12 +55,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       }
       stringstream ss;
       ss << i;
-      string key_str = ss.str();
-      Database::key_type key(key_str.c_str(), key_str.c_str() + key_str.size());
-      Database::value_type value(datum.ByteSize());
-      datum.SerializeWithCachedSizesToArray(
-          reinterpret_cast<unsigned char*>(value.data()));
-      CHECK(database->put(key, value));
+      CHECK(database->put(ss.str(), datum));
     }
     CHECK(database->commit());
     database->close();

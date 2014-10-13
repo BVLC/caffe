@@ -13,15 +13,24 @@
 
 namespace caffe {
 
-class LeveldbDatabase : public Database {
+template <typename K, typename V>
+class LeveldbDatabase : public Database<K, V> {
  public:
+  typedef Database<K, V> Base;
+  typedef typename Base::key_type key_type;
+  typedef typename Base::value_type value_type;
+  typedef typename Base::DatabaseState DatabaseState;
+  typedef typename Base::Mode Mode;
+  typedef typename Base::const_iterator const_iterator;
+  typedef typename Base::KV KV;
+
   bool open(const string& filename, Mode mode);
-  bool put(const key_type& key, const value_type& value);
-  bool get(const key_type& key, value_type* value);
+  bool put(const K& key, const V& value);
+  bool get(const K& key, V* value);
   bool commit();
   void close();
 
-  void keys(vector<key_type>* keys);
+  void keys(vector<K>* keys);
 
   const_iterator begin() const;
   const_iterator cbegin() const;
@@ -29,11 +38,11 @@ class LeveldbDatabase : public Database {
   const_iterator cend() const;
 
  protected:
-  class LeveldbState : public Database::DatabaseState {
+  class LeveldbState : public DatabaseState {
    public:
     explicit LeveldbState(shared_ptr<leveldb::DB> db,
         shared_ptr<leveldb::Iterator> iter)
-        : Database::DatabaseState(),
+        : DatabaseState(),
           db_(db),
           iter_(iter) { }
 
@@ -66,7 +75,7 @@ class LeveldbDatabase : public Database {
   bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const;
   void increment(shared_ptr<DatabaseState>* state) const;
-  Database::KV& dereference(shared_ptr<DatabaseState> state) const;
+  KV& dereference(shared_ptr<DatabaseState> state) const;
 
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::WriteBatch> batch_;

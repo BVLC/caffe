@@ -11,11 +11,103 @@
 
 namespace caffe {
 
-template <typename TypeParam>
-class DatabaseTest : public MultiDeviceTest<TypeParam> {
-  typedef typename TypeParam::Dtype Dtype;
+namespace DatabaseTest_internal {
 
+template <typename T>
+struct TestData {
+  static T TestValue();
+  static T TestAltValue();
+  static bool equals(const T& a, const T& b);
+};
+
+template <>
+string TestData<string>::TestValue() {
+  return "world";
+}
+
+template <>
+string TestData<string>::TestAltValue() {
+  return "bar";
+}
+
+template <>
+bool TestData<string>::equals(const string& a, const string& b) {
+  return a == b;
+}
+
+template <>
+vector<char> TestData<vector<char> >::TestValue() {
+  string str = "world";
+  vector<char> val(str.data(), str.data() + str.size());
+  return val;
+}
+
+template <>
+vector<char> TestData<vector<char> >::TestAltValue() {
+  string str = "bar";
+  vector<char> val(str.data(), str.data() + str.size());
+  return val;
+}
+
+template <>
+bool TestData<vector<char> >::equals(const vector<char>& a,
+    const vector<char>& b) {
+  if (a.size() != b.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < a.size(); ++i) {
+    if (a.at(i) != b.at(i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+template <>
+Datum TestData<Datum>::TestValue() {
+  Datum datum;
+  datum.set_channels(3);
+  datum.set_height(32);
+  datum.set_width(32);
+  datum.set_data(string(32 * 32 * 3 * 4, ' '));
+  datum.set_label(0);
+  return datum;
+}
+
+template <>
+Datum TestData<Datum>::TestAltValue() {
+  Datum datum;
+  datum.set_channels(1);
+  datum.set_height(64);
+  datum.set_width(64);
+  datum.set_data(string(64 * 64 * 1 * 4, ' '));
+  datum.set_label(1);
+  return datum;
+}
+
+template <>
+bool TestData<Datum>::equals(const Datum& a, const Datum& b) {
+  string serialized_a;
+  a.SerializeToString(&serialized_a);
+
+  string serialized_b;
+  b.SerializeToString(&serialized_b);
+
+  return serialized_a == serialized_b;
+}
+
+}  // namespace DatabaseTest_internal
+
+#define UNPACK_TYPES \
+  typedef typename TypeParam::value_type value_type; \
+  const DataParameter_DB backend = TypeParam::backend;
+
+template <typename TypeParam>
+class DatabaseTest : public ::testing::Test {
  protected:
+  typedef typename TypeParam::value_type value_type;
+
   string DBName() {
     string filename;
     MakeTempDir(&filename);
@@ -23,149 +115,199 @@ class DatabaseTest : public MultiDeviceTest<TypeParam> {
     return filename;
   }
 
-  Database::key_type TestKey() {
-    const char* kKey = "hello";
-    Database::key_type key(kKey, kKey + 5);
-    return key;
+  string TestKey() {
+    return "hello";
   }
 
-  Database::value_type TestValue() {
-    const char* kValue = "world";
-    Database::value_type value(kValue, kValue + 5);
-    return value;
+  value_type TestValue() {
+    return DatabaseTest_internal::TestData<value_type>::TestValue();
   }
 
-  Database::key_type TestAltKey() {
-    const char* kKey = "foo";
-    Database::key_type key(kKey, kKey + 3);
-    return key;
+  string TestAltKey() {
+    return "foo";
   }
 
-  Database::value_type TestAltValue() {
-    const char* kValue = "bar";
-    Database::value_type value(kValue, kValue + 3);
-    return value;
+  value_type TestAltValue() {
+    return DatabaseTest_internal::TestData<value_type>::TestAltValue();
   }
 
   template <typename T>
-  bool BufferEq(const T& buf1, const T& buf2) {
-    if (buf1.size() != buf2.size()) {
-      return false;
-    }
-    for (size_t i = 0; i < buf1.size(); ++i) {
-      if (buf1.at(i) != buf2.at(i)) {
-        return false;
-      }
-    }
-
-    return true;
+  bool equals(const T& a, const T& b) {
+    return DatabaseTest_internal::TestData<T>::equals(a, b);
   }
 };
 
-TYPED_TEST_CASE(DatabaseTest, TestDtypesAndDevices);
+struct StringLeveldb {
+  typedef string value_type;
+  static const DataParameter_DB backend;
+};
+const DataParameter_DB StringLeveldb::backend = DataParameter_DB_LEVELDB;
 
-TYPED_TEST(DatabaseTest, TestNewDoesntExistLevelDBPasses) {
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(this->DBName(), Database::New));
+struct StringLmdb {
+  typedef string value_type;
+  static const DataParameter_DB backend;
+};
+const DataParameter_DB StringLmdb::backend = DataParameter_DB_LEVELDB;
+
+struct VectorLeveldb {
+  typedef vector<char> value_type;
+  static const DataParameter_DB backend;
+};
+const DataParameter_DB VectorLeveldb::backend = DataParameter_DB_LEVELDB;
+
+struct VectorLmdb {
+  typedef vector<char> value_type;
+  static const DataParameter_DB backend;
+};
+const DataParameter_DB VectorLmdb::backend = DataParameter_DB_LEVELDB;
+
+struct DatumLeveldb {
+  typedef Datum value_type;
+  static const DataParameter_DB backend;
+};
+const DataParameter_DB DatumLeveldb::backend = DataParameter_DB_LEVELDB;
+
+struct DatumLmdb {
+  typedef Datum value_type;
+  static const DataParameter_DB backend;
+};
+const DataParameter_DB DatumLmdb::backend = DataParameter_DB_LEVELDB;
+
+typedef ::testing::Types<StringLeveldb, StringLmdb, VectorLeveldb, VectorLmdb,
+    DatumLeveldb, DatumLmdb> TestTypes;
+
+TYPED_TEST_CASE(DatabaseTest, TestTypes);
+
+TYPED_TEST(DatabaseTest, TestNewDoesntExistPasses) {
+  UNPACK_TYPES;
+
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(this->DBName(),
+      Database<string, value_type>::New));
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestNewExistsFailsLevelDB) {
+TYPED_TEST(DatabaseTest, TestNewExistsFails) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
   database->close();
 
-  EXPECT_FALSE(database->open(name, Database::New));
+  EXPECT_FALSE(database->open(name, Database<string, value_type>::New));
 }
 
-TYPED_TEST(DatabaseTest, TestReadOnlyExistsLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestReadOnlyExistsPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
   database->close();
 
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestReadOnlyDoesntExistFailsLevelDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_FALSE(database->open(name, Database::ReadOnly));
-}
-
-TYPED_TEST(DatabaseTest, TestReadWriteExistsLevelDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
-  database->close();
-
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadOnly));
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestReadWriteDoesntExistLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestReadOnlyDoesntExistFails) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_FALSE(database->open(name, Database<string, value_type>::ReadOnly));
+}
+
+TYPED_TEST(DatabaseTest, TestReadWriteExistsPasses) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
+  database->close();
+
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadWrite));
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestKeysLevelDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+TYPED_TEST(DatabaseTest, TestReadWriteDoesntExistPasses) {
+  UNPACK_TYPES;
 
-  Database::key_type key1 = this->TestKey();
-  Database::value_type value1 = this->TestValue();
+  string name = this->DBName();
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadWrite));
+  database->close();
+}
+
+TYPED_TEST(DatabaseTest, TestKeys) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
+
+  string key1 = this->TestKey();
+  value_type value1 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
 
-  Database::key_type key2 = this->TestAltKey();
-  Database::value_type value2 = this->TestAltValue();
+  string key2 = this->TestAltKey();
+  value_type value2 = this->TestAltValue();
 
   EXPECT_TRUE(database->put(key2, value2));
 
   EXPECT_TRUE(database->commit());
 
-  vector<Database::key_type> keys;
+  vector<string> keys;
   database->keys(&keys);
 
   EXPECT_EQ(2, keys.size());
 
-  EXPECT_TRUE(this->BufferEq(keys.at(0), key1) ||
-      this->BufferEq(keys.at(0), key2));
-  EXPECT_TRUE(this->BufferEq(keys.at(1), key1) ||
-      this->BufferEq(keys.at(2), key2));
-  EXPECT_FALSE(this->BufferEq(keys.at(0), keys.at(1)));
+  EXPECT_TRUE(this->equals(keys.at(0), key1) ||
+      this->equals(keys.at(0), key2));
+  EXPECT_TRUE(this->equals(keys.at(1), key1) ||
+      this->equals(keys.at(2), key2));
+  EXPECT_FALSE(this->equals(keys.at(0), keys.at(1)));
 }
 
-TYPED_TEST(DatabaseTest, TestKeysNoCommitLevelDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+TYPED_TEST(DatabaseTest, TestKeysNoCommit) {
+  UNPACK_TYPES;
 
-  Database::key_type key1 = this->TestKey();
-  Database::value_type value1 = this->TestValue();
+  string name = this->DBName();
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
+
+  string key1 = this->TestKey();
+  value_type value1 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
 
-  Database::key_type key2 = this->TestAltKey();
-  Database::value_type value2 = this->TestAltValue();
+  string key2 = this->TestAltKey();
+  value_type value2 = this->TestAltValue();
 
   EXPECT_TRUE(database->put(key2, value2));
 
-  vector<Database::key_type> keys;
+  vector<string> keys;
   database->keys(&keys);
 
   EXPECT_EQ(0, keys.size());
 }
 
-TYPED_TEST(DatabaseTest, TestIteratorsLevelDB) {
+TYPED_TEST(DatabaseTest, TestIterators) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
   const int kNumExamples = 4;
   for (int i = 0; i < kNumExamples; ++i) {
@@ -173,16 +315,14 @@ TYPED_TEST(DatabaseTest, TestIteratorsLevelDB) {
     ss << i;
     string key = ss.str();
     ss << " here be data";
-    string value = ss.str();
-    Database::key_type key_buf(key.data(), key.data() + key.size());
-    Database::value_type val_buf(value.data(), value.data() + value.size());
-    EXPECT_TRUE(database->put(key_buf, val_buf));
+    value_type value = this->TestValue();
+    EXPECT_TRUE(database->put(key, value));
   }
   EXPECT_TRUE(database->commit());
 
   int count = 0;
-  for (Database::const_iterator iter = database->begin();
-      iter != database->end(); ++iter) {
+  typedef typename Database<string, value_type>::const_iterator Iter;
+  for (Iter iter = database->begin(); iter != database->end(); ++iter) {
     (void)iter;
     ++count;
   }
@@ -190,656 +330,313 @@ TYPED_TEST(DatabaseTest, TestIteratorsLevelDB) {
   EXPECT_EQ(kNumExamples, count);
 }
 
-TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLevelDB) {
+TYPED_TEST(DatabaseTest, TestIteratorsPreIncrement) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key1 = this->TestAltKey();
-  Database::value_type value1 = this->TestAltValue();
+  string key1 = this->TestAltKey();
+  value_type value1 = this->TestAltValue();
 
-  Database::key_type key2 = this->TestKey();
-  Database::value_type value2 = this->TestValue();
+  string key2 = this->TestKey();
+  value_type value2 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
   EXPECT_TRUE(database->put(key2, value2));
   EXPECT_TRUE(database->commit());
 
-  Database::const_iterator iter1 = database->begin();
+  typename Database<string, value_type>::const_iterator iter1 =
+      database->begin();
 
   EXPECT_FALSE(database->end() == iter1);
 
-  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
+  EXPECT_TRUE(this->equals(iter1->key, key1));
 
-  Database::const_iterator iter2 = ++iter1;
+  typename Database<string, value_type>::const_iterator iter2 = ++iter1;
 
   EXPECT_FALSE(database->end() == iter1);
   EXPECT_FALSE(database->end() == iter2);
 
-  EXPECT_TRUE(this->BufferEq(iter2->key, key2));
+  EXPECT_TRUE(this->equals(iter2->key, key2));
 
-  Database::const_iterator iter3 = ++iter2;
+  typename Database<string, value_type>::const_iterator iter3 = ++iter2;
 
   EXPECT_TRUE(database->end() == iter3);
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLevelDB) {
+TYPED_TEST(DatabaseTest, TestIteratorsPostIncrement) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key1 = this->TestAltKey();
-  Database::value_type value1 = this->TestAltValue();
+  string key1 = this->TestAltKey();
+  value_type value1 = this->TestAltValue();
 
-  Database::key_type key2 = this->TestKey();
-  Database::value_type value2 = this->TestValue();
+  string key2 = this->TestKey();
+  value_type value2 = this->TestValue();
 
   EXPECT_TRUE(database->put(key1, value1));
   EXPECT_TRUE(database->put(key2, value2));
   EXPECT_TRUE(database->commit());
 
-  Database::const_iterator iter1 = database->begin();
+  typename Database<string, value_type>::const_iterator iter1 =
+      database->begin();
 
   EXPECT_FALSE(database->end() == iter1);
 
-  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
+  EXPECT_TRUE(this->equals(iter1->key, key1));
 
-  Database::const_iterator iter2 = iter1++;
+  typename Database<string, value_type>::const_iterator iter2 = iter1++;
 
   EXPECT_FALSE(database->end() == iter1);
   EXPECT_FALSE(database->end() == iter2);
 
-  EXPECT_TRUE(this->BufferEq(iter2->key, key1));
-  EXPECT_TRUE(this->BufferEq(iter1->key, key2));
+  EXPECT_TRUE(this->equals(iter2->key, key1));
+  EXPECT_TRUE(this->equals(iter1->key, key2));
 
-  Database::const_iterator iter3 = iter1++;
+  typename Database<string, value_type>::const_iterator iter3 = iter1++;
 
   EXPECT_FALSE(database->end() == iter3);
-  EXPECT_TRUE(this->BufferEq(iter3->key, key2));
+  EXPECT_TRUE(this->equals(iter3->key, key2));
   EXPECT_TRUE(database->end() == iter1);
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestNewPutLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestNewPutPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
   EXPECT_TRUE(database->commit());
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestNewCommitLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestNewCommitPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
   EXPECT_TRUE(database->commit());
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestNewGetLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestNewGetPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
   EXPECT_TRUE(database->commit());
 
-  Database::value_type new_val;
+  value_type new_value;
 
-  EXPECT_TRUE(database->get(key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_value));
 
-  EXPECT_TRUE(this->BufferEq(val, new_val));
+  EXPECT_TRUE(this->equals(value, new_value));
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestNewGetNoCommitLevelDBFails) {
+TYPED_TEST(DatabaseTest, TestNewGetNoCommitFails) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
-  Database::value_type new_val;
+  value_type new_value;
 
-  EXPECT_FALSE(database->get(key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_value));
 }
 
 
-TYPED_TEST(DatabaseTest, TestReadWritePutLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestReadWritePutPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadWrite));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
   EXPECT_TRUE(database->commit());
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestReadWriteCommitLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestReadWriteCommitPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadWrite));
 
   EXPECT_TRUE(database->commit());
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestReadWriteGetLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestReadWriteGetPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
   EXPECT_TRUE(database->commit());
 
-  Database::value_type new_val;
+  value_type new_value;
 
-  EXPECT_TRUE(database->get(key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_value));
 
-  EXPECT_TRUE(this->BufferEq(val, new_val));
+  EXPECT_TRUE(this->equals(value, new_value));
 
   database->close();
 }
 
-TYPED_TEST(DatabaseTest, TestReadWriteGetNoCommitLevelDBFails) {
+TYPED_TEST(DatabaseTest, TestReadWriteGetNoCommitFails) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
-  Database::value_type new_val;
+  value_type new_value;
 
-  EXPECT_FALSE(database->get(key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_value));
 }
 
-TYPED_TEST(DatabaseTest, TestReadOnlyPutLevelDBFails) {
+TYPED_TEST(DatabaseTest, TestReadOnlyPutFails) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
   database->close();
 
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadOnly));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_FALSE(database->put(key, val));
+  EXPECT_FALSE(database->put(key, value));
 }
 
-TYPED_TEST(DatabaseTest, TestReadOnlyCommitLevelDBFails) {
+TYPED_TEST(DatabaseTest, TestReadOnlyCommitFails) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
   database->close();
 
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadOnly));
 
   EXPECT_FALSE(database->commit());
 }
 
-TYPED_TEST(DatabaseTest, TestReadOnlyGetLevelDBPasses) {
+TYPED_TEST(DatabaseTest, TestReadOnlyGetPasses) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
   EXPECT_TRUE(database->commit());
 
   database->close();
 
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadOnly));
 
-  Database::value_type new_val;
+  value_type new_value;
 
-  EXPECT_TRUE(database->get(key, &new_val));
+  EXPECT_TRUE(database->get(key, &new_value));
 
-  EXPECT_TRUE(this->BufferEq(val, new_val));
+  EXPECT_TRUE(this->equals(value, new_value));
 }
 
-TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLevelDBFails) {
+TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitFails) {
+  UNPACK_TYPES;
+
   string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("leveldb");
-  EXPECT_TRUE(database->open(name, Database::New));
+  shared_ptr<Database<string, value_type> > database =
+      DatabaseFactory<string, value_type>(backend);
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::New));
 
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
+  string key = this->TestKey();
+  value_type value = this->TestValue();
 
-  EXPECT_TRUE(database->put(key, val));
+  EXPECT_TRUE(database->put(key, value));
 
   database->close();
 
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
+  EXPECT_TRUE(database->open(name, Database<string, value_type>::ReadOnly));
 
-  Database::value_type new_val;
+  value_type new_value;
 
-  EXPECT_FALSE(database->get(key, &new_val));
+  EXPECT_FALSE(database->get(key, &new_value));
 }
 
-TYPED_TEST(DatabaseTest, TestNewDoesntExistLMDBPasses) {
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(this->DBName(), Database::New));
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestNewExistsFailsLMDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-  database->close();
-
-  EXPECT_FALSE(database->open(name, Database::New));
-}
-
-TYPED_TEST(DatabaseTest, TestReadOnlyExistsLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-  database->close();
-
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestReadOnlyDoesntExistFailsLMDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_FALSE(database->open(name, Database::ReadOnly));
-}
-
-TYPED_TEST(DatabaseTest, TestReadWriteExistsLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-  database->close();
-
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestReadWriteDoesntExistLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestKeysLMDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key1 = this->TestKey();
-  Database::value_type value1 = this->TestValue();
-
-  EXPECT_TRUE(database->put(key1, value1));
-
-  Database::key_type key2 = this->TestAltKey();
-  Database::value_type value2 = this->TestAltValue();
-
-  EXPECT_TRUE(database->put(key2, value2));
-
-  EXPECT_TRUE(database->commit());
-
-  vector<Database::key_type> keys;
-  database->keys(&keys);
-
-  EXPECT_EQ(2, keys.size());
-
-  EXPECT_TRUE(this->BufferEq(keys.at(0), key1) ||
-      this->BufferEq(keys.at(0), key2));
-  EXPECT_TRUE(this->BufferEq(keys.at(1), key1) ||
-      this->BufferEq(keys.at(2), key2));
-  EXPECT_FALSE(this->BufferEq(keys.at(0), keys.at(1)));
-}
-
-TYPED_TEST(DatabaseTest, TestKeysNoCommitLMDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key1 = this->TestKey();
-  Database::value_type value1 = this->TestValue();
-
-  EXPECT_TRUE(database->put(key1, value1));
-
-  Database::key_type key2 = this->TestAltKey();
-  Database::value_type value2 = this->TestAltValue();
-
-  EXPECT_TRUE(database->put(key2, value2));
-
-  vector<Database::key_type> keys;
-  database->keys(&keys);
-
-  EXPECT_EQ(0, keys.size());
-}
-
-
-TYPED_TEST(DatabaseTest, TestIteratorsLMDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  const int kNumExamples = 4;
-  for (int i = 0; i < kNumExamples; ++i) {
-    stringstream ss;
-    ss << i;
-    string key = ss.str();
-    ss << " here be data";
-    string value = ss.str();
-    Database::key_type key_buf(key.data(), key.data() + key.size());
-    Database::value_type val_buf(value.data(), value.data() + value.size());
-    EXPECT_TRUE(database->put(key_buf, val_buf));
-  }
-  EXPECT_TRUE(database->commit());
-
-  int count = 0;
-  for (Database::const_iterator iter = database->begin();
-      iter != database->end(); ++iter) {
-    (void)iter;
-    ++count;
-  }
-
-  EXPECT_EQ(kNumExamples, count);
-}
-
-TYPED_TEST(DatabaseTest, TestIteratorsPreIncrementLMDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key1 = this->TestAltKey();
-  Database::value_type value1 = this->TestAltValue();
-
-  Database::key_type key2 = this->TestKey();
-  Database::value_type value2 = this->TestValue();
-
-  EXPECT_TRUE(database->put(key1, value1));
-  EXPECT_TRUE(database->put(key2, value2));
-  EXPECT_TRUE(database->commit());
-
-  Database::const_iterator iter1 = database->begin();
-
-  EXPECT_FALSE(database->end() == iter1);
-
-  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
-
-  Database::const_iterator iter2 = ++iter1;
-
-  EXPECT_FALSE(database->end() == iter1);
-  EXPECT_FALSE(database->end() == iter2);
-
-  EXPECT_TRUE(this->BufferEq(iter2->key, key2));
-
-  Database::const_iterator iter3 = ++iter2;
-
-  EXPECT_TRUE(database->end() == iter3);
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestIteratorsPostIncrementLMDB) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key1 = this->TestAltKey();
-  Database::value_type value1 = this->TestAltValue();
-
-  Database::key_type key2 = this->TestKey();
-  Database::value_type value2 = this->TestValue();
-
-  EXPECT_TRUE(database->put(key1, value1));
-  EXPECT_TRUE(database->put(key2, value2));
-  EXPECT_TRUE(database->commit());
-
-  Database::const_iterator iter1 = database->begin();
-
-  EXPECT_FALSE(database->end() == iter1);
-
-  EXPECT_TRUE(this->BufferEq(iter1->key, key1));
-
-  Database::const_iterator iter2 = iter1++;
-
-  EXPECT_FALSE(database->end() == iter1);
-  EXPECT_FALSE(database->end() == iter2);
-
-  EXPECT_TRUE(this->BufferEq(iter2->key, key1));
-  EXPECT_TRUE(this->BufferEq(iter1->key, key2));
-
-  Database::const_iterator iter3 = iter1++;
-
-  EXPECT_FALSE(database->end() == iter3);
-  EXPECT_TRUE(this->BufferEq(iter3->key, key2));
-  EXPECT_TRUE(database->end() == iter1);
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestNewPutLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  EXPECT_TRUE(database->commit());
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestNewCommitLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  EXPECT_TRUE(database->commit());
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestNewGetLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  EXPECT_TRUE(database->commit());
-
-  Database::value_type new_val;
-
-  EXPECT_TRUE(database->get(key, &new_val));
-
-  EXPECT_TRUE(this->BufferEq(val, new_val));
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestNewGetNoCommitLMDBFails) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  Database::value_type new_val;
-
-  EXPECT_FALSE(database->get(key, &new_val));
-}
-
-TYPED_TEST(DatabaseTest, TestReadWritePutLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  EXPECT_TRUE(database->commit());
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestReadWriteCommitLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::ReadWrite));
-
-  EXPECT_TRUE(database->commit());
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestReadWriteGetLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  EXPECT_TRUE(database->commit());
-
-  Database::value_type new_val;
-
-  EXPECT_TRUE(database->get(key, &new_val));
-
-  EXPECT_TRUE(this->BufferEq(val, new_val));
-
-  database->close();
-}
-
-TYPED_TEST(DatabaseTest, TestReadWriteGetNoCommitLMDBFails) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  Database::value_type new_val;
-
-  EXPECT_FALSE(database->get(key, &new_val));
-}
-
-TYPED_TEST(DatabaseTest, TestReadOnlyPutLMDBFails) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-  database->close();
-
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_FALSE(database->put(key, val));
-}
-
-TYPED_TEST(DatabaseTest, TestReadOnlyCommitLMDBFails) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-  database->close();
-
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
-
-  EXPECT_FALSE(database->commit());
-}
-
-TYPED_TEST(DatabaseTest, TestReadOnlyGetLMDBPasses) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  EXPECT_TRUE(database->commit());
-
-  database->close();
-
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
-
-  Database::value_type new_val;
-
-  EXPECT_TRUE(database->get(key, &new_val));
-
-  EXPECT_TRUE(this->BufferEq(val, new_val));
-}
-
-TYPED_TEST(DatabaseTest, TestReadOnlyGetNoCommitLMDBFails) {
-  string name = this->DBName();
-  shared_ptr<Database> database = DatabaseFactory("lmdb");
-  EXPECT_TRUE(database->open(name, Database::New));
-
-  Database::key_type key = this->TestKey();
-  Database::value_type val = this->TestValue();
-
-  EXPECT_TRUE(database->put(key, val));
-
-  database->close();
-
-  EXPECT_TRUE(database->open(name, Database::ReadOnly));
-
-  Database::value_type new_val;
-
-  EXPECT_FALSE(database->get(key, &new_val));
-}
+#undef UNPACK_TYPES
 
 }  // namespace caffe

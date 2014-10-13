@@ -78,10 +78,11 @@ int main(int argc, char** argv) {
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
   // Open new db
-  shared_ptr<Database> database = DatabaseFactory(db_backend);
+  shared_ptr<Database<string, Datum> > database =
+      DatabaseFactory<string, Datum>(db_backend);
 
   // Open db
-  CHECK(database->open(db_path, Database::New));
+  CHECK(database->open(db_path, Database<string, Datum>::New));
 
   // Storing to db
   std::string root_folder(argv[1]);
@@ -110,13 +111,9 @@ int main(int argc, char** argv) {
     // sequential
     int length = snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
         lines[line_id].first.c_str());
-    Database::value_type value(datum.ByteSize());
-    datum.SerializeWithCachedSizesToArray(
-        reinterpret_cast<unsigned char*>(value.data()));
-    Database::key_type keystr(key_cstr, key_cstr + length);
 
     // Put in db
-    CHECK(database->put(keystr, value));
+    CHECK(database->put(string(key_cstr, length), datum));
 
     if (++count % 1000 == 0) {
       // Commit txn

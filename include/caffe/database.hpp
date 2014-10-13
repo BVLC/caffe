@@ -11,6 +11,83 @@
 
 namespace caffe {
 
+namespace database_internal {
+
+template <typename T>
+struct Coder {
+  static bool serialize(const T& obj, string* serialized) {
+    return obj.SerializeToString(serialized);
+  }
+
+  static bool serialize(const T& obj, vector<char>* serialized) {
+    serialized->resize(obj.ByteSize());
+    return obj.SerializeWithCachedSizesToArray(
+        reinterpret_cast<unsigned char*>(serialized->data()));
+  }
+
+  static bool deserialize(const string& serialized, T* obj) {
+    return obj->ParseFromString(serialized);
+  }
+
+  static bool deserialize(const char* data, size_t size, T* obj) {
+    return obj->ParseFromArray(data, size);
+  }
+};
+
+template <>
+struct Coder<string> {
+  static bool serialize(string obj, string* serialized) {
+    *serialized = obj;
+    return true;
+  }
+
+  static bool serialize(const string& obj, vector<char>* serialized) {
+    vector<char> temp(obj.data(), obj.data() + obj.size());
+    serialized->swap(temp);
+    return true;
+  }
+
+  static bool deserialize(const string& serialized, string* obj) {
+    *obj = serialized;
+    return true;
+  }
+
+  static bool deserialize(const char* data, size_t size, string* obj) {
+    string temp_string(data, size);
+    obj->swap(temp_string);
+    return true;
+  }
+};
+
+template <>
+struct Coder<vector<char> > {
+  static bool serialize(vector<char> obj, string* serialized) {
+    string tmp(obj.data(), obj.size());
+    serialized->swap(tmp);
+    return true;
+  }
+
+  static bool serialize(const vector<char>& obj, vector<char>* serialized) {
+    *serialized = obj;
+    return true;
+  }
+
+  static bool deserialize(const string& serialized, vector<char>* obj) {
+    vector<char> tmp(serialized.data(), serialized.data() + serialized.size());
+    obj->swap(tmp);
+    return true;
+  }
+
+  static bool deserialize(const char* data, size_t size, vector<char>* obj) {
+    vector<char> tmp(data, data + size);
+    obj->swap(tmp);
+    return true;
+  }
+};
+
+}  // namespace database_internal
+
+template <typename K, typename V>
 class Database {
  public:
   enum Mode {
@@ -19,21 +96,21 @@ class Database {
     ReadOnly
   };
 
-  typedef vector<char> key_type;
-  typedef vector<char> value_type;
+  typedef K key_type;
+  typedef V value_type;
 
   struct KV {
-    key_type key;
-    value_type value;
+    K key;
+    V value;
   };
 
   virtual bool open(const string& filename, Mode mode) = 0;
-  virtual bool put(const key_type& key, const value_type& value) = 0;
-  virtual bool get(const key_type& key, value_type* value) = 0;
+  virtual bool put(const K& key, const V& value) = 0;
+  virtual bool get(const K& key, V* value) = 0;
   virtual bool commit() = 0;
   virtual void close() = 0;
 
-  virtual void keys(vector<key_type>* keys) = 0;
+  virtual void keys(vector<K>* keys) = 0;
 
   Database() { }
   virtual ~Database() { }
@@ -123,8 +200,33 @@ class Database {
   virtual void increment(shared_ptr<DatabaseState>* state) const = 0;
   virtual KV& dereference(
       shared_ptr<DatabaseState> state) const = 0;
+
+  template <typename T>
+  static bool serialize(const T& obj, string* serialized) {
+    return database_internal::Coder<T>::serialize(obj, serialized);
+  }
+
+  template <typename T>
+  static bool serialize(const T& obj, vector<char>* serialized) {
+    return database_internal::Coder<T>::serialize(obj, serialized);
+  }
+
+  template <typename T>
+  static bool deserialize(const string& serialized, T* obj) {
+    return database_internal::Coder<T>::deserialize(serialized, obj);
+  }
+
+  template <typename T>
+  static bool deserialize(const char* data, size_t size, T* obj) {
+    return database_internal::Coder<T>::deserialize(data, size, obj);
+  }
 };
 
 }  // namespace caffe
+
+#define INSTANTIATE_DATABASE(type) \
+  template class type<string, string>; \
+  template class type<string, vector<char> >; \
+  template class type<string, Datum>;
 
 #endif  // CAFFE_DATABASE_H_

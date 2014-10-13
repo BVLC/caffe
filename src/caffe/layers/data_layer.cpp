@@ -25,10 +25,11 @@ template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Initialize DB
-  database_ = DatabaseFactory(this->layer_param_.data_param().backend());
+  database_ = DatabaseFactory<string, Datum>(
+      this->layer_param_.data_param().backend());
   const string& source = this->layer_param_.data_param().source();
   LOG(INFO) << "Opening database " << source;
-  CHECK(database_->open(source, Database::ReadOnly));
+  CHECK(database_->open(source, Database<string, Datum>::ReadOnly));
   iter_ = database_->begin();
 
   // Check if we would need to randomly skip a few data points
@@ -44,8 +45,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read a data point, and use it to initialize the top blob.
   CHECK(iter_ != database_->end());
-  Datum datum;
-  datum.ParseFromArray(iter_->value.data(), iter_->value.size());
+  const Datum& datum = iter_->value;
 
   // image
   int crop_size = this->layer_param_.transform_param().crop_size();
@@ -89,9 +89,8 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   const int batch_size = this->layer_param_.data_param().batch_size();
 
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    Datum datum;
     CHECK(iter_ != database_->end());
-    datum.ParseFromArray(iter_->value.data(), iter_->value.size());
+    const Datum& datum = iter_->value;
 
     // Apply data transformations (mirror, scale, crop...)
     int offset = this->prefetch_data_.offset(item_id);

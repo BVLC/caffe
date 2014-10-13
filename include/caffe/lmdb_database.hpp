@@ -12,20 +12,29 @@
 
 namespace caffe {
 
-class LmdbDatabase : public Database {
+template <typename K, typename V>
+class LmdbDatabase : public Database<K, V> {
  public:
+  typedef Database<K, V> Base;
+  typedef typename Base::key_type key_type;
+  typedef typename Base::value_type value_type;
+  typedef typename Base::DatabaseState DatabaseState;
+  typedef typename Base::Mode Mode;
+  typedef typename Base::const_iterator const_iterator;
+  typedef typename Base::KV KV;
+
   LmdbDatabase()
       : env_(NULL),
         dbi_(0),
         txn_(NULL) { }
 
   bool open(const string& filename, Mode mode);
-  bool put(const key_type& key, const value_type& value);
-  bool get(const key_type& key, value_type* value);
+  bool put(const K& key, const V& value);
+  bool get(const K& key, V* value);
   bool commit();
   void close();
 
-  void keys(vector<key_type>* keys);
+  void keys(vector<K>* keys);
 
   const_iterator begin() const;
   const_iterator cbegin() const;
@@ -33,10 +42,10 @@ class LmdbDatabase : public Database {
   const_iterator cend() const;
 
  protected:
-  class LmdbState : public Database::DatabaseState {
+  class LmdbState : public DatabaseState {
    public:
     explicit LmdbState(MDB_cursor* cursor, MDB_txn* txn, const MDB_dbi* dbi)
-        : Database::DatabaseState(),
+        : DatabaseState(),
           cursor_(cursor),
           txn_(txn),
           dbi_(dbi) { }
@@ -70,7 +79,7 @@ class LmdbDatabase : public Database {
   bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const;
   void increment(shared_ptr<DatabaseState>* state) const;
-  Database::KV& dereference(shared_ptr<DatabaseState> state) const;
+  KV& dereference(shared_ptr<DatabaseState> state) const;
 
   MDB_env* env_;
   MDB_dbi dbi_;
