@@ -19,16 +19,17 @@ class Database {
     ReadOnly
   };
 
-  typedef vector<char> buffer_t;
+  typedef vector<char> key_type;
+  typedef vector<char> value_type;
 
   struct KV {
-    buffer_t key;
-    buffer_t value;
+    key_type key;
+    value_type value;
   };
 
   virtual bool open(const string& filename, Mode mode) = 0;
-  virtual bool put(const buffer_t& key, const buffer_t& value) = 0;
-  virtual bool get(const buffer_t& key, buffer_t* value) = 0;
+  virtual bool put(const key_type& key, const value_type& value) = 0;
+  virtual bool get(const key_type& key, value_type* value) = 0;
   virtual bool commit() = 0;
   virtual void close() = 0;
 

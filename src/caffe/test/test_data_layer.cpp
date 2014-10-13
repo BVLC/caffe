@@ -55,8 +55,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       stringstream ss;
       ss << i;
       string key_str = ss.str();
-      Database::buffer_t key(key_str.c_str(), key_str.c_str() + key_str.size());
-      Database::buffer_t value(datum.ByteSize());
+      Database::key_type key(key_str.c_str(), key_str.c_str() + key_str.size());
+      Database::value_type value(datum.ByteSize());
       datum.SerializeWithCachedSizesToArray(
           reinterpret_cast<unsigned char*>(value.data()));
       CHECK(database->put(key, value));

@@ -155,12 +155,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }
-        Database::buffer_t value(datum.ByteSize());
+        Database::value_type value(datum.ByteSize());
         datum.SerializeWithCachedSizesToArray(
             reinterpret_cast<unsigned char*>(value.data()));
         int length = snprintf(key_str, kMaxKeyStrLength, "%d",
             image_indices[i]);
-        Database::buffer_t key(key_str, key_str + length);
+        Database::key_type key(key_str, key_str + length);
         CHECK(feature_dbs.at(i)->put(key, value));
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
