@@ -292,6 +292,8 @@ ifeq ($(BLAS), mkl)
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
+else ifeq ($(BLAS), atlas-centos7)
+	LIBRARIES += tatlas
 else
 	# ATLAS
 	ifeq ($(LINUX), 1)
