@@ -82,11 +82,11 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void DataLayer<Dtype>::InternalThreadEntry() {
-  Timer batch_timer;
+  CPUTimer batch_timer;
   batch_timer.Start();
-  float read_time = 0;
-  float trans_time = 0;
-  Timer timer;
+  double read_time = 0;
+  double trans_time = 0;
+  CPUTimer timer;
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
@@ -106,7 +106,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     if (datum.encoded()) {
        cv_img = DecodeDatumToCVMat(datum);
     }
-    read_time += timer.MilliSeconds();
+    read_time += timer.MicroSeconds();
     timer.Start();
 
     // Apply data transformations (mirror, scale, crop...)
@@ -120,7 +120,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
     }
-    trans_time += timer.MilliSeconds();
+    trans_time += timer.MicroSeconds();
     // go to the next iter
     ++iter_;
     if (iter_ == dataset_->end()) {
@@ -128,9 +128,9 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     }
   }
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
-  DLOG(INFO) << "Read time: " << read_time << "ms.";
-  DLOG(INFO) << "Transform time: " << trans_time << "ms.";
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);

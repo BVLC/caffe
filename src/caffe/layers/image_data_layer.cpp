@@ -93,11 +93,11 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void ImageDataLayer<Dtype>::InternalThreadEntry() {
-  Timer batch_timer;
+  CPUTimer batch_timer;
   batch_timer.Start();
-  float read_time = 0;
-  float trans_time = 0;
-  Timer timer;
+  double read_time = 0;
+  double trans_time = 0;
+  CPUTimer timer;
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
@@ -120,13 +120,13 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     if (!cv_img.data) {
       continue;
     }
-    read_time += timer.MilliSeconds();
+    read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
     this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
-    trans_time += timer.MilliSeconds();
+    trans_time += timer.MicroSeconds();
 
     top_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
@@ -141,9 +141,9 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     }
   }
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
-  DLOG(INFO) << "Read time: " << read_time << "ms.";
-  DLOG(INFO) << "Transform time: " << trans_time << "ms.";
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);
