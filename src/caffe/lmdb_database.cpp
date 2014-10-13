@@ -2,6 +2,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "caffe/lmdb_database.hpp"
 
@@ -168,22 +169,43 @@ void LmdbDatabase::close() {
   }
 }
 
+void LmdbDatabase::keys(vector<key_type>* keys) {
+  LOG(INFO) << "LMDB: Keys";
+
+  keys->clear();
+  for (Database::const_iterator iter = begin(); iter != end(); ++iter) {
+    keys->push_back(iter->key);
+  }
+}
+
 LmdbDatabase::const_iterator LmdbDatabase::begin() const {
-  MDB_cursor* cursor;
   int retval;
-  retval = mdb_cursor_open(txn_, dbi_, &cursor);
+
+  MDB_txn* iter_txn;
+
+  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &iter_txn);
+  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
+      << mdb_strerror(retval);
+
+  MDB_cursor* cursor;
+  retval = mdb_cursor_open(iter_txn, dbi_, &cursor);
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
   MDB_val key;
   MDB_val val;
   retval = mdb_cursor_get(cursor, &key, &val, MDB_FIRST);
-  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
 
-  shared_ptr<DatabaseState> state(new LmdbState(cursor, txn_, &dbi_));
+  CHECK(MDB_SUCCESS == retval || MDB_NOTFOUND == retval)
+      << mdb_strerror(retval);
+
+  shared_ptr<DatabaseState> state;
+  if (MDB_SUCCESS == retval) {
+    state.reset(new LmdbState(cursor, iter_txn, &dbi_));
+  }
   return const_iterator(this, state);
 }
 
 LmdbDatabase::const_iterator LmdbDatabase::end() const {
-  shared_ptr<DatabaseState> state(new LmdbState(NULL, txn_, &dbi_));
+  shared_ptr<DatabaseState> state;
   return const_iterator(this, state);
 }
 
@@ -195,22 +217,18 @@ bool LmdbDatabase::equal(shared_ptr<DatabaseState> state1,
   shared_ptr<LmdbState> lmdb_state1 =
       boost::dynamic_pointer_cast<LmdbState>(state1);
 
-  CHECK_NOTNULL(lmdb_state1.get());
-
   shared_ptr<LmdbState> lmdb_state2 =
       boost::dynamic_pointer_cast<LmdbState>(state2);
-
-  CHECK_NOTNULL(lmdb_state2.get());
 
   // The KV store doesn't really have any sort of ordering,
   // so while we can do a sequential scan over the collection,
   // we can't really use subranges.
-  return !lmdb_state1->cursor_ && !lmdb_state2->cursor_;
+  return !lmdb_state1 && !lmdb_state2;
 }
 
-void LmdbDatabase::increment(shared_ptr<DatabaseState> state) const {
+void LmdbDatabase::increment(shared_ptr<DatabaseState>* state) const {
   shared_ptr<LmdbState> lmdb_state =
-      boost::dynamic_pointer_cast<LmdbState>(state);
+      boost::dynamic_pointer_cast<LmdbState>(*state);
 
   CHECK_NOTNULL(lmdb_state.get());
 
@@ -223,7 +241,7 @@ void LmdbDatabase::increment(shared_ptr<DatabaseState> state) const {
   int retval = mdb_cursor_get(cursor, &key, &val, MDB_NEXT);
   if (MDB_NOTFOUND == retval) {
     mdb_cursor_close(cursor);
-    cursor = NULL;
+    state->reset();
   } else {
     CHECK_EQ(MDB_SUCCESS, retval) << mdb_strerror(retval);
   }
