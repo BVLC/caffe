@@ -182,6 +182,7 @@ class PySGDSolver {
   int iter() { return solver_->iter(); }
   void Solve() { return solver_->Solve(); }
   void SolveResume(const string& resume_file);
+  void Step(int niter) { solver_->Step(niter); }
 
  protected:
   shared_ptr<PyNet> net_;

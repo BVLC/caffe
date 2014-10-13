@@ -26,6 +26,7 @@ class Solver {
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
+  void Step(int niter);
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
@@ -36,7 +37,7 @@ class Solver {
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
   // put up some scaffold.
-  virtual void PreSolve() {}
+  virtual void PreSolve();
   // Get the update value for the current iteration.
   virtual void ComputeUpdateValue() = 0;
   // The Solver::Snapshot function implements the basic snapshotting utility
@@ -56,9 +57,11 @@ class Solver {
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
+  int start_iter_;
   int iter_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
+  bool initialized_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };

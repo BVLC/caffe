@@ -159,29 +159,49 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   Caffe::set_phase(Caffe::TRAIN);
   LOG(INFO) << "Solving " << net_->name();
   PreSolve();
-
-  iter_ = 0;
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
   }
-  // Remember the initial iter_ value; will be non-zero if we loaded from a
-  // resume_file above.
-  const int start_iter = iter_;
 
+  Step(param_.max_iter() - iter_);
+
+  // Always save a snapshot after optimization, unless overridden by setting
+  // snapshot_after_train := false.
+  if (param_.snapshot_after_train()) { Snapshot(); }
+  // After the optimization is done, run an additional train and test pass to
+  // display the train and test loss/outputs if appropriate (based on the
+  // display and test_interval settings, respectively).  Unlike in the rest of
+  // training, for the train net we only run a forward pass as we've already
+  // updated the parameters "max_iter" times -- this final pass is only done to
+  // display the loss, which is computed in the forward pass.
+  if (param_.display() && iter_ % param_.display() == 0) {
+    Dtype loss;
+    net_->ForwardPrefilled(&loss);
+    LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
+  }
+  if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
+    TestAll();
+  }
+  LOG(INFO) << "Optimization Done.";
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Step(int niter) {
+  if (!initialized_) {
+    PreSolve();
+  }
   int average_loss = this->param_.average_loss();
-
   CHECK_GE(average_loss, 1) << "average_loss should be non-negative.";
-
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
-
+  int stop_iter = iter_ + niter;
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
-  for (; iter_ < param_.max_iter(); ++iter_) {
+  for (; iter_ < stop_iter; ++iter_) {
     // Save a snapshot if needed.
-    if (param_.snapshot() && iter_ > start_iter &&
+    if (param_.snapshot() && iter_ > start_iter_ &&
         iter_ % param_.snapshot() == 0) {
       Snapshot();
     }
@@ -199,7 +219,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
       int size = losses.size();
       smoothed_loss = (smoothed_loss * (size - 1) + loss) / size;
     } else {
-      int idx = (iter_ - start_iter) % average_loss;
+      int idx = (iter_ - start_iter_) % average_loss;
       smoothed_loss += (loss - losses[idx]) / average_loss;
       losses[idx] = loss;
     }
@@ -229,26 +249,13 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     ComputeUpdateValue();
     net_->Update();
   }
-  // Always save a snapshot after optimization, unless overridden by setting
-  // snapshot_after_train := false.
-  if (param_.snapshot_after_train()) { Snapshot(); }
-  // After the optimization is done, run an additional train and test pass to
-  // display the train and test loss/outputs if appropriate (based on the
-  // display and test_interval settings, respectively).  Unlike in the rest of
-  // training, for the train net we only run a forward pass as we've already
-  // updated the parameters "max_iter" times -- this final pass is only done to
-  // display the loss, which is computed in the forward pass.
-  if (param_.display() && iter_ % param_.display() == 0) {
-    Dtype loss;
-    net_->Forward(bottom_vec, &loss);
-    LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
-  }
-  if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
-    TestAll();
-  }
-  LOG(INFO) << "Optimization Done.";
 }
 
+template <typename Dtype>
+void Solver<Dtype>::PreSolve() {
+  start_iter_ = iter_ = 0;
+  initialized_ = true;
+}
 
 template <typename Dtype>
 void Solver<Dtype>::TestAll() {
@@ -350,7 +357,7 @@ void Solver<Dtype>::Restore(const char* state_file) {
     ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
     net_->CopyTrainedLayersFrom(net_param);
   }
-  iter_ = state.iter();
+  start_iter_ = iter_ = state.iter();
   RestoreSolverState(state);
 }
 
@@ -388,6 +395,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
+  Solver<Dtype>::PreSolve();
   // Initialize the history
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   history_.clear();
