@@ -7,7 +7,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/database_factory.hpp"
+#include "caffe/dataset_factory.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
@@ -16,8 +16,8 @@
 using boost::shared_ptr;
 using caffe::Blob;
 using caffe::Caffe;
-using caffe::Database;
-using caffe::DatabaseFactory;
+using caffe::Dataset;
+using caffe::DatasetFactory;
 using caffe::Datum;
 using caffe::Net;
 
@@ -39,12 +39,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
     " extract features of the input data produced by the net.\n"
     "Usage: extract_features  pretrained_net_param"
     "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
-    "  save_feature_database_name1[,name2,...]  num_mini_batches  db_type"
+    "  save_feature_dataset_name1[,name2,...]  num_mini_batches  db_type"
     "  [CPU/GPU] [DEVICE_ID=0]\n"
     "Note: you can extract multiple features in one pass by specifying"
-    " multiple feature blob names and database names seperated by ','."
+    " multiple feature blob names and dataset names seperated by ','."
     " The names cannot contain white space characters and the number of blobs"
-    " and databases must be equal.";
+    " and datasets must be equal.";
     return 1;
   }
   int arg_pos = num_required_args;
@@ -105,12 +105,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
   std::vector<std::string> blob_names;
   boost::split(blob_names, extract_feature_blob_names, boost::is_any_of(","));
 
-  std::string save_feature_database_names(argv[++arg_pos]);
-  std::vector<std::string> database_names;
-  boost::split(database_names, save_feature_database_names,
+  std::string save_feature_dataset_names(argv[++arg_pos]);
+  std::vector<std::string> dataset_names;
+  boost::split(dataset_names, save_feature_dataset_names,
                boost::is_any_of(","));
-  CHECK_EQ(blob_names.size(), database_names.size()) <<
-      " the number of blob names and database names must be equal";
+  CHECK_EQ(blob_names.size(), dataset_names.size()) <<
+      " the number of blob names and dataset names must be equal";
   size_t num_features = blob_names.size();
 
   for (size_t i = 0; i < num_features; i++) {
@@ -121,14 +121,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   int num_mini_batches = atoi(argv[++arg_pos]);
 
-  std::vector<shared_ptr<Database<std::string, Datum> > > feature_dbs;
+  std::vector<shared_ptr<Dataset<std::string, Datum> > > feature_dbs;
   for (size_t i = 0; i < num_features; ++i) {
-    LOG(INFO)<< "Opening database " << database_names[i];
-    shared_ptr<Database<std::string, Datum> > database =
-        DatabaseFactory<std::string, Datum>(argv[++arg_pos]);
-    CHECK(database->open(database_names.at(i),
-        Database<std::string, Datum>::New));
-    feature_dbs.push_back(database);
+    LOG(INFO)<< "Opening dataset " << dataset_names[i];
+    shared_ptr<Dataset<std::string, Datum> > dataset =
+        DatasetFactory<std::string, Datum>(argv[++arg_pos]);
+    CHECK(dataset->open(dataset_names.at(i), Dataset<std::string, Datum>::New));
+    feature_dbs.push_back(dataset);
   }
 
   LOG(ERROR)<< "Extacting Features";
