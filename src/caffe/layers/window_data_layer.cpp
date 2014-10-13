@@ -224,11 +224,11 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::InternalThreadEntry() {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
-  Timer batch_timer;
+  CPUTimer batch_timer;
   batch_timer.Start();
-  float read_time = 0;
-  float trans_time = 0;
-  Timer timer;
+  double read_time = 0;
+  double trans_time = 0;
+  CPUTimer timer;
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
@@ -289,7 +289,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
           return;
         }
       }
-      read_time += timer.MilliSeconds();
+      read_time += timer.MicroSeconds();
       timer.Start();
       const int channels = cv_img.channels();
 
@@ -416,7 +416,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
           }
         }
       }
-      trans_time += timer.MilliSeconds();
+      trans_time += timer.MicroSeconds();
       // get window label
       top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
 
@@ -457,9 +457,9 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
     }
   }
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
-  DLOG(INFO) << "Read time: " << read_time << "ms.";
-  DLOG(INFO) << "Transform time: " << trans_time << "ms.";
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(WindowDataLayer);

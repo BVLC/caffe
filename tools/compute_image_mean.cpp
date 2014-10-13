@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
