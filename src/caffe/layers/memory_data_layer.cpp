@@ -72,5 +72,5 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 INSTANTIATE_CLASS(MemoryDataLayer);
-
+REGISTER_LAYER_CLASS(MEMORY_DATA, MemoryDataLayer);
 }  // namespace caffe

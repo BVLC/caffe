@@ -90,6 +90,5 @@ STUB_GPU(SoftmaxWithLossLayer);
 #endif
 
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
-
-
+REGISTER_LAYER_CLASS(SOFTMAX_LOSS, SoftmaxWithLossLayer);
 }  // namespace caffe

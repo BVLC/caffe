@@ -73,6 +73,5 @@ STUB_GPU(DropoutLayer);
 #endif
 
 INSTANTIATE_CLASS(DropoutLayer);
-
-
+REGISTER_LAYER_CLASS(DROPOUT, DropoutLayer);
 }  // namespace caffe
