@@ -30,8 +30,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Initialize DB
   database_ = DatabaseFactory(this->layer_param_.data_param().backend());
-  LOG(INFO) << "Opening database " << this->layer_param_.data_param().source();
-  database_->open(this->layer_param_.data_param().source(), Database::ReadOnly);
+  const string& source = this->layer_param_.data_param().source();
+  LOG(INFO) << "Opening database " << source;
+  CHECK(database_->open(source, Database::ReadOnly));
   iter_ = database_->begin();
 
   // Check if we would need to randomly skip a few data points

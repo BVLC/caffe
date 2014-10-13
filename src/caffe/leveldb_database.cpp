@@ -5,7 +5,7 @@
 
 namespace caffe {
 
-void LeveldbDatabase::open(const string& filename, Mode mode) {
+bool LeveldbDatabase::open(const string& filename, Mode mode) {
   LOG(INFO) << "LevelDB: Open " << filename;
 
   leveldb::Options options;
@@ -40,15 +40,24 @@ void LeveldbDatabase::open(const string& filename, Mode mode) {
   leveldb::Status status = leveldb::DB::Open(
       options, filename, &db);
   db_.reset(db);
-  CHECK(status.ok()) << "Failed to open leveldb " << filename
-      << ". Is it already existing?";
+
+  if (!status.ok()) {
+    LOG(ERROR) << "Failed to open leveldb " << filename
+        << ". Is it already existing?";
+    return false;
+  }
+
   batch_.reset(new leveldb::WriteBatch());
+  return true;
 }
 
-void LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
+bool LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
   LOG(INFO) << "LevelDB: Put";
 
-  CHECK(!read_only_);
+  if (read_only_) {
+    LOG(ERROR) << "put can not be used on a database in ReadOnly mode";
+    return false;
+  }
 
   CHECK_NOTNULL(batch_.get());
 
@@ -56,9 +65,11 @@ void LeveldbDatabase::put(buffer_t* key, buffer_t* value) {
   leveldb::Slice value_slice(value->data(), value->size());
 
   batch_->Put(key_slice, value_slice);
+
+  return true;
 }
 
-void LeveldbDatabase::get(buffer_t* key, buffer_t* value) {
+bool LeveldbDatabase::get(buffer_t* key, buffer_t* value) {
   LOG(INFO) << "LevelDB: Get";
 
   leveldb::Slice key_slice(key->data(), key->size());
@@ -66,23 +77,35 @@ void LeveldbDatabase::get(buffer_t* key, buffer_t* value) {
   string value_string;
   leveldb::Status status =
       db_->Get(leveldb::ReadOptions(), key_slice, &value_string);
-  CHECK(status.ok()) << "leveldb get failed";
+
+  if (!status.ok()) {
+    LOG(ERROR) << "leveldb get failed";
+    return false;
+  }
 
   Database::buffer_t temp_value(value_string.data(),
       value_string.data() + value_string.size());
   value->swap(temp_value);
+
+  return true;
 }
 
-void LeveldbDatabase::commit() {
+bool LeveldbDatabase::commit() {
   LOG(INFO) << "LevelDB: Commit";
 
-  CHECK(!read_only_);
+  if (read_only_) {
+    LOG(ERROR) << "commit can not be used on a database in ReadOnly mode";
+    return false;
+  }
 
   CHECK_NOTNULL(db_.get());
   CHECK_NOTNULL(batch_.get());
 
-  db_->Write(leveldb::WriteOptions(), batch_.get());
+  leveldb::Status status = db_->Write(leveldb::WriteOptions(), batch_.get());
+
   batch_.reset(new leveldb::WriteBatch());
+
+  return status.ok();
 }
 
 void LeveldbDatabase::close() {

@@ -7,7 +7,7 @@
 
 namespace caffe {
 
-void LmdbDatabase::open(const string& filename, Mode mode) {
+bool LmdbDatabase::open(const string& filename, Mode mode) {
   LOG(INFO) << "LMDB: Open " << filename;
 
   CHECK(NULL == env_);
@@ -19,12 +19,16 @@ void LmdbDatabase::open(const string& filename, Mode mode) {
     retval = mkdir(filename.c_str(), 0744);
     switch (mode) {
     case New:
-      CHECK_EQ(0, retval) << "mkdir " << filename << " failed";
+      if (0 != retval) {
+        LOG(ERROR) << "mkdir " << filename << " failed";
+        return false;
+      }
       break;
     case ReadWrite:
-      if (-1 == retval) {
-        CHECK_EQ(EEXIST, errno) << "mkdir " << filename << " failed ("
+      if (-1 == retval && EEXIST != errno) {
+        LOG(ERROR) << "mkdir " << filename << " failed ("
             << strerror(errno) << ")";
+        return false;
       }
       break;
     default:
@@ -33,11 +37,17 @@ void LmdbDatabase::open(const string& filename, Mode mode) {
   }
 
   retval = mdb_env_create(&env_);
-  CHECK_EQ(retval, MDB_SUCCESS) << "mdb_env_create failed "
-      << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_env_create failed "
+        << mdb_strerror(retval);
+    return false;
+  }
+
   retval = mdb_env_set_mapsize(env_, 1099511627776);
-  CHECK_EQ(retval, MDB_SUCCESS)  // 1TB
-      << "mdb_env_set_mapsize failed " << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_env_set_mapsize failed " << mdb_strerror(retval);
+    return false;
+  }
 
   int flag1 = 0;
   int flag2 = 0;
@@ -47,16 +57,27 @@ void LmdbDatabase::open(const string& filename, Mode mode) {
   }
 
   retval = mdb_env_open(env_, filename.c_str(), flag1, 0664);
-  CHECK_EQ(retval, MDB_SUCCESS)
-      << "mdb_env_open failed " << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_env_open failed " << mdb_strerror(retval);
+    return false;
+  }
+
   retval = mdb_txn_begin(env_, NULL, flag2, &txn_);
-  CHECK_EQ(retval, MDB_SUCCESS)
-      << "mdb_txn_begin failed " << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
+    return false;
+  }
+
   retval = mdb_open(txn_, NULL, 0, &dbi_);
-  CHECK_EQ(retval, MDB_SUCCESS) << "mdb_open failed" << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_open failed" << mdb_strerror(retval);
+    return false;
+  }
+
+  return true;
 }
 
-void LmdbDatabase::put(buffer_t* key, buffer_t* value) {
+bool LmdbDatabase::put(buffer_t* key, buffer_t* value) {
   LOG(INFO) << "LMDB: Put";
 
   MDB_val mdbkey, mdbdata;
@@ -69,11 +90,15 @@ void LmdbDatabase::put(buffer_t* key, buffer_t* value) {
   CHECK_NE(0, dbi_);
 
   int retval = mdb_put(txn_, dbi_, &mdbkey, &mdbdata, 0);
-  CHECK_EQ(retval, MDB_SUCCESS)
-      << "mdb_put failed " << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_put failed " << mdb_strerror(retval);
+    return false;
+  }
+
+  return true;
 }
 
-void LmdbDatabase::get(buffer_t* key, buffer_t* value) {
+bool LmdbDatabase::get(buffer_t* key, buffer_t* value) {
   LOG(INFO) << "LMDB: Get";
 
   MDB_val mdbkey, mdbdata;
@@ -83,11 +108,16 @@ void LmdbDatabase::get(buffer_t* key, buffer_t* value) {
   int retval;
   MDB_txn* get_txn;
   retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &get_txn);
-  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
-      << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
+    return false;
+  }
 
   retval = mdb_get(get_txn, dbi_, &mdbkey, &mdbdata);
-  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_get failed " << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_get failed " << mdb_strerror(retval);
+    return false;
+  }
 
   mdb_txn_abort(get_txn);
 
@@ -95,21 +125,29 @@ void LmdbDatabase::get(buffer_t* key, buffer_t* value) {
       reinterpret_cast<char*>(mdbdata.mv_data) + mdbdata.mv_size);
 
   value->swap(temp_value);
+
+  return true;
 }
 
-void LmdbDatabase::commit() {
+bool LmdbDatabase::commit() {
   LOG(INFO) << "LMDB: Commit";
 
   CHECK_NOTNULL(txn_);
 
   int retval;
   retval = mdb_txn_commit(txn_);
-  CHECK_EQ(retval, MDB_SUCCESS) << "mdb_txn_commit failed "
-      << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_txn_commit failed " << mdb_strerror(retval);
+    return false;
+  }
 
   retval = mdb_txn_begin(env_, NULL, 0, &txn_);
-  CHECK_EQ(retval, MDB_SUCCESS)
-      << "mdb_txn_begin failed " << mdb_strerror(retval);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
+    return false;
+  }
+
+  return true;
 }
 
 void LmdbDatabase::close() {

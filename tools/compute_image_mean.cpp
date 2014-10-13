@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
   caffe::shared_ptr<Database> database = caffe::DatabaseFactory(db_backend);
 
   // Open db
-  database->open(argv[1], Database::ReadOnly);
+  CHECK(database->open(argv[1], Database::ReadOnly));
 
   Datum datum;
   BlobProto sum_blob;
