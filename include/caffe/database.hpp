@@ -33,6 +33,8 @@ class Database {
   virtual bool commit() = 0;
   virtual void close() = 0;
 
+  virtual void keys(vector<key_type>* keys) = 0;
+
   Database() { }
   virtual ~Database() { }
 
@@ -65,7 +67,8 @@ class Database {
 
     iterator(const iterator& other)
         : parent_(other.parent_),
-          state_(other.state_->clone()) { }
+          state_(other.state_ ? other.state_->clone()
+              : shared_ptr<DatabaseState>()) { }
 
     iterator& operator=(iterator copy) {
       copy.swap(*this);
@@ -86,12 +89,12 @@ class Database {
     }
 
     iterator& operator++() {
-      parent_->increment(state_);
+      parent_->increment(&state_);
       return *this;
     }
     iterator operator++(int) {
       iterator copy(*this);
-      parent_->increment(state_);
+      parent_->increment(&state_);
       return copy;
     }
 
@@ -117,7 +120,7 @@ class Database {
 
   virtual bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const = 0;
-  virtual void increment(shared_ptr<DatabaseState> state) const = 0;
+  virtual void increment(shared_ptr<DatabaseState>* state) const = 0;
   virtual KV& dereference(
       shared_ptr<DatabaseState> state) const = 0;
 };

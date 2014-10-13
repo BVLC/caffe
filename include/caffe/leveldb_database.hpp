@@ -6,6 +6,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/database.hpp"
@@ -19,6 +20,8 @@ class LeveldbDatabase : public Database {
   bool get(const key_type& key, value_type* value);
   bool commit();
   void close();
+
+  void keys(vector<key_type>* keys);
 
   const_iterator begin() const;
   const_iterator cbegin() const;
@@ -62,7 +65,7 @@ class LeveldbDatabase : public Database {
 
   bool equal(shared_ptr<DatabaseState> state1,
       shared_ptr<DatabaseState> state2) const;
-  void increment(shared_ptr<DatabaseState> state) const;
+  void increment(shared_ptr<DatabaseState>* state) const;
   Database::KV& dereference(shared_ptr<DatabaseState> state) const;
 
   shared_ptr<leveldb::DB> db_;

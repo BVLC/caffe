@@ -1,5 +1,6 @@
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "caffe/leveldb_database.hpp"
 
@@ -115,6 +116,16 @@ void LeveldbDatabase::close() {
   db_.reset();
 }
 
+void LeveldbDatabase::keys(vector<key_type>* keys) {
+  LOG(INFO) << "LevelDB: Keys";
+
+  keys->clear();
+  for (Database::const_iterator iter = begin(); iter != end(); ++iter) {
+    LOG(INFO) << "KEY";
+    keys->push_back(iter->key);
+  }
+}
+
 LeveldbDatabase::const_iterator LeveldbDatabase::begin() const {
   CHECK_NOTNULL(db_.get());
   shared_ptr<leveldb::Iterator> iter(db_->NewIterator(leveldb::ReadOptions()));
@@ -122,13 +133,16 @@ LeveldbDatabase::const_iterator LeveldbDatabase::begin() const {
   if (!iter->Valid()) {
     iter.reset();
   }
-  shared_ptr<DatabaseState> state(new LeveldbState(db_, iter));
+
+  shared_ptr<DatabaseState> state;
+  if (iter) {
+    state.reset(new LeveldbState(db_, iter));
+  }
   return const_iterator(this, state);
 }
 
 LeveldbDatabase::const_iterator LeveldbDatabase::end() const {
-  shared_ptr<leveldb::Iterator> iter;
-  shared_ptr<DatabaseState> state(new LeveldbState(db_, iter));
+  shared_ptr<DatabaseState> state;
   return const_iterator(this, state);
 }
 
@@ -143,25 +157,20 @@ bool LeveldbDatabase::equal(shared_ptr<DatabaseState> state1,
   shared_ptr<LeveldbState> leveldb_state1 =
       boost::dynamic_pointer_cast<LeveldbState>(state1);
 
-  CHECK_NOTNULL(leveldb_state1.get());
-
   shared_ptr<LeveldbState> leveldb_state2 =
       boost::dynamic_pointer_cast<LeveldbState>(state2);
 
-  CHECK_NOTNULL(leveldb_state2.get());
-
-  CHECK(!leveldb_state1->iter_ || leveldb_state1->iter_->Valid());
-  CHECK(!leveldb_state2->iter_ || leveldb_state2->iter_->Valid());
+  LOG(INFO) << leveldb_state1 << " " << leveldb_state2;
 
   // The KV store doesn't really have any sort of ordering,
   // so while we can do a sequential scan over the collection,
   // we can't really use subranges.
-  return !leveldb_state1->iter_ && !leveldb_state2->iter_;
+  return !leveldb_state1 && !leveldb_state2;
 }
 
-void LeveldbDatabase::increment(shared_ptr<DatabaseState> state) const {
+void LeveldbDatabase::increment(shared_ptr<DatabaseState>* state) const {
   shared_ptr<LeveldbState> leveldb_state =
-      boost::dynamic_pointer_cast<LeveldbState>(state);
+      boost::dynamic_pointer_cast<LeveldbState>(*state);
 
   CHECK_NOTNULL(leveldb_state.get());
 
@@ -172,7 +181,7 @@ void LeveldbDatabase::increment(shared_ptr<DatabaseState> state) const {
 
   iter->Next();
   if (!iter->Valid()) {
-    iter.reset();
+    state->reset();
   }
 }
 
