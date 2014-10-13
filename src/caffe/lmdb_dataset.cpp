@@ -5,12 +5,12 @@
 #include <vector>
 
 #include "caffe/caffe.hpp"
-#include "caffe/lmdb_database.hpp"
+#include "caffe/lmdb_dataset.hpp"
 
 namespace caffe {
 
 template <typename K, typename V>
-bool LmdbDatabase<K, V>::open(const string& filename, Mode mode) {
+bool LmdbDataset<K, V>::open(const string& filename, Mode mode) {
   DLOG(INFO) << "LMDB: Open " << filename;
 
   CHECK(NULL == env_);
@@ -81,7 +81,7 @@ bool LmdbDatabase<K, V>::open(const string& filename, Mode mode) {
 }
 
 template <typename K, typename V>
-bool LmdbDatabase<K, V>::put(const K& key, const V& value) {
+bool LmdbDataset<K, V>::put(const K& key, const V& value) {
   DLOG(INFO) << "LMDB: Put";
 
   vector<char> serialized_key;
@@ -115,7 +115,7 @@ bool LmdbDatabase<K, V>::put(const K& key, const V& value) {
 }
 
 template <typename K, typename V>
-bool LmdbDatabase<K, V>::get(const K& key, V* value) {
+bool LmdbDataset<K, V>::get(const K& key, V* value) {
   DLOG(INFO) << "LMDB: Get";
 
   vector<char> serialized_key;
@@ -154,7 +154,7 @@ bool LmdbDatabase<K, V>::get(const K& key, V* value) {
 }
 
 template <typename K, typename V>
-bool LmdbDatabase<K, V>::commit() {
+bool LmdbDataset<K, V>::commit() {
   DLOG(INFO) << "LMDB: Commit";
 
   CHECK_NOTNULL(txn_);
@@ -176,7 +176,7 @@ bool LmdbDatabase<K, V>::commit() {
 }
 
 template <typename K, typename V>
-void LmdbDatabase<K, V>::close() {
+void LmdbDataset<K, V>::close() {
   DLOG(INFO) << "LMDB: Close";
 
   if (env_ && dbi_) {
@@ -189,7 +189,7 @@ void LmdbDatabase<K, V>::close() {
 }
 
 template <typename K, typename V>
-void LmdbDatabase<K, V>::keys(vector<K>* keys) {
+void LmdbDataset<K, V>::keys(vector<K>* keys) {
   DLOG(INFO) << "LMDB: Keys";
 
   keys->clear();
@@ -199,8 +199,8 @@ void LmdbDatabase<K, V>::keys(vector<K>* keys) {
 }
 
 template <typename K, typename V>
-typename LmdbDatabase<K, V>::const_iterator
-    LmdbDatabase<K, V>::begin() const {
+typename LmdbDataset<K, V>::const_iterator
+    LmdbDataset<K, V>::begin() const {
   int retval;
 
   MDB_txn* iter_txn;
@@ -219,7 +219,7 @@ typename LmdbDatabase<K, V>::const_iterator
   CHECK(MDB_SUCCESS == retval || MDB_NOTFOUND == retval)
       << mdb_strerror(retval);
 
-  shared_ptr<DatabaseState> state;
+  shared_ptr<DatasetState> state;
   if (MDB_SUCCESS == retval) {
     state.reset(new LmdbState(cursor, iter_txn, &dbi_));
   }
@@ -227,23 +227,23 @@ typename LmdbDatabase<K, V>::const_iterator
 }
 
 template <typename K, typename V>
-typename LmdbDatabase<K, V>::const_iterator
-    LmdbDatabase<K, V>::end() const {
-  shared_ptr<DatabaseState> state;
+typename LmdbDataset<K, V>::const_iterator
+    LmdbDataset<K, V>::end() const {
+  shared_ptr<DatasetState> state;
   return const_iterator(this, state);
 }
 
 template <typename K, typename V>
-typename LmdbDatabase<K, V>::const_iterator
-    LmdbDatabase<K, V>::cbegin() const { return begin(); }
+typename LmdbDataset<K, V>::const_iterator
+    LmdbDataset<K, V>::cbegin() const { return begin(); }
 
 template <typename K, typename V>
-typename LmdbDatabase<K, V>::const_iterator
-    LmdbDatabase<K, V>::cend() const { return end(); }
+typename LmdbDataset<K, V>::const_iterator
+    LmdbDataset<K, V>::cend() const { return end(); }
 
 template <typename K, typename V>
-bool LmdbDatabase<K, V>::equal(shared_ptr<DatabaseState> state1,
-    shared_ptr<DatabaseState> state2) const {
+bool LmdbDataset<K, V>::equal(shared_ptr<DatasetState> state1,
+    shared_ptr<DatasetState> state2) const {
   shared_ptr<LmdbState> lmdb_state1 =
       boost::dynamic_pointer_cast<LmdbState>(state1);
 
@@ -257,7 +257,7 @@ bool LmdbDatabase<K, V>::equal(shared_ptr<DatabaseState> state1,
 }
 
 template <typename K, typename V>
-void LmdbDatabase<K, V>::increment(shared_ptr<DatabaseState>* state) const {
+void LmdbDataset<K, V>::increment(shared_ptr<DatasetState>* state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(*state);
 
@@ -279,8 +279,8 @@ void LmdbDatabase<K, V>::increment(shared_ptr<DatabaseState>* state) const {
 }
 
 template <typename K, typename V>
-typename Database<K, V>::KV& LmdbDatabase<K, V>::dereference(
-    shared_ptr<DatabaseState> state) const {
+typename Dataset<K, V>::KV& LmdbDataset<K, V>::dereference(
+    shared_ptr<DatasetState> state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(state);
 
@@ -303,6 +303,6 @@ typename Database<K, V>::KV& LmdbDatabase<K, V>::dereference(
   return lmdb_state->kv_pair_;
 }
 
-INSTANTIATE_DATABASE(LmdbDatabase);
+INSTANTIATE_DATASET(LmdbDataset);
 
 }  // namespace caffe

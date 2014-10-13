@@ -1,5 +1,5 @@
-#ifndef CAFFE_LMDB_DATABASE_H_
-#define CAFFE_LMDB_DATABASE_H_
+#ifndef CAFFE_LMDB_DATASET_H_
+#define CAFFE_LMDB_DATASET_H_
 
 #include <string>
 #include <utility>
@@ -8,22 +8,22 @@
 #include "lmdb.h"
 
 #include "caffe/common.hpp"
-#include "caffe/database.hpp"
+#include "caffe/dataset.hpp"
 
 namespace caffe {
 
 template <typename K, typename V>
-class LmdbDatabase : public Database<K, V> {
+class LmdbDataset : public Dataset<K, V> {
  public:
-  typedef Database<K, V> Base;
+  typedef Dataset<K, V> Base;
   typedef typename Base::key_type key_type;
   typedef typename Base::value_type value_type;
-  typedef typename Base::DatabaseState DatabaseState;
+  typedef typename Base::DatasetState DatasetState;
   typedef typename Base::Mode Mode;
   typedef typename Base::const_iterator const_iterator;
   typedef typename Base::KV KV;
 
-  LmdbDatabase()
+  LmdbDataset()
       : env_(NULL),
         dbi_(0),
         txn_(NULL) { }
@@ -42,15 +42,15 @@ class LmdbDatabase : public Database<K, V> {
   const_iterator cend() const;
 
  protected:
-  class LmdbState : public DatabaseState {
+  class LmdbState : public DatasetState {
    public:
     explicit LmdbState(MDB_cursor* cursor, MDB_txn* txn, const MDB_dbi* dbi)
-        : DatabaseState(),
+        : DatasetState(),
           cursor_(cursor),
           txn_(txn),
           dbi_(dbi) { }
 
-    shared_ptr<DatabaseState> clone() {
+    shared_ptr<DatasetState> clone() {
       MDB_cursor* new_cursor;
 
       if (cursor_) {
@@ -67,7 +67,7 @@ class LmdbDatabase : public Database<K, V> {
         new_cursor = cursor_;
       }
 
-      return shared_ptr<DatabaseState>(new LmdbState(new_cursor, txn_, dbi_));
+      return shared_ptr<DatasetState>(new LmdbState(new_cursor, txn_, dbi_));
     }
 
     MDB_cursor* cursor_;
@@ -76,10 +76,10 @@ class LmdbDatabase : public Database<K, V> {
     KV kv_pair_;
   };
 
-  bool equal(shared_ptr<DatabaseState> state1,
-      shared_ptr<DatabaseState> state2) const;
-  void increment(shared_ptr<DatabaseState>* state) const;
-  KV& dereference(shared_ptr<DatabaseState> state) const;
+  bool equal(shared_ptr<DatasetState> state1,
+      shared_ptr<DatasetState> state2) const;
+  void increment(shared_ptr<DatasetState>* state) const;
+  KV& dereference(shared_ptr<DatasetState> state) const;
 
   MDB_env* env_;
   MDB_dbi dbi_;
@@ -88,4 +88,4 @@ class LmdbDatabase : public Database<K, V> {
 
 }  // namespace caffe
 
-#endif  // CAFFE_LMDB_DATABASE_H_
+#endif  // CAFFE_LMDB_DATASET_H_

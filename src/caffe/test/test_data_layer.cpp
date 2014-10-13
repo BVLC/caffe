@@ -5,7 +5,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/database_factory.hpp"
+#include "caffe/dataset_factory.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
@@ -38,10 +38,10 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   // an image are the same.
   void Fill(const bool unique_pixels, DataParameter_DB backend) {
     backend_ = backend;
-    LOG(INFO) << "Using temporary database " << *filename_;
-    shared_ptr<Database<string, Datum> > database =
-        DatabaseFactory<string, Datum>(backend_);
-    CHECK(database->open(*filename_, Database<string, Datum>::New));
+    LOG(INFO) << "Using temporary dataset " << *filename_;
+    shared_ptr<Dataset<string, Datum> > dataset =
+        DatasetFactory<string, Datum>(backend_);
+    CHECK(dataset->open(*filename_, Dataset<string, Datum>::New));
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
@@ -55,10 +55,10 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       }
       stringstream ss;
       ss << i;
-      CHECK(database->put(ss.str(), datum));
+      CHECK(dataset->put(ss.str(), datum));
     }
-    CHECK(database->commit());
-    database->close();
+    CHECK(dataset->commit());
+    dataset->close();
   }
 
   void TestRead() {
@@ -183,7 +183,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         }
         crop_sequence.push_back(iter_crop_sequence);
       }
-    }  // destroy 1st data layer and unlock the database
+    }  // destroy 1st data layer and unlock the dataset
 
     // Get crop sequence after reseeding Caffe with 1701.
     // Check that the sequence is the same as the original.
@@ -238,7 +238,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         }
         crop_sequence.push_back(iter_crop_sequence);
       }
-    }  // destroy 1st data layer and unlock the database
+    }  // destroy 1st data layer and unlock the dataset
 
     // Get crop sequence continuing from previous Caffe RNG state; reseed
     // srand with 1701. Check that the sequence differs from the original.

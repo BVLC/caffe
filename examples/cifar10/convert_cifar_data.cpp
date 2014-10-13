@@ -13,13 +13,13 @@
 #include "google/protobuf/text_format.h"
 #include "stdint.h"
 
-#include "caffe/database_factory.hpp"
+#include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 using std::string;
 
-using caffe::Database;
-using caffe::DatabaseFactory;
+using caffe::Dataset;
+using caffe::DatasetFactory;
 using caffe::Datum;
 using caffe::shared_ptr;
 
@@ -38,10 +38,10 @@ void read_image(std::ifstream* file, int* label, char* buffer) {
 
 void convert_dataset(const string& input_folder, const string& output_folder,
     const string& db_type) {
-  shared_ptr<Database<string, Datum> > train_database =
-      DatabaseFactory<string, Datum>(db_type);
-  CHECK(train_database->open(output_folder + "/cifar10_train_" + db_type,
-      Database<string, Datum>::New));
+  shared_ptr<Dataset<string, Datum> > train_dataset =
+      DatasetFactory<string, Datum>(db_type);
+  CHECK(train_dataset->open(output_folder + "/cifar10_train_" + db_type,
+      Dataset<string, Datum>::New));
   // Data buffer
   int label;
   char str_buffer[kCIFARImageNBytes];
@@ -64,17 +64,17 @@ void convert_dataset(const string& input_folder, const string& output_folder,
       datum.set_data(str_buffer, kCIFARImageNBytes);
       int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d",
           fileid * kCIFARBatchSize + itemid);
-      CHECK(train_database->put(string(str_buffer, length), datum));
+      CHECK(train_dataset->put(string(str_buffer, length), datum));
     }
   }
-  CHECK(train_database->commit());
-  train_database->close();
+  CHECK(train_dataset->commit());
+  train_dataset->close();
 
   LOG(INFO) << "Writing Testing data";
-  shared_ptr<Database<string, Datum> > test_database =
-      DatabaseFactory<string, Datum>(db_type);
-  CHECK(test_database->open(output_folder + "/cifar10_test_" + db_type,
-      Database<string, Datum>::New));
+  shared_ptr<Dataset<string, Datum> > test_dataset =
+      DatasetFactory<string, Datum>(db_type);
+  CHECK(test_dataset->open(output_folder + "/cifar10_test_" + db_type,
+      Dataset<string, Datum>::New));
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
@@ -84,10 +84,10 @@ void convert_dataset(const string& input_folder, const string& output_folder,
     datum.set_label(label);
     datum.set_data(str_buffer, kCIFARImageNBytes);
     int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
-    CHECK(test_database->put(string(str_buffer, length), datum));
+    CHECK(test_dataset->put(string(str_buffer, length), datum));
   }
-  CHECK(test_database->commit());
-  test_database->close();
+  CHECK(test_dataset->commit());
+  test_dataset->close();
 }
 
 int main(int argc, char** argv) {

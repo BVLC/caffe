@@ -1,5 +1,5 @@
-#ifndef CAFFE_LEVELDB_DATABASE_H_
-#define CAFFE_LEVELDB_DATABASE_H_
+#ifndef CAFFE_LEVELDB_DATASET_H_
+#define CAFFE_LEVELDB_DATASET_H_
 
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
@@ -9,17 +9,17 @@
 #include <vector>
 
 #include "caffe/common.hpp"
-#include "caffe/database.hpp"
+#include "caffe/dataset.hpp"
 
 namespace caffe {
 
 template <typename K, typename V>
-class LeveldbDatabase : public Database<K, V> {
+class LeveldbDataset : public Dataset<K, V> {
  public:
-  typedef Database<K, V> Base;
+  typedef Dataset<K, V> Base;
   typedef typename Base::key_type key_type;
   typedef typename Base::value_type value_type;
-  typedef typename Base::DatabaseState DatabaseState;
+  typedef typename Base::DatasetState DatasetState;
   typedef typename Base::Mode Mode;
   typedef typename Base::const_iterator const_iterator;
   typedef typename Base::KV KV;
@@ -38,11 +38,11 @@ class LeveldbDatabase : public Database<K, V> {
   const_iterator cend() const;
 
  protected:
-  class LeveldbState : public DatabaseState {
+  class LeveldbState : public DatasetState {
    public:
     explicit LeveldbState(shared_ptr<leveldb::DB> db,
         shared_ptr<leveldb::Iterator> iter)
-        : DatabaseState(),
+        : DatasetState(),
           db_(db),
           iter_(iter) { }
 
@@ -54,7 +54,7 @@ class LeveldbDatabase : public Database<K, V> {
       db_.reset();
     }
 
-    shared_ptr<DatabaseState> clone() {
+    shared_ptr<DatasetState> clone() {
       shared_ptr<leveldb::Iterator> new_iter;
 
       if (iter_.get()) {
@@ -64,7 +64,7 @@ class LeveldbDatabase : public Database<K, V> {
         CHECK(new_iter->Valid());
       }
 
-      return shared_ptr<DatabaseState>(new LeveldbState(db_, new_iter));
+      return shared_ptr<DatasetState>(new LeveldbState(db_, new_iter));
     }
 
     shared_ptr<leveldb::DB> db_;
@@ -72,10 +72,10 @@ class LeveldbDatabase : public Database<K, V> {
     KV kv_pair_;
   };
 
-  bool equal(shared_ptr<DatabaseState> state1,
-      shared_ptr<DatabaseState> state2) const;
-  void increment(shared_ptr<DatabaseState>* state) const;
-  KV& dereference(shared_ptr<DatabaseState> state) const;
+  bool equal(shared_ptr<DatasetState> state1,
+      shared_ptr<DatasetState> state2) const;
+  void increment(shared_ptr<DatasetState>* state) const;
+  KV& dereference(shared_ptr<DatasetState> state) const;
 
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::WriteBatch> batch_;
@@ -84,4 +84,4 @@ class LeveldbDatabase : public Database<K, V> {
 
 }  // namespace caffe
 
-#endif  // CAFFE_LEVELDB_DATABASE_H_
+#endif  // CAFFE_LEVELDB_DATASET_H_

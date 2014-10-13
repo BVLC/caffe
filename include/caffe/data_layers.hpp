@@ -11,7 +11,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/data_transformer.hpp"
-#include "caffe/database.hpp"
+#include "caffe/dataset.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
@@ -100,8 +100,8 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void InternalThreadEntry();
 
-  shared_ptr<Database<string, Datum> > database_;
-  Database<string, Datum>::const_iterator iter_;
+  shared_ptr<Dataset<string, Datum> > dataset_;
+  Dataset<string, Datum>::const_iterator iter_;
 };
 
 /**

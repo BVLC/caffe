@@ -3,12 +3,12 @@
 #include <vector>
 
 #include "caffe/caffe.hpp"
-#include "caffe/leveldb_database.hpp"
+#include "caffe/leveldb_dataset.hpp"
 
 namespace caffe {
 
 template <typename K, typename V>
-bool LeveldbDatabase<K, V>::open(const string& filename, Mode mode) {
+bool LeveldbDataset<K, V>::open(const string& filename, Mode mode) {
   DLOG(INFO) << "LevelDB: Open " << filename;
 
   leveldb::Options options;
@@ -55,11 +55,11 @@ bool LeveldbDatabase<K, V>::open(const string& filename, Mode mode) {
 }
 
 template <typename K, typename V>
-bool LeveldbDatabase<K, V>::put(const K& key, const V& value) {
+bool LeveldbDataset<K, V>::put(const K& key, const V& value) {
   DLOG(INFO) << "LevelDB: Put";
 
   if (read_only_) {
-    LOG(ERROR) << "put can not be used on a database in ReadOnly mode";
+    LOG(ERROR) << "put can not be used on a dataset in ReadOnly mode";
     return false;
   }
 
@@ -81,7 +81,7 @@ bool LeveldbDatabase<K, V>::put(const K& key, const V& value) {
 }
 
 template <typename K, typename V>
-bool LeveldbDatabase<K, V>::get(const K& key, V* value) {
+bool LeveldbDataset<K, V>::get(const K& key, V* value) {
   DLOG(INFO) << "LevelDB: Get";
 
   string serialized_key;
@@ -106,11 +106,11 @@ bool LeveldbDatabase<K, V>::get(const K& key, V* value) {
 }
 
 template <typename K, typename V>
-bool LeveldbDatabase<K, V>::commit() {
+bool LeveldbDataset<K, V>::commit() {
   DLOG(INFO) << "LevelDB: Commit";
 
   if (read_only_) {
-    LOG(ERROR) << "commit can not be used on a database in ReadOnly mode";
+    LOG(ERROR) << "commit can not be used on a dataset in ReadOnly mode";
     return false;
   }
 
@@ -125,7 +125,7 @@ bool LeveldbDatabase<K, V>::commit() {
 }
 
 template <typename K, typename V>
-void LeveldbDatabase<K, V>::close() {
+void LeveldbDataset<K, V>::close() {
   DLOG(INFO) << "LevelDB: Close";
 
   batch_.reset();
@@ -133,7 +133,7 @@ void LeveldbDatabase<K, V>::close() {
 }
 
 template <typename K, typename V>
-void LeveldbDatabase<K, V>::keys(vector<K>* keys) {
+void LeveldbDataset<K, V>::keys(vector<K>* keys) {
   DLOG(INFO) << "LevelDB: Keys";
 
   keys->clear();
@@ -143,8 +143,8 @@ void LeveldbDatabase<K, V>::keys(vector<K>* keys) {
 }
 
 template <typename K, typename V>
-typename LeveldbDatabase<K, V>::const_iterator
-    LeveldbDatabase<K, V>::begin() const {
+typename LeveldbDataset<K, V>::const_iterator
+    LeveldbDataset<K, V>::begin() const {
   CHECK_NOTNULL(db_.get());
   shared_ptr<leveldb::Iterator> iter(db_->NewIterator(leveldb::ReadOptions()));
   iter->SeekToFirst();
@@ -152,7 +152,7 @@ typename LeveldbDatabase<K, V>::const_iterator
     iter.reset();
   }
 
-  shared_ptr<DatabaseState> state;
+  shared_ptr<DatasetState> state;
   if (iter) {
     state.reset(new LeveldbState(db_, iter));
   }
@@ -160,25 +160,25 @@ typename LeveldbDatabase<K, V>::const_iterator
 }
 
 template <typename K, typename V>
-typename LeveldbDatabase<K, V>::const_iterator
-    LeveldbDatabase<K, V>::end() const {
-  shared_ptr<DatabaseState> state;
+typename LeveldbDataset<K, V>::const_iterator
+    LeveldbDataset<K, V>::end() const {
+  shared_ptr<DatasetState> state;
   return const_iterator(this, state);
 }
 
 template <typename K, typename V>
-typename LeveldbDatabase<K, V>::const_iterator
-    LeveldbDatabase<K, V>::cbegin() const {
+typename LeveldbDataset<K, V>::const_iterator
+    LeveldbDataset<K, V>::cbegin() const {
   return begin();
 }
 
 template <typename K, typename V>
-typename LeveldbDatabase<K, V>::const_iterator
-    LeveldbDatabase<K, V>::cend() const { return end(); }
+typename LeveldbDataset<K, V>::const_iterator
+    LeveldbDataset<K, V>::cend() const { return end(); }
 
 template <typename K, typename V>
-bool LeveldbDatabase<K, V>::equal(shared_ptr<DatabaseState> state1,
-    shared_ptr<DatabaseState> state2) const {
+bool LeveldbDataset<K, V>::equal(shared_ptr<DatasetState> state1,
+    shared_ptr<DatasetState> state2) const {
   shared_ptr<LeveldbState> leveldb_state1 =
       boost::dynamic_pointer_cast<LeveldbState>(state1);
 
@@ -192,7 +192,7 @@ bool LeveldbDatabase<K, V>::equal(shared_ptr<DatabaseState> state1,
 }
 
 template <typename K, typename V>
-void LeveldbDatabase<K, V>::increment(shared_ptr<DatabaseState>* state) const {
+void LeveldbDataset<K, V>::increment(shared_ptr<DatasetState>* state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(*state);
 
@@ -210,8 +210,8 @@ void LeveldbDatabase<K, V>::increment(shared_ptr<DatabaseState>* state) const {
 }
 
 template <typename K, typename V>
-typename Database<K, V>::KV& LeveldbDatabase<K, V>::dereference(
-    shared_ptr<DatabaseState> state) const {
+typename Dataset<K, V>::KV& LeveldbDataset<K, V>::dereference(
+    shared_ptr<DatasetState> state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(state);
 
@@ -233,6 +233,6 @@ typename Database<K, V>::KV& LeveldbDatabase<K, V>::dereference(
   return leveldb_state->kv_pair_;
 }
 
-INSTANTIATE_DATABASE(LeveldbDatabase);
+INSTANTIATE_DATASET(LeveldbDataset);
 
 }  // namespace caffe

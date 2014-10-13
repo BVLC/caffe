@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "caffe/database_factory.hpp"
+#include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
@@ -78,11 +78,11 @@ int main(int argc, char** argv) {
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
   // Open new db
-  shared_ptr<Database<string, Datum> > database =
-      DatabaseFactory<string, Datum>(db_backend);
+  shared_ptr<Dataset<string, Datum> > dataset =
+      DatasetFactory<string, Datum>(db_backend);
 
   // Open db
-  CHECK(database->open(db_path, Database<string, Datum>::New));
+  CHECK(dataset->open(db_path, Dataset<string, Datum>::New));
 
   // Storing to db
   std::string root_folder(argv[1]);
@@ -113,19 +113,19 @@ int main(int argc, char** argv) {
         lines[line_id].first.c_str());
 
     // Put in db
-    CHECK(database->put(string(key_cstr, length), datum));
+    CHECK(dataset->put(string(key_cstr, length), datum));
 
     if (++count % 1000 == 0) {
       // Commit txn
-      CHECK(database->commit());
+      CHECK(dataset->commit());
       LOG(ERROR) << "Processed " << count << " files.";
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
-    CHECK(database->commit());
+    CHECK(dataset->commit());
     LOG(ERROR) << "Processed " << count << " files.";
   }
-  database->close();
+  dataset->close();
   return 0;
 }

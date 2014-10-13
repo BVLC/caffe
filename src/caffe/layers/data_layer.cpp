@@ -5,7 +5,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
-#include "caffe/database_factory.hpp"
+#include "caffe/dataset_factory.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
@@ -17,20 +17,20 @@ namespace caffe {
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
-  // clean up the database resources
-  database_->close();
+  // clean up the dataset resources
+  dataset_->close();
 }
 
 template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Initialize DB
-  database_ = DatabaseFactory<string, Datum>(
+  dataset_ = DatasetFactory<string, Datum>(
       this->layer_param_.data_param().backend());
   const string& source = this->layer_param_.data_param().source();
-  LOG(INFO) << "Opening database " << source;
-  CHECK(database_->open(source, Database<string, Datum>::ReadOnly));
-  iter_ = database_->begin();
+  LOG(INFO) << "Opening dataset " << source;
+  CHECK(dataset_->open(source, Dataset<string, Datum>::ReadOnly));
+  iter_ = dataset_->begin();
 
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.data_param().rand_skip()) {
@@ -38,13 +38,13 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                         this->layer_param_.data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
-      if (++iter_ == database_->end()) {
-        iter_ = database_->begin();
+      if (++iter_ == dataset_->end()) {
+        iter_ = dataset_->begin();
       }
     }
   }
   // Read a data point, and use it to initialize the top blob.
-  CHECK(iter_ != database_->end());
+  CHECK(iter_ != dataset_->end());
   const Datum& datum = iter_->value;
 
   // image
@@ -89,7 +89,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   const int batch_size = this->layer_param_.data_param().batch_size();
 
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    CHECK(iter_ != database_->end());
+    CHECK(iter_ != dataset_->end());
     const Datum& datum = iter_->value;
 
     // Apply data transformations (mirror, scale, crop...)
@@ -102,8 +102,8 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
     // go to the next iter
     ++iter_;
-    if (iter_ == database_->end()) {
-      iter_ = database_->begin();
+    if (iter_ == dataset_->end()) {
+      iter_ = dataset_->begin();
     }
   }
 }

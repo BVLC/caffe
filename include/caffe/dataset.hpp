@@ -1,5 +1,5 @@
-#ifndef CAFFE_DATABASE_H_
-#define CAFFE_DATABASE_H_
+#ifndef CAFFE_DATASET_H_
+#define CAFFE_DATASET_H_
 
 #include <algorithm>
 #include <iterator>
@@ -11,7 +11,7 @@
 
 namespace caffe {
 
-namespace database_internal {
+namespace dataset_internal {
 
 template <typename T>
 struct Coder {
@@ -85,10 +85,10 @@ struct Coder<vector<char> > {
   }
 };
 
-}  // namespace database_internal
+}  // namespace dataset_internal
 
 template <typename K, typename V>
-class Database {
+class Dataset {
  public:
   enum Mode {
     New,
@@ -112,8 +112,8 @@ class Database {
 
   virtual void keys(vector<K>* keys) = 0;
 
-  Database() { }
-  virtual ~Database() { }
+  Dataset() { }
+  virtual ~Dataset() { }
 
   class iterator;
   typedef iterator const_iterator;
@@ -124,7 +124,7 @@ class Database {
   virtual const_iterator cend() const = 0;
 
  protected:
-  class DatabaseState;
+  class DatasetState;
 
  public:
   class iterator : public std::iterator<std::forward_iterator_tag, KV> {
@@ -137,7 +137,7 @@ class Database {
     iterator()
         : parent_(NULL) { }
 
-    iterator(const Database* parent, shared_ptr<DatabaseState> state)
+    iterator(const Dataset* parent, shared_ptr<DatasetState> state)
         : parent_(parent),
           state_(state) { }
     ~iterator() { }
@@ -145,7 +145,7 @@ class Database {
     iterator(const iterator& other)
         : parent_(other.parent_),
           state_(other.state_ ? other.state_->clone()
-              : shared_ptr<DatabaseState>()) { }
+              : shared_ptr<DatasetState>()) { }
 
     iterator& operator=(iterator copy) {
       copy.swap(*this);
@@ -184,49 +184,49 @@ class Database {
     }
 
    protected:
-    const Database* parent_;
-    shared_ptr<DatabaseState> state_;
+    const Dataset* parent_;
+    shared_ptr<DatasetState> state_;
   };
 
  protected:
-  class DatabaseState {
+  class DatasetState {
    public:
-    virtual ~DatabaseState() { }
-    virtual shared_ptr<DatabaseState> clone() = 0;
+    virtual ~DatasetState() { }
+    virtual shared_ptr<DatasetState> clone() = 0;
   };
 
-  virtual bool equal(shared_ptr<DatabaseState> state1,
-      shared_ptr<DatabaseState> state2) const = 0;
-  virtual void increment(shared_ptr<DatabaseState>* state) const = 0;
+  virtual bool equal(shared_ptr<DatasetState> state1,
+      shared_ptr<DatasetState> state2) const = 0;
+  virtual void increment(shared_ptr<DatasetState>* state) const = 0;
   virtual KV& dereference(
-      shared_ptr<DatabaseState> state) const = 0;
+      shared_ptr<DatasetState> state) const = 0;
 
   template <typename T>
   static bool serialize(const T& obj, string* serialized) {
-    return database_internal::Coder<T>::serialize(obj, serialized);
+    return dataset_internal::Coder<T>::serialize(obj, serialized);
   }
 
   template <typename T>
   static bool serialize(const T& obj, vector<char>* serialized) {
-    return database_internal::Coder<T>::serialize(obj, serialized);
+    return dataset_internal::Coder<T>::serialize(obj, serialized);
   }
 
   template <typename T>
   static bool deserialize(const string& serialized, T* obj) {
-    return database_internal::Coder<T>::deserialize(serialized, obj);
+    return dataset_internal::Coder<T>::deserialize(serialized, obj);
   }
 
   template <typename T>
   static bool deserialize(const char* data, size_t size, T* obj) {
-    return database_internal::Coder<T>::deserialize(data, size, obj);
+    return dataset_internal::Coder<T>::deserialize(data, size, obj);
   }
 };
 
 }  // namespace caffe
 
-#define INSTANTIATE_DATABASE(type) \
+#define INSTANTIATE_DATASET(type) \
   template class type<string, string>; \
   template class type<string, vector<char> >; \
   template class type<string, Datum>;
 
-#endif  // CAFFE_DATABASE_H_
+#endif  // CAFFE_DATASET_H_
