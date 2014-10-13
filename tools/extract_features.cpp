@@ -121,11 +121,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   int num_mini_batches = atoi(argv[++arg_pos]);
 
-  std::vector<shared_ptr<Database> > feature_dbs;
+  std::vector<shared_ptr<Database<std::string, Datum> > > feature_dbs;
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening database " << database_names[i];
-    shared_ptr<Database> database = DatabaseFactory(argv[++arg_pos]);
-    CHECK(database->open(database_names.at(i), Database::New));
+    shared_ptr<Database<std::string, Datum> > database =
+        DatabaseFactory<std::string, Datum>(argv[++arg_pos]);
+    CHECK(database->open(database_names.at(i),
+        Database<std::string, Datum>::New));
     feature_dbs.push_back(database);
   }
 
@@ -155,13 +157,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }
-        Database::value_type value(datum.ByteSize());
-        datum.SerializeWithCachedSizesToArray(
-            reinterpret_cast<unsigned char*>(value.data()));
         int length = snprintf(key_str, kMaxKeyStrLength, "%d",
             image_indices[i]);
-        Database::key_type key(key_str, key_str + length);
-        CHECK(feature_dbs.at(i)->put(key, value));
+        CHECK(feature_dbs.at(i)->put(std::string(key_str, length), datum));
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           CHECK(feature_dbs.at(i)->commit());

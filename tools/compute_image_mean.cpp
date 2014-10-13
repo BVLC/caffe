@@ -26,18 +26,17 @@ int main(int argc, char** argv) {
     db_backend = std::string(argv[3]);
   }
 
-  caffe::shared_ptr<Database> database = caffe::DatabaseFactory(db_backend);
+  caffe::shared_ptr<Database<std::string, Datum> > database =
+      caffe::DatabaseFactory<std::string, Datum>(db_backend);
 
   // Open db
-  CHECK(database->open(argv[1], Database::ReadOnly));
+  CHECK(database->open(argv[1], Database<std::string, Datum>::ReadOnly));
 
-  Datum datum;
   BlobProto sum_blob;
   int count = 0;
   // load first datum
-  Database::const_iterator iter = database->begin();
-  const Database::value_type& first_blob = iter->value;
-  datum.ParseFromArray(first_blob.data(), first_blob.size());
+  Database<std::string, Datum>::const_iterator iter = database->begin();
+  const Datum& datum = iter->value;
 
   sum_blob.set_num(1);
   sum_blob.set_channels(datum.channels());
@@ -50,11 +49,10 @@ int main(int argc, char** argv) {
     sum_blob.add_data(0.);
   }
   LOG(INFO) << "Starting Iteration";
-  for (Database::const_iterator iter = database->begin();
+  for (Database<std::string, Datum>::const_iterator iter = database->begin();
       iter != database->end(); ++iter) {
     // just a dummy operation
-    const Database::value_type& blob = iter->value;
-    datum.ParseFromArray(blob.data(), blob.size());
+    const Datum& datum = iter->value;
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),
         datum.float_data_size());

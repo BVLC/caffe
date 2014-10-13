@@ -9,8 +9,11 @@
 
 namespace caffe {
 
-shared_ptr<Database> DatabaseFactory(const DataParameter_DB& type);
-shared_ptr<Database> DatabaseFactory(const string& type);
+template <typename K, typename V>
+shared_ptr<Database<K, V> > DatabaseFactory(const DataParameter_DB& type);
+
+template <typename K, typename V>
+shared_ptr<Database<K, V> > DatabaseFactory(const string& type);
 
 }  // namespace caffe
 

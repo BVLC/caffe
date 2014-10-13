@@ -4,11 +4,13 @@
 #include <utility>
 #include <vector>
 
+#include "caffe/caffe.hpp"
 #include "caffe/lmdb_database.hpp"
 
 namespace caffe {
 
-bool LmdbDatabase::open(const string& filename, Mode mode) {
+template <typename K, typename V>
+bool LmdbDatabase<K, V>::open(const string& filename, Mode mode) {
   DLOG(INFO) << "LMDB: Open " << filename;
 
   CHECK(NULL == env_);
@@ -16,16 +18,16 @@ bool LmdbDatabase::open(const string& filename, Mode mode) {
   CHECK_EQ(0, dbi_);
 
   int retval;
-  if (mode != ReadOnly) {
+  if (mode != Base::ReadOnly) {
     retval = mkdir(filename.c_str(), 0744);
     switch (mode) {
-    case New:
+    case Base::New:
       if (0 != retval) {
         LOG(ERROR) << "mkdir " << filename << " failed";
         return false;
       }
       break;
-    case ReadWrite:
+    case Base::ReadWrite:
       if (-1 == retval && EEXIST != errno) {
         LOG(ERROR) << "mkdir " << filename << " failed ("
             << strerror(errno) << ")";
@@ -52,7 +54,7 @@ bool LmdbDatabase::open(const string& filename, Mode mode) {
 
   int flag1 = 0;
   int flag2 = 0;
-  if (mode == ReadOnly) {
+  if (mode == Base::ReadOnly) {
     flag1 = MDB_RDONLY | MDB_NOTLS;
     flag2 = MDB_RDONLY;
   }
@@ -78,18 +80,27 @@ bool LmdbDatabase::open(const string& filename, Mode mode) {
   return true;
 }
 
-bool LmdbDatabase::put(const key_type& key, const value_type& value) {
+template <typename K, typename V>
+bool LmdbDatabase<K, V>::put(const K& key, const V& value) {
   DLOG(INFO) << "LMDB: Put";
 
-  // MDB_val::mv_size is not const, so we need to make a local copy.
-  key_type local_key = key;
-  value_type local_value = value;
+  vector<char> serialized_key;
+  if (!Base::serialize(key, &serialized_key)) {
+    LOG(ERROR) << "failed to serialize key";
+    return false;
+  }
+
+  vector<char> serialized_value;
+  if (!Base::serialize(value, &serialized_value)) {
+    LOG(ERROR) << "failed to serialized value";
+    return false;
+  }
 
   MDB_val mdbkey, mdbdata;
-  mdbdata.mv_size = local_value.size();
-  mdbdata.mv_data = local_value.data();
-  mdbkey.mv_size = local_key.size();
-  mdbkey.mv_data = local_key.data();
+  mdbdata.mv_size = serialized_value.size();
+  mdbdata.mv_data = serialized_value.data();
+  mdbkey.mv_size = serialized_key.size();
+  mdbkey.mv_data = serialized_key.data();
 
   CHECK_NOTNULL(txn_);
   CHECK_NE(0, dbi_);
@@ -103,14 +114,19 @@ bool LmdbDatabase::put(const key_type& key, const value_type& value) {
   return true;
 }
 
-bool LmdbDatabase::get(const key_type& key, value_type* value) {
+template <typename K, typename V>
+bool LmdbDatabase<K, V>::get(const K& key, V* value) {
   DLOG(INFO) << "LMDB: Get";
 
-  key_type local_key = key;
+  vector<char> serialized_key;
+  if (!Base::serialize(key, &serialized_key)) {
+    LOG(ERROR) << "failed to serialized key";
+    return false;
+  }
 
   MDB_val mdbkey, mdbdata;
-  mdbkey.mv_data = local_key.data();
-  mdbkey.mv_size = local_key.size();
+  mdbkey.mv_data = serialized_key.data();
+  mdbkey.mv_size = serialized_key.size();
 
   int retval;
   MDB_txn* get_txn;
@@ -128,15 +144,17 @@ bool LmdbDatabase::get(const key_type& key, value_type* value) {
 
   mdb_txn_abort(get_txn);
 
-  Database::value_type temp_value(reinterpret_cast<char*>(mdbdata.mv_data),
-      reinterpret_cast<char*>(mdbdata.mv_data) + mdbdata.mv_size);
-
-  value->swap(temp_value);
+  if (!Base::deserialize(reinterpret_cast<char*>(mdbdata.mv_data),
+      mdbdata.mv_size, value)) {
+    LOG(ERROR) << "failed to deserialize value";
+    return false;
+  }
 
   return true;
 }
 
-bool LmdbDatabase::commit() {
+template <typename K, typename V>
+bool LmdbDatabase<K, V>::commit() {
   DLOG(INFO) << "LMDB: Commit";
 
   CHECK_NOTNULL(txn_);
@@ -157,7 +175,8 @@ bool LmdbDatabase::commit() {
   return true;
 }
 
-void LmdbDatabase::close() {
+template <typename K, typename V>
+void LmdbDatabase<K, V>::close() {
   DLOG(INFO) << "LMDB: Close";
 
   if (env_ && dbi_) {
@@ -169,16 +188,19 @@ void LmdbDatabase::close() {
   }
 }
 
-void LmdbDatabase::keys(vector<key_type>* keys) {
+template <typename K, typename V>
+void LmdbDatabase<K, V>::keys(vector<K>* keys) {
   DLOG(INFO) << "LMDB: Keys";
 
   keys->clear();
-  for (Database::const_iterator iter = begin(); iter != end(); ++iter) {
+  for (const_iterator iter = begin(); iter != end(); ++iter) {
     keys->push_back(iter->key);
   }
 }
 
-LmdbDatabase::const_iterator LmdbDatabase::begin() const {
+template <typename K, typename V>
+typename LmdbDatabase<K, V>::const_iterator
+    LmdbDatabase<K, V>::begin() const {
   int retval;
 
   MDB_txn* iter_txn;
@@ -204,15 +226,23 @@ LmdbDatabase::const_iterator LmdbDatabase::begin() const {
   return const_iterator(this, state);
 }
 
-LmdbDatabase::const_iterator LmdbDatabase::end() const {
+template <typename K, typename V>
+typename LmdbDatabase<K, V>::const_iterator
+    LmdbDatabase<K, V>::end() const {
   shared_ptr<DatabaseState> state;
   return const_iterator(this, state);
 }
 
-LmdbDatabase::const_iterator LmdbDatabase::cbegin() const { return begin(); }
-LmdbDatabase::const_iterator LmdbDatabase::cend() const { return end(); }
+template <typename K, typename V>
+typename LmdbDatabase<K, V>::const_iterator
+    LmdbDatabase<K, V>::cbegin() const { return begin(); }
 
-bool LmdbDatabase::equal(shared_ptr<DatabaseState> state1,
+template <typename K, typename V>
+typename LmdbDatabase<K, V>::const_iterator
+    LmdbDatabase<K, V>::cend() const { return end(); }
+
+template <typename K, typename V>
+bool LmdbDatabase<K, V>::equal(shared_ptr<DatabaseState> state1,
     shared_ptr<DatabaseState> state2) const {
   shared_ptr<LmdbState> lmdb_state1 =
       boost::dynamic_pointer_cast<LmdbState>(state1);
@@ -226,7 +256,8 @@ bool LmdbDatabase::equal(shared_ptr<DatabaseState> state1,
   return !lmdb_state1 && !lmdb_state2;
 }
 
-void LmdbDatabase::increment(shared_ptr<DatabaseState>* state) const {
+template <typename K, typename V>
+void LmdbDatabase<K, V>::increment(shared_ptr<DatabaseState>* state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(*state);
 
@@ -247,7 +278,9 @@ void LmdbDatabase::increment(shared_ptr<DatabaseState>* state) const {
   }
 }
 
-Database::KV& LmdbDatabase::dereference(shared_ptr<DatabaseState> state) const {
+template <typename K, typename V>
+typename Database<K, V>::KV& LmdbDatabase<K, V>::dereference(
+    shared_ptr<DatabaseState> state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(state);
 
@@ -262,18 +295,14 @@ Database::KV& LmdbDatabase::dereference(shared_ptr<DatabaseState> state) const {
   int retval = mdb_cursor_get(cursor, &mdb_key, &mdb_val, MDB_GET_CURRENT);
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
 
-  char* key_data = reinterpret_cast<char*>(mdb_key.mv_data);
-  char* value_data = reinterpret_cast<char*>(mdb_val.mv_data);
-
-  Database::key_type temp_key(key_data, key_data + mdb_key.mv_size);
-
-  Database::value_type temp_value(value_data,
-      value_data + mdb_val.mv_size);
-
-  lmdb_state->kv_pair_.key.swap(temp_key);
-  lmdb_state->kv_pair_.value.swap(temp_value);
+  CHECK(Base::deserialize(reinterpret_cast<char*>(mdb_key.mv_data),
+      mdb_key.mv_size, &lmdb_state->kv_pair_.key));
+  CHECK(Base::deserialize(reinterpret_cast<char*>(mdb_val.mv_data),
+      mdb_val.mv_size, &lmdb_state->kv_pair_.value));
 
   return lmdb_state->kv_pair_;
 }
+
+INSTANTIATE_DATABASE(LmdbDatabase);
 
 }  // namespace caffe

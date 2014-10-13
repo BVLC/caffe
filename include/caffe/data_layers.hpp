@@ -100,8 +100,8 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void InternalThreadEntry();
 
-  shared_ptr<Database> database_;
-  Database::const_iterator iter_;
+  shared_ptr<Database<string, Datum> > database_;
+  Database<string, Datum>::const_iterator iter_;
 };
 
 /**

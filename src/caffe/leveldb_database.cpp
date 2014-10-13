@@ -2,28 +2,30 @@
 #include <utility>
 #include <vector>
 
+#include "caffe/caffe.hpp"
 #include "caffe/leveldb_database.hpp"
 
 namespace caffe {
 
-bool LeveldbDatabase::open(const string& filename, Mode mode) {
+template <typename K, typename V>
+bool LeveldbDatabase<K, V>::open(const string& filename, Mode mode) {
   DLOG(INFO) << "LevelDB: Open " << filename;
 
   leveldb::Options options;
   switch (mode) {
-  case New:
+  case Base::New:
     DLOG(INFO) << " mode NEW";
     options.error_if_exists = true;
     options.create_if_missing = true;
     read_only_ = false;
     break;
-  case ReadWrite:
+  case Base::ReadWrite:
     DLOG(INFO) << " mode RW";
     options.error_if_exists = false;
     options.create_if_missing = true;
     read_only_ = false;
     break;
-  case ReadOnly:
+  case Base::ReadOnly:
     DLOG(INFO) << " mode RO";
     options.error_if_exists = false;
     options.create_if_missing = false;
@@ -52,7 +54,8 @@ bool LeveldbDatabase::open(const string& filename, Mode mode) {
   return true;
 }
 
-bool LeveldbDatabase::put(const key_type& key, const value_type& value) {
+template <typename K, typename V>
+bool LeveldbDatabase<K, V>::put(const K& key, const V& value) {
   DLOG(INFO) << "LevelDB: Put";
 
   if (read_only_) {
@@ -62,36 +65,48 @@ bool LeveldbDatabase::put(const key_type& key, const value_type& value) {
 
   CHECK_NOTNULL(batch_.get());
 
-  leveldb::Slice key_slice(key.data(), key.size());
-  leveldb::Slice value_slice(value.data(), value.size());
+  string serialized_key;
+  if (!Base::serialize(key, &serialized_key)) {
+    return false;
+  }
 
-  batch_->Put(key_slice, value_slice);
+  string serialized_value;
+  if (!Base::serialize(value, &serialized_value)) {
+    return false;
+  }
+
+  batch_->Put(serialized_key, serialized_value);
 
   return true;
 }
 
-bool LeveldbDatabase::get(const key_type& key, value_type* value) {
+template <typename K, typename V>
+bool LeveldbDatabase<K, V>::get(const K& key, V* value) {
   DLOG(INFO) << "LevelDB: Get";
 
-  leveldb::Slice key_slice(key.data(), key.size());
+  string serialized_key;
+  if (!Base::serialize(key, &serialized_key)) {
+    return false;
+  }
 
-  string value_string;
+  string serialized_value;
   leveldb::Status status =
-      db_->Get(leveldb::ReadOptions(), key_slice, &value_string);
+      db_->Get(leveldb::ReadOptions(), serialized_key, &serialized_value);
 
   if (!status.ok()) {
     LOG(ERROR) << "leveldb get failed";
     return false;
   }
 
-  Database::value_type temp_value(value_string.data(),
-      value_string.data() + value_string.size());
-  value->swap(temp_value);
+  if (!Base::deserialize(serialized_value, value)) {
+    return false;
+  }
 
   return true;
 }
 
-bool LeveldbDatabase::commit() {
+template <typename K, typename V>
+bool LeveldbDatabase<K, V>::commit() {
   DLOG(INFO) << "LevelDB: Commit";
 
   if (read_only_) {
@@ -109,23 +124,27 @@ bool LeveldbDatabase::commit() {
   return status.ok();
 }
 
-void LeveldbDatabase::close() {
+template <typename K, typename V>
+void LeveldbDatabase<K, V>::close() {
   DLOG(INFO) << "LevelDB: Close";
 
   batch_.reset();
   db_.reset();
 }
 
-void LeveldbDatabase::keys(vector<key_type>* keys) {
+template <typename K, typename V>
+void LeveldbDatabase<K, V>::keys(vector<K>* keys) {
   DLOG(INFO) << "LevelDB: Keys";
 
   keys->clear();
-  for (Database::const_iterator iter = begin(); iter != end(); ++iter) {
+  for (const_iterator iter = begin(); iter != end(); ++iter) {
     keys->push_back(iter->key);
   }
 }
 
-LeveldbDatabase::const_iterator LeveldbDatabase::begin() const {
+template <typename K, typename V>
+typename LeveldbDatabase<K, V>::const_iterator
+    LeveldbDatabase<K, V>::begin() const {
   CHECK_NOTNULL(db_.get());
   shared_ptr<leveldb::Iterator> iter(db_->NewIterator(leveldb::ReadOptions()));
   iter->SeekToFirst();
@@ -140,18 +159,25 @@ LeveldbDatabase::const_iterator LeveldbDatabase::begin() const {
   return const_iterator(this, state);
 }
 
-LeveldbDatabase::const_iterator LeveldbDatabase::end() const {
+template <typename K, typename V>
+typename LeveldbDatabase<K, V>::const_iterator
+    LeveldbDatabase<K, V>::end() const {
   shared_ptr<DatabaseState> state;
   return const_iterator(this, state);
 }
 
-LeveldbDatabase::const_iterator LeveldbDatabase::cbegin() const {
+template <typename K, typename V>
+typename LeveldbDatabase<K, V>::const_iterator
+    LeveldbDatabase<K, V>::cbegin() const {
   return begin();
 }
 
-LeveldbDatabase::const_iterator LeveldbDatabase::cend() const { return end(); }
+template <typename K, typename V>
+typename LeveldbDatabase<K, V>::const_iterator
+    LeveldbDatabase<K, V>::cend() const { return end(); }
 
-bool LeveldbDatabase::equal(shared_ptr<DatabaseState> state1,
+template <typename K, typename V>
+bool LeveldbDatabase<K, V>::equal(shared_ptr<DatabaseState> state1,
     shared_ptr<DatabaseState> state2) const {
   shared_ptr<LeveldbState> leveldb_state1 =
       boost::dynamic_pointer_cast<LeveldbState>(state1);
@@ -165,7 +191,8 @@ bool LeveldbDatabase::equal(shared_ptr<DatabaseState> state1,
   return !leveldb_state1 && !leveldb_state2;
 }
 
-void LeveldbDatabase::increment(shared_ptr<DatabaseState>* state) const {
+template <typename K, typename V>
+void LeveldbDatabase<K, V>::increment(shared_ptr<DatabaseState>* state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(*state);
 
@@ -182,7 +209,8 @@ void LeveldbDatabase::increment(shared_ptr<DatabaseState>* state) const {
   }
 }
 
-Database::KV& LeveldbDatabase::dereference(
+template <typename K, typename V>
+typename Database<K, V>::KV& LeveldbDatabase<K, V>::dereference(
     shared_ptr<DatabaseState> state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(state);
@@ -195,15 +223,16 @@ Database::KV& LeveldbDatabase::dereference(
 
   CHECK(iter->Valid());
 
-  Database::key_type temp_key(key_type(iter->key().data(),
-      iter->key().data() + iter->key().size()));
+  const leveldb::Slice& key = iter->key();
+  const leveldb::Slice& value = iter->value();
+  CHECK(Base::deserialize(key.data(), key.size(),
+      &leveldb_state->kv_pair_.key));
+  CHECK(Base::deserialize(value.data(), value.size(),
+      &leveldb_state->kv_pair_.value));
 
-  Database::value_type temp_value(value_type(iter->value().data(),
-      iter->value().data() + iter->value().size()));
-
-  leveldb_state->kv_pair_.key.swap(temp_key);
-  leveldb_state->kv_pair_.value.swap(temp_value);
   return leveldb_state->kv_pair_;
 }
+
+INSTANTIATE_DATABASE(LeveldbDatabase);
 
 }  // namespace caffe
