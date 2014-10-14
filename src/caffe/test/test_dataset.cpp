@@ -147,7 +147,7 @@ struct StringLmdb {
   typedef string value_type;
   static const DataParameter_DB backend;
 };
-const DataParameter_DB StringLmdb::backend = DataParameter_DB_LEVELDB;
+const DataParameter_DB StringLmdb::backend = DataParameter_DB_LMDB;
 
 struct VectorLeveldb {
   typedef vector<char> value_type;
@@ -159,7 +159,7 @@ struct VectorLmdb {
   typedef vector<char> value_type;
   static const DataParameter_DB backend;
 };
-const DataParameter_DB VectorLmdb::backend = DataParameter_DB_LEVELDB;
+const DataParameter_DB VectorLmdb::backend = DataParameter_DB_LMDB;
 
 struct DatumLeveldb {
   typedef Datum value_type;
@@ -171,7 +171,7 @@ struct DatumLmdb {
   typedef Datum value_type;
   static const DataParameter_DB backend;
 };
-const DataParameter_DB DatumLmdb::backend = DataParameter_DB_LEVELDB;
+const DataParameter_DB DatumLmdb::backend = DataParameter_DB_LMDB;
 
 typedef ::testing::Types<StringLeveldb, StringLmdb, VectorLeveldb, VectorLmdb,
     DatumLeveldb, DatumLmdb> TestTypes;
