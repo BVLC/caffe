@@ -1,6 +1,8 @@
 #ifndef CAFFE_DATASET_H_
 #define CAFFE_DATASET_H_
 
+#include <google/protobuf/message.h>
+
 #include <algorithm>
 #include <iterator>
 #include <string>
@@ -8,34 +10,58 @@
 #include <vector>
 
 #include "caffe/common.hpp"
+#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 
 namespace dataset_internal {
 
+using google::protobuf::Message;
+
+template<bool condition>
+struct static_assertion {};
+template<>
+struct static_assertion<true> {
+  enum {
+    DEFAULT_CODER_NOT_AVAILABLE
+  };
+};
+
 template <typename T>
-struct Coder {
-  static bool serialize(const T& obj, string* serialized) {
+struct DefaultCoder {
+  using static_assertion<sizeof(T) == 0>::DEFAULT_CODER_NOT_AVAILABLE;
+  static bool serialize(const T& obj, string* serialized);
+  static bool serialize(const T& obj, vector<char>* serialized);
+  static bool deserialize(const string& serialized, T* obj);
+  static bool deserialize(const char* data, size_t size, T* obj);
+};
+
+template <>
+struct DefaultCoder<Message> {
+  static bool serialize(const Message& obj, string* serialized) {
     return obj.SerializeToString(serialized);
   }
 
-  static bool serialize(const T& obj, vector<char>* serialized) {
+  static bool serialize(const Message& obj, vector<char>* serialized) {
     serialized->resize(obj.ByteSize());
     return obj.SerializeWithCachedSizesToArray(
         reinterpret_cast<unsigned char*>(serialized->data()));
   }
 
-  static bool deserialize(const string& serialized, T* obj) {
+  static bool deserialize(const string& serialized, Message* obj) {
     return obj->ParseFromString(serialized);
   }
 
-  static bool deserialize(const char* data, size_t size, T* obj) {
+  static bool deserialize(const char* data, size_t size, Message* obj) {
     return obj->ParseFromArray(data, size);
   }
 };
 
 template <>
-struct Coder<string> {
+struct DefaultCoder<caffe::Datum> : public DefaultCoder<Message> { };
+
+template <>
+struct DefaultCoder<string> {
   static bool serialize(string obj, string* serialized) {
     *serialized = obj;
     return true;
@@ -60,7 +86,7 @@ struct Coder<string> {
 };
 
 template <>
-struct Coder<vector<char> > {
+struct DefaultCoder<vector<char> > {
   static bool serialize(vector<char> obj, string* serialized) {
     string tmp(obj.data(), obj.size());
     serialized->swap(tmp);
@@ -87,7 +113,9 @@ struct Coder<vector<char> > {
 
 }  // namespace dataset_internal
 
-template <typename K, typename V>
+template <typename K, typename V,
+          typename KCoder = dataset_internal::DefaultCoder<K>,
+          typename VCoder = dataset_internal::DefaultCoder<V> >
 class Dataset {
  public:
   enum Mode {
@@ -200,26 +228,6 @@ class Dataset {
   virtual void increment(shared_ptr<DatasetState>* state) const = 0;
   virtual KV& dereference(
       shared_ptr<DatasetState> state) const = 0;
-
-  template <typename T>
-  static bool serialize(const T& obj, string* serialized) {
-    return dataset_internal::Coder<T>::serialize(obj, serialized);
-  }
-
-  template <typename T>
-  static bool serialize(const T& obj, vector<char>* serialized) {
-    return dataset_internal::Coder<T>::serialize(obj, serialized);
-  }
-
-  template <typename T>
-  static bool deserialize(const string& serialized, T* obj) {
-    return dataset_internal::Coder<T>::deserialize(serialized, obj);
-  }
-
-  template <typename T>
-  static bool deserialize(const char* data, size_t size, T* obj) {
-    return dataset_internal::Coder<T>::deserialize(data, size, obj);
-  }
 };
 
 }  // namespace caffe
@@ -227,6 +235,6 @@ class Dataset {
 #define INSTANTIATE_DATASET(type) \
   template class type<string, string>; \
   template class type<string, vector<char> >; \
-  template class type<string, Datum>;
+  template class type<string, caffe::Datum>;
 
 #endif  // CAFFE_DATASET_H_

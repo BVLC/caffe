@@ -9,8 +9,9 @@
 
 namespace caffe {
 
-template <typename K, typename V>
-bool LmdbDataset<K, V>::open(const string& filename, Mode mode) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LmdbDataset<K, V, KCoder, VCoder>::open(const string& filename,
+    Mode mode) {
   DLOG(INFO) << "LMDB: Open " << filename;
 
   CHECK(NULL == env_);
@@ -80,18 +81,18 @@ bool LmdbDataset<K, V>::open(const string& filename, Mode mode) {
   return true;
 }
 
-template <typename K, typename V>
-bool LmdbDataset<K, V>::put(const K& key, const V& value) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LmdbDataset<K, V, KCoder, VCoder>::put(const K& key, const V& value) {
   DLOG(INFO) << "LMDB: Put";
 
   vector<char> serialized_key;
-  if (!Base::serialize(key, &serialized_key)) {
+  if (!KCoder::serialize(key, &serialized_key)) {
     LOG(ERROR) << "failed to serialize key";
     return false;
   }
 
   vector<char> serialized_value;
-  if (!Base::serialize(value, &serialized_value)) {
+  if (!VCoder::serialize(value, &serialized_value)) {
     LOG(ERROR) << "failed to serialized value";
     return false;
   }
@@ -114,12 +115,12 @@ bool LmdbDataset<K, V>::put(const K& key, const V& value) {
   return true;
 }
 
-template <typename K, typename V>
-bool LmdbDataset<K, V>::get(const K& key, V* value) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LmdbDataset<K, V, KCoder, VCoder>::get(const K& key, V* value) {
   DLOG(INFO) << "LMDB: Get";
 
   vector<char> serialized_key;
-  if (!Base::serialize(key, &serialized_key)) {
+  if (!KCoder::serialize(key, &serialized_key)) {
     LOG(ERROR) << "failed to serialized key";
     return false;
   }
@@ -144,7 +145,7 @@ bool LmdbDataset<K, V>::get(const K& key, V* value) {
 
   mdb_txn_abort(get_txn);
 
-  if (!Base::deserialize(reinterpret_cast<char*>(mdbdata.mv_data),
+  if (!VCoder::deserialize(reinterpret_cast<char*>(mdbdata.mv_data),
       mdbdata.mv_size, value)) {
     LOG(ERROR) << "failed to deserialize value";
     return false;
@@ -153,8 +154,8 @@ bool LmdbDataset<K, V>::get(const K& key, V* value) {
   return true;
 }
 
-template <typename K, typename V>
-bool LmdbDataset<K, V>::commit() {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LmdbDataset<K, V, KCoder, VCoder>::commit() {
   DLOG(INFO) << "LMDB: Commit";
 
   CHECK_NOTNULL(txn_);
@@ -175,8 +176,8 @@ bool LmdbDataset<K, V>::commit() {
   return true;
 }
 
-template <typename K, typename V>
-void LmdbDataset<K, V>::close() {
+template <typename K, typename V, typename KCoder, typename VCoder>
+void LmdbDataset<K, V, KCoder, VCoder>::close() {
   DLOG(INFO) << "LMDB: Close";
 
   if (env_ && dbi_) {
@@ -188,8 +189,8 @@ void LmdbDataset<K, V>::close() {
   }
 }
 
-template <typename K, typename V>
-void LmdbDataset<K, V>::keys(vector<K>* keys) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+void LmdbDataset<K, V, KCoder, VCoder>::keys(vector<K>* keys) {
   DLOG(INFO) << "LMDB: Keys";
 
   keys->clear();
@@ -198,9 +199,9 @@ void LmdbDataset<K, V>::keys(vector<K>* keys) {
   }
 }
 
-template <typename K, typename V>
-typename LmdbDataset<K, V>::const_iterator
-    LmdbDataset<K, V>::begin() const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LmdbDataset<K, V, KCoder, VCoder>::const_iterator
+    LmdbDataset<K, V, KCoder, VCoder>::begin() const {
   int retval;
 
   MDB_txn* iter_txn;
@@ -226,23 +227,23 @@ typename LmdbDataset<K, V>::const_iterator
   return const_iterator(this, state);
 }
 
-template <typename K, typename V>
-typename LmdbDataset<K, V>::const_iterator
-    LmdbDataset<K, V>::end() const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LmdbDataset<K, V, KCoder, VCoder>::const_iterator
+    LmdbDataset<K, V, KCoder, VCoder>::end() const {
   shared_ptr<DatasetState> state;
   return const_iterator(this, state);
 }
 
-template <typename K, typename V>
-typename LmdbDataset<K, V>::const_iterator
-    LmdbDataset<K, V>::cbegin() const { return begin(); }
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LmdbDataset<K, V, KCoder, VCoder>::const_iterator
+    LmdbDataset<K, V, KCoder, VCoder>::cbegin() const { return begin(); }
 
-template <typename K, typename V>
-typename LmdbDataset<K, V>::const_iterator
-    LmdbDataset<K, V>::cend() const { return end(); }
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LmdbDataset<K, V, KCoder, VCoder>::const_iterator
+    LmdbDataset<K, V, KCoder, VCoder>::cend() const { return end(); }
 
-template <typename K, typename V>
-bool LmdbDataset<K, V>::equal(shared_ptr<DatasetState> state1,
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LmdbDataset<K, V, KCoder, VCoder>::equal(shared_ptr<DatasetState> state1,
     shared_ptr<DatasetState> state2) const {
   shared_ptr<LmdbState> lmdb_state1 =
       boost::dynamic_pointer_cast<LmdbState>(state1);
@@ -256,8 +257,9 @@ bool LmdbDataset<K, V>::equal(shared_ptr<DatasetState> state1,
   return !lmdb_state1 && !lmdb_state2;
 }
 
-template <typename K, typename V>
-void LmdbDataset<K, V>::increment(shared_ptr<DatasetState>* state) const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+void LmdbDataset<K, V, KCoder, VCoder>::increment(
+    shared_ptr<DatasetState>* state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(*state);
 
@@ -278,8 +280,9 @@ void LmdbDataset<K, V>::increment(shared_ptr<DatasetState>* state) const {
   }
 }
 
-template <typename K, typename V>
-typename Dataset<K, V>::KV& LmdbDataset<K, V>::dereference(
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename Dataset<K, V, KCoder, VCoder>::KV&
+    LmdbDataset<K, V, KCoder, VCoder>::dereference(
     shared_ptr<DatasetState> state) const {
   shared_ptr<LmdbState> lmdb_state =
       boost::dynamic_pointer_cast<LmdbState>(state);
@@ -295,9 +298,9 @@ typename Dataset<K, V>::KV& LmdbDataset<K, V>::dereference(
   int retval = mdb_cursor_get(cursor, &mdb_key, &mdb_val, MDB_GET_CURRENT);
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
 
-  CHECK(Base::deserialize(reinterpret_cast<char*>(mdb_key.mv_data),
+  CHECK(KCoder::deserialize(reinterpret_cast<char*>(mdb_key.mv_data),
       mdb_key.mv_size, &lmdb_state->kv_pair_.key));
-  CHECK(Base::deserialize(reinterpret_cast<char*>(mdb_val.mv_data),
+  CHECK(VCoder::deserialize(reinterpret_cast<char*>(mdb_val.mv_data),
       mdb_val.mv_size, &lmdb_state->kv_pair_.value));
 
   return lmdb_state->kv_pair_;

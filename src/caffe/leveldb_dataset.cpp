@@ -7,8 +7,9 @@
 
 namespace caffe {
 
-template <typename K, typename V>
-bool LeveldbDataset<K, V>::open(const string& filename, Mode mode) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LeveldbDataset<K, V, KCoder, VCoder>::open(const string& filename,
+    Mode mode) {
   DLOG(INFO) << "LevelDB: Open " << filename;
 
   leveldb::Options options;
@@ -54,8 +55,8 @@ bool LeveldbDataset<K, V>::open(const string& filename, Mode mode) {
   return true;
 }
 
-template <typename K, typename V>
-bool LeveldbDataset<K, V>::put(const K& key, const V& value) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LeveldbDataset<K, V, KCoder, VCoder>::put(const K& key, const V& value) {
   DLOG(INFO) << "LevelDB: Put";
 
   if (read_only_) {
@@ -66,12 +67,12 @@ bool LeveldbDataset<K, V>::put(const K& key, const V& value) {
   CHECK_NOTNULL(batch_.get());
 
   string serialized_key;
-  if (!Base::serialize(key, &serialized_key)) {
+  if (!KCoder::serialize(key, &serialized_key)) {
     return false;
   }
 
   string serialized_value;
-  if (!Base::serialize(value, &serialized_value)) {
+  if (!VCoder::serialize(value, &serialized_value)) {
     return false;
   }
 
@@ -80,12 +81,12 @@ bool LeveldbDataset<K, V>::put(const K& key, const V& value) {
   return true;
 }
 
-template <typename K, typename V>
-bool LeveldbDataset<K, V>::get(const K& key, V* value) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LeveldbDataset<K, V, KCoder, VCoder>::get(const K& key, V* value) {
   DLOG(INFO) << "LevelDB: Get";
 
   string serialized_key;
-  if (!Base::serialize(key, &serialized_key)) {
+  if (!KCoder::serialize(key, &serialized_key)) {
     return false;
   }
 
@@ -98,15 +99,15 @@ bool LeveldbDataset<K, V>::get(const K& key, V* value) {
     return false;
   }
 
-  if (!Base::deserialize(serialized_value, value)) {
+  if (!VCoder::deserialize(serialized_value, value)) {
     return false;
   }
 
   return true;
 }
 
-template <typename K, typename V>
-bool LeveldbDataset<K, V>::commit() {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LeveldbDataset<K, V, KCoder, VCoder>::commit() {
   DLOG(INFO) << "LevelDB: Commit";
 
   if (read_only_) {
@@ -124,16 +125,16 @@ bool LeveldbDataset<K, V>::commit() {
   return status.ok();
 }
 
-template <typename K, typename V>
-void LeveldbDataset<K, V>::close() {
+template <typename K, typename V, typename KCoder, typename VCoder>
+void LeveldbDataset<K, V, KCoder, VCoder>::close() {
   DLOG(INFO) << "LevelDB: Close";
 
   batch_.reset();
   db_.reset();
 }
 
-template <typename K, typename V>
-void LeveldbDataset<K, V>::keys(vector<K>* keys) {
+template <typename K, typename V, typename KCoder, typename VCoder>
+void LeveldbDataset<K, V, KCoder, VCoder>::keys(vector<K>* keys) {
   DLOG(INFO) << "LevelDB: Keys";
 
   keys->clear();
@@ -142,9 +143,9 @@ void LeveldbDataset<K, V>::keys(vector<K>* keys) {
   }
 }
 
-template <typename K, typename V>
-typename LeveldbDataset<K, V>::const_iterator
-    LeveldbDataset<K, V>::begin() const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LeveldbDataset<K, V, KCoder, VCoder>::const_iterator
+    LeveldbDataset<K, V, KCoder, VCoder>::begin() const {
   CHECK_NOTNULL(db_.get());
   shared_ptr<leveldb::Iterator> iter(db_->NewIterator(leveldb::ReadOptions()));
   iter->SeekToFirst();
@@ -159,26 +160,26 @@ typename LeveldbDataset<K, V>::const_iterator
   return const_iterator(this, state);
 }
 
-template <typename K, typename V>
-typename LeveldbDataset<K, V>::const_iterator
-    LeveldbDataset<K, V>::end() const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LeveldbDataset<K, V, KCoder, VCoder>::const_iterator
+    LeveldbDataset<K, V, KCoder, VCoder>::end() const {
   shared_ptr<DatasetState> state;
   return const_iterator(this, state);
 }
 
-template <typename K, typename V>
-typename LeveldbDataset<K, V>::const_iterator
-    LeveldbDataset<K, V>::cbegin() const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LeveldbDataset<K, V, KCoder, VCoder>::const_iterator
+    LeveldbDataset<K, V, KCoder, VCoder>::cbegin() const {
   return begin();
 }
 
-template <typename K, typename V>
-typename LeveldbDataset<K, V>::const_iterator
-    LeveldbDataset<K, V>::cend() const { return end(); }
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename LeveldbDataset<K, V, KCoder, VCoder>::const_iterator
+    LeveldbDataset<K, V, KCoder, VCoder>::cend() const { return end(); }
 
-template <typename K, typename V>
-bool LeveldbDataset<K, V>::equal(shared_ptr<DatasetState> state1,
-    shared_ptr<DatasetState> state2) const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LeveldbDataset<K, V, KCoder, VCoder>::equal(
+    shared_ptr<DatasetState> state1, shared_ptr<DatasetState> state2) const {
   shared_ptr<LeveldbState> leveldb_state1 =
       boost::dynamic_pointer_cast<LeveldbState>(state1);
 
@@ -191,8 +192,9 @@ bool LeveldbDataset<K, V>::equal(shared_ptr<DatasetState> state1,
   return !leveldb_state1 && !leveldb_state2;
 }
 
-template <typename K, typename V>
-void LeveldbDataset<K, V>::increment(shared_ptr<DatasetState>* state) const {
+template <typename K, typename V, typename KCoder, typename VCoder>
+void LeveldbDataset<K, V, KCoder, VCoder>::increment(
+    shared_ptr<DatasetState>* state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(*state);
 
@@ -209,8 +211,9 @@ void LeveldbDataset<K, V>::increment(shared_ptr<DatasetState>* state) const {
   }
 }
 
-template <typename K, typename V>
-typename Dataset<K, V>::KV& LeveldbDataset<K, V>::dereference(
+template <typename K, typename V, typename KCoder, typename VCoder>
+typename Dataset<K, V, KCoder, VCoder>::KV&
+    LeveldbDataset<K, V, KCoder, VCoder>::dereference(
     shared_ptr<DatasetState> state) const {
   shared_ptr<LeveldbState> leveldb_state =
       boost::dynamic_pointer_cast<LeveldbState>(state);
@@ -225,9 +228,9 @@ typename Dataset<K, V>::KV& LeveldbDataset<K, V>::dereference(
 
   const leveldb::Slice& key = iter->key();
   const leveldb::Slice& value = iter->value();
-  CHECK(Base::deserialize(key.data(), key.size(),
+  CHECK(KCoder::deserialize(key.data(), key.size(),
       &leveldb_state->kv_pair_.key));
-  CHECK(Base::deserialize(value.data(), value.size(),
+  CHECK(VCoder::deserialize(value.data(), value.size(),
       &leveldb_state->kv_pair_.value));
 
   return leveldb_state->kv_pair_;
