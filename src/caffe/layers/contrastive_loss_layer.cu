@@ -42,7 +42,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
       // two labels in [0,N] are provided; are they equal?
       similar_.mutable_cpu_data()[i] =
         (static_cast<int>(bottom[2]->cpu_data()[i]) ==
-         static_cast<int>(bottom[3]->cpu_data()[i])) ;
+         static_cast<int>(bottom[3]->cpu_data()[i]));
     }
   }
 
