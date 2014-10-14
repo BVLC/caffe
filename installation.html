@@ -122,7 +122,7 @@ The choice is yours:</p>
 
 <p>You can install the dependencies with</p>
 
-<pre><code>pip install -r /path/to/caffe/python/requirements.txt
+<pre><code>for req in $(cat requirements.txt); do sudo pip install $req; done
 </code></pre>
 
 <p>but we highly recommend first installing the <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> Python distribution, which provides most of the necessary packages, as well as the <code>hdf5</code> library dependency.</p>
