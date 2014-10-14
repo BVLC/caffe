@@ -11,7 +11,6 @@
 
 using caffe::Datum;
 using caffe::BlobProto;
-using std::string;
 using std::max;
 
 int main(int argc, char** argv) {
@@ -22,9 +21,9 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  string db_backend = "lmdb";
+  std::string db_backend = "lmdb";
   if (argc == 4) {
-    db_backend = string(argv[3]);
+    db_backend = std::string(argv[3]);
   }
 
   // leveldb
@@ -94,7 +93,7 @@ int main(int argc, char** argv) {
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
       // just a dummy operation
       datum.ParseFromString(it->value().ToString());
-      const string& data = datum.data();
+      const std::string& data = datum.data();
       size_in_datum = std::max<int>(datum.data().size(),
           datum.float_data_size());
       CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " <<
@@ -120,7 +119,7 @@ int main(int argc, char** argv) {
     do {
       // just a dummy operation
       datum.ParseFromArray(mdb_value.mv_data, mdb_value.mv_size);
-      const string& data = datum.data();
+      const std::string& data = datum.data();
       size_in_datum = std::max<int>(datum.data().size(),
           datum.float_data_size());
       CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " <<

@@ -11,8 +11,6 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
-using std::string;
-
 namespace caffe {
 
 class PaddingLayerUpgradeTest : public ::testing::Test {

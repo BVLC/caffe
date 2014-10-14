@@ -14,7 +14,11 @@
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
-using namespace caffe;  // NOLINT(build/namespaces)
+using boost::shared_ptr;
+using caffe::Blob;
+using caffe::Caffe;
+using caffe::Datum;
+using caffe::Net;
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv);
@@ -62,7 +66,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   Caffe::set_phase(Caffe::TEST);
 
   arg_pos = 0;  // the name of the executable
-  string pretrained_binary_proto(argv[++arg_pos]);
+  std::string pretrained_binary_proto(argv[++arg_pos]);
 
   // Expected prototxt contains at least one data layer such as
   //  the layer data_layer_name and one feature blob such as the
@@ -91,17 +95,17 @@ int feature_extraction_pipeline(int argc, char** argv) {
      top: "fc7"
    }
    */
-  string feature_extraction_proto(argv[++arg_pos]);
+  std::string feature_extraction_proto(argv[++arg_pos]);
   shared_ptr<Net<Dtype> > feature_extraction_net(
       new Net<Dtype>(feature_extraction_proto));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
-  string extract_feature_blob_names(argv[++arg_pos]);
-  vector<string> blob_names;
+  std::string extract_feature_blob_names(argv[++arg_pos]);
+  std::vector<std::string> blob_names;
   boost::split(blob_names, extract_feature_blob_names, boost::is_any_of(","));
 
-  string save_feature_leveldb_names(argv[++arg_pos]);
-  vector<string> leveldb_names;
+  std::string save_feature_leveldb_names(argv[++arg_pos]);
+  std::vector<std::string> leveldb_names;
   boost::split(leveldb_names, save_feature_leveldb_names,
                boost::is_any_of(","));
   CHECK_EQ(blob_names.size(), leveldb_names.size()) <<
@@ -118,7 +122,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   options.error_if_exists = true;
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
-  vector<shared_ptr<leveldb::DB> > feature_dbs;
+  std::vector<shared_ptr<leveldb::DB> > feature_dbs;
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening leveldb " << leveldb_names[i];
     leveldb::DB* db;
@@ -134,13 +138,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
-  vector<shared_ptr<leveldb::WriteBatch> > feature_batches(
+  std::vector<shared_ptr<leveldb::WriteBatch> > feature_batches(
       num_features,
       shared_ptr<leveldb::WriteBatch>(new leveldb::WriteBatch()));
   const int kMaxKeyStrLength = 100;
   char key_str[kMaxKeyStrLength];
-  vector<Blob<float>*> input_vec;
-  vector<int> image_indices(num_features, 0);
+  std::vector<Blob<float>*> input_vec;
+  std::vector<int> image_indices(num_features, 0);
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
     for (int i = 0; i < num_features; ++i) {
@@ -160,10 +164,10 @@ int feature_extraction_pipeline(int argc, char** argv) {
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }
-        string value;
+        std::string value;
         datum.SerializeToString(&value);
         snprintf(key_str, kMaxKeyStrLength, "%d", image_indices[i]);
-        feature_batches[i]->Put(string(key_str), value);
+        feature_batches[i]->Put(std::string(key_str), value);
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           feature_dbs[i]->Write(leveldb::WriteOptions(),
