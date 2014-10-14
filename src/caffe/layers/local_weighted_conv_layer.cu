@@ -55,7 +55,6 @@ template <typename Dtype>
 void LocalWeightedConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 
-
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
@@ -99,101 +98,8 @@ void LocalWeightedConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>
       col2im_gpu(x_diff, channels_, height_, width_, kernel_size_, kernel_size_,
                  pad_, pad_, stride_, stride_, bottom_diff + bottom[0]->offset(n));
     }
-
-
-
   }
-
-
-
-
-
-
-
-/*
-  const Dtype* weight = NULL;
-  Dtype* weight_diff = NULL;
-  if (this->param_propagate_down_[0]) {
-    weight = this->blobs_[0]->gpu_data();
-    weight_diff = this->blobs_[0]->mutable_gpu_diff();
-    caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
-  }
-  Dtype* bias_diff = NULL;
-  if (bias_term_ && this->param_propagate_down_[1]) {
-    bias_diff = this->blobs_[1]->mutable_gpu_diff();
-    caffe_gpu_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
-  }
-  const int weight_offset = M_ * K_;
-  const int col_offset = K_ * N_;
-  const int top_offset = M_ * N_;
-  for (int i = 0; i < top.size(); ++i) {
-    const Dtype* top_diff = NULL;
-    // Bias gradient, if necessary.
-    if (bias_term_ && this->param_propagate_down_[1]) {
-      top_diff = top[i]->gpu_diff();
-      for (int n = 0; n < num_; ++n) {
-        caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_,
-            1., top_diff + top[0]->offset(n),
-            bias_multiplier_.gpu_data(), 1.,
-            bias_diff);
-      }
-    }
-    if (this->param_propagate_down_[0] || propagate_down[i]) {
-      if (!top_diff) {
-        top_diff = top[i]->gpu_diff();
-      }
-      Dtype* col_buff = NULL;
-      if (!is_1x1_) {
-        col_buff = col_buffer_.mutable_gpu_data();
-      }
-      const Dtype* bottom_data = bottom[i]->gpu_data();
-      Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
-      for (int n = 0; n < num_; ++n) {
-        // Since we saved memory in the forward pass by not storing all col
-        // data, we will need to recompute them.
-        if (!is_1x1_) {
-          im2col_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
-                    width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-                    stride_h_, stride_w_, col_buff);
-        } else {
-          col_buff = bottom[i]->mutable_gpu_data() + bottom[i]->offset(n);
-        }
-        // gradient w.r.t. weight. Note that we will accumulate diffs.
-        if (this->param_propagate_down_[0]) {
-          for (int g = 0; g < group_; ++g) {
-            caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
-                (Dtype)1., top_diff + top[i]->offset(n) + top_offset * g,
-                col_buff + col_offset * g, (Dtype)1.,
-                weight_diff + weight_offset * g);
-          }
-        }
-        // gradient w.r.t. bottom data, if necessary
-        if (propagate_down[i]) {
-          if (weight == NULL) {
-            weight = this->blobs_[0]->gpu_data();
-          }
-          if (is_1x1_) {
-            col_buff = bottom[i]->mutable_gpu_diff() + bottom[i]->offset(n);
-          }
-          for (int g = 0; g < group_; ++g) {
-            caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
-                (Dtype)1., weight + weight_offset * g,
-                top_diff + top[i]->offset(n) + top_offset * g,
-                (Dtype)0., col_buff + col_offset * g);
-          }
-          // col2im back to the data
-          if (!is_1x1_) {
-            col2im_gpu(col_buff, channels_, height_, width_,
-                kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-                bottom_diff + bottom[i]->offset(n));
-          }
-        }
-      }
-    }
-  }
-*/
 }
-
 
 INSTANTIATE_LAYER_GPU_FUNCS(LocalWeightedConvolutionLayer);
 
