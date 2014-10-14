@@ -27,7 +27,6 @@
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
-using std::string;
 
 DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
@@ -62,8 +61,8 @@ int main(int argc, char** argv) {
   bool is_color = !FLAGS_gray;
   bool check_size = FLAGS_check_size;
   std::ifstream infile(argv[2]);
-  std::vector<std::pair<string, int> > lines;
-  string filename;
+  std::vector<std::pair<std::string, int> > lines;
+  std::string filename;
   int label;
   while (infile >> filename >> label) {
     lines.push_back(std::make_pair(filename, label));
@@ -75,7 +74,7 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
-  const string& db_backend = FLAGS_backend;
+  const std::string& db_backend = FLAGS_backend;
   const char* db_path = argv[3];
 
   int resize_height = std::max<int>(0, FLAGS_resize_height);
@@ -121,7 +120,7 @@ int main(int argc, char** argv) {
   }
 
   // Storing to db
-  string root_folder(argv[1]);
+  std::string root_folder(argv[1]);
   Datum datum;
   int count = 0;
   const int kMaxKeyLength = 256;
@@ -139,7 +138,7 @@ int main(int argc, char** argv) {
         data_size = datum.channels() * datum.height() * datum.width();
         data_size_initialized = true;
       } else {
-        const string& data = datum.data();
+        const std::string& data = datum.data();
         CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
             << data.size();
       }
@@ -147,9 +146,9 @@ int main(int argc, char** argv) {
     // sequential
     snprintf(key_cstr, kMaxKeyLength, "%08d_%s", line_id,
         lines[line_id].first.c_str());
-    string value;
+    std::string value;
     datum.SerializeToString(&value);
-    string keystr(key_cstr);
+    std::string keystr(key_cstr);
 
     // Put in db
     if (db_backend == "leveldb") {  // leveldb
