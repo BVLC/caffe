@@ -1,0 +1,344 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe | LeNet MNIST Tutorial
+    </title>
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="training-lenet-on-mnist-with-caffe">Training LeNet on MNIST with Caffe</h1>
+
+<p>We will assume that you have Caffe successfully compiled. If not, please refer to the <a href="/installation.html">Installation page</a>. In this tutorial, we will assume that your Caffe installation is located at <code>CAFFE_ROOT</code>.</p>
+
+<h2 id="prepare-datasets">Prepare Datasets</h2>
+
+<p>You will first need to download and convert the data format from the MNIST website. To do this, simply run the following commands:</p>
+
+<pre><code>cd $CAFFE_ROOT
+./data/mnist/get_mnist.sh
+./examples/mnist/create_mnist.sh
+</code></pre>
+
+<p>If it complains that <code>wget</code> or <code>gunzip</code> are not installed, you need to install them respectively. After running the script there should be two datasets, <code>mnist_train_lmdb</code>, and <code>mnist_test_lmdb</code>.</p>
+
+<h2 id="lenet-the-mnist-classification-model">LeNet: the MNIST Classification Model</h2>
+
+<p>Before we actually run the training program, let’s explain what will happen. We will use the <a href="http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf">LeNet</a> network, which is known to work well on digit classification tasks. We will use a slightly different version from the original LeNet implementation, replacing the sigmoid activations with Rectified Linear Unit (ReLU) activations for the neurons.</p>
+
+<p>The design of LeNet contains the essence of CNNs that are still used in larger models such as the ones in ImageNet. In general, it consists of a convolutional layer followed by a pooling layer, another convolution layer followed by a pooling layer, and then two fully connected layers similar to the conventional multilayer perceptrons. We have defined the layers in <code>$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt</code>.</p>
+
+<h2 id="define-the-mnist-network">Define the MNIST Network</h2>
+
+<p>This section explains the <code>lenet_train_test.prototxt</code> model definition that specifies the LeNet model for MNIST handwritten digit classification. We assume that you are familiar with <a href="https://developers.google.com/protocol-buffers/docs/overview">Google Protobuf</a>, and assume that you have read the protobuf definitions used by Caffe, which can be found at <code>$CAFFE_ROOT/src/caffe/proto/caffe.proto</code>.</p>
+
+<p>Specifically, we will write a <code>caffe::NetParameter</code> (or in python, <code>caffe.proto.caffe_pb2.NetParameter</code>) protobuf. We will start by giving the network a name:</p>
+
+<pre><code>name: "LeNet"
+</code></pre>
+
+<h3 id="writing-the-data-layer">Writing the Data Layer</h3>
+
+<p>Currently, we will read the MNIST data from the lmdb we created earlier in the demo. This is defined by a data layer:</p>
+
+<pre><code>layers {
+  name: "mnist"
+  type: DATA
+  data_param {
+    source: "mnist_train_lmdb"
+    backend: LMDB
+    batch_size: 64
+    scale: 0.00390625
+  }
+  top: "data"
+  top: "label"
+}
+</code></pre>
+
+<p>Specifically, this layer has name <code>mnist</code>, type <code>data</code>, and it reads the data from the given lmdb source. We will use a batch size of 64, and scale the incoming pixels so that they are in the range [0,1). Why 0.00390625? It is 1 divided by 256. And finally, this layer produces two blobs, one is the <code>data</code> blob, and one is the <code>label</code> blob.</p>
+
+<h3 id="writing-the-convolution-layer">Writing the Convolution Layer</h3>
+
+<p>Let’s define the first convolution layer:</p>
+
+<pre><code>layers {
+  name: "conv1"
+  type: CONVOLUTION
+  blobs_lr: 1.
+  blobs_lr: 2.
+  convolution_param {
+    num_output: 20
+    kernelsize: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+  bottom: "data"
+  top: "conv1"
+}
+</code></pre>
+
+<p>This layer takes the <code>data</code> blob (it is provided by the data layer), and produces the <code>conv1</code> layer. It produces outputs of 20 channels, with the convolutional kernel size 5 and carried out with stride 1.</p>
+
+<p>The fillers allow us to randomly initialize the value of the weights and bias. For the weight filler, we will use the <code>xavier</code> algorithm that automatically determines the scale of initialization based on the number of input and output neurons. For the bias filler, we will simply initialize it as constant, with the default filling value 0.</p>
+
+<p><code>blobs_lr</code> are the learning rate adjustments for the layer’s learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.</p>
+
+<h3 id="writing-the-pooling-layer">Writing the Pooling Layer</h3>
+
+<p>Phew. Pooling layers are actually much easier to define:</p>
+
+<pre><code>layers {
+  name: "pool1"
+  type: POOLING
+  pooling_param {
+    kernel_size: 2
+    stride: 2
+    pool: MAX
+  }
+  bottom: "conv1"
+  top: "pool1"
+}
+</code></pre>
+
+<p>This says we will perform max pooling with a pool kernel size 2 and a stride of 2 (so no overlapping between neighboring pooling regions).</p>
+
+<p>Similarly, you can write up the second convolution and pooling layers. Check <code>$CAFFE_ROOT/examples/mnist/lenet_train_test.prototxt</code> for details.</p>
+
+<h3 id="writing-the-fully-connected-layer">Writing the Fully Connected Layer</h3>
+
+<p>Writing a fully connected layer is also simple:</p>
+
+<pre><code>layers {
+  name: "ip1"
+  type: INNER_PRODUCT
+  blobs_lr: 1.
+  blobs_lr: 2.
+  inner_product_param {
+    num_output: 500
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+  bottom: "pool2"
+  top: "ip1"
+}
+</code></pre>
+
+<p>This defines a fully connected layer (for some legacy reason, Caffe calls it an <code>innerproduct</code> layer) with 500 outputs. All other lines look familiar, right?</p>
+
+<h3 id="writing-the-relu-layer">Writing the ReLU Layer</h3>
+
+<p>A ReLU Layer is also simple:</p>
+
+<pre><code>layers {
+  name: "relu1"
+  type: RELU
+  bottom: "ip1"
+  top: "ip1"
+}
+</code></pre>
+
+<p>Since ReLU is an element-wise operation, we can do <em>in-place</em> operations to save some memory. This is achieved by simply giving the same name to the bottom and top blobs. Of course, do NOT use duplicated blob names for other layer types!</p>
+
+<p>After the ReLU layer, we will write another innerproduct layer:</p>
+
+<pre><code>layers {
+  name: "ip2"
+  type: INNER_PRODUCT
+  blobs_lr: 1.
+  blobs_lr: 2.
+  inner_product_param {
+    num_output: 10
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+  bottom: "ip1"
+  top: "ip2"
+}
+</code></pre>
+
+<h3 id="writing-the-loss-layer">Writing the Loss Layer</h3>
+
+<p>Finally, we will write the loss!</p>
+
+<pre><code>layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "ip2"
+  bottom: "label"
+}
+</code></pre>
+
+<p>The <code>softmax_loss</code> layer implements both the softmax and the multinomial logistic loss (that saves time and improves numerical stability). It takes two blobs, the first one being the prediction and the second one being the <code>label</code> provided by the data layer (remember it?). It does not produce any outputs - all it does is to compute the loss function value, report it when backpropagation starts, and initiates the gradient with respect to <code>ip2</code>. This is where all magic starts.</p>
+
+<h3 id="additional-notes-writing-layer-rules">Additional Notes: Writing Layer Rules</h3>
+
+<p>Layer definitions can include rules for whether and when they are included in the network definition, like the one below:</p>
+
+<pre><code>layers {
+  // ...layer definition...
+  include: { phase: TRAIN }
+}
+</code></pre>
+
+<p>This is a rule, which controls layer inclusion in the network, based on current network’s state.
+You can refer to <code>$CAFFE_ROOT/src/caffe/proto/caffe.proto</code> for more information about layer rules and model schema.</p>
+
+<p>In the above example, this layer will be included only in <code>TRAIN</code> phase.
+If we change <code>TRAIN</code> with <code>TEST</code>, then this layer will be used only in test phase.
+By default, that is without layer rules, a layer is always included in the network.
+Thus, <code>lenet_train_test.prototxt</code> has two <code>DATA</code> layers defined (with different <code>batch_size</code>), one for the training phase and one for the testing phase.
+Also, there is an <code>ACCURACY</code> layer which is included only in <code>TEST</code> phase for reporting the model accuracy every 100 iteration, as defined in <code>lenet_solver.prototxt</code>.</p>
+
+<h2 id="define-the-mnist-solver">Define the MNIST Solver</h2>
+
+<p>Check out the comments explaining each line in the prototxt <code>$CAFFE_ROOT/examples/mnist/lenet_solver.prototxt</code>:</p>
+
+<pre><code># The train/test net protocol buffer definition
+net: "examples/mnist/lenet_train_test.prototxt"
+# test_iter specifies how many forward passes the test should carry out.
+# In the case of MNIST, we have test batch size 100 and 100 test iterations,
+# covering the full 10,000 testing images.
+test_iter: 100
+# Carry out testing every 500 training iterations.
+test_interval: 500
+# The base learning rate, momentum and the weight decay of the network.
+base_lr: 0.01
+momentum: 0.9
+weight_decay: 0.0005
+# The learning rate policy
+lr_policy: "inv"
+gamma: 0.0001
+power: 0.75
+# Display every 100 iterations
+display: 100
+# The maximum number of iterations
+max_iter: 10000
+# snapshot intermediate results
+snapshot: 5000
+snapshot_prefix: "examples/mnist/lenet"
+# solver mode: CPU or GPU
+solver_mode: GPU
+</code></pre>
+
+<h2 id="training-and-testing-the-model">Training and Testing the Model</h2>
+
+<p>Training the model is simple after you have written the network definition protobuf and solver protobuf files. Simply run <code>train_lenet.sh</code>, or the following command directly:</p>
+
+<pre><code>cd $CAFFE_ROOT
+./examples/mnist/train_lenet.sh
+</code></pre>
+
+<p><code>train_lenet.sh</code> is a simple script, but here is a quick explanation: the main tool for training is <code>caffe</code> with action <code>train</code> and the solver protobuf text file as its argument.</p>
+
+<p>When you run the code, you will see a lot of messages flying by like this:</p>
+
+<pre><code>I1203 net.cpp:66] Creating Layer conv1
+I1203 net.cpp:76] conv1 &lt;- data
+I1203 net.cpp:101] conv1 -&gt; conv1
+I1203 net.cpp:116] Top shape: 20 24 24
+I1203 net.cpp:127] conv1 needs backward computation.
+</code></pre>
+
+<p>These messages tell you the details about each layer, its connections and its output shape, which may be helpful in debugging. After the initialization, the training will start:</p>
+
+<pre><code>I1203 net.cpp:142] Network initialization done.
+I1203 solver.cpp:36] Solver scaffolding done.
+I1203 solver.cpp:44] Solving LeNet
+</code></pre>
+
+<p>Based on the solver setting, we will print the training loss function every 100 iterations, and test the network every 1000 iterations. You will see messages like this:</p>
+
+<pre><code>I1203 solver.cpp:204] Iteration 100, lr = 0.00992565
+I1203 solver.cpp:66] Iteration 100, loss = 0.26044
+...
+I1203 solver.cpp:84] Testing net
+I1203 solver.cpp:111] Test score #0: 0.9785
+I1203 solver.cpp:111] Test score #1: 0.0606671
+</code></pre>
+
+<p>For each training iteration, <code>lr</code> is the learning rate of that iteration, and <code>loss</code> is the training function. For the output of the testing phase, score 0 is the accuracy, and score 1 is the testing loss function.</p>
+
+<p>And after a few minutes, you are done!</p>
+
+<pre><code>I1203 solver.cpp:84] Testing net
+I1203 solver.cpp:111] Test score #0: 0.9897
+I1203 solver.cpp:111] Test score #1: 0.0324599
+I1203 solver.cpp:126] Snapshotting to lenet_iter_10000
+I1203 solver.cpp:133] Snapshotting solver state to lenet_iter_10000.solverstate
+I1203 solver.cpp:78] Optimization Done.
+</code></pre>
+
+<p>The final model, stored as a binary protobuf file, is stored at</p>
+
+<pre><code>lenet_iter_10000
+</code></pre>
+
+<p>which you can deploy as a trained model in your application, if you are training on a real-world application dataset.</p>
+
+<h3 id="um-how-about-gpu-training">Um… How about GPU training?</h3>
+
+<p>You just did! All the training was carried out on the GPU. In fact, if you would like to do training on CPU, you can simply change one line in <code>lenet_solver.prototxt</code>:</p>
+
+<pre><code># solver mode: CPU or GPU
+solver_mode: CPU
+</code></pre>
+
+<p>and you will be using CPU for training. Isn’t that easy?</p>
+
+<p>MNIST is a small dataset, so training with GPU does not really introduce too much benefit due to communication overheads. On larger datasets with more complex models, such as ImageNet, the computation speed difference will be more significant.</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>
