@@ -20,6 +20,11 @@ void ContrastiveLossLayer<Dtype>::LayerSetUp(
   CHECK_EQ(bottom[2]->channels(), 1);
   CHECK_EQ(bottom[2]->height(), 1);
   CHECK_EQ(bottom[2]->width(), 1);
+
+  CHECK_GE(bottom.size(), 3);
+  CHECK_LE(bottom.size(), 4);
+
+  similar_.Reshape(bottom[0]->num(), 1, 1, 1);
   diff_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
   diff_sq_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
   dist_sq_.Reshape(bottom[0]->num(), 1, 1, 1);
@@ -41,11 +46,26 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
       diff_.mutable_cpu_data());  // a_i-b_i
   const int channels = bottom[0]->channels();
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
+
+  for (int i = 0; i < bottom[0]->num(); ++i) {
+    if (bottom.size() == 3) {
+      // 1/0 label provided directly
+      similar_.mutable_cpu_data()[i] = 
+        static_cast<int>(bottom[2]->cpu_data()[i]);
+    } else if (bottom.size() == 4) {
+      // two labels in [0,N] are provided; are they equal?
+      similar_.mutable_cpu_data()[i] =
+        (static_cast<int>(bottom[2]->cpu_data()[i]) ==
+         static_cast<int>(bottom[3]->cpu_data()[i])) ;
+    }
+  }
+
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
     dist_sq_.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_.cpu_data() + (i*channels), diff_.cpu_data() + (i*channels));
-    if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
+
+    if (static_cast<int>(similar_.cpu_data()[i])) { // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
       loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
@@ -68,7 +88,7 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       int channels = bottom[i]->channels();
       for (int j = 0; j < num; ++j) {
         Dtype* bout = bottom[i]->mutable_cpu_diff();
-        if (static_cast<int>(bottom[2]->cpu_data()[j])) {  // similar pairs
+        if (static_cast<int>(similar_.cpu_data()[j])) { // similar pairs
           caffe_cpu_axpby(
               channels,
               alpha,
