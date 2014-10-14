@@ -15,13 +15,13 @@ namespace caffe {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_() {
+    : net_(), initialized_(false) {
   Init(param);
 }
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file)
-    : net_() {
+    : net_(), initialized_(false) {
   SolverParameter param;
   ReadProtoFromTextFile(param_file, &param);
   Init(param);
