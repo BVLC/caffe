@@ -35,7 +35,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     "Usage: extract_features  pretrained_net_param"
     "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
     "  save_feature_leveldb_name1[,name2,...]  num_mini_batches  [CPU/GPU]"
-    "  [DEVICE_ID=0]\n"
+    "  [DEVICE_ID=0] [database_batch_size=100]\n"
     "Note: you can extract multiple features in one pass by specifying"
     " multiple feature blob names and leveldb names seperated by ','."
     " The names cannot contain white space characters and the number of blobs"
@@ -43,15 +43,27 @@ int feature_extraction_pipeline(int argc, char** argv) {
     return 1;
   }
   int arg_pos = num_required_args;
-
+  uint db_batch_size = 100;
+  uint device_id = 0;
+  bool using_gpu = false;
   arg_pos = num_required_args;
-  if (argc > arg_pos && strcmp(argv[arg_pos], "GPU") == 0) {
-    LOG(ERROR)<< "Using GPU";
-    uint device_id = 0;
-    if (argc > arg_pos + 1) {
-      device_id = atoi(argv[arg_pos + 1]);
+  while (arg_pos < argc) {
+    if ( arg_pos == num_required_args ) {
+      if (strcmp(argv[arg_pos], "GPU") == 0) {
+        using_gpu = true;
+      }
+    } else if (arg_pos == num_required_args+1) {
+      device_id = atoi(argv[arg_pos]);
       CHECK_GE(device_id, 0);
+    } else if (arg_pos == num_required_args+2) {
+      db_batch_size = atoi(argv[arg_pos]);
+      CHECK_GE(db_batch_size, 1);
     }
+    arg_pos++;
+  }
+
+  if (using_gpu) {
+    LOG(ERROR)<< "Using GPU";
     LOG(ERROR) << "Using Device_id=" << device_id;
     Caffe::SetDevice(device_id);
     Caffe::set_mode(Caffe::GPU);
@@ -59,6 +71,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
     LOG(ERROR) << "Using CPU";
     Caffe::set_mode(Caffe::CPU);
   }
+
+  LOG(ERROR) << "Using DB batch size=" << db_batch_size;
+
   Caffe::set_phase(Caffe::TEST);
 
   arg_pos = 0;  // the name of the executable
@@ -134,18 +149,22 @@ int feature_extraction_pipeline(int argc, char** argv) {
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
-  vector<shared_ptr<leveldb::WriteBatch> > feature_batches(
-      num_features,
-      shared_ptr<leveldb::WriteBatch>(new leveldb::WriteBatch()));
+  vector<shared_ptr<leveldb::WriteBatch> > feature_batches;
+  for (int i = 0; i < num_features; ++i) {
+    feature_batches.push_back(
+          shared_ptr<leveldb::WriteBatch>(new leveldb::WriteBatch()));
+  }
   const int kMaxKeyStrLength = 100;
   char key_str[kMaxKeyStrLength];
   vector<Blob<float>*> input_vec;
   vector<int> image_indices(num_features, 0);
+
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
     for (int i = 0; i < num_features; ++i) {
       const shared_ptr<Blob<Dtype> > feature_blob = feature_extraction_net
           ->blob_by_name(blob_names[i]);
+
       int batch_size = feature_blob->num();
       int dim_features = feature_blob->count() / batch_size;
       const Dtype* feature_blob_data;
@@ -165,7 +184,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         snprintf(key_str, kMaxKeyStrLength, "%d", image_indices[i]);
         feature_batches[i]->Put(string(key_str), value);
         ++image_indices[i];
-        if (image_indices[i] % 1000 == 0) {
+        if (image_indices[i] % db_batch_size == 0) {
           feature_dbs[i]->Write(leveldb::WriteOptions(),
                                 feature_batches[i].get());
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
@@ -177,7 +196,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   }  // for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
-    if (image_indices[i] % 1000 != 0) {
+    if (image_indices[i] % db_batch_size != 0) {
       feature_dbs[i]->Write(leveldb::WriteOptions(), feature_batches[i].get());
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
