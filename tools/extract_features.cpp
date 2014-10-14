@@ -35,7 +35,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     "Usage: extract_features  pretrained_net_param"
     "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
     "  save_feature_leveldb_name1[,name2,...]  num_mini_batches  [CPU/GPU]"
-    "  [DEVICE_ID=0] [DatabaseBatchSize=100]\n"
+    "  [DEVICE_ID=0] [database_batch_size=100]\n"
     "Note: you can extract multiple features in one pass by specifying"
     " multiple feature blob names and leveldb names seperated by ','."
     " The names cannot contain white space characters and the number of blobs"
@@ -50,12 +50,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   while (arg_pos < argc) {
     if ( arg_pos == num_required_args ) {
       if (strcmp(argv[arg_pos], "GPU") == 0) {
-        LOG(ERROR)<< "Using GPU";
-        Caffe::set_mode(Caffe::GPU);
         using_gpu = true;
-      } else {
-        LOG(ERROR) << "Using CPU";
-        Caffe::set_mode(Caffe::CPU);
       }
     } else if (arg_pos == num_required_args+1) {
       device_id = atoi(argv[arg_pos]);
@@ -68,8 +63,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
   }
 
   if (using_gpu) {
+    LOG(ERROR)<< "Using GPU";
     LOG(ERROR) << "Using Device_id=" << device_id;
     Caffe::SetDevice(device_id);
+    Caffe::set_mode(Caffe::GPU);
+  } else {
+    LOG(ERROR) << "Using CPU";
+    Caffe::set_mode(Caffe::CPU);
   }
 
   LOG(ERROR) << "Using DB batch size=" << db_batch_size;
