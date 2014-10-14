@@ -12,10 +12,12 @@
 
 namespace caffe {
 
-template <typename K, typename V>
-class LmdbDataset : public Dataset<K, V> {
+template <typename K, typename V,
+          typename KCoder = dataset_internal::DefaultCoder<K>,
+          typename VCoder = dataset_internal::DefaultCoder<V> >
+class LmdbDataset : public Dataset<K, V, KCoder, VCoder> {
  public:
-  typedef Dataset<K, V> Base;
+  typedef Dataset<K, V, KCoder, VCoder> Base;
   typedef typename Base::key_type key_type;
   typedef typename Base::value_type value_type;
   typedef typename Base::DatasetState DatasetState;
