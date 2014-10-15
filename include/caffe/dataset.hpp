@@ -135,6 +135,8 @@ class Dataset {
   virtual bool open(const string& filename, Mode mode) = 0;
   virtual bool put(const K& key, const V& value) = 0;
   virtual bool get(const K& key, V* value) = 0;
+  virtual bool first_key(K* key) = 0;
+  virtual bool last_key(K* key) = 0;
   virtual bool commit() = 0;
   virtual void close() = 0;
 

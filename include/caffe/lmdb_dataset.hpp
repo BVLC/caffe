@@ -33,6 +33,8 @@ class LmdbDataset : public Dataset<K, V, KCoder, VCoder> {
   bool open(const string& filename, Mode mode);
   bool put(const K& key, const V& value);
   bool get(const K& key, V* value);
+  bool first_key(K* key);
+  bool last_key(K* key);
   bool commit();
   void close();
 

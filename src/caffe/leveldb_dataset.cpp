@@ -107,6 +107,30 @@ bool LeveldbDataset<K, V, KCoder, VCoder>::get(const K& key, V* value) {
 }
 
 template <typename K, typename V, typename KCoder, typename VCoder>
+bool LeveldbDataset<K, V, KCoder, VCoder>::first_key(K* key) {
+  DLOG(INFO) << "LevelDB: First key";
+
+  CHECK_NOTNULL(db_.get());
+  shared_ptr<leveldb::Iterator> iter(db_->NewIterator(leveldb::ReadOptions()));
+  iter->SeekToFirst();
+  CHECK(iter->Valid());
+  const leveldb::Slice& key_slice = iter->key();
+  return KCoder::deserialize(key_slice.data(), key_slice.size(), key);
+}
+
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LeveldbDataset<K, V, KCoder, VCoder>::last_key(K* key) {
+  DLOG(INFO) << "LevelDB: Last key";
+
+  CHECK_NOTNULL(db_.get());
+  shared_ptr<leveldb::Iterator> iter(db_->NewIterator(leveldb::ReadOptions()));
+  iter->SeekToLast();
+  CHECK(iter->Valid());
+  const leveldb::Slice& key_slice = iter->key();
+  return KCoder::deserialize(key_slice.data(), key_slice.size(), key);
+}
+
+template <typename K, typename V, typename KCoder, typename VCoder>
 bool LeveldbDataset<K, V, KCoder, VCoder>::commit() {
   DLOG(INFO) << "LevelDB: Commit";
 
