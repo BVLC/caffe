@@ -144,16 +144,18 @@ class DummyDataLayer : public Layer<Dtype> {
  * TODO(dox): thorough documentation for Forward and proto params.
  */
 template <typename Dtype>
-class HDF5DataLayer : public Layer<Dtype> {
+class HDF5DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
   explicit HDF5DataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~HDF5DataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
+  virtual void Reset();
+  virtual void InternalThreadEntry();
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_HDF5_DATA;
@@ -166,16 +168,12 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
-  virtual void LoadHDF5FileData(const char* filename);
+  virtual void FillHDF5FileData();
 
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;
   unsigned int current_file_;
-  hsize_t current_row_;
+  int current_row_;
   std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
 };
 

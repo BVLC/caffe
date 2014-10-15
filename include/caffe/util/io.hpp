@@ -165,15 +165,34 @@ inline cv::Mat DecodeDatumToCVMat(const Datum& datum) {
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 #endif
 
+/**
+ * @brief Shapes a Blob to read "num" rows of HDF5 data.  If num == -1, take
+ *        the num of the HDF5 dataset.
+ *
+ * @param file_id      the HDF5 file handle
+ * @param dataset_name the name of the HDF5 dataset to read
+ * @param num          the number of rows to read: either num >= 0,
+ *                     or num == -1 for the number of rows in the HDF5 dataset
+ * @param blob         the Blob to shape
+ *
+ * The HDF5 dataset must have 1-4 dimensions. blob will be shaped like the
+ * the HDF5 dataset, except that the HDF5 dataset's first dimension is ignored
+ * and replaced by num, and if the dataset has \@$ D < 4 \@$ dimensions, the
+ * remaining \@$ 4 - D \@$ dimensions are replaced with 1's -- so an
+ * \@$ N \times D \times H \@$ HDF5 dataset will result in a
+ * \@$ \mathrm{num} \times D \times H \times 1 \@$ Blob.
+ */
 template <typename Dtype>
-void hdf5_load_nd_dataset_helper(
-  hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
-  Blob<Dtype>* blob);
+void HDF5PrepareBlob(hid_t file_id, const char* dataset_name, int num,
+                     Blob<Dtype>* blob);
 
+/**
+ * @brief Reads rows [offset, offset + data->num() - 1] into Blob* data, which
+ *        must have been pre-shaped using HDF5PrepareBlob (or otherwise).
+ */
 template <typename Dtype>
-void hdf5_load_nd_dataset(
-  hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
-  Blob<Dtype>* blob);
+int HDF5ReadRowsToBlob(hid_t file_id, const char* dataset_name,
+                       int h5_offset, int blob_offset, Blob<Dtype>* blob);
 
 template <typename Dtype>
 void hdf5_save_nd_dataset(

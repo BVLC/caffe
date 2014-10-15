@@ -76,10 +76,10 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
                           H5P_DEFAULT);
   ASSERT_GE(file_id, 0)<< "Failed to open HDF5 file" <<
       this->input_file_name_;
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_DATASET_NAME, 0, 4,
-                       this->blob_data_);
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_LABEL_NAME, 0, 4,
-                       this->blob_label_);
+  HDF5PrepareBlob(file_id, HDF5_DATA_DATASET_NAME, -1, this->blob_data_);
+  HDF5ReadRowsToBlob(file_id, HDF5_DATA_DATASET_NAME, 0, 0, this->blob_data_);
+  HDF5PrepareBlob(file_id, HDF5_DATA_LABEL_NAME, -1, this->blob_label_);
+  HDF5ReadRowsToBlob(file_id, HDF5_DATA_LABEL_NAME, 0, 0, this->blob_label_);
   herr_t status = H5Fclose(file_id);
   EXPECT_GE(status, 0)<< "Failed to close HDF5 file " <<
       this->input_file_name_;
@@ -103,13 +103,13 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
           this->input_file_name_;
 
   Blob<Dtype>* blob_data = new Blob<Dtype>();
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_DATASET_NAME, 0, 4,
-                       blob_data);
+  HDF5PrepareBlob(file_id, HDF5_DATA_DATASET_NAME, -1, blob_data);
+  HDF5ReadRowsToBlob(file_id, HDF5_DATA_DATASET_NAME, 0, 0, blob_data);
   this->CheckBlobEqual(*(this->blob_data_), *blob_data);
 
   Blob<Dtype>* blob_label = new Blob<Dtype>();
-  hdf5_load_nd_dataset(file_id, HDF5_DATA_LABEL_NAME, 0, 4,
-                       blob_label);
+  HDF5PrepareBlob(file_id, HDF5_DATA_LABEL_NAME, -1, blob_label);
+  HDF5ReadRowsToBlob(file_id, HDF5_DATA_LABEL_NAME, 0, 0, blob_label);
   this->CheckBlobEqual(*(this->blob_label_), *blob_label);
 
   status = H5Fclose(file_id);
