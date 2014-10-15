@@ -1,6 +1,15 @@
 project( CaffeSrc )
 
 
+find_package(libjpeg REQUIRED)
+include_directories(${LIBJPEG_INCLUDE_DIRS})
+link_directories(${LIBJPEG_LIBRARY_DIRS})
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(CURLPP REQUIRED curlpp)
+include_directories(${CURLPP_INCLUDE_DIRS})
+link_directories(${CURLPP_LIBRARY_DIRS})
+
 add_subdirectory(proto)
 
 #    Recursively find source files
@@ -40,6 +49,8 @@ target_link_libraries(caffe proto
         ${LMDB_LIBRARIES}
         ${OpenCV_LIBS}
         ${CMAKE_THREAD_LIBS_INIT}
+        ${LIBJPEG_LIBRARIES}
+        ${CURLPP_LIBRARIES}
 )
 
 #set output directory

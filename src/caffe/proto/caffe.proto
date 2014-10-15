@@ -271,6 +271,7 @@ message LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
+    PROTOBUF_DATA = 999;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -327,6 +328,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 37;
   optional ThresholdParameter threshold_param = 25;
   optional WindowDataParameter window_data_param = 20;
+  optional ProtobufDataParameter protobuf_data_param = 999;
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
@@ -545,6 +547,16 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+}
+
+message ProtobufDataParameter {
+  optional string source = 1;
+  optional uint32 batch_size = 2;
+  optional uint32 rand_skip = 3 [default = 0];
+  optional bool shuffle = 4 [default = false];
+  optional uint32 crop_height = 5;
+  optional uint32 crop_width = 6;
+  repeated string labels = 7;
 }
 
 // Message that stores parameters InfogainLossLayer
@@ -816,4 +828,51 @@ message V0LayerParameter {
   optional uint32 concat_dim = 65 [default = 1];
 
   optional HDF5OutputParameter hdf5_output_param = 1001;
+}
+
+message LabelDefinition {
+  optional string name = 1;
+  optional uint32 dim = 2;
+  optional float mean = 3;
+  optional float stdev = 4;
+  repeated float weights = 5;
+}
+
+message ProtobufManifest {
+  repeated ProtobufRecord records = 1;
+  repeated LabelDefinition label_defs = 2;
+}
+
+message ProtobufRecord {
+  optional string image_url = 1;
+  optional int32 crop_x1 = 2;
+  optional int32 crop_x2 = 3;
+  optional int32 crop_y1 = 4;
+  optional int32 crop_y2 = 5;
+
+  extensions 100 to max;
+}
+
+message ClassificationRecord {
+  extend ProtobufRecord {
+    optional ClassificationRecord parent = 101;
+  }
+
+  optional uint32 class_id = 1;
+}
+
+message TestRecord {
+  extend ProtobufRecord {
+    optional TestRecord parent = 102;
+  }
+
+  optional uint32 single_int = 1;
+  optional float single_float = 2;
+  optional float single_float_sub = 3;
+  optional float single_float_sub_scale = 4;
+  optional float weighted = 5;
+  repeated uint32 multi_int = 6;
+  repeated float multi_float = 7;
+  repeated float multi_float_sub = 8;
+  repeated float multi_float_sub_scale = 9;
 }

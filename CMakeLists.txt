@@ -3,6 +3,7 @@ project( Caffe )
 
 ###    Build Options     ##########################################################################
 
+option(WORKAROUND_PROTOBUF_FIND_EXTENSION "Enable protobuf reflection workaround" OFF)
 option(CPU_ONLY "Build Caffe without GPU support" OFF)
 option(BUILD_PYTHON "Build Python wrapper" OFF)
 option(BUILD_MATLAB "Build Matlab wrapper" OFF)
@@ -39,6 +40,10 @@ endif()
 #    Global Definitions
 if(CPU_ONLY)
     add_definitions(-DCPU_ONLY)
+endif()
+
+if(WORKAROUND_PROTOBUF_FIND_EXTENSION)
+    add_definitions(-DWORKAROUND_PROTOBUF_FIND_EXTENSION)
 endif()
 
 #    Include Directories
