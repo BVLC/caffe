@@ -155,6 +155,70 @@ bool LmdbDataset<K, V, KCoder, VCoder>::get(const K& key, V* value) {
 }
 
 template <typename K, typename V, typename KCoder, typename VCoder>
+bool LmdbDataset<K, V, KCoder, VCoder>::first_key(K* key) {
+  DLOG(INFO) << "LMDB: First key";
+
+  int retval;
+
+  MDB_txn* iter_txn;
+
+  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &iter_txn);
+  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
+      << mdb_strerror(retval);
+
+  MDB_cursor* cursor;
+  retval = mdb_cursor_open(iter_txn, dbi_, &cursor);
+  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+  MDB_val mdbkey;
+  MDB_val mdbval;
+  retval = mdb_cursor_get(cursor, &mdbkey, &mdbval, MDB_FIRST);
+  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+
+  mdb_cursor_close(cursor);
+  mdb_txn_abort(iter_txn);
+
+  if (!KCoder::deserialize(reinterpret_cast<char*>(mdbkey.mv_data),
+      mdbkey.mv_size, key)) {
+    LOG(ERROR) << "failed to deserialize key";
+    return false;
+  }
+
+  return true;
+}
+
+template <typename K, typename V, typename KCoder, typename VCoder>
+bool LmdbDataset<K, V, KCoder, VCoder>::last_key(K* key) {
+  DLOG(INFO) << "LMDB: Last key";
+
+  int retval;
+
+  MDB_txn* iter_txn;
+
+  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &iter_txn);
+  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
+      << mdb_strerror(retval);
+
+  MDB_cursor* cursor;
+  retval = mdb_cursor_open(iter_txn, dbi_, &cursor);
+  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+  MDB_val mdbkey;
+  MDB_val mdbval;
+  retval = mdb_cursor_get(cursor, &mdbkey, &mdbval, MDB_LAST);
+  CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+
+  mdb_cursor_close(cursor);
+  mdb_txn_abort(iter_txn);
+
+  if (!KCoder::deserialize(reinterpret_cast<char*>(mdbkey.mv_data),
+      mdbkey.mv_size, key)) {
+    LOG(ERROR) << "failed to deserialize key";
+    return false;
+  }
+
+  return true;
+}
+
+template <typename K, typename V, typename KCoder, typename VCoder>
 bool LmdbDataset<K, V, KCoder, VCoder>::commit() {
   DLOG(INFO) << "LMDB: Commit";
 

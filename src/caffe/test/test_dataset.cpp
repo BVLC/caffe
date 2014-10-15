@@ -277,6 +277,120 @@ TYPED_TEST(DatasetTest, TestKeys) {
   EXPECT_FALSE(this->equals(keys.at(0), keys.at(1)));
 }
 
+TYPED_TEST(DatasetTest, TestFirstKey) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Dataset<string, value_type> > dataset =
+      DatasetFactory<string, value_type>(backend);
+  EXPECT_TRUE(dataset->open(name, Dataset<string, value_type>::New));
+
+  value_type value = this->TestValue();
+
+  string key1 = "01";
+  EXPECT_TRUE(dataset->put(key1, value));
+
+  string key2 = "02";
+  EXPECT_TRUE(dataset->put(key2, value));
+
+  string key3 = "03";
+  EXPECT_TRUE(dataset->put(key3, value));
+
+  EXPECT_TRUE(dataset->commit());
+
+  string first_key;
+  dataset->first_key(&first_key);
+
+  EXPECT_TRUE(this->equals(first_key, key1));
+}
+
+TYPED_TEST(DatasetTest, TestLastKey) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Dataset<string, value_type> > dataset =
+      DatasetFactory<string, value_type>(backend);
+  EXPECT_TRUE(dataset->open(name, Dataset<string, value_type>::New));
+
+  value_type value = this->TestValue();
+
+  string key1 = "01";
+  EXPECT_TRUE(dataset->put(key1, value));
+
+  string key2 = "02";
+  EXPECT_TRUE(dataset->put(key2, value));
+
+  string key3 = "03";
+  EXPECT_TRUE(dataset->put(key3, value));
+
+  EXPECT_TRUE(dataset->commit());
+
+  string last_key;
+  dataset->last_key(&last_key);
+
+  EXPECT_TRUE(this->equals(last_key, key3));
+}
+
+TYPED_TEST(DatasetTest, TestFirstLastKeys) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Dataset<string, value_type> > dataset =
+      DatasetFactory<string, value_type>(backend);
+  EXPECT_TRUE(dataset->open(name, Dataset<string, value_type>::New));
+
+  value_type value = this->TestValue();
+
+  string key1 = "01";
+  EXPECT_TRUE(dataset->put(key1, value));
+
+  string key2 = "02";
+  EXPECT_TRUE(dataset->put(key2, value));
+
+  string key3 = "03";
+  EXPECT_TRUE(dataset->put(key3, value));
+
+  EXPECT_TRUE(dataset->commit());
+
+  string first_key;
+  dataset->first_key(&first_key);
+  string last_key;
+  dataset->last_key(&last_key);
+
+  EXPECT_TRUE(this->equals(first_key, key1));
+  EXPECT_TRUE(this->equals(last_key, key3));
+}
+
+TYPED_TEST(DatasetTest, TestFirstLastKeysUnOrdered) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Dataset<string, value_type> > dataset =
+      DatasetFactory<string, value_type>(backend);
+  EXPECT_TRUE(dataset->open(name, Dataset<string, value_type>::New));
+
+  value_type value = this->TestValue();
+
+  string key3 = "03";
+  EXPECT_TRUE(dataset->put(key3, value));
+
+  string key1 = "01";
+  EXPECT_TRUE(dataset->put(key1, value));
+
+  string key2 = "02";
+  EXPECT_TRUE(dataset->put(key2, value));
+
+  EXPECT_TRUE(dataset->commit());
+
+  string first_key;
+  dataset->first_key(&first_key);
+  string last_key;
+  dataset->last_key(&last_key);
+
+  EXPECT_TRUE(this->equals(first_key, key1));
+  EXPECT_TRUE(this->equals(last_key, key3));
+}
+
 TYPED_TEST(DatasetTest, TestKeysNoCommit) {
   UNPACK_TYPES;
 
