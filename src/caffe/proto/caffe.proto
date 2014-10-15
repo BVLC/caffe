@@ -423,7 +423,7 @@ message DataParameter {
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
-  // be larger than the number of keys in the leveldb.
+  // be larger than the number of keys in the database.
   optional uint32 rand_skip = 7 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
@@ -518,7 +518,7 @@ message ImageDataParameter {
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
-  // be larger than the number of keys in the leveldb.
+  // be larger than the number of keys in the database.
   optional uint32 rand_skip = 7 [default = 0];
   // Whether or not ImageLayer should shuffle the list of files at every epoch.
   optional bool shuffle = 8 [default = false];
@@ -767,7 +767,7 @@ message V0LayerParameter {
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
-  // be larger than the number of keys in the leveldb.
+  // be larger than the number of keys in the database.
   optional uint32 rand_skip = 53 [default = 0];
 
   // Fields related to detection (det_*)
