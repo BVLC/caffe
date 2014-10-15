@@ -101,14 +101,22 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     // get a blob
     CHECK(iter_ != dataset_->end());
     const Datum& datum = iter_->value;
-    cv::Mat cv_img = DecodeDatumToCVMat(datum);
+    cv::Mat cv_img;
+    if (datum.encoded()) {
+       cv_img = DecodeDatumToCVMat(datum);
+    }
     read_time += timer.MilliSeconds();
     timer.Start();
 
     // Apply data transformations (mirror, scale, crop...)
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
+    if (datum.encoded()) {
+      this->data_transformer_.Transform(cv_img, &(this->transformed_data_));  
+    } else {
+      this->data_transformer_.Transform(datum, &(this->transformed_data_));
+    }
+    
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
     }
