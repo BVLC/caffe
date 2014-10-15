@@ -153,7 +153,9 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline int ExactNumBottomBlobs() const { return -1; }
+  virtual inline int MinBottomBlobs() const { return 3; }
+  virtual inline int MaxBottomBlobs() const { return 4; }
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_CONTRASTIVE_LOSS;
   }

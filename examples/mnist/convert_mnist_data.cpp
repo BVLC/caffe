@@ -18,6 +18,8 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 
+#include "opencv2/core/core.hpp"
+#include "opencv2/opencv.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 using namespace caffe;  // NOLINT(build/namespaces)
@@ -94,6 +96,16 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         << "mdb_txn_begin failed";
     CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
         << "mdb_open failed. Does the lmdb already exist? ";
+  } else if (db_backend == "files") {  // png files
+    CHECK_EQ(mkdir(db_path, 0744), 0)
+        << "mkdir " << db_path << "failed";
+    for (int i = 0; i < 10; i++) {
+      int pathlen = strlen(db_path) + strlen("/0") + 1;
+      char path[pathlen];
+      snprintf(path, pathlen, "%s/%c", db_path, '0' + i);
+      CHECK_EQ(mkdir(path, 0744), 0)
+          << "mkdir " << path << "failed";
+    }
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
@@ -114,6 +126,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   LOG(INFO) << "Rows: " << rows << " Cols: " << cols;
   for (int item_id = 0; item_id < num_items; ++item_id) {
     image_file.read(pixels, rows * cols);
+
     label_file.read(&label, 1);
     datum.set_data(pixels, rows*cols);
     datum.set_label(label);
@@ -131,6 +144,15 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       mdb_key.mv_data = reinterpret_cast<void*>(&keystr[0]);
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
+    } else if (db_backend == "files") {  // png files
+      cv::Mat img = cv::Mat(28, 28, CV_8UC1, pixels);
+
+      int pathlen = strlen(db_path) + strlen("/0/12345.png") + 1;
+      char filename[pathlen];
+
+      snprintf(filename, pathlen, "%s/%c/%05d.png", db_path, '0' + label, item_id);
+      //std::cout << "writing " << filename << std::endl;
+      cv::imwrite(filename, img);
     } else {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }
@@ -146,6 +168,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
             << "mdb_txn_commit failed";
         CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
             << "mdb_txn_begin failed";
+      } else if (db_backend == "files") {  // png files
+        
       } else {
         LOG(FATAL) << "Unknown db backend " << db_backend;
       }
@@ -161,6 +185,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS) << "mdb_txn_commit failed";
       mdb_close(mdb_env, mdb_dbi);
       mdb_env_close(mdb_env);
+    } else if (db_backend == "files") {  // files
+    
     } else {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }

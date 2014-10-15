@@ -21,9 +21,6 @@ void ContrastiveLossLayer<Dtype>::LayerSetUp(
   CHECK_EQ(bottom[2]->height(), 1);
   CHECK_EQ(bottom[2]->width(), 1);
 
-  CHECK_GE(bottom.size(), 3);
-  CHECK_LE(bottom.size(), 4);
-
   similar_.Reshape(bottom[0]->num(), 1, 1, 1);
   diff_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
   diff_sq_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
