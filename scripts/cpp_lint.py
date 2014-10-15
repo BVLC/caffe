@@ -1609,6 +1609,7 @@ def CheckCaffeDataLayerSetUp(filename, clean_lines, linenum, error):
   ix = line.find('DataLayer<Dtype>::LayerSetUp')
   if ix >= 0 and (
        line.find('void DataLayer<Dtype>::LayerSetUp') != -1 or
+       line.find('void HDF5DataLayer<Dtype>::LayerSetUp') == -1 and
        line.find('void ImageDataLayer<Dtype>::LayerSetUp') != -1 or
        line.find('void MemoryDataLayer<Dtype>::LayerSetUp') != -1 or
        line.find('void WindowDataLayer<Dtype>::LayerSetUp') != -1):
@@ -1621,6 +1622,7 @@ def CheckCaffeDataLayerSetUp(filename, clean_lines, linenum, error):
   if ix >= 0 and (
        line.find('void Base') == -1 and
        line.find('void DataLayer<Dtype>::DataLayerSetUp') == -1 and
+       line.find('void HDF5DataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void ImageDataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void MemoryDataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void WindowDataLayer<Dtype>::DataLayerSetUp') == -1):
