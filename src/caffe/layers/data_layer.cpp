@@ -8,6 +8,7 @@
 #include "caffe/dataset_factory.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -47,6 +48,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(iter_ != dataset_->end());
   const Datum& datum = iter_->value;
 
+  if (DecodeDatum(datum)) {
+    LOG(INFO) << "Decoding Datum";
+  }
   // image
   int crop_size = this->layer_param_.transform_param().crop_size();
   if (crop_size > 0) {
@@ -78,6 +82,8 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void DataLayer<Dtype>::InternalThreadEntry() {
+  Timer batch_timer;
+  batch_timer.Start();
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
@@ -87,25 +93,35 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
   const int batch_size = this->layer_param_.data_param().batch_size();
-
+  float read_time = 0;
+  float trans_time = 0;
+  Timer timer;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
+    timer.Start();
+    // get a blob
     CHECK(iter_ != dataset_->end());
     const Datum& datum = iter_->value;
+    cv::Mat cv_img = DecodeDatumToCVMat(datum);
+    read_time += timer.MilliSeconds();
+    timer.Start();
 
     // Apply data transformations (mirror, scale, crop...)
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_.Transform(datum, &(this->transformed_data_));
+    this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
     }
-
+    trans_time += timer.MilliSeconds();
     // go to the next iter
     ++iter_;
     if (iter_ == dataset_->end()) {
       iter_ = dataset_->begin();
     }
   }
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
+  DLOG(INFO) << "Read time: " << read_time << "ms.";
+  DLOG(INFO) << "Transform time: " << trans_time << "ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);

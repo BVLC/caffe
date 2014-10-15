@@ -13,6 +13,7 @@
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -192,7 +193,8 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::InternalThreadEntry() {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
-
+  Timer batch_timer;
+  batch_timer.Start();
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
@@ -219,19 +221,20 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   const int num_samples[2] = { batch_size - num_fg, num_fg };
 
   int item_id = 0;
+  float read_time = 0;
+  float trans_time = 0;
+  Timer timer;
   // sample from bg set then fg set
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
       // sample a window
+      timer.Start();
       const unsigned int rand_index = PrefetchRand();
       vector<float> window = (is_fg) ?
           fg_windows_[rand_index % fg_windows_.size()] :
           bg_windows_[rand_index % bg_windows_.size()];
 
-      bool do_mirror = false;
-      if (mirror && PrefetchRand() % 2) {
-        do_mirror = true;
-      }
+      bool do_mirror = mirror && PrefetchRand() % 2;
 
       // load the image containing the window
       pair<std::string, vector<int> > image =
@@ -242,6 +245,8 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
         LOG(ERROR) << "Could not open or find file " << image.first;
         return;
       }
+      read_time += timer.MilliSeconds();
+      timer.Start();
       const int channels = cv_img.channels();
 
       // crop window out of image and warp it
@@ -359,7 +364,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
           }
         }
       }
-
+      trans_time += timer.MilliSeconds();
       // get window label
       top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
 
@@ -399,6 +404,9 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       item_id++;
     }
   }
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
+  DLOG(INFO) << "Read time: " << read_time << "ms.";
+  DLOG(INFO) << "Transform time: " << trans_time << "ms.";
 }
 
 INSTANTIATE_CLASS(WindowDataLayer);

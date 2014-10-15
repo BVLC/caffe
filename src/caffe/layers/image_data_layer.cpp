@@ -6,6 +6,7 @@
 
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -91,6 +92,8 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
 void ImageDataLayer<Dtype>::InternalThreadEntry() {
+  Timer batch_timer;
+  batch_timer.Start();
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
@@ -103,18 +106,25 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 
   // datum scales
   const int lines_size = lines_.size();
+  float read_time = 0;
+  float trans_time = 0;
+  Timer timer;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
+    timer.Start();
     CHECK_GT(lines_size, lines_id_);
     cv::Mat cv_img = ReadImageToCVMat(lines_[lines_id_].first,
                                     new_height, new_width, is_color);
     if (!cv_img.data) {
       continue;
     }
+    read_time += timer.MilliSeconds();
+    timer.Start();
     // Apply transformations (mirror, crop...) to the image
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
     this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
+    trans_time += timer.MilliSeconds();
 
     top_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
@@ -128,6 +138,9 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
       }
     }
   }
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
+  DLOG(INFO) << "Read time: " << read_time << "ms.";
+  DLOG(INFO) << "Transform time: " << trans_time << "ms.";
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);
