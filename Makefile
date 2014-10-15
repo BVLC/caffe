@@ -281,12 +281,6 @@ ifeq ($(USE_CUDNN), 1)
 	COMMON_FLAGS += -DUSE_CUDNN
 endif
 
-TIMING ?= 0
-# Timing Flag
-ifneq ($(TIMING), 0)
-	COMMON_FLAGS += -DTIMING
-endif
-
 # CPU-only configuration
 ifeq ($(CPU_ONLY), 1)
 	OBJS := $(PROTO_OBJS) $(CXX_OBJS)

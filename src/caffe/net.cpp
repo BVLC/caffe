@@ -9,9 +9,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
-#ifdef TIMING
-#include "caffe/util/benchmark.hpp"
-#endif
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -502,10 +499,6 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 
 template <typename Dtype>
 Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
-  #ifdef TIMING
-  Timer timer;
-  timer.Start();
-  #endif
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
@@ -516,9 +509,6 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
-  #ifdef TIMING
-  LOG(INFO) << "Forward time: " << timer.MilliSeconds() << "ms.";
-  #endif
   return loss;
 }
 
@@ -575,10 +565,6 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
 
 template <typename Dtype>
 void Net<Dtype>::BackwardFromTo(int start, int end) {
-  #ifdef TIMING
-  Timer timer;
-  timer.Start();
-  #endif
   CHECK_GE(end, 0);
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
@@ -588,9 +574,6 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }
-  #ifdef TIMING
-  LOG(INFO) << "Backward time: " << timer.MilliSeconds() << "ms.";
-  #endif
 }
 
 template <typename Dtype>
