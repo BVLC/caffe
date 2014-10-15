@@ -46,9 +46,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // Read a data point, and use it to initialize the top blob.
   CHECK(iter_ != dataset_->end());
-  const Datum& datum = iter_->value;
+  Datum datum = iter_->value;
 
-  if (DecodeDatum(datum)) {
+  if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
   }
   // image
