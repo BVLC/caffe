@@ -13,9 +13,7 @@
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
-#ifdef TIMING
 #include "caffe/util/benchmark.hpp"
-#endif
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -226,13 +224,11 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::InternalThreadEntry() {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
-  #ifdef TIMING
   Timer batch_timer;
   batch_timer.Start();
   float read_time = 0;
   float trans_time = 0;
   Timer timer;
-  #endif
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
@@ -269,9 +265,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
       // sample a window
-      #ifdef TIMING
       timer.Start();
-      #endif
       const unsigned int rand_index = PrefetchRand();
       vector<float> window = (is_fg) ?
           fg_windows_[rand_index % fg_windows_.size()] :
@@ -295,10 +289,8 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
           return;
         }
       }
-      #ifdef TIMING
       read_time += timer.MilliSeconds();
       timer.Start();
-      #endif
       const int channels = cv_img.channels();
 
       // crop window out of image and warp it
@@ -424,9 +416,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
           }
         }
       }
-      #ifdef TIMING
       trans_time += timer.MilliSeconds();
-      #endif
       // get window label
       top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
 
@@ -466,12 +456,10 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       item_id++;
     }
   }
-  #ifdef TIMING
   batch_timer.Stop();
-  LOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
-  LOG(INFO) << "Read time: " << read_time << "ms.";
-  LOG(INFO) << "Transform time: " << trans_time << "ms.";
-  #endif
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << "ms.";
+  DLOG(INFO) << "Read time: " << read_time << "ms.";
+  DLOG(INFO) << "Transform time: " << trans_time << "ms.";
 }
 
 INSTANTIATE_CLASS(WindowDataLayer);
