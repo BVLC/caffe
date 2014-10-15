@@ -230,52 +230,91 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
-void hdf5_load_nd_dataset_helper(
-    hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
-    Blob<Dtype>* blob) {
+void HDF5PrepareBlob(hid_t file_id, const char* dataset_name, int num,
+                     Blob<Dtype>* blob) {
   // Verify that the dataset exists.
-  CHECK(H5LTfind_dataset(file_id, dataset_name_))
-      << "Failed to find HDF5 dataset " << dataset_name_;
-  // Verify that the number of dimensions is in the accepted range.
+  CHECK(H5LTfind_dataset(file_id, dataset_name))
+      << "Failed to find HDF5 dataset " << dataset_name;
   herr_t status;
   int ndims;
-  status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
-  CHECK_GE(status, 0) << "Failed to get dataset ndims for " << dataset_name_;
-  CHECK_GE(ndims, min_dim);
-  CHECK_LE(ndims, max_dim);
+  CHECK_LE(0, H5LTget_dataset_ndims(file_id, dataset_name, &ndims))
+      << "Failed to get dataset ndims for " << dataset_name;
+  CHECK_GE(ndims, 1) << "HDF5 dataset must have at least 1 dimension.";
+  CHECK_LE(ndims, 4)
+      << "HDF5 dataset must have at most 4 dimensions, to fit in a Blob.";
 
   // Verify that the data format is what we expect: float or double.
   std::vector<hsize_t> dims(ndims);
-  H5T_class_t class_;
+  H5T_class_t h5_class;
   status = H5LTget_dataset_info(
-      file_id, dataset_name_, dims.data(), &class_, NULL);
-  CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
-  CHECK_EQ(class_, H5T_FLOAT) << "Expected float or double data";
+      file_id, dataset_name, dims.data(), &h5_class, NULL);
+  CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name;
+  CHECK_EQ(h5_class, H5T_FLOAT) << "Expected float or double data";
+  CHECK_GE(num, -1) << "num must be -1 (to indicate the number of rows"
+                       "in the dataset) or non-negative.";
+  const int blob_num = (num == -1) ? dims[0] : num;
+  blob->Reshape(
+    blob_num,
+    (dims.size() > 1) ? dims[1] : 1,
+    (dims.size() > 2) ? dims[2] : 1,
+    (dims.size() > 3) ? dims[3] : 1);
+}
 
-  vector<int> blob_dims(dims.size());
-  for (int i = 0; i < dims.size(); ++i) {
-    blob_dims[i] = dims[i];
+template
+void HDF5PrepareBlob<float>(hid_t file_id, const char* dataset_name, int num,
+                            Blob<float>* blob);
+
+template
+void HDF5PrepareBlob<double>(hid_t file_id, const char* dataset_name, int num,
+                             Blob<double>* blob);
+
+template <typename Dtype>
+int HDF5ReadRowsToBlob(hid_t file_id, const char* dataset_name,
+                       int h5_offset, int blob_offset, Blob<Dtype>* blob) {
+  int ndims;
+  CHECK_LE(0, H5LTget_dataset_ndims(file_id, dataset_name, &ndims))
+      << "Failed to get dataset ndims for " << dataset_name;
+  std::vector<hsize_t> dims(ndims);
+  H5T_class_t h5_class;
+  herr_t status = H5LTget_dataset_info(
+      file_id, dataset_name, dims.data(), &h5_class, NULL);
+  CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name;
+  CHECK_EQ(h5_class, H5T_FLOAT) << "Expected float or double data";
+  hid_t dataset = H5Dopen(file_id, dataset_name, H5P_DEFAULT);
+  hid_t dataspace = H5Dget_space(dataset);
+  vector<hsize_t> slab_start(ndims, 0);
+  slab_start[0] = h5_offset;
+  const int num_rows_available = dims[0] - h5_offset;
+  const int num_rows = std::min(blob->num(), num_rows_available);
+  if (num_rows <= 0) {
+    return 0;
   }
-  blob->Reshape(blob_dims);
+  vector<hsize_t> slab_count(ndims, num_rows);
+  for (int i = 1; i < ndims; ++i) {
+    slab_count[i] = dims[i];
+  }
+  status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET,
+      slab_start.data(), NULL, slab_count.data(), NULL);
+  CHECK_GE(status, 0) << "Failed to select slab.";
+  hid_t memspace = H5Screate_simple(ndims, slab_count.data(), NULL);
+  const int blob_offset_size = blob_offset * blob->count() / blob->num();
+  hid_t type = (sizeof(Dtype) == 4) ? H5T_NATIVE_FLOAT : H5T_NATIVE_DOUBLE;
+  status = H5Dread(dataset, type, memspace, dataspace, H5P_DEFAULT,
+                   blob->mutable_cpu_data() + blob_offset_size);
+  CHECK_GE(status, 0) << "Failed to read dataset " << dataset_name;
+  H5Dclose(dataset);
+  H5Sclose(dataspace);
+  H5Sclose(memspace);
+  return num_rows;
 }
 
-template <>
-void hdf5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim, Blob<float>* blob) {
-  hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
-  herr_t status = H5LTread_dataset_float(
-    file_id, dataset_name_, blob->mutable_cpu_data());
-  CHECK_GE(status, 0) << "Failed to read float dataset " << dataset_name_;
-}
+template
+int HDF5ReadRowsToBlob<float>(hid_t file_id, const char* dataset_name,
+    int h5_offset, int blob_offset, Blob<float>* data);
 
-template <>
-void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim, Blob<double>* blob) {
-  hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
-  herr_t status = H5LTread_dataset_double(
-    file_id, dataset_name_, blob->mutable_cpu_data());
-  CHECK_GE(status, 0) << "Failed to read double dataset " << dataset_name_;
-}
+template
+int HDF5ReadRowsToBlob<double>(hid_t file_id, const char* dataset_name,
+    int h5_offset, int blob_offset, Blob<double>* data);
 
 template <>
 void hdf5_save_nd_dataset<float>(
