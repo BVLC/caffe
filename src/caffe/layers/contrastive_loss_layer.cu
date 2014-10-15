@@ -36,19 +36,18 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
   for (int i = 0; i < bottom[0]->num(); ++i) {
     if (bottom.size() == 3) {
       // 1/0 label provided directly
-      similar_.mutable_cpu_data()[i] =
-        static_cast<int>(bottom[2]->cpu_data()[i]);
+      similar_.mutable_cpu_data()[i] = bottom[2]->cpu_data()[i];
     } else if (bottom.size() == 4) {
       // two labels in [0,N] are provided; are they equal?
       similar_.mutable_cpu_data()[i] =
-        (static_cast<int>(bottom[2]->cpu_data()[i]) ==
-         static_cast<int>(bottom[3]->cpu_data()[i]));
+        (bottom[2]->cpu_data()[i] ==
+         bottom[3]->cpu_data()[i] ? Dtype(1.0) : Dtype(0.0));
     }
   }
 
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
-    if (static_cast<int>(similar_.gpu_data()[i])) {  // similar pairs
+    if (static_cast<int>(similar_.cpu_data()[i])) {  // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
       loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
