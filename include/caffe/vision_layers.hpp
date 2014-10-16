@@ -112,6 +112,22 @@ class ConvolutionLayer : public Layer<Dtype> {
   Blob<Dtype> bias_multiplier_;
 };
 
+/**
+ * @brief Simple implementation of ConvolutionLayer.
+ *
+ * In forwradprop, it uses `caffe_conv` function which convolves images with
+ * filters by simply taking "for loop".
+ */
+template <typename Dtype>
+class LoopConvolutionLayer : public ConvolutionLayer<Dtype> {
+ public:
+  explicit LoopConvolutionLayer(const LayerParameter& param)
+      : ConvolutionLayer<Dtype>(param) {}
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+};
+
 #ifdef USE_CUDNN
 /*
  * @brief cuDNN implementation of ConvolutionLayer.
