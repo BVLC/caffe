@@ -162,6 +162,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   PreSolve();
 
   iter_ = 0;
+  current_step_ = 0;
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
