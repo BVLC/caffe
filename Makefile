@@ -311,10 +311,11 @@ else
 			LIBRARIES += cblas atlas
 		endif
 	else ifeq ($(OSX), 1)
-		# OS X packages atlas as the vecLib framework
-		BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
+		# OS X XCode6 packages atlas as the Accelerate framework
+		BLAS_INCLUDE ?= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
+
 		LIBRARIES += cblas
-		LDFLAGS += -framework vecLib
+		LDFLAGS += -framework Accelerate
 	endif
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
