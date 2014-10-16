@@ -38,7 +38,8 @@ class Net {
    *
    * You can get the input blobs using input_blobs().
    */
-  const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss = NULL);
+  const vector<Blob<Dtype>*>& ForwardPrefilled(Dtype* loss = NULL,
+          std::vector<std::pair<std::string, Dtype> >* loss_table = NULL);
 
   /**
    * The From and To variants of Forward and Backward operate on the
@@ -48,17 +49,22 @@ class Net {
    * the middle may be incorrect if all of the layers of a fan-in are not
    * included.
    */
-  Dtype ForwardFromTo(int start, int end);
-  Dtype ForwardFrom(int start);
-  Dtype ForwardTo(int end);
+  Dtype ForwardFromTo(int start, int end,
+          std::vector<std::pair<std::string, Dtype> >* loss_table = NULL);
+  Dtype ForwardFrom(int start,
+          std::vector<std::pair<std::string, Dtype> >* loss_table = NULL);
+  Dtype ForwardTo(int end,
+          std::vector<std::pair<std::string, Dtype> >* loss_table = NULL);
   /// @brief Run forward using a set of bottom blobs, and return the result.
   const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom,
-      Dtype* loss = NULL);
+      Dtype* loss = NULL,
+      std::vector<std::pair<std::string, Dtype> >* loss_table = NULL);
   /**
    * @brief Run forward using a serialized BlobProtoVector and return the
    *        result as a serialized BlobProtoVector
    */
-  string Forward(const string& input_blob_protos, Dtype* loss = NULL);
+  string Forward(const string& input_blob_protos, Dtype* loss = NULL,
+      std::vector<std::pair<std::string, Dtype> >* loss_table = NULL);
 
   /**
    * The network backward should take no input and output, since it solely
@@ -78,13 +84,14 @@ class Net {
    */
   void Reshape();
 
-  Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
+  Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom,
+      std::vector<std::pair<std::string, Dtype> >* loss_table = NULL) {
     #ifdef TIMING
     Timer timer;
     timer.Start();
     #endif
     Dtype loss;
-    Forward(bottom, &loss);
+    Forward(bottom, &loss, loss_table);
     Backward();
     #ifdef TIMING
     LOG(INFO) << "ForwardBackward Time: " << timer.MilliSeconds() << "ms.";
