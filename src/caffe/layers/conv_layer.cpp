@@ -262,9 +262,20 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+template <typename Dtype>
+void LoopConvolutionLayer<Dtype>::Forward_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  for (int i = 0; i < bottom.size(); ++i) {
+    caffe_conv<Dtype>(
+        bottom[i], this->layer_param_.mutable_convolution_param(),
+        this->blobs_, top[i]);
+  }
+}
+
 #ifdef CPU_ONLY
 STUB_GPU(ConvolutionLayer);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionLayer);
+INSTANTIATE_CLASS(LoopConvolutionLayer);
 }  // namespace caffe
