@@ -357,4 +357,96 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
   }
 }
 
+TYPED_TEST(DataTransformTest, TestIsPersistent) {
+  TransformationParameter transform_param;
+  DataTransformer<TypeParam>* transformer =
+      new DataTransformer<TypeParam>(transform_param);
+  // By default it's not persistent
+  EXPECT_FALSE(transformer->IsPersistent());
+  transform_param.set_persistent(true);
+  transformer = new DataTransformer<TypeParam>(transform_param);
+  EXPECT_TRUE(transformer->IsPersistent());
+}
+
+TYPED_TEST(DataTransformTest, TestPersistentTrain) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int crop_size = 2;
+  const int size = channels * crop_size * crop_size;
+
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  transform_param.set_crop_size(crop_size);
+  transform_param.set_mirror(true);
+  transform_param.set_persistent(true);
+  Caffe::set_phase(Caffe::TRAIN);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+  // All the crops and mirror should be the same
+  EXPECT_EQ(num_matches, size * this->num_iter_);
+}
+
+TYPED_TEST(DataTransformTest, TestPersistentTest) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int crop_size = 2;
+  const int size = channels * crop_size * crop_size;
+
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  transform_param.set_crop_size(crop_size);
+  transform_param.set_mirror(true);
+  transform_param.set_persistent(true);
+  Caffe::set_phase(Caffe::TEST);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+  // All the crops and mirror should be the same
+  EXPECT_EQ(num_matches, size * this->num_iter_);
+}
+
+TYPED_TEST(DataTransformTest, TesetResetState) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 40;
+  const int width = 50;
+  const int crop_size = 2;
+  const int size = channels * crop_size * crop_size;
+
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Blob<TypeParam>* blob =
+        new Blob<TypeParam>(1, datum.channels(), crop_size, crop_size);
+
+  transform_param.set_crop_size(crop_size);
+  transform_param.set_mirror(true);
+  transform_param.set_persistent(true);
+  Caffe::set_phase(Caffe::TRAIN);
+  DataTransformer<TypeParam>* transformer =
+      new DataTransformer<TypeParam>(transform_param);
+  transformer->InitRand();
+  transformer->Transform(datum, blob);
+  vector<TypeParam> crop_sequence;
+  for (int j = 0; j < blob->count(); ++j) {
+    crop_sequence.push_back(blob->cpu_data()[j]);
+  }
+  // All the crops and mirror should be the same after reset
+  int num_matches = 0;
+  for (int iter = 0; iter < this->num_iter_; ++iter) {
+    transformer->ResetState();
+    transformer->Transform(datum, blob);
+    for (int j = 0; j < blob->count(); ++j) {
+      num_matches += (crop_sequence[j] == blob->cpu_data()[j]);
+    }
+  }
+  EXPECT_LT(num_matches, size * this->num_iter_);
+}
+
 }  // namespace caffe
