@@ -190,6 +190,42 @@ class EltwiseLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Reshapes the input Blob into an arbitrary-sized output Blob.
+ *
+ * Note: similarly to FlattenLayer, this layer does not change the input values
+ * (see FlattenLayer, Blob::ShareData and Blob::ShareDiff).
+ */
+template <typename Dtype>
+class ReshapeLayer : public Layer<Dtype> {
+ public:
+  explicit ReshapeLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  void FillInSingleUnspecifiedDimension(int bottom_count);
+
+  int num_out;
+  int channels_out;
+  int height_out;
+  int width_out;
+};
+
+
+/**
  * @brief Reshapes the input Blob into flat vectors.
  *
  * Note: because this layer does not change the input values -- merely the
