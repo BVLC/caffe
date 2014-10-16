@@ -2,7 +2,9 @@
 #include <boost/random.hpp>
 
 #include <limits>
+#include <vector>
 
+#include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -383,5 +385,94 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
   cblas_dcopy(n, x, 1, y, 1);
   cblas_dscal(n, alpha, y, 1);
 }
+
+
+
+// Reference convolution for checking results:
+// accumulate through explicit loops over input, output, and filters.
+template <typename Dtype>
+void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
+    const vector<shared_ptr<Blob<Dtype> > >& weights,
+    Blob<Dtype>* out) {
+  // Kernel size, stride, and pad
+  int kernel_h, kernel_w;
+  if (conv_param->has_kernel_size()) {
+    kernel_h = kernel_w = conv_param->kernel_size();
+  } else {
+    kernel_h = conv_param->kernel_h();
+    kernel_w = conv_param->kernel_w();
+  }
+  int pad_h, pad_w;
+  if (!conv_param->has_pad_h()) {
+    pad_h = pad_w = conv_param->pad();
+  } else {
+    pad_h = conv_param->pad_h();
+    pad_w = conv_param->pad_w();
+  }
+  int stride_h, stride_w;
+  if (!conv_param->has_stride_h()) {
+    stride_h = stride_w = conv_param->stride();
+  } else {
+    stride_h = conv_param->stride_h();
+    stride_w = conv_param->stride_w();
+  }
+  // Groups
+  int groups = conv_param->group();
+  int o_g = out->channels() / groups;
+  int k_g = in->channels() / groups;
+  int o_head, k_head;
+  // Convolution
+  const Dtype* in_data = in->cpu_data();
+  const Dtype* weight_data = weights[0]->cpu_data();
+  Dtype* out_data = out->mutable_cpu_data();
+  for (int n = 0; n < out->num(); n++) {
+    for (int g = 0; g < groups; g++) {
+      o_head = o_g * g;
+      k_head = k_g * g;
+      for (int o = 0; o < o_g; o++) {
+        for (int k = 0; k < k_g; k++) {
+          for (int y = 0; y < out->height(); y++) {
+            for (int x = 0; x < out->width(); x++) {
+              for (int p = 0; p < kernel_h; p++) {
+                for (int q = 0; q < kernel_w; q++) {
+                  int in_y = y * stride_h - pad_h + p;
+                  int in_x = x * stride_w - pad_w + q;
+                  if (in_y >= 0 && in_y < in->height()
+                    && in_x >= 0 && in_x < in->width()) {
+                    out_data[out->offset(n, o + o_head, y, x)] +=
+                        in_data[in->offset(n, k + k_head, in_y, in_x)]
+                        * weight_data[weights[0]->offset(o + o_head, k, p, q)];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  // Bias
+  if (conv_param->bias_term()) {
+    const Dtype* bias_data = weights[1]->cpu_data();
+    for (int n = 0; n < out->num(); n++) {
+      for (int o = 0; o < out->channels(); o++) {
+        for (int y = 0; y < out->height(); y++) {
+          for (int x = 0; x < out->width(); x++) {
+            out_data[out->offset(n, o, y, x)] += bias_data[o];
+          }
+        }
+      }
+    }
+  }
+}
+
+template void caffe_conv(const Blob<float>* in,
+    ConvolutionParameter* conv_param,
+    const vector<shared_ptr<Blob<float> > >& weights,
+    Blob<float>* out);
+template void caffe_conv(const Blob<double>* in,
+    ConvolutionParameter* conv_param,
+    const vector<shared_ptr<Blob<double> > >& weights,
+    Blob<double>* out);
 
 }  // namespace caffe
