@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <cmath>  // for std::fabs and std::signbit
+#include <vector>
 
 #include "glog/logging.h"
 
@@ -11,6 +12,10 @@
 #include "caffe/util/mkl_alternate.hpp"
 
 namespace caffe {
+
+// Forward declaration
+template <typename Dtype> class Blob;
+class ConvolutionParameter;
 
 // Decaf gemm provides a simpler interface to the gemm functions, with the
 // limitation that the data has to be contiguous in memory.
@@ -141,6 +146,13 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
 
 template <typename Dtype>
 void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
+
+template <typename Dtype>
+void caffe_conv(const Blob<Dtype>* in,
+    ConvolutionParameter* conv_param,
+    const vector<shared_ptr<Blob<Dtype> > >& weights,
+    Blob<Dtype>* out);
+
 
 #ifndef CPU_ONLY  // GPU
 
