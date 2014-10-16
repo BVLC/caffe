@@ -417,6 +417,11 @@ mat$(PROJECT): mat
 
 mat: $(MAT$(PROJECT)_SO)
 
+ifeq ($(OSX), 1)
+  OSXCXXLIBS = "/usr/lib/libstdc++.dylib"
+else
+  OSXCXXLIBS = ""
+endif
 $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	@ if [ -z "$(MATLAB_DIR)" ]; then \
 		echo "MATLAB_DIR must be specified in $(CONFIG_FILE)" \
@@ -426,7 +431,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) \
 			CXX="$(CXX)" \
 			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
-			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS) /usr/lib/libstdc++.dylib" -output $@
+			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS) $(OSXCXXLIBS)" -output $@
 	@ echo
 
 runtest: $(TEST_ALL_BIN) $(TEST_ALL_DYNLINK_BIN)
