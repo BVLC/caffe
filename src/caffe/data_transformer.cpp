@@ -16,6 +16,7 @@ template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
     : param_(param) {
   phase_ = Caffe::phase();
+  ResetState();
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
@@ -46,7 +47,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
@@ -76,20 +76,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   int height = datum_height;
   int width = datum_width;
 
-  int h_off = 0;
-  int w_off = 0;
   if (crop_size) {
     height = crop_size;
     width = crop_size;
-    // We only do random crop when we do training.
-    if (phase_ == Caffe::TRAIN) {
-      h_off = Rand(datum_height - crop_size + 1);
-      w_off = Rand(datum_width - crop_size + 1);
-    } else {
-      h_off = (datum_height - crop_size) / 2;
-      w_off = (datum_width - crop_size) / 2;
-    }
   }
+
+  UpdateState(datum_height, datum_width);
+  const int h_off = state_.h_off;
+  const int w_off = state_.w_off;
+  const bool do_mirror = state_.do_mirror;
 
   Dtype datum_element;
   int top_index, data_index;
@@ -197,7 +192,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -223,20 +217,16 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     }
   }
 
-  int h_off = 0;
-  int w_off = 0;
+  UpdateState(img_height, img_width);
+  const int h_off = state_.h_off;
+  const int w_off = state_.w_off;
+  const bool do_mirror = state_.do_mirror;
+
+  // Crop the image if needed
   cv::Mat cv_cropped_img = cv_img;
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
-    // We only do random crop when we do training.
-    if (phase_ == Caffe::TRAIN) {
-      h_off = Rand(img_height - crop_size + 1);
-      w_off = Rand(img_width - crop_size + 1);
-    } else {
-      h_off = (img_height - crop_size) / 2;
-      w_off = (img_width - crop_size) / 2;
-    }
     cv::Rect roi(w_off, h_off, crop_size, crop_size);
     cv_cropped_img = cv_img(roi);
   } else {
@@ -299,27 +289,21 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
-  int h_off = 0;
-  int w_off = 0;
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
-    // We only do random crop when we do training.
-    if (phase_ == Caffe::TRAIN) {
-      h_off = Rand(input_height - crop_size + 1);
-      w_off = Rand(input_width - crop_size + 1);
-    } else {
-      h_off = (input_height - crop_size) / 2;
-      w_off = (input_width - crop_size) / 2;
-    }
   } else {
     CHECK_EQ(input_height, height);
     CHECK_EQ(input_width, width);
   }
+
+  UpdateState(input_height, input_width);
+  const int h_off = state_.h_off;
+  const int w_off = state_.w_off;
+  const bool do_mirror = state_.do_mirror;
 
   Dtype* input_data = input_blob->mutable_cpu_data();
   if (has_mean_file) {
@@ -398,6 +382,47 @@ int DataTransformer<Dtype>::Rand(int n) {
   caffe::rng_t* rng =
       static_cast<caffe::rng_t*>(rng_->generator());
   return ((*rng)() % n);
+}
+
+template <typename Dtype>
+void DataTransformer<Dtype>::ResetState() {
+  state_.persistent = param_.persistent();
+  state_.reset = true;
+  state_.do_mirror = false;
+  state_.h_off = 0;
+  state_.w_off = 0;
+  state_.height = 0;
+  state_.width = 0;
+}
+
+template <typename Dtype>
+void DataTransformer<Dtype>::UpdateState(const int height,
+      const int width) {
+  const int crop_size = param_.crop_size();
+  CHECK_GE(height, crop_size);
+  CHECK_GE(width, crop_size);
+  // If not persistent or if persistent and reset then generate random
+  // params if needed.
+  if (!state_.persistent || state_.reset) {
+    // If persistent only initialize the first time
+    state_.height = height;
+    state_.width = width;
+    if (state_.persistent) {
+      state_.reset = false;
+    }
+    state_.do_mirror = param_.mirror() && Rand(2);
+    if (crop_size) {
+      if (phase_ == Caffe::TRAIN) {
+        state_.h_off = Rand(height - crop_size + 1);
+        state_.w_off = Rand(width - crop_size + 1);
+      } else {
+        state_.h_off = (height - crop_size) / 2;
+        state_.w_off = (width - crop_size) / 2;
+      }
+    }
+  }
+  CHECK_EQ(height, state_.height) << "When persistent height cannot change";
+  CHECK_EQ(width, state_.width) << "When persistent width cannot change";
 }
 
 INSTANTIATE_CLASS(DataTransformer);
