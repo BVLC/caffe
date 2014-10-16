@@ -5,7 +5,7 @@ base_lr: 0.001
 # The learning rate policy
 lr_policy: "step"
 gamma: 0.75
-stepsize: 3500
+stepsize: 10000
 display: 20
 max_iter: 100000
 momentum: 0.9
