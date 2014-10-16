@@ -20,12 +20,17 @@ data = data.astype('float32')
 label = 1 + np.arange(num_rows)[:, np.newaxis]
 label = label.astype('float32')
 
+# We add an extra label2 dataset to test HDF5 layer's ability
+# to handle arbitrary number of output ("top") Blobs.
+label2 = label + 1
+
 print data
 print label
 
 with h5py.File(os.path.dirname(__file__) + '/sample_data.h5', 'w') as f:
     f['data'] = data
     f['label'] = label
+    f['label2'] = label2
 
 with h5py.File(os.path.dirname(__file__) + '/sample_data_2_gzip.h5', 'w') as f:
     f.create_dataset(
@@ -34,6 +39,10 @@ with h5py.File(os.path.dirname(__file__) + '/sample_data_2_gzip.h5', 'w') as f:
     )
     f.create_dataset(
         'label', data=label,
+        compression='gzip', compression_opts=1
+    )
+    f.create_dataset(
+        'label2', data=label2,
         compression='gzip', compression_opts=1
     )
 
