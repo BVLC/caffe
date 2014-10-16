@@ -10,7 +10,7 @@ layers {
     source: "examples/siamese/mnist_train.txt"
     batch_size: 100
     scale: 0.00390625
-    shuffle: false
+    shuffle: true
   }
   include: { phase: TRAIN }
 }
@@ -39,7 +39,7 @@ layers {
     source: "examples/siamese/mnist_train_p.txt"
     batch_size: 100
     scale: 0.00390625
-    shuffle: false
+    shuffle: true
   }
   include: { phase: TRAIN }
 }
