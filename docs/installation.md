@@ -182,7 +182,7 @@ For each of these formulas, `brew edit FORMULA`, and add the ENV definitions as 
 
 To edit the formulae in turn, run
 
-    for x in snappy leveldb protobuf gflags glog szip boost lmdb homebrew/science/opencv; do brew edit $x; done
+    for x in snappy leveldb protobuf gflags glog szip boost boost-python lmdb homebrew/science/opencv; do brew edit $x; done
 
 After this, run
 
