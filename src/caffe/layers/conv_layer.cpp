@@ -267,7 +267,7 @@ template <typename Dtype>
 void LoopConvolutionLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* weight_data;
-  const Dtype* bias_data;
+  const Dtype* bias_data = NULL;
   int num_ig = this->channels_ / this->group_;
   int num_og = this->num_output_ / this->group_;
   weight_data = this->blobs_[0]->cpu_data();
@@ -291,7 +291,7 @@ void LoopConvolutionLayer<Dtype>::Forward_cpu(
             this->pad_h_, this->pad_w_, this->stride_h_, this->stride_w_);
       }
       // Bias
-      if (this->bias_term_) {
+      if (this->bias_term_ && bias_data) {
         for (int s = 0; s < this->height_out_ * this->width_out_; s++) {
           for (int o = 0; o < this->num_output_; o++) {
             int oi = top[i]->offset(
@@ -322,7 +322,6 @@ void LoopConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   int num_ig = this->channels_ / this->group_;
   int num_og = this->num_output_ / this->group_;
-  int N_ = this->height_out_ * this->width_out_;
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = NULL;
     // Bias gradient, if necessary.
