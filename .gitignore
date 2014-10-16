@@ -2,7 +2,8 @@
 
 # training LOG file
 *.log
-
+*.mat
+examples/lsp_pose/cache/*
 # Compiled Object files
 *.slo
 *.lo
