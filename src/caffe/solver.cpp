@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/net.hpp"
@@ -180,6 +181,8 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   vector<Blob<Dtype>*> bottom_vec;
+
+  std::vector<std::pair<std::string, Dtype> > loss_table;
   for (; iter_ < param_.max_iter(); ++iter_) {
     // Save a snapshot if needed.
     if (param_.snapshot() && iter_ > start_iter &&
@@ -194,7 +197,9 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
-    Dtype loss = net_->ForwardBackward(bottom_vec);
+
+    Dtype loss = net_->ForwardBackward(bottom_vec,
+            display ? &loss_table : NULL);
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
@@ -206,6 +211,13 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     }
     if (display) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
+
+      if (loss_table.size() > 1) {
+        for (size_t i = 0; i < loss_table.size(); ++i) {
+            LOG(INFO) << "    Layer \"" << loss_table[i].first
+                << "\": " << loss_table[i].second;
+        }
+      }
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {

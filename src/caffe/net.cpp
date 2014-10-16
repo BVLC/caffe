@@ -498,52 +498,67 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 }
 
 template <typename Dtype>
-Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
+Dtype Net<Dtype>::ForwardFromTo(int start, int end,
+        std::vector<std::pair<std::string, Dtype> >* loss_table) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
+
+  if (loss_table)
+      loss_table->clear();
+
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     loss += layer_loss;
+
+    if (loss_table && layer_loss != 0)
+        loss_table->push_back(
+                std::make_pair(layers_[i]->layer_param().name(), layer_loss));
+
     if (debug_info_) { ForwardDebugInfo(i); }
   }
   return loss;
 }
 
 template <typename Dtype>
-Dtype Net<Dtype>::ForwardFrom(int start) {
-  return ForwardFromTo(start, layers_.size() - 1);
+Dtype Net<Dtype>::ForwardFrom(int start,
+        std::vector<std::pair<std::string, Dtype> >* loss_table) {
+  return ForwardFromTo(start, layers_.size() - 1, loss_table);
 }
 
 template <typename Dtype>
-Dtype Net<Dtype>::ForwardTo(int end) {
-  return ForwardFromTo(0, end);
+Dtype Net<Dtype>::ForwardTo(int end,
+        std::vector<std::pair<std::string, Dtype> >* loss_table) {
+  return ForwardFromTo(0, end, loss_table);
 }
 
 template <typename Dtype>
-const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled(Dtype* loss) {
+const vector<Blob<Dtype>*>& Net<Dtype>::ForwardPrefilled(Dtype* loss,
+        std::vector<std::pair<std::string, Dtype> >* loss_table) {
   if (loss != NULL) {
-    *loss = ForwardFromTo(0, layers_.size() - 1);
+    *loss = ForwardFromTo(0, layers_.size() - 1, loss_table);
   } else {
-    ForwardFromTo(0, layers_.size() - 1);
+    ForwardFromTo(0, layers_.size() - 1, loss_table);
   }
   return net_output_blobs_;
 }
 
 template <typename Dtype>
 const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
-    const vector<Blob<Dtype>*> & bottom, Dtype* loss) {
+    const vector<Blob<Dtype>*> & bottom, Dtype* loss,
+    std::vector<std::pair<std::string, Dtype> >* loss_table) {
   // Copy bottom to internal bottom
   for (int i = 0; i < bottom.size(); ++i) {
     net_input_blobs_[i]->CopyFrom(*bottom[i]);
   }
-  return ForwardPrefilled(loss);
+  return ForwardPrefilled(loss, loss_table);
 }
 
 template <typename Dtype>
-string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
+string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss,
+        std::vector<std::pair<std::string, Dtype> >* loss_table) {
   BlobProtoVector blob_proto_vec;
   if (net_input_blobs_.size()) {
     blob_proto_vec.ParseFromString(input_blob_protos);
@@ -553,7 +568,7 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
       net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i));
     }
   }
-  ForwardPrefilled(loss);
+  ForwardPrefilled(loss, loss_table);
   blob_proto_vec.Clear();
   for (int i = 0; i < net_output_blobs_.size(); ++i) {
     net_output_blobs_[i]->ToProto(blob_proto_vec.add_blobs());
