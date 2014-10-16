@@ -34,6 +34,8 @@ DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 DEFINE_bool(check_size, false,
     "When this option is on, check that all the datum have the same size");
+DEFINE_bool(encoded, false,
+    "When this option is on, the encoded image will be save in datum");
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
@@ -55,8 +57,10 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  bool is_color = !FLAGS_gray;
-  bool check_size = FLAGS_check_size;
+  const bool is_color = !FLAGS_gray;
+  const bool check_size = FLAGS_check_size;
+  const bool encoded = FLAGS_encoded;
+
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
   std::string filename;
@@ -73,6 +77,12 @@ int main(int argc, char** argv) {
 
   const std::string& db_backend = FLAGS_backend;
   const char* db_path = argv[3];
+
+  if (encoded) {
+    CHECK_EQ(FLAGS_resize_height, 0) << "With encoded don't resize images";
+    CHECK_EQ(FLAGS_resize_width, 0) << "With encoded don't resize images";
+    CHECK(!check_size) << "With encoded cannot check_size";
+  }
 
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
@@ -94,10 +104,15 @@ int main(int argc, char** argv) {
   bool data_size_initialized = false;
 
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
-    if (!ReadImageToDatum(root_folder + lines[line_id].first,
-        lines[line_id].second, resize_height, resize_width, is_color, &datum)) {
-      continue;
+    bool status;
+    if (encoded) {
+      status = ReadFileToDatum(root_folder + lines[line_id].first,
+        lines[line_id].second, &datum);
+    } else {
+      status = ReadImageToDatum(root_folder + lines[line_id].first,
+          lines[line_id].second, resize_height, resize_width, is_color, &datum);
     }
+    if (status == false) continue;
     if (check_size) {
       if (!data_size_initialized) {
         data_size = datum.channels() * datum.height() * datum.width();

@@ -11,11 +11,11 @@ class Timer {
  public:
   Timer();
   virtual ~Timer();
-  void Start();
-  void Stop();
-  float MilliSeconds();
-  float MicroSeconds();
-  float Seconds();
+  virtual void Start();
+  virtual void Stop();
+  virtual float MilliSeconds();
+  virtual float MicroSeconds();
+  virtual float Seconds();
 
   inline bool initted() { return initted_; }
   inline bool running() { return running_; }
@@ -35,6 +35,16 @@ class Timer {
   boost::posix_time::ptime stop_cpu_;
   float elapsed_milliseconds_;
   float elapsed_microseconds_;
+};
+
+class CPUTimer : public Timer {
+ public:
+  explicit CPUTimer();
+  virtual ~CPUTimer() {}
+  virtual void Start();
+  virtual void Stop();
+  virtual float MilliSeconds();
+  virtual float MicroSeconds();
 };
 
 }  // namespace caffe
