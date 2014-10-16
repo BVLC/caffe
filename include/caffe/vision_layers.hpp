@@ -107,7 +107,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int col_offset_;
   int output_offset_;
 
-  Blob<Dtype> col_buffer_;
+  static Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
 };
 
