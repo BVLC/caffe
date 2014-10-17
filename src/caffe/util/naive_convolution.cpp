@@ -6,7 +6,7 @@ namespace caffe {
 // This function takes a function object `accumulator` which
 // is called inside convolution loop.
 template <typename ACCUMULATOR>
-static void conv_loop(
+static void naive_conv_loop(
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w,
@@ -47,11 +47,11 @@ static void conv_loop(
 }
 
 
-// Accumulator function object for `conv_top`
+// Accumulator function object for `naive_conv`
 template <typename Dtype>
-class ConvTop {
+class AccumNaiveConv {
  public:
-  ConvTop(const Dtype* bottom, const Dtype* weight, Dtype* top) :
+  AccumNaiveConv(const Dtype* bottom, const Dtype* weight, Dtype* top) :
       bottom_(bottom), weight_(weight), top_(top) {}
   void operator()(int t, int k, int b) {
     top_[t] += weight_[k] * bottom_[b];
@@ -62,11 +62,12 @@ class ConvTop {
   Dtype* top_;
 };
 
-// Accumulator function object for `conv_weight`
+// Accumulator function object for `naive_conv_grad_weight`
 template <typename Dtype>
-class ConvKernel {
+class AccumNaiveConvGradWeight {
  public:
-  ConvKernel(const Dtype* bottom, Dtype* weight, const Dtype* top) :
+  AccumNaiveConvGradWeight(
+      const Dtype* bottom, Dtype* weight, const Dtype* top) :
       bottom_(bottom), weight_(weight), top_(top) {}
   void operator()(int t, int k, int b) {
     weight_[k] += top_[t] * bottom_[b];
@@ -77,11 +78,12 @@ class ConvKernel {
   const Dtype* top_;
 };
 
-// Accumulator function object for `conv_bottom`
+// Accumulator function object for `naive_conv_grad_bottom`
 template <typename Dtype>
-class ConvBottom {
+class AccumNaiveConvGradBottom {
  public:
-  ConvBottom(Dtype* bottom, const Dtype* weight, const Dtype* top) :
+  AccumNaiveConvGradBottom(
+      Dtype* bottom, const Dtype* weight, const Dtype* top) :
       bottom_(bottom), weight_(weight), top_(top) {}
   void operator()(int t, int k, int b) {
     bottom_[b] += weight_[k] * top_[t];
@@ -95,67 +97,69 @@ class ConvBottom {
 
 // Convolution
 template <typename Dtype>
-void conv_top(
+void naive_conv(
     const Dtype* bottom, const Dtype* weight, Dtype* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w) {
-  conv_loop<ConvTop<Dtype> >(channels, bottom_h, bottom_w,
+  naive_conv_loop<AccumNaiveConv<Dtype> >(channels, bottom_h, bottom_w,
             num_output, weight_h, weight_w, pad_h, pad_w, stride_h, stride_w,
-            ConvTop<Dtype>(bottom, weight, top));
+            AccumNaiveConv<Dtype>(bottom, weight, top));
 }
 
 // Backprop to weight
 template <typename Dtype>
-void conv_weight(
+void naive_conv_grad_weight(
     const Dtype* bottom, Dtype* weight, const Dtype* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w) {
-  conv_loop<ConvKernel<Dtype> >(channels, bottom_h, bottom_w,
-            num_output, weight_h, weight_w, pad_h, pad_w, stride_h, stride_w,
-            ConvKernel<Dtype>(bottom, weight, top));
+  naive_conv_loop<AccumNaiveConvGradWeight<Dtype> >(
+      channels, bottom_h, bottom_w,
+      num_output, weight_h, weight_w, pad_h, pad_w, stride_h, stride_w,
+      AccumNaiveConvGradWeight<Dtype>(bottom, weight, top));
 }
 
 // Backprop to bottom
 template <typename Dtype>
-void conv_bottom(
+void naive_conv_grad_bottom(
     Dtype* bottom, const Dtype* weight, const Dtype* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w) {
-  conv_loop<ConvBottom<Dtype> >(channels, bottom_h, bottom_w,
-            num_output, weight_h, weight_w, pad_h, pad_w, stride_h, stride_w,
-            ConvBottom<Dtype>(bottom, weight, top));
+  naive_conv_loop<AccumNaiveConvGradBottom<Dtype> >(
+      channels, bottom_h, bottom_w,
+      num_output, weight_h, weight_w, pad_h, pad_w, stride_h, stride_w,
+      AccumNaiveConvGradBottom<Dtype>(bottom, weight, top));
 }
 
 // Template instanciation
-template void conv_top(
+template void naive_conv(
     const float* bottom, const float* weight, float* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w);
-template void conv_top(
+template void naive_conv(
     const double* bottom, const double* weight, double* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w);
-template void conv_weight(
+template void naive_conv_grad_weight(
     const float* bottom, float* weight, const float* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w);
-template void conv_weight(
+template void naive_conv_grad_weight(
     const double* bottom, double* weight, const double* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w);
-template void conv_bottom(
+template void naive_conv_grad_bottom(
     float* bottom, const float* weight, const float* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
     int pad_h, int pad_w, int stride_h, int stride_w);
-template void conv_bottom(
+template void naive_conv_grad_bottom(
     double* bottom, const double* weight, const double* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,

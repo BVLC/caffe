@@ -23,7 +23,7 @@ namespace caffe {
  * by multiple call of this function.
  */
 template <typename Dtype>
-void conv_top(
+void naive_conv(
     const Dtype* bottom, const Dtype* weight, Dtype* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
@@ -35,10 +35,10 @@ void conv_top(
  * @param[in] bottom Bottom maps
  * @param[in,out] weight Gradient w.r.t. weight accumulated
  * @param[in] top Gradient w.r.t. top layer map
- * @see conv_top
+ * @see naive_conv
  */
 template <typename Dtype>
-void conv_weight(
+void naive_conv_grad_weight(
     const Dtype* bottom, Dtype* weight, const Dtype* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w,
@@ -50,10 +50,10 @@ void conv_weight(
  * @param[in,out] bottom Gradient w.r.t. bottom map accumulated
  * @param[in] weight Convolutional weight
  * @param[in] top Gradient w.r.t. top map
- * @see conv_top
+ * @see naive_conv
  */
 template <typename Dtype>
-void conv_bottom(
+void naive_conv_grad_bottom(
     Dtype* bottom, const Dtype* weight, const Dtype* top,
     int channels, int bottom_h, int bottom_w,
     int num_output, int weight_h, int weight_w, int pad_h,

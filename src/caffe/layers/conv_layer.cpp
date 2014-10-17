@@ -3,7 +3,7 @@
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
-#include "caffe/util/loop_convolution.hpp"
+#include "caffe/util/naive_convolution.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
@@ -282,7 +282,7 @@ void NaiveConvolutionLayer<Dtype>::Forward_cpu(
     for (int n = 0; n < this->num_; n++) {
       // Convolution
       for (int g = 0; g < this->group_; g++) {
-        conv_top(
+        naive_conv(
             bottom_data + bottom[i]->offset(n, g * num_ig),
             weight_data + this->blobs_[0]->offset(g * num_og),
             top_data + top[i]->offset(n, g * num_og),
@@ -348,7 +348,7 @@ void NaiveConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           for (int g = 0; g < this->group_; ++g) {
-            conv_weight(
+            naive_conv_grad_weight(
                 bottom_data + bottom[i]->offset(n, g * num_ig),
                 weight_diff + this->blobs_[0]->offset(g * num_og),
                 top_diff + top[i]->offset(n, g * num_og),
@@ -364,7 +364,7 @@ void NaiveConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             weight = this->blobs_[0]->cpu_data();
           }
           for (int g = 0; g < this->group_; ++g) {
-            conv_bottom(
+            naive_conv_grad_bottom(
                 bottom_diff + bottom[i]->offset(n, g * num_ig),
                 weight + this->blobs_[0]->offset(g * num_og),
                 top_diff + top[i]->offset(n, g * num_og),
