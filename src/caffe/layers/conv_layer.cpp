@@ -3,8 +3,8 @@
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
-#include "caffe/util/naive_convolution.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/naive_convolution.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -307,7 +307,6 @@ void NaiveConvolutionLayer<Dtype>::Forward_cpu(
 template <typename Dtype>
 void NaiveConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
   if (this->param_propagate_down_[0]) {

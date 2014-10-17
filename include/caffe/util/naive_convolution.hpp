@@ -59,7 +59,7 @@ void naive_conv_grad_bottom(
     int num_output, int weight_h, int weight_w, int pad_h,
     int pad_w, int stride_h, int stride_w);
 
-// end of namespace caffe
-}
+}  // namespace caffe
+
 
 #endif
