@@ -53,7 +53,6 @@ Using a script, we will download a small subset of the data and split it into tr
     Writing train/val for 1939 successfully downloaded images.
 
 This script downloads images and writes train/val file lists into `data/flickr_style`.
-With this random seed there are 1,557 train images and 382 test images.
 The prototxts in this example assume this, and also assume the presence of the ImageNet mean file (run `get_ilsvrc_aux.sh` from `data/ilsvrc12` to obtain this if you haven't yet).
 
 We'll also need the ImageNet-trained model, which you can obtain by running `./scripts/download_model_binary.py models/bvlc_reference_caffenet`.
@@ -106,7 +105,8 @@ Now we can train! (You can fine-tune in CPU mode by leaving out the `-gpu` flag.
     I0828 22:23:17.438894 11510 solver.cpp:302]     Test net output #0: accuracy = 0.2356
 
 Note how rapidly the loss went down. Although the 23.5% accuracy is only modest, it was achieved in only 1000, and evidence that the model is starting to learn quickly and well.
-Once the model is fully fine-tuned on the whole training set over 100,000 iterations the final validation accuracy is 91.64%. This takes ~7 hours in Caffe on a K40 GPU.
+Once the model is fully fine-tuned on the whole training set over 100,000 iterations the final validation accuracy is 39.16%.
+This takes ~7 hours in Caffe on a K40 GPU.
 
 For comparison, here is how the loss goes down when we do not start with a pre-trained model:
 
@@ -155,7 +155,7 @@ Now try fine-tuning to your own tasks and data!
 
 ## Trained model
 
-We provide a model trained on all 80K images, with final accuracy of 98%.
+We provide a model trained on all 80K images, with final accuracy of 39%.
 Simply do `./scripts/download_model_binary.py models/finetune_flickr_style` to obtain it.
 
 ## License
