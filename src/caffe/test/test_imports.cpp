@@ -30,6 +30,7 @@ class ImportsTest : public MultiDeviceTest<TypeParam> {
   }
 
   virtual void InitNet() {
+    string file = CMAKE_SOURCE_DIR "caffe/test/test_data/module.prototxt";
     string proto =
         "name: 'TestNetwork' "
         "layers: { "
@@ -56,7 +57,7 @@ class ImportsTest : public MultiDeviceTest<TypeParam> {
         "  name: 'import' "
         "  type: IMPORT "
         "  import_param { "
-        "    net: 'src/caffe/test/test_data/module.prototxt' "
+        "    net: '" + file + "' "
         "    var { name: 'num_output' value: '1000' } "
         "  } "
         "} "
