@@ -22,22 +22,20 @@ void LocalWeightedConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
   num_output_ = this->layer_param_.local_weighted_convolution_param().num_output();
-  CHECK_GT(num_output_, 0); 
-  CHECK_GE(height_, kernel_size_) << "height smaller than kernel size";
-  CHECK_GE(width_, kernel_size_) << "width smaller than kernel size";
-  // The im2col result buffer would only hold one image at a time to avoid
-  // overly large memory usage.
+
   height_out_ = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
   width_out_ = (width_ + 2 * pad_ - kernel_size_) / stride_ + 1;
-  col_buffer_.Reshape(
-      1, channels_ * kernel_size_ * kernel_size_, height_out_, width_out_);
-  // Set the parameters
-  bias_term_ = this->layer_param_.local_weighted_convolution_param().bias_term();
-  // Figure out the dimensions for individual gemms.
+
   M_ = num_output_;
   K_ = channels_ * kernel_size_ * kernel_size_;
   N_ = height_out_ * width_out_;
-  top[0]->Reshape(bottom[0]->num(), num_output_, height_out_, width_out_);
+
+  CHECK_GT(num_output_, 0); 
+  CHECK_GE(height_, kernel_size_) << "height smaller than kernel size";
+  CHECK_GE(width_, kernel_size_) << "width smaller than kernel size";
+  // Set the parameters
+  bias_term_ = this->layer_param_.local_weighted_convolution_param().bias_term();
+
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
@@ -67,12 +65,8 @@ void LocalWeightedConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>
 template <typename Dtype>
 void LocalWeightedConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-/*
-  num_ = bottom[0]->num();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
   CHECK_EQ(bottom[0]->channels(), channels_) << "Input size incompatible with"
-    " convolution kernel.";
+    " weights.";
   // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK_EQ(num_, bottom[bottom_id]->num()) << "Inputs must have same num.";
@@ -83,32 +77,20 @@ void LocalWeightedConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& b
     CHECK_EQ(width_, bottom[bottom_id]->width())
         << "Inputs must have same width.";
   }
+
   // Shape the tops.
-  height_out_ =
-      (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1;
-  width_out_ = (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1;
   for (int top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
-  // Prepare the matrix multiplication computation.
-  // Each input will be convolved as a single GEMM.
-  M_ = num_output_ / group_;
-  K_ = channels_ * kernel_h_ * kernel_w_ / group_;
-  N_ = height_out_ * width_out_;
-  // The im2col result buffer will only hold one image at a time to avoid
-  // overly large memory usage. In the special case of 1x1 convolution
-  // it goes lazily unused to save memory.
+
+  // The im2col result buffer would only hold one image at a time to avoid
+  // overly large memory usage.
   col_buffer_.Reshape(
-      1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
+      1, channels_ * kernel_size_ * kernel_size_, height_out_, width_out_);
+
   for (int top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
   }
-  // Set up the all ones "bias multiplier" for adding biases by BLAS
-  if (bias_term_) {
-    bias_multiplier_.Reshape(1, 1, 1, N_);
-    caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
-  }
-*/
 }
 
 template <typename Dtype>
