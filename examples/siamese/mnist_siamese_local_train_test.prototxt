@@ -74,12 +74,12 @@ layers {
 
 layers {
   name: "local1"
-  type: LOCAL_WEIGHTED_CONVOLUTION
+  type: LOCAL
   bottom: "pool1"
   top: "local1"
   blobs_lr: 1
   blobs_lr: 2
-  local_weighted_convolution_param {
+  local_param {
     num_output: 5
     kernel_size: 5
     stride: 1
@@ -103,12 +103,12 @@ layers {
 }
 layers {
   name: "local2"
-  type: LOCAL_WEIGHTED_CONVOLUTION
+  type: LOCAL
   bottom: "local1"
   top: "local2"
   blobs_lr: 1
   blobs_lr: 2
-  local_weighted_convolution_param {
+  local_param {
     num_output: 10
     kernel_size: 5
     stride: 1
@@ -260,12 +260,12 @@ layers {
 
 layers {
   name: "local1_p"
-  type: LOCAL_WEIGHTED_CONVOLUTION
+  type: LOCAL
   bottom: "pool1_p"
   top: "local1_p"
   blobs_lr: 1
   blobs_lr: 2
-  local_weighted_convolution_param {
+  local_param {
     num_output: 5
     kernel_size: 5
     stride: 1
@@ -289,12 +289,12 @@ layers {
 }
 layers {
   name: "local2_p"
-  type: LOCAL_WEIGHTED_CONVOLUTION
+  type: LOCAL
   bottom: "local1_p"
   top: "local2_p"
   blobs_lr: 1
   blobs_lr: 2
-  local_weighted_convolution_param {
+  local_param {
     num_output: 10
     kernel_size: 5
     stride: 1
