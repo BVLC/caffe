@@ -159,9 +159,9 @@ class XavierFiller : public Filler<Dtype> {
 
 
 template <typename Dtype>
-class TestLocalWeightConvolutionFiller : public Filler<Dtype> {
+class TestLocalFiller : public Filler<Dtype> {
  public:
-  explicit TestLocalWeightConvolutionFiller(const FillerParameter& param)
+  explicit TestLocalFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
     LOG(INFO) << "Doing mutable cpu";
@@ -200,8 +200,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new UniformFiller<Dtype>(param);
   } else if (type == "xavier") {
     return new XavierFiller<Dtype>(param);
-  } else if (type == "test_local_weight_convolution") {
-    return new TestLocalWeightConvolutionFiller<Dtype>(param);
+  } else if (type == "test_local") {
+    return new TestLocalFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }

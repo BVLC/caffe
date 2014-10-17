@@ -115,9 +115,9 @@ class ConvolutionLayer : public Layer<Dtype> {
 
 
 template <typename Dtype>
-class LocalWeightedConvolutionLayer : public Layer<Dtype> {
+class LocalLayer : public Layer<Dtype> {
  public:
-  explicit LocalWeightedConvolutionLayer(const LayerParameter& param)
+  explicit LocalLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -125,7 +125,7 @@ class LocalWeightedConvolutionLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_LOCAL_WEIGHTED_CONVOLUTION;
+    return LayerParameter_LayerType_LOCAL;
   }
   virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }

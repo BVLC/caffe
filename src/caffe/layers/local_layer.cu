@@ -11,7 +11,7 @@ namespace caffe {
 
 /// @brief refer to CPU forward -- the BLAS implementation is the same.
 template <typename Dtype>
-void LocalWeightedConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+void LocalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
   Dtype* x_data = col_buffer_.mutable_gpu_data();
@@ -52,7 +52,7 @@ void LocalWeightedConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*
 
 /// @brief refer to CPU backward -- the BLAS implementation is the same.
 template <typename Dtype>
-void LocalWeightedConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+void LocalLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 
   const Dtype* top_diff = top[0]->gpu_diff();
@@ -101,6 +101,6 @@ void LocalWeightedConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(LocalWeightedConvolutionLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(LocalLayer);
 
 }  // namespace caffe
