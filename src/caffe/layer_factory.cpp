@@ -24,8 +24,8 @@ Layer<Dtype>* GetConvolutionLayer(
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     return new CuDNNConvolutionLayer<Dtype>(param);
 #endif
-  } else if (engine == ConvolutionParameter_Engine_LOOP) {
-    return new LoopConvolutionLayer<Dtype>(param);
+  } else if (engine == ConvolutionParameter_Engine_NAIVE) {
+    return new NaiveConvolutionLayer<Dtype>(param);
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }

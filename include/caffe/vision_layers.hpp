@@ -161,9 +161,9 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
  * filters by simply taking "for loop".
  */
 template <typename Dtype>
-class LoopConvolutionLayer : public ConvolutionLayer<Dtype> {
+class NaiveConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
-  explicit LoopConvolutionLayer(const LayerParameter& param)
+  explicit NaiveConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param) {}
 
  protected:

@@ -132,7 +132,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   }
 }
 
-TYPED_TEST(ConvolutionLayerTest, TestLoopConvolution) {
+TYPED_TEST(ConvolutionLayerTest, TestNaiveConvolution) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
@@ -149,10 +149,10 @@ TYPED_TEST(ConvolutionLayerTest, TestLoopConvolution) {
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Check against LoopConvolutionLayer.
+  // Check against NaiveConvolutionLayer.
   layer->ToProto(&layer_param);  // put learnable params into layer_param
   shared_ptr<Layer<Dtype> > layer_ref(
-      new LoopConvolutionLayer<Dtype>(layer_param));
+      new NaiveConvolutionLayer<Dtype>(layer_param));
   shared_ptr<Blob<Dtype> > ref_blob_top_2(new Blob<Dtype>());
   vector<Blob<Dtype>*> ref_blob_top_vec;
   this->ref_blob_top_.reset(new Blob<Dtype>());
@@ -341,7 +341,7 @@ TYPED_TEST(ConvolutionLayerTest, TestGradient) {
       this->blob_top_vec_);
 }
 
-TYPED_TEST(ConvolutionLayerTest, TestGradientLoopConvolution) {
+TYPED_TEST(ConvolutionLayerTest, TestGradientNaiveConvolution) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
@@ -353,7 +353,7 @@ TYPED_TEST(ConvolutionLayerTest, TestGradientLoopConvolution) {
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  LoopConvolutionLayer<Dtype> layer(layer_param);
+  NaiveConvolutionLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);

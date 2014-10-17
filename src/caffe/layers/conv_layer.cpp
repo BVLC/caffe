@@ -264,7 +264,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 template <typename Dtype>
-void LoopConvolutionLayer<Dtype>::Forward_cpu(
+void NaiveConvolutionLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* weight_data;
   const Dtype* bias_data = NULL;
@@ -305,7 +305,7 @@ void LoopConvolutionLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void LoopConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void NaiveConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 
   const Dtype* weight = NULL;
@@ -383,5 +383,5 @@ STUB_GPU(ConvolutionLayer);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionLayer);
-INSTANTIATE_CLASS(LoopConvolutionLayer);
+INSTANTIATE_CLASS(NaiveConvolutionLayer);
 }  // namespace caffe
