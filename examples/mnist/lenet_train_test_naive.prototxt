@@ -47,7 +47,7 @@ layers {
     bias_filler {
       type: "constant"
     }
-    engine: LOOP
+    engine: NAIVE
   }
 }
 layers {
@@ -78,7 +78,7 @@ layers {
     bias_filler {
       type: "constant"
     }
-    engine: LOOP
+    engine: NAIVE
   }
 }
 layers {
