@@ -119,3 +119,6 @@
 \form#118:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} \left(1 - \left[\frac{\exp(2x) - 1}{exp(2x) + 1} \right]^2 \right) = \frac{\partial E}{\partial y} (1 - y^2) $
 \form#119:$ y = \left\{ \begin{array}{lr} 0 & \mathrm{if} \; x \le t \\ 1 & \mathrm{if} \; x > t \end{array} \right. $
 \form#120:$ \geq 1 $
+\form#121:$ \hat{p}_{n,l_n} $
+\form#122:$ n $
+\form#123:$ l_n $
