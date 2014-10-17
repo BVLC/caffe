@@ -1,3 +1,6 @@
+#include <boost/algorithm/string.hpp>
+#include <google/protobuf/text_format.h>
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -15,6 +18,7 @@
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+using boost::replace_all;
 
 namespace caffe {
 
@@ -32,10 +36,13 @@ Net<Dtype>::Net(const string& param_file) {
 
 template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
+  // Load import layers
+  NetParameter expanded(in_param);
+  LoadImports(in_param, &expanded);
   // Filter layers based on their include/exclude rules and
   // the current NetState.
   NetParameter filtered_param;
-  FilterNet(in_param, &filtered_param);
+  FilterNet(expanded, &filtered_param);
   LOG(INFO) << "Initializing net from parameters: " << std::endl
             << filtered_param.DebugString();
   // Create a copy of filtered_param with splits added where necessary.
@@ -460,6 +467,64 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     layers_[layer_id]->blobs()[param_id]->ShareData(
         *layers_[owner_layer_id]->blobs()[owner_param_id]);
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::LoadImports(const NetParameter& source, NetParameter* target) {
+  target->CopyFrom(source);
+  target->clear_layers();
+  LoadImports(source, target, "");
+}
+
+template <typename Dtype>
+void Net<Dtype>::LoadImports(const NetParameter& source, NetParameter* target,
+    const string& pwd) {
+  for (int i = 0; i < source.layers_size(); ++i) {
+    if (source.layers(i).type() == LayerParameter_LayerType_IMPORT) {
+      const LayerParameter& layer = source.layers(i);
+      CHECK(layer.has_import_param()) << "Missing import_param";
+      const ImportParameter& import = layer.import_param();
+      string proto = ReadFile(import.net());
+      // Replace variables and references
+      for (int j = 0; j < import.var_size(); ++j) {
+        const Pair& p = import.var(j);
+        replace_all(proto, "${" + p.name() + "}", p.value());
+      }
+      NetParameter net;
+      bool parse = google::protobuf::TextFormat::ParseFromString(proto, &net);
+      CHECK(parse) << "Failed to parse NetParameter file: " << import.net();
+      CHECK(layer.has_name() && layer.name().length() > 0)
+          << "Import layer must have a name";
+      LoadImports(net, target, ResolveImportName(layer.name(), pwd));
+    } else {
+      LayerParameter *t = target->add_layers();
+      t->CopyFrom(source.layers(i));
+      t->set_name(ResolveImportName(t->name(), pwd));
+      for (int j = 0; j < source.layers(i).top_size(); ++j)
+        t->set_top(j, ResolveImportName(source.layers(i).top(j), pwd));
+      for (int j = 0; j < source.layers(i).bottom_size(); ++j)
+        t->set_bottom(j, ResolveImportName(source.layers(i).bottom(j), pwd));
+    }
+  }
+}
+
+template <typename Dtype>
+string Net<Dtype>::ResolveImportName(const string& path, const string& pwd) {
+  CHECK(!boost::starts_with(pwd, "/") && !boost::ends_with(pwd, "/"));
+  if (boost::starts_with(path, "/"))
+    return path.substr(1, path.size() - 1);
+  string cpath = path;
+  string cpwd = pwd;
+  while (boost::starts_with(cpath, "../")) {
+    cpath = cpath.substr(3, cpath.size() - 3);
+    size_t i = cpwd.find_last_of('/');
+    cpwd = i == string::npos ? "" : cpwd.substr(0, i);
+  }
+  if (!cpwd.size())
+    return cpath;
+  if (!cpath.size() || cpath == ".")
+    return cpwd;
+  return cpwd + '/' + cpath;
 }
 
 template <typename Dtype>

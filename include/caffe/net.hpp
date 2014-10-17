@@ -192,6 +192,13 @@ class Net {
   /// @brief Get misc parameters, e.g. the LR multiplier and weight decay.
   void GetLearningRateAndWeightDecay();
 
+  // @brief Loads imports, for modular network definitions
+  static void LoadImports(const NetParameter& source, NetParameter* target);
+  static void LoadImports(const NetParameter& source, NetParameter* target,
+      const string& pwd);
+  // @brief Resolves a layer or blob name, e.g. "../data"
+  static string ResolveImportName(const string& path, const string& pwd);
+
   /// @brief Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
