@@ -751,6 +751,44 @@ TYPED_TEST(DatasetTest, TestReadOnlyGetNoCommitFails) {
   EXPECT_FALSE(dataset->get(key, &new_value));
 }
 
+TYPED_TEST(DatasetTest, TestCreateManyItersShortScope) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Dataset<string, value_type> > dataset =
+      DatasetFactory<string, value_type>(backend);
+  EXPECT_TRUE(dataset->open(name, Dataset<string, value_type>::New));
+
+  string key = this->TestKey();
+  value_type value = this->TestValue();
+  EXPECT_TRUE(dataset->put(key, value));
+  EXPECT_TRUE(dataset->commit());
+
+  for (int i = 0; i < 1000; ++i) {
+    typename Dataset<string, value_type>::const_iterator iter =
+        dataset->begin();
+  }
+}
+
+TYPED_TEST(DatasetTest, TestCreateManyItersLongScope) {
+  UNPACK_TYPES;
+
+  string name = this->DBName();
+  shared_ptr<Dataset<string, value_type> > dataset =
+      DatasetFactory<string, value_type>(backend);
+  EXPECT_TRUE(dataset->open(name, Dataset<string, value_type>::New));
+
+  string key = this->TestKey();
+  value_type value = this->TestValue();
+  EXPECT_TRUE(dataset->put(key, value));
+  EXPECT_TRUE(dataset->commit());
+
+  vector<typename Dataset<string, value_type>::const_iterator> iters;
+  for (int i = 0; i < 1000; ++i) {
+    iters.push_back(dataset->begin());
+  }
+}
+
 #undef UNPACK_TYPES
 
 }  // namespace caffe

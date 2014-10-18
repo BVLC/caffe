@@ -61,12 +61,11 @@ class LeveldbDataset : public Dataset<K, V, KCoder, VCoder> {
     shared_ptr<DatasetState> clone() {
       shared_ptr<leveldb::Iterator> new_iter;
 
-      if (iter_.get()) {
-        new_iter.reset(db_->NewIterator(leveldb::ReadOptions()));
-        CHECK(iter_->Valid());
-        new_iter->Seek(iter_->key());
-        CHECK(new_iter->Valid());
-      }
+      CHECK(iter_.get());
+      new_iter.reset(db_->NewIterator(leveldb::ReadOptions()));
+      CHECK(iter_->Valid());
+      new_iter->Seek(iter_->key());
+      CHECK(new_iter->Valid());
 
       return shared_ptr<DatasetState>(new LeveldbState(db_, new_iter));
     }

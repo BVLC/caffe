@@ -28,7 +28,8 @@ class LmdbDataset : public Dataset<K, V, KCoder, VCoder> {
   LmdbDataset()
       : env_(NULL),
         dbi_(0),
-        txn_(NULL) { }
+        write_txn_(NULL),
+        read_txn_(NULL) { }
 
   bool open(const string& filename, Mode mode);
   bool put(const K& key, const V& value);
@@ -55,21 +56,19 @@ class LmdbDataset : public Dataset<K, V, KCoder, VCoder> {
           dbi_(dbi) { }
 
     shared_ptr<DatasetState> clone() {
-      MDB_cursor* new_cursor;
+      CHECK(cursor_);
 
-      if (cursor_) {
-        int retval;
-        retval = mdb_cursor_open(txn_, *dbi_, &new_cursor);
-        CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
-        MDB_val key;
-        MDB_val val;
-        retval = mdb_cursor_get(cursor_, &key, &val, MDB_GET_CURRENT);
-        CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
-        retval = mdb_cursor_get(new_cursor, &key, &val, MDB_SET);
-        CHECK_EQ(MDB_SUCCESS, retval) << mdb_strerror(retval);
-      } else {
-        new_cursor = cursor_;
-      }
+      MDB_cursor* new_cursor;
+      int retval;
+
+      retval = mdb_cursor_open(txn_, *dbi_, &new_cursor);
+      CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+      MDB_val key;
+      MDB_val val;
+      retval = mdb_cursor_get(cursor_, &key, &val, MDB_GET_CURRENT);
+      CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
+      retval = mdb_cursor_get(new_cursor, &key, &val, MDB_SET);
+      CHECK_EQ(MDB_SUCCESS, retval) << mdb_strerror(retval);
 
       return shared_ptr<DatasetState>(new LmdbState(new_cursor, txn_, dbi_));
     }
@@ -87,7 +86,8 @@ class LmdbDataset : public Dataset<K, V, KCoder, VCoder> {
 
   MDB_env* env_;
   MDB_dbi dbi_;
-  MDB_txn* txn_;
+  MDB_txn* write_txn_;
+  MDB_txn* read_txn_;
 };
 
 }  // namespace caffe
