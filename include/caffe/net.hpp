@@ -11,9 +11,6 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#ifdef TIMING
-#include "caffe/util/benchmark.hpp"
-#endif
 
 namespace caffe {
 
@@ -79,16 +76,9 @@ class Net {
   void Reshape();
 
   Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
-    #ifdef TIMING
-    Timer timer;
-    timer.Start();
-    #endif
     Dtype loss;
     Forward(bottom, &loss);
     Backward();
-    #ifdef TIMING
-    LOG(INFO) << "ForwardBackward Time: " << timer.MilliSeconds() << "ms.";
-    #endif
     return loss;
   }
 
