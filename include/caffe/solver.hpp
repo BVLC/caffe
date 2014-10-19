@@ -132,19 +132,13 @@ template <typename Dtype>
 class AdaDeltaSolver : public SGDSolver<Dtype> {
  public:
   explicit AdaDeltaSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param) {}
   explicit AdaDeltaSolver(const string& param_file)
-      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param_file) {}
 
  protected:
   virtual void PreSolve();
   virtual void ComputeUpdateValue();
-  void constructor_sanity_check() {
-    CHECK_EQ(0, this->param_.base_lr())
-        << "Learning rate cannot be used with AdaDelta.";
-    CHECK_EQ("", this->param_.lr_policy())
-        << "Learning rate policy cannot be applied to AdaDelta.";
-  }
 
   DISABLE_COPY_AND_ASSIGN(AdaDeltaSolver);
 };

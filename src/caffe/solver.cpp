@@ -792,7 +792,10 @@ void AdaDeltaSolver<Dtype>::PreSolve() {
 template <typename Dtype>
 void AdaDeltaSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_lr = this->net_->params_lr();
   vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  // get the learning rate
+  Dtype rate = this->GetLearningRate();
   Dtype delta = this->param_.delta();
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
@@ -801,6 +804,7 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue() {
   switch (Caffe::mode()) {
   case Caffe::CPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
       if (local_decay) {
@@ -864,6 +868,10 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue() {
           this->update_[param_id]->cpu_data(),
           net_params[param_id]->mutable_cpu_diff());
 
+      // scale
+      caffe_scal(net_params[param_id]->count(), local_rate,
+          net_params[param_id]->mutable_cpu_diff());
+
       // compute square of update
       caffe_powx(net_params[param_id]->count(),
           net_params[param_id]->cpu_diff(), Dtype(2),
@@ -878,6 +886,7 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue() {
   case Caffe::GPU:
 #ifndef CPU_ONLY
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
       if (local_decay) {
@@ -939,6 +948,10 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue() {
       caffe_gpu_mul(net_params[param_id]->count(),
           net_params[param_id]->gpu_diff(),
           this->update_[param_id]->gpu_data(),
+          net_params[param_id]->mutable_gpu_diff());
+
+      // scale
+      caffe_gpu_scal(net_params[param_id]->count(), local_rate,
           net_params[param_id]->mutable_gpu_diff());
 
       // compute square of update
