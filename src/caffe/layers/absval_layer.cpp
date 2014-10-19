@@ -26,12 +26,11 @@ template <typename Dtype>
 void AbsValLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int count = top[0]->count();
-  const Dtype* top_data = top[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
   if (propagate_down[0]) {
     const Dtype* bottom_data = bottom[0]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    caffe_div(count, top_data, bottom_data, bottom_diff);
+    caffe_cpu_sign(count, bottom_data, bottom_diff);
     caffe_mul(count, bottom_diff, top_diff, bottom_diff);
   }
 }
