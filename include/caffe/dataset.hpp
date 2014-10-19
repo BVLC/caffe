@@ -170,7 +170,6 @@ class Dataset {
     iterator(const Dataset* parent, shared_ptr<DatasetState> state)
         : parent_(parent),
           state_(state) { }
-    ~iterator() { }
 
     iterator(const iterator& other)
         : parent_(other.parent_),

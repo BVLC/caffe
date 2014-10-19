@@ -15,7 +15,8 @@ bool LmdbDataset<K, V, KCoder, VCoder>::open(const string& filename,
   DLOG(INFO) << "LMDB: Open " << filename;
 
   CHECK(NULL == env_);
-  CHECK(NULL == txn_);
+  CHECK(NULL == write_txn_);
+  CHECK(NULL == read_txn_);
   CHECK_EQ(0, dbi_);
 
   int retval;
@@ -66,13 +67,19 @@ bool LmdbDataset<K, V, KCoder, VCoder>::open(const string& filename,
     return false;
   }
 
-  retval = mdb_txn_begin(env_, NULL, flag2, &txn_);
+  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &read_txn_);
   if (MDB_SUCCESS != retval) {
     LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
     return false;
   }
 
-  retval = mdb_open(txn_, NULL, 0, &dbi_);
+  retval = mdb_txn_begin(env_, NULL, flag2, &write_txn_);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
+    return false;
+  }
+
+  retval = mdb_open(write_txn_, NULL, 0, &dbi_);
   if (MDB_SUCCESS != retval) {
     LOG(ERROR) << "mdb_open failed" << mdb_strerror(retval);
     return false;
@@ -103,10 +110,10 @@ bool LmdbDataset<K, V, KCoder, VCoder>::put(const K& key, const V& value) {
   mdbkey.mv_size = serialized_key.size();
   mdbkey.mv_data = serialized_key.data();
 
-  CHECK_NOTNULL(txn_);
+  CHECK_NOTNULL(write_txn_);
   CHECK_NE(0, dbi_);
 
-  int retval = mdb_put(txn_, dbi_, &mdbkey, &mdbdata, 0);
+  int retval = mdb_put(write_txn_, dbi_, &mdbkey, &mdbdata, 0);
   if (MDB_SUCCESS != retval) {
     LOG(ERROR) << "mdb_put failed " << mdb_strerror(retval);
     return false;
@@ -130,20 +137,11 @@ bool LmdbDataset<K, V, KCoder, VCoder>::get(const K& key, V* value) {
   mdbkey.mv_size = serialized_key.size();
 
   int retval;
-  MDB_txn* get_txn;
-  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &get_txn);
-  if (MDB_SUCCESS != retval) {
-    LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
-    return false;
-  }
-
-  retval = mdb_get(get_txn, dbi_, &mdbkey, &mdbdata);
+  retval = mdb_get(read_txn_, dbi_, &mdbkey, &mdbdata);
   if (MDB_SUCCESS != retval) {
     LOG(ERROR) << "mdb_get failed " << mdb_strerror(retval);
     return false;
   }
-
-  mdb_txn_abort(get_txn);
 
   if (!VCoder::deserialize(reinterpret_cast<char*>(mdbdata.mv_data),
       mdbdata.mv_size, value)) {
@@ -160,14 +158,8 @@ bool LmdbDataset<K, V, KCoder, VCoder>::first_key(K* key) {
 
   int retval;
 
-  MDB_txn* iter_txn;
-
-  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &iter_txn);
-  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
-      << mdb_strerror(retval);
-
   MDB_cursor* cursor;
-  retval = mdb_cursor_open(iter_txn, dbi_, &cursor);
+  retval = mdb_cursor_open(read_txn_, dbi_, &cursor);
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
   MDB_val mdbkey;
   MDB_val mdbval;
@@ -175,7 +167,6 @@ bool LmdbDataset<K, V, KCoder, VCoder>::first_key(K* key) {
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
 
   mdb_cursor_close(cursor);
-  mdb_txn_abort(iter_txn);
 
   if (!KCoder::deserialize(reinterpret_cast<char*>(mdbkey.mv_data),
       mdbkey.mv_size, key)) {
@@ -192,14 +183,8 @@ bool LmdbDataset<K, V, KCoder, VCoder>::last_key(K* key) {
 
   int retval;
 
-  MDB_txn* iter_txn;
-
-  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &iter_txn);
-  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
-      << mdb_strerror(retval);
-
   MDB_cursor* cursor;
-  retval = mdb_cursor_open(iter_txn, dbi_, &cursor);
+  retval = mdb_cursor_open(read_txn_, dbi_, &cursor);
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
   MDB_val mdbkey;
   MDB_val mdbval;
@@ -207,7 +192,6 @@ bool LmdbDataset<K, V, KCoder, VCoder>::last_key(K* key) {
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
 
   mdb_cursor_close(cursor);
-  mdb_txn_abort(iter_txn);
 
   if (!KCoder::deserialize(reinterpret_cast<char*>(mdbkey.mv_data),
       mdbkey.mv_size, key)) {
@@ -222,16 +206,24 @@ template <typename K, typename V, typename KCoder, typename VCoder>
 bool LmdbDataset<K, V, KCoder, VCoder>::commit() {
   DLOG(INFO) << "LMDB: Commit";
 
-  CHECK_NOTNULL(txn_);
+  CHECK_NOTNULL(write_txn_);
 
   int retval;
-  retval = mdb_txn_commit(txn_);
+  retval = mdb_txn_commit(write_txn_);
   if (MDB_SUCCESS != retval) {
     LOG(ERROR) << "mdb_txn_commit failed " << mdb_strerror(retval);
     return false;
   }
 
-  retval = mdb_txn_begin(env_, NULL, 0, &txn_);
+  mdb_txn_abort(read_txn_);
+
+  retval = mdb_txn_begin(env_, NULL, 0, &write_txn_);
+  if (MDB_SUCCESS != retval) {
+    LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
+    return false;
+  }
+
+  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &read_txn_);
   if (MDB_SUCCESS != retval) {
     LOG(ERROR) << "mdb_txn_begin failed " << mdb_strerror(retval);
     return false;
@@ -245,11 +237,14 @@ void LmdbDataset<K, V, KCoder, VCoder>::close() {
   DLOG(INFO) << "LMDB: Close";
 
   if (env_ && dbi_) {
+    mdb_txn_abort(write_txn_);
+    mdb_txn_abort(read_txn_);
     mdb_close(env_, dbi_);
     mdb_env_close(env_);
     env_ = NULL;
     dbi_ = 0;
-    txn_ = NULL;
+    write_txn_ = NULL;
+    read_txn_ = NULL;
   }
 }
 
@@ -268,14 +263,8 @@ typename LmdbDataset<K, V, KCoder, VCoder>::const_iterator
     LmdbDataset<K, V, KCoder, VCoder>::begin() const {
   int retval;
 
-  MDB_txn* iter_txn;
-
-  retval = mdb_txn_begin(env_, NULL, MDB_RDONLY, &iter_txn);
-  CHECK_EQ(MDB_SUCCESS, retval) << "mdb_txn_begin failed "
-      << mdb_strerror(retval);
-
   MDB_cursor* cursor;
-  retval = mdb_cursor_open(iter_txn, dbi_, &cursor);
+  retval = mdb_cursor_open(read_txn_, dbi_, &cursor);
   CHECK_EQ(retval, MDB_SUCCESS) << mdb_strerror(retval);
   MDB_val key;
   MDB_val val;
@@ -286,7 +275,9 @@ typename LmdbDataset<K, V, KCoder, VCoder>::const_iterator
 
   shared_ptr<DatasetState> state;
   if (MDB_SUCCESS == retval) {
-    state.reset(new LmdbState(cursor, iter_txn, &dbi_));
+    state.reset(new LmdbState(cursor, read_txn_, &dbi_));
+  } else {
+    mdb_cursor_close(cursor);
   }
   return const_iterator(this, state);
 }
