@@ -65,6 +65,7 @@ class DataTransformer {
   void Transform(const vector<Datum> & datum_vector,
                 Blob<Dtype>* transformed_blob);
 
+#ifndef OSX
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
@@ -75,22 +76,47 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used See image_data_layer.cpp for an example.
    */
-#ifndef OSX
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+    /**
+   * @brief Applies the transformation defined in the data layer's
+   * transform_param block to a vector of cv::Mat.
+   *
+   * @param cv_img_vector
+   *    A vector of cv::Mat containing the data to be transformed.
+   * @param transformed_blob
+   *    This is destination blob. It can be part of top blob's data if
+   *    set_cpu_data() is used See memory_layer.cpp for an example.
+   */
+  void Transform(const vector<cv::Mat>& cv_img_vector,
+                Blob<Dtype>* transformed_blob);
 #endif
 
   /**
-   * @brief Applies the same transformation defined in the data layer's
+   * @brief Applies the transformation defined in the data layer's
    * transform_param block to all the num images in a input_blob.
    *
    * @param input_blob
-   *    A Blob containing the data to be transformed. It applies the same
-   *    transformation to all the num images in the blob.
+   *    A Blob containing the data to be transformed. It applies a
+   *    transformation to each the num images in the blob.
    * @param transformed_blob
    *    This is destination blob, it will contain as many images as the
    *    input blob. It can be part of top blob's data.
    */
-  void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
+  void Transform(const Blob<Dtype>& input_blob, Blob<Dtype>* transformed_blob);
+
+  /**
+   * @brief Applies the transformation defined in the data layer's
+   * transform_param block to all the Blobs in input_blobs.
+   *
+   * @param input_blobs
+   *    A Vector of Blob containing the data to be transformed. 
+   *    It applies the transformation to each of the Blobs int Vector.
+   * @param transformed_blobs
+   *    This is destination vector of blob, it will contain as many 
+   *    Blobs input_blobs.
+   */
+  void Transform(const vector<Blob<Dtype>*>& input_blobs,
+                const vector<Blob<Dtype>*>& transformed_blobs);
 
  protected:
    /**
@@ -119,7 +145,7 @@ class DataTransformer {
 
   void CheckSizes(const int input_channels, const int input_height,
     const int input_width, const int output_channels,
-    const int output_height, const int output_width)
+    const int output_height, const int output_width);
 
   // Do the actual transformation for different Datatypes:
   // uchar, uint8_t, float, double
@@ -135,11 +161,25 @@ class DataTransformer {
   //  num_blocks = input_height
   //  height_offset = 0
   //  channel_offset = 1;
-  template <typename Datatype>
-  void InternalTransform(const vector<Datatype*> & data_ptrs,
-  const int num_blocks, const int height_offset, const int channel_offset,
-  const int output_height, const int output_width, const int output_channels,
-  Dtype* transformed_data);
+  void InternalTransform(const vector<const uchar*> & data_ptrs,
+    const int height_offset, const int channel_offset,
+    const int output_height, const int output_width,
+    const int output_channels, Dtype* transformed_data);
+
+  void InternalTransform(const vector<const char*> & data_ptrs,
+    const int height_offset, const int channel_offset,
+    const int output_height, const int output_width,
+    const int output_channels, Dtype* transformed_data);
+
+  void InternalTransform(const vector<const float*> & data_ptrs,
+    const int height_offset, const int channel_offset,
+    const int output_height, const int output_width,
+    const int output_channels, Dtype* transformed_data);
+
+  void InternalTransform(const vector<const double*> & data_ptrs,
+    const int height_offset, const int channel_offset,
+    const int output_height, const int output_width,
+    const int output_channels, Dtype* transformed_data);
 
   // Tranformation parameters
   TransformationParameter param_;
