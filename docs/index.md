@@ -67,11 +67,11 @@ Developer documentation automagically generated from code comments.
 
 Please cite Caffe in your publications if it helps your research:
 
-    @misc{Jia13caffe,
-       Author = {Yangqing Jia},
-       Title = { {Caffe}: An Open Source Convolutional Architecture for Fast Feature Embedding},
-       Year  = {2013},
-       Howpublished = {\url{http://caffe.berkeleyvision.org/}}
+    @article{jia2014caffe,
+      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
+      Journal = {arXiv preprint arXiv:1408.5093},
+      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
+      Year = {2014}
     }
 
 If you do publish a paper where Caffe helped your research, we encourage you to update the [publications wiki](https://github.com/BVLC/caffe/wiki/Publications).
