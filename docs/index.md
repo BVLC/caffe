@@ -17,7 +17,7 @@ Networks are specified in simple config files, with no hard-coded parameters in 
 Switching between CPU and GPU is as simple as setting a flag -- so models can be trained on a GPU machine, and then used on commodity clusters.
 
 **Readable & modifiable implementation** fosters active development.
-In Caffe's first six months, it has been forked by over 300 developers on Github, and many have pushed significant changes.
+In Caffe's first year, it has been forked by over 600 developers on Github, and many have pushed significant changes.
 
 **Speed** makes Caffe perfect for industry use.
 Caffe can process over **40M images per day** with a single NVIDIA K40 or Titan GPU\*.
@@ -35,11 +35,11 @@ Consult performance [details](/performance_hardware.html).
 ## Documentation
 
 - [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)<br>
-Caffe tutorial slides.
-- [ACM MM paper](http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf)<br>
-A 4-page report for the ACM Multimedia Open Source competition.
-- [Caffe Tutorial](/tutorial)<br>
-DIY deep learning with this hands-on tutorial to Caffe.
+Tutorial presentation.
+- [Tutorial Documentation](/tutorial)<br>
+Practical guide and framework reference.
+- [arXiv / ACM MM '14 paper](http://arxiv.org/abs/1408.5093)<br>
+A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v1).
 - [Installation instructions](/installation.html)<br>
 Tested on Ubuntu, Red Hat, OS X.
 * [Model Zoo](/model_zoo.html)<br>
