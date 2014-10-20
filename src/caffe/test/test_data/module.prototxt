@@ -1,0 +1,21 @@
+layers: {
+  name: 'innerproduct'
+  type: INNER_PRODUCT
+  inner_product_param {
+    num_output: ${num_output}
+    weight_filler {
+      type: 'gaussian'
+      std: 0.01
+    }
+    bias_filler {
+      type: 'constant'
+      value: 0
+    }
+  }
+  blobs_lr: 1.
+  blobs_lr: 2.
+  weight_decay: 1.
+  weight_decay: 0.
+  bottom: '../data'
+  top: 'innerproduct'
+}

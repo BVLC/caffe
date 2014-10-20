@@ -79,6 +79,10 @@ docs/dev
 
 # Eclipse Project settings
 *.*project
+.settings
 
 # CMake generated files
 *.gen.cmake
+
+# OSX files
+.DS_Store

@@ -1,0 +1,30 @@
+layers {
+  name: "conv"
+  type: CONVOLUTION
+  bottom: "${bottom}"
+  top: "conv"
+  blobs_lr: 1
+  blobs_lr: 2
+  convolution_param {
+    num_output: ${num_output}
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layers {
+  name: "pool"
+  type: POOLING
+  bottom: "conv"
+  top: "pool"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}

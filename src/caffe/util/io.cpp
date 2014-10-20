@@ -65,6 +65,18 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
+string ReadFile(const string& filename) {
+  std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
+  CHECK(in) << "Failed to read file: " << filename;
+  std::string contents;
+  in.seekg(0, std::ios::end);
+  contents.resize(in.tellg());
+  in.seekg(0, std::ios::beg);
+  in.read(&contents[0], contents.size());
+  in.close();
+  return contents;
+}
+
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color) {
   cv::Mat cv_img;

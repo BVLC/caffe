@@ -206,7 +206,7 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 42 (last added: exp_param)
+// LayerParameter next available ID: 43 (last added: import_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -227,7 +227,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 39 (last added: EXP)
+  // LayerType next available ID: 40 (last added: IMPORT)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -252,6 +252,7 @@ message LayerParameter {
     HINGE_LOSS = 28;
     IM2COL = 11;
     IMAGE_DATA = 12;
+    IMPORT = 39;
     INFOGAIN_LOSS = 13;
     INNER_PRODUCT = 14;
     LRN = 15;
@@ -313,6 +314,7 @@ message LayerParameter {
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional HingeLossParameter hinge_loss_param = 29;
   optional ImageDataParameter image_data_param = 15;
+  optional ImportParameter import_param = 42;
   optional InfogainLossParameter infogain_loss_param = 16;
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
@@ -340,6 +342,20 @@ message LayerParameter {
   // This should never be used by any code except to upgrade to the new
   // LayerParameter specification.
   optional V0LayerParameter layer = 1;
+}
+
+message Pair {
+   required string name = 1;
+   required string value = 2;
+}
+
+// Message that stores parameters used by ImportLayer
+message ImportParameter {
+    // Proto file to import
+    required string net = 1;
+    // Variable names to replace before importing the file. Variables can
+    // be used in the file in this format: ${name}
+    repeated Pair var = 2;
 }
 
 // Message that stores parameters used to apply transformation

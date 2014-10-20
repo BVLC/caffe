@@ -29,71 +29,28 @@ layers {
   }
   include: { phase: TEST }
 }
-
 layers {
-  name: "conv1"
-  type: CONVOLUTION
-  bottom: "data"
-  top: "conv1"
-  blobs_lr: 1
-  blobs_lr: 2
-  convolution_param {
-    num_output: 20
-    kernel_size: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
+  name: "cp1"
+  type: IMPORT
+  import_param {
+    net: "examples/mnist/lenet_conv_pool.prototxt"
+    var { name: "bottom" value: "/data" }
+    var { name: "num_output" value: "20" }
   }
 }
 layers {
-  name: "pool1"
-  type: POOLING
-  bottom: "conv1"
-  top: "pool1"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
-  }
-}
-layers {
-  name: "conv2"
-  type: CONVOLUTION
-  bottom: "pool1"
-  top: "conv2"
-  blobs_lr: 1
-  blobs_lr: 2
-  convolution_param {
-    num_output: 50
-    kernel_size: 5
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layers {
-  name: "pool2"
-  type: POOLING
-  bottom: "conv2"
-  top: "pool2"
-  pooling_param {
-    pool: MAX
-    kernel_size: 2
-    stride: 2
+  name: "cp2"
+  type: IMPORT
+  import_param {
+    net: "examples/mnist/lenet_conv_pool.prototxt"
+    var { name: "bottom" value: "../cp1/pool" }
+    var { name: "num_output" value: "50" }
   }
 }
 layers {
   name: "ip1"
   type: INNER_PRODUCT
-  bottom: "pool2"
+  bottom: "cp2/pool"
   top: "ip1"
   blobs_lr: 1
   blobs_lr: 2
