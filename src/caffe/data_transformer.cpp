@@ -37,6 +37,44 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
   }
 }
 
+template<typename Dtype, typename Datatype>
+void DataTransformer<Dtype>::InternalTransform(const Datatype*& data_ptr,
+  const int num_blocks, const int height_offset, const int channel_offset,
+  const int height, const int width, const int channels,
+  Dtype* transformed_data) {
+  int top_index = 0;
+  Datatype* data = NULL;
+  for (int h = 0; h < height; ++h) {
+    if (num_blocks = 1) {
+      data = data_ptr[0];
+    } else {
+      data = data_ptr[h + h_off];
+    }
+    for (int w = 0; w < width; ++w) {
+      for (int c = 0; c < channels; ++c) {
+        if (do_mirror) {
+          top_index = (c * height + h) * width + (width - 1 - w);
+        } else {
+          top_index = (c * height + h) * width + w;
+        }
+        int data_index =
+          c * channel_offset + (h + h_off) * height_offset + w + w_off;
+        Dtype pixel = static_cast<Dtype>(data[data_index]);
+        if (has_mean_file) {
+          transformed_data[top_index] =
+            (pixel - data_mean_->data_at(0, c, h_off + h, w_off + w)) * scale;
+        } else {
+          if (has_mean_values) {
+            transformed_data[top_index] = (pixel - mean_values_[c]) * scale;
+          } else {
+            transformed_data[top_index] = pixel * scale;
+          }
+        }
+      }
+    }
+  }
+}
+
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Dtype* transformed_data) {

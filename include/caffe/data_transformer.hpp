@@ -109,13 +109,37 @@ class DataTransformer {
     bool do_mirror;
     int h_off;
     int w_off;
-    int height;
-    int width;
+    int input_channels;
+    int input_height;
+    int input_width;
   };
 
-  void Transform(const Datum& datum, Dtype* transformed_data);
+  void UpdateState(const int input_channels, const int input_height,
+                  const int input_width);
 
-  void UpdateState(const int height, const int width);
+  void CheckSizes(const int input_channels, const int input_height,
+    const int input_width, const int output_channels,
+    const int output_height, const int output_width)
+
+  // Do the actual transformation for different Datatypes:
+  // uchar, uint8_t, float, double
+  // For Datum or Blob (continous) use:
+  //  num_blocks = 1
+  //  height_offset = input_width
+  //  channel_offset = input_height * input_width;
+  // For cv::Mat (continous) use:
+  //  num_blocks = 1
+  //  height_offset = input_width
+  //  channel_offset = 1;
+  // For cv::Mat (discontinous) use:
+  //  num_blocks = input_height
+  //  height_offset = 0
+  //  channel_offset = 1;
+  template <typename Datatype>
+  void InternalTransform(const vector<Datatype*> & data_ptrs,
+  const int num_blocks, const int height_offset, const int channel_offset,
+  const int output_height, const int output_width, const int output_channels,
+  Dtype* transformed_data);
 
   // Tranformation parameters
   TransformationParameter param_;
