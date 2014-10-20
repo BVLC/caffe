@@ -59,7 +59,7 @@ Networks are specified in simple config files, with no hard-coded parameters in 
 Switching between CPU and GPU is as simple as setting a flag – so models can be trained on a GPU machine, and then used on commodity clusters.</p>
 
 <p><strong>Readable &amp; modifiable implementation</strong> fosters active development.
-In Caffe’s first six months, it has been forked by over 300 developers on Github, and many have pushed significant changes.</p>
+In Caffe’s first year, it has been forked by over 600 developers on Github, and many have pushed significant changes.</p>
 
 <p><strong>Speed</strong> makes Caffe perfect for industry use.
 Caffe can process over <strong>40M images per day</strong> with a single NVIDIA K40 or Titan GPU*.
@@ -78,11 +78,11 @@ Consult performance <a href="/performance_hardware.html">details</a>.
 
 <ul>
   <li><a href="https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p">DIY Deep Learning for Vision with Caffe</a><br />
-Caffe tutorial slides.</li>
-  <li><a href="http://ucb-icsi-vision-group.github.io/caffe-paper/caffe.pdf">ACM MM paper</a><br />
-A 4-page report for the ACM Multimedia Open Source competition.</li>
-  <li><a href="/tutorial">Caffe Tutorial</a><br />
-DIY deep learning with this hands-on tutorial to Caffe.</li>
+Tutorial presentation.</li>
+  <li><a href="/tutorial">Tutorial Documentation</a><br />
+Practical guide and framework reference.</li>
+  <li><a href="http://arxiv.org/abs/1408.5093">arXiv / ACM MM ‘14 paper</a><br />
+A 4-page report for the ACM Multimedia Open Source competition (arXiv:1408.5093v1).</li>
   <li><a href="/installation.html">Installation instructions</a><br />
 Tested on Ubuntu, Red Hat, OS X.</li>
   <li><a href="/model_zoo.html">Model Zoo</a><br />
@@ -146,11 +146,11 @@ Developer documentation automagically generated from code comments.</li>
 
 <p>Please cite Caffe in your publications if it helps your research:</p>
 
-<pre><code>@misc{Jia13caffe,
-   Author = {Yangqing Jia},
-   Title = { {Caffe}: An Open Source Convolutional Architecture for Fast Feature Embedding},
-   Year  = {2013},
-   Howpublished = {\url{http://caffe.berkeleyvision.org/}}
+<pre><code>@article{jia2014caffe,
+  Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
+  Journal = {arXiv preprint arXiv:1408.5093},
+  Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
+  Year = {2014}
 }
 </code></pre>
 
@@ -159,16 +159,18 @@ Citations are also tracked automatically by <a href="http://scholar.google.com/s
 
 <h2 id="acknowledgements">Acknowledgements</h2>
 
-<p>Yangqing would like to thank the NVIDIA Academic program for providing GPUs, <a href="http://www1.icsi.berkeley.edu/~vinyals/">Oriol Vinyals</a> for discussions along the journey, and BVLC PI <a href="http://www.eecs.berkeley.edu/~trevor/">Trevor Darrell</a> for guidance.</p>
+<p>The BVLC Caffe developers would like to thank NVIDIA for GPU donation, A9 and Amazon Web Services for a research grant in support of Caffe development and reproducible research in deep learning, and BVLC PI <a href="http://www.eecs.berkeley.edu/~trevor/">Trevor Darrell</a> for guidance.</p>
 
-<p>A core set of BVLC members have contributed much new functionality and many fixes since the original release (alphabetical by first name):
-<a href="https://github.com/erictzeng">Eric Tzeng</a>, <a href="http://imaginarynumber.net/">Evan Shelhamer</a>, <a href="http://jeffdonahue.com/">Jeff Donahue</a>, <a href="https://github.com/longjon">Jon Long</a>, <a href="http://www.cs.berkeley.edu/~rbg/">Ross Girshick</a>, <a href="http://sergeykarayev.com/">Sergey Karayev</a>, <a href="http://www.eecs.berkeley.edu/~sguada/">Sergio Guadarrama</a>.</p>
+<p>The BVLC members who have contributed to Caffe are (alphabetical by first name):
+<a href="https://github.com/erictzeng">Eric Tzeng</a>, <a href="http://imaginarynumber.net/">Evan Shelhamer</a>, <a href="http://jeffdonahue.com/">Jeff Donahue</a>, <a href="https://github.com/longjon">Jon Long</a>, <a href="http://www.cs.berkeley.edu/~rbg/">Ross Girshick</a>, <a href="http://sergeykarayev.com/">Sergey Karayev</a>, <a href="http://www.eecs.berkeley.edu/~sguada/">Sergio Guadarrama</a>, and <a href="http://daggerfs.com/">Yangqing Jia</a>.</p>
 
-<p>Additionally, the open-source community plays a large and growing role in Caffe’s development.
+<p>The open-source community plays an important and growing role in Caffe’s development.
 Check out the Github <a href="https://github.com/BVLC/caffe/pulse">project pulse</a> for recent activity, and the <a href="https://github.com/BVLC/caffe/graphs/contributors">contributors</a> for a sorted list.</p>
 
 <p>We sincerely appreciate your interest and contributions!
 If you’d like to contribute, please read the <a href="development.html">developing &amp; contributing</a> guide.</p>
+
+<p>Yangqing would like to give a personal thanks to the NVIDIA Academic program for providing GPUs, <a href="http://www1.icsi.berkeley.edu/~vinyals/">Oriol Vinyals</a> for discussions along the journey, and BVLC PI <a href="http://www.eecs.berkeley.edu/~trevor/">Trevor Darrell</a> for advice.</p>
 
 <h2 id="contacting-us">Contacting us</h2>
 
