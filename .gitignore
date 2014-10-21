@@ -10,6 +10,9 @@
 *.so
 *.dylib
 
+# Compiled Debugging files
+*.dSYM
+
 # Compiled Static libraries
 *.lai
 *.la
