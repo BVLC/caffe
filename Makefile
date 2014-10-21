@@ -4,8 +4,8 @@ CONFIG_FILE := Makefile.config
 include $(CONFIG_FILE)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
-RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
-DEBUG_BUILD_DIR := .$(BUILD_DIR)_debug
+RELEASE_BUILD_DIR ?= .$(BUILD_DIR)_release
+DEBUG_BUILD_DIR ?= .$(BUILD_DIR)_debug
 
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
