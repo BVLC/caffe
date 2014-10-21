@@ -1,8 +1,13 @@
 #ifndef CAFFE_INTERNAL_THREAD_HPP_
 #define CAFFE_INTERNAL_THREAD_HPP_
 
-#include <boost/thread.hpp>
 #include "caffe/common.hpp"
+
+/**
+ Forward declare boost::thread instead of including boost/thread.hpp
+ to avoid a boost/NVCC issues (#1009, #1010) on OSX.
+ */
+namespace boost { class thread; }
 
 namespace caffe {
 
@@ -22,7 +27,7 @@ class InternalThread {
   /** Will not return until the internal thread has exited. */
   bool WaitForInternalThreadToExit();
 
-  bool is_started() const { return thread_ != NULL && thread_->joinable(); }
+  bool is_started() const;
 
  protected:
   /* Implement this method in your subclass
@@ -34,4 +39,4 @@ class InternalThread {
 
 }  // namespace caffe
 
-#endif
+#endif // CAFFE_INTERNAL_THREAD_HPP_
