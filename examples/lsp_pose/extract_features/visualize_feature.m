@@ -1,11 +1,8 @@
 close all; clear all;
-addpath(genpath('../../../build/wyang'));
+addpath(genpath('../../../tools/wyang'));
 
-nsample     = 3;
-num_output  = 96; % conv1
-% num_output  = 256; % conv2
-% num_output  = 384; % conv3
-layer = 'features_conv1_0923';
+num_output  = 96; %  num_output: 96 for conv 1 (refer to the proto)
+layer = 'features_conv1';
 load([layer '/features.mat']);
 load('/home/wyang/Code/PE1.41DBN_human_detector/LSP/cache_test/pos.mat');
 width = size(feats, 2);
@@ -19,7 +16,7 @@ for i = 1:length(pos)
     feat = feats(i, :);
     feat = reshape(feat, [nmap num_output]);
     figure('name', name);
-	im = imread([imdir pos(i).im]);
+	im = imread([imdir pos(i).im]); % original image
     subplot(1, 2, 1);
     imshow(im);
     subplot(1, 2, 2)
