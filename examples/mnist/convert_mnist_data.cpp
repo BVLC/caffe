@@ -15,6 +15,11 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 
@@ -72,6 +77,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   options.create_if_missing = true;
   options.write_buffer_size = 268435456;
   leveldb::WriteBatch* batch = NULL;
+  // image data files
+  std::ofstream images_index;
 
   // Open db
   if (db_backend == "leveldb") {  // leveldb
@@ -94,6 +101,11 @@ void convert_dataset(const char* image_filename, const char* label_filename,
         << "mdb_txn_begin failed";
     CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
         << "mdb_open failed. Does the lmdb already exist? ";
+  } else if (db_backend == "files") {
+    CHECK_EQ(mkdir(db_path, 0744), 0);
+    std::string db_path_str(db_path);
+    std::string index_filename = db_path_str + "_images_index.txt"; 
+    images_index.open(index_filename.c_str());
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
@@ -131,6 +143,21 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       mdb_key.mv_data = reinterpret_cast<void*>(&keystr[0]);
       CHECK_EQ(mdb_put(mdb_txn, mdb_dbi, &mdb_key, &mdb_data, 0), MDB_SUCCESS)
           << "mdb_put failed";
+    } else if (db_backend == "files") {
+      
+      cv::Mat image_as_mat(cv::Size(rows,cols),CV_8UC1,pixels);
+
+      std::vector<int> compression_params;
+      compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+      std::string item_id_str = static_cast<std::ostringstream*>( &(std::ostringstream() << item_id) )->str();
+      std::string label_str = static_cast<std::ostringstream*>( &(std::ostringstream() << label) )->str();
+      std::string db_path_str(db_path);
+      
+      std::string filename = db_path_str + "/" + item_id_str + ".png";  // TODO: not portable
+
+      imwrite(filename, image_as_mat, compression_params);
+      images_index << filename << " " << label_str << "\n";
+
     } else {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }
@@ -146,6 +173,8 @@ void convert_dataset(const char* image_filename, const char* label_filename,
             << "mdb_txn_commit failed";
         CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
             << "mdb_txn_begin failed";
+      } else if (db_backend == "files") {
+        // nothing to do here.. 
       } else {
         LOG(FATAL) << "Unknown db backend " << db_backend;
       }
@@ -161,11 +190,19 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       CHECK_EQ(mdb_txn_commit(mdb_txn), MDB_SUCCESS) << "mdb_txn_commit failed";
       mdb_close(mdb_env, mdb_dbi);
       mdb_env_close(mdb_env);
+    } else if (db_backend == "files") { 
+      // Nothing To do here..
     } else {
       LOG(FATAL) << "Unknown db backend " << db_backend;
     }
     LOG(ERROR) << "Processed " << count << " files.";
   }
+
+  // close resources
+  if (db_backend == "files") {
+    images_index.close();
+  }
+
   delete pixels;
 }
 
