@@ -251,6 +251,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new SoftmaxWithLossLayer<Dtype>(param);
   case LayerParameter_LayerType_SPLIT:
     return new SplitLayer<Dtype>(param);
+  case LayerParameter_LayerType_SUM:
+    return new SumLayer<Dtype>(param);
   case LayerParameter_LayerType_TANH:
     return GetTanHLayer<Dtype>(name, param);
   case LayerParameter_LayerType_WINDOW_DATA:

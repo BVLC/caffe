@@ -267,6 +267,7 @@ message LayerParameter {
     SOFTMAX_LOSS = 21;
     SPLIT = 22;
     SLICE = 33;
+    SUM = 44;
     TANH = 23;
     VECTOR_LABEL_DATA = 43;
     WINDOW_DATA = 24;
