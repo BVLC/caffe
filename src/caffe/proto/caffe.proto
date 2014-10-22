@@ -499,6 +499,8 @@ message HDF5DataParameter {
   optional string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 2;
+  // Specify shuffling the order of training data
+  optional bool shuffle = 3 [default = false];
 }
 
 // Message that stores parameters used by HDF5OutputLayer
