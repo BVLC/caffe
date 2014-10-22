@@ -225,6 +225,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new LRNLayer<Dtype>(param);
   case LayerParameter_LayerType_MAP_DATA:
     return new MapDataLayer<Dtype>(param);
+  case LayerParameter_LayerType_MEAN:
+    return new MeanLayer<Dtype>(param);
   case LayerParameter_LayerType_MEMORY_DATA:
     return new MemoryDataLayer<Dtype>(param);
   case LayerParameter_LayerType_MVN:

@@ -252,6 +252,7 @@ message LayerParameter {
     INNER_PRODUCT = 14;
     LRN = 15;
     MAP_DATA = 42;
+    MEAN = 45;
     MEMORY_DATA = 29;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     MVN = 34;
