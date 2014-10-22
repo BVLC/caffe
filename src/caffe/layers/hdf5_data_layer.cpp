@@ -53,6 +53,10 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
     CHECK_EQ(hdf_blobs_[i]->num(), num);
   }
   DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->num() << " rows";
+  data_permutation_.clear();
+  data_permutation_.resize(hdf_blobs_[0]->num());
+  for (int i = 0; i < hdf_blobs_[0]->num(); i++)
+    data_permutation_[i] = i;
 }
 
 template <typename Dtype>
@@ -76,9 +80,17 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   current_file_ = 0;
   LOG(INFO) << "Number of HDF5 files: " << num_files_;
 
+  file_permutation_.clear();
+  file_permutation_.resize(num_files_);
+  for (int i = 0; i < num_files_; i++)
+    file_permutation_[i] = i;
+
   // Load the first HDF5 file and initialize the line counter.
   LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
   current_row_ = 0;
+  if (this->layer_param_.hdf5_data_param().shuffle()) {
+    std::random_shuffle(file_permutation_.begin(), file_permutation_.end());
+  }
 
   // Reshape blobs.
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
@@ -99,17 +111,23 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         ++current_file_;
         if (current_file_ == num_files_) {
           current_file_ = 0;
+          if (this->layer_param_.hdf5_data_param().shuffle())
+            std::random_shuffle(file_permutation_.begin(),
+              file_permutation_.end());
           DLOG(INFO) << "Looping around to first file.";
         }
-        LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+        LoadHDF5FileData(hdf_filenames_[file_permutation_[current_file_]].
+          c_str());
       }
       current_row_ = 0;
+      if (this->layer_param_.hdf5_data_param().shuffle())
+        std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     }
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->num();
       caffe_copy(data_dim,
-          &hdf_blobs_[j]->cpu_data()[current_row_ * data_dim],
-          &top[j]->mutable_cpu_data()[i * data_dim]);
+          &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
+            * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
     }
   }
 }
