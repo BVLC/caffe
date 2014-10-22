@@ -3,6 +3,7 @@
 # training LOG file
 *.log
 *.mat
+*.png
 examples/lsp_pose/cache/*
 # Compiled Object files
 *.slo

@@ -31,9 +31,21 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         if (current_file_ == num_files_) {
           current_file_ = 0;
           LOG(INFO) << "looping around to first file";
-        }
+          // shuffle file
+			if(this->layer_param_.hdf5_data_param().shuffle()){
+			  hdf_filepermutation_.clear();
+			  hdf_filepermutation_.resize(num_files_);
+			  for(int i=0;i<num_files_;i++)
+				  hdf_filepermutation_[i] = i;
 
-        LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+			  std::random_shuffle(hdf_filepermutation_.begin(), hdf_filepermutation_.end());
+			}
+        }
+        if(this->layer_param_.hdf5_data_param().shuffle()){
+			LoadHDF5FileData(hdf_filenames_[hdf_filepermutation_[current_file_]].c_str());
+		}else{
+			LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+		}
       }
       current_row_ = 0;
       // shuffle data

@@ -198,6 +198,7 @@ class HDF5DataLayer : public Layer<Dtype> {
    */
   void ShuffleData();
   std::vector<int> permutation_;
+  std::vector<int> hdf_filepermutation_;
 
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;

@@ -5,19 +5,7 @@ layers {
   top: "data"
   top: "label"
   hdf5_data_param {
-    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/lsp_val_mean.txt"
-    batch_size: 128
-	shuffle: 1
-  }
-  include: { phase: TRAIN }
-}
-layers {
-  name: "data"
-  type: HDF5_DATA
-  top: "data"
-  top: "label"
-  hdf5_data_param {
-    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/lsp_val_mean.txt"
+    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/lsp_test_mean.txt"
     batch_size: 100
   }
   include: { phase: TEST }

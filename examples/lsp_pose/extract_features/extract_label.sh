@@ -1,15 +1,15 @@
 #!/usr/bin/env sh
 # args for EXTRACT_FEATURE
 TOOL=../../../build/tools
-MODEL=/home/wyang/github/caffe/examples/lsp_pose/pose_caffenet_train_iter_62000.caffemodel 
-PROTOTXT=/home/wyang/github/caffe/examples/lsp_pose/caffenet-pose-lsp-train-val.prototxt
+MODEL=/home/wyang/github/caffe/examples/lsp_pose/pose_caffenet_train_iter_30000.caffemodel 
+PROTOTXT=/home/wyang/github/caffe/examples/lsp_pose/caffenet-pose-lsp-val.prototxt
 # CONV 1
 #LAYER=conv1
 #LEVELDB=features_${LAYER}_0923
 
 # FC8-POSE
 LAYER=fc8
-LEVELDB=train-17-oct
+LEVELDB=train-21-oct
 
 # LABEL
 #LAYER=label
