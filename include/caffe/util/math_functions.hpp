@@ -112,6 +112,19 @@ inline int8_t caffe_sign(Dtype val) {
   return (Dtype(0) < val) - (val < Dtype(0));
 }
 
+#define DEFINE_CAFFE_CPU_BINARY_FUNC(name, operation) \
+  template<typename Dtype> \
+  void caffe_cpu_##name(const int n, const Dtype* a, const Dtype *b, Dtype* y) { \
+    CHECK_GT(n, 0); CHECK(a); CHECK(b); CHECK(y); \
+    for (int i = 0; i < n; ++i) { \
+      operation; \
+    } \
+  }
+
+// output is 1 for the sames, 0 for not sames
+DEFINE_CAFFE_CPU_BINARY_FUNC(same, y[i] = (a[i] == b[i]));
+
+
 // The following two macros are modifications of DEFINE_VSL_UNARY_FUNC
 //   in include/caffe/util/mkl_alternate.hpp authored by @Rowland Depp.
 // Please refer to commit 7e8ef25c7 of the boost-eigen branch.

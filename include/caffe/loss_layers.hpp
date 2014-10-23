@@ -204,11 +204,15 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> similar_;  // either copied or calc'd from equality of two labels
+  Blob<Dtype> label_;  // either copied or calc'd from equality of two labels
   Blob<Dtype> diff_;  // cached for backward pass
   Blob<Dtype> dist_sq_;  // cached for backward pass
   Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
   Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+
+ private:
+  virtual void LabelSetUp(const vector<Blob<Dtype>*>& bottom);
+
 };
 
 /**
