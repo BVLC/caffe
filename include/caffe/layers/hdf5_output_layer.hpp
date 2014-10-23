@@ -54,6 +54,7 @@ class HDF5OutputLayer : public Layer<Dtype> {
 
   bool file_opened_;
   std::string file_name_;
+  int ds_iter_;
   hid_t file_id_;
   Blob<Dtype> data_blob_;
   Blob<Dtype> label_blob_;
