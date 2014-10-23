@@ -18,6 +18,8 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 
+#include <boost/filesystem.hpp>
+
 #include "opencv2/core/core.hpp"
 #include "opencv2/opencv.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -85,8 +87,9 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     batch = new leveldb::WriteBatch();
   } else if (db_backend == "lmdb") {  // lmdb
     LOG(INFO) << "Opening lmdb " << db_path;
-    CHECK_EQ(mkdir(db_path, 0744), 0)
-        << "mkdir " << db_path << "failed";
+    boost::filesystem::path p(db_path);
+    CHECK_EQ(boost::filesystem::create_directories(p), 0)
+        << "mkdir " << db_path << " failed";
     CHECK_EQ(mdb_env_create(&mdb_env), MDB_SUCCESS) << "mdb_env_create failed";
     CHECK_EQ(mdb_env_set_mapsize(mdb_env, 1099511627776), MDB_SUCCESS)  // 1TB
         << "mdb_env_set_mapsize failed";
@@ -97,14 +100,19 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
         << "mdb_open failed. Does the lmdb already exist? ";
   } else if (db_backend == "files") {  // png files
-    CHECK_EQ(mkdir(db_path, 0744), 0)
-        << "mkdir " << db_path << "failed";
+    boost::filesystem::path p(db_path);
+    if (! boost::filesystem::is_directory(p))
+      CHECK_EQ(boost::filesystem::create_directories(p), 1)
+          << "mkdir " << p << " failed";
     for (int i = 0; i < 10; i++) {
-      int pathlen = strlen(db_path) + strlen("/0") + 1;
-      char path[pathlen];
-      snprintf(path, pathlen, "%s/%c", db_path, '0' + i);
-      CHECK_EQ(mkdir(path, 0744), 0)
-          << "mkdir " << path << "failed";
+      char buf[2];
+      snprintf(buf, 2, "%c", '0' + i);
+      string digit_dir_name(buf);
+      boost::filesystem::path digit_path = p / digit_dir_name;
+
+      if (! boost::filesystem::is_directory(digit_path))
+        CHECK_EQ(boost::filesystem::create_directories(digit_path), 1)
+            << "mkdir " << digit_path << " failed";
     }
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
