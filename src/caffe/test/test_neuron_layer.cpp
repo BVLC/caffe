@@ -1,3 +1,5 @@
+#include <google/protobuf/text_format.h>
+
 #include <cstring>
 #include <vector>
 
@@ -152,7 +154,8 @@ TYPED_TEST(NeuronLayerTest, TestReLUGradient) {
 TYPED_TEST(NeuronLayerTest, TestReLUWithNegativeSlope) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.ParseFromString("relu_param{negative_slope:0.01}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param{negative_slope:0.01}", &layer_param));
   ReLULayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -168,7 +171,8 @@ TYPED_TEST(NeuronLayerTest, TestReLUWithNegativeSlope) {
 TYPED_TEST(NeuronLayerTest, TestReLUGradientWithNegativeSlope) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.ParseFromString("relu_param{negative_slope:0.01}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param{negative_slope:0.01}", &layer_param));
   ReLULayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
@@ -437,7 +441,8 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientCuDNN) {
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
-  layer_param.ParseFromString("relu_param{negative_slope:0.01}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param{negative_slope:0.01}", &layer_param));
   CuDNNReLULayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -453,7 +458,8 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUGradientWithNegativeSlopeCuDNN) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
-  layer_param.ParseFromString("relu_param{negative_slope:0.01}");
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "relu_param{negative_slope:0.01}", &layer_param));
   CuDNNReLULayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3, 1701, 0., 0.01);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
