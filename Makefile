@@ -238,12 +238,16 @@ endif
 
 # OS X:
 # clang++ instead of g++
-# libstdc++ instead of libc++ for CUDA compatibility on 10.9
+# libstdc++ instead of libc++ for CUDA compatibility on 10.9 and 10.10
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
 	# clang throws this warning for cuda headers
 	WARNINGS += -Wno-unneeded-internal-declaration
 	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
+		CXXFLAGS += -stdlib=libstdc++
+		LINKFLAGS += -stdlib=libstdc++
+	endif
+	ifneq ($(findstring 10.10, $(shell sw_vers -productVersion)),)
 		CXXFLAGS += -stdlib=libstdc++
 		LINKFLAGS += -stdlib=libstdc++
 	endif
