@@ -386,8 +386,16 @@ message ConcatParameter {
 
 // Message that stores parameters used by ContrastiveLossLayer
 message ContrastiveLossParameter {
-  //margin for dissimilar pair
+  // margin for dissimilar pair
   optional float margin = 1 [default = 1.0];
+  // types of labels on the bottom:
+  // PAIR_SIMILARITY -- there should be 3 bottoms total
+  // CATEGORY -- there should be 4 bottoms total
+  optional LabelType label_type = 2 [default = PAIR_SIMILARITY];
+  enum LabelType {
+    PAIR_SIMILARITY = 0;  // a single 0/1 label, where 1 indicates "same"
+    CATEGORY = 1;         // a pair of category labels in [0,N-1]
+  }
 }
 
 // Message that stores parameters used by ConvolutionLayer

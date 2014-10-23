@@ -1,38 +1,61 @@
 name: "mnist_siamese_train_test"
+
+
 layers {
-  name: "pair_data"
-  type: DATA
-  top: "pair_data"
-  top: "sim"
-  data_param {
-    source: "examples/siamese/mnist_siamese_train_leveldb"
+  name: "data"
+  type: IMAGE_DATA
+  top: "data"
+  top: "label"
+  image_data_param {
+    source: "examples/siamese/mnist_train.txt"
+    batch_size: 100
     scale: 0.00390625
-    batch_size: 64
+    shuffle: true
   }
   include: { phase: TRAIN }
 }
+
 layers {
-  name: "pair_data"
-  type: DATA
-  top: "pair_data"
-  top: "sim"
-  data_param {
-    source: "examples/siamese/mnist_siamese_test_leveldb"
-    scale: 0.00390625
+  name: "data"
+  type: IMAGE_DATA
+  top: "data"
+  top: "label"
+  image_data_param {
+    source: "examples/siamese/mnist_test.txt"
     batch_size: 100
+    scale: 0.00390625
+    shuffle: false
   }
   include: { phase: TEST }
 }
+
+
 layers {
-    name: "slice_pair"
-    type: SLICE
-    bottom: "pair_data"
-    top: "data"
-    top: "data_p"
-    slice_param {
-        slice_dim: 1
-        slice_point: 1
-    }
+  name: "data_p"
+  type: IMAGE_DATA
+  top: "data_p"
+  top: "label_p"
+  image_data_param {
+    source: "examples/siamese/mnist_train_p.txt"
+    batch_size: 100
+    scale: 0.00390625
+    shuffle: true
+  }
+  include: { phase: TRAIN }
+}
+
+layers {
+  name: "data_p"
+  type: IMAGE_DATA
+  top: "data_p"
+  top: "label_p"
+  image_data_param {
+    source: "examples/siamese/mnist_test_p.txt"
+    batch_size: 100
+    scale: 0.00390625
+    shuffle: false
+  }
+  include: { phase: TEST }
 }
 
 
@@ -308,6 +331,7 @@ layers {
     }
     bottom: "feat"
     bottom: "feat_p"
-    bottom: "sim"
+    bottom: "label"
+    bottom: "label_p"
     top: "loss"
 }

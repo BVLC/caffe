@@ -153,7 +153,9 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline int ExactNumBottomBlobs() const { return -1; }
+  virtual inline int MinBottomBlobs() const { return 3; }
+  virtual inline int MaxBottomBlobs() const { return 4; }
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_CONTRASTIVE_LOSS;
   }
@@ -202,10 +204,15 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  Blob<Dtype> label_;  // either copied or calc'd from equality of two labels
   Blob<Dtype> diff_;  // cached for backward pass
   Blob<Dtype> dist_sq_;  // cached for backward pass
   Blob<Dtype> diff_sq_;  // tmp storage for gpu forward pass
   Blob<Dtype> summer_vec_;  // tmp storage for gpu forward pass
+
+ private:
+  virtual void LabelSetUp(const vector<Blob<Dtype>*>& bottom);
+
 };
 
 /**

@@ -32,9 +32,12 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
       Dtype(0.0),
       dist_sq_.mutable_gpu_data());  // \Sum (a_i-b_i)^2
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
+
+  LabelSetUp(bottom);
+
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
-    if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
+    if (static_cast<int>(label_.cpu_data()[i])) {  // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
       loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
@@ -51,6 +54,7 @@ __global__ void CLLForward(const int count, const int channels,
     Dtype *bottom_diff) {
   CUDA_KERNEL_LOOP(i, count) {
     int n = i / channels;  // the num index, to access y and dist_sq
+
     if (static_cast<int>(y[n])) {  // similar pairs
       bottom_diff[i] = alpha * diff[i];
     } else {  // dissimilar pairs
@@ -77,7 +81,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       // NOLINT_NEXT_LINE(whitespace/operators)
       CLLForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
           count, channels, margin, alpha,
-          bottom[2]->gpu_data(),  // pair similarity 0 or 1
+          label_.gpu_data(),
           diff_.gpu_data(),  // the cached eltwise difference between a and b
           dist_sq_.gpu_data(),  // the cached square distance between a and b
           bottom[i]->mutable_gpu_diff());

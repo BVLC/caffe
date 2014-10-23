@@ -20,6 +20,8 @@ void ContrastiveLossLayer<Dtype>::LayerSetUp(
   CHECK_EQ(bottom[2]->channels(), 1);
   CHECK_EQ(bottom[2]->height(), 1);
   CHECK_EQ(bottom[2]->width(), 1);
+
+  label_.Reshape(bottom[0]->num(), 1, 1, 1);
   diff_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
   diff_sq_.Reshape(bottom[0]->num(), bottom[0]->channels(), 1, 1);
   dist_sq_.Reshape(bottom[0]->num(), 1, 1, 1);
@@ -27,6 +29,29 @@ void ContrastiveLossLayer<Dtype>::LayerSetUp(
   summer_vec_.Reshape(bottom[0]->channels(), 1, 1, 1);
   for (int i = 0; i < bottom[0]->channels(); ++i)
     summer_vec_.mutable_cpu_data()[i] = Dtype(1);
+}
+
+template <typename Dtype>
+void ContrastiveLossLayer<Dtype>::LabelSetUp(
+  const vector<Blob<Dtype>*>& bottom) {
+
+  switch (this->layer_param_.contrastive_loss_param().label_type()) {
+    case ContrastiveLossParameter_LabelType_PAIR_SIMILARITY:
+      CHECK_EQ(bottom.size(), 3);
+      caffe_copy(bottom[0]->num(),
+                 bottom[2]->cpu_data(),
+                 label_.mutable_cpu_data());
+      break;
+    case ContrastiveLossParameter_LabelType_CATEGORY:
+      CHECK_EQ(bottom.size(), 4);
+      caffe_cpu_same(bottom[0]->num(),
+                     bottom[2]->cpu_data(),
+                     bottom[3]->cpu_data(),
+                     label_.mutable_cpu_data());
+      break;
+    default:
+      LOG(FATAL) << "Unknown label type";
+  }
 }
 
 template <typename Dtype>
@@ -41,11 +66,15 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
       diff_.mutable_cpu_data());  // a_i-b_i
   const int channels = bottom[0]->channels();
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
+
+  LabelSetUp(bottom);
+
   Dtype loss(0.0);
   for (int i = 0; i < bottom[0]->num(); ++i) {
     dist_sq_.mutable_cpu_data()[i] = caffe_cpu_dot(channels,
         diff_.cpu_data() + (i*channels), diff_.cpu_data() + (i*channels));
-    if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
+
+    if (static_cast<int>(label_.cpu_data()[i])) {  // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
       loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
@@ -68,7 +97,7 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       int channels = bottom[i]->channels();
       for (int j = 0; j < num; ++j) {
         Dtype* bout = bottom[i]->mutable_cpu_diff();
-        if (static_cast<int>(bottom[2]->cpu_data()[j])) {  // similar pairs
+        if (static_cast<int>(label_.cpu_data()[j])) {  // similar pairs
           caffe_cpu_axpby(
               channels,
               alpha,
