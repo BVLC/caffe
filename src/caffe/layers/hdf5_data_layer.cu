@@ -19,11 +19,12 @@ namespace caffe {
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  this->JoinPrefetchThread();
   for (int i = 0; i < top.size(); ++i) {
     const int count = top[i]->count();
     caffe_copy(count, hdf_blobs_[i]->gpu_data(), top[i]->mutable_gpu_data());
   }
-  this->InternalThreadEntry();
+  this->CreatePrefetchThread();
 }
 
 INSTANTIATE_LAYER_GPU_FORWARD(HDF5DataLayer);
