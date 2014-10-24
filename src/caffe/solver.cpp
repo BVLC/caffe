@@ -347,7 +347,7 @@ template <typename Dtype>
 void Solver<Dtype>::Restore(const char* state_file) {
   SolverState state;
   NetParameter net_param;
-  ReadProtoFromBinaryFile(state_file, &state);
+  caffe::ReadProtoFromBinaryFile(state_file, &state);
   if (state.has_learned_net()) {
     ReadProtoFromBinaryFile(state.learned_net().c_str(), &net_param);
     net_->CopyTrainedLayersFrom(net_param);
