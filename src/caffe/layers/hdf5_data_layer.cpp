@@ -117,7 +117,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   Reset();
 
   DLOG(INFO) << "Initializing prefetch";
-  this->InternalThreadEntry();
+  this->CreatePrefetchThread();
   DLOG(INFO) << "Prefetch initialized.";
 }
 
@@ -135,11 +135,12 @@ void HDF5DataLayer<Dtype>::InternalThreadEntry() {
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  this->JoinPrefetchThread();
   for (int i = 0; i < top.size(); ++i) {
     const int count = top[i]->count();
     caffe_copy(count, hdf_blobs_[i]->cpu_data(), top[i]->mutable_cpu_data());
   }
-  this->InternalThreadEntry();
+  this->CreatePrefetchThread();
 }
 
 #ifdef CPU_ONLY
