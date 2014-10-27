@@ -61,10 +61,10 @@ void NormalizedSigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
       }
     }
     if (n_pos > 0) {
-      loss += pos_loss / n_pos;
+      loss += pos_loss / (n_pos * 2);
     }
     if (n_neg > 0) {
-      loss += neg_loss / n_neg;
+      loss += neg_loss / (n_neg * 2);
     }
   }
   (*top)[0]->mutable_cpu_data()[0] = loss;
@@ -104,9 +104,9 @@ void NormalizedSigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
       for (int j = 0; j < num; ++j) {
         int idx = j * dim + i;
         if (target[idx] > 0.5) {
-          scales[idx] = loss_weight / n_pos;
+          scales[idx] = loss_weight / (n_pos * 2.);
         } else {
-          scales[idx] = loss_weight / n_neg;
+          scales[idx] = loss_weight / (n_neg * 2.);
         }
       }
     }
