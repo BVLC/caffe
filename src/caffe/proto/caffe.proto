@@ -256,6 +256,7 @@ message LayerParameter {
     MEMORY_DATA = 29;
     MULTINOMIAL_LOGISTIC_LOSS = 16;
     MVN = 34;
+    NORMALIZED_SIGMOID_CROSS_ENTROPY_LOSS = 46;
     POOLING = 17;
     // Sparse-kernel pooling layer
     POOLING_SK = 41;

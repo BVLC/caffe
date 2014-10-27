@@ -233,6 +233,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new MVNLayer<Dtype>(param);
   case LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS:
     return new MultinomialLogisticLossLayer<Dtype>(param);
+  case LayerParameter_LayerType_NORMALIZED_SIGMOID_CROSS_ENTROPY_LOSS:
+    return new NormalizedSigmoidCrossEntropyLossLayer<Dtype>(param);
   case LayerParameter_LayerType_POOLING:
     return GetPoolingLayer<Dtype>(name, param);
   case LayerParameter_LayerType_POWER:
