@@ -28,6 +28,8 @@ message Datum {
   repeated float float_data = 6;
   // If true data contains an encoded image that need to be decoded
   optional bool encoded = 7 [default = false];
+  // Stores the source of the datum (i.e. filename)
+  optional string source = 8 [default = ""];
 }
 
 message FillerParameter {
@@ -443,6 +445,30 @@ message DataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+}
+
+// Message that stores parameters used by DataLayer
+message DatumDBParameter {
+  enum Backend {
+    LEVELDB = 0;
+    LMDB = 1;
+    IMAGESDB = 2;
+  }
+  enum Mode {
+    NEW = 0;
+    WRITE = 1;
+    READ = 2;
+  }
+  // Specify the data source.
+  optional Backend backend = 1 [default = LEVELDB];
+  optional Mode mode = 2 [default = READ];
+  optional string source = 3;
+  optional bool loop = 4 [default = true];
+  // Only used by IMAGESDB
+  optional string root_images = 5 [default = ""];
+  optional bool cache_images = 6 [default = false];
+  optional bool encode_images = 7 [default = false];
+  optional bool shuffle_images = 8 [default = false];
 }
 
 // Message that stores parameters used by DropoutLayer

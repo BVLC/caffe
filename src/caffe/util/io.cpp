@@ -88,6 +88,7 @@ bool ReadImageToDatum(const string& filename, const int label,
   cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
   if (cv_img.data) {
     CVMatToDatum(cv_img, datum);
+    datum->set_source(filename);
     datum->set_label(label);
     return true;
   } else {
@@ -109,6 +110,7 @@ bool ReadFileToDatum(const string& filename, const int label,
     datum->set_data(buffer);
     datum->set_label(label);
     datum->set_encoded(true);
+    datum->set_source(filename);
     return true;
   } else {
     return false;
