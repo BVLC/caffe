@@ -672,7 +672,8 @@ class NormalizedSigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   explicit NormalizedSigmoidCrossEntropyLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param),
           sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
-          sigmoid_output_(new Blob<Dtype>()) {}
+          sigmoid_output_(new Blob<Dtype>()),
+          thres_(param.norm_sigmoid_param().norm_threshold()){}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -700,6 +701,10 @@ class NormalizedSigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_bottom_vec_;
   /// top vector holder to call the underlying SigmoidLayer::Forward
   vector<Blob<Dtype>*> sigmoid_top_vec_;
+  /// normalization threshold
+  const float thres_;
+  
+
 };
 
 // Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.

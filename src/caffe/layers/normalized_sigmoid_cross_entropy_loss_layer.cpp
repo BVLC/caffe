@@ -43,6 +43,7 @@ void NormalizedSigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   const Dtype* input_data = bottom[0]->cpu_data();
   const Dtype* target = bottom[1]->cpu_data();
   Dtype loss = 0;
+  
   for (int i = 0; i < dim; ++i) {
     int n_pos = 0;
     int n_neg = 0;
@@ -60,11 +61,17 @@ void NormalizedSigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
         log(1 + exp(input_data[idx] - 2 * input_data[idx] * (input_data[idx] >= 0)));
       }
     }
-    if (n_pos > 0) {
-      loss += pos_loss / (n_pos * 2);
-    }
-    if (n_neg > 0) {
-      loss += neg_loss / (n_neg * 2);
+    // Only count loss if there are both positive and negative samples
+    if (n_pos > 0 && n_pos < num) {
+      const float ratio = float(n_pos) / n_neg;
+      // Only normalize if ratio reaches threshold
+      if (ratio >= thres_ || 1. / ratio >= thres_ ) {
+        loss += pos_loss / (n_pos * 2);
+        loss += neg_loss / (n_neg * 2);
+      } else {
+        loss += pos_loss / num;
+        loss += neg_loss / num;
+      }
     }
   }
   (*top)[0]->mutable_cpu_data()[0] = loss;
@@ -90,6 +97,7 @@ void NormalizedSigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     // Scale down gradient
     const Dtype loss_weight = top[0]->cpu_diff()[0];
     Dtype* scales = new Dtype[count];
+
     for (int i = 0; i < dim; ++i) {
       int n_pos = 0;
       int n_neg = 0;
@@ -101,12 +109,25 @@ void NormalizedSigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
           n_neg++;
         }
       }
-      for (int j = 0; j < num; ++j) {
-        int idx = j * dim + i;
-        if (target[idx] > 0.5) {
-          scales[idx] = loss_weight / (n_pos * 2.);
-        } else {
-          scales[idx] = loss_weight / (n_neg * 2.);
+      // Only back propagate if there are both positive and negative samples
+      if (n_pos > 0 && n_pos < num) {
+        const float ratio = float(n_pos) / n_neg;
+        const bool shouldNorm = (ratio >= thres_ || 1. / ratio >= thres_);
+        for (int j = 0; j < num; ++j) {
+          int idx = j * dim + i;
+          if (target[idx] > 0.5) {
+            if (shouldNorm) {
+              scales[idx] = loss_weight / (n_pos * 2.);
+            } else {
+              scales[idx] = loss_weight / num;
+            }
+          } else {
+            if (shouldNorm) {
+              scales[idx] = loss_weight / (n_neg * 2.);
+            } else {
+              scales[idx] = loss_weight / num;
+            }
+          }
         }
       }
     }

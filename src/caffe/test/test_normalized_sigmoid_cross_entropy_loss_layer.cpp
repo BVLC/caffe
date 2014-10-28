@@ -55,6 +55,7 @@ class NormalizedSigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypePa
       int n_neg = 0;
       Dtype pos_loss = 0;
       Dtype neg_loss = 0;
+      const float thres = 1.5;
       for (int j = 0; j < num; ++j) {
         const int idx = j * dim + i;
         const Dtype prediction = 1 / (1 + exp(-input[idx]));
@@ -72,11 +73,17 @@ class NormalizedSigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypePa
           neg_loss -= (1 - target[idx]) * log(1 - prediction + (target[idx] == Dtype(1)));
         }
       }
-      if (n_pos > 0) {
-        loss += pos_loss / n_pos;
-      }
-      if (n_neg > 0) {
-        loss += neg_loss / n_neg;
+      // Only count loss if there are both positive and negative samples
+      if (n_pos > 0 && n_pos < num) {
+        const float ratio = float(n_pos) / n_neg;
+        // Only normalize if ratio reaches threshold
+        if (ratio >= thres || 1. / ratio >= thres ) {
+          loss += pos_loss / (n_pos * 2);
+          loss += neg_loss / (n_neg * 2);
+        } else {
+          loss += pos_loss / num;
+          loss += neg_loss / num;
+        }
       }
     }
     return loss;
@@ -94,6 +101,7 @@ class NormalizedSigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypePa
     targets_filler_param.set_max(1.0);
     UniformFiller<Dtype> targets_filler(targets_filler_param);
     Dtype eps = 2e-2;
+    layer_param.mutable_norm_sigmoid_param()->set_norm_threshold(1.5);
     for (int i = 0; i < 100; ++i) {
       // Fill the data vector
       data_filler.Fill(this->blob_bottom_data_);

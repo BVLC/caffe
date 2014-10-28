@@ -320,6 +320,7 @@ message LayerParameter {
   optional LRNParameter lrn_param = 18;
   optional MemoryDataParameter memory_data_param = 22;
   optional MVNParameter mvn_param = 34;
+  optional NormSigmoidCrossEntropyParameter norm_sigmoid_param = 41;
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional ReLUParameter relu_param = 30;
@@ -580,6 +581,12 @@ message MVNParameter {
 
   // This parameter can be set to true to perform DNN-like MVN
   optional bool across_channels = 2 [default = false];
+}
+
+// Message that stores parameters used by NormalziedSigmoidCrossEntropyLossLayer
+message NormSigmoidCrossEntropyParameter {
+  // Normalization threshold
+  optional float norm_threshold = 1 [default = 2.];
 }
 
 // Message that stores parameters used by PoolingLayer
