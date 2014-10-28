@@ -96,7 +96,7 @@ void NormalizedSigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     caffe_sub(count, sigmoid_output_data, target, bottom_diff);
     // Scale down gradient
     const Dtype loss_weight = top[0]->cpu_diff()[0];
-    Dtype* scales = new Dtype[count];
+    Dtype* scales = new Dtype[count]();
 
     for (int i = 0; i < dim; ++i) {
       int n_pos = 0;
