@@ -72,5 +72,8 @@ DISTRIBUTE_DIR := distribute
 # Uncomment for debugging. Does not work on OSX due to https://github.com/BVLC/caffe/issues/171
 # DEBUG := 1
 
+# Uncomment for OpenMP.
+OPENMP := 1
+
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0
