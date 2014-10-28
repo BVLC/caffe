@@ -81,7 +81,7 @@ void PowerLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(PowerLayer);
+INSTANTIATE_CLASS(PowerLayer);
 
 
 }  // namespace caffe

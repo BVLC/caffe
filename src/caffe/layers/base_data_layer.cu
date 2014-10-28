@@ -20,6 +20,6 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   CreatePrefetchThread();
 }
 
-INSTANTIATE_LAYER_GPU_FORWARD(BasePrefetchingDataLayer);
+INSTANTIATE_CLASS(BasePrefetchingDataLayer);
 
 }  // namespace caffe

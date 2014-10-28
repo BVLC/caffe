@@ -10,6 +10,9 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
+using std::string;
+using std::stringstream;
+
 namespace caffe {
 
 template <typename Dtype>

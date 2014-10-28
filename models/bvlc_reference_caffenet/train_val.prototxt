@@ -5,8 +5,7 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "examples/imagenet/ilsvrc12_train_lmdb"
-    backend: LMDB
+    source: "examples/imagenet/ilsvrc12_train_leveldb"
     batch_size: 256
   }
   transform_param {
@@ -14,14 +13,6 @@ layers {
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
     mirror: true
   }
-# mean pixel / channel-wise mean instead of mean image
-#  transform_param {
-#    crop_size: 227
-#    mean_value: 104
-#    mean_value: 117
-#    mean_value: 123
-#    mirror: true
-#  }
   include: { phase: TRAIN }
 }
 layers {
@@ -30,8 +21,7 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "examples/imagenet/ilsvrc12_val_lmdb"
-    backend: LMDB
+    source: "examples/imagenet/ilsvrc12_val_leveldb"
     batch_size: 50
   }
   transform_param {
@@ -39,14 +29,6 @@ layers {
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
     mirror: false
   }
-# mean pixel / channel-wise mean instead of mean image
-#  transform_param {
-#    crop_size: 227
-#    mean_value: 104
-#    mean_value: 117
-#    mean_value: 123
-#    mirror: true
-#  }
   include: { phase: TEST }
 }
 layers {
@@ -62,6 +44,7 @@ layers {
     num_output: 96
     kernel_size: 11
     stride: 4
+    engine: FFT
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -114,6 +97,7 @@ layers {
     pad: 2
     kernel_size: 5
     group: 2
+    engine: FFT
     weight_filler {
       type: "gaussian"
       std: 0.01

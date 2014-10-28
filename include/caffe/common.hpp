@@ -19,7 +19,7 @@
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 // Luckily we will be able to use GFLAGS_GFAGS_H_ to detect if it is version
-// 2.1. If yes, we will add a temporary solution to redirect the namespace.
+// 2.1. If yes , we will add a temporary solution to redirect the namespace.
 // TODO(Yangqing): Once gflags solves the problem in a more elegant way, let's
 // remove the following hack.
 #ifndef GFLAGS_GFLAGS_H_
@@ -34,31 +34,8 @@ private:\
 
 // Instantiate a class with float and double specifications.
 #define INSTANTIATE_CLASS(classname) \
-  char gInstantiationGuard##classname; \
   template class classname<float>; \
   template class classname<double>
-
-#define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
-  template void classname<float>::Forward_gpu( \
-      const std::vector<Blob<float>*>& bottom, \
-      const std::vector<Blob<float>*>& top); \
-  template void classname<double>::Forward_gpu( \
-      const std::vector<Blob<double>*>& bottom, \
-      const std::vector<Blob<double>*>& top);
-
-#define INSTANTIATE_LAYER_GPU_BACKWARD(classname) \
-  template void classname<float>::Backward_gpu( \
-      const std::vector<Blob<float>*>& top, \
-      const std::vector<bool>& propagate_down, \
-      const std::vector<Blob<float>*>& bottom); \
-  template void classname<double>::Backward_gpu( \
-      const std::vector<Blob<double>*>& top, \
-      const std::vector<bool>& propagate_down, \
-      const std::vector<Blob<double>*>& bottom)
-
-#define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
-  INSTANTIATE_LAYER_GPU_FORWARD(classname); \
-  INSTANTIATE_LAYER_GPU_BACKWARD(classname)
 
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
@@ -74,7 +51,6 @@ using boost::shared_ptr;
 using std::fstream;
 using std::ios;
 using std::isnan;
-using std::isinf;
 using std::iterator;
 using std::make_pair;
 using std::map;

@@ -43,10 +43,8 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
   Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < spatial_dim; j++) {
-      const int label_value = static_cast<int>(label[i * spatial_dim + j]);
-      CHECK_GT(dim, label_value * spatial_dim);
       loss -= log(std::max(prob_data[i * dim +
-          label_value * spatial_dim + j],
+          static_cast<int>(label[i * spatial_dim + j]) * spatial_dim + j],
                            Dtype(FLT_MIN)));
     }
   }
@@ -90,5 +88,6 @@ STUB_GPU(SoftmaxWithLossLayer);
 #endif
 
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
-REGISTER_LAYER_CLASS(SOFTMAX_LOSS, SoftmaxWithLossLayer);
+
+
 }  // namespace caffe

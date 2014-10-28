@@ -108,7 +108,7 @@ Dtype caffe_cpu_asum(const int n, const Dtype* x);
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
 template<typename Dtype>
-inline int8_t caffe_sign(Dtype val) {
+inline char caffe_sign(Dtype val) {
   return (Dtype(0) < val) - (val < Dtype(0));
 }
 
@@ -127,6 +127,12 @@ inline int8_t caffe_sign(Dtype val) {
     } \
   }
 
+#define INSTANTIATE_CAFFE_CPU_UNARY_FUNC(name) \
+  template <> \
+  void caffe_cpu_##name<float>(const int n, const float* x, float* y); \
+  template <> \
+  void caffe_cpu_##name<double>(const int n, const double* x, double* y)
+
 // output is 1 for the positives, 0 for zero, and -1 for the negatives
 DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
 
@@ -134,8 +140,7 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
 // The name sngbit is meant to avoid conflicts with std::signbit in the macro.
 // The extra parens are needed because CUDA < 6.5 defines signbit as a macro,
 // and we don't want that to expand here when CUDA headers are also included.
-DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
-    y[i] = static_cast<bool>((std::signbit)(x[i])));
+DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, y[i] = (std::signbit)(x[i]));
 
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
 
@@ -199,9 +204,6 @@ void caffe_gpu_div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_abs(const int n, const Dtype* a, Dtype* y);
-
-template <typename Dtype>
-void caffe_gpu_exp(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);

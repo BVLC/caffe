@@ -18,6 +18,6 @@ void FlattenLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   bottom[0]->ShareDiff(*top[0]);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(FlattenLayer);
+INSTANTIATE_CLASS(FlattenLayer);
 
 }  // namespace caffe

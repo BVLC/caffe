@@ -11,6 +11,9 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
+using std::string;
+using std::vector;
+
 namespace caffe {
 
 template<typename TypeParam>

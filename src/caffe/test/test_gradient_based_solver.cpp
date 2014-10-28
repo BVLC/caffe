@@ -323,6 +323,7 @@ class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
 TYPED_TEST_CASE(SGDSolverTest, TestDtypesAndDevices);
 
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdate) {
+  typedef typename TypeParam::Dtype Dtype;
   this->TestLeastSquaresUpdate();
 }
 
@@ -389,6 +390,7 @@ class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
 TYPED_TEST_CASE(AdaGradSolverTest, TestDtypesAndDevices);
 
 TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdate) {
+  typedef typename TypeParam::Dtype Dtype;
   this->TestLeastSquaresUpdate();
 }
 
@@ -433,6 +435,7 @@ class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
 TYPED_TEST_CASE(NesterovSolverTest, TestDtypesAndDevices);
 
 TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdate) {
+  typedef typename TypeParam::Dtype Dtype;
   this->TestLeastSquaresUpdate();
 }
 

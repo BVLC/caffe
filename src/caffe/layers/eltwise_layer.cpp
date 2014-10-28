@@ -163,5 +163,6 @@ STUB_GPU(EltwiseLayer);
 #endif
 
 INSTANTIATE_CLASS(EltwiseLayer);
-REGISTER_LAYER_CLASS(ELTWISE, EltwiseLayer);
+
+
 }  // namespace caffe

@@ -23,6 +23,6 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SilenceLayer);
+INSTANTIATE_CLASS(SilenceLayer);
 
 }  // namespace caffe

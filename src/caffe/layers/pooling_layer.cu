@@ -373,7 +373,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_LAYER_GPU_FUNCS(PoolingLayer);
+INSTANTIATE_CLASS(PoolingLayer);
 
 
 }  // namespace caffe

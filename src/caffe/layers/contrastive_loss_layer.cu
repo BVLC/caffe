@@ -86,6 +86,6 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ContrastiveLossLayer);
+INSTANTIATE_CLASS(ContrastiveLossLayer);
 
 }  // namespace caffe

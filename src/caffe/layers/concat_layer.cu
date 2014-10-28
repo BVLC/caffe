@@ -71,6 +71,6 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ConcatLayer);
+INSTANTIATE_CLASS(ConcatLayer);
 
 }  // namespace caffe

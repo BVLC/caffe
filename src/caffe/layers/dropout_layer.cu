@@ -71,7 +71,7 @@ void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(DropoutLayer);
+INSTANTIATE_CLASS(DropoutLayer);
 
 
 }  // namespace caffe

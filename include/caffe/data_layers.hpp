@@ -7,17 +7,21 @@
 
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
+#include "leveldb/db.h"
+#include "lmdb.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/data_transformer.hpp"
-#include "caffe/dataset.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
+
+#define HDF5_DATA_DATASET_NAME "data"
+#define HDF5_DATA_LABEL_NAME "label"
 
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
@@ -45,9 +49,20 @@ class BaseDataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
+  int datum_channels() const { return datum_channels_; }
+  int datum_height() const { return datum_height_; }
+  int datum_width() const { return datum_width_; }
+  int datum_size() const { return datum_size_; }
+
  protected:
   TransformationParameter transform_param_;
   DataTransformer<Dtype> data_transformer_;
+  int datum_channels_;
+  int datum_height_;
+  int datum_width_;
+  int datum_size_;
+  Blob<Dtype> data_mean_;
+  const Dtype* mean_;
   Caffe::Phase phase_;
   bool output_labels_;
 };
@@ -78,7 +93,6 @@ class BasePrefetchingDataLayer :
  protected:
   Blob<Dtype> prefetch_data_;
   Blob<Dtype> prefetch_label_;
-  Blob<Dtype> transformed_data_;
 };
 
 template <typename Dtype>
@@ -100,8 +114,15 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void InternalThreadEntry();
 
-  shared_ptr<Dataset<string, Datum> > dataset_;
-  Dataset<string, Datum>::const_iterator iter_;
+  // LEVELDB
+  shared_ptr<leveldb::DB> db_;
+  shared_ptr<leveldb::Iterator> iter_;
+  // LMDB
+  MDB_env* mdb_env_;
+  MDB_dbi mdb_dbi_;
+  MDB_txn* mdb_txn_;
+  MDB_cursor* mdb_cursor_;
+  MDB_val mdb_key_, mdb_value_;
 };
 
 /**
@@ -159,7 +180,7 @@ class HDF5DataLayer : public Layer<Dtype> {
     return LayerParameter_LayerType_HDF5_DATA;
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -176,7 +197,8 @@ class HDF5DataLayer : public Layer<Dtype> {
   unsigned int num_files_;
   unsigned int current_file_;
   hsize_t current_row_;
-  std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
+  Blob<Dtype> data_blob_;
+  Blob<Dtype> label_blob_;
 };
 
 /**
@@ -276,15 +298,12 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   void Reset(Dtype* data, Dtype* label, int n);
 
   int batch_size() { return batch_size_; }
-  int channels() { return channels_; }
-  int height() { return height_; }
-  int width() { return width_; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  int batch_size_, channels_, height_, width_, size_;
+  int batch_size_;
   Dtype* data_;
   Dtype* labels_;
   int n_;
@@ -324,12 +343,6 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
-  Blob<Dtype> data_mean_;
-  vector<Dtype> mean_values_;
-  bool has_mean_file_;
-  bool has_mean_values_;
-  bool cache_images_;
-  vector<std::pair<std::string, Datum > > image_database_cache_;
 };
 
 }  // namespace caffe

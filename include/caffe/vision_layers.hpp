@@ -1,6 +1,9 @@
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 
+#include <cufft.h>
+
+#include <complex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -13,6 +16,7 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+
 
 namespace caffe {
 
@@ -60,8 +64,8 @@ class ConvolutionLayer : public Layer<Dtype> {
    *  first group and input channels 3-4 and output channels 5-8 into the second
    *  group.
    *  - bias_term (\b optional, default true). Whether to have a bias.
-   *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
-   *    kernels + stream parallelism) engines.
+   *  - engine: convolution has CAFFE (matrix multiplication), CUDNN (library
+   *    kernels + stream parallelism) and FFT engines.
    */
   explicit ConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
@@ -98,6 +102,62 @@ class ConvolutionLayer : public Layer<Dtype> {
   int height_out_, width_out_;
   bool bias_term_;
   bool is_1x1_;
+  /// M_ is the channel dimension of the output for a single group, which is the
+  /// leading dimension of the filter matrix.
+  int M_;
+  /// K_ is the dimension of an unrolled input for a single group, which is the
+  /// leading dimension of the data matrix.
+  int K_;
+  /// N_ is the spatial dimension of the output, the H x W, which are the last
+  /// dimensions of the data and filter matrices.
+  int N_;
+  Blob<Dtype> col_buffer_;
+  Blob<Dtype> bias_multiplier_;
+};
+
+template <typename Dtype>
+class ConvolutionLayerFFT : public ConvolutionLayer<Dtype> {
+ public:
+  explicit ConvolutionLayerFFT(const LayerParameter& param)
+      : ConvolutionLayer<Dtype>(param) ,
+      fft_on_(true), fft_cpu_initialized_(false), fft_gpu_initialized_(false) {
+  }
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual  ~ConvolutionLayerFFT<Dtype>();
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_CONVOLUTION;
+  }
+  virtual inline int MinBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline bool EqualNumBottomTopBlobs() const { return true; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down,
+       const vector<Blob<Dtype>*>& bottom);
+
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
+  int num_;
+  int channels_;
+  int pad_h_, pad_w_;
+  int height_, width_;
+  int group_;
+  int num_output_;
+  int height_out_, width_out_;
+  bool bias_term_;
+  bool is_1x1_;
+
 
   /// M_ is the channel dimension of the output for a single group, which is the
   /// leading dimension of the filter matrix.
@@ -110,6 +170,93 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
+
+
+// ----------------------   FFT ---------------------------------
+
+
+// Forward CPU
+  virtual Dtype Forward_cpu_fft(
+          const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu_fft_task(const Dtype *bottom_data, Dtype* top_data,
+          int n);
+  virtual void Forward_cpu_task(const Dtype* bottom_data, Dtype* top_data,
+  Dtype* col_buff, const Dtype* weight, int n);
+  virtual void fft_compute_weights();
+
+
+// Forward GPU
+  virtual Dtype Forward_gpu_fft(const vector<Blob<Dtype>*>& bottom,
+          const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu_fft_task(const Dtype *bottom_data, Dtype* top_data,
+          const Dtype* weight, int n);
+  virtual void Forward_gpu_task(const vector<Blob<Dtype>*>& bottom,
+          const vector<Blob<Dtype>*>& top, int i, int n);
+  virtual void fft_gpu_compute_weights();
+
+// Backward CPU
+  virtual void Backward_cpu_fft_task(const vector<Blob<Dtype>*>& bottom,
+          const vector<Blob<Dtype>*>& top,
+           const Dtype* weight, int i, int n);
+  virtual void Backward_cpu_weight_diff_task(const Dtype* top_diff,
+          const vector<Blob<Dtype>*>& bottom, int i, int n);
+  virtual void Backward_cpu_bottom_diff_task(
+          const Dtype* top_diff, Dtype* bottom_diff,
+           const Dtype* weight, int i, int n);
+
+// Backward GPU
+  virtual void Backward_gpu_fft_task(const vector<Blob<Dtype>*>& bottom,
+          const vector<Blob<Dtype>*>& top,
+           const Dtype* weight, int i, int n);
+  virtual void Backward_gpu_weight_diff_task(const Dtype* top_diff,
+          const vector<Blob<Dtype>*>& bottom, int i, int n);
+  virtual void Backward_gpu_bottom_diff_task(
+          const Dtype* top_diff, Dtype* bottom_diff,
+           const Dtype* weight, int i,  int n);
+
+// fft setup function for CPU and GPU
+  virtual void fft_setup();
+  virtual void fft_cpu_setup();
+  virtual void fft_gpu_setup();
+  virtual void fft_clean();
+  virtual void fft_cpu_clean();
+  virtual void fft_gpu_clean();
+
+  int num_of_threads_;                // openmp
+  std::vector<Dtype> col_buffer_mt_;  //  openmp
+  std::vector<Dtype> weight_diff_mt_;  // openmp
+
+// FFT variables
+  bool fft_on_;
+  bool fft_cpu_initialized_;
+  bool fft_gpu_initialized_;
+  int fft_height_;
+  int fft_width_;
+  int fft_map_real_size_;
+  int fft_map_complex_size_;
+  int map_size_;
+  int map_out_size_;
+
+// CPU buffers and handles
+  Dtype* fft_weights_real_;
+  Dtype* fft_map_in_real_;
+  std::complex<Dtype>* fft_weights_complex_;
+  std::complex<Dtype>* fft_map_in_complex_;
+  std::complex<Dtype>* fft_map_out_complex_;
+  Dtype* fft_map_out_real_;
+  void* fft_handle_;
+  void* ifft_handle_;
+  void* fft_many_handle_;
+// GPU buffers and handles
+  Dtype* fft_gpu_weights_real_;
+  Dtype* fft_gpu_map_in_real_;
+  std::complex<Dtype>* fft_gpu_weights_complex_;
+  std::complex<Dtype>* fft_gpu_map_in_complex_;
+  std::complex<Dtype>* fft_gpu_map_out_complex_;
+  Dtype* fft_gpu_map_out_real_;
+  cufftHandle fft_gpu_handle_;
+  cufftHandle ifft_gpu_handle_;
+  cufftHandle fft_gpu_many_weights_handle_;
 };
 
 #ifdef USE_CUDNN
@@ -319,7 +466,6 @@ class PoolingLayer : public Layer<Dtype> {
   int channels_;
   int height_, width_;
   int pooled_height_, pooled_width_;
-  bool global_pooling_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
 };
@@ -339,9 +485,6 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual ~CuDNNPoolingLayer();
-  // Currently, cuDNN does not support the extra top blob.
-  virtual inline int MinTopBlobs() const { return -1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
