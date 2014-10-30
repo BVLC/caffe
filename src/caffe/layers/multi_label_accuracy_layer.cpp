@@ -1,14 +1,12 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <algorithm>
-#include <cmath>
 #include <cfloat>
+#include <cmath>
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-#include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/math_functions.hpp"
+#include "caffe/vision_layers.hpp"
 
 using std::max;
 
@@ -16,8 +14,8 @@ using std::max;
 namespace caffe {
 
 template <typename Dtype>
-void MultiLabelAccuracyLayer<Dtype>::SetUp(
-  const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+void MultiLabelAccuracyLayer<Dtype>::Reshape(
+  const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(bottom[0]->num(), bottom[1]->num())
     << "The data and label should have the same number of instances";
   CHECK_EQ(bottom[0]->channels(), bottom[1]->channels())
@@ -30,12 +28,13 @@ void MultiLabelAccuracyLayer<Dtype>::SetUp(
   // top[0] = Sensitivity (TP/P),
   // top[1] = Specificity (TN/N),
   // top[2] = Harmonic Mean of Sens and Spec, 2/(P/TP+N/TN),
-  (*top)[0]->Reshape(1, 3, 1, 1);
+  top[0]->Reshape(1, 3, 1, 1);
 }
 
 template <typename Dtype>
-Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
-  const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+void MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
+  const vector<Blob<Dtype>*>& bottom,
+  const vector<Blob<Dtype>*>& top) {
   Dtype true_positive = 0;
   Dtype true_negative = 0;
   int count_pos = 0;
@@ -61,20 +60,17 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
   }
   Dtype sensitivity = (count_pos > 0)? (true_positive / count_pos): 0;
   Dtype specificity = (count_neg > 0)? (true_negative / count_neg): 0;
-  Dtype harmmean = ((count_pos + count_neg) > 0)? 
+  Dtype harmmean = ((count_pos + count_neg) > 0)?
     2 / (count_pos / true_positive + count_neg / true_negative) : 0;
 
   DLOG(INFO) << "Sensitivity: " << sensitivity;
   DLOG(INFO) << "Specificity: " << specificity;
   DLOG(INFO) << "Harmonic Mean of Sens and Spec: " << harmmean;
-  (*top)[0]->mutable_cpu_data()[0] = sensitivity;
-  (*top)[0]->mutable_cpu_data()[1] = specificity;
-  (*top)[0]->mutable_cpu_data()[2] = harmmean;
-
-  // MultiLabelAccuracy should not be used as a loss function.
-  return Dtype(0);
+  top[0]->mutable_cpu_data()[0] = sensitivity;
+  top[0]->mutable_cpu_data()[1] = specificity;
+  top[0]->mutable_cpu_data()[2] = harmmean;
 }
 
 INSTANTIATE_CLASS(MultiLabelAccuracyLayer);
-
+REGISTER_LAYER_CLASS(MULTI_LABEL_ACCURACY, MultiLabelAccuracyLayer);
 }  // namespace caffe

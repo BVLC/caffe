@@ -1,21 +1,17 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/vision_layers.hpp"
+#include "gtest/gtest.h"
 
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
 class MultiLabelAccuracyLayerTest : public ::testing::Test {
@@ -29,7 +25,7 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
     data_filler_param.set_std(1);
     GaussianFiller<Dtype> data_filler(data_filler_param);
     data_filler.Fill(blob_bottom_data_);
-  
+
     // Fill the label vector
     FillerParameter targets_filler_param;
     targets_filler_param.set_min(-1);
@@ -78,8 +74,8 @@ class MultiLabelAccuracyLayerTest : public ::testing::Test {
         targets[j] = targets[j] * mask[j];
       }
       MultiLabelAccuracyLayer<Dtype> layer(layer_param);
-      layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-      layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+      layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+      layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
       const Dtype* top_acc = this->blob_top_->cpu_data();
       DLOG(INFO) << top_acc[0] << " " << top_acc[1] << " " << top_acc[2];
       mean_acc += top_acc[2];
@@ -100,11 +96,11 @@ TYPED_TEST_CASE(MultiLabelAccuracyLayerTest, Dtypes);
 TYPED_TEST(MultiLabelAccuracyLayerTest, TestSetup) {
   LayerParameter layer_param;
   MultiLabelAccuracyLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  EXPECT_EQ(this->blob_top_->num(),1);
-  EXPECT_EQ(this->blob_top_->channels(),3);
-  EXPECT_EQ(this->blob_top_->height(),1);
-  EXPECT_EQ(this->blob_top_->width(),1);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 3);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
 }
 
 
