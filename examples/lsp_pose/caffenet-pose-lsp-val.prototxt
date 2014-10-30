@@ -5,7 +5,7 @@ layers {
   top: "data"
   top: "label"
   hdf5_data_param {
-    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/lsp_test_mean.txt"
+    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/lsp_test_on_train.txt"
     batch_size: 100
   }
   include: { phase: TEST }

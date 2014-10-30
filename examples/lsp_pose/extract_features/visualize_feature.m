@@ -2,7 +2,7 @@ close all; clear all;
 addpath(genpath('../../../tools/wyang'));
 
 num_output  = 96; %  num_output: 96 for conv 1 (refer to the proto)
-layer = 'features_conv1';
+layer = 'features-fc7';
 load([layer '/features.mat']);
 load('/home/wyang/Code/PE1.41DBN_human_detector/LSP/cache_test/pos.mat');
 width = size(feats, 2);

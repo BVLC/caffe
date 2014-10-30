@@ -5,20 +5,8 @@ layers {
   top: "data"
   top: "label"
   hdf5_data_param {
-    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/cache_train_val/lsp_val.txt"
-    batch_size: 128
-	shuffle: 1
-  }
-  include: { phase: TRAIN }
-}
-layers {
-  name: "data"
-  type: HDF5_DATA
-  top: "data"
-  top: "label"
-  hdf5_data_param {
-    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/lsp_test_full_mean.txt"
-    batch_size: 128
+    source: "/home/wyang/Code/PE1.41DBN_human_detector/LSP/cache_train_no_fr/lsp_ext_no_fr.txt"
+    batch_size: 100
   }
   include: { phase: TEST }
 }
@@ -328,15 +316,6 @@ layers {
   top: "accuracy"
   include: { phase: TEST }
 }
-layers {
-  name: "loss"
-  type: EUCLIDEAN_LOSS
-  bottom: "fc8"
-  bottom: "label"
-  top: "loss"
-}
-
-
 layers {
   name: "loss"
   type: EUCLIDEAN_LOSS
