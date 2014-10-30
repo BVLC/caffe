@@ -290,6 +290,9 @@ void Solver<Dtype>::Test(const int test_net_id) {
     const string& output_name = test_net->blob_names()[output_blob_index];
     const Dtype loss_weight = test_net->blob_loss_weights()[output_blob_index];
     ostringstream loss_msg_stream;
+    LOG(INFO) << "test_score[" << i << "]:" <<  test_score[i];
+    LOG(INFO) << "param_.test_iter(" << test_net_id << "):" <<  param_.test_iter(test_net_id);
+
     const Dtype mean_score = test_score[i] / param_.test_iter(test_net_id);
     if (loss_weight) {
       loss_msg_stream << " (* " << loss_weight
