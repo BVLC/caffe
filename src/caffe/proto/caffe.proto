@@ -359,6 +359,9 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
+  // Specify if we want to randomly rotate data by an integer multiple of
+  // 90 degrees
+  optional bool rotate = 6 [default = false];
 }
 
 // Message that stores parameters used by AccuracyLayer
