@@ -13,7 +13,7 @@ import argparse
 
 
 def get_line_type(line):
-    """Return either 'test' or 'train depending on line type
+    """Return either 'test' or 'train' depending on line type
     """
 
     line_type = None
@@ -30,7 +30,8 @@ def parse_log(path_to_log):
 
     re_iteration = re.compile('Iteration (\d+)')
     re_accuracy = re.compile('output #\d+: accuracy = ([\.\d]+)')
-    re_loss = re.compile('output #\d+: loss = ([\.\d]+)')
+    re_train_loss = re.compile('Iteration \d+, loss = ([\.\d]+)')
+    re_output_loss = re.compile('output #\d+: loss = ([\.\d]+)')
     re_lr = re.compile('lr = ([\.\d]+)')
 
     # Pick out lines of interest
@@ -61,21 +62,23 @@ def parse_log(path_to_log):
                 learning_rate = float(lr_match.group(1))
 
             accuracy_match = re_accuracy.search(line)
-            if accuracy_match:
+            if accuracy_match and get_line_type(line) == 'test':
                 test_accuracy = float(accuracy_match.group(1))
 
-            loss_match = re_loss.search(line)
-            if loss_match:
-                loss = float(loss_match.group(1))
-                line_type = get_line_type(line)
-                assert line_type, ('Failed to determine line type for line: ' +
-                                   line)
-                if line_type == 'test':
-                    # NOTE: we assume that accuracy always comes right before
-                    # loss for test data
-                    test_list.append((iteration, seconds, test_accuracy, loss))
-                elif line_type == 'train':
-                    train_list.append((iteration, seconds, loss, learning_rate))
+            train_loss_match = re_train_loss.search(line)
+            if train_loss_match:
+                train_loss = float(train_loss_match.group(1))
+                train_list.append((iteration, seconds, train_loss,
+                                   learning_rate))
+
+            output_loss_match = re_output_loss.search(line)
+            if output_loss_match and get_line_type(line) == 'test':
+                test_loss = float(output_loss_match.group(1))
+                # NOTE: we assume that (1) accuracy always comes right before
+                # loss for test data so the test_accuracy variable is already
+                # correctly populated and (2) there's one and only one output
+                # named "accuracy" for the test net
+                test_list.append((iteration, seconds, test_accuracy, test_loss))
 
     return train_list, test_list
 
@@ -113,7 +116,7 @@ def write_csv(output_filename, list_of_tuples, format_string, header,
 
 def parse_args():
     description = ('Parse a Caffe training log into two CSV files '
-                   'representing training and testing information')
+                   'containing training and testing information')
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument('logfile_path',
