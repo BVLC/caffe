@@ -1,22 +1,18 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/vision_layers.hpp"
+#include "gtest/gtest.h"
 
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
-
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 
 template <typename Dtype>
 class MultiLabelLossLayerTest : public ::testing::Test {
@@ -40,10 +36,12 @@ class MultiLabelLossLayerTest : public ::testing::Test {
     caffe_cpu_sign(count, this->blob_bottom_targets_->cpu_data(),
       this->blob_bottom_targets_->mutable_cpu_data());
     blob_bottom_vec_.push_back(blob_bottom_targets_);
+    this->blob_top_vec_.push_back(new Blob<Dtype>());
   }
   virtual ~MultiLabelLossLayerTest() {
     delete blob_bottom_data_;
     delete blob_bottom_targets_;
+    delete blob_top_vec_[0];
   }
 
   Dtype SigmoidMultiLabelLossReference(const int count, const int num,
@@ -84,9 +82,9 @@ class MultiLabelLossLayerTest : public ::testing::Test {
       Dtype* targets = this->blob_bottom_targets_->mutable_cpu_data();
       caffe_cpu_sign(count, targets, targets);
       MultiLabelLossLayer<Dtype> layer(layer_param);
-      layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+      layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
       Dtype layer_loss =
-          layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+          layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
       const int num = this->blob_bottom_data_->num();
       const Dtype* blob_bottom_data = this->blob_bottom_data_->cpu_data();
       const Dtype* blob_bottom_targets =
@@ -112,7 +110,7 @@ TYPED_TEST(MultiLabelLossLayerTest, TestSetup1Top) {
   vector<Blob<TypeParam>*> aux_top_vec;
   Blob<TypeParam>* blob_top_ = new Blob<TypeParam>();
   aux_top_vec.push_back(blob_top_);
-  layer.SetUp(this->blob_bottom_vec_, &(aux_top_vec));
+  layer.SetUp(this->blob_bottom_vec_, aux_top_vec);
   EXPECT_EQ(blob_top_->num(), 1);
   EXPECT_EQ(blob_top_->channels(), 1);
   EXPECT_EQ(blob_top_->height(), 1);
@@ -127,7 +125,7 @@ TYPED_TEST(MultiLabelLossLayerTest, TestSetup2Tops) {
   Blob<TypeParam>* blob_top2_ = new Blob<TypeParam>();
   aux_top_vec.push_back(blob_top_);
   aux_top_vec.push_back(blob_top2_);
-  layer.SetUp(this->blob_bottom_vec_, &(aux_top_vec));
+  layer.SetUp(this->blob_bottom_vec_, aux_top_vec);
   EXPECT_EQ(blob_top_->num(), 1);
   EXPECT_EQ(blob_top_->channels(), 1);
   EXPECT_EQ(blob_top_->height(), 1);
@@ -152,20 +150,20 @@ TYPED_TEST(MultiLabelLossLayerTest, TestGradientCPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::CPU);
   MultiLabelLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0, -1, -1);
+  checker.CheckGradientSingle(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0, -1, -1);
 }
 
 TYPED_TEST(MultiLabelLossLayerTest, TestGradientGPU) {
   LayerParameter layer_param;
   Caffe::set_mode(Caffe::GPU);
   MultiLabelLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0, -1, -1);
+  checker.CheckGradientSingle(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0, -1, -1);
 }
 
 

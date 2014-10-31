@@ -11,9 +11,16 @@ using std::max;
 namespace caffe {
 
 template <typename Dtype>
-void MultiLabelLossLayer<Dtype>::LayerSetup(
+void MultiLabelLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  LossLayer<Dtype>::LayerSetUp(bottom, top);
+
+  if (top.size() > 1) {
+    while (this->layer_param_.loss_weight_size() < top.size())
+      this->layer_param_.add_loss_weight(Dtype(0));
+  }
+
   CHECK_EQ(bottom[0]->count(), bottom[1]->count()) <<
       "MULTI_LABEL_LOSS layer inputs must have the same count.";
   sigmoid_bottom_vec_.clear();
@@ -21,10 +28,15 @@ void MultiLabelLossLayer<Dtype>::LayerSetup(
   sigmoid_top_vec_.clear();
   sigmoid_top_vec_.push_back(sigmoid_output_.get());
   sigmoid_layer_->SetUp(sigmoid_bottom_vec_, sigmoid_top_vec_);
-  if (top.size() >= 1) {
-    // sigmoid cross entropy loss (averaged across batch)
-    top[0]->Reshape(1, 1, 1, 1);
-  }
+}
+
+template <typename Dtype>
+void MultiLabelLossLayer<Dtype>::Reshape(
+    const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  LossLayer<Dtype>::Reshape(bottom, top);
+  sigmoid_layer_->Reshape(sigmoid_bottom_vec_, sigmoid_top_vec_);
+
   if (top.size() == 2) {
     // softmax output
     top[1]->ReshapeLike(*sigmoid_output_.get());

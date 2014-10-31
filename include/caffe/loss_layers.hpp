@@ -807,7 +807,10 @@ class MultiLabelLossLayer : public LossLayer<Dtype> {
           sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
           sigmoid_output_(new Blob<Dtype>()) {}
 
-  virtual void LayerSetup(const vector<Blob<Dtype>*>& bottom,
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
   virtual inline LayerParameter_LayerType type() const {
@@ -815,6 +818,10 @@ class MultiLabelLossLayer : public LossLayer<Dtype> {
   }
 
   virtual inline int MaxTopBlobs() const { return 2; }
+
+  virtual inline int ExactNumTopBlobs() const { return -1; }
+
+  virtual inline int MinTopBlobs() const { return 1; }
 
   // We cannot backpropagate to the labels; ignore force_backward for these
   // inputs.
