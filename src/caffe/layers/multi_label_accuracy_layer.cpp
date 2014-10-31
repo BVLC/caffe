@@ -10,7 +10,6 @@
 
 using std::max;
 
-
 namespace caffe {
 
 template <typename Dtype>
@@ -71,7 +70,8 @@ void MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
   Dtype precission = (true_positive > 0)?
     (true_positive / (true_positive + false_positive)): 0;
   Dtype f1_score = (true_positive > 0)?
-    2 * true_positive / (2 * true_positive + false_positive + false_negative) : 0;
+    2 * true_positive /
+    (2 * true_positive + false_positive + false_negative) : 0;
 
   DLOG(INFO) << "Sensitivity: " << sensitivity;
   DLOG(INFO) << "Specificity: " << specificity;
