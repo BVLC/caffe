@@ -11,7 +11,7 @@ TODO complete list of layers linking to headings
 
 ### Vision Layers
 
-* Header: `./include/caffe/vision_layers.hpp`
+* Header: `$CAFFE_ROOT/include/caffe/vision_layers.hpp`
 
 Vision layers usually take *images* as input and produce other *images* as output.
 A typical "image" in the real-world may have one color channel ($$c = 1$$), as in a grayscale image, or three color channels ($$c = 3$$) as in an RGB (red, green, blue) image.
@@ -24,8 +24,8 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 #### Convolution
 
 * LayerType: `CONVOLUTION`
-* CPU implementation: `./src/caffe/layers/convolution_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/convolution_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/convolution_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/convolution_layer.cu`
 * Parameters (`ConvolutionParameter convolution_param`)
     - Required
         - `num_output` (`c_o`): the number of filters
@@ -72,8 +72,8 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 #### Pooling
 
 * LayerType: `POOLING`
-* CPU implementation: `./src/caffe/layers/pooling_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/pooling_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/pooling_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/pooling_layer.cu`
 * Parameters (`PoolingParameter pooling_param`)
     - Required
         - `kernel_size` (or `kernel_h` and `kernel_w`): specifies height and width of each filter
@@ -102,8 +102,8 @@ The `CONVOLUTION` layer convolves the input image with a set of learnable filter
 #### Local Response Normalization (LRN)
 
 * LayerType: `LRN`
-* CPU Implementation: `./src/caffe/layers/lrn_layer.cpp`
-* CUDA GPU Implementation: `./src/caffe/layers/lrn_layer.cu`
+* CPU Implementation: `$CAFFE_ROOT/src/caffe/layers/lrn_layer.cpp`
+* CUDA GPU Implementation: `$CAFFE_ROOT/src/caffe/layers/lrn_layer.cu`
 * Parameters (`LRNParameter lrn_param`)
     - Optional
         - `local_size` [default 5]: the number of channels to sum over (for cross channel LRN) or the side length of the square region to sum over (for within channel LRN)
@@ -124,19 +124,23 @@ Loss drives learning by comparing an output to a target and assigning cost to mi
 #### Softmax
 
 * LayerType: `SOFTMAX_LOSS`
+* CPU implemntation: `$CAFFE_ROOT/src/caffe/layers/softmax_loss_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/softmax_loss_layer.cu`
 
 The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It's conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.
 
 #### Sum-of-Squares / Euclidean
 
 * LayerType: `EUCLIDEAN_LOSS`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/euclidean_loss_layer.cpp`
+* GPU GPU implementation: `$CAFFE_ROOT/src/caffe/layers/euclidean_loss_layer.cu`
 
 The Euclidean loss layer computes the sum of squares of differences of its two inputs, $$\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2$$.
 
 #### Hinge / Margin
 
 * LayerType: `HINGE_LOSS`
-* CPU implementation: `./src/caffe/layers/hinge_loss_layer.cpp`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/hinge_loss_layer.cpp`
 * CUDA GPU implementation: none yet
 * Parameters (`HingeLossParameter hinge_loss_param`)
     - Optional
@@ -172,11 +176,15 @@ The hinge loss layer computes a one-vs-all hinge or squared hinge loss.
 
 #### Sigmoid Cross-Entropy
 
-`SIGMOID_CROSS_ENTROPY_LOSS`
+* LayerType: `SIGMOID_CROSS_ENTROPY_LOSS`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/sigmoid_cross_entropy_loss_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/sigmoid_cross_entropy_loss_layer.cu`
 
 #### Infogain
 
-`INFOGAIN_LOSS`
+* LayerType: `INFOGAIN_LOSS`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/infogain_loss_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/infogain_loss_layer.cu`
 
 #### Accuracy and Top-k
 
@@ -194,8 +202,8 @@ In general, activation / Neuron layers are element-wise operators, taking one bo
 #### ReLU / Rectified-Linear and Leaky-ReLU
 
 * LayerType: `RELU`
-* CPU implementation: `./src/caffe/layers/relu_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/relu_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/relu_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/relu_layer.cu`
 * Parameters (`ReLUParameter relu_param`)
     - Optional
         - `negative_slope` [default 0]: specifies whether to leak the negative part by multiplying it with the slope value rather than setting it to 0.
@@ -213,9 +221,9 @@ Given an input value x, The `RELU` layer computes the output as x if x > 0 and n
 #### Sigmoid
 
 * LayerType: `SIGMOID`
-* CPU implementation: `./src/caffe/layers/sigmoid_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/sigmoid_layer.cu`
-* Sample (as seen in `./examples/imagenet/mnist_autoencoder.prototxt`)
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/sigmoid_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/sigmoid_layer.cu`
+* Sample (as seen in `$CAFFE_ROOT/examples/imagenet/mnist_autoencoder.prototxt`)
 
       layers {
         name: "encode1neuron"
@@ -229,8 +237,8 @@ The `SIGMOID` layer computes the output as sigmoid(x) for each input element x.
 #### TanH / Hyperbolic Tangent
 
 * LayerType: `TANH`
-* CPU implementation: `./src/caffe/layers/tanh_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/tanh_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/tanh_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/tanh_layer.cu`
 * Sample
 
       layers {
@@ -245,8 +253,8 @@ The `TANH` layer computes the output as tanh(x) for each input element x.
 #### Absolute Value
 
 * LayerType: `ABSVAL`
-* CPU implementation: `./src/caffe/layers/absval_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/absval_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/absval_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/absval_layer.cu`
 * Sample
 
       layers {
@@ -261,8 +269,8 @@ The `ABSVAL` layer computes the output as abs(x) for each input element x.
 #### Power
 
 * LayerType: `POWER`
-* CPU implementation: `./src/caffe/layers/power_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/power_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/power_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/power_layer.cu`
 * Parameters (`PowerParameter power_param`)
     - Optional
         - `power` [default 1]
@@ -287,8 +295,8 @@ The `POWER` layer computes the output as (shift + scale * x) ^ power for each in
 #### BNLL
 
 * LayerType: `BNLL`
-* CPU implementation: `./src/caffe/layers/bnll_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/bnll_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/bnll_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/bnll_layer.cu`
 * Sample
 
       layers {
@@ -310,6 +318,8 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 #### Database
 
 * LayerType: `DATA`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/data_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/data_layer.cu`
 * Parameters
     - Required
         - `source`: the name of the directory containing the database
@@ -323,6 +333,8 @@ Common input preprocessing (mean subtraction, scaling, random cropping, and mirr
 #### In-Memory
 
 * LayerType: `MEMORY_DATA`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/memory_data_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/memory_data_layer.cu`
 * Parameters
     - Required
         - `batch_size`, `channels`, `height`, `width`: specify the size of input chunks to read from memory
@@ -332,6 +344,8 @@ The memory data layer reads data directly from memory, without copying it. In or
 #### HDF5 Input
 
 * LayerType: `HDF5_DATA`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/hdf5_data_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/hdf5_data_layer.cu`
 * Parameters
     - Required
         - `source`: the name of the file to read from
@@ -340,6 +354,8 @@ The memory data layer reads data directly from memory, without copying it. In or
 #### HDF5 Output
 
 * LayerType: `HDF5_OUTPUT`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/hdf5_output_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/hdf5_output_layer.cu`
 * Parameters
     - Required
         - `file_name`: name of file to write to
@@ -349,6 +365,8 @@ The HDF5 output layer performs the opposite function of the other layers in this
 #### Images
 
 * LayerType: `IMAGE_DATA`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/image_data.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/image_data.cu`
 * Parameters
     - Required
         - `source`: name of a text file, with each line giving an image filename and label
@@ -360,7 +378,9 @@ The HDF5 output layer performs the opposite function of the other layers in this
 
 #### Windows
 
-`WINDOW_DATA`
+* LayerType: `WINDOW_DATA`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/window_data_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/window_data_layer.cu`
 
 #### Dummy
 
@@ -371,8 +391,8 @@ The HDF5 output layer performs the opposite function of the other layers in this
 #### Inner Product
 
 * LayerType: `INNER_PRODUCT`
-* CPU implementation: `./src/caffe/layers/inner_product_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/inner_product_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/inner_product_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/inner_product_layer.cu`
 * Parameters (`InnerProductParameter inner_product_param`)
     - Required
         - `num_output` (`c_o`): the number of filters
@@ -422,8 +442,8 @@ The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * 
 #### Concatenation
 
 * LayerType: `CONCAT`
-* CPU implementation: `./src/caffe/layers/concat_layer.cpp`
-* CUDA GPU implementation: `./src/caffe/layers/concat_layer.cu`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/layers/concat_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/layers/concat_layer.cu`
 * Parameters (`ConcatParameter concat_param`)
     - Optional
         - `concat_dim` [default 1]: 0 for concatenation along num and 1 for channels.
@@ -453,16 +473,24 @@ The `SLICE` layer is a utility layer that slices an input layer to multiple outp
 
 #### Elementwise Operations
 
-`ELTWISE`
+* LayerType: `ELTWISE`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/eltwise_layer.cpp`
+* CUDA GPU imlementation: `$CAFFE_ROOT/src/caffe/eltwise_layer.cu`
 
 #### Argmax
 
-`ARGMAX`
+* LayerType: `ARGMAX`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/argmax_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/argmax_layer.cu`
 
 #### Softmax
 
-`SOFTMAX`
+* LayerType: `SOFTMAX`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/softmax_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/softmax_layer.cu`
 
 #### Mean-Variance Normalization
 
-`MVN`
+* LayerType: `MVN`
+* CPU implementation: `$CAFFE_ROOT/src/caffe/mvn_layer.cpp`
+* CUDA GPU implementation: `$CAFFE_ROOT/src/caffe/mvn_layer.cu
