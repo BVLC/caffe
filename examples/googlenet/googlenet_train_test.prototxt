@@ -27,7 +27,7 @@ layers {
     batch_size: 50
   }
   transform_param {
-    crop_size: 227
+    crop_size: 228
     mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
     mirror: false
   }
@@ -193,8 +193,7 @@ layers {
   convolution_param {
     num_output: 96
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1   
     weight_filler {
       type: "xavier"
     }
@@ -220,6 +219,7 @@ layers {
     num_output: 128
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"
     }
@@ -244,8 +244,7 @@ layers {
   convolution_param {
     num_output: 16
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -271,6 +270,7 @@ layers {
     num_output: 32
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"
     }
@@ -372,7 +372,6 @@ layers {
     num_output: 128
     kernel_size: 1
     stride: 1
-    pad: 1
     weight_filler {
       type: "xavier"
     }
@@ -398,6 +397,7 @@ layers {
     num_output: 192
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"      
     }
@@ -424,8 +424,7 @@ layers {
   convolution_param {
     num_output: 32
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1    
     weight_filler {
       type: "xavier"      
     }
@@ -451,6 +450,7 @@ layers {
     num_output: 96
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"     
     }
@@ -561,8 +561,7 @@ layers {
   convolution_param {
     num_output: 96
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -588,6 +587,7 @@ layers {
     num_output: 208
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"
       std: 0.01
@@ -613,8 +613,7 @@ layers {
   convolution_param {
     num_output: 16
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1    
     weight_filler {
       type: "xavier"      
     }
@@ -640,6 +639,7 @@ layers {
     num_output: 48
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"
     }
@@ -806,6 +806,7 @@ layers {
   bottom: "clf1_fc2"
   bottom: "label"
   top: "clf1_loss"
+  loss_weight: 0.3
 }
 
 #---------------------------
@@ -846,8 +847,7 @@ layers {
   convolution_param {
     num_output: 112
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -873,6 +873,7 @@ layers {
     num_output: 224
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"
     }
@@ -897,8 +898,7 @@ layers {
   convolution_param {
     num_output: 24
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -924,6 +924,7 @@ layers {
     num_output: 64
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"
     }
@@ -1024,8 +1025,7 @@ layers {
   convolution_param {
     num_output: 128
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -1051,6 +1051,7 @@ layers {
     num_output: 256
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"      
     }
@@ -1077,8 +1078,7 @@ layers {
   convolution_param {
     num_output: 24
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1    
     weight_filler {
       type: "xavier"      
     }
@@ -1104,6 +1104,7 @@ layers {
     num_output: 64
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"     
     }
@@ -1203,8 +1204,7 @@ layers {
   convolution_param {
     num_output: 144
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -1230,6 +1230,7 @@ layers {
     num_output: 288
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"      
     }
@@ -1256,8 +1257,7 @@ layers {
   convolution_param {
     num_output: 32
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1   
     weight_filler {
       type: "xavier"      
     }
@@ -1283,6 +1283,7 @@ layers {
     num_output: 64
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"     
     }
@@ -1450,6 +1451,7 @@ layers {
   bottom: "clf2_fc2"
   bottom: "label"
   top: "clf2_loss"
+  loss_weight: 0.3
 }
 
 #---------------------------
@@ -1490,8 +1492,7 @@ layers {
   convolution_param {
     num_output: 160
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -1512,11 +1513,12 @@ layers {
   name: "inc7_conv3"
   type: CONVOLUTION
   blobs_lr: 1.0
-  blobs_lr: 2.0  
+  blobs_lr: 2.0    
   convolution_param {
     num_output: 320
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"      
     }
@@ -1544,7 +1546,6 @@ layers {
     num_output: 32
     kernel_size: 1
     stride: 1
-    pad: 2
     weight_filler {
       type: "xavier"      
     }
@@ -1570,6 +1571,7 @@ layers {
     num_output: 128
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"     
     }
@@ -1680,8 +1682,7 @@ layers {
   convolution_param {
     num_output: 160
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -1706,7 +1707,8 @@ layers {
   convolution_param {
     num_output: 320
     kernel_size: 3
-    stride: 1
+    stride: 1    
+    pad: 1
     weight_filler {
       type: "xavier"      
     }
@@ -1733,8 +1735,7 @@ layers {
   convolution_param {
     num_output: 32
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1    
     weight_filler {
       type: "xavier"      
     }
@@ -1760,6 +1761,7 @@ layers {
     num_output: 128
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"     
     }
@@ -1859,8 +1861,7 @@ layers {
   convolution_param {
     num_output: 192
     kernel_size: 1
-    stride: 1
-    pad: 1
+    stride: 1    
     weight_filler {
       type: "xavier"
     }
@@ -1886,6 +1887,7 @@ layers {
     num_output: 384
     kernel_size: 3
     stride: 1
+    pad: 1
     weight_filler {
       type: "xavier"      
     }
@@ -1912,8 +1914,7 @@ layers {
   convolution_param {
     num_output: 48
     kernel_size: 1
-    stride: 1
-    pad: 2
+    stride: 1    
     weight_filler {
       type: "xavier"      
     }
@@ -1939,6 +1940,7 @@ layers {
     num_output: 128
     kernel_size: 5
     stride: 1
+    pad: 2
     weight_filler {
       type: "xavier"     
     }
@@ -2052,4 +2054,5 @@ layers {
   bottom: "clf3_fc1"
   bottom: "label"
   top: "clf3_loss"
+  loss_weight: 1.0
 }
