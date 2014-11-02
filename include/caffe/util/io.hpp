@@ -150,17 +150,17 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
-  hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
-  Blob<Dtype>* blob);
+    hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
+    Blob<Dtype>* blob);
 
 template <typename Dtype>
 void hdf5_load_nd_dataset(
-  hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
-  Blob<Dtype>* blob);
+    hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
+    Blob<Dtype>* blob);
 
 template <typename Dtype>
 void hdf5_save_nd_dataset(
-  const hid_t file_id, const string dataset_name, const Blob<Dtype>& blob);
+    const hid_t file_id, const string& dataset_name, const Blob<Dtype>& blob);
 
 }  // namespace caffe
 
