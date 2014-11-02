@@ -149,6 +149,43 @@ class VectorLabelDataLayer : public BasePrefetchingDataLayer<Dtype> {
   shared_ptr<leveldb::Iterator> iter_;
 };
 
+template <typename Dtype>
+class SamplingVectorLabelDataLayer : public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit SamplingVectorLabelDataLayer(const LayerParameter& param)
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+  virtual ~SamplingVectorLabelDataLayer();
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_SAMPLING_VECTOR_LABEL_DATA;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 3; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void InternalThreadEntry();
+  virtual unsigned int PrefetchRand();
+  shared_ptr<Caffe::RNG> prefetch_rng_;
+
+  // LEVELDB
+  shared_ptr<leveldb::DB> db_;
+  shared_ptr<leveldb::Iterator> iter_;
+  
+  // Sampling pool
+  vector<vector<std::string> >sampling_pool;
+  
+  // Sampling indices
+  int minIdx_;
+  int maxIdx_;
+  int curIdx_;
+  
+};
+
 template<typename Dtype>
 class MapDataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:

@@ -241,6 +241,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new PowerLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
     return GetReLULayer<Dtype>(name, param);
+  case LayerParameter_LayerType_SAMPLING_VECTOR_LABEL_DATA:
+    return new SamplingVectorLabelDataLayer<Dtype>(param);
   case LayerParameter_LayerType_SILENCE:
     return new SilenceLayer<Dtype>(param);
   case LayerParameter_LayerType_SIGMOID:
