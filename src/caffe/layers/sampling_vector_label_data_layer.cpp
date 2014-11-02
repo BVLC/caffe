@@ -91,17 +91,23 @@ void SamplingVectorLabelDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype
   
   // setup sampling pools
   std::ifstream pool_file(this->layer_param_.sampling_param().pool_file().c_str());
+  LOG(INFO) << "Opening pool file " << this->layer_param_.sampling_param().pool_file();
   CHECK(pool_file.good()) << "Failed to open pool file "
       << this->layer_param_.sampling_param().pool_file() << std::endl;
-  int idx = 0, pool_size, label_id;
+  int pool_size, label_id;
   while (pool_file >> label_id >> pool_size) {
+    LOG(INFO) << "Label id: " << label_id << "\tPool size: " << pool_size;
     string key;
+    vector<std::string> cur_pool;
     for (int i = 0; i < pool_size; ++i) {
       pool_file >> key;
-      sampling_pool[idx].push_back(key);
+      cur_pool.push_back(key);
     }
-    idx++;
+    sampling_pool.push_back(cur_pool);
   }
+  // setup random seed
+  const unsigned int prefetch_rng_seed = caffe_rng_rand();
+  prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
 }
 
 template <typename Dtype>
@@ -122,10 +128,7 @@ void SamplingVectorLabelDataLayer<Dtype>::Forward_cpu(
     for (int i = 0; i < batch_size; ++i) {
       cur_labels[i] = curIdx_;
     }
-  }
-  curIdx_++;
-  if (curIdx_ > maxIdx_) {
-    curIdx_ = minIdx_;
+    LOG(INFO) << "Forward label index: " << curIdx_;
   }
   // Start a new prefetch thread
   this->CreatePrefetchThread();
@@ -179,6 +182,11 @@ void SamplingVectorLabelDataLayer<Dtype>::InternalThreadEntry() {
         }
       }
     }
+  }
+  curIdx_++;
+  if (curIdx_ > maxIdx_) {
+    LOG(INFO) << "Start from min index again";
+    curIdx_ = minIdx_;
   }
 }
 
