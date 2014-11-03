@@ -10,6 +10,7 @@ import os
 import re
 import extract_seconds
 import argparse
+import csv
 
 
 def get_line_type(line):
@@ -26,6 +27,13 @@ def get_line_type(line):
 
 def parse_log(path_to_log):
     """Parse log file
+    Returns (train_dict_list, train_dict_names, test_dict_list, test_dict_names)
+
+    train_dict_list and test_dict_list are lists of dicts that define the table
+    rows
+
+    train_dict_names and test_dict_names are ordered tuples of the column names
+    for the two dict_lists
     """
 
     re_iteration = re.compile('Iteration (\d+)')
@@ -38,8 +46,10 @@ def parse_log(path_to_log):
     iteration = -1
     test_accuracy = -1
     learning_rate = float('NaN')
-    train_list = []
-    test_list = []
+    train_dict_list = []
+    test_dict_list = []
+    train_dict_names = ('NumIters', 'Seconds', 'TrainingLoss', 'LearningRate')
+    test_dict_names = ('NumIters', 'Seconds', 'TestAccuracy', 'TestLoss')
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
     with open(path_to_log) as f:
@@ -68,8 +78,10 @@ def parse_log(path_to_log):
             train_loss_match = re_train_loss.search(line)
             if train_loss_match:
                 train_loss = float(train_loss_match.group(1))
-                train_list.append((iteration, seconds, train_loss,
-                                   learning_rate))
+                train_dict_list.append({'NumIters': iteration,
+                                        'Seconds': seconds,
+                                        'TrainingLoss': train_loss,
+                                        'LearningRate': learning_rate})
 
             output_loss_match = re_output_loss.search(line)
             if output_loss_match and get_line_type(line) == 'test':
@@ -78,13 +90,16 @@ def parse_log(path_to_log):
                 # loss for test data so the test_accuracy variable is already
                 # correctly populated and (2) there's one and only one output
                 # named "accuracy" for the test net
-                test_list.append((iteration, seconds, test_accuracy, test_loss))
+                test_dict_list.append({'NumIters': iteration,
+                                       'Seconds': seconds,
+                                       'TestAccuracy': test_accuracy,
+                                       'TestLoss': test_loss})
 
-    return train_list, test_list
+    return train_dict_list, train_dict_names, test_dict_list, test_dict_names
 
 
-def save_csv_files(logfile_path, output_dir, train_list, test_list,
-                   verbose=False):
+def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
+                   test_dict_list, test_dict_names, verbose=False):
     """Save CSV files to output_dir
 
     If the input log file is, e.g., caffe.INFO, the names will be
@@ -93,23 +108,20 @@ def save_csv_files(logfile_path, output_dir, train_list, test_list,
 
     log_basename = os.path.basename(logfile_path)
     train_filename = os.path.join(output_dir, log_basename + '.train')
-    write_csv(train_filename, train_list, '%d,%f,%f,%f',
-              'NumIters,Seconds,TrainingLoss,LearningRate', verbose)
+    write_csv(train_filename, train_dict_list, train_dict_names, verbose)
 
     test_filename = os.path.join(output_dir, log_basename + '.test')
-    write_csv(test_filename, test_list, '%d,%f,%f,%f',
-              'NumIters,Seconds,TestAccuracy,TestLoss', verbose)
+    write_csv(test_filename, test_dict_list, test_dict_names, verbose)
 
 
-def write_csv(output_filename, list_of_tuples, format_string, header,
-              verbose=False):
+def write_csv(output_filename, dict_list, header_names, verbose=False):
     """Write a CSV file
     """
+
     with open(output_filename, 'w') as f:
-        f.write(header + '\n')
-        for row in list_of_tuples:
-            line = format_string % row
-            f.write(line + '\n')
+        dict_writer = csv.DictWriter(f, header_names)
+        dict_writer.writeheader()
+        dict_writer.writerows(dict_list)
     if verbose:
         print 'Wrote %s' % output_filename
 
@@ -135,8 +147,10 @@ def parse_args():
 
 def main():
     args = parse_args()
-    train_list, test_list = parse_log(args.logfile_path)
-    save_csv_files(args.logfile_path, args.output_dir, train_list, test_list)
+    train_dict_list, train_dict_names, test_dict_list, test_dict_names = \
+        parse_log(args.logfile_path)
+    save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
+                   train_dict_names, test_dict_list, test_dict_names)
 
 
 if __name__ == '__main__':
