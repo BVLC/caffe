@@ -1,6 +1,7 @@
 
 #ifndef CAFFE_UTIL_caffe_cpu_fft_H_
 #define CAFFE_UTIL_caffe_cpu_fft_H_
+#ifdef USE_FFT
 
 #ifndef CPU_ONLY
 #include <cufft.h>
@@ -102,5 +103,7 @@ void caffe_gpu_fft_execute_dft_c2r(cufftHandle plan,
 #endif
 
 }  // namespace caffe
+
+#endif // USE_FFT
 
 #endif  // CAFFE_UTIL_caffe_cpu_fft_H_

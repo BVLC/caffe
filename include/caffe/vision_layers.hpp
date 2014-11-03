@@ -117,6 +117,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   Blob<Dtype> bias_multiplier_;
 };
 
+#ifdef USE_FFT
 template <typename Dtype>
 class ConvolutionLayerFFT : public ConvolutionLayer<Dtype> {
  public:
@@ -262,7 +263,7 @@ class ConvolutionLayerFFT : public ConvolutionLayer<Dtype> {
   cufftHandle fft_gpu_many_weights_handle_;
 #endif
 };
-
+#endif // USE_FFT
 
 #ifdef USE_CUDNN
 /*

@@ -1,3 +1,4 @@
+#ifdef USE_FFT
 #include <cstring>
 #include <vector>
 
@@ -432,3 +433,4 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestGradientGroup_FFT) {
 
 
 }  // namespace caffe
+#endif

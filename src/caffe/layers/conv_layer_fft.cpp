@@ -1,5 +1,5 @@
 
-
+#ifdef USE_FFT
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -812,3 +812,4 @@ INSTANTIATE_CLASS(ConvolutionLayerFFT);
 
 
 }  // namespace caffe
+#endif

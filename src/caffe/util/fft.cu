@@ -1,4 +1,4 @@
-
+#ifdef USE_FFT
 #include <algorithm>
 
 #include <cmath>
@@ -256,3 +256,4 @@ void caffe_gpu_fft_execute_dft_r2c_inplace(cufftHandle plan,
 
 
 }  // namespace caffe
+#endif

@@ -24,8 +24,10 @@ Layer<Dtype>* GetConvolutionLayer(
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     return new CuDNNConvolutionLayer<Dtype>(param);
 #endif
+#ifdef USE_FFT
   } else if (engine == ConvolutionParameter_Engine_FFT) {
     return new ConvolutionLayerFFT<Dtype>(param);
+#endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
   }

@@ -1,3 +1,4 @@
+#ifdef USE_FFT
 
 #include <algorithm>
 #include <vector>
@@ -518,3 +519,4 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu(
         const vector<Blob<double>*>& bottom);
 
 }  // namespace caffe
+#endif // USE_FFT

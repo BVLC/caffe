@@ -1,3 +1,4 @@
+#ifdef USE_FFT
 #include "caffe/util/fft.hpp"
 
 namespace caffe {
@@ -114,3 +115,4 @@ void caffe_cpu_fft_execute_dft_c2r<double>(const void* plan,
 }
 
 }  // namespace caffe
+#endif

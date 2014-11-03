@@ -167,6 +167,7 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand cufft
 endif
+
 LIBRARIES += glog gflags protobuf leveldb snappy \
 	lmdb boost_system hdf5_hl hdf5 m \
 	opencv_core opencv_highgui opencv_imgproc
@@ -302,13 +303,13 @@ ifeq ($(BLAS), mkl)
 	BLAS_LIB ?= $(MKL_DIR)/lib $(MKL_DIR)/lib/intel64
 else ifeq ($(BLAS), open)
 	# OpenBLAS
-	LIBRARIES += openblas fftw3f fftw3
+	LIBRARIES += openblas
 else
 	# ATLAS
 	ifeq ($(LINUX), 1)
 		ifeq ($(BLAS), atlas)
 			# Linux simply has cblas and atlas
-			LIBRARIES += cblas atlas fftw3f fftw3
+			LIBRARIES += cblas atlas
 		endif
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
@@ -317,6 +318,15 @@ else
 		LDFLAGS += -framework vecLib
 	endif
 endif
+
+FFT ?= 0
+ifeq ($(FFT), 1)
+        ifneq ($(BLAS), mkl)
+                LIBRARIES += fftw3f fftw3
+        endif
+        COMMON_FLAGS += -DUSE_FFT
+endif
+
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 
