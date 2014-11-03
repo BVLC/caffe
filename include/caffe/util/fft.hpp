@@ -2,7 +2,10 @@
 #ifndef CAFFE_UTIL_caffe_cpu_fft_H_
 #define CAFFE_UTIL_caffe_cpu_fft_H_
 
+#ifndef CPU_ONLY
 #include <cufft.h>
+#endif
+
 #include <fftw3.h>
 
 #include <complex>
@@ -61,6 +64,7 @@ void caffe_cpu_fft_cleanup_threads(void) {
 
 // --- gpu-------------------------------------------------
 
+#ifndef CPU_ONLY
 template <typename Dtype>
 void fft_gpu_copy2buffer(Dtype* fft_gpu_weights_real_, const Dtype* weight,
     int num_output, int group, int channels, int ker_h_, int ker_w_,
@@ -95,7 +99,7 @@ void caffe_gpu_fft_execute_dft_r2c_inplace(cufftHandle plan,
 template <typename Dtype>
 void caffe_gpu_fft_execute_dft_c2r(cufftHandle plan,
     std::complex<Dtype> *in, Dtype  *out);
-
+#endif
 
 }  // namespace caffe
 

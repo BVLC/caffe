@@ -99,6 +99,5 @@ STUB_GPU(PowerLayer);
 #endif
 
 INSTANTIATE_CLASS(PowerLayer);
-
-
+REGISTER_LAYER_CLASS(POWER, PowerLayer);
 }  // namespace caffe

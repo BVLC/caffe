@@ -9,13 +9,13 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-
 namespace caffe {
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::fft_gpu_setup() {
   if (fft_gpu_initialized_)
     fft_gpu_clean();
+  fft_gpu_initialized_ = false;
   // Evaluate memory needed for buffers
   int num_weights = num_output_ * (channels_ / group_);
   size_t free_byte, total_byte;
@@ -56,53 +56,27 @@ void ConvolutionLayerFFT<Dtype>::fft_gpu_setup() {
 
   // cufft plans
   if (sizeof(Dtype) == sizeof(float)) {
-    if (cufftPlan2d(&fft_gpu_handle_, fft_height_, fft_width_ , CUFFT_R2C)
-           != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: Plan creation failed");
-      return;
-    }
-    if (cufftPlan2d(&ifft_gpu_handle_, fft_height_, fft_width_ , CUFFT_C2R)
-           != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: Plan creation failed");
-      return;
-    }
-    if (cufftCreate(&fft_gpu_many_weights_handle_)
-           != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: GPU Many Handle creation failed");
-      return;
-    }
-    if (cufftPlanMany(&fft_gpu_many_weights_handle_, 2, n, inembed, 1, in_size,
-           onembed, 1, fft_map_complex_size_, CUFFT_R2C, num_weights)
-           != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: GPU Many PLAN creation failed");
-      return;
-    }
+    CUFFT_CHECK(cufftPlan2d(&fft_gpu_handle_, fft_height_, fft_width_,
+                 CUFFT_R2C));
+    CUFFT_CHECK(cufftPlan2d(&ifft_gpu_handle_, fft_height_, fft_width_,
+                 CUFFT_C2R));
+    CUFFT_CHECK(cufftCreate(&fft_gpu_many_weights_handle_));
+    CUFFT_CHECK(cufftPlanMany(&fft_gpu_many_weights_handle_, 2, n, inembed,
+                 1, in_size, onembed, 1, fft_map_complex_size_, CUFFT_R2C,
+                 num_weights));
   } else if (sizeof(Dtype) == sizeof(double)) {
-    if (cufftPlan2d(&fft_gpu_handle_, fft_height_, fft_width_ , CUFFT_D2Z)
-           != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: Plan creation failed");
-      return;
-    }
-    if (cufftPlan2d(&ifft_gpu_handle_, fft_height_, fft_width_ , CUFFT_Z2D)
-           != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: Plan creation failed");
-      return;
-    }
-    if (cufftCreate(&fft_gpu_many_weights_handle_) != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: GPU Many Handle creation failed");
-      return;
-    }
-    if (cufftPlanMany(&fft_gpu_many_weights_handle_, 2, n, inembed, 1,
-           in_size, onembed, 1, fft_map_complex_size_,
-           CUFFT_D2Z, num_weights) != CUFFT_SUCCESS) {
-      fprintf(stderr, "CUFFT error: GPU Many PLAN creation failed");
-      return;
-    }
+    CUFFT_CHECK(cufftPlan2d(&fft_gpu_handle_, fft_height_, fft_width_,
+                 CUFFT_D2Z));
+    CUFFT_CHECK(cufftPlan2d(&ifft_gpu_handle_, fft_height_, fft_width_,
+                 CUFFT_Z2D));
+    CUFFT_CHECK(cufftCreate(&fft_gpu_many_weights_handle_));
+    CUFFT_CHECK(cufftPlanMany(&fft_gpu_many_weights_handle_, 2, n, inembed,
+                 1, in_size, onembed, 1, fft_map_complex_size_, CUFFT_D2Z,
+                 num_weights));
   }
   cudaMemGetInfo(&free_byte, &total_byte);
   LOG(INFO) << "CUDA free memory after buffers, after plans is: "
             << free_byte/(1024*1024) << " MB";
-
   fft_gpu_initialized_ = true;
 }
 
@@ -139,7 +113,6 @@ void ConvolutionLayerFFT<Dtype>::fft_gpu_compute_weights() {
   caffe_gpu_fft_execute_dft_r2c_inplace(fft_gpu_many_weights_handle_,
        fft_gpu_weights_complex_);
 }
-
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft_task(
@@ -187,15 +160,12 @@ void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft_task(
   }
   //  IFFT: map_out_complex --> map_out_real
   Dtype ifft_scale = 1./((Dtype)fft_map_real_size_);
-
   //  OPTION: ifft_many ?
   for (int out = 0; out < num_output_; out++) {
     map_out_complex = fft_gpu_map_out_complex_  + out * fft_map_complex_size_;
     map_out_real = fft_gpu_map_out_real_;
-
     caffe_gpu_fft_execute_dft_c2r(ifft_gpu_handle_,
         map_out_complex, map_out_real);
-
     //  post-process: map_out_real --> map_out
     map_out = map_out_n + out * map_out_size_;
     fft_gpu_copy2buffer2D_out(map_out , map_out_real, height_out_, width_out_,
@@ -265,8 +235,6 @@ void ConvolutionLayerFFT<Dtype>::Forward_gpu_task(
   }
 }
 
-/// @brief refer to CPU forward -- the BLAS implementation is the same.
-
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::Forward_gpu(
        const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
@@ -281,9 +249,7 @@ void ConvolutionLayerFFT<Dtype>::Forward_gpu(
   }
 }
 
-/// @brief refer to CPU backward -- the BLAS implementation is the same.
 //===========================BACKWARD GPU============================
-
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
@@ -473,6 +439,82 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS(ConvolutionLayerFFT);
+// float instantiation
+  template
+  void ConvolutionLayerFFT<float>::fft_gpu_setup();
+  template
+  void ConvolutionLayerFFT<float>::fft_gpu_clean();
+  template
+  float ConvolutionLayerFFT<float>::Forward_gpu_fft(
+        const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
+  template
+  void ConvolutionLayerFFT<float>::Forward_gpu_fft_task(
+        const float *bottom_data, float* top_data, const float* weight, int n);
+  template
+  void ConvolutionLayerFFT<float>::Forward_gpu_task(
+       const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
+       int i, int n);
+  template
+  void ConvolutionLayerFFT<float>::fft_gpu_compute_weights();
+  template
+  void ConvolutionLayerFFT<float>::Forward_gpu(
+       const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
+  template
+  void ConvolutionLayerFFT<float>::Backward_gpu_fft_task(
+        const vector<Blob<float>*>& bottom,
+        const vector<Blob<float>*>& top,
+        const float* weight, int i, int n);
+  template
+  void ConvolutionLayerFFT<float>::Backward_gpu_weight_diff_task(
+        const float* top_diff, const vector<Blob<float>*>& bottom,
+        int i, int n);
+  template
+  void ConvolutionLayerFFT<float>::Backward_gpu_bottom_diff_task(
+        const float* top_diff, float* bottom_diff,
+        const float* weight, int i,  int n);
+  template
+  void ConvolutionLayerFFT<float>::Backward_gpu(
+        const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
+        const vector<Blob<float>*>& bottom);
+
+// double instantiation
+  template
+  void ConvolutionLayerFFT<double>::fft_gpu_setup();
+  template
+  void ConvolutionLayerFFT<double>::fft_gpu_clean();
+  template
+  double ConvolutionLayerFFT<double>::Forward_gpu_fft(
+        const vector<Blob<double>*>& bottom,
+        const vector<Blob<double>*>& top);
+  template
+  void ConvolutionLayerFFT<double>::Forward_gpu_fft_task(
+        const double *bottom_data, double* top_data,
+          const double* weight, int n);
+  template
+  void ConvolutionLayerFFT<double>::Forward_gpu_task(
+         const vector<Blob<double>*>& bottom,
+         const vector<Blob<double>*>& top, int i, int n);
+  template
+  void ConvolutionLayerFFT<double>::fft_gpu_compute_weights();
+  template
+  void ConvolutionLayerFFT<double>::Forward_gpu(
+        const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top);
+  template
+  void ConvolutionLayerFFT<double>::Backward_gpu_fft_task(
+        const vector<Blob<double>*>& bottom,
+        const vector<Blob<double>*>& top,
+        const double* weight, int i, int n);
+  template
+  void ConvolutionLayerFFT<double>::Backward_gpu_weight_diff_task(
+        const double* top_diff, const vector<Blob<double>*>& bottom,
+        int i, int n);
+  template
+  void ConvolutionLayerFFT<double>::Backward_gpu_bottom_diff_task(
+        const double* top_diff, double* bottom_diff,
+        const double* weight, int i,  int n);
+  template
+  void ConvolutionLayerFFT<double>::Backward_gpu(
+        const vector<Blob<double>*>& top, const vector<bool>& propagate_down,
+        const vector<Blob<double>*>& bottom);
 
 }  // namespace caffe

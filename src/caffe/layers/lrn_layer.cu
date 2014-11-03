@@ -98,6 +98,10 @@ void LRNLayer<Dtype>::CrossChannelForward_gpu(
       n_threads, bottom_data, scale_data, -beta_, top_data);
   CUDA_POST_KERNEL_CHECK;
 }
+template void LRNLayer<float>::CrossChannelForward_gpu(
+    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
+template void LRNLayer<double>::CrossChannelForward_gpu(
+    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top);
 
 
 template <typename Dtype>
@@ -188,8 +192,15 @@ void LRNLayer<Dtype>::CrossChannelBackward_gpu(
       size_, -beta_, Dtype(2. * alpha_ * beta_ / size_),
       bottom[0]->mutable_gpu_diff());
 }
+template void LRNLayer<float>::CrossChannelBackward_gpu(
+    const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<float>*>& bottom);
+template void LRNLayer<double>::CrossChannelBackward_gpu(
+    const vector<Blob<double>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<double>*>& bottom);
 
 
-INSTANTIATE_CLASS(LRNLayer);
+
+INSTANTIATE_LAYER_GPU_FUNCS(LRNLayer);
 
 }  // namespace caffe

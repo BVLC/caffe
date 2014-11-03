@@ -33,6 +33,6 @@ void SplitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(SplitLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(SplitLayer);
 
 }  // namespace caffe

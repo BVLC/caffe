@@ -229,38 +229,54 @@ int time() {
   Timer total_timer;
   total_timer.Start();
   Timer forward_timer;
-  forward_timer.Start();
+  Timer backward_timer;
   Timer timer;
-  for (int i = 0; i < layers.size(); ++i) {
-    const caffe::string& layername = layers[i]->layer_param().name();
-    timer.Start();
-    for (int j = 0; j < FLAGS_iterations; ++j) {
+  std::vector<double> forward_time_per_layer(layers.size(), 0.0);
+  std::vector<double> backward_time_per_layer(layers.size(), 0.0);
+  double forward_time = 0.0;
+  double backward_time = 0.0;
+  for (int j = 0; j < FLAGS_iterations; ++j) {
+    Timer iter_timer;
+    iter_timer.Start();
+    forward_timer.Start();
+    for (int i = 0; i < layers.size(); ++i) {
+      timer.Start();
       // Although Reshape should be essentially free, we include it here
       // so that we will notice Reshape performance bugs.
       layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+      forward_time_per_layer[i] += timer.MicroSeconds();
     }
-    LOG(INFO) << layername << "\tforward: " << timer.MilliSeconds() <<
-        " milliseconds.";
-  }
-  LOG(INFO) << "Forward pass: " << forward_timer.MilliSeconds() <<
-      " milliseconds.";
-  Timer backward_timer;
-  backward_timer.Start();
-  for (int i = layers.size() - 1; i >= 0; --i) {
-    const caffe::string& layername = layers[i]->layer_param().name();
-    timer.Start();
-    for (int j = 0; j < FLAGS_iterations; ++j) {
+    forward_time += forward_timer.MicroSeconds();
+    backward_timer.Start();
+    for (int i = layers.size() - 1; i >= 0; --i) {
+      timer.Start();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
                           bottom_vecs[i]);
+      backward_time_per_layer[i] += timer.MicroSeconds();
     }
-    LOG(INFO) << layername << "\tbackward: "
-        << timer.MilliSeconds() << " milliseconds.";
+    backward_time += backward_timer.MicroSeconds();
+    LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
+      << iter_timer.MilliSeconds() << " ms.";
   }
-  LOG(INFO) << "Backward pass: " << backward_timer.MilliSeconds() <<
-      " milliseconds.";
-  LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() <<
-      " milliseconds.";
+  LOG(INFO) << "Average time per layer: ";
+  for (int i = 0; i < layers.size(); ++i) {
+    const caffe::string& layername = layers[i]->layer_param().name();
+    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
+      "\tforward: " << forward_time_per_layer[i] / 1000 /
+      FLAGS_iterations << " ms.";
+    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
+      "\tbackward: " << backward_time_per_layer[i] / 1000 /
+      FLAGS_iterations << " ms.";
+  }
+  total_timer.Stop();
+  LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
+    FLAGS_iterations << " ms.";
+  LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
+    FLAGS_iterations << " ms.";
+  LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
+    FLAGS_iterations << " ms.";
+  LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
 }

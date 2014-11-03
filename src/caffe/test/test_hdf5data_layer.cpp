@@ -1,8 +1,6 @@
 #include <string>
 #include <vector>
 
-#include "leveldb/db.h"
-
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
@@ -12,8 +10,6 @@
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-
-using std::string;
 
 namespace caffe {
 
@@ -25,10 +21,12 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
   HDF5DataLayerTest()
       : filename(NULL),
         blob_top_data_(new Blob<Dtype>()),
-        blob_top_label_(new Blob<Dtype>()) {}
+        blob_top_label_(new Blob<Dtype>()),
+        blob_top_label2_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
+    blob_top_vec_.push_back(blob_top_label2_);
 
     // Check out generate_sample_data.py in the same directory.
     filename = new string(
@@ -39,12 +37,14 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
   virtual ~HDF5DataLayerTest() {
     delete blob_top_data_;
     delete blob_top_label_;
+    delete blob_top_label2_;
     delete filename;
   }
 
   string* filename;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
+  Blob<Dtype>* const blob_top_label2_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -57,12 +57,16 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   // The data file we are reading has 10 rows and 8 columns,
   // with values from 0 to 10*8 reshaped in row-major order.
   LayerParameter param;
+  param.add_top("data");
+  param.add_top("label");
+  param.add_top("label2");
+
   HDF5DataParameter* hdf5_data_param = param.mutable_hdf5_data_param();
   int batch_size = 5;
   hdf5_data_param->set_batch_size(batch_size);
   hdf5_data_param->set_source(*(this->filename));
   int num_cols = 8;
-  int height = 5;
+  int height = 6;
   int width = 5;
 
   // Test that the layer setup got the correct parameters.
@@ -78,6 +82,11 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
 
+  EXPECT_EQ(this->blob_top_label2_->num(), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label2_->height(), 1);
+  EXPECT_EQ(this->blob_top_label2_->width(), 1);
+
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   // Go through the data 10 times (5 batches).
@@ -89,17 +98,21 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
     // On odd iterations, we're reading the second half of the data.
     // NB: label is 1-indexed
     int label_offset = 1 + ((iter % 2 == 0) ? 0 : batch_size);
+    int label2_offset = 1 + label_offset;
     int data_offset = (iter % 2 == 0) ? 0 : batch_size * data_size;
 
     // Every two iterations we are reading the second file,
     // which has the same labels, but data is offset by total data size,
-    // which is 2000 (see generate_sample_data).
-    int file_offset = (iter % 4 < 2) ? 0 : 2000;
+    // which is 2400 (see generate_sample_data).
+    int file_offset = (iter % 4 < 2) ? 0 : 2400;
 
     for (int i = 0; i < batch_size; ++i) {
       EXPECT_EQ(
         label_offset + i,
         this->blob_top_label_->cpu_data()[i]);
+      EXPECT_EQ(
+        label2_offset + i,
+        this->blob_top_label2_->cpu_data()[i]);
     }
     for (int i = 0; i < batch_size; ++i) {
       for (int j = 0; j < num_cols; ++j) {

@@ -22,5 +22,5 @@ STUB_GPU(SilenceLayer);
 #endif
 
 INSTANTIATE_CLASS(SilenceLayer);
-
+REGISTER_LAYER_CLASS(SILENCE, SilenceLayer);
 }  // namespace caffe

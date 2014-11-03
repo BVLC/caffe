@@ -3,6 +3,7 @@
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
+
 #include <vector>
 
 // Stub out GPU calls as unavailable.
@@ -35,6 +36,8 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <curand.h>
+#include <cufft.h>
+
 #include <driver_types.h>  // cuda driver types
 #ifdef USE_CUDNN  // cuDNN acceleration library.
 #include "caffe/util/cudnn.hpp"
@@ -66,6 +69,13 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
       << caffe::curandGetErrorString(status); \
   } while (0)
 
+#define CUFFT_CHECK(condition) \
+  do { \
+    cufftResult_t status = condition; \
+    CHECK_EQ(status, CUFFT_SUCCESS) << " " \
+      << caffe::cufftGetErrorEnum(status); \
+  } while (0)
+
 // CUDA: grid stride looping
 #define CUDA_KERNEL_LOOP(i, n) \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; \
@@ -80,6 +90,8 @@ namespace caffe {
 // CUDA: library error reporting.
 const char* cublasGetErrorString(cublasStatus_t error);
 const char* curandGetErrorString(curandStatus_t error);
+const char* cufftGetErrorEnum(cufftResult_t error);
+
 
 // CUDA: thread number configuration.
 // Use 1024 threads per block, which requires cuda sm_2x or above,

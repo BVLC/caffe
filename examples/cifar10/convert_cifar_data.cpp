@@ -11,12 +11,17 @@
 
 #include "glog/logging.h"
 #include "google/protobuf/text_format.h"
-#include "leveldb/db.h"
 #include "stdint.h"
 
+#include "caffe/dataset_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 using std::string;
+
+using caffe::Dataset;
+using caffe::DatasetFactory;
+using caffe::Datum;
+using caffe::shared_ptr;
 
 const int kCIFARSize = 32;
 const int kCIFARImageNBytes = 3072;
@@ -31,26 +36,21 @@ void read_image(std::ifstream* file, int* label, char* buffer) {
   return;
 }
 
-void convert_dataset(const string& input_folder, const string& output_folder) {
-  // Leveldb options
-  leveldb::Options options;
-  options.create_if_missing = true;
-  options.error_if_exists = true;
+void convert_dataset(const string& input_folder, const string& output_folder,
+    const string& db_type) {
+  shared_ptr<Dataset<string, Datum> > train_dataset =
+      DatasetFactory<string, Datum>(db_type);
+  CHECK(train_dataset->open(output_folder + "/cifar10_train_" + db_type,
+      Dataset<string, Datum>::New));
   // Data buffer
   int label;
   char str_buffer[kCIFARImageNBytes];
-  string value;
-  caffe::Datum datum;
+  Datum datum;
   datum.set_channels(3);
   datum.set_height(kCIFARSize);
   datum.set_width(kCIFARSize);
 
   LOG(INFO) << "Writing Training data";
-  leveldb::DB* train_db;
-  leveldb::Status status;
-  status = leveldb::DB::Open(options, output_folder + "/cifar10_train_leveldb",
-      &train_db);
-  CHECK(status.ok()) << "Failed to open leveldb.";
   for (int fileid = 0; fileid < kCIFARTrainBatches; ++fileid) {
     // Open files
     LOG(INFO) << "Training Batch " << fileid + 1;
@@ -62,17 +62,19 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
       read_image(&data_file, &label, str_buffer);
       datum.set_label(label);
       datum.set_data(str_buffer, kCIFARImageNBytes);
-      datum.SerializeToString(&value);
-      snprintf(str_buffer, kCIFARImageNBytes, "%05d",
+      int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d",
           fileid * kCIFARBatchSize + itemid);
-      train_db->Put(leveldb::WriteOptions(), string(str_buffer), value);
+      CHECK(train_dataset->put(string(str_buffer, length), datum));
     }
   }
+  CHECK(train_dataset->commit());
+  train_dataset->close();
 
   LOG(INFO) << "Writing Testing data";
-  leveldb::DB* test_db;
-  CHECK(leveldb::DB::Open(options, output_folder + "/cifar10_test_leveldb",
-      &test_db).ok()) << "Failed to open leveldb.";
+  shared_ptr<Dataset<string, Datum> > test_dataset =
+      DatasetFactory<string, Datum>(db_type);
+  CHECK(test_dataset->open(output_folder + "/cifar10_test_" + db_type,
+      Dataset<string, Datum>::New));
   // Open files
   std::ifstream data_file((input_folder + "/test_batch.bin").c_str(),
       std::ios::in | std::ios::binary);
@@ -81,28 +83,26 @@ void convert_dataset(const string& input_folder, const string& output_folder) {
     read_image(&data_file, &label, str_buffer);
     datum.set_label(label);
     datum.set_data(str_buffer, kCIFARImageNBytes);
-    datum.SerializeToString(&value);
-    snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
-    test_db->Put(leveldb::WriteOptions(), string(str_buffer), value);
+    int length = snprintf(str_buffer, kCIFARImageNBytes, "%05d", itemid);
+    CHECK(test_dataset->put(string(str_buffer, length), datum));
   }
-
-  delete train_db;
-  delete test_db;
+  CHECK(test_dataset->commit());
+  test_dataset->close();
 }
 
 int main(int argc, char** argv) {
-  if (argc != 3) {
+  if (argc != 4) {
     printf("This script converts the CIFAR dataset to the leveldb format used\n"
            "by caffe to perform classification.\n"
            "Usage:\n"
-           "    convert_cifar_data input_folder output_folder\n"
+           "    convert_cifar_data input_folder output_folder db_type\n"
            "Where the input folder should contain the binary batch files.\n"
            "The CIFAR dataset could be downloaded at\n"
            "    http://www.cs.toronto.edu/~kriz/cifar.html\n"
            "You should gunzip them after downloading.\n");
   } else {
     google::InitGoogleLogging(argv[0]);
-    convert_dataset(string(argv[1]), string(argv[2]));
+    convert_dataset(string(argv[1]), string(argv[2]), string(argv[3]));
   }
   return 0;
 }

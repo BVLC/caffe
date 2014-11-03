@@ -13,14 +13,14 @@ Let's fine-tune the BVLC-distributed CaffeNet model on a different dataset, [Fli
 
 ## Explanation
 
-The Flickr-sourced images of the Style dataset are visually very similar to the ImageNet dataset, on which the `caffe_reference_imagenet_model` was trained.
+The Flickr-sourced images of the Style dataset are visually very similar to the ImageNet dataset, on which the `bvlc_reference_caffenet` was trained.
 Since that model works well for object category classification, we'd like to use it architecture for our style classifier.
 We also only have 80,000 images to train on, so we'd like to start with the parameters learned on the 1,000,000 ImageNet images, and fine-tune as needed.
 If we give provide the `weights` argument to the `caffe train` command, the pretrained weights will be loaded into our model, matching layers by name.
 
 Because we are predicting 20 classes instead of a 1,000, we do need to change the last layer in the model.
 Therefore, we change the name of the last layer from `fc8` to `fc8_flickr` in our prototxt.
-Since there is no layer named that in the `caffe_reference_imagenet_model`, that layer will begin training with random weights.
+Since there is no layer named that in the `bvlc_reference_caffenet`, that layer will begin training with random weights.
 
 We will also decrease the overall learning rate `base_lr` in the solver prototxt, but boost the `blobs_lr` on the newly introduced layer.
 The idea is to have the rest of the model change very slowly with new data, but let the new layer learn fast.
@@ -34,7 +34,7 @@ All steps are to be done from the caffe root directory.
 The dataset is distributed as a list of URLs with corresponding labels.
 Using a script, we will download a small subset of the data and split it into train and val sets.
 
-    caffe % ./models/finetune_flickr_style/assemble_data.py -h
+    caffe % ./examples/finetune_flickr_style/assemble_data.py -h
     usage: assemble_data.py [-h] [-s SEED] [-i IMAGES] [-w WORKERS]
 
     Download a subset of Flickr Style to a directory
@@ -48,12 +48,11 @@ Using a script, we will download a small subset of the data and split it into tr
                             num workers used to download images. -x uses (all - x)
                             cores.
 
-    caffe % python models/finetune_flickr_style/assemble_data.py --workers=-1 --images=2000 --seed 831486
+    caffe % python examples/finetune_flickr_style/assemble_data.py --workers=-1 --images=2000 --seed 831486
     Downloading 2000 images with 7 workers...
     Writing train/val for 1939 successfully downloaded images.
 
 This script downloads images and writes train/val file lists into `data/flickr_style`.
-With this random seed there are 1,557 train images and 382 test images.
 The prototxts in this example assume this, and also assume the presence of the ImageNet mean file (run `get_ilsvrc_aux.sh` from `data/ilsvrc12` to obtain this if you haven't yet).
 
 We'll also need the ImageNet-trained model, which you can obtain by running `./scripts/download_model_binary.py models/bvlc_reference_caffenet`.
@@ -106,7 +105,8 @@ Now we can train! (You can fine-tune in CPU mode by leaving out the `-gpu` flag.
     I0828 22:23:17.438894 11510 solver.cpp:302]     Test net output #0: accuracy = 0.2356
 
 Note how rapidly the loss went down. Although the 23.5% accuracy is only modest, it was achieved in only 1000, and evidence that the model is starting to learn quickly and well.
-Once the model is fully fine-tuned on the whole training set over 100,000 iterations the final validation accuracy is 91.64%. This takes ~7 hours in Caffe on a K40 GPU.
+Once the model is fully fine-tuned on the whole training set over 100,000 iterations the final validation accuracy is 39.16%.
+This takes ~7 hours in Caffe on a K40 GPU.
 
 For comparison, here is how the loss goes down when we do not start with a pre-trained model:
 
@@ -155,7 +155,7 @@ Now try fine-tuning to your own tasks and data!
 
 ## Trained model
 
-We provide a model trained on all 80K images, with final accuracy of 98%.
+We provide a model trained on all 80K images, with final accuracy of 39%.
 Simply do `./scripts/download_model_binary.py models/finetune_flickr_style` to obtain it.
 
 ## License

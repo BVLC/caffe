@@ -1,7 +1,9 @@
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 
+#ifndef CPU_ONLY
 #include <cufft.h>
+#endif
 
 #include <complex>
 #include <string>
@@ -16,7 +18,6 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
-
 
 namespace caffe {
 
@@ -64,8 +65,8 @@ class ConvolutionLayer : public Layer<Dtype> {
    *  first group and input channels 3-4 and output channels 5-8 into the second
    *  group.
    *  - bias_term (\b optional, default true). Whether to have a bias.
-   *  - engine: convolution has CAFFE (matrix multiplication), CUDNN (library
-   *    kernels + stream parallelism) and FFT engines.
+   *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
+   *    kernels + stream parallelism) engines.
    */
   explicit ConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
@@ -102,6 +103,7 @@ class ConvolutionLayer : public Layer<Dtype> {
   int height_out_, width_out_;
   bool bias_term_;
   bool is_1x1_;
+
   /// M_ is the channel dimension of the output for a single group, which is the
   /// leading dimension of the filter matrix.
   int M_;
@@ -248,6 +250,7 @@ class ConvolutionLayerFFT : public ConvolutionLayer<Dtype> {
   void* ifft_handle_;
   void* fft_many_handle_;
 // GPU buffers and handles
+#ifndef CPU_ONLY
   Dtype* fft_gpu_weights_real_;
   Dtype* fft_gpu_map_in_real_;
   std::complex<Dtype>* fft_gpu_weights_complex_;
@@ -257,7 +260,9 @@ class ConvolutionLayerFFT : public ConvolutionLayer<Dtype> {
   cufftHandle fft_gpu_handle_;
   cufftHandle ifft_gpu_handle_;
   cufftHandle fft_gpu_many_weights_handle_;
+#endif
 };
+
 
 #ifdef USE_CUDNN
 /*
@@ -466,6 +471,7 @@ class PoolingLayer : public Layer<Dtype> {
   int channels_;
   int height_, width_;
   int pooled_height_, pooled_width_;
+  bool global_pooling_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
 };
@@ -485,6 +491,9 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual ~CuDNNPoolingLayer();
+  // Currently, cuDNN does not support the extra top blob.
+  virtual inline int MinTopBlobs() const { return -1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,

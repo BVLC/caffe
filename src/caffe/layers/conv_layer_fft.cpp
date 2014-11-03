@@ -1,5 +1,4 @@
 
-#include <cufft.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -192,9 +191,11 @@ void ConvolutionLayerFFT<Dtype>::fft_setup() {
   switch (Caffe::mode()) {
     case Caffe::CPU:
       fft_cpu_setup();
+      fft_cpu_initialized_ = true;
       break;
     case Caffe::GPU:
       fft_gpu_setup();
+      fft_gpu_initialized_ = true;
       break;
   }
 }
@@ -256,10 +257,12 @@ void ConvolutionLayerFFT<Dtype>::fft_cpu_setup() {
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::fft_clean() {
-  if ( fft_cpu_initialized_)
+  if ( fft_cpu_initialized_) 
     fft_cpu_clean();
-  if ( fft_gpu_initialized_)
+  if ( fft_gpu_initialized_) 
     fft_gpu_clean();
+  fft_cpu_initialized_ = false;
+  fft_gpu_initialized_ = false;
 }
 
 // free FFT buffers--------------------------------------------------
@@ -764,9 +767,48 @@ void ConvolutionLayerFFT<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(ConvolutionLayer);
+// while CPU_ONLY is on, stub functions
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::fft_gpu_setup() { NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::fft_gpu_clean() { NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::fft_gpu_compute_weights() { NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft_task(
+      const Dtype* bottom_data, Dtype* top_data, const Dtype* weight, int n) {
+            NO_GPU; }
+template <typename Dtype>
+Dtype ConvolutionLayerFFT<Dtype>::Forward_gpu_fft(
+         const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+            NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::Forward_gpu_task(
+           const vector<Blob<Dtype>*>& bottom,
+            const vector<Blob<Dtype>*>& top, int i, int n) { NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::Forward_gpu(
+       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+                NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
+        const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
+         const Dtype* weight, int i, int n) { NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::Backward_gpu_bottom_diff_task(
+      const Dtype* top_diff, Dtype* bottom_diff,
+       const Dtype* weight, int i,  int n) { NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::Backward_gpu_weight_diff_task(
+         const Dtype* top_diff, const vector<Blob<Dtype>*>& bottom,
+          int i, int n) { NO_GPU; }
+template <typename Dtype>
+void ConvolutionLayerFFT<Dtype>::Backward_gpu(
+        const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+         const vector<Blob<Dtype>*>& bottom) { NO_GPU; }
 #endif
 
 INSTANTIATE_CLASS(ConvolutionLayerFFT);
+
 
 }  // namespace caffe
