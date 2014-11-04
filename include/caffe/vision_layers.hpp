@@ -2,7 +2,9 @@
 #define CAFFE_VISION_LAYERS_HPP_
 
 #ifndef CPU_ONLY
+#ifdef USE_FFT
 #include <cufft.h>
+#endif
 #endif
 
 #include <complex>
