@@ -119,7 +119,7 @@ def main(argv):
 
     # Load input.
     t = time.time()
-    print('Loading input...')
+    print("Loading input...")
     if args.input_file.lower().endswith('txt'):
         with open(args.input_file) as f:
             inputs = [_.strip() for _ in f.readlines()]
