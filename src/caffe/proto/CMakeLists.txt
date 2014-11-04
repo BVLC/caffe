@@ -35,3 +35,7 @@ foreach(header ${ProtoHeaders})
 )
 
 endforeach(header)
+
+###    Install    #################################################################################
+
+install(TARGETS proto DESTINATION lib)
