@@ -102,7 +102,7 @@ class LossLayer : public Layer<Dtype> {
   virtual void Reshape(
       const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
 
   /**
    * @brief For convenience and backwards compatibility, instruct the Net to
@@ -245,6 +245,11 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_EUCLIDEAN_LOSS;
   }
+
+  virtual inline int ExactNumBottomBlobs() const { return -1; }
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MaxBottomBlobs() const { return 3; }
+  virtual inline int ExactNumTopBlobs() const { return -1; }
 
   /**
    * Unlike most loss layers, in the EuclideanLossLayer we can backpropagate

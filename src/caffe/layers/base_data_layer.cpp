@@ -21,6 +21,12 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     output_labels_ = true;
   }
+
+  if (top->size() == 2) {
+    output_sample_weights_ = true;
+  } else {
+    output_sample_weights_ = false;
+  }
   DataLayerSetUp(bottom, top);
   // The subclasses should setup the datum channels, height and width
   CHECK_GT(datum_channels_, 0);
@@ -61,6 +67,9 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   if (this->output_labels_) {
     this->prefetch_label_.mutable_cpu_data();
   }
+  if (this->output_sample_weights_) {
+    this->prefetch_sample_weight_.mutable_cpu_data();
+  }
   DLOG(INFO) << "Initializing prefetch";
   this->CreatePrefetchThread();
   DLOG(INFO) << "Prefetch initialized.";
@@ -89,6 +98,10 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   if (this->output_labels_) {
     caffe_copy(prefetch_label_.count(), prefetch_label_.cpu_data(),
                (*top)[1]->mutable_cpu_data());
+  }
+  if (this->output_sample_weights_) {
+    caffe_copy(prefetch_sample_weight_.count(), prefetch_sample_weight_.cpu_data(),
+               (*top)[2]->mutable_cpu_data());
   }
   // Start a new prefetch thread
   CreatePrefetchThread();

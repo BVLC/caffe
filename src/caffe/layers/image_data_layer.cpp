@@ -76,6 +76,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   (*top)[1]->Reshape(batch_size, 1, 1, 1);
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
+  // sample_weight
+  this->prefetch_sample_weight_.Reshape(batch_size, 1, 1, 1);
   // datum size
   this->datum_channels_ = datum.channels();
   this->datum_height_ = datum.height();
@@ -97,6 +99,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   CHECK(this->prefetch_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
+  Dtype* top_sample_weight = this->prefetch_sample_weight_.mutable_cpu_data();
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
   const int new_height = image_data_param.new_height();

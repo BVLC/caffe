@@ -43,9 +43,15 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   hdf5_load_nd_dataset(
     file_id, "label", MIN_LABEL_DIM, MAX_LABEL_DIM, &label_blob_);
 
+  const int MIN_SAMPLE_WEIGHT_DIM = 1;
+  const int MAX_SAMPLE_WEIGHT_DIM = 2;
+  hdf5_load_nd_dataset(
+    file_id, "sample_weight", MIN_SAMPLE_WEIGHT_DIM, MAX_SAMPLE_WEIGHT_DIM, &sample_weight_blob_);
+
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file " << filename;
   CHECK_EQ(data_blob_.num(), label_blob_.num());
+  CHECK_EQ(data_blob_.num(), sample_weight_blob_.num());
   LOG(INFO) << "Successully loaded " << data_blob_.num() << " rows";
 }
 
@@ -78,6 +84,8 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                      data_blob_.height(), data_blob_.width());
   (*top)[1]->Reshape(batch_size, label_blob_.channels(),
                      label_blob_.height(), label_blob_.width());
+  (*top)[2]->Reshape(batch_size, sample_weight_blob_.channels(),
+                     sample_weight_blob_.height(), sample_weight_blob_.width());
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
@@ -89,6 +97,7 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
   const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
+  const int sample_weight_data_count = (*top)[2]->count() / (*top)[2]->num();
 
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == data_blob_.num()) {
@@ -107,6 +116,9 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_copy(label_data_count,
                &label_blob_.cpu_data()[current_row_ * label_data_count],
                &(*top)[1]->mutable_cpu_data()[i * label_data_count]);
+    caffe_copy(sample_weight_data_count,
+               &sample_weight_blob_.cpu_data()[current_row_ * sample_weight_data_count],
+               &(*top)[2]->mutable_cpu_data()[i * sample_weight_data_count]);
   }
 }
 

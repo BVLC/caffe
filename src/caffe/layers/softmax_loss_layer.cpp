@@ -37,13 +37,15 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
   softmax_layer_->Forward(softmax_bottom_vec_, &softmax_top_vec_);
   const Dtype* prob_data = prob_.cpu_data();
   const Dtype* label = bottom[1]->cpu_data();
+  const Dtype* sample_weight = bottom[2]->cpu_data();
   int num = prob_.num();
   int dim = prob_.count() / num;
   int spatial_dim = prob_.height() * prob_.width();
   Dtype loss = 0;
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < spatial_dim; j++) {
-      loss -= log(std::max(prob_data[i * dim +
+      Dtype w = sample_weight[i * spatial_dim + j];
+      loss -= w * log(std::max(prob_data[i * dim +
           static_cast<int>(label[i * spatial_dim + j]) * spatial_dim + j],
                            Dtype(FLT_MIN)));
     }
@@ -67,15 +69,23 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* prob_data = prob_.cpu_data();
     caffe_copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = (*bottom)[1]->cpu_data();
+    const Dtype* sample_weight = (*bottom)[2]->cpu_data();
     int num = prob_.num();
     int dim = prob_.count() / num;
     int spatial_dim = prob_.height() * prob_.width();
+    Dtype w;
     for (int i = 0; i < num; ++i) {
       for (int j = 0; j < spatial_dim; ++j) {
+        w = sample_weight[i * spatial_dim + j];
         bottom_diff[i * dim + static_cast<int>(label[i * spatial_dim + j])
             * spatial_dim + j] -= 1;
+
+        for (int k = 0; k < dim; ++k) {
+            bottom_diff[i * dim + k * spatial_dim + j] *= w;
+        }
       }
     }
+
     // Scale gradient
     const Dtype loss_weight = top[0]->cpu_diff()[0];
     caffe_scal(prob_.count(), loss_weight / num / spatial_dim, bottom_diff);
