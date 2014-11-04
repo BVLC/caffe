@@ -165,7 +165,10 @@ INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
-	LIBRARIES := cudart cublas curand cufft
+	LIBRARIES := cudart cublas curand
+	ifeq ($(FFT), 1)
+		LIBRARIES += cufft
+        endif     
 endif
 
 LIBRARIES += glog gflags protobuf leveldb snappy \
