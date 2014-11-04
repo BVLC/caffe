@@ -156,7 +156,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }
-        int length = snprintf(key_str, kMaxKeyStrLength, "%d",
+        int length = snprintf(key_str, kMaxKeyStrLength, "%09d",
             image_indices[i]);
         CHECK(feature_dbs.at(i)->put(std::string(key_str, length), datum));
         ++image_indices[i];
