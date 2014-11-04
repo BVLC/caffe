@@ -265,7 +265,7 @@ const char* curandGetErrorString(curandStatus_t error) {
   }
   return "Unknown curand status";
 }
-
+#ifdef USE_FFT
 const char* cufftGetErrorEnum(cufftResult_t error) {
   switch (error) {
   case CUFFT_SUCCESS:
@@ -299,6 +299,7 @@ const char* cufftGetErrorEnum(cufftResult_t error) {
   }
   return "CUFFT_ERROR";
 }
+#endif
 
 #endif  // CPU_ONLY
 

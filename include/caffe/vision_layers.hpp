@@ -263,7 +263,7 @@ class ConvolutionLayerFFT : public ConvolutionLayer<Dtype> {
   cufftHandle fft_gpu_many_weights_handle_;
 #endif
 };
-#endif // USE_FFT
+#endif  // USE_FFT
 
 #ifdef USE_CUDNN
 /*

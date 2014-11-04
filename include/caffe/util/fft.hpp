@@ -104,6 +104,6 @@ void caffe_gpu_fft_execute_dft_c2r(cufftHandle plan,
 
 }  // namespace caffe
 
-#endif // USE_FFT
+#endif  // USE_FFT
 
 #endif  // CAFFE_UTIL_caffe_cpu_fft_H_

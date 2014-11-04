@@ -257,9 +257,9 @@ void ConvolutionLayerFFT<Dtype>::fft_cpu_setup() {
 
 template <typename Dtype>
 void ConvolutionLayerFFT<Dtype>::fft_clean() {
-  if ( fft_cpu_initialized_) 
+  if ( fft_cpu_initialized_)
     fft_cpu_clean();
-  if ( fft_gpu_initialized_) 
+  if ( fft_gpu_initialized_)
     fft_gpu_clean();
   fft_cpu_initialized_ = false;
   fft_gpu_initialized_ = false;
