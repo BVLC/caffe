@@ -41,7 +41,7 @@ Read `sample_weight` through:
 * lmdb (untested)
 * leveldb (untested)
 
-The layers that have been made to appreciate take a `sample_weight` are:
+The layers that have been made to appreciate `sample_weight` are:
 
 * SOFTMAX_WITH_LOSS (`label` and `sample_weight` should be 1D)
 * EUCLIDEAN_LOSS (`label` and `sample_weight` should be 2D)
