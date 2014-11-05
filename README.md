@@ -43,8 +43,12 @@ Read `sample_weight` through:
 
 The layers that have been made to appreciate `sample_weight` are:
 
-* SOFTMAX_WITH_LOSS (`label` and `sample_weight` should be 1D)
+* SOFTMAX_LOSS (`label` and `sample_weight` should be 1D)
 * EUCLIDEAN_LOSS (`label` and `sample_weight` should be 2D)
+
+New layers althogether include:
+
+* SOFTMAX_CROSS_ENTROPY_LOSS (a multi-class generalization of SIGMOID_CROSS_ENTROPY_LOSS)
 
 For now, `sample_weight` is required to be specified, both in the training and
 testing data (even though it is not used in the latter).
