@@ -12,6 +12,7 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/indexed_data.hpp"
 
 namespace caffe {
 
@@ -485,6 +486,37 @@ class SliceLayer : public Layer<Dtype> {
   int width_;
   int slice_dim_;
   vector<int> slice_point_;
+};
+
+/**
+ * @brief Takes a label input and transform it into an blob
+ *        by looking up a mapping
+ */
+template <typename Dtype>
+class IndirectionLayer : public Layer<Dtype> {
+ public:
+  explicit IndirectionLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_INDIRECTION;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+
+  shared_ptr<IndexedDataReader<Dtype> > reader_;
 };
 
 }  // namespace caffe

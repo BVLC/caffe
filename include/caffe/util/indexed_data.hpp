@@ -3,7 +3,12 @@
 
 #include <caffe/common.hpp>
 
+#include <string>
+#include <vector>
+
 namespace caffe {
+
+typedef uint32_t index_type;
 
 /**
  * @brief An abstract class for retrieving data array
@@ -14,7 +19,7 @@ template <typename Dtype>
 class IndexedDataReader {
  public:
   IndexedDataReader() {}
-  virtual IndexedDataReader() {}
+  virtual ~IndexedDataReader() {}
 
   /**
    * @brief Retrieve the data.
@@ -33,39 +38,18 @@ class IndexedDataReader {
    * When length equals zero, out can be a null pointer; otherwise, a null
    * out will cause undefined behavior.
    */
-  virtual uint32_t retrieve(uint32_t index,
-          Dtype* out, uint32_t length) = 0;
+  virtual index_type read(index_type index,
+          Dtype* out, index_type length) = 0;
 };
-
-
-/**
- * @brief An abstract class for writing into floating point array storage.
- */
-template <typename Dtype>
-class IndexedDataWriter {
- public:
-  IndexedDataWriter() {}
-  virtual ~IndexedDataWriter() {}
-
-  /**
-   * @brief Write the data to the storage.
-   * @return Whether the write succeeded
-   *
-   * in can never be null.
-   */
-  virtual bool write(uint32_t index, const Dtype* in,
-          uint32_t length) = 0;
-};
-
 
 /**
  * @brief A cache class of IndexedDataReader.
  */
 template <typename Dtype>
-class IndexedDataReadCache: public IndexedDataReader {
+class IndexedDataReadCache: public IndexedDataReader<Dtype> {
  private:
-  shared_ptr<IndexedDataReader> reader_;
-  uint32_t length_;
+  shared_ptr<IndexedDataReader<Dtype> > reader_;
+  index_type length_;
 
  public:
   /**
@@ -76,11 +60,40 @@ class IndexedDataReadCache: public IndexedDataReader {
    * The cache only works with readers whose data array has the same
    * length, and has no gaps in indices
    */
-  explicit IndexedDataReadCache(shared_ptr<IndexedDataReader>
-          reader, uint32_t length): reader_(reader), length_(length)
+  explicit IndexedDataReadCache(shared_ptr<IndexedDataReader<Dtype> >
+          reader, index_type length): reader_(reader), length_(length)
   {}
 
-  uint32_t data_length() const { return length_; }
+  index_type data_length() const { return length_; }
+};
+
+/**
+ * @brief The simplest indexed data storage backed by a text file
+ *        where each line is a single number
+ */
+template <typename Dtype>
+class SimpleSingleIndexedTextFile
+  : public IndexedDataReader<Dtype> {
+ private:
+    std::vector<Dtype> data_;
+
+ public:
+    explicit SimpleSingleIndexedTextFile(const std::string& file_name) {
+      std::ifstream input(file_name.c_str());
+      Dtype tmp;
+      while (input >> tmp)
+        data_.push_back(tmp);
+    }
+
+    virtual index_type read(index_type index,
+          Dtype* out, index_type length) {
+      if (index >= data_.size())
+        return 0;
+
+      if (length > 0)
+        *out = data_[index];
+      return 1;
+    }
 };
 }  // namespace caffe
 
