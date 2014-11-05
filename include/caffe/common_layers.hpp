@@ -12,7 +12,6 @@
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/indexed_data.hpp"
 
 namespace caffe {
 
@@ -488,6 +487,10 @@ class SliceLayer : public Layer<Dtype> {
   vector<int> slice_point_;
 };
 
+// Forward declaration
+template <typename Dtype>
+class IndexedDataReader;
+
 /**
  * @brief Takes a label input and transform it into an blob
  *        by looking up a mapping
@@ -516,7 +519,8 @@ class IndirectionLayer : public Layer<Dtype> {
     NOT_IMPLEMENTED;
   }
 
-  shared_ptr<IndexedDataReader<Dtype> > reader_;
+  std::vector<shared_ptr<IndexedDataReader<Dtype> > > readers_;
+  int data_length_;
 };
 
 }  // namespace caffe
