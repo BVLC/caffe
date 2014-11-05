@@ -46,6 +46,9 @@ The layers that have been made to appreciate `sample_weight` are:
 * SOFTMAX_WITH_LOSS (`label` and `sample_weight` should be 1D)
 * EUCLIDEAN_LOSS (`label` and `sample_weight` should be 2D)
 
+For now, `sample_weight` is required to be specified, both in the training and
+testing data (even though it is not used in the latter).
+
 ## Original Caffe note
 
 Caffe is a deep learning framework developed with cleanliness, readability, and speed in mind.<br />
