@@ -404,6 +404,12 @@ message AccuracyParameter {
 
   // If specified, ignore instances with the given label.
   optional int32 ignore_label = 3;
+
+  // Controls the denominator in the computed accuracy = #correct / denominator.
+  // Must be a positive number, or the default of 0, for the total input weight.
+  // If no input weights are used, the denominator is the batch size, as the
+  // weights each default to 1.
+  optional float denominator = 4 [default = 0];
 }
 
 message ArgMaxParameter {

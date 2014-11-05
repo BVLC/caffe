@@ -20,6 +20,10 @@ void AccuracyLayer<Dtype>::LayerSetUp(
   if (has_ignore_label_) {
     ignore_label_ = this->layer_param_.accuracy_param().ignore_label();
   }
+
+  denominator_ = this->layer_param_.accuracy_param().denominator();
+  CHECK_GE(denominator_, 0)
+      << "Denominator must be positive; or 0, for the batch size.";
 }
 
 template <typename Dtype>
@@ -81,7 +85,8 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  top[0]->mutable_cpu_data()[0] = accuracy / count;
+  const Dtype denominator = (denominator_ == 0) ? count : denominator_;
+  top[0]->mutable_cpu_data()[0] = accuracy / denominator;
   // Accuracy layer should not be used as a loss function.
 }
 

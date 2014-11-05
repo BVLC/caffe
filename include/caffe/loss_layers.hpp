@@ -86,6 +86,8 @@ class AccuracyLayer : public Layer<Dtype> {
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int ignore_label_;
+
+  Dtype denominator_;
 };
 
 /**
