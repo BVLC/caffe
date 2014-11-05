@@ -14,6 +14,9 @@ template <typename Dtype>
 void AccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   top_k_ = this->layer_param_.accuracy_param().top_k();
+  denominator_ = this->layer_param_.accuracy_param().denominator();
+  CHECK_GE(denominator_, 0)
+      << "Denominator must be positive; or 0, for the batch size.";
 }
 
 template <typename Dtype>
@@ -60,7 +63,8 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  top[0]->mutable_cpu_data()[0] = accuracy / num;
+  const Dtype denominator = (denominator_ == 0) ? num : denominator_;
+  top[0]->mutable_cpu_data()[0] = accuracy / denominator;
   // Accuracy layer should not be used as a loss function.
 }
 
