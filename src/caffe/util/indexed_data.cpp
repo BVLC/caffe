@@ -5,6 +5,8 @@
 #include <sstream>  // NOLINT(readability/streams)
 #include <string>
 
+#include "caffe/util/io.hpp"
+
 namespace caffe {
 
 template <typename Dtype>
@@ -43,7 +45,7 @@ index_type LinearIndexedStorage<Dtype>::read(
 INSTANTIATE_CLASS(SimpleIndexedTextFile);
 
 template <typename Dtype>
-IndexedBinaryFiles<Dtype>::IndexedBinaryFiles(
+IndexedFileStorage<Dtype>::IndexedFileStorage(
     const std::string& source_file) {
   std::ifstream input(source_file.c_str());
   CHECK(input) << "Fail to open " << source_file << " for reading";
@@ -54,13 +56,19 @@ IndexedBinaryFiles<Dtype>::IndexedBinaryFiles(
 }
 
 template <typename Dtype>
-index_type IndexedBinaryFiles<Dtype>::read(
+index_type IndexedFileStorage<Dtype>::read(
     index_type index, Dtype* out, index_type length) {
   if (index >= file_names_.size())
     return 0;
 
-  std::ifstream input(file_names_[index].c_str(), std::ios_base::binary);
-  CHECK(input) << "Fail to open " << file_names_[index] << " for reading";
+  return read(file_names_[index], out, length);
+}
+
+template <typename Dtype>
+index_type IndexedBinaryFiles<Dtype>::read(
+    const std::string& file_name, Dtype* out, index_type length) {
+  std::ifstream input(file_name.c_str(), std::ios_base::binary);
+  CHECK(input) << "Fail to open " << file_name << " for reading";
   input.seekg(0, std::ios_base::end);
   index_type actual_length = input.tellg() / sizeof(Dtype);
 
@@ -74,6 +82,22 @@ index_type IndexedBinaryFiles<Dtype>::read(
 
 INSTANTIATE_CLASS(IndexedBinaryFiles);
 
+template <typename Dtype>
+index_type IndexedBlobProtos<Dtype>::read(
+    const std::string& file_name, Dtype* out, index_type length) {
+  BlobProto blob;
+  ReadProtoFromBinaryFileOrDie(file_name, &blob);
+
+  if (length > 0) {
+    index_type min_length = std::min<index_type>(length, blob.data_size());
+    std::copy(blob.data().data(), blob.data().data() + min_length, out);
+  }
+
+  return blob.data_size();
+}
+
+INSTANTIATE_CLASS(IndexedBlobProtos);
+
 template<typename Dtype>
 shared_ptr<IndexedDataReader<Dtype> > IndexedDataReader<Dtype>::make_reader(
     IndirectionParameter::IndirectionSourceType type,
@@ -86,6 +110,9 @@ shared_ptr<IndexedDataReader<Dtype> > IndexedDataReader<Dtype>::make_reader(
     break;
   case IndirectionParameter_IndirectionSourceType_INDEXED_BINARY:
     result.reset(new IndexedBinaryFiles<Dtype>(source_file));
+    break;
+  case IndirectionParameter_IndirectionSourceType_INDEXED_BLOB:
+    result.reset(new IndexedBlobProtos<Dtype>(source_file));
     break;
   default:
     LOG(FATAL) << "Unkown IndirectionParameter type " << static_cast<int>(type);

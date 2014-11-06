@@ -36,25 +36,28 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
     top_.push_back(blob_top_data_);
     bottom_.clear();
     bottom_.push_back(blob_bottom_label_);
+    Fill();
+  }
+
+  void Fill() {
+    blob_bottom_label_->Reshape(10, 1, 1, 1);
+    Dtype* label = blob_bottom_label_->mutable_cpu_data();
+    for (int i = 0; i < 10; ++i)
+      label[i] = i;
   }
 
   void FillText() {
     std::ofstream out(filename_.c_str());
     CHECK(out);
-    blob_bottom_label_->Reshape(10, 1, 1, 1);
-    Dtype* label = blob_bottom_label_->mutable_cpu_data();
 
     for (int i = 0; i < 10; ++i) {
       out << 0 << ' ' << 9 - i << '\n';
-      label[i] = i;
     }
   }
 
   void FillBinary() {
     std::ofstream out(filename_.c_str());
     CHECK(out);
-    blob_bottom_label_->Reshape(10, 1, 1, 1);
-    Dtype* label = blob_bottom_label_->mutable_cpu_data();
 
     for (int i = 0; i < 10; ++i) {
       std::ostringstream os;
@@ -70,8 +73,28 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
       bin_out.write(reinterpret_cast<char*>(&d), sizeof(d));
       CHECK_EQ(bin_out.tellp(), 2 * sizeof(Dtype));
       out << bin_fn << '\n';
+    }
+  }
 
-      label[i] = i;
+  void FillBlobs() {
+    std::ofstream out(filename_.c_str());
+    CHECK(out);
+
+    BlobProto blob;
+    blob.set_channels(2);
+    blob.set_height(1);
+    blob.set_width(1);
+    blob.add_data(0);
+    blob.add_data(0);
+    float* data = blob.mutable_data()->mutable_data();
+
+    for (int i = 0; i < 10; ++i) {
+      data[1] = 9 - i;
+      std::ostringstream os;
+      os << filename_ << '_' << i << ".binaryproto";
+      const std::string& proto_fn = os.str();
+      WriteProtoToBinaryFile(blob, proto_fn);
+      out << proto_fn << '\n';
     }
   }
 
@@ -97,9 +120,8 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
 
  private:
   std::string filename_;
-
-  Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_bottom_label_;
+  Blob<Dtype>* const blob_top_data_;
   vector<Blob<Dtype>*> bottom_;
   vector<Blob<Dtype>*> top_;
 };
@@ -114,5 +136,10 @@ TYPED_TEST(IndirectionLayerTest, TestTextFile) {
 TYPED_TEST(IndirectionLayerTest, TestBinaryFiles) {
   this->FillBinary();
   this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BINARY);
+}
+
+TYPED_TEST(IndirectionLayerTest, TestBlobProtos) {
+  this->FillBlobs();
+  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BLOB);
 }
 }  // namespace caffe

@@ -99,20 +99,52 @@ class SimpleIndexedTextFile
     explicit SimpleIndexedTextFile(const std::string& source_file);
 };
 
+template <typename Dtype>
+class IndexedFileStorage: public IndexedDataReader<Dtype> {
+ private:
+  std::vector<std::string> file_names_;
+
+ protected:
+  virtual index_type read(const std::string& file,
+                          Dtype* out, index_type length) = 0;
+
+ public:
+  explicit IndexedFileStorage(const std::string& source_file);
+
+  virtual index_type read(index_type index,
+        Dtype* out, index_type length);
+};
+
 /**
  * @brief A indexed data storage where each line of source file points
  *        to a binary file of Dtype array in machine byte order
  */
 template <typename Dtype>
-class IndexedBinaryFiles : public IndexedDataReader<Dtype> {
- private:
-  std::vector<std::string> file_names_;
+class IndexedBinaryFiles : public IndexedFileStorage<Dtype> {
  public:
-  explicit IndexedBinaryFiles(const std::string& source_file);
+  explicit IndexedBinaryFiles(const std::string& source_file)
+    : IndexedFileStorage<Dtype>(source_file) {}
 
-  virtual index_type read(index_type index,
+ protected:
+  virtual index_type read(const std::string& file,
         Dtype* out, index_type length);
 };
+
+/**
+ * @brief A indexed data storage where each line of source file points
+ *        to a BlobProto file
+ */
+template <typename Dtype>
+class IndexedBlobProtos : public IndexedFileStorage<Dtype> {
+ public:
+  explicit IndexedBlobProtos(const std::string& source_file)
+    : IndexedFileStorage<Dtype>(source_file) {}
+
+ protected:
+  virtual index_type read(const std::string& file,
+        Dtype* out, index_type length);
+};
+
 }  // namespace caffe
 
 #endif    // CAFFE_UTIL_INDEXED_DATA_H_
