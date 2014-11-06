@@ -38,8 +38,9 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
     bottom_.push_back(blob_bottom_label_);
   }
 
-  void Fill() {
+  void FillText() {
     std::ofstream out(filename_.c_str());
+    CHECK(out);
     blob_bottom_label_->Reshape(10, 1, 1, 1);
     Dtype* label = blob_bottom_label_->mutable_cpu_data();
 
@@ -49,9 +50,35 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void TestOutput() {
+  void FillBinary() {
+    std::ofstream out(filename_.c_str());
+    CHECK(out);
+    blob_bottom_label_->Reshape(10, 1, 1, 1);
+    Dtype* label = blob_bottom_label_->mutable_cpu_data();
+
+    for (int i = 0; i < 10; ++i) {
+      std::ostringstream os;
+      os << filename_ << '_' << i << ".bin";
+      const std::string& bin_fn = os.str();
+
+      std::ofstream bin_out(bin_fn.c_str(), std::ios_base::binary);
+      CHECK(bin_out);
+
+      Dtype d = 0;
+      bin_out.write(reinterpret_cast<char*>(&d), sizeof(d));
+      d = 9 - i;
+      bin_out.write(reinterpret_cast<char*>(&d), sizeof(d));
+      CHECK_EQ(bin_out.tellp(), 2 * sizeof(Dtype));
+      out << bin_fn << '\n';
+
+      label[i] = i;
+    }
+  }
+
+  void TestOutput(IndirectionParameter_IndirectionSourceType type) {
     LayerParameter layerParam;
     IndirectionParameter* param = layerParam.mutable_indirection_param();
+    param->set_type(type);
     *param->add_source() = filename_;
     param->set_channels(2);
     param->set_height(1);
@@ -79,8 +106,13 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
 
 TYPED_TEST_CASE(IndirectionLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(IndirectionLayerTest, TestOutput) {
-  this->Fill();
-  this->TestOutput();
+TYPED_TEST(IndirectionLayerTest, TestTextFile) {
+  this->FillText();
+  this->TestOutput(IndirectionParameter_IndirectionSourceType_SIMPLE_TEXT);
+}
+
+TYPED_TEST(IndirectionLayerTest, TestBinaryFiles) {
+  this->FillBinary();
+  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BINARY);
 }
 }  // namespace caffe

@@ -552,7 +552,10 @@ message ImageDataParameter {
 // Message that store parameters for IndirectionLayer
 message IndirectionParameter {
   enum IndirectionSourceType {
-    SIMPLE_SINGLE_TEXT_FILE = 0;
+    SIMPLE_TEXT = 0;
+    INDEXED_BINARY = 1;
+    INDEXED_BLOB = 2;
+    INDEXED_IMAGE = 3;
   }
   optional IndirectionSourceType type = 1;
   // The source file for index mapping

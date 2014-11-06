@@ -1,10 +1,11 @@
 #ifndef CAFFE_UTIL_INDEXED_DATA_H_
 #define CAFFE_UTIL_INDEXED_DATA_H_
 
-#include <caffe/common.hpp>
-
 #include <string>
 #include <vector>
+
+#include "caffe/common.hpp"
+#include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
 
@@ -40,6 +41,15 @@ class IndexedDataReader {
    */
   virtual index_type read(index_type index,
           Dtype* out, index_type length) = 0;
+
+  /**
+   * @brief Factory function for creating subtypes of IndexedDataReader
+   */
+  static shared_ptr<IndexedDataReader<Dtype> > make_reader(
+      IndirectionParameter::IndirectionSourceType type,
+      const std::string& source_file);
+
+  DISABLE_COPY_AND_ASSIGN(IndexedDataReader);
 };
 
 /**
@@ -67,22 +77,41 @@ class IndexedDataReadCache: public IndexedDataReader<Dtype> {
   index_type data_length() const { return length_; }
 };
 
+template <typename Dtype>
+class LinearIndexedStorage : public IndexedDataReader<Dtype> {
+ protected:
+  std::vector<Dtype> data_;
+  std::vector<std::size_t> indices_;
+
+ public:
+  virtual index_type read(index_type index,
+        Dtype* out, index_type length);
+};
+
 /**
  * @brief The simplest indexed data storage backed by a text file
  *        where each line consists of numbers separated by whitespace
  */
 template <typename Dtype>
 class SimpleIndexedTextFile
-  : public IndexedDataReader<Dtype> {
- private:
-    std::vector<Dtype> data_;
-    std::vector<std::size_t> indices_;
-
+  : public LinearIndexedStorage<Dtype> {
  public:
-    explicit SimpleIndexedTextFile(const std::string& file_name);
+    explicit SimpleIndexedTextFile(const std::string& source_file);
+};
 
-    virtual index_type read(index_type index,
-          Dtype* out, index_type length);
+/**
+ * @brief A indexed data storage where each line of source file points
+ *        to a binary file of Dtype array in machine byte order
+ */
+template <typename Dtype>
+class IndexedBinaryFiles : public IndexedDataReader<Dtype> {
+ private:
+  std::vector<std::string> file_names_;
+ public:
+  explicit IndexedBinaryFiles(const std::string& source_file);
+
+  virtual index_type read(index_type index,
+        Dtype* out, index_type length);
 };
 }  // namespace caffe
 
