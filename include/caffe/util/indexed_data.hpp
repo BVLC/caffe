@@ -69,31 +69,20 @@ class IndexedDataReadCache: public IndexedDataReader<Dtype> {
 
 /**
  * @brief The simplest indexed data storage backed by a text file
- *        where each line is a single number
+ *        where each line consists of numbers separated by whitespace
  */
 template <typename Dtype>
-class SimpleSingleIndexedTextFile
+class SimpleIndexedTextFile
   : public IndexedDataReader<Dtype> {
  private:
     std::vector<Dtype> data_;
+    std::vector<std::size_t> indices_;
 
  public:
-    explicit SimpleSingleIndexedTextFile(const std::string& file_name) {
-      std::ifstream input(file_name.c_str());
-      Dtype tmp;
-      while (input >> tmp)
-        data_.push_back(tmp);
-    }
+    explicit SimpleIndexedTextFile(const std::string& file_name);
 
     virtual index_type read(index_type index,
-          Dtype* out, index_type length) {
-      if (index >= data_.size())
-        return 0;
-
-      if (length > 0)
-        *out = data_[index];
-      return 1;
-    }
+          Dtype* out, index_type length);
 };
 }  // namespace caffe
 

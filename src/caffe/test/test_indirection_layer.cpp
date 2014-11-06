@@ -1,4 +1,4 @@
-#include <fstream>
+#include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
 
@@ -7,9 +7,9 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/common_layers.hpp"
+#include "caffe/test/test_caffe_main.hpp"
 #include "caffe/util/indexed_data.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
 
@@ -44,7 +44,7 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
     Dtype* label = blob_bottom_label_->mutable_cpu_data();
 
     for (int i = 0; i < 10; ++i) {
-      out << 9 - i << '\n';
+      out << 0 << ' ' << 9 - i << '\n';
       label[i] = i;
     }
   }
@@ -53,6 +53,9 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter layerParam;
     IndirectionParameter* param = layerParam.mutable_indirection_param();
     *param->add_source() = filename_;
+    param->set_channels(2);
+    param->set_height(1);
+    param->set_width(1);
 
     IndirectionLayer<Dtype> layer(layerParam);
     layer.SetUp(bottom_, top_);
@@ -60,7 +63,8 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
 
     const Dtype* data = blob_top_data_->cpu_data();
     for (int i = 0; i < 10; ++i) {
-      EXPECT_EQ(data[i] + i, 9);
+      EXPECT_EQ(data[2 * i], 0);
+      EXPECT_EQ(data[2 * i + 1] + i, 9);
     }
   }
 
@@ -79,4 +83,4 @@ TYPED_TEST(IndirectionLayerTest, TestOutput) {
   this->Fill();
   this->TestOutput();
 }
-}
+}  // namespace caffe

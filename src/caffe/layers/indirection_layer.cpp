@@ -16,8 +16,8 @@ void IndirectionLayer<Dtype>::LayerSetUp(
   data_length_ = param.channels() * param.height() * param.width();
 
   for (int i = 0; i < size; ++i) {
-      shared_ptr<SimpleSingleIndexedTextFile<Dtype> > reader(
-                  new SimpleSingleIndexedTextFile<Dtype>(param.source(i)));
+      shared_ptr<SimpleIndexedTextFile<Dtype> > reader(
+                  new SimpleIndexedTextFile<Dtype>(param.source(i)));
       this->readers_.push_back(reader);
   }
 }
