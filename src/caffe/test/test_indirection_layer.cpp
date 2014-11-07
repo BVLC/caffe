@@ -127,6 +127,15 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_EQ(data[2 * i], 0);
       EXPECT_EQ(data[2 * i + 1] + i, 9);
     }
+
+    // Test it twice to see if the caching is right
+    layer.Forward(bottom_, top_);
+
+    data = blob_top_data_->cpu_data();
+    for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(data[2 * i], 0);
+      EXPECT_EQ(data[2 * i + 1] + i, 9);
+    }
   }
 
   void TestOutput(IndirectionParameter_IndirectionSourceType type) {
