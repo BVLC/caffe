@@ -19,7 +19,7 @@ void IndirectionLayer<Dtype>::LayerSetUp(
       shared_ptr<IndexedDataReader<Dtype> > reader =
           IndexedDataReader<Dtype>::make_reader(param.type(), param.source(i));
 
-      readers_.push_back(IndexedDataReadCache<Dtype>::make_cached_reader(
+      readers_.push_back(IndexedCachedDataReader<Dtype>::make_cached_reader(
                            param.cache_type(), reader, data_length_,
                            param.cache_block_size(), param.cache_block_num()));
   }

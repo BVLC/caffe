@@ -39,9 +39,9 @@ SimpleIndexedTextFile<Dtype>::SimpleIndexedTextFile(
 }
 
 template <typename Dtype>
-index_type LinearIndexedStorage<Dtype>::read(
+index_type SimpleIndexedTextFile<Dtype>::read(
     index_type index, Dtype* out, index_type length) {
-  if (index >= data_.size())
+  if (index >= this->size())
     return 0;
 
   std::size_t actual_length = indices_[index + 1] - indices_[index];
@@ -50,6 +50,11 @@ index_type LinearIndexedStorage<Dtype>::read(
     copy(&data_[start], actual_length, out, length);
   }
   return actual_length;
+}
+
+template <typename Dtype>
+index_type SimpleIndexedTextFile<Dtype>::size() const {
+  return static_cast<index_type>(indices_.size()) - 1;
 }
 
 INSTANTIATE_CLASS(SimpleIndexedTextFile);
@@ -169,13 +174,13 @@ INSTANTIATE_CLASS(IndexedCompleteInMemoryCache);
 
 template <typename Dtype>
 shared_ptr<IndexedDataReader<Dtype> >
-IndexedDataReadCache<Dtype>::make_cached_reader(
+IndexedCachedDataReader<Dtype>::make_cached_reader(
     IndirectionParameter::IndirectionCacheType type,
     shared_ptr<IndexedDataReader<Dtype> > reader,
     index_type data_length,
     index_type cache_block_size,
     index_type cache_block_num) {
-  shared_ptr<IndexedDataReadCache<Dtype> > result;
+  shared_ptr<IndexedCachedDataReader<Dtype> > result;
 
   switch (type) {
   case IndirectionParameter_IndirectionCacheType_NONE:
@@ -198,7 +203,7 @@ IndexedDataReadCache<Dtype>::make_cached_reader(
 // Explicit instantiation of factory function
 template
 shared_ptr<IndexedDataReader<float> >
-IndexedDataReadCache<float>::make_cached_reader(
+IndexedCachedDataReader<float>::make_cached_reader(
     IndirectionParameter::IndirectionCacheType type,
     shared_ptr<IndexedDataReader<float> > reader,
     index_type data_length,
@@ -207,7 +212,7 @@ IndexedDataReadCache<float>::make_cached_reader(
 
 template
 shared_ptr<IndexedDataReader<double> >
-IndexedDataReadCache<double>::make_cached_reader(
+IndexedCachedDataReader<double>::make_cached_reader(
     IndirectionParameter::IndirectionCacheType type,
     shared_ptr<IndexedDataReader<double> > reader,
     index_type data_length,
@@ -228,7 +233,7 @@ template <typename Dtype>
 IndexedBlockCache<Dtype>::IndexedBlockCache(index_type length,
                                             index_type block_size,
                                             index_type block_num)
-  : IndexedDataReadCache<Dtype>(length),
+  : IndexedCachedDataReader<Dtype>(length),
     block_size_(block_size), block_num_(block_num) {
   blocks_ = new block[block_num];
   for (index_type i = 0; i < block_num; ++i)
@@ -253,8 +258,8 @@ index_type IndexedBlockCache<Dtype>::read(index_type index,
   if (!b) {
     b = find_victim();
     mapping_.erase(b->start_index / block_size());
-    b->valid = true;
     fill_block(b, block_index);
+    b->valid = true;
     mapping_.insert(std::make_pair(block_index, b));
   }
 
@@ -282,18 +287,14 @@ template <typename Dtype>
 void IndexedBlockCache<Dtype>::fill_block(
     typename IndexedBlockCache<Dtype>::block* b, index_type block_index) {
   b->start_index = block_index * block_size();
-  index_type i;
-  for (i = 0; i < block_size(); ++i) {
-    index_type ret =
-        reader_->read(b->start_index + i, &b->data[i * this->data_length()],
-        this->data_length());
-    if (ret == 0) {
-      break;
-    }
-    CHECK_EQ(ret, this->data_length())
+  b->end_index = std::min<index_type>(b->start_index + block_size(),
+                                      reader_->size());
+
+  for (index_type i = b->start_index; i < b->end_index; ++i) {
+    Dtype* buffer = &b->data[(i - b->start_index) * this->data_length()];
+    CHECK_EQ(reader_->read(i, buffer, this->data_length()), this->data_length())
         << "Error reading from underlying reader";
   }
-  b->end_index = b->start_index + i;
 }
 
 template <typename Dtype>

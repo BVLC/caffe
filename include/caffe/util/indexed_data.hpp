@@ -68,7 +68,7 @@ class IndexedDataReader {
  * @brief A cache class of IndexedDataReader.
  */
 template <typename Dtype>
-class IndexedDataReadCache: public IndexedDataReader<Dtype> {
+class IndexedCachedDataReader: public IndexedDataReader<Dtype> {
  private:
   index_type length_;
 
@@ -80,7 +80,7 @@ class IndexedDataReadCache: public IndexedDataReader<Dtype> {
    * The cache only works with readers whose each data array has the same
    * length, and has no gaps in indices
    */
-  explicit IndexedDataReadCache(index_type length): length_(length)
+  explicit IndexedCachedDataReader(index_type length): length_(length)
   {}
 
   virtual void set_underlying_reader(
@@ -96,28 +96,23 @@ class IndexedDataReadCache: public IndexedDataReader<Dtype> {
       index_type cache_block_num);
 };
 
-template <typename Dtype>
-class LinearIndexedStorage : public IndexedDataReader<Dtype> {
- protected:
-  std::vector<Dtype> data_;
-  std::vector<std::size_t> indices_;
-
- public:
-  virtual index_type read(index_type index,
-        Dtype* out, index_type length);
-
-  virtual index_type size() const { return data_.size(); }
-};
-
 /**
  * @brief The simplest indexed data storage backed by a text file
  *        where each line consists of numbers separated by whitespace
  */
 template <typename Dtype>
 class SimpleIndexedTextFile
-  : public LinearIndexedStorage<Dtype> {
+  : public IndexedDataReader<Dtype> {
+ private:
+  std::vector<Dtype> data_;
+  std::vector<std::size_t> indices_;
  public:
-    explicit SimpleIndexedTextFile(const std::string& source_file);
+  explicit SimpleIndexedTextFile(const std::string& source_file);
+
+  virtual index_type read(index_type index,
+                          Dtype* out, index_type length);
+
+  virtual index_type size() const;
 };
 
 template <typename Dtype>
@@ -169,13 +164,13 @@ class IndexedBlobProtos : public IndexedFileStorage<Dtype> {
 };
 
 template <typename Dtype>
-class IndexedCompleteInMemoryCache : public IndexedDataReadCache<Dtype> {
+class IndexedCompleteInMemoryCache : public IndexedCachedDataReader<Dtype> {
  private:
   std::vector<Dtype> data_;
 
  public:
   explicit IndexedCompleteInMemoryCache(index_type length)
-    : IndexedDataReadCache<Dtype>(length) {}
+    : IndexedCachedDataReader<Dtype>(length) {}
 
   virtual void set_underlying_reader(
       shared_ptr<IndexedDataReader<Dtype> > reader);
@@ -187,7 +182,7 @@ class IndexedCompleteInMemoryCache : public IndexedDataReadCache<Dtype> {
 };
 
 template <typename Dtype>
-class IndexedBlockCache : public IndexedDataReadCache<Dtype> {
+class IndexedBlockCache : public IndexedCachedDataReader<Dtype> {
  protected:
   struct block;
   block* blocks_;
@@ -233,7 +228,7 @@ class IndexedBlockCache : public IndexedDataReadCache<Dtype> {
    * @brief Subclasses should override this method if it wants to record
    *        any metadata for cache replacement algorithm
    */
-  virtual void mark_block_as_accessed(block* b) = 0;
+  virtual void mark_block_as_accessed(block* b) {}
 
   /**
    * @brief Subclasses should implement this method
@@ -256,7 +251,6 @@ class IndexedBlockCache_Clock : public IndexedBlockCache<Dtype> {
     : IndexedBlockCache<Dtype>(length, block_size, block_num), hand_(0) {}
 
  protected:
-  virtual void mark_block_as_accessed(block* b) {}
   virtual block* find_victim();
 };
 }  // namespace caffe

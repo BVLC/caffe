@@ -46,6 +46,13 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
       label[i] = i;
   }
 
+  void FillWrong() {
+    blob_bottom_label_->Reshape(10, 1, 1, 1);
+    Dtype* label = blob_bottom_label_->mutable_cpu_data();
+    for (int i = 0; i < 10; ++i)
+      label[i] = i + 1;
+  }
+
   void FillText() {
     std::ofstream out(filename_.c_str());
     CHECK(out);
@@ -124,6 +131,8 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
 
   void TestOutput(IndirectionParameter_IndirectionSourceType type) {
     TestOutput(type, IndirectionParameter_IndirectionCacheType_NONE);
+    TestOutput(type, IndirectionParameter_IndirectionCacheType_WHOLE);
+    TestOutput(type, IndirectionParameter_IndirectionCacheType_CLOCK);
   }
 
  private:
@@ -143,13 +152,11 @@ TYPED_TEST(IndirectionLayerTest, TestTextFile) {
 
 TYPED_TEST(IndirectionLayerTest, TestBinaryFiles) {
   this->FillBinary();
-  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BINARY,
-                   IndirectionParameter_IndirectionCacheType_CLOCK);
+  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BINARY);
 }
 
 TYPED_TEST(IndirectionLayerTest, TestBlobProtos) {
   this->FillBlobs();
-  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BLOB,
-                   IndirectionParameter_IndirectionCacheType_WHOLE);
+  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BLOB);
 }
 }  // namespace caffe
