@@ -175,6 +175,26 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   }
 }
 
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
+                                       Blob<Dtype>* transformed_blob) {
+  const int mat_num = mat_vector.size();
+  const int num = transformed_blob->num();
+  const int channels = transformed_blob->channels();
+  const int height = transformed_blob->height();
+  const int width = transformed_blob->width();
+
+  CHECK_GT(mat_num, 0) << "There is no MAT to add";
+  CHECK_LE(mat_num, num) <<
+    "The size of mat_vector must be smaller than transformed_blob->num()";
+  Blob<Dtype> uni_blob(1, channels, height, width);
+  for (int item_id = 0; item_id < mat_num; ++item_id) {
+    int offset = transformed_blob->offset(item_id);
+    uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data() + offset);
+    Transform(mat_vector[item_id], &uni_blob);
+  }
+}
+
 #ifndef OSX
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,

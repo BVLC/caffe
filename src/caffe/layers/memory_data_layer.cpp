@@ -51,6 +51,30 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
 }
 
 template <typename Dtype>
+void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
+    const vector<int>& labels) {
+  CHECK(!has_new_data_) <<
+      "Can't add Mat when earlier ones haven't been consumed"
+      << " by the upper layers";
+  size_t num = mat_vector.size();
+  CHECK_GT(num, 0) << "There is no mat to add";
+  CHECK_LE(num, batch_size_) <<
+      "The number of added mat must be no greater than the batch size";
+
+  // Apply data transformations (mirror, scale, crop...)
+  this->data_transformer_.Transform(mat_vector, &added_data_);
+  // Copy Labels
+  Dtype* top_label = added_label_.mutable_cpu_data();
+  for (int item_id = 0; item_id < num; ++item_id) {
+    top_label[item_id] = labels[item_id];
+  }
+  // num_images == batch_size_
+  Dtype* top_data = added_data_.mutable_cpu_data();
+  Reset(top_data, top_label, batch_size_);
+  has_new_data_ = true;
+}
+
+template <typename Dtype>
 void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   CHECK(data);
   CHECK(labels);
