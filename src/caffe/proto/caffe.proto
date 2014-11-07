@@ -555,7 +555,6 @@ message IndirectionParameter {
     SIMPLE_TEXT = 0;
     INDEXED_BINARY = 1;
     INDEXED_BLOB = 2;
-    INDEXED_IMAGE = 3;
   }
   optional IndirectionSourceType type = 1;
   // The source file for index mapping
@@ -563,6 +562,14 @@ message IndirectionParameter {
   optional uint32 channels = 3 [default = 1];
   optional uint32 height = 4 [default = 1];
   optional uint32 width = 5 [default = 1];
+  enum IndirectionCacheType {
+    NONE = 0;
+    WHOLE = 1;
+    CLOCK = 2;
+  }
+  optional IndirectionCacheType cache_type = 6;
+  optional uint32 cache_block_size = 7 [default = 256];
+  optional uint32 cache_block_num = 8 [default = 8];
 }
 
 // Message that stores parameters InfogainLossLayer

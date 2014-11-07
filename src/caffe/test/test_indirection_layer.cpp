@@ -98,14 +98,18 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void TestOutput(IndirectionParameter_IndirectionSourceType type) {
+  void TestOutput(IndirectionParameter_IndirectionSourceType type,
+                  IndirectionParameter_IndirectionCacheType cache_type) {
     LayerParameter layerParam;
     IndirectionParameter* param = layerParam.mutable_indirection_param();
     param->set_type(type);
+    param->set_cache_type(cache_type);
     *param->add_source() = filename_;
     param->set_channels(2);
     param->set_height(1);
     param->set_width(1);
+    param->set_cache_block_size(3);
+    param->set_cache_block_num(2);
 
     IndirectionLayer<Dtype> layer(layerParam);
     layer.SetUp(bottom_, top_);
@@ -116,6 +120,10 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_EQ(data[2 * i], 0);
       EXPECT_EQ(data[2 * i + 1] + i, 9);
     }
+  }
+
+  void TestOutput(IndirectionParameter_IndirectionSourceType type) {
+    TestOutput(type, IndirectionParameter_IndirectionCacheType_NONE);
   }
 
  private:
@@ -135,11 +143,13 @@ TYPED_TEST(IndirectionLayerTest, TestTextFile) {
 
 TYPED_TEST(IndirectionLayerTest, TestBinaryFiles) {
   this->FillBinary();
-  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BINARY);
+  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BINARY,
+                   IndirectionParameter_IndirectionCacheType_CLOCK);
 }
 
 TYPED_TEST(IndirectionLayerTest, TestBlobProtos) {
   this->FillBlobs();
-  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BLOB);
+  this->TestOutput(IndirectionParameter_IndirectionSourceType_INDEXED_BLOB,
+                   IndirectionParameter_IndirectionCacheType_WHOLE);
 }
 }  // namespace caffe
