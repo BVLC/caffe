@@ -13,7 +13,7 @@ void ConditionalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data_IF = bottom[0]->gpu_data();
   const Dtype* bottom_data_THEN = bottom[1]->gpu_data();
   
-  vector<float> indices_to_keep;
+  vector<Dtype> indices_to_keep;
   int num_items = bottom[0]->num();
   int num_channels = bottom[0]->channels();
   //look through the batch to find who passes the conditional check
@@ -40,18 +40,18 @@ void ConditionalLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data_indices = top[0]->mutable_gpu_data();
   Dtype* top_data = top[1]->mutable_gpu_data();
   
+  caffe_copy(new_tops_num, &indices_to_keep[0],
+        top_data_indices);
+  
   size_t size_top = top[1]->count()/top[1]->num();
-  for (size_t n = 0; n<indices_to_keep.size(); n++)
+  for (size_t n = 0; n<new_tops_num; n++)
   {
-    int offset = indices_to_keep[n];
-    top_data_indices[n] = (float)offset;
+    int offset = indices_to_keep[n];    
     int data_offset_top = size_top*n;
     int data_offset_bottom = size_top*offset;
-    for(size_t s = 0; s<size_top; s++)
-    {
-      top_data[data_offset_top + s] = bottom_data_THEN[data_offset_bottom + s];
-    }
 
+    caffe_copy(size_top, bottom_data_THEN+data_offset_bottom,
+        top_data+data_offset_top);
   }
 
 }
