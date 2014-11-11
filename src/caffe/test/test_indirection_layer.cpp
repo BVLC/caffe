@@ -10,6 +10,8 @@
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/util/indexed_data.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/rng.hpp"
+
 
 namespace caffe {
 
@@ -42,15 +44,9 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
   void Fill() {
     blob_bottom_label_->Reshape(10, 1, 1, 1);
     Dtype* label = blob_bottom_label_->mutable_cpu_data();
+    rng_t& engine = *caffe_rng();
     for (int i = 0; i < 10; ++i)
-      label[i] = i;
-  }
-
-  void FillWrong() {
-    blob_bottom_label_->Reshape(10, 1, 1, 1);
-    Dtype* label = blob_bottom_label_->mutable_cpu_data();
-    for (int i = 0; i < 10; ++i)
-      label[i] = i + 1;
+      label[i] = engine() % 10;
   }
 
   void FillText() {
@@ -123,18 +119,21 @@ class IndirectionLayerTest : public MultiDeviceTest<TypeParam> {
     layer.Forward(bottom_, top_);
 
     const Dtype* data = blob_top_data_->cpu_data();
+    const Dtype* label = blob_bottom_label_->cpu_data();
+
     for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(data[2 * i], 0);
-      EXPECT_EQ(data[2 * i + 1] + i, 9);
+      EXPECT_EQ(data[2 * i + 1] + label[i], 9);
     }
 
     // Test it twice to see if the caching is right
     layer.Forward(bottom_, top_);
 
     data = blob_top_data_->cpu_data();
+    label = blob_bottom_label_->cpu_data();
     for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(data[2 * i], 0);
-      EXPECT_EQ(data[2 * i + 1] + i, 9);
+      EXPECT_EQ(data[2 * i + 1] + label[i], 9);
     }
   }
 
