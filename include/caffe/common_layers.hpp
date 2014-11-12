@@ -168,7 +168,7 @@ class ConditionalLayer : public Layer<Dtype> {
     return LayerParameter_LayerType_CONDITIONAL;
   }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
   /**
@@ -189,6 +189,8 @@ class ConditionalLayer : public Layer<Dtype> {
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the error gradient w.r.t. the concatenate inputs.
@@ -214,14 +216,11 @@ class ConditionalLayer : public Layer<Dtype> {
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> col_bob_;
-  int count_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
-  int concat_dim_;
+  int conditional_index_;
+  vector<Dtype> indices_to_keep_;
 };
 
 /**
