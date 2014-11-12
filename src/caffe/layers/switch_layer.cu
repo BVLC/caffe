@@ -32,9 +32,14 @@ void SwitchLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int num_elem = top[0]->channels() * top[0]->height() * top[0]->width();
   const Dtype* top_diff = top[0]->gpu_diff();
 
+  if (propagate_down[selector_ind]) {
+    LOG(FATAL) << this->type_name()
+               << " Layer cannot backpropagate to selector inputs.";
+  }
+
   for (int n = 0; n < bottom[selector_ind]->num(); n++) {
     int index = static_cast<int>(bottom[selector_ind]->data_at(n, 0 , 0, 0));
-    if (index >= 0 && index < selector_ind) {
+    if (index >= 0 && index < selector_ind && propagate_down[index]) {
       Dtype* bottom_diff = bottom[index]->mutable_gpu_diff();
       caffe_copy(num_elem, top_diff+top[0]->offset(n),
           bottom_diff + bottom[index]->offset(n));

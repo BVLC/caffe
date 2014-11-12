@@ -488,8 +488,9 @@ class SliceLayer : public Layer<Dtype> {
 };
 
 /**
- * @brief Takes three Blob%s and outputs the second or third blob based on
- *        the value of the first blob (second if 0, third if 1).
+ * @brief Takes some inputs Blob%s and a selector and outputs the data
+ *        based on the value of the selector blob.
+ *        If selector is < 0 or > num_inputs then it fills with zeros
  */
 template <typename Dtype>
 class SwitchLayer : public Layer<Dtype> {
@@ -505,7 +506,7 @@ class SwitchLayer : public Layer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_SWITCH;
   }
-  virtual inline int MinBottomBlobs() const { return 3; }
+  virtual inline int MinBottomBlobs() const { return 2; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:

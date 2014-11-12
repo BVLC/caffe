@@ -1,7 +1,7 @@
 #include <vector>
 
+#include "caffe/common_layers.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -10,7 +10,7 @@ template <typename Dtype>
 void SwitchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Check that the dimensions of bottoms are all the same
-  for (int i = 0; i < bottom.size() - 1; ++i) {
+  for (int i = 1; i < bottom.size() - 1; ++i) {
     CHECK_EQ(bottom[i]->num(),  bottom[0]->num());
     CHECK_EQ(bottom[i]->channels(), bottom[0]->channels());
     CHECK_EQ(bottom[i]->height(), bottom[0]->height());
@@ -29,9 +29,7 @@ template <typename Dtype>
 void SwitchLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Initialize with the first blob.
-  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
-    bottom[0]->height(), bottom[0]->width());
-  CHECK_EQ(bottom[0]->count(), top[0]->count());
+  top[0]->ReshapeLike(*bottom[0]);
 }
 
 template <typename Dtype>
@@ -60,9 +58,14 @@ void SwitchLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const int num_elem = top[0]->channels() * top[0]->height() * top[0]->width();
   const Dtype* top_diff = top[0]->cpu_diff();
 
+  if (propagate_down[selector_ind]) {
+    LOG(FATAL) << this->type_name()
+               << " Layer cannot backpropagate to selector inputs.";
+  }
+
   for (int n = 0; n < bottom[selector_ind]->num(); n++) {
     int index = static_cast<int>(bottom[selector_ind]->data_at(n, 0 , 0, 0));
-    if (index >= 0 && index < selector_ind) {
+    if (index >= 0 && index < selector_ind && propagate_down[index]) {
       Dtype* bottom_diff = bottom[index]->mutable_cpu_diff();
       caffe_copy(num_elem, top_diff+top[0]->offset(n),
           bottom_diff + bottom[index]->offset(n));
