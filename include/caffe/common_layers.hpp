@@ -487,6 +487,47 @@ class SliceLayer : public Layer<Dtype> {
   vector<int> slice_point_;
 };
 
+/**
+ * @brief Takes three Blob%s and outputs the second or third blob based on
+ *        the value of the first blob (second if 0, third if 1).
+ */
+template <typename Dtype>
+class SwitchLayer : public Layer<Dtype> {
+ public:
+  explicit SwitchLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  /*
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  */
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_SWITCH;
+  }
+  virtual inline int MinBottomBlobs() const { return 3; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  Blob<Dtype> col_bob_;
+  int count_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_LAYERS_HPP_

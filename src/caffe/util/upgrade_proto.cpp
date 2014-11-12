@@ -504,6 +504,8 @@ LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     return LayerParameter_LayerType_SOFTMAX_LOSS;
   } else if (type == "split") {
     return LayerParameter_LayerType_SPLIT;
+  } else if (type == "switch") {
+    return LayerParameter_LayerType_SWITCH;
   } else if (type == "tanh") {
     return LayerParameter_LayerType_TANH;
   } else if (type == "window_data") {
