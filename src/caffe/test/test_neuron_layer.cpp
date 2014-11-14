@@ -452,8 +452,11 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestReLUWithNegativeSlopeCuDNN) {
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   const TypeParam* top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    EXPECT_GE(top_data[i], 0.);
-    EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+    if (top_data[i] >= 0) {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
+    } else {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] * 0.01);
+    }
   }
 }
 
