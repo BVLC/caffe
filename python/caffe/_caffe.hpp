@@ -115,7 +115,13 @@ class PyNet {
   void set_phase_train() { Caffe::set_phase(Caffe::TRAIN); }
   void set_phase_test() { Caffe::set_phase(Caffe::TEST); }
   void set_device(int device_id) { Caffe::SetDevice(device_id); }
-
+  void set_input_dim(int num,int channel,int height,int width) {
+       
+     for (int i = 0; i < net_->input_blobs().size(); ++ i)
+        	net_->input_blobs()[i]->Reshape(num, channel, height, width);
+     for (int i = 0; i < net_->layers().size(); ++i)
+		net_->layers()[i]->Reshape(net_->bottom_vecs()[i], &net_->top_vecs()[i]);
+    }
   vector<PyBlob<float> > blobs() {
     return vector<PyBlob<float> >(net_->blobs().begin(), net_->blobs().end());
   }
