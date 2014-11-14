@@ -71,6 +71,7 @@ void Solver<Dtype>::InitTrainNet() {
   // precedence); then, merge in any NetState specified by the net_param itself;
   // finally, merge in any NetState specified by the train_state (highest
   // precedence).
+  Caffe::set_phase(Caffe::TRAIN);
   NetState net_state;
   net_state.set_phase(TRAIN);
   net_state.MergeFrom(net_param.state());
@@ -141,6 +142,7 @@ void Solver<Dtype>::InitTestNets() {
     // precedence); then, merge in any NetState specified by the net_param
     // itself; finally, merge in any NetState specified by the test_state
     // (highest precedence).
+    Caffe::set_phase(Caffe::TEST);
     NetState net_state;
     net_state.set_phase(TEST);
     net_state.MergeFrom(net_params[i].state());
