@@ -155,6 +155,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("set_phase_train",       &PyNet::set_phase_train)
       .def("set_phase_test",        &PyNet::set_phase_test)
       .def("set_device",            &PyNet::set_device)
+      .def("set_input_dim",         &PyNet::set_input_dim)
       .add_property("_blobs",       &PyNet::blobs)
       .add_property("layers",       &PyNet::layers)
       .add_property("_blob_names",  &PyNet::blob_names)
