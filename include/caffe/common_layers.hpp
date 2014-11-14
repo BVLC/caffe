@@ -167,7 +167,7 @@ class ConditionalLayer : public Layer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_CONDITIONAL;
   }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
  protected:
@@ -220,6 +220,7 @@ class ConditionalLayer : public Layer<Dtype> {
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   int conditional_index_;
+  int output_type_;
   vector<Dtype> indices_to_keep_;
 };
 

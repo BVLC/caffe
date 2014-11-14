@@ -392,6 +392,11 @@ message ConditionalParameter {
   // with the ArgMax of bottom[0], to allow or deny the forward pass
   // from bottom[1] to top[1]
   required uint32 conditional_index = 1;
+  enum OUTPUT_TYPE {
+    FILTERED_LABELS = 0;
+    FILTERED_INDICES = 1;
+  }
+  required OUTPUT_TYPE output_type = 2;
 }
 
 // Message that stores parameters used by ContrastiveLossLayer
