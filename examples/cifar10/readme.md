@@ -35,17 +35,70 @@ to download and unzip the data files (if it complains that `wget` or `gunzip` ar
     cd $CAFFE_ROOT
     ./examples/cifar10/create_cifar10.sh
 
-to create the dataset, `./cifar10_leveldb`, and the data set image mean `./mean.binaryproto`, in `$CAFFE_ROOT/examples/cifar10`. Currently only `leveldb` is supported for CIFAR-10.
+to create the train and test dataset, `$CAFFE_ROOT/examples/cifar10/cifar10_train_leveldb` and `$CAFFE_ROOT/examples/cifar10/cifar10_test_leveldb` respectively, and also the data set image mean `$CAFFE_ROOT/examples/cifar10/mean.binaryproto.
+
+Keep in mind that it is possible to create either `lmdb` or `leveldb` for the train and test dataset. You only need to change the `DBTYPE` variable in `$CAFFE_ROOT/examples/cifar10/create_cifar10.sh` file. In addition, it is also needed to change the definition of the appropriate `.prototxt` model definition file, as disgussed below.
 
 The Model
 ---------
 
-The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the `CAFFE_ROOT/examples/cifar10` directory's `cifar10_quick_train_test.prototxt`.
+The CIFAR-10 model is a CNN that composes layers of convolution, pooling, rectified linear unit (ReLU) nonlinearities, and local contrast normalization with a linear classifier on top of it all. We have defined the model in the `CAFFE_ROOT/examples/cifar10` directory's `cifar10_quick_train_test.prototxt` and `cifar10_full_train_test.prototxt`. Here we will train the "quick" model.
+
+Define the CIFAR-10 "Quick" Model
+---------------------------------
+
+This section explains the model definiton. The `cifar10_quick_train_test.prototxt` file has the network definition for the "quick" model, while the `cifar10_full_train_test.prototxt` file has the network definition for the "full" model. Here, we will use the `cifar10_quick_train_test.prototxt` file.
+
+### Writing the Data Layer (for training)
+
+The first layer will need to read the data from the `lmdb` or from the `leveldb` database that was created previously. The data layer is defined as:
+
+    layers {
+      name: "cifar"
+      type: DATA
+      top: "data"
+      top: "label"
+      data_param {
+        source: "examples/cifar10/cifar10_train_leveldb"
+        batch_size: 100
+      }
+      transform_param {
+        mean_file: "examples/cifar10/mean.binaryproto"
+      }
+      include: { phase: TRAIN }
+    }
+
+This layer has name `cifar10`, has type `DATA` and it reads the data from the `examples/cifar10/cifar10_train_leveldb` database. It uses a batch size of 100 (the number of images in the batch) and uses the `examples/cifar10/mean.binaryproto` file to transform the input images in the batch. Finally, this layer produces two blobs, the first is the `data` and the second is the the `label` blob, which are used by the next layers. The layer also includes the rule `phase: TRAIN`, so this layer will be only used for training. If a layer specifies no rule, then that layer will be used during both the training and the testing phase.
+
+Furthermore, if you created the `lmdb` database in the previous step, you will need to change the source file to `examples/cifar10/cifar10_train_lmdb`. Both the `lmdb` and the `leveldb` databases cannot coexist (it is forced by the `examples/cifar10/create_cifar10.sh` file) to avoid confusion with the model definition.
+
+### Writing the Data Layer (for testing)
+
+For the test phase the data layer is changed to:
+
+    layers {
+      name: "cifar"
+      type: DATA
+      top: "data"
+      top: "label"
+      data_param {
+        source: "examples/cifar10/cifar10_test_leveldb"
+        batch_size: 100
+      }
+      transform_param {
+        mean_file: "examples/cifar10/mean.binaryproto"
+      }
+      include: { phase: TEST }
+    }
+
+This data layer has only a few differences from the previous one. First of all, the rule `phase: TEST` is used to use this layer only during the `TEST` phase. In addition to that, the source has changed to `examples/cifar10/cifar10_test_leveldb` to import the testing data into the network. Moreover, it is possible to change the `batch_size` (which is not done here).
+
+As we said previously, for the training phase data layer, if we created the `lmdb` database, we will need to change the source to `examples/cifar10/cifar10_test_lmdb`.
 
 Training and Testing the "Quick" Model
 --------------------------------------
 
-Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to [MNIST Tutorial](../examples/mnist.html)). Simply run `train_quick.sh`, or the following command directly:
+Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to [MNIST Tutorial](../examples/mnist.html)). Simply, run `train_quick.sh`, or the following command directly:
 
     cd $CAFFE_ROOT
     ./examples/cifar10/train_quick.sh
