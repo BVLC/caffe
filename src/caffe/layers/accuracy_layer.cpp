@@ -58,7 +58,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       ++nums[true_label];
       if (bottom_data_vector[k].second == true_label) {
         ++accuracy;
-	++accuracies[true_label];
+        ++accuracies[true_label];
         break;
       }
     }
