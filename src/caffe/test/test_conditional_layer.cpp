@@ -215,23 +215,15 @@ TYPED_TEST(ConditionalLayerTest, TestForwardIndices) {
 
 TYPED_TEST(ConditionalLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
-  bool IS_VALID_CUDA = false;
-#ifndef CPU_ONLY
-  IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
-#endif
-  if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 || IS_VALID_CUDA) {
-    LayerParameter layer_param;
-    ConditionalParameter* c_param = layer_param.mutable_conditional_param();
-    c_param->set_conditional_index(20);
-    c_param->set_output_type(ConditionalParameter_OUTPUT_TYPE_FILTERED_INDICES);
-    ConditionalLayer<Dtype> layer(layer_param);
-    GradientChecker<Dtype> checker(1e-2, 1e-3);
-    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-        this->blob_top_vec_, 0);
-  } else {
-    LOG(ERROR) << "Skipping test due to old architecture.";
-  }
+
+  LayerParameter layer_param;
+  ConditionalParameter* c_param = layer_param.mutable_conditional_param();
+  c_param->set_conditional_index(20);
+  c_param->set_output_type(ConditionalParameter_OUTPUT_TYPE_FILTERED_INDICES);
+  ConditionalLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
 }
 
 

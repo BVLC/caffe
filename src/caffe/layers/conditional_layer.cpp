@@ -11,6 +11,7 @@ void ConditionalLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   ConditionalParameter cond_param = this->layer_param_.conditional_param();
   conditional_index_ = cond_param.conditional_index();
+  first_reshape_ = true;
   output_type_ = cond_param.output_type();
   int max_index = bottom[0]->count()/bottom[0]->num() -1;
   CHECK_LE(conditional_index_, max_index) <<
@@ -45,10 +46,13 @@ void ConditionalLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
 
-  // Only items that passed conditional check will be forwarded
+  // only items that passed conditional check will be forwarded
   int new_tops_num = indices_to_forward_.size();
-  if (new_tops_num == 0)
+  // init
+  if (first_reshape_) {
     new_tops_num = bottom[1]->num();
+    first_reshape_ = false;
+  }
 
   if (output_type_ == ConditionalParameter_OUTPUT_TYPE_FILTERED_INDICES)
     top[0]->Reshape(new_tops_num, 1, 1, 1);
