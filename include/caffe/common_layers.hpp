@@ -151,8 +151,9 @@ class ConcatLayer : public Layer<Dtype> {
 };
 
 /**
- * @brief Takes two Blob%s, computes the result of the priority layer,
- *  and allow or block the successive forward pass according to the result
+ * @brief Takes two Blob%s, computes the argmax of the IF bottom blob,
+ *  and allow or block the successive forward pass depending on whether
+ *  the argmax is equal or different form conditional index, respectively
  */
 template <typename Dtype>
 class ConditionalLayer : public Layer<Dtype> {
@@ -172,20 +173,20 @@ class ConditionalLayer : public Layer<Dtype> {
 
  protected:
   /**
-   * @param bottom input Blob vector (length 2+)
+   * @param bottom input Blob vector (length 3)
    *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs @f$ x_1 @f$
+   *      the inputs bottom_IF
    *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs @f$ x_2 @f$
-   *   -# ...
-   *   - K @f$ (N \times C \times H \times W) @f$
-   *      the inputs @f$ x_K @f$
-   * @param top output Blob vector (length 1)
-   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
-   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
-   *      the concatenated output @f$
-   *        y = [\begin{array}{cccc} x_1 & x_2 & ... & x_K \end{array}]
-   *      @f$
+   *      the inputs bottom_TO_BE_FORWARDED
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs bottom_LABELS
+   * @param top output Blob vector (length 2)
+   *   -# @f$ (S \times C \times H \times W) @f$ () 
+   *        top_labels_or_indices, where S is the number of items 
+   *        that passed the conditional test
+   *      @f$ (S \times C \times H \times W) @f$
+   *        top_THEN, where S is the number of items 
+   *        that passed the conditional test
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -193,26 +194,16 @@ class ConditionalLayer : public Layer<Dtype> {
     const vector<Blob<Dtype>*>& top);
 
   /**
-   * @brief Computes the error gradient w.r.t. the concatenate inputs.
+   * @brief Computes the error gradient w.r.t. the forwarded inputs.
    *
-   * @param top output Blob vector (length 1), providing the error gradient with
+   * @param top output Blob vector (length 2), providing the error gradient with
    *        respect to the outputs
-   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
-   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
-   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
-   *      with respect to concatenated outputs @f$ y @f$
+   *   -# @f$ (S \times C \times H \times W) @f$ 
+   *        contains the labels, it is not used to update the error gradient
    * @param propagate_down see Layer::Backward.
-   * @param bottom input Blob vector (length K), into which the top gradient
-   *        @f$ \frac{\partial E}{\partial y} @f$ is deconcatenated back to the
-   *        inputs @f$
-   *        \left[ \begin{array}{cccc}
-   *          \frac{\partial E}{\partial x_1} &
-   *          \frac{\partial E}{\partial x_2} &
-   *          ... &
-   *          \frac{\partial E}{\partial x_K}
-   *        \end{array} \right] =
-   *        \frac{\partial E}{\partial y}
-   *        @f$
+   * @param bottom input Blob vector (length 3), into which the top[1] gradient
+   *        is returned back. Only the bottom[1] will receive the updated 
+   *        error gradient. S is the number of items that were been forwarded.
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
@@ -221,7 +212,7 @@ class ConditionalLayer : public Layer<Dtype> {
 
   int conditional_index_;
   int output_type_;
-  vector<Dtype> indices_to_keep_;
+  vector<Dtype> indices_to_forward_;
 };
 
 /**
