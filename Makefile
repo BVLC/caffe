@@ -272,8 +272,11 @@ ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
 	NVCCFLAGS += -G
 else
-	COMMON_FLAGS += -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O2 
 endif
+
+# AVX2 flags
+# CXXFLAGS += -march=core-avx2 -ffast-math -mfma
 
 # cuDNN acceleration configuration.
 ifeq ($(USE_CUDNN), 1)
@@ -303,6 +306,8 @@ ifeq ($(BLAS), mkl)
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
+        BLAS_INCLUDE ?= /opt/OpenBLAS/include
+        BLAS_LIB ?= /opt/OpenBLAS/lib
 else
 	# ATLAS
 	ifeq ($(LINUX), 1)
@@ -321,6 +326,17 @@ INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
+
+# OpenMP
+OPENMP ?= 0
+ifeq ($(OPENMP), 1)
+        CXXFLAGS += -fopenmp
+        LINKFLAGS += -fopenmp
+        ifeq ($(BLAS), mkl)
+                LIBRARIES += iomp5
+                LIBRARY_DIRS += $(INTEL_OMP_DIR)/compiler/lib/intel64
+        endif
+endif
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
