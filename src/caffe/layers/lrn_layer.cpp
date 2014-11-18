@@ -135,7 +135,9 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   caffe_set(padded_square_.count(), Dtype(0), padded_square_data);
   Dtype alpha_over_size = alpha_ / size_;
   // go through the images
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int n = 0; n < num_; ++n) {
       int tid = 0;
     #ifdef _OPENMP
@@ -176,7 +178,9 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, top_data);
   caffe_mul<Dtype>(scale_.count(), top_data, bottom_data, top_data);
 #else
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i = 0; i < scale_.count(); i++) {
 //   top_data[i] = pow(scale_data[i],-beta_) * bottom_data[i];
     top_data[i] = exp(log(scale_data[i]) *(-beta_)) * bottom_data[i];
@@ -229,7 +233,9 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   caffe_powx<Dtype>(scale_.count(), scale_data, -beta_, bottom_diff);
   caffe_mul<Dtype>(scale_.count(), top_diff, bottom_diff, bottom_diff);
 #else
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int i = 0; i < scale_.count(); i++) {
 //   bottom_diff[i]=powf(scale_data[i],-beta_) * top_diff[i];
     bottom_diff[i]=exp(log(scale_data[i]) * (-beta_)) * top_diff[i];
@@ -238,7 +244,9 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
 
   // go through individual data
   int inverse_pre_pad = size_ - (size_ + 1) / 2;
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
   for (int n = 0; n < num_; ++n) {
     int tid = 0;
     #ifdef _OPENMP

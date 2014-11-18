@@ -149,7 +149,9 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         // compute offset
@@ -203,7 +205,9 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data[i] = 0;
     }
     // The main loop
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         const Dtype*  bottom_data_n = bottom[0]->cpu_data() +
@@ -266,7 +270,9 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // } else {
     //  mask = max_idx_.cpu_data();
     // }
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         Dtype*  bottom_diff_n = bottom[0]->mutable_cpu_diff() +
@@ -300,7 +306,9 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     break;
   case PoolingParameter_PoolMethod_AVE:
     // The main loop
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         Dtype*  bottom_diff_n = bottom[0]->mutable_cpu_diff() +

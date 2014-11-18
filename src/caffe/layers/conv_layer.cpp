@@ -215,7 +215,9 @@ void ConvolutionLayer<Dtype>::Forward_cpu(
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     Dtype* col_buff = bottom[i]->mutable_cpu_data();
+#ifdef _OPENMP
 #pragma omp parallel for  //  shared(bottom,top)
+#endif
     for (int n = 0; n < num_; ++n) {
       Forward_cpu_task(bottom_data, top_data, col_buff, weight, n);
     }
@@ -355,7 +357,9 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       caffe_memset(num_of_threads_ * weight_diff_size *
               sizeof(Dtype), 0., & weight_diff_mt_[0]);
       if (this->param_propagate_down_[0]) {
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
         for (int n = 0; n < num_; ++n) {
           Backward_cpu_weight_diff_task(top_diff, bottom, i, n);
         }
@@ -372,7 +376,9 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           weight = this->blobs_[0]->cpu_data();
         }
         // back-prop by gemm
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
         for (int n = 0; n < num_; ++n) {
           Backward_cpu_bottom_diff_task(top_diff, bottom_diff, weight, i, n);
         }
