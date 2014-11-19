@@ -12,8 +12,7 @@ namespace caffe {
 template <typename Dtype>
 __global__ void TanHForward(const int n, const Dtype* in, Dtype* out) {
   CUDA_KERNEL_LOOP(index, n) {
-    Dtype exp2x = exp(2 * in[index]);
-    out[index] = (exp2x - Dtype(1)) / (exp2x + Dtype(1));
+    out[index] = tanh(in[index]);
   }
 }
 
