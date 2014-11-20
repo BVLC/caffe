@@ -13,7 +13,7 @@ end
 IMAGE_DIM = 256;
 CROPPED_DIM = 227;
 indices = [0 IMAGE_DIM-CROPPED_DIM] + 1;
-center = floor(indices(2) / 2)+1;
+center = floor(indices(2) / 2);
 
 num_images = length(image_files);
 images = zeros(CROPPED_DIM,CROPPED_DIM,3,batch_size,'single');
