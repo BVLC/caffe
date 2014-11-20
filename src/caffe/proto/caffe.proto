@@ -397,6 +397,7 @@ message ConditionalParameter {
     FILTERED_INDICES = 1;
   }
   required OUTPUT_TYPE output_type = 2;
+  optional float threshold_value = 3;
 }
 
 // Message that stores parameters used by ContrastiveLossLayer

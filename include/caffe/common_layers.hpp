@@ -213,6 +213,8 @@ class ConditionalLayer : public Layer<Dtype> {
   int conditional_index_;
   int output_type_;
   bool first_reshape_;
+  bool check_threshold_value_;
+  float threshold_value_;
   vector<Dtype> indices_to_forward_;
 };
 

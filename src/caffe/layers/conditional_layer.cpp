@@ -12,6 +12,9 @@ void ConditionalLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   ConditionalParameter cond_param = this->layer_param_.conditional_param();
   conditional_index_ = cond_param.conditional_index();
   first_reshape_ = true;
+  check_threshold_value_ = cond_param.has_threshold_value();
+  if (check_threshold_value_)
+    threshold_value_ = this->layer_param_.conditional_param().threshold_value();
   output_type_ = cond_param.output_type();
   int max_index = bottom[0]->count()/bottom[0]->num() -1;
   CHECK_LE(conditional_index_, max_index) <<
@@ -42,7 +45,13 @@ void ConditionalLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const Dtype max_value = *std::max_element(tmp_data_IF,
         tmp_data_IF + num_elements);
     if (*(tmp_data_IF + conditional_index_) == max_value) {
-      indices_to_forward_.push_back(item_id);
+      // if threshold_value is not set, keep the index as good
+      if (!check_threshold_value_)
+        indices_to_forward_.push_back(item_id);
+      // otherwise before adding the index we need to compare the threshold
+      // with max_value
+      else if (max_value >= threshold_value_)
+        indices_to_forward_.push_back(item_id);
     }
   }
 
