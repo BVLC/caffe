@@ -434,6 +434,9 @@ runtest: $(TEST_ALL_BIN) $(TEST_ALL_DYNLINK_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER) && \
 	$(TEST_ALL_DYNLINK_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
 
+pytest: py
+	cd python; python -m unittest discover -s caffe/test
+
 warn: $(EMPTY_WARN_REPORT)
 
 $(EMPTY_WARN_REPORT): $(ALL_WARNS) | $(BUILD_DIR)
