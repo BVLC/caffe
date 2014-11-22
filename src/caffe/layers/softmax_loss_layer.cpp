@@ -44,6 +44,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < spatial_dim; j++) {
       const int label_value = static_cast<int>(label[i * spatial_dim + j]);
+      CHECK_GE(label_value, 0);
       CHECK_GT(dim, label_value * spatial_dim);
       loss -= log(std::max(prob_data[i * dim +
           label_value * spatial_dim + j],
