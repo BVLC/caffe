@@ -16,6 +16,10 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
+# All of the directories containing code.
+SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
+	\( -name '*.cpp' -o -name '*.proto' \) | grep -q ." \; -print)
+
 # The target shared library name
 LIB_BUILD_DIR := $(BUILD_DIR)/lib
 STATIC_NAME := $(LIB_BUILD_DIR)/lib$(PROJECT).a
@@ -98,9 +102,6 @@ PROTO_GEN_PY := $(foreach file,${PROTO_SRCS:.proto=_pb2.py}, \
 CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${CXX_SRCS:.cpp=.o})
 CU_OBJS := $(addprefix $(BUILD_DIR)/, ${CU_SRCS:.cu=.cuo})
 PROTO_OBJS := ${PROTO_GEN_CC:.cc=.o}
-OBJ_BUILD_DIR := $(BUILD_DIR)/src/$(PROJECT)
-LAYER_BUILD_DIR := $(OBJ_BUILD_DIR)/layers
-UTIL_BUILD_DIR := $(OBJ_BUILD_DIR)/util
 OBJS := $(PROTO_OBJS) $(CXX_OBJS) $(CU_OBJS)
 # tool, example, and test objects
 TOOL_OBJS := $(addprefix $(BUILD_DIR)/, ${TOOL_SRCS:.cpp=.o})
@@ -110,11 +111,7 @@ TEST_CXX_OBJS := $(addprefix $(BUILD_DIR)/, ${TEST_SRCS:.cpp=.o})
 TEST_CU_OBJS := $(addprefix $(BUILD_DIR)/, ${TEST_CU_SRCS:.cu=.cuo})
 TEST_OBJS := $(TEST_CXX_OBJS) $(TEST_CU_OBJS)
 GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
-GTEST_BUILD_DIR := $(dir $(GTEST_OBJ))
 EXAMPLE_OBJS := $(addprefix $(BUILD_DIR)/, ${EXAMPLE_SRCS:.cpp=.o})
-EXAMPLE_BUILD_DIR := $(BUILD_DIR)/examples
-EXAMPLE_BUILD_DIRS := $(EXAMPLE_BUILD_DIR)
-EXAMPLE_BUILD_DIRS += $(foreach obj,$(EXAMPLE_OBJS),$(dir $(obj)))
 # tool, example, and test bins
 TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
@@ -183,14 +180,9 @@ ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
 		DIST_ALIASES += distribute
 endif
 
-ALL_BUILD_DIRS := $(sort \
-		$(BUILD_DIR) $(LIB_BUILD_DIR) $(OBJ_BUILD_DIR) \
-		$(LAYER_BUILD_DIR) $(UTIL_BUILD_DIR) $(TOOL_BUILD_DIR) \
-		$(TEST_BUILD_DIR) $(TEST_BIN_DIR) $(GTEST_BUILD_DIR) \
-		$(EXAMPLE_BUILD_DIRS) \
-		$(LINT_OUTPUT_DIR) \
-		$(PROTO_BUILD_DIR) $(PROTO_BUILD_INCLUDE_DIR) $(PY_PROTO_BUILD_DIR) \
-		$(DISTRIBUTE_SUBDIRS))
+ALL_BUILD_DIRS := $(sort $(BUILD_DIR) $(addprefix $(BUILD_DIR)/, $(SRC_DIRS)) \
+	$(LIB_BUILD_DIR) $(TEST_BIN_DIR) $(PY_PROTO_BUILD_DIR) $(LINT_OUTPUT_DIR) \
+	$(DISTRIBUTE_SUBDIRS) $(PROTO_BUILD_INCLUDE_DIR))
 
 ##############################
 # Set directory for Doxygen-generated documentation
