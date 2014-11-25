@@ -190,6 +190,70 @@ class EltwiseLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Takes two Blob%s, computes the argmax of the IF bottom blob,
+ *  and allow or block the successive forward pass depending on whether
+ *  the argmax is equal or different form conditional index, respectively
+ */
+template <typename Dtype>
+class FilterLayer : public Layer<Dtype> {
+ public:
+  explicit FilterLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_FILTER;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 3; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 3)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs bottom_IF
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs bottom_TO_BE_FORWARDED
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs bottom_LABELS
+   * @param top output Blob vector (length 2)
+   *   -# @f$ (S \times C \times H \times W) @f$ () 
+   *        top_labels_or_indices, where S is the number of items 
+   *        that passed the conditional test
+   *      @f$ (S \times C \times H \times W) @f$
+   *        top_THEN, where S is the number of items 
+   *        that passed the conditional test
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the forwarded inputs.
+   *
+   * @param top output Blob vector (length 2), providing the error gradient with
+   *        respect to the outputs
+   *   -# @f$ (S \times C \times H \times W) @f$ 
+   *        contains the labels, it is not used to update the error gradient
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 3), into which the top[1] gradient
+   *        is returned back. Only the bottom[1] will receive the updated 
+   *        error gradient. S is the number of items that were been forwarded.
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool first_reshape_;
+  vector<Dtype> indices_to_forward_;
+};
+
+/**
  * @brief Reshapes the input Blob into flat vectors.
  *
  * Note: because this layer does not change the input values -- merely the
