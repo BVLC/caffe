@@ -19,10 +19,11 @@ namespace caffe {
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+  const int n_blobs = top->size();
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
-  const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
-  const int sample_weight_data_count = (*top)[2]->count() / (*top)[2]->num();
+  const int label_data_count = (n_blobs >= 2) ? ((*top)[1]->count() / (*top)[1]->num()) : 0;
+  const int sample_weight_data_count = (n_blobs >= 3) ? ((*top)[2]->count() / (*top)[2]->num()) : 0;
 
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == data_blob_.num()) {
@@ -34,19 +35,23 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           LOG(INFO) << "looping around to first file";
         }
 
-        LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+        LoadHDF5FileData(hdf_filenames_[current_file_].c_str(), n_blobs);
       }
       current_row_ = 0;
     }
     caffe_copy(data_count,
         &data_blob_.cpu_data()[current_row_ * data_count],
         &(*top)[0]->mutable_gpu_data()[i * data_count]);
-    caffe_copy(label_data_count,
-        &label_blob_.cpu_data()[current_row_ * label_data_count],
-        &(*top)[1]->mutable_gpu_data()[i * label_data_count]);
-    caffe_copy(sample_weight_data_count,
-        &sample_weight_blob_.cpu_data()[current_row_ * sample_weight_data_count],
-        &(*top)[2]->mutable_gpu_data()[i * sample_weight_data_count]);
+    if (n_blobs >= 2) {
+      caffe_copy(label_data_count,
+          &label_blob_.cpu_data()[current_row_ * label_data_count],
+          &(*top)[1]->mutable_gpu_data()[i * label_data_count]);
+    }
+    if (n_blobs >= 3) {
+      caffe_copy(sample_weight_data_count,
+          &sample_weight_blob_.cpu_data()[current_row_ * sample_weight_data_count],
+          &(*top)[2]->mutable_gpu_data()[i * sample_weight_data_count]);
+    }
   }
 }
 

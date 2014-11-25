@@ -25,7 +25,7 @@ HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
 
 // Load data and label from HDF5 filename into the class property blobs.
 template <typename Dtype>
-void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
+void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename, int n_blobs) {
   LOG(INFO) << "Loading HDF5 file" << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
@@ -33,25 +33,31 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
     return;
   }
 
-  const int MIN_DATA_DIM = 2;
-  const int MAX_DATA_DIM = 4;
-  hdf5_load_nd_dataset(
-    file_id, "data",  MIN_DATA_DIM, MAX_DATA_DIM, &data_blob_);
+  if (n_blobs >= 1) {
+    const int MIN_DATA_DIM = 2;
+    const int MAX_DATA_DIM = 4;
+    hdf5_load_nd_dataset(
+      file_id, "data",  MIN_DATA_DIM, MAX_DATA_DIM, &data_blob_);
+  }
 
-  const int MIN_LABEL_DIM = 1;
-  const int MAX_LABEL_DIM = 2;
-  hdf5_load_nd_dataset(
-    file_id, "label", MIN_LABEL_DIM, MAX_LABEL_DIM, &label_blob_);
+  if (n_blobs >= 2) {
+    const int MIN_LABEL_DIM = 1;
+    const int MAX_LABEL_DIM = 2;
+    hdf5_load_nd_dataset(
+      file_id, "label", MIN_LABEL_DIM, MAX_LABEL_DIM, &label_blob_);
+    CHECK_EQ(data_blob_.num(), label_blob_.num());
+  }
 
-  const int MIN_SAMPLE_WEIGHT_DIM = 1;
-  const int MAX_SAMPLE_WEIGHT_DIM = 2;
-  hdf5_load_nd_dataset(
-    file_id, "sample_weight", MIN_SAMPLE_WEIGHT_DIM, MAX_SAMPLE_WEIGHT_DIM, &sample_weight_blob_);
+  if (n_blobs >= 3) {
+    const int MIN_SAMPLE_WEIGHT_DIM = 1;
+    const int MAX_SAMPLE_WEIGHT_DIM = 2;
+    hdf5_load_nd_dataset(
+      file_id, "sample_weight", MIN_SAMPLE_WEIGHT_DIM, MAX_SAMPLE_WEIGHT_DIM, &sample_weight_blob_);
+    CHECK_EQ(data_blob_.num(), sample_weight_blob_.num());
+  }
 
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file " << filename;
-  CHECK_EQ(data_blob_.num(), label_blob_.num());
-  CHECK_EQ(data_blob_.num(), sample_weight_blob_.num());
   LOG(INFO) << "Successully loaded " << data_blob_.num() << " rows";
 }
 
@@ -75,17 +81,24 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "Number of files: " << num_files_;
 
   // Load the first HDF5 file and initialize the line counter.
-  LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+
+  // How many blobs to read
+  int n_blobs = top->size();
+  LoadHDF5FileData(hdf_filenames_[current_file_].c_str(), n_blobs);
   current_row_ = 0;
 
   // Reshape blobs.
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   (*top)[0]->Reshape(batch_size, data_blob_.channels(),
                      data_blob_.height(), data_blob_.width());
-  (*top)[1]->Reshape(batch_size, label_blob_.channels(),
-                     label_blob_.height(), label_blob_.width());
-  (*top)[2]->Reshape(batch_size, sample_weight_blob_.channels(),
-                     sample_weight_blob_.height(), sample_weight_blob_.width());
+  if (n_blobs >= 2) {
+    (*top)[1]->Reshape(batch_size, label_blob_.channels(),
+                       label_blob_.height(), label_blob_.width());
+  }
+  if (n_blobs >= 3) {
+    (*top)[2]->Reshape(batch_size, sample_weight_blob_.channels(),
+                       sample_weight_blob_.height(), sample_weight_blob_.width());
+  }
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
@@ -94,10 +107,14 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+  int n_blobs = top->size();
+  LOG(INFO) << "n_blobs " << n_blobs;
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int data_count = (*top)[0]->count() / (*top)[0]->num();
-  const int label_data_count = (*top)[1]->count() / (*top)[1]->num();
-  const int sample_weight_data_count = (*top)[2]->count() / (*top)[2]->num();
+  const int label_data_count = 
+    (n_blobs >= 2) ? ((*top)[1]->count() / (*top)[1]->num()) : 0;
+  const int sample_weight_data_count = 
+    (n_blobs >= 3) ? ((*top)[2]->count() / (*top)[2]->num()) : 0;
 
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == data_blob_.num()) {
@@ -107,18 +124,22 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           current_file_ = 0;
           LOG(INFO) << "looping around to first file";
         }
-        LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
+        LoadHDF5FileData(hdf_filenames_[current_file_].c_str(), n_blobs);
       }
       current_row_ = 0;
     }
     caffe_copy(data_count, &data_blob_.cpu_data()[current_row_ * data_count],
                &(*top)[0]->mutable_cpu_data()[i * data_count]);
-    caffe_copy(label_data_count,
-               &label_blob_.cpu_data()[current_row_ * label_data_count],
-               &(*top)[1]->mutable_cpu_data()[i * label_data_count]);
-    caffe_copy(sample_weight_data_count,
-               &sample_weight_blob_.cpu_data()[current_row_ * sample_weight_data_count],
-               &(*top)[2]->mutable_cpu_data()[i * sample_weight_data_count]);
+    if (n_blobs >= 2) {
+      caffe_copy(label_data_count,
+                 &label_blob_.cpu_data()[current_row_ * label_data_count],
+                 &(*top)[1]->mutable_cpu_data()[i * label_data_count]);
+    }
+    if (n_blobs >= 3) {
+      caffe_copy(sample_weight_data_count,
+                 &sample_weight_blob_.cpu_data()[current_row_ * sample_weight_data_count],
+                 &(*top)[2]->mutable_cpu_data()[i * sample_weight_data_count]);
+    }
   }
 }
 

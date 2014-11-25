@@ -184,7 +184,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   //virtual inline int ExactNumTopBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 3; }
+  //virtual inline int ExactNumTopBlobs() const { return 3; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -195,7 +195,7 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void LoadHDF5FileData(const char* filename);
+  virtual void LoadHDF5FileData(const char* filename, int n_blobs);
 
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;
