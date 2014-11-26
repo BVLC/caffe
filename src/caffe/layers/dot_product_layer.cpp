@@ -1,9 +1,9 @@
 #include <cfloat>
 #include <vector>
 
+#include "caffe/common_layers.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/common_layers.hpp"
 
 namespace caffe {
 
@@ -33,7 +33,10 @@ void DotProductLayer<Dtype>::Forward_cpu(
   Dtype* top_data = top[0]->mutable_cpu_data();
 
   for (int i = 0; i < num; ++i) {
-    top_data[i] = caffe_cpu_dot(dim, bottom_data_a + i*dim, bottom_data_b + i*dim);
+    top_data[i] = caffe_cpu_dot(
+        dim,
+        bottom_data_a + i*dim,
+        bottom_data_b + i*dim);
   }
 }
 
@@ -47,17 +50,25 @@ void DotProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const int num = bottom[0]->num();
   const int dim = bottom[0]->count() / num;
 
-  if (propagate_down[0]){
+  if (propagate_down[0]) {
     Dtype* bottom_diff_a = bottom[0]->mutable_cpu_diff();
     for (int i = 0; i < num; ++i) {
-      caffe_cpu_scale(dim, top_diff[i], bottom_data_b + i*dim, bottom_diff_a + i*dim);
+      caffe_cpu_scale(
+          dim,
+          top_diff[i],
+          bottom_data_b + i*dim,
+          bottom_diff_a + i*dim);
     }
   }
 
-  if (propagate_down[1]){
+  if (propagate_down[1]) {
     Dtype* bottom_diff_b = bottom[1]->mutable_cpu_diff();
     for (int i = 0; i < num; ++i) {
-      caffe_cpu_scale(dim, top_diff[i], bottom_data_a + i*dim, bottom_diff_b + i*dim);
+      caffe_cpu_scale(
+          dim,
+          top_diff[i],
+          bottom_data_a + i*dim,
+          bottom_diff_b + i*dim);
     }
   }
 }

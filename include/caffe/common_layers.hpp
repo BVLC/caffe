@@ -155,7 +155,7 @@ class ConcatLayer : public Layer<Dtype> {
 */
 template <typename Dtype>
 class DotProductLayer : public Layer<Dtype> {
-public:
+ public:
   explicit DotProductLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -167,7 +167,7 @@ public:
   virtual inline int ExactNumBottomBlobs() const { return 2; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
-protected:
+ protected:
   /**
   * @param bottom input Blob vector (length 2)
   *   -# @f$ (N \times C \times H \times W) @f$
