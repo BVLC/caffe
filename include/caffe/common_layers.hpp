@@ -207,25 +207,28 @@ class FilterLayer : public Layer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_FILTER;
   }
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
   /**
-   * @param bottom input Blob vector (length 3)
+   * @param bottom input Blob vector (length 2+)
    *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs bottom_IF
+   *      the selector blob
    *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs bottom_TO_BE_FORWARDED
+   *      the inputs to be filtered @f$ x_1 @f$
+   *   -# ...
    *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs bottom_LABELS
-   * @param top output Blob vector (length 2)
+   *      the inputs to be filtered @f$ x_K @f$
+   * @param top output Blob vector (length 1+)
    *   -# @f$ (S \times C \times H \times W) @f$ () 
-   *        top_labels_or_indices, where S is the number of items 
-   *        that passed the conditional test
+   *        the filtered output @f$ x_1 @f$ 
+   *        where S is the number of items
+   *        that haven't been filtered
    *      @f$ (S \times C \times H \times W) @f$
-   *        top_THEN, where S is the number of items 
-   *        that passed the conditional test
+   *        the filtered output @f$ x_K @f$ 
+   *        where S is the number of items
+   *        that haven't been filtered
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -235,14 +238,11 @@ class FilterLayer : public Layer<Dtype> {
   /**
    * @brief Computes the error gradient w.r.t. the forwarded inputs.
    *
-   * @param top output Blob vector (length 2), providing the error gradient with
+   * @param top output Blob vector (length 1+), providing the error gradient with
    *        respect to the outputs
-   *   -# @f$ (S \times C \times H \times W) @f$ 
-   *        contains the labels, it is not used to update the error gradient
    * @param propagate_down see Layer::Backward.
-   * @param bottom input Blob vector (length 3), into which the top[1] gradient
-   *        is returned back. Only the bottom[1] will receive the updated 
-   *        error gradient. S is the number of items that were been forwarded.
+   * @param bottom input Blob vector (length 2+), into which the top error
+   *        gradient is copied
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
@@ -251,6 +251,7 @@ class FilterLayer : public Layer<Dtype> {
 
   bool first_reshape_;
   vector<Dtype> indices_to_forward_;
+  vector<int> need_back_prop_;
 };
 
 /**
