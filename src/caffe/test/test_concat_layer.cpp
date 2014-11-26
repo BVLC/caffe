@@ -61,7 +61,7 @@ TYPED_TEST_CASE(ConcatLayerTest, TestDtypesAndDevices);
 TYPED_TEST(ConcatLayerTest, TestSetupNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.mutable_concat_param()->set_concat_dim(0);
+  layer_param.mutable_concat_param()->set_axis(0);
   ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(),
@@ -83,10 +83,26 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
   EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_0_->width());
 }
 
+TYPED_TEST(ConcatLayerTest, TestSetupChannelsNegativeIndexing) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConcatLayer<Dtype> layer(layer_param);
+  // "channels" index is the third one from the end -- test negative indexing
+  // by setting axis to -3 and checking that we get the same results as above in
+  // TestSetupChannels.
+  layer_param.mutable_concat_param()->set_axis(-3);
+  layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
+  EXPECT_EQ(this->blob_top_->channels(),
+      this->blob_bottom_0_->channels() + this->blob_bottom_1_->channels());
+  EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_0_->height());
+  EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_0_->width());
+}
+
 TYPED_TEST(ConcatLayerTest, TestForwardNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.mutable_concat_param()->set_concat_dim(0);
+  layer_param.mutable_concat_param()->set_axis(0);
   ConcatLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_1_, this->blob_top_vec_);
@@ -141,7 +157,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
 TYPED_TEST(ConcatLayerTest, TestGradientNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.mutable_concat_param()->set_concat_dim(0);
+  layer_param.mutable_concat_param()->set_axis(0);
   ConcatLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradient(&layer, this->blob_bottom_vec_1_,
