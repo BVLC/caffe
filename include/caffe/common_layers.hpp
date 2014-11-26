@@ -450,11 +450,9 @@ class SliceLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   int count_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
-  int slice_dim_;
+  int num_slices_;
+  int slice_size_;
+  int slice_axis_;
   vector<int> slice_point_;
 };
 

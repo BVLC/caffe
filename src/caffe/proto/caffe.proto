@@ -671,12 +671,12 @@ message SigmoidParameter {
 
 // Message that stores parameters used by SliceLayer
 message SliceParameter {
-  // SliceLayer needs to know which dimension to slice across.
-  // Currently, SliceLayer only supports slicing across num (dim 0)
-  // and channels (dim 1).
-  // By default, SliceLayer slices across channels.
-  optional uint32 slice_dim = 1 [default = 1];
+  // The axis along which to slice.
+  // By default, SliceLayer concatenates blobs along the channels axis (1).
+  optional uint32 axis = 1 [default = 1];
   repeated uint32 slice_point = 2;
+
+  optional uint32 slice_dim = 3 [default = 1];  // alias for "axis"
 }
 
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
