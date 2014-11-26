@@ -378,9 +378,13 @@ message ArgMaxParameter {
 
 // Message that stores parameters used by ConcatLayer
 message ConcatParameter {
-  // Concat Layer needs to specify the dimension along the concat will happen,
-  // the other dimensions must be the same for all the bottom blobs
-  // By default it will concatenate blobs along channels dimension
+  // The axis along which to concatenate -- may be negative to index from the
+  // end (e.g., -1 for the last axis).  Other axes must have the
+  // same dimension for all the bottom blobs.
+  // By default, ConcatLayer concatenates blobs along the "channels" axis (1).
+  optional int32 axis = 2 [default = 1];
+
+  // DEPRECATED: alias for "axis" -- does not support negative indexing.
   optional uint32 concat_dim = 1 [default = 1];
 }
 
