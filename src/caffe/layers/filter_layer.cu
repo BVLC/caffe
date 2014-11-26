@@ -11,7 +11,7 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   int new_tops_num = indices_to_forward_.size();
   // forward all filtered items for all bottoms but the Selector (bottom[0])
-  for(size_t b = 1; b < bottom.size(); b++) {
+  for (size_t b = 1; b < bottom.size(); b++) {
     const Dtype* bottom_data = bottom[b]->gpu_data();
     Dtype* top_data = top[b-1]->mutable_gpu_data();
     size_t dim = bottom[b]->count()/bottom[b]->num();
@@ -30,7 +30,7 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  for(size_t i = 1; i < propagate_down.size(); i++) {
+  for (size_t i = 1; i < propagate_down.size(); i++) {
     // bottom[0] is the selector and never needs backpropagation
     // so we can start from i = 1 and index each top with i-1
     if (propagate_down[i] && need_back_prop_[i-1]) {
@@ -52,8 +52,8 @@ void FilterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       }
     }
   }
-    
 }
+
 INSTANTIATE_LAYER_GPU_FUNCS(FilterLayer);
 
 }  // namespace caffe

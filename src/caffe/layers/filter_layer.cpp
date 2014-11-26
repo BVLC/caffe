@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 
 #include "caffe/layer.hpp"
@@ -28,15 +29,14 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // bottom[0] is the "SELECTOR_blob"
   // bottom[1+] are the blobs to filter
-  int num_items = bottom[0]->num();
-  
   CHECK_EQ(bottom[0]->channels(), 1) <<
         "Selector blob (bottom[0]) must have channels == 1";
   CHECK_EQ(bottom[0]->width(), 1) <<
         "Selector blob (bottom[0]) must have width == 1";
   CHECK_EQ(bottom[0]->height(), 1) <<
         "Selector blob (bottom[0]) must have height == 1";
-  for(int i = 1; i < bottom.size(); i++) {
+  int num_items = bottom[0]->num();
+  for (int i = 1; i < bottom.size(); i++) {
     CHECK_EQ(num_items, bottom[i]->num()) <<
         "Each bottom should have the same dimension as bottom[0]";
   }
@@ -48,9 +48,9 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // have the same index as the items in bottom[0] with value == non-zero
   // will be forwarded
   for (size_t item_id = 0; item_id < num_items; ++item_id) {
-    //we don't need an offset because item size == 1
+    // we don't need an offset because item size == 1
     const Dtype* tmp_data_SELECTOR = bottom_data_SELECTOR + item_id;
-    if(*tmp_data_SELECTOR != 0) {
+    if (*tmp_data_SELECTOR != 0) {
       indices_to_forward_.push_back(item_id);
     }
   }
@@ -63,7 +63,7 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     first_reshape_ = false;
   }
 
-  for(size_t t = 0; t < top.size(); t++) {
+  for (size_t t = 0; t < top.size(); t++) {
     top[t]->Reshape(new_tops_num,
         bottom[t+1]->channels(),
         bottom[t+1]->height(),
@@ -76,7 +76,7 @@ void FilterLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   int new_tops_num = indices_to_forward_.size();
   // forward all filtered items for all bottoms but the Selector (bottom[0])
-  for(size_t b = 1; b < bottom.size(); b++) {
+  for (size_t b = 1; b < bottom.size(); b++) {
     const Dtype* bottom_data = bottom[b]->cpu_data();
     Dtype* top_data = top[b-1]->mutable_cpu_data();
     size_t dim = bottom[b]->count()/bottom[b]->num();
@@ -95,7 +95,7 @@ void FilterLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  for(size_t i = 1; i < propagate_down.size(); i++) {
+  for (size_t i = 1; i < propagate_down.size(); i++) {
     // bottom[0] is the selector and never needs backpropagation
     // so we can start from i = 1 and index each top with i-1
     if (propagate_down[i] && need_back_prop_[i-1]) {
@@ -117,7 +117,6 @@ void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
     }
   }
-    
 }
 
 #ifdef CPU_ONLY
