@@ -99,8 +99,8 @@ class ConcatLayer : public Layer<Dtype> {
    *   - K @f$ (N \times C \times H \times W) @f$
    *      the inputs @f$ x_K @f$
    * @param top output Blob vector (length 1)
-   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
-   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
+   *   -# @f$ (KN \times C \times H \times W) @f$ if axis == 0, or
+   *      @f$ (N \times KC \times H \times W) @f$ if axis == 1:
    *      the concatenated output @f$
    *        y = [\begin{array}{cccc} x_1 & x_2 & ... & x_K \end{array}]
    *      @f$
@@ -115,8 +115,8 @@ class ConcatLayer : public Layer<Dtype> {
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *        respect to the outputs
-   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
-   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
+   *   -# @f$ (KN \times C \times H \times W) @f$ if axis == 0, or
+   *      @f$ (N \times KC \times H \times W) @f$ if axis == 1:
    *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
    *      with respect to concatenated outputs @f$ y @f$
    * @param propagate_down see Layer::Backward.
@@ -138,11 +138,9 @@ class ConcatLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   int count_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
-  int concat_dim_;
+  int num_concats_;
+  int concat_input_size_;
+  int concat_axis_;
 };
 
 /**

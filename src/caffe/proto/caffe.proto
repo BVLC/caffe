@@ -378,10 +378,12 @@ message ArgMaxParameter {
 
 // Message that stores parameters used by ConcatLayer
 message ConcatParameter {
-  // Concat Layer needs to specify the dimension along the concat will happen,
-  // the other dimensions must be the same for all the bottom blobs
-  // By default it will concatenate blobs along channels dimension
-  optional uint32 concat_dim = 1 [default = 1];
+  // The axis along which to concatenate.  Other axes must have the
+  // same dimension for all the bottom blobs.
+  // By default, ConcatLayer concatenates blobs along the channels axis (1).
+  optional uint32 axis = 1 [default = 1];
+
+  optional uint32 concat_dim = 2 [default = 1];  // alias for "axis"
 }
 
 // Message that stores parameters used by ContrastiveLossLayer
