@@ -151,6 +151,70 @@ class ConcatLayer : public Layer<Dtype> {
 };
 
 /**
+* @brief Computes @f$ y = x_1 \cdot x_2 @f$
+*/
+template <typename Dtype>
+class DotProductLayer : public Layer<Dtype> {
+public:
+  explicit DotProductLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_DOT_PRODUCT;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+protected:
+  /**
+  * @param bottom input Blob vector (length 2)
+  *   -# @f$ (N \times C \times H \times W) @f$
+  *      the inputs @f$ x_1 @f$
+  *   -# @f$ (N \times C \times H \times W) @f$
+  *      the inputs @f$ x_2 @f$
+  * @param top output Blob vector (length 1)
+  *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+  *      the computed output @f$
+  *        y = x_1 \cdot x_2
+  *      @f$
+  */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+  * @brief Computes the error gradient w.r.t. the dot product inputs.
+  *
+  * @param top output Blob vector (length 1), providing the error gradient with
+  *        respect to the outputs
+  *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+  *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+  *      with respect to dot product outputs @f$ y @f$
+  * @param propagate_down see Layer::Backward.
+  * @param bottom input Blob vector (length 2)
+  *   -# @f$ (N \times C \times H \times W) @f$
+  *      @f$x_1@f$; Backward fills their diff with
+  *      gradients @f$
+  *        \frac{\partial E}{\partial x_1} =
+  *            \frac{\partial E}{\partial y} \cdot x_2
+  *      @f$
+  *   -# @f$ (N \times C \times H \times W) @f$
+  *      @f$x_2@f$; Backward fills their diff with
+  *      gradients @f$
+  *        \frac{\partial E}{\partial x_1} =
+  *            \frac{\partial E}{\partial y} \cdot x_1
+  *      @f$
+  */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+};
+
+/**
  * @brief Compute elementwise operations, such as product and sum,
  *        along multiple input Blobs.
  *
