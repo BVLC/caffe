@@ -10,17 +10,11 @@ namespace caffe {
 template <typename Dtype>
 void DotProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  const int num = bottom[0]->num();
-  const int channels = bottom[0]->channels();
-  const int height = bottom[0]->height();
-  const int width = bottom[0]->width();
-  for (int i = 1; i < bottom.size(); ++i) {
-    CHECK_EQ(num, bottom[i]->num());
-    CHECK_EQ(channels, bottom[i]->channels());
-    CHECK_EQ(height, bottom[i]->height());
-    CHECK_EQ(width, bottom[i]->width());
-  }
-  top[0]->Reshape(num, 1, 1, 1);
+  CHECK_EQ(bottom[0]->num(),      bottom[1]->num());
+  CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
+  CHECK_EQ(bottom[0]->height(),   bottom[1]->height());
+  CHECK_EQ(bottom[0]->width(),    bottom[1]->width());
+  top[0]->Reshape(bottom[0]->num(), 1, 1, 1);
 }
 
 template <typename Dtype>
