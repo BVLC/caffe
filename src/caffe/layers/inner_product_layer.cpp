@@ -26,14 +26,18 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->blobs_.resize(1);
     }
     // Intialize the weight
-    this->blobs_[0].reset(new Blob<Dtype>(1, 1, N_, K_));
+    vector<int> weight_shape(2);
+    weight_shape[0] = N_;
+    weight_shape[1] = K_;
+    this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
     // fill the weights
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
         this->layer_param_.inner_product_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, intiialize and fill the bias term
     if (bias_term_) {
-      this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, N_));
+      vector<int> bias_shape(1, N_);
+      this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
           this->layer_param_.inner_product_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
@@ -49,10 +53,14 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   M_ = bottom[0]->num();
   CHECK_EQ(bottom[0]->count() / bottom[0]->num(), K_) << "Input size "
     "incompatible with inner product parameters.";
-  top[0]->Reshape(bottom[0]->num(), N_, 1, 1);
+  vector<int> top_shape(2);
+  top_shape[0] = M_;
+  top_shape[1] = N_;
+  top[0]->Reshape(top_shape);
   // Set up the bias multiplier
   if (bias_term_) {
-    bias_multiplier_.Reshape(1, 1, 1, M_);
+    vector<int> bias_shape(1, M_);
+    bias_multiplier_.Reshape(bias_shape);
     caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
 }
