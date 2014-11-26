@@ -137,7 +137,6 @@ class ConcatLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> col_bob_;
   int count_;
   int num_;
   int channels_;
@@ -452,7 +451,6 @@ class SliceLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> col_bob_;
   int count_;
   int num_;
   int channels_;
