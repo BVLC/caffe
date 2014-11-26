@@ -58,6 +58,13 @@ class Net {
   string Forward(const string& input_blob_protos, Dtype* loss = NULL);
 
   /**
+   * If a bottom blob has num == 0, then the forward is not allowed and a top
+   * blob of the layer must be reshaped with num = 0, so all the subsequent
+   * layers will not have their forward allowed, too.
+   */
+  bool ForwardIsAllowed(int i);
+
+  /**
    * The network backward should take no input and output, since it solely
    * computes the gradient w.r.t the parameters, and the data has already been
    * provided during the forward pass.
@@ -66,6 +73,12 @@ class Net {
   void BackwardFromTo(int start, int end);
   void BackwardFrom(int start);
   void BackwardTo(int end);
+
+  /**
+   * If a top blob has num == 0, then the forward on this layer was been
+   * denied, so we don't need to backpropagate
+   */
+  bool BackwardIsAllowed(int i);
 
   /**
    * @brief Reshape all layers from bottom to top.
