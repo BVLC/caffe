@@ -109,11 +109,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
       }
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
-      LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
-          << top_vecs_[layer_id][top_id]->channels() << " "
-          << top_vecs_[layer_id][top_id]->height() << " "
-          << top_vecs_[layer_id][top_id]->width() << " ("
-          << top_vecs_[layer_id][top_id]->count() << ")";
+      LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->shape_string();
       if (layer->loss(top_id)) {
         LOG(INFO) << "    with loss weight " << layer->loss(top_id);
       }
@@ -427,14 +423,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
           << "Shared parameter blobs must have the same count.";
     } else {
       // Strict dimension checking -- all dims must be the same.
-      CHECK_EQ(this_blob->num(), owner_blob->num())
-          << "Shared parameter blobs must have the same num.";
-      CHECK_EQ(this_blob->channels(), owner_blob->channels())
-          << "Shared parameter blobs must have the same channels.";
-      CHECK_EQ(this_blob->height(), owner_blob->height())
-          << "Shared parameter blobs must have the same height.";
-      CHECK_EQ(this_blob->width(), owner_blob->width())
-          << "Shared parameter blobs must have the same width.";
+      CHECK(this_blob->shape() == owner_blob->shape());
     }
     layers_[layer_id]->blobs()[param_id]->ShareData(
         *layers_[owner_layer_id]->blobs()[owner_param_id]);
@@ -640,10 +629,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
-      CHECK_EQ(target_blobs[j]->num(), source_blob->num());
-      CHECK_EQ(target_blobs[j]->channels(), source_blob->channels());
-      CHECK_EQ(target_blobs[j]->height(), source_blob->height());
-      CHECK_EQ(target_blobs[j]->width(), source_blob->width());
+      CHECK(target_blobs[j]->shape() == source_blob->shape());
       target_blobs[j]->ShareData(*source_blob);
     }
   }
@@ -707,10 +693,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
-      CHECK_EQ(target_blobs[j]->num(), source_layer.blobs(j).num());
-      CHECK_EQ(target_blobs[j]->channels(), source_layer.blobs(j).channels());
-      CHECK_EQ(target_blobs[j]->height(), source_layer.blobs(j).height());
-      CHECK_EQ(target_blobs[j]->width(), source_layer.blobs(j).width());
+      CHECK(target_blobs[j]->ShapeEquals(source_layer.blobs(j)));
       target_blobs[j]->FromProto(source_layer.blobs(j));
     }
   }

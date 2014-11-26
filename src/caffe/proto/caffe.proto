@@ -3,12 +3,15 @@ syntax = "proto2";
 package caffe;
 
 message BlobProto {
+  repeated int32 dim = 7 [packed = true];
+  repeated float data = 5 [packed = true];
+  repeated float diff = 6 [packed = true];
+
+  // 4D dimensions -- deprecated.  Use "dim" instead.
   optional int32 num = 1 [default = 0];
   optional int32 channels = 2 [default = 0];
   optional int32 height = 3 [default = 0];
   optional int32 width = 4 [default = 0];
-  repeated float data = 5 [packed = true];
-  repeated float diff = 6 [packed = true];
 }
 
 // The BlobProtoVector is simply a way to pass multiple blobproto instances

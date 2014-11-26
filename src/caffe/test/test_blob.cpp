@@ -31,10 +31,7 @@ TYPED_TEST(BlobSimpleTest, TestInitialization) {
   EXPECT_EQ(this->blob_preshaped_->height(), 4);
   EXPECT_EQ(this->blob_preshaped_->width(), 5);
   EXPECT_EQ(this->blob_preshaped_->count(), 120);
-  EXPECT_EQ(this->blob_->num(), 0);
-  EXPECT_EQ(this->blob_->channels(), 0);
-  EXPECT_EQ(this->blob_->height(), 0);
-  EXPECT_EQ(this->blob_->width(), 0);
+  EXPECT_EQ(this->blob_->num_axes(), 0);
   EXPECT_EQ(this->blob_->count(), 0);
 }
 
