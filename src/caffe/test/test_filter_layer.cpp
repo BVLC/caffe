@@ -139,12 +139,7 @@ TYPED_TEST(FilterLayerTest, TestForward) {
 
 TYPED_TEST(FilterLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
-  bool IS_VALID_CUDA = false;
-#ifndef CPU_ONLY
-  IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
-#endif
-  if (Caffe::mode() == Caffe::CPU ||
-      sizeof(Dtype) == 4 || IS_VALID_CUDA) {
+  if (Caffe::mode() == Caffe::CPU || sizeof(Dtype) == 4) {
     LayerParameter layer_param;
     FilterParameter* f_param = layer_param.mutable_filter_param();
     // we need to forward the data blob
