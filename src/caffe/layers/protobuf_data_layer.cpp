@@ -339,7 +339,7 @@ void ProtobufDataLayer<Dtype>::InternalThreadEntry() {
           // copy
           for (int channel = 0; channel < 3; ++channel) {
             pixel_base[channel * crop_height * crop_width] =
-                (pixel[channel] - 128.0f) / 128.0f;
+                (pixel[channel] - 128.0f);
           }
         }
       }
