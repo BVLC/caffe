@@ -137,7 +137,11 @@ TYPED_TEST(NeuronLayerTest, TestReLU) {
   const Dtype* top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
-    EXPECT_TRUE(top_data[i] == 0 || top_data[i] == bottom_data[i]);
+    if ( bottom_data[i] <= 0.0 ) {
+      EXPECT_EQ(top_data[i], 0);
+    } else {
+      EXPECT_EQ(top_data[i], bottom_data[i]);
+    }
   }
 }
 
@@ -162,7 +166,7 @@ TYPED_TEST(NeuronLayerTest, TestReLUWithNegativeSlope) {
   const Dtype* bottom_data = this->blob_bottom_->cpu_data();
   const Dtype* top_data = this->blob_top_->cpu_data();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    if (top_data[i] >= 0) {
+    if (bottom_data[i] >= 0) {
       EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
     } else {
       EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] * 0.01);
@@ -177,6 +181,72 @@ TYPED_TEST(NeuronLayerTest, TestReLUGradientWithNegativeSlope) {
       "relu_param { negative_slope: 0.01 }", &layer_param));
   ReLULayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestTRecWhileTraining) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  const Dtype THETA = 0.7;
+  std::stringstream ss;
+  ss << "relu_param { theta: " << THETA << " }";
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      ss.str(), &layer_param));
+  ReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  Caffe::set_phase(Caffe::TRAIN);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  // When training not testing, the threshold theta should be enforced.
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (bottom_data[i] >= THETA) {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
+    } else {
+      EXPECT_FLOAT_EQ(top_data[i], 0.0);
+    }
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestTRecWhileTesting) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  const Dtype THETA = 0.7;
+  std::stringstream ss;
+  ss << "relu_param { theta: " << THETA << " }";
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+          ss.str(), &layer_param));
+  ReLULayer<Dtype> layer(layer_param);
+  Caffe::set_phase(Caffe::TEST);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  // When testing not training, the threshold theta should be ignored.
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (bottom_data[i] >= 0.0) {
+      EXPECT_FLOAT_EQ(top_data[i], bottom_data[i]);
+    } else {
+      EXPECT_FLOAT_EQ(top_data[i], 0.0);
+    }
+  }
+}
+
+
+TYPED_TEST(NeuronLayerTest, TestTRecGradientWhileTraining) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  const Dtype THETA = 0.7;
+  std::stringstream ss;
+  ss << "relu_param { theta: " << THETA << " }";
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      ss.str(), &layer_param));
+  ReLULayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, THETA, 0.01);
+  Caffe::set_phase(Caffe::TRAIN);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }

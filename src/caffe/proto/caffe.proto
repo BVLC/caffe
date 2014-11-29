@@ -643,6 +643,11 @@ message ReLUParameter {
     CUDNN = 2;
   }
   optional Engine engine = 2 [default = DEFAULT];
+  // Allow a thresholded RELU as described in:
+  // R. Memisevic et al, "Zero-bias autoencoders and the benefits of
+  // co-adapting features". When training, input to unit must have magnitude
+  // exceeding theta for the output to be non-zero.
+  optional float theta = 3 [default = 0];
 }
 
 // Message that stores parameters used by SigmoidLayer
