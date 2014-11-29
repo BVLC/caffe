@@ -298,7 +298,7 @@ class ProtobufDataLayerTest : public MultiDeviceTest<TypeParam> {
               // TODO(kmatzen): Fix this test so that JPEG decompresses closer
               // to the exact value.  In fact, maybe replace jpeg decompressor
               // in the layer with a separate class that I can mock.
-              EXPECT_NEAR(target, 128.0 * *data++ + 128.0, 17.0)
+              EXPECT_NEAR(target, *data++ + 128.0, 17.0)
                   << channel << " " << height << " " << width;
             }
           }
