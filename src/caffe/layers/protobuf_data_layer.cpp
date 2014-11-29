@@ -279,16 +279,28 @@ void ProtobufDataLayer<Dtype>::InternalThreadEntry() {
     CHECK(record.has_crop_y1());
     CHECK(record.has_crop_y2());
 
-    int height = record.crop_y2() - record.crop_y1() + 1;
-    int width = record.crop_x2() - record.crop_x1() + 1;
+    int x1 = record.crop_x1();
+    int x2 = record.crop_x2();
+    int y1 = record.crop_y1();
+    int y2 = record.crop_y2();
+
+    if (protobuf_data_param.no_crop()) {
+      x1 = 0;
+      x2 = image.cols - 1;
+      y1 = 0;
+      y2 = image.rows - 1;
+    }
+
+    int height = y2 - y1 + 1;
+    int width = x2 - x1 + 1;
 
     cv::Mat crop(height, width, CV_8UC4);
     uchar* dst = crop.ptr();
     for (int row = 0; row < height; ++row) {
-      const int src_row = record.crop_y1() + row;
+      const int src_row = y1 + row;
       uchar* src_scanline = image.ptr(src_row);
       for (int col = 0; col < width; ++col) {
-        const int src_col = record.crop_x1() + col;
+        const int src_col = x1 + col;
         if (src_row >= 0 && src_row < image.rows &&
             src_col >= 0 && src_col < image.cols) {
           uchar* src = src_scanline + src_col * 3;
