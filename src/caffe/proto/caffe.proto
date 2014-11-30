@@ -558,6 +558,7 @@ message ProtobufDataParameter {
   optional uint32 crop_width = 6;
   repeated string labels = 7;
   optional bool no_crop = 8 [default = false];
+  optional float jitter = 9;
 }
 
 // Message that stores parameters InfogainLossLayer

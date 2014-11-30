@@ -294,6 +294,21 @@ void ProtobufDataLayer<Dtype>::InternalThreadEntry() {
     int height = y2 - y1 + 1;
     int width = x2 - x1 + 1;
 
+    if (protobuf_data_param.has_jitter()) {
+      int orig_height = height/(1.0 + 2.0*protobuf_data_param.jitter());
+      int orig_width = width/(1.0 + 2.0*protobuf_data_param.jitter());
+      int jitter_pixels_height = (height - orig_height) / 2;
+      int jitter_pixels_width = (width - orig_width) / 2;
+      int jitter_x = caffe_rng_rand() % jitter_pixels_width;
+      int jitter_y = caffe_rng_rand() % jitter_pixels_height;
+      x1 += jitter_x;
+      y1 += jitter_y;
+      x2 += jitter_x;
+      y2 += jitter_y;
+      height = y2 - y1 + 1;
+      width = x2 - x1 + 1;
+    }
+
     cv::Mat crop(height, width, CV_8UC4);
     uchar* dst = crop.ptr();
     for (int row = 0; row < height; ++row) {
