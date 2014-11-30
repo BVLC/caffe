@@ -19,14 +19,15 @@ void AccuracyLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void AccuracyLayer<Dtype>::Reshape(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  CHECK_EQ(bottom[0]->num(), bottom[1]->num())
-      << "The data and label should have the same number.";
-  CHECK_LE(top_k_, bottom[0]->count() / bottom[0]->num())
+  CHECK_LE(top_k_, bottom[0]->count() / bottom[1]->count())
       << "top_k must be less than or equal to the number of classes.";
-  CHECK_EQ(bottom[1]->channels(), 1);
-  CHECK_EQ(bottom[1]->height(), 1);
-  CHECK_EQ(bottom[1]->width(), 1);
-  top[0]->Reshape(1, 1, 1, 1);
+  CHECK_GE(bottom[0]->num_axes(), bottom[1]->num_axes());
+  for (int i = 0; i < bottom[1]->num_axes(); ++i) {
+    CHECK_LE(bottom[0]->shape(i), bottom[1]->shape(i))
+        << "Dimension mismatch between predictions and label.";
+  }
+  vector<int> top_shape(0);  // Accuracy is a scalar; 0 axes.
+  top[0]->Reshape(top_shape);
 }
 
 template <typename Dtype>
