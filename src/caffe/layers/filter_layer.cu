@@ -17,7 +17,6 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     int dim = bottom[b]->count() / bottom[b]->num();
 
     for (int n = 0; n < new_tops_num; n++) {
-      int offset = indices_to_forward_[n];
       int data_offset_top = top[b-1]->offset(n);
       int data_offset_bottom =  bottom[b]->offset(indices_to_forward_[n]);
 
