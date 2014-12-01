@@ -190,9 +190,10 @@ class EltwiseLayer : public Layer<Dtype> {
 };
 
 /**
- * @brief Takes two Blob%s, computes the argmax of the IF bottom blob,
- *  and allow or block the successive forward pass depending on whether
- *  the argmax is equal or different form conditional index, respectively
+ * @brief Takes two+ Blobs, interprets first Blob as a selector and
+ *  filter remaining Blobs accordingly with selector data (0 means that
+ * the corresponding item has to be filtered, non-zero means that corresponding
+ * item needs to stay).
  */
 template <typename Dtype>
 class FilterLayer : public Layer<Dtype> {
@@ -213,7 +214,7 @@ class FilterLayer : public Layer<Dtype> {
  protected:
   /**
    * @param bottom input Blob vector (length 2+)
-   *   -# @f$ (N \times C \times H \times W) @f$
+   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
    *      the selector blob
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the inputs to be filtered @f$ x_1 @f$
@@ -250,7 +251,7 @@ class FilterLayer : public Layer<Dtype> {
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool first_reshape_;
-  vector<Dtype> indices_to_forward_;
+  vector<int> indices_to_forward_;
   vector<int> need_back_prop_;
 };
 
