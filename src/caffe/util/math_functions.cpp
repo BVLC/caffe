@@ -58,7 +58,20 @@ void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
     memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
     return;
+    if (Caffe::mode() == Caffe::GPU) {
+#ifndef CPU_ONLY
+      // NOLINT_NEXT_LINE(caffe/alt_fn)
+      CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));
+      return;
+#else
+      NO_GPU;
+#endif
+    } else {
+      memset(Y, 0, sizeof(Dtype) * N);  // NOLINT(caffe/alt_fn)
+      return;
+    }
   }
+
   for (int i = 0; i < N; ++i) {
     Y[i] = alpha;
   }
