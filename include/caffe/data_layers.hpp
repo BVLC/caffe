@@ -171,7 +171,9 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
   virtual void LoadHDF5FileData(const char* filename);
+  void ShuffleData(const hsize_t max_val);
 
+  std::vector<int> permutation_;
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;
   unsigned int current_file_;
