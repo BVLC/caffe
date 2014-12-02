@@ -88,6 +88,8 @@ inline void WriteProtoToBinaryFile(
   WriteProtoToBinaryFile(proto, filename.c_str());
 }
 
+bool ReadFileToString(const string& filename, string* content);
+
 bool ReadFileToDatum(const string& filename, const int label, Datum* datum);
 
 inline bool ReadFileToDatum(const string& filename, Datum* datum) {
