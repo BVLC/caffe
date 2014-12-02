@@ -208,28 +208,39 @@ If you're not using Anaconda, include `hdf5` in the list above.
     Aborting
     Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
 
-One solution is to commit your changes to a separate Homebrew branch, run `brew update`, and rebase your changes onto the updated master, as follows:
+One solution is to commit your changes to a separate Homebrew branch, run `brew update`, and rebase your changes onto the updated master. You'll have to do this both for the main Homebrew repository in `/usr/local/` and the Homebrew science repository that contains OpenCV in  `/usr/local/Library/Taps/homebrew/homebrew-science`, as follows:
 
     cd /usr/local
     git checkout -b caffe
     git add .
     git commit -m "Update Caffe dependencies to use libstdc++"
+    cd /usr/local/Library/Taps/homebrew/homebrew-science
+    git checkout -b caffe
+    git add .
+    git commit -m "Update Caffe dependencies"
+
+Then, whenever you want to update homebrew, switch back to the master branches, do the update, rebase the caffe branches onto master and fix any conflicts:
+
+    # Switch batch to homebrew master branches
+    cd /usr/local
     git checkout master
+    cd /usr/local/Library/Taps/homebrew/homebrew-science
+    git checkout master
+    
+    # Update homebrew; hopefully this works without errors!
     brew update
+    
+    # Switch back to the caffe branches with the forumlae that you modified earlier
+    cd /usr/local
     git rebase master caffe
-    # Resolve any merge conflicts here
-    git checkout caffe
+    # Fix any merge conflicts and commit to caffe branch
+    cd /usr/local/Library/Taps/homebrew/homebrew-science
+    git rebase master caffe
+    # Fix any merge conflicts and commit to caffe branch
+    
+    # Done!            
 
-At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place. You may still get the following error:
-
-    $ brew update
-    error: Your local changes to the following files would be overwritten by merge:
-	opencv.rb
-    Please, commit your changes or stash them before you can merge.
-    Aborting
-    Error: Failed to update tap: homebrew/science
-
-but non-OpenCV packages will still update as expected.
+At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.
 
 #### Windows
 
