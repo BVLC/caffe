@@ -1,0 +1,32 @@
+# InnerProduct with dropout
+# Required: input, num_ouput, dropout_ratio
+layers: {
+  name: "innerproduct"
+  type: INNER_PRODUCT
+  bottom: "${input}"
+  top: "output"
+  blobs_lr: 1.
+  blobs_lr: 2.
+  weight_decay: 1.
+  weight_decay: 0.
+  inner_product_param {
+    num_output: ${num_output}
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers: {
+  name: "dropout"
+  type: DROPOUT
+  bottom: "output"
+  top: "output"
+  dropout_param {
+    dropout_ratio: ${dropout_ratio}
+  }
+}

@@ -1,0 +1,30 @@
+# Convolution with ReLU
+# Required: input, num_output, kernel_size
+layers: {
+  name: "convolution"
+  type: CONVOLUTION
+  bottom: "${input}"
+  top: "output"
+  blobs_lr: 1.
+  blobs_lr: 2.
+  weight_decay: 1.
+  weight_decay: 0.
+  convolution_param {
+    num_output: ${num_output}
+    kernel_size: ${kernel_size}
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers: {
+  name: "relu"
+  type: RELU
+  bottom: "output"
+  top: "output"
+}

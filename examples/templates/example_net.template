@@ -1,0 +1,58 @@
+name: "TemplateNetwork"
+layers: {
+  name: "data"
+  type: DUMMY_DATA
+  dummy_data_param {
+    num: 5
+    channels: 2
+    height: 3
+    width: 4
+    num: 5
+    channels: 1
+    height: 1
+    width: 1
+    data_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+  }
+  top: "data"
+  top: "label"
+}
+layers: {
+  name: "conv1"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/convolution_with_relu.template"
+    variable { name: "input" value: "/data" }
+    variable { name: "num_output" value: "10" }
+    variable { name: "kernel_size" value: "3" }
+  }
+}
+layers: {
+  name: "fc1"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/innerproduct_with_dropout.template"
+    variable { name: "input" value: "/conv1/output" }
+    variable { name: "num_output" value: "10" }
+    variable { name: "dropout_ratio" value: "0.5" }
+  } 
+}
+layers: {
+  name: "fc2"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/innerproduct_with_dropout.template"
+    variable { name: "input" value: "../fc1/output" }
+    variable { name: "num_output" value: "20" }
+    variable { name: "dropout_ratio" value: "0.0" }
+  }
+}
+layers: {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "fc2/output"
+  bottom: "label"
+  top: "top_loss"
+}
