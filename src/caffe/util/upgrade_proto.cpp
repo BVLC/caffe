@@ -584,6 +584,9 @@ void NetParameterToPrettyPrint(const NetParameter& param,
   if (param.has_force_backward()) {
     pretty_param->set_force_backward(param.force_backward());
   }
+  if (param.has_state()) {
+    pretty_param->mutable_state()->CopyFrom(param.state());
+  }
   for (int i = 0; i < param.input_size(); ++i) {
     pretty_param->add_input(param.input(i));
   }

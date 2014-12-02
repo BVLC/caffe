@@ -12,7 +12,8 @@ import "caffe.proto";
 message NetParameterPrettyPrint {
   optional string name = 1;
   optional bool force_backward = 2 [default = false];
-  repeated string input = 3;
-  repeated int32 input_dim = 4;
-  repeated LayerParameter layers = 5;
+  optional NetState state = 3;
+  repeated string input = 4;
+  repeated int32 input_dim = 5;
+  repeated LayerParameter layers = 6;
 }
