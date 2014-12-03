@@ -10,7 +10,6 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/data_sources.hpp"
 #include "caffe/data_transformer.hpp"
 #include "caffe/dataset.hpp"
 #include "caffe/filler.hpp"
@@ -333,11 +332,18 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   vector<std::pair<std::string, Datum > > image_database_cache_;
 };
 
+// Forward declaration
+template <typename Dtype>
+class DataSource;
+
 template <typename Dtype>
 class DataMappingLayer : public Layer<Dtype> {
  public:
   explicit DataMappingLayer(const LayerParameter& param)
     : Layer<Dtype>(param) {}
+
+  DataMappingLayer(const LayerParameter& param,
+                   shared_ptr<DataSource<Dtype> > source);
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
@@ -356,7 +362,7 @@ class DataMappingLayer : public Layer<Dtype> {
 
  private:
   shared_ptr<DataSource<Dtype> > data_source_;
-  uint32_t data_length_;
+  unsigned int data_length_;
 };
 
 template <typename Dtype>
@@ -365,6 +371,9 @@ class DataSequenceLayer : public Layer<Dtype> {
   explicit DataSequenceLayer(const LayerParameter& param)
     : Layer<Dtype>(param) {}
 
+  DataSequenceLayer(const LayerParameter& param,
+                    shared_ptr<DataSource<Dtype> > source);
+
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
 
@@ -382,7 +391,7 @@ class DataSequenceLayer : public Layer<Dtype> {
 
  private:
   shared_ptr<DataSource<Dtype> > data_source_;
-  std::vector<index_type> indices_;
+  std::vector<int> indices_;
   int cursor_;
   unsigned int batch_size_;
   unsigned int data_length_;

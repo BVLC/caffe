@@ -7,6 +7,13 @@
 namespace caffe {
 
 template <typename Dtype>
+DataMappingLayer<Dtype>::DataMappingLayer(const LayerParameter& param,
+                                          shared_ptr<DataSource<Dtype> > source)
+  : Layer<Dtype>(param) {
+  data_source_ = source;
+}
+
+template <typename Dtype>
 void DataMappingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(bottom.size(), top.size());
@@ -17,6 +24,8 @@ void DataMappingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   const DataMappingParameter& param = this->layer_param().data_mapping_param();
   this->data_length_ = param.channels() * param.height() * param.width();
+  if (!data_source_)
+    data_source_.reset(create_data_source<Dtype>(param.data_source()));
 }
 
 template <typename Dtype>

@@ -847,6 +847,11 @@ message DataSourceParameter {
     RANGE = 2;
     RANDOM = 3;
     CSV = 4;
+    GRAY_IMAGE = 5;
+    COLOR_IMAGE = 6;
+    LMDB = 7;
+    LEVELDB = 8;
+    HDF5 = 9;
   }
   optional DataSourceType type = 1;
   optional int32 channels = 2 [default = 1];

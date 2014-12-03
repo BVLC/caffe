@@ -7,12 +7,21 @@
 namespace caffe {
 
 template <typename Dtype>
+DataSequenceLayer<Dtype>::DataSequenceLayer(const LayerParameter& param,
+                                          shared_ptr<DataSource<Dtype> > source)
+  : Layer<Dtype>(param) {
+  data_source_ = source;
+}
+
+template <typename Dtype>
 void DataSequenceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                          const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(bottom.size(), 0);
   CHECK_EQ(top.size(), 1);
   const DataSequenceParameter& param =
       this->layer_param().data_sequence_param();
+  if (!data_source_)
+    data_source_.reset(create_data_source<Dtype>(param.data_source()));
   this->data_length_ = param.channels() * param.height() * param.width();
   this->indices_ = data_source_->indices();
   std::sort(indices_.begin(), indices_.end());
