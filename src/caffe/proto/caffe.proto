@@ -227,7 +227,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 39 (last added: EXP)
+  // LayerType next available ID: 41 (last added: DATA_SEQUENCE)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -241,6 +241,8 @@ message LayerParameter {
     CONTRASTIVE_LOSS = 37;
     CONVOLUTION = 4;
     DATA = 5;
+    DATA_MAPPING = 39;
+    DATA_SEQUENCE = 40;
     DROPOUT = 6;
     DUMMY_DATA = 32;
     EUCLIDEAN_LOSS = 7;
@@ -305,6 +307,8 @@ message LayerParameter {
   optional ContrastiveLossParameter contrastive_loss_param = 40;
   optional ConvolutionParameter convolution_param = 10;
   optional DataParameter data_param = 11;
+  optional DataMappingParameter data_mapping_param = 42;
+  optional DataSequenceParameter data_sequence_param = 43;
   optional DropoutParameter dropout_param = 12;
   optional DummyDataParameter dummy_data_param = 26;
   optional EltwiseParameter eltwise_param = 24;
@@ -443,6 +447,23 @@ message DataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+}
+
+// Message that stores parameter for DataMappingLayer
+message DataMappingParameter {
+  optional DataSourceParameter data_source = 1;
+  optional uint32 channels = 2 [default = 1];
+  optional uint32 height = 3 [default = 1];
+  optional uint32 width = 4 [default = 1];
+}
+
+// Message that stores parameter for DataSequenceLayer
+message DataSequenceParameter {
+  optional DataSourceParameter data_source = 1;
+  optional uint32 channels = 2 [default = 1];
+  optional uint32 height = 3 [default = 1];
+  optional uint32 width = 4 [default = 1];
+  optional uint32 batch_size = 5;
 }
 
 // Message that stores parameters used by DropoutLayer
@@ -816,4 +837,39 @@ message V0LayerParameter {
   optional uint32 concat_dim = 65 [default = 1];
 
   optional HDF5OutputParameter hdf5_output_param = 1001;
+}
+
+// Message for DataSource
+message DataSourceParameter {
+  enum DataSourceType {
+    NONE = 0;
+    CONSTANT = 1;
+    RANGE = 2;
+    RANDOM = 3;
+    CSV = 4;
+  }
+  optional DataSourceType type = 1;
+  optional int32 channels = 2 [default = 1];
+  optional int32 height = 3 [default = 1];
+  optional int32 width = 4 [default = 1];
+  optional string filename = 5;
+
+  optional ConstantDataSourceParameter constant_param = 6;
+  optional RangeDataSourceParameter range_param = 7;
+  optional RandomDataSourceParameter random_param = 8;
+}
+
+message ConstantDataSourceParameter {
+  optional float constant = 1 [default = 0.0];
+}
+
+message RangeDataSourceParameter {
+  optional int32 start = 1 [default = 0];
+  optional int32 stop = 2 [default = 2];
+  optional int32 step = 3 [default = 1];
+}
+
+message RandomDataSourceParameter {
+  optional int32 minimum = 1 [default = 0];
+  optional int32 maximum = 2 [default = 1];
 }

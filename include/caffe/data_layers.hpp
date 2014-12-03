@@ -10,6 +10,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/data_sources.hpp"
 #include "caffe/data_transformer.hpp"
 #include "caffe/dataset.hpp"
 #include "caffe/filler.hpp"
@@ -330,6 +331,53 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   bool has_mean_values_;
   bool cache_images_;
   vector<std::pair<std::string, Datum > > image_database_cache_;
+};
+
+template <typename Dtype>
+class DataMappingLayer : public Layer<Dtype> {
+ public:
+  explicit DataMappingLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {}
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+ private:
+  shared_ptr<DataSource<Dtype> > data_source_;
+  uint32_t data_length_;
+};
+
+template <typename Dtype>
+class DataSequenceLayer : public Layer<Dtype> {
+ public:
+  explicit DataSequenceLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {}
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+ private:
+  shared_ptr<DataSource<Dtype> > data_source_;
+  std::vector<index_type> indices_;
+  int cursor;
+  unsigned int batch_size_;
+  unsigned int data_length_;
 };
 
 }  // namespace caffe
