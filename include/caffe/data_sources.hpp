@@ -3,6 +3,7 @@
 
 #include <boost/unordered_map.hpp>
 
+#include <algorithm>
 #include <vector>
 
 #include "caffe/proto/caffe.pb.h"
@@ -28,7 +29,19 @@ class DataSource {
                                Dtype* buffer,
                                length_type buffer_length) = 0;
 
-  virtual std::vector<index_type> indices() = 0;
+  /**
+   * @brief indices
+   * @return a list of indicies that this source accepts
+   *
+   * This default implementation returns a single {0}.
+   *
+   * Subclass may allow retrieval of data at indices
+   * other than those in the return value of this function.
+   * It is especially true for pseudo sources, e.g. ConstantDataSource.
+   */
+  virtual std::vector<index_type> indices() {
+    return std::vector<index_type>(1, 0);
+  }
 
  private:
   DataSourceParameter data_source_param_;
@@ -42,16 +55,11 @@ class ConstantDataSource : public DataSource<Dtype> {
     constant_ = param.constant_param().constant();
   }
 
-  virtual std::vector<index_type> indices() {
-    return std::vector<index_type>(1, 0);
-  }
-
   virtual length_type retrieve(index_type index,
                                  Dtype* buffer,
                                  length_type buffer_length) {
-    if (buffer_length > 0)
-      *buffer = constant_;
-    return 1;
+    std::fill(buffer, buffer + buffer_length, constant_);
+    return buffer_length;
   }
 
  private:
