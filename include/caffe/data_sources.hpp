@@ -33,11 +33,11 @@ class DataSource {
    * @brief indices
    * @return a list of indicies that this source accepts
    *
-   * This default implementation returns a single {0}.
+   * This default implementation returns a single {0}. The return value is
+   * not guaranteed to be sorted.
    *
    * Subclass may allow retrieval of data at indices
-   * other than those in the return value of this function.
-   * It is especially true for pseudo sources, e.g. ConstantDataSource.
+   * other than those specified by this function.
    */
   virtual std::vector<index_type> indices() {
     return std::vector<index_type>(1, 0);

@@ -15,7 +15,7 @@
 namespace caffe {
 
 template <typename TypeParam>
-class DataMappingLayerTest : public MultiDeviceTest<TypeParam> {
+class DataSequenceLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  private:
@@ -33,6 +33,16 @@ class DataMappingLayerTest : public MultiDeviceTest<TypeParam> {
       std::copy(data, data + copy_length, buffer);
       return sizeof(data) / sizeof(*data);
     }
+
+    virtual std::vector<index_type> indices() {
+      std::vector<index_type> result;
+      result.push_back(1);
+      result.push_back(4);
+      result.push_back(22);
+      result.push_back(3);
+      result.push_back(10);
+      return result;
+    }
   };
 
  protected:
@@ -40,82 +50,54 @@ class DataMappingLayerTest : public MultiDeviceTest<TypeParam> {
   std::vector<Blob<Dtype>*> top_, bottom_;
 
  protected:
-  DataMappingLayerTest()
+  DataSequenceLayerTest()
     : data_source_(new DummyDataSource(DataSourceParameter())) {
-    for (int i = 0; i < 4; ++i) {
-      bottom_.push_back(new Blob<Dtype>(i * 4 + 1, 1, 1, 1));
-      top_.push_back(new Blob<Dtype>());
-    }
+    top_.push_back(new Blob<Dtype>());
   }
 
-  ~DataMappingLayerTest() {
-    for (int i = 0; i < bottom_.size(); ++i) {
-      delete bottom_[i];
-    }
-
+  ~DataSequenceLayerTest() {
     for (int i = 0; i < bottom_.size(); ++i) {
       delete top_[i];
     }
   }
-
-  void FillBottomRandomly(int maximum) {
-    rng_t& rng = *caffe_rng();
-    for (int i = 0; i < bottom_.size(); ++i) {
-      Blob<Dtype>* b = bottom_[i];
-      Dtype* out = b->mutable_cpu_data();
-      for (int j = 0; j < b->num(); ++j) {
-        out[j] = rng() % maximum;
-      }
-    }
-  }
-
-  void CheckTopAgainstBottom(const DataMappingParameter& param) {
-    CHECK_EQ(bottom_.size(), top_.size());
-    for (int i = 0; i < bottom_.size(); ++i) {
-      const Blob<Dtype>& b = *bottom_[i];
-      const Blob<Dtype>& t = *top_[i];
-
-      CHECK_EQ(t.num(), b.num());
-      CHECK_EQ(t.channels(), param.channels());
-      CHECK_EQ(t.height(), param.height());
-      CHECK_EQ(t.width(), param.width());
-    }
-  }
 };
 
-TYPED_TEST_CASE(DataMappingLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(DataSequenceLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(DataMappingLayerTest, TestForward) {
+TYPED_TEST(DataSequenceLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
 
-  this->FillBottomRandomly(65535);
-
   LayerParameter param;
-  param.set_type(caffe::LayerParameter_LayerType_DATA_MAPPING);
-  DataMappingParameter* dm_param = param.mutable_data_mapping_param();
-  dm_param->set_channels(3);
-  dm_param->set_height(2);
+  param.set_type(caffe::LayerParameter_LayerType_DATA_SEQUENCE);
+  DataSequenceParameter* ds_param = param.mutable_data_sequence_param();
+  ds_param->set_channels(3);
+  ds_param->set_height(2);
+  ds_param->set_batch_size(3);
 
-  DataMappingLayer<Dtype> layer(param, this->data_source_);
-
+  DataSequenceLayer<Dtype> layer(param, this->data_source_);
   layer.SetUp(this->bottom_, this->top_);
-  this->CheckTopAgainstBottom(param.data_mapping_param());
+
+  std::vector<index_type> retrieved_indices;
 
   for (int round = 0; round < 3; ++round) {
     layer.Forward(this->bottom_, this->top_);
 
-    for (int i = 0; i < this->bottom_.size(); ++i) {
-      const Blob<Dtype>& b = *this->bottom_[i];
+    for (int i = 0; i < this->top_.size(); ++i) {
       const Blob<Dtype>& t = *this->top_[i];
-
-      int num = b.num();
-
+      int num = t.num();
       for (int j = 0; j < num; ++j) {
-        CHECK_EQ(b.data_at(j, 0, 0, 0), t.data_at(j, 0, 0, 0));
-        CHECK_EQ(b.data_at(j, 0, 0, 0) + 5, t.data_at(j, 2, 1, 0));
+        Dtype value = t.data_at(j, 0, 0, 0);
+        CHECK_EQ(value + 5, t.data_at(j, 2, 1, 0));
+        retrieved_indices.push_back(static_cast<index_type>(value));
       }
     }
   }
+
+  // Now, check that the whole range of indices is covered and in order
+  std::vector<index_type> indices = this->data_source_->indices();
+  std::sort(indices.begin(), indices.end());
+  CHECK(std::equal(indices.begin(), indices.end(),
+                   retrieved_indices.begin()));
 }
 
 template <typename Iterator>
@@ -128,29 +110,27 @@ static bool all_zero(Iterator begin, Iterator end) {
   return true;
 }
 
-TYPED_TEST(DataMappingLayerTest, TestForwardZero) {
+TYPED_TEST(DataSequenceLayerTest, TestForwardZero) {
   typedef typename TypeParam::Dtype Dtype;
 
-  this->FillBottomRandomly(65535);
-
   LayerParameter param;
-  param.set_type(caffe::LayerParameter_LayerType_DATA_MAPPING);
-  DataMappingParameter* dm_param = param.mutable_data_mapping_param();
-  dm_param->mutable_data_source()
+  param.set_type(caffe::LayerParameter_LayerType_DATA_SEQUENCE);
+  DataSequenceParameter* ds_param = param.mutable_data_sequence_param();
+  ds_param->mutable_data_source()
       ->set_type(caffe::DataSourceParameter_DataSourceType_CONSTANT);
-  dm_param->set_channels(3);
-  dm_param->set_height(2);
-  dm_param->set_width(9);
+  ds_param->set_channels(3);
+  ds_param->set_height(2);
+  ds_param->set_width(9);
+  ds_param->set_batch_size(3);
 
-  DataMappingLayer<Dtype> layer(param);
+  DataSequenceLayer<Dtype> layer(param);
 
   layer.SetUp(this->bottom_, this->top_);
-  this->CheckTopAgainstBottom(param.data_mapping_param());
 
   for (int round = 0; round < 3; ++round) {
     layer.Forward(this->bottom_, this->top_);
 
-    for (int i = 0; i < this->bottom_.size(); ++i) {
+    for (int i = 0; i < this->top_.size(); ++i) {
       const Blob<Dtype>& t = *this->top_[i];
       const Dtype* buffer = t.cpu_data();
       const int length = t.num() * t.channels() * t.height() * t.width();
