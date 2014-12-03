@@ -17,7 +17,6 @@ namespace caffe {
 template <typename TypeParam>
 class FilterLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
-
  protected:
   FilterLayerTest()
       : blob_bottom_selector_(new Blob<Dtype>(4, 1, 1, 1)),
@@ -68,7 +67,6 @@ TYPED_TEST_CASE(FilterLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(FilterLayerTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;
-
   LayerParameter layer_param;
   FilterParameter* f_param = layer_param.mutable_filter_param();
   // we need to forward the data blob
@@ -103,7 +101,6 @@ TYPED_TEST(FilterLayerTest, TestReshape) {
 
 TYPED_TEST(FilterLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
-
   LayerParameter layer_param;
   FilterParameter* f_param = layer_param.mutable_filter_param();
   // we need to forward the data blob
@@ -137,7 +134,6 @@ TYPED_TEST(FilterLayerTest, TestForward) {
 
 TYPED_TEST(FilterLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
-
   LayerParameter layer_param;
   FilterParameter* f_param = layer_param.mutable_filter_param();
   // we need to forward the data blob
