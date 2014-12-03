@@ -32,13 +32,15 @@ class FilterLayerTest : public MultiDeviceTest<TypeParam> {
     GaussianFiller<Dtype> filler(filler_param);
     // fill the selector blob
     Dtype* bottom_data_selector_ = blob_bottom_selector_->mutable_cpu_data();
-    *(bottom_data_selector_) = 0;
-    *(bottom_data_selector_ + 1) = 1;
-    *(bottom_data_selector_ + 2) = 1;
-    *(bottom_data_selector_ + 3) = 0;
-    // fill the othre bottom blobs
+    bottom_data_selector_[0] = 0;
+    bottom_data_selector_[1] = 1;
+    bottom_data_selector_[2] = 1;
+    bottom_data_selector_[3] = 0;
+    // fill the other bottom blobs
     filler.Fill(blob_bottom_data_);
-    filler.Fill(blob_bottom_labels_);
+    for (int i = 0; i < blob_bottom_labels_->count(); ++i) {
+      blob_bottom_labels_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
+    }
     blob_bottom_vec_.push_back(blob_bottom_selector_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_labels_);
@@ -52,7 +54,6 @@ class FilterLayerTest : public MultiDeviceTest<TypeParam> {
     delete blob_top_data_;
     delete blob_top_labels_;
   }
-
   Blob<Dtype>* const blob_bottom_selector_;
   Blob<Dtype>* const blob_bottom_data_;
   Blob<Dtype>* const blob_bottom_labels_;
@@ -100,7 +101,6 @@ TYPED_TEST(FilterLayerTest, TestReshape) {
       this->blob_top_data_->height());
 }
 
-
 TYPED_TEST(FilterLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
 
@@ -127,15 +127,13 @@ TYPED_TEST(FilterLayerTest, TestForward) {
   // with top(0,c,h,w) and bottom(2,c,h,w) with top(1,c,h,w)
   bottom_data += dim;  // bottom(1,c,h,w)
   for (size_t n = 0; n < dim; n++)
-    EXPECT_EQ(*(top_data+n), *(bottom_data+n));
+    EXPECT_EQ(top_data[n], bottom_data[n]);
 
   bottom_data += dim;  // bottom(2,c,h,w)
   top_data += dim;  // top(1,c,h,w)
   for (size_t n = 0; n < dim; n++)
-    EXPECT_EQ(*(top_data+n), *(bottom_data+n));
+    EXPECT_EQ(top_data[n], bottom_data[n]);
 }
-
-
 
 TYPED_TEST(FilterLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
@@ -151,7 +149,5 @@ TYPED_TEST(FilterLayerTest, TestGradient) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 1);
 }
-
-
 
 }  // namespace caffe

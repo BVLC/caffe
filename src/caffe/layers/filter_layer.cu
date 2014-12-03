@@ -15,13 +15,11 @@ void FilterLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[b]->gpu_data();
     Dtype* top_data = top[b-1]->mutable_gpu_data();
     int dim = bottom[b]->count() / bottom[b]->num();
-
     for (int n = 0; n < new_tops_num; n++) {
       int data_offset_top = top[b-1]->offset(n);
       int data_offset_bottom =  bottom[b]->offset(indices_to_forward_[n]);
-
-      caffe_copy(dim, bottom_data+data_offset_bottom,
-          top_data+data_offset_top);
+      caffe_copy(dim, bottom_data + data_offset_bottom,
+          top_data + data_offset_top);
     }
   }
 }

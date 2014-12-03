@@ -35,9 +35,8 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
         "Selector blob (bottom[0]) must have width == 1";
   CHECK_EQ(bottom[0]->height(), 1) <<
         "Selector blob (bottom[0]) must have height == 1";
-  int num_items = bottom[0]->num();
   for (int i = 1; i < bottom.size(); i++) {
-    CHECK_EQ(num_items, bottom[i]->num()) <<
+    CHECK_EQ(bottom[0]->num(), bottom[i]->num()) <<
         "Each bottom should have the same dimension as bottom[0]";
   }
 
@@ -47,14 +46,13 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // look for non-zero elements in bottom[0]. Items of each bottom that
   // have the same index as the items in bottom[0] with value == non-zero
   // will be forwarded
-  for (int item_id = 0; item_id < num_items; ++item_id) {
+  for (int item_id = 0; item_id < bottom[0]->num(); ++item_id) {
     // we don't need an offset because item size == 1
     const Dtype* tmp_data_selector = bottom_data_selector + item_id;
     if (*tmp_data_selector) {
       indices_to_forward_.push_back(item_id);
     }
   }
-
   // only filtered items will be forwarded
   int new_tops_num = indices_to_forward_.size();
   // init
@@ -62,12 +60,9 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     new_tops_num = bottom[1]->num();
     first_reshape_ = false;
   }
-
   for (int t = 0; t < top.size(); t++) {
-    top[t]->Reshape(new_tops_num,
-        bottom[t+1]->channels(),
-        bottom[t+1]->height(),
-        bottom[t+1]->width());
+    top[t]->Reshape(new_tops_num, bottom[t+1]->channels(),
+        bottom[t+1]->height(), bottom[t+1]->width());
   }
 }
 
@@ -80,13 +75,11 @@ void FilterLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[b]->cpu_data();
     Dtype* top_data = top[b-1]->mutable_cpu_data();
     int dim = bottom[b]->count() / bottom[b]->num();
-
     for (int n = 0; n < new_tops_num; n++) {
       int data_offset_top = top[b-1]->offset(n);
       int data_offset_bottom =  bottom[b]->offset(indices_to_forward_[n]);
-
-      caffe_copy(dim, bottom_data+data_offset_bottom,
-          top_data+data_offset_top);
+      caffe_copy(dim, bottom_data + data_offset_bottom,
+          top_data + data_offset_top);
     }
   }
 }
