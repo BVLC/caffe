@@ -350,6 +350,10 @@ class DataMappingLayer : public Layer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom) {
     NOT_IMPLEMENTED;
   }
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
  private:
   shared_ptr<DataSource<Dtype> > data_source_;
   uint32_t data_length_;
@@ -372,10 +376,14 @@ class DataSequenceLayer : public Layer<Dtype> {
                             const vector<Blob<Dtype>*>& bottom) {
     NOT_IMPLEMENTED;
   }
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
  private:
   shared_ptr<DataSource<Dtype> > data_source_;
   std::vector<index_type> indices_;
-  int cursor;
+  int cursor_;
   unsigned int batch_size_;
   unsigned int data_length_;
 };
