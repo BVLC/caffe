@@ -844,14 +844,7 @@ message DataSourceParameter {
   enum DataSourceType {
     NONE = 0;
     CONSTANT = 1;
-    RANGE = 2;
-    RANDOM = 3;
-    CSV = 4;
-    GRAY_IMAGE = 5;
-    COLOR_IMAGE = 6;
-    LMDB = 7;
-    LEVELDB = 8;
-    HDF5 = 9;
+    CSV = 2;
   }
   optional DataSourceType type = 1;
   optional int32 channels = 2 [default = 1];
@@ -860,21 +853,8 @@ message DataSourceParameter {
   optional string filename = 5;
 
   optional ConstantDataSourceParameter constant_param = 6;
-  optional RangeDataSourceParameter range_param = 7;
-  optional RandomDataSourceParameter random_param = 8;
 }
 
 message ConstantDataSourceParameter {
   optional float constant = 1 [default = 0.0];
-}
-
-message RangeDataSourceParameter {
-  optional int32 start = 1 [default = 0];
-  optional int32 stop = 2 [default = 2];
-  optional int32 step = 3 [default = 1];
-}
-
-message RandomDataSourceParameter {
-  optional int32 minimum = 1 [default = 0];
-  optional int32 maximum = 2 [default = 1];
 }

@@ -39,7 +39,6 @@ void DataMappingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     for (int j = 0; j < num; ++j) {
       index_type index = b->data_at(j, 0, 0, 0);
-      Blob<Dtype>* t = top[i];
       CHECK_EQ(data_source_->retrieve(index,
                                       buffer,
                                       data_length_),
