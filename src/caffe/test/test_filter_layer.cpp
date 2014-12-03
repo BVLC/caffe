@@ -17,6 +17,7 @@ namespace caffe {
 template <typename TypeParam>
 class FilterLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
+
  protected:
   FilterLayerTest()
       : blob_bottom_selector_(new Blob<Dtype>(4, 1, 1, 1)),
