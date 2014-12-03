@@ -488,9 +488,9 @@ class SliceLayer : public Layer<Dtype> {
 };
 
 /**
- * @brief Takes some inputs Blob%s and a selector and outputs the data
- *        based on the value of the selector blob.
- *        If selector is < 0 or > num_inputs then it fills with zeros
+ * @brief Takes some inputs Blob%s and a selector and copies the data
+ *        based on the value of the selector blob to the top blob.
+ *        The selector values should integer and within [0,n-1]
  */
 template <typename Dtype>
 class SwitchLayer : public Layer<Dtype> {
