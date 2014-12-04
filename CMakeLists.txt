@@ -4,10 +4,11 @@ project( Caffe )
 ###    Build Options     ##########################################################################
 
 option(CPU_ONLY "Build Caffe without GPU support" OFF)
+option(CUDNN "Build with cuDNN support" ON)
 option(BUILD_PYTHON "Build Python wrapper" OFF)
 option(BUILD_MATLAB "Build Matlab wrapper" OFF)
 option(BUILD_EXAMPLES "Build examples" ON)
-option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
+option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" ON)
 
 if(NOT BLAS)
     set(BLAS atlas)
@@ -32,6 +33,8 @@ set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}) # set release flags
 #    Global Definitions
 if(CPU_ONLY)
     add_definitions(-DCPU_ONLY)
+elseif (CUDNN)
+    add_definitions(-DUSE_CUDNN)
 endif()
 
 #    Include Directories

@@ -85,6 +85,10 @@ if(NOT CPU_ONLY)
             -gencode arch=compute_30,code=sm_30
             -gencode arch=compute_35,code=sm_35
     )
+
+    if(CUDNN)
+        set(CUDA_CUBLAS_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} /usr/local/cuda/lib/libcudnn.so)
+    endif()
     
 # https://github.com/ComputationalRadiationPhysics/picongpu/blob/master/src/picongpu/CMakeLists.txt
     # work-arounds
