@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < n_layer; i++) {
     layers[i] = argv[9 + i];
     string output_file_name = output_file_base + ".bin." + argv[9 + i];
-    LOG(INFO) << "rwduzhao: " << "writing layer " << argv[9 + i] << " into " << output_file_name << std::endl;
+    LOG(INFO) << "writing layer " << argv[9 + i] << " into " << output_file_name << std::endl;
     output_files[i] = fopen(output_file_name.c_str(), "wb");
     const int frame_number = frame_files.size();
     const int feat_dim = caffe_test_net.blob_by_name(layers[i])->channels();
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
 	fwrite(data_blob_ptr, sizeof(float), n_example * n_channel, output_files[i_layer]);
       }
 
-      LOG(INFO) << "rwduzhao: " << frame_id + 1 << " (+" << n_example
+      LOG(INFO) << frame_id + 2 << " (+" << n_example
         << ") out of " << frame_files.size() << " results written.";
 
       batch_frame_names.clear();

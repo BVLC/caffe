@@ -76,11 +76,11 @@ int main(int argc, char** argv) {
   for (int i = 0; i < n_layer; i++) {
     layers[i] = argv[9 + i];
     string output_file_name = output_file_base + "." + argv[9 + i];
-    LOG(INFO) << "rwduzhao: " << "writing layer " << argv[9 + i] << " into " << output_file_name << std::endl;
+    LOG(INFO) << "writing layer " << argv[9 + i] << " into " << output_file_name << std::endl;
     output_files[i] = fopen(output_file_name.c_str(), "w");
   }
 
-  cv::Mat cv_img;
+  cv::Mat cv_img, cv_img_orig;
   int n_channel = 3;
   int image_size = 256;
   int image_crop_size = 227;
@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
   for (int frame_id = 0; frame_id < frame_files.size(); ++frame_id) {
     batch_frame_names.push_back(frame_names[frame_id]);
 
-    cv_img = cv::imread(frame_dir + "/" + frame_files[frame_id], CV_LOAD_IMAGE_COLOR);
-    cv::resize(cv_img, cv_img, cv::Size(image_size, image_size), 0, 0, 3);
+    cv_img_orig = cv::imread(frame_dir + "/" + frame_files[frame_id], CV_LOAD_IMAGE_COLOR);
+    cv::resize(cv_img_orig, cv_img, cv::Size(image_size, image_size));
 
     float* frame_blob_data = frame_blob->mutable_cpu_data();
     for (int i_channel = 0; i_channel < n_channel; ++i_channel) {
@@ -122,12 +122,12 @@ int main(int argc, char** argv) {
         int i_prob = 0;
         for (int i_example = 0; i_example < n_example; i_example++) {
           for (int i_label = 0; i_label < n_channel - 1; i_label++)
-            fprintf(output_files[i_layer], "%0.9e ", data_blob_ptr[i_prob++]);
-          fprintf(output_files[i_layer], "%0.9e\n", data_blob_ptr[i_prob++]);
+            fprintf(output_files[i_layer], "%f ", data_blob_ptr[i_prob++]);
+          fprintf(output_files[i_layer], "%f\n", data_blob_ptr[i_prob++]);
         }
       }
 
-      LOG(INFO) << "rwduzhao: " << frame_id + 1 << " (+" << n_example
+      LOG(INFO) << frame_id + 1 << " (+" << n_example
         << ") out of " << frame_files.size() << " results written.";
 
       batch_frame_names.clear();
