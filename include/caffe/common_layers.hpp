@@ -190,7 +190,7 @@ class EltwiseLayer : public Layer<Dtype> {
 };
 
 /**
- * @brief Takes two+ Blobs, interprets first Blob as a selector and
+ * @brief Takes two+ Blobs, interprets last Blob as a selector and
  *  filter remaining Blobs accordingly with selector data (0 means that
  * the corresponding item has to be filtered, non-zero means that corresponding
  * item needs to stay).
@@ -214,13 +214,13 @@ class FilterLayer : public Layer<Dtype> {
  protected:
   /**
    * @param bottom input Blob vector (length 2+)
-   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
-   *      the selector blob
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the inputs to be filtered @f$ x_1 @f$
    *   -# ...
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the inputs to be filtered @f$ x_K @f$
+   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *      the selector blob
    * @param top output Blob vector (length 1+)
    *   -# @f$ (S \times C \times H \times W) @f$ () 
    *        the filtered output @f$ x_1 @f$ 

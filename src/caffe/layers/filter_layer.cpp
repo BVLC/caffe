@@ -27,26 +27,27 @@ void FilterLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // bottom[0] is the "selector_blob"
-  // bottom[1+] are the blobs to filter
-  CHECK_EQ(bottom[0]->channels(), 1) <<
-        "Selector blob (bottom[0]) must have channels == 1";
-  CHECK_EQ(bottom[0]->width(), 1) <<
-        "Selector blob (bottom[0]) must have width == 1";
-  CHECK_EQ(bottom[0]->height(), 1) <<
-        "Selector blob (bottom[0]) must have height == 1";
-  for (int i = 1; i < bottom.size(); i++) {
-    CHECK_EQ(bottom[0]->num(), bottom[i]->num()) <<
-        "Each bottom should have the same dimension as bottom[0]";
+  // bottom[0...k-1] are the blobs to filter
+  // bottom[last] is the "selector_blob"
+  int selector_index = bottom.size() - 1;
+  CHECK_EQ(bottom[selector_index]->channels(), 1) <<
+        "Selector blob (bottom[last]) must have channels == 1";
+  CHECK_EQ(bottom[selector_index]->width(), 1) <<
+        "Selector blob (bottom[last]) must have width == 1";
+  CHECK_EQ(bottom[selector_index]->height(), 1) <<
+        "Selector blob (bottom[last]) must have height == 1";
+  for (int i = 0; i < bottom.size()-1; i++) {
+    CHECK_EQ(bottom[selector_index]->num(), bottom[i]->num()) <<
+        "Each bottom should have the same dimension as bottom[last]";
   }
 
-  const Dtype* bottom_data_selector = bottom[0]->cpu_data();
+  const Dtype* bottom_data_selector = bottom[selector_index]->cpu_data();
   indices_to_forward_.clear();
 
   // look for non-zero elements in bottom[0]. Items of each bottom that
   // have the same index as the items in bottom[0] with value == non-zero
   // will be forwarded
-  for (int item_id = 0; item_id < bottom[0]->num(); ++item_id) {
+  for (int item_id = 0; item_id < bottom[selector_index]->num(); ++item_id) {
     // we don't need an offset because item size == 1
     const Dtype* tmp_data_selector = bottom_data_selector + item_id;
     if (*tmp_data_selector) {
@@ -57,12 +58,12 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   int new_tops_num = indices_to_forward_.size();
   // init
   if (first_reshape_) {
-    new_tops_num = bottom[1]->num();
+    new_tops_num = bottom[0]->num();
     first_reshape_ = false;
   }
   for (int t = 0; t < top.size(); t++) {
-    top[t]->Reshape(new_tops_num, bottom[t+1]->channels(),
-        bottom[t+1]->height(), bottom[t+1]->width());
+    top[t]->Reshape(new_tops_num, bottom[t]->channels(),
+        bottom[t]->height(), bottom[t]->width());
   }
 }
 
@@ -70,14 +71,14 @@ template <typename Dtype>
 void FilterLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   int new_tops_num = indices_to_forward_.size();
-  // forward all filtered items for all bottoms but the Selector (bottom[0])
-  for (int b = 1; b < bottom.size(); b++) {
-    const Dtype* bottom_data = bottom[b]->cpu_data();
-    Dtype* top_data = top[b-1]->mutable_cpu_data();
-    int dim = bottom[b]->count() / bottom[b]->num();
+  // forward all filtered items for all bottoms but the Selector (bottom[last])
+  for (int t = 0; t < top.size(); t++) {
+    const Dtype* bottom_data = bottom[t]->cpu_data();
+    Dtype* top_data = top[t]->mutable_cpu_data();
+    int dim = bottom[t]->count() / bottom[t]->num();
     for (int n = 0; n < new_tops_num; n++) {
-      int data_offset_top = top[b-1]->offset(n);
-      int data_offset_bottom =  bottom[b]->offset(indices_to_forward_[n]);
+      int data_offset_top = top[t]->offset(n);
+      int data_offset_bottom =  bottom[t]->offset(indices_to_forward_[n]);
       caffe_copy(dim, bottom_data + data_offset_bottom,
           top_data + data_offset_top);
     }
@@ -87,11 +88,10 @@ void FilterLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  for (int i = 1; i < propagate_down.size(); i++) {
-    // bottom[0] is the selector and never needs backpropagation
-    // so we can start from i = 1 and index each top with i-1
-    if (propagate_down[i] && need_back_prop_[i-1]) {
-      const int dim = top[i-1]->count() / top[i-1]->num();
+  for (int i = 0; i < top.size(); i++) {
+    // bottom[last] is the selector and never needs backpropagation
+    if (propagate_down[i] && need_back_prop_[i]) {
+      const int dim = top[i]->count() / top[i]->num();
       int next_to_backward_offset = 0;
       int batch_offset = 0;
       int data_offset_bottom = 0;
@@ -100,19 +100,19 @@ void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         if (next_to_backward_offset >= indices_to_forward_.size()) {
           // we already visited all items that were been forwarded, so
           // just set to zero remaining ones
-          data_offset_bottom = top[i-1]->offset(n);
+          data_offset_bottom = top[i]->offset(n);
           caffe_set(dim, Dtype(0),
               bottom[i]->mutable_cpu_diff() + data_offset_bottom);
         } else {
           batch_offset = indices_to_forward_[next_to_backward_offset];
-          data_offset_bottom = top[i-1]->offset(n);
+          data_offset_bottom = top[i]->offset(n);
           if (n != batch_offset) {  // this data was not been forwarded
             caffe_set(dim, Dtype(0),
                 bottom[i]->mutable_cpu_diff() + data_offset_bottom);
           } else {  // this data was been forwarded
-            data_offset_top = top[i-1]->offset(next_to_backward_offset);
+            data_offset_top = top[i]->offset(next_to_backward_offset);
             next_to_backward_offset++;  // point to next forwarded item index
-            caffe_copy(dim, top[i-1]->mutable_cpu_diff() + data_offset_top,
+            caffe_copy(dim, top[i]->mutable_cpu_diff() + data_offset_top,
                 bottom[i]->mutable_cpu_diff() + data_offset_bottom);
           }
         }
