@@ -267,7 +267,7 @@ void caffe_gpu_##name<double>(const int n, const double* x, double* y) { \
       n, x, y); \
 }
 
-#endif  // CPU_ONLY
+#endif  // !CPU_ONLY
 
 }  // namespace caffe
 
