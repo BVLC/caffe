@@ -149,6 +149,8 @@ class Caffe {
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
+  // Gets current device_id
+  static int GetDevice();
   // Prints the current GPU status.
   static void DeviceQuery();
 

@@ -126,6 +126,12 @@ void Caffe::set_random_seed(const unsigned int seed) {
   Get().random_generator_.reset(new RNG(seed));
 }
 
+int Caffe::GetDevice() {
+  int current_device;
+  CUDA_CHECK(cudaGetDevice(&current_device));
+  return current_device;
+}
+
 void Caffe::SetDevice(const int device_id) {
   int current_device;
   CUDA_CHECK(cudaGetDevice(&current_device));

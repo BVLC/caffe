@@ -39,6 +39,3 @@ else
 end
 fprintf('Done with set_mode\n');
 
-% put into test mode
-caffe('set_phase_test');
-fprintf('Done with set_phase_test\n');

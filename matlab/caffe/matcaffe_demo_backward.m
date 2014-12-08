@@ -1,7 +1,7 @@
-function [scores, maxlabel] = matcaffe_demo(im, use_gpu)
+function [scores, gradients] = matcaffe_demo_backward(im, use_gpu)
 % scores = matcaffe_demo(im, use_gpu)
-% By default uses cpu
-%
+% By default uses cpu, recomeded gpu
+
 % Demo of the matlab wrapper using the ILSVRC network.
 %
 % input
@@ -13,13 +13,13 @@ function [scores, maxlabel] = matcaffe_demo(im, use_gpu)
 %
 % You may need to do the following before you start matlab:
 %  $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda-5.5/lib64
-%  $ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 % Or the equivalent based on where things are installed on your system
 %
 % Usage:
-%  im = imread('../../examples/images/cat.jpg');
+%  im = imread('../../examples/cat.jpg');
 %  scores = matcaffe_demo(im, 1);
 %  [score, class] = max(scores);
+
 % Five things to be aware of:
 %   caffe uses row-major order
 %   matlab uses column-major order
@@ -46,6 +46,11 @@ function [scores, maxlabel] = matcaffe_demo(im, use_gpu)
 % The actual forward function. It takes in a cell array of 4-D arrays as
 % input and outputs a cell array. 
 
+% init caffe network (spews logging info)
+if nargin < 1 || isempty(im)
+  % For demo purposes we will use the peppers image
+  im = imread('peppers.png');
+end
 
 % init caffe network (spews logging info)
 net = CaffeNet.instance;
@@ -63,29 +68,44 @@ end
 net.set_phase_test;
 fprintf('Done with set_phase_test\n');
 
-if nargin < 1 || isempty(im)
-  % For demo purposes we will use the peppers image
-  im = imread('peppers.png');
-end
-
-% prepare oversampled input
+% prepare oversampled input (4 corners + center)x flipped
 % input_data is Height x Width x Channel x Num
 tic;
-input_data = {prepare_image(im)};
+input_data = prepare_image(im);
 toc;
 
-% do forward pass to get scores
+% Do forward pass to get scores
 % scores are now Width x Height x Channels x Num
 tic;
-scores = net.forward(input_data);
+scores = net.forward({input_data});
 toc;
 
+% Get scores of each class
 scores = scores{1};
 size(scores)
 scores = squeeze(scores);
-scores = mean(scores,2);
+% Find the maximum score and its label
+[~,maxlabels] = max(scores);
 
-[~,maxlabel] = max(scores);
+% Assign the scores to the output_diff to be able to backpropagate it
+output_diff(1,1,:,:) = scores;
+
+% Compute gradients based on the scores
+tic;
+gradients = net.backward({output_diff});
+toc;
+gradients = gradients{1};
+% Get center image and permute BGR to RGB
+img_gradients = gradients(:,:,[3 2 1],5);
+% Permute width and height back
+img_gradients = permute(img_gradients,[2 1 3]);
+% Scale gradients for easy visualization
+max_g = max(img_gradients(:));
+min_g = min(img_gradients(:));
+% Visualize the gradient of one image
+imtool(permute(input_data(:,:,[3 2 1],5),[2 1 3]));
+imtool((img_gradients)/(max_g-min_g)*2);
+
 
 % ------------------------------------------------------------------------
 function images = prepare_image(im)
