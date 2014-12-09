@@ -266,6 +266,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
+  void ChangeBatchSize(int new_size);
 
   int batch_size() { return batch_size_; }
   int channels() { return channels_; }

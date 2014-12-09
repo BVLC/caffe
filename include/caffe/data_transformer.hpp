@@ -60,9 +60,10 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See memory_layer.cpp for an example.
    */
+#ifndef OSX
   void Transform(const vector<cv::Mat> & mat_vector,
                 Blob<Dtype>* transformed_blob);
-
+#endif
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
