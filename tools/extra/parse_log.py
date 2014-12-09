@@ -80,6 +80,9 @@ def parse_log(path_to_log):
                 line, iteration, seconds, learning_rate
             )
 
+    fix_initial_nan_learning_rate(train_dict_list)
+    fix_initial_nan_learning_rate(test_dict_list)
+
     return train_dict_list, test_dict_list
 
 
@@ -113,6 +116,19 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
         row[output_name] = output_val
 
     return row_dict_list, row
+
+
+def fix_initial_nan_learning_rate(dict_list):
+    """Correct initial value of learning rate
+
+    Learning rate is normally not printed until after the initial test and
+    training step, which means the initial testing and training rows have
+    LearningRate = NaN. Fix this by copying over the LearningRate from the
+    second row, if it exists.
+    """
+
+    if len(dict_list) > 1:
+        dict_list[0]['LearningRate'] = dict_list[1]['LearningRate']
 
 
 def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
