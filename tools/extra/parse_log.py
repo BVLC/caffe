@@ -11,6 +11,7 @@ import re
 import extract_seconds
 import argparse
 import csv
+from collections import OrderedDict
 
 
 def get_line_type(line):
@@ -48,8 +49,6 @@ def parse_log(path_to_log):
     learning_rate = float('NaN')
     train_dict_list = []
     test_dict_list = []
-    train_dict_names = ('NumIters', 'Seconds', 'TrainingLoss', 'LearningRate')
-    test_dict_names = ('NumIters', 'Seconds', 'TestAccuracy', 'TestLoss')
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
     with open(path_to_log) as f:
@@ -78,10 +77,11 @@ def parse_log(path_to_log):
             train_loss_match = re_train_loss.search(line)
             if train_loss_match:
                 train_loss = float(train_loss_match.group(1))
-                train_dict_list.append({'NumIters': iteration,
-                                        'Seconds': seconds,
-                                        'TrainingLoss': train_loss,
-                                        'LearningRate': learning_rate})
+                row = OrderedDict([('NumIters', iteration),
+                                   ('Seconds', seconds),
+                                   ('TrainingLoss', train_loss),
+                                   ('LearningRate', learning_rate)])
+                train_dict_list.append(row)
 
             output_loss_match = re_output_loss.search(line)
             if output_loss_match and get_line_type(line) == 'test':
@@ -90,16 +90,17 @@ def parse_log(path_to_log):
                 # loss for test data so the test_accuracy variable is already
                 # correctly populated and (2) there's one and only one output
                 # named "accuracy" for the test net
-                test_dict_list.append({'NumIters': iteration,
-                                       'Seconds': seconds,
-                                       'TestAccuracy': test_accuracy,
-                                       'TestLoss': test_loss})
+                row = OrderedDict([('NumIters', iteration),
+                                   ('Seconds', seconds),
+                                   ('TestAccuracy', test_accuracy),
+                                   ('TestLoss', test_loss)])
+                test_dict_list.append(row)
 
-    return train_dict_list, train_dict_names, test_dict_list, test_dict_names
+    return train_dict_list, test_dict_list
 
 
-def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
-                   test_dict_list, test_dict_names, verbose=False):
+def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
+                   verbose=False):
     """Save CSV files to output_dir
 
     If the input log file is, e.g., caffe.INFO, the names will be
@@ -108,18 +109,18 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, train_dict_names,
 
     log_basename = os.path.basename(logfile_path)
     train_filename = os.path.join(output_dir, log_basename + '.train')
-    write_csv(train_filename, train_dict_list, train_dict_names, verbose)
+    write_csv(train_filename, train_dict_list, verbose)
 
     test_filename = os.path.join(output_dir, log_basename + '.test')
-    write_csv(test_filename, test_dict_list, test_dict_names, verbose)
+    write_csv(test_filename, test_dict_list, verbose)
 
 
-def write_csv(output_filename, dict_list, header_names, verbose=False):
+def write_csv(output_filename, dict_list, verbose=False):
     """Write a CSV file
     """
 
     with open(output_filename, 'w') as f:
-        dict_writer = csv.DictWriter(f, header_names)
+        dict_writer = csv.DictWriter(f, fieldnames=dict_list[0].keys())
         dict_writer.writeheader()
         dict_writer.writerows(dict_list)
     if verbose:
@@ -147,10 +148,9 @@ def parse_args():
 
 def main():
     args = parse_args()
-    train_dict_list, train_dict_names, test_dict_list, test_dict_names = \
-        parse_log(args.logfile_path)
+    train_dict_list, test_dict_list = parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
-                   train_dict_names, test_dict_list, test_dict_names)
+                   test_dict_list)
 
 
 if __name__ == '__main__':
