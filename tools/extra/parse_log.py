@@ -37,66 +37,82 @@ def parse_log(path_to_log):
     for the two dict_lists
     """
 
-    re_iteration = re.compile('Iteration (\d+)')
-    re_accuracy = re.compile('output #\d+: accuracy = ([\.\d]+)')
-    re_train_loss = re.compile('Iteration \d+, loss = ([\.\d]+)')
-    re_output_loss = re.compile('output #\d+: loss = ([\.\d]+)')
-    re_lr = re.compile('lr = ([\.\d]+)')
+    regex_iteration = re.compile('Iteration (\d+)')
+    regex_train_output = re.compile('Train net output #(\d+): (\w*) = ([\.\d]+)')
+    regex_test_output = re.compile('Test net output #(\d+): (\w*) = ([\.\d]+)')
+    regex_learning_rate = re.compile('lr = ([\.\d]+)')
 
     # Pick out lines of interest
     iteration = -1
-    test_accuracy = -1
     learning_rate = float('NaN')
     train_dict_list = []
     test_dict_list = []
+    train_row = None
+    test_row = None
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
     with open(path_to_log) as f:
         start_time = extract_seconds.get_start_time(f, logfile_year)
 
         for line in f:
-            iteration_match = re_iteration.search(line)
+            iteration_match = regex_iteration.search(line)
             if iteration_match:
                 iteration = float(iteration_match.group(1))
             if iteration == -1:
-                # Only look for other stuff if we've found the first iteration
+                # Only start parsing for other stuff if we've found the first
+                # iteration
                 continue
 
             time = extract_seconds.extract_datetime_from_line(line,
                                                               logfile_year)
             seconds = (time - start_time).total_seconds()
 
-            lr_match = re_lr.search(line)
-            if lr_match:
-                learning_rate = float(lr_match.group(1))
+            learning_rate_match = regex_learning_rate.search(line)
+            if learning_rate_match:
+                learning_rate = float(learning_rate_match.group(1))
 
-            accuracy_match = re_accuracy.search(line)
-            if accuracy_match and get_line_type(line) == 'test':
-                test_accuracy = float(accuracy_match.group(1))
-
-            train_loss_match = re_train_loss.search(line)
-            if train_loss_match:
-                train_loss = float(train_loss_match.group(1))
-                row = OrderedDict([('NumIters', iteration),
-                                   ('Seconds', seconds),
-                                   ('TrainingLoss', train_loss),
-                                   ('LearningRate', learning_rate)])
-                train_dict_list.append(row)
-
-            output_loss_match = re_output_loss.search(line)
-            if output_loss_match and get_line_type(line) == 'test':
-                test_loss = float(output_loss_match.group(1))
-                # NOTE: we assume that (1) accuracy always comes right before
-                # loss for test data so the test_accuracy variable is already
-                # correctly populated and (2) there's one and only one output
-                # named "accuracy" for the test net
-                row = OrderedDict([('NumIters', iteration),
-                                   ('Seconds', seconds),
-                                   ('TestAccuracy', test_accuracy),
-                                   ('TestLoss', test_loss)])
-                test_dict_list.append(row)
+            train_dict_list, train_row = parse_line_for_net_output(
+                regex_train_output, train_row, train_dict_list,
+                line, iteration, seconds, learning_rate
+            )
+            test_dict_list, test_row = parse_line_for_net_output(
+                regex_test_output, test_row, test_dict_list,
+                line, iteration, seconds, learning_rate
+            )
 
     return train_dict_list, test_dict_list
+
+
+def parse_line_for_net_output(regex_obj, row, row_dict_list,
+                              line, iteration, seconds, learning_rate):
+    """Parse a single line for training or test output
+
+    Returns a a tuple with (row_dict_list, row)
+    row: may be either a new row or an augmented version of the current row
+    row_dict_list: may be either the current row_dict_list or an augmented
+    version of the current row_dict_list
+    """
+
+    output_match = regex_obj.search(line)
+    if output_match:
+        if not row or row['NumIters'] != iteration:
+            # Push the last row and start a new one
+            if row:
+                row_dict_list.append(row)
+
+            row = OrderedDict([
+                ('NumIters', iteration),
+                ('Seconds', seconds),
+                ('LearningRate', learning_rate)
+            ])
+
+        # output_num is not used; may be used in the future
+        # output_num = output_match.group(1)
+        output_name = output_match.group(2)
+        output_val = output_match.group(3)
+        row[output_name] = output_val
+
+    return row_dict_list, row
 
 
 def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
