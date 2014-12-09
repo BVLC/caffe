@@ -3,7 +3,7 @@
 """
 Parse training log
 
-Competitor to parse_log.sh
+Evolved from parse_log.sh
 """
 
 import os
@@ -12,18 +12,6 @@ import extract_seconds
 import argparse
 import csv
 from collections import OrderedDict
-
-
-def get_line_type(line):
-    """Return either 'test' or 'train' depending on line type
-    """
-
-    line_type = None
-    if line.find('Train') != -1:
-        line_type = 'train'
-    elif line.find('Test') != -1:
-        line_type = 'test'
-    return line_type
 
 
 def parse_log(path_to_log):
@@ -132,7 +120,7 @@ def fix_initial_nan_learning_rate(dict_list):
 
 
 def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
-                   verbose=False):
+                   delimiter=',', verbose=False):
     """Save CSV files to output_dir
 
     If the input log file is, e.g., caffe.INFO, the names will be
@@ -141,18 +129,22 @@ def save_csv_files(logfile_path, output_dir, train_dict_list, test_dict_list,
 
     log_basename = os.path.basename(logfile_path)
     train_filename = os.path.join(output_dir, log_basename + '.train')
-    write_csv(train_filename, train_dict_list, verbose)
+    write_csv(train_filename, train_dict_list, delimiter, verbose)
 
     test_filename = os.path.join(output_dir, log_basename + '.test')
-    write_csv(test_filename, test_dict_list, verbose)
+    write_csv(test_filename, test_dict_list, delimiter, verbose)
 
 
-def write_csv(output_filename, dict_list, verbose=False):
+def write_csv(output_filename, dict_list, delimiter, verbose=False):
     """Write a CSV file
     """
 
+    dialect = csv.excel
+    dialect.delimiter = delimiter
+
     with open(output_filename, 'w') as f:
-        dict_writer = csv.DictWriter(f, fieldnames=dict_list[0].keys())
+        dict_writer = csv.DictWriter(f, fieldnames=dict_list[0].keys(),
+                                     dialect=dialect)
         dict_writer.writeheader()
         dict_writer.writerows(dict_list)
     if verbose:
@@ -174,6 +166,11 @@ def parse_args():
                         action='store_true',
                         help='Print some extra info (e.g., output filenames)')
 
+    parser.add_argument('--delimiter',
+                        default=',',
+                        help=('Column delimiter in output files '
+                              '(default: \'%(default)s\')'))
+
     args = parser.parse_args()
     return args
 
@@ -182,7 +179,7 @@ def main():
     args = parse_args()
     train_dict_list, test_dict_list = parse_log(args.logfile_path)
     save_csv_files(args.logfile_path, args.output_dir, train_dict_list,
-                   test_dict_list)
+                   test_dict_list, delimiter=args.delimiter)
 
 
 if __name__ == '__main__':
