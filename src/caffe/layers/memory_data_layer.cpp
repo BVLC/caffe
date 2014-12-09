@@ -23,6 +23,7 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   added_label_.Reshape(batch_size_, 1, 1, 1);
   data_ = NULL;
   labels_ = NULL;
+  needs_reshape_ = false;
   added_data_.cpu_data();
   added_label_.cpu_data();
 }
@@ -32,19 +33,14 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK(!has_new_data_) <<
       "Can't add Datum when earlier ones haven't been consumed"
       << " by the upper layers";
-
   size_t num = datum_vector.size();
-  if (batch_size_ != num) {
-    needs_reshape_ = true;
-    batch_size_ = num;
-    added_data_.Reshape(batch_size_, channels_, height_, width_);
-    added_label_.Reshape(batch_size_, 1, 1, 1);
-  }
-
   CHECK_GT(num, 0) << "There is no datum to add";
-  CHECK_LE(num, batch_size_) <<
-      "The number of added datum must be no greater than the batch size";
-
+  CHECK_LE(num % batch_size_, 0) <<
+      "The number of added datum must be multiple of the batch size";
+  if (num > batch_size_) {
+    added_data_.Reshape(num, channels_, height_, width_);
+    added_label_.Reshape(num, 1, 1, 1);
+  }
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_.Transform(datum_vector, &added_data_);
   // Copy Labels
@@ -54,33 +50,24 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   }
   // num_images == batch_size_
   Dtype* top_data = added_data_.mutable_cpu_data();
-  Reset(top_data, top_label, batch_size_);
+  Reset(top_data, top_label, num);
   has_new_data_ = true;
 }
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
     const vector<int>& labels) {
-
+  size_t num = mat_vector.size();
   CHECK(!has_new_data_) <<
       "Can't add Mat when earlier ones haven't been consumed"
       << " by the upper layers";
-
-  CHECK_EQ(mat_vector.size(), labels.size()) <<
-      "vector of labels and vector of mats need to be of the same size";
-
-  size_t num = mat_vector.size();
-  if (batch_size_ != num) {
-    needs_reshape_ = true;
-    batch_size_ = num;
-    added_data_.Reshape(batch_size_, channels_, height_, width_);
-    added_label_.Reshape(batch_size_, 1, 1, 1);
-  }
-
+  CHECK_LE(num % batch_size_, 0) <<
+      "The number of added datum must be multiple of the batch size";
   CHECK_GT(num, 0) << "There is no mat to add";
-  CHECK_LE(num, batch_size_) <<
-      "The number of added mat must be no greater than the batch size";
-
+  if (num > batch_size_) {
+    added_data_.Reshape(num, channels_, height_, width_);
+    added_label_.Reshape(num, 1, 1, 1);
+  }
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_.Transform(mat_vector, &added_data_);
   // Copy Labels
@@ -90,7 +77,7 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   }
   // num_images == batch_size_
   Dtype* top_data = added_data_.mutable_cpu_data();
-  Reset(top_data, top_label, batch_size_);
+  Reset(top_data, top_label, num);
   has_new_data_ = true;
 }
 
@@ -106,18 +93,30 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
 }
 
 template <typename Dtype>
+void MemoryDataLayer<Dtype>::ChangeBatchSize(int new_size) {
+  CHECK(!has_new_data_) <<
+      "Can't change batch_size before all data haven't been consumed"
+      << " by the upper layers";
+  batch_size_ = new_size;
+  added_data_.Reshape(batch_size_, channels_, height_, width_);
+  added_label_.Reshape(batch_size_, 1, 1, 1);
+  needs_reshape_ = true;
+}
+
+template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
   if (needs_reshape_) {
     top[0]->Reshape(batch_size_, channels_, height_, width_);
     top[1]->Reshape(batch_size_, 1, 1, 1);
+    needs_reshape_ = false;
   }
   top[0]->set_cpu_data(data_ + pos_ * size_);
   top[1]->set_cpu_data(labels_ + pos_);
   pos_ = (pos_ + batch_size_) % n_;
-  has_new_data_ = false;
-  needs_reshape_ = false;
+  if (pos_ == 0)
+    has_new_data_ = false;
 }
 
 INSTANTIATE_CLASS(MemoryDataLayer);
