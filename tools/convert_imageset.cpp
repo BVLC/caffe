@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "caffe/dataset_factory.hpp"
+#include "caffe/datum_DB.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
@@ -29,7 +29,8 @@ DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
 DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
-DEFINE_string(backend, "lmdb", "The backend for storing the result");
+DEFINE_string(backend, "lmdb",
+        "The backend {lmdb, leveldb} for storing the result");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 DEFINE_bool(check_size, false,
@@ -57,6 +58,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  CHECK(FLAGS_backend == "lmdb" || FLAGS_backend == "leveldb")
+    << "Unknown backend " << FLAGS_backend;
   const bool is_color = !FLAGS_gray;
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
@@ -75,9 +78,6 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
-  const std::string& db_backend = FLAGS_backend;
-  const char* db_path = argv[3];
-
   if (encoded) {
     CHECK_EQ(FLAGS_resize_height, 0) << "With encoded don't resize images";
     CHECK_EQ(FLAGS_resize_width, 0) << "With encoded don't resize images";
@@ -87,12 +87,12 @@ int main(int argc, char** argv) {
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
-  // Open new db
-  shared_ptr<Dataset<string, Datum> > dataset =
-      DatasetFactory<string, Datum>(db_backend);
-
-  // Open db
-  CHECK(dataset->open(db_path, Dataset<string, Datum>::New));
+  // Create new DatumDB
+  DatumDBParameter datumdb_param;
+  datumdb_param.set_source(argv[3]);
+  datumdb_param.set_mode(DatumDBParameter_Mode_NEW);
+  datumdb_param.set_backend(DatumDB::GetBackend(FLAGS_backend));
+  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(datumdb_param);
 
   // Storing to db
   std::string root_folder(argv[1]);
@@ -128,19 +128,18 @@ int main(int argc, char** argv) {
         lines[line_id].first.c_str());
 
     // Put in db
-    CHECK(dataset->put(string(key_cstr, length), datum));
+    datumdb->Put(string(key_cstr, length), datum);
 
     if (++count % 1000 == 0) {
-      // Commit txn
-      CHECK(dataset->commit());
+      // Commit db
+      datumdb->Commit();
       LOG(ERROR) << "Processed " << count << " files.";
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
-    CHECK(dataset->commit());
+    datumdb->Commit();
     LOG(ERROR) << "Processed " << count << " files.";
   }
-  dataset->close();
   return 0;
 }

@@ -5,7 +5,6 @@
 
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
-#include "caffe/dataset_factory.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/benchmark.hpp"
@@ -18,35 +17,42 @@ namespace caffe {
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
-  // clean up the dataset resources
-  dataset_->close();
 }
 
 template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // Initialize DB
-  dataset_ = DatasetFactory<string, Datum>(
-      this->layer_param_.data_param().backend());
-  const string& source = this->layer_param_.data_param().source();
-  LOG(INFO) << "Opening dataset " << source;
-  CHECK(dataset_->open(source, Dataset<string, Datum>::ReadOnly));
-  iter_ = dataset_->begin();
+  // Initialize DatumDB
+  DatumDBParameter datumdb_param;
+  DataParameter data_param = this->layer_param_.data_param();
+  if (this->layer_param_.has_datum_db_param()) {
+    datumdb_param = this->layer_param_.datum_db_param();
+  } else {
+    DatumDBParameter_Backend backend;
+    if (data_param.backend() == DataParameter_DB_LEVELDB) {
+      backend = DatumDBParameter_Backend_LEVELDB;
+    }
+    if (data_param.backend() == DataParameter_DB_LMDB) {
+      backend = DatumDBParameter_Backend_LMDB;
+    }
+    datumdb_param.set_backend(backend);
+    datumdb_param.set_source(data_param.source());
+  }
+  CHECK_EQ(datumdb_param.mode(), DatumDBParameter_Mode_READ);
+  datumdb_ = DatumDB::GetDatumDB(datumdb_param);
+  CHECK(datumdb_->Valid());
 
   // Check if we would need to randomly skip a few data points
-  if (this->layer_param_.data_param().rand_skip()) {
+  if (data_param.rand_skip()) {
     unsigned int skip = caffe_rng_rand() %
-                        this->layer_param_.data_param().rand_skip();
+                        data_param.rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
-      if (++iter_ == dataset_->end()) {
-        iter_ = dataset_->begin();
-      }
+      CHECK(datumdb_->Next());
     }
   }
   // Read a data point, and use it to initialize the top blob.
-  CHECK(iter_ != dataset_->end());
-  Datum datum = iter_->value;
+  Datum datum = datumdb_->CurrentDatum();
 
   if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
@@ -54,16 +60,15 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // image
   int crop_size = this->layer_param_.transform_param().crop_size();
   if (crop_size > 0) {
-    top[0]->Reshape(this->layer_param_.data_param().batch_size(),
+    top[0]->Reshape(data_param.batch_size(),
                        datum.channels(), crop_size, crop_size);
-    this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
+    this->prefetch_data_.Reshape(data_param.batch_size(),
         datum.channels(), crop_size, crop_size);
     this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size);
   } else {
-    top[0]->Reshape(
-        this->layer_param_.data_param().batch_size(), datum.channels(),
+    top[0]->Reshape(data_param.batch_size(), datum.channels(),
         datum.height(), datum.width());
-    this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
+    this->prefetch_data_.Reshape(data_param.batch_size(),
         datum.channels(), datum.height(), datum.width());
     this->transformed_data_.Reshape(1, datum.channels(),
       datum.height(), datum.width());
@@ -73,8 +78,8 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->width();
   // label
   if (this->output_labels_) {
-    top[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
-    this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
+    top[1]->Reshape(data_param.batch_size(), 1, 1, 1);
+    this->prefetch_label_.Reshape(data_param.batch_size(),
         1, 1, 1);
   }
 }
@@ -99,8 +104,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
-    CHECK(iter_ != dataset_->end());
-    const Datum& datum = iter_->value;
+    Datum datum = datumdb_->CurrentDatum();
 
     cv::Mat cv_img;
     if (datum.encoded()) {
@@ -122,10 +126,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     }
     trans_time += timer.MicroSeconds();
     // go to the next iter
-    ++iter_;
-    if (iter_ == dataset_->end()) {
-      iter_ = dataset_->begin();
-    }
+    CHECK(datumdb_->Next());
   }
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
