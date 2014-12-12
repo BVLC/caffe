@@ -82,11 +82,11 @@ void read_libsvm_data(
 
   // Check
   CHECK_EQ(data->size(), labels->size());
-  BOOST_FOREACH(Dtype l, *labels) {
-    CHECK((l == 0) || (l == 1) || (l == -1)) <<
-        "In the current implementation, "
-        "labels must be in {-1, 0, 1}. Found " << l;
-  }
+  // BOOST_FOREACH(Dtype l, *labels) {
+  //   CHECK((l == 0) || (l == 1) || (l == -1)) <<
+  //       "In the current implementation, "
+  //       "labels must be in {-1, 0, 1}. Found " << l;
+  // }
 }
 
 template <typename Dtype>

@@ -34,7 +34,7 @@ class LIBSVMDataLayerTest : public MultiDeviceTest<TypeParam> {
     std::ofstream outfile(filename_.c_str(), std::ofstream::out);
     LOG(INFO) << "Using temporary file " << filename_;
     for (int i = 0; i < 8; ++i) {
-      int label = (i % 3) - 1;
+      int label = i;
       outfile << label << " ";
       for (int j = 0; j < i + 2; j++) {
         outfile << j*(i+1) << ":1.0 ";
@@ -92,36 +92,7 @@ TYPED_TEST(LIBSVMDataLayerTest, TestRead) {
           td->cpu_data() + td->offset(k),
           td->cpu_data() + td->offset(k + 1), 0.0);
       EXPECT_EQ(nonzero, i + 2);
-      EXPECT_EQ(this->blob_top_label_->cpu_data()[k], i % 3 - 1);
-    }
-  }
-}
-
-/*
-TYPED_TEST(LIBSVMDataLayerTest, TestResize) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter param;
-  LIBSVMDataParameter* libsvm_data_param = param.mutable_libsvm_data_param();
-  libsvm_data_param->set_batch_size(5);
-  libsvm_data_param->set_source(this->filename_.c_str());
-  libsvm_data_param->set_new_height(256);
-  libsvm_data_param->set_new_width(256);
-  libsvm_data_param->set_shuffle(false);
-  LIBSVMDataLayer<Dtype> layer(param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 5);
-  EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), 256);
-  EXPECT_EQ(this->blob_top_data_->width(), 256);
-  EXPECT_EQ(this->blob_top_label_->num(), 5);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
-  EXPECT_EQ(this->blob_top_label_->height(), 1);
-  EXPECT_EQ(this->blob_top_label_->width(), 1);
-  // Go through the data twice
-  for (int iter = 0; iter < 2; ++iter) {
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    for (int i = 0; i < 5; ++i) {
-      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+      EXPECT_EQ(this->blob_top_label_->cpu_data()[k], i);
     }
   }
 }
@@ -130,35 +101,37 @@ TYPED_TEST(LIBSVMDataLayerTest, TestShuffle) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   LIBSVMDataParameter* libsvm_data_param = param.mutable_libsvm_data_param();
-  libsvm_data_param->set_batch_size(5);
+  libsvm_data_param->set_batch_size(8);
+  libsvm_data_param->set_channels(65);
   libsvm_data_param->set_source(this->filename_.c_str());
   libsvm_data_param->set_shuffle(true);
   LIBSVMDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_data_->num(), 5);
-  EXPECT_EQ(this->blob_top_data_->channels(), 3);
-  EXPECT_EQ(this->blob_top_data_->height(), 360);
-  EXPECT_EQ(this->blob_top_data_->width(), 480);
-  EXPECT_EQ(this->blob_top_label_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->num(), 8);
+  EXPECT_EQ(this->blob_top_data_->channels(), 65);
+  EXPECT_EQ(this->blob_top_data_->height(), 1);
+  EXPECT_EQ(this->blob_top_data_->width(), 1);
+  EXPECT_EQ(this->blob_top_label_->num(), 8);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
   EXPECT_EQ(this->blob_top_label_->height(), 1);
   EXPECT_EQ(this->blob_top_label_->width(), 1);
   // Go through the data twice
   for (int iter = 0; iter < 2; ++iter) {
     layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
-    map<Dtype, int> values_to_indices;
-    int num_in_order = 0;
-    for (int i = 0; i < 5; ++i) {
-      Dtype value = this->blob_top_label_->cpu_data()[i];
-      // Check that the value has not been seen already (no duplicates).
-      EXPECT_EQ(values_to_indices.find(value), values_to_indices.end());
-      values_to_indices[value] = i;
-      num_in_order += (value == Dtype(i));
+    map<int, int> seen_nonzero;
+    map<int, int> seen_label;
+    for (int i = 0; i < 8; ++i) {
+      Dtype l = this->blob_top_label_->cpu_data()[i];
+      seen_label[l]++;
+      Blob<Dtype> *td = this->blob_top_data_;
+      int nonzero = std::accumulate(
+          td->cpu_data() + td->offset(i),
+          td->cpu_data() + td->offset(i + 1), 0.0);
+      seen_nonzero[nonzero]++;
     }
-    EXPECT_EQ(5, values_to_indices.size());
-    EXPECT_GT(5, num_in_order);
+    EXPECT_EQ(seen_nonzero.size(), 8);
+    EXPECT_EQ(seen_label.size(), 8);
   }
 }
-*/
 
 }  // namespace caffe
