@@ -219,6 +219,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new InfogainLossLayer<Dtype>(param);
   case LayerParameter_LayerType_INNER_PRODUCT:
     return new InnerProductLayer<Dtype>(param);
+  case LayerParameter_LayerType_LIBSVM_DATA:
+    return new LIBSVMDataLayer<Dtype>(param);
   case LayerParameter_LayerType_LRN:
     return new LRNLayer<Dtype>(param);
   case LayerParameter_LayerType_MEMORY_DATA:

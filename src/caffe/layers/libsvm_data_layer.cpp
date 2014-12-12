@@ -81,8 +81,8 @@ void read_libsvm_data(
   }
 
   // Check
-  CHECK_EQ(data_->size(), labels_->size());
-  BOOST_FOREACH(Dtype l, *labels_) {
+  CHECK_EQ(data->size(), labels->size());
+  BOOST_FOREACH(Dtype l, *labels) {
     CHECK((l == 0) || (l == 1) || (l == -1)) <<
         "In the current implementation, "
         "labels must be in {-1, 0, 1}. Found " << l;
@@ -98,16 +98,16 @@ template <typename Dtype>
 void LIBSVMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
   // Number of features
-  unsinged_int channels = this->layer_param_.libsvm_data_param().channels();
+  unsigned int channels = this->layer_param_.libsvm_data_param().channels();
 
   // Read data from file. Features and labels will be stored in data_
   // and labels_ respectively.
   const string& source = this->layer_param_.libsvm_data_param().source();
-  read_libsvm_data(source, channels, &data_, &label_);
+  read_libsvm_data(source, channels, &data_, &labels_);
 
   // Init accessor
   access_order_.resize(data_.size());
-  for (int s = 0; s < access_order_; s++) { accept_order_[s] = s; }
+  for (int s = 0; s < access_order_.size(); s++) { access_order_[s] = s; }
 
   if (this->layer_param_.libsvm_data_param().shuffle()) {
     // randomly shuffle data
@@ -166,7 +166,7 @@ void LIBSVMDataLayer<Dtype>::InternalThreadEntry() {
     // Apply transformations (scale, mean...) to the data
     this->data_transformer_.Transform(item_id, *datum_p, this->mean_, top_data);
 
-    top_label[item_id] = labels_[pos]
+    top_label[item_id] = labels_[pos];
     // go to the next iter
     pos_++;
     if (pos_ >= data_.size()) {
@@ -174,7 +174,7 @@ void LIBSVMDataLayer<Dtype>::InternalThreadEntry() {
       DLOG(INFO) << "Restarting data prefetching from start.";
       pos_ = 0;
       if (this->layer_param_.libsvm_data_param().shuffle()) {
-        ShuffleImages();
+        ShuffleAccessOrder();
       }
     }
   }

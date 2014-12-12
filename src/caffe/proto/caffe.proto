@@ -554,9 +554,9 @@ message LRNParameter {
 
 // Message that stores parameters used by LIBSVMDataLayer
 message LIBSVMDataParameter {
-  string source = 1; // path to libsvm input text file
-  uint32 batch_size = 2;
-  uint32 channels = 3; // number of features
+  required string source = 1; // path to libsvm input text file
+  optional uint32 batch_size = 2;
+  required uint32 channels = 3; // number of features
   optional bool shuffle = 4 [default = false];
 }
 

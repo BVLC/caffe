@@ -300,9 +300,9 @@ class LIBSVMDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void ShuffleAccessOrder();
   virtual void InternalThreadEntry();
 
-  /// all data are stored into `data_` and `label_`
+  /// all data are stored into `data_` and `labels_`
   vector<shared_ptr<Datum> > data_;
-  vector<float> label_;
+  vector<float> labels_;
   int pos_;
   /// Determine accessing order for shuffling
   vector<unsigned int> access_order_;
