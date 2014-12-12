@@ -135,6 +135,12 @@ void LIBSVMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
+
+  // datum size must be set. See BaseDataLayer.
+  this->datum_channels_ = channels;
+  this->datum_height_ = 1;
+  this->datum_width_ = 1;
+  this->datum_size_ = channels;
 }
 
 
