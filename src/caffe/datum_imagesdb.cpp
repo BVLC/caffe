@@ -1,3 +1,4 @@
+#include <map>
 #include <string>
 #include <vector>
 
@@ -88,7 +89,7 @@ bool DatumImagesDB::Next() {
           LOG(INFO) << "Shuffling the keys";
           shuffle(keys_.begin(), keys_.end());
         }
-        LOG(INFO) << "Reached the end and looping.";
+        DLOG(INFO) << "Reached the end and looping.";
         SeekToFirst();
       } else {
         LOG(ERROR) << "Reached the end and not looping.";
@@ -107,7 +108,7 @@ bool DatumImagesDB::Prev() {
           LOG(INFO) << "Shuffling the keys";
           shuffle(keys_.begin(), keys_.end());
         }
-        LOG(INFO) << "Reached the beginning and looping.";
+        DLOG(INFO) << "Reached the beginning and looping.";
         SeekToLast();
       } else {
         LOG(ERROR) << "Reached the beginning and not looping.";
@@ -122,7 +123,7 @@ bool DatumImagesDB::Prev() {
 
 bool DatumImagesDB::SeekToFirst() {
   if (!keys_.empty()) {
-    read_it_ = keys_.begin();  
+    read_it_ = keys_.begin();
   }
   return Valid();
 }

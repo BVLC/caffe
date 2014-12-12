@@ -134,7 +134,7 @@ TYPED_TEST(DatumDBTest, TestSeekToFirst) {
   string key;
   Datum datum;
   EXPECT_TRUE(datumdb->Current(&key, &datum));
-  EXPECT_TRUE(key == "cat.jpg");
+  EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
@@ -152,7 +152,7 @@ TYPED_TEST(DatumDBTest, TestSeekToLast) {
   string key;
   Datum datum;
   EXPECT_TRUE(datumdb->Current(&key, &datum));
-  EXPECT_TRUE(key == "fish-bike.jpg");
+  EXPECT_EQ(key, "fish-bike.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 323);
   EXPECT_EQ(datum.width(), 481);
@@ -168,24 +168,24 @@ TYPED_TEST(DatumDBTest, TestCurrent) {
   string key;
   Datum datum;
   EXPECT_TRUE(datumdb->Current(&key, &datum));
-  EXPECT_TRUE(key == "cat.jpg");
+  EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
   EXPECT_TRUE(datumdb->Current(&key, &datum));
-  EXPECT_TRUE(key == "cat.jpg");
+  EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
   EXPECT_TRUE(datumdb->Next());
   EXPECT_TRUE(datumdb->Current(&key, &datum));
-  EXPECT_TRUE(key == "fish-bike.jpg");
+  EXPECT_EQ(key, "fish-bike.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 323);
   EXPECT_EQ(datum.width(), 481);
   EXPECT_TRUE(datumdb->Prev());
   EXPECT_TRUE(datumdb->Current(&key, &datum));
-  EXPECT_TRUE(key == "cat.jpg");
+  EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
@@ -217,10 +217,10 @@ TYPED_TEST(DatumDBTest, TestCurrentKey) {
   shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
   string key;
   key = datumdb->CurrentKey();
-  EXPECT_TRUE(key == "cat.jpg");
+  EXPECT_EQ(key, "cat.jpg");
   EXPECT_TRUE(datumdb->Next());
   key = datumdb->CurrentKey();
-  EXPECT_TRUE(key == "fish-bike.jpg");
+  EXPECT_EQ(key, "fish-bike.jpg");
 }
 
 TYPED_TEST(DatumDBTest, TestCurrentDatum) {

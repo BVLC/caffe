@@ -10,15 +10,13 @@ void DatumLMDB::Open() {
   LOG(INFO) << "Opening lmdb " << param_.source();
   mdb_status_ = mdb_env_create(&mdb_env_);
   CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
-  mdb_status_ = mdb_env_set_mapsize(mdb_env_, 1099511627776); // 1TB
-  CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
-  mdb_status_ = mdb_env_set_maxreaders(mdb_env_, 126); // 126 Readers
-  CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
   switch (param_.mode()) {
   case DatumDBParameter_Mode_NEW:
     CHECK_EQ(mkdir(param_.source().c_str(), 0744), 0)
       << "mkdir " << param_.source() << "failed";
   case DatumDBParameter_Mode_WRITE:
+    mdb_status_ = mdb_env_set_mapsize(mdb_env_, param_.mdb_env_mapsize());
+    CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
     mdb_status_ = mdb_env_open(mdb_env_, param_.source().c_str(), 0, 0664);
     CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
     mdb_status_ = mdb_txn_begin(mdb_env_, NULL, 0, &mdb_txn_);
@@ -27,6 +25,10 @@ void DatumLMDB::Open() {
     CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
     break;
   case DatumDBParameter_Mode_READ:
+    mdb_status_ = mdb_env_set_mapsize(mdb_env_, 1);
+    CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
+    mdb_status_ = mdb_env_set_maxreaders(mdb_env_, param_.mdb_env_maxreaders());
+    CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
     mdb_status_ = mdb_env_open(mdb_env_, param_.source().c_str(),
                   MDB_RDONLY|MDB_NOTLS, 0664);
     CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
@@ -59,7 +61,7 @@ bool DatumLMDB::Next() {
   if (mdb_status_ != MDB_SUCCESS) {
     if (param_.loop()) {
       SeekToFirst();
-      LOG(INFO) << "Reached the end and looping.";
+      DLOG(INFO) << "Reached the end and looping.";
     } else {
       LOG(ERROR) << "Reached the end and not looping.";
     }
@@ -73,7 +75,7 @@ bool DatumLMDB::Prev() {
   if (mdb_status_ != MDB_SUCCESS) {
     if (param_.loop()) {
       SeekToLast();
-      LOG(INFO) << "Reached the beginning and looping.";
+      DLOG(INFO) << "Reached the beginning and looping.";
     } else {
       LOG(ERROR) << "Reached the beginning and not looping.";
     }
@@ -123,7 +125,7 @@ bool DatumLMDB::Get(const string& key, Datum* datum) {
     return true;
   } else {
     LOG(ERROR) << "key " << key << " not found";
-    return false;  
+    return false;
   }
 }
 

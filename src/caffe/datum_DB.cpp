@@ -1,3 +1,5 @@
+#include <string>
+
 #include "caffe/datum_DB.hpp"
 
 namespace caffe {

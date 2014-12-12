@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -70,7 +71,7 @@ class DatumLevelDB : public DatumDB {
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
 
-protected:
+ protected:
   virtual void Open();
   virtual void Close();
 
@@ -96,7 +97,7 @@ class DatumLMDB : public DatumDB {
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
 
-protected:
+ protected:
   virtual void Open();
   virtual void Close();
 
@@ -124,7 +125,7 @@ class DatumImagesDB : public DatumDB {
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
 
-protected:
+ protected:
   virtual void Open();
   virtual void Close();
 
@@ -132,7 +133,7 @@ protected:
   string root_images_;
   bool cache_images_;
   bool encode_images_;
-  
+
   vector<string> keys_;
   vector<string>::iterator read_it_;
   map<string, Datum> datum_database_;

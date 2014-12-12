@@ -58,7 +58,7 @@ bool DatumLevelDB::Next() {
     if (!iter_->Valid()) {
       if (param_.loop()) {
         // We have reached the end. Restart from the first.
-        LOG(INFO) << "Reached the end and looping.";
+        DLOG(INFO) << "Reached the end and looping.";
         iter_->SeekToFirst();
       } else {
         LOG(ERROR) << "Reached the end and not looping.";
@@ -74,13 +74,13 @@ bool DatumLevelDB::Prev() {
     if (!iter_->Valid()) {
       if (param_.loop()) {
         // We have reached the end. Restart from the first.
-        LOG(INFO) << "Reached the beginning and looping.";
+        DLOG(INFO) << "Reached the beginning and looping.";
         iter_->SeekToLast();
       } else {
         LOG(ERROR) << "Reached the beginning and not looping.";
       }
     }
-  }   
+  }
   return Valid();
 }
 
