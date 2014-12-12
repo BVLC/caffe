@@ -34,7 +34,10 @@ class Solver {
   }
   int iter() { return iter_; }
 
- protected:
+ public:
+  // PreSolve is run before any solving iteration starts, allowing one to
+  // put up some scaffold.
+  virtual void PreSolve() {}
   // Get the update value for the current iteration.
   virtual void ComputeUpdateValue() = 0;
   // The Solver::Snapshot function implements the basic snapshotting utility
