@@ -121,13 +121,14 @@ TYPED_TEST(LIBSVMDataLayerTest, TestShuffle) {
     map<int, int> seen_nonzero;
     map<int, int> seen_label;
     for (int i = 0; i < 8; ++i) {
-      Dtype l = this->blob_top_label_->cpu_data()[i];
-      seen_label[l]++;
+      Dtype label = this->blob_top_label_->cpu_data()[i];
+      seen_label[label]++;
       Blob<Dtype> *td = this->blob_top_data_;
       int nonzero = std::accumulate(
           td->cpu_data() + td->offset(i),
           td->cpu_data() + td->offset(i + 1), 0.0);
       seen_nonzero[nonzero]++;
+      EXPECT_EQ(nonzero - 2, label);
     }
     EXPECT_EQ(seen_nonzero.size(), 8);
     EXPECT_EQ(seen_label.size(), 8);
