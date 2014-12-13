@@ -108,6 +108,7 @@ void LIBSVMDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Init accessor
   access_order_.resize(data_.size());
   for (int s = 0; s < access_order_.size(); s++) { access_order_[s] = s; }
+  pos_ = 0;
 
   if (this->layer_param_.libsvm_data_param().shuffle()) {
     // randomly shuffle data
