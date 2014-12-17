@@ -89,6 +89,10 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
         if not row or row['NumIters'] != iteration:
             # Push the last row and start a new one
             if row:
+                # If we're on a new iteration, push the last row
+                # This will probably only happen for the first row; otherwise
+                # the full row checking logic below will push and clear full
+                # rows
                 row_dict_list.append(row)
 
             row = OrderedDict([
@@ -102,6 +106,12 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
         output_name = output_match.group(2)
         output_val = output_match.group(3)
         row[output_name] = output_val
+
+    if row and len(row_dict_list) >= 1 and len(row) == len(row_dict_list[0]):
+        # The row is full, based on the fact that it has the same number of
+        # columns as the first row; append it to the list
+        row_dict_list.append(row)
+        row = None
 
     return row_dict_list, row
 
