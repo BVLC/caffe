@@ -1,55 +1,37 @@
-project( CaffeSrc )
+# generate protobuf sources
+file(GLOB proto_files proto/*.proto)
+caffe_protobuf_generate_cpp(${proto_gen_folder} proto_srcs proto_hdrs ${proto_files})
+caffe_protobuf_generate_py(${proto_gen_folder} proto_python ${proto_files})
 
+# include python files either to force generation
+add_library(proto STATIC ${proto_hdrs} ${proto_srcs} ${proto_python})
+set(Caffe_LINKER_LIBS proto ${Caffe_LINKER_LIBS}) # note, crucial to prepend!
+caffe_default_properties(proto)
 
-add_subdirectory(proto)
+# --[ Caffe library
 
-#    Recursively find source files
-##    test sources
-file(GLOB_RECURSE TEST_CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
+# creates 'test_srcs', 'srcs', 'test_cuda', 'cuda' lists
+caffe_pickup_caffe_sources(${CMAKE_SOURCE_DIR})
 
-##    all cpp sources
-file(GLOB_RECURSE CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-
-##    remove test sources from cpp sources
-list(REMOVE_ITEM CPP_SOURCES ${TEST_CPP_SOURCES})
-
-add_library(caffe ${CPP_SOURCES})
-# both depend on proto
-add_dependencies(caffe proto)
-
-#    cuda sources
-if(NOT CPU_ONLY)
-    file(GLOB_RECURSE CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cu)
-    file(GLOB_RECURSE TEST_CU_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cu)
-    list(REMOVE_ITEM CU_SOURCES ${TEST_CU_SOURCES})
-    cuda_add_library(caffe_cu ${CU_SOURCES})
-    add_dependencies(caffe_cu proto)
-    target_link_libraries(caffe caffe_cu
-        ${CUDA_CUBLAS_LIBRARIES}
-        ${CUDA_curand_LIBRARY}
-    )
+if(HAVE_CUDA)
+  caffe_cuda_compile(cuda_objs ${cuda})
+  list(APPEND srcs ${cuda_objs} ${cuda})
 endif()
 
-target_link_libraries(caffe proto
-        ${BLAS_LIBRARIES}
-        ${Boost_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${GLOG_LIBRARIES}
-        ${HDF5_LIBRARIES}
-        ${LEVELDB_LIBS}
-        ${LMDB_LIBRARIES}
-        ${OpenCV_LIBS}
-        ${CMAKE_THREAD_LIBS_INIT}
-)
+add_library(caffe ${srcs})
+target_link_libraries(caffe proto ${Caffe_LINKER_LIBS})
+caffe_default_properties(caffe)
 
-#set output directory
-set_target_properties(caffe PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-)
+# ---[ Tests
+ add_subdirectory(test)
 
-add_subdirectory(test)
+# ---[ Install
+install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION include)
+install(FILES ${proto_hdrs} DESTINATION include/caffe/proto)
+install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION lib)
 
-###    Install    #################################################################################
+file(WRITE ${CMAKE_BINARY_DIR}/__init__.py)
+list(APPEND proto_python ${CMAKE_BINARY_DIR}/__init__.py)
+install(PROGRAMS ${proto_python} DESTINATION python/caffe/proto)
 
-install(TARGETS caffe DESTINATION lib)
+
