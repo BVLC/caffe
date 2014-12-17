@@ -34,7 +34,7 @@ find_package(Boost 1.46 COMPONENTS python REQUIRED)
 
 
 include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS})
+    ${Boost_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIR})
 
 file(GLOB_RECURSE Python_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 

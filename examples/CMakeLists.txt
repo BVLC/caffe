@@ -1,5 +1,7 @@
 project( Examples )
 
+include_directories(${PROTOBUF_INCLUDE_DIR})
+
 file(GLOB_RECURSE EXAMPLES_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 foreach(source ${EXAMPLES_SOURCES})

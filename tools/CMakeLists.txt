@@ -1,5 +1,7 @@
 project( Tools )
 
+include_directories(${PROTOBUF_INCLUDE_DIR})
+
 #    Find all source files
 file(GLOB_RECURSE TOOLS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
