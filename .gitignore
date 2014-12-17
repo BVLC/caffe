@@ -29,9 +29,6 @@
 # IPython notebook checkpoints
 .ipynb_checkpoints
 
-# CMake generated files
-*.gen.cmake
-
 # Editor temporaries
 *.swp
 *~
