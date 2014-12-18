@@ -316,7 +316,7 @@ else
 		endif
 	else ifeq ($(OSX), 1)
 		LIBRARIES += cblas
-		ifneq ($(findstring 10.10, $(shell sw_vers -productVersion)),)
+		ifneq ($(findstring Xcode 6, $(shell xcodebuild -version)),)
 			BLAS_INCLUDE ?= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
 			LDFLAGS += -framework Accelerate
 		else
