@@ -31,8 +31,8 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
     int h_off, w_off;
     // We only do random crop when we do training.
     if (phase_ == Caffe::TRAIN) {
-      h_off = Rand() % (height - crop_size);
-      w_off = Rand() % (width - crop_size);
+      h_off = Rand() % (height - crop_size + 1);
+      w_off = Rand() % (width - crop_size + 1);
     } else {
       h_off = (height - crop_size) / 2;
       w_off = (width - crop_size) / 2;
