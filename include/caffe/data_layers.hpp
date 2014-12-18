@@ -7,12 +7,11 @@
 
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
-#include "leveldb/db.h"
-#include "lmdb.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/data_transformer.hpp"
+#include "caffe/dataset.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
@@ -101,15 +100,8 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void InternalThreadEntry();
 
-  // LEVELDB
-  shared_ptr<leveldb::DB> db_;
-  shared_ptr<leveldb::Iterator> iter_;
-  // LMDB
-  MDB_env* mdb_env_;
-  MDB_dbi mdb_dbi_;
-  MDB_txn* mdb_txn_;
-  MDB_cursor* mdb_cursor_;
-  MDB_val mdb_key_, mdb_value_;
+  shared_ptr<Dataset<string, Datum> > dataset_;
+  Dataset<string, Datum>::const_iterator iter_;
 };
 
 /**
@@ -333,6 +325,11 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
   Blob<Dtype> data_mean_;
+  vector<Dtype> mean_values_;
+  bool has_mean_file_;
+  bool has_mean_values_;
+  bool cache_images_;
+  vector<std::pair<std::string, Datum > > image_database_cache_;
 };
 
 }  // namespace caffe

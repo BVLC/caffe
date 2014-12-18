@@ -3,16 +3,17 @@ name: Finetuning CaffeNet on Flickr Style
 caffemodel: finetune_flickr_style.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/finetune_flickr_style.caffemodel
 license: non-commercial
-sha1: 443ad95a61fb0b5cd3cee55951bcc1f299186b5e
-caffe_commit: 41751046f18499b84dbaf529f64c0e664e2a09fe
+sha1: b61b5cef7d771b53b0c488e78d35ccadc073e9cf
+caffe_commit: 737ea5e936821b5c69f9c3952d72693ae5843370
 gist_id: 034c6ac3865563b69e60
 ---
 
 This model is trained exactly as described in `docs/finetune_flickr_style/readme.md`, using all 80000 images.
-The final performance on the test set:
+The final performance:
 
-    I0903 18:40:59.211707 11585 caffe.cpp:167] Loss: 0.407405
-    I0903 18:40:59.211717 11585 caffe.cpp:179] accuracy = 0.9164
+    I1017 07:36:17.370688 31333 solver.cpp:228] Iteration 100000, loss = 0.757952
+    I1017 07:36:17.370730 31333 solver.cpp:247] Iteration 100000, Testing net (#0)
+    I1017 07:36:34.248730 31333 solver.cpp:298]     Test net output #0: accuracy = 0.3916
 
 ## License
 

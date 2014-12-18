@@ -139,7 +139,7 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(MVNLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(MVNLayer);
 
 
 }  // namespace caffe

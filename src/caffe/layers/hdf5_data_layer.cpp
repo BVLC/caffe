@@ -75,6 +75,8 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   num_files_ = hdf_filenames_.size();
   current_file_ = 0;
   LOG(INFO) << "Number of HDF5 files: " << num_files_;
+  CHECK_GE(num_files_, 1) << "Must have at least 1 HDF5 filename listed in "
+    << source;
 
   // Load the first HDF5 file and initialize the line counter.
   LoadHDF5FileData(hdf_filenames_[current_file_].c_str());
@@ -119,5 +121,5 @@ STUB_GPU_FORWARD(HDF5DataLayer, Forward);
 #endif
 
 INSTANTIATE_CLASS(HDF5DataLayer);
-
+REGISTER_LAYER_CLASS(HDF5_DATA, HDF5DataLayer);
 }  // namespace caffe

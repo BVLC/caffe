@@ -105,5 +105,5 @@ STUB_GPU(ConcatLayer);
 #endif
 
 INSTANTIATE_CLASS(ConcatLayer);
-
+REGISTER_LAYER_CLASS(CONCAT, ConcatLayer);
 }  // namespace caffe
