@@ -138,6 +138,58 @@ class DummyDataLayer : public Layer<Dtype> {
   vector<bool> refill_;
 };
 
+
+
+/**
+ * @brief Provides categorical data to the Net from HDF5 files.
+ * 
+ */
+
+template <typename Dtype>
+class HDF5CategoricalDLayer : public Layer<Dtype> {
+ public:
+  explicit HDF5CategoricalDLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~HDF5CategoricalDLayer();
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_HDF5CATEGORICAL;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 1; }
+
+ protected:
+  void setcategoriesvalues(const int * input, Dtype*onehotencodedvec);
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  virtual void LoadHDF5FileCategoricalData(const char* filename);
+
+  std::vector<std::string> hdf_filenames_;
+  unsigned int num_files_;
+  unsigned int current_file_;
+  // contains: number of categories and for each the number of possible values
+  std::vector<unsigned int> description_;
+  // accumulated values of description_[1->], starting with zero
+  std::vector<unsigned int> accumulatedvalues_; 
+  hsize_t current_row_;
+  Blob<int> data_blob_;
+  Blob<Dtype> label_blob_;
+};
+
+
+ 
+
 /**
  * @brief Provides data to the Net from HDF5 files.
  *
