@@ -69,8 +69,8 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
-  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
-    CV_LOAD_IMAGE_GRAYSCALE);
+  int cv_read_flag = (is_color ? cv::IMREAD_COLOR :
+    cv::IMREAD_GRAYSCALE);
 
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
   if (!cv_img_origin.data) {
