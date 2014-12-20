@@ -27,8 +27,11 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
+  CHECK_GT(source.size(), 0);
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
+  CHECK(infile.good())
+      << "Could not open image list (filename: \""+ source + "\")";
   string filename;
   int label;
   while (infile >> filename >> label) {
@@ -53,6 +56,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_GT(lines_.size(), skip) << "Not enough points to skip";
     lines_id_ = skip;
   }
+  CHECK(!lines_.empty())
+      << "Image list is empty (filename: \"" + source + "\")";
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
