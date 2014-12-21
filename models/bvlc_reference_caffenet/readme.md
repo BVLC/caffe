@@ -18,6 +18,8 @@ The best validation performance during training was iteration 313,000 with valid
 This model obtains a top-1 accuracy 57.4% and a top-5 accuracy 80.4% on the validation set, using just the center crop.
 (Using the average of 10 crops, (4 + 1 center) * 2 mirror, should obtain a bit higher accuracy still.)
 
+This model was trained by Jeff Donahue @jeffdonahue
+
 ## License
 
 The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
