@@ -21,7 +21,7 @@ DEFINE_int32(gpu, -1,
 DEFINE_string(solver, "",
     "The solver definition protocol buffer text file.");
 DEFINE_string(model, "",
-    "The model definition protocol buffer text file..");
+    "The model definition protocol buffer text file.");
 DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
 DEFINE_string(weights, "",
