@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     CHECK_EQ(mdb_txn_begin(mdb_env, NULL, 0, &mdb_txn), MDB_SUCCESS)
         << "mdb_txn_begin failed";
     CHECK_EQ(mdb_open(mdb_txn, NULL, 0, &mdb_dbi), MDB_SUCCESS)
-        << "mdb_open failed. Does the lmdb already exist? ";
+        << "mdb_open failed. Does the lmdb already exist?";
   } else {
     LOG(FATAL) << "Unknown db backend " << db_backend;
   }
