@@ -131,7 +131,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   int num_mini_batches = atoi(argv[++arg_pos]);
 
-  LOG(ERROR)<< "Extacting Features";
+  LOG(ERROR)<< "Extracting Features";
 
   Datum datum;
   vector<shared_ptr<leveldb::WriteBatch> > feature_batches(
