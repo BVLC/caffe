@@ -43,6 +43,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
       weights);
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
+#ifndef CPU_ONLY
   void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
       Dtype* output, bool skip_im2col = false);
   void forward_gpu_bias(Dtype* output, const Dtype* bias);
@@ -51,6 +52,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
       weights);
   void backward_gpu_bias(Dtype* bias, const Dtype* input);
+#endif
 
   // reverse_dimensions should return true iff we are implementing deconv, so
   // that conv helpers know which dimensions are which.
@@ -80,6 +82,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     col2im_cpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
         kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data);
   }
+#ifndef CPU_ONLY
   inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
     im2col_gpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
         kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff);
@@ -88,6 +91,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
     col2im_gpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
         kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data);
   }
+#endif
 
   int conv_out_channels_;
   int conv_in_channels_;
