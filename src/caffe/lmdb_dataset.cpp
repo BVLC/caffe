@@ -57,8 +57,19 @@ bool LmdbDataset<K, V, KCoder, VCoder>::open(const string& filename,
   int flag1 = 0;
   int flag2 = 0;
   if (mode == Base::ReadOnly) {
-    flag1 = MDB_RDONLY | MDB_NOTLS;
+    // No locking, assume db is not written to at the same time, otherwise
+    // LMDB tries to lock the file, which fails if it's read-only
+    flag1 = MDB_RDONLY | MDB_NOTLS | MDB_NOLOCK;
     flag2 = MDB_RDONLY;
+  }
+
+  // Allow DB to be stand-alone file
+  {
+    struct stat st_buf;
+    stat (filename.c_str(), &st_buf);
+    if (S_ISREG (st_buf.st_mode)) {
+      flag1 |= MDB_NOSUBDIR;
+    }
   }
 
   retval = mdb_env_open(env_, filename.c_str(), flag1, 0664);

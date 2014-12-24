@@ -14,30 +14,36 @@
 namespace caffe {
 
 template <typename Dtype>
-Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_() {
-  Init(param);
+Solver<Dtype>::Solver(const SolverParameter& param, bool skip_test_nets)
+    : iter_(), iter_total_(&iter_), net_() {
+  Init(param, skip_test_nets);
 }
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file)
-    : net_() {
+    : iter_(), iter_total_(&iter_), net_() {
   SolverParameter param;
   ReadProtoFromTextFileOrDie(param_file, &param);
-  Init(param);
+  Init(param, false);
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Init(const SolverParameter& param) {
+void Solver<Dtype>::Init(const SolverParameter& param, bool skip_test_nets) {
   LOG(INFO) << "Initializing solver from parameters: " << std::endl
             << param.DebugString();
   param_ = param;
+  if (param_.solver_mode() == SolverParameter::GPU &&
+      param_.has_device_id()) {
+    Caffe::SetDevice(param_.device_id());
+  }
+  Caffe::set_mode(Caffe::Brew(param_.solver_mode()));
   if (param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
   }
   // Scaffolding code
   InitTrainNet();
-  InitTestNets();
+  if(!skip_test_nets)
+    InitTestNets();
   LOG(INFO) << "Solver scaffolding done.";
 }
 
@@ -377,34 +383,35 @@ template <typename Dtype>
 Dtype SGDSolver<Dtype>::GetLearningRate() {
   Dtype rate;
   const string& lr_policy = this->param_.lr_policy();
+  int iter = *(this->iter_total_);
   if (lr_policy == "fixed") {
     rate = this->param_.base_lr();
   } else if (lr_policy == "step") {
-    this->current_step_ = this->iter_ / this->param_.stepsize();
+    this->current_step_ = iter / this->param_.stepsize();
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), this->current_step_);
   } else if (lr_policy == "exp") {
-    rate = this->param_.base_lr() * pow(this->param_.gamma(), this->iter_);
+    rate = this->param_.base_lr() * pow(this->param_.gamma(), iter);
   } else if (lr_policy == "inv") {
     rate = this->param_.base_lr() *
-        pow(Dtype(1) + this->param_.gamma() * this->iter_,
+        pow(Dtype(1) + this->param_.gamma() * iter,
             - this->param_.power());
   } else if (lr_policy == "multistep") {
     if (this->current_step_ < this->param_.stepvalue_size() &&
-          this->iter_ >= this->param_.stepvalue(this->current_step_)) {
+          iter >= this->param_.stepvalue(this->current_step_)) {
       this->current_step_++;
       LOG(INFO) << "MultiStep Status: Iteration " <<
-      this->iter_ << ", step = " << this->current_step_;
+      iter << ", step = " << this->current_step_;
     }
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), this->current_step_);
   } else if (lr_policy == "poly") {
     rate = this->param_.base_lr() * pow(Dtype(1.) -
-        (Dtype(this->iter_) / Dtype(this->param_.max_iter())),
+        (Dtype(iter) / Dtype(this->param_.max_iter())),
         this->param_.power());
   } else if (lr_policy == "sigmoid") {
     rate = this->param_.base_lr() * (Dtype(1.) /
-        (Dtype(1.) + exp(-this->param_.gamma() * (Dtype(this->iter_) -
+        (Dtype(1.) + exp(-this->param_.gamma() * (Dtype(iter) -
           Dtype(this->param_.stepsize())))));
   } else {
     LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;

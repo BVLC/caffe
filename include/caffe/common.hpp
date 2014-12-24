@@ -2,6 +2,7 @@
 #define CAFFE_COMMON_HPP_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -69,6 +70,7 @@ namespace caffe {
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
+using boost::thread_specific_ptr;
 
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
@@ -95,10 +97,10 @@ class Caffe {
  public:
   ~Caffe();
   inline static Caffe& Get() {
-    if (!singleton_.get()) {
-      singleton_.reset(new Caffe());
+    if (!thread_instance_.get()) {
+      thread_instance_.reset(new Caffe());
     }
-    return *singleton_;
+    return *(thread_instance_.get());
   }
   enum Brew { CPU, GPU };
   enum Phase { TRAIN, TEST };
@@ -161,7 +163,9 @@ class Caffe {
 
   Brew mode_;
   Phase phase_;
-  static shared_ptr<Caffe> singleton_;
+
+  // Make sure each thread can have different values.
+  static thread_specific_ptr<Caffe> thread_instance_;
 
  private:
   // The private constructor to avoid duplicate instantiation.

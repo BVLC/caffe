@@ -417,13 +417,14 @@ message ConvolutionParameter {
 }
 
 // Message that stores parameters used by DataLayer
+// next available ID: 10 (last added: prefetch)
 message DataParameter {
   enum DB {
     LEVELDB = 0;
     LMDB = 1;
   }
   // Specify the data source.
-  optional string source = 1;
+  repeated string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 4;
   // The rand_skip variable is for the data layer to skip a few data points
@@ -443,6 +444,8 @@ message DataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+  // Prefetch queue (Number of batches to prefetch).
+  optional uint32 prefetch = 9 [default = 4];
 }
 
 // Message that stores parameters used by DropoutLayer

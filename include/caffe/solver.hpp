@@ -17,9 +17,9 @@ namespace caffe {
 template <typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param);
+  explicit Solver(const SolverParameter& param, bool skip_test_nets);
   explicit Solver(const string& param_file);
-  void Init(const SolverParameter& param);
+  void Init(const SolverParameter& param, bool skip_test_nets);
   void InitTrainNet();
   void InitTestNets();
   // The main entry of the solver function. In default, iter will be zero. Pass
@@ -27,11 +27,14 @@ class Solver {
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
   virtual ~Solver() {}
+  inline const SolverParameter& param() const { return param_; }
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
+  inline int iter() { return iter_; }
+  inline int *iter_total() { return iter_total_; }
+  inline void iter_total(int *value) { iter_total_ = value; }
 
  protected:
   // PreSolve is run before any solving iteration starts, allowing one to
@@ -57,6 +60,9 @@ class Solver {
 
   SolverParameter param_;
   int iter_;
+  // Points to iter_ by default, but can be overriden, e.g. to a global
+  // counter if multiple solvers contribute iterations to the same model.
+  int *iter_total_;
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
@@ -72,8 +78,8 @@ class Solver {
 template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
-  explicit SGDSolver(const SolverParameter& param)
-      : Solver<Dtype>(param) {}
+  explicit SGDSolver(const SolverParameter& param, bool skip_test_nets = false)
+      : Solver<Dtype>(param, skip_test_nets) {}
   explicit SGDSolver(const string& param_file)
       : Solver<Dtype>(param_file) {}
 
