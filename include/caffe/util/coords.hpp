@@ -45,6 +45,17 @@ class DiagonalAffineMap {
   vector<pair<Dtype, Dtype> > coefs_;
 };
 
+template <typename Dtype>
+DiagonalAffineMap<Dtype> FilterMap(const int kernel_h, const int kernel_w,
+    const int stride_h, const int stride_w, const int pad_h, const int pad_w) {
+  vector<pair<Dtype, Dtype> > coefs;
+  coefs.push_back(make_pair(stride_h,
+        static_cast<Dtype>(kernel_h - 1) / 2 - pad_h));
+  coefs.push_back(make_pair(stride_w,
+        static_cast<Dtype>(kernel_w - 1) / 2 - pad_w));
+  return DiagonalAffineMap<Dtype>(coefs);
+}
+
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_COORDS_H_
