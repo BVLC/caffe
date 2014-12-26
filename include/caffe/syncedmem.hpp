@@ -24,6 +24,7 @@ namespace caffe {
 
 inline void CaffeMallocHost(void** ptr, size_t size) {
   *ptr = malloc(size);
+  CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
 inline void CaffeFreeHost(void* ptr) {
