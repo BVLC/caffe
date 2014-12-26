@@ -166,7 +166,11 @@ ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
+	ifeq ($(FFT), 1)
+		LIBRARIES += cufft
+        endif     
 endif
+
 LIBRARIES += glog gflags protobuf leveldb snappy \
 	lmdb boost_system hdf5_hl hdf5 m \
 	opencv_core opencv_highgui opencv_imgproc
@@ -303,6 +307,7 @@ ifeq ($(BLAS), mkl)
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
+        BLAS_LIB ?= /opt/OpenBLAS/lib
 else
 	# ATLAS
 	ifeq ($(LINUX), 1)
@@ -317,10 +322,31 @@ else
 		LDFLAGS += -framework vecLib
 	endif
 endif
+
+FFT ?= 0
+ifeq ($(FFT), 1)
+        ifneq ($(BLAS), mkl)
+                LIBRARIES += fftw3f fftw3
+        endif
+        COMMON_FLAGS += -DUSE_FFT
+endif
+
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
+
+# OpenMP
+OPENMP ?= 0
+ifeq ($(OPENMP), 1)
+        CXXFLAGS += -fopenmp
+        ifeq ($(BLAS), mkl)
+                LIBRARIES += iomp5
+                LIBRARY_DIRS += $(INTEL_OMP_DIR)/compiler/lib/intel64
+        else
+                LIBRARIES += fftw3_omp
+        endif
+endif
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
