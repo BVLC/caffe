@@ -110,6 +110,17 @@ class ConvolutionLayer : public Layer<Dtype> {
   int N_;
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
+
+  virtual void Forward_cpu_task(const Dtype* bottom_data, Dtype* top_data,
+  Dtype* col_buff, const Dtype* weight, int n);
+  virtual void Backward_cpu_weight_diff_task(const Dtype* top_diff,
+          const vector<Blob<Dtype>*>& bottom, int i, int n);
+  virtual void Backward_cpu_bottom_diff_task(
+          const Dtype* top_diff, Dtype* bottom_diff,
+           const Dtype* weight, int i, int n);
+  int num_of_threads_;                // openmp
+  std::vector<Dtype> col_buffer_mt_;  //  openmp
+  std::vector<Dtype> weight_diff_mt_;  // openmp
 };
 
 #ifdef USE_CUDNN
@@ -255,6 +266,10 @@ class LRNLayer : public Layer<Dtype> {
   // Fields used for normalization ACROSS_CHANNELS
   // scale_ stores the intermediate summing results
   Blob<Dtype> scale_;
+  Blob<Dtype> padded_square_;  // buffer for forward
+  Blob<Dtype> padded_ratio_;  // buffer for backward
+  Blob<Dtype> accum_ratio_;  // buffer for backward
+  int num_of_threads_;                // openmp
 
   // Fields used for normalization WITHIN_CHANNEL
   shared_ptr<SplitLayer<Dtype> > split_layer_;

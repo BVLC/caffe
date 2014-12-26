@@ -5,7 +5,7 @@
 # USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
-# CPU_ONLY := 1
+#CPU_ONLY := 1
 
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
@@ -24,8 +24,8 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 		-gencode arch=compute_20,code=sm_21 \
 		-gencode arch=compute_30,code=sm_30 \
 		-gencode arch=compute_35,code=sm_35 \
-		#-gencode arch=compute_50,code=sm_50 \
-		#-gencode arch=compute_50,code=compute_50
+		-gencode arch=compute_50,code=sm_50 \
+		-gencode arch=compute_50,code=compute_50
 
 # BLAS choice:
 # atlas for ATLAS (default)
@@ -35,8 +35,8 @@ BLAS := atlas
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
-# BLAS_INCLUDE := /path/to/your/blas
-# BLAS_LIB := /path/to/your/blas
+# BLAS_INCLUDE := /opt/OpenBLAS/include
+# BLAS_LIB := /opt/OpenBLAS/lib
 
 # This is required only if you will compile the matlab interface.
 # MATLAB directory should contain the mex binary in /bin.
@@ -71,6 +71,9 @@ DISTRIBUTE_DIR := distribute
 
 # Uncomment for debugging. Does not work on OSX due to https://github.com/BVLC/caffe/issues/171
 # DEBUG := 1
+
+# Uncomment for OpenMP.
+#OPENMP := 1
 
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0

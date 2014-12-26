@@ -128,7 +128,7 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
+  // const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
@@ -149,8 +149,22 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+        // compute offset
+        const Dtype*  bottom_data_n = bottom[0]->cpu_data() +
+                                    bottom[0]->offset(n, c);
+        Dtype* top_data_n = top[0]->mutable_cpu_data() + top[0]->offset(n, c);
+        int* mask_n = NULL;
+        Dtype* top_mask_n = NULL;
+        if (use_top_mask) {
+          top_mask_n = top[1]->mutable_cpu_data() + top[1]->offset(n, c);
+        } else {
+          mask_n = max_idx_.mutable_cpu_data() + max_idx_.offset(n, c);
+        }
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
@@ -163,12 +177,12 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 const int index = h * width_ + w;
-                if (bottom_data[index] > top_data[pool_index]) {
-                  top_data[pool_index] = bottom_data[index];
+                if (bottom_data_n[index] > top_data_n[pool_index]) {
+                  top_data_n[pool_index] = bottom_data_n[index];
                   if (use_top_mask) {
-                    top_mask[pool_index] = static_cast<Dtype>(index);
+                    top_mask_n[pool_index] = static_cast<Dtype>(index);
                   } else {
-                    mask[pool_index] = index;
+                    mask_n[pool_index] = index;
                   }
                 }
               }
@@ -176,13 +190,13 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           }
         }
         // compute offset
-        bottom_data += bottom[0]->offset(0, 1);
-        top_data += top[0]->offset(0, 1);
-        if (use_top_mask) {
-          top_mask += top[0]->offset(0, 1);
-        } else {
-          mask += top[0]->offset(0, 1);
-        }
+//        bottom_data += bottom[0]->offset(0, 1);
+//        top_data += top[0]->offset(0, 1);
+//        if (use_top_mask) {
+//          top_mask += top[0]->offset(0, 1);
+//        } else {
+//          mask += top[0]->offset(0, 1);
+//        }
       }
     }
     break;
@@ -191,8 +205,14 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data[i] = 0;
     }
     // The main loop
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+        const Dtype*  bottom_data_n = bottom[0]->cpu_data() +
+                                    bottom[0]->offset(n, c);
+        Dtype* top_data_n = top[0]->mutable_cpu_data() + top[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
@@ -206,16 +226,16 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             wend = min(wend, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                top_data[ph * pooled_width_ + pw] +=
-                    bottom_data[h * width_ + w];
+                top_data_n[ph * pooled_width_ + pw] +=
+                    bottom_data_n[h * width_ + w];
               }
             }
-            top_data[ph * pooled_width_ + pw] /= pool_size;
+            top_data_n[ph * pooled_width_ + pw] /= pool_size;
           }
         }
         // compute offset
-        bottom_data += bottom[0]->offset(0, 1);
-        top_data += top[0]->offset(0, 1);
+        // bottom_data += bottom[0]->offset(0, 1);
+        // top_data += top[0]->offset(0, 1);
       }
     }
     break;
@@ -233,47 +253,67 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (!propagate_down[0]) {
     return;
   }
-  const Dtype* top_diff = top[0]->cpu_diff();
+  // const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
   caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
-  const int* mask = NULL;  // suppress warnings about uninitialized variables
-  const Dtype* top_mask = NULL;
+  // const int* mask = NULL;  // suppress warnings about uninitialized variables
+  // const Dtype* top_mask = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
-    if (use_top_mask) {
-      top_mask = top[1]->cpu_data();
-    } else {
-      mask = max_idx_.cpu_data();
-    }
+    // if (use_top_mask) {
+    //  top_mask = top[1]->cpu_data();
+    // } else {
+    //  mask = max_idx_.cpu_data();
+    // }
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+        Dtype*  bottom_diff_n = bottom[0]->mutable_cpu_diff() +
+                              bottom[0]->offset(n, c);
+        const Dtype* top_diff_n = top[0]->cpu_diff() + top[0]->offset(n, c);
+        int* mask_n = NULL;
+        Dtype* top_mask_n = NULL;
+          if (use_top_mask) {
+            top_mask_n = top[1]->mutable_cpu_data() + top[0]->offset(n, c);
+          } else {
+            mask_n = max_idx_.mutable_cpu_data() + max_idx_.offset(n, c);
+          }
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             const int index = ph * pooled_width_ + pw;
             const int bottom_index =
-                use_top_mask ? top_mask[index] : mask[index];
-            bottom_diff[bottom_index] += top_diff[index];
+                use_top_mask ? top_mask_n[index] : mask_n[index];
+            bottom_diff_n[bottom_index] += top_diff_n[index];
           }
         }
-        bottom_diff += bottom[0]->offset(0, 1);
-        top_diff += top[0]->offset(0, 1);
-        if (use_top_mask) {
-          top_mask += top[0]->offset(0, 1);
-        } else {
-          mask += top[0]->offset(0, 1);
-        }
+
+//        bottom_diff += bottom[0]->offset(0, 1);
+//        top_diff += top[0]->offset(0, 1);
+//        if (use_top_mask) {
+//          top_mask += top[0]->offset(0, 1);
+//        } else {
+//          mask += top[0]->offset(0, 1);
+//        }
       }
     }
     break;
   case PoolingParameter_PoolMethod_AVE:
     // The main loop
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
+        Dtype*  bottom_diff_n = bottom[0]->mutable_cpu_diff() +
+                              bottom[0]->offset(n, c);
+        const Dtype* top_diff_n = top[0]->cpu_diff() + top[0]->offset(n, c);
         for (int ph = 0; ph < pooled_height_; ++ph) {
           for (int pw = 0; pw < pooled_width_; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
@@ -287,15 +327,15 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             wend = min(wend, width_);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                bottom_diff[h * width_ + w] +=
-                  top_diff[ph * pooled_width_ + pw] / pool_size;
+                bottom_diff_n[h * width_ + w] +=
+                  top_diff_n[ph * pooled_width_ + pw] / pool_size;
               }
             }
           }
         }
         // offset
-        bottom_diff += bottom[0]->offset(0, 1);
-        top_diff += top[0]->offset(0, 1);
+        // bottom_diff += bottom[0]->offset(0, 1);
+        // top_diff += top[0]->offset(0, 1);
       }
     }
     break;
