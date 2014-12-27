@@ -26,8 +26,8 @@ def parse_log(path_to_log):
     """
 
     regex_iteration = re.compile('Iteration (\d+)')
-    regex_train_output = re.compile('Train net output #(\d+): (\S+) = ([\.\d]+)')
-    regex_test_output = re.compile('Test net output #(\d+): (\S+) = ([\.\d]+)')
+    regex_train_output = re.compile('Train net output #(\d+): (\S+) = ([\.\deE+-]+)')
+    regex_test_output = re.compile('Test net output #(\d+): (\S+) = ([\.\deE+-]+)')
     regex_learning_rate = re.compile('lr = ([\.\d]+)')
 
     # Pick out lines of interest
