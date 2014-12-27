@@ -306,7 +306,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 144 (last added: input_param)
+// LayerParameter next available layer-specific ID: 145 (last added: crop_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -360,6 +360,7 @@ message LayerParameter {
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
+  optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
@@ -596,6 +597,13 @@ message ConvolutionParameter {
   // implementation; for input blobs with num_axes != 2, this option is
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
+}
+
+message CropParameter {
+  // Assumes standard dimensions: ( N,C,H,W )
+  // This could possibly be extended to  use "optional BlobShape offsets"
+  optional uint32 offset_height = 1[default = 0];
+  optional uint32 offset_width = 2[default = 0];
 }
 
 message DataParameter {
