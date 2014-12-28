@@ -332,6 +332,71 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   vector<std::pair<std::string, Datum > > image_database_cache_;
 };
 
+// Forward declaration
+template <typename Dtype>
+class DataSource;
+
+template <typename Dtype>
+class DataMappingLayer : public Layer<Dtype> {
+ public:
+  explicit DataMappingLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {}
+
+  DataMappingLayer(const LayerParameter& param,
+                   shared_ptr<DataSource<Dtype> > source);
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+ private:
+  shared_ptr<DataSource<Dtype> > data_source_;
+  unsigned int data_length_;
+};
+
+template <typename Dtype>
+class DataSequenceLayer : public Layer<Dtype> {
+ public:
+  explicit DataSequenceLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {}
+
+  DataSequenceLayer(const LayerParameter& param,
+                    shared_ptr<DataSource<Dtype> > source);
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+ private:
+  shared_ptr<DataSource<Dtype> > data_source_;
+  std::vector<int> indices_;
+  int cursor_;
+  unsigned int batch_size_;
+  unsigned int data_length_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_DATA_LAYERS_HPP_
