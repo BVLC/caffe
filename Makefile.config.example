@@ -74,3 +74,6 @@ DISTRIBUTE_DIR := distribute
 
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0
+
+# enable pretty build (comment to see full commands)
+Q ?= @
