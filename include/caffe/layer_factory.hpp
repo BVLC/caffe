@@ -113,17 +113,6 @@ class LayerRegisterer {
   }                                                                            \
   REGISTER_LAYER_CREATOR(type, Creator_##clsname)
 
-// A function to get a specific layer from the specification given in
-// LayerParameter. Ideally this would be replaced by a factory pattern,
-// but we will leave it this way for now.
-// Yangqing's note: With LayerRegistry, we no longer need this thin wrapper any
-// more. It is provided here for backward compatibility and should be removed in
-// the future.
-template <typename Dtype>
-Layer<Dtype>* GetLayer(const LayerParameter& param) {
-  return LayerRegistry<Dtype>::CreateLayer(param);
-}
-
 }  // namespace caffe
 
 #endif  // CAFFE_LAYER_FACTORY_H_
