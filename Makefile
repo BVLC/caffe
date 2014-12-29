@@ -402,10 +402,10 @@ py$(PROJECT): py
 
 py: $(PY$(PROJECT)_SO) $(PROTO_GEN_PY)
 
-$(PY$(PROJECT)_SO): $(STATIC_NAME) $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX_SRC)
-	$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
+$(PY$(PROJECT)_SO): $(PY$(PROJECT)_SRC) $(STATIC_NAME) $(PY$(PROJECT)_HXX_SRC)
+	@ echo CXX $<
+	$(Q)$(CXX) -shared -o $@ $(PY$(PROJECT)_SRC) \
 		$(STATIC_LINK_COMMAND) $(LINKFLAGS) $(PYTHON_LDFLAGS)
-	@ echo
 
 mat$(PROJECT): mat
 
@@ -417,11 +417,11 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 			"to build mat$(PROJECT)."; \
 		exit 1; \
 	fi
-	$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) \
+	@ echo MEX $<
+	$(Q)$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) \
 			CXX="$(CXX)" \
 			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
 			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS)" -output $@
-	@ echo
 
 runtest: $(TEST_ALL_BIN) $(TEST_ALL_DYNLINK_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER) && \
@@ -458,57 +458,57 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
 $(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
-	$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)
-	@ echo
+	@ echo LD $<
+	$(Q)$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
-	ar rcs $@ $(OBJS)
-	@ echo
+	@ echo AR $<
+	$(Q)ar rcs $@ $(OBJS)
 
 $(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
-	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+	@ echo CXX $<
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
-	@ echo
 
 $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		| $(PROTO_BUILD_DIR)
-	$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+	@ echo CXX $<
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
-	@ echo
 
 $(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
-	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+	@ echo NVCC $<
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
-	$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
-	@ echo
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_NAME) \
 		| $(TEST_BIN_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
+	@ echo CXX/LD -o $@ $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
-	@ echo
 
 $(TEST_ALL_DYNLINK_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(DYNAMIC_NAME) \
 		| $(TEST_BIN_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
+	@ echo CXX/LD -o $@ $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(LIB_BUILD_DIR)
-	@ echo
 
 $(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
 	$(GTEST_OBJ) $(STATIC_NAME) | $(TEST_BIN_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
-	@ echo
 
 $(TEST_CXX_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CXX_BUILD_DIR)/%.o \
 	$(GTEST_OBJ) $(STATIC_NAME) | $(TEST_BIN_DIR)
-	$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
+	@ echo LD $<
+	$(Q)$(CXX) $(TEST_MAIN_SRC) $< $(GTEST_OBJ) $(STATIC_LINK_COMMAND) \
 		-o $@ $(LINKFLAGS) $(LDFLAGS)
-	@ echo
 
 # Target for extension-less symlinks to tool binaries with extension '*.bin'.
 $(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
@@ -516,20 +516,20 @@ $(TOOL_BUILD_DIR)/%: $(TOOL_BUILD_DIR)/%.bin | $(TOOL_BUILD_DIR)
 	@ ln -s $(abspath $<) $@
 
 $(TOOL_BINS) $(EXAMPLE_BINS): %.bin : %.o $(STATIC_NAME)
-	$(CXX) $< $(STATIC_LINK_COMMAND) -o $@ $(LINKFLAGS) $(LDFLAGS)
-	@ echo
+	@ echo LD $<
+	$(Q)$(CXX) $< $(STATIC_LINK_COMMAND) -o $@ $(LINKFLAGS) $(LDFLAGS)
 
 proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)
 
 $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR)
-	protoc --proto_path=$(PROTO_SRC_DIR) --cpp_out=$(PROTO_BUILD_DIR) $<
-	@ echo
+	@ echo PROTOC $<
+	$(Q)protoc --proto_path=$(PROTO_SRC_DIR) --cpp_out=$(PROTO_BUILD_DIR) $<
 
 $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 		$(PY_PROTO_INIT) | $(PY_PROTO_BUILD_DIR)
-	protoc --proto_path=$(PROTO_SRC_DIR) --python_out=$(PY_PROTO_BUILD_DIR) $<
-	@ echo
+	@ echo PROTOC \(python\) $<
+	$(Q)protoc --proto_path=$(PROTO_SRC_DIR) --python_out=$(PY_PROTO_BUILD_DIR) $<
 
 $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 	touch $(PY_PROTO_INIT)
