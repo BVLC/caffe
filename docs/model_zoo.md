@@ -14,7 +14,9 @@ To help share these models, we introduce the model zoo framework:
 
 ## Where to get trained models
 
-First of all, we provide some trained models out of the box.
+First of all, we bundle BVLC-trained models for unrestricted, out of the box use.
+<br>
+See the [BVLC model license](#bvlc-model-license) for details.
 Each one of these can be downloaded by running `scripts/download_model_binary.py <dirname>` where `<dirname>` is specified below:
 
 - **BVLC Reference CaffeNet** in `models/bvlc_reference_caffenet`: AlexNet trained on ILSVRC 2012, with a minor variation from the version as described in [ImageNet classification with deep convolutional neural networks](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks) by Krizhevsky et al. in NIPS 2012. (Trained by Jeff Donahue @jeffdonahue)
@@ -22,7 +24,9 @@ Each one of these can be downloaded by running `scripts/download_model_binary.py
 - **BVLC Reference R-CNN ILSVRC-2013** in `models/bvlc_reference_rcnn_ilsvrc13`: pure Caffe implementation of [R-CNN](https://github.com/rbgirshick/rcnn) as described by Girshick et al. in CVPR 2014. (Trained by Ross Girshick @rbgirshick)
 - **BVLC GoogLeNet** in `models/bvlc_googlenet`: GoogLeNet trained on ILSVRC 2012, almost exactly as described in [Going Deeper with Convolutions](http://arxiv.org/abs/1409.4842) by Szegedy et al. in ILSVRC 2014. (Trained by Sergio Guadarrama @sguada)
 
-User-provided models are posted to a public-editable [wiki page](https://github.com/BVLC/caffe/wiki/Model-Zoo).
+**Community models** made by Caffe users are posted to a publicly editable [wiki page](https://github.com/BVLC/caffe/wiki/Model-Zoo).
+These models are subject to conditions of their respective authors such as citation and license.
+Thank you for sharing your models!
 
 ## Model info format
 
@@ -55,3 +59,12 @@ We host our BVLC-provided models on our own server.
 Dropbox also works fine (tip: make sure that `?dl=1` is appended to the end of the URL).
 
 `scripts/download_model_binary.py <dirname>` downloads the `.caffemodel` from the URL specified in the `<dirname>/readme.md` frontmatter and confirms SHA1.
+
+## BVLC model license
+
+The Caffe models bundled by the BVLC are released for unrestricted use.
+
+These models are trained on data from the [ImageNet project](http://www.image-net.org/) and training data includes internet photos that may be subject to copyright.
+
+Our present understanding as researchers is that there is no restriction placed on the open release of these learned model weights, since none of the original images are distributed in whole or in part.
+To the extent that the interpretation arises that weights are derivative works of the original copyright holder and they assert such a copyright, UC Berkeley makes no representations as to what use is allowed other than to consider our present release in the spirit of fair use in the academic mission of the university to disseminate knowledge and tools as broadly as possible without restriction.
