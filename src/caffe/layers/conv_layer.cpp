@@ -47,10 +47,6 @@ void ConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_h_ = conv_param.stride_h();
     stride_w_ = conv_param.stride_w();
   }
-  // Special case: im2col is the identity for 1x1 convolution with stride 1
-  // and no padding, so flag for skipping the buffer and transformation.
-  is_1x1_ = kernel_w_ == 1 && kernel_h_ == 1
-      && stride_h_ == 1 && stride_w_ == 1 && pad_h_ == 0 && pad_w_ == 0;
   // Configure output channels and groups.
   channels_ = bottom[0]->channels();
   num_output_ = this->layer_param_.convolution_param().num_output();
@@ -131,6 +127,18 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     bias_multiplier_.Reshape(1, 1, 1, N_);
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
+  // Special case: im2col is the identity for no padding and one of:
+  // 1x1: convolution with stride 1
+  // Single: bottom height x width == kernel_w x kernel_h
+  // or cases where stride alings with kernel in memory
+  // so flag for skipping the buffer and transformation.
+  skip_col_buff_ = (pad_h_ == 0 && pad_w_ == 0) &&
+    ((kernel_w_ == 1 && kernel_h_ == 1 && stride_h_ == 1 && stride_w_ == 1) ||
+    (width_ == kernel_w_ && height_ == kernel_h_) ||
+    (stride_w_ == kernel_w_ && width_ % kernel_w_ == 0
+      && kernel_h_ == 1) ||
+    (stride_h_ == kernel_h_ && height_ % kernel_h_ == 0
+      && kernel_w_ == width_));
 }
 
 template <typename Dtype>
@@ -140,7 +148,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     Dtype* col_buff = NULL;
-    if (!is_1x1_) {
+    if (!skip_col_buff_) {
       col_buff = col_buffer_.mutable_cpu_data();
     }
     const Dtype* weight = this->blobs_[0]->cpu_data();
@@ -150,7 +158,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < num_; ++n) {
       // im2col transformation: unroll input regions for filtering
       // into column matrix for multplication.
-      if (!is_1x1_) {
+      if (!skip_col_buff_) {
         im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
             width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
             col_buff);
@@ -209,7 +217,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         top_diff = top[i]->cpu_diff();
       }
       Dtype* col_buff = NULL;
-      if (!is_1x1_) {
+      if (!skip_col_buff_) {
         col_buff = col_buffer_.mutable_cpu_data();
       }
       const Dtype* bottom_data = bottom[i]->cpu_data();
@@ -217,7 +225,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       for (int n = 0; n < num_; ++n) {
         // Since we saved memory in the forward pass by not storing all col
         // data, we will need to recompute them.
-        if (!is_1x1_) {
+        if (!skip_col_buff_) {
           im2col_cpu(bottom_data + bottom[i]->offset(n), channels_, height_,
                     width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
                     stride_h_, stride_w_, col_buff);
@@ -238,7 +246,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           if (weight == NULL) {
             weight = this->blobs_[0]->cpu_data();
           }
-          if (is_1x1_) {
+          if (skip_col_buff_) {
             col_buff = bottom[i]->mutable_cpu_diff() + bottom[i]->offset(n);
           }
           for (int g = 0; g < group_; ++g) {
@@ -248,7 +256,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                 (Dtype)0., col_buff + col_offset * g);
           }
           // col2im back to the data
-          if (!is_1x1_) {
+          if (!skip_col_buff_) {
             col2im_cpu(col_buff, channels_, height_, width_,
                 kernel_h_, kernel_w_, pad_h_, pad_w_,
                 stride_h_, stride_w_, bottom_diff + bottom[i]->offset(n));
