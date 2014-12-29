@@ -15,9 +15,10 @@ To lower the friction of sharing these models, we introduce the model zoo framew
 First of all, we provide some trained models out of the box.
 Each one of these can be downloaded by running `scripts/download_model_binary.py <dirname>` where `<dirname>` is specified below:
 
-- **BVLC Reference CaffeNet** in `models/bvlc_reference_caffenet`: AlexNet trained on ILSVRC 2012, with a minor variation from the version as described in the NIPS 2012 paper.
-- **BVLC AlexNet** in `models/bvlc_alexnet`: AlexNet trained on ILSVRC 2012, almost exactly as described in NIPS 2012.
-- **BVLC Reference R-CNN ILSVRC-2013** in `models/bvlc_reference_rcnn_ilsvrc13`: pure Caffe implementation of [R-CNN](https://github.com/rbgirshick/rcnn).
+- **BVLC Reference CaffeNet** in `models/bvlc_reference_caffenet`: AlexNet trained on ILSVRC 2012, with a minor variation from the version as described in the NIPS 2012 paper. (Trained by Jeff Donahue @jeffdonahue)
+- **BVLC AlexNet** in `models/bvlc_alexnet`: AlexNet trained on ILSVRC 2012, almost exactly as described in NIPS 2012. (Trained by Evan Shelhamer @shelhamer)
+- **BVLC Reference R-CNN ILSVRC-2013** in `models/bvlc_reference_rcnn_ilsvrc13`: pure Caffe implementation of [R-CNN](https://github.com/rbgirshick/rcnn). (Trained by Ross Girshick @rbgirshick)
+- **BVLC GoogleNet** in `models/bvlc_googlenet`: GoogleNet trained on ILSVRC 2012, almost exactly as described in [GoogleNet](http://arxiv.org/abs/1409.4842). (Trained by Sergio Guadarrama @sguada)
 
 User-provided models are posted to a public-editable [wiki page](https://github.com/BVLC/caffe/wiki/Model-Zoo).
 

@@ -14,7 +14,8 @@ void CuDNNPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   // Fallback to Caffe for padded pooling, max top mask.
   if ((this->pad_h_ > 0 || this->pad_w_ > 0) || (*top).size() > 1) {
-    LOG(WARNING) << "Falling back to standard Caffe for padded pooling.";
+    LOG_FIRST_N(WARNING, 1)
+        << "Falling back to standard Caffe for padded pooling.";
     return PoolingLayer<Dtype>::Forward_gpu(bottom, top);
   }
 
@@ -33,7 +34,8 @@ void CuDNNPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   // Fallback to Caffe for padded pooling, max top mask.
   if ((this->pad_h_ > 0 || this->pad_w_ > 0) || top.size() > 1) {
-    LOG(WARNING) << "Falling back to standard Caffe for padded pooling.";
+    LOG_FIRST_N(WARNING, 1)
+        << "Falling back to standard Caffe for padded pooling.";
     return PoolingLayer<Dtype>::Backward_gpu(top, propagate_down, bottom);
   }
 
