@@ -758,6 +758,10 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> softmax_bottom_vec_;
   /// top vector holder used in call to the underlying SoftmaxLayer::Forward
   vector<Blob<Dtype>*> softmax_top_vec_;
+  /// Whether to ignore instances with a certain label.
+  bool has_ignore_label_;
+  /// The label indicating that an instance should be ignored.
+  int ignore_label_;
 };
 
 }  // namespace caffe
