@@ -133,3 +133,4 @@ add_subdirectory(test)
 ###    Install    #################################################################################
 
 install(TARGETS caffe DESTINATION lib)
+install(TARGETS caffe_cu DESTINATION lib)
