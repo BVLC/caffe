@@ -28,19 +28,19 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.has_datum_db_param()) {
     datumdb_param = this->layer_param_.datum_db_param();
   } else {
-    DatumDBParameter_Backend backend;
+    string backend;
     if (data_param.backend() == DataParameter_DB_LEVELDB) {
-      backend = DatumDBParameter_Backend_LEVELDB;
+      backend = "leveldb";
     }
     if (data_param.backend() == DataParameter_DB_LMDB) {
-      backend = DatumDBParameter_Backend_LMDB;
+      backend = "lmdb";
     }
     datumdb_param.set_backend(backend);
     datumdb_param.set_source(data_param.source());
   }
   CHECK_EQ(datumdb_param.mode(), DatumDBParameter_Mode_READ);
   datumdb_ = DatumDB::GetDatumDB(datumdb_param);
-  CHECK(datumdb_->Valid());
+  datum_generator_ = datumdb_->GetGenerator();
 
   // Check if we would need to randomly skip a few data points
   if (data_param.rand_skip()) {
@@ -48,11 +48,12 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                         data_param.rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
-      CHECK(datumdb_->Next());
+      CHECK(datum_generator_->Next());
     }
   }
   // Read a data point, and use it to initialize the top blob.
-  Datum datum = datumdb_->CurrentDatum();
+  Datum datum;
+  datum_generator_->Current(&datum);
 
   if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
@@ -104,7 +105,8 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
-    Datum datum = datumdb_->CurrentDatum();
+    Datum datum;
+    CHECK(datum_generator_->Current(&datum));
 
     cv::Mat cv_img;
     if (datum.encoded()) {
@@ -126,7 +128,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     }
     trans_time += timer.MicroSeconds();
     // go to the next iter
-    CHECK(datumdb_->Next());
+    datum_generator_->Next();
   }
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";

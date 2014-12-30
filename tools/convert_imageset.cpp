@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   DatumDBParameter datumdb_param;
   datumdb_param.set_source(argv[3]);
   datumdb_param.set_mode(DatumDBParameter_Mode_NEW);
-  datumdb_param.set_backend(DatumDB::GetBackend(FLAGS_backend));
+  datumdb_param.set_backend(FLAGS_backend);
   shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(datumdb_param);
 
   // Storing to db

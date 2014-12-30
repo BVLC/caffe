@@ -452,18 +452,13 @@ message DataParameter {
 
 // Message that stores parameters used by DataLayer
 message DatumDBParameter {
-  enum Backend {
-    LEVELDB = 0;
-    LMDB = 1;
-    IMAGESDB = 2;
-  }
   enum Mode {
     NEW = 0;
     WRITE = 1;
     READ = 2;
   }
   // Specify the datumDB Backend.
-  optional Backend backend = 1 [default = LEVELDB];
+  optional string backend = 1 [default = "leveldb"];
   // Specify the datumDB mode.
   optional Mode mode = 2 [default = READ];
   // Specify the datumDB source.

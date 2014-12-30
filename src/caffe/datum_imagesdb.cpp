@@ -11,13 +11,14 @@
 namespace caffe {
 
 void DatumImagesDB::Open() {
+  CHECK(!is_opened_) << "Already opened";
   const string& source = param_.source();
   LOG(INFO) << "Opening imagesdb " << source;
+  datum_database_.reset(new map<string, Datum>());
   switch (param_.mode()) {
   case DatumDBParameter_Mode_NEW: {
     file_.open(source.c_str(), ios::out | ios::trunc);
     CHECK(file_.good()) << "Could not create file: " << source;
-    datum_database_.clear();
     keys_.clear();
     batch_.clear();
     break;
@@ -25,7 +26,6 @@ void DatumImagesDB::Open() {
   case DatumDBParameter_Mode_WRITE: {
     file_.open(source.c_str(), ios::out | ios::app);
     CHECK(file_.good()) << "Could not open file: " << source;
-    datum_database_.clear();
     keys_.clear();
     batch_.clear();
     break;
@@ -36,7 +36,6 @@ void DatumImagesDB::Open() {
     encode_images_ = param_.encode_images();
     file_.open(source.c_str(), ios::in);
     CHECK(file_.good()) << "File not found: " << source;
-    datum_database_.clear();
     keys_.clear();
     batch_.clear();
     std::string key;
@@ -53,30 +52,47 @@ void DatumImagesDB::Open() {
         datum.set_source(root_images_ + key);
         datum.set_label(label);
       }
-      datum_database_[key] = datum;
+      datum_database_->insert(make_pair(key, datum));
       keys_.push_back(key);
     }
     CHECK(!keys_.empty()) << "Error reading the file " << source;
-    if (param_.shuffle_images()) {
-      // randomly shuffle data
-      LOG(INFO) << "Shuffling the keys";
-      shuffle(keys_.begin(), keys_.end());
-    }
-    CHECK(SeekToFirst()) << "Failed SeekToFirst";
-    LOG(INFO) << "A total of " << keys_.size() << " elements.";
+    LOG(INFO) << "A total of " << datum_database_->size()
+      << " images and " << keys_.size() << " keys.";
     break;
   }
   default:
     LOG(FATAL) << "Unknown DB mode " << param_.mode();
   }
+  is_opened_ = true;
 }
 
 void DatumImagesDB::Close() {
-  LOG(INFO) << "Closing imagesdb " << param_.source();
   batch_.clear();
   keys_.clear();
-  datum_database_.clear();
-  file_.close();
+  if (is_opened_) {
+    LOG(INFO) << "Closing imagesdb " << param_.source();
+    datum_database_->clear();
+    datum_database_.reset();
+    file_.close();
+  } else {
+    LOG(INFO) << "Closing Generator on " << param_.source();
+  }
+}
+
+shared_ptr<DatumDB::Generator> DatumImagesDB::GetGenerator() {
+  CHECK_EQ(param_.mode(),DatumDBParameter_Mode_READ)
+    << "Only DatumDB in Mode_READ can use GetGenerator";
+  LOG(INFO) << "Creating Generator for " << param_.source();
+  DatumImagesDB* datumdb = new DatumImagesDB(param_);
+  datumdb->datum_database_ = datum_database_;
+  datumdb->keys_ = keys_;
+  shared_ptr<DatumDB::Generator> generator;
+  generator.reset(new DatumDB::Generator(shared_ptr<DatumDB>(datumdb)));
+  return generator;
+}
+
+bool DatumImagesDB::Valid() {
+  return (!keys_.empty() && read_it_ != keys_.end());
 }
 
 bool DatumImagesDB::Next() {
@@ -84,13 +100,7 @@ bool DatumImagesDB::Next() {
     ++read_it_;
     if (read_it_ == keys_.end()) {
       if (param_.loop()) {
-        if (param_.shuffle_images()) {
-          // randomly shuffle data
-          LOG(INFO) << "Shuffling the keys";
-          shuffle(keys_.begin(), keys_.end());
-        }
-        DLOG(INFO) << "Reached the end and looping.";
-        SeekToFirst();
+        return Reset();
       } else {
         LOG(ERROR) << "Reached the end and not looping.";
       }
@@ -99,45 +109,14 @@ bool DatumImagesDB::Next() {
   return Valid();
 }
 
-bool DatumImagesDB::Prev() {
-  if (Valid()) {
-    if (read_it_ == keys_.begin()) {
-      if (param_.loop()) {
-        if (param_.shuffle_images()) {
-          // randomly shuffle data
-          LOG(INFO) << "Shuffling the keys";
-          shuffle(keys_.begin(), keys_.end());
-        }
-        DLOG(INFO) << "Reached the beginning and looping.";
-        SeekToLast();
-      } else {
-        LOG(ERROR) << "Reached the beginning and not looping.";
-        read_it_ = keys_.end();
-      }
-    } else {
-      --read_it_;
-    }
-  }
-  return Valid();
-}
-
-bool DatumImagesDB::SeekToFirst() {
+bool DatumImagesDB::Reset() {
   if (!keys_.empty()) {
+    if (param_.shuffle_images()) {
+      ShuffleKeys();
+    }
     read_it_ = keys_.begin();
   }
   return Valid();
-}
-
-bool DatumImagesDB::SeekToLast() {
-  read_it_ = keys_.end();
-  if (!keys_.empty()) {
-    --read_it_;
-  }
-  return Valid();
-}
-
-bool DatumImagesDB::Valid() {
-  return (!keys_.empty() && read_it_ != keys_.end());
 }
 
 bool DatumImagesDB::Current(string* key, Datum* datum) {
@@ -149,9 +128,15 @@ bool DatumImagesDB::Current(string* key, Datum* datum) {
   }
 }
 
+void DatumImagesDB::ShuffleKeys() {
+  // randomly shuffle the keys
+  LOG(INFO) << "Shuffling the keys";
+  shuffle(keys_.begin(), keys_.end());
+}
+
 bool DatumImagesDB::Get(const string& key, Datum* datum) {
-  map<string, Datum>::iterator it = datum_database_.find(key);
-  if (it != datum_database_.end()) {
+  map<string, Datum>::iterator it = datum_database_->find(key);
+  if (it != datum_database_->end()) {
     *datum = (*it).second;
     if (!cache_images_) {
       if (encode_images_) {
@@ -177,7 +162,7 @@ void DatumImagesDB::Commit() {
     string key = batch_[i].first;
     Datum datum = batch_[i].second;
     keys_.push_back(key);
-    datum_database_[key] = datum;
+    (*datum_database_)[key] = datum;
     file_ << key << " " << datum.label() << std::endl;
   }
   batch_.clear();

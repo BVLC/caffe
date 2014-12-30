@@ -42,12 +42,12 @@ int main(int argc, char** argv) {
   DatumDBParameter datumdb_param;
   datumdb_param.set_source(argv[1]);
   datumdb_param.set_loop(false);
-  datumdb_param.set_backend(DatumDB::GetBackend(FLAGS_backend));
+  datumdb_param.set_backend(FLAGS_backend);
   // Usefull for imagesdb ignored for the rest while reading
   datumdb_param.set_encode_images(true);
 
   shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(datumdb_param);
-  CHECK(datumdb->Valid());
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->GetGenerator();
 
   const int max_iter = FLAGS_max_iter;
 
@@ -55,10 +55,10 @@ int main(int argc, char** argv) {
   // load first datum
   LOG(INFO) << "Starting Iteration";
   vector<pair<string, int> > keys_label;
-  while (datumdb->Valid()) {
+  while (datum_generator->Valid()) {
     string key;
     Datum datum;
-    datumdb->Current(&key, &datum);
+    CHECK(datum_generator->Current(&key, &datum)) << "Failed getting Current";
     int label = datum.label();
     keys_label.push_back(std::make_pair(key, label));
     ++count;
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     if (max_iter > 0 && count >= max_iter) {
       break;
     }
-    datumdb->Next();
+    datum_generator->Next();
   }
 
   if (count % 10000 != 0) {
