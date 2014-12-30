@@ -689,9 +689,9 @@ template <typename Dtype> class SoftmaxLayer;
  *      indicating the correct class label among the @f$ K @f$ classes
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
- *      the computed cross-entropy classification loss: @f$ E =
+ *      the empirical cross-entropy classification loss: @f$ E =
  *        \frac{-1}{N} \sum\limits_{n=1}^N \log(\hat{p}_{n,l_n})
- *      @f$, for softmax output class probabilites @f$ \hat{p} @f$
+ *      @f$, for softmax output class probabilites @f$ \hat{p}_{i,j}, where i is the instance index, j is the label @f$
  */
 template <typename Dtype>
 class SoftmaxWithLossLayer : public LossLayer<Dtype> {
