@@ -347,7 +347,7 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 
 # Set the sub-targets of the 'everything' target.
-EVERYTHING_TARGETS := all py$(PROJECT) test warn lint runtest
+EVERYTHING_TARGETS := all py$(PROJECT) test warn lint
 # Only build matcaffe as part of "everything" if MATLAB_DIR is specified.
 ifneq ($(MATLAB_DIR),)
 	EVERYTHING_TARGETS += mat$(PROJECT)
