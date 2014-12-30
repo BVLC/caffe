@@ -1,0 +1,22 @@
+# net: "imagenet_train_val.prototxt"
+net: "imagenet_sep_conv_train_val.prototxt"
+
+test_iter: 100
+test_interval: 100
+test_compute_loss: true
+base_lr: 0.01
+lr_policy: "step"
+gamma: 0.1
+stepsize: 100000
+display: 20
+max_iter: 450000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 1000
+
+# snapshot_prefix: "caffe_ilsvrc2014_train"
+# snapshot_prefix: "caffe_ilsvrc2014_sep_conv_train2"
+snapshot_prefix: "caffe_ilsvrc2014_sep_conv_finetune"
+
+# solver mode: CPU or GPU
+solver_mode: GPU
