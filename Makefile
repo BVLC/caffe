@@ -346,6 +346,13 @@ PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
 # default behavior of 'find'.
 SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 
+# Set the sub-targets of the 'everything' target.
+EVERYTHING_TARGETS := all py$(PROJECT) test warn lint runtest
+# Only build matcaffe as part of "everything" if MATLAB_DIR is specified.
+ifneq ($(MATLAB_DIR),)
+	EVERYTHING_TARGETS += mat$(PROJECT)
+endif
+
 ##############################
 # Define build targets
 ##############################
@@ -355,7 +362,7 @@ SUPERCLEAN_EXTS := .so .a .o .bin .testbin .pb.cc .pb.h _pb2.py .cuo
 
 all: $(STATIC_NAME) $(DYNAMIC_NAME) tools examples
 
-everything: all py$(PROJECT) mat$(PROJECT) test warn lint runtest
+everything: $(EVERYTHING_TARGETS)
 
 linecount:
 	cloc --read-lang-def=$(PROJECT).cloc \
