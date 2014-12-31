@@ -1,7 +1,7 @@
 project( CaffeSrc )
 
-
 add_subdirectory(proto)
+include_directories(${PROTOBUF_INCLUDE_DIR})
 
 #    Recursively find source files
 ##    test sources
