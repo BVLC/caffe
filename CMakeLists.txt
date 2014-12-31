@@ -10,6 +10,7 @@ include(cmake/Utils.cmake)
 include(cmake/Targets.cmake)
 include(cmake/Misc.cmake)
 include(cmake/Summary.cmake)
+include(cmake/ConfigGen.cmake)
 
 # ---[ Options
 caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA support" OFF) # TODO: rename to USE_CUDA
@@ -51,3 +52,6 @@ add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/lin
 
 # ---[ Configuration summary
 caffe_print_configuration_summary()
+
+# ---[ Export configs generation
+caffe_generate_export_configs()

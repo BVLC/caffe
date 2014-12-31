@@ -202,8 +202,6 @@ list(APPEND Caffe_LINKER_LIBS ${CUDA_CUDART_LIBRARY}
                               ${CUDA_curand_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
 
 # cudnn detection
-set(HAVE_CUDNN FALSE)
-
 if(USE_CUDNN)
   detect_cuDNN()
   if(HAVE_CUDNN)
