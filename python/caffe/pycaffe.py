@@ -344,6 +344,16 @@ def _Net_set_input_arrays(self, data, labels):
                                              np.newaxis])
     return self._set_input_arrays(data, labels)
 
+def _Net_add_datum_vector(self, data, labels):
+    """
+    Insert input arrays of the in-memory MemoryDataLayer before transformation.
+    (Note: this is only for networks declared with the memory data layer.)
+    """
+    if labels.ndim == 1:
+        labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
+                                             np.newaxis])
+    return self._add_datum_vector(data, labels)
+
 
 def _Net_batch(self, blobs):
     """
@@ -391,4 +401,5 @@ Net.set_channel_swap = _Net_set_channel_swap
 Net.preprocess = _Net_preprocess
 Net.deprocess = _Net_deprocess
 Net.set_input_arrays = _Net_set_input_arrays
+Net.add_datum_vector = _Net_add_datum_vector
 Net._batch = _Net_batch
