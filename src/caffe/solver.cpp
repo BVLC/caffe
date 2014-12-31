@@ -171,7 +171,7 @@ void Solver<Dtype>::Step(int iters) {
     // zero-init the params
     for (int i = 0; i < net_->params().size(); ++i) {
       shared_ptr<Blob<Dtype> > blob = net_->params()[i];
-      switch(Caffe::mode()) {
+      switch (Caffe::mode()) {
       case Caffe::CPU:
         caffe_set(blob->count(), static_cast<Dtype>(0),
             blob->mutable_cpu_diff());
