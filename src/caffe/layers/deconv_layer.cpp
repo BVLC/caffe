@@ -39,13 +39,6 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  if (this->param_propagate_down_[0]) {
-    caffe_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
-  }
-  if (this->bias_term_ && this->param_propagate_down_[1]) {
-    caffe_set(this->blobs_[1]->count(), Dtype(0),
-        this->blobs_[1]->mutable_cpu_diff());
-  }
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
