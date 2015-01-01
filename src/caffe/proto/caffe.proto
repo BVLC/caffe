@@ -2,12 +2,17 @@ syntax = "proto2";
 
 package caffe;
 
+// Specifies the shape (dimensions) of a Blob.
+message BlobShape {
+  repeated int64 dim = 1 [packed = true];
+}
+
 message BlobProto {
-  repeated int32 dim = 7 [packed = true];
+  optional BlobShape shape = 7;
   repeated float data = 5 [packed = true];
   repeated float diff = 6 [packed = true];
 
-  // 4D dimensions -- deprecated.  Use "dim" instead.
+  // 4D dimensions -- deprecated.  Use "shape" instead.
   optional int32 num = 1 [default = 0];
   optional int32 channels = 2 [default = 0];
   optional int32 height = 3 [default = 0];
@@ -50,10 +55,15 @@ message NetParameter {
   optional string name = 1; // consider giving the network a name
   // The input blobs to the network.
   repeated string input = 3;
-  // The dim of the input blobs. For each input blob there should be four
+  // The shape of the input blobs.
+  repeated BlobShape input_shape = 8;
+
+  // 4D input dimensions -- deprecated.  Use "shape" instead.
+  // If specified, for each input blob there should be four
   // values specifying the num, channels, height and width of the input blob.
   // Thus, there should be a total of (4 * #input) numbers.
   repeated int32 input_dim = 4;
+
   // Whether the network will force every layer to carry out backward operation.
   // If set False, then whether to carry out backward is determined
   // automatically according to the net structure and learning rates.

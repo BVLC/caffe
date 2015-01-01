@@ -39,6 +39,16 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::Reshape(const BlobShape& shape) {
+  CHECK_LE(shape.dim_size(), kMaxBlobAxes);
+  vector<int> shape_vec(shape.dim_size());
+  for (int i = 0; i < shape.dim_size(); ++i) {
+    shape_vec[i] = shape.dim(i);
+  }
+  Reshape(shape_vec);
+}
+
+template <typename Dtype>
 void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
   Reshape(other.shape());
 }
@@ -382,9 +392,9 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
            LegacyShape(-2) == other.height() &&
            LegacyShape(-1) == other.width();
   }
-  vector<int> other_shape(other.dim_size());
-  for (int i = 0; i < other.dim_size(); ++i) {
-    other_shape[i] = other.dim(i);
+  vector<int> other_shape(other.shape().dim_size());
+  for (int i = 0; i < other.shape().dim_size(); ++i) {
+    other_shape[i] = other.shape().dim(i);
   }
   return shape_ == other_shape;
 }
@@ -435,9 +445,9 @@ void Blob<Dtype>::FromProto(const BlobProto& proto) {
     shape[2] = proto.height();
     shape[3] = proto.width();
   } else {
-    shape.resize(proto.dim_size());
-    for (int i = 0; i < proto.dim_size(); ++i) {
-      shape[i] = proto.dim(i);
+    shape.resize(proto.shape().dim_size());
+    for (int i = 0; i < proto.shape().dim_size(); ++i) {
+      shape[i] = proto.shape().dim(i);
     }
   }
   Reshape(shape);
@@ -456,8 +466,9 @@ void Blob<Dtype>::FromProto(const BlobProto& proto) {
 
 template <typename Dtype>
 void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
+  proto->clear_shape();
   for (int i = 0; i < shape_.size(); ++i) {
-    proto->add_dim(shape_[i]);
+    proto->mutable_shape()->add_dim(shape_[i]);
   }
   proto->clear_data();
   proto->clear_diff();
