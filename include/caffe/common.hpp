@@ -7,6 +7,11 @@
 #include <glog/logging.h>
 
 // avoid fatal checks from glog
+#define CAFFE_THROW_ON_ERROR
+#ifdef CAFFE_THROW_ON_ERROR
+#include <sstream>
+#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
+		 ( std::ostringstream() << std::dec << x ) ).str()
 class CaffeErrorException : public std::exception
 {
 public:
@@ -18,11 +23,12 @@ public:
 
 #define CHECK(condition)						\
   if (GOOGLE_PREDICT_BRANCH_NOT_TAKEN(!(condition)))			\
-    throw CaffeErrorException("Check failed (custom): " #condition "");	\
-  LOG_IF(ERROR, GOOGLE_PREDICT_BRANCH_NOT_TAKEN(!(condition)))		\
-      << "Check failed (custom): " #condition " "
+    throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Check failed (custom): " #condition ""); \
+  LOG_IF(ERROR, false) \
+  << "Check failed (custom): " #condition " "
 
 #define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1) op (val2))
+#endif
 
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
