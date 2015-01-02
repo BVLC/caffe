@@ -148,6 +148,10 @@ macro(caffe_cuda_compile objlist_variable)
     list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
   endif()
 
+  if(APPLE)
+    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -Wno-unused-function)
+  endif()
+
   cuda_compile(cuda_objcs ${ARGN})
 
   foreach(var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)

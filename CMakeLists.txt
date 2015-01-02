@@ -28,17 +28,24 @@ if(UNIX OR APLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
 endif()
 
+if(APPLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
+
 # ---[ Warnings
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
 
 # ---[ Config generation
 configure_file(cmake/Templates/caffe_config.h.in "${CMAKE_BINARY_DIR}/caffe_config.h")
 
-# ---[ Subdirectories
+# ---[ Includes
 set(Caffe_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 include_directories(${Caffe_INCLUDE_DIR} ${CMAKE_BINARY_DIR})
 include_directories(BEFORE src) # This is needed for gtest. Ugly code layout!
 
+# ---[ Subdirectories
 add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)

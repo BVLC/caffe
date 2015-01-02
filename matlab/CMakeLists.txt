@@ -52,7 +52,12 @@ if(build_using MATCHES "Matlab")
   add_custom_target(matlab ALL DEPENDS ${Matlab_caffe_mex} SOURCES ${Matlab_srcs})
 
 elseif(build_using MATCHES "Octave")
-  set(libflags -Wl,--whole-archive -lcaffe${CAffe_POSTFIX} -Wl,--no-whole-archive ${libflags})
+
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(libflags -Wl,-force_load,$<TARGET_LINKER_FILE:caffe> ${libflags})
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(libflags -Wl,--whole-archive -lcaffe${CAffe_POSTFIX} -Wl,--no-whole-archive ${libflags})
+  endif()
 
   add_custom_command(OUTPUT ${Matlab_caffe_mex} COMMAND ${Octave_compiler}
       ARGS --mex -o ${Matlab_caffe_mex} ${Matlab_srcs} ${cflags} ${link_folders} ${libflags} -Wl,-rpath,${rpath_folders}
