@@ -227,7 +227,9 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 39 (last added: EXP)
+  // LayerType next available ID: 41 (last added: HDF5CATEGORICAL)
+  // was 40 (last added: COMPLEMENT)
+  // WAS: 39 (last added: EXP)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -237,6 +239,7 @@ message LayerParameter {
     ACCURACY = 1;
     ARGMAX = 30;
     BNLL = 2;
+    COMPLEMENT = 39;
     CONCAT = 3;
     CONTRASTIVE_LOSS = 37;
     CONVOLUTION = 4;
@@ -247,6 +250,7 @@ message LayerParameter {
     ELTWISE = 25;
     EXP = 38;
     FLATTEN = 8;
+    HDF5CATEGORICAL=40;	
     HDF5_DATA = 9;
     HDF5_OUTPUT = 10;
     HINGE_LOSS = 28;
@@ -309,6 +313,7 @@ message LayerParameter {
   optional DummyDataParameter dummy_data_param = 26;
   optional EltwiseParameter eltwise_param = 24;
   optional ExpParameter exp_param = 41;
+  optional HDF5CategoricalDParameter hdf5_categorical_data_param = 42;
   optional HDF5DataParameter hdf5_data_param = 13;
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional HingeLossParameter hinge_loss_param = 29;
@@ -492,6 +497,16 @@ message ExpParameter {
   optional float scale = 2 [default = 1.0];
   optional float shift = 3 [default = 0.0];
 }
+// Message that stores parameters used by HDF5CategoricalDLayer
+message HDF5CategoricalDParameter {
+  // Specify the data source.
+  optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 2;
+  // check that data values
+  optional bool check_data=3 [default=true];	
+}
+
 
 // Message that stores parameters used by HDF5DataLayer
 message HDF5DataParameter {

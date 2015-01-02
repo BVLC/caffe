@@ -27,7 +27,7 @@ HDF5CategoricalDLayer<Dtype>::~HDF5CategoricalDLayer<Dtype>() { }
 // and for each categorie the number of possible values
 // if the number of values for some category is N>1 than the possible values
 //  are-1(not set),0,..,N-1 if N==1 than the values are -1 (not set) and 0 (set)
-void hdf5_load_description(hid_t file_id, vector<unsigned int>& description) {
+void hdf5_load_description(hid_t file_id, vector<int>& description) {
   char* dataset_name_="description";
   int ndims, DESCRIPTION_DIM=1;
   herr_t status; 
@@ -54,16 +54,33 @@ void hdf5_load_description(hid_t file_id, vector<unsigned int>& description) {
   CHECK_EQ(description[0],dim-1);
 }
 
+// check if hdf5 'data' values agree with those given in 'description_'
+void check_data(const int*data,const vector<int> & description,
+		int num){
+
+  int numcategories=(int) description[0];
+  vector<int> aux(numcategories);
+  for(int i=0;i<numcategories;++i)
+    aux[i]=description[i+1];
+
+  int notset=-1;
+
+  for(int j=0;j<num;++j)
+    for(int i=0;i<numcategories;++i){
+      CHECK_GE(data[j*numcategories+i],notset);
+      CHECK_GE(aux[i],data[j*numcategories+i]);
+    }
+}		  
+
 void hdf5_load_int_data(hid_t file_id,Blob<int>* blob,
 			 int numcategories){
   char* dataset_name_="data";
   // verifies that 'data' is there
   CHECK(H5LTfind_dataset(file_id, dataset_name_))
     << "Failed to find HDF5 dataset " << dataset_name_;
-  /*int DATA_DIM=2;*/
   herr_t status; 
   int ndims, DATA_DIM=2;
-  // verify description dataset is a 2dim-matrix
+  // verify that dataset is a 2dim-matrix
   status= H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
   CHECK_GE(status, 0) << "Failed to get dataset ndims for " << dataset_name_;
   CHECK_EQ(ndims, DATA_DIM);
@@ -86,13 +103,13 @@ void hdf5_load_int_data(hid_t file_id,Blob<int>* blob,
 
 // load hdf5 categorical data file and insert 'data' and 'label' to 
 // respective data blobs
-// also create a vector<unsigned int> description with the information about
+// also create a vector<int> description with the information about
 // the number of categories and the possible values for each 
 template <typename Dtype>
 void 
 HDF5CategoricalDLayer<Dtype>::LoadHDF5FileCategoricalData(const char* filename)
 {
-  LOG(INFO) << "Loading HDF5 file" << filename;
+  LOG(INFO)<< "Loading HDF5 file" << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
     LOG(ERROR) << "Failed opening HDF5 file" << filename;
@@ -109,6 +126,9 @@ HDF5CategoricalDLayer<Dtype>::LoadHDF5FileCategoricalData(const char* filename)
   herr_t status = H5Fclose(file_id);
   CHECK_GE(status, 0) << "Failed to close HDF5 file " << filename;
   CHECK_EQ(data_blob_.num(), label_blob_.num());
+  // check that data values agree with those declared in 'description_'
+  if(this->layer_param_.hdf5_categorical_data_param().check_data())
+    check_data(data_blob_.cpu_data(),description_,data_blob_.num());
   LOG(INFO) << "Successully loaded " << data_blob_.num() << " rows";
 }
 
@@ -119,7 +139,7 @@ HDF5CategoricalDLayer<Dtype>::LoadHDF5FileCategoricalData(const char* filename)
 template <typename Dtype> void 
 HDF5CategoricalDLayer<Dtype>::setcategoriesvalues(const int * input,
 						  Dtype*onehotencodedvector){
-  int numcategories=(int) description_[0];
+  int numcategories=description_[0];
 
   for(int i=0;i<numcategories;++i)
     if(input[i]>-1)
@@ -135,7 +155,7 @@ HDF5CategoricalDLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Read the source to parse the filenames.
   const string& source 
     = this->layer_param_.hdf5_categorical_data_param().source();
-  LOG(INFO) << "Loading filename from " << source;
+  LOG(INFO)<< "Loading filename from " << source;
   hdf_filenames_.clear();
   std::ifstream source_file(source.c_str());
   if (source_file.is_open()) {
@@ -148,7 +168,7 @@ HDF5CategoricalDLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   num_files_ = hdf_filenames_.size();
   current_file_ = 0;
 
-  LOG(INFO) << "Number of files: " << num_files_;
+  LOG(INFO)<< "Number of files: " << num_files_;
 
   // Load the first HDF5 file and initialize the line counter.
   LoadHDF5FileCategoricalData(hdf_filenames_[current_file_].c_str());
@@ -169,7 +189,7 @@ HDF5CategoricalDLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(batch_size, nchannels, 1,1);
   top[1]->Reshape(batch_size, label_blob_.channels(),
                      label_blob_.height(), label_blob_.width());
-  LOG(INFO) << "output data size: " << top[0]->num() << ","
+  LOG(INFO)<< "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
 }
