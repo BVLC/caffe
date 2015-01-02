@@ -163,9 +163,13 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
     // the shape information from the blob.
     void* data = PyArray_DATA(reinterpret_cast<PyArrayObject*>(result));
     Py_DECREF(result);
-    npy_intp dims[] = {blob->num(), blob->channels(),
-                       blob->height(), blob->width()};
-    PyObject* arr_obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32, data);
+    const int num_axes = blob->num_axes();
+    vector<npy_intp> dims(num_axes);
+    for (int i = 0; i < num_axes; ++i) {
+      dims[i] = blob->shape(i);
+    }
+    PyObject *arr_obj = PyArray_SimpleNewFromData(num_axes, dims.data(),
+                                                  NPY_FLOAT32, data);
     // SetBaseObject steals a ref, so we need to INCREF.
     Py_INCREF(pyblob.ptr());
     PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(arr_obj),
@@ -173,6 +177,27 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
     return arr_obj;
   }
 };
+
+void Blob_Reshape(Blob<Dtype>* blob, bp::object shape_obj) {
+  PyArrayObject* shape_arr =
+      reinterpret_cast<PyArrayObject*>(shape_obj.ptr());
+  if (!(PyArray_FLAGS(shape_arr) & NPY_ARRAY_C_CONTIGUOUS)) {
+    throw std::runtime_error("new shape must be C contiguous");
+  }
+  if (PyArray_NDIM(shape_arr) != 1) {
+    throw std::runtime_error("new shape must be 1-d");
+  }
+  if (PyArray_TYPE(shape_arr) != NPY_INT32) {
+    throw std::runtime_error("new shape must be specified as int32 array");
+  }
+  npy_int32* shape_data = static_cast<npy_int32*>(PyArray_DATA(shape_arr));
+  const int num_axes = PyArray_SIZE(shape_arr);
+  vector<int> shape(num_axes);
+  for (int i = 0; i < num_axes; ++i) {
+    shape[i] = shape_data[i];
+  }
+  blob->Reshape(shape);
+}
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
@@ -218,8 +243,11 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
     .add_property("width",    &Blob<Dtype>::width)
-    .add_property("count",    &Blob<Dtype>::count)
-    .def("reshape",           &Blob<Dtype>::Reshape)
+    .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
+        &Blob<Dtype>::count))
+    .def("reshape", static_cast<void (Blob<Dtype>::*)(int, int, int, int)>(
+        &Blob<Dtype>::Reshape))
+    .def("reshape", &Blob_Reshape)
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
