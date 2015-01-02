@@ -1,9 +1,28 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
+#include <exception>
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
+
+// avoid fatal checks from glog
+class CaffeErrorException : public std::exception
+{
+public:
+  CaffeErrorException(const std::string &s):_s(s) {}
+  ~CaffeErrorException() throw() {}
+  const char* what() const throw() { return _s.c_str(); }
+  std::string _s;
+};
+
+#define CHECK(condition)						\
+  if (GOOGLE_PREDICT_BRANCH_NOT_TAKEN(!(condition)))			\
+    throw CaffeErrorException("Check failed (custom): " #condition "");	\
+  LOG_IF(ERROR, GOOGLE_PREDICT_BRANCH_NOT_TAKEN(!(condition)))		\
+      << "Check failed (custom): " #condition " "
+
+#define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1) op (val2))
 
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
