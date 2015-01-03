@@ -14,6 +14,7 @@ template <typename Dtype>
 void AccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   top_k_ = this->layer_param_.accuracy_param().top_k();
+  output_per_class_ = this->layer_param_.accuracy_param().output_per_class();
 }
 
 template <typename Dtype>
@@ -26,7 +27,10 @@ void AccuracyLayer<Dtype>::Reshape(
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  int dim = bottom[0]->count() / bottom[0]->num();
+  int dim = 0;
+  if (output_per_class_) {
+    dim += bottom[0]->count() / bottom[0]->num();
+  }
   top[0]->Reshape(1 + dim, 1, 1, 1);
 }
 
@@ -58,7 +62,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       ++nums[true_label];
       if (bottom_data_vector[k].second == true_label) {
         ++accuracy;
-	++accuracies[true_label];
+        ++accuracies[true_label];
         break;
       }
     }
@@ -66,8 +70,10 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // LOG(INFO) << "Accuracy: " << accuracy;
   top[0]->mutable_cpu_data()[0] = accuracy / num;
-  for (int i = 0; i < dim; ++i) {
-    top[0]->mutable_cpu_data()[i + 1] = accuracies[i] / nums[i];
+  if (output_per_class_) {
+    for (int i = 0; i < dim; ++i) {
+      top[0]->mutable_cpu_data()[i + 1] = accuracies[i] / nums[i];
+    }
   }
   // Accuracy layer should not be used as a loss function.
 }
