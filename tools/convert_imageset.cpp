@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
   datumdb_param.set_source(argv[3]);
   datumdb_param.set_mode(DatumDBParameter_Mode_NEW);
   datumdb_param.set_backend(FLAGS_backend);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(datumdb_param);
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(datumdb_param));
 
   // Storing to db
   std::string root_folder(argv[1]);

@@ -46,8 +46,8 @@ int main(int argc, char** argv) {
   // Usefull for imagesdb ignored for the rest while reading
   datumdb_param.set_encode_images(true);
 
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(datumdb_param);
-  shared_ptr<DatumDB::Generator> datum_generator = datumdb->GetGenerator();
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(datumdb_param));
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
 
   const int max_iter = FLAGS_max_iter;
 

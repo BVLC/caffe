@@ -39,8 +39,8 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     datumdb_param.set_source(data_param.source());
   }
   CHECK_EQ(datumdb_param.mode(), DatumDBParameter_Mode_READ);
-  datumdb_ = DatumDB::GetDatumDB(datumdb_param);
-  datum_generator_ = datumdb_->GetGenerator();
+  datumdb_.reset(DatumDBRegistry::GetDatumDB(datumdb_param));
+  datum_generator_ = datumdb_->NewGenerator();
 
   // Check if we would need to randomly skip a few data points
   if (data_param.rand_skip()) {

@@ -1,17 +1,13 @@
 #ifndef CAFFE_DATUMDB_HPP
 #define CAFFE_DATUMDB_HPP
 
-#include <algorithm>
-#include <iterator>
-#include <map>
 #include <string>
-#include <utility>
-#include <vector>
 
 #include "leveldb/db.h"
 #include "lmdb.h"
 
 #include "caffe/common.hpp"
+#include "caffe/datum_DB_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -20,7 +16,7 @@ class DatumDB {
  public:
   explicit DatumDB(const DatumDBParameter& param)
     : param_(param),
-      is_opened_(false) {}
+      is_opened_(new bool(false)) {}
   virtual ~DatumDB() {}
 
   class Generator {
@@ -43,47 +39,48 @@ class DatumDB {
     DISABLE_COPY_AND_ASSIGN(Generator);
   };
 
-  static shared_ptr<DatumDB> GetDatumDB(const DatumDBParameter& param);
-  static shared_ptr<Generator> GetGenerator(const DatumDBParameter& param);
-
-  virtual shared_ptr<Generator> GetGenerator() = 0;
-
+  virtual shared_ptr<Generator> NewGenerator() = 0;
   virtual bool Get(const string& key, Datum* datum) = 0;
   virtual void Put(const string& key, const Datum& datum) = 0;
   virtual void Commit() = 0;
 
  protected:
+  explicit DatumDB(const DatumDB& other)
+    : param_(other.param_),
+      is_opened_(other.is_opened_) {}
+  virtual void Open() = 0;
+  virtual void Close() = 0;
   virtual bool Valid() = 0;
   virtual bool Reset() = 0;
   virtual bool Next() = 0;
   virtual bool Current(string* key, Datum* datum) = 0;
-  virtual void Open() = 0;
-  virtual void Close() = 0;
 
   DatumDBParameter param_;
-  bool is_opened_;
+  shared_ptr<bool> is_opened_;
 
-  DISABLE_COPY_AND_ASSIGN(DatumDB);
 };
 
 class DatumLevelDB : public DatumDB {
  public:
   explicit DatumLevelDB(const DatumDBParameter& param)
-    : DatumDB(param) {}
+    : DatumDB(param) { Open(); }
   virtual ~DatumLevelDB() { Close(); }
 
-  virtual shared_ptr<Generator> GetGenerator();
+  virtual shared_ptr<Generator> NewGenerator();
   virtual bool Get(const string& key, Datum* datum);
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
 
  protected:
+  explicit DatumLevelDB(const DatumLevelDB& other)
+    : DatumDB(other),
+    db_(other.db_) {}
+  virtual void Open();
+  virtual void Close();
   virtual bool Valid();
   virtual bool Next();
   virtual bool Reset();
   virtual bool Current(string* key, Datum* datum);
-  virtual void Open();
-  virtual void Close();
 
   shared_ptr<leveldb::DB> db_;
   shared_ptr<leveldb::Iterator> iter_;
@@ -94,21 +91,26 @@ class DatumLevelDB : public DatumDB {
 class DatumLMDB : public DatumDB {
  public:
   explicit DatumLMDB(const DatumDBParameter& param)
-    : DatumDB(param) {}
+    : DatumDB(param) { Open(); }
   virtual ~DatumLMDB() { Close(); }
 
-  virtual shared_ptr<Generator> GetGenerator();
+  virtual shared_ptr<Generator> NewGenerator();
   virtual bool Get(const string& key, Datum* datum);
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
 
  protected:
+  explicit DatumLMDB(const DatumLMDB& other)
+    : DatumDB(other),
+    mdb_env_(other.mdb_env_),
+    mdb_txn_(other.mdb_txn_),
+    mdb_dbi_(other.mdb_dbi_) {}
+  virtual void Open();
+  virtual void Close();
   virtual bool Valid();
   virtual bool Next();
   virtual bool Reset();
   virtual bool Current(string* key, Datum* datum);
-  virtual void Open();
-  virtual void Close();
 
   MDB_env* mdb_env_;
   MDB_txn* mdb_txn_;
@@ -116,37 +118,6 @@ class DatumLMDB : public DatumDB {
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
   int mdb_status_;
-};
-
-class DatumImagesDB : public DatumDB {
- public:
-  explicit DatumImagesDB(const DatumDBParameter& param)
-    : DatumDB(param) {}
-  virtual ~DatumImagesDB() { Close(); }
-
-  virtual shared_ptr<Generator> GetGenerator();
-  virtual bool Get(const string& key, Datum* datum);
-  virtual void Put(const string& key, const Datum& datum);
-  virtual void Commit();
-
- protected:
-  virtual bool Valid();
-  virtual bool Next();
-  virtual bool Reset();
-  virtual bool Current(string* key, Datum* datum);
-  virtual void Open();
-  virtual void Close();
-  virtual void ShuffleKeys();
-
-  std::fstream file_;
-  string root_images_;
-  bool cache_images_;
-  bool encode_images_;
-
-  vector<string> keys_;
-  vector<string>::iterator read_it_;
-  shared_ptr<map<string, Datum> > datum_database_;
-  vector<pair<string, Datum> > batch_;
 };
 
 }  // namespace caffe

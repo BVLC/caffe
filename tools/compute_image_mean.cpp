@@ -47,8 +47,8 @@ int main(int argc, char** argv) {
   datumdb_param.set_source(argv[1]);
   datumdb_param.set_loop(false);
   datumdb_param.set_backend(FLAGS_backend);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(datumdb_param);
-  shared_ptr<DatumDB::Generator> datum_generator = datumdb->GetGenerator();
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(datumdb_param));
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
 
   BlobProto sum_blob;
   int count = 0;
