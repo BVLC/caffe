@@ -28,7 +28,7 @@ class DatumDBTest : public ::testing::Test {
     param.set_mode(DatumDBParameter_Mode_NEW);
     param.set_source(source_);
     param.set_root_images(root_images_);
-    shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
+    shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
     for (int i = 0; i < 2; ++i) {
       Datum datum;
       ReadImageToDatum(root_images_ + keys[i], i, &datum);
@@ -39,28 +39,25 @@ class DatumDBTest : public ::testing::Test {
 
   virtual ~DatumDBTest() { }
 
-  DatumDBParameter_Backend backend_;
+  string backend_;
   string source_;
   string root_images_;
 };
 
 struct TypeLeveldb {
-  static const DatumDBParameter_Backend backend;
+  static const char backend[];
 };
-const DatumDBParameter_Backend TypeLeveldb::backend =
-      DatumDBParameter_Backend_LEVELDB;
+const char TypeLeveldb::backend[] = "leveldb";
 
 struct TypeLmdb {
-  static const DatumDBParameter_Backend backend;
+  static const char backend[];
 };
-const DatumDBParameter_Backend TypeLmdb::backend =
-      DatumDBParameter_Backend_LMDB;
+const char TypeLmdb::backend[] = "lmdb";
 
 struct TypeImagesdb {
-  static const DatumDBParameter_Backend backend;
+  static const char backend[];
 };
-const DatumDBParameter_Backend TypeImagesdb::backend =
-      DatumDBParameter_Backend_IMAGESDB;
+const char TypeImagesdb::backend[] = "imagesdb";
 
 // typedef ::testing::Types<TypeLmdb> TestTypes;
 typedef ::testing::Types<TypeLeveldb, TypeLmdb, TypeImagesdb> TestTypes;
@@ -72,8 +69,8 @@ TYPED_TEST(DatumDBTest, TestGetDatumDB) {
   param.set_backend(TypeParam::backend);
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  EXPECT_TRUE(datumdb->Valid());
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
+  EXPECT_TRUE(datumdb.get());
 }
 
 TYPED_TEST(DatumDBTest, TestNext) {
@@ -81,10 +78,11 @@ TYPED_TEST(DatumDBTest, TestNext) {
   param.set_backend(TypeParam::backend);
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  EXPECT_TRUE(datumdb->Valid());
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
+  EXPECT_TRUE(datum_generator->Valid());
   for (int i = 0; i < 5; ++i) {
-    EXPECT_TRUE(datumdb->Next());
+    EXPECT_TRUE(datum_generator->Next());
   }
 }
 
@@ -94,69 +92,29 @@ TYPED_TEST(DatumDBTest, TestNextNoLoop) {
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
   param.set_loop(false);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  EXPECT_TRUE(datumdb->Valid());
-  EXPECT_TRUE(datumdb->Next());
-  EXPECT_FALSE(datumdb->Next());
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
+  EXPECT_TRUE(datum_generator->Valid());
+  EXPECT_TRUE(datum_generator->Next());
+  EXPECT_FALSE(datum_generator->Next());
 }
 
-TYPED_TEST(DatumDBTest, TestPrev) {
-  DatumDBParameter param;
-  param.set_backend(TypeParam::backend);
-  param.set_source(this->source_);
-  param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  EXPECT_TRUE(datumdb->Valid());
-  for (int i = 0; i < 5; ++i) {
-    EXPECT_TRUE(datumdb->Prev());
-  }
-}
-
-TYPED_TEST(DatumDBTest, TestPrevNoLoop) {
+TYPED_TEST(DatumDBTest, TestReset) {
   DatumDBParameter param;
   param.set_backend(TypeParam::backend);
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
   param.set_loop(false);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  EXPECT_TRUE(datumdb->Valid());
-  EXPECT_FALSE(datumdb->Prev());
-}
-
-TYPED_TEST(DatumDBTest, TestSeekToFirst) {
-  DatumDBParameter param;
-  param.set_backend(TypeParam::backend);
-  param.set_source(this->source_);
-  param.set_root_images(this->root_images_);
-  param.set_loop(false);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  EXPECT_TRUE(datumdb->SeekToFirst());
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
+  EXPECT_TRUE(datum_generator->Reset());
   string key;
   Datum datum;
-  EXPECT_TRUE(datumdb->Current(&key, &datum));
+  EXPECT_TRUE(datum_generator->Current(&key, &datum));
   EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
-  EXPECT_FALSE(datumdb->Prev());
-}
-
-TYPED_TEST(DatumDBTest, TestSeekToLast) {
-  DatumDBParameter param;
-  param.set_backend(TypeParam::backend);
-  param.set_source(this->source_);
-  param.set_root_images(this->root_images_);
-  param.set_loop(false);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  EXPECT_TRUE(datumdb->SeekToLast());
-  string key;
-  Datum datum;
-  EXPECT_TRUE(datumdb->Current(&key, &datum));
-  EXPECT_EQ(key, "fish-bike.jpg");
-  EXPECT_EQ(datum.channels(), 3);
-  EXPECT_EQ(datum.height(), 323);
-  EXPECT_EQ(datum.width(), 481);
-  EXPECT_FALSE(datumdb->Next());
 }
 
 TYPED_TEST(DatumDBTest, TestCurrent) {
@@ -164,27 +122,28 @@ TYPED_TEST(DatumDBTest, TestCurrent) {
   param.set_backend(TypeParam::backend);
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
   string key;
   Datum datum;
-  EXPECT_TRUE(datumdb->Current(&key, &datum));
+  EXPECT_TRUE(datum_generator->Current(&key, &datum));
   EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
-  EXPECT_TRUE(datumdb->Current(&key, &datum));
+  EXPECT_TRUE(datum_generator->Current(&key, &datum));
   EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
-  EXPECT_TRUE(datumdb->Next());
-  EXPECT_TRUE(datumdb->Current(&key, &datum));
+  EXPECT_TRUE(datum_generator->Next());
+  EXPECT_TRUE(datum_generator->Current(&key, &datum));
   EXPECT_EQ(key, "fish-bike.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 323);
   EXPECT_EQ(datum.width(), 481);
-  EXPECT_TRUE(datumdb->Prev());
-  EXPECT_TRUE(datumdb->Current(&key, &datum));
+  EXPECT_TRUE(datum_generator->Next());
+  EXPECT_TRUE(datum_generator->Current(&key, &datum));
   EXPECT_EQ(key, "cat.jpg");
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
@@ -196,7 +155,7 @@ TYPED_TEST(DatumDBTest, TestGet) {
   param.set_backend(TypeParam::backend);
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
   Datum datum;
   EXPECT_TRUE(datumdb->Get("cat.jpg", &datum));
   EXPECT_EQ(datum.channels(), 3);
@@ -209,33 +168,20 @@ TYPED_TEST(DatumDBTest, TestGet) {
   EXPECT_FALSE(datumdb->Get("none.jpg", &datum));
 }
 
-TYPED_TEST(DatumDBTest, TestCurrentKey) {
-  DatumDBParameter param;
-  param.set_backend(TypeParam::backend);
-  param.set_source(this->source_);
-  param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
-  string key;
-  key = datumdb->CurrentKey();
-  EXPECT_EQ(key, "cat.jpg");
-  EXPECT_TRUE(datumdb->Next());
-  key = datumdb->CurrentKey();
-  EXPECT_EQ(key, "fish-bike.jpg");
-}
-
 TYPED_TEST(DatumDBTest, TestCurrentDatum) {
   DatumDBParameter param;
   param.set_backend(TypeParam::backend);
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
+  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
   Datum datum;
-  datum = datumdb->CurrentDatum();
+  EXPECT_TRUE(datum_generator->Current(&datum));
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 360);
   EXPECT_EQ(datum.width(), 480);
-  EXPECT_TRUE(datumdb->Next());
-  datum = datumdb->CurrentDatum();
+  EXPECT_TRUE(datum_generator->Next());
+  EXPECT_TRUE(datum_generator->Current(&datum));
   EXPECT_EQ(datum.channels(), 3);
   EXPECT_EQ(datum.height(), 323);
   EXPECT_EQ(datum.width(), 481);
@@ -247,7 +193,7 @@ TYPED_TEST(DatumDBTest, TestWrite) {
   param.set_mode(DatumDBParameter_Mode_WRITE);
   param.set_source(this->source_);
   param.set_root_images(this->root_images_);
-  shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
   Datum datum;
   ReadFileToDatum(this->root_images_ + "cat.jpg", 0, &datum);
   datumdb->Put("cat.jpg", datum);

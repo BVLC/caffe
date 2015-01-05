@@ -17,11 +17,15 @@ class DatumDB {
   explicit DatumDB(const DatumDBParameter& param)
     : param_(param),
       is_opened_(new bool(false)) {}
-  virtual ~DatumDB() {}
+  virtual ~DatumDB() {
+    if (is_opened_.unique()) {
+      DatumDBRegistry::RemoveSource(param_.source());
+    }
+  }
 
   class Generator {
    public:
-    Generator(shared_ptr<DatumDB> datumdb)
+    explicit Generator(shared_ptr<DatumDB> datumdb)
       : datumdb_(datumdb) { CHECK_NOTNULL(datumdb.get());
           CHECK(Reset()); }
     bool Valid() { return datumdb_->Valid(); }
@@ -57,7 +61,6 @@ class DatumDB {
 
   DatumDBParameter param_;
   shared_ptr<bool> is_opened_;
-
 };
 
 class DatumLevelDB : public DatumDB {

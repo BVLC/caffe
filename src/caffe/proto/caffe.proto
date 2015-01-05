@@ -465,20 +465,23 @@ message DatumDBParameter {
   optional string source = 3;
   // If true it will loop around the datumDB when needed
   optional bool loop = 4 [default = true];
+  // If true the datum_DB_factory will register the source 
+  // and will make sure there is only one datumDB per source
+  optional bool unique_source = 5 [default = true];
   // Only used by LMDB
   // Max size of LMDB, by default 1TB
-  optional uint64 mdb_env_mapsize = 5 [default = 1099511627776];
+  optional uint64 mdb_env_mapsize = 6 [default = 1099511627776];
   // Max number of readers, by default 126
-  optional uint32 mdb_env_maxreaders = 6 [default = 126];
+  optional uint32 mdb_env_maxreaders = 7 [default = 126];
   // Only used by IMAGESDB
   // Prefix used to locate the images
-  optional string root_images = 7 [default = ""];
+  optional string root_images = 8 [default = ""];
   // If true it will store the images in memory, be careful with memory
-  optional bool cache_images = 8 [default = false];
+  optional bool cache_images = 9 [default = false];
   // If true it will use encoded images, just copy the file for later decoding
-  optional bool encode_images = 9 [default = false];
+  optional bool encode_images = 10 [default = false];
   // If true it will shuffle the list of images
-  optional bool shuffle_images = 10 [default = false];
+  optional bool shuffle_images = 11 [default = false];
 }
 
 // Message that stores parameters used by DropoutLayer

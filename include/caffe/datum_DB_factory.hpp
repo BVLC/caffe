@@ -2,6 +2,7 @@
 #define CAFFE_DATUMDB_FACTORY_H_
 
 #include <map>
+#include <string>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -48,9 +49,22 @@ class DatumDBRegistry {
       CreatorRegistry& registry = Registry();
       CHECK_EQ(registry.count(backend), 1);
       DatumDB* datumdb = registry[backend](param);
-      sources[param.source()] = datumdb;
+      if (param.unique_source()) {
+        sources[param.source()] = datumdb;
+      }
       return datumdb;
     }
+  }
+
+  static bool RemoveSource(const string& source) {
+    SourceRegistry& sources = Sources();
+    SourceRegistry::iterator it = sources.find(source);
+    if (it != sources.end()) {
+      LOG(INFO) << "Removing Source " << source;
+      sources.erase(it);
+      return true;
+    }
+    return false;
   }
 
  private:

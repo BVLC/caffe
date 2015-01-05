@@ -84,7 +84,7 @@ void DatumImagesDB::Close() {
 }
 
 shared_ptr<DatumDB::Generator> DatumImagesDB::NewGenerator() {
-  CHECK_EQ(param_.mode(),DatumDBParameter_Mode_READ)
+  CHECK_EQ(param_.mode(), DatumDBParameter_Mode_READ)
     << "Only DatumDB in Mode_READ can use NewGenerator";
   CHECK(*is_opened_);
   LOG(INFO) << "Creating Generator for " << param_.source();

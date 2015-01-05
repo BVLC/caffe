@@ -21,7 +21,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   DataLayerTest()
-      : backend_(DatumDBParameter_Backend_LEVELDB),
+      : backend_("leveldb"),
         blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
         seed_(1701) {}
@@ -36,14 +36,14 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   // Fill the LevelDB with data: if unique_pixels, each pixel is unique but
   // all images are the same; else each image is unique but all pixels within
   // an image are the same.
-  void Fill(const bool unique_pixels, DatumDBParameter_Backend backend) {
+  void Fill(const bool unique_pixels, string backend) {
     backend_ = backend;
     LOG(INFO) << "Using temporary dataset " << *source_;
     DatumDBParameter param;
     param.set_backend(backend_);
     param.set_mode(DatumDBParameter_Mode_NEW);
     param.set_source(source_->c_str());
-    shared_ptr<DatumDB> datumdb = DatumDB::GetDatumDB(param);
+    shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(param));
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
@@ -268,7 +268,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
   virtual ~DataLayerTest() { delete blob_top_data_; delete blob_top_label_; }
 
-  DatumDBParameter_Backend backend_;
+  string backend_;
   shared_ptr<string> source_;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
@@ -281,14 +281,14 @@ TYPED_TEST_CASE(DataLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(DataLayerTest, TestReadLevelDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LEVELDB);
+  this->Fill(unique_pixels, "leveldb");
   this->TestRead();
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
   Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LEVELDB);
+  this->Fill(unique_pixels, "leveldb");
   this->TestReadCrop();
 }
 
@@ -297,7 +297,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLevelDB) {
   Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LEVELDB);
+  this->Fill(unique_pixels, "leveldb");
   this->TestReadCropTrainSequenceSeeded();
 }
 
@@ -306,27 +306,27 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLevelDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededLevelDB) {
   Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LEVELDB);
+  this->Fill(unique_pixels, "leveldb");
   this->TestReadCropTrainSequenceUnseeded();
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
   Caffe::set_phase(Caffe::TEST);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LEVELDB);
+  this->Fill(unique_pixels, "leveldb");
   this->TestReadCrop();
 }
 
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
   const bool unique_pixels = false;  // all pixels the same; images different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LMDB);
+  this->Fill(unique_pixels, "lmdb");
   this->TestRead();
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
   Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LMDB);
+  this->Fill(unique_pixels, "lmdb");
   this->TestReadCrop();
 }
 
@@ -335,7 +335,7 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLMDB) {
   Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LMDB);
+  this->Fill(unique_pixels, "lmdb");
   this->TestReadCropTrainSequenceSeeded();
 }
 
@@ -344,14 +344,14 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLMDB) {
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededLMDB) {
   Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LMDB);
+  this->Fill(unique_pixels, "lmdb");
   this->TestReadCropTrainSequenceUnseeded();
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   Caffe::set_phase(Caffe::TEST);
   const bool unique_pixels = true;  // all images the same; pixels different
-  this->Fill(unique_pixels, DatumDBParameter_Backend_LMDB);
+  this->Fill(unique_pixels, "lmdb");
   this->TestReadCrop();
 }
 

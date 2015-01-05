@@ -29,7 +29,8 @@ void DatumLMDB::Open() {
     case DatumDBParameter_Mode_READ:
       mdb_status_ = mdb_env_set_mapsize(mdb_env_, 1);
       CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
-      mdb_status_ = mdb_env_set_maxreaders(mdb_env_, param_.mdb_env_maxreaders());
+      mdb_status_ = mdb_env_set_maxreaders(mdb_env_,
+                    param_.mdb_env_maxreaders());
       CHECK_EQ(mdb_status_, MDB_SUCCESS) << mdb_strerror(mdb_status_);
       mdb_status_ = mdb_env_open(mdb_env_, param_.source().c_str(),
                     MDB_RDONLY|MDB_NOTLS|MDB_NOLOCK, 0664);
@@ -62,7 +63,7 @@ void DatumLMDB::Close() {
 }
 
 shared_ptr<DatumDB::Generator> DatumLMDB::NewGenerator() {
-  CHECK_EQ(param_.mode(),DatumDBParameter_Mode_READ)
+  CHECK_EQ(param_.mode(), DatumDBParameter_Mode_READ)
     << "Only DatumDB in Mode_READ can use NewGenerator";
   CHECK(*is_opened_);
   LOG(INFO) << "Creating Generator for " << param_.source();
