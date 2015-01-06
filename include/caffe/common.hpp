@@ -35,7 +35,6 @@ public:
 #include <iostream>  // NOLINT(readability/streams)
 #include <map>
 #include <set>
-#include <sstream>
 #include <string>
 #include <utility>  // pair
 #include <vector>
