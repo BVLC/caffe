@@ -1,3 +1,0 @@
-../../src/caffe/test/test_data/categorical_hdf5_test_data0.h5
-../../src/caffe/test/test_data/categorical_hdf5_test_data1.h5
-

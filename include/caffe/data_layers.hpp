@@ -181,14 +181,11 @@ class HDF5CategoricalDLayer : public Layer<Dtype> {
   // contains: number of categories and for each the number of possible values
   std::vector<int> description_;
   // accumulated values of description_[1->], starting with zero
-  std::vector<int> accumulatedvalues_; 
+  std::vector<int> accumulatedvalues_;
   hsize_t current_row_;
   Blob<int> data_blob_;
   Blob<Dtype> label_blob_;
 };
-
-
- 
 
 /**
  * @brief Provides data to the Net from HDF5 files.
