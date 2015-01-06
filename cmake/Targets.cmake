@@ -1,10 +1,14 @@
 ################################################################################################
-# Defines global Caffe_STATIC_LINK flag, This flag is required to prevent linker from excluding
+# Defines global Caffe_LINK flag, This flag is required to prevent linker from excluding
 # some objects which are not addressed directly but are registered via static constructors
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(Caffe_STATIC_LINK -Wl,-force_load caffe)
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(Caffe_STATIC_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
+if(BUILD_SHARED_LIBS)
+  set(Caffe_LINK caffe)
+else()
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(Caffe_LINK -Wl,-force_load caffe)
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(Caffe_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
+  endif()
 endif()
 
 ################################################################################################

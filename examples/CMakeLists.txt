@@ -9,7 +9,7 @@ foreach(source_file ${examples_srcs})
   get_filename_component(folder ${path} NAME_WE)
     
   add_executable(${name} ${source_file})
-  target_link_libraries(${name} ${Caffe_STATIC_LINK})
+  target_link_libraries(${name} ${Caffe_LINK})
   caffe_default_properties(${name})
 
   # set back RUNTIME_OUTPUT_DIRECTORY

@@ -81,7 +81,7 @@ function(caffe_protobuf_generate_cpp output_dir srcs_var hdrs_var)
              "${output_dir}/${fil_we}.pb.h"
       COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
       ARGS --cpp_out  ${output_dir} ${_protobuf_include_path} ${abs_fil}
-      DEPENDS ${ABS_FIL}
+      DEPENDS ${abs_fil}
       COMMENT "Running C++ protocol buffer compiler on ${fil}"
       VERBATIM )
   endforeach()
