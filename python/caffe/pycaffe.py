@@ -376,6 +376,13 @@ def _Net_batch(self, blobs):
                                                  padding])
         yield padded_batch
 
+@property
+def _Net_inputs(self):
+    return [self.blobs.keys()[i] for i in self._inputs]
+
+@property
+def _Net_outputs(self):
+    return [self.blobs.keys()[i] for i in self._outputs]
 
 # Attach methods to Net.
 Net.blobs = _Net_blobs
@@ -392,3 +399,5 @@ Net.preprocess = _Net_preprocess
 Net.deprocess = _Net_deprocess
 Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
+Net.inputs = _Net_inputs
+Net.outputs = _Net_outputs
