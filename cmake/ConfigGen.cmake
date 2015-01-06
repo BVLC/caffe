@@ -34,7 +34,7 @@ endfunction()
 # Usage:
 #  caffe_generate_export_configs()
 function(caffe_generate_export_configs)
-  set(install_cmake_suffix "share/caffe")
+  set(install_cmake_suffix "share/Caffe")
 
   # ---[ Configure build-tree CaffeConfig.cmake file ]---
   caffe_get_current_includes(Caffe_INCLUDE_DIRS)
