@@ -207,6 +207,15 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
 
+  bp::class_<Layer<Dtype>, shared_ptr<Layer<Dtype> >, boost::noncopyable>(
+    "Layer", bp::no_init)
+    .add_property("blobs", bp::make_function(&Layer<Dtype>::blobs,
+          bp::return_internal_reference<>()))
+    .def("setup", &Layer<Dtype>::LayerSetUp)
+    .def("reshape", &Layer<Dtype>::Reshape)
+    .add_property("type_name", bp::make_function(&Layer<Dtype>::type_name,
+        bp::return_value_policy<bp::copy_const_reference>()));
+
   // vector wrappers for all the vector types we use
   bp::class_<vector<shared_ptr<Blob<Dtype> > > >("BlobVec")
     .def(bp::vector_indexing_suite<vector<shared_ptr<Blob<Dtype> > >, true>());
