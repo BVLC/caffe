@@ -9,6 +9,8 @@
 // avoid fatal checks from glog
 //#define CAFFE_THROW_ON_ERROR
 #ifdef CAFFE_THROW_ON_ERROR
+#undef CHECK
+#undef CHECK_OP_LOG
 #include <sstream>
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
 		 ( std::ostringstream() << std::dec << x ) ).str()
