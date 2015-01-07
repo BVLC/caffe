@@ -197,7 +197,8 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("test_nets", &PySGDSolver::test_nets)
       .add_property("iter",      &PySGDSolver::iter)
       .def("solve",              &PySGDSolver::Solve)
-      .def("solve",              &PySGDSolver::SolveResume);
+      .def("solve",              &PySGDSolver::SolveResume)
+      .def("step",               &PySGDSolver::Step);
 
   bp::class_<vector<shared_ptr<PyNet> > >("NetVec")
       .def(bp::vector_indexing_suite<vector<shared_ptr<PyNet> >, true>());
