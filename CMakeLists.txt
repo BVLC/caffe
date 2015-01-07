@@ -43,7 +43,7 @@ configure_file(cmake/Templates/caffe_config.h.in "${CMAKE_BINARY_DIR}/caffe_conf
 # ---[ Includes
 set(Caffe_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 include_directories(${Caffe_INCLUDE_DIR} ${CMAKE_BINARY_DIR})
-include_directories(BEFORE src) # This is needed for gtest. Ugly code layout!
+include_directories(BEFORE src) # This is needed for gtest.
 
 # ---[ Subdirectories
 add_subdirectory(src/gtest)

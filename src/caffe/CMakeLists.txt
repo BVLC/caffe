@@ -1,7 +1,6 @@
 # generate protobuf sources
 file(GLOB proto_files proto/*.proto)
-caffe_protobuf_generate_cpp(${proto_gen_folder} proto_srcs proto_hdrs ${proto_files})
-caffe_protobuf_generate_py(${proto_gen_folder} proto_python ${proto_files})
+caffe_protobuf_generate_cpp_py(${proto_gen_folder} proto_srcs proto_hdrs proto_python ${proto_files})
 
 # include python files either to force generation
 add_library(proto STATIC ${proto_hdrs} ${proto_srcs} ${proto_python})
