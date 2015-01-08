@@ -2,7 +2,7 @@
 name: BVLC GoogleNet Model
 caffemodel: bvlc_googlenet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel
-license: non-commercial
+license: unrestricted
 sha1: 405fc5acd08a3bb12de8ee5e23a96bec22f08204
 caffe_commit: bc614d1bd91896e3faceaf40b23b72dab47d44f5
 gist_id: 866e2aa1fd707b89b913

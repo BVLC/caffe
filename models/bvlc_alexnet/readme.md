@@ -2,7 +2,7 @@
 name: BVLC AlexNet Model
 caffemodel: bvlc_alexnet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel
-license: non-commercial
+license: unrestricted
 sha1: 9116a64c0fbe4459d18f4bb6b56d647b63920377
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
 ---
