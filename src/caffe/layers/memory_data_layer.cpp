@@ -35,12 +35,10 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
       << " by the upper layers";
   size_t num = datum_vector.size();
   CHECK_GT(num, 0) << "There is no datum to add";
-  CHECK_LE(num % batch_size_, 0) <<
+  CHECK_EQ(num % batch_size_, 0) <<
       "The number of added datum must be multiple of the batch size";
-  if (num > batch_size_) {
-    added_data_.Reshape(num, channels_, height_, width_);
-    added_label_.Reshape(num, 1, 1, 1);
-  }
+  added_data_.Reshape(num, channels_, height_, width_);
+  added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_.Transform(datum_vector, &added_data_);
   // Copy Labels
@@ -61,13 +59,11 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   CHECK(!has_new_data_) <<
       "Can't add Mat when earlier ones haven't been consumed"
       << " by the upper layers";
-  CHECK_LE(num % batch_size_, 0) <<
+  CHECK_EQ(num % batch_size_, 0) <<
       "The number of added datum must be multiple of the batch size";
   CHECK_GT(num, 0) << "There is no mat to add";
-  if (num > batch_size_) {
-    added_data_.Reshape(num, channels_, height_, width_);
-    added_label_.Reshape(num, 1, 1, 1);
-  }
+  added_data_.Reshape(num, channels_, height_, width_);
+  added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_.Transform(mat_vector, &added_data_);
   // Copy Labels
