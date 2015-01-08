@@ -38,8 +38,10 @@ def parse_log(path_to_log):
 
     re_iteration = re.compile('Iteration (\d+)')
     re_accuracy = re.compile('output #\d+: accuracy = ([\.\d]+)')
-    re_train_loss = re.compile('Iteration \d+, loss = ([\.\d]+)')
-    re_output_loss = re.compile('output #\d+: loss = ([\.\d]+)')
+    re_train_loss = re.compile(
+        'Iteration \d+, loss = ([-+]?[0-9]*\.?[0-9]+[eE][-+]?[0-9]+)?')
+    re_output_loss = re.compile(
+        'output #\d+: loss = ([-+]?[0-9]*\.?[0-9]+[eE][-+]?[0-9]+)?')
     re_lr = re.compile('lr = ([\.\d]+)')
 
     # Pick out lines of interest
