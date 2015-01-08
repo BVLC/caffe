@@ -247,8 +247,7 @@ TYPED_TEST(MemoryDataLayerTest, TestChangeBatchSize) {
           for (int c = 0; c < this->channels_; ++c) {
             data_index = (i*count) + (c * this->height_ + h) * this->width_ + w;
             Dtype pixel = static_cast<Dtype>(ptr_mat[index++]);
-            EXPECT_EQ(static_cast<int>(pixel),
-                      data[data_index]);
+            EXPECT_EQ(static_cast<int>(pixel), data[data_index]);
           }
         }
       }
@@ -284,8 +283,7 @@ TYPED_TEST(MemoryDataLayerTest, TestChangeBatchSize) {
           for (int c = 0; c < this->channels_; ++c) {
             data_index = (i*count) + (c * this->height_ + h) * this->width_ + w;
             Dtype pixel = static_cast<Dtype>(ptr_mat[index++]);
-            EXPECT_EQ(static_cast<int>(pixel),
-                      data[data_index]);
+            EXPECT_EQ(static_cast<int>(pixel), data[data_index]);
           }
         }
       }
