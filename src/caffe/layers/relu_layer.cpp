@@ -43,5 +43,4 @@ STUB_GPU(ReLULayer);
 
 INSTANTIATE_CLASS(ReLULayer);
 
-
 }  // namespace caffe

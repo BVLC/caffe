@@ -29,9 +29,6 @@ class NeuronLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_NONE;
-  }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 };
@@ -54,9 +51,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_ABSVAL;
-  }
+  virtual inline const char* type() const { return "AbsVal"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
@@ -113,9 +108,7 @@ class BNLLLayer : public NeuronLayer<Dtype> {
   explicit BNLLLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_BNLL;
-  }
+  virtual inline const char* type() const { return "BNLL"; }
 
  protected:
   /// @copydoc BNLLLayer
@@ -173,9 +166,7 @@ class DropoutLayer : public NeuronLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_DROPOUT;
-  }
+  virtual inline const char* type() const { return "Dropout"; }
 
  protected:
   /**
@@ -233,9 +224,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_EXP;
-  }
+  virtual inline const char* type() const { return "Exp"; }
 
  protected:
   /**
@@ -298,9 +287,7 @@ class PowerLayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_POWER;
-  }
+  virtual inline const char* type() const { return "Power"; }
 
  protected:
   /**
@@ -369,9 +356,7 @@ class ReLULayer : public NeuronLayer<Dtype> {
   explicit ReLULayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_RELU;
-  }
+  virtual inline const char* type() const { return "ReLU"; }
 
  protected:
   /**
@@ -465,9 +450,7 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
   explicit SigmoidLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_SIGMOID;
-  }
+  virtual inline const char* type() const { return "Sigmoid"; }
 
  protected:
   /**
@@ -549,9 +532,7 @@ class TanHLayer : public NeuronLayer<Dtype> {
   explicit TanHLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_TANH;
-  }
+  virtual inline const char* type() const { return "TanH"; }
 
  protected:
   /**
@@ -639,9 +620,7 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_THRESHOLD;
-  }
+  virtual inline const char* type() const { return "Threshold"; }
 
  protected:
   /**

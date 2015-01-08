@@ -14,7 +14,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   LayerParameter softmax_param(this->layer_param_);
-  softmax_param.set_type(LayerParameter_LayerType_SOFTMAX);
+  softmax_param.set_type("Softmax");
   softmax_layer_.reset(LayerRegistry<Dtype>::CreateLayer(softmax_param));
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
@@ -80,7 +80,7 @@ template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
-    LOG(FATAL) << this->type_name()
+    LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
@@ -116,6 +116,6 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(SoftmaxWithLossLayer);
-REGISTER_LAYER_CLASS(SOFTMAX_LOSS, SoftmaxWithLossLayer);
+REGISTER_LAYER_CLASS(SoftmaxWithLoss);
 
 }  // namespace caffe
