@@ -14,6 +14,7 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
+#include "caffe/python_layer.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -215,14 +216,16 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
 
-  bp::class_<Layer<Dtype>, shared_ptr<Layer<Dtype> >, boost::noncopyable>(
-    "Layer", bp::no_init)
+  bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,
+    boost::noncopyable>("Layer", bp::init<const LayerParameter&>())
     .add_property("blobs", bp::make_function(&Layer<Dtype>::blobs,
           bp::return_internal_reference<>()))
     .def("setup", &Layer<Dtype>::LayerSetUp)
     .def("reshape", &Layer<Dtype>::Reshape)
-    .add_property("type_name", bp::make_function(&Layer<Dtype>::type_name,
-        bp::return_value_policy<bp::copy_const_reference>()));
+    .add_property("type", bp::make_function(&Layer<Dtype>::type));
+  bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
+
+  bp::class_<LayerParameter>("LayerParameter", bp::no_init);
 
   bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
     "Solver", bp::no_init)
@@ -250,6 +253,8 @@ BOOST_PYTHON_MODULE(_caffe) {
   // vector wrappers for all the vector types we use
   bp::class_<vector<shared_ptr<Blob<Dtype> > > >("BlobVec")
     .def(bp::vector_indexing_suite<vector<shared_ptr<Blob<Dtype> > >, true>());
+  bp::class_<vector<Blob<Dtype>*> >("RawBlobVec")
+    .def(bp::vector_indexing_suite<vector<Blob<Dtype>*>, true>());
   bp::class_<vector<shared_ptr<Layer<Dtype> > > >("LayerVec")
     .def(bp::vector_indexing_suite<vector<shared_ptr<Layer<Dtype> > >, true>());
   bp::class_<vector<string> >("StringVec")
@@ -258,6 +263,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def(bp::vector_indexing_suite<vector<int> >());
   bp::class_<vector<shared_ptr<Net<Dtype> > > >("NetVec")
     .def(bp::vector_indexing_suite<vector<shared_ptr<Net<Dtype> > >, true>());
+  bp::class_<vector<bool> >("BoolVec")
+    .def(bp::vector_indexing_suite<vector<bool> >());
 
   import_array();
 }
