@@ -160,9 +160,8 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
    */
   explicit ConvolutionLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_CONVOLUTION;
-  }
+
+  virtual inline const char* type() const { return "Convolution"; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -196,9 +195,8 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
  public:
   explicit DeconvolutionLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_DECONVOLUTION;
-  }
+
+  virtual inline const char* type() const { return "Deconvolution"; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -272,9 +270,7 @@ class Im2colLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_IM2COL;
-  }
+  virtual inline const char* type() const { return "Im2col"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
@@ -314,9 +310,7 @@ class LRNLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_LRN;
-  }
+  virtual inline const char* type() const { return "LRN"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
@@ -392,9 +386,7 @@ class PoolingLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_POOLING;
-  }
+  virtual inline const char* type() const { return "Pooling"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
   // MAX POOL layers can output an extra top blob for the mask;

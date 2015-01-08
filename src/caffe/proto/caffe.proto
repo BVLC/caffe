@@ -225,59 +225,7 @@ message LayerParameter {
   repeated NetStateRule include = 32;
   repeated NetStateRule exclude = 33;
 
-  // NOTE
-  // Add new LayerTypes to the enum below in lexicographical order (other than
-  // starting with NONE), starting with the next available ID in the comment
-  // line above the enum. Update the next available ID when you add a new
-  // LayerType.
-  //
-  // LayerType next available ID: 40 (last added: DECONVOLUTION)
-  enum LayerType {
-    // "NONE" layer type is 0th enum element so that we don't cause confusion
-    // by defaulting to an existent LayerType (instead, should usually error if
-    // the type is unspecified).
-    NONE = 0;
-    ABSVAL = 35;
-    ACCURACY = 1;
-    ARGMAX = 30;
-    BNLL = 2;
-    CONCAT = 3;
-    CONTRASTIVE_LOSS = 37;
-    CONVOLUTION = 4;
-    DATA = 5;
-    DECONVOLUTION = 39;
-    DROPOUT = 6;
-    DUMMY_DATA = 32;
-    EUCLIDEAN_LOSS = 7;
-    ELTWISE = 25;
-    EXP = 38;
-    FLATTEN = 8;
-    HDF5_DATA = 9;
-    HDF5_OUTPUT = 10;
-    HINGE_LOSS = 28;
-    IM2COL = 11;
-    IMAGE_DATA = 12;
-    INFOGAIN_LOSS = 13;
-    INNER_PRODUCT = 14;
-    LRN = 15;
-    MEMORY_DATA = 29;
-    MULTINOMIAL_LOGISTIC_LOSS = 16;
-    MVN = 34;
-    POOLING = 17;
-    POWER = 26;
-    RELU = 18;
-    SIGMOID = 19;
-    SIGMOID_CROSS_ENTROPY_LOSS = 27;
-    SILENCE = 36;
-    SOFTMAX = 20;
-    SOFTMAX_LOSS = 21;
-    SPLIT = 22;
-    SLICE = 33;
-    TANH = 23;
-    WINDOW_DATA = 24;
-    THRESHOLD = 31;
-  }
-  optional LayerType type = 5; // the layer type from the enum above
+  optional string type = 5; // the layer type from the enum above
 
   // The blobs containing the numeric parameters of the layer
   repeated BlobProto blobs = 6;

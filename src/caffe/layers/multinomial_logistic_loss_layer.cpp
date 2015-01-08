@@ -41,7 +41,7 @@ void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
-    LOG(FATAL) << this->type_name()
+    LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
@@ -62,5 +62,6 @@ void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
 }
 
 INSTANTIATE_CLASS(MultinomialLogisticLossLayer);
-REGISTER_LAYER_CLASS(MULTINOMIAL_LOGISTIC_LOSS, MultinomialLogisticLossLayer);
+REGISTER_LAYER_CLASS(MultinomialLogisticLoss);
+
 }  // namespace caffe

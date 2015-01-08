@@ -459,78 +459,78 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
   return is_fully_compatible;
 }
 
-LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
+const char* UpgradeV0LayerType(const string& type) {
   if (type == "accuracy") {
-    return LayerParameter_LayerType_ACCURACY;
+    return "Accuracy";
   } else if (type == "bnll") {
-    return LayerParameter_LayerType_BNLL;
+    return "BNLL";
   } else if (type == "concat") {
-    return LayerParameter_LayerType_CONCAT;
+    return "Concat";
   } else if (type == "conv") {
-    return LayerParameter_LayerType_CONVOLUTION;
+    return "Convolution";
   } else if (type == "data") {
-    return LayerParameter_LayerType_DATA;
+    return "Data";
   } else if (type == "dropout") {
-    return LayerParameter_LayerType_DROPOUT;
+    return "Dropout";
   } else if (type == "euclidean_loss") {
-    return LayerParameter_LayerType_EUCLIDEAN_LOSS;
+    return "EuclideanLoss";
   } else if (type == "flatten") {
-    return LayerParameter_LayerType_FLATTEN;
+    return "Flatten";
   } else if (type == "hdf5_data") {
-    return LayerParameter_LayerType_HDF5_DATA;
+    return "HDF5Data";
   } else if (type == "hdf5_output") {
-    return LayerParameter_LayerType_HDF5_OUTPUT;
+    return "HDF5Output";
   } else if (type == "im2col") {
-    return LayerParameter_LayerType_IM2COL;
+    return "Im2Col";
   } else if (type == "images") {
-    return LayerParameter_LayerType_IMAGE_DATA;
+    return "ImageData";
   } else if (type == "infogain_loss") {
-    return LayerParameter_LayerType_INFOGAIN_LOSS;
+    return "InfogainLoss";
   } else if (type == "innerproduct") {
-    return LayerParameter_LayerType_INNER_PRODUCT;
+    return "InnerProduct";
   } else if (type == "lrn") {
-    return LayerParameter_LayerType_LRN;
+    return "LRN";
   } else if (type == "multinomial_logistic_loss") {
-    return LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS;
+    return "MultinomialLogisticLoss";
   } else if (type == "pool") {
-    return LayerParameter_LayerType_POOLING;
+    return "Pooling";
   } else if (type == "relu") {
-    return LayerParameter_LayerType_RELU;
+    return "ReLU";
   } else if (type == "sigmoid") {
-    return LayerParameter_LayerType_SIGMOID;
+    return "Sigmoid";
   } else if (type == "softmax") {
-    return LayerParameter_LayerType_SOFTMAX;
+    return "Softmax";
   } else if (type == "softmax_loss") {
-    return LayerParameter_LayerType_SOFTMAX_LOSS;
+    return "SoftmaxWithLoss";
   } else if (type == "split") {
-    return LayerParameter_LayerType_SPLIT;
+    return "Split";
   } else if (type == "tanh") {
-    return LayerParameter_LayerType_TANH;
+    return "TanH";
   } else if (type == "window_data") {
-    return LayerParameter_LayerType_WINDOW_DATA;
+    return "WindowData";
   } else {
-    LOG(FATAL) << "Unknown layer name: " << type;
-    return LayerParameter_LayerType_NONE;
+    LOG(FATAL) << "Unknown layer type: " << type;
+    return "";
   }
 }
 
 bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   for (int i = 0; i < net_param.layers_size(); ++i) {
-    if (net_param.layers(i).type() == LayerParameter_LayerType_DATA) {
+    if (net_param.layers(i).type() == "Data") {
       DataParameter layer_param = net_param.layers(i).data_param();
       if (layer_param.has_scale()) { return true; }
       if (layer_param.has_mean_file()) { return true; }
       if (layer_param.has_crop_size()) { return true; }
       if (layer_param.has_mirror()) { return true; }
     }
-    if (net_param.layers(i).type() == LayerParameter_LayerType_IMAGE_DATA) {
+    if (net_param.layers(i).type() == "ImageData") {
       ImageDataParameter layer_param = net_param.layers(i).image_data_param();
       if (layer_param.has_scale()) { return true; }
       if (layer_param.has_mean_file()) { return true; }
       if (layer_param.has_crop_size()) { return true; }
       if (layer_param.has_mirror()) { return true; }
     }
-    if (net_param.layers(i).type() == LayerParameter_LayerType_WINDOW_DATA) {
+    if (net_param.layers(i).type() == "WindowData") {
       WindowDataParameter layer_param = net_param.layers(i).window_data_param();
       if (layer_param.has_scale()) { return true; }
       if (layer_param.has_mean_file()) { return true; }
@@ -541,11 +541,11 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   return false;
 }
 
-#define CONVERT_LAYER_TRANSFORM_PARAM(TYPE, Name, param_name) \
+#define CONVERT_LAYER_TRANSFORM_PARAM(TYPE_NAME, PARAM_NAME) \
   do { \
-    if (net_param->layers(i).type() == LayerParameter_LayerType_##TYPE) { \
-      Name##Parameter* layer_param = \
-          net_param->mutable_layers(i)->mutable_##param_name##_param(); \
+    if (net_param->layers(i).type() == #TYPE_NAME) { \
+      TYPE_NAME##Parameter* layer_param = \
+          net_param->mutable_layers(i)->mutable_##PARAM_NAME##_param(); \
       TransformationParameter* transform_param = \
           net_param->mutable_layers(i)->mutable_transform_param(); \
       if (layer_param->has_scale()) { \
@@ -569,9 +569,9 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
 
 void UpgradeNetDataTransformation(NetParameter* net_param) {
   for (int i = 0; i < net_param->layers_size(); ++i) {
-    CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
-    CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
-    CONVERT_LAYER_TRANSFORM_PARAM(WINDOW_DATA, WindowData, window_data);
+    CONVERT_LAYER_TRANSFORM_PARAM(Data, data);
+    CONVERT_LAYER_TRANSFORM_PARAM(ImageData, image_data);
+    CONVERT_LAYER_TRANSFORM_PARAM(WindowData, window_data);
   }
 }
 

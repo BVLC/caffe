@@ -27,7 +27,7 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
 bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
                            LayerParameter* layer_param);
 
-LayerParameter_LayerType UpgradeV0LayerType(const string& type);
+const char* UpgradeV0LayerType(const string& type);
 
 // Return true iff any layer contains deprecated data transformation parameters.
 bool NetNeedsDataUpgrade(const NetParameter& net_param);

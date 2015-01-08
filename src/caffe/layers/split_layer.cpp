@@ -16,7 +16,7 @@ void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     // the backward pass.  (Technically, it should be possible to share the diff
     // blob of the first split output with the input, but this seems to cause
     // some strange effects in practice...)
-    CHECK_NE(top[i], bottom[0]) << this->type_name() << " Layer does not "
+    CHECK_NE(top[i], bottom[0]) << this->type() << " Layer does not "
         "allow in-place computation.";
     top[i]->Reshape(bottom[0]->num(), bottom[0]->channels(),
                        bottom[0]->height(), bottom[0]->width());
@@ -56,5 +56,6 @@ STUB_GPU(SplitLayer);
 #endif
 
 INSTANTIATE_CLASS(SplitLayer);
-REGISTER_LAYER_CLASS(SPLIT, SplitLayer);
+REGISTER_LAYER_CLASS(Split);
+
 }  // namespace caffe

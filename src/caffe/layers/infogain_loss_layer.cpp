@@ -75,11 +75,11 @@ void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
-    LOG(FATAL) << this->type_name()
+    LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down.size() > 2 && propagate_down[2]) {
-    LOG(FATAL) << this->type_name()
+    LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to infogain inputs.";
   }
   if (propagate_down[0]) {
@@ -106,5 +106,5 @@ void InfogainLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 INSTANTIATE_CLASS(InfogainLossLayer);
-REGISTER_LAYER_CLASS(INFOGAIN_LOSS, InfogainLossLayer);
+REGISTER_LAYER_CLASS(InfogainLoss);
 }  // namespace caffe

@@ -121,5 +121,6 @@ STUB_GPU_FORWARD(HDF5DataLayer, Forward);
 #endif
 
 INSTANTIATE_CLASS(HDF5DataLayer);
-REGISTER_LAYER_CLASS(HDF5_DATA, HDF5DataLayer);
+REGISTER_LAYER_CLASS(HDF5Data);
+
 }  // namespace caffe
