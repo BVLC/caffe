@@ -5,6 +5,10 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/vision_layers.hpp"
 
+#ifdef WITH_PYTHON_LAYER
+#include "caffe/python_layer.hpp"
+#endif
+
 namespace caffe {
 
 // Get convolution layer according to engine.
@@ -152,6 +156,23 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
 }
 
 REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
+
+#ifdef WITH_PYTHON_LAYER
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
+  Py_Initialize();
+  try {
+    bp::object module = bp::import(param.python_param().module().c_str());
+    bp::object layer = module.attr(param.python_param().layer().c_str())(param);
+    return bp::extract<shared_ptr<PythonLayer<Dtype> > >(layer)();
+  } catch (bp::error_already_set) {
+    PyErr_Print();
+    throw;
+  }
+}
+
+REGISTER_LAYER_CREATOR(Python, GetPythonLayer);
+#endif
 
 // Layers that use their constructor as their default creator should be
 // registered in their corresponding cpp files. Do not register them here.
