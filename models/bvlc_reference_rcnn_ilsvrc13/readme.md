@@ -2,7 +2,7 @@
 name: BVLC Reference RCNN ILSVRC13 Model
 caffemodel: bvlc_reference_rcnn_ilsvrc13.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_rcnn_ilsvrc13.caffemodel
-license: non-commercial
+license: unrestricted
 sha1: bdd8abb885819cba5e2fe1eb36235f2319477e64
 caffe_commit: a7e397abbda52c0b90323c23ab95bdeabee90a98
 ---
