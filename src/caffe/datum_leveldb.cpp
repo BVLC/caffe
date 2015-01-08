@@ -11,7 +11,7 @@ void DatumLevelDB::Open() {
     LOG(INFO) << "Opening leveldb " << param_.source();
     leveldb::DB* db_temp;
     leveldb::Options options;
-    options.block_size = 16384;
+    options.block_size = 65536;
     options.write_buffer_size = 268435456;
     options.max_open_files = 100;
     switch (param_.mode()) {
@@ -43,29 +43,11 @@ void DatumLevelDB::Open() {
 }
 
 void DatumLevelDB::Close() {
-  if (*is_opened_) {
-    if (iter_.get() != NULL) {
-      LOG(INFO) << "Closing Generator on " << param_.source();
-      iter_.reset();
-    }
-    if (is_opened_.unique()) {
-      LOG(INFO) << "Closing leveldb " << param_.source();
-      batch_.reset();
-      db_.reset();
-    }
+  if (*is_opened_ && is_opened_.unique()) {
+    LOG(INFO) << "Closing DatumLevelDB " << param_.source();
+    batch_.reset();
+    db_.reset();
   }
-}
-
-shared_ptr<DatumDB::Generator> DatumLevelDB::NewGenerator() {
-  CHECK_EQ(param_.mode(), DatumDBParameter_Mode_READ)
-    << "Only DatumDB in Mode_READ can use NewGenerator";
-  CHECK(*is_opened_);
-  LOG(INFO) << "Creating Generator for " << param_.source();
-  DatumLevelDB* datumdb = new DatumLevelDB(*this);
-  datumdb->iter_.reset(db_->NewIterator(leveldb::ReadOptions()));
-  shared_ptr<DatumDB::Generator> generator;
-  generator.reset(new DatumDB::Generator(shared_ptr<DatumDB>(datumdb)));
-  return generator;
 }
 
 bool DatumLevelDB::Get(const string& key, Datum* datum) {
@@ -99,41 +81,48 @@ void DatumLevelDB::Commit() {
   batch_.reset(new leveldb::WriteBatch());
 }
 
-bool DatumLevelDB::Valid() {
-  CHECK_NOTNULL(iter_.get());
+DatumDBCursor* DatumLevelDB::NewCursor() {
+  CHECK_EQ(param_.mode(), DatumDBParameter_Mode_READ)
+    << "Only DatumDB in Mode_READ can create NewCursor";
+  CHECK(*is_opened_);
+  LOG(INFO) << "Creating NewCursor for " << param_.source();
+  leveldb::Iterator* iter = db_->NewIterator(leveldb::ReadOptions());
+  return new DatumLevelDBCursor(param_, iter);
+}
+
+bool DatumLevelDBCursor::Valid() {
   return (iter_->Valid());
 }
 
-bool DatumLevelDB::Reset() {
-  CHECK_NOTNULL(iter_.get());
+void DatumLevelDBCursor::SeekToFirst() {
   iter_->SeekToFirst();
-  return Valid();
 }
 
-bool DatumLevelDB::Next() {
-  if (Valid()) {
-    iter_->Next();
-    if (!iter_->Valid()) {
-      if (param_.loop()) {
-        // We have reached the end. Restart from the first.
-        DLOG(INFO) << "Reached the end and looping.";
-        return Reset();
-      } else {
-        LOG(ERROR) << "Reached the end and not looping.";
-      }
+void DatumLevelDBCursor::Next() {
+  CHECK(Valid());
+  iter_->Next();
+  if (!iter_->Valid()) {
+    if (param_.loop()) {
+      // We have reached the end. Restart from the first.
+      DLOG(INFO) << "Reached the end and looping.";
+      SeekToFirst();
+    } else {
+      LOG(ERROR) << "Reached the end and not looping.";
     }
   }
-  return Valid();
 }
 
-bool DatumLevelDB::Current(string* key, Datum* datum) {
-  if (Valid()) {
-    key->assign(iter_->key().ToString());
-    datum->ParseFromString(iter_->value().ToString());
-    return true;
-  } else {
-    return false;
-  }
+string DatumLevelDBCursor::key() {
+  CHECK(Valid());
+  string key = iter_->key().ToString();
+  return key;
+}
+
+Datum DatumLevelDBCursor::value() {
+  CHECK(Valid());
+  Datum datum;
+  datum.ParseFromString(iter_->value().ToString());
+  return datum;
 }
 
 REGISTER_DATUMDB_CLASS("leveldb", DatumLevelDB);

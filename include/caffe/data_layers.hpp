@@ -101,7 +101,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void InternalThreadEntry();
 
   shared_ptr<DatumDB> datumdb_;
-  shared_ptr<DatumDB::Generator> datum_generator_;
+  shared_ptr<DatumDBCursor> datum_cursor_;
 };
 
 /**

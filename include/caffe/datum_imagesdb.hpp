@@ -18,35 +18,44 @@ class DatumImagesDB : public DatumDB {
     : DatumDB(param) { Open(); }
   virtual ~DatumImagesDB() { Close(); }
 
-  virtual shared_ptr<Generator> NewGenerator();
   virtual bool Get(const string& key, Datum* datum);
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
+  virtual DatumDBCursor* NewCursor();
 
  protected:
-  explicit DatumImagesDB(const DatumImagesDB& other)
-    : DatumDB(other),
-    cache_images_(other.cache_images_),
-    encode_images_(other.encode_images_),
-    keys_(other.keys_),
-    datum_database_(other.datum_database_) {}
   virtual void Open();
   virtual void Close();
-  virtual bool Valid();
-  virtual bool Next();
-  virtual bool Reset();
-  virtual bool Current(string* key, Datum* datum);
-  virtual void ShuffleKeys();
 
   std::fstream file_;
-  string root_images_;
-  bool cache_images_;
-  bool encode_images_;
+  shared_ptr<map<string, Datum> > datum_database_;
+  vector<string> keys_;
+  vector<pair<string, Datum> > batch_;
+};
 
+class DatumImagesDBCursor : public DatumDBCursor {
+ public:
+  explicit DatumImagesDBCursor(const DatumDBParameter& param,
+    shared_ptr<map<string, Datum> > datum_database, vector<string> keys)
+    : DatumDBCursor(param),
+    datum_database_(datum_database),
+    keys_(keys) { SeekToFirst(); }
+  ~DatumImagesDBCursor() {
+    LOG(INFO) << "Closing DatumImagesDBCursor";
+  }
+
+  virtual bool Valid();
+  virtual void SeekToFirst();
+  virtual void Next();
+  virtual string key();
+  virtual Datum value();
+
+ protected:
+  virtual void ShuffleKeys();
+
+  shared_ptr<map<string, Datum> > datum_database_;
   vector<string> keys_;
   vector<string>::iterator read_it_;
-  shared_ptr<map<string, Datum> > datum_database_;
-  vector<pair<string, Datum> > batch_;
 };
 
 }  // namespace caffe

@@ -40,7 +40,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   CHECK_EQ(datumdb_param.mode(), DatumDBParameter_Mode_READ);
   datumdb_.reset(DatumDBRegistry::GetDatumDB(datumdb_param));
-  datum_generator_ = datumdb_->NewGenerator();
+  datum_cursor_.reset(datumdb_->NewCursor());
 
   // Check if we would need to randomly skip a few data points
   if (data_param.rand_skip()) {
@@ -48,12 +48,11 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                         data_param.rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
-      CHECK(datum_generator_->Next());
+      datum_cursor_->Next();
     }
   }
   // Read a data point, and use it to initialize the top blob.
-  Datum datum;
-  datum_generator_->Current(&datum);
+  Datum datum = datum_cursor_->value();
 
   if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
@@ -105,8 +104,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
-    Datum datum;
-    CHECK(datum_generator_->Current(&datum));
+    Datum datum = datum_cursor_->value();
 
     cv::Mat cv_img;
     if (datum.encoded()) {
@@ -128,7 +126,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     }
     trans_time += timer.MicroSeconds();
     // go to the next iter
-    datum_generator_->Next();
+    datum_cursor_->Next();
   }
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";

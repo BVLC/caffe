@@ -32,9 +32,9 @@ void DatumImagesDB::Open() {
       break;
     }
     case DatumDBParameter_Mode_READ: {
-      root_images_ = param_.root_images();
-      cache_images_ = param_.cache_images();
-      encode_images_ = param_.encode_images();
+      string root_images = param_.root_images();
+      bool cache_images = param_.cache_images();
+      bool encode_images = param_.encode_images();
       file_.open(source.c_str(), ios::in);
       CHECK(file_.good()) << "File not found: " << source;
       keys_.clear();
@@ -43,15 +43,16 @@ void DatumImagesDB::Open() {
       int label;
       while (file_ >> key >> label) {
         Datum datum;
-        if (cache_images_) {
-          if (encode_images_) {
-            ReadFileToDatum(root_images_ + key, label, &datum);
+        if (cache_images) {
+          if (encode_images) {
+            ReadFileToDatum(root_images + key, label, &datum);
           } else {
-            ReadImageToDatum(root_images_ + key, label, &datum);
+            ReadImageToDatum(root_images + key, label, &datum);
           }
         } else {
-          datum.set_source(root_images_ + key);
+          datum.set_source(root_images + key);
           datum.set_label(label);
+          datum.set_encoded(encode_images);
         }
         datum_database_->insert(make_pair(key, datum));
         keys_.push_back(key);
@@ -59,6 +60,7 @@ void DatumImagesDB::Open() {
       CHECK(!keys_.empty()) << "Error reading the file " << source;
       LOG(INFO) << "A total of " << datum_database_->size()
         << " images and " << keys_.size() << " keys.";
+      file_.close();
       break;
     }
     default:
@@ -69,37 +71,23 @@ void DatumImagesDB::Open() {
 }
 
 void DatumImagesDB::Close() {
-  if (*is_opened_) {
+  if (*is_opened_ && is_opened_.unique()) {
+    LOG(INFO) << "Closing imagesdb " << param_.source();
     batch_.clear();
     keys_.clear();
-    if (is_opened_.unique()) {
-      LOG(INFO) << "Closing imagesdb " << param_.source();
-      datum_database_->clear();
-      datum_database_.reset();
+    datum_database_->clear();
+    if (file_.is_open()) {
       file_.close();
-    } else {
-      LOG(INFO) << "Closing Generator on " << param_.source();
     }
   }
-}
-
-shared_ptr<DatumDB::Generator> DatumImagesDB::NewGenerator() {
-  CHECK_EQ(param_.mode(), DatumDBParameter_Mode_READ)
-    << "Only DatumDB in Mode_READ can use NewGenerator";
-  CHECK(*is_opened_);
-  LOG(INFO) << "Creating Generator for " << param_.source();
-  DatumImagesDB* datumdb = new DatumImagesDB(*this);
-  shared_ptr<DatumDB::Generator> generator;
-  generator.reset(new DatumDB::Generator(shared_ptr<DatumDB>(datumdb)));
-  return generator;
 }
 
 bool DatumImagesDB::Get(const string& key, Datum* datum) {
   map<string, Datum>::iterator it = datum_database_->find(key);
   if (it != datum_database_->end()) {
     *datum = (*it).second;
-    if (!cache_images_) {
-      if (encode_images_) {
+    if (datum->data().size() == 0) {
+      if (datum->encoded()) {
         ReadFileToDatum(datum->source(), datum->label(), datum);
       } else {
         ReadImageToDatum(datum->source(), datum->label(), datum);
@@ -128,44 +116,60 @@ void DatumImagesDB::Commit() {
   batch_.clear();
 }
 
-bool DatumImagesDB::Valid() {
+DatumDBCursor* DatumImagesDB::NewCursor() {
+  CHECK_EQ(param_.mode(), DatumDBParameter_Mode_READ)
+    << "Only DatumDB in Mode_READ can create NewCursor";
+  CHECK(*is_opened_);
+  LOG(INFO) << "Creating NewCursor for " << param_.source();
+  return new DatumImagesDBCursor(param_, datum_database_, keys_);
+}
+
+// DatumImagesDBCursor
+bool DatumImagesDBCursor::Valid() {
   return (!keys_.empty() && read_it_ != keys_.end());
 }
 
-bool DatumImagesDB::Next() {
-  if (Valid()) {
-    ++read_it_;
-    if (read_it_ == keys_.end()) {
-      if (param_.loop()) {
-        return Reset();
-      } else {
-        LOG(ERROR) << "Reached the end and not looping.";
-      }
+void DatumImagesDBCursor::SeekToFirst() {
+  CHECK(!keys_.empty());
+  if (param_.shuffle_images()) {
+    ShuffleKeys();
+  }
+  read_it_ = keys_.begin();
+}
+
+void DatumImagesDBCursor::Next() {
+  CHECK(Valid());
+  ++read_it_;
+  if (read_it_ == keys_.end()) {
+    if (param_.loop()) {
+      SeekToFirst();
+    } else {
+      LOG(ERROR) << "Reached the end and not looping.";
     }
   }
-  return Valid();
 }
 
-bool DatumImagesDB::Reset() {
-  if (!keys_.empty()) {
-    if (param_.shuffle_images()) {
-      ShuffleKeys();
+string DatumImagesDBCursor::key() {
+  CHECK(Valid());
+  return *read_it_;
+}
+
+Datum DatumImagesDBCursor::value() {
+  CHECK(Valid());
+  string key = *read_it_;
+  map<string, Datum>::iterator it = datum_database_->find(key);
+  Datum datum = (*it).second;
+  if (datum.data().size() == 0) {
+    if (datum.encoded()) {
+      ReadFileToDatum(datum.source(), datum.label(), &datum);
+    } else {
+      ReadImageToDatum(datum.source(), datum.label(), &datum);
     }
-    read_it_ = keys_.begin();
   }
-  return Valid();
+  return datum;
 }
 
-bool DatumImagesDB::Current(string* key, Datum* datum) {
-  if (Valid()) {
-    *key = *read_it_;
-    return Get(*key, datum);
-  } else {
-    return false;
-  }
-}
-
-void DatumImagesDB::ShuffleKeys() {
+void DatumImagesDBCursor::ShuffleKeys() {
   // randomly shuffle the keys
   LOG(INFO) << "Shuffling the keys";
   shuffle(keys_.begin(), keys_.end());

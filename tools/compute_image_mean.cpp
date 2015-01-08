@@ -48,13 +48,12 @@ int main(int argc, char** argv) {
   datumdb_param.set_loop(false);
   datumdb_param.set_backend(FLAGS_backend);
   shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(datumdb_param));
-  shared_ptr<DatumDB::Generator> datum_generator = datumdb->NewGenerator();
+  shared_ptr<DatumDBCursor> datum_cursor(datumdb->NewCursor());
 
   BlobProto sum_blob;
   int count = 0;
   // load first datum
-  Datum datum;
-  CHECK(datum_generator->Current(&datum));
+  Datum datum = datum_cursor->value();
 
   if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
@@ -71,9 +70,8 @@ int main(int argc, char** argv) {
     sum_blob.add_data(0.);
   }
   LOG(INFO) << "Starting Iteration";
-  while (datum_generator->Valid()) {
-    Datum datum;
-    CHECK(datum_generator->Current(&datum));
+  while (datum_cursor->Valid()) {
+    Datum datum = datum_cursor->value();
     DecodeDatum(&datum);
 
     const std::string& data = datum.data();
@@ -100,7 +98,7 @@ int main(int argc, char** argv) {
     if (max_num_images > 0 && count >= max_num_images) {
       break;
     }
-    datum_generator->Next();
+    datum_cursor->Next();
   }
 
   if (count % 10000 != 0) {

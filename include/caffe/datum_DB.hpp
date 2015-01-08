@@ -12,6 +12,25 @@
 
 namespace caffe {
 
+class DatumDBCursor {
+ public:
+  explicit DatumDBCursor(const DatumDBParameter& param)
+    : param_(param) {}
+  ~DatumDBCursor() {
+    LOG(INFO) << "Closing DatumDBCursor on " << param_.source();
+  }
+
+  virtual bool Valid() = 0;
+  virtual void SeekToFirst() = 0;
+  virtual void Next() = 0;
+  virtual string key() = 0;
+  virtual Datum value() = 0;
+
+ protected:
+  DatumDBParameter param_;
+  DISABLE_COPY_AND_ASSIGN(DatumDBCursor);
+};
+
 class DatumDB {
  public:
   explicit DatumDB(const DatumDBParameter& param)
@@ -23,44 +42,18 @@ class DatumDB {
     }
   }
 
-  class Generator {
-   public:
-    explicit Generator(shared_ptr<DatumDB> datumdb)
-      : datumdb_(datumdb) { CHECK_NOTNULL(datumdb.get());
-          CHECK(Reset()); }
-    bool Valid() { return datumdb_->Valid(); }
-    bool Reset() { return datumdb_->Reset(); }
-    bool Next() { return datumdb_->Next(); }
-    bool Current(string* key, Datum* datum) {
-      return datumdb_->Current(key, datum);
-    }
-    bool Current(Datum* datum) {
-      string key;
-      return datumdb_->Current(&key, datum);
-    }
-   private:
-    shared_ptr<DatumDB> datumdb_;
-    DISABLE_COPY_AND_ASSIGN(Generator);
-  };
-
-  virtual shared_ptr<Generator> NewGenerator() = 0;
-  virtual bool Get(const string& key, Datum* datum) = 0;
-  virtual void Put(const string& key, const Datum& datum) = 0;
+  virtual bool Get(const string& key, Datum* value) = 0;
+  virtual void Put(const string& key, const Datum& value) = 0;
   virtual void Commit() = 0;
+  virtual DatumDBCursor* NewCursor() = 0;
 
  protected:
-  explicit DatumDB(const DatumDB& other)
-    : param_(other.param_),
-      is_opened_(other.is_opened_) {}
   virtual void Open() = 0;
   virtual void Close() = 0;
-  virtual bool Valid() = 0;
-  virtual bool Reset() = 0;
-  virtual bool Next() = 0;
-  virtual bool Current(string* key, Datum* datum) = 0;
 
   DatumDBParameter param_;
   shared_ptr<bool> is_opened_;
+  DISABLE_COPY_AND_ASSIGN(DatumDB);
 };
 
 class DatumLevelDB : public DatumDB {
@@ -69,27 +62,37 @@ class DatumLevelDB : public DatumDB {
     : DatumDB(param) { Open(); }
   virtual ~DatumLevelDB() { Close(); }
 
-  virtual shared_ptr<Generator> NewGenerator();
   virtual bool Get(const string& key, Datum* datum);
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
+  virtual DatumDBCursor* NewCursor();
 
  protected:
-  explicit DatumLevelDB(const DatumLevelDB& other)
-    : DatumDB(other),
-    db_(other.db_) {}
   virtual void Open();
   virtual void Close();
-  virtual bool Valid();
-  virtual bool Next();
-  virtual bool Reset();
-  virtual bool Current(string* key, Datum* datum);
 
   shared_ptr<leveldb::DB> db_;
-  shared_ptr<leveldb::Iterator> iter_;
   shared_ptr<leveldb::WriteBatch> batch_;
 };
 
+class DatumLevelDBCursor : public DatumDBCursor {
+ public:
+  explicit DatumLevelDBCursor(const DatumDBParameter& param,
+                              leveldb::Iterator* iter)
+    : DatumDBCursor(param),
+    iter_(iter) { CHECK_NOTNULL(iter_); SeekToFirst(); }
+  ~DatumLevelDBCursor() {
+    LOG(INFO) << "Closing DatumLevelDBCursor";
+  }
+  virtual bool Valid();
+  virtual void SeekToFirst();
+  virtual void Next();
+  virtual string key();
+  virtual Datum value();
+
+ protected:
+  leveldb::Iterator* iter_;
+};
 
 class DatumLMDB : public DatumDB {
  public:
@@ -97,31 +100,42 @@ class DatumLMDB : public DatumDB {
     : DatumDB(param) { Open(); }
   virtual ~DatumLMDB() { Close(); }
 
-  virtual shared_ptr<Generator> NewGenerator();
   virtual bool Get(const string& key, Datum* datum);
   virtual void Put(const string& key, const Datum& datum);
   virtual void Commit();
+  virtual DatumDBCursor* NewCursor();
 
  protected:
-  explicit DatumLMDB(const DatumLMDB& other)
-    : DatumDB(other),
-    mdb_env_(other.mdb_env_),
-    mdb_txn_(other.mdb_txn_),
-    mdb_dbi_(other.mdb_dbi_) {}
   virtual void Open();
   virtual void Close();
-  virtual bool Valid();
-  virtual bool Next();
-  virtual bool Reset();
-  virtual bool Current(string* key, Datum* datum);
 
   MDB_env* mdb_env_;
   MDB_txn* mdb_txn_;
   MDB_dbi mdb_dbi_;
+};
+
+class DatumLMDBCursor : public DatumDBCursor {
+ public:
+  explicit DatumLMDBCursor(const DatumDBParameter& param,
+                           MDB_cursor* mdb_cursor)
+    : DatumDBCursor(param),
+    mdb_cursor_(mdb_cursor) { CHECK_NOTNULL(mdb_cursor_); SeekToFirst(); }
+  ~DatumLMDBCursor() {
+    LOG(INFO) << "Closing DatumLMDBCursor";
+    mdb_cursor_close(mdb_cursor_);
+  }
+  virtual bool Valid();
+  virtual void SeekToFirst();
+  virtual void Next();
+  virtual string key();
+  virtual Datum value();
+
+ protected:
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
   int mdb_status_;
 };
+
 
 }  // namespace caffe
 
