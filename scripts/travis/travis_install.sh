@@ -39,7 +39,7 @@ if $WITH_CUDA; then
   apt-get -y update
   # Install the minimal CUDA subpackages required to test Caffe build.
   # For a full CUDA installation, add 'cuda' to the list of packages.
-  apt-get -y install cuda-core-6-5 cuda-cublas-6-5 cuda-cublas-dev-6-5 cuda-cudart-6-5 cuda-cudart-dev-6-5 cuda-curand-6-5 cuda-curand-dev-6-5
+  apt-get -y install cuda-core-6-5 cuda-cublas-6-5 cuda-cublas-dev-6-5 cuda-cusparse-6-5 cuda-cusparse-dev-6-5 cuda-cudart-6-5 cuda-cudart-dev-6-5 cuda-curand-6-5 cuda-curand-dev-6-5
   # Create CUDA symlink at /usr/local/cuda
   # (This would normally be created by the CUDA installer, but we create it
   # manually since we did a partial installation.)

@@ -50,6 +50,12 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::set_gpu_data(Dtype* data) {
+  CHECK(data);
+  data_->set_gpu_data(data);
+}
+
+template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_data() const {
   CHECK(data_);
   return (const Dtype*)data_->gpu_data();

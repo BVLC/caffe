@@ -42,6 +42,7 @@ shared_ptr<Dataset<K, V> > DatasetFactory(const string& type) {
 REGISTER_DATASET(string, string);
 REGISTER_DATASET(string, vector<char>);
 REGISTER_DATASET(string, Datum);
+REGISTER_DATASET(string, SparseDatum);
 
 #undef REGISTER_DATASET
 

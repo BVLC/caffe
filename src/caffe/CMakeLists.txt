@@ -26,6 +26,7 @@ if(NOT CPU_ONLY)
     add_dependencies(caffe_cu proto)
     target_link_libraries(caffe caffe_cu
         ${CUDA_CUBLAS_LIBRARIES}
+        ${CUDA_cusparse_LIBRARY}
         ${CUDA_curand_LIBRARY}
     )
 endif()
