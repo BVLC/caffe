@@ -18,18 +18,39 @@ def extract_datetime_from_line(line, year):
     dt = datetime.datetime(year, month, day, hour, minute, second, microsecond)
     return dt
 
+
+def get_log_created_year(input_file):
+    """Get year from log file system timestamp
+    """
+
+    log_created_time = os.path.getctime(input_file)
+    log_created_year = datetime.datetime.fromtimestamp(log_created_time).year
+    return log_created_year
+
+
+def get_start_time(line_iterable, year):
+    """Find start time from group of lines
+    """
+
+    start_datetime = None
+    for line in line_iterable:
+        line = line.strip()
+        if line.find('Solving') != -1:
+            start_datetime = extract_datetime_from_line(line, year)
+            break
+    return start_datetime
+
+
 def extract_seconds(input_file, output_file):
     with open(input_file, 'r') as f:
         lines = f.readlines()
-    log_created_time = os.path.getctime(input_file)
-    log_created_year = datetime.datetime.fromtimestamp(log_created_time).year
-    start_time_found = False
+    log_created_year = get_log_created_year(input_file)
+    start_datetime = get_start_time(lines, log_created_year)
+    assert start_datetime, 'Start time not found'
+
     out = open(output_file, 'w')
     for line in lines:
         line = line.strip()
-        if not start_time_found and line.find('Solving') != -1:
-            start_time_found = True
-            start_datetime = extract_datetime_from_line(line, log_created_year)
         if line.find('Iteration') != -1:
             dt = extract_datetime_from_line(line, log_created_year)
             elapsed_seconds = (dt - start_datetime).total_seconds()

@@ -126,9 +126,6 @@ void ConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // it goes lazily unused to save memory.
   col_buffer_.Reshape(
       1, channels_ * kernel_h_ * kernel_w_, height_out_, width_out_);
-  for (int top_id = 0; top_id < top.size(); ++top_id) {
-    top[top_id]->Reshape(num_, num_output_, height_out_, width_out_);
-  }
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);

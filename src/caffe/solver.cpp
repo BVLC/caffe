@@ -32,6 +32,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   LOG(INFO) << "Initializing solver from parameters: " << std::endl
             << param.DebugString();
   param_ = param;
+  CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   if (param_.random_seed() >= 0) {
     Caffe::set_random_seed(param_.random_seed());
   }
@@ -39,6 +40,8 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   InitTrainNet();
   InitTestNets();
   LOG(INFO) << "Solver scaffolding done.";
+  iter_ = 0;
+  current_step_ = 0;
 }
 
 template <typename Dtype>
@@ -155,39 +158,15 @@ void Solver<Dtype>::InitTestNets() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file) {
-  Caffe::set_phase(Caffe::TRAIN);
-  LOG(INFO) << "Solving " << net_->name();
-  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
-  PreSolve();
-
-  iter_ = 0;
-  current_step_ = 0;
-  if (resume_file) {
-    LOG(INFO) << "Restoring previous solver status from " << resume_file;
-    Restore(resume_file);
-  }
-  // Remember the initial iter_ value; will be non-zero if we loaded from a
-  // resume_file above.
+void Solver<Dtype>::Step(int iters) {
+  vector<Blob<Dtype>*> bottom_vec;
   const int start_iter = iter_;
-
+  const int stop_iter = iter_ + iters;
   int average_loss = this->param_.average_loss();
-
-  CHECK_GE(average_loss, 1) << "average_loss should be non-negative.";
-
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
 
-  // For a network that is trained by the solver, no bottom or top vecs
-  // should be given, and we will just provide dummy vecs.
-  vector<Blob<Dtype>*> bottom_vec;
-  for (; iter_ < param_.max_iter(); ++iter_) {
-    // Save a snapshot if needed.
-    if (param_.snapshot() && iter_ > start_iter &&
-        iter_ % param_.snapshot() == 0) {
-      Snapshot();
-    }
-
+  for (; iter_ < stop_iter; ++iter_) {
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -227,13 +206,36 @@ void Solver<Dtype>::Solve(const char* resume_file) {
         }
       }
     }
-
     ComputeUpdateValue();
     net_->Update();
+
+    // Save a snapshot if needed.
+    if (param_.snapshot() && (iter_ + 1) % param_.snapshot() == 0) {
+      Snapshot();
+    }
   }
-  // Always save a snapshot after optimization, unless overridden by setting
-  // snapshot_after_train := false.
-  if (param_.snapshot_after_train()) { Snapshot(); }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Solve(const char* resume_file) {
+  Caffe::set_phase(Caffe::TRAIN);
+  LOG(INFO) << "Solving " << net_->name();
+  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+
+  if (resume_file) {
+    LOG(INFO) << "Restoring previous solver status from " << resume_file;
+    Restore(resume_file);
+  }
+
+  // For a network that is trained by the solver, no bottom or top vecs
+  // should be given, and we will just provide dummy vecs.
+  Step(param_.max_iter() - iter_);
+  // If we haven't already, save a snapshot after optimization, unless
+  // overridden by setting snapshot_after_train := false
+  if (param_.snapshot_after_train()
+      && (!param_.snapshot() || iter_ % param_.snapshot() != 0)) {
+    Snapshot();
+  }
   // After the optimization is done, run an additional train and test pass to
   // display the train and test loss/outputs if appropriate (based on the
   // display and test_interval settings, respectively).  Unlike in the rest of
@@ -242,7 +244,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // display the loss, which is computed in the forward pass.
   if (param_.display() && iter_ % param_.display() == 0) {
     Dtype loss;
-    net_->Forward(bottom_vec, &loss);
+    net_->ForwardPrefilled(&loss);
     LOG(INFO) << "Iteration " << iter_ << ", loss = " << loss;
   }
   if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
@@ -328,14 +330,15 @@ void Solver<Dtype>::Snapshot() {
   string model_filename, snapshot_filename;
   const int kBufferSize = 20;
   char iter_str_buffer[kBufferSize];
-  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
+  // Add one to iter_ to get the number of iterations that have completed.
+  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_ + 1);
   filename += iter_str_buffer;
   model_filename = filename + ".caffemodel";
   LOG(INFO) << "Snapshotting to " << model_filename;
   WriteProtoToBinaryFile(net_param, model_filename.c_str());
   SolverState state;
   SnapshotSolverState(&state);
-  state.set_iter(iter_);
+  state.set_iter(iter_ + 1);
   state.set_learned_net(model_filename);
   state.set_current_step(current_step_);
   snapshot_filename = filename + ".solverstate";
