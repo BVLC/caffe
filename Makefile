@@ -334,6 +334,7 @@ endif
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) $(PKG_CONFIG) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
+DYNAMIC_LDFLAGS := -l$(PROJECT) -Wl,-rpath,\$$ORIGIN/../lib
 
 # 'superclean' target recursively* deletes all files ending with an extension
 # in $(SUPERCLEAN_EXTS) below.  This may be useful if you've built older
@@ -503,7 +504,7 @@ $(TEST_ALL_DYNLINK_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(DYNAMIC_NA
 		| $(TEST_BIN_DIR)
 	@ echo CXX/LD -o $@ $<
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
-		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(LIB_BUILD_DIR)
+		-o $@ $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_LDFLAGS)
 
 $(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
 	$(GTEST_OBJ) $(STATIC_NAME) | $(TEST_BIN_DIR)
