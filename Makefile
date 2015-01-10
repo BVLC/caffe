@@ -240,6 +240,10 @@ ifeq ($(OSX), 1)
 		CXXFLAGS += -stdlib=libstdc++
 		LINKFLAGS += -stdlib=libstdc++
 	endif
+	ifneq ($(findstring 10.10, $(shell sw_vers -productVersion)),)
+		CXXFLAGS += -stdlib=libstdc++
+		LINKFLAGS += -stdlib=libstdc++
+	endif
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
 	LIBRARIES += boost_thread-mt
         NVCCFLAGS += -DOSX
@@ -303,10 +307,15 @@ else
 			LIBRARIES += cblas atlas
 		endif
 	else ifeq ($(OSX), 1)
-		# OS X packages atlas as the vecLib framework
-		BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
 		LIBRARIES += cblas
-		LDFLAGS += -framework vecLib
+		ifneq ($(findstring Xcode 6, $(shell xcodebuild -version)),)
+			BLAS_INCLUDE ?= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
+			LDFLAGS += -framework Accelerate
+		else
+			# OS X packages atlas as the vecLib framework
+			BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
+			LDFLAGS += -framework vecLib
+		endif
 	endif
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
