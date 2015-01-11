@@ -1,0 +1,3 @@
+@CMAKE_SOURCE_DIR@/src/caffe/test/test_data/categorical_hdf5_test_data0double.h5
+@CMAKE_SOURCE_DIR@/src/caffe/test/test_data/categorical_hdf5_test_data1double.h5
+
