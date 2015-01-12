@@ -1,11 +1,15 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "boost/scoped_ptr.hpp"
+#include "boost/random/mersenne_twister.hpp"
+#include "boost/random/uniform_real.hpp"
+#include "boost/random/variate_generator.hpp"
+#include "boost/weak_ptr.hpp"
 #include "hdf5.h"
 
 #include "caffe/blob.hpp"
@@ -16,8 +20,14 @@
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
+
+using boost::weak_ptr;
+using boost::mt19937;
+using boost::uniform_real;
+using boost::variate_generator;
 
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
@@ -53,11 +63,16 @@ class BaseDataLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
+class Batch {
+ public:
+  Blob<Dtype> data_, label_;
+};
+
+template <typename Dtype>
 class BasePrefetchingDataLayer :
     public BaseDataLayer<Dtype>, public InternalThread {
  public:
-  explicit BasePrefetchingDataLayer(const LayerParameter& param)
-      : BaseDataLayer<Dtype>(param) {}
+  explicit BasePrefetchingDataLayer(const LayerParameter& param);
   virtual ~BasePrefetchingDataLayer() {}
   // LayerSetUp: implements common data layer setup functionality, and calls
   // DataLayerSetUp to do special data layer setup for individual layer types.
@@ -70,22 +85,64 @@ class BasePrefetchingDataLayer :
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual void CreatePrefetchThread();
-  virtual void JoinPrefetchThread();
-  // The thread's function
-  virtual void InternalThreadEntry() {}
+  // Prefetches batches (asynchronously if to GPU memory)
+  static const int PREFETCH_COUNT = 3;
 
  protected:
-  Blob<Dtype> prefetch_data_;
-  Blob<Dtype> prefetch_label_;
+  virtual void InternalThreadEntry();
+  virtual void load_batch(Batch<Dtype>* batch) = 0;
+
+  Batch<Dtype> prefetch_[PREFETCH_COUNT];
+  blocking_queue<Batch<Dtype>*> prefetch_free_;
+  blocking_queue<Batch<Dtype>*> prefetch_full_;
+  int device_;
+
   Blob<Dtype> transformed_data_;
 };
 
-template <typename Dtype>
-class DataLayer : public BasePrefetchingDataLayer<Dtype> {
+// Prefetches datums to host memory that can be read by multiple data layers.
+class DataLoader {
  public:
-  explicit DataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+  DataLoader(const DataParameter& param, int index);
+  ~DataLoader();
+
+  inline blocking_queue<Datum*>& free() {
+    return body_.get()->free_;
+  }
+  inline blocking_queue<Datum*>& full() {
+    return body_.get()->full_;
+  }
+
+ protected:
+  class Body: public InternalThread {
+   public:
+    Body(const DataParameter& param, int index);
+    ~Body();
+
+    void InternalThreadEntry();
+
+    shared_ptr<Dataset<string, Datum> > dataset_;
+    Dataset<string, Datum>::const_iterator iter_;
+
+    blocking_queue<Datum*> free_;
+    blocking_queue<Datum*> full_;
+
+    DISABLE_COPY_AND_ASSIGN(Body);
+  };
+
+  static map<string, weak_ptr<Body> > instances_;
+  static boost::mutex instances_mutex_;
+
+  const string source_;
+  shared_ptr<Body> body_;
+
+  DISABLE_COPY_AND_ASSIGN(DataLoader);
+};
+
+template <typename Dtype>
+class DataLayer: public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit DataLayer(const LayerParameter& param);
   virtual ~DataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -98,10 +155,12 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
-  virtual void InternalThreadEntry();
+  virtual void load_batch(Batch<Dtype>* batch);
+  DataLoader* next_loader();
 
-  shared_ptr<Dataset<string, Datum> > dataset_;
-  Dataset<string, Datum>::const_iterator iter_;
+  vector<shared_ptr<DataLoader> > loaders_;
+  mt19937 rand_engine_;
+  uniform_real<float> rand_;
 };
 
 /**
@@ -244,7 +303,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
   virtual void ShuffleImages();
-  virtual void InternalThreadEntry();
+  virtual void load_batch(Batch<Dtype>* batch);
 
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
@@ -317,7 +376,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
  protected:
   virtual unsigned int PrefetchRand();
-  virtual void InternalThreadEntry();
+  virtual void load_batch(Batch<Dtype>* batch);
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
   vector<std::pair<std::string, vector<int> > > image_database_;

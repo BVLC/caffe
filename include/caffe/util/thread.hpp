@@ -20,6 +20,10 @@ bool Thread::joinable() {
   return static_cast<boost::thread*>(this->thread_)->joinable();
 }
 
+void Thread::interrupt() {
+  static_cast<boost::thread*>(this->thread_)->interrupt();
+}
+
 }  // namespace caffe
 
 #endif
