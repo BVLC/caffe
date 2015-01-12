@@ -211,7 +211,7 @@ TYPED_TEST(MemoryDataLayerTest, AddMatVectorDefaultTransform) {
   }
 }
 
-TYPED_TEST(MemoryDataLayerTest, TestChangeBatchSize) {
+TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
   MemoryDataParameter* memory_data_param = param.mutable_memory_data_param();
@@ -255,7 +255,7 @@ TYPED_TEST(MemoryDataLayerTest, TestChangeBatchSize) {
   }
   // and then add new data with different batch_size
   int new_batch_size = 16;
-  layer.ChangeBatchSize(new_batch_size);
+  layer.set_batch_size(new_batch_size);
   mat_vector.clear();
   mat_vector.resize(new_batch_size * num_iter);
   label_vector.clear();
