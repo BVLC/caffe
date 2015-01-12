@@ -23,7 +23,6 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   added_label_.Reshape(batch_size_, 1, 1, 1);
   data_ = NULL;
   labels_ = NULL;
-  needs_reshape_ = false;
   added_data_.cpu_data();
   added_label_.cpu_data();
 }
@@ -89,25 +88,21 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
 }
 
 template <typename Dtype>
-void MemoryDataLayer<Dtype>::ChangeBatchSize(int new_size) {
+void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
   CHECK(!has_new_data_) <<
       "Can't change batch_size before all data haven't been consumed"
       << " by the upper layers";
   batch_size_ = new_size;
   added_data_.Reshape(batch_size_, channels_, height_, width_);
   added_label_.Reshape(batch_size_, 1, 1, 1);
-  needs_reshape_ = true;
 }
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
-  if (needs_reshape_) {
-    top[0]->Reshape(batch_size_, channels_, height_, width_);
-    top[1]->Reshape(batch_size_, 1, 1, 1);
-    needs_reshape_ = false;
-  }
+  top[0]->Reshape(batch_size_, channels_, height_, width_);
+  top[1]->Reshape(batch_size_, 1, 1, 1);
   top[0]->set_cpu_data(data_ + pos_ * size_);
   top[1]->set_cpu_data(labels_ + pos_);
   pos_ = (pos_ + batch_size_) % n_;
