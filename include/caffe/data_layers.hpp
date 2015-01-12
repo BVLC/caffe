@@ -181,10 +181,11 @@ class HDF5DataLayer : public Layer<Dtype> {
 template <typename Dtype>
 class HDF5OutputLayer : public Layer<Dtype> {
  public:
-  explicit HDF5OutputLayer(const LayerParameter& param);
+  explicit HDF5OutputLayer(const LayerParameter& param)
+      : Layer<Dtype>(param), file_opened_(false) {}
   virtual ~HDF5OutputLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {}
+      const vector<Blob<Dtype>*>& top);
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -207,6 +208,7 @@ class HDF5OutputLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void SaveBlobs();
 
+  bool file_opened_;
   std::string file_name_;
   hid_t file_id_;
   Blob<Dtype> data_blob_;
