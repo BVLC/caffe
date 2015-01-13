@@ -37,7 +37,16 @@ find_package(HDF5 COMPONENTS HL REQUIRED)
 include_directories(${HDF5_INCLUDE_DIRS})
 
 #    OpenCV
-find_package(OpenCV REQUIRED core highgui imgproc)
+#OPENCV - Git version (>=3.0 has different namespaces for variables)
+FIND_PACKAGE(OpenCV 3.0.0 EXACT COMPONENTS core highgui imgproc)
+if(OpenCV_FOUND)
+add_definitions(-DOPENCV_3)
+message( STATUS "OpenCV: Found (3.x)")
+else()
+#find minimum the 2.4.6 version
+FIND_PACKAGE(OpenCV 2.4.6 COMPONENTS core highgui imgproc REQUIRED)
+add_definitions( -DOPENCV_2)
+endif(OpenCV_FOUND)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 #    LevelDB
