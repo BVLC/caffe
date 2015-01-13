@@ -43,8 +43,8 @@ if(OpenCV_FOUND)
 add_definitions(-DOPENCV_3)
 message( STATUS "OpenCV: Found (3.x)")
 else()
-#find minimum the 2.4.6 version
-FIND_PACKAGE(OpenCV 2.4.6 COMPONENTS core highgui imgproc REQUIRED)
+#find minimum the 2.3 version
+FIND_PACKAGE(OpenCV 2.3.0 COMPONENTS core highgui imgproc REQUIRED)
 add_definitions( -DOPENCV_2)
 endif(OpenCV_FOUND)
 include_directories(${OpenCV_INCLUDE_DIRS})
