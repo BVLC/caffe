@@ -14,5 +14,5 @@ message NetParameterPrettyPrint {
   optional bool force_backward = 2 [default = false];
   repeated string input = 3;
   repeated int32 input_dim = 4;
-  repeated LayerParameter layers = 5;
+  repeated LayerParameter layer = 5;
 }

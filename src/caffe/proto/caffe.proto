@@ -45,7 +45,6 @@ message FillerParameter {
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  repeated LayerParameter layers = 2; // a bunch of layers.
   // The input blobs to the network.
   repeated string input = 3;
   // The dim of the input blobs. For each input blob there should be four
@@ -64,6 +63,13 @@ message NetParameter {
   // Print debugging information about results while running Net::Forward,
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
+
+  // The layers that make up the net.  Each of their configurations, including
+  // connectivity and behavior, is specified as a LayerParameter.
+  repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
+
+  // DEPRECATED: use 'layer' instead.
+  // repeated LayerParameter layers = 2; // a bunch of layers.
 }
 
 // NOTE
