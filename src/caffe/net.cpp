@@ -55,14 +55,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
   // For each layer, set up their input and output
-  bottom_vecs_.resize(param.layers_size());
-  top_vecs_.resize(param.layers_size());
-  bottom_id_vecs_.resize(param.layers_size());
-  param_id_vecs_.resize(param.layers_size());
-  top_id_vecs_.resize(param.layers_size());
-  bottom_need_backward_.resize(param.layers_size());
-  for (int layer_id = 0; layer_id < param.layers_size(); ++layer_id) {
-    const LayerParameter& layer_param = param.layers(layer_id);
+  bottom_vecs_.resize(param.layer_size());
+  top_vecs_.resize(param.layer_size());
+  bottom_id_vecs_.resize(param.layer_size());
+  param_id_vecs_.resize(param.layer_size());
+  top_id_vecs_.resize(param.layer_size());
+  bottom_need_backward_.resize(param.layer_size());
+  for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
+    const LayerParameter& layer_param = param.layer(layer_id);
     layers_.push_back(shared_ptr<Layer<Dtype> >(
           LayerRegistry<Dtype>::CreateLayer(layer_param)));
     layer_names_.push_back(layer_param.name());
@@ -242,9 +242,9 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
     }
   }
   param_filtered->CopyFrom(param);
-  param_filtered->clear_layers();
-  for (int i = 0; i < param.layers_size(); ++i) {
-    const LayerParameter& layer_param = param.layers(i);
+  param_filtered->clear_layer();
+  for (int i = 0; i < param.layer_size(); ++i) {
+    const LayerParameter& layer_param = param.layer(i);
     const string& layer_name = layer_param.name();
     CHECK(layer_param.include_size() == 0 || layer_param.exclude_size() == 0)
           << "Specify either include rules or exclude rules; not both.";
@@ -262,7 +262,7 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
       }
     }
     if (layer_included) {
-      param_filtered->add_layers()->CopyFrom(layer_param);
+      param_filtered->add_layer()->CopyFrom(layer_param);
     }
   }
 }
@@ -335,7 +335,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
                            const int top_id, set<string>* available_blobs,
                            map<string, int>* blob_name_to_idx) {
   shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
-    (new LayerParameter(param.layers(layer_id))) : NULL);
+    (new LayerParameter(param.layer(layer_id))) : NULL);
   const string& blob_name = layer_param ?
       (layer_param->top_size() > top_id ?
           layer_param->top(top_id) : "(automatic)") : param.input(top_id);
@@ -385,7 +385,7 @@ template <typename Dtype>
 int Net<Dtype>::AppendBottom(const NetParameter& param,
     const int layer_id, const int bottom_id,
     set<string>* available_blobs, map<string, int>* blob_name_to_idx) {
-  const LayerParameter& layer_param = param.layers(layer_id);
+  const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {
     LOG(FATAL) << "Unknown blob input " << blob_name
@@ -730,9 +730,9 @@ void Net<Dtype>::Reshape() {
 
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
-  int num_source_layers = param.layers_size();
+  int num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
-    const LayerParameter& source_layer = param.layers(i);
+    const LayerParameter& source_layer = param.layer(i);
     const string& source_layer_name = source_layer.name();
     int target_layer_id = 0;
     while (target_layer_id != layer_names_.size() &&
@@ -775,7 +775,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   }
   DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
-    LayerParameter* layer_param = param->add_layers();
+    LayerParameter* layer_param = param->add_layer();
     for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {
       layer_param->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
     }
