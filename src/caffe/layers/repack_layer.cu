@@ -57,7 +57,7 @@ __global__ void unpack_gpu_kernel(const Dtype* packed, Dtype* unpacked,
   const int N = p_n*u_c*p_h*p_w;
   CUDA_KERNEL_LOOP(index, N) {
     int x, y, i, j, c, n;
-    computeCoord(x, y, i, j, c, n, index, u_n, u_c, p_h, p_w, s_w);
+    computeCoord(&x, &y, &i, &j, &c, &n, index, u_n, u_c, p_h, p_w, s_w);
     // TODO: This is not all that memory friendly!
     if (j*s_h+y < u_h && i*s_w+x < u_w )
       unpacked[((n*u_c+c)*u_h+j*s_h+y)*u_w+i*s_w+x] = packed[index];
