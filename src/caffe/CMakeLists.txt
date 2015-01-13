@@ -38,7 +38,7 @@ include_directories(${HDF5_INCLUDE_DIRS})
 
 #    OpenCV
 #OPENCV - Git version (>=3.0 has different namespaces for variables)
-FIND_PACKAGE(OpenCV 3.0.0 EXACT COMPONENTS core highgui imgproc)
+FIND_PACKAGE(OpenCV 3.0.0 EXACT COMPONENTS core highgui imgproc imgcodecs)
 if(OpenCV_FOUND)
 add_definitions(-DOPENCV_3)
 message( STATUS "OpenCV: Found (3.x)")
