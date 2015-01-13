@@ -39,7 +39,7 @@ LayerParameter_LayerType RepackLayer< Dtype >::type() const {
 template<typename Dtype>
 inline void pack_cpu(const Dtype* input, int in_n, int in_c, int in_h, int in_w,
                      Dtype* output, int s_h, int s_w) {
-  int out_n = s_h*s_w*in_n, out_w = (in_w-1)/s_w+1, out_h = (in_h-1)/s_h+1;
+  int out_w = (in_w-1)/s_w+1, out_h = (in_h-1)/s_h+1;
   for ( int y = 0, o = 0; y < s_h; y++ )
     for ( int x = 0; x < s_w; x++ )
       for ( int n = 0; n < in_n; n++ )
@@ -54,7 +54,7 @@ inline void pack_cpu(const Dtype* input, int in_n, int in_c, int in_h, int in_w,
 template<typename Dtype>
 inline void unpack_cpu(const Dtype* input, Dtype* output, int out_n, int out_c,
                        int out_h, int out_w, int s_h, int s_w) {
-  int in_n = s_h*s_w*out_n, in_w = (out_w-1)/s_w+1, in_h = (out_h-1)/s_h+1;
+  int in_w = (out_w-1)/s_w+1, in_h = (out_h-1)/s_h+1;
   for ( int y = 0, o = 0; y < s_h; y++ )
     for ( int x = 0; x < s_w; x++ )
       for ( int n = 0; n < out_n; n++ )
