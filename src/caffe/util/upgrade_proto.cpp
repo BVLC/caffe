@@ -13,8 +13,8 @@
 namespace caffe {
 
 bool NetNeedsUpgrade(const NetParameter& net_param) {
-  for (int i = 0; i < net_param.layer_size(); ++i) {
-    if (net_param.layer(i).has_layer()) {
+  for (int i = 0; i < net_param.layers_size(); ++i) {
+    if (net_param.layers(i).has_layer()) {
       return true;
     }
   }
@@ -32,9 +32,9 @@ bool UpgradeV0Net(const NetParameter& v0_net_param_padding_layers,
   if (v0_net_param.has_name()) {
     net_param->set_name(v0_net_param.name());
   }
-  for (int i = 0; i < v0_net_param.layer_size(); ++i) {
-    is_fully_compatible &= UpgradeLayerParameter(v0_net_param.layer(i),
-                                                 net_param->add_layer());
+  for (int i = 0; i < v0_net_param.layers_size(); ++i) {
+    is_fully_compatible &= UpgradeLayerParameter(v0_net_param.layers(i),
+                                                 net_param->add_layers());
   }
   for (int i = 0; i < v0_net_param.input_size(); ++i) {
     net_param->add_input(v0_net_param.input(i));
@@ -53,19 +53,19 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
   // Copy everything other than the layers from the original param.
   param_upgraded_pad->Clear();
   param_upgraded_pad->CopyFrom(param);
-  param_upgraded_pad->clear_layer();
+  param_upgraded_pad->clear_layers();
   // Figure out which layer each bottom blob comes from.
   map<string, int> blob_name_to_last_top_idx;
   for (int i = 0; i < param.input_size(); ++i) {
     const string& blob_name = param.input(i);
     blob_name_to_last_top_idx[blob_name] = -1;
   }
-  for (int i = 0; i < param.layer_size(); ++i) {
-    const LayerParameter& layer_connection = param.layer(i);
+  for (int i = 0; i < param.layers_size(); ++i) {
+    const V1LayerParameter& layer_connection = param.layers(i);
     const V0LayerParameter& layer_param = layer_connection.layer();
     // Add the layer to the new net, unless it's a padding layer.
     if (layer_param.type() != "padding") {
-      param_upgraded_pad->add_layer()->CopyFrom(layer_connection);
+      param_upgraded_pad->add_layers()->CopyFrom(layer_connection);
     }
     for (int j = 0; j < layer_connection.bottom_size(); ++j) {
       const string& blob_name = layer_connection.bottom(j);
@@ -77,7 +77,7 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
       if (top_idx == -1) {
         continue;
       }
-      LayerParameter source_layer = param.layer(top_idx);
+      const V1LayerParameter& source_layer = param.layers(top_idx);
       if (source_layer.layer().type() == "padding") {
         // This layer has a padding layer as input -- check that it is a conv
         // layer or a pooling layer and takes only one input.  Also check that
@@ -93,10 +93,10 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
             << "Padding Layer takes a single blob as input.";
         CHECK_EQ(source_layer.top_size(), 1)
             << "Padding Layer produces a single blob as output.";
-        int layer_index = param_upgraded_pad->layer_size() - 1;
-        param_upgraded_pad->mutable_layer(layer_index)->mutable_layer()
+        int layer_index = param_upgraded_pad->layers_size() - 1;
+        param_upgraded_pad->mutable_layers(layer_index)->mutable_layer()
             ->set_pad(source_layer.layer().pad());
-        param_upgraded_pad->mutable_layer(layer_index)
+        param_upgraded_pad->mutable_layers(layer_index)
             ->set_bottom(j, source_layer.bottom(0));
       }
     }
@@ -107,8 +107,8 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
   }
 }
 
-bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
-                           LayerParameter* layer_param) {
+bool UpgradeLayerParameter(const V1LayerParameter& v0_layer_connection,
+                           V1LayerParameter* layer_param) {
   bool is_fully_compatible = true;
   layer_param->Clear();
   for (int i = 0; i < v0_layer_connection.bottom_size(); ++i) {
@@ -459,79 +459,79 @@ bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
   return is_fully_compatible;
 }
 
-const char* UpgradeV0LayerType(const string& type) {
+V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
   if (type == "accuracy") {
-    return "Accuracy";
+    return V1LayerParameter_LayerType_ACCURACY;
   } else if (type == "bnll") {
-    return "BNLL";
+    return V1LayerParameter_LayerType_BNLL;
   } else if (type == "concat") {
-    return "Concat";
+    return V1LayerParameter_LayerType_CONCAT;
   } else if (type == "conv") {
-    return "Convolution";
+    return V1LayerParameter_LayerType_CONVOLUTION;
   } else if (type == "data") {
-    return "Data";
+    return V1LayerParameter_LayerType_DATA;
   } else if (type == "dropout") {
-    return "Dropout";
+    return V1LayerParameter_LayerType_DROPOUT;
   } else if (type == "euclidean_loss") {
-    return "EuclideanLoss";
+    return V1LayerParameter_LayerType_EUCLIDEAN_LOSS;
   } else if (type == "flatten") {
-    return "Flatten";
+    return V1LayerParameter_LayerType_FLATTEN;
   } else if (type == "hdf5_data") {
-    return "HDF5Data";
+    return V1LayerParameter_LayerType_HDF5_DATA;
   } else if (type == "hdf5_output") {
-    return "HDF5Output";
+    return V1LayerParameter_LayerType_HDF5_OUTPUT;
   } else if (type == "im2col") {
-    return "Im2Col";
+    return V1LayerParameter_LayerType_IM2COL;
   } else if (type == "images") {
-    return "ImageData";
+    return V1LayerParameter_LayerType_IMAGE_DATA;
   } else if (type == "infogain_loss") {
-    return "InfogainLoss";
+    return V1LayerParameter_LayerType_INFOGAIN_LOSS;
   } else if (type == "innerproduct") {
-    return "InnerProduct";
+    return V1LayerParameter_LayerType_INNER_PRODUCT;
   } else if (type == "lrn") {
-    return "LRN";
+    return V1LayerParameter_LayerType_LRN;
   } else if (type == "multinomial_logistic_loss") {
-    return "MultinomialLogisticLoss";
+    return V1LayerParameter_LayerType_MULTINOMIAL_LOGISTIC_LOSS;
   } else if (type == "pool") {
-    return "Pooling";
+    return V1LayerParameter_LayerType_POOLING;
   } else if (type == "relu") {
-    return "ReLU";
+    return V1LayerParameter_LayerType_RELU;
   } else if (type == "sigmoid") {
-    return "Sigmoid";
+    return V1LayerParameter_LayerType_SIGMOID;
   } else if (type == "softmax") {
-    return "Softmax";
+    return V1LayerParameter_LayerType_SOFTMAX;
   } else if (type == "softmax_loss") {
-    return "SoftmaxWithLoss";
+    return V1LayerParameter_LayerType_SOFTMAX_LOSS;
   } else if (type == "split") {
-    return "Split";
+    return V1LayerParameter_LayerType_SPLIT;
   } else if (type == "tanh") {
-    return "TanH";
+    return V1LayerParameter_LayerType_TANH;
   } else if (type == "window_data") {
-    return "WindowData";
+    return V1LayerParameter_LayerType_WINDOW_DATA;
   } else {
-    LOG(FATAL) << "Unknown layer type: " << type;
-    return "";
+    LOG(FATAL) << "Unknown layer name: " << type;
+    return V1LayerParameter_LayerType_NONE;
   }
 }
 
 bool NetNeedsDataUpgrade(const NetParameter& net_param) {
-  for (int i = 0; i < net_param.layer_size(); ++i) {
-    if (net_param.layer(i).type() == "Data") {
-      DataParameter layer_param = net_param.layer(i).data_param();
+  for (int i = 0; i < net_param.layers_size(); ++i) {
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_DATA) {
+      DataParameter layer_param = net_param.layers(i).data_param();
       if (layer_param.has_scale()) { return true; }
       if (layer_param.has_mean_file()) { return true; }
       if (layer_param.has_crop_size()) { return true; }
       if (layer_param.has_mirror()) { return true; }
     }
-    if (net_param.layer(i).type() == "ImageData") {
-      ImageDataParameter layer_param = net_param.layer(i).image_data_param();
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_IMAGE_DATA) {
+      ImageDataParameter layer_param = net_param.layers(i).image_data_param();
       if (layer_param.has_scale()) { return true; }
       if (layer_param.has_mean_file()) { return true; }
       if (layer_param.has_crop_size()) { return true; }
       if (layer_param.has_mirror()) { return true; }
     }
-    if (net_param.layer(i).type() == "WindowData") {
-      WindowDataParameter layer_param = net_param.layer(i).window_data_param();
+    if (net_param.layers(i).type() == V1LayerParameter_LayerType_WINDOW_DATA) {
+      WindowDataParameter layer_param = net_param.layers(i).window_data_param();
       if (layer_param.has_scale()) { return true; }
       if (layer_param.has_mean_file()) { return true; }
       if (layer_param.has_crop_size()) { return true; }
@@ -541,13 +541,13 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   return false;
 }
 
-#define CONVERT_LAYER_TRANSFORM_PARAM(TYPE_NAME, PARAM_NAME) \
+#define CONVERT_LAYER_TRANSFORM_PARAM(TYPE, Name, param_name) \
   do { \
-    if (net_param->layer(i).type() == #TYPE_NAME) { \
-      TYPE_NAME##Parameter* layer_param = \
-          net_param->mutable_layer(i)->mutable_##PARAM_NAME##_param(); \
+    if (net_param->layers(i).type() == V1LayerParameter_LayerType_##TYPE) { \
+      Name##Parameter* layer_param = \
+          net_param->mutable_layers(i)->mutable_##param_name##_param(); \
       TransformationParameter* transform_param = \
-          net_param->mutable_layer(i)->mutable_transform_param(); \
+          net_param->mutable_layers(i)->mutable_transform_param(); \
       if (layer_param->has_scale()) { \
         transform_param->set_scale(layer_param->scale()); \
         layer_param->clear_scale(); \
@@ -568,10 +568,10 @@ bool NetNeedsDataUpgrade(const NetParameter& net_param) {
   } while (0)
 
 void UpgradeNetDataTransformation(NetParameter* net_param) {
-  for (int i = 0; i < net_param->layer_size(); ++i) {
-    CONVERT_LAYER_TRANSFORM_PARAM(Data, data);
-    CONVERT_LAYER_TRANSFORM_PARAM(ImageData, image_data);
-    CONVERT_LAYER_TRANSFORM_PARAM(WindowData, window_data);
+  for (int i = 0; i < net_param->layers_size(); ++i) {
+    CONVERT_LAYER_TRANSFORM_PARAM(DATA, Data, data);
+    CONVERT_LAYER_TRANSFORM_PARAM(IMAGE_DATA, ImageData, image_data);
+    CONVERT_LAYER_TRANSFORM_PARAM(WINDOW_DATA, WindowData, window_data);
   }
 }
 
@@ -590,7 +590,7 @@ void NetParameterToPrettyPrint(const NetParameter& param,
   for (int i = 0; i < param.input_dim_size(); ++i) {
     pretty_param->add_input_dim(param.input_dim(i));
   }
-  for (int i = 0; i < param.layer_size(); ++i) {
+  for (int i = 0; i < param.layers_size(); ++i) {
     pretty_param->add_layer()->CopyFrom(param.layer(i));
   }
 }

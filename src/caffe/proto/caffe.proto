@@ -69,7 +69,7 @@ message NetParameter {
   repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
 
   // DEPRECATED: use 'layer' instead.
-  // repeated LayerParameter layers = 2; // a bunch of layers.
+  repeated V1LayerParameter layers = 2;
 }
 
 // NOTE
@@ -297,11 +297,6 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-
-  // DEPRECATED: The layer parameters specified as a V0LayerParameter.
-  // This should never be used by any code except to upgrade to the new
-  // LayerParameter specification.
-  optional V0LayerParameter layer = 1;
 }
 
 // Message that stores parameters used to apply transformation
@@ -693,6 +688,97 @@ message WindowDataParameter {
   optional bool cache_images = 12 [default = false];
   // append root_folder to locate images
   optional string root_folder = 13 [default = ""];
+}
+
+// DEPRECATED: use LayerParameter.
+message V1LayerParameter {
+  repeated string bottom = 2;
+  repeated string top = 3;
+  optional string name = 4;
+  repeated NetStateRule include = 32;
+  repeated NetStateRule exclude = 33;
+  enum LayerType {
+    NONE = 0;
+    ABSVAL = 35;
+    ACCURACY = 1;
+    ARGMAX = 30;
+    BNLL = 2;
+    CONCAT = 3;
+    CONTRASTIVE_LOSS = 37;
+    CONVOLUTION = 4;
+    DATA = 5;
+    DROPOUT = 6;
+    DUMMY_DATA = 32;
+    EUCLIDEAN_LOSS = 7;
+    ELTWISE = 25;
+    EXP = 38;
+    FLATTEN = 8;
+    HDF5_DATA = 9;
+    HDF5_OUTPUT = 10;
+    HINGE_LOSS = 28;
+    IM2COL = 11;
+    IMAGE_DATA = 12;
+    INFOGAIN_LOSS = 13;
+    INNER_PRODUCT = 14;
+    LRN = 15;
+    MEMORY_DATA = 29;
+    MULTINOMIAL_LOGISTIC_LOSS = 16;
+    MVN = 34;
+    POOLING = 17;
+    POWER = 26;
+    RELU = 18;
+    SIGMOID = 19;
+    SIGMOID_CROSS_ENTROPY_LOSS = 27;
+    SILENCE = 36;
+    SOFTMAX = 20;
+    SOFTMAX_LOSS = 21;
+    SPLIT = 22;
+    SLICE = 33;
+    TANH = 23;
+    WINDOW_DATA = 24;
+    THRESHOLD = 31;
+  }
+  optional LayerType type = 5;
+  repeated BlobProto blobs = 6;
+  repeated string param = 1001;
+  repeated DimCheckMode blob_share_mode = 1002;
+  enum DimCheckMode {
+    STRICT = 0;
+    PERMISSIVE = 1;
+  }
+  repeated float blobs_lr = 7;
+  repeated float weight_decay = 8;
+  repeated float loss_weight = 35;
+  optional AccuracyParameter accuracy_param = 27;
+  optional ArgMaxParameter argmax_param = 23;
+  optional ConcatParameter concat_param = 9;
+  optional ContrastiveLossParameter contrastive_loss_param = 40;
+  optional ConvolutionParameter convolution_param = 10;
+  optional DataParameter data_param = 11;
+  optional DropoutParameter dropout_param = 12;
+  optional DummyDataParameter dummy_data_param = 26;
+  optional EltwiseParameter eltwise_param = 24;
+  optional ExpParameter exp_param = 41;
+  optional HDF5DataParameter hdf5_data_param = 13;
+  optional HDF5OutputParameter hdf5_output_param = 14;
+  optional HingeLossParameter hinge_loss_param = 29;
+  optional ImageDataParameter image_data_param = 15;
+  optional InfogainLossParameter infogain_loss_param = 16;
+  optional InnerProductParameter inner_product_param = 17;
+  optional LRNParameter lrn_param = 18;
+  optional MemoryDataParameter memory_data_param = 22;
+  optional MVNParameter mvn_param = 34;
+  optional PoolingParameter pooling_param = 19;
+  optional PowerParameter power_param = 21;
+  optional ReLUParameter relu_param = 30;
+  optional SigmoidParameter sigmoid_param = 38;
+  optional SoftmaxParameter softmax_param = 39;
+  optional SliceParameter slice_param = 31;
+  optional TanHParameter tanh_param = 37;
+  optional ThresholdParameter threshold_param = 25;
+  optional WindowDataParameter window_data_param = 20;
+  optional TransformationParameter transform_param = 36;
+  optional V0LayerParameter layer = 1;
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters
