@@ -24,10 +24,10 @@ void UpgradeV0PaddingLayers(const NetParameter& param,
                             NetParameter* param_upgraded_pad);
 
 // Upgrade a single V0LayerConnection to the new LayerParameter format.
-bool UpgradeLayerParameter(const LayerParameter& v0_layer_connection,
-                           LayerParameter* layer_param);
+bool UpgradeLayerParameter(const V1LayerParameter& v0_layer_connection,
+                           V1LayerParameter* layer_param);
 
-const char* UpgradeV0LayerType(const string& type);
+V1LayerParameter_LayerType UpgradeV0LayerType(const string& type);
 
 // Return true iff any layer contains deprecated data transformation parameters.
 bool NetNeedsDataUpgrade(const NetParameter& net_param);
