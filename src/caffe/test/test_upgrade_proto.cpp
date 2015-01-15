@@ -7,6 +7,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -2847,5 +2848,22 @@ TEST_F(NetUpgradeTest, TestImageNet) {
       "} ";
   this->RunV1UpgradeTest(expected_v1_proto, expected_v2_proto);
 }  // NOLINT(readability/fn_size)
+
+TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
+  LayerParameter layer_param;
+  shared_ptr<Layer<float> > layer;
+  for (int i = 0; i < V1LayerParameter_LayerType_LayerType_ARRAYSIZE; ++i) {
+    ASSERT_TRUE(V1LayerParameter_LayerType_IsValid(i));
+    V1LayerParameter_LayerType v1_type = V1LayerParameter_LayerType(i);
+    string v2_layer_type(UpgradeV1LayerType(v1_type));
+    if (v2_layer_type == "") {
+      EXPECT_EQ(V1LayerParameter_LayerType_NONE, v1_type);
+      continue;  // Empty string isn't actually a valid layer type.
+    }
+    layer_param.set_type(v2_layer_type);
+    layer.reset(LayerRegistry<float>::CreateLayer(layer_param));
+    EXPECT_EQ(v2_layer_type, layer->type());
+  }
+}
 
 }  // NOLINT(readability/fn_size)  // namespace caffe
