@@ -4,7 +4,6 @@
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/proto/caffe_pretty_print.pb.h"
 
 namespace caffe {
 
@@ -50,11 +49,6 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
                              LayerParameter* layer_param);
 
 const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type);
-
-// Convert a NetParameter to NetParameterPrettyPrint used for dumping to
-// proto text files.
-void NetParameterToPrettyPrint(const NetParameter& param,
-                               NetParameterPrettyPrint* pretty_param);
 
 // Check for deprecations and upgrade the NetParameter as needed.
 bool UpgradeNetAsNeeded(const string& param_file, NetParameter* param);
