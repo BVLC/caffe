@@ -407,8 +407,8 @@ class CuDNNSoftmaxLayer : public SoftmaxLayer<Dtype> {
      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   cudnnHandle_t             handle_;
-  cudnnTensor4dDescriptor_t bottom_desc_;
-  cudnnTensor4dDescriptor_t top_desc_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
 };
 #endif
 
