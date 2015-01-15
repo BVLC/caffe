@@ -138,9 +138,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     CHECK(param_size == num_param_blobs || param_size == 0)
         << "Incorrect param size: should be either 0 or the same as "
            "the number of the layer's parameter blobs: " << num_param_blobs;
-    const int blob_share_mode_size = layer_param.blob_share_mode_size();
-    CHECK(blob_share_mode_size == num_param_blobs || blob_share_mode_size == 0)
-        << "Incorrect blob_share_mode size: should be either 0 or the same as "
+    const int param_share_mode_size = layer_param.param_share_mode_size();
+    CHECK(param_share_mode_size == num_param_blobs ||
+          param_share_mode_size == 0)
+        << "Incorrect param_share_mode size: should be either 0 or the same as "
            "the number of the layer's parameter blobs: " << num_param_blobs;
     for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
       AppendParam(param, layer_id, param_id);
@@ -441,9 +442,9 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     Blob<Dtype>* this_blob = layers_[layer_id]->blobs()[param_id].get();
     Blob<Dtype>* owner_blob =
         layers_[owner_layer_id]->blobs()[owner_param_id].get();
-    const int blob_share_mode_size = layer_param.blob_share_mode_size();
-    if (blob_share_mode_size > param_id &&
-        (layer_param.blob_share_mode(param_id) ==
+    const int param_share_mode_size = layer_param.param_share_mode_size();
+    if (param_share_mode_size > param_id &&
+        (layer_param.param_share_mode(param_id) ==
          LayerParameter_DimCheckMode_PERMISSIVE)) {
       // Permissive dimension checking -- only check counts are the same.
       CHECK_EQ(this_blob->count(), owner_blob->count())
