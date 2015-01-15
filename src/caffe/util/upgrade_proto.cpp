@@ -659,6 +659,7 @@ bool UpgradeV1Net(const NetParameter& v1_net_param, NetParameter* net_param) {
   }
   net_param->CopyFrom(v1_net_param);
   net_param->clear_layers();
+  net_param->clear_layer();
   for (int i = 0; i < v1_net_param.layers_size(); ++i) {
     if (!UpgradeV1LayerParameter(v1_net_param.layers(i),
                                  net_param->add_layer())) {
@@ -695,27 +696,34 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
     layer_param->add_blobs()->CopyFrom(v1_layer_param.blobs(i));
   }
   for (int i = 0; i < v1_layer_param.param_size(); ++i) {
-    layer_param->add_param(v1_layer_param.param(i));
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_name(v1_layer_param.param(i));
   }
+  ParamSpec_DimCheckMode mode;
   for (int i = 0; i < v1_layer_param.blob_share_mode_size(); ++i) {
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
     switch (v1_layer_param.blob_share_mode(i)) {
     case V1LayerParameter_DimCheckMode_STRICT:
-      layer_param->add_param_share_mode(LayerParameter_DimCheckMode_STRICT);
+      mode = ParamSpec_DimCheckMode_STRICT;
       break;
     case V1LayerParameter_DimCheckMode_PERMISSIVE:
-      layer_param->add_param_share_mode(LayerParameter_DimCheckMode_PERMISSIVE);
+      mode = ParamSpec_DimCheckMode_PERMISSIVE;
       break;
     default:
       LOG(FATAL) << "Unknown blob_share_mode: "
                  << v1_layer_param.blob_share_mode(i);
       break;
     }
+    layer_param->mutable_param(i)->set_share_mode(mode);
   }
   for (int i = 0; i < v1_layer_param.blobs_lr_size(); ++i) {
-    layer_param->add_blobs_lr(v1_layer_param.blobs_lr(i));
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_lr_mult(v1_layer_param.blobs_lr(i));
   }
   for (int i = 0; i < v1_layer_param.weight_decay_size(); ++i) {
-    layer_param->add_weight_decay(v1_layer_param.weight_decay(i));
+    while (layer_param->param_size() <= i) { layer_param->add_param(); }
+    layer_param->mutable_param(i)->set_decay_mult(
+        v1_layer_param.weight_decay(i));
   }
   for (int i = 0; i < v1_layer_param.loss_weight_size(); ++i) {
     layer_param->add_loss_weight(v1_layer_param.loss_weight(i));

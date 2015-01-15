@@ -213,6 +213,31 @@ message NetStateRule {
   repeated string not_stage = 5;
 }
 
+// Specifies training parameters (multipliers on global learning constants,
+// and the name and other settings used for weight sharing).
+message ParamSpec {
+  // The names of the parameter blobs -- useful for sharing parameters among
+  // layers, but never required otherwise.  To share a parameter between two
+  // layers, give it a (non-empty) name.
+  optional string name = 1;
+
+  // Whether to require shared weights to have the same shape, or just the same
+  // count -- defaults to STRICT if unspecified.
+  optional DimCheckMode share_mode = 2;
+  enum DimCheckMode {
+    // STRICT (default) requires that num, channels, height, width each match.
+    STRICT = 0;
+    // PERMISSIVE requires only the count (num*channels*height*width) to match.
+    PERMISSIVE = 1;
+  }
+
+  // The multiplier on the global learning rate for this parameter.
+  optional float lr_mult = 3 [default = 1.0];
+
+  // The multiplier on the global weight decay for this parameter.
+  optional float decay_mult = 4 [default = 1.0];
+}
+
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
@@ -228,29 +253,12 @@ message LayerParameter {
   // to each top blob.
   repeated float loss_weight = 5;
 
-  // The blobs containing the numeric parameters of the layer
-  repeated BlobProto blobs = 6;
+  // Specifies training parameters (multipliers on global learning constants,
+  // and the name and other settings used for weight sharing).
+  repeated ParamSpec param = 6;
 
-  // The names of the parameter blobs -- useful for sharing parameters among
-  // layers (but never required).
-  repeated string param = 7;
-
-  // Whether to require shared weights to have the same shape, or just the same
-  // count -- defaults to STRICT if unspecified.
-  repeated DimCheckMode param_share_mode = 8;
-  enum DimCheckMode {
-    // STRICT (default) requires that num, channels, height, width each match.
-    STRICT = 0;
-    // PERMISSIVE requires only the count (num*channels*height*width) to match.
-    PERMISSIVE = 1;
-  }
-
-  // The ratio that is multiplied on the global learning rate. If you want to
-  // set the learning ratio for one blob, you need to set it for all blobs.
-  repeated float blobs_lr = 9;
-
-  // The weight decay that is multiplied on the global weight decay.
-  repeated float weight_decay = 10;
+  // The blobs containing the numeric parameters of the layer.
+  repeated BlobProto blobs = 7;
 
   // Rules controlling whether and when a layer is included in the network,
   // based on the current NetState.  You may specify a non-zero number of rules
