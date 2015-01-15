@@ -142,6 +142,13 @@ void PySGDSolver::SolveResume(const string& resume_file) {
 }
 
 BOOST_PYTHON_MODULE(_caffe) {
+  // Caffe utility methods
+  bp::def("set_mode_cpu",          &set_mode_cpu);
+  bp::def("set_mode_gpu",          &set_mode_gpu);
+  bp::def("set_phase_train",       &set_phase_train);
+  bp::def("set_phase_test",        &set_phase_test);
+  bp::def("set_device",            &Caffe::SetDevice);
+
   // below, we prepend an underscore to methods that will be replaced
   // in Python
   bp::class_<PyNet, shared_ptr<PyNet> >(
@@ -150,11 +157,6 @@ BOOST_PYTHON_MODULE(_caffe) {
       .def("_forward",              &PyNet::Forward)
       .def("_backward",             &PyNet::Backward)
       .def("reshape",               &PyNet::Reshape)
-      .def("set_mode_cpu",          &PyNet::set_mode_cpu)
-      .def("set_mode_gpu",          &PyNet::set_mode_gpu)
-      .def("set_phase_train",       &PyNet::set_phase_train)
-      .def("set_phase_test",        &PyNet::set_phase_test)
-      .def("set_device",            &PyNet::set_device)
       .add_property("_blobs",       &PyNet::blobs)
       .add_property("layers",       &PyNet::layers)
       .add_property("_blob_names",  &PyNet::blob_names)
