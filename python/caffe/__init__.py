@@ -4,4 +4,5 @@ from ._caffe import set_mode_cpu, set_mode_gpu, set_device, \
 from .proto.caffe_pb2 import TRAIN, TEST
 from .classifier import Classifier
 from .detector import Detector
+from .layers import layers, params, to_proto
 import io
