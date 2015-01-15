@@ -241,7 +241,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 43 (last added: loss_param)
+// LayerParameter next available layer-specific ID: 129 (last added: window_data_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -266,48 +266,49 @@ message LayerParameter {
   // specified, the layer is always included.  If the current NetState meets
   // ANY (i.e., one or more) of the specified rules, the layer is
   // included/excluded.
-  repeated NetStateRule include = 11;
-  repeated NetStateRule exclude = 12;
+  repeated NetStateRule include = 8;
+  repeated NetStateRule exclude = 9;
 
   // Parameters for data pre-processing.
-  optional TransformationParameter transform_param = 13;
-
-  optional AccuracyParameter accuracy_param = 14;
-  optional ArgMaxParameter argmax_param = 15;
-  optional ConcatParameter concat_param = 16;
-  optional ContrastiveLossParameter contrastive_loss_param = 17;
-  optional ConvolutionParameter convolution_param = 18;
-  optional DataParameter data_param = 19;
-  optional DropoutParameter dropout_param = 20;
-  optional DummyDataParameter dummy_data_param = 21;
-  optional EltwiseParameter eltwise_param = 22;
-  optional ExpParameter exp_param = 23;
-  optional HDF5DataParameter hdf5_data_param = 24;
-  optional HDF5OutputParameter hdf5_output_param = 25;
-  optional HingeLossParameter hinge_loss_param = 26;
-  optional ImageDataParameter image_data_param = 27;
-  optional InfogainLossParameter infogain_loss_param = 28;
-  optional InnerProductParameter inner_product_param = 29;
-  optional LRNParameter lrn_param = 30;
-  optional MemoryDataParameter memory_data_param = 31;
-  optional MVNParameter mvn_param = 32;
-  optional PoolingParameter pooling_param = 33;
-  optional PowerParameter power_param = 34;
-  optional ReLUParameter relu_param = 35;
-  optional SigmoidParameter sigmoid_param = 36;
-  optional SoftmaxParameter softmax_param = 37;
-  optional SliceParameter slice_param = 38;
-  optional TanHParameter tanh_param = 39;
-  optional ThresholdParameter threshold_param = 40;
-  optional WindowDataParameter window_data_param = 41;
+  optional TransformationParameter transform_param = 100;
 
   // Parameters shared by loss layers.
-  optional LossParameter loss_param = 42;
+  optional LossParameter loss_param = 101;
 
+  // Layer type-specific parameters.
+  //
   // Note: certain layers may have more than one computational engine
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
+  optional AccuracyParameter accuracy_param = 102;
+  optional ArgMaxParameter argmax_param = 103;
+  optional ConcatParameter concat_param = 104;
+  optional ContrastiveLossParameter contrastive_loss_param = 105;
+  optional ConvolutionParameter convolution_param = 106;
+  optional DataParameter data_param = 107;
+  optional DropoutParameter dropout_param = 108;
+  optional DummyDataParameter dummy_data_param = 109;
+  optional EltwiseParameter eltwise_param = 110;
+  optional ExpParameter exp_param = 111;
+  optional HDF5DataParameter hdf5_data_param = 112;
+  optional HDF5OutputParameter hdf5_output_param = 113;
+  optional HingeLossParameter hinge_loss_param = 114;
+  optional ImageDataParameter image_data_param = 115;
+  optional InfogainLossParameter infogain_loss_param = 116;
+  optional InnerProductParameter inner_product_param = 117;
+  optional LRNParameter lrn_param = 118;
+  optional MemoryDataParameter memory_data_param = 119;
+  optional MVNParameter mvn_param = 120;
+  optional PoolingParameter pooling_param = 121;
+  optional PowerParameter power_param = 122;
+  optional ReLUParameter relu_param = 123;
+  optional SigmoidParameter sigmoid_param = 124;
+  optional SoftmaxParameter softmax_param = 125;
+  optional SliceParameter slice_param = 126;
+  optional TanHParameter tanh_param = 127;
+  optional ThresholdParameter threshold_param = 128;
+  optional WindowDataParameter window_data_param = 129;
 }
 
 // Message that stores parameters used to apply transformation
