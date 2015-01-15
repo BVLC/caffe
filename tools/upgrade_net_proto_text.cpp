@@ -47,13 +47,8 @@ int main(int argc, char** argv) {
     UpgradeNetDataTransformation(&net_param);
   }
 
-  // Convert to a NetParameterPrettyPrint to print fields in desired
-  // order.
-  NetParameterPrettyPrint net_param_pretty;
-  NetParameterToPrettyPrint(net_param, &net_param_pretty);
-
   // Save new format prototxt.
-  WriteProtoToTextFile(net_param_pretty, argv[2]);
+  WriteProtoToTextFile(net_param, argv[2]);
 
   LOG(ERROR) << "Wrote upgraded NetParameter text proto to " << argv[2];
   return !success;
