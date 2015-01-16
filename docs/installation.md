@@ -17,7 +17,7 @@ Caffe depends on several software packages.
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
-* [OpenCV](http://opencv.org/).
+* [OpenCV](http://opencv.org/) (>= 2.4)
 * [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 and 1.56 are tested)
 * `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`, `lmdb`
 * For the Python wrapper
@@ -226,10 +226,10 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     git checkout master
     cd /usr/local/Library/Taps/homebrew/homebrew-science
     git checkout master
-    
+
     # Update homebrew; hopefully this works without errors!
     brew update
-    
+
     # Switch back to the caffe branches with the forumlae that you modified earlier
     cd /usr/local
     git rebase master caffe
@@ -237,8 +237,8 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     cd /usr/local/Library/Taps/homebrew/homebrew-science
     git rebase master caffe
     # Fix any merge conflicts and commit to caffe branch
-    
-    # Done!            
+
+    # Done!
 
 At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.
 
