@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
         "    http://www.image-net.org/download-images\n");
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  if (argc != 4) {
+  if (argc < 4) {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/convert_imageset");
     return 1;
   }
