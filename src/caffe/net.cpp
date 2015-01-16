@@ -636,7 +636,7 @@ void Net<Dtype>::UpdateDebugInfo(const int param_id) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::ShareTrainedLayersWith(Net* other) {
+void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
   int num_source_layers = other->layers().size();
   for (int i = 0; i < num_source_layers; ++i) {
     Layer<Dtype>* source_layer = other->layers()[i].get();
@@ -726,7 +726,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
+void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   param->Clear();
   param->set_name(name_);
   // Add bottom and top
@@ -785,16 +785,16 @@ void Net<Dtype>::Update() {
 }
 
 template <typename Dtype>
-bool Net<Dtype>::has_blob(const string& blob_name) {
+bool Net<Dtype>::has_blob(const string& blob_name) const {
   return blob_names_index_.find(blob_name) != blob_names_index_.end();
 }
 
 template <typename Dtype>
 const shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(
-    const string& blob_name) {
+    const string& blob_name) const {
   shared_ptr<Blob<Dtype> > blob_ptr;
   if (has_blob(blob_name)) {
-    blob_ptr = blobs_[blob_names_index_[blob_name]];
+    blob_ptr = blobs_[blob_names_index_.find(blob_name)->second];
   } else {
     blob_ptr.reset((Blob<Dtype>*)(NULL));
     LOG(WARNING) << "Unknown blob name " << blob_name;
@@ -803,16 +803,16 @@ const shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(
 }
 
 template <typename Dtype>
-bool Net<Dtype>::has_layer(const string& layer_name) {
+bool Net<Dtype>::has_layer(const string& layer_name) const {
   return layer_names_index_.find(layer_name) != layer_names_index_.end();
 }
 
 template <typename Dtype>
 const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
-    const string& layer_name) {
+    const string& layer_name) const {
   shared_ptr<Layer<Dtype> > layer_ptr;
   if (has_layer(layer_name)) {
-    layer_ptr = layers_[layer_names_index_[layer_name]];
+    layer_ptr = layers_[layer_names_index_.find(layer_name)->second];
   } else {
     layer_ptr.reset((Layer<Dtype>*)(NULL));
     LOG(WARNING) << "Unknown layer name " << layer_name;

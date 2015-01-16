@@ -220,8 +220,8 @@ int time() {
   caffe_net.Backward();
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
-  vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
-  vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
+  const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
+  const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
       caffe_net.bottom_need_backward();
   LOG(INFO) << "*** Benchmark begins ***";
