@@ -5,7 +5,7 @@ title: Installation
 # Installation
 
 Prior to installing, it is best to read through this guide and take note of the details for your platform.
-We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
+We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.10, 10.9, and 10.8.
 
 - [Prerequisites](#prerequisites)
 - [Compilation](#compilation)
@@ -156,9 +156,9 @@ Building boost from source is needed to link against your local Python (exceptio
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
 
-#### 10.9-specific Instructions
+#### 10.10- and 10.9-specific Instructions
 
-In OS X 10.9, clang++ is the default C++ compiler and uses `libc++` as the standard library.
+In OS X 10.9+, clang++ is the default C++ compiler and uses `libc++` as the standard library.
 However, NVIDIA CUDA (even version 6.0) currently links only with `libstdc++`.
 This makes it necessary to change the compilation settings for each of the dependencies.
 
@@ -226,10 +226,10 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     git checkout master
     cd /usr/local/Library/Taps/homebrew/homebrew-science
     git checkout master
-    
+
     # Update homebrew; hopefully this works without errors!
     brew update
-    
+
     # Switch back to the caffe branches with the forumlae that you modified earlier
     cd /usr/local
     git rebase master caffe
@@ -237,8 +237,8 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     cd /usr/local/Library/Taps/homebrew/homebrew-science
     git rebase master caffe
     # Fix any merge conflicts and commit to caffe branch
-    
-    # Done!            
+
+    # Done!
 
 At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.
 

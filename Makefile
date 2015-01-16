@@ -234,15 +234,15 @@ endif
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
+	CXXFLAGS += -stdlib=libstdc++
+	LINKFLAGS += -stdlib=libstdc++
 	# clang throws this warning for cuda headers
 	WARNINGS += -Wno-unneeded-internal-declaration
-	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
-		CXXFLAGS += -stdlib=libstdc++
-		LINKFLAGS += -stdlib=libstdc++
-	endif
+	# gtest needs to use its own tuple to not conflict with clang
+	CXXFLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
 	LIBRARIES += boost_thread-mt
-        NVCCFLAGS += -DOSX
+	NVCCFLAGS += -DOSX
 endif
 
 # Custom compiler
@@ -304,9 +304,16 @@ else
 		endif
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
-		BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
 		LIBRARIES += cblas
-		LDFLAGS += -framework vecLib
+		# 10.10 has accelerate while 10.9 has veclib
+		XCODE_CLT_VER := $(shell pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep -o 'version: 6')
+		ifneq (,$(findstring version: 6,$(XCODE_CLT_VER)))
+			BLAS_INCLUDE ?= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
+			LDFLAGS += -framework Accelerate
+		else
+			BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
+			LDFLAGS += -framework vecLib
+		endif
 	endif
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
