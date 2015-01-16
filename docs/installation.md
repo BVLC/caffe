@@ -93,7 +93,7 @@ and for **Ubuntu 14.04** the rest of the dependencies can be installed with
 
 Keep reading to find out how to manually build and install the Google flags library, Google logging library and LMDB on **Ubuntu 12.04**.
 
-On **CentOS / RHEL / Fedora**, most of the dependencies can be installed with
+On **CentOS / RHEL / Fedora**, first add `EPEL` software repository( https://fedoraproject.org/wiki/EPEL/FAQ#How_can_I_install_the_packages_from_the_EPEL_software_repository.3F ), then most of the dependencies can be installed with
 
     sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
 
@@ -101,7 +101,7 @@ The Google flags library, Google logging library and LMDB already made their way
 
     sudo yum install gflags-devel glog-devel lmdb-devel
 
-**Finally** in case you couldn't find those extra libraries mentioned above in your distribution's repositories, here are the instructions to follow for manually building and installing them on **Ubuntu 12.04 / CentOS / RHEL / Fedora** (or practically on any Linux distribution)
+**Finally** in case you couldn't find those extra libraries mentioned above in your distribution's repositories, here are the instructions to follow for manually building and installing them on **Ubuntu 12.04 / CentOS / RHEL / Fedora** (or practically on any Linux distribution). On **Centos 6**, if you install `lmdb` library using `yum install lmdb-devel`. The installed library is too old. The compilation will fail. You need to manually install `lmdb` library from source code as follows.
 
     # glog
     wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz

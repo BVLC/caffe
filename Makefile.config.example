@@ -57,7 +57,7 @@ PYTHON_LIB := /usr/lib
 
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
-LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
+LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib /usr/lib64/atlas
 
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute
