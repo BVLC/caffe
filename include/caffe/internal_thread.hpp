@@ -39,4 +39,4 @@ class InternalThread {
 
 }  // namespace caffe
 
-#endif // CAFFE_INTERNAL_THREAD_HPP_
+#endif  // CAFFE_INTERNAL_THREAD_HPP_

@@ -17,7 +17,8 @@ bool InternalThread::StartInternalThread() {
     return false;
   }
   try {
-    thread_.reset(new boost::thread(&InternalThread::InternalThreadEntry, this));
+    thread_.reset(
+        new boost::thread(&InternalThread::InternalThreadEntry, this));
   } catch (...) {
     return false;
   }
