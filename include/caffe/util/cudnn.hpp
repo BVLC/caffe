@@ -62,15 +62,15 @@ inline void createTensor4dDesc(cudnnTensorDescriptor_t* desc) {
 
 template <typename Dtype>
 inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
-                            int n, int c, int h, int w,
-                            int stride_n, int stride_c, int stride_h, int stride_w) {
+    int n, int c, int h, int w,
+    int stride_n, int stride_c, int stride_h, int stride_w) {
   CUDNN_CHECK(cudnnSetTensor4dDescriptorEx(*desc, dataType<Dtype>::type,
-                                         n, c, h, w, stride_n, stride_c, stride_h, stride_w));
+        n, c, h, w, stride_n, stride_c, stride_h, stride_w));
 }
 
 template <typename Dtype>
 inline void setTensor4dDesc(cudnnTensorDescriptor_t* desc,
-                            int n, int c, int h, int w) {
+    int n, int c, int h, int w) {
   const int stride_w = 1;
   const int stride_h = w * stride_w;
   const int stride_c = h * stride_h;
@@ -96,7 +96,7 @@ template <typename Dtype>
 inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
     int pad_h, int pad_w, int stride_h, int stride_w) {
-  CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv, 
+  CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
       pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
 }
 

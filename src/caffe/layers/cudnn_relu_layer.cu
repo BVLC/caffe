@@ -22,9 +22,11 @@ void CuDNNReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype beta = 0.0;
 
   CUDNN_CHECK(cudnnActivationForward(this->handle_,
-                                     CUDNN_ACTIVATION_RELU, (void *)(&alpha),
-                                     this->bottom_desc_, bottom_data, (void *)(&beta),
-                                     this->top_desc_, top_data));
+        CUDNN_ACTIVATION_RELU,
+        std::reinterpret_cast<void *>(&alpha),
+        this->bottom_desc_, bottom_data,
+        std::reinterpret_cast<void *>(&beta),
+        this->top_desc_, top_data));
 }
 
 template <typename Dtype>
@@ -49,10 +51,12 @@ void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype beta = 0.0;
 
   CUDNN_CHECK(cudnnActivationBackward(this->handle_,
-                                      CUDNN_ACTIVATION_RELU, (void *)(&alpha),
-                                      this->top_desc_, top_data, this->top_desc_, top_diff,
-                                      this->bottom_desc_, bottom_data, (void *)(&beta), 
-                                      this->bottom_desc_, bottom_diff));
+        CUDNN_ACTIVATION_RELU,
+        std::reinterpret_cast<void *>(&alpha),
+        this->top_desc_, top_data, this->top_desc_, top_diff,
+        this->bottom_desc_, bottom_data,
+        std::reinterpret_cast<void *>(&beta),
+        this->bottom_desc_, bottom_diff));
 }
 
 INSTANTIATE_CLASS(CuDNNReLULayer);
