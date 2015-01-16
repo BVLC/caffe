@@ -8,6 +8,8 @@ from itertools import izip_longest
 import numpy as np
 
 from ._caffe import Net, SGDSolver
+from ._caffe import set_mode_cpu, set_mode_gpu, set_phase_train, set_phase_test
+from ._caffe import set_device
 import caffe.io
 
 # We directly update methods from Net here (rather than using composition or
