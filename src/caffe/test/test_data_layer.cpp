@@ -1,19 +1,22 @@
 #include <string>
 #include <vector>
 
+#include "boost/scoped_ptr.hpp"
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/dataset_factory.hpp"
+#include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
+
+using boost::scoped_ptr;
 
 template <typename TypeParam>
 class DataLayerTest : public MultiDeviceTest<TypeParam> {
@@ -33,15 +36,15 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_label_);
   }
 
-  // Fill the LevelDB with data: if unique_pixels, each pixel is unique but
+  // Fill the DB with data: if unique_pixels, each pixel is unique but
   // all images are the same; else each image is unique but all pixels within
   // an image are the same.
   void Fill(const bool unique_pixels, DataParameter_DB backend) {
     backend_ = backend;
     LOG(INFO) << "Using temporary dataset " << *filename_;
-    shared_ptr<Dataset<string, Datum> > dataset =
-        DatasetFactory<string, Datum>(backend_);
-    CHECK(dataset->open(*filename_, Dataset<string, Datum>::New));
+    scoped_ptr<db::DB> db(db::GetDB(backend));
+    db->Open(*filename_, db::NEW);
+    scoped_ptr<db::Transaction> txn(db->NewTransaction());
     for (int i = 0; i < 5; ++i) {
       Datum datum;
       datum.set_label(i);
@@ -55,10 +58,12 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       }
       stringstream ss;
       ss << i;
-      CHECK(dataset->put(ss.str(), datum));
+      string out;
+      CHECK(datum.SerializeToString(&out));
+      txn->Put(ss.str(), out);
     }
-    CHECK(dataset->commit());
-    dataset->close();
+    txn->Commit();
+    db->Close();
   }
 
   void TestRead() {
@@ -183,7 +188,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         }
         crop_sequence.push_back(iter_crop_sequence);
       }
-    }  // destroy 1st data layer and unlock the dataset
+    }  // destroy 1st data layer and unlock the db
 
     // Get crop sequence after reseeding Caffe with 1701.
     // Check that the sequence is the same as the original.
@@ -238,7 +243,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
         }
         crop_sequence.push_back(iter_crop_sequence);
       }
-    }  // destroy 1st data layer and unlock the dataset
+    }  // destroy 1st data layer and unlock the db
 
     // Get crop sequence continuing from previous Caffe RNG state; reseed
     // srand with 1701. Check that the sequence differs from the original.
