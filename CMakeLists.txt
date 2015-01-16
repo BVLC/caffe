@@ -18,7 +18,7 @@ caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" ON IF NOT CPU_ONL
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
 caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
-caffe_option(BUILD_docs   "Build examples" OFF IF UNIX OR APPLE)
+caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
 
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)

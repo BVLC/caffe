@@ -55,6 +55,22 @@ function(caffe_print_list)
 endfunction()
 
 ################################################################################################
+# Function merging lists of compiler flags to single string.
+# Usage:
+#   caffe_merge_flag_lists(out_variable <list1> [<list2>] [<list3>] ...)
+function(caffe_merge_flag_lists out_var)
+  set(__result "")
+  foreach(__list ${ARGN})
+    foreach(__flag ${${__list}})
+      string(STRIP ${__flag} __flag)
+      set(__result "${__result} ${__flag}")
+    endforeach()
+  endforeach()
+  string(STRIP ${__result} __result)
+  set(${out_var} ${__result} PARENT_SCOPE)
+endfunction()
+
+################################################################################################
 # Converts all paths in list to absolute
 # Usage:
 #   caffe_convert_absolute_paths(<list_variable>)

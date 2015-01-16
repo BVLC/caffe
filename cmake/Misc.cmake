@@ -30,6 +30,7 @@ endif()
 
 # ---[ RPATH settings
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE CACHE BOOLEAN "Use link paths for shared library rpath")
+set(CMAKE_MACOSX_RPATH TRUE)
 
 # ---[ Funny target
 if(UNIX OR APPLE)

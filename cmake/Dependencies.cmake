@@ -57,9 +57,9 @@ if(NOT HAVE_CUDA)
 endif()
 
 # ---[ OpenCV
-find_package(OpenCV QUIET COMPONENTS core highgui imgproc)
-if(NOT OpenCV_FOUND) # temporary for OpenCV 3.x
-  find_package(OpenCV REQUIRED)
+find_package(OpenCV QUIET COMPONENTS core highgui imgproc imgcodecs)
+if(NOT OpenCV_FOUND) # if not OpenCV 3.x, then imgcodecs are not found
+  find_package(OpenCV REQUIRED COMPONENTS core highgui imgproc)
 endif()
 include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${OpenCV_LIBS})

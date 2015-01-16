@@ -62,10 +62,10 @@ function(caffe_generate_export_configs)
   list(REMOVE_ITEM Caffe_INCLUDE_DIRS ${__insource} ${__inbinary})
 
   # add `install` include folder
-  set(lines "")
-  list(APPEND lines "get_filename_component(__caffe_include \"\${Caffe_CMAKE_DIR}/../../include\" ABSOLUTE)\n")
-  list(APPEND lines "list(APPEND Caffe_INCLUDE_DIRS \${__caffe_include})\n")
-  list(APPEND lines "unset(__caffe_include)\n")
+  set(lines
+     "get_filename_component(__caffe_include \"\${Caffe_CMAKE_DIR}/../../include\" ABSOLUTE)\n"
+     "list(APPEND Caffe_INCLUDE_DIRS \${__caffe_include})\n"
+     "unset(__caffe_include)\n")
   string(REPLACE ";" "" Caffe_INSTALL_INCLUDE_DIR_APPEND_COMMAND ${lines})
 
   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${CMAKE_BINARY_DIR}/cmake/CaffeConfig.cmake" @ONLY)
