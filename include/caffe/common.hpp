@@ -64,6 +64,9 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
+// See PR #1236
+namespace cv {class Mat;}
+
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly

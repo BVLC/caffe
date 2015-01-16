@@ -242,7 +242,6 @@ ifeq ($(OSX), 1)
 	CXXFLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
 	LIBRARIES += boost_thread-mt
-	NVCCFLAGS += -DOSX
 endif
 
 # Custom compiler
