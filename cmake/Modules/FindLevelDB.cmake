@@ -22,4 +22,23 @@ if(LEVELDB_FOUND)
   set(LevelDB_INCLUDES ${LevelDB_INCLUDE})
   set(LevelDB_LIBRARIES ${LevelDB_LIBRARY})
   mark_as_advanced(LevelDB_INCLUDE LevelDB_LIBRARY)
+
+  if(EXISTS "${LevelDB_INCLUDE}/leveldb/db.h")
+    file(STRINGS "${LevelDB_INCLUDE}/leveldb/db.h" __version_lines
+           REGEX "static const int k[^V]+Version[ \t]+=[ \t]+[0-9]+;")
+
+    foreach(__line ${__version_lines})
+      if(__line MATCHES "[^k]+kMajorVersion[ \t]+=[ \t]+([0-9]+);")
+        set(LEVELDB_VERSION_MAJOR ${CMAKE_MATCH_1})
+      elseif(__line MATCHES "[^k]+kMinorVersion[ \t]+=[ \t]+([0-9]+);")
+        set(LEVELDB_VERSION_MINOR ${CMAKE_MATCH_1})
+      endif()
+    endforeach()
+
+    if(LEVELDB_VERSION_MAJOR AND LEVELDB_VERSION_MINOR)
+      set(LEVELDB_VERSION "${LEVELDB_VERSION_MAJOR}.${LEVELDB_VERSION_MINOR}")
+    endif()
+
+    caffe_clear_vars(__line __version_lines)
+  endif()
 endif()
