@@ -218,10 +218,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
   GetLearningRateAndWeightDecay();
+  debug_info_ = param.debug_info();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
-  // Don't display debug info by default.
-  debug_info_ = false;
 }
 
 template <typename Dtype>
