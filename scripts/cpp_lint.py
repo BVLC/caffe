@@ -4222,7 +4222,10 @@ def CheckForNonConstReference(filename, clean_lines, linenum,
                            r'operator\s*[<>][<>]|'
                            r'static_assert|COMPILE_ASSERT'
                            r')\s*\(')
-  if Search(whitelisted_functions, line):
+  fluent_patterns = (r'(Fluent|Accessor)')
+  if Search(fluent_patterns, line):
+    check_params = False
+  elif Search(whitelisted_functions, line):
     check_params = False
   elif not Search(r'\S+\([^)]*$', line):
     # Don't see a whitelisted function on this line.  Actually we

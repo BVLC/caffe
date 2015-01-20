@@ -421,20 +421,28 @@ void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
 }
 
 template <typename Dtype>
-__global__ void clamp_kernel(const int n, const Dtype m, const Dtype M, Dtype* X) {
+__global__ void clamp_kernel(const int n, const Dtype m, const Dtype M,
+  Dtype* X) {
   CUDA_KERNEL_LOOP(index, n) {
+    // NOLINT_NEXT_LINE(build/include_what_you_use
     X[index] = max(m, min(M, X[index]));
   }
 }
 
 template <>
-void caffe_gpu_clamp<float>(const int N, const float m, const float M, float* X) {
-  clamp_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m, M, X);
+void caffe_gpu_clamp<float>(const int N, const float m, const float M,
+  float* X) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  clamp_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+    N, m, M, X);
 }
 
 template <>
-void caffe_gpu_clamp<double>(const int N, const double m, const double M, double* X) {
-  clamp_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m, M, X);
+void caffe_gpu_clamp<double>(const int N, const double m, const double M,
+  double* X) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  clamp_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+    N, m, M, X);
 }
 
 template <typename Dtype>

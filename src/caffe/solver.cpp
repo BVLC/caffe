@@ -7,10 +7,10 @@
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
+#include "caffe/util/fluent.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
-#include "caffe/util/fluent.hpp"
 
 namespace caffe {
 
@@ -455,20 +455,21 @@ void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
 }
 
 template <typename Dtype, typename BlobAccessor, typename Fluent>
-void apply_regulator(Fluent& op, BlobAccessor& param, BlobAccessor& temp, Dtype local_decay, const string& regularization_type) {
+void apply_regulator(Fluent& op, BlobAccessor& param, BlobAccessor& temp,
+  Dtype local_decay, const string& regularization_type) {
   if (local_decay) {
       if (regularization_type == "L2") {
         op
           // add weight decay
-          .axpy(local_decay,param,param);          
+          .axpy(local_decay, param, param);
       } else if (regularization_type == "L1") {
         op
-          .sign(param,temp)
-          .axpy(local_decay,temp,param);
+          .sign(param, temp)
+          .axpy(local_decay, temp, param);
       } else {
         LOG(FATAL) << "Unknown regularization type: " << regularization_type;
       }
-    }  
+    }
 }
 
 template <typename Dtype>
@@ -485,26 +486,26 @@ void SGDSolver<Dtype>::Compute() {
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();
-  
+
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     Dtype local_rate = rate * net_params_lr[param_id];
     Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
     BlobAccessor
-      param(net_params[param_id],true), 
+      param(net_params[param_id], true),
       temp(this->temp_[param_id]),
-      history(this->history_[param_id]);      
+      history(this->history_[param_id]);
 
     Fluent op(net_params[param_id]->count());
-    
-    apply_regulator(op,param,temp,local_decay,regularization_type);    
-      
+
+    apply_regulator(op, param, temp, local_decay, regularization_type);
+
     op
       // update history of gradient
-      .axpby(local_rate, temp, momentum, history)      
+      .axpby(local_rate, temp, momentum, history)
        // copy
       .copy(history, param);
-  }  
+  }
 }
 
 template <typename Dtype>
@@ -521,31 +522,31 @@ void NesterovSolver<Dtype>::Compute() {
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();
-  
+
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     Dtype local_rate = rate * net_params_lr[param_id];
     Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
     BlobAccessor
-      param(net_params[param_id],true), 
+      param(net_params[param_id], true),
       temp(this->temp_[param_id]),
       update(this->update_[param_id]),
-      history(this->history_[param_id]);      
+      history(this->history_[param_id]);
 
     Fluent op(net_params[param_id]->count());
 
-    op.copy(history,update);
+    op.copy(history, update);
 
-    apply_regulator(op,param,temp,local_decay,regularization_type);    
-      
+    apply_regulator(op, param, temp, local_decay, regularization_type);
+
     op
       // update history of gradient
       .axpby(local_rate, temp, momentum, history)
-      // compute update: step back then over step      
+      // compute update: step back then over step
       .axpby(Dtype(1) + momentum, history, -momentum, update)
        // copy
-      .copy(update, param);                  
-  }  
+      .copy(update, param);
+  }
 }
 
 
@@ -554,42 +555,41 @@ template <typename BlobAccessor, typename Fluent>
 void AdaGradSolver<Dtype>::Compute() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   vector<float>& net_params_lr = this->net_->params_lr();
-  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();  
+  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
 
   // get the learning rate
-  Dtype 
+  Dtype
     delta = this->param_.delta(),
     rate = this->GetLearningRate(),
     weight_decay = this->param_.weight_decay();
 
   string regularization_type = this->param_.regularization_type();
-  
+
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     Dtype local_rate = rate * net_params_lr[param_id];
     Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
     BlobAccessor
-      param(net_params[param_id],true),
+      param(net_params[param_id], true),
       temp(this->temp_[param_id]),
       update(this->update_[param_id]),
       history(this->history_[param_id]);
 
     Fluent op(net_params[param_id]->count());
-    
-    apply_regulator(op,param,temp,local_decay,regularization_type);      
+
+    apply_regulator(op, param, temp, local_decay, regularization_type);
 
     op
       // compute square of gradient in update
       .sqr(param, update)
       // update history
-      .add(update,history,history)
+      .add(update, history, history)
       // prepare update
-      .sqrt(history,update)
-      .add_scalar(delta,update)
-      .div(param,update,update)      
+      .sqrt(history, update)
+      .add_scalar(delta, update)
+      .div(param, update, update)
       // scale and copy
-      .axpby(local_rate,update,Dtype(0),param)
-    ;     
+      .axpby(local_rate, update, Dtype(0), param);
   }
 }
 
@@ -599,7 +599,7 @@ template <typename Dtype>\
 void Name<Dtype>::ComputeUpdateValue() {\
   switch (Caffe::mode()) {\
   case Caffe::CPU:\
-  this->Compute<cpu::BlobAccessor<Dtype>,cpu::Fluent<Dtype> >();\
+  this->Compute<cpu::BlobAccessor<Dtype>, cpu::Fluent<Dtype> >();\
   case Caffe::GPU:\
   NO_GPU;\
     break;\
@@ -613,15 +613,15 @@ template <typename Dtype>\
 void Name<Dtype>::ComputeUpdateValue() {\
   switch (Caffe::mode()) {\
   case Caffe::CPU:\
-  this->Compute<cpu::BlobAccessor<Dtype>,cpu::Fluent<Dtype> >();\
+  this->Compute<cpu::BlobAccessor<Dtype>, cpu::Fluent<Dtype> >();\
   case Caffe::GPU:\
-  this->Compute<gpu::BlobAccessor<Dtype>,gpu::Fluent<Dtype> >();\
+  this->Compute<gpu::BlobAccessor<Dtype>, gpu::Fluent<Dtype> >();\
     break;\
   default:\
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();\
   }\
 }
-#endif // CPU_ONLY
+#endif  // CPU_ONLY
 
 IMPLEMENT_CLASS(SGDSolver);
 IMPLEMENT_CLASS(NesterovSolver);
