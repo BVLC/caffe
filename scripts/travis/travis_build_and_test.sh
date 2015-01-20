@@ -7,7 +7,7 @@ MAKE="make --jobs=$NUM_THREADS --keep-going"
 if $WITH_CMAKE; then
   mkdir build
   cd build
-  cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON ..
+  cmake -DBUILD_PYTHON=ON -DBUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release -DCPU_ONLY=ON -DLIBJPEG_INCLUDE_DIR=/opt/libjpeg-turbo/include -DLIBJPEG_LIBRARY=/opt/libjpeg-turbo/lib64/libturbojpeg.so -DWORKAROUND_PROTOBUF_FIND_EXTENSION=ON ..
   $MAKE
   if ! $WITH_CUDA; then
     $MAKE runtest

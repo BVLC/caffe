@@ -1,6 +1,7 @@
 #ifndef CAFFE_DATA_LAYERS_HPP_
 #define CAFFE_DATA_LAYERS_HPP_
 
+#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,6 +17,7 @@
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/download_manager.hpp"
 
 namespace caffe {
 
@@ -248,6 +250,65 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
+};
+
+/**
+ * @brief Provides data to the Net from protobufs containing image URLs and some
+ * label data..
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
+template <typename Dtype>
+class ProtobufDataLayer : public BasePrefetchingDataLayer<Dtype> {
+  typedef void* tjhandle;
+  typedef DownloadManager*(*DownloadManagerFactory)();
+
+ public:
+  explicit ProtobufDataLayer(const LayerParameter& param)
+      : BasePrefetchingDataLayer<Dtype>(param),
+        download_manager_factory_(
+            &DownloadManager::DefaultDownloadManagerFactory) {}
+  ProtobufDataLayer(const LayerParameter& param,
+      DownloadManagerFactory download_manager_factory)
+      : BasePrefetchingDataLayer<Dtype>(param),
+        download_manager_factory_(download_manager_factory) {}
+  virtual ~ProtobufDataLayer();
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_PROTOBUF_DATA;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinNumTopBlobs() const {
+    return this->layer_param_.protobuf_data_param().labels_size() + 1;
+  }
+  virtual inline int MaxNumTopBlobs() const {
+    return 2*this->layer_param_.protobuf_data_param().labels_size() + 1;
+  }
+
+ protected:
+  shared_ptr<Caffe::RNG> prefetch_rng_;
+  virtual void ShuffleProtobufs();
+  virtual void InternalThreadEntry();
+
+  ProtobufManifest manifest_;
+  vector<ProtobufRecord> records_;
+  vector<shared_ptr<Blob<Dtype> > > prefetch_labels_;
+  vector<shared_ptr<Blob<Dtype> > > prefetch_weights_;
+  int num_labels_;
+  int records_id_;
+  map<string, int> label_map_;
+  map<string, int> weight_map_;
+  map<string, LabelDefinition> label_def_map_;
+  tjhandle jpeg_decompressor_;
+  DownloadManagerFactory download_manager_factory_;
 };
 
 /**
