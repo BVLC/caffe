@@ -17,6 +17,8 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
+const int kProtoReadBytesLimit = INT_MAX;  // Max size of 2 GB minus 1 byte.
+
 namespace caffe {
 
 using google::protobuf::io::FileInputStream;
@@ -50,7 +52,7 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
   CHECK_NE(fd, -1) << "File not found: " << filename;
   ZeroCopyInputStream* raw_input = new FileInputStream(fd);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
-  coded_input->SetTotalBytesLimit(1073741824, 536870912);
+  coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
 
   bool success = proto->ParseFromCodedStream(coded_input);
 
