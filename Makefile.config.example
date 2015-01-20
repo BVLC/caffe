@@ -2,7 +2,7 @@
 # Contributions simplifying and improving our build system are welcome!
 
 # cuDNN acceleration switch (uncomment to build with cuDNN).
-# USE_CUDNN := 1
+USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
@@ -30,16 +30,16 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 # atlas for ATLAS (default)
 # mkl for MKL
 # open for OpenBlas
-BLAS := atlas
+BLAS := open
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
-# BLAS_INCLUDE := /path/to/your/blas
+BLAS_INCLUDE := /usr/include/openblas
 # BLAS_LIB := /path/to/your/blas
 
 # This is required only if you will compile the matlab interface.
 # MATLAB directory should contain the mex binary in /bin.
-# MATLAB_DIR := /usr/local
+MATLAB_DIR := /usr/local/MATLAB/R2014a/
 # MATLAB_DIR := /Applications/MATLAB_R2012b.app
 
 # NOTE: this is required only if you will compile the python interface.
