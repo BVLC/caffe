@@ -563,8 +563,7 @@ void AdaGradSolver<Dtype>::Compute() {
     weight_decay = this->param_.weight_decay();
 
   string regularization_type = this->param_.regularization_type();
-  size_t update_history_offset = net_params.size();
-
+  
   for (int param_id = 0; param_id < net_params.size(); ++param_id) {
     Dtype local_rate = rate * net_params_lr[param_id];
     Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
@@ -573,8 +572,7 @@ void AdaGradSolver<Dtype>::Compute() {
       param(net_params[param_id],true),
       temp(this->temp_[param_id]),
       update(this->update_[param_id]),
-      history(this->history_[param_id]),
-      delta_history(this->history_[param_id + update_history_offset]);
+      history(this->history_[param_id]);
 
     Fluent op(net_params[param_id]->count());
     
