@@ -584,7 +584,7 @@ void AdaGradSolver<Dtype>::Compute() {
       // update history
       .add(update,history,history)
       // prepare update
-      .powx(history,Dtype(0.5),update)
+      .sqrt(history,update)
       .add_scalar(delta,update)
       .div(param,update,update)      
       // scale and copy
