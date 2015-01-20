@@ -7,18 +7,20 @@
 #include <utility>
 #include <vector>
 
-#include "caffe/dataset_factory.hpp"
+#include "caffe/datum_DB.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
 
-using caffe::Dataset;
-using caffe::Datum;
-using caffe::BlobProto;
+using namespace caffe;  // NOLINT(build/namespaces)
+
 using std::max;
 using std::pair;
 
 
-DEFINE_string(backend, "lmdb", "The backend for containing the images");
+DEFINE_string(backend, "lmdb",
+        "The backend {leveldb, lmdb, imagesdb} containing the images");
+DEFINE_int32(max_num_images, 0,
+        "Max number of images to process (0 means use all)");
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
@@ -28,7 +30,7 @@ int main(int argc, char** argv) {
 #endif
 
   gflags::SetUsageMessage("Compute the mean_image of a set of images given by"
-        " a leveldb/lmdb or a list of images\n"
+        " a leveldb/lmdb/imagesdb\n"
         "Usage:\n"
         "    compute_image_mean [FLAGS] INPUT_DB [OUTPUT_FILE]\n");
 
@@ -39,19 +41,19 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::string db_backend = FLAGS_backend;
+  const int max_num_images = FLAGS_max_num_images;
 
-  caffe::shared_ptr<Dataset<std::string, Datum> > dataset =
-      caffe::DatasetFactory<std::string, Datum>(db_backend);
-
-  // Open db
-  CHECK(dataset->open(argv[1], Dataset<std::string, Datum>::ReadOnly));
+  DatumDBParameter datumdb_param;
+  datumdb_param.set_source(argv[1]);
+  datumdb_param.set_loop(false);
+  datumdb_param.set_backend(FLAGS_backend);
+  shared_ptr<DatumDB> datumdb(DatumDBRegistry::GetDatumDB(datumdb_param));
+  shared_ptr<DatumDBCursor> datum_cursor(datumdb->NewCursor());
 
   BlobProto sum_blob;
   int count = 0;
   // load first datum
-  Dataset<std::string, Datum>::const_iterator iter = dataset->begin();
-  Datum datum = iter->value;
+  Datum datum = datum_cursor->value();
 
   if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
@@ -68,9 +70,8 @@ int main(int argc, char** argv) {
     sum_blob.add_data(0.);
   }
   LOG(INFO) << "Starting Iteration";
-  for (Dataset<std::string, Datum>::const_iterator iter = dataset->begin();
-      iter != dataset->end(); ++iter) {
-    Datum datum = iter->value;
+  while (datum_cursor->Valid()) {
+    Datum datum = datum_cursor->value();
     DecodeDatum(&datum);
 
     const std::string& data = datum.data();
@@ -94,6 +95,10 @@ int main(int argc, char** argv) {
     if (count % 10000 == 0) {
       LOG(INFO) << "Processed " << count << " files.";
     }
+    if (max_num_images > 0 && count >= max_num_images) {
+      break;
+    }
+    datum_cursor->Next();
   }
 
   if (count % 10000 != 0) {
@@ -117,7 +122,5 @@ int main(int argc, char** argv) {
     }
     LOG(INFO) << "mean_value channel [" << c << "]:" << mean_values[c] / dim;
   }
-  // Clean up
-  dataset->close();
   return 0;
 }

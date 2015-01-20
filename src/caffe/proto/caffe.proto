@@ -28,6 +28,8 @@ message Datum {
   repeated float float_data = 6;
   // If true data contains an encoded image that need to be decoded
   optional bool encoded = 7 [default = false];
+  // Stores the source of the datum (i.e. filename)
+  optional string source = 8 [default = ""];
 }
 
 message FillerParameter {
@@ -206,7 +208,7 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 42 (last added: exp_param)
+// LayerParameter next available ID: 43 (last added: datum_db_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -331,6 +333,9 @@ message LayerParameter {
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
 
+  // Parameters for DatumDB
+  optional DatumDBParameter datum_db_param = 43;
+
   // Note: certain layers may have more than one computational engine
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
@@ -443,6 +448,40 @@ message DataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+}
+
+// Message that stores parameters used by DataLayer
+message DatumDBParameter {
+  enum Mode {
+    NEW = 0;
+    WRITE = 1;
+    READ = 2;
+  }
+  // Specify the datumDB Backend.
+  optional string backend = 1 [default = "leveldb"];
+  // Specify the datumDB mode.
+  optional Mode mode = 2 [default = READ];
+  // Specify the datumDB source.
+  optional string source = 3;
+  // If true it will loop around the datumDB when needed
+  optional bool loop = 4 [default = true];
+  // If true the datum_DB_factory will register the source 
+  // and will make sure there is only one datumDB per source
+  optional bool unique_source = 5 [default = true];
+  // Only used by LMDB
+  // Max size of LMDB, by default 1TB
+  optional uint64 mdb_env_mapsize = 6 [default = 1099511627776];
+  // Max number of readers, by default 126
+  optional uint32 mdb_env_maxreaders = 7 [default = 126];
+  // Only used by IMAGESDB
+  // Prefix used to locate the images
+  optional string root_images = 8 [default = ""];
+  // If true it will store the images in memory, be careful with memory
+  optional bool cache_images = 9 [default = false];
+  // If true it will use encoded images, just copy the file for later decoding
+  optional bool encode_images = 10 [default = false];
+  // If true it will shuffle the list of images
+  optional bool shuffle_images = 11 [default = false];
 }
 
 // Message that stores parameters used by DropoutLayer
