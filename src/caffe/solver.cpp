@@ -593,15 +593,16 @@ void AdaGradSolver<Dtype>::Compute() {
   }
 }
 
-#if CPU_ONLY
+#ifndef CPU_ONLY
 #define IMPLEMENT_CLASS(Name)\
 template <typename Dtype>\
 void Name<Dtype>::ComputeUpdateValue() {\
   switch (Caffe::mode()) {\
   case Caffe::CPU:\
-  this->Compute<cpu::BlobAccessor<Dtype>, cpu::Fluent<Dtype> >();\
+    this->Compute<cpu::BlobAccessor<Dtype>, cpu::Fluent<Dtype> >();\
+    break;\
   case Caffe::GPU:\
-  NO_GPU;\
+    this->Compute<gpu::BlobAccessor<Dtype>, gpu::Fluent<Dtype> >();\
     break;\
   default:\
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();\
@@ -613,9 +614,10 @@ template <typename Dtype>\
 void Name<Dtype>::ComputeUpdateValue() {\
   switch (Caffe::mode()) {\
   case Caffe::CPU:\
-  this->Compute<cpu::BlobAccessor<Dtype>, cpu::Fluent<Dtype> >();\
+    this->Compute<cpu::BlobAccessor<Dtype>, cpu::Fluent<Dtype> >();\
+    break;\
   case Caffe::GPU:\
-  this->Compute<gpu::BlobAccessor<Dtype>, gpu::Fluent<Dtype> >();\
+    NO_GPU;\
     break;\
   default:\
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();\
