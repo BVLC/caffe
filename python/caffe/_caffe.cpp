@@ -163,11 +163,13 @@ void PyNet::AddDatumVector(bp::object data_obj, bp::object labels_obj) {
     vec[idx].set_label(
         static_cast<int>(static_cast<float*>(PyArray_DATA(labels_arr))[idx]));
     for (size_t fidx = 0;
-         fidx < md_layer->channels() * md_layer->in_height() * md_layer->in_width();
+         fidx < md_layer->channels() * md_layer->in_height()
+                                     * md_layer->in_width();
          fidx++) {
       vec[idx].add_float_data((static_cast<float*>(
           PyArray_DATA(data_arr))[idx * md_layer->channels() *
-                                      md_layer->in_height() * md_layer->in_width() +
+                                      md_layer->in_height() *
+                                      md_layer->in_width() +
                                   fidx]));
     }
     vec[idx].set_channels(md_layer->channels());
