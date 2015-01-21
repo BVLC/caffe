@@ -17,15 +17,14 @@ CUDA_DIR := /usr/local/cuda
 # "sudo apt-get install nvidia-cuda-toolkit" then use this instead:
 # CUDA_DIR := /usr
 
-# CUDA architecture setting: going with all of them (up to CUDA 5.5 compatible).
-# For the latest architecture, you need to install CUDA >= 6.0 and uncomment
-# the *_50 lines below.
+# CUDA architecture setting: going with all of them.
+# For CUDA < 6.0, comment the *_50 lines for compatibility.
 CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 		-gencode arch=compute_20,code=sm_21 \
 		-gencode arch=compute_30,code=sm_30 \
 		-gencode arch=compute_35,code=sm_35 \
-		#-gencode arch=compute_50,code=sm_50 \
-		#-gencode arch=compute_50,code=compute_50
+		-gencode arch=compute_50,code=sm_50 \
+		-gencode arch=compute_50,code=compute_50
 
 # BLAS choice:
 # atlas for ATLAS (default)

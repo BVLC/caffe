@@ -36,12 +36,12 @@ class Detector(caffe.Net):
             R-CNN feature extraction.
         """
         caffe.Net.__init__(self, model_file, pretrained_file)
-        self.set_phase_test()
+        caffe.set_phase_test()
 
         if gpu:
-            self.set_mode_gpu()
+            caffe.set_mode_gpu()
         else:
-            self.set_mode_cpu()
+            caffe.set_mode_cpu()
 
         if mean is not None:
             self.set_mean(self.inputs[0], mean)

@@ -2,7 +2,7 @@
 name: BVLC AlexNet Model
 caffemodel: bvlc_alexnet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel
-license: non-commercial
+license: unrestricted
 sha1: 9116a64c0fbe4459d18f4bb6b56d647b63920377
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
 ---
@@ -22,6 +22,4 @@ This model was trained by Evan Shelhamer @shelhamer
 
 ## License
 
-The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
-"Researcher shall use the Database only for non-commercial research and educational purposes."
-Accordingly, this model is distributed under a non-commercial license.
+This model is released for unrestricted use.
