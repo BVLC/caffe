@@ -108,6 +108,10 @@ Caffe::~Caffe() {
   }
 }
 
+unsigned int Caffe::get_random_seed() {
+  return Get().random_generator_seed_;
+}
+
 void Caffe::set_random_seed(const unsigned int seed) {
   // Curand seed
   static bool g_curand_availability_logged = false;
@@ -124,6 +128,7 @@ void Caffe::set_random_seed(const unsigned int seed) {
   }
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
+  Get().random_generator_seed_ = seed;
 }
 
 void Caffe::SetDevice(const int device_id) {

@@ -15,6 +15,7 @@ class Thread {
   Thread(Callable func, A1 a1);
   void join();
   bool joinable();
+  void interrupt();
  private:
   void* thread_;
 };
@@ -26,16 +27,20 @@ class Thread {
  */
 class InternalThread {
  public:
-  InternalThread() : thread_(NULL) {}
+  InternalThread() : thread_(NULL), must_stop_() {}
   virtual ~InternalThread();
 
   /** Returns true if the thread was successfully started. **/
   bool StartInternalThread();
 
   /** Will not return until the internal thread has exited. */
-  bool WaitForInternalThreadToExit();
+  bool StopInternalThread();
 
   bool is_started() const { return thread_ != NULL && thread_->joinable(); }
+
+  bool must_stop() {
+    return must_stop_;
+  }
 
  protected:
   /* Implement this method in your subclass
@@ -43,6 +48,7 @@ class InternalThread {
   virtual void InternalThreadEntry() {}
 
   caffe::Thread* thread_;
+  bool must_stop_;
 };
 
 }  // namespace caffe

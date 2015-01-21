@@ -147,7 +147,8 @@ class Caffe {
   inline static void set_mode(Brew mode) { Get().mode_ = mode; }
   // Sets the phase.
   inline static void set_phase(Phase phase) { Get().phase_ = phase; }
-  // Sets the random seed of both boost and curand
+  // Random seed of both boost and curand
+  static unsigned int get_random_seed();
   static void set_random_seed(const unsigned int seed);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
@@ -161,6 +162,7 @@ class Caffe {
   curandGenerator_t curand_generator_;
 #endif
   shared_ptr<RNG> random_generator_;
+  unsigned int random_generator_seed_;
 
   Brew mode_;
   Phase phase_;
