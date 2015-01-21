@@ -13,8 +13,7 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   channels_ = this->layer_param_.memory_data_param().channels();
   in_height_ = height_ = this->layer_param_.memory_data_param().height();
   in_width_ = width_ = this->layer_param_.memory_data_param().width();
-  if ( this->layer_param_.transform_param().has_crop_size() )
-  {
+  if ( this->layer_param_.transform_param().has_crop_size() ) {
       height_ = this->layer_param_.transform_param().crop_size();
       width_ = this->layer_param_.transform_param().crop_size();
   }
