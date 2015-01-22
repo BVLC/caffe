@@ -36,6 +36,7 @@ class SolvingDriver {
   int iter() const { return solver_->iter(); }
 
   const SolverParameter& param() const { return solver_->param(); }
+  inline shared_ptr<Solver<Dtype> > internal_solver() { return solver_; }
 
   DISABLE_COPY_AND_ASSIGN(SolvingDriver);
 };

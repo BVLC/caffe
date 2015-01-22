@@ -9,7 +9,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/solver.hpp"
+#include "caffe/solving_driver.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -25,13 +25,20 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   GradientBasedSolverTest() :
       seed_(1701), num_(5), channels_(3), height_(10), width_(10) {}
 
-  shared_ptr<SGDSolver<Dtype> > solver_;
+  shared_ptr<SolvingDriver<Dtype> > solver_;
   int seed_;
   int num_, channels_, height_, width_;
   Dtype delta_;  // Stability constant for AdaGrad.
 
   virtual SolverParameter_SolverType solver_type() = 0;
   virtual void InitSolver(const SolverParameter& param) = 0;
+
+  const vector<shared_ptr<Blob<Dtype> > >& get_history() {
+    SGDSolver<Dtype>* internal_solver =
+        dynamic_cast<SGDSolver<Dtype>*>(solver_->internal_solver().get());
+    CHECK_NOTNULL(internal_solver);
+    return internal_solver->history();
+  }
 
   virtual void InitSolverFromProtoString(const string& proto) {
     SolverParameter param;
@@ -188,7 +195,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       grad += weight_decay *
           ((i == D) ? bias.cpu_data()[0] : weights.cpu_data()[i]);
       // Finally, compute update.
-      const vector<shared_ptr<Blob<Dtype> > >& history = solver_->history();
+      const vector<shared_ptr<Blob<Dtype> > >& history = get_history();
       ASSERT_EQ(2, history.size());  // 1 blob for weights, 1 for bias
       Dtype update_value = learning_rate * grad;
       const Dtype history_value = (i == D) ?
@@ -253,7 +260,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
 
     // Check the solver's history -- should contain the previous update value.
     if (solver_type() == SolverParameter_SolverType_SGD) {
-      const vector<shared_ptr<Blob<Dtype> > >& history = solver_->history();
+      const vector<shared_ptr<Blob<Dtype> > >& history = get_history();
       ASSERT_EQ(2, history.size());
       for (int i = 0; i < D; ++i) {
         const Dtype expected_history = updated_weights.cpu_diff()[i];
@@ -312,7 +319,9 @@ class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
 
  protected:
   virtual void InitSolver(const SolverParameter& param) {
-    this->solver_.reset(new SGDSolver<Dtype>(param));
+    this->solver_ =
+        boost::make_shared<SolvingDriver<Dtype> >(
+          boost::make_shared<SGDSolver<Dtype> >(param));
   }
 
   virtual SolverParameter_SolverType solver_type() {
@@ -379,7 +388,9 @@ class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
 
  protected:
   virtual void InitSolver(const SolverParameter& param) {
-    this->solver_.reset(new AdaGradSolver<Dtype>(param));
+    this->solver_ =
+        boost::make_shared<SolvingDriver<Dtype> >(
+          boost::make_shared<AdaGradSolver<Dtype> >(param));
   }
   virtual SolverParameter_SolverType solver_type() {
     return SolverParameter_SolverType_ADAGRAD;
@@ -423,7 +434,9 @@ class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
 
  protected:
   virtual void InitSolver(const SolverParameter& param) {
-    this->solver_.reset(new NesterovSolver<Dtype>(param));
+    this->solver_ =
+        boost::make_shared<SolvingDriver<Dtype> >(
+          boost::make_shared<NesterovSolver<Dtype> >(param));
   }
   virtual SolverParameter_SolverType solver_type() {
     return SolverParameter_SolverType_NESTEROV;

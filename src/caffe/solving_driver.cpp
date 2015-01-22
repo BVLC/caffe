@@ -43,7 +43,7 @@ void SolvingDriver<Dtype>::InitTrainNet() {
 
 template <typename Dtype>
 void SolvingDriver<Dtype>::InitTestNets() {
-  const SolverParameter& param_ = solver_->param();
+  const SolverParameter& param_ = param();
   const bool has_net_param = param_.has_net_param();
   const bool has_net_file = param_.has_net();
   const int num_generic_nets = has_net_param + has_net_file;
@@ -53,11 +53,11 @@ void SolvingDriver<Dtype>::InitTestNets() {
   const int num_test_net_files = param_.test_net_size();
   const int num_test_nets = num_test_net_params + num_test_net_files;
   if (num_generic_nets) {
-    CHECK_GE(param_.test_iter_size(), num_test_nets)
-        << "test_iter must be specified for each test network.";
+      CHECK_GE(param_.test_iter_size(), num_test_nets)
+          << "test_iter must be specified for each test network.";
   } else {
-    CHECK_EQ(param_.test_iter_size(), num_test_nets)
-        << "test_iter must be specified for each test network.";
+      CHECK_EQ(param_.test_iter_size(), num_test_nets)
+          << "test_iter must be specified for each test network.";
   }
   // If we have a generic net (specified by net or net_param, rather than
   // test_net or test_net_param), we may have an unlimited number of actual
@@ -77,50 +77,43 @@ void SolvingDriver<Dtype>::InitTestNets() {
   vector<string> sources(num_test_net_instances);
   vector<NetParameter> net_params(num_test_net_instances);
   for (int i = 0; i < num_test_net_params; ++i, ++test_net_id) {
-    sources[test_net_id] = "test_net_param";
-    net_params[test_net_id].CopyFrom(param_.test_net_param(i));
+      sources[test_net_id] = "test_net_param";
+      net_params[test_net_id].CopyFrom(param_.test_net_param(i));
   }
   for (int i = 0; i < num_test_net_files; ++i, ++test_net_id) {
-    sources[test_net_id] = "test_net file: " + param_.test_net(i);
-    ReadNetParamsFromTextFileOrDie(param_.test_net(i),
-                                   &net_params[test_net_id]);
+      sources[test_net_id] = "test_net file: " + param_.test_net(i);
+      ReadNetParamsFromTextFileOrDie(param_.test_net(i),
+          &net_params[test_net_id]);
   }
   const int remaining_test_nets = param_.test_iter_size() - test_net_id;
   if (has_net_param) {
     for (int i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
       sources[test_net_id] = "net_param";
       net_params[test_net_id].CopyFrom(param_.net_param());
-      if (has_net_param) {
-        for (int i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
-          sources[test_net_id] = "net_param";
-          net_params[test_net_id].CopyFrom(param_.net_param());
-        }
-      }
-      if (has_net_file) {
-        for (int i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
-          sources[test_net_id] = "net file: " + param_.net();
-          ReadNetParamsFromTextFileOrDie(param_.net(),
-                                         &net_params[test_net_id]);
-        }
-      }
-      test_nets_.resize(num_test_net_instances);
-      for (int i = 0; i < num_test_net_instances; ++i) {
-        // Set the correct NetState.  We start with the solver defaults (lowest
-        // precedence); then, merge in any NetState specified by the net_param
-        // itself; finally, merge in any NetState specified by the test_state
-        // (highest precedence).
-        NetState net_state;
-        net_state.set_phase(TEST);
-        net_state.MergeFrom(net_params[i].state());
-        if (param_.test_state_size()) {
-          net_state.MergeFrom(param_.test_state(i));
-        }
-        net_params[i].mutable_state()->CopyFrom(net_state);
-        LOG(INFO)
-            << "Creating test net (#" << i << ") specified by " << sources[i];
-        test_nets_[i].reset(new Net<Dtype>(net_params[i]));
-      }
     }
+  }
+  if (has_net_file) {
+    for (int i = 0; i < remaining_test_nets; ++i, ++test_net_id) {
+      sources[test_net_id] = "net file: " + param_.net();
+      ReadNetParamsFromTextFileOrDie(param_.net(), &net_params[test_net_id]);
+    }
+  }
+  test_nets_.resize(num_test_net_instances);
+  for (int i = 0; i < num_test_net_instances; ++i) {
+    // Set the correct NetState.  We start with the solver defaults (lowest
+    // precedence); then, merge in any NetState specified by the net_param
+    // itself; finally, merge in any NetState specified by the test_state
+    // (highest precedence).
+    NetState net_state;
+    net_state.set_phase(TEST);
+    net_state.MergeFrom(net_params[i].state());
+    if (param_.test_state_size()) {
+      net_state.MergeFrom(param_.test_state(i));
+    }
+    net_params[i].mutable_state()->CopyFrom(net_state);
+    LOG(INFO)
+        << "Creating test net (#" << i << ") specified by " << sources[i];
+    test_nets_[i].reset(new Net<Dtype>(net_params[i]));
   }
 }
 
