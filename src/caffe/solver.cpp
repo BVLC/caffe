@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/make_shared.hpp>
-
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/solver.hpp"
@@ -86,15 +84,16 @@ void Solver<Dtype>::InitTrainNet() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Next(
+Dtype Solver<Dtype>::Next(
     vector<shared_ptr<SolverResult<Dtype> > >* output) {
+  Caffe::set_phase(Caffe::TRAIN);
   vector<Blob<Dtype>*> bottom_vec;
   Dtype loss = net_->ForwardBackward(bottom_vec);
   last_losses_.push_back(loss);
   Dtype size = Dtype(last_losses_.size());
   smoothed_loss_ = (smoothed_loss_ * (size - 1) + loss) / size;
 
-  if (output){
+  if (output) {
     const vector<Blob<Dtype>*>& result = net_->output_blobs();
     for (int j = 0; j < result.size(); ++j) {
       const Dtype* result_vec = result[j]->cpu_data();
@@ -113,6 +112,7 @@ void Solver<Dtype>::Next(
   ComputeUpdateValue();
   net_->Update();
   ++iter_;
+  return loss;
 }
 
 template <typename Dtype>

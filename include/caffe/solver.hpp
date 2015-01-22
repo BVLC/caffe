@@ -1,10 +1,10 @@
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
 
+#include <boost/circular_buffer.hpp>
+
 #include <string>
 #include <vector>
-
-#include <boost/circular_buffer.hpp>
 
 #include "caffe/net.hpp"
 
@@ -32,13 +32,19 @@ class Solver {
   explicit Solver(const SolverParameter& param);
   explicit Solver(const string& param_file);
 
-  // The main entry of the solver function.
-  void Next(vector<shared_ptr<SolverResult<Dtype> > >* output = 0);
+  /**
+   * @brief Next
+   * @param output The output blobs before the network is updated
+   * @return The total loss of this round of forwarding
+   */
+  Dtype Next(vector<shared_ptr<SolverResult<Dtype> > >* output = 0);
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline shared_ptr<const Net<Dtype> > net() const { return net_; }
 
   int iter() const { return iter_; }
+  int current_step() const { return current_step_; }
+  const SolverParameter& param() const { return param_; }
   virtual void SnapshotSolverState(SolverState* state) const = 0;
   virtual void RestoreSolverState(const SolverState& state) = 0;
 
