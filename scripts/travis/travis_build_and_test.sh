@@ -26,6 +26,7 @@ else
   $MAKE all
   $MAKE test
   $MAKE pycaffe
+  $MAKE pytest
   $MAKE warn
   if ! $WITH_CUDA; then
     $MAKE lint
