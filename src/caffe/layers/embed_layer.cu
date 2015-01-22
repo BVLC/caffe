@@ -5,6 +5,7 @@
 #include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/gpu_util.cuh"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
@@ -25,15 +26,18 @@ __global__ void EmbedForward(const int nthreads, const Dtype* bottom_data,
 template <typename Dtype>
 __global__ void EmbedBackward(const int nthreads, const Dtype* bottom_data,
     const Dtype* top_diff, const int M, const int N, const int K,
+    Dtype* weight_diff);
+
+template <typename Dtype>
+__global__ void EmbedBackward(const int nthreads, const Dtype* bottom_data,
+    const Dtype* top_diff, const int M, const int N, const int K,
     Dtype* weight_diff) {
-  CUDA_KERNEL_LOOP(weight_index, nthreads) {
-    const int index = weight_index / N;
-    const int output_index = weight_index % N;
-    for (int n = 0; n < M; ++n) {
-      if (static_cast<int>(bottom_data[n]) == index) {
-        weight_diff[weight_index] += top_diff[n * N + output_index];
-      }
-    }
+  CUDA_KERNEL_LOOP(top_index, nthreads) {
+    const int n = top_index / N;
+    const int d = top_index % N;
+    const int index = static_cast<int>(bottom_data[n]);
+    const int weight_index = index * N + d;
+    caffe_gpu_atomic_add(top_diff[top_index], weight_diff + weight_index);
   }
 }
 
@@ -59,13 +63,14 @@ void EmbedLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   CHECK(!propagate_down[0]) << "Can't backpropagate to EmbedLayer input.";
   if (this->param_propagate_down_[0]) {
+    const int top_count = top[0]->count();
     const int count = this->blobs_[0]->count();
     const Dtype* top_diff = top[0]->gpu_diff();
     const Dtype* bottom_data = bottom[0]->gpu_data();
     Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
     EmbedBackward<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-        <<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, top_diff, M_, N_, K_, weight_diff);
+        <<<CAFFE_GET_BLOCKS(top_count), CAFFE_CUDA_NUM_THREADS>>>(
+        top_count, bottom_data, top_diff, M_, N_, K_, weight_diff);
   }
   if (bias_term_ && this->param_propagate_down_[1]) {
     const Dtype* top_diff = top[0]->gpu_diff();
