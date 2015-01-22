@@ -35,9 +35,13 @@ class Solver {
   /**
    * @brief Next
    * @param output The output blobs before the network is updated
+   *        learning_rate The learning rate for this round. A negative
+   *                      value will allow the solver to automatically
+   *                      determine it by the specified policy
    * @return The total loss of this round of forwarding
    */
-  Dtype Next(vector<shared_ptr<SolverResult<Dtype> > >* output = 0);
+  Dtype Next(vector<shared_ptr<SolverResult<Dtype> > >* output = 0,
+             Dtype learning_rate = -1);
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline shared_ptr<const Net<Dtype> > net() const { return net_; }
@@ -63,9 +67,11 @@ class Solver {
 
   Dtype smoothed_loss() const { return smoothed_loss_; }
 
+  Dtype GetLearningRate();
+
  protected:
   // Get the update value for the current iteration.
-  virtual void ComputeUpdateValue() = 0;
+  virtual void ComputeUpdateValue(Dtype learning_rate) = 0;
 
   SolverParameter param_;
   int iter_;
@@ -97,8 +103,7 @@ class SGDSolver : public Solver<Dtype> {
 
  protected:
   void PreSolve();
-  Dtype GetLearningRate();
-  virtual void ComputeUpdateValue();
+  virtual void ComputeUpdateValue(Dtype learning_rate);
   virtual void SnapshotSolverState(SolverState * state) const;
   virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
@@ -119,7 +124,7 @@ class NesterovSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param_file) {}
 
  protected:
-  virtual void ComputeUpdateValue();
+  virtual void ComputeUpdateValue(Dtype rate);
 
   DISABLE_COPY_AND_ASSIGN(NesterovSolver);
 };
@@ -133,7 +138,7 @@ class AdaGradSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
 
  protected:
-  virtual void ComputeUpdateValue();
+  virtual void ComputeUpdateValue(Dtype rate);
   void constructor_sanity_check() {
     CHECK_EQ(0, this->param_.momentum())
         << "Momentum cannot be used with AdaGrad.";

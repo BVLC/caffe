@@ -133,7 +133,7 @@ PySGDSolver::PySGDSolver(const string& param_file) {
   // as in PyNet, (as a convenience, not a guarantee), create a Python
   // exception if param_file can't be opened
   CheckFile(param_file);
-  solver_.reset(new SGDSolver<float>(param_file));
+  solver_ = boost::make_shared<SolvingDriver<float> >(param_file);
   // we need to explicitly store the net wrapper, rather than constructing
   // it on the fly, so that it can hold references to Python objects
   net_.reset(new PyNet(solver_->net()));

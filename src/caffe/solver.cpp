@@ -84,14 +84,17 @@ void Solver<Dtype>::InitTrainNet() {
 }
 
 template <typename Dtype>
-Dtype Solver<Dtype>::Next(
-    vector<shared_ptr<SolverResult<Dtype> > >* output) {
+Dtype Solver<Dtype>::Next(vector<shared_ptr<SolverResult<Dtype> > >* output,
+                          Dtype learning_rate) {
   Caffe::set_phase(Caffe::TRAIN);
   vector<Blob<Dtype>*> bottom_vec;
   Dtype loss = net_->ForwardBackward(bottom_vec);
   last_losses_.push_back(loss);
   Dtype size = Dtype(last_losses_.size());
   smoothed_loss_ = (smoothed_loss_ * (size - 1) + loss) / size;
+
+  if (learning_rate < 0)
+    learning_rate = GetLearningRate();
 
   if (output) {
     const vector<Blob<Dtype>*>& result = net_->output_blobs();
@@ -109,7 +112,7 @@ Dtype Solver<Dtype>::Next(
       output->push_back(sr);
     }
   }
-  ComputeUpdateValue();
+  ComputeUpdateValue(learning_rate);
   net_->Update();
   ++iter_;
   return loss;
@@ -175,7 +178,7 @@ void Solver<Dtype>::Restore(const char* state_file) {
 // where base_lr, max_iter, gamma, step, stepvalue and power are defined
 // in the solver parameter protocol buffer, and iter is the current iteration.
 template <typename Dtype>
-Dtype SGDSolver<Dtype>::GetLearningRate() {
+Dtype Solver<Dtype>::GetLearningRate() {
   Dtype rate;
   const string& lr_policy = this->param_.lr_policy();
   if (lr_policy == "fixed") {
@@ -236,13 +239,11 @@ void SGDSolver<Dtype>::PreSolve() {
 
 
 template <typename Dtype>
-void SGDSolver<Dtype>::ComputeUpdateValue() {
+void SGDSolver<Dtype>::ComputeUpdateValue(Dtype rate) {
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   const vector<float>& net_params_weight_decay =
       this->net_->params_weight_decay();
-  // get the learning rate
-  Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
   }
@@ -350,13 +351,11 @@ void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
 }
 
 template <typename Dtype>
-void NesterovSolver<Dtype>::ComputeUpdateValue() {
+void NesterovSolver<Dtype>::ComputeUpdateValue(Dtype rate) {
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   const vector<float>& net_params_weight_decay =
       this->net_->params_weight_decay();
-  // get the learning rate
-  Dtype rate = this->GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
   }
@@ -466,13 +465,11 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 }
 
 template <typename Dtype>
-void AdaGradSolver<Dtype>::ComputeUpdateValue() {
+void AdaGradSolver<Dtype>::ComputeUpdateValue(Dtype rate) {
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   const vector<float>& net_params_weight_decay =
       this->net_->params_weight_decay();
-  // get the learning rate
-  Dtype rate = this->GetLearningRate();
   Dtype delta = this->param_.delta();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
