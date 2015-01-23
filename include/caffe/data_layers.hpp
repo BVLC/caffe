@@ -48,8 +48,7 @@ class BaseDataLayer : public Layer<Dtype> {
 
  protected:
   TransformationParameter transform_param_;
-  DataTransformer<Dtype> data_transformer_;
-  Caffe::Phase phase_;
+  shared_ptr<DataTransformer<Dtype> > data_transformer_;
   bool output_labels_;
 };
 

@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "caffe/data_layers.hpp"
+#include "caffe/net.hpp"
 #include "caffe/util/io.hpp"
 
 namespace caffe {
@@ -9,8 +10,7 @@ namespace caffe {
 template <typename Dtype>
 BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
     : Layer<Dtype>(param),
-      transform_param_(param.transform_param()),
-      data_transformer_(transform_param_) {
+      transform_param_(param.transform_param()) {
 }
 
 template <typename Dtype>
@@ -23,6 +23,8 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // The subclasses should setup the size of bottom and top
   DataLayerSetUp(bottom, top);
+  data_transformer_.reset(
+      new DataTransformer<Dtype>(transform_param_, this->phase_));
   data_transformer_->InitRand();
 }
 
@@ -45,8 +47,7 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::CreatePrefetchThread() {
-  this->phase_ = Caffe::phase();
-  this->data_transformer_.InitRand();
+  this->data_transformer_->InitRand();
   CHECK(StartInternalThread()) << "Thread execution failed";
 }
 
