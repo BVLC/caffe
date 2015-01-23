@@ -52,7 +52,7 @@ static int init_key = -2;
 // input and outputs a cell array.
 
 static mxArray* do_forward(const mxArray* const bottom) {
-  vector<Blob<float>*>& input_blobs = net_->input_blobs();
+  const vector<Blob<float>*>& input_blobs = net_->input_blobs();
   if (static_cast<unsigned int>(mxGetDimensions(bottom)[0]) !=
       input_blobs.size()) {
     mex_error("Invalid input size");
@@ -112,8 +112,8 @@ static mxArray* do_forward(const mxArray* const bottom) {
 }
 
 static mxArray* do_backward(const mxArray* const top_diff) {
-  vector<Blob<float>*>& output_blobs = net_->output_blobs();
-  vector<Blob<float>*>& input_blobs = net_->input_blobs();
+  const vector<Blob<float>*>& output_blobs = net_->output_blobs();
+  const vector<Blob<float>*>& input_blobs = net_->input_blobs();
   if (static_cast<unsigned int>(mxGetDimensions(top_diff)[0]) !=
       output_blobs.size()) {
     mex_error("Invalid input size");
