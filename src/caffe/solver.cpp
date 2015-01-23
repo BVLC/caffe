@@ -219,7 +219,6 @@ void Solver<Dtype>::Step(int iters) {
 
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
-  Caffe::set_phase(Caffe::TRAIN);
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
 
@@ -266,8 +265,6 @@ template <typename Dtype>
 void Solver<Dtype>::Test(const int test_net_id) {
   LOG(INFO) << "Iteration " << iter_
             << ", Testing net (#" << test_net_id << ")";
-  // We need to set phase to test before running.
-  Caffe::set_phase(Caffe::TEST);
   CHECK_NOTNULL(test_nets_[test_net_id].get())->
       ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
@@ -318,7 +315,6 @@ void Solver<Dtype>::Test(const int test_net_id) {
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
         << mean_score << loss_msg_stream.str();
   }
-  Caffe::set_phase(Caffe::TRAIN);
 }
 
 
