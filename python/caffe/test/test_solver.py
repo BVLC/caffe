@@ -17,7 +17,7 @@ class TestSolver(unittest.TestCase):
         display: 100 max_iter: 100 snapshot_after_train: false""")
         f.close()
         self.solver = caffe.SGDSolver(f.name)
-        self.solver.net.set_mode_cpu()
+        caffe.set_mode_cpu()
         # fill in valid labels
         self.solver.net.blobs['label'].data[...] = \
                 np.random.randint(self.num_output,
