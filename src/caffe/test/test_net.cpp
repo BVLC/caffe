@@ -1534,20 +1534,6 @@ TEST_F(FilterNetTest, TestFilterLeNetTrainTest) {
       output_proto_test + " state: { phase: TEST } ";
   this->RunFilterNetTest(input_proto_train, output_proto_train_explicit);
   this->RunFilterNetTest(input_proto_test, output_proto_test_explicit);
-
-  // Also check that nets are filtered according to the Caffe singleton phase,
-  // if not explicitly specified in the input proto.
-  Caffe::set_phase(Caffe::TRAIN);
-  this->RunFilterNetTest(input_proto, output_proto_train);
-  Caffe::set_phase(Caffe::TEST);
-  this->RunFilterNetTest(input_proto, output_proto_test);
-
-  // Finally, check that the current Caffe singleton phase is ignored if the
-  // phase is explicitly specified in the input proto.
-  Caffe::set_phase(Caffe::TEST);
-  this->RunFilterNetTest(input_proto_train, output_proto_train_explicit);
-  Caffe::set_phase(Caffe::TRAIN);
-  this->RunFilterNetTest(input_proto_test, output_proto_test_explicit);
 }
 
 TEST_F(FilterNetTest, TestFilterOutByStage) {

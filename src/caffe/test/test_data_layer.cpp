@@ -69,6 +69,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   void TestRead() {
     const Dtype scale = 3;
     LayerParameter param;
+    param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
     data_param->set_source(filename_->c_str());
@@ -132,6 +133,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
     // Load and check data of various shapes.
     LayerParameter param;
+    param.set_phase(TEST);
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(1);
     data_param->set_source(filename_->c_str());
@@ -167,9 +169,10 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void TestReadCrop() {
+  void TestReadCrop(Phase phase) {
     const Dtype scale = 3;
     LayerParameter param;
+    param.set_phase(phase);
     Caffe::set_random_seed(1701);
 
     DataParameter* data_param = param.mutable_data_param();
@@ -205,7 +208,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
           num_with_center_value +=
               (center_value == blob_top_data_->cpu_data()[i * 2 + j]);
           // At TEST time, check that we always get center value.
-          if (Caffe::phase() == Caffe::TEST) {
+          if (phase == caffe::TEST) {
             EXPECT_EQ(center_value, this->blob_top_data_->cpu_data()[i * 2 + j])
                 << "debug: iter " << iter << " i " << i << " j " << j;
           }
@@ -214,7 +217,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       // At TRAIN time, check that we did not get the center crop all 10 times.
       // (This check fails with probability 1-1/12^10 in a correct
       // implementation, so we call set_random_seed.)
-      if (Caffe::phase() == Caffe::TRAIN) {
+      if (phase == caffe::TRAIN) {
         EXPECT_LT(num_with_center_value, 10);
       }
     }
@@ -222,6 +225,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
   void TestReadCropTrainSequenceSeeded() {
     LayerParameter param;
+    param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
     data_param->set_source(filename_->c_str());
@@ -276,6 +280,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
   void TestReadCropTrainSequenceUnseeded() {
     LayerParameter param;
+    param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(5);
     data_param->set_source(filename_->c_str());
@@ -354,16 +359,14 @@ TYPED_TEST(DataLayerTest, TestReshapeLevelDB) {
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTrainLevelDB) {
-  Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
-  this->TestReadCrop();
+  this->TestReadCrop(TRAIN);
 }
 
 // Test that the sequence of random crops is consistent when using
 // Caffe::set_random_seed.
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLevelDB) {
-  Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
   this->TestReadCropTrainSequenceSeeded();
@@ -372,17 +375,15 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLevelDB) {
 // Test that the sequence of random crops differs across iterations when
 // Caffe::set_random_seed isn't called (and seeds from srand are ignored).
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededLevelDB) {
-  Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
   this->TestReadCropTrainSequenceUnseeded();
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTestLevelDB) {
-  Caffe::set_phase(Caffe::TEST);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LEVELDB);
-  this->TestReadCrop();
+  this->TestReadCrop(TEST);
 }
 
 TYPED_TEST(DataLayerTest, TestReadLMDB) {
@@ -396,16 +397,14 @@ TYPED_TEST(DataLayerTest, TestReshapeLMDB) {
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTrainLMDB) {
-  Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
-  this->TestReadCrop();
+  this->TestReadCrop(TRAIN);
 }
 
 // Test that the sequence of random crops is consistent when using
 // Caffe::set_random_seed.
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLMDB) {
-  Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
   this->TestReadCropTrainSequenceSeeded();
@@ -414,17 +413,15 @@ TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceSeededLMDB) {
 // Test that the sequence of random crops differs across iterations when
 // Caffe::set_random_seed isn't called (and seeds from srand are ignored).
 TYPED_TEST(DataLayerTest, TestReadCropTrainSequenceUnseededLMDB) {
-  Caffe::set_phase(Caffe::TRAIN);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
   this->TestReadCropTrainSequenceUnseeded();
 }
 
 TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
-  Caffe::set_phase(Caffe::TEST);
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
-  this->TestReadCrop();
+  this->TestReadCrop(TEST);
 }
 
 }  // namespace caffe

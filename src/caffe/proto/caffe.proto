@@ -253,6 +253,9 @@ message LayerParameter {
   repeated string bottom = 3; // the name of each bottom blob
   repeated string top = 4; // the name of each top blob
 
+  // The train / test phase for computation.
+  optional Phase phase = 10;
+
   // The amount of weight to assign each top blob in the objective.
   // Each layer assigns a default value, usually of either 0 or 1,
   // to each top blob.

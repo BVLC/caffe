@@ -29,13 +29,6 @@ TEST_F(CommonTest, TestBrewMode) {
   EXPECT_EQ(Caffe::mode(), Caffe::GPU);
 }
 
-TEST_F(CommonTest, TestPhase) {
-  Caffe::set_phase(Caffe::TRAIN);
-  EXPECT_EQ(Caffe::phase(), Caffe::TRAIN);
-  Caffe::set_phase(Caffe::TEST);
-  EXPECT_EQ(Caffe::phase(), Caffe::TEST);
-}
-
 TEST_F(CommonTest, TestRandSeedCPU) {
   SyncedMemory data_a(10 * sizeof(int));
   SyncedMemory data_b(10 * sizeof(int));

@@ -115,6 +115,8 @@ class Net {
   inline const vector<shared_ptr<Layer<Dtype> > >& layers() const {
     return layers_;
   }
+  /// @brief returns the phase: TRAIN or TEST
+  inline Phase phase() const { return phase_; }
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
@@ -207,6 +209,10 @@ class Net {
   /// @brief Get misc parameters, e.g. the LR multiplier and weight decay.
   void GetLearningRateAndWeightDecay();
 
+  /// @brief The network name
+  string name_;
+  /// @brief The phase: TRAIN or TEST
+  Phase phase_;
   /// @brief Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
@@ -239,7 +245,6 @@ class Net {
   vector<int> net_output_blob_indices_;
   vector<Blob<Dtype>*> net_input_blobs_;
   vector<Blob<Dtype>*> net_output_blobs_;
-  string name_;
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
   /// the learning rate multipliers
