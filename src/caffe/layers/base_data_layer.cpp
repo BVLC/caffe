@@ -23,7 +23,7 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   // The subclasses should setup the size of bottom and top
   DataLayerSetUp(bottom, top);
-  data_transformer_.InitRand();
+  data_transformer_->InitRand();
 }
 
 template <typename Dtype>
