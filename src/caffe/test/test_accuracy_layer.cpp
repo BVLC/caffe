@@ -189,7 +189,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
               num_correct_labels / 100.0, 1e-4);
   for (int i = 0; i < num_class; ++i) {
     EXPECT_NEAR(this->blob_top_per_class_->data_at(i, 0, 0, 0),
-                static_cast<float>(correct_per_class[i]) / num_per_class[i], 
+                static_cast<float>(correct_per_class[i]) / num_per_class[i],
                 1e-4);
   }
 }

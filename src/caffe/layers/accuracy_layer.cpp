@@ -30,7 +30,7 @@ void AccuracyLayer<Dtype>::Reshape(
   if (top.size() >= 2) {
     int dim = bottom[0]->count() / bottom[0]->num();
     top[1]->Reshape(dim, 1, 1, 1);
-  }  
+  }
 }
 
 template <typename Dtype>
