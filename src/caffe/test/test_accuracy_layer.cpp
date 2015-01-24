@@ -22,6 +22,7 @@ class AccuracyLayerTest : public ::testing::Test {
       : blob_bottom_data_(new Blob<Dtype>(100, 10, 1, 1)),
         blob_bottom_label_(new Blob<Dtype>(100, 1, 1, 1)),
         blob_top_(new Blob<Dtype>()),
+        blob_top_per_class_(new Blob<Dtype>()),
         top_k_(3) {
     // fill the probability values
     FillerParameter filler_param;
@@ -40,17 +41,22 @@ class AccuracyLayerTest : public ::testing::Test {
     blob_bottom_vec_.push_back(blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_label_);
     blob_top_vec_.push_back(blob_top_);
+    blob_top_per_class_vec_.push_back(blob_top_);
+    blob_top_per_class_vec_.push_back(blob_top_per_class_);
   }
   virtual ~AccuracyLayerTest() {
     delete blob_bottom_data_;
     delete blob_bottom_label_;
     delete blob_top_;
+    delete blob_top_per_class_;
   }
   Blob<Dtype>* const blob_bottom_data_;
   Blob<Dtype>* const blob_bottom_label_;
   Blob<Dtype>* const blob_top_;
+  Blob<Dtype>* const blob_top_per_class_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+  vector<Blob<Dtype>*> blob_top_per_class_vec_;
   int top_k_;
 };
 
@@ -68,13 +74,16 @@ TYPED_TEST(AccuracyLayerTest, TestSetup) {
 
 TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
   LayerParameter layer_param;
-  layer_param.mutable_accuracy_param()->set_output_per_class(true);
   AccuracyLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 11);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
   EXPECT_EQ(this->blob_top_->height(), 1);
   EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->num(), 10);
+  EXPECT_EQ(this->blob_top_per_class_->channels(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->height(), 1);
+  EXPECT_EQ(this->blob_top_per_class_->width(), 1);
 }
 
 TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
@@ -147,5 +156,84 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / 100.0, 1e-4);
 }
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
+  LayerParameter layer_param;
+  Caffe::set_mode(Caffe::CPU);
+  AccuracyLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+
+  TypeParam max_value;
+  int max_id;
+  int num_correct_labels = 0;
+  const int num_class = this->blob_top_per_class_->num();
+  vector<int> correct_per_class(num_class, 0);
+  vector<int> num_per_class(num_class, 0);
+  for (int i = 0; i < 100; ++i) {
+    max_value = -FLT_MAX;
+    max_id = 0;
+    for (int j = 0; j < 10; ++j) {
+      if (this->blob_bottom_data_->data_at(i, j, 0, 0) > max_value) {
+        max_value = this->blob_bottom_data_->data_at(i, j, 0, 0);
+        max_id = j;
+      }
+    }
+    ++num_per_class[this->blob_bottom_label_->data_at(i, 0, 0, 0)];
+    if (max_id == this->blob_bottom_label_->data_at(i, 0, 0, 0)) {
+      ++num_correct_labels;
+      ++correct_per_class[max_id];
+    }
+  }
+  EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
+              num_correct_labels / 100.0, 1e-4);
+  for (int i = 0; i < num_class; ++i) {
+    EXPECT_NEAR(this->blob_top_per_class_->data_at(i, 0, 0, 0),
+                static_cast<float>(correct_per_class[i]) / num_per_class[i], 
+                1e-4);
+  }
+}
+
+TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopKPerClass) {
+  LayerParameter layer_param;
+  AccuracyParameter* accuracy_param = layer_param.mutable_accuracy_param();
+  accuracy_param->set_top_k(this->top_k_);
+  AccuracyLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
+
+  TypeParam current_value;
+  int current_rank;
+  int num_correct_labels = 0;
+  const int num_class = this->blob_top_per_class_->num();
+  vector<int> correct_per_class(num_class, 0);
+  vector<int> num_per_class(num_class, 0);
+  for (int i = 0; i < 100; ++i) {
+    ++num_per_class[this->blob_bottom_label_->data_at(i, 0, 0, 0)];
+    for (int j = 0; j < 10; ++j) {
+      current_value = this->blob_bottom_data_->data_at(i, j, 0, 0);
+      current_rank = 0;
+      for (int k = 0; k < 10; ++k) {
+        if (this->blob_bottom_data_->data_at(i, k, 0, 0) > current_value) {
+          ++current_rank;
+        }
+      }
+      if (current_rank < this->top_k_ &&
+          j == this->blob_bottom_label_->data_at(i, 0, 0, 0)) {
+        ++num_correct_labels;
+        ++correct_per_class[j];
+      }
+    }
+  }
+
+  EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
+              num_correct_labels / 100.0, 1e-4);
+  for (int i = 0; i < num_class; ++i) {
+    EXPECT_NEAR(this->blob_top_per_class_->data_at(i, 0, 0, 0),
+                static_cast<float>(correct_per_class[i]) / num_per_class[i],
+                1e-4);
+  }
+}
+
 
 }  // namespace caffe

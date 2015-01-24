@@ -14,7 +14,6 @@ template <typename Dtype>
 void AccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   top_k_ = this->layer_param_.accuracy_param().top_k();
-  output_per_class_ = this->layer_param_.accuracy_param().output_per_class();
 }
 
 template <typename Dtype>
@@ -27,11 +26,11 @@ void AccuracyLayer<Dtype>::Reshape(
   CHECK_EQ(bottom[1]->channels(), 1);
   CHECK_EQ(bottom[1]->height(), 1);
   CHECK_EQ(bottom[1]->width(), 1);
-  int dim = 0;
-  if (output_per_class_) {
-    dim += bottom[0]->count() / bottom[0]->num();
-  }
-  top[0]->Reshape(1 + dim, 1, 1, 1);
+  top[0]->Reshape(1, 1, 1, 1);
+  if (top.size() >= 2) {
+    int dim = bottom[0]->count() / bottom[0]->num();
+    top[1]->Reshape(dim, 1, 1, 1);
+  }  
 }
 
 template <typename Dtype>
@@ -48,6 +47,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   vector<Dtype> nums(dim, 0);
   for (int i = 0; i < num; ++i) {
     const int true_label = static_cast<int>(bottom_label[i]);
+    ++nums[true_label];
     // Top-k accuracy
     std::vector<std::pair<Dtype, int> > bottom_data_vector;
     for (int j = 0; j < dim; ++j) {
@@ -59,7 +59,6 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
     // check if true label is in top k predictions
     for (int k = 0; k < top_k_; k++) {
-      ++nums[true_label];
       if (bottom_data_vector[k].second == true_label) {
         ++accuracy;
         ++accuracies[true_label];
@@ -70,9 +69,9 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   // LOG(INFO) << "Accuracy: " << accuracy;
   top[0]->mutable_cpu_data()[0] = accuracy / num;
-  if (output_per_class_) {
+  if (top.size() >= 2) {
     for (int i = 0; i < dim; ++i) {
-      top[0]->mutable_cpu_data()[i + 1] = accuracies[i] / nums[i];
+      top[1]->mutable_cpu_data()[i] = accuracies[i] / nums[i];
     }
   }
   // Accuracy layer should not be used as a loss function.
