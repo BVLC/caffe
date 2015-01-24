@@ -24,7 +24,7 @@ template <typename Dtype>
 class Net {
  public:
   explicit Net(const NetParameter& param);
-  explicit Net(const string& param_file);
+  explicit Net(const string& param_file, Phase phase);
   virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.
