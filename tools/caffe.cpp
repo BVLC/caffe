@@ -139,8 +139,7 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Caffe::set_phase(Caffe::TEST);
-  Net<float> caffe_net(FLAGS_model);
+  Net<float> caffe_net(FLAGS_model, caffe::TEST);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
@@ -205,8 +204,7 @@ int time() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Caffe::set_phase(Caffe::TRAIN);
-  Net<float> caffe_net(FLAGS_model);
+  Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
