@@ -11,7 +11,7 @@ from caffe.proto import caffe_pb2
 
 def main(argv):
     if len(argv) != 3:
-        print 'Usage: %s input_net_proto_file output_image_file' % \
+        print 'Usage: %s input_net_prototxt output_image_file' % \
                 os.path.basename(sys.argv[0])
     else:
         net = caffe_pb2.NetParameter()
