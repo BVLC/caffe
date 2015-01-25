@@ -19,6 +19,12 @@ inline void mex_error(const std::string &msg) {
   mexErrMsgTxt(msg.c_str());
 }
 
+// Log and print Warning message
+inline void mex_warn(const std::string &msg) {
+	LOG(INFO) << msg;
+	mexWarnMsgTxt(msg.c_str());
+}
+
 using namespace caffe;  // NOLINT(build/namespaces)
 
 // The pointer to the internal caffe::Net instance
@@ -242,8 +248,115 @@ static mxArray* do_get_weights() {
   return mx_layers;
 }
 
+static void do_set_weights(const mxArray* const mx_layers) {
+	// check input
+	if (!mxIsStruct(mx_layers)) {
+		mex_error("Expected input structure array with \"weights\" and \"layer_names\" fields");
+	}
+	const int num_layers = mxGetNumberOfElements(mx_layers);
+	const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
+	const vector<string>& layer_names = net_->layer_names();
+	for (int i = 0; i < num_layers; ++i) {
+		char* c_l_name = mxArrayToString(mxGetField(mx_layers, i, "layer_names"));
+		const mxArray* mx_l_weights = mxGetField(mx_layers, i, "weights");
+		if (!c_l_name || !mx_l_weights || !mxIsCell(mx_l_weights)) {
+			// fail to find corresponding field
+			mex_error("Expected field \"weights\" contain cells of single-precision number, and field \"layer_names\" contain string");
+		}
+		const string l_name(c_l_name);
+		mxFree(static_cast<void*>(c_l_name));
+		// Step 1: find corresponding layer in the net_
+		unsigned int ln;
+		for (ln = 0; ln < layer_names.size(); ++ln) {
+			if (l_name == layer_names[ln]) break;
+		}
+		if (ln >= layer_names.size()) {
+			mex_warn("Ignoring source layer " + l_name);
+			continue;
+		}
+		// Step 2: set layer weights
+    const vector<shared_ptr<Blob<float> > >& layer_blobs = layers[ln]->blobs();
+    if (layer_blobs.size() != mxGetNumberOfElements(mx_l_weights)) {
+    	ostringstream error_msg;
+    	error_msg << "Layer " << l_name << " expected "
+    			<< layer_blobs.size() << " blob(s), got " << mxGetNumberOfElements(mx_l_weights);
+    	mex_error(error_msg.str());
+    }
+    for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
+			// internally data is stored as (width, height, channels, num)
+			// where width is the fastest dimension
+    	const mxArray* mx_weights = mxGetCell(mx_l_weights, j);
+    	if (!mxIsSingle(mx_weights)) {
+        mex_error("MatCaffe require single-precision float point data");
+    	}
+    	const int num_dims = mxGetNumberOfDimensions(mx_weights);
+    	if (num_dims > 4) {
+    		ostringstream error_msg;
+				error_msg << "Expected input blob has at most 4 dimensions, got " << num_dims;
+				mex_error(error_msg.str());
+    	}
+    	const mwSize *dims = mxGetDimensions(mx_weights);
+    	const int width = dims[0];
+    	const int height = dims[1];
+    	const int channels = num_dims > 2 ? dims[2] : 1;
+    	const int num = num_dims > 3 ? dims[3] : 1;
+    	if (layer_blobs[j]->width() != width) {
+    		ostringstream error_msg;
+				error_msg << "Expected blob " << j << " in layer " << l_name
+						<< " has width = " << layer_blobs[j]->width()
+						<< ", got " << width;
+				mex_error(error_msg.str());
+    	}
+    	if (layer_blobs[j]->height() != height) {
+    		ostringstream error_msg;
+				error_msg << "Expected blob " << j << " in layer " << l_name
+						<< " has height = " << layer_blobs[j]->height()
+						<< ", got " << height;
+				mex_error(error_msg.str());
+    	}
+    	if (layer_blobs[j]->channels() != channels) {
+    		ostringstream error_msg;
+				error_msg << "Expected blob " << j << " in layer " << l_name
+						<< " has channels = " << layer_blobs[j]->channels()
+						<< ", got " << channels;
+				mex_error(error_msg.str());
+    	}
+    	if (layer_blobs[j]->num() != num) {
+    		ostringstream error_msg;
+				error_msg << "Expected blob " << j << " in layer " << l_name
+						<< " has width = " << layer_blobs[j]->num()
+						<< ", got " << num;
+				mex_error(error_msg.str());
+    	}
+
+			const float* weights_ptr = reinterpret_cast<const float*>(mxGetPr(mx_weights));
+			switch (Caffe::mode()) {
+			case Caffe::CPU:
+				caffe_copy(layer_blobs[j]->count(), weights_ptr,
+						layer_blobs[j]->mutable_cpu_data());
+				break;
+			case Caffe::GPU:
+				caffe_copy(layer_blobs[j]->count(), weights_ptr,
+						layer_blobs[j]->mutable_gpu_data());
+				break;
+			default:
+				mex_error("Unknown Caffe mode");
+			}
+		}
+	}
+}
+
 static void get_weights(MEX_ARGS) {
   plhs[0] = do_get_weights();
+}
+
+static void set_weights(MEX_ARGS) {
+	if (nrhs != 1) {
+		ostringstream error_msg;
+		error_msg << "Expected 1 argument, got " << nrhs;
+		mex_error(error_msg.str());
+	}
+  do_set_weights(prhs[0]);
 }
 
 static void set_mode_cpu(MEX_ARGS) {
@@ -381,6 +494,7 @@ static handler_registry handlers[] = {
   { "set_phase_test",     set_phase_test  },
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
+  { "set_weights", 				set_weights			},
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
   { "read_mean",          read_mean       },
