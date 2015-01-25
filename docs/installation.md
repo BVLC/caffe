@@ -11,6 +11,8 @@ We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
 - [Compilation](#compilation)
 - [Hardware questions](#hardware_questions)
 
+Ask installation questions on the [caffe-users](https://groups.google.com/forum/#!forum/caffe-users) mailing list.
+
 ## Prerequisites
 
 Caffe depends on several software packages.
@@ -299,4 +301,4 @@ As a workaround, if you are using Ubuntu 12.04 you can try the following steps t
 
 Once installed, check your times against our [reference performance numbers](performance_hardware.html) to make sure everything is configured properly.
 
-Refer to the project's issue tracker for [hardware/compatibility](https://github.com/BVLC/caffe/issues?labels=hardware%2Fcompatibility&page=1&state=open).
+Ask hardware questions on the [caffe-users](https://groups.google.com/forum/#!forum/caffe-users) mailing list.
