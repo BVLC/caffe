@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
+#include "caffe/layer_factory.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
@@ -12,6 +13,9 @@ template <typename Dtype>
 void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
+  LayerParameter softmax_param(this->layer_param_);
+  softmax_param.set_type(LayerParameter_LayerType_SOFTMAX);
+  softmax_layer_.reset(LayerRegistry<Dtype>::CreateLayer(softmax_param));
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
   softmax_top_vec_.clear();
