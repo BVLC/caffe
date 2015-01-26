@@ -57,7 +57,8 @@ static int init_key = -2;
 // The actual forward function. It takes in a cell array of 4-D arrays as
 // input and outputs a cell array.
 
-static mxArray* do_forward(const mxArray* const bottom) {
+static mxArray* do_forward(const mxArray* const bottom,
+    const bool is_conv = false) {
   const vector<Blob<float>*>& input_blobs = net_->input_blobs();
   if (static_cast<unsigned int>(mxGetDimensions(bottom)[0]) !=
       input_blobs.size()) {
@@ -68,13 +69,34 @@ static mxArray* do_forward(const mxArray* const bottom) {
     if (!mxIsSingle(elem)) {
       mex_error("MatCaffe require single-precision float point data");
     }
-    if (mxGetNumberOfElements(elem) != input_blobs[i]->count()) {
+    if (!is_conv && mxGetNumberOfElements(elem) != input_blobs[i]->count()) {
       std::string error_msg;
       error_msg += "MatCaffe input size does not match the input size ";
       error_msg += "of the network";
       mex_error(error_msg);
     }
-
+    if (is_conv) {
+      // allow dynamic input size, when the net is fully convolutional.
+      const int num_dims = mxGetNumberOfDimensions(elem);
+      if (num_dims > 4) {
+        ostringstream error_msg;
+        error_msg << "Expected input blob has at most 4 dimensions, got "
+            << num_dims;
+        mex_error(error_msg.str());
+      }
+      const mwSize* dim = mxGetDimensions(elem);
+      int width = dim[0];   // width in caffe is the fastest dimension
+      int height = dim[1];
+      int channels = num_dims > 2 ? dim[2] : 1;
+      int num = num_dims > 3 ? dim[3] : 1;
+      if (input_blobs[i]->width() != width
+          || input_blobs[i]->height() != height
+          || input_blobs[i]->channels() != channels
+          || input_blobs[i]->num() != num) {
+        input_blobs[i]->Reshape(num, channels, height, width);
+        // The shape of other layers will be reshaped when calling forward.
+      }
+    }
     const float* const data_ptr =
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {
@@ -462,6 +484,16 @@ static void forward(MEX_ARGS) {
   plhs[0] = do_forward(prhs[0]);
 }
 
+static void conv_forward(MEX_ARGS) {
+  if (nrhs != 1) {
+    ostringstream error_msg;
+    error_msg << "Expected 1 argument, got " << nrhs;
+    mex_error(error_msg.str());
+  }
+
+  plhs[0] = do_forward(prhs[0], true);
+}
+
 static void backward(MEX_ARGS) {
   if (nrhs != 1) {
     ostringstream error_msg;
@@ -516,6 +548,7 @@ struct handler_registry {
 static handler_registry handlers[] = {
   // Public API functions
   { "forward",            forward         },
+  { "conv_forward",       conv_forward    },
   { "backward",           backward        },
   { "init",               init            },
   { "is_initialized",     is_initialized  },
