@@ -5,8 +5,9 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "examples/cifar10/cifar10_train_leveldb"
+    source: "examples/cifar10/cifar10_train_lmdb"
     batch_size: 100
+    backend: LMDB
   }
   transform_param {
     mean_file: "examples/cifar10/mean.binaryproto"
@@ -19,8 +20,9 @@ layers {
   top: "data"
   top: "label"
   data_param {
-    source: "examples/cifar10/cifar10_test_leveldb"
+    source: "examples/cifar10/cifar10_test_lmdb"
     batch_size: 100
+    backend: LMDB
   }
   transform_param {
     mean_file: "examples/cifar10/mean.binaryproto"
