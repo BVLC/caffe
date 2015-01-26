@@ -421,6 +421,28 @@ static void reset(MEX_ARGS) {
   }
 }
 
+// save the network weights to binary proto
+static void save(MEX_ARGS) {
+	if (nrhs != 1) {
+		ostringstream error_msg;
+		error_msg << "Expected 1 argument, got " << nrhs;
+		mex_error(error_msg.str());
+	}
+	if (!net_) {
+		mex_error("Init net before save it");
+	}
+	char* c_model_file = mxArrayToString(prhs[0]);
+	if (!c_model_file) {
+		mex_error("Expected string input for model name");
+	}
+	string model_file(c_model_file);
+	mxFree(static_cast<void*>(c_model_file));
+
+	NetParameter net_param;
+	net_->ToProto(&net_param, false);
+	WriteProtoToBinaryFile(net_param, model_file);
+}
+
 static void forward(MEX_ARGS) {
   if (nrhs != 1) {
     ostringstream error_msg;
@@ -497,6 +519,7 @@ static handler_registry handlers[] = {
   { "set_weights", 				set_weights			},
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
+  { "save",								save						},
   { "read_mean",          read_mean       },
   // The end.
   { "END",                NULL            },
