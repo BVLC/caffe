@@ -271,6 +271,7 @@ message LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
+    TEMPLATE = 1000;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -331,6 +332,9 @@ message LayerParameter {
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
 
+  // Parameters for templates.
+  optional TemplateParameter template_param = 1000;
+
   // Note: certain layers may have more than one computational engine
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
@@ -340,6 +344,20 @@ message LayerParameter {
   // This should never be used by any code except to upgrade to the new
   // LayerParameter specification.
   optional V0LayerParameter layer = 1;
+}
+
+message NameValue {
+   required string name = 1;
+   required string value = 2;
+}
+
+// Message that stores parameters used by TemplateLayer
+message TemplateParameter {
+    // Proto file containing the template
+    optional string source = 1;
+    // Variable names to replace after expanding the template. Variables can
+    // be used in the template file in this format: ${name}
+    repeated NameValue variable = 2;
 }
 
 // Message that stores parameters used to apply transformation

@@ -1,0 +1,123 @@
+# Auxiliary Classifer Module
+# Requires: input
+layers {
+  bottom: "${input}"
+  top: "ave_pool"
+  name: "ave_pool"
+  type: POOLING
+  pooling_param {
+    pool: AVE
+    kernel_size: 5
+    stride: 3
+  }
+}
+layers {
+  bottom: "ave_pool"
+  top: "conv"
+  name: "conv"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: 128
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.08
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "conv"
+  top: "conv"
+  name: "relu_conv"
+  type: RELU
+}
+layers {
+  bottom: "conv"
+  top: "fc"
+  name: "fc"
+  type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 1024
+    weight_filler {
+      type: "xavier"
+      std: 0.02
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "fc"
+  top: "fc"
+  name: "relu_fc"
+  type: RELU
+}
+layers {
+  bottom: "fc"
+  top: "fc"
+  name: "drop_fc"
+  type: DROPOUT
+  dropout_param {
+    dropout_ratio: 0.7
+  }
+}
+layers {
+  bottom: "fc"
+  top: "classifier"
+  name: "classifier"
+  type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 1000
+    weight_filler {
+      type: "xavier"
+      std: 0.0009765625
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  bottom: "classifier"
+  bottom: "../label"
+  name: "loss"
+  type: SOFTMAX_LOSS
+  loss_weight: 0.3
+  top: "loss1"
+}
+layers {
+  name: "top-1"
+  type: ACCURACY
+  bottom: "classifier"
+  bottom: "../label"
+  top: "top-1"
+  include: { phase: TEST }
+}
+layers {
+  name: "top-5"
+  type: ACCURACY
+  bottom: "classifier"
+  bottom: "../label"
+  top: "top-5"
+  accuracy_param: { top_k: 5 }
+  include: { phase: TEST }
+}

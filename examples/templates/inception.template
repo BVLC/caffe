@@ -1,0 +1,194 @@
+# < Inception Module
+# Requires: input, 1x1, 3x3_reduce, 3x3, 5x5_reduce, 5x5, pool_proj
+layers {
+  bottom: "${input}"
+  top: "1x1"
+  name: "1x1"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: ${1x1}
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "1x1"
+  top: "1x1"
+  name: "relu_1x1"
+  type: RELU
+}
+layers {
+  bottom: "${input}"
+  top: "3x3_reduce"
+  name: "3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: ${3x3_reduce}
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.09
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "3x3_reduce"
+  top: "3x3_reduce"
+  name: "relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "3x3_reduce"
+  top: "3x3"
+  name: "3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: ${3x3}
+    kernel_size: 3
+    pad: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "3x3"
+  top: "3x3"
+  name: "relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "${input}"
+  top: "5x5_reduce"
+  name: "5x5_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: ${5x5_reduce}
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.2
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "5x5_reduce"
+  top: "5x5_reduce"
+  name: "relu_5x5_reduce"
+  type: RELU
+}
+layers {
+  bottom: "5x5_reduce"
+  top: "5x5"
+  name: "5x5"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: ${5x5}
+    kernel_size: 5
+    pad: 2
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "5x5"
+  top: "5x5"
+  name: "relu_5x5"
+  type: RELU
+}
+layers {
+  bottom: "${input}"
+  top: "pool"
+  name: "pool"
+  type: POOLING
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 1
+    pad: 1
+  }
+}
+layers {
+  bottom: "pool"
+  top: "pool_proj"
+  name: "pool_proj"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: ${pool_proj}
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "pool_proj"
+  top: "pool_proj"
+  name: "relu_pool_proj"
+  type: RELU
+}
+layers {
+  bottom: "1x1"
+  bottom: "3x3"
+  bottom: "5x5"
+  bottom: "pool_proj"
+  top: "output"
+  name: "output"
+  type: CONCAT
+}
+# Inception Module >

@@ -1,0 +1,411 @@
+name: "GoogleNet"
+layers {
+  name: "data"
+  type: DATA
+  top: "data"
+  top: "label"
+  data_param {
+    source: "examples/imagenet/ilsvrc12_train_lmdb"
+    backend: LMDB
+    batch_size: 32
+  }
+  transform_param {
+    crop_size: 224
+    mean_value: 104
+    mean_value: 117
+    mean_value: 123
+    mirror: true
+  }
+  include: { phase: TRAIN }
+}
+layers {
+  name: "data"
+  type: DATA
+  top: "data"
+  top: "label"
+  data_param {
+    source: "examples/imagenet/ilsvrc12_val_lmdb"
+    backend: LMDB
+    batch_size: 50
+  }
+  transform_param {
+    crop_size: 224
+    mean_value: 104
+    mean_value: 117
+    mean_value: 123
+    mirror: false
+  }
+  include: { phase: TEST }
+}
+layers {
+  bottom: "data"
+  top: "conv1/7x7_s2"
+  name: "conv1/7x7_s2"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: 64
+    kernel_size: 7
+    stride: 2
+    pad: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "conv1/7x7_s2"
+  top: "conv1/7x7_s2"
+  name: "conv1/relu_7x7"
+  type: RELU
+}
+layers {
+  bottom: "conv1/7x7_s2"
+  top: "pool1/3x3_s2"
+  name: "pool1/3x3_s2"
+  type: POOLING
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layers {
+  bottom: "pool1/3x3_s2"
+  top: "pool1/norm1"
+  name: "pool1/norm1"
+  type: LRN
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layers {
+  bottom: "pool1/norm1"
+  top: "conv2/3x3_reduce"
+  name: "conv2/3x3_reduce"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    weight_filler {
+      type: "xavier"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "conv2/3x3_reduce"
+  top: "conv2/3x3_reduce"
+  name: "conv2/relu_3x3_reduce"
+  type: RELU
+}
+layers {
+  bottom: "conv2/3x3_reduce"
+  top: "conv2/3x3"
+  name: "conv2/3x3"
+  type: CONVOLUTION
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  convolution_param {
+    num_output: 192
+    pad: 1
+    kernel_size: 3
+    weight_filler {
+      type: "xavier"
+      std: 0.03
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.2
+    }
+  }
+}
+layers {
+  bottom: "conv2/3x3"
+  top: "conv2/3x3"
+  name: "conv2/relu_3x3"
+  type: RELU
+}
+layers {
+  bottom: "conv2/3x3"
+  top: "conv2/norm2"
+  name: "conv2/norm2"
+  type: LRN
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layers {
+  bottom: "conv2/norm2"
+  top: "pool2/3x3_s2"
+  name: "pool2/3x3_s2"
+  type: POOLING
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+# Inception (3a)
+layers {
+  name: "inception_3a"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/pool2/3x3_s2"}
+    variable { name: "1x1"        value: "64"}
+    variable { name: "3x3_reduce" value: "96"}
+    variable { name: "3x3"        value: "128"}
+    variable { name: "5x5_reduce" value: "16"}
+    variable { name: "5x5"        value: "32"}
+    variable { name: "pool_proj"  value: "32"}
+  }
+}
+# Inception (3b)
+layers {
+  name: "inception_3b"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/inception_3a/output"}
+    variable { name: "1x1"        value: "128"}
+    variable { name: "3x3_reduce" value: "128"}
+    variable { name: "3x3"        value: "192"}
+    variable { name: "5x5_reduce" value: "32"}
+    variable { name: "5x5"        value: "96"}
+    variable { name: "pool_proj"  value: "64"}
+  }
+}
+layers {
+  bottom: "/inception_3b/output"
+  top: "pool3/3x3_s2"
+  name: "pool3/3x3_s2"
+  type: POOLING
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+# Inception (4a)
+layers {
+  name: "inception_4a"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/pool3/3x3_s2"}
+    variable { name: "1x1"        value: "192"}
+    variable { name: "3x3_reduce" value: "96"}
+    variable { name: "3x3"        value: "208"}
+    variable { name: "5x5_reduce" value: "16"}
+    variable { name: "5x5"        value: "48"}
+    variable { name: "pool_proj"  value: "64"}
+  }
+}
+# Loss 1
+layers {
+  name: "loss1"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/aux_classifier.template"
+    variable { name: "input" value: "/inception_4a/output"}
+  }
+}
+# Inception (4b)
+layers {
+  name: "inception_4b"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/inception_4a/output"}
+    variable { name: "1x1"        value: "160"}
+    variable { name: "3x3_reduce" value: "112"}
+    variable { name: "3x3"        value: "224"}
+    variable { name: "5x5_reduce" value: "24"}
+    variable { name: "5x5"        value: "64"}
+    variable { name: "pool_proj"  value: "64"}
+  }
+}
+# Inception (4b)
+layers {
+  name: "inception_4c"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/inception_4b/output"}
+    variable { name: "1x1"        value: "128"}
+    variable { name: "3x3_reduce" value: "128"}
+    variable { name: "3x3"        value: "256"}
+    variable { name: "5x5_reduce" value: "24"}
+    variable { name: "5x5"        value: "64"}
+    variable { name: "pool_proj"  value: "64"}
+  }
+}
+# Inception (4d)
+layers {
+  name: "inception_4d"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/inception_4c/output"}
+    variable { name: "1x1"        value: "112"}
+    variable { name: "3x3_reduce" value: "144"}
+    variable { name: "3x3"        value: "288"}
+    variable { name: "5x5_reduce" value: "32"}
+    variable { name: "5x5"        value: "64"}
+    variable { name: "pool_proj"  value: "64"}
+  }
+}
+# Loss 2
+layers {
+  name: "loss2"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/aux_classifier.template"
+    variable { name: "input" value: "/inception_4d/output"}
+  }
+}
+# Inception (4e)
+layers {
+  name: "inception_4e"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/inception_4d/output"}
+    variable { name: "1x1"        value: "256"}
+    variable { name: "3x3_reduce" value: "160"}
+    variable { name: "3x3"        value: "320"}
+    variable { name: "5x5_reduce" value: "32"}
+    variable { name: "5x5"        value: "128"}
+    variable { name: "pool_proj"  value: "128"}
+  }
+}
+layers {
+  bottom: "/inception_4e/output"
+  top: "pool4/3x3_s2"
+  name: "pool4/3x3_s2"
+  type: POOLING
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+# Inception (5a)
+layers {
+  name: "inception_5a"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/pool4/3x3_s2"}
+    variable { name: "1x1"        value: "256"}
+    variable { name: "3x3_reduce" value: "160"}
+    variable { name: "3x3"        value: "320"}
+    variable { name: "5x5_reduce" value: "32"}
+    variable { name: "5x5"        value: "128"}
+    variable { name: "pool_proj"  value: "128"}
+  }
+}
+# Inception (5b)
+layers {
+  name: "inception_5b"
+  type: TEMPLATE
+  template_param {
+    source: "examples/templates/inception.template"
+    variable { name: "input"      value: "/inception_5a/output"}
+    variable { name: "1x1"        value: "384"}
+    variable { name: "3x3_reduce" value: "192"}
+    variable { name: "3x3"        value: "384"}
+    variable { name: "5x5_reduce" value: "48"}
+    variable { name: "5x5"        value: "128"}
+    variable { name: "pool_proj"  value: "128"}
+  }
+}
+layers {
+  bottom: "/inception_5b/output"
+  top: "pool5/7x7_s1"
+  name: "pool5/7x7_s1"
+  type: POOLING
+  pooling_param {
+    pool: AVE
+    kernel_size: 7
+    stride: 1
+  }
+}
+layers {
+  bottom: "pool5/7x7_s1"
+  top: "pool5/7x7_s1"
+  name: "pool5/drop_7x7_s1"
+  type: DROPOUT
+  dropout_param {
+    dropout_ratio: 0.4
+  }
+}
+# Loss 3
+layers {
+  bottom: "pool5/7x7_s1"
+  top: "loss3/classifier"
+  name: "loss3/classifier"
+  type: INNER_PRODUCT
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 1000
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  bottom: "loss3/classifier"
+  bottom: "label"
+  name: "loss3/loss3"
+  type: SOFTMAX_LOSS
+  loss_weight: 1
+  top: "loss3/loss3"
+}
+layers {
+  name: "loss3/top-1"
+  type: ACCURACY
+  bottom: "loss3/classifier"
+  bottom: "label"
+  top: "loss3/top-1"
+  include: { phase: TEST }
+}
+layers {
+  name: "loss3/top-5"
+  type: ACCURACY
+  bottom: "loss3/classifier"
+  bottom: "label"
+  top: "loss3/top-5"
+  accuracy_param: { top_k: 5 }
+  include: { phase: TEST }
+}

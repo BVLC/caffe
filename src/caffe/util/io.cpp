@@ -67,6 +67,20 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
+bool ReadFileToString(const string& filename, string* contents) {
+  std::ifstream in(filename.c_str(), ios::in | ios::binary | ios::ate);
+  if (in.is_open()) {
+    contents->resize(in.tellg());
+    in.seekg(0, ios::beg);
+    in.read(&(*contents)[0], contents->size());
+    in.close();
+    return true;
+  } else {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return false;
+  }
+}
+
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color) {
   cv::Mat cv_img;
@@ -113,15 +127,8 @@ bool ReadImageToDatum(const string& filename, const int label,
 
 bool ReadFileToDatum(const string& filename, const int label,
     Datum* datum) {
-  std::streampos size;
-
-  fstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
-  if (file.is_open()) {
-    size = file.tellg();
-    std::string buffer(size, ' ');
-    file.seekg(0, ios::beg);
-    file.read(&buffer[0], size);
-    file.close();
+  std::string buffer;
+  if (ReadFileToString(filename, &buffer)) {
     datum->set_data(buffer);
     datum->set_label(label);
     datum->set_encoded(true);
