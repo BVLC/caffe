@@ -7,7 +7,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/solver.hpp"
+#include "caffe/solving_driver.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -16,7 +16,7 @@ using std::ostringstream;
 namespace caffe {
 
 template <typename TypeParam>
-class SolverTest : public MultiDeviceTest<TypeParam> {
+class SolvingDriverTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
@@ -34,15 +34,15 @@ class SolverTest : public MultiDeviceTest<TypeParam> {
       default:
         LOG(FATAL) << "Unknown Caffe mode: " << Caffe::mode();
     }
-    solver_.reset(new SGDSolver<Dtype>(param));
+    solver_.reset(new SolvingDriver<Dtype>(param));
   }
 
-  shared_ptr<Solver<Dtype> > solver_;
+  shared_ptr<SolvingDriver<Dtype> > solver_;
 };
 
-TYPED_TEST_CASE(SolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SolvingDriverTest, TestDtypesAndDevices);
 
-TYPED_TEST(SolverTest, TestInitTrainTestNets) {
+TYPED_TEST(SolvingDriverTest, TestInitTrainTestNets) {
   const string& proto =
      "test_interval: 10 "
      "test_iter: 10 "

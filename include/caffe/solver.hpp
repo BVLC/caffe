@@ -1,12 +1,24 @@
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
 
+#include <boost/circular_buffer.hpp>
+
 #include <string>
 #include <vector>
 
 #include "caffe/net.hpp"
 
 namespace caffe {
+
+/**
+ * @brief The SolverResult struct holds output of each stepping of Solver
+ */
+template <typename Dtype>
+struct SolverResult {
+  string blob_name;
+  Dtype loss_weight;
+  vector<Dtype> blob_data;
+};
 
 /**
  * @brief An interface for classes that perform optimization on Net%s.
@@ -19,49 +31,61 @@ class Solver {
  public:
   explicit Solver(const SolverParameter& param);
   explicit Solver(const string& param_file);
-  void Init(const SolverParameter& param);
-  void InitTrainNet();
-  void InitTestNets();
-  // The main entry of the solver function. In default, iter will be zero. Pass
-  // in a non-zero iter number to resume training for a pre-trained net.
-  virtual void Solve(const char* resume_file = NULL);
-  inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
-  void Step(int iters);
+
+  /**
+   * @brief Next
+   * @param output The output blobs before the network is updated
+   *        learning_rate The learning rate for this round. A negative
+   *                      value will allow the solver to automatically
+   *                      determine it by the specified policy
+   * @return The total loss of this round of forwarding
+   */
+  Dtype Next(vector<shared_ptr<SolverResult<Dtype> > >* output = 0,
+             Dtype learning_rate = -1);
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
-  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
-    return test_nets_;
-  }
-  int iter() { return iter_; }
+  inline shared_ptr<const Net<Dtype> > net() const { return net_; }
 
- protected:
-  // Get the update value for the current iteration.
-  virtual void ComputeUpdateValue() = 0;
-  // The Solver::Snapshot function implements the basic snapshotting utility
-  // that stores the learned net. You should implement the SnapshotSolverState()
-  // function that produces a SolverState protocol buffer that needs to be
-  // written to disk together with the learned net.
-  void Snapshot();
-  // The test routine
-  void TestAll();
-  void Test(const int test_net_id = 0);
-  virtual void SnapshotSolverState(SolverState* state) = 0;
+  int iter() const { return iter_; }
+  int current_step() const { return current_step_; }
+  const SolverParameter& param() const { return param_; }
+  virtual void SnapshotSolverState(SolverState* state) const = 0;
+  virtual void RestoreSolverState(const SolverState& state) = 0;
+
+  // Snapshot to default filenames
+  void Snapshot() const;
+  void Snapshot(const string& model_filename,
+                const string& snapshot_filename) const;
+
   // The Restore function implements how one should restore the solver to a
   // previously snapshotted state. You should implement the RestoreSolverState()
   // function that restores the state from a SolverState protocol buffer.
   void Restore(const char* resume_file);
-  virtual void RestoreSolverState(const SolverState& state) = 0;
-  void DisplayOutputBlobs(const int net_id);
+
+  typedef boost::circular_buffer<Dtype> loss_container_type;
+  const loss_container_type& last_losses() const { return last_losses_; }
+
+  Dtype smoothed_loss() const { return smoothed_loss_; }
+
+  Dtype GetLearningRate();
+
+ protected:
+  // Get the update value for the current iteration.
+  virtual void ComputeUpdateValue(Dtype learning_rate) = 0;
 
   SolverParameter param_;
   int iter_;
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
-  vector<shared_ptr<Net<Dtype> > > test_nets_;
+  loss_container_type last_losses_;
+  Dtype smoothed_loss_;
+
+ private:
+  void InitTrainNet();
+  void Init(const SolverParameter& param);
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
-
 
 /**
  * @brief Optimizes the parameters of a Net using
@@ -79,9 +103,8 @@ class SGDSolver : public Solver<Dtype> {
 
  protected:
   void PreSolve();
-  Dtype GetLearningRate();
-  virtual void ComputeUpdateValue();
-  virtual void SnapshotSolverState(SolverState * state);
+  virtual void ComputeUpdateValue(Dtype learning_rate);
+  virtual void SnapshotSolverState(SolverState * state) const;
   virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
@@ -101,7 +124,7 @@ class NesterovSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param_file) {}
 
  protected:
-  virtual void ComputeUpdateValue();
+  virtual void ComputeUpdateValue(Dtype rate);
 
   DISABLE_COPY_AND_ASSIGN(NesterovSolver);
 };
@@ -115,7 +138,7 @@ class AdaGradSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
 
  protected:
-  virtual void ComputeUpdateValue();
+  virtual void ComputeUpdateValue(Dtype rate);
   void constructor_sanity_check() {
     CHECK_EQ(0, this->param_.momentum())
         << "Momentum cannot be used with AdaGrad.";

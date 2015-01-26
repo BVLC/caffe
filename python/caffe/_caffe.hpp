@@ -186,7 +186,7 @@ class PySGDSolver {
  protected:
   shared_ptr<PyNet> net_;
   vector<shared_ptr<PyNet> > test_nets_;
-  shared_ptr<SGDSolver<float> > solver_;
+  shared_ptr<SolvingDriver<float> > solver_;
 };
 
 // Declare the module init function created by boost::python, so that we can
