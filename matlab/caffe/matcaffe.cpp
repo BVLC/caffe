@@ -353,6 +353,9 @@ static void do_set_weights(const mxArray* const mx_layers) {
 }
 
 static void get_weights(MEX_ARGS) {
+  if (!net_) {
+    mex_error("Init net before get weights");
+  }
   plhs[0] = do_get_weights();
 }
 
