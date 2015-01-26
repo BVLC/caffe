@@ -419,6 +419,48 @@ The `SPLIT` layer is a utility layer that splits an input blob to multiple outpu
 
 The `FLATTEN` layer is a utility layer that flattens an input of shape `n * c * h * w` to a simple vector output of shape `n * (c*h*w) * 1 * 1`.
 
+#### Reshape
+
+* LayerType: `RESHAPE`
+* CPU implementation: `./src/caffe/layers/reshape_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/reshape_layer.cu`
+* Parameters (`ReshapeParameter reshape_param`)
+    - Optional: (also see detailed description below)
+        - `num` [default 0]
+        - `channels` [default 0]
+        - `width` [default 0]
+        - `height` [default 0]
+
+* Input
+    - a single blob with arbitrary dimensions
+* Output
+    - the same blob, with modified dimensions, as specified by `reshape_param`
+
+* Sample
+
+        layers {
+          name: "reshape"
+          type: RESHAPE
+          bottom: "input"
+          top: "output"
+
+          reshape_param {
+            num: 0  # copy the dimension from below
+            channels: 2
+            width: 3
+            height: -1 # infer it from the other dimensions
+          }
+        }
+
+The `RESHAPE` layer can be used to change the dimensions of its input, without changing its data. Just like the `FLATTEN` layer, only the dimensions are changed, no data is copied in the process.
+
+Output dimensions are specified by the `ReshapeParam` proto. Positive numbers are used directly, setting the corresponding dimension of the output blob. In addition, two special values are accepted for any of the target dimension values:
+
+* **0** means "copy the respective dimension of the bottom layer". That is, if the bottom layer has 2 channels, the top one will have 2 channels too, given `channels: 0` as target dimension. Since the default value of all the target dimensions is 0, omitting any of the target dimensions will also cause it to be copied.
+* **-1** stands for "infer this from the other dimensions". This behavior is similar to that of -1 in *numpy*'s or `[]` for *MATLAB*'s reshape: this dimension is calculated to keep the overall element count the same as in the bottom layer. If this is not possible, an error is raised. Also, at most one -1 can be used in a reshape operation.
+
+As another example, giving `num: 0, channels: -1, height: 1, width: 1` as parameters makes the layer behave in exactly the same way as the `FLATTEN` layer.
+
 #### Concatenation
 
 * LayerType: `CONCAT`

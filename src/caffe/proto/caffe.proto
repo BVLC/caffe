@@ -206,7 +206,7 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 42 (last added: exp_param)
+// LayerParameter next available ID: 43 (last added: reshape_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -227,7 +227,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 39 (last added: EXP)
+  // LayerType next available ID: 40 (last added: RESHAPE)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -261,6 +261,7 @@ message LayerParameter {
     POOLING = 17;
     POWER = 26;
     RELU = 18;
+    RESHAPE = 39;
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SILENCE = 36;
@@ -321,6 +322,7 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 19;
   optional PowerParameter power_param = 21;
   optional ReLUParameter relu_param = 30;
+  optional ReshapeParameter reshape_param = 42;
   optional SigmoidParameter sigmoid_param = 38;
   optional SoftmaxParameter softmax_param = 39;
   optional SliceParameter slice_param = 31;
@@ -643,6 +645,19 @@ message ReLUParameter {
     CUDNN = 2;
   }
   optional Engine engine = 2 [default = DEFAULT];
+}
+
+// Message that stores parameters used by ReshapeLayer
+message ReshapeParameter {
+  // Specify the output dimensions. If some of the following parameters are
+  // omitted or set to 0 explicitly, the corresponding dimension from the bottom
+  // layer is used (unchanged). Also, if exactly one of them is set to -1, its
+  // value is calculated from the count of the bottom layer and the remaining
+  // dimensions, if possible.
+  optional int32 num = 1 [default = 0];
+  optional int32 channels = 2 [default = 0];
+  optional int32 height = 3 [default = 0];
+  optional int32 width = 4 [default = 0];
 }
 
 // Message that stores parameters used by SigmoidLayer
