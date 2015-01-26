@@ -6,7 +6,10 @@ deploy_file = fullfile(caffe_root, 'models/bvlc_reference_caffenet/deploy.protot
 model_file = fullfile(caffe_root, 'models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel');
 deploy_conv_file = fullfile(caffe_root, 'examples/imagenet/bvlc_caffenet_full_conv.prototxt');
 
-
+if ~exist(model_file, 'file')
+    fprintf('Please download caffe reference net first\n');
+    return;
+end
 %% get weights in the net with fully-connected layers
 caffe('reset');
 caffe('init', deploy_file, model_file);
