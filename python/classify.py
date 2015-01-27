@@ -5,6 +5,7 @@ classify.py is an out-of-the-box image classifer callable from the command line.
 By default it configures and runs the Caffe reference ImageNet model.
 """
 import numpy as np
+import pandas as pd
 import os
 import sys
 import argparse
@@ -79,12 +80,24 @@ def main(argv):
         default='2,1,0',
         help="Order to permute input channels. The default converts " +
              "RGB -> BGR since BGR is the Caffe default by way of OpenCV."
+
     )
     parser.add_argument(
         "--ext",
         default='jpg',
         help="Image file extension to take as input when a directory " +
-             "is given as the input file."
+        "is given as the input file."
+    )
+    parser.add_argument(
+        "--labels_file",
+        default=os.path.join(pycaffe_dir,
+                             "../data/ilsvrc12/synset_words.txt"),
+        help="Readable label definition file."
+    )
+    parser.add_argument(
+        "--print_results",
+        action='store_true',
+        help="Write output text to stdout rather than serializing to a file."
     )
     args = parser.parse_args()
 
@@ -99,7 +112,7 @@ def main(argv):
     # Make classifier.
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
             image_dims=image_dims, gpu=args.gpu, mean=mean,
-            input_scale=args.input_scale, raw_scale=args.raw_scale,
+            input_scale=args.input_scale,
             channel_swap=channel_swap)
 
     if args.gpu:
@@ -119,12 +132,32 @@ def main(argv):
 
     # Classify.
     start = time.time()
-    predictions = classifier.predict(inputs, not args.center_only)
+    scores = classifier.predict(inputs, not args.center_only).flatten()
     print "Done in %.2f s." % (time.time() - start)
 
-    # Save
-    np.save(args.output_file, predictions)
+    if args.print_results:
+        with open(args.labels_file) as f:
+          labels_df = pd.DataFrame([
+               {
+                   'synset_id': l.strip().split(' ')[0],
+                   'name': ' '.join(l.strip().split(' ')[1:]).split(',')[0]
+               }
+               for l in f.readlines()
+            ])
+        labels = labels_df.sort('synset_id')['name'].values
 
+        indices = (-scores).argsort()[:5]
+        predictions = labels[indices]
+
+        meta = [
+                   (p, '%.5f' % scores[i])
+                   for i, p in zip(indices, predictions)
+               ]
+
+        print meta
+
+    # Save
+    np.save(args.output_file, scores)
 
 if __name__ == '__main__':
     main(sys.argv)
