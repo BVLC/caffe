@@ -206,7 +206,7 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 42 (last added: exp_param)
+// LayerParameter next available ID: 43 (last added: filter_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -227,7 +227,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 39 (last added: EXP)
+  // LayerType next available ID: 40 (last added: FILTER)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -246,6 +246,7 @@ message LayerParameter {
     EUCLIDEAN_LOSS = 7;
     ELTWISE = 25;
     EXP = 38;
+    FILTER = 39;
     FLATTEN = 8;
     HDF5_DATA = 9;
     HDF5_OUTPUT = 10;
@@ -309,6 +310,7 @@ message LayerParameter {
   optional DummyDataParameter dummy_data_param = 26;
   optional EltwiseParameter eltwise_param = 24;
   optional ExpParameter exp_param = 41;
+  optional FilterParameter filter_param = 42;
   optional HDF5DataParameter hdf5_data_param = 13;
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional HingeLossParameter hinge_loss_param = 29;
@@ -491,6 +493,12 @@ message ExpParameter {
   optional float base = 1 [default = -1.0];
   optional float scale = 2 [default = 1.0];
   optional float shift = 3 [default = 0.0];
+}
+
+// Message that stores parameters used by FilterLayer
+message FilterParameter {
+  // specify which blobs need to be backpropagated and which not
+  repeated uint32 need_back_prop = 1 [packed = true];
 }
 
 // Message that stores parameters used by HDF5DataLayer
