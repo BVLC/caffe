@@ -696,6 +696,14 @@ template <typename Dtype> class SoftmaxLayer;
 template <typename Dtype>
 class SoftmaxWithLossLayer : public LossLayer<Dtype> {
  public:
+   /**
+    * @param param provides LossParameter loss_param, with options:
+    *  - ignore_label (optional)
+    *    Specify a label value that should be ignored when computing the loss.
+    *  - normalize (optional, default true)
+    *    If true, the loss is normalized by the number of (nonignored) labels
+    *    present; otherwise the loss is simply summed over spatial locations.
+    */
   explicit SoftmaxWithLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param),
         softmax_layer_(new SoftmaxLayer<Dtype>(param)) {}
