@@ -37,10 +37,11 @@ int feature_extraction_pipeline(int argc, char** argv) {
     LOG(ERROR)<<
     "This program takes in a trained network and an input data layer, and then"
     " extract features of the input data produced by the net.\n"
-    "Usage: extract_features  pretrained_net_param"
-    "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
-    "  save_feature_dataset_name1[,name2,...]  num_mini_batches  db_type"
-    "  [CPU/GPU] [DEVICE_ID=0]\n"
+    "Usage: extract_features  pretrained_net_param\n"
+    "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]\n"
+    "  save_feature_dataset_name1[,name2,...]  num_mini_batches  db_type\n"
+    "  [CPU/GPU] [DEVICE_ID=0] [DB_BATCH_SIZE=100]\n"
+    "where db_type must be 'leveldb' or 'lmdb'.\n\n"
     "Note: you can extract multiple features in one pass by specifying"
     " multiple feature blob names and dataset names seperated by ','."
     " The names cannot contain white space characters and the number of blobs"
@@ -48,15 +49,27 @@ int feature_extraction_pipeline(int argc, char** argv) {
     return 1;
   }
   int arg_pos = num_required_args;
-
+  uint db_batch_size = 100;
+  uint device_id = 0;
+  bool using_gpu = false;
+  // Process optional args.
   arg_pos = num_required_args;
-  if (argc > arg_pos && strcmp(argv[arg_pos], "GPU") == 0) {
-    LOG(ERROR)<< "Using GPU";
-    uint device_id = 0;
-    if (argc > arg_pos + 1) {
-      device_id = atoi(argv[arg_pos + 1]);
+  while (arg_pos < argc) {
+    if ( arg_pos == num_required_args ) {
+      if (strcmp(argv[arg_pos], "GPU") == 0) {
+        using_gpu = true;
+      }
+    } else if (arg_pos == num_required_args+1) {
+      device_id = atoi(argv[arg_pos]);
       CHECK_GE(device_id, 0);
+    } else if (arg_pos == num_required_args+2) {
+      db_batch_size = atoi(argv[arg_pos]);
+      CHECK_GE(db_batch_size, 1);
     }
+    arg_pos++;
+  }
+  if (using_gpu) {
+    LOG(ERROR)<< "Using GPU";
     LOG(ERROR) << "Using Device_id=" << device_id;
     Caffe::SetDevice(device_id);
     Caffe::set_mode(Caffe::GPU);
@@ -64,6 +77,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     LOG(ERROR) << "Using CPU";
     Caffe::set_mode(Caffe::CPU);
   }
+  LOG(ERROR) << "Using DB batch size=" << db_batch_size;
   Caffe::set_phase(Caffe::TEST);
 
   arg_pos = 0;  // the name of the executable
@@ -121,11 +135,12 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   int num_mini_batches = atoi(argv[++arg_pos]);
 
+  std::string db_type(argv[++arg_pos]);
   std::vector<shared_ptr<Dataset<std::string, Datum> > > feature_dbs;
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
     shared_ptr<Dataset<std::string, Datum> > dataset =
-        DatasetFactory<std::string, Datum>(argv[++arg_pos]);
+        DatasetFactory<std::string, Datum>(db_type);
     CHECK(dataset->open(dataset_names.at(i), Dataset<std::string, Datum>::New));
     feature_dbs.push_back(dataset);
   }
@@ -160,7 +175,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
             image_indices[i]);
         CHECK(feature_dbs.at(i)->put(std::string(key_str, length), datum));
         ++image_indices[i];
-        if (image_indices[i] % 1000 == 0) {
+        if (image_indices[i] % db_batch_size == 0) {
           CHECK(feature_dbs.at(i)->commit());
           LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
               " query images for feature blob " << blob_names[i];
@@ -170,7 +185,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   }  // for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
   // write the last batch
   for (int i = 0; i < num_features; ++i) {
-    if (image_indices[i] % 1000 != 0) {
+    if (image_indices[i] % db_batch_size != 0) {
       CHECK(feature_dbs.at(i)->commit());
     }
     LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
