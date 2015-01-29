@@ -18,6 +18,7 @@ set(IN_EXT .in)            # generator input file extension
 set(GEN_EXT .gen.cmake)    # generated output file extension
 set(TEST_DEFINES_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp)
 set(TEST_DATA_FILE ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt)
+set(TEST_WINDOW_FILE ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_window.txt)
 
 # Function prepares name of a test executable
 #    @output_name -  output variable's name
@@ -30,6 +31,7 @@ endfunction()
 set(IN_FILES             # generator input files
     ${TEST_DEFINES_FILE}
     ${TEST_DATA_FILE}
+    ${TEST_WINDOW_FILE}
 )
 
 foreach(in_file ${IN_FILES})    
