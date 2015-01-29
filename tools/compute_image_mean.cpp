@@ -157,6 +157,7 @@ int main(int argc, char** argv) {
 
   // Clean up
   if (db_backend == "leveldb") {
+    delete it;
     delete db;
   } else if (db_backend == "lmdb") {
     mdb_cursor_close(mdb_cursor);
