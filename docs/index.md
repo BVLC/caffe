@@ -46,7 +46,7 @@ Tested on Ubuntu, Red Hat, OS X.
 BVLC suggests a standard distribution format for Caffe models, and provides trained models.
 * [Developing & Contributing](/development.html)<br>
 Guidelines for development and contributing to Caffe.
-* [API Documentation](/doxygen/)<br>
+* [API Documentation](/doxygen/annotated.html)<br>
 Developer documentation automagically generated from code comments.
 
 ### Examples
