@@ -210,7 +210,7 @@ message NetStateRule {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 42 (last added: exp_param)
+// LayerParameter next available ID: 43 (last added: loss_param)
 message LayerParameter {
   repeated string bottom = 2; // the name of the bottom blobs
   repeated string top = 3; // the name of the top blobs
@@ -335,6 +335,9 @@ message LayerParameter {
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
 
+  // Parameters shared by loss layers.
+  optional LossParameter loss_param = 42;
+
   // Note: certain layers may have more than one computational engine
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
@@ -363,6 +366,15 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
+}
+
+// Message that stores parameters shared by loss layers
+message LossParameter {
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 1;
+  // If true, normalize each batch across all instances (including spatial
+  // dimesions, but not ignored instances); else, divide by batch size only.
+  optional bool normalize = 2 [default = true];
 }
 
 // Message that stores parameters used by AccuracyLayer
