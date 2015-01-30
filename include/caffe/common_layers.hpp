@@ -487,6 +487,42 @@ class SliceLayer : public Layer<Dtype> {
   vector<int> slice_point_;
 };
 
+// Forward declaration
+template <typename Dtype>
+class IndexedDataReader;
+
+/**
+ * @brief Takes a label input and transform it into an blob
+ *        by looking up a mapping
+ */
+template <typename Dtype>
+class IndirectionLayer : public Layer<Dtype> {
+ public:
+  explicit IndirectionLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_INDIRECTION;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+
+  std::vector<shared_ptr<IndexedDataReader<Dtype> > > readers_;
+  int data_length_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_LAYERS_HPP_

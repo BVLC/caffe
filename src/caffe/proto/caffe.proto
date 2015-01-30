@@ -231,7 +231,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 39 (last added: EXP)
+  // LayerType next available ID: 40 (last added: INDIRECTION)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -256,6 +256,7 @@ message LayerParameter {
     HINGE_LOSS = 28;
     IM2COL = 11;
     IMAGE_DATA = 12;
+    INDIRECTION = 40;
     INFOGAIN_LOSS = 13;
     INNER_PRODUCT = 14;
     LRN = 15;
@@ -317,6 +318,7 @@ message LayerParameter {
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional HingeLossParameter hinge_loss_param = 29;
   optional ImageDataParameter image_data_param = 15;
+  optional IndirectionParameter indirection_param = 42;
   optional InfogainLossParameter infogain_loss_param = 16;
   optional InnerProductParameter inner_product_param = 17;
   optional LRNParameter lrn_param = 18;
@@ -561,6 +563,39 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+}
+
+// Message that store parameters for IndirectionLayer
+message IndirectionParameter {
+  enum IndirectionSourceType {
+    // Each line of the source file consists of numbers separated by whitespace
+    SIMPLE_TEXT = 0;
+    // Each line of the source file is a path to an unstructured binary file
+    INDEXED_BINARY = 1;
+    // Each line of the source file is a path to a binary BlobProto file
+    INDEXED_BLOB = 2;
+  }
+  optional IndirectionSourceType type = 1;
+  // The source file for index mapping
+  repeated string source = 2;
+
+  // The product of channels, height and width must equal to array length 
+  // in the source
+  optional uint32 channels = 3 [default = 1];
+  optional uint32 height = 4 [default = 1];
+  optional uint32 width = 5 [default = 1];
+  enum IndirectionCacheType {
+    NONE = 0;  // No cache is used
+    WHOLE = 1;  // The data is cached as a whole in memory
+
+    // Part of the data is cached; replacement is based on clock algorithm
+    CLOCK = 2;
+  }
+  optional IndirectionCacheType cache_type = 6;
+
+  // The following parameters are used only with partial cache
+  optional uint32 cache_block_size = 7 [default = 256];
+  optional uint32 cache_block_num = 8 [default = 8];
 }
 
 // Message that stores parameters InfogainLossLayer
