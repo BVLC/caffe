@@ -18,7 +18,8 @@ set(IN_EXT .in)            # generator input file extension
 set(GEN_EXT .gen.cmake)    # generated output file extension
 set(TEST_DEFINES_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake_test_defines.hpp)
 set(TEST_DATA_FILE ${CMAKE_CURRENT_SOURCE_DIR}/test_data/sample_data_list.txt)
-
+set(TEST_CATEGORICAL_DATA_FILE_FLOAT ${CMAKE_CURRENT_SOURCE_DIR}/test_data/categorical_hdf5_sample_data_list_float.txt)
+set(TEST_CATEGORICAL_DATA_FILE_DOUBLE ${CMAKE_CURRENT_SOURCE_DIR}/test_data/categorical_hdf5_sample_data_list_double.txt)
 # Function prepares name of a test executable
 #    @output_name -  output variable's name
 #    @filename    -  test_*.cpp file path
@@ -30,6 +31,8 @@ endfunction()
 set(IN_FILES             # generator input files
     ${TEST_DEFINES_FILE}
     ${TEST_DATA_FILE}
+    ${TEST_CATEGORICAL_DATA_FILE_FLOAT}
+    ${TEST_CATEGORICAL_DATA_FILE_DOUBLE}
 )
 
 foreach(in_file ${IN_FILES})
