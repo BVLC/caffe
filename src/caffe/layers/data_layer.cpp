@@ -7,7 +7,6 @@
 
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
-#include "caffe/dataset_factory.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/benchmark.hpp"
@@ -20,35 +19,28 @@ namespace caffe {
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
-  // clean up the dataset resources
-  dataset_->close();
 }
 
 template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Initialize DB
-  dataset_ = DatasetFactory<string, Datum>(
-      this->layer_param_.data_param().backend());
-  const string& source = this->layer_param_.data_param().source();
-  LOG(INFO) << "Opening dataset " << source;
-  CHECK(dataset_->open(source, Dataset<string, Datum>::ReadOnly));
-  iter_ = dataset_->begin();
+  db_.reset(db::GetDB(this->layer_param_.data_param().backend()));
+  db_->Open(this->layer_param_.data_param().source(), db::READ);
+  cursor_.reset(db_->NewCursor());
 
-  // Check if we would need to randomly skip a few data points
+  // Check if we should randomly skip a few data points
   if (this->layer_param_.data_param().rand_skip()) {
     unsigned int skip = caffe_rng_rand() %
                         this->layer_param_.data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
-      if (++iter_ == dataset_->end()) {
-        iter_ = dataset_->begin();
-      }
+      cursor_->Next();
     }
   }
   // Read a data point, and use it to initialize the top blob.
-  CHECK(iter_ != dataset_->end());
-  Datum datum = iter_->value;
+  Datum datum;
+  datum.ParseFromString(cursor_->value());
 
   if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
@@ -101,8 +93,8 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
-    CHECK(iter_ != dataset_->end());
-    const Datum& datum = iter_->value;
+    Datum datum;
+    datum.ParseFromString(cursor_->value());
 
     cv::Mat cv_img;
     if (datum.encoded()) {
@@ -124,9 +116,10 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     }
     trans_time += timer.MicroSeconds();
     // go to the next iter
-    ++iter_;
-    if (iter_ == dataset_->end()) {
-      iter_ = dataset_->begin();
+    cursor_->Next();
+    if (!cursor_->valid()) {
+      DLOG(INFO) << "Restarting data prefetching from start.";
+      cursor_->SeekToFirst();
     }
   }
   batch_timer.Stop();
@@ -137,4 +130,5 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
 INSTANTIATE_CLASS(DataLayer);
 REGISTER_LAYER_CLASS(DATA, DataLayer);
+
 }  // namespace caffe
