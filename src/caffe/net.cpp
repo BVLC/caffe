@@ -58,6 +58,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   bottom_vecs_.resize(param.layers_size());
   top_vecs_.resize(param.layers_size());
   bottom_id_vecs_.resize(param.layers_size());
+  param_id_vecs_.resize(param.layers_size());
   top_id_vecs_.resize(param.layers_size());
   bottom_need_backward_.resize(param.layers_size());
   for (int layer_id = 0; layer_id < param.layers_size(); ++layer_id) {
@@ -217,10 +218,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
   GetLearningRateAndWeightDecay();
+  debug_info_ = param.debug_info();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
-  // Don't display debug info by default.
-  debug_info_ = false;
 }
 
 template <typename Dtype>
@@ -416,6 +416,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   }
   const int net_param_id = params_.size();
   params_.push_back(layers_[layer_id]->blobs()[param_id]);
+  param_id_vecs_[layer_id].push_back(net_param_id);
   param_layer_indices_.push_back(make_pair(layer_id, param_id));
   if (!param_size || !param_name.size() || (param_name.size() &&
       param_names_index_.find(param_name) == param_names_index_.end())) {
@@ -503,6 +504,11 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
+  if (debug_info_) {
+    for (int i = 0; i < net_input_blobs_.size(); ++i) {
+      InputDebugInfo(i);
+    }
+  }
   for (int i = start; i <= end; ++i) {
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
@@ -578,6 +584,15 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 }
 
 template <typename Dtype>
+void Net<Dtype>::InputDebugInfo(const int input_id) {
+  const Blob<Dtype>& blob = *net_input_blobs_[input_id];
+  const string& blob_name = blob_names_[net_input_blob_indices_[input_id]];
+  const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
+  LOG(INFO) << "    [Forward] "
+     << "Input " << blob_name << " data: " << data_abs_val_mean;
+}
+
+template <typename Dtype>
 void Net<Dtype>::ForwardDebugInfo(const int layer_id) {
   for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
     const Blob<Dtype>& blob = *top_vecs_[layer_id][top_id];
@@ -585,6 +600,16 @@ void Net<Dtype>::ForwardDebugInfo(const int layer_id) {
     const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
     LOG(INFO) << "    [Forward] "
        << "Layer " << layer_names_[layer_id] << ", top blob " << blob_name
+       << " data: " << data_abs_val_mean;
+  }
+  for (int param_id = 0; param_id < layers_[layer_id]->blobs().size();
+       ++param_id) {
+    const Blob<Dtype>& blob = *layers_[layer_id]->blobs()[param_id];
+    const int net_param_id = param_id_vecs_[layer_id][param_id];
+    const string& blob_name = param_display_names_[net_param_id];
+    const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
+    LOG(INFO) << "    [Forward] "
+       << "Layer " << layer_names_[layer_id] << ", param blob " << blob_name
        << " data: " << data_abs_val_mean;
   }
 }
@@ -679,6 +704,21 @@ void Net<Dtype>::BackwardTo(int end) {
 template <typename Dtype>
 void Net<Dtype>::Backward() {
   BackwardFromTo(layers_.size() - 1, 0);
+  if (debug_info_) {
+    Dtype asum_data = 0, asum_diff = 0, sumsq_data = 0, sumsq_diff = 0;
+    for (int i = 0; i < params_.size(); ++i) {
+      if (param_owners_[i] >= 0) { continue; }
+      asum_data += params_[i]->asum_data();
+      asum_diff += params_[i]->asum_diff();
+      sumsq_data += params_[i]->sumsq_data();
+      sumsq_diff += params_[i]->sumsq_diff();
+    }
+    const Dtype l2norm_data = std::sqrt(sumsq_data);
+    const Dtype l2norm_diff = std::sqrt(sumsq_diff);
+    LOG(ERROR) << "    [Backward] All net params (data, diff): "
+        << "L1 norm = (" << asum_data << ", " << asum_diff << "); "
+        << "L2 norm = (" << l2norm_data << ", " << l2norm_diff << ")";
+  }
 }
 
 template <typename Dtype>
