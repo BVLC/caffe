@@ -197,6 +197,16 @@ void caffe_sqr<double>(const int n, const double* a, double* y) {
 }
 
 template <>
+void caffe_sqrt<float>(const int n, const float* a, float* y) {
+  vsSqrt(n, a, y);
+}
+
+template <>
+void caffe_sqrt<double>(const int n, const double* a, double* y) {
+  vdSqrt(n, a, y);
+}
+
+template <>
 void caffe_exp<float>(const int n, const float* a, float* y) {
   vsExp(n, a, y);
 }
@@ -385,6 +395,29 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
                              double* y) {
   cblas_dcopy(n, x, 1, y, 1);
   cblas_dscal(n, alpha, y, 1);
+}
+
+
+template <>
+void caffe_clamp<float>(const int n, float m, float M, float* y) {
+  for (int i = 0; i < n; ++i) {
+    float x = y[i];
+    if (x < m)
+      x = m;
+    else if (x > M)
+      x = M;
+  }
+}
+
+template <>
+void caffe_clamp<double>(const int n, double m, double M, double* y) {
+  for (int i = 0; i < n; ++i) {
+    double x = y[i];
+    if (x < m)
+      x = m;
+    else if (x > M)
+      x = M;
+  }
 }
 
 }  // namespace caffe

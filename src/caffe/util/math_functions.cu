@@ -420,4 +420,48 @@ void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
       curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
 }
 
+template <typename Dtype>
+__global__ void clamp_kernel(const int n, const Dtype m, const Dtype M,
+  Dtype* X) {
+  CUDA_KERNEL_LOOP(index, n) {
+    // NOLINT_NEXT_LINE(build/include_what_you_use
+    X[index] = max(m, min(M, X[index]));
+  }
+}
+
+template <>
+void caffe_gpu_clamp<float>(const int N, const float m, const float M,
+  float* X) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  clamp_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+    N, m, M, X);
+}
+
+template <>
+void caffe_gpu_clamp<double>(const int N, const double m, const double M,
+  double* X) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  clamp_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+    N, m, M, X);
+}
+
+template <typename Dtype>
+__global__ void sqrt_kernel(const int n, const Dtype* a, Dtype* y) {
+  CUDA_KERNEL_LOOP(index, n) {
+    y[index] = sqrt(a[index]);
+  }
+}
+
+template <>
+void caffe_gpu_sqrt<float>(const int N, const float* a, float* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  sqrt_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, a, y);
+}
+
+template <>
+void caffe_gpu_sqrt<double>(const int N, const double* a, double* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  sqrt_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, a, y);
+}
+
 }  // namespace caffe

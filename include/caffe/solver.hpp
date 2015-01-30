@@ -90,6 +90,9 @@ class SGDSolver : public Solver<Dtype> {
   //   of gradients/updates and is not needed in snapshots
   vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
 
+  template <typename BlobAccessor, typename Fluent>
+  void Compute();
+
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
 
@@ -103,6 +106,9 @@ class NesterovSolver : public SGDSolver<Dtype> {
 
  protected:
   virtual void ComputeUpdateValue();
+
+  template <typename BlobAccessor, typename Fluent>
+  void Compute();
 
   DISABLE_COPY_AND_ASSIGN(NesterovSolver);
 };
@@ -121,6 +127,9 @@ class AdaGradSolver : public SGDSolver<Dtype> {
     CHECK_EQ(0, this->param_.momentum())
         << "Momentum cannot be used with AdaGrad.";
   }
+
+  template <typename BlobAccessor, typename Fluent>
+  void Compute();
 
   DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
 };
