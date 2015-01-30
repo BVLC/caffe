@@ -145,8 +145,8 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
 
   cudnnHandle_t* handle_;
   cudaStream_t*  stream_;
-  vector<cudnnTensor4dDescriptor_t> bottom_descs_, top_descs_;
-  cudnnTensor4dDescriptor_t    bias_desc_;
+  vector<cudnnTensorDescriptor_t> bottom_descs_, top_descs_;
+  cudnnTensorDescriptor_t    bias_desc_;
   cudnnFilterDescriptor_t      filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
   int bottom_offset_, top_offset_, weight_offset_, bias_offset_;
@@ -344,7 +344,7 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 
   cudnnHandle_t             handle_;
-  cudnnTensor4dDescriptor_t bottom_desc_, top_desc_;
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
   cudnnPoolingDescriptor_t  pooling_desc_;
   cudnnPoolingMode_t        mode_;
 };
