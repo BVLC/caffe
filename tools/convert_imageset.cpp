@@ -8,28 +8,31 @@
 //   subfolder1/file1.JPEG 7
 //   ....
 
-#include <gflags/gflags.h>
-#include <glog/logging.h>
-
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "caffe/dataset_factory.hpp"
+#include "boost/scoped_ptr.hpp"
+#include "gflags/gflags.h"
+#include "glog/logging.h"
+
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
+using boost::scoped_ptr;
 
 DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
 DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
-DEFINE_string(backend, "lmdb", "The backend for storing the result");
+DEFINE_string(backend, "lmdb",
+        "The backend {lmdb, leveldb} for storing the result");
 DEFINE_int32(resize_width, 0, "Width images are resized to");
 DEFINE_int32(resize_height, 0, "Height images are resized to");
 DEFINE_bool(check_size, false,
@@ -75,9 +78,6 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
-  const std::string& db_backend = FLAGS_backend;
-  const char* db_path = argv[3];
-
   if (encoded) {
     CHECK_EQ(FLAGS_resize_height, 0) << "With encoded don't resize images";
     CHECK_EQ(FLAGS_resize_width, 0) << "With encoded don't resize images";
@@ -87,12 +87,10 @@ int main(int argc, char** argv) {
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
-  // Open new db
-  shared_ptr<Dataset<string, Datum> > dataset =
-      DatasetFactory<string, Datum>(db_backend);
-
-  // Open db
-  CHECK(dataset->open(db_path, Dataset<string, Datum>::New));
+  // Create new DB
+  scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
+  db->Open(argv[3], db::NEW);
+  scoped_ptr<db::Transaction> txn(db->NewTransaction());
 
   // Storing to db
   std::string root_folder(argv[1]);
@@ -128,19 +126,21 @@ int main(int argc, char** argv) {
         lines[line_id].first.c_str());
 
     // Put in db
-    CHECK(dataset->put(string(key_cstr, length), datum));
+    string out;
+    CHECK(datum.SerializeToString(&out));
+    txn->Put(string(key_cstr, length), out);
 
     if (++count % 1000 == 0) {
-      // Commit txn
-      CHECK(dataset->commit());
+      // Commit db
+      txn->Commit();
+      txn.reset(db->NewTransaction());
       LOG(ERROR) << "Processed " << count << " files.";
     }
   }
   // write the last batch
   if (count % 1000 != 0) {
-    CHECK(dataset->commit());
+    txn->Commit();
     LOG(ERROR) << "Processed " << count << " files.";
   }
-  dataset->close();
   return 0;
 }
