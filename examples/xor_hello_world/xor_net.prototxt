@@ -1,0 +1,45 @@
+name: "SIMPLE_XOR_NET"
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+  hdf5_data_param {
+    source: "xor_data.filelist.txt"
+  }
+}
+layers {
+  name: "fully_connected"
+  type: INNER_PRODUCT
+  bottom: "data"
+  top: "fully_connected"
+  blobs_lr: 1
+  blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 0
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layers {
+  name: "loss"
+  type: SOFTMAX_LOSS
+  bottom: "fully_connected"
+  bottom: "label"
+  top: "loss"
+}
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "fully_connected"
+  bottom: "label"
+  top: "accuracy"
+}
