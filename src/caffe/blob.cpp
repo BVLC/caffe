@@ -433,7 +433,7 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::FromProto(const BlobProto& proto) {
+void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   vector<int> shape;
   if (proto.has_num() || proto.has_channels() ||
       proto.has_height() || proto.has_width()) {
@@ -450,7 +450,9 @@ void Blob<Dtype>::FromProto(const BlobProto& proto) {
       shape[i] = proto.shape().dim(i);
     }
   }
-  Reshape(shape);
+  if (reshape) {
+    Reshape(shape);
+  }
   // copy data
   Dtype* data_vec = mutable_cpu_data();
   for (int i = 0; i < count_; ++i) {

@@ -706,7 +706,8 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       CHECK(target_blobs[j]->ShapeEquals(source_layer.blobs(j)));
-      target_blobs[j]->FromProto(source_layer.blobs(j));
+      const bool kReshape = false;
+      target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
     }
   }
 }
