@@ -431,24 +431,28 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::FromProto(const BlobProto& proto) {
-  vector<int> shape;
-  if (proto.has_num() || proto.has_channels() ||
-      proto.has_height() || proto.has_width()) {
-    // Using deprecated 4D Blob dimensions --
-    // shape is (num, channels, height, width).
-    shape.resize(4);
-    shape[0] = proto.num();
-    shape[1] = proto.channels();
-    shape[2] = proto.height();
-    shape[3] = proto.width();
-  } else {
-    shape.resize(proto.shape().dim_size());
-    for (int i = 0; i < proto.shape().dim_size(); ++i) {
-      shape[i] = proto.shape().dim(i);
+void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
+  if (reshape) {
+    vector<int> shape;
+    if (proto.has_num() || proto.has_channels() ||
+        proto.has_height() || proto.has_width()) {
+      // Using deprecated 4D Blob dimensions --
+      // shape is (num, channels, height, width).
+      shape.resize(4);
+      shape[0] = proto.num();
+      shape[1] = proto.channels();
+      shape[2] = proto.height();
+      shape[3] = proto.width();
+    } else {
+      shape.resize(proto.shape().dim_size());
+      for (int i = 0; i < proto.shape().dim_size(); ++i) {
+        shape[i] = proto.shape().dim(i);
+      }
     }
+    Reshape(shape);
+  } else {
+    CHECK(ShapeEquals(proto)) << "shape mismatch (reshape not set)";
   }
-  Reshape(shape);
   // copy data
   Dtype* data_vec = mutable_cpu_data();
   for (int i = 0; i < count_; ++i) {
