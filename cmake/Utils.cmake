@@ -363,3 +363,19 @@ function(caffe_parse_linker_libs Caffe_LINKER_LIBS_variable folders_var flags_va
   set(${flags_var} ${libflags} PARENT_SCOPE)
   set(${frameworks_var} ${__framework} PARENT_SCOPE)
 endfunction()
+
+################################################################################################
+# Helper function to detect Darwin version, i.e. 10.8, 10.9, 10.10, ....
+# Usage:
+#   caffe_detect_darwin_version(<version_variable>)
+function(caffe_detect_darwin_version output_var)
+  if(APPLE)
+    execute_process(COMMAND /usr/bin/sw_vers -productVersion
+                    RESULT_VARIABLE __sw_vers OUTPUT_VARIABLE __sw_vers_out
+                    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    set(${output_var} ${__sw_vers_out} PARENT_SCOPE)
+  else()
+    set(${output_var} "" PARENT_SCOPE)
+  endif()
+endfunction()

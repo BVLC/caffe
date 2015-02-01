@@ -35,7 +35,7 @@ file(GLOB Matlab_srcs caffe/matcaffe.cpp)
 set(Matlab_caffe_mex ${CMAKE_SOURCE_DIR}/matlab/caffe/caffe.mex)
 
 caffe_get_current_cflags(cflags)
-caffe_parse_linker_libs(Caffe_LINKER_LIBS folders libflags macos_framewoks)
+caffe_parse_linker_libs(Caffe_LINKER_LIBS folders libflags macos_frameworks)
 set(folders $<TARGET_LINKER_FILE_DIR:caffe> ${folders})
 
 # prepare linker flag lists
