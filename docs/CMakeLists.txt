@@ -28,7 +28,7 @@ function(gather_readmes_as_prebuild_cmd target gathered_dir root)
       add_custom_command(TARGET ${target} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory ${new_folder}
         COMMAND ln -sf ${root}/${file} ${new_filename}
-        COMMENT "Creating simlink ${new_filename} -> ${root}/${file}"
+        COMMENT "Creating symlink ${new_filename} -> ${root}/${file}"
         WORKING_DIRECTORY ${root} VERBATIM)
     endif()
   endforeach()
@@ -94,11 +94,11 @@ if(NOT IS_ABSOLUTE ${output_dir})
   get_filename_component(output_dir ${output_dir} ABSOLUTE)
 endif()
 
-# creates simlink in docs subfolder to code documentation built by doxygen
+# creates symlink in docs subfolder to code documentation built by doxygen
 add_custom_command(TARGET docs POST_BUILD VERBATIM
                    COMMAND ln -sfn "${output_dir}/html" doxygen
                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs
-                   COMMENT "Creating simlink ${CMAKE_SOURCE_DIR}/docs/doxygen -> ${output_dir}/html")
+                   COMMENT "Creating symlink ${CMAKE_SOURCE_DIR}/docs/doxygen -> ${output_dir}/html")
 
 # for quick launch of jekyll
 add_custom_target(jekyll COMMAND jekyll serve -w -s . -d _site --port=4000

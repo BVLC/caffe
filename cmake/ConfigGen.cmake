@@ -38,14 +38,21 @@ function(caffe_generate_export_configs)
 
   # ---[ Configure build-tree CaffeConfig.cmake file ]---
   caffe_get_current_includes(Caffe_INCLUDE_DIRS)
+
+  set(Caffe_DEFINITIONS "")
   if(NOT HAVE_CUDA)
     set(HAVE_CUDA FALSE)
-    set(Caffe_DEFINITIONS -DCPU_ONLY)
+    list(APPEND Caffe_DEFINITIONS -DCPU_ONLY)
   endif()
+
   if(NOT HAVE_CUDNN)
     set(HAVE_CUDNN FALSE)
   else()
-    set(Caffe_DEFINITIONS -DUSE_CUDNN)
+    list(APPEND DEFINITIONS -DUSE_CUDNN)
+  endif()
+
+  if(BLAS STREQUAL "MKL" OR BLAS STREQUAL "mkl")
+    list(APPEND Caffe_DEFINITIONS -DUSE_MKL)
   endif()
 
   configure_file("cmake/Templates/CaffeConfig.cmake.in" "${CMAKE_BINARY_DIR}/CaffeConfig.cmake" @ONLY)

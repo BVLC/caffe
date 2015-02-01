@@ -34,8 +34,8 @@ set(CMAKE_MACOSX_RPATH TRUE)
 
 # ---[ Funny target
 if(UNIX OR APPLE)
-  add_custom_target(simlink_to_build COMMAND "ln" "-sf" "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/build"
-                                     COMMENT "Adding simlink: <caffe_root>/build -> ${CMAKE_BINARY_DIR}" )
+  add_custom_target(symlink_to_build COMMAND "ln" "-sf" "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/build"
+                                     COMMENT "Adding symlink: <caffe_root>/build -> ${CMAKE_BINARY_DIR}" )
 endif()
 
 # ---[ Set debug postfix
