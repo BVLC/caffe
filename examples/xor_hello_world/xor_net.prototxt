@@ -6,6 +6,7 @@ layers {
   top: "label"
   hdf5_data_param {
     source: "xor_data.filelist.txt"
+    batch_size: 1
   }
 }
 layers {
