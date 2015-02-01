@@ -15,7 +15,7 @@ if(UNIX OR APPLE)
     set(__linkname "${CMAKE_SOURCE_DIR}/python/_caffe.so")
     add_custom_command(TARGET pycaffe POST_BUILD
                        COMMAND ln -sf $<TARGET_LINKER_FILE:caffe> "${CMAKE_SOURCE_DIR}/python/_caffe.so"
-                       COMMENT "Creating simlink ${__linkname} -> ${CMAKE_BINARY_DIR}/lib/_caffe${CAffe_POSTFIX}.so")
+                       COMMENT "Creating symlink ${__linkname} -> ${CMAKE_BINARY_DIR}/lib/_caffe${CAffe_POSTFIX}.so")
 endif()
 
 # ---[ Install
