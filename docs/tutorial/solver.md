@@ -126,7 +126,7 @@ Note that in practice, for weights $$ W \in \mathcal{R}^d $$, AdaGrad implementa
 
 ### NAG
 
-**Nesterov's accelerated gradient** (`solver_type: NAG`) was proposed by Nesterov [1] as an "optimal" method of convex optimization, achieving a convergence rate of $$ \mathcal{O}(1/t^2) $$ rather than the $$ \mathcal{O}(1/t) $$.
+**Nesterov's accelerated gradient** (`solver_type: NESTOROV`) was proposed by Nesterov [1] as an "optimal" method of convex optimization, achieving a convergence rate of $$ \mathcal{O}(1/t^2) $$ rather than the $$ \mathcal{O}(1/t) $$.
 Though the required assumptions to achieve the $$ \mathcal{O}(1/t^2) $$ convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].
 
 The weight update formulas look very similar to the SGD updates given above:
