@@ -343,7 +343,7 @@ static void read_mean(MEX_ARGS) {
     }
     const string& mean_file = mxArrayToString(prhs[0]);
     Blob<float> data_mean;
-    LOG(INFO) << "Loading mean file from" << mean_file;
+    LOG(INFO) << "Loading mean file from: " << mean_file;
     BlobProto blob_proto;
     bool result = ReadProtoFromBinaryFile(mean_file.c_str(), &blob_proto);
     if (!result) {
