@@ -54,7 +54,7 @@ void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(BNLLLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(BNLLLayer);
 
 
 }  // namespace caffe

@@ -38,6 +38,6 @@ void HDF5OutputLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   return;
 }
 
-INSTANTIATE_CLASS(HDF5OutputLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(HDF5OutputLayer);
 
 }  // namespace caffe

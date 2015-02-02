@@ -51,6 +51,6 @@ void InnerProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(InnerProductLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(InnerProductLayer);
 
 }  // namespace caffe

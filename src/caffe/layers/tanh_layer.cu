@@ -54,7 +54,7 @@ void TanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(TanHLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(TanHLayer);
 
 
 }  // namespace caffe

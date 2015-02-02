@@ -148,7 +148,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
 }
 
-INSTANTIATE_CLASS(SoftmaxLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(SoftmaxLayer);
 
 
 }  // namespace caffe
