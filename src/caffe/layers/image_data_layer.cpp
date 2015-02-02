@@ -1,3 +1,5 @@
+#include <opencv2/core/core.hpp>
+
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
 #include <string>

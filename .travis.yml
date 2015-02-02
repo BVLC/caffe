@@ -22,7 +22,8 @@ install:
   - sudo -E $SCRIPTS/travis_install.sh
 
 before_script:
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/cuda/lib64
+  - export PATH=/home/travis/miniconda/bin:$PATH
   - if ! $WITH_CMAKE; then $SCRIPTS/travis_setup_makefile_config.sh; fi
 
 script: $SCRIPTS/travis_build_and_test.sh

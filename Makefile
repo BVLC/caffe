@@ -234,15 +234,14 @@ endif
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
+	CXXFLAGS += -stdlib=libstdc++
+	LINKFLAGS += -stdlib=libstdc++
 	# clang throws this warning for cuda headers
 	WARNINGS += -Wno-unneeded-internal-declaration
-	ifneq ($(findstring 10.9, $(shell sw_vers -productVersion)),)
-		CXXFLAGS += -stdlib=libstdc++
-		LINKFLAGS += -stdlib=libstdc++
-	endif
+	# gtest needs to use its own tuple to not conflict with clang
+	CXXFLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
 	LIBRARIES += boost_thread-mt
-        NVCCFLAGS += -DOSX
 endif
 
 # Custom compiler
@@ -304,9 +303,16 @@ else
 		endif
 	else ifeq ($(OSX), 1)
 		# OS X packages atlas as the vecLib framework
-		BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
 		LIBRARIES += cblas
-		LDFLAGS += -framework vecLib
+		# 10.10 has accelerate while 10.9 has veclib
+		XCODE_CLT_VER := $(shell pkgutil --pkg-info=com.apple.pkg.CLTools_Executables | grep -o 'version: 6')
+		ifneq (,$(findstring version: 6,$(XCODE_CLT_VER)))
+			BLAS_INCLUDE ?= /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Headers/
+			LDFLAGS += -framework Accelerate
+		else
+			BLAS_INCLUDE ?= /System/Library/Frameworks/vecLib.framework/Versions/Current/Headers/
+			LDFLAGS += -framework vecLib
+		endif
 	endif
 endif
 INCLUDE_DIRS += $(BLAS_INCLUDE)
@@ -334,6 +340,7 @@ endif
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) $(PKG_CONFIG) \
 		$(foreach library,$(LIBRARIES),-l$(library))
 PYTHON_LDFLAGS := $(LDFLAGS) $(foreach library,$(PYTHON_LIBRARIES),-l$(library))
+DYNAMIC_LDFLAGS := -l$(PROJECT) -Wl,-rpath,\$$ORIGIN/../lib
 
 # 'superclean' target recursively* deletes all files ending with an extension
 # in $(SUPERCLEAN_EXTS) below.  This may be useful if you've built older
@@ -434,6 +441,9 @@ runtest: $(TEST_ALL_BIN) $(TEST_ALL_DYNLINK_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER) && \
 	$(TEST_ALL_DYNLINK_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
 
+pytest: py
+	cd python; python -m unittest discover -s caffe/test
+
 warn: $(EMPTY_WARN_REPORT)
 
 $(EMPTY_WARN_REPORT): $(ALL_WARNS) | $(BUILD_DIR)
@@ -465,11 +475,11 @@ $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
 $(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
-	@ echo LD $<
+	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)
 
 $(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
-	@ echo AR $<
+	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
 $(BUILD_DIR)/%.o: %.cpp | $(ALL_BUILD_DIRS)
@@ -503,7 +513,7 @@ $(TEST_ALL_DYNLINK_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) $(DYNAMIC_NA
 		| $(TEST_BIN_DIR)
 	@ echo CXX/LD -o $@ $<
 	$(Q)$(CXX) $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \
-		-o $@ $(LINKFLAGS) $(LDFLAGS) -l$(PROJECT) -Wl,-rpath,$(LIB_BUILD_DIR)
+		-o $@ $(LINKFLAGS) $(LDFLAGS) $(DYNAMIC_LDFLAGS)
 
 $(TEST_CU_BINS): $(TEST_BIN_DIR)/%.testbin: $(TEST_CU_BUILD_DIR)/%.o \
 	$(GTEST_OBJ) $(STATIC_NAME) | $(TEST_BIN_DIR)

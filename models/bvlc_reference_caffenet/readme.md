@@ -2,7 +2,7 @@
 name: BVLC CaffeNet Model
 caffemodel: bvlc_reference_caffenet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_caffenet.caffemodel
-license: non-commercial
+license: unrestricted
 sha1: 4c8d77deb20ea792f84eb5e6d0a11ca0a8660a46
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
 ---
@@ -22,6 +22,4 @@ This model was trained by Jeff Donahue @jeffdonahue
 
 ## License
 
-The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
-"Researcher shall use the Database only for non-commercial research and educational purposes."
-Accordingly, this model is distributed under a non-commercial license.
+This model is released for unrestricted use.

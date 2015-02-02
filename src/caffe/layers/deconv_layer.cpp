@@ -9,22 +9,22 @@
 namespace caffe {
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::compute_output_shape() {
-  this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
-      / this->stride_h_ + 1;
-  this->width_out_ = (this->width_ + 2 * this->pad_w_ - this->kernel_w_)
-      / this->stride_w_ + 1;
+void DeconvolutionLayer<Dtype>::compute_output_shape() {
+  this->height_out_ = this->stride_h_ * (this->height_ - 1) + this->kernel_h_
+      - 2 * this->pad_h_;
+  this->width_out_ = this->stride_w_ * (this->width_ - 1) + this->kernel_w_
+      - 2 * this->pad_w_;
 }
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + bottom[i]->offset(n), weight,
+      this->backward_cpu_gemm(bottom_data + bottom[i]->offset(n), weight,
           top_data + top[i]->offset(n));
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
@@ -35,7 +35,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
@@ -59,15 +59,17 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       for (int n = 0; n < this->num_; ++n) {
-        // gradient w.r.t. weight. Note that we will accumulate diffs.
+        // Gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          this->weight_cpu_gemm(bottom_data + bottom[i]->offset(n),
-              top_diff + top[i]->offset(n), weight_diff);
+          this->weight_cpu_gemm(top_diff + top[i]->offset(n),
+              bottom_data + bottom[i]->offset(n), weight_diff);
         }
-        // gradient w.r.t. bottom data, if necessary.
+        // Gradient w.r.t. bottom data, if necessary, reusing the column buffer
+        // we might have just computed above.
         if (propagate_down[i]) {
-          this->backward_cpu_gemm(top_diff + top[i]->offset(n), weight,
-              bottom_diff + bottom[i]->offset(n));
+          this->forward_cpu_gemm(top_diff + top[i]->offset(n), weight,
+              bottom_diff + bottom[i]->offset(n),
+              this->param_propagate_down_[0]);
         }
       }
     }
@@ -75,8 +77,9 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(ConvolutionLayer);
+STUB_GPU(DeconvolutionLayer);
 #endif
 
-INSTANTIATE_CLASS(ConvolutionLayer);
+INSTANTIATE_CLASS(DeconvolutionLayer);
+REGISTER_LAYER_CLASS(DECONVOLUTION, DeconvolutionLayer);
 }  // namespace caffe

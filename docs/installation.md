@@ -5,7 +5,7 @@ title: Installation
 # Installation
 
 Prior to installing, it is best to read through this guide and take note of the details for your platform.
-We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.
+We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.10, 10.9, and 10.8.
 
 - [Prerequisites](#prerequisites)
 - [Compilation](#compilation)
@@ -17,7 +17,7 @@ Caffe depends on several software packages.
 
 * [CUDA](https://developer.nvidia.com/cuda-zone) library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)
 * [BLAS](http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) (provided via ATLAS, MKL, or OpenBLAS).
-* [OpenCV](http://opencv.org/).
+* [OpenCV](http://opencv.org/) (>= 2.4)
 * [Boost](http://www.boost.org/) (>= 1.55, although only 1.55 and 1.56 are tested)
 * `glog`, `gflags`, `protobuf`, `leveldb`, `snappy`, `hdf5`, `lmdb`
 * For the Python wrapper
@@ -141,7 +141,7 @@ Do `brew edit opencv` and change the lines that look like the two lines below to
 **NOTE**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
 In other `ENV` settings, things may not work as expected.
 
-**NOTE**: There is currently a conflict between boost 1.56 and CUDA in some configurations. Check the [conflict description](https://github.com/BVLC/caffe/issues/1193#issuecomment-57491906) and try downgrading to 1.55.
+**NOTE**: There is currently a conflict between boost 1.56 and CUDA in some configurations. Check the [conflict description](https://github.com/BVLC/caffe/issues/1193#issuecomment-57491906) and try downgrading to 1.55 or upgrading to 1.57.
 
 #### 10.8-specific Instructions
 
@@ -156,9 +156,9 @@ Building boost from source is needed to link against your local Python (exceptio
 **Note** that the HDF5 dependency is provided by Anaconda Python in this case.
 If you're not using Anaconda, include `hdf5` in the list above.
 
-#### 10.9-specific Instructions
+#### 10.10- and 10.9-specific Instructions
 
-In OS X 10.9, clang++ is the default C++ compiler and uses `libc++` as the standard library.
+In OS X 10.9+, clang++ is the default C++ compiler and uses `libc++` as the standard library.
 However, NVIDIA CUDA (even version 6.0) currently links only with `libstdc++`.
 This makes it necessary to change the compilation settings for each of the dependencies.
 
@@ -226,10 +226,10 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     git checkout master
     cd /usr/local/Library/Taps/homebrew/homebrew-science
     git checkout master
-    
+
     # Update homebrew; hopefully this works without errors!
     brew update
-    
+
     # Switch back to the caffe branches with the forumlae that you modified earlier
     cd /usr/local
     git rebase master caffe
@@ -237,8 +237,8 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     cd /usr/local/Library/Taps/homebrew/homebrew-science
     git rebase master caffe
     # Fix any merge conflicts and commit to caffe branch
-    
-    # Done!            
+
+    # Done!
 
 At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.
 
