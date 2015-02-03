@@ -28,7 +28,7 @@ void AbsValLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(AbsValLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(AbsValLayer);
 
 
 }  // namespace caffe

@@ -39,6 +39,6 @@ void EuclideanLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(EuclideanLossLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(EuclideanLossLayer);
 
 }  // namespace caffe

@@ -56,7 +56,7 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(SigmoidLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(SigmoidLayer);
 
 
 }  // namespace caffe

@@ -103,7 +103,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(CuDNNConvolutionLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
 
 }  // namespace caffe
 #endif

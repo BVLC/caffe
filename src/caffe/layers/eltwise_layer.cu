@@ -130,6 +130,6 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(EltwiseLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(EltwiseLayer);
 
 }  // namespace caffe

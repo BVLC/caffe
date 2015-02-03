@@ -63,6 +63,6 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }  // slice_dim_ is guaranteed to be 0 or 1 by SetUp.
 }
 
-INSTANTIATE_CLASS(SliceLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(SliceLayer);
 
 }  // namespace caffe
