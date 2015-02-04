@@ -234,9 +234,8 @@ endif
 # libstdc++ instead of libc++ for CUDA compatibility on 10.9
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
-  # if '10.9'
-  # CXXFLAGS += -stdlib=libstdc++
-  # LINKFLAGS += -stdlib=libstdc++
+	CXXFLAGS += -stdlib=libstdc++
+	LINKFLAGS += -stdlib=libstdc++
 	# clang throws this warning for cuda headers
 	WARNINGS += -Wno-unneeded-internal-declaration
 	# gtest needs to use its own tuple to not conflict with clang
