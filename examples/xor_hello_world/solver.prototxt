@@ -1,5 +1,5 @@
-net: "xor_net.pure.prototxt"
-# net: "xor_net.prototxt"
+net: "xor_net.pure.prototxt" # xor_net.pure.prototxt as more standard example (no concat layer)
+# net: "xor_net.prototxt"    # hardcoded weights/bias :(
 
 test_iter: 1
 test_interval: 1
