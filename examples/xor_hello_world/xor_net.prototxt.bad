@@ -1,0 +1,61 @@
+name: "SIMPLE_XOR_NET"
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+  hdf5_data_param {
+    source: "xor_data.filelist.txt"
+    batch_size: 40
+  }
+}
+layers {
+  name: "fully_connected"
+  type: INNER_PRODUCT
+  bottom: "data"
+  top: "fully_connected"
+  inner_product_param {
+    num_output: 3   
+    weight_filler {
+      type: "xavier"
+      std: 0.5
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.5
+    }
+  }
+}
+# layers {
+#   name: "relu7"
+#   type: SIGMOID
+#   bottom: "fully_connected"
+#   top: "fully_connected"
+# }
+layers {
+  name: "fully_connected2"
+  type: INNER_PRODUCT
+  bottom: "fully_connected"
+  top: "fully_connected2"
+  inner_product_param {
+    num_output: 1
+    #  2 -> EUCLIDEAN_LOSS Check failed: bottom[0]->channels() == bottom[1]->channels() (2 vs. 1)
+    # 1 -> Copying source layer fully_connected Check failed: target_blobs[j]->height() == source_blob->height() (2 vs. 1) 
+  }
+}
+layers {
+  name: "loss"
+  type: SIGMOID_CROSS_ENTROPY_LOSS  # n categories in 1 field!
+  # type: SOFTMAX_LOSS # n categories in n fields!
+  # type: EUCLIDEAN_LOSS  # n categories in n fields!
+  bottom: "fully_connected2"
+  bottom: "label"
+  top: "loss"
+}
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "fully_connected2"
+  bottom: "label"
+  top: "accuracy"
+}
