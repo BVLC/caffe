@@ -142,6 +142,20 @@ class Blob {
     CHECK_LE(w, width());
     return ((n * channels() + c) * height() + h) * width() + w;
   }
+
+  inline int offset(const vector<int>& indices) const {
+    CHECK_LE(indices.size(), num_axes());
+    int offset = 0;
+    for (int i = 0; i < num_axes(); ++i) {
+      offset *= shape(i);
+      if (indices.size() > i) {
+        CHECK_GE(indices[i], 0);
+        CHECK_LT(indices[i], shape(i));
+        offset += indices[i];
+      }
+    }
+    return offset;
+  }
   /**
    * @brief Copy from a source Blob.
    *
@@ -156,12 +170,20 @@ class Blob {
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {
-    return *(cpu_data() + offset(n, c, h, w));
+    return cpu_data()[offset(n, c, h, w)];
   }
 
   inline Dtype diff_at(const int n, const int c, const int h,
       const int w) const {
-    return *(cpu_diff() + offset(n, c, h, w));
+    return cpu_diff()[offset(n, c, h, w)];
+  }
+
+  inline Dtype data_at(const vector<int>& index) const {
+    return cpu_data()[offset(index)];
+  }
+
+  inline Dtype diff_at(const vector<int>& index) const {
+    return cpu_diff()[offset(index)];
   }
 
   inline const shared_ptr<SyncedMemory>& data() const {
