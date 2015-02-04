@@ -1,4 +1,4 @@
-net: "xor_net.prototxt"
+net: "xor_net.prototxt.pure"
 test_iter: 1
 test_interval: 1
 base_lr: 0.9
@@ -8,7 +8,7 @@ stepsize: 10
 display: 10
 max_iter: 15
 snapshot: 10000
-snapshot_prefix: "xor_net_snapshot"
+snapshot_prefix: "snapshot"
 momentum: 0.9
 weight_decay: 0.0005
 solver_mode: CPU
