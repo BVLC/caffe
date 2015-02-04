@@ -1610,6 +1610,7 @@ def CheckCaffeDataLayerSetUp(filename, clean_lines, linenum, error):
   if ix >= 0 and (
        line.find('void DataLayer<Dtype>::LayerSetUp') != -1 or
        line.find('void ImageDataLayer<Dtype>::LayerSetUp') != -1 or
+       line.find('void LIBSVMDataLayer<Dtype>::LayerSetUp') != -1 or
        line.find('void MemoryDataLayer<Dtype>::LayerSetUp') != -1 or
        line.find('void WindowDataLayer<Dtype>::LayerSetUp') != -1):
       error(filename, linenum, 'caffe/data_layer_setup', 2,
@@ -1622,6 +1623,7 @@ def CheckCaffeDataLayerSetUp(filename, clean_lines, linenum, error):
        line.find('void Base') == -1 and
        line.find('void DataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void ImageDataLayer<Dtype>::DataLayerSetUp') == -1 and
+       line.find('void LIBSVMDataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void MemoryDataLayer<Dtype>::DataLayerSetUp') == -1 and
        line.find('void WindowDataLayer<Dtype>::DataLayerSetUp') == -1):
       error(filename, linenum, 'caffe/data_layer_setup', 2,

@@ -273,6 +273,42 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 };
 
 /**
+ * @brief Provides data to the Net from LIBSVM data format file
+ *
+ *   Note that this layer reads and stores all data into memory at the
+ *   intialization stage
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
+template <typename Dtype>
+class LIBSVMDataLayer : public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit LIBSVMDataLayer(const LayerParameter& param)
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+  virtual ~LIBSVMDataLayer();
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_LIBSVM_DATA;
+  }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
+
+ protected:
+  shared_ptr<Caffe::RNG> prefetch_rng_;
+  virtual void ShuffleAccessOrder();
+  virtual void InternalThreadEntry();
+
+  /// all data are stored into `data_` and `labels_`
+  vector<shared_ptr<Datum> > data_;
+  vector<float> labels_;
+  int pos_;
+  /// Determine accessing order for shuffling
+  vector<unsigned int> access_order_;
+};
+
+/**
  * @brief Provides data to the Net from memory.
  *
  * TODO(dox): thorough documentation for Forward and proto params.
