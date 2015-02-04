@@ -10,7 +10,7 @@ option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
 
 if(NOT BLAS)
-    set(BLAS atlas)
+    set(BLAS open)
 endif()
 
 if(NOT CUDA_TEST_DEVICE)

@@ -28,7 +28,7 @@ snapshot_prefix: "examples/mnist/lenet"
 # line, or set to a negative integer -- e.g. "random_seed: -1")
 random_seed: 1701
 # solver mode: CPU or GPU
-solver_mode: GPU
+solver_mode: CPU
 
 # We test on both the test and train set using "stages".  The TEST DATA layers
 # each have a stage, either 'test-on-train-set' or 'test-on-test-set'.

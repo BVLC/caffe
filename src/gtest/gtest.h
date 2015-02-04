@@ -1,3 +1,4 @@
+#define GTEST_USE_OWN_TR1_TUPLE 1
 // Copyright 2005, Google Inc.
 // All rights reserved.
 //
