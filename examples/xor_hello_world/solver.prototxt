@@ -1,4 +1,4 @@
-net: "xor_net.prototxt.pure"
+net: "xor_net.prototxt"
 test_iter: 1
 test_interval: 1
 base_lr: 0.9
