@@ -105,7 +105,7 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
         # output_num = output_match.group(1)
         output_name = output_match.group(2)
         output_val = output_match.group(3)
-        row[output_name] = output_val
+        row[output_name] = float(output_val)
 
     if row and len(row_dict_list) >= 1 and len(row) == len(row_dict_list[0]):
         # The row is full, based on the fact that it has the same number of
