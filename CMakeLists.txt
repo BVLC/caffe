@@ -10,11 +10,20 @@ option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
 
 if(NOT BLAS)
-    set(BLAS atlas)
+    if(APPLE)
+        set(BLAS veclib) # Accelerate / vecLib Framework from OS X
+    else()
+        set(BLAS atlas)
+    endif()
 endif()
 
 if(NOT CUDA_TEST_DEVICE)
     set(CUDA_TEST_DEVICE -1)
+endif()
+
+if(APPLE)
+    # ask gtest to use internal tuple to avoid conflicting with clang compiler
+    add_definitions(-DGTEST_USE_OWN_TR1_TUPLE=1)
 endif()
 
 #    Install Prefix
@@ -30,11 +39,11 @@ set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}) # set debug flags
 set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}) # set release flags
 
 #    Link Flags
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")  # clang++
-  set(CAFFE_STATIC_LINK -Wl,-force_load $(STATIC_NAME))
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")  # g++
+#if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")  # clang++
+#  set(CAFFE_STATIC_LINK -Wl,-force_load caffe)
+#elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")  # g++
   set(CAFFE_STATIC_LINK -Wl,--whole-archive caffe -Wl,--no-whole-archive)
-endif()
+#endif()
 
 #    Global Definitions
 if(CPU_ONLY)
@@ -112,11 +121,21 @@ elseif(BLAS STREQUAL "mkl")
     include_directories(${MKL_INCLUDE_DIR})
     set(BLAS_LIBRARIES ${MKL_LIBRARIES})
 
+elseif(BLAS STREQUAL "veclib")
+
+    find_package(vecLib REQUIRED)
+    include_directories(${vecLib_INCLUDE_DIR})
+    set(BLAS_LIBRARIES ${vecLib_LIBRARY})
+
 endif()
 
 #    HDF5
 find_package(HDF5 COMPONENTS HL REQUIRED)
 include_directories(${HDF5_INCLUDE_DIRS})
+
+#    OpenCV
+find_package(OpenCV REQUIRED core highgui imgproc)
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 #    LevelDB
 find_package(LevelDB REQUIRED)
