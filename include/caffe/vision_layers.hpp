@@ -163,6 +163,10 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_CONVOLUTION;
   }
+  virtual inline DiagonalAffineMap<Dtype> coord_map() {
+    return FilterMap<Dtype>(this->kernel_h_, this->kernel_w_, this->stride_h_,
+        this->stride_w_, this->pad_h_, this->pad_w_).inv();
+  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -199,7 +203,10 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_DECONVOLUTION;
   }
-
+  virtual inline DiagonalAffineMap<Dtype> coord_map() {
+    return FilterMap<Dtype>(this->kernel_h_, this->kernel_w_, this->stride_h_,
+        this->stride_w_, this->pad_h_, this->pad_w_);
+  }
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -319,6 +326,9 @@ class LRNLayer : public Layer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline DiagonalAffineMap<Dtype> coord_map() {
+    return DiagonalAffineMap<Dtype>::identity(2);
+  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -402,6 +412,10 @@ class PoolingLayer : public Layer<Dtype> {
   virtual inline int MaxTopBlobs() const {
     return (this->layer_param_.pooling_param().pool() ==
             PoolingParameter_PoolMethod_MAX) ? 2 : 1;
+  }
+  virtual inline DiagonalAffineMap<Dtype> coord_map() {
+    return FilterMap<Dtype>(kernel_h_, kernel_w_, stride_h_, stride_w_,
+        pad_h_, pad_w_).inv();
   }
 
  protected:

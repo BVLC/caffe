@@ -3,12 +3,14 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/coords.hpp"
 #include "caffe/util/device_alternate.hpp"
 
 namespace caffe {
@@ -291,6 +293,12 @@ class Layer {
       param_propagate_down_.resize(param_id + 1, true);
     }
     param_propagate_down_[param_id] = value;
+  }
+
+  virtual DiagonalAffineMap<Dtype> coord_map() {
+    NOT_IMPLEMENTED;
+    // suppress warnings
+    return DiagonalAffineMap<Dtype>(vector<pair<Dtype, Dtype> >());
   }
 
 
