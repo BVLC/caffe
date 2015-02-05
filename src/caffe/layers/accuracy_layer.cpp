@@ -17,6 +17,12 @@ void AccuracyLayer<Dtype>::LayerSetUp(
   denominator_ = this->layer_param_.accuracy_param().denominator();
   CHECK_GE(denominator_, 0)
       << "Denominator must be positive; or 0, for the batch size.";
+
+  has_ignore_label_ =
+    this->layer_param_.loss_param().has_ignore_label();
+  if (has_ignore_label_) {
+    ignore_label_ = this->layer_param_.loss_param().ignore_label();
+  }
 }
 
 template <typename Dtype>
@@ -39,10 +45,11 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype accuracy = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
-  int num = bottom[0]->count(0, bottom[1]->num_axes());
+  int num = bottom[1]->count();
   int dim = bottom[0]->count() / num;
   vector<Dtype> maxval(top_k_+1);
   vector<int> max_id(top_k_+1);
+  int count = 0;
   for (int i = 0; i < num; ++i) {
     // Top-k accuracy
     std::vector<std::pair<Dtype, int> > bottom_data_vector;
@@ -54,8 +61,13 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
         bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
     // check if true label is in top k predictions
+    const int label_value = static_cast<int>(bottom_label[i]);
+    if (has_ignore_label_ && label_value == ignore_label_) {
+      continue;
+    }
+    ++count;
     for (int k = 0; k < top_k_; k++) {
-      if (bottom_data_vector[k].second == static_cast<int>(bottom_label[i])) {
+      if (bottom_data_vector[k].second == label_value) {
         ++accuracy;
         break;
       }
@@ -63,7 +75,7 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  const Dtype denominator = (denominator_ == 0) ? num : denominator_;
+  const Dtype denominator = (denominator_ == 0) ? count : denominator_;
   top[0]->mutable_cpu_data()[0] = accuracy / denominator;
   // Accuracy layer should not be used as a loss function.
 }
