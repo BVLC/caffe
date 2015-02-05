@@ -1,4 +1,4 @@
-net: "mnist_kSAE.prototxt"
+net: "mnist_kSAE_init.prototxt"
 test_state: { stage: 'test-on-test' }
 test_iter: 100
 test_interval: 1000
