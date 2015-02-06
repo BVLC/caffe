@@ -719,6 +719,7 @@ message V1LayerParameter {
     CONTRASTIVE_LOSS = 37;
     CONVOLUTION = 4;
     DATA = 5;
+    DECONVOLUTION = 39;
     DROPOUT = 6;
     DUMMY_DATA = 32;
     EUCLIDEAN_LOSS = 7;
@@ -790,6 +791,7 @@ message V1LayerParameter {
   optional ThresholdParameter threshold_param = 25;
   optional WindowDataParameter window_data_param = 20;
   optional TransformationParameter transform_param = 36;
+  optional LossParameter loss_param = 42;
   optional V0LayerParameter layer = 1;
 }
 

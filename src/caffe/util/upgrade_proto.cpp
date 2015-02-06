@@ -824,6 +824,10 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
     layer_param->mutable_transform_param()->CopyFrom(
         v1_layer_param.transform_param());
   }
+  if (v1_layer_param.has_loss_param()) {
+    layer_param->mutable_loss_param()->CopyFrom(
+        v1_layer_param.loss_param());
+  }
   if (v1_layer_param.has_layer()) {
     LOG(ERROR) << "Input NetParameter has V0 layer -- ignoring.";
     is_fully_compatible = false;
@@ -849,6 +853,8 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     return "ContrastiveLoss";
   case V1LayerParameter_LayerType_CONVOLUTION:
     return "Convolution";
+  case V1LayerParameter_LayerType_DECONVOLUTION:
+    return "Deconvolution";
   case V1LayerParameter_LayerType_DATA:
     return "Data";
   case V1LayerParameter_LayerType_DROPOUT:
