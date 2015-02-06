@@ -45,7 +45,6 @@ message FillerParameter {
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
-  repeated LayerParameter layers = 2; // a bunch of layers.
   // The input blobs to the network.
   repeated string input = 3;
   // The dim of the input blobs. For each input blob there should be four
@@ -64,6 +63,13 @@ message NetParameter {
   // Print debugging information about results while running Net::Forward,
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
+
+  // The layers that make up the net.  Each of their configurations, including
+  // connectivity and behavior, is specified as a LayerParameter.
+  repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
+
+  // DEPRECATED: use 'layer' instead.
+  repeated V1LayerParameter layers = 2;
 }
 
 // NOTE
@@ -207,14 +213,52 @@ message NetStateRule {
   repeated string not_stage = 5;
 }
 
+// Specifies training parameters (multipliers on global learning constants,
+// and the name and other settings used for weight sharing).
+message ParamSpec {
+  // The names of the parameter blobs -- useful for sharing parameters among
+  // layers, but never required otherwise.  To share a parameter between two
+  // layers, give it a (non-empty) name.
+  optional string name = 1;
+
+  // Whether to require shared weights to have the same shape, or just the same
+  // count -- defaults to STRICT if unspecified.
+  optional DimCheckMode share_mode = 2;
+  enum DimCheckMode {
+    // STRICT (default) requires that num, channels, height, width each match.
+    STRICT = 0;
+    // PERMISSIVE requires only the count (num*channels*height*width) to match.
+    PERMISSIVE = 1;
+  }
+
+  // The multiplier on the global learning rate for this parameter.
+  optional float lr_mult = 3 [default = 1.0];
+
+  // The multiplier on the global weight decay for this parameter.
+  optional float decay_mult = 4 [default = 1.0];
+}
+
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available ID: 43 (last added: loss_param)
+// LayerParameter next available layer-specific ID: 129 (last added: window_data_param)
 message LayerParameter {
-  repeated string bottom = 2; // the name of the bottom blobs
-  repeated string top = 3; // the name of the top blobs
-  optional string name = 4; // the layer name
+  optional string name = 1; // the layer name
+  optional string type = 2; // the layer type
+  repeated string bottom = 3; // the name of each bottom blob
+  repeated string top = 4; // the name of each top blob
+
+  // The amount of weight to assign each top blob in the objective.
+  // Each layer assigns a default value, usually of either 0 or 1,
+  // to each top blob.
+  repeated float loss_weight = 5;
+
+  // Specifies training parameters (multipliers on global learning constants,
+  // and the name and other settings used for weight sharing).
+  repeated ParamSpec param = 6;
+
+  // The blobs containing the numeric parameters of the layer.
+  repeated BlobProto blobs = 7;
 
   // Rules controlling whether and when a layer is included in the network,
   // based on the current NetState.  You may specify a non-zero number of rules
@@ -222,132 +266,49 @@ message LayerParameter {
   // specified, the layer is always included.  If the current NetState meets
   // ANY (i.e., one or more) of the specified rules, the layer is
   // included/excluded.
-  repeated NetStateRule include = 32;
-  repeated NetStateRule exclude = 33;
-
-  // NOTE
-  // Add new LayerTypes to the enum below in lexicographical order (other than
-  // starting with NONE), starting with the next available ID in the comment
-  // line above the enum. Update the next available ID when you add a new
-  // LayerType.
-  //
-  // LayerType next available ID: 40 (last added: DECONVOLUTION)
-  enum LayerType {
-    // "NONE" layer type is 0th enum element so that we don't cause confusion
-    // by defaulting to an existent LayerType (instead, should usually error if
-    // the type is unspecified).
-    NONE = 0;
-    ABSVAL = 35;
-    ACCURACY = 1;
-    ARGMAX = 30;
-    BNLL = 2;
-    CONCAT = 3;
-    CONTRASTIVE_LOSS = 37;
-    CONVOLUTION = 4;
-    DATA = 5;
-    DECONVOLUTION = 39;
-    DROPOUT = 6;
-    DUMMY_DATA = 32;
-    EUCLIDEAN_LOSS = 7;
-    ELTWISE = 25;
-    EXP = 38;
-    FLATTEN = 8;
-    HDF5_DATA = 9;
-    HDF5_OUTPUT = 10;
-    HINGE_LOSS = 28;
-    IM2COL = 11;
-    IMAGE_DATA = 12;
-    INFOGAIN_LOSS = 13;
-    INNER_PRODUCT = 14;
-    LRN = 15;
-    MEMORY_DATA = 29;
-    MULTINOMIAL_LOGISTIC_LOSS = 16;
-    MVN = 34;
-    POOLING = 17;
-    POWER = 26;
-    RELU = 18;
-    SIGMOID = 19;
-    SIGMOID_CROSS_ENTROPY_LOSS = 27;
-    SILENCE = 36;
-    SOFTMAX = 20;
-    SOFTMAX_LOSS = 21;
-    SPLIT = 22;
-    SLICE = 33;
-    TANH = 23;
-    WINDOW_DATA = 24;
-    THRESHOLD = 31;
-  }
-  optional LayerType type = 5; // the layer type from the enum above
-
-  // The blobs containing the numeric parameters of the layer
-  repeated BlobProto blobs = 6;
-  // The names of the parameter blobs -- useful for sharing parameters among
-  // layers (but never required).
-  repeated string param = 1001;
-  // Whether to require shared weights to have the same shape, or just the same
-  // count -- defaults to STRICT if unspecified.
-  repeated DimCheckMode blob_share_mode = 1002;
-  enum DimCheckMode {
-    // STRICT (default) requires that num, channels, height, width each match.
-    STRICT = 0;
-    // PERMISSIVE requires only the count (num*channels*height*width) to match.
-    PERMISSIVE = 1;
-  }
-  // The ratio that is multiplied on the global learning rate. If you want to
-  // set the learning ratio for one blob, you need to set it for all blobs.
-  repeated float blobs_lr = 7;
-  // The weight decay that is multiplied on the global weight decay.
-  repeated float weight_decay = 8;
-
-  // The amount of weight to assign each top blob in the objective.
-  // Each layer assigns a default value, usually of either 0 or 1,
-  // to each top blob.
-  repeated float loss_weight = 35;
-
-  optional AccuracyParameter accuracy_param = 27;
-  optional ArgMaxParameter argmax_param = 23;
-  optional ConcatParameter concat_param = 9;
-  optional ContrastiveLossParameter contrastive_loss_param = 40;
-  optional ConvolutionParameter convolution_param = 10;
-  optional DataParameter data_param = 11;
-  optional DropoutParameter dropout_param = 12;
-  optional DummyDataParameter dummy_data_param = 26;
-  optional EltwiseParameter eltwise_param = 24;
-  optional ExpParameter exp_param = 41;
-  optional HDF5DataParameter hdf5_data_param = 13;
-  optional HDF5OutputParameter hdf5_output_param = 14;
-  optional HingeLossParameter hinge_loss_param = 29;
-  optional ImageDataParameter image_data_param = 15;
-  optional InfogainLossParameter infogain_loss_param = 16;
-  optional InnerProductParameter inner_product_param = 17;
-  optional LRNParameter lrn_param = 18;
-  optional MemoryDataParameter memory_data_param = 22;
-  optional MVNParameter mvn_param = 34;
-  optional PoolingParameter pooling_param = 19;
-  optional PowerParameter power_param = 21;
-  optional ReLUParameter relu_param = 30;
-  optional SigmoidParameter sigmoid_param = 38;
-  optional SoftmaxParameter softmax_param = 39;
-  optional SliceParameter slice_param = 31;
-  optional TanHParameter tanh_param = 37;
-  optional ThresholdParameter threshold_param = 25;
-  optional WindowDataParameter window_data_param = 20;
+  repeated NetStateRule include = 8;
+  repeated NetStateRule exclude = 9;
 
   // Parameters for data pre-processing.
-  optional TransformationParameter transform_param = 36;
+  optional TransformationParameter transform_param = 100;
 
   // Parameters shared by loss layers.
-  optional LossParameter loss_param = 42;
+  optional LossParameter loss_param = 101;
 
+  // Layer type-specific parameters.
+  //
   // Note: certain layers may have more than one computational engine
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-
-  // DEPRECATED: The layer parameters specified as a V0LayerParameter.
-  // This should never be used by any code except to upgrade to the new
-  // LayerParameter specification.
-  optional V0LayerParameter layer = 1;
+  optional AccuracyParameter accuracy_param = 102;
+  optional ArgMaxParameter argmax_param = 103;
+  optional ConcatParameter concat_param = 104;
+  optional ContrastiveLossParameter contrastive_loss_param = 105;
+  optional ConvolutionParameter convolution_param = 106;
+  optional DataParameter data_param = 107;
+  optional DropoutParameter dropout_param = 108;
+  optional DummyDataParameter dummy_data_param = 109;
+  optional EltwiseParameter eltwise_param = 110;
+  optional ExpParameter exp_param = 111;
+  optional HDF5DataParameter hdf5_data_param = 112;
+  optional HDF5OutputParameter hdf5_output_param = 113;
+  optional HingeLossParameter hinge_loss_param = 114;
+  optional ImageDataParameter image_data_param = 115;
+  optional InfogainLossParameter infogain_loss_param = 116;
+  optional InnerProductParameter inner_product_param = 117;
+  optional LRNParameter lrn_param = 118;
+  optional MemoryDataParameter memory_data_param = 119;
+  optional MVNParameter mvn_param = 120;
+  optional PoolingParameter pooling_param = 121;
+  optional PowerParameter power_param = 122;
+  optional ReLUParameter relu_param = 123;
+  optional SigmoidParameter sigmoid_param = 124;
+  optional SoftmaxParameter softmax_param = 125;
+  optional SliceParameter slice_param = 126;
+  optional TanHParameter tanh_param = 127;
+  optional ThresholdParameter threshold_param = 128;
+  optional WindowDataParameter window_data_param = 129;
 }
 
 // Message that stores parameters used to apply transformation
@@ -739,6 +700,97 @@ message WindowDataParameter {
   optional bool cache_images = 12 [default = false];
   // append root_folder to locate images
   optional string root_folder = 13 [default = ""];
+}
+
+// DEPRECATED: use LayerParameter.
+message V1LayerParameter {
+  repeated string bottom = 2;
+  repeated string top = 3;
+  optional string name = 4;
+  repeated NetStateRule include = 32;
+  repeated NetStateRule exclude = 33;
+  enum LayerType {
+    NONE = 0;
+    ABSVAL = 35;
+    ACCURACY = 1;
+    ARGMAX = 30;
+    BNLL = 2;
+    CONCAT = 3;
+    CONTRASTIVE_LOSS = 37;
+    CONVOLUTION = 4;
+    DATA = 5;
+    DROPOUT = 6;
+    DUMMY_DATA = 32;
+    EUCLIDEAN_LOSS = 7;
+    ELTWISE = 25;
+    EXP = 38;
+    FLATTEN = 8;
+    HDF5_DATA = 9;
+    HDF5_OUTPUT = 10;
+    HINGE_LOSS = 28;
+    IM2COL = 11;
+    IMAGE_DATA = 12;
+    INFOGAIN_LOSS = 13;
+    INNER_PRODUCT = 14;
+    LRN = 15;
+    MEMORY_DATA = 29;
+    MULTINOMIAL_LOGISTIC_LOSS = 16;
+    MVN = 34;
+    POOLING = 17;
+    POWER = 26;
+    RELU = 18;
+    SIGMOID = 19;
+    SIGMOID_CROSS_ENTROPY_LOSS = 27;
+    SILENCE = 36;
+    SOFTMAX = 20;
+    SOFTMAX_LOSS = 21;
+    SPLIT = 22;
+    SLICE = 33;
+    TANH = 23;
+    WINDOW_DATA = 24;
+    THRESHOLD = 31;
+  }
+  optional LayerType type = 5;
+  repeated BlobProto blobs = 6;
+  repeated string param = 1001;
+  repeated DimCheckMode blob_share_mode = 1002;
+  enum DimCheckMode {
+    STRICT = 0;
+    PERMISSIVE = 1;
+  }
+  repeated float blobs_lr = 7;
+  repeated float weight_decay = 8;
+  repeated float loss_weight = 35;
+  optional AccuracyParameter accuracy_param = 27;
+  optional ArgMaxParameter argmax_param = 23;
+  optional ConcatParameter concat_param = 9;
+  optional ContrastiveLossParameter contrastive_loss_param = 40;
+  optional ConvolutionParameter convolution_param = 10;
+  optional DataParameter data_param = 11;
+  optional DropoutParameter dropout_param = 12;
+  optional DummyDataParameter dummy_data_param = 26;
+  optional EltwiseParameter eltwise_param = 24;
+  optional ExpParameter exp_param = 41;
+  optional HDF5DataParameter hdf5_data_param = 13;
+  optional HDF5OutputParameter hdf5_output_param = 14;
+  optional HingeLossParameter hinge_loss_param = 29;
+  optional ImageDataParameter image_data_param = 15;
+  optional InfogainLossParameter infogain_loss_param = 16;
+  optional InnerProductParameter inner_product_param = 17;
+  optional LRNParameter lrn_param = 18;
+  optional MemoryDataParameter memory_data_param = 22;
+  optional MVNParameter mvn_param = 34;
+  optional PoolingParameter pooling_param = 19;
+  optional PowerParameter power_param = 21;
+  optional ReLUParameter relu_param = 30;
+  optional SigmoidParameter sigmoid_param = 38;
+  optional SoftmaxParameter softmax_param = 39;
+  optional SliceParameter slice_param = 31;
+  optional TanHParameter tanh_param = 37;
+  optional ThresholdParameter threshold_param = 25;
+  optional WindowDataParameter window_data_param = 20;
+  optional TransformationParameter transform_param = 36;
+  optional V0LayerParameter layer = 1;
 }
 
 // DEPRECATED: V0LayerParameter is the old way of specifying layer parameters

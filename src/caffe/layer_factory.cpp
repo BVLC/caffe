@@ -29,7 +29,7 @@ Layer<Dtype>* GetConvolutionLayer(
   }
 }
 
-REGISTER_LAYER_CREATOR(CONVOLUTION, GetConvolutionLayer);
+REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
 // Get pooling layer according to engine.
 template <typename Dtype>
@@ -59,7 +59,7 @@ Layer<Dtype>* GetPoolingLayer(const LayerParameter& param) {
   }
 }
 
-REGISTER_LAYER_CREATOR(POOLING, GetPoolingLayer);
+REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
 
 // Get relu layer according to engine.
 template <typename Dtype>
@@ -82,7 +82,7 @@ Layer<Dtype>* GetReLULayer(const LayerParameter& param) {
   }
 }
 
-REGISTER_LAYER_CREATOR(RELU, GetReLULayer);
+REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 
 // Get sigmoid layer according to engine.
 template <typename Dtype>
@@ -105,7 +105,7 @@ Layer<Dtype>* GetSigmoidLayer(const LayerParameter& param) {
   }
 }
 
-REGISTER_LAYER_CREATOR(SIGMOID, GetSigmoidLayer);
+REGISTER_LAYER_CREATOR(Sigmoid, GetSigmoidLayer);
 
 // Get softmax layer according to engine.
 template <typename Dtype>
@@ -128,7 +128,7 @@ Layer<Dtype>* GetSoftmaxLayer(const LayerParameter& param) {
   }
 }
 
-REGISTER_LAYER_CREATOR(SOFTMAX, GetSoftmaxLayer);
+REGISTER_LAYER_CREATOR(Softmax, GetSoftmaxLayer);
 
 // Get tanh layer according to engine.
 template <typename Dtype>
@@ -151,7 +151,7 @@ Layer<Dtype>* GetTanHLayer(const LayerParameter& param) {
   }
 }
 
-REGISTER_LAYER_CREATOR(TANH, GetTanHLayer);
+REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
 
 // Layers that use their constructor as their default creator should be
 // registered in their corresponding cpp files. Do not register them here.

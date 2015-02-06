@@ -79,4 +79,5 @@ STUB_GPU(ConvolutionLayer);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionLayer);
+
 }  // namespace caffe

@@ -53,7 +53,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[1]) {
-    LOG(FATAL) << this->type_name()
+    LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
@@ -75,5 +75,6 @@ STUB_GPU(SigmoidCrossEntropyLossLayer);
 #endif
 
 INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
-REGISTER_LAYER_CLASS(SIGMOID_CROSS_ENTROPY_LOSS, SigmoidCrossEntropyLossLayer);
+REGISTER_LAYER_CLASS(SigmoidCrossEntropyLoss);
+
 }  // namespace caffe
