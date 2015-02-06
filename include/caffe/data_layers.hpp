@@ -281,7 +281,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   Dtype* data_;
   Dtype* labels_;
   int n_;
-  int pos_;
+  size_t pos_;
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
   bool has_new_data_;
