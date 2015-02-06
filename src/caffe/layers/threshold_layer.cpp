@@ -29,5 +29,6 @@ STUB_GPU_FORWARD(ThresholdLayer, Forward);
 #endif
 
 INSTANTIATE_CLASS(ThresholdLayer);
-REGISTER_LAYER_CLASS(THRESHOLD, ThresholdLayer);
+REGISTER_LAYER_CLASS(Threshold);
+
 }  // namespace caffe

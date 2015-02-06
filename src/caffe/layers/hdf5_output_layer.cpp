@@ -12,19 +12,21 @@
 namespace caffe {
 
 template <typename Dtype>
-HDF5OutputLayer<Dtype>::HDF5OutputLayer(const LayerParameter& param)
-    : Layer<Dtype>(param),
-      file_name_(param.hdf5_output_param().file_name()) {
-  /* create a HDF5 file */
+void HDF5OutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  file_name_ = this->layer_param_.hdf5_output_param().file_name();
   file_id_ = H5Fcreate(file_name_.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
                        H5P_DEFAULT);
   CHECK_GE(file_id_, 0) << "Failed to open HDF5 file" << file_name_;
+  file_opened_ = true;
 }
 
 template <typename Dtype>
 HDF5OutputLayer<Dtype>::~HDF5OutputLayer<Dtype>() {
-  herr_t status = H5Fclose(file_id_);
-  CHECK_GE(status, 0) << "Failed to close HDF5 file " << file_name_;
+  if (file_opened_) {
+    herr_t status = H5Fclose(file_id_);
+    CHECK_GE(status, 0) << "Failed to close HDF5 file " << file_name_;
+  }
 }
 
 template <typename Dtype>
@@ -70,5 +72,6 @@ STUB_GPU(HDF5OutputLayer);
 #endif
 
 INSTANTIATE_CLASS(HDF5OutputLayer);
-REGISTER_LAYER_CLASS(HDF5_OUTPUT, HDF5OutputLayer);
+REGISTER_LAYER_CLASS(HDF5Output);
+
 }  // namespace caffe

@@ -179,18 +179,9 @@ class Layer {
   }
 
   /**
-   * @brief Returns the layer type as an enum value.
+   * @brief Returns the layer type.
    */
-  virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_NONE;
-  }
-
-  /**
-   * @brief Returns the layer type name.
-   */
-  virtual inline const string& type_name() const {
-    return LayerParameter_LayerType_Name(type());
-  }
+  virtual inline const char* type() const { return ""; }
 
   /**
    * @brief Returns the exact number of bottom blobs required by the layer,
@@ -347,37 +338,37 @@ class Layer {
                                const vector<Blob<Dtype>*>& top) {
     if (ExactNumBottomBlobs() >= 0) {
       CHECK_EQ(ExactNumBottomBlobs(), bottom.size())
-          << type_name() << " Layer takes " << ExactNumBottomBlobs()
+          << type() << " Layer takes " << ExactNumBottomBlobs()
           << " bottom blob(s) as input.";
     }
     if (MinBottomBlobs() >= 0) {
       CHECK_LE(MinBottomBlobs(), bottom.size())
-          << type_name() << " Layer takes at least " << MinBottomBlobs()
+          << type() << " Layer takes at least " << MinBottomBlobs()
           << " bottom blob(s) as input.";
     }
     if (MaxBottomBlobs() >= 0) {
       CHECK_GE(MaxBottomBlobs(), bottom.size())
-          << type_name() << " Layer takes at most " << MaxBottomBlobs()
+          << type() << " Layer takes at most " << MaxBottomBlobs()
           << " bottom blob(s) as input.";
     }
     if (ExactNumTopBlobs() >= 0) {
       CHECK_EQ(ExactNumTopBlobs(), top.size())
-          << type_name() << " Layer produces " << ExactNumTopBlobs()
+          << type() << " Layer produces " << ExactNumTopBlobs()
           << " top blob(s) as output.";
     }
     if (MinTopBlobs() >= 0) {
       CHECK_LE(MinTopBlobs(), top.size())
-          << type_name() << " Layer produces at least " << MinTopBlobs()
+          << type() << " Layer produces at least " << MinTopBlobs()
           << " top blob(s) as output.";
     }
     if (MaxTopBlobs() >= 0) {
       CHECK_GE(MaxTopBlobs(), top.size())
-          << type_name() << " Layer produces at most " << MaxTopBlobs()
+          << type() << " Layer produces at most " << MaxTopBlobs()
           << " top blob(s) as output.";
     }
     if (EqualNumBottomTopBlobs()) {
       CHECK_EQ(bottom.size(), top.size())
-          << type_name() << " Layer produces one top blob as output for each "
+          << type() << " Layer produces one top blob as output for each "
           << "bottom blob input.";
     }
   }

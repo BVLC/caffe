@@ -55,14 +55,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
   // For each layer, set up their input and output
-  bottom_vecs_.resize(param.layers_size());
-  top_vecs_.resize(param.layers_size());
-  bottom_id_vecs_.resize(param.layers_size());
-  param_id_vecs_.resize(param.layers_size());
-  top_id_vecs_.resize(param.layers_size());
-  bottom_need_backward_.resize(param.layers_size());
-  for (int layer_id = 0; layer_id < param.layers_size(); ++layer_id) {
-    const LayerParameter& layer_param = param.layers(layer_id);
+  bottom_vecs_.resize(param.layer_size());
+  top_vecs_.resize(param.layer_size());
+  bottom_id_vecs_.resize(param.layer_size());
+  param_id_vecs_.resize(param.layer_size());
+  top_id_vecs_.resize(param.layer_size());
+  bottom_need_backward_.resize(param.layer_size());
+  for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
+    const LayerParameter& layer_param = param.layer(layer_id);
     layers_.push_back(shared_ptr<Layer<Dtype> >(
           LayerRegistry<Dtype>::CreateLayer(layer_param)));
     layer_names_.push_back(layer_param.name());
@@ -113,35 +113,19 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       memory_used_ += top_vecs_[layer_id][top_id]->count();
     }
     DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
-    const int blobs_lr_size = layer_param.blobs_lr_size();
-    const int num_param_blobs = layers_[layer_id]->blobs().size();
-    CHECK(blobs_lr_size == num_param_blobs || blobs_lr_size == 0)
-        << "Incorrect blobs lr size: should be either 0 "
-        << "or the same as the number of the layer's parameter blobs.";
-    if (blobs_lr_size) {
-      // Check if this layer needs backward operation itself
-      for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
-        const bool param_need_backward = layer_param.blobs_lr(param_id) > 0;
-        need_backward |= param_need_backward;
-        layers_[layer_id]->set_param_propagate_down(param_id,
-                                                    param_need_backward);
-      }
-    } else if (layers_[layer_id]->blobs().size()) {
-      // catch: if a layer param does not specify blobs_lr, we should assume the
-      // learning rate to be 1. Thus we will need to perform backward.
-      need_backward = true;
-      for (int param_id = 0; param_id < blobs_lr_size; ++param_id) {
-        layers_[layer_id]->set_param_propagate_down(param_id, true);
-      }
-    }
     const int param_size = layer_param.param_size();
-    CHECK(param_size == num_param_blobs || param_size == 0)
-        << "Incorrect param size: should be either 0 or the same as "
-           "the number of the layer's parameter blobs: " << num_param_blobs;
-    const int blob_share_mode_size = layer_param.blob_share_mode_size();
-    CHECK(blob_share_mode_size == num_param_blobs || blob_share_mode_size == 0)
-        << "Incorrect blob_share_mode size: should be either 0 or the same as "
-           "the number of the layer's parameter blobs: " << num_param_blobs;
+    const int num_param_blobs = layers_[layer_id]->blobs().size();
+    CHECK_LE(param_size, num_param_blobs)
+        << "Too many params specified for layer " << layer_param.name();
+    ParamSpec default_param_spec;
+    for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
+      const ParamSpec* param_spec = (param_id < param_size) ?
+          &layer_param.param(param_id) : &default_param_spec;
+      const bool param_need_backward = param_spec->lr_mult() > 0;
+      need_backward |= param_need_backward;
+      layers_[layer_id]->set_param_propagate_down(param_id,
+                                                  param_need_backward);
+    }
     for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
       AppendParam(param, layer_id, param_id);
     }
@@ -242,9 +226,9 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
     }
   }
   param_filtered->CopyFrom(param);
-  param_filtered->clear_layers();
-  for (int i = 0; i < param.layers_size(); ++i) {
-    const LayerParameter& layer_param = param.layers(i);
+  param_filtered->clear_layer();
+  for (int i = 0; i < param.layer_size(); ++i) {
+    const LayerParameter& layer_param = param.layer(i);
     const string& layer_name = layer_param.name();
     CHECK(layer_param.include_size() == 0 || layer_param.exclude_size() == 0)
           << "Specify either include rules or exclude rules; not both.";
@@ -262,7 +246,7 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
       }
     }
     if (layer_included) {
-      param_filtered->add_layers()->CopyFrom(layer_param);
+      param_filtered->add_layer()->CopyFrom(layer_param);
     }
   }
 }
@@ -335,7 +319,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
                            const int top_id, set<string>* available_blobs,
                            map<string, int>* blob_name_to_idx) {
   shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
-    (new LayerParameter(param.layers(layer_id))) : NULL);
+    (new LayerParameter(param.layer(layer_id))) : NULL);
   const string& blob_name = layer_param ?
       (layer_param->top_size() > top_id ?
           layer_param->top(top_id) : "(automatic)") : param.input(top_id);
@@ -385,7 +369,7 @@ template <typename Dtype>
 int Net<Dtype>::AppendBottom(const NetParameter& param,
     const int layer_id, const int bottom_id,
     set<string>* available_blobs, map<string, int>* blob_name_to_idx) {
-  const LayerParameter& layer_param = param.layers(layer_id);
+  const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {
     LOG(FATAL) << "Unknown blob input " << blob_name
@@ -406,7 +390,8 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
                              const int param_id) {
   const LayerParameter& layer_param = layers_[layer_id]->layer_param();
   const int param_size = layer_param.param_size();
-  string param_name = param_size ? layer_param.param(param_id) : "";
+  string param_name =
+      (param_size > param_id) ? layer_param.param(param_id).name() : "";
   if (param_name.size()) {
     param_display_names_.push_back(param_name);
   } else {
@@ -441,10 +426,9 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     Blob<Dtype>* this_blob = layers_[layer_id]->blobs()[param_id].get();
     Blob<Dtype>* owner_blob =
         layers_[owner_layer_id]->blobs()[owner_param_id].get();
-    const int blob_share_mode_size = layer_param.blob_share_mode_size();
-    if (blob_share_mode_size > param_id &&
-        (layer_param.blob_share_mode(param_id) ==
-         LayerParameter_DimCheckMode_PERMISSIVE)) {
+    const int param_size = layer_param.param_size();
+    if (param_size > param_id && (layer_param.param(param_id).share_mode() ==
+                                  ParamSpec_DimCheckMode_PERMISSIVE)) {
       // Permissive dimension checking -- only check counts are the same.
       CHECK_EQ(this_blob->count(), owner_blob->count())
           << "Shared parameter blobs must have the same count.";
@@ -467,34 +451,15 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
 template <typename Dtype>
 void Net<Dtype>::GetLearningRateAndWeightDecay() {
   LOG(INFO) << "Collecting Learning Rate and Weight Decay.";
+  ParamSpec default_param_spec;
   for (int i = 0; i < layers_.size(); ++i) {
     vector<shared_ptr<Blob<Dtype> > >& layer_blobs = layers_[i]->blobs();
-    // push the learning rate mutlipliers
-    if (layers_[i]->layer_param().blobs_lr_size()) {
-      CHECK_EQ(layers_[i]->layer_param().blobs_lr_size(), layer_blobs.size());
-      for (int j = 0; j < layer_blobs.size(); ++j) {
-        float local_lr = layers_[i]->layer_param().blobs_lr(j);
-        CHECK_GE(local_lr, 0.);
-        params_lr_.push_back(local_lr);
-      }
-    } else {
-      for (int j = 0; j < layer_blobs.size(); ++j) {
-        params_lr_.push_back(1.);
-      }
-    }
-    // push the weight decay multipliers
-    if (layers_[i]->layer_param().weight_decay_size()) {
-      CHECK_EQ(layers_[i]->layer_param().weight_decay_size(),
-          layer_blobs.size());
-      for (int j = 0; j < layer_blobs.size(); ++j) {
-        float local_decay = layers_[i]->layer_param().weight_decay(j);
-        CHECK_GE(local_decay, 0.);
-        params_weight_decay_.push_back(local_decay);
-      }
-    } else {
-      for (int j = 0; j < layer_blobs.size(); ++j) {
-        params_weight_decay_.push_back(1.);
-      }
+    for (int j = 0; j < layer_blobs.size(); ++j) {
+      const ParamSpec* param_spec =
+          (layers_[i]->layer_param().param_size() > j) ?
+          &layers_[i]->layer_param().param(j) : &default_param_spec;
+      params_lr_.push_back(param_spec->lr_mult());
+      params_weight_decay_.push_back(param_spec->decay_mult());
     }
   }
 }
@@ -730,9 +695,9 @@ void Net<Dtype>::Reshape() {
 
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
-  int num_source_layers = param.layers_size();
+  int num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
-    const LayerParameter& source_layer = param.layers(i);
+    const LayerParameter& source_layer = param.layer(i);
     const string& source_layer_name = source_layer.name();
     int target_layer_id = 0;
     while (target_layer_id != layer_names_.size() &&
@@ -775,7 +740,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   }
   DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
-    LayerParameter* layer_param = param->add_layers();
+    LayerParameter* layer_param = param->add_layer();
     for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {
       layer_param->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
     }
