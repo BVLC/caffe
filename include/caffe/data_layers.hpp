@@ -260,10 +260,13 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
+  virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
+      const vector<int>& labels);
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
   void Reset(Dtype* data, Dtype* label, int n);
+  void set_batch_size(int new_size);
 
   int batch_size() { return batch_size_; }
   int channels() { return channels_; }
