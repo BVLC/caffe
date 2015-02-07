@@ -163,8 +163,8 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   const int width = transformed_blob->width();
 
   CHECK_GT(datum_num, 0) << "There is no datum to add";
-  CHECK_EQ(datum_num, num) <<
-    "The size of datum_vector must be equals to transformed_blob->num()";
+  CHECK_LE(datum_num, num) <<
+    "The size of datum_vector must be no greater than transformed_blob->num()";
   Blob<Dtype> uni_blob(1, channels, height, width);
   for (int item_id = 0; item_id < datum_num; ++item_id) {
     int offset = transformed_blob->offset(item_id);
@@ -173,7 +173,6 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   }
 }
 
-#ifndef OSX
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
                                        Blob<Dtype>* transformed_blob) {
@@ -193,7 +192,6 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
     Transform(mat_vector[item_id], &uni_blob);
   }
 }
-#endif
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
