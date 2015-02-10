@@ -26,10 +26,10 @@ template <typename Dtype>
 void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   SoftmaxLayer<Dtype>::Reshape(bottom, top);
-  int N = bottom[0]->num();
-  int K = bottom[0]->channels();
-  int H = bottom[0]->height();
-  int W = bottom[0]->width();
+  int N = this->outer_num_;
+  int K = bottom[0]->shape(this->softmax_axis_);
+  int H = this->inner_num_;
+  int W = 1;
   cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
   cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
 }
