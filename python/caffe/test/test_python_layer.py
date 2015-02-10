@@ -24,11 +24,11 @@ def python_net_file():
     f = tempfile.NamedTemporaryFile(delete=False)
     f.write("""name: 'pythonnet' force_backward: true
     input: 'data' input_dim: 10 input_dim: 9 input_dim: 8 input_dim: 7
-    layers { type: PYTHON name: 'one' bottom: 'data' top: 'one'
+    layer { type: 'Python' name: 'one' bottom: 'data' top: 'one'
       python_param { module: 'test_python_layer' layer: 'SimpleLayer' } }
-    layers { type: PYTHON name: 'two' bottom: 'one' top: 'two'
+    layer { type: 'Python' name: 'two' bottom: 'one' top: 'two'
       python_param { module: 'test_python_layer' layer: 'SimpleLayer' } }
-    layers { type: PYTHON name: 'three' bottom: 'two' top: 'three'
+    layer { type: 'Python' name: 'three' bottom: 'two' top: 'three'
       python_param { module: 'test_python_layer' layer: 'SimpleLayer' } }""")
     f.close()
     return f.name
