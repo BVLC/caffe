@@ -31,8 +31,8 @@ void CuDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
-  cudnnDestroyTensor4dDescriptor(this->bottom_desc_);
-  cudnnDestroyTensor4dDescriptor(this->top_desc_);
+  cudnnDestroyTensorDescriptor(this->bottom_desc_);
+  cudnnDestroyTensorDescriptor(this->top_desc_);
   cudnnDestroy(this->handle_);
 }
 
