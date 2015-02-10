@@ -12,9 +12,12 @@ set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
 caffe_default_properties(pycaffe)
 
 if(UNIX OR APPLE)
-    set(__linkname "${CMAKE_SOURCE_DIR}/python/_caffe.so")
+    set(__linkname "${CMAKE_SOURCE_DIR}/python/caffe/_caffe.so")
     add_custom_command(TARGET pycaffe POST_BUILD
-                       COMMAND ln -sf $<TARGET_LINKER_FILE:caffe> "${CMAKE_SOURCE_DIR}/python/_caffe.so"
+                       COMMAND ln -sf $<TARGET_LINKER_FILE:pycaffe> "${__linkname}"
+                       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/python/caffe/proto
+                       COMMAND touch ${CMAKE_SOURCE_DIR}/python/caffe/proto/__init__.py
+                       COMMAND cp ${proto_gen_folder}/*.py ${CMAKE_SOURCE_DIR}/python/caffe/proto/
                        COMMENT "Creating symlink ${__linkname} -> ${CMAKE_BINARY_DIR}/lib/_caffe${CAffe_POSTFIX}.so")
 endif()
 
