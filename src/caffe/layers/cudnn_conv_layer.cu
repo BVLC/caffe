@@ -32,12 +32,12 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
         filter_desc_,
         conv_descs_[i],
         top_descs_[i],
-        CUDNN_CONVOLUTION_FWD_NO_WORKSPACE,
+        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
         0,  // memoryLimitInBytes,
         &algo));
 
       // get minimum size of the workspace needed for the desired algorithm
-      size_t workspaceSizeInBytes;
+      size_t workspaceSizeInBytes_temp;
 
       CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(handle_[g],
         bottom_descs_[i],
@@ -47,7 +47,12 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
         algo,
         &workspaceSizeInBytes));
 
-      void *workspace = NULL;
+      if (workspaceSizeInBytes_temp > workspaceSizeInBytes) {
+        workspaceSizeInBytes = workspaceSizeInBytes_temp;
+        // free the existing workspace and allocate a new (larger) one
+        cudaFree(this->workspace);
+        cudaMalloc(&(this->workspace), workspaceSizeInBytes);
+      }
 
       // Filters.
       CUDNN_CHECK(cudnnConvolutionForward(handle_[g],
