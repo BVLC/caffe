@@ -12,9 +12,16 @@ void CuDNNTanHLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
+
+  Dtype alpha = 1.0;
+  Dtype beta = 0.0;
+
   CUDNN_CHECK(cudnnActivationForward(this->handle_,
-      CUDNN_ACTIVATION_TANH,
-      this->bottom_desc_, bottom_data, this->top_desc_, top_data));
+        CUDNN_ACTIVATION_TANH,
+        reinterpret_cast<void *>(&alpha),
+        this->bottom_desc_, bottom_data,
+        reinterpret_cast<void *>(&beta),
+        this->top_desc_, top_data));
 }
 
 template <typename Dtype>
@@ -29,10 +36,17 @@ void CuDNNTanHLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+
+  Dtype alpha = 1.0;
+  Dtype beta = 0.0;
+
   CUDNN_CHECK(cudnnActivationBackward(this->handle_,
-      CUDNN_ACTIVATION_TANH,
-      this->top_desc_, top_data, this->top_desc_, top_diff,
-      this->bottom_desc_, bottom_data, this->bottom_desc_, bottom_diff));
+        CUDNN_ACTIVATION_TANH,
+        reinterpret_cast<void *>(&alpha),
+        this->top_desc_, top_data, this->top_desc_, top_diff,
+        this->bottom_desc_, bottom_data,
+        reinterpret_cast<void *>(&beta),
+        this->bottom_desc_, bottom_diff));
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNTanHLayer);
