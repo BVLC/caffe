@@ -611,7 +611,7 @@ static void get_blob_size(MEX_ARGS) {
 
     if ((nrhs >= 1) && (!mxIsEmpty(prhs[0]))) {
       if (!mxIsCell(prhs[0])) mex_error("blob_names should be a cell array of strings");
-      size_t blob_count = mxGetNumberOfElements(prhs[1]);
+      size_t blob_count = mxGetNumberOfElements(prhs[0]);
       for (size_t i = 0; i < blob_count; ++i) {
         blob_names.push_back(std::string(mxArrayToString(mxGetCell(prhs[0], i))));
       }
@@ -631,7 +631,7 @@ static void get_blob_size(MEX_ARGS) {
       data[1] = custom_output_blob->channels();
       data[2] = custom_output_blob->height();
       data[3] = custom_output_blob->width();
-      mxSetCell(plhs[0], 0, mx_blob_sz);
+      mxSetCell(plhs[0], i, mx_blob_sz);
     }
 }
 
