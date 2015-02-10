@@ -230,7 +230,7 @@ template <typename Dtype>
 class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
-      : ConvolutionLayer<Dtype>(param) {}
+      : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -243,6 +243,7 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  bool handles_setup_;
   cudnnHandle_t* handle_;
   cudaStream_t*  stream_;
   vector<cudnnTensor4dDescriptor_t> bottom_descs_, top_descs_;
@@ -426,7 +427,7 @@ template <typename Dtype>
 class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
  public:
   explicit CuDNNPoolingLayer(const LayerParameter& param)
-      : PoolingLayer<Dtype>(param) {}
+      : PoolingLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -442,6 +443,7 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  bool handles_setup_;
   cudnnHandle_t             handle_;
   cudnnTensor4dDescriptor_t bottom_desc_, top_desc_;
   cudnnPoolingDescriptor_t  pooling_desc_;
