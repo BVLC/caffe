@@ -36,8 +36,8 @@ void CuDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 CuDNNPoolingLayer<Dtype>::~CuDNNPoolingLayer() {
-  cudnnDestroyTensor4dDescriptor(bottom_desc_);
-  cudnnDestroyTensor4dDescriptor(top_desc_);
+  cudnnDestroyTensorDescriptor(bottom_desc_);
+  cudnnDestroyTensorDescriptor(top_desc_);
   cudnnDestroyPoolingDescriptor(pooling_desc_);
   cudnnDestroy(handle_);
 }
