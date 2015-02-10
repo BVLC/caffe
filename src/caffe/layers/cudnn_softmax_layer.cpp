@@ -39,8 +39,8 @@ CuDNNSoftmaxLayer<Dtype>::~CuDNNSoftmaxLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
-  cudnnDestroyTensor4dDescriptor(bottom_desc_);
-  cudnnDestroyTensor4dDescriptor(top_desc_);
+  cudnnDestroyTensorDescriptor(bottom_desc_);
+  cudnnDestroyTensorDescriptor(top_desc_);
   cudnnDestroy(handle_);
 }
 
