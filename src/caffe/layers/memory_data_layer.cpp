@@ -81,6 +81,9 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   CHECK(data);
   CHECK(labels);
   CHECK_EQ(n % batch_size_, 0) << "n must be a multiple of batch size";
+  // Refuse transformation parameters since a memory array is totally generic.
+  CHECK(!this->layer_param_.has_transform_param()) <<
+      this->type() << " does not transform data.";
   data_ = data;
   labels_ = labels;
   n_ = n;
