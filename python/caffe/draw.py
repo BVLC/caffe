@@ -17,13 +17,6 @@ NEURON_LAYER_STYLE = {'shape': 'record', 'fillcolor': '#90EE90',
          'style': 'filled'}
 BLOB_STYLE = {'shape': 'octagon', 'fillcolor': '#E0E0E0',
         'style': 'filled'}
-def get_enum_name_by_value():
-  desc = caffe_pb2.LayerParameter.LayerType.DESCRIPTOR
-  d = {}
-  for k,v in desc.values_by_name.items():
-    d[v.number] = k
-  return d
-
 
 def get_pooling_types_dict():
     """Get dictionary mapping pooling type number to type name
@@ -112,10 +105,9 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
   pydot_graph = pydot.Dot(caffe_net.name, graph_type='digraph', rankdir=rankdir)
   pydot_nodes = {}
   pydot_edges = []
-  d = get_enum_name_by_value()
-  for layer in caffe_net.layers:
+  for layer in caffe_net.layer:
     name = layer.name
-    layertype = d[layer.type]
+    layertype = layer.type
     node_label = determine_node_label_by_layertype(layer, layertype, rankdir)
     if (len(layer.bottom) == 1 and len(layer.top) == 1 and
         layer.bottom[0] == layer.top[0]):
