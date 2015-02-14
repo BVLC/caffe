@@ -24,6 +24,8 @@ TYPED_TEST(LayerFactoryTest, TestCreateLayer) {
   LayerParameter layer_param;
   for (typename LayerRegistry<Dtype>::CreatorRegistry::iterator iter =
        registry.begin(); iter != registry.end(); ++iter) {
+    // Special case: PythonLayer is checked by pytest
+    if (iter->first == "Python") { continue; }
     layer_param.set_type(iter->first);
     layer = LayerRegistry<Dtype>::CreateLayer(layer_param);
     EXPECT_EQ(iter->first, layer->type());
