@@ -32,6 +32,35 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       mean_values_.push_back(param_.mean_value(c));
     }
   }
+
+  int eigen_val_size = param_.eigen_value_size();
+  if (eigen_val_size > 0) {
+    CHECK_GT(param_.eigen_vector_component_size(), 0) <<
+      "Must specify both eigen vectors and eigen values" <<
+      " to do re-lighting augmentation";
+    CHECK_EQ(param_.eigen_vector_component_size(),
+      eigen_val_size*eigen_val_size) <<
+      "Specify an eigen vector per channel, each vector of channel length";
+
+    for (int c = 0; c < eigen_val_size ; ++c) {
+      eigen_values_.push_back(param_.eigen_value(c));
+    }
+
+    CHECK_EQ(eigen_val_size*eigen_val_size,
+      param_.eigen_vector_component_size()) <<
+      "Eigen vectors should be "<< eigen_val_size
+      << "^2 matrix for eigen vectors of length " << eigen_val_size;
+
+    eigen_vectors_.Reshape(1, 1, eigen_val_size, eigen_val_size);
+    Dtype *eigen_vec_data = eigen_vectors_.mutable_cpu_data();
+    for (int i = 0; i < param_.eigen_vector_component_size(); ++i) {
+        eigen_vec_data[i] = param_.eigen_vector_component(i);
+    }
+
+    relight_filler_ =
+      shared_ptr<Filler<Dtype> > (GetFiller<Dtype>(param_.relight_filler()));
+    relight_.Reshape(1, 1, 1, eigen_val_size);
+  }
 }
 
 template<typename Dtype>
@@ -48,6 +77,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_eigen_values = eigen_values_.size() > 0;
 
   CHECK_GT(datum_channels, 0);
   CHECK_GE(datum_height, crop_size);
@@ -69,6 +99,27 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
         mean_values_.push_back(mean_values_[0]);
       }
     }
+  }
+
+  // Generates a random offset in direction of PCA
+  // for each image for re-lighting augmentation.
+  if (phase_ == TRAIN && has_eigen_values) {
+    CHECK_EQ(datum_channels, eigen_values_.size()) <<
+      "Specify as many eigen values as channels: " << datum_channels;
+    CHECK_EQ(datum_channels*datum_channels, eigen_vectors_.count()) <<
+      "Eigen vectors should be "<< datum_channels << "^2 matrix, row first";
+
+    Blob<Dtype> relight_alpha(1, 1, 1, datum_channels);
+    relight_filler_->Fill(&relight_alpha);
+
+    for (int c = 0; c < datum_channels ; ++c) {
+      relight_alpha.mutable_cpu_data()[c] *= eigen_values_[c];
+    }
+
+    relight_.Reshape(1, 1, 1, datum_channels);
+    caffe_cpu_gemv<Dtype>(CblasTrans, datum_channels,
+      datum_channels, (Dtype) 1, eigen_vectors_.cpu_data(),
+      relight_alpha.cpu_data(), (Dtype) 0, relight_.mutable_cpu_data());
   }
 
   int height = datum_height;
@@ -116,6 +167,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           } else {
             transformed_data[top_index] = datum_element * scale;
           }
+        }
+        if (has_eigen_values) {
+          transformed_data[top_index] += relight_.cpu_data()[c];
         }
       }
     }
@@ -217,6 +271,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_eigen_values = eigen_values_.size() > 0;
 
   CHECK_GT(img_channels, 0);
   CHECK_GE(img_height, crop_size);
@@ -238,6 +293,27 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         mean_values_.push_back(mean_values_[0]);
       }
     }
+  }
+
+  // Generates a random offset in direction of PCA
+  // for each image for re-lighting augmentation.
+  if (phase_ == TRAIN && has_eigen_values) {
+    CHECK_EQ(img_channels, eigen_values_.size()) <<
+      "Specify as many eigen values as channels: " << img_channels;
+    CHECK_EQ(img_channels*img_channels, eigen_vectors_.count()) <<
+      "Eigen vectors should be "<< img_channels << "^2 matrix, row first";
+
+    Blob<Dtype> relight_alpha(1, 1, 1, img_channels);
+    relight_filler_->Fill(&relight_alpha);
+
+    for (int c = 0; c < img_channels ; ++c) {
+      relight_alpha.mutable_cpu_data()[c] *= eigen_values_[c];
+    }
+
+    relight_.Reshape(1, 1, 1, img_channels);
+    caffe_cpu_gemv<Dtype>(CblasTrans, img_channels,
+      img_channels, (Dtype) 1, eigen_vectors_.mutable_cpu_data(),
+      relight_alpha.cpu_data(), (Dtype) 0, relight_.mutable_cpu_data());
   }
 
   int h_off = 0;
@@ -289,6 +365,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
             transformed_data[top_index] = pixel * scale;
           }
         }
+        if (has_eigen_values) {
+          transformed_data[top_index] += relight_.cpu_data()[c];
+        }
       }
     }
   }
@@ -318,6 +397,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_eigen_values = eigen_values_.size() > 0;
 
   int h_off = 0;
   int w_off = 0;
@@ -347,6 +427,27 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
       caffe_sub(data_mean_.count(), input_data + offset,
             data_mean_.cpu_data(), input_data + offset);
     }
+  }
+
+  // Generates a random offset in direction of PCA
+  // for each image for re-lighting augmentation.
+  if (phase_ == TRAIN && has_eigen_values) {
+    CHECK_EQ(input_channels, eigen_values_.size()) <<
+      "Specify as many eigen values as channels: " << input_channels;
+    CHECK_EQ(input_channels*input_channels, eigen_vectors_.count()) <<
+      "Eigen vectors should be "<< input_channels << "^2 matrix, row first";
+
+    Blob<Dtype> relight_alpha(1, 1, 1, input_channels);
+    relight_filler_->Fill(&relight_alpha);
+
+    for (int c = 0; c < input_channels ; ++c) {
+      relight_alpha.mutable_cpu_data()[c] *= eigen_values_[c];
+    }
+
+    relight_.Reshape(1, 1, 1, input_channels);
+    caffe_cpu_gemv<Dtype>(CblasTrans, input_channels,
+      input_channels, (Dtype) 1, eigen_vectors_.cpu_data(),
+      relight_alpha.cpu_data(), (Dtype) 0, relight_.mutable_cpu_data());
   }
 
   if (has_mean_values) {
@@ -384,6 +485,11 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
         } else {
           for (int w = 0; w < width; ++w) {
             transformed_data[top_index_h + w] = input_data[data_index_h + w];
+          }
+        }
+        if (has_eigen_values) {
+          for (int w = 0; w < width; ++w) {
+            transformed_data[top_index_h + w] += relight_.cpu_data()[c];
           }
         }
       }
