@@ -337,6 +337,10 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
+  // Specify minimum size of images before crop (used for scale augmentation). 
+  optional uint32 min_size = 6;
+  // Specify maximum size of images before crop (used for scale agumentation).
+  optional uint32 max_size = 7;
 }
 
 // Message that stores parameters shared by loss layers
