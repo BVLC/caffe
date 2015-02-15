@@ -149,6 +149,31 @@ class RecurrentLayer : public Layer<Dtype> {
   Blob<Dtype>* cont_input_blob_;
 };
 
+/**
+ * @brief Processes time-varying inputs using a simple recurrent neural network
+ *        (RNN). Implemented as a network unrolling the RNN computation in time.
+ *
+ * Given time-varying inputs @f$ x_t @f$, computes hidden state @f$
+ *     h_t := \tanh[ W_{hh} h_{t_1} + W_{xh} x_t + b_h ]
+ * @f$, and outputs @f$
+ *     o_t := \tanh[ W_{ho} h_t + b_o ]
+ * @f$.
+ */
+template <typename Dtype>
+class RNNLayer : public RecurrentLayer<Dtype> {
+ public:
+  explicit RNNLayer(const LayerParameter& param)
+      : RecurrentLayer<Dtype>(param) {}
+
+  virtual inline const char* type() const { return "RNN"; }
+
+ protected:
+  virtual void FillUnrolledNet(NetParameter* net_param) const;
+  virtual void RecurrentInputBlobNames(vector<string>* names) const;
+  virtual void RecurrentOutputBlobNames(vector<string>* names) const;
+  virtual void OutputBlobNames(vector<string>* names) const;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_SEQUENCE_LAYERS_HPP_
