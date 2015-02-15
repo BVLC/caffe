@@ -71,6 +71,7 @@ distribute/*
 *.testbin
 *.bin
 python/caffe/proto/
+tools/create_list_file.py
 
 # Generated documentation
 docs/_site
