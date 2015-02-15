@@ -269,7 +269,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 138 (last added: embed_param)
+// LayerParameter next available layer-specific ID: 139 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -342,6 +342,7 @@ message LayerParameter {
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
   optional PythonParameter python_param = 130;
+  optional RecurrentParameter recurrent_param = 138;
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
@@ -729,6 +730,19 @@ message PowerParameter {
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
+}
+
+// Message that stores parameters used by RecurrentLayer
+message RecurrentParameter {
+  // The dimension of the output (and usually hidden state) representation --
+  // must be explicitly set to non-zero.
+  optional uint32 num_output = 1 [default = 0];
+
+  optional FillerParameter weight_filler = 2; // The filler for the weight
+  optional FillerParameter bias_filler = 3; // The filler for the bias
+
+  // Whether to enable displaying debug_info in the unrolled recurrent net.
+  optional bool debug_info = 4 [default = false];
 }
 
 // Message that stores parameters used by ReductionLayer
