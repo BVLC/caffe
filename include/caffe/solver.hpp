@@ -126,6 +126,27 @@ class AdaGradSolver : public SGDSolver<Dtype> {
 };
 
 template <typename Dtype>
+class RMSpropSolver : public SGDSolver<Dtype> {
+public:
+	explicit RMSpropSolver(const SolverParameter& param)
+		: SGDSolver<Dtype>(param) { constructor_sanity_check(); }
+	explicit RMSpropSolver(const string& param_file)
+	      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+
+	const vector<shared_ptr<Blob<Dtype> > >& history_rms() { return history_rms_; }
+protected:
+	virtual void ComputeUpdateValue();
+	void constructor_sanity_check() {
+	CHECK_EQ(0, this->param_.momentum())
+		<< "Momentum cannot be used with AdaGrad.";
+	}
+
+	DISABLE_COPY_AND_ASSIGN(RMSpropSolver);
+	// Keeps RMS of the gradient history
+	vector<shared_ptr<Blob<Dtype> > > history_rms_;
+};
+
+template <typename Dtype>
 Solver<Dtype>* GetSolver(const SolverParameter& param) {
   SolverParameter_SolverType type = param.solver_type();
 
@@ -136,6 +157,8 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
       return new NesterovSolver<Dtype>(param);
   case SolverParameter_SolverType_ADAGRAD:
       return new AdaGradSolver<Dtype>(param);
+  case SolverParameter_SolverType_RMSPROP:
+	  return new RMSpropSolver<Dtype>(param);
   default:
       LOG(FATAL) << "Unknown SolverType: " << type;
   }

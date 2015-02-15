@@ -75,7 +75,11 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
+<<<<<<< HEAD
 // SolverParameter next available ID: 36 (last added: clip_gradients)
+=======
+// SolverParameter next available ID: 36 (last added: RMSprop)
+>>>>>>> RMSprop solver
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -168,10 +172,14 @@ message SolverParameter {
     SGD = 0;
     NESTEROV = 1;
     ADAGRAD = 2;
+    RMSPROP = 3;
   }
   optional SolverType solver_type = 30 [default = SGD];
-  // numerical stability for AdaGrad
+  // numerical stability for AdaGrad and RMSprop
   optional float delta = 31 [default = 1e-8];
+  
+  // decay rate for RMSpro
+  optional float rms_decay = 35 [default = 0.99];
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.
