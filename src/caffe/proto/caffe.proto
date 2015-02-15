@@ -333,6 +333,9 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
+  // if true it would compute the random parameters the first time and reuse
+  // them for following transfomration until Reset() is called.
+  optional bool persistent = 6 [default = false];
 }
 
 // Message that stores parameters shared by loss layers

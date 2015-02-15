@@ -26,6 +26,17 @@ class DataTransformer {
   void InitRand();
 
   /**
+   * @brief Reset Transformation state. This would cause to generate random params
+   *    the next Transform is called
+   */
+  void ResetState();
+
+  /**
+   * @brief Tells if the Transformation is persistent or not
+   */
+  inline bool IsPersistent() { return state_.persistent; }
+
+  /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to the data.
    *
@@ -98,15 +109,28 @@ class DataTransformer {
    */
   virtual int Rand(int n);
 
+  struct TransformState {
+    bool persistent;
+    bool reset;
+    bool do_mirror;
+    int h_off;
+    int w_off;
+    int height;
+    int width;
+  };
+
   void Transform(const Datum& datum, Dtype* transformed_data);
+
+  void UpdateState(const int height, const int width);
+
   // Tranformation parameters
   TransformationParameter param_;
-
 
   shared_ptr<Caffe::RNG> rng_;
   Caffe::Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+  TransformState state_;
 };
 
 }  // namespace caffe
