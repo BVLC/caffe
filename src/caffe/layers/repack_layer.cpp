@@ -33,10 +33,6 @@ void RepackLayer< Dtype >::Reshape(const vector< Blob< Dtype >* >& bottom,
   } else { LOG(ERROR) << "Unknown repacking operation!"; }
 }
 template<typename Dtype>
-LayerParameter_LayerType RepackLayer< Dtype >::type() const {
-  return LayerParameter_LayerType_REPACK;
-}
-template<typename Dtype>
 inline void pack_cpu(const Dtype* input, int in_n, int in_c, int in_h, int in_w,
                      Dtype* output, int s_h, int s_w) {
   int out_w = (in_w-1)/s_w+1, out_h = (in_h-1)/s_h+1;
@@ -97,6 +93,6 @@ void RepackLayer< Dtype >::Backward_cpu(const vector< Blob<Dtype>* >& top,
 STUB_GPU(RepackLayer);
 #endif
 INSTANTIATE_CLASS(RepackLayer);
-REGISTER_LAYER_CLASS(REPACK, RepackLayer);
+REGISTER_LAYER_CLASS(Repack);
 
 }  // namespace caffe

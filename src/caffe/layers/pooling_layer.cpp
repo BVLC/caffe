@@ -314,5 +314,4 @@ STUB_GPU(PoolingLayer);
 
 INSTANTIATE_CLASS(PoolingLayer);
 
-
 }  // namespace caffe

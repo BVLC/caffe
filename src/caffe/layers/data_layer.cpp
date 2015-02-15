@@ -129,6 +129,6 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 }
 
 INSTANTIATE_CLASS(DataLayer);
-REGISTER_LAYER_CLASS(DATA, DataLayer);
+REGISTER_LAYER_CLASS(Data);
 
 }  // namespace caffe

@@ -118,10 +118,8 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     timer.Start();
     CHECK_GT(lines_size, lines_id_);
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-                                    new_height, new_width, is_color);
-    if (!cv_img.data) {
-      continue;
-    }
+        new_height, new_width, is_color);
+    CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
@@ -149,5 +147,6 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
 }
 
 INSTANTIATE_CLASS(ImageDataLayer);
-REGISTER_LAYER_CLASS(IMAGE_DATA, ImageDataLayer);
+REGISTER_LAYER_CLASS(ImageData);
+
 }  // namespace caffe

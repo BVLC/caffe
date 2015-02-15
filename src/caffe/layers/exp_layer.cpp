@@ -64,5 +64,6 @@ STUB_GPU(ExpLayer);
 #endif
 
 INSTANTIATE_CLASS(ExpLayer);
-REGISTER_LAYER_CLASS(EXP, ExpLayer);
+REGISTER_LAYER_CLASS(Exp);
+
 }  // namespace caffe

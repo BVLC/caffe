@@ -93,5 +93,6 @@ void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 INSTANTIATE_CLASS(DummyDataLayer);
-REGISTER_LAYER_CLASS(DUMMY_DATA, DummyDataLayer);
+REGISTER_LAYER_CLASS(DummyData);
+
 }  // namespace caffe
