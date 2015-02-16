@@ -653,6 +653,81 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
   Dtype threshold_;
 };
 
+/**
+ * @brief Parameterized Rectified Linear Unit non-linearity @f$ y_i = \max(0, x_i) + a_i \min(0, x_i) @f$.
+ */
+template <typename Dtype>
+class PReLULayer : public NeuronLayer<Dtype> {
+ public:
+  /**
+   * @param param provides PReLUParameter prelu_param,
+   *     with PReLULayer options:
+   *   - init_value (\b optional, default 0.25).
+   *     all negative slopes over channels are set to this value.
+   *   - channel_shared (\b optional, default false).
+   *     negative slopes are shared across channels.
+   */
+  explicit PReLULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "PReLU"; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the computed outputs for each channel @f$i@f $@f$
+   *        y_i = \max(0, x_i) + a_i \min(0, x_i)
+   *      @f$.
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the PReLU inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *      respect to the outputs
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
+   *      with respect to computed outputs @f$ y @f$
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length 1)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs @f$ x @f$; For each channel @f$i@f$, backward fills their
+   *      diff with gradients @f$
+   *        \frac{\partial E}{\partial x_i} = \left\{
+   *        \begin{array}{lr}
+   *            a_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\
+   *            \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i > 0
+   *        \end{array} \right
+   *      @f$.
+   *      If param_propagate_down_[0] is true, it fills the diff with gradients
+   *      @f$
+   *        \frac{\partial E}{\partial a_i} = \left\{
+   *        \begin{array}{lr}
+   *            \sum_{x_i} x_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\
+   *            0 & \mathrm{if} \; x_i > 0
+   *        \end{array} \right.
+   *      @f$.
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool channel_shared_;
+  Blob<Dtype> multiplier_;  // dot multipler for backward computation of params
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_NEURON_LAYERS_HPP_

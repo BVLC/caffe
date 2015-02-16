@@ -246,7 +246,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 129 (last added: window_data_param)
+// LayerParameter next available layer-specific ID: 131 (last added: prelu_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -314,6 +314,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+  optional PReLUParameter prelu_param = 130;
 }
 
 // Message that stores parameters used to apply transformation
@@ -892,4 +893,15 @@ message V0LayerParameter {
   optional uint32 concat_dim = 65 [default = 1];
 
   optional HDF5OutputParameter hdf5_output_param = 1001;
+}
+
+// Message that stores parameters used by PReLULayer
+message PReLUParameter {
+  // Parametric ReLU described in K. He et al, Delving Deep into Rectifiers:
+  // Surpassing Human-Level Performance on ImageNet Classification, 2015.
+
+  // Initial value of a_i. Set as a_i=init_value for all channel i.
+  optional float init_value = 1 [default = 0.25];
+  // Whether or not slope paramters are shared across channels.
+  optional bool channel_shared = 2 [default = false];
 }
