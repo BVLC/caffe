@@ -9,7 +9,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
+void SoftmaxWithCrossEntropyLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   softmax_bottom_vec_.clear();
@@ -20,7 +20,7 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
 }
 
 template <typename Dtype>
-void SoftmaxWithLossLayer<Dtype>::Reshape(
+void SoftmaxWithCrossEntropyLossLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   LossLayer<Dtype>::Reshape(bottom, top);
   softmax_layer_->Reshape(softmax_bottom_vec_, &softmax_top_vec_);
@@ -31,23 +31,24 @@ void SoftmaxWithLossLayer<Dtype>::Reshape(
 }
 
 template <typename Dtype>
-void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
+void SoftmaxWithCrossEntropyLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
   // The forward pass computes the softmax prob values.
   softmax_layer_->Forward(softmax_bottom_vec_, &softmax_top_vec_);
   const Dtype* prob_data = prob_.cpu_data();
   const Dtype* label = bottom[1]->cpu_data();
-  const Dtype* sample_weight = bottom[2]->cpu_data();
+  const Dtype* abcweight = bottom[2]->cpu_data();
   int num = prob_.num();
   int dim = prob_.count() / num;
   int spatial_dim = prob_.height() * prob_.width();
   Dtype loss = 0;
+  Dtype w;
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < spatial_dim; j++) {
-      Dtype w = sample_weight[i * spatial_dim + j];
-      loss -= w * log(std::max(prob_data[i * dim +
-          static_cast<int>(label[i * spatial_dim + j]) * spatial_dim + j],
-                           Dtype(FLT_MIN)));
+      w = abcweight[i * spatial_dim + j];
+      for (int k = 0; k < dim; k++) {
+        loss -= w * label[i * dim + k * spatial_dim + j] * log(std::max(prob_data[i * dim + k * spatial_dim + j], Dtype(FLT_MIN)));
+      }
     }
   }
   (*top)[0]->mutable_cpu_data()[0] = loss / num / spatial_dim;
@@ -57,7 +58,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
 }
 
 template <typename Dtype>
-void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void SoftmaxWithCrossEntropyLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     vector<Blob<Dtype>*>* bottom) {
   if (propagate_down[1]) {
@@ -67,24 +68,33 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if (propagate_down[0]) {
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const Dtype* prob_data = prob_.cpu_data();
-    caffe_copy(prob_.count(), prob_data, bottom_diff);
+    //caffe_copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = (*bottom)[1]->cpu_data();
-    const Dtype* sample_weight = (*bottom)[2]->cpu_data();
+    const Dtype* abcweight = (*bottom)[2]->cpu_data();
     int num = prob_.num();
     int dim = prob_.count() / num;
     int spatial_dim = prob_.height() * prob_.width();
     Dtype w;
     for (int i = 0; i < num; ++i) {
       for (int j = 0; j < spatial_dim; ++j) {
-        w = sample_weight[i * spatial_dim + j];
-        bottom_diff[i * dim + static_cast<int>(label[i * spatial_dim + j])
-            * spatial_dim + j] -= 1;
+        //bottom_diff[i * dim + static_cast<int>(label[i * spatial_dim + j])
+        //    * spatial_dim + j] -= 1;
+        w = abcweight[i * spatial_dim + j];
+
+        
 
         for (int k = 0; k < dim; ++k) {
-            bottom_diff[i * dim + k * spatial_dim + j] *= w;
+          bottom_diff[i * dim + k * spatial_dim + j] = 0;
+          for (int k2 = 0; k2 < dim; ++k2) {
+            bottom_diff[i * dim + k * spatial_dim + j] -= w * label[i * dim + k2 * spatial_dim + j] * ((float)(k == k2) - prob_data[i * dim + k * spatial_dim + j]);
+              //bottom_diff[i * dim + k * spatial_dim + j] *= w;
+          }
         }
+        //bottom_diff[i * dim + static_cast<int>(label[i * spatial_dim + j])
+        //    * spatial_dim + j] *= w;
       }
     }
+    //caffe_mul(prob_.count(), bottom_diff, top_data, bottom_diff);
 
     // Scale gradient
     const Dtype loss_weight = top[0]->cpu_diff()[0];
@@ -94,10 +104,10 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
 
 #ifdef CPU_ONLY
-STUB_GPU(SoftmaxWithLossLayer);
+STUB_GPU(SoftmaxWithCrossEntropyLossLayer);
 #endif
 
-INSTANTIATE_CLASS(SoftmaxWithLossLayer);
+INSTANTIATE_CLASS(SoftmaxWithCrossEntropyLossLayer);
 
 
 }  // namespace caffe

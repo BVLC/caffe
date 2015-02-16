@@ -134,6 +134,12 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
         1, 1, 1);
   }
+  // sample_weight
+  if (this->output_sample_weights_) {
+    (*top)[2]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
+    this->prefetch_sample_weight_.Reshape(this->layer_param_.data_param().batch_size(),
+        1, 1, 1);
+  }
   // datum size
   this->datum_channels_ = datum.channels();
   this->datum_height_ = datum.height();
@@ -150,6 +156,10 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
+  }
+  Dtype* top_sample_weight = NULL;  // suppress warnings about uninitialized variables
+  if (this->output_sample_weights_) {
+    top_sample_weight = this->prefetch_sample_weight_.mutable_cpu_data();
   }
   const int batch_size = this->layer_param_.data_param().batch_size();
 
@@ -176,6 +186,9 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
+    }
+    if (this->output_sample_weights_) {
+      top_sample_weight[item_id] = datum.sample_weight();
     }
 
     // go to the next iter

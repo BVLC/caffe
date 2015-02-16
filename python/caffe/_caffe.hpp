@@ -106,7 +106,7 @@ class PyNet {
   void Backward(int start, int end) { net_->BackwardFromTo(start, end); }
   void Reshape() { net_->Reshape(); }
 
-  void set_input_arrays(bp::object data_obj, bp::object labels_obj);
+  void set_input_arrays(bp::object data_obj, bp::object labels_obj, bp::object sample_weights_obj);
 
   // Save the network weights to binary proto for net surgeries.
   void save(string filename) {
@@ -157,6 +157,7 @@ class PyNet {
   // if taking input from an ndarray, we need to hold references
   bp::object input_data_;
   bp::object input_labels_;
+  bp::object input_sample_weights_;
 };
 
 class PySGDSolver {

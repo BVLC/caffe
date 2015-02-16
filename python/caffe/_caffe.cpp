@@ -91,7 +91,8 @@ void PyNet::check_contiguous_array(PyArrayObject* arr, string name,
   }
 }
 
-void PyNet::set_input_arrays(bp::object data_obj, bp::object labels_obj) {
+void PyNet::set_input_arrays(bp::object data_obj, bp::object labels_obj,
+                             bp::object sample_weights_obj) {
   // check that this network has an input MemoryDataLayer
   shared_ptr<MemoryDataLayer<float> > md_layer =
     boost::dynamic_pointer_cast<MemoryDataLayer<float> >(net_->layers()[0]);
@@ -105,11 +106,18 @@ void PyNet::set_input_arrays(bp::object data_obj, bp::object labels_obj) {
       reinterpret_cast<PyArrayObject*>(data_obj.ptr());
   PyArrayObject* labels_arr =
       reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+  PyArrayObject* sample_weights_arr =
+      reinterpret_cast<PyArrayObject*>(sample_weights_obj.ptr());
   check_contiguous_array(data_arr, "data array", md_layer->datum_channels(),
       md_layer->datum_height(), md_layer->datum_width());
   check_contiguous_array(labels_arr, "labels array", 1, 1, 1);
+  check_contiguous_array(sample_weights_arr, "sample weights array", 1, 1, 1);
   if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
     throw std::runtime_error("data and labels must have the same first"
+        " dimension");
+  }
+  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(sample_weights_arr)[0]) {
+    throw std::runtime_error("data and sample weights must have the same first"
         " dimension");
   }
   if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
@@ -120,9 +128,11 @@ void PyNet::set_input_arrays(bp::object data_obj, bp::object labels_obj) {
   // hold references
   input_data_ = data_obj;
   input_labels_ = labels_obj;
+  input_sample_weights_ = sample_weights_obj;
 
   md_layer->Reset(static_cast<float*>(PyArray_DATA(data_arr)),
       static_cast<float*>(PyArray_DATA(labels_arr)),
+      static_cast<float*>(PyArray_DATA(sample_weights_arr)),
       PyArray_DIMS(data_arr)[0]);
 }
 

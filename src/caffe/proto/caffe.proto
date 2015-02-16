@@ -26,6 +26,7 @@ message Datum {
   optional int32 label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
+  optional float sample_weight = 7;
 }
 
 message FillerParameter {
@@ -225,7 +226,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 38 (last added: CONTRASTIVE_LOSS)
+  // LayerType next available ID: 39 (last added: SOFTMAX_CROSS_ENTROPY_LOSS)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -263,6 +264,7 @@ message LayerParameter {
     SILENCE = 36;
     SOFTMAX = 20;
     SOFTMAX_LOSS = 21;
+    SOFTMAX_CROSS_ENTROPY_LOSS = 38;
     SPLIT = 22;
     SLICE = 33;
     TANH = 23;

@@ -22,6 +22,7 @@ namespace caffe {
 
 #define HDF5_DATA_DATASET_NAME "data"
 #define HDF5_DATA_LABEL_NAME "label"
+#define HDF5_DATA_SAMPLE_WEIGHT_NAME "sample_weight"
 
 /**
  * @brief Provides base for data layers that feed blobs to the Net.
@@ -65,6 +66,7 @@ class BaseDataLayer : public Layer<Dtype> {
   const Dtype* mean_;
   Caffe::Phase phase_;
   bool output_labels_;
+  bool output_sample_weights_;
 };
 
 template <typename Dtype>
@@ -93,6 +95,7 @@ class BasePrefetchingDataLayer :
  protected:
   Blob<Dtype> prefetch_data_;
   Blob<Dtype> prefetch_label_;
+  Blob<Dtype> prefetch_sample_weight_;
 };
 
 template <typename Dtype>
@@ -109,7 +112,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
  protected:
   virtual void InternalThreadEntry();
@@ -180,7 +183,8 @@ class HDF5DataLayer : public Layer<Dtype> {
     return LayerParameter_LayerType_HDF5_DATA;
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  //virtual inline int ExactNumTopBlobs() const { return 2; }
+  //virtual inline int ExactNumTopBlobs() const { return 3; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -191,7 +195,7 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {}
-  virtual void LoadHDF5FileData(const char* filename);
+  virtual void LoadHDF5FileData(const char* filename, int n_blobs);
 
   std::vector<std::string> hdf_filenames_;
   unsigned int num_files_;
@@ -199,6 +203,7 @@ class HDF5DataLayer : public Layer<Dtype> {
   hsize_t current_row_;
   Blob<Dtype> data_blob_;
   Blob<Dtype> label_blob_;
+  Blob<Dtype> sample_weight_blob_;
 };
 
 /**
@@ -221,7 +226,7 @@ class HDF5OutputLayer : public Layer<Dtype> {
     return LayerParameter_LayerType_HDF5_OUTPUT;
   }
   // TODO: no limit on the number of blobs
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumBottomBlobs() const { return /*3*/ 1; }
   virtual inline int ExactNumTopBlobs() const { return 0; }
 
   inline std::string file_name() const { return file_name_; }
@@ -261,7 +266,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
     return LayerParameter_LayerType_IMAGE_DATA;
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 3; }
 
  protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
@@ -289,13 +294,13 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
     return LayerParameter_LayerType_MEMORY_DATA;
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 3; }
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
-  void Reset(Dtype* data, Dtype* label, int n);
+  void Reset(Dtype* data, Dtype* label, Dtype* sample_weight, int n);
 
   int batch_size() { return batch_size_; }
 
@@ -306,10 +311,12 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   int batch_size_;
   Dtype* data_;
   Dtype* labels_;
+  Dtype* sample_weights_;
   int n_;
   int pos_;
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
+  Blob<Dtype> added_sample_weight_;
   bool has_new_data_;
 };
 
@@ -332,7 +339,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
     return LayerParameter_LayerType_WINDOW_DATA;
   }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 3; }
 
  protected:
   virtual unsigned int PrefetchRand();
