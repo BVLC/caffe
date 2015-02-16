@@ -23,7 +23,24 @@ class Classifier(caffe.Net):
     def __init__(self, model_file, pretrained_file, image_dims=None,
                  mean=None, input_scale=None, raw_scale=None,
                  channel_swap=None):
+<<<<<<< HEAD
         caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
+=======
+        """
+        Take
+        image_dims: dimensions to scale input for cropping/sampling.
+            Default is to scale to net input size for whole-image crop.
+        gpu, mean, input_scale, raw_scale, channel_swap: params for
+            preprocessing options.
+        """
+        caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
+        caffe.set_phase_test()
+
+        if gpu:
+            caffe.set_mode_gpu()
+        else:
+            caffe.set_mode_cpu()
+>>>>>>> Implement RMSprop
 
         # configure pre-processing
         in_ = self.inputs[0]
