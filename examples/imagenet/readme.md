@@ -67,7 +67,7 @@ We will also lay out a protocol buffer for running the solver. Let's make a few 
 * We will run in batches of 256, and run a total of 450,000 iterations (about 90 epochs).
 * For every 1,000 iterations, we test the learned net on the validation data.
 * We set the initial learning rate to 0.01, and decrease it every 100,000 iterations (about 20 epochs).
-* Information will be displayed every 20 epochs.
+* Information will be displayed every 20 iterations.
 * The network will be trained with momentum 0.9 and a weight decay of 0.0005.
 * For every 10,000 iterations, we will take a snapshot of the current status.
 
