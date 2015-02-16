@@ -1,0 +1,122 @@
+name: "lstm_language_model"
+
+input: "cont_sentence"
+input_shape { dim: 1 dim: 1 }
+
+input: "input_sentence"
+input_shape { dim: 1 dim: 1 }
+
+layer {
+  name: "embedding"
+  type: "Embed"
+  bottom: "input_sentence"
+  top: "embedded_input_sentence"
+  param {
+    lr_mult: 1
+  }
+  embed_param {
+    bias_term: false
+    input_dim: 8801  # = vocab_size + 1 (for EOS)
+    num_output: 1000
+    weight_filler {
+      type: "uniform"
+      min: -0.08
+      max: 0.08
+    }
+  }
+}
+layer {
+  name: "embed-drop"
+  type: "Dropout"
+  bottom: "embedded_input_sentence"
+  top: "embedded_input_sentence"
+  dropout_param { dropout_ratio: 0.5 }
+  include { stage: "embed-drop" }
+}
+layer {
+  name: "lstm1"
+  type: "LSTM"
+  bottom: "embedded_input_sentence"
+  bottom: "cont_sentence"
+  top: "lstm1"
+  recurrent_param {
+    num_output: 1000
+    weight_filler {
+      type: "uniform"
+      min: -0.08
+      max: 0.08
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "lstm-drop"
+  type: "Dropout"
+  bottom: "lstm1"
+  top: "lstm1"
+  dropout_param { dropout_ratio: 0.5 }
+  include { stage: "lstm-drop" }
+}
+layer {
+  name: "predict"
+  type: "InnerProduct"
+  bottom: "lstm1"
+  top: "predict"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 8801  # = vocab_size + 1 (+1 for EOS)
+    weight_filler {
+      type: "uniform"
+      min: -0.08
+      max: 0.08
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    axis: 2
+  }
+}
+layer {
+  name: "probs"
+  type: "Softmax"
+  bottom: "predict"
+  top: "probs"
+  softmax_param { axis: 2 }
+}
+# layer {
+#   name: "cross_entropy_loss"
+#   type: "SoftmaxWithLoss"
+#   bottom: "predict"
+#   bottom: "target_sentence"
+#   top: "cross_entropy_loss"
+#   loss_weight: 20
+#   loss_param {
+#     ignore_label: -1
+#   }
+#   softmax_param {
+#     axis: 2
+#   }
+# }
+# layer {
+#   name: "accuracy"
+#   type: "Accuracy"
+#   bottom: "predict"
+#   bottom: "target_sentence"
+#   top: "accuracy"
+#   include { phase: TEST }
+#   accuracy_param {
+#     axis: 2
+#     ignore_label: -1
+#   }
+# }
