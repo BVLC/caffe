@@ -142,4 +142,40 @@ TYPED_TEST(GaussianFillerTest, TestFill) {
   EXPECT_LE(var, target_var * 5.);
 }
 
+template <typename Dtype>
+class MSRFillerTest : public ::testing::Test {
+ protected:
+  MSRFillerTest()
+      : blob_(new Blob<Dtype>(1000, 3, 4, 5)),
+        filler_param_() {
+    filler_.reset(new MSRFiller<Dtype>(filler_param_));
+    filler_->Fill(blob_);
+  }
+  virtual ~MSRFillerTest() { delete blob_; }
+  Blob<Dtype>* const blob_;
+  FillerParameter filler_param_;
+  shared_ptr<MSRFiller<Dtype> > filler_;
+};
+
+TYPED_TEST_CASE(MSRFillerTest, TestDtypes);
+
+TYPED_TEST(MSRFillerTest, TestFill) {
+  EXPECT_TRUE(this->blob_);
+  const int count = this->blob_->count();
+  const TypeParam* data = this->blob_->cpu_data();
+  TypeParam mean = 0.;
+  TypeParam ex2 = 0.;
+  for (int i = 0; i < count; ++i) {
+    mean += data[i];
+    ex2 += data[i] * data[i];
+  }
+  mean /= count;
+  ex2 /= count;
+  TypeParam std = sqrt(ex2 - mean*mean);
+  int fan_in = 3*4*5;
+  TypeParam target_std = sqrt(2.0 / fan_in);
+  EXPECT_NEAR(mean, 0.0, 0.1);
+  EXPECT_NEAR(std, target_std, 0.1);
+}
+
 }  // namespace caffe
