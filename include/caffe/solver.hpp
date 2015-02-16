@@ -134,15 +134,17 @@ public:
 	      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
 
 	const vector<shared_ptr<Blob<Dtype> > >& history_rms() { return history_rms_; }
+	const vector<shared_ptr<Blob<Dtype> > >& update_rms() { return update_rms_; }
 protected:
 	virtual void ComputeUpdateValue();
 	void constructor_sanity_check() {
-
+	CHECK_NE(0, this->param_.rms_decay())
+		<< "rms_decay cannot be 0 with RMSprop.";
 	}
 
 	DISABLE_COPY_AND_ASSIGN(RMSpropSolver);
 	// Keeps RMS of the gradient history
-	vector<shared_ptr<Blob<Dtype> > > history_rms_;
+	vector<shared_ptr<Blob<Dtype> > > history_rms_, update_rms_;
 };
 
 template <typename Dtype>
@@ -157,7 +159,7 @@ Solver<Dtype>* GetSolver(const SolverParameter& param) {
   case SolverParameter_SolverType_ADAGRAD:
       return new AdaGradSolver<Dtype>(param);
   case SolverParameter_SolverType_RMSPROP:
-      return new AdaGradSolver<Dtype>(param);
+      return new RMSpropSolver<Dtype>(param);
   default:
       LOG(FATAL) << "Unknown SolverType: " << type;
   }

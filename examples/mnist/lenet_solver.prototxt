@@ -8,7 +8,7 @@ test_iter: 100
 test_interval: 500
 # The base learning rate, momentum and the weight decay of the network.
 base_lr: 0.01
-momentum: 0.9
+momentum: 0.00
 weight_decay: 0.0005
 # The learning rate policy
 lr_policy: "inv"

@@ -953,50 +953,51 @@ void RMSpropSolver<Dtype>::ComputeUpdateValue() {
         }
       }
 
+
       // compute square of gradient in update
       caffe_gpu_powx(net_params[param_id]->count(),
           net_params[param_id]->gpu_diff(), Dtype(2),
-          this->update_[param_id]->mutable_gpu_data());
+          this->update_rms_[param_id]->mutable_gpu_data());
 
       // update history
 	  caffe_gpu_axpby(net_params[param_id] -> count(),
-	  		   (1-rms_decay), this->update_[param_id]->gpu_data(),
-	  		   rms_decay, this->history_[param_id]-> mutable_gpu_data());
+	  		   (1-rms_decay), this->update_rms_[param_id]->gpu_data(),
+	  		   rms_decay, this->history_rms_[param_id]-> mutable_gpu_data());
 
       // prepare update
       caffe_gpu_powx(net_params[param_id]->count(),
-                this->history_[param_id]->gpu_data(), Dtype(0.5),
-                this->update_[param_id]->mutable_gpu_data());
+                this->history_rms_[param_id]->gpu_data(), Dtype(0.5),
+                this->update_rms_[param_id]->mutable_gpu_data());
 
       caffe_gpu_add_scalar(net_params[param_id]->count(),
-                delta, this->update_[param_id]->mutable_gpu_data());
+                delta, this->update_rms_[param_id]->mutable_gpu_data());
 
       caffe_gpu_div(net_params[param_id]->count(),
                 net_params[param_id]->gpu_diff(),
-                this->update_[param_id]->gpu_data(),
-                this->update_[param_id]->mutable_gpu_data());
+                this->update_rms_[param_id]->gpu_data(),
+                this->update_rms_[param_id]->mutable_gpu_data());
 
       // scale and copy
       caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
-          this->update_[param_id]->gpu_data(), Dtype(0),
+          this->update_rms_[param_id]->gpu_data(), Dtype(0),
           net_params[param_id]->mutable_gpu_diff());
 
+      // Momentum step
       if(momentum > 0){
 		  // update history
-		  caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-					 net_params[param_id]->cpu_diff(), momentum,
-					 this->history_[param_id]->mutable_cpu_data());
+		  caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
+					 net_params[param_id]->gpu_diff(), momentum,
+					 this->history_[param_id]->mutable_gpu_data());
 
-		   // compute udpate: step back then over step
-		   caffe_cpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
-			   this->history_[param_id]->cpu_data(), -momentum,
-			   this->update_[param_id]->mutable_cpu_data());
+		  // compute udpate: step back then over step
+		  caffe_gpu_axpby(net_params[param_id]->count(), Dtype(1) + momentum,
+			   this->history_[param_id]->gpu_data(), -momentum,
+			   this->update_[param_id]->mutable_gpu_data());
 
-		   // copy
-		   caffe_gpu_add(net_params[param_id]->count(),
-			   this->update_[param_id]->cpu_data(),
-			   net_params[param_id]->cpu_diff(),
-			   net_params[param_id]->mutable_cpu_diff());
+		  // copy
+		  caffe_gpu_axpby(net_params[param_id]->count(),
+			   Dtype(1.0),this->update_[param_id]->gpu_data(),
+			   Dtype(1.0),net_params[param_id]->mutable_gpu_diff());
 
        }
     }
