@@ -605,6 +605,37 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
   Dtype threshold_;
 };
 
+template <typename Dtype>
+class BatchnormLayer : public NeuronLayer<Dtype> {
+ public:
+  explicit BatchnormLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_BATCHNORM;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  //virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      //vector<Blob<Dtype>*>* top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  //virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      //const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+
+  int num_;
+  int bottom_size_;
+  Dtype var_epsilon_;
+  Blob<Dtype> batch_mean_;
+  Blob<Dtype> buffer_blob_;
+  Blob<Dtype> batch_variance_;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_NEURON_LAYERS_HPP_

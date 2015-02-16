@@ -234,6 +234,7 @@ message LayerParameter {
     ABSVAL = 35;
     ACCURACY = 1;
     ARGMAX = 30;
+    BATCHNORM = 104;
     BNLL = 2;
     CONCAT = 3;
     CONTRASTIVE_LOSS = 37;
