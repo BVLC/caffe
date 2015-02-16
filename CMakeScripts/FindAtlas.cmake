@@ -10,6 +10,7 @@
 #  Atlas_LIBRARYRARY_DIRS
 
 set(Atlas_INCLUDE_SEARCH_PATHS
+  /usr/include
   /usr/include/atlas
   /usr/include/atlas-base
   $ENV{Atlas_ROOT_DIR}
@@ -17,6 +18,7 @@ set(Atlas_INCLUDE_SEARCH_PATHS
 )
 
 set(Atlas_LIB_SEARCH_PATHS
+  /usr/lib64
   /usr/lib/atlas
   /usr/lib/atlas-base
   $ENV{Atlas_ROOT_DIR}
@@ -27,7 +29,7 @@ find_path(Atlas_CBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Atlas_INCLUDE_SEARCH_PAT
 find_path(Atlas_CLAPACK_INCLUDE_DIR NAMES clapack.h PATHS ${Atlas_INCLUDE_SEARCH_PATHS})
 find_library(Atlas_CBLAS_LIBRARY NAMES ptcblas_r ptcblas cblas_r cblas PATHS ${Atlas_LIB_SEARCH_PATHS})
 find_library(Atlas_BLAS_LIBRARY NAMES atlas_r atlas PATHS ${Atlas_LIB_SEARCH_PATHS})
-find_library(Atlas_LAPACK_LIBRARY NAMES alapack_r alapack lapack_atlas PATHS ${Atlas_LIB_SEARCH_PATHS})
+find_library(Atlas_LAPACK_LIBRARY NAMES atlclapack alapack_r alapack lapack_atlas PATHS ${Atlas_LIB_SEARCH_PATHS})
 
 set(LOOKED_FOR
 
