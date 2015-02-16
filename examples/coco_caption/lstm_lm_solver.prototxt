@@ -1,0 +1,21 @@
+net: "./examples/coco_caption/lstm_language_model.prototxt"
+train_state: { stage: 'embed-drop' stage: 'lstm-drop' }
+test_iter: 25
+test_state: { stage: 'test-on-train' }
+test_iter: 25
+test_state: { stage: 'test-on-val' }
+test_interval: 1000
+base_lr: 0.1
+lr_policy: "step"
+gamma: 0.5
+stepsize: 20000
+display: 1
+max_iter: 110000
+momentum: 0.9
+weight_decay: 0.0000
+snapshot: 5000
+snapshot_prefix: "./examples/coco_caption/lstm_lm"
+solver_mode: GPU
+random_seed: 1701
+average_loss: 100
+clip_gradients: 10
