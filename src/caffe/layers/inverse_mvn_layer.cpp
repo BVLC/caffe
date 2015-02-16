@@ -113,10 +113,8 @@ void InverseMVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
-  const Dtype* top_data = top[0]->cpu_data();
 
   Blob<Dtype>* bottom_blob = blob_helper_.DataBlob(bottom);
-  const Dtype* bottom_data = bottom_blob->cpu_data();
   Dtype* bottom_diff = bottom_blob->mutable_cpu_diff();
 
   int num;
@@ -126,7 +124,6 @@ void InverseMVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     num = bottom_blob->num() * bottom[0]->channels();
 
   int dim = bottom_blob->count() / num;
-  Dtype eps = 1e-10;
 
   if (this->layer_param_.mvn_param().normalize_variance()) {
     Blob<Dtype>* variance_blob = blob_helper_.VarianceBlob(bottom);

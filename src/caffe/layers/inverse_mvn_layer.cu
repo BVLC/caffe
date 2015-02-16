@@ -62,10 +62,8 @@ void InverseMVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->gpu_diff();
-  const Dtype* top_data = top[0]->gpu_data();
 
   Blob<Dtype>* bottom_blob = blob_helper_.DataBlob(bottom);
-  const Dtype* bottom_data = bottom_blob->gpu_data();
   Dtype* bottom_diff = bottom_blob->mutable_gpu_diff();
 
   int num;

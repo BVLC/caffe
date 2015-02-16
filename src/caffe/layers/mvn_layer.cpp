@@ -8,6 +8,9 @@
 
 namespace caffe {
 
+bool please_dump = false;
+int train_iter = -1;
+
 template <typename Dtype>
 void MVNLayer<Dtype>::SetBlobFinder(const BlobFinder<Dtype> &blob_finder) {
   this->blob_helper_ = MvnBlobHelper<Dtype>(this->layer_param_, blob_finder);
@@ -79,6 +82,8 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_powx(bottom[0]->count(), bottom_data, Dtype(2),
         temp_.mutable_cpu_data());
 
+    std::ofstream stream;
+
     // computes variance using var(X) = E(X^2) - (EX)^2
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
         sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());  // EX
@@ -90,28 +95,30 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     caffe_sub(mean_.count(), variance_.cpu_data(), temp_.cpu_data(),
         variance_.mutable_cpu_data());  // variance
 
+    // Check for slightly negative values of the variance, which would cause
+    // NaN result in the subsequent square root.
+    Dtype* write_var = variance_.mutable_cpu_data();
+    const Dtype* read_var = variance_.cpu_data();
+    for (int i = 0; i < variance_.count(); ++i) {
+      write_var[i] = read_var[i] < eps ? eps : read_var[i];
+    }
+
     // do mean and variance normalization
     // subtract mean
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
             mean_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
             temp_.mutable_cpu_data());
-
     caffe_add(temp_.count(), bottom_data, temp_.cpu_data(),
               top_blob->mutable_cpu_data());
-
     // normalize variance
     caffe_powx(variance_.count(), variance_.cpu_data(), Dtype(0.5),
           variance_.mutable_cpu_data());
-
     caffe_add_scalar(variance_.count(), eps, variance_.mutable_cpu_data());
-
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, 1.,
           variance_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
           temp_.mutable_cpu_data());
-
     caffe_div(temp_.count(), top_blob->cpu_data(), temp_.cpu_data(),
               top_blob->mutable_cpu_data());
-
     if (blob_helper_.HasVarianceTop()) {
       // If the variance is exported as a top blob, it should just mirror the
       // data in the member mean_ blob.

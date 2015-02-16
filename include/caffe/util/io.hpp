@@ -155,19 +155,20 @@ void hdf5_save_nd_dataset(
     const hid_t file_id, const string& dataset_name, const Blob<Dtype>& blob);
 
 template <typename Dtype>
-void ShowBlob(const std::string& name, const Blob<Dtype>& blob) {
-  std::cout << std::endl << "==============" << std::endl <<
+void ShowBlob(const std::string& name, const Blob<Dtype>& blob,
+              std::ofstream&  stream ) {
+  stream << std::endl << "==============" << std::endl <<
                "Blob " << name << std::endl;
   for (int num = 0; num < blob.num(); ++num) {
     for (int chan = 0; chan < blob.channels(); ++chan) {
       for (int h = 0; h < blob.height(); ++h) {
-        std::cout << "data[" << num
+        stream << "data[" << num
                      << "," << chan << ","
                         << h << "] = ";
         for (int w = 0; w < blob.width(); ++w) {
-          std::cout << blob.data_at(num, chan, h, w) << ",";
+          stream << blob.data_at(num, chan, h, w) << ",";
         }
-        std::cout << std::endl;
+        stream << std::endl;
       }
     }
   }

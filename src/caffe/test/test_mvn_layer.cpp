@@ -147,6 +147,21 @@ TYPED_TEST(MVNLayerTest, TestForward_MeanAndVarianceInTopBlobs) {
           expected_input_variances.offset(i, j, 0, 0)) = input_variance;
     }
   }
+
+  // The variances and means should match what we computed in the loop above.
+  Blob<Dtype>* mean_blob = this->blob_finder_.PointerFromName("mean");
+  Blob<Dtype>* variance_blob = this->blob_finder_.PointerFromName("variance");
+  for (int i = 0; i < num; ++i) {
+    for (int j = 0; j < channels; ++j) {
+      const Dtype kErrorBound = 0.0001;
+      EXPECT_NEAR( expected_input_means.data_at(i, j, 0, 0),
+                   mean_blob->data_at(i, j, 0, 0),
+                   kErrorBound);
+      EXPECT_NEAR( expected_input_variances.data_at(i, j, 0, 0),
+                   variance_blob->data_at(i, j, 0, 0),
+                   kErrorBound);
+    }
+  }
 }
 
 // Test the case where the MVNParameter specifies that the mean
@@ -197,6 +212,17 @@ TYPED_TEST(MVNLayerTest, TestForward_MeanInTopBlobs) {
       EXPECT_NEAR(1, var, kErrorBound);
       *(expected_input_means.mutable_cpu_data() +
           expected_input_means.offset(i, j, 0, 0)) = input_mean;
+    }
+  }
+
+  // The means should match what we computed in the loop above.
+  Blob<Dtype>* mean_blob = this->blob_finder_.PointerFromName("mean");
+  for (int i = 0; i < num; ++i) {
+    for (int j = 0; j < channels; ++j) {
+      const Dtype kErrorBound = 0.0001;
+      EXPECT_NEAR( expected_input_means.data_at(i, j, 0, 0),
+                   mean_blob->data_at(i, j, 0, 0),
+                   kErrorBound);
     }
   }
 }
