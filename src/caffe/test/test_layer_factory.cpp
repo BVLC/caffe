@@ -25,7 +25,7 @@ TYPED_TEST(LayerFactoryTest, TestCreateLayer) {
   for (typename LayerRegistry<Dtype>::CreatorRegistry::iterator iter =
        registry.begin(); iter != registry.end(); ++iter) {
     layer_param.set_type(iter->first);
-    layer.reset(LayerRegistry<Dtype>::CreateLayer(layer_param));
+    layer = LayerRegistry<Dtype>::CreateLayer(layer_param);
     EXPECT_EQ(iter->first, layer->type());
   }
 }
