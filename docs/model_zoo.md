@@ -7,10 +7,10 @@ Lots of people have used Caffe to train models of different architectures and ap
 To lower the friction of sharing these models, we introduce the model zoo framework:
 
 - A standard format for packaging Caffe model info.
-- Tools to upload/download model info to/from Github Gists, and to download trained `.caffemodel` binaries.
+- Tools to upload/download model info to/from Github Gists, and to download trained `.caffemodel` parameters.
 - A central wiki page for sharing model info Gists.
 
-## Where to get trained models
+## BVLC Reference Models
 
 First of all, we provide some trained models out of the box.
 Each one of these can be downloaded by running `scripts/download_model_binary.py <dirname>` where `<dirname>` is specified below:
@@ -20,7 +20,11 @@ Each one of these can be downloaded by running `scripts/download_model_binary.py
 - **BVLC Reference R-CNN ILSVRC-2013** in `models/bvlc_reference_rcnn_ilsvrc13`: pure Caffe implementation of [R-CNN](https://github.com/rbgirshick/rcnn). (Trained by Ross Girshick @rbgirshick)
 - **BVLC GoogleNet** in `models/bvlc_googlenet`: GoogleNet trained on ILSVRC 2012, almost exactly as described in [GoogleNet](http://arxiv.org/abs/1409.4842). (Trained by Sergio Guadarrama @sguada)
 
-User-provided models are posted to a public-editable [wiki page](https://github.com/BVLC/caffe/wiki/Model-Zoo).
+
+## Community Models
+
+The publicly-editable [Caffe Model Zoo wiki](https://github.com/BVLC/caffe/wiki/Model-Zoo) catalogues user-made models.
+Refer to the model details for authorship and conditions -- please respect licenses and citations.
 
 ## Model info format
 
@@ -36,7 +40,7 @@ A caffe model is distributed as a directory containing:
     - License information.
 - [optional] Other helpful scripts.
 
-## Hosting model info
+### Hosting model info
 
 Github Gist is a good format for model info distribution because it can contain multiple files, is versionable, and has in-browser syntax highlighting and markdown rendering.
 
