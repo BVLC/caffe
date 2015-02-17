@@ -103,7 +103,7 @@ def main(argv):
             channel_swap=channel_swap)
 
     if args.gpu:
-        print 'GPU mode'
+        print('GPU mode')
 
     # Load numpy array (.npy), directory glob (*.jpg), or image file.
     args.input_file = os.path.expanduser(args.input_file)
@@ -115,12 +115,12 @@ def main(argv):
     else:
         inputs = [caffe.io.load_image(args.input_file)]
 
-    print "Classifying %d inputs." % len(inputs)
+    print("Classifying %d inputs." % len(inputs))
 
     # Classify.
     start = time.time()
     predictions = classifier.predict(inputs, not args.center_only)
-    print "Done in %.2f s." % (time.time() - start)
+    print("Done in %.2f s." % (time.time() - start))
 
     # Save
     np.save(args.output_file, predictions)
