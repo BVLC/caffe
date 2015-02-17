@@ -17,7 +17,7 @@ class PythonLayer : public Layer<Dtype> {
       : Layer<Dtype>(param), self_(self) { }
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
     try {
       bp::call_method<bp::object>(self_, "setup", bottom, top);
     } catch (bp::error_already_set) {
