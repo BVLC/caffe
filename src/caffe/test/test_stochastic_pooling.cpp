@@ -62,8 +62,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
 
 TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
   Caffe::set_mode(Caffe::GPU);
-  Caffe::set_phase(Caffe::TRAIN);
   LayerParameter layer_param;
+  layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
@@ -106,8 +106,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
 
 TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
   Caffe::set_mode(Caffe::GPU);
-  Caffe::set_phase(Caffe::TEST);
   LayerParameter layer_param;
+  layer_param.set_phase(TEST);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
@@ -144,8 +144,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
 
 TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
   Caffe::set_mode(Caffe::GPU);
-  Caffe::set_phase(Caffe::TRAIN);
   LayerParameter layer_param;
+  layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);

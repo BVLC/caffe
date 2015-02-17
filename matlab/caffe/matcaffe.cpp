@@ -254,14 +254,6 @@ static void set_mode_gpu(MEX_ARGS) {
   Caffe::set_mode(Caffe::GPU);
 }
 
-static void set_phase_train(MEX_ARGS) {
-  Caffe::set_phase(Caffe::TRAIN);
-}
-
-static void set_phase_test(MEX_ARGS) {
-  Caffe::set_phase(Caffe::TEST);
-}
-
 static void set_device(MEX_ARGS) {
   if (nrhs != 1) {
     ostringstream error_msg;
@@ -278,7 +270,7 @@ static void get_init_key(MEX_ARGS) {
 }
 
 static void init(MEX_ARGS) {
-  if (nrhs != 2) {
+  if (nrhs != 3) {
     ostringstream error_msg;
     error_msg << "Expected 2 arguments, got " << nrhs;
     mex_error(error_msg.str());
@@ -286,12 +278,23 @@ static void init(MEX_ARGS) {
 
   char* param_file = mxArrayToString(prhs[0]);
   char* model_file = mxArrayToString(prhs[1]);
+  char* phase_name = mxArrayToString(prhs[2]);
 
-  net_.reset(new Net<float>(string(param_file)));
+  Phase phase;
+  if (strcmp(phase_name, "train") == 0) {
+      phase = TRAIN;
+  } else if (strcmp(phase_name, "test") == 0) {
+      phase = TEST;
+  } else {
+    mex_error("Unknown phase.");
+  }
+
+  net_.reset(new Net<float>(string(param_file), phase));
   net_->CopyTrainedLayersFrom(string(model_file));
 
   mxFree(param_file);
   mxFree(model_file);
+  mxFree(phase_name);
 
   init_key = random();  // NOLINT(caffe/random_fn)
 
@@ -377,8 +380,6 @@ static handler_registry handlers[] = {
   { "is_initialized",     is_initialized  },
   { "set_mode_cpu",       set_mode_cpu    },
   { "set_mode_gpu",       set_mode_gpu    },
-  { "set_phase_train",    set_phase_train },
-  { "set_phase_test",     set_phase_test  },
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
   { "get_init_key",       get_init_key    },

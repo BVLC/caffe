@@ -119,9 +119,9 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     int offset = this->prefetch_data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
     if (datum.encoded()) {
-      this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
+      this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     } else {
-      this->data_transformer_.Transform(datum, &(this->transformed_data_));
+      this->data_transformer_->Transform(datum, &(this->transformed_data_));
     }
     if (this->output_labels_) {
       top_label[item_id] = datum.label();

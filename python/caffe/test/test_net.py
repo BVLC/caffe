@@ -35,7 +35,7 @@ class TestNet(unittest.TestCase):
     def setUp(self):
         self.num_output = 13
         net_file = simple_net_file(self.num_output)
-        self.net = caffe.Net(net_file)
+        self.net = caffe.Net(net_file, caffe.TRAIN)
         # fill in valid labels
         self.net.blobs['label'].data[...] = \
                 np.random.randint(self.num_output,
@@ -69,7 +69,7 @@ class TestNet(unittest.TestCase):
         f.close()
         self.net.save(f.name)
         net_file = simple_net_file(self.num_output)
-        net2 = caffe.Net(net_file, f.name)
+        net2 = caffe.Net(net_file, f.name, caffe.TRAIN)
         os.remove(net_file)
         os.remove(f.name)
         for name in self.net.params:

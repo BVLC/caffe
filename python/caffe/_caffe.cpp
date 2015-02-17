@@ -31,10 +31,9 @@ namespace caffe {
 typedef float Dtype;
 const int NPY_DTYPE = NPY_FLOAT32;
 
+// Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
-void set_phase_train() { Caffe::set_phase(Caffe::TRAIN); }
-void set_phase_test() { Caffe::set_phase(Caffe::TEST); }
 
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
@@ -71,13 +70,24 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
   }
 }
 
-// Net construct-and-load convenience constructor
+// Net constructor for passing phase as int
 shared_ptr<Net<Dtype> > Net_Init(
-    string param_file, string pretrained_param_file) {
+    string param_file, int phase) {
+  CheckFile(param_file);
+
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
+      static_cast<Phase>(phase)));
+  return net;
+}
+
+// Net construct-and-load convenience constructor
+shared_ptr<Net<Dtype> > Net_Init_Load(
+    string param_file, string pretrained_param_file, int phase) {
   CheckFile(param_file);
   CheckFile(pretrained_param_file);
 
-  shared_ptr<Net<Dtype> > net (new Net<Dtype>(param_file));
+  shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
+      static_cast<Phase>(phase)));
   net->CopyTrainedLayersFrom(pretrained_param_file);
   return net;
 }
@@ -172,13 +182,12 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
-  bp::def("set_phase_train", &set_phase_train);
-  bp::def("set_phase_test", &set_phase_test);
   bp::def("set_device", &Caffe::SetDevice);
 
-  bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >(
-    "Net", bp::init<string>())
+  bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
+    bp::no_init)
     .def("__init__", bp::make_constructor(&Net_Init))
+    .def("__init__", bp::make_constructor(&Net_Init_Load))
     .def("_forward", &Net<Dtype>::ForwardFromTo)
     .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)

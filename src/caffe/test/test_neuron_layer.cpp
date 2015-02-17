@@ -43,8 +43,8 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     if (dropout_ratio != 0.5) {
       layer_param.mutable_dropout_param()->set_dropout_ratio(dropout_ratio);
     }
-    Caffe::set_phase(Caffe::TRAIN);
     DropoutLayer<Dtype> layer(layer_param);
+    layer_param.set_phase(TRAIN);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     // Now, check values
@@ -334,7 +334,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutThreeQuarters) {
 TYPED_TEST(NeuronLayerTest, TestDropoutTestPhase) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_phase(Caffe::TEST);
+  layer_param.set_phase(TEST);
   DropoutLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -351,7 +351,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutTestPhase) {
 TYPED_TEST(NeuronLayerTest, TestDropoutGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_phase(Caffe::TRAIN);
+  layer_param.set_phase(TRAIN);
   DropoutLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
@@ -361,7 +361,7 @@ TYPED_TEST(NeuronLayerTest, TestDropoutGradient) {
 TYPED_TEST(NeuronLayerTest, TestDropoutGradientTest) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_phase(Caffe::TEST);
+  layer_param.set_phase(TEST);
   DropoutLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,

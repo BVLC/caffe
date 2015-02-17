@@ -16,7 +16,7 @@ namespace caffe {
 template <typename Dtype>
 class DataTransformer {
  public:
-  explicit DataTransformer(const TransformationParameter& param);
+  explicit DataTransformer(const TransformationParameter& param, Phase phase);
   virtual ~DataTransformer() {}
 
   /**
@@ -104,7 +104,7 @@ class DataTransformer {
 
 
   shared_ptr<Caffe::RNG> rng_;
-  Caffe::Phase phase_;
+  Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
 };

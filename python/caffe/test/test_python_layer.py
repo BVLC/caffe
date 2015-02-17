@@ -36,7 +36,7 @@ def python_net_file():
 class TestPythonLayer(unittest.TestCase):
     def setUp(self):
         net_file = python_net_file()
-        self.net = caffe.Net(net_file)
+        self.net = caffe.Net(net_file, caffe.TRAIN)
         os.remove(net_file)
 
     def test_forward(self):
