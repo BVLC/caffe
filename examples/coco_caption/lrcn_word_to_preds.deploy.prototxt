@@ -1,0 +1,56 @@
+name: "caffenet_to_lstm"
+
+input: "cont_sentence"
+input_shape { dim: 1 dim: 1000 }
+
+input: "input_sentence"
+input_shape { dim: 1 dim: 1000 }
+
+input: "image_features"
+input_shape { dim: 1000 dim: 1000 }
+
+layer {
+  name: "embedding"
+  type: "Embed"
+  bottom: "input_sentence"
+  top: "embedded_input_sentence"
+  embed_param {
+    input_dim: 8801
+    num_output: 1000
+    bias_term: false
+  }
+}
+layer {
+  name: "lstm1"
+  type: "LSTM"
+  bottom: "embedded_input_sentence"
+  bottom: "cont_sentence"
+  top: "lstm1"
+  recurrent_param { num_output: 1000 }
+}
+layer {
+  name: "lstm2"
+  type: "LSTM"
+  bottom: "lstm1"
+  bottom: "cont_sentence"
+  bottom: "image_features"
+  top: "lstm2"
+  recurrent_param { num_output: 1000 }
+}
+layer {
+  name: "predict"
+  type: "InnerProduct"
+  bottom: "lstm2"
+  top: "predict"
+  inner_product_param {
+    axis: 2
+    num_output: 8801
+  }
+}
+layer {
+  name: "probs"
+  type: "Softmax"
+  bottom: "predict"
+  top: "probs"
+  softmax_param { axis: 2 }
+}
