@@ -45,6 +45,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
+  const int rotation_count = (param_.rotate()) ? Rand(4) : 0;
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
@@ -73,6 +74,10 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   int height = datum_height;
   int width = datum_width;
+  if (param_.rotate()) {
+    CHECK(height == width) <<
+        "If random rotation is enabled, the data must be square";
+  }
 
   int h_off = 0;
   int w_off = 0;
@@ -95,11 +100,25 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     for (int h = 0; h < height; ++h) {
       for (int w = 0; w < width; ++w) {
         data_index = (c * datum_height + h_off + h) * datum_width + w_off + w;
+        int h_idx = h;
+        int w_idx = w;
         if (do_mirror) {
-          top_index = (c * height + h) * width + (width - 1 - w);
-        } else {
-          top_index = (c * height + h) * width + w;
+          w_idx = width - 1 - w;
         }
+        if (rotation_count == 1) {
+          int temp = w_idx;
+          w_idx = height - 1 - h_idx;
+          h_idx = temp;
+        } else if (rotation_count == 2) {
+          w_idx = width - 1 - w_idx;
+          h_idx = height - 1 - h_idx;
+        } else if (rotation_count == 3) {
+          int temp = h_idx;
+          h_idx = width - 1 - w_idx;
+          w_idx = temp;
+        }
+        top_index = (c * height + h_idx) * width + w_idx;
+
         if (has_uint8) {
           datum_element =
             static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
@@ -397,7 +416,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
-  const bool needs_rand = param_.mirror() ||
+  const bool needs_rand = param_.mirror() || param_.rotate() ||
       (phase_ == Caffe::TRAIN && param_.crop_size());
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();

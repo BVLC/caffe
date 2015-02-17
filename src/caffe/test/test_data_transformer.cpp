@@ -227,6 +227,40 @@ TYPED_TEST(DataTransformTest, TestMirrorTest) {
   EXPECT_LT(num_matches, size * this->num_iter_);
 }
 
+TYPED_TEST(DataTransformTest, TestRotateTrain) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 5;
+  const int width = 5;
+  const int size = channels * height * width;
+
+  transform_param.set_rotate(true);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Caffe::set_phase(Caffe::TRAIN);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+  EXPECT_LT(num_matches, size * this->num_iter_);
+}
+
+TYPED_TEST(DataTransformTest, TestRotateTest) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 5;
+  const int width = 5;
+  const int size = channels * height * width;
+
+  transform_param.set_rotate(true);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Caffe::set_phase(Caffe::TEST);
+  int num_matches = this->NumSequenceMatches(transform_param, datum);
+  EXPECT_LT(num_matches, size * this->num_iter_);
+}
+
 TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
   TransformationParameter transform_param;
   const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
