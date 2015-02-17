@@ -102,14 +102,26 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   CPUTimer timer;
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
-  Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
-  Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
+  const int crop_size = this->layer_param_.transform_param().crop_size();
   const bool is_color = image_data_param.is_color();
   string root_folder = image_data_param.root_folder();
+
+  // Reshape on single input batches for inputs of varying dimension.
+  if (batch_size == 1 && crop_size == 0 && new_height == 0 && new_width == 0) {
+    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+        0, 0, is_color);
+    this->prefetch_data_.Reshape(1, cv_img.channels(),
+        cv_img.rows, cv_img.cols);
+    this->transformed_data_.Reshape(1, cv_img.channels(),
+        cv_img.rows, cv_img.cols);
+  }
+
+  Dtype* prefetch_data = this->prefetch_data_.mutable_cpu_data();
+  Dtype* prefetch_label = this->prefetch_label_.mutable_cpu_data();
 
   // datum scales
   const int lines_size = lines_.size();
@@ -124,11 +136,11 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
     int offset = this->prefetch_data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(top_data + offset);
+    this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_.Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
 
-    top_label[item_id] = lines_[lines_id_].second;
+    prefetch_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {
