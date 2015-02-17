@@ -32,11 +32,11 @@ def determine_edge_label_by_layertype(layer, layertype):
     """Define edge label based on layer type
     """
 
-    if layertype == 'DATA':
+    if layertype == 'Data':
         edge_label = 'Batch ' + str(layer.data_param.batch_size)
-    elif layertype == 'CONVOLUTION':
+    elif layertype == 'Convolution':
         edge_label = str(layer.convolution_param.num_output)
-    elif layertype == 'INNER_PRODUCT':
+    elif layertype == 'InnerProduct':
         edge_label = str(layer.inner_product_param.num_output)
     else:
         edge_label = '""'
@@ -57,7 +57,7 @@ def determine_node_label_by_layertype(layer, layertype, rankdir):
         # horizontal space is not; separate words with newlines
         separator = '\n'
 
-    if layertype == 'CONVOLUTION':
+    if layertype == 'Convolution':
         # Outer double quotes needed or else colon characters don't parse
         # properly
         node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
@@ -70,7 +70,7 @@ def determine_node_label_by_layertype(layer, layertype, rankdir):
                       layer.convolution_param.stride,
                       separator,
                       layer.convolution_param.pad)
-    elif layertype == 'POOLING':
+    elif layertype == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
         node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\
                      (layer.name,
@@ -92,11 +92,11 @@ def choose_color_by_layertype(layertype):
     """Define colors for nodes based on the layer type
     """
     color = '#6495ED'  # Default
-    if layertype == 'CONVOLUTION':
+    if layertype == 'Convolution':
         color = '#FF5050'
-    elif layertype == 'POOLING':
+    elif layertype == 'Pooling':
         color = '#FF9900'
-    elif layertype == 'INNER_PRODUCT':
+    elif layertype == 'InnerProduct':
         color = '#CC33FF'
     return color
 
