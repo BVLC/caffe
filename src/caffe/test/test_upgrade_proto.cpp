@@ -2901,7 +2901,7 @@ TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
       continue;  // Empty string isn't actually a valid layer type.
     }
     layer_param.set_type(v2_layer_type);
-    layer.reset(LayerRegistry<float>::CreateLayer(layer_param));
+    layer = LayerRegistry<float>::CreateLayer(layer_param);
     EXPECT_EQ(v2_layer_type, layer->type());
   }
 }

@@ -63,8 +63,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   bottom_need_backward_.resize(param.layer_size());
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     const LayerParameter& layer_param = param.layer(layer_id);
-    layers_.push_back(shared_ptr<Layer<Dtype> >(
-          LayerRegistry<Dtype>::CreateLayer(layer_param)));
+    layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = false;
