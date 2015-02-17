@@ -50,10 +50,14 @@ template <typename Dtype> class dataType;
 template<> class dataType<float>  {
  public:
   static const cudnnDataType_t type = CUDNN_DATA_FLOAT;
+  static float oneval, zeroval;
+  static const void *one, *zero;
 };
 template<> class dataType<double> {
  public:
   static const cudnnDataType_t type = CUDNN_DATA_DOUBLE;
+  static double oneval, zeroval;
+  static const void *one, *zero;
 };
 
 template <typename Dtype>
@@ -102,9 +106,9 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
 }
 
 template <typename Dtype>
-inline void createPoolingDesc(cudnnPoolingDescriptor_t* conv,
+inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
     PoolingParameter_PoolMethod poolmethod, cudnnPoolingMode_t* mode,
-    int h, int w, int stride_h, int stride_w) {
+    int h, int w, int pad_h, int pad_w, int stride_h, int stride_w) {
   switch (poolmethod) {
   case PoolingParameter_PoolMethod_MAX:
     *mode = CUDNN_POOLING_MAX;
@@ -115,9 +119,9 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* conv,
   default:
     LOG(FATAL) << "Unknown pooling method.";
   }
-  CUDNN_CHECK(cudnnCreatePoolingDescriptor(conv));
-  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*conv, *mode, h, w,
-        0, 0, stride_h, stride_w));
+  CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
+  CUDNN_CHECK(cudnnSetPooling2dDescriptor(*pool_desc, *mode, h, w,
+        pad_h, pad_w, stride_h, stride_w));
 }
 
 }  // namespace cudnn
