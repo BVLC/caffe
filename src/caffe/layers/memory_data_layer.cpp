@@ -13,8 +13,12 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
      const vector<Blob<Dtype>*>& top) {
   batch_size_ = this->layer_param_.memory_data_param().batch_size();
   channels_ = this->layer_param_.memory_data_param().channels();
-  height_ = this->layer_param_.memory_data_param().height();
-  width_ = this->layer_param_.memory_data_param().width();
+  in_height_ = height_ = this->layer_param_.memory_data_param().height();
+  in_width_ = width_ = this->layer_param_.memory_data_param().width();
+  if ( this->layer_param_.transform_param().has_crop_size() ) {
+      height_ = this->layer_param_.transform_param().crop_size();
+      width_ = this->layer_param_.transform_param().crop_size();
+  }
   size_ = channels_ * height_ * width_;
   CHECK_GT(batch_size_ * size_, 0) <<
       "batch_size, channels, height, and width must be specified and"

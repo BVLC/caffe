@@ -272,12 +272,15 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   int channels() { return channels_; }
   int height() { return height_; }
   int width() { return width_; }
+  int in_height() { return in_height_; }
+  int in_width() { return in_width_; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
   int batch_size_, channels_, height_, width_, size_;
+  int in_height_, in_width_;
   Dtype* data_;
   Dtype* labels_;
   int n_;

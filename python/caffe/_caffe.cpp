@@ -129,6 +129,56 @@ void PyNet::set_input_arrays(bp::object data_obj, bp::object labels_obj) {
       PyArray_DIMS(data_arr)[0]);
 }
 
+void PyNet::AddDatumVector(bp::object data_obj, bp::object labels_obj) {
+  // check that this network has an input MemoryDataLayer
+  shared_ptr<MemoryDataLayer<float> > md_layer =
+      boost::dynamic_pointer_cast<MemoryDataLayer<float> >(net_->layers()[0]);
+  if (!md_layer) {
+    throw std::runtime_error(
+        "set_input_arrays may only be called if the"
+        " first layer is a MemoryDataLayer");
+  }
+
+  // check that we were passed appropriately-sized contiguous memory
+  PyArrayObject* data_arr = reinterpret_cast<PyArrayObject*>(data_obj.ptr());
+  PyArrayObject* labels_arr =
+      reinterpret_cast<PyArrayObject*>(labels_obj.ptr());
+  check_contiguous_array(data_arr, "data array", md_layer->channels(),
+                         md_layer->in_height(), md_layer->in_width());
+  check_contiguous_array(labels_arr, "labels array", 1, 1, 1);
+  if (PyArray_DIMS(data_arr)[0] != PyArray_DIMS(labels_arr)[0]) {
+    throw std::runtime_error(
+        "data and labels must have the same first"
+        " dimension");
+  }
+  if (PyArray_DIMS(data_arr)[0] % md_layer->batch_size() != 0) {
+    throw std::runtime_error(
+        "first dimensions of input arrays must be a"
+        " multiple of batch size");
+  }
+
+  size_t num = PyArray_DIMS(data_arr)[0];
+  vector<Datum> vec(num);
+  for (size_t idx = 0; idx < num; idx++) {
+    vec[idx].set_label(
+        static_cast<int>(static_cast<float*>(PyArray_DATA(labels_arr))[idx]));
+    for (size_t fidx = 0;
+         fidx < md_layer->channels() * md_layer->in_height()
+                                     * md_layer->in_width();
+         fidx++) {
+      vec[idx].add_float_data((static_cast<float*>(
+          PyArray_DATA(data_arr))[idx * md_layer->channels() *
+                                      md_layer->in_height() *
+                                      md_layer->in_width() +
+                                  fidx]));
+    }
+    vec[idx].set_channels(md_layer->channels());
+    vec[idx].set_height(md_layer->in_height());
+    vec[idx].set_width(md_layer->in_width());
+  }
+  md_layer->AddDatumVector(vec);
+}
+
 PySGDSolver::PySGDSolver(const string& param_file) {
   // as in PyNet, (as a convenience, not a guarantee), create a Python
   // exception if param_file can't be opened
@@ -176,6 +226,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .add_property("raw_scale",    &PyNet::raw_scale_)
       .add_property("channel_swap", &PyNet::channel_swap_)
       .def("_set_input_arrays",     &PyNet::set_input_arrays)
+      .def("_add_datum_vector",     &PyNet::AddDatumVector)
       .def("save",                  &PyNet::save);
 
   bp::class_<PyBlob<float>, PyBlobWrap>(
