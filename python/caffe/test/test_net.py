@@ -11,21 +11,22 @@ def simple_net_file(num_output):
 
     f = tempfile.NamedTemporaryFile(delete=False)
     f.write("""name: 'testnet' force_backward: true
-    layers { type: DUMMY_DATA name: 'data' top: 'data' top: 'label'
+    layer { type: 'DummyData' name: 'data' top: 'data' top: 'label'
       dummy_data_param { num: 5 channels: 2 height: 3 width: 4
         num: 5 channels: 1 height: 1 width: 1
         data_filler { type: 'gaussian' std: 1 }
         data_filler { type: 'constant' } } }
-    layers { type: CONVOLUTION name: 'conv' bottom: 'data' top: 'conv'
+    layer { type: 'Convolution' name: 'conv' bottom: 'data' top: 'conv'
       convolution_param { num_output: 11 kernel_size: 2 pad: 3
         weight_filler { type: 'gaussian' std: 1 }
         bias_filler { type: 'constant' value: 2 } }
-        weight_decay: 1 weight_decay: 0 }
-    layers { type: INNER_PRODUCT name: 'ip' bottom: 'conv' top: 'ip'
+        param { decay_mult: 1 } param { decay_mult: 0 }
+        }
+    layer { type: 'InnerProduct' name: 'ip' bottom: 'conv' top: 'ip'
       inner_product_param { num_output: """ + str(num_output) + """
         weight_filler { type: 'gaussian' std: 2.5 }
         bias_filler { type: 'constant' value: -3 } } }
-    layers { type: SOFTMAX_LOSS name: 'loss' bottom: 'ip' bottom: 'label'
+    layer { type: 'SoftmaxWithLoss' name: 'loss' bottom: 'ip' bottom: 'label'
       top: 'loss' }""")
     f.close()
     return f.name

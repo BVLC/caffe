@@ -53,7 +53,7 @@ class Layer;
 template <typename Dtype>
 class LayerRegistry {
  public:
-  typedef Layer<Dtype>* (*Creator)(const LayerParameter&);
+  typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
   typedef std::map<string, Creator> CreatorRegistry;
 
   static CreatorRegistry& Registry() {
@@ -70,7 +70,7 @@ class LayerRegistry {
   }
 
   // Get a layer using a LayerParameter.
-  static Layer<Dtype>* CreateLayer(const LayerParameter& param) {
+  static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param) {
     LOG(INFO) << "Creating layer " << param.name();
     const string& type = param.type();
     CreatorRegistry& registry = Registry();
@@ -103,7 +103,7 @@ template <typename Dtype>
 class LayerRegisterer {
  public:
   LayerRegisterer(const string& type,
-                  Layer<Dtype>* (*creator)(const LayerParameter&)) {
+                  shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
     // LOG(INFO) << "Registering layer type: " << type;
     LayerRegistry<Dtype>::AddCreator(type, creator);
   }
@@ -116,8 +116,9 @@ class LayerRegisterer {
 
 #define REGISTER_LAYER_CLASS(type)                                             \
   template <typename Dtype>                                                    \
-  Layer<Dtype>* Creator_##type##Layer(const LayerParameter& param) {           \
-    return new type##Layer<Dtype>(param);                                      \
+  shared_ptr<Layer<Dtype> > Creator_##type##Layer(const LayerParameter& param) \
+  {                                                                            \
+    return shared_ptr<Layer<Dtype> >(new type##Layer<Dtype>(param));           \
   }                                                                            \
   REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)
 
