@@ -40,7 +40,7 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   added_data_.Reshape(num, channels_, height_, width_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
-  this->data_transformer_.Transform(datum_vector, &added_data_);
+  this->data_transformer_->Transform(datum_vector, &added_data_);
   // Copy Labels
   Dtype* top_label = added_label_.mutable_cpu_data();
   for (int item_id = 0; item_id < num; ++item_id) {
@@ -64,7 +64,7 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   added_data_.Reshape(num, channels_, height_, width_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
-  this->data_transformer_.Transform(mat_vector, &added_data_);
+  this->data_transformer_->Transform(mat_vector, &added_data_);
   // Copy Labels
   Dtype* top_label = added_label_.mutable_cpu_data();
   for (int item_id = 0; item_id < num; ++item_id) {

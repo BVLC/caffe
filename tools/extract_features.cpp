@@ -64,7 +64,6 @@ int feature_extraction_pipeline(int argc, char** argv) {
     LOG(ERROR) << "Using CPU";
     Caffe::set_mode(Caffe::CPU);
   }
-  Caffe::set_phase(Caffe::TEST);
 
   arg_pos = 0;  // the name of the executable
   std::string pretrained_binary_proto(argv[++arg_pos]);
@@ -98,7 +97,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
    */
   std::string feature_extraction_proto(argv[++arg_pos]);
   shared_ptr<Net<Dtype> > feature_extraction_net(
-      new Net<Dtype>(feature_extraction_proto));
+      new Net<Dtype>(feature_extraction_proto, caffe::TEST));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
   std::string extract_feature_blob_names(argv[++arg_pos]);

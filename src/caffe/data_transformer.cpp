@@ -11,9 +11,9 @@
 namespace caffe {
 
 template<typename Dtype>
-DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param)
-    : param_(param) {
-  phase_ = Caffe::phase();
+DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
+    Phase phase)
+    : param_(param), phase_(phase) {
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
     CHECK_EQ(param_.mean_value_size(), 0) <<
@@ -80,7 +80,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     height = crop_size;
     width = crop_size;
     // We only do random crop when we do training.
-    if (phase_ == Caffe::TRAIN) {
+    if (phase_ == TRAIN) {
       h_off = Rand(datum_height - crop_size + 1);
       w_off = Rand(datum_width - crop_size + 1);
     } else {
@@ -247,7 +247,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
-    if (phase_ == Caffe::TRAIN) {
+    if (phase_ == TRAIN) {
       h_off = Rand(img_height - crop_size + 1);
       w_off = Rand(img_width - crop_size + 1);
     } else {
@@ -325,7 +325,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
     // We only do random crop when we do training.
-    if (phase_ == Caffe::TRAIN) {
+    if (phase_ == TRAIN) {
       h_off = Rand(input_height - crop_size + 1);
       w_off = Rand(input_width - crop_size + 1);
     } else {
@@ -398,7 +398,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
-      (phase_ == Caffe::TRAIN && param_.crop_size());
+      (phase_ == TRAIN && param_.crop_size());
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();
     rng_.reset(new Caffe::RNG(rng_seed));
