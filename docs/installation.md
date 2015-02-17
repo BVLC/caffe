@@ -270,10 +270,10 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### Compilation using CMake (beta)
+### CMake Compilation
 
-In lieu of manually editing `Makefile.config` to tell Caffe where dependencies are located, Caffe also provides a CMake-based build system (currently in "beta").
-It requires CMake version >= 2.8.8.
+In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community.
+It requires CMake version >= 2.8.7.
 The basic installation steps are as follows:
 
     mkdir build
@@ -281,6 +281,8 @@ The basic installation steps are as follows:
     cmake ..
     make all
     make runtest
+
+See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for details.
 
 #### Ubuntu 12.04
 
