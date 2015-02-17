@@ -22,7 +22,7 @@ max_iter: 10000
 snapshot: 5000
 snapshot_prefix: "examples/mnist/models/lenet"
 # solver mode: CPU or GPU
-solver_mode: GPU
+solver_mode: CPU
 solver_type:RMSPROP
 rms_decay:0.95
 
