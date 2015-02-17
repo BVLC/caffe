@@ -169,8 +169,17 @@ class MSRFiller : public Filler<Dtype> {
       : Filler<Dtype>(param) {}
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
+    CHECK(this->filler_param_.fan_in() || this->filler_param_.fan_out())
+         << "MSR Filler requires either fan_in, fan_out, or both to be true.";
     int fan_in = blob->count() / blob->num();
-    Dtype std = sqrt(Dtype(2) / fan_in);
+    int fan_out = blob->count() / blob->channels();
+    Dtype n = fan_in;  // default to fan_in
+    if (this->filler_param_.fan_in() && this->filler_param_.fan_out()) {
+      n = (fan_in + fan_out) / Dtype(2);
+    } else if (this->filler_param_.fan_out()) {
+      n = fan_out;
+    }
+    Dtype std = sqrt(Dtype(2) / n);
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
         blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)

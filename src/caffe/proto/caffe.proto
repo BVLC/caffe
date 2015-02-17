@@ -41,6 +41,10 @@ message FillerParameter {
   // The expected number of non-zero output weights for a given input in
   // Gaussian filler -- the default -1 means don't perform sparsification.
   optional int32 sparse = 7 [default = -1];
+  // for the msr filler we can consider the fan_in size, the fan_out size, or
+  // both (by averaging)
+  optional bool fan_in = 8 [default = true];
+  optional bool fan_out = 9 [default = false];
 }
 
 message NetParameter {
