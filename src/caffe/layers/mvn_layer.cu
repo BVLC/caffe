@@ -111,23 +111,6 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     caffe_gpu_powx(temp_.count(), bottom_data, Dtype(2),
         temp_.mutable_gpu_data());
 
-    // computes variance using var(X) = E(X^2) - (EX)^2
-    caffe_gpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
-        sum_multiplier_.gpu_data(), 0., mean_.mutable_gpu_data());  // EX
-    caffe_gpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, temp_.gpu_data(),
-        sum_multiplier_.gpu_data(), 0.,
-        variance_.mutable_gpu_data());  // E(X^2)
-    caffe_gpu_powx(mean_.count(), mean_.gpu_data(), Dtype(2),
-        temp_.mutable_gpu_data());  // (EX)^2
-    caffe_gpu_sub(mean_.count(), variance_.gpu_data(), temp_.gpu_data(),
-        variance_.mutable_gpu_data());  // variance
-
-    // normalize variance
-    caffe_gpu_powx(variance_.count(), variance_.gpu_data(), Dtype(0.5),
-          variance_.mutable_gpu_data());
-
-    caffe_gpu_add_scalar(variance_.count(), eps, variance_.mutable_gpu_data());
-
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, 1.,
         variance_.gpu_data(), sum_multiplier_.gpu_data(), 0.,
         temp_.mutable_gpu_data());
