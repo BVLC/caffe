@@ -125,26 +125,27 @@ class AdaGradSolver : public SGDSolver<Dtype> {
   DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
 };
 
+
 template <typename Dtype>
 class RMSpropSolver : public SGDSolver<Dtype> {
 public:
 	explicit RMSpropSolver(const SolverParameter& param)
-		: SGDSolver<Dtype>(param) { constructor_sanity_check(); }
-	explicit RMSpropSolver(const string& param_file)
-	      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+	      : SGDSolver<Dtype>(param) { PreSolveRMS();constructor_sanity_check(); }
+	  explicit RMSpropSolver(const string& param_file)
+	      : SGDSolver<Dtype>(param_file) { PreSolveRMS();constructor_sanity_check(); }
 
-	const vector<shared_ptr<Blob<Dtype> > >& history_rms() { return history_rms_; }
-	const vector<shared_ptr<Blob<Dtype> > >& update_rms() { return update_rms_; }
 protected:
+	void PreSolveRMS();
 	virtual void ComputeUpdateValue();
 	void constructor_sanity_check() {
-	CHECK_NE(0, this->param_.rms_decay())
+		CHECK_NE(0, this->param_.rms_decay())
 		<< "rms_decay cannot be 0 with RMSprop.";
 	}
 
-	DISABLE_COPY_AND_ASSIGN(RMSpropSolver);
 	// Keeps RMS of the gradient history
-	vector<shared_ptr<Blob<Dtype> > > history_rms_, update_rms_;
+	vector<shared_ptr<Blob<Dtype> > >  history_rms_, update_rms_;
+
+	DISABLE_COPY_AND_ASSIGN(RMSpropSolver);
 };
 
 template <typename Dtype>
