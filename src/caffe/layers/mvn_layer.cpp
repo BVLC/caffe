@@ -1,4 +1,4 @@
-                                                       #include <algorithm>
+#include <algorithm>
 #include <vector>
 
 #include "caffe/common_layers.hpp"
@@ -7,9 +7,6 @@
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
-
-bool please_dump = false;
-int train_iter = -1;
 
 template <typename Dtype>
 void MVNLayer<Dtype>::SetBlobFinder(const BlobFinder<Dtype> &blob_finder) {
@@ -81,8 +78,6 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // put the squares of bottom into temp_
     caffe_powx(bottom[0]->count(), bottom_data, Dtype(2),
         temp_.mutable_cpu_data());
-
-    std::ofstream stream;
 
     // computes variance using var(X) = E(X^2) - (EX)^2
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
