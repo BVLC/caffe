@@ -49,7 +49,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int crop_size = this->layer_param_.transform_param().crop_size();
   if (crop_size > 0) {
     top[0]->Reshape(this->layer_param_.data_param().batch_size(),
-                       datum.channels(), crop_size, crop_size);
+        datum.channels(), crop_size, crop_size);
     this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
         datum.channels(), crop_size, crop_size);
     this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size);
@@ -83,13 +83,25 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   CPUTimer timer;
   CHECK(this->prefetch_data_.count());
   CHECK(this->transformed_data_.count());
+
+  // Reshape on single input batches for inputs of varying dimension.
+  const int batch_size = this->layer_param_.data_param().batch_size();
+  const int crop_size = this->layer_param_.transform_param().crop_size();
+  if (batch_size == 1 && crop_size == 0) {
+    Datum datum;
+    datum.ParseFromString(cursor_->value());
+    this->prefetch_data_.Reshape(1, datum.channels(),
+        datum.height(), datum.width());
+    this->transformed_data_.Reshape(1, datum.channels(),
+        datum.height(), datum.width());
+  }
+
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
 
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
-  const int batch_size = this->layer_param_.data_param().batch_size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
