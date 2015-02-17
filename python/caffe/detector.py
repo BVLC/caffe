@@ -118,7 +118,7 @@ class Detector(caffe.Net):
             cmd='selective_search_rcnn'
         )
         # Run windowed detection on the selective search list.
-        return self.detect_windows(zip(image_fnames, windows_list))
+        return self.detect_windows(list(zip(image_fnames, windows_list)))
 
 
     def crop(self, im, window):
