@@ -246,7 +246,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 129 (last added: window_data_param)
+// LayerParameter next available layer-specific ID: 130 (last added: repack_layer)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -308,6 +308,7 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional ReLUParameter relu_param = 123;
+  optional RepackParameter repack_param = 130;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SliceParameter slice_param = 126;
@@ -626,6 +627,18 @@ message ReLUParameter {
     CUDNN = 2;
   }
   optional Engine engine = 2 [default = DEFAULT];
+}
+
+// Message that stores parameters used by RepackLayer
+message RepackParameter {
+  enum Operation {
+    PACK_IMAGE = 0;
+    UNPACK_IMAGE = 1;
+  }
+  optional Operation operation = 1 [default = PACK_IMAGE];
+  optional uint32 stride = 2 [default = 1]; // The stride (equal in Y, X)
+  optional uint32 stride_h = 3; // The stride height
+  optional uint32 stride_w = 4; // The stride width
 }
 
 // Message that stores parameters used by SigmoidLayer
