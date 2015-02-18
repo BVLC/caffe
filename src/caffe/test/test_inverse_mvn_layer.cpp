@@ -111,7 +111,6 @@ TYPED_TEST(InverseMVNLayerTest, TestSetUp) {
   EXPECT_EQ(this->mvn_blob_top_vec_.size(), 3);
   EXPECT_EQ(this->inverse_mvn_blob_top_vec_.size(), 1);
 
-  const int num_channels = 5;
   Blob<Dtype>* normalized_blob =
       this->blob_finder_.PointerFromName("normalized");
   EXPECT_EQ(normalized_blob->num(), INPUT_NUM);
