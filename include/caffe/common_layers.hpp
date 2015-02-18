@@ -303,7 +303,7 @@ class MVNLayer : public Layer<Dtype> {
   Blob<Dtype> mean_, variance_, temp_;
   /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
-  float eps;
+  Dtype eps;
 };
 
 /**
