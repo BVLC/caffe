@@ -22,6 +22,7 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       bottom[0]->height(), bottom[0]->width());
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
+  eps = this->layer_param_.mvn_param().eps();
 }
 
 template <typename Dtype>
@@ -36,7 +37,6 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     num = bottom[0]->num() * bottom[0]->channels();
 
   int dim = bottom[0]->count() / num;
-  Dtype eps = 1e-10;
 
   if (this->layer_param_.mvn_param().normalize_variance()) {
     // put the squares of bottom into temp_
@@ -102,7 +102,6 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     num = bottom[0]->num() * bottom[0]->channels();
 
   int dim = bottom[0]->count() / num;
-  Dtype eps = 1e-10;
 
   if (this->layer_param_.mvn_param().normalize_variance()) {
     caffe_mul(temp_.count(), top_data, top_diff, bottom_diff);

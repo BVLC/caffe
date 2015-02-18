@@ -36,8 +36,6 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     caffe_gpu_sub(mean_.count(), variance_.gpu_data(), temp_.gpu_data(),
         variance_.mutable_gpu_data());  // variance
 
-    Dtype eps = 1e-10;
-
     // do mean and variance normalization
     // subtract mean
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
@@ -86,8 +84,6 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     num = bottom[0]->num() * bottom[0]->channels();
 
   int dim = bottom[0]->count() / num;
-
-  Dtype eps = 1e-10;
 
   if (this->layer_param_.mvn_param().normalize_variance()) {
     caffe_gpu_mul(temp_.count(), top_data, top_diff, bottom_diff);
