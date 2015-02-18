@@ -8,7 +8,7 @@
 namespace caffe {
 
 template <typename Dtype>
-__global__ void FixNegativeVariance( const int n, const Dtype* in,
+__global__ void FixNegVar(const int n, const Dtype* in,
                                      Dtype* out, Dtype epsilon) {
   CUDA_KERNEL_LOOP(index, n) {
     out[index] = in[index] < epsilon ? epsilon : in[index];
@@ -50,9 +50,11 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     // Check for, and correct, slightly negative variance numbers which can
     // happen when true variance is zero (e.g. solid color image) due to float
     // roundoff error.
-    FixNegativeVariance<Dtype><<<CAFFE_GET_BLOCKS(variance_.count()),
-        CAFFE_CUDA_NUM_THREADS>>>( variance_.count(), variance_.gpu_data(),
-                                   variance_.mutable_gpu_data(), eps);
+    const int count = variance_.count();
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    FixNegVar<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >>>(
+        variance_.count(), variance_.gpu_data(),
+        variance_.mutable_gpu_data(), eps);
 
     // do mean and variance normalization
     // subtract mean

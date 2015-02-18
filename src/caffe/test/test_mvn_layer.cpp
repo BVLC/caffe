@@ -154,10 +154,10 @@ TYPED_TEST(MVNLayerTest, TestForward_MeanAndVarianceInTopBlobs) {
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < channels; ++j) {
       const Dtype kErrorBound = 0.0001;
-      EXPECT_NEAR( expected_input_means.data_at(i, j, 0, 0),
+      EXPECT_NEAR(expected_input_means.data_at(i, j, 0, 0),
                    mean_blob->data_at(i, j, 0, 0),
                    kErrorBound);
-      EXPECT_NEAR( expected_input_variances.data_at(i, j, 0, 0),
+      EXPECT_NEAR(expected_input_variances.data_at(i, j, 0, 0),
                    variance_blob->data_at(i, j, 0, 0),
                    kErrorBound);
     }
@@ -220,7 +220,7 @@ TYPED_TEST(MVNLayerTest, TestForward_MeanInTopBlobs) {
   for (int i = 0; i < num; ++i) {
     for (int j = 0; j < channels; ++j) {
       const Dtype kErrorBound = 0.0001;
-      EXPECT_NEAR( expected_input_means.data_at(i, j, 0, 0),
+      EXPECT_NEAR(expected_input_means.data_at(i, j, 0, 0),
                    mean_blob->data_at(i, j, 0, 0),
                    kErrorBound);
     }
