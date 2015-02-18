@@ -32,7 +32,7 @@ endfunction()
 
 # global settings
 file(GLOB Matlab_srcs caffe/matcaffe.cpp)
-set(Matlab_caffe_mex ${CMAKE_SOURCE_DIR}/matlab/caffe/caffe.mex)
+set(Matlab_caffe_mex ${PROJECT_SOURCE_DIR}/matlab/caffe/caffe.mex)
 
 caffe_get_current_cflags(cflags)
 caffe_parse_linker_libs(Caffe_LINKER_LIBS folders libflags macos_frameworks)

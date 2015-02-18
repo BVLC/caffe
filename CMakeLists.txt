@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8.7)
 project(Caffe C CXX)
 
 # ---[ Using cmake scripts and modules
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
 include(cmake/Utils.cmake)
 include(cmake/Targets.cmake)
@@ -39,11 +39,11 @@ add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
 
 # ---[ Config generation
-configure_file(cmake/Templates/caffe_config.h.in "${CMAKE_BINARY_DIR}/caffe_config.h")
+configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_config.h")
 
 # ---[ Includes
-set(Caffe_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
-include_directories(${Caffe_INCLUDE_DIR} ${CMAKE_BINARY_DIR})
+set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
 include_directories(BEFORE src) # This is needed for gtest.
 
 # ---[ Subdirectories
@@ -56,7 +56,7 @@ add_subdirectory(matlab)
 add_subdirectory(docs)
 
 # ---[ Linter target
-add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/cmake/lint.cmake)
+add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
 
 # ---[ Configuration summary
 caffe_print_configuration_summary()

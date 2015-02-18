@@ -29,8 +29,8 @@ endif()
 add_executable(${the_target} EXCLUDE_FROM_ALL ${test_srcs})
 target_link_libraries(${the_target} gtest ${Caffe_LINK})
 caffe_default_properties(${the_target})
-caffe_set_runtime_directory(${the_target} "${CMAKE_BINARY_DIR}/test")
+caffe_set_runtime_directory(${the_target} "${PROJECT_BINARY_DIR}/test")
 
 # ---[ Adding runtest
 add_custom_target(runtest COMMAND ${the_target} ${test_args}
-                          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+                          WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})

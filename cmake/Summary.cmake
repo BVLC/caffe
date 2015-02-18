@@ -65,7 +65,7 @@ function(caffe_extract_caffe_version)
   if(GIT_FOUND)
     execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty
                     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-                    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
                     OUTPUT_VARIABLE Caffe_GIT_VERSION
                     RESULT_VARIABLE __git_result)
     if(NOT ${__git_result} EQUAL 0)
