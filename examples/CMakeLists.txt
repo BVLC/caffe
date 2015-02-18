@@ -1,4 +1,4 @@
-file(GLOB_RECURSE examples_srcs "${CMAKE_SOURCE_DIR}/examples/*.cpp")
+file(GLOB_RECURSE examples_srcs "${PROJECT_SOURCE_DIR}/examples/*.cpp")
 
 foreach(source_file ${examples_srcs})
   # get file name
@@ -14,7 +14,7 @@ foreach(source_file ${examples_srcs})
 
   # set back RUNTIME_OUTPUT_DIRECTORY
   set_target_properties(${name} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples/${folder}")
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/examples/${folder}")
 
   caffe_set_solution_folder(${name} examples)
 
@@ -24,7 +24,7 @@ foreach(source_file ${examples_srcs})
   if(UNIX OR APPLE)
     # Funny command to make tutorials work
     # TODO: remove in future as soon as naming is standartaized everywhere
-    set(__outname ${CMAKE_BINARY_DIR}/examples/${folder}/${name}${CAffe_POSTFIX})
+    set(__outname ${PROJECT_BINARY_DIR}/examples/${folder}/${name}${CAffe_POSTFIX})
     add_custom_command(TARGET ${name} POST_BUILD
                        COMMAND ln -sf "${__outname}" "${__outname}.bin")
   endif()

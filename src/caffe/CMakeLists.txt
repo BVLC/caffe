@@ -10,7 +10,7 @@ caffe_default_properties(proto)
 # --[ Caffe library
 
 # creates 'test_srcs', 'srcs', 'test_cuda', 'cuda' lists
-caffe_pickup_caffe_sources(${CMAKE_SOURCE_DIR})
+caffe_pickup_caffe_sources(${PROJECT_SOURCE_DIR})
 
 if(HAVE_CUDA)
   caffe_cuda_compile(cuda_objs ${cuda})
@@ -29,8 +29,8 @@ install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION include)
 install(FILES ${proto_hdrs} DESTINATION include/caffe/proto)
 install(TARGETS caffe proto EXPORT CaffeTargets DESTINATION lib)
 
-file(WRITE ${CMAKE_BINARY_DIR}/__init__.py)
-list(APPEND proto_python ${CMAKE_BINARY_DIR}/__init__.py)
+file(WRITE ${PROJECT_BINARY_DIR}/__init__.py)
+list(APPEND proto_python ${PROJECT_BINARY_DIR}/__init__.py)
 install(PROGRAMS ${proto_python} DESTINATION python/caffe/proto)
 
 

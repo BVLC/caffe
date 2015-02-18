@@ -22,8 +22,8 @@ if(PROTOBUF_FOUND)
 endif()
 
 # place where to generate protobuf sources
-set(proto_gen_folder "${CMAKE_BINARY_DIR}/include/caffe/proto")
-include_directories(SYSTEM "${CMAKE_BINARY_DIR}/include")
+set(proto_gen_folder "${PROJECT_BINARY_DIR}/include/caffe/proto")
+include_directories(SYSTEM "${PROJECT_BINARY_DIR}/include")
 
 set(PROTOBUF_GENERATE_CPP_APPEND_PATH TRUE)
 

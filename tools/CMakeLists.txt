@@ -16,7 +16,7 @@ foreach(source ${srcs})
   caffe_default_properties(${name})
 
   # set back RUNTIME_OUTPUT_DIRECTORY
-  caffe_set_runtime_directory(${name} "${CMAKE_BINARY_DIR}/tools")
+  caffe_set_runtime_directory(${name} "${PROJECT_BINARY_DIR}/tools")
   caffe_set_solution_folder(${name} tools)
 
   # restore output name without suffix
