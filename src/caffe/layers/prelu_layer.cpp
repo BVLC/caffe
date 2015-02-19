@@ -40,6 +40,16 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
+void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  top[0]->ReshapeLike(*bottom[0]);
+  if (bottom[0] == top[0]) {
+    // For in-place computation
+    bottom_memory_.ReshapeLike(*bottom[0]);
+  }
+}
+
+template <typename Dtype>
 void PReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -48,19 +58,19 @@ void PReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int hw = bottom[0]->height() * bottom[0]->width();
   const int channels = bottom[0]->channels();
   const Dtype* slope_data = this->blobs_[0]->cpu_data();
-  if (channel_shared_) {
-    // Channel shared variant
-    const Dtype slope = *slope_data;
-    for (int i = 0; i < count; ++i) {
-      top_data[i] = std::max(bottom_data[i], Dtype(0))
-      + slope * std::min(bottom_data[i], Dtype(0));
-    }
-  } else {
-    for (int i = 0; i < count; ++i) {
-      int c = (i / hw) % channels;
-      top_data[i] = std::max(bottom_data[i], Dtype(0))
+
+  // For in-place computation
+  if (bottom[0] == top[0]) {
+    caffe_copy(count, bottom_data, bottom_memory_.mutable_cpu_data());
+  }
+
+  // if channel_shared, channel index in the following computation becomes
+  // always zero.
+  const int div_factor = channel_shared_ ? channels : 1;
+  for (int i = 0; i < count; ++i) {
+    int c = (i / hw) % channels / div_factor;
+    top_data[i] = std::max(bottom_data[i], Dtype(0))
       + slope_data[c] * std::min(bottom_data[i], Dtype(0));
-    }
   }
 }
 
@@ -69,43 +79,40 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
+  const Dtype* slope_data = this->blobs_[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
   const int count = bottom[0]->count();
   const int hw = bottom[0]->height() * bottom[0]->width();
   const int channels = bottom[0]->channels();
-  if (propagate_down[0]) {
-    const Dtype* slope_data = this->blobs_[0]->cpu_data();
-    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    if (channel_shared_) {
-      // Channel shared variant
-      const Dtype slope = *slope_data;
-      for (int i = 0; i < count; ++i) {
-        bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
-          + slope * (bottom_data[i] <= 0));
-      }
-    } else {
-      for (int i = 0; i < count; ++i) {
-        int c = (i / hw) % channels;
-        bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
-          + slope_data[c] * (bottom_data[i] <= 0));
-      }
-    }
+
+  // For in-place computation
+  if (top[0] == bottom[0]) {
+    bottom_data = bottom_memory_.cpu_data();
   }
+
+  // if channel_shared, channel index in the following computation becomes
+  // always zero.
+  const int div_factor = channel_shared_ ? channels : 1;
+
+  // Propagte to param
+  // Since to write bottom diff will affect top diff if top and bottom blobs
+  // are identical (in-place computaion), we first compute param backward to
+  // keep top_diff unchanged.
   if (this->param_propagate_down_[0]) {
     Dtype* slope_diff = this->blobs_[0]->mutable_cpu_diff();
     caffe_set(this->blobs_[0]->count(), Dtype(0), slope_diff);
-    if (channel_shared_) {
-      // Channel shared variant
-      Dtype slope = 0;
-      for (int i = 0; i < count; ++i) {
-        slope += top_diff[i] * bottom_data[i] * (bottom_data[i] <= 0);
-      }
-      *slope_diff = slope;
-    } else {
-      for (int i = 0; i < count; ++i) {
-        int c = (i / hw) % channels;
-        slope_diff[c] += top_diff[i] * bottom_data[i] * (bottom_data[i] <= 0);
-      }
+    for (int i = 0; i < count; ++i) {
+      int c = (i / hw) % channels / div_factor;
+      slope_diff[c] += top_diff[i] * bottom_data[i] * (bottom_data[i] <= 0);
+    }
+  }
+  // Propagate to bottom
+  if (propagate_down[0]) {
+    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+    for (int i = 0; i < count; ++i) {
+      int c = (i / hw) % channels / div_factor;
+      bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
+        + slope_data[c] * (bottom_data[i] <= 0));
     }
   }
 }

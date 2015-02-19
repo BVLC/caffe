@@ -8,19 +8,32 @@ namespace caffe {
 
 // CUDA kernele for forward
 template <typename Dtype>
-__global__ void PReLUForward(const int n, int channels, int hw,
-  const Dtype* in, Dtype* out, const Dtype* slope_data) {
+__global__ void PReLUForward(const int n, const int channels, const int hw,
+  const Dtype* in, Dtype* out, const Dtype* slope_data, const int div_factor) {
   CUDA_KERNEL_LOOP(index, n) {
-    int c = (index / hw) % channels;
+    int c = (index / hw) % channels / div_factor;
     out[index] = in[index] > 0 ? in[index] : in[index] * slope_data[c];
   }
 }
-// CUDA kernele for forward w/ channel shared
+
+// CUDA kernel for bottom backward
 template <typename Dtype>
-__global__ void PReLUChannelSharedForward(const int n, const Dtype* in,
-  Dtype* out, const Dtype *slope_data) {
+__global__ void PReLUBackward(const int n, const int channels, const int hw,
+  const Dtype* in_diff, const Dtype* in_data, Dtype* out_diff,
+  const Dtype* slope_data, const int div_factor) {
   CUDA_KERNEL_LOOP(index, n) {
-    out[index] = in[index] > 0 ? in[index] : in[index] * slope_data[0];
+    int c = (index / hw) % channels / div_factor;
+    out_diff[index] = in_diff[index] * ((in_data[index] > 0)
+        + (in_data[index] <= 0) * slope_data[c]);
+  }
+}
+
+// CUDA kernel for element-wise parameter backward
+template <typename Dtype>
+__global__ void PReLUParamBackward(const int n, const Dtype* in_diff,
+    const Dtype* in_data, Dtype* out_diff) {
+  CUDA_KERNEL_LOOP(index, n) {
+    out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0);
   }
 }
 
@@ -33,48 +46,17 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int hw = bottom[0]->height() * bottom[0]->width();
   const int channels = bottom[0]->channels();
   const Dtype* slope_data = this->blobs_[0]->gpu_data();
-  if (channel_shared_) {
-    // Channel shared variant
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    PReLUChannelSharedForward<Dtype><<<CAFFE_GET_BLOCKS(count),
-      CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom_data, top_data, slope_data);
-    CUDA_POST_KERNEL_CHECK;
-  } else {
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    PReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, channels, hw, bottom_data, top_data, slope_data);
-    CUDA_POST_KERNEL_CHECK;
-  }
-}
+  const int div_factor = channel_shared_ ? channels : 1;
 
-// CUDA kernel for bottom backward
-template <typename Dtype>
-__global__ void PReLUBackward(const int n, int channels, int hw,
-  const Dtype* in_diff, const Dtype* in_data, Dtype* out_diff,
-  const Dtype* slope_data) {
-  CUDA_KERNEL_LOOP(index, n) {
-    int c = (index / hw) % channels;
-    out_diff[index] = in_diff[index] * ((in_data[index] > 0)
-        + (in_data[index] <= 0) * slope_data[c]);
+  // For in-place computation
+  if (top[0] == bottom[0]) {
+    caffe_gpu_memcpy(count, bottom_data, bottom_memory_.mutable_gpu_data());
   }
-}
-// CUDA kernel for bottom backward w/ channel shared
-template <typename Dtype>
-__global__ void PReLUChannelSharedBackward(const int n, const Dtype* in_diff,
-    const Dtype* in_data, Dtype* out_diff, const Dtype *slope_data) {
-  CUDA_KERNEL_LOOP(index, n) {
-    out_diff[index] = in_diff[index] * ((in_data[index] > 0)
-        + (in_data[index] <= 0) * slope_data[0]);
-  }
-}
-// CUDA kernel for element-wise parameter backward
-template <typename Dtype>
-__global__ void PReLUParamBackward(const int n, const Dtype* in_diff,
-    const Dtype* in_data, Dtype* out_diff) {
-  CUDA_KERNEL_LOOP(index, n) {
-    out_diff[index] = in_diff[index] * in_data[index] * (in_data[index] <= 0);
-  }
+
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  PReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+    count, channels, hw, bottom_data, top_data, slope_data, div_factor);
+  CUDA_POST_KERNEL_CHECK;
 }
 
 template <typename Dtype>
@@ -86,35 +68,25 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int count = bottom[0]->count();
   const int hw = bottom[0]->height() * bottom[0]->width();
   const int channels = bottom[0]->channels();
-  // Propagate to bottom
-  if (propagate_down[0]) {
-    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    const Dtype* slope_data = this->blobs_[0]->gpu_data();
-    if (channel_shared_) {
-      // Channel shared variant
-      // NOLINT_NEXT_LINE(whitespace/operators)
-      PReLUChannelSharedBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, bottom_data, bottom_diff, slope_data);
-      CUDA_POST_KERNEL_CHECK;
-    } else {
-      // NOLINT_NEXT_LINE(whitespace/operators)
-      PReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
-        CAFFE_CUDA_NUM_THREADS>>>(
-        count, channels, hw, top_diff, bottom_data, bottom_diff, slope_data);
-      CUDA_POST_KERNEL_CHECK;
-    }
+
+  // For in-place computation
+  if (top[0] == bottom[0]) {
+    bottom_data = bottom_memory_.gpu_data();
   }
+
   // Propagte to param
+  // Since to write bottom diff will affect top diff if top and bottom blobs
+  // are identical (in-place computaion), we first compute param backward to
+  // keep top_diff unchanged.
   if (this->param_propagate_down_[0]) {
     Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
     // slope_diff is set as 0, then accumulated over batches
     caffe_gpu_set<Dtype>(this->blobs_[0]->count(), Dtype(0), slope_diff);
     int chw = channels * hw;
-    // compute element-wise diff
     Dtype dsum = 0.;
     for (int n = 0; n < bottom[0]->num(); ++n) {
       Dtype* temp_buff = multiplier_.mutable_gpu_diff();
+      // compute element-wise diff
       // NOLINT_NEXT_LINE(whitespace/operators)
       PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
         CAFFE_CUDA_NUM_THREADS>>>(
@@ -122,7 +94,6 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
       CUDA_POST_KERNEL_CHECK;
       if (channel_shared_) {
-        // Channel shared variant
         Dtype d;
         caffe_gpu_dot<Dtype>(channels * hw, multiplier_.gpu_diff(),
           multiplier_.gpu_data(), &d);
@@ -136,6 +107,18 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     if (channel_shared_) {
       caffe_gpu_set(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
     }
+  }
+  // Propagate to bottom
+  if (propagate_down[0]) {
+    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+    const Dtype* slope_data = this->blobs_[0]->gpu_data();
+    int div_factor = channel_shared_ ? channels : 1;
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
+    CAFFE_CUDA_NUM_THREADS>>>(
+      count, channels, hw, top_diff, bottom_data, bottom_diff, slope_data,
+      div_factor);
+    CUDA_POST_KERNEL_CHECK;
   }
 }
 

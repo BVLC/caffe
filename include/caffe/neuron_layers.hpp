@@ -654,7 +654,11 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
 };
 
 /**
- * @brief Parameterized Rectified Linear Unit non-linearity @f$ y_i = \max(0, x_i) + a_i \min(0, x_i) @f$.
+ * @brief Parameterized Rectified Linear Unit non-linearity @f$
+ *        y_i = \max(0, x_i) + a_i \min(0, x_i)
+ *        @f$. The differences from ReLULayer are 1) negative slopes are
+ *        learnable though backprop and 2) negative slopes can vary across
+ *        channels.
  */
 template <typename Dtype>
 class PReLULayer : public NeuronLayer<Dtype> {
@@ -673,6 +677,9 @@ class PReLULayer : public NeuronLayer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
   virtual inline const char* type() const { return "PReLU"; }
 
  protected:
@@ -682,7 +689,7 @@ class PReLULayer : public NeuronLayer<Dtype> {
    *      the inputs @f$ x @f$
    * @param top output Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
-   *      the computed outputs for each channel @f$i@f $@f$
+   *      the computed outputs for each channel @f$i@f$ @f$
    *        y_i = \max(0, x_i) + a_i \min(0, x_i)
    *      @f$.
    */
@@ -708,7 +715,7 @@ class PReLULayer : public NeuronLayer<Dtype> {
    *        \begin{array}{lr}
    *            a_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\
    *            \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i > 0
-   *        \end{array} \right
+   *        \end{array} \right.
    *      @f$.
    *      If param_propagate_down_[0] is true, it fills the diff with gradients
    *      @f$
@@ -726,6 +733,7 @@ class PReLULayer : public NeuronLayer<Dtype> {
 
   bool channel_shared_;
   Blob<Dtype> multiplier_;  // dot multipler for backward computation of params
+  Blob<Dtype> bottom_memory_;  // memory for in-place computation
 };
 
 }  // namespace caffe
