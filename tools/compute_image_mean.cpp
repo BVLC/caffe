@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
   Datum datum;
   datum.ParseFromString(cursor->value());
 
-  if (DecodeDatumNative(&datum)) {
+  if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
   }
 
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
   while (cursor->valid()) {
     Datum datum;
     datum.ParseFromString(cursor->value());
-    DecodeDatumNative(&datum);
+    DecodeDatum(&datum);
 
     const std::string& data = datum.data();
     size_in_datum = std::max<int>(datum.data().size(),

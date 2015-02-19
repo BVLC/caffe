@@ -42,7 +42,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   Datum datum;
   datum.ParseFromString(cursor_->value());
 
-  if (DecodeDatumNative(&datum)) {
+  if (DecodeDatum(&datum)) {
     LOG(INFO) << "Decoding Datum";
   }
   // image
@@ -110,7 +110,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
     cv::Mat cv_img;
     if (datum.encoded()) {
-       cv_img = DecodeDatumToCVMatNative(datum);
+       cv_img = DecodeDatumToCVMat(datum);
     }
     read_time += timer.MicroSeconds();
     timer.Start();

@@ -39,8 +39,6 @@ DEFINE_bool(check_size, false,
     "When this option is on, check that all the datum have the same size");
 DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
-DEFINE_string(encode_type, "",
-    "Optional: What type should we encode the image as ('png','jpg',...).");
 
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
@@ -65,7 +63,6 @@ int main(int argc, char** argv) {
   const bool is_color = !FLAGS_gray;
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
-  const string encode_type = FLAGS_encode_type;
 
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
@@ -81,8 +78,11 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
-  if (encode_type.size() && !encoded)
-    LOG(INFO) << "encode_type specified, assuming encoded=true.";
+  if (encoded) {
+    CHECK_EQ(FLAGS_resize_height, 0) << "With encoded don't resize images";
+    CHECK_EQ(FLAGS_resize_width, 0) << "With encoded don't resize images";
+    CHECK(!check_size) << "With encoded cannot check_size";
+  }
 
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
@@ -98,24 +98,18 @@ int main(int argc, char** argv) {
   int count = 0;
   const int kMaxKeyLength = 256;
   char key_cstr[kMaxKeyLength];
-  int data_size = 0;
+  int data_size;
   bool data_size_initialized = false;
 
   for (int line_id = 0; line_id < lines.size(); ++line_id) {
     bool status;
-    std::string enc = encode_type;
-    if (encoded && !enc.size()) {
-      // Guess the encoding type from the file name
-      string fn = lines[line_id].first;
-      size_t p = fn.rfind('.');
-      if ( p == fn.npos )
-        LOG(WARNING) << "Failed to guess the encoding of '" << fn << "'";
-      enc = fn.substr(p);
-      std::transform(enc.begin(), enc.end(), enc.begin(), ::tolower);
+    if (encoded) {
+      status = ReadFileToDatum(root_folder + lines[line_id].first,
+        lines[line_id].second, &datum);
+    } else {
+      status = ReadImageToDatum(root_folder + lines[line_id].first,
+          lines[line_id].second, resize_height, resize_width, is_color, &datum);
     }
-    status = ReadImageToDatum(root_folder + lines[line_id].first,
-        lines[line_id].second, resize_height, resize_width, is_color,
-        enc, &datum);
     if (status == false) continue;
     if (check_size) {
       if (!data_size_initialized) {
