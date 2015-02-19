@@ -192,9 +192,6 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       grad += weight_decay *
           ((i == D) ? bias.cpu_data()[0] : weights.cpu_data()[i]);
       // Finally, compute update.
-      const vector<shared_ptr<Blob<Dtype> > >& history_rms = solver_->history_rms();
-      const Dtype history_rms_value = (i == D) ?
-                  		history_rms[1]->cpu_data()[0] : history_rms[0]->cpu_data()[i];
       const vector<shared_ptr<Blob<Dtype> > >& history = solver_->history();
       ASSERT_EQ(2, history.size());  // 1 blob for weights, 1 for bias
       Dtype update_value = learning_rate * grad;
@@ -214,10 +211,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
         update_value /= std::sqrt(history_value + grad * grad) + delta_;
         break;
       case SolverParameter_SolverType_RMSPROP:
-				update_value /= (std::sqrt(rms_decay*history_rms_value + grad*grad*(1-rms_decay)) + delta_) ;
-				if(momentum > 0){
-					update_value += temp;
-				}
+				update_value /= (std::sqrt(rms_decay*history_value + grad*grad*(1-rms_decay)) + delta_) ;
         break;
       default:
         LOG(FATAL) << "Unknown solver type: " << solver_type();
