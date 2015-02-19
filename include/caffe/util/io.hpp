@@ -92,14 +92,7 @@ inline bool ReadFileToDatum(const string& filename, Datum* datum) {
 }
 
 bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color,
-    const std::string & encoding, Datum* datum);
-
-inline bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color, Datum* datum) {
-  return ReadImageToDatum(filename, label, height, width, is_color,
-                          "", datum);
-}
+    const int height, const int width, const bool is_color, Datum* datum);
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, Datum* datum) {
@@ -116,12 +109,20 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, true, datum);
 }
 
-inline bool ReadImageToDatum(const string& filename, const int label,
-    const std::string & encoding, Datum* datum) {
-  return ReadImageToDatum(filename, label, 0, 0, true, encoding, datum);
+bool DecodeDatum(const int height, const int width, const bool is_color,
+  Datum* datum);
+
+inline bool DecodeDatum(const int height, const int width, Datum* datum) {
+  return DecodeDatum(height, width, true, datum);
 }
 
-bool DecodeDatumNative(Datum* datum);
+inline bool DecodeDatum(const bool is_color, Datum* datum) {
+  return DecodeDatum(0, 0, is_color, datum);
+}
+
+inline bool DecodeDatum(Datum* datum) {
+  return DecodeDatum(0, 0, true, datum);
+}
 
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color);
@@ -134,7 +135,16 @@ cv::Mat ReadImageToCVMat(const string& filename,
 
 cv::Mat ReadImageToCVMat(const string& filename);
 
-cv::Mat DecodeDatumToCVMatNative(const Datum& datum);
+cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const int height, const int width, const bool is_color);
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const int height, const int width);
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum,
+    const bool is_color);
+
+cv::Mat DecodeDatumToCVMat(const Datum& datum);
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
