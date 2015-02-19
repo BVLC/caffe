@@ -175,7 +175,7 @@ message SolverParameter {
   optional float delta = 31 [default = 1e-8];
   
   //RMSprop decay value
-  optional float rms_decay = 36 [default = 0.99];
+  optional float rms_decay = 36;
 
   // If true, print information about the state of the net that may help with
   // debugging learning problems.

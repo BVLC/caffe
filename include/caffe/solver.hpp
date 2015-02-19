@@ -130,20 +130,12 @@ template <typename Dtype>
 class RMSpropSolver : public SGDSolver<Dtype> {
 public:
 	explicit RMSpropSolver(const SolverParameter& param)
-	      : SGDSolver<Dtype>(param) { PreSolveRMS();constructor_sanity_check(); }
-	  explicit RMSpropSolver(const string& param_file)
-	      : SGDSolver<Dtype>(param_file) { PreSolveRMS();constructor_sanity_check(); }
+	      : SGDSolver<Dtype>(param) {  }
+	explicit RMSpropSolver(const string& param_file)
+	      : SGDSolver<Dtype>(param_file) { }
 
 protected:
-	void PreSolveRMS();
 	virtual void ComputeUpdateValue();
-	void constructor_sanity_check() {
-		CHECK_NE(0, this->param_.rms_decay())
-		<< "rms_decay cannot be 0 with RMSprop.";
-	}
-
-	// Keeps RMS of the gradient history
-	vector<shared_ptr<Blob<Dtype> > >  history_rms_, update_rms_;
 
 	DISABLE_COPY_AND_ASSIGN(RMSpropSolver);
 };
