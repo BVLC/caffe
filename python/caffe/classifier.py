@@ -23,7 +23,7 @@ class Classifier(caffe.Net):
         gpu, mean, input_scale, raw_scale, channel_swap: params for
             preprocessing options.
         """
-        caffe.Net.__init__(self, model_file, pretrained_file)
+        caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
         caffe.set_phase_test()
 
         if gpu:
