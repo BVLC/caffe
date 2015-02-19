@@ -1,8 +1,8 @@
 /* Sources directory */
-#define SOURCE_FOLDER "${CMAKE_SOURCE_DIR}"
+#define SOURCE_FOLDER "${PROJECT_SOURCE_DIR}"
 
 /* Binaries directory */
-#define BINARY_FOLDER "${CMAKE_BINARY_DIR}"
+#define BINARY_FOLDER "${PROJECT_BINARY_DIR}"
 
 /* NVIDA Cuda */
 #cmakedefine HAVE_CUDA

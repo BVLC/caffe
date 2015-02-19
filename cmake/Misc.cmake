@@ -25,7 +25,7 @@ endif()
 
 # ---[ Install options
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Default install path" FORCE)
+  set(CMAKE_INSTALL_PREFIX "${PROJECT_BINARY_DIR}/install" CACHE PATH "Default install path" FORCE)
 endif()
 
 # ---[ RPATH settings
@@ -34,8 +34,8 @@ set(CMAKE_MACOSX_RPATH TRUE)
 
 # ---[ Funny target
 if(UNIX OR APPLE)
-  add_custom_target(symlink_to_build COMMAND "ln" "-sf" "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}/build"
-                                     COMMENT "Adding symlink: <caffe_root>/build -> ${CMAKE_BINARY_DIR}" )
+  add_custom_target(symlink_to_build COMMAND "ln" "-sf" "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/build"
+                                     COMMENT "Adding symlink: <caffe_root>/build -> ${PROJECT_BINARY_DIR}" )
 endif()
 
 # ---[ Set debug postfix

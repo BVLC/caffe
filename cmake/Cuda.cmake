@@ -12,7 +12,7 @@ set(Caffe_known_gpu_archs "20 21(20) 30 35 50")
 #   caffe_detect_installed_gpus(out_variable)
 function(caffe_detect_installed_gpus out_variable)
   if(NOT CUDA_gpu_detect_output)
-    set(__cufile ${CMAKE_BINARY_DIR}/detect_cuda_archs.cu)
+    set(__cufile ${PROJECT_BINARY_DIR}/detect_cuda_archs.cu)
 
     file(WRITE ${__cufile} ""
       "#include <cstdio>\n"
@@ -31,7 +31,7 @@ function(caffe_detect_installed_gpus out_variable)
       "}\n")
 
     execute_process(COMMAND "${CUDA_NVCC_EXECUTABLE}" "--run" "${__cufile}"
-                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/CMakeFiles/"
+                    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/CMakeFiles/"
                     RESULT_VARIABLE __nvcc_res OUTPUT_VARIABLE __nvcc_out
                     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
