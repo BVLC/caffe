@@ -167,13 +167,34 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
   }
   return cv_img;
 }
+cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
+  cv::Mat cv_img;
+  CHECK(datum.encoded()) << "Datum not encoded";
+  const string& data = datum.data();
+  std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+  cv_img = cv::imdecode(vec_data, cv_read_flag);
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not decode datum ";
+  }
+  return cv_img;
+}
 
 // If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
-// if height and width are set it will resize it
 // If Datum is not encoded will do nothing
 bool DecodeDatumNative(Datum* datum) {
   if (datum->encoded()) {
     cv::Mat cv_img = DecodeDatumToCVMatNative((*datum));
+    CVMatToDatum(cv_img, datum);
+    return true;
+  } else {
+    return false;
+  }
+}
+bool DecodeDatum(Datum* datum, bool is_color) {
+  if (datum->encoded()) {
+    cv::Mat cv_img = DecodeDatumToCVMat((*datum), is_color);
     CVMatToDatum(cv_img, datum);
     return true;
   } else {

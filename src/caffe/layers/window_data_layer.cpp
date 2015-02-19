@@ -281,7 +281,7 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       if (this->cache_images_) {
         pair<std::string, Datum> image_cached =
           image_database_cache_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
-        cv_img = DecodeDatumToCVMatNative(image_cached.second);
+        cv_img = DecodeDatumToCVMat(image_cached.second, true);
       } else {
         cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
         if (!cv_img.data) {
