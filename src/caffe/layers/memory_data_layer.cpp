@@ -16,17 +16,31 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   height_ = this->layer_param_.memory_data_param().height();
   width_ = this->layer_param_.memory_data_param().width();
   size_ = channels_ * height_ * width_;
+
   CHECK_GT(batch_size_ * size_, 0) <<
       "batch_size, channels, height, and width must be specified and"
       " positive in memory_data_param";
-  top[0]->Reshape(batch_size_, channels_, height_, width_);
+
+  int crop_size = this->layer_param_.transform_param().crop_size();
+
+  top_height_ = height_;
+  top_width_ = width_;
+  if (crop_size > 0) {
+    top_height_ = crop_size;
+    top_width_ = crop_size;
+  }
+
+  top[0]->Reshape(batch_size_, channels_, top_height_, top_width_);
   top[1]->Reshape(batch_size_, 1, 1, 1);
-  added_data_.Reshape(batch_size_, channels_, height_, width_);
+  added_data_.Reshape(batch_size_, channels_, top_height_, top_width_);
   added_label_.Reshape(batch_size_, 1, 1, 1);
+
   data_ = NULL;
   labels_ = NULL;
   added_data_.cpu_data();
   added_label_.cpu_data();
+
+  need_reshape = false;
 }
 
 template <typename Dtype>
@@ -37,7 +51,7 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK_GT(num, 0) << "There is no datum to add.";
   CHECK_EQ(num % batch_size_, 0) <<
       "The added data must be a multiple of the batch size.";
-  added_data_.Reshape(num, channels_, height_, width_);
+  added_data_.Reshape(num, channels_, top_height_, top_width_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_->Transform(datum_vector, &added_data_);
@@ -61,7 +75,7 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   CHECK_GT(num, 0) << "There is no mat to add";
   CHECK_EQ(num % batch_size_, 0) <<
       "The added data must be a multiple of the batch size.";
-  added_data_.Reshape(num, channels_, height_, width_);
+  added_data_.Reshape(num, channels_, top_height_, top_width_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_->Transform(mat_vector, &added_data_);
@@ -81,11 +95,7 @@ void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
   CHECK(data);
   CHECK(labels);
   CHECK_EQ(n % batch_size_, 0) << "n must be a multiple of batch size";
-  // Warn with transformation parameters since a memory array is meant to
-  // be generic and no transformations are done with Reset().
-  if (this->layer_param_.has_transform_param()) {
-    LOG(WARNING) << this->type() << " does not transform array data on Reset()";
-  }
+
   data_ = data;
   labels_ = labels;
   n_ = n;
@@ -97,18 +107,41 @@ void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
   CHECK(!has_new_data_) <<
       "Can't change batch_size until current data has been consumed.";
   batch_size_ = new_size;
-  added_data_.Reshape(batch_size_, channels_, height_, width_);
+
+  added_data_.Reshape(batch_size_, channels_, top_height_, top_width_);
   added_label_.Reshape(batch_size_, 1, 1, 1);
+
+  need_reshape = true;
 }
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
-  top[0]->Reshape(batch_size_, channels_, height_, width_);
-  top[1]->Reshape(batch_size_, 1, 1, 1);
-  top[0]->set_cpu_data(data_ + pos_ * size_);
-  top[1]->set_cpu_data(labels_ + pos_);
+
+  if (need_reshape) {
+    top[0]->Reshape(batch_size_, channels_, top_height_, top_width_);
+    top[1]->Reshape(batch_size_, 1, 1, 1);
+    need_reshape = false;
+  }
+
+  if (this->layer_param_.has_transform_param()) {
+    // Copy to blob
+    Blob<Dtype> b;
+    b.Reshape(batch_size_, channels_, top_height_, top_width_);
+    b.set_cpu_data(data_ + pos_ * size_);
+
+    // transform
+    this->data_transformer_->Transform(&b, top[0]);
+
+    // Copy labels
+    top[1]->set_cpu_data(labels_ + pos_);
+
+  } else {
+    top[0]->set_cpu_data(data_ + pos_ * size_);
+    top[1]->set_cpu_data(labels_ + pos_);
+  }
+
   pos_ = (pos_ + batch_size_) % n_;
   if (pos_ == 0)
     has_new_data_ = false;

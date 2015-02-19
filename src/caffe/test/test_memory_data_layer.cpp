@@ -26,6 +26,8 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
     channels_ = 4;
     height_ = 7;
     width_ = 11;
+    crop_size_ = 3;
+
     blob_top_vec_.push_back(data_blob_);
     blob_top_vec_.push_back(label_blob_);
     // pick random input data
@@ -48,6 +50,7 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
   int channels_;
   int height_;
   int width_;
+  int crop_size_;
   // we don't really need blobs for the input data, but it makes it
   //  easier to call Filler
   Blob<Dtype>* const data_;
@@ -77,6 +80,36 @@ TYPED_TEST(MemoryDataLayerTest, TestSetup) {
   EXPECT_EQ(this->data_blob_->channels(), this->channels_);
   EXPECT_EQ(this->data_blob_->height(), this->height_);
   EXPECT_EQ(this->data_blob_->width(), this->width_);
+  EXPECT_EQ(this->label_blob_->num(), this->batch_size_);
+  EXPECT_EQ(this->label_blob_->channels(), 1);
+  EXPECT_EQ(this->label_blob_->height(), 1);
+  EXPECT_EQ(this->label_blob_->width(), 1);
+}
+// Setup with transforms
+TYPED_TEST(MemoryDataLayerTest, TestSetupTransforms) {
+  typedef typename TypeParam::Dtype Dtype;
+
+  LayerParameter layer_param;
+  MemoryDataParameter* md_param = layer_param.mutable_memory_data_param();
+  md_param->set_batch_size(this->batch_size_);
+  md_param->set_channels(this->channels_);
+  md_param->set_height(this->height_);
+  md_param->set_width(this->width_);
+
+  TransformationParameter* transform_param =
+      layer_param.mutable_transform_param();
+
+  transform_param->set_crop_size(this->crop_size_);
+
+  shared_ptr<Layer<Dtype> > layer(
+      new MemoryDataLayer<Dtype>(layer_param));
+
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->data_blob_->num(), this->batch_size_);
+  EXPECT_EQ(this->data_blob_->channels(), this->channels_);
+  EXPECT_EQ(this->data_blob_->height(), this->crop_size_);
+  EXPECT_EQ(this->data_blob_->width(), this->crop_size_);
+
   EXPECT_EQ(this->label_blob_->num(), this->batch_size_);
   EXPECT_EQ(this->label_blob_->channels(), 1);
   EXPECT_EQ(this->label_blob_->height(), 1);
@@ -124,6 +157,7 @@ TYPED_TEST(MemoryDataLayerTest, AddDatumVectorDefaultTransform) {
   memory_data_param->set_width(this->width_);
   MemoryDataLayer<Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
   // We add batch_size*num_iter items, then for each iteration
   // we forward batch_size elements
   int num_iter = 5;
