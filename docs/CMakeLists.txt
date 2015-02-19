@@ -64,19 +64,19 @@ endfunction()
 ########################## [ Non macro part ] ##################################################
 
 # Gathering is done at each 'make doc'
-file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/docs/gathered)
+file(REMOVE_RECURSE ${PROJECT_SOURCE_DIR}/docs/gathered)
 
 # Doxygen config file path
-set(DOXYGEN_config_file ${CMAKE_SOURCE_DIR}/.Doxyfile CACHE FILEPATH "Doxygen config file")
+set(DOXYGEN_config_file ${PROJECT_SOURCE_DIR}/.Doxyfile CACHE FILEPATH "Doxygen config file")
 
 # Adding docs target
 add_custom_target(docs COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_config_file}
-                       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
                        COMMENT "Launching doxygen..." VERBATIM)
 
 # Gathering examples into docs subfolder
-gather_notebooks_as_prebuild_cmd(docs docs/gathered ${CMAKE_SOURCE_DIR})
-gather_readmes_as_prebuild_cmd(docs docs/gathered  ${CMAKE_SOURCE_DIR})
+gather_notebooks_as_prebuild_cmd(docs docs/gathered ${PROJECT_SOURCE_DIR})
+gather_readmes_as_prebuild_cmd(docs docs/gathered  ${PROJECT_SOURCE_DIR})
 
 # Auto detect output directory
 file(STRINGS ${DOXYGEN_config_file} config_line REGEX "OUTPUT_DIRECTORY[ \t]+=[^=].*")
@@ -90,17 +90,17 @@ else()
 endif()
 
 if(NOT IS_ABSOLUTE ${output_dir})
-  set(output_dir ${CMAKE_SOURCE_DIR}/${output_dir})
+  set(output_dir ${PROJECT_SOURCE_DIR}/${output_dir})
   get_filename_component(output_dir ${output_dir} ABSOLUTE)
 endif()
 
 # creates symlink in docs subfolder to code documentation built by doxygen
 add_custom_command(TARGET docs POST_BUILD VERBATIM
                    COMMAND ln -sfn "${output_dir}/html" doxygen
-                   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs
-                   COMMENT "Creating symlink ${CMAKE_SOURCE_DIR}/docs/doxygen -> ${output_dir}/html")
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/docs
+                   COMMENT "Creating symlink ${PROJECT_SOURCE_DIR}/docs/doxygen -> ${output_dir}/html")
 
 # for quick launch of jekyll
 add_custom_target(jekyll COMMAND jekyll serve -w -s . -d _site --port=4000
-                         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs
+                         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/docs
                          COMMENT "Launching jekyll..." VERBATIM)

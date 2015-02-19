@@ -53,7 +53,7 @@ function(caffe_pickup_caffe_sources root)
   # put all files in source groups (visible as subfolder in many IDEs)
   caffe_source_group("Include"        GLOB "${root}/include/caffe/*.h*")
   caffe_source_group("Include\\Util"  GLOB "${root}/include/caffe/util/*.h*")
-  caffe_source_group("Include"        GLOB "${CMAKE_BINARY_DIR}/caffe_config.h*")
+  caffe_source_group("Include"        GLOB "${PROJECT_BINARY_DIR}/caffe_config.h*")
   caffe_source_group("Source"         GLOB "${root}/src/caffe/*.cpp")
   caffe_source_group("Source\\Util"   GLOB "${root}/src/caffe/util/*.cpp")
   caffe_source_group("Source\\Layers" GLOB "${root}/src/caffe/layers/*.cpp")
@@ -75,7 +75,7 @@ function(caffe_pickup_caffe_sources root)
   list(REMOVE_ITEM  srcs ${test_srcs})
 
   # adding headers to make the visible in some IDEs (Qt, VS, Xcode)
-  list(APPEND srcs ${hdrs} ${CMAKE_BINARY_DIR}/caffe_config.h)
+  list(APPEND srcs ${hdrs} ${PROJECT_BINARY_DIR}/caffe_config.h)
   list(APPEND test_srcs ${test_hdrs})
 
   # collect cuda files
@@ -107,9 +107,9 @@ endfunction()
 function(caffe_default_properties target)
   set_target_properties(${target} PROPERTIES
     DEBUG_POSTFIX ${Caffe_DEBUG_POSTFIX}
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 endfunction()
 
 ################################################################################################
@@ -139,7 +139,7 @@ function(caffe_configure_testdatafile file)
   file(STRINGS ${file} __lines)
   set(result "")
   foreach(line ${__lines})
-    set(result "${result}${CMAKE_SOURCE_DIR}/${line}\n")
+    set(result "${result}${PROJECT_SOURCE_DIR}/${line}\n")
   endforeach()  
   file(WRITE ${file}.gen.cmake ${result})
 endfunction()
