@@ -40,7 +40,7 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   added_data_.cpu_data();
   added_label_.cpu_data();
 
-  need_reshape = false;
+  need_reshape_ = false;
 }
 
 template <typename Dtype>
@@ -111,7 +111,7 @@ void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
   added_data_.Reshape(batch_size_, channels_, top_height_, top_width_);
   added_label_.Reshape(batch_size_, 1, 1, 1);
 
-  need_reshape = true;
+  need_reshape_ = true;
 }
 
 template <typename Dtype>
@@ -119,10 +119,10 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initalized by calling Reset";
 
-  if (need_reshape) {
+  if (need_reshape_) {
     top[0]->Reshape(batch_size_, channels_, top_height_, top_width_);
     top[1]->Reshape(batch_size_, 1, 1, 1);
-    need_reshape = false;
+    need_reshape_ = false;
   }
 
   if (this->layer_param_.has_transform_param()) {

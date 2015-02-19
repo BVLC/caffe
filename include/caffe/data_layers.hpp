@@ -289,7 +289,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   size_t pos_;
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
-  bool has_new_data_, need_reshape;
+  bool has_new_data_, need_reshape_;
 };
 
 /**
