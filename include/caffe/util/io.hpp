@@ -1,7 +1,14 @@
 #ifndef CAFFE_UTIL_IO_H_
 #define CAFFE_UTIL_IO_H_
 
+#ifndef _MSC_VER
 #include <unistd.h>
+#else
+// For Visual Studio, we need som other includes.
+#include <stdio.h>
+#include <direct.h>
+#include <stdint.h>
+#endif
 #include <string>
 
 #include "google/protobuf/message.h"
@@ -20,24 +27,43 @@ using ::google::protobuf::Message;
 
 inline void MakeTempFilename(string* temp_filename) {
   temp_filename->clear();
+#ifdef _MSC_VER
+  // Use the system method to create temporary files.
+  *temp_filename = string(tmpnam(nullptr));
+#else
   *temp_filename = "/tmp/caffe_test.XXXXXX";
+#endif
   char* temp_filename_cstr = new char[temp_filename->size() + 1];
   // NOLINT_NEXT_LINE(runtime/printf)
   strcpy(temp_filename_cstr, temp_filename->c_str());
+#ifdef _MSC_VER
+  FILE* fd = fopen(temp_filename_cstr, "w");
+  CHECK(fd != NULL) << "Failed to open a temporary file at: " << *temp_filename;
+  fclose(fd);
+#else
   int fd = mkstemp(temp_filename_cstr);
   CHECK_GE(fd, 0) << "Failed to open a temporary file at: " << *temp_filename;
   close(fd);
+#endif
   *temp_filename = temp_filename_cstr;
   delete[] temp_filename_cstr;
 }
 
 inline void MakeTempDir(string* temp_dirname) {
   temp_dirname->clear();
+#ifdef _MSC_VER
+  *temp_dirname = string(tmpnam(nullptr));
+#else
   *temp_dirname = "/tmp/caffe_test.XXXXXX";
+#endif
   char* temp_dirname_cstr = new char[temp_dirname->size() + 1];
   // NOLINT_NEXT_LINE(runtime/printf)
   strcpy(temp_dirname_cstr, temp_dirname->c_str());
+#ifdef _MSC_VER
+  int mkdtemp_result = _mkdir(temp_dirname_cstr);
+#else
   char* mkdtemp_result = mkdtemp(temp_dirname_cstr);
+#endif
   CHECK(mkdtemp_result != NULL)
       << "Failed to create a temporary directory at: " << *temp_dirname;
   *temp_dirname = temp_dirname_cstr;

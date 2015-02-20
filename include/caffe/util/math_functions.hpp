@@ -134,8 +134,26 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
 // The name sngbit is meant to avoid conflicts with std::signbit in the macro.
 // The extra parens are needed because CUDA < 6.5 defines signbit as a macro,
 // and we don't want that to expand here when CUDA headers are also included.
+// On Windows, std::signbit is not available, so use a replacement.
+#ifdef _MSC_VER
+template <typename T>
+bool signbit(const T &arg);
+
+template <>
+bool signbit<float>(const float &arg) {
+  return (*reinterpret_cast<const long*>(&arg) & (1L << 31)) != 0;
+};
+
+template <>
+bool signbit<double>(const double &arg) {
+  return (*reinterpret_cast<const long long*>(&arg) & (1LL << 63)) != 0;
+};
+DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
+    y[i] = static_cast<bool>((signbit)(x[i])));
+#else
 DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
     y[i] = static_cast<bool>((std::signbit)(x[i])));
+#endif
 
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
 
