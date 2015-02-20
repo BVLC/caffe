@@ -42,7 +42,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   Datum datum;
   datum.ParseFromString(cursor_->value());
 
-  if (DecodeDatumNative(&datum)) {
+  bool force_color = this->layer_param_.data_param().force_encoded_color();
+  if ((force_color && DecodeDatum(&datum, true)) ||
+      DecodeDatumNative(&datum)) {
     LOG(INFO) << "Decoding Datum";
   }
   // image
@@ -102,6 +104,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
+  bool force_color = this->layer_param_.data_param().force_encoded_color();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
@@ -110,7 +113,17 @@ void DataLayer<Dtype>::InternalThreadEntry() {
 
     cv::Mat cv_img;
     if (datum.encoded()) {
-       cv_img = DecodeDatumToCVMatNative(datum);
+      if (force_color) {
+        cv_img = DecodeDatumToCVMat(datum, true);
+      } else {
+        cv_img = DecodeDatumToCVMatNative(datum);
+      }
+      if (cv_img.channels() != this->transformed_data_.channels()) {
+        LOG(WARNING) << "Your dataset contains encoded images with mixed "
+        << "channel sizes. Consider adding a 'force_color' flag to the "
+        << "model definition, or rebuild your dataset using "
+        << "convert_imageset.";
+      }
     }
     read_time += timer.MicroSeconds();
     timer.Start();
