@@ -142,4 +142,53 @@ TYPED_TEST(GaussianFillerTest, TestFill) {
   EXPECT_LE(var, target_var * 5.);
 }
 
+template <typename Dtype>
+class MSRFillerTest : public ::testing::Test {
+ protected:
+  MSRFillerTest()
+      : blob_(new Blob<Dtype>(1000, 2, 4, 5)),
+        filler_param_() {
+  }
+  virtual void test_params(bool fan_in, bool fan_out, Dtype n) {
+    this->filler_param_.set_fan_in(fan_in);
+    this->filler_param_.set_fan_out(fan_out);
+    this->filler_.reset(new MSRFiller<Dtype>(this->filler_param_));
+    this->filler_->Fill(blob_);
+    EXPECT_TRUE(this->blob_);
+    const int count = this->blob_->count();
+    const Dtype* data = this->blob_->cpu_data();
+    Dtype mean = 0.;
+    Dtype ex2 = 0.;
+    for (int i = 0; i < count; ++i) {
+      mean += data[i];
+      ex2 += data[i] * data[i];
+    }
+    mean /= count;
+    ex2 /= count;
+    Dtype std = sqrt(ex2 - mean*mean);
+    Dtype target_std = sqrt(2.0 / n);
+    EXPECT_NEAR(mean, 0.0, 0.1);
+    EXPECT_NEAR(std, target_std, 0.1);
+  }
+  virtual ~MSRFillerTest() { delete blob_; }
+  Blob<Dtype>* const blob_;
+  FillerParameter filler_param_;
+  shared_ptr<MSRFiller<Dtype> > filler_;
+};
+
+TYPED_TEST_CASE(MSRFillerTest, TestDtypes);
+
+TYPED_TEST(MSRFillerTest, TestFillFanIn) {
+  TypeParam n = 2*4*5;
+  this->test_params(true, false, n);
+}
+TYPED_TEST(MSRFillerTest, TestFillFanOut) {
+  TypeParam n = 1000*4*5;
+  this->test_params(false, true, n);
+}
+TYPED_TEST(MSRFillerTest, TestFillFanInFanOut) {
+  TypeParam n = (2*4*5 + 1000*4*5) / 2.0;
+  this->test_params(true, true, n);
+}
+
 }  // namespace caffe

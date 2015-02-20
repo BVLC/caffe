@@ -157,6 +157,36 @@ class XavierFiller : public Filler<Dtype> {
   }
 };
 
+/**
+ * @brief Fills a Blob with values @f$ x \sim N(-a, +a) @f$ where @f$ a @f$ is
+ *        set by the number of incoming nodes, based on the paper [He,
+ *        Zhang, Ren and Sun 2015]
+ */
+template <typename Dtype>
+class MSRFiller : public Filler<Dtype> {
+ public:
+  explicit MSRFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    CHECK(blob->count());
+    CHECK(this->filler_param_.fan_in() || this->filler_param_.fan_out())
+         << "MSR Filler requires either fan_in, fan_out, or both to be true.";
+    int fan_in = blob->count() / blob->num();
+    int fan_out = blob->count() / blob->channels();
+    Dtype n = fan_in;  // default to fan_in
+    if (this->filler_param_.fan_in() && this->filler_param_.fan_out()) {
+      n = (fan_in + fan_out) / Dtype(2);
+    } else if (this->filler_param_.fan_out()) {
+      n = fan_out;
+    }
+    Dtype std = sqrt(Dtype(2) / n);
+    caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
+        blob->mutable_cpu_data());
+    CHECK_EQ(this->filler_param_.sparse(), -1)
+         << "Sparsity not supported by this Filler.";
+  }
+};
+
 
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
@@ -177,6 +207,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new UniformFiller<Dtype>(param);
   } else if (type == "xavier") {
     return new XavierFiller<Dtype>(param);
+  } else if (type == "msr") {
+    return new MSRFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
