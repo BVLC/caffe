@@ -77,15 +77,13 @@ using boost::shared_ptr;
 using std::fstream;
 using std::ios;
 #ifdef _MSC_VER
-// For MSVC it is necessary to define this missing symbol.
-template <typename FP>
-bool isnan(const FP &arg) {
-    return arg != arg;
-}
+// For MSVC it is necessary to define these:
+#define isnan(x) _isnan(x)
+#define isinf(x) (!_finite(x))
 #else
 using std::isnan;
-#endif
 using std::isinf;
+#endif
 using std::iterator;
 using std::make_pair;
 using std::map;
