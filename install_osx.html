@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- MathJax -->
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>
+      Caffe 
+    </title>
+
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
+    <link rel="stylesheet" href="/stylesheets/reset.css">
+    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-46255508-1', 'daggerfs.com');
+    ga('send', 'pageview');
+  </script>
+    <div class="wrapper">
+      <header>
+        <h1 class="header"><a href="/">Caffe</a></h1>
+        <p class="header">
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+        </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
+        <ul>
+          <li>
+            <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
+          </li>
+        </ul>
+      </header>
+      <section>
+
+      <h1 id="os-x-installation">OS X Installation</h1>
+
+<p>We highly recommend using the <a href="http://brew.sh/">Homebrew</a> package manager.
+Ideally you could start from a clean <code>/usr/local</code> to avoid conflicts.
+In the following, we assume that you’re using Anaconda Python and Homebrew.</p>
+
+<p><strong>CUDA</strong>: Install via the NVIDIA package that includes both CUDA and the bundled driver. <strong>CUDA 7 is strongly suggested.</strong> Older CUDA require <code>libstdc++</code> while clang++ is the default compiler and <code>libc++</code> the default standard library on OS X 10.9+. This disagreement makes it necessary to change the compilation settings for each of the dependencies. This is prone to error.</p>
+
+<p><strong>Library Path</strong>: We find that everything compiles successfully if <code>$LD_LIBRARY_PATH</code> is not set at all, and <code>$DYLD_FALLBACK_LIBRARY_PATH</code> is set to to provide CUDA, Python, and other relevant libraries (e.g. <code>/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib</code>).
+In other <code>ENV</code> settings, things may not work as expected.</p>
+
+<p><strong>General dependencies</strong></p>
+
+<pre><code>brew install --fresh -vd snappy leveldb gflags glog szip lmdb
+# need the homebrew science source for OpenCV and hdf5
+brew tap homebrew/science
+hdf5 opencv
+</code></pre>
+
+<p>If using Anaconda Python, a modification to the OpenCV formula might be needed
+Do <code>brew edit opencv</code> and change the lines that look like the two lines below to exactly the two lines below.</p>
+
+<pre><code>  -DPYTHON_LIBRARY=#{py_prefix}/lib/libpython2.7.dylib
+  -DPYTHON_INCLUDE_DIR=#{py_prefix}/include/python2.7
+</code></pre>
+
+<p>If using Anaconda Python, HDF5 is bundled and the <code>hdf5</code> formula can be skipped.</p>
+
+<p><strong>Remaining dependencies, with / without Python</strong></p>
+
+<pre><code># with Python pycaffe needs dependencies built from source
+brew install --build-from-source --with-python --fresh -vd protobuf
+brew install --build-from-source --fresh -vd boost
+# without Python the usual installation suffices
+brew install protobuf boost
+</code></pre>
+
+<p><strong>BLAS</strong>: already installed as the <a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html">Accelerate / vecLib Framework</a>. OpenBLAS and MKL are alternatives for faster CPU computation.</p>
+
+<p><strong>Python</strong> (optional): Anaconda is the preferred Python.
+If you decide against it, please use Homebrew.
+Check that Caffe and dependencies are linking against the same, desired Python.</p>
+
+<p>Continue with <a href="installation.html#compilation">compilation</a>.</p>
+
+<h2 id="libstdc-installation">libstdc++ installation</h2>
+
+<p>This route is not for the faint of heart.
+For OS X 10.10 and 10.9 you should install CUDA 7 and follow the instructions above.
+If that is not an option, take a deep breath and carry on.</p>
+
+<p>In OS X 10.9+, clang++ is the default C++ compiler and uses <code>libc++</code> as the standard library.
+However, NVIDIA CUDA (even version 6.0) currently links only with <code>libstdc++</code>.
+This makes it necessary to change the compilation settings for each of the dependencies.</p>
+
+<p>We do this by modifying the Homebrew formulae before installing any packages.
+Make sure that Homebrew doesn’t install any software dependencies in the background; all packages must be linked to <code>libstdc++</code>.</p>
+
+<p>The prerequisite Homebrew formulae are</p>
+
+<pre><code>boost snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv
+</code></pre>
+
+<p>For each of these formulas, <code>brew edit FORMULA</code>, and add the ENV definitions as shown:</p>
+
+<pre><code>  def install
+      # ADD THE FOLLOWING:
+      ENV.append "CXXFLAGS", "-stdlib=libstdc++"
+      ENV.append "CFLAGS", "-stdlib=libstdc++"
+      ENV.append "LDFLAGS", "-stdlib=libstdc++ -lstdc++"
+      # The following is necessary because libtool likes to strip LDFLAGS:
+      ENV["CXX"] = "/usr/bin/clang++ -stdlib=libstdc++"
+      ...
+</code></pre>
+
+<p>To edit the formulae in turn, run</p>
+
+<pre><code>for x in snappy leveldb protobuf gflags glog szip boost boost-python lmdb homebrew/science/opencv; do brew edit $x; done
+</code></pre>
+
+<p>After this, run</p>
+
+<pre><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
+brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
+brew install --build-from-source --fresh -vd boost boost-python
+</code></pre>
+
+<p>If this is not done exactly right then linking errors will trouble you.</p>
+
+<p><strong>Homebrew versioning</strong> that Homebrew maintains itself as a separate git repository and making the above <code>brew edit FORMULA</code> changes will change files in your local copy of homebrew’s master branch. By default, this will prevent you from updating Homebrew using <code>brew update</code>, as you will get an error message like the following:</p>
+
+<pre><code>$ brew update
+error: Your local changes to the following files would be overwritten by merge:
+  Library/Formula/lmdb.rb
+Please, commit your changes or stash them before you can merge.
+Aborting
+Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
+</code></pre>
+
+<p>One solution is to commit your changes to a separate Homebrew branch, run <code>brew update</code>, and rebase your changes onto the updated master. You’ll have to do this both for the main Homebrew repository in <code>/usr/local/</code> and the Homebrew science repository that contains OpenCV in  <code>/usr/local/Library/Taps/homebrew/homebrew-science</code>, as follows:</p>
+
+<pre><code>cd /usr/local
+git checkout -b caffe
+git add .
+git commit -m "Update Caffe dependencies to use libstdc++"
+cd /usr/local/Library/Taps/homebrew/homebrew-science
+git checkout -b caffe
+git add .
+git commit -m "Update Caffe dependencies"
+</code></pre>
+
+<p>Then, whenever you want to update homebrew, switch back to the master branches, do the update, rebase the caffe branches onto master and fix any conflicts:</p>
+
+<pre><code># Switch batch to homebrew master branches
+cd /usr/local
+git checkout master
+cd /usr/local/Library/Taps/homebrew/homebrew-science
+git checkout master
+
+# Update homebrew; hopefully this works without errors!
+brew update
+
+# Switch back to the caffe branches with the forumlae that you modified earlier
+cd /usr/local
+git rebase master caffe
+# Fix any merge conflicts and commit to caffe branch
+cd /usr/local/Library/Taps/homebrew/homebrew-science
+git rebase master caffe
+# Fix any merge conflicts and commit to caffe branch
+
+# Done!
+</code></pre>
+
+<p>At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place.</p>
+
+
+      </section>
+  </div>
+  </body>
+</html>

@@ -11,6 +11,8 @@
       Caffe | CIFAR-10 tutorial
     </title>
 
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
     <link rel="stylesheet" href="/stylesheets/reset.css">
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -34,8 +36,16 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
         </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
         <ul>
           <li>
             <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
@@ -60,8 +70,8 @@
 
 <pre><code>cd $CAFFE_ROOT/data/cifar10
 ./get_cifar10.sh
-cd $CAFFE_ROOT/examples/cifar10
-./create_cifar10.sh
+cd $CAFFE_ROOT
+./examples/cifar10/create_cifar10.sh
 </code></pre>
 
 <p>If it complains that <code>wget</code> or <code>gunzip</code> are not installed, you need to install them respectively. After running the script there should be the dataset, <code>./cifar10-leveldb</code>, and the data set image mean <code>./mean.binaryproto</code>.</p>
@@ -74,8 +84,8 @@ cd $CAFFE_ROOT/examples/cifar10
 
 <p>Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to <a href="../examples/mnist.html">MNIST Tutorial</a>). Simply run <code>train_quick.sh</code>, or the following command directly:</p>
 
-<pre><code>cd $CAFFE_ROOT/examples/cifar10
-./train_quick.sh
+<pre><code>cd $CAFFE_ROOT
+./examples/cifar10/train_quick.sh
 </code></pre>
 
 <p><code>train_quick.sh</code> is a simple script, so have a look inside. The main tool for training is <code>caffe</code> with the <code>train</code> action, and the solver protobuf text file as its argument.</p>

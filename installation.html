@@ -11,6 +11,8 @@
       Caffe | Installation
     </title>
 
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
     <link rel="stylesheet" href="/stylesheets/reset.css">
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -34,8 +36,16 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
         </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
         <ul>
           <li>
             <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
@@ -46,38 +56,45 @@
 
       <h1 id="installation">Installation</h1>
 
-<p>Prior to installing, it is best to read through this guide and take note of the details for your platform.
-We have installed Caffe on Ubuntu 14.04, Ubuntu 12.04, OS X 10.9, and OS X 10.8.</p>
+<p>Prior to installing, have a glance through this guide and take note of the details for your platform.
+We install and run Caffe on Ubuntu 14.04 and 12.04, OS X 10.10 / 10.9 / 10.8, and AWS.
+The official Makefile and <code>Makefile.config</code> build are complemented by an automatic CMake build from the community.</p>
 
 <ul>
   <li><a href="#prerequisites">Prerequisites</a></li>
   <li><a href="#compilation">Compilation</a></li>
-  <li><a href="#hardware_questions">Hardware questions</a></li>
+  <li><a href="#hardware">Hardware</a></li>
+  <li>Platforms: <a href="install_apt.html">Ubuntu guide</a>, <a href="install_osx.html">OS X guide</a>, and <a href="install_yum.html">RHEL / CentOS / Fedora guide</a></li>
 </ul>
+
+<p>When updating Caffe, it’s best to <code>make clean</code> before re-compiling.</p>
 
 <h2 id="prerequisites">Prerequisites</h2>
 
-<p>Caffe depends on several software packages.</p>
+<p>Caffe has several dependencies.</p>
 
 <ul>
-  <li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> library version 6.5 (recommended), 6.0, 5.5, or 5.0 and the latest driver version for CUDA 6 or 319.* for CUDA 5 (and NOT 331.*)</li>
-  <li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> (provided via ATLAS, MKL, or OpenBLAS).</li>
-  <li><a href="http://opencv.org/">OpenCV</a>.</li>
-  <li><a href="http://www.boost.org/">Boost</a> (&gt;= 1.55, although only 1.55 and 1.56 are tested)</li>
-  <li><code>glog</code>, <code>gflags</code>, <code>protobuf</code>, <code>leveldb</code>, <code>snappy</code>, <code>hdf5</code>, <code>lmdb</code></li>
-  <li>For the Python wrapper
+  <li><a href="https://developer.nvidia.com/cuda-zone">CUDA</a> is required for GPU mode.
     <ul>
-      <li><code>Python 2.7</code>, <code>numpy (&gt;= 1.7)</code>, boost-provided <code>boost.python</code></li>
+      <li>library version 7.0 and the latest driver version are recommended, but 6.* is fine too</li>
+      <li>5.5, and 5.0 are compatible but considered legacy</li>
     </ul>
   </li>
-  <li>For the MATLAB wrapper
-    <ul>
-      <li>MATLAB with the <code>mex</code> compiler.</li>
-    </ul>
-  </li>
+  <li><a href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS</a> via ATLAS, MKL, or OpenBLAS.</li>
+  <li><a href="http://www.boost.org/">Boost</a> &gt;= 1.55</li>
+  <li><a href="http://opencv.org/">OpenCV</a> &gt;= 2.4 including 3.0</li>
+  <li><code>protobuf</code>, <code>glog</code>, <code>gflags</code></li>
+  <li>IO libraries <code>hdf5</code>, <code>leveldb</code>, <code>snappy</code>, <code>lmdb</code></li>
 </ul>
 
-<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code>USE_CUDNN := 1</code> flag in <code>Makefile.config</code> when installing Caffe. Acceleration is automatic.</p>
+<p>Pycaffe and Matcaffe interfaces have their own natural needs.</p>
+
+<ul>
+  <li>For Python Caffe:  <code>Python 2.7</code>, <code>numpy (&gt;= 1.7)</code>, boost-provided <code>boost.python</code></li>
+  <li>For MATLAB Caffe: MATLAB with the <code>mex</code> compiler.</li>
+</ul>
+
+<p><strong>cuDNN Caffe</strong>: for fastest operation Caffe is accelerated by drop-in integration of <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. To speed up your Caffe models, install cuDNN then uncomment the <code>USE_CUDNN := 1</code> flag in <code>Makefile.config</code> when installing Caffe. Acceleration is automatic. For now cuDNN v1 is integrated but see <a href="https://github.com/BVLC/caffe/pull/1731">PR #1731</a> for v2.</p>
 
 <p><strong>CPU-only Caffe</strong>: for cold-brewed CPU-only Caffe uncomment the <code>CPU_ONLY := 1</code> flag in <code>Makefile.config</code> to configure and build Caffe without CUDA. This is helpful for cloud or cluster deployment.</p>
 
@@ -89,17 +106,10 @@ To install CUDA, go to the <a href="https://developer.nvidia.com/cuda-downloads"
 <p>For best performance, Caffe can be accelerated by <a href="https://developer.nvidia.com/cudnn">NVIDIA cuDNN</a>. Register for free at the cuDNN site, install it, then continue with these installation instructions. To compile with cuDNN set the <code>USE_CUDNN := 1</code> flag set in your <code>Makefile.config</code>.</p>
 
 <p>Caffe requires BLAS as the backend of its matrix and vector computations.
-There are several implementations of this library.
-The choice is yours:</p>
+There are several implementations of this library. The choice is yours:</p>
 
 <ul>
-  <li><a href="http://math-atlas.sourceforge.net/">ATLAS</a>: free, open source, and so the default for Caffe.
-    <ul>
-      <li>Ubuntu: <code>sudo apt-get install libatlas-base-dev</code></li>
-      <li>CentOS/RHEL/Fedora: <code>sudo yum install atlas-devel</code></li>
-      <li>OS X: already installed as the <a href="https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man7/Accelerate.7.html">Accelerate / vecLib Framework</a>.</li>
-    </ul>
-  </li>
+  <li><a href="http://math-atlas.sourceforge.net/">ATLAS</a>: free, open source, and so the default for Caffe.</li>
   <li><a href="http://software.intel.com/en-us/intel-mkl">Intel MKL</a>: commercial and optimized for Intel CPUs, with a free trial and <a href="http://software.intel.com/en-us/intel-education-offerings">student</a> licenses.
     <ol>
       <li>Install MKL.</li>
@@ -114,7 +124,7 @@ The choice is yours:</p>
   </li>
 </ul>
 
-<h3 id="python-andor-matlab-wrappers-optional">Python and/or MATLAB wrappers (optional)</h3>
+<h3 id="python-andor-matlab-caffe-optional">Python and/or MATLAB Caffe (optional)</h3>
 
 <h4 id="python">Python</h4>
 
@@ -122,16 +132,10 @@ The choice is yours:</p>
 
 <p>You can install the dependencies with</p>
 
-<pre><code>for req in $(cat requirements.txt); do sudo pip install $req; done
+<pre><code>for req in $(cat requirements.txt); do pip install $req; done
 </code></pre>
 
-<p>but we highly recommend first installing the <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> Python distribution, which provides most of the necessary packages, as well as the <code>hdf5</code> library dependency.</p>
-
-<p>For <strong>Ubuntu</strong>, if you use the default Python you will need to <code>sudo apt-get install</code> the <code>python-dev</code> package to have the Python headers for building the wrapper.</p>
-
-<p>For <strong>Fedora</strong>, if you use the default Python you will need to <code>sudo yum install</code> the <code>python-devel</code> package to have the Python headers for building the wrapper.</p>
-
-<p>For <strong>OS X</strong>, Anaconda is the preferred Python. If you decide against it, please use Homebrew – but beware of potential linking errors!</p>
+<p>but we suggest first installing the <a href="https://store.continuum.io/cshop/anaconda/">Anaconda</a> Python distribution, which provides most of the necessary packages, as well as the <code>hdf5</code> library dependency.</p>
 
 <p>To import the <code>caffe</code> Python module after completing the installation, add the module directory to your <code>$PYTHONPATH</code> by <code>export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH</code> or the like. You should not import the module in the <code>caffe/python/caffe</code> directory!</p>
 
@@ -141,175 +145,7 @@ The choice is yours:</p>
 
 <p>Install MATLAB, and make sure that its <code>mex</code> is in your <code>$PATH</code>.</p>
 
-<p><em>Caffe’s MATLAB interface works with versions 2012b, 2013a/b, and 2014a.</em></p>
-
-<h3 id="the-rest-of-the-dependencies">The rest of the dependencies</h3>
-
-<h4 id="linux">Linux</h4>
-
-<p>On <strong>Ubuntu</strong>, most of the dependencies can be installed with</p>
-
-<pre><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
-</code></pre>
-
-<p>and for <strong>Ubuntu 14.04</strong> the rest of the dependencies can be installed with</p>
-
-<pre><code>sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
-</code></pre>
-
-<p>Keep reading to find out how to manually build and install the Google flags library, Google logging library and LMDB on <strong>Ubuntu 12.04</strong>.</p>
-
-<p>On <strong>CentOS / RHEL / Fedora</strong>, most of the dependencies can be installed with</p>
-
-<pre><code>sudo yum install protobuf-devel leveldb-devel snappy-devel opencv-devel boost-devel hdf5-devel
-</code></pre>
-
-<p>The Google flags library, Google logging library and LMDB already made their ways into newer versions of <strong>CentOS / RHEL / Fedora</strong> so it is better to first attempt to install them using <code>yum</code></p>
-
-<pre><code>sudo yum install gflags-devel glog-devel lmdb-devel
-</code></pre>
-
-<p><strong>Finally</strong> in case you couldn’t find those extra libraries mentioned above in your distribution’s repositories, here are the instructions to follow for manually building and installing them on <strong>Ubuntu 12.04 / CentOS / RHEL / Fedora</strong> (or practically on any Linux distribution)</p>
-
-<pre><code># glog
-wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
-tar zxvf glog-0.3.3.tar.gz
-cd glog-0.3.3
-./configure
-make &amp;&amp; make install
-# gflags
-wget https://github.com/schuhschuh/gflags/archive/master.zip
-unzip master.zip
-cd gflags-master
-mkdir build &amp;&amp; cd build
-export CXXFLAGS="-fPIC" &amp;&amp; cmake .. &amp;&amp; make VERBOSE=1
-make &amp;&amp; make install
-# lmdb
-git clone git://gitorious.org/mdb/mdb.git
-cd mdb/libraries/liblmdb
-make &amp;&amp; make install
-</code></pre>
-
-<p>Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.</p>
-
-<h4 id="os-x">OS X</h4>
-
-<p>On <strong>OS X</strong>, we highly recommend using the <a href="http://brew.sh/">Homebrew</a> package manager, and ideally starting from a clean install of the OS (or from a wiped <code>/usr/local</code>) to avoid conflicts.
-In the following, we assume that you’re using Anaconda Python and Homebrew.</p>
-
-<p>To install the OpenCV dependency, we’ll need to provide an additional source for Homebrew:</p>
-
-<pre><code>brew tap homebrew/science
-</code></pre>
-
-<p>If using Anaconda Python, a modification is required to the OpenCV formula.
-Do <code>brew edit opencv</code> and change the lines that look like the two lines below to exactly the two lines below.</p>
-
-<pre><code>  -DPYTHON_LIBRARY=#{py_prefix}/lib/libpython2.7.dylib
-  -DPYTHON_INCLUDE_DIR=#{py_prefix}/include/python2.7
-</code></pre>
-
-<p><strong>NOTE</strong>: We find that everything compiles successfully if <code>$LD_LIBRARY_PATH</code> is not set at all, and <code>$DYLD_FALLBACK_LIBRARY_PATH</code> is set to to provide CUDA, Python, and other relevant libraries (e.g. <code>/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib</code>).
-In other <code>ENV</code> settings, things may not work as expected.</p>
-
-<p><strong>NOTE</strong>: There is currently a conflict between boost 1.56 and CUDA in some configurations. Check the <a href="https://github.com/BVLC/caffe/issues/1193#issuecomment-57491906">conflict description</a> and try downgrading to 1.55.</p>
-
-<h4 id="specific-instructions">10.8-specific Instructions</h4>
-
-<p>Simply run the following:</p>
-
-<pre><code>brew install --build-from-source boost boost-python
-brew install --with-python protobuf
-for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew install $x; done
-</code></pre>
-
-<p>Building boost from source is needed to link against your local Python (exceptions might be raised during some OS X installs, but <strong>ignore</strong> these and continue). If you do not need the Python wrapper, simply doing <code>brew install boost</code> is fine.</p>
-
-<p><strong>Note</strong> that the HDF5 dependency is provided by Anaconda Python in this case.
-If you’re not using Anaconda, include <code>hdf5</code> in the list above.</p>
-
-<h4 id="specific-instructions-1">10.9-specific Instructions</h4>
-
-<p>In OS X 10.9, clang++ is the default C++ compiler and uses <code>libc++</code> as the standard library.
-However, NVIDIA CUDA (even version 6.0) currently links only with <code>libstdc++</code>.
-This makes it necessary to change the compilation settings for each of the dependencies.</p>
-
-<p>We do this by modifying the Homebrew formulae before installing any packages.
-Make sure that Homebrew doesn’t install any software dependencies in the background; all packages must be linked to <code>libstdc++</code>.</p>
-
-<p>The prerequisite Homebrew formulae are</p>
-
-<pre><code>boost snappy leveldb protobuf gflags glog szip lmdb homebrew/science/opencv
-</code></pre>
-
-<p>For each of these formulas, <code>brew edit FORMULA</code>, and add the ENV definitions as shown:</p>
-
-<pre><code>  def install
-      # ADD THE FOLLOWING:
-      ENV.append "CXXFLAGS", "-stdlib=libstdc++"
-      ENV.append "CFLAGS", "-stdlib=libstdc++"
-      ENV.append "LDFLAGS", "-stdlib=libstdc++ -lstdc++"
-      # The following is necessary because libtool likes to strip LDFLAGS:
-      ENV["CXX"] = "/usr/bin/clang++ -stdlib=libstdc++"
-      ...
-</code></pre>
-
-<p>To edit the formulae in turn, run</p>
-
-<pre><code>for x in snappy leveldb protobuf gflags glog szip boost boost-python lmdb homebrew/science/opencv; do brew edit $x; done
-</code></pre>
-
-<p>After this, run</p>
-
-<pre><code>for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
-brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
-brew install --build-from-source --fresh -vd boost boost-python
-</code></pre>
-
-<p><strong>Note</strong> that <code>brew install --build-from-source --fresh -vd boost</code> is fine if you do not need the Caffe Python wrapper.</p>
-
-<p><strong>Note</strong> that the HDF5 dependency is provided by Anaconda Python in this case.
-If you’re not using Anaconda, include <code>hdf5</code> in the list above.</p>
-
-<p><strong>Note</strong> that in order to build the Caffe Python wrappers you must install <code>boost</code> and <code>boost-python</code>:</p>
-
-<pre><code>brew install --build-from-source --fresh -vd boost boost-python
-</code></pre>
-
-<p><strong>Note</strong> that Homebrew maintains itself as a separate git repository and making the above <code>brew edit FORMULA</code> changes will change files in your local copy of homebrew’s master branch. By default, this will prevent you from updating Homebrew using <code>brew update</code>, as you will get an error message like the following:</p>
-
-<pre><code>$ brew update
-error: Your local changes to the following files would be overwritten by merge:
-  Library/Formula/lmdb.rb
-Please, commit your changes or stash them before you can merge.
-Aborting
-Error: Failure while executing: git pull -q origin refs/heads/master:refs/remotes/origin/master
-</code></pre>
-
-<p>One solution is to commit your changes to a separate Homebrew branch, run <code>brew update</code>, and rebase your changes onto the updated master, as follows:</p>
-
-<pre><code>cd /usr/local
-git checkout -b caffe
-git add .
-git commit -m "Update Caffe dependencies to use libstdc++"
-git checkout master
-brew update
-git rebase master caffe
-# Resolve any merge conflicts here
-git checkout caffe
-</code></pre>
-
-<p>At this point, you should be running the latest Homebrew packages and your Caffe-related modifications will remain in place. You may still get the following error:</p>
-
-<pre><code>$ brew update
-error: Your local changes to the following files would be overwritten by merge:
-opencv.rb
-Please, commit your changes or stash them before you can merge.
-Aborting
-Error: Failed to update tap: homebrew/science
-</code></pre>
-
-<p>but non-OpenCV packages will still update as expected.</p>
+<p><em>Caffe’s MATLAB interface works with versions 2014a/b, 2013a/b, and 2012b.</em></p>
 
 <h4 id="windows">Windows</h4>
 
@@ -317,8 +153,7 @@ Error: Failed to update tap: homebrew/science
 
 <h2 id="compilation">Compilation</h2>
 
-<p>Now that you have the prerequisites, edit your <code>Makefile.config</code> to change the paths for your setup (you should especially uncomment and set <code>BLAS_LIB</code> accordingly on distributions like <strong>CentOS / RHEL / Fedora</strong> where ATLAS is installed under <code>/usr/lib[64]/atlas</code>)
-The defaults should work, but uncomment the relevant lines if using Anaconda Python.</p>
+<p>Now that you have the prerequisites, edit your <code>Makefile.config</code> to change the paths for your setup The defaults should work, but uncomment the relevant lines if using Anaconda Python.</p>
 
 <pre><code>cp Makefile.config.example Makefile.config
 # Adjust Makefile.config (for example, if using Anaconda Python)
@@ -327,24 +162,24 @@ make test
 make runtest
 </code></pre>
 
-<p>To compile with cuDNN acceleration, you should uncomment the <code>USE_CUDNN := 1</code> switch in <code>Makefile.config</code>.</p>
-
-<p>If there is no GPU in your machine, you should switch to CPU-only Caffe by uncommenting <code>CPU_ONLY := 1</code> in <code>Makefile.config</code>.</p>
+<ul>
+  <li>For cuDNN acceleration, you should uncomment the <code>USE_CUDNN := 1</code> switch in <code>Makefile.config</code>.</li>
+  <li>For CPU-only Caffe, uncomment <code>CPU_ONLY := 1</code> in <code>Makefile.config</code>.</li>
+</ul>
 
 <p>To compile the Python and MATLAB wrappers do <code>make pycaffe</code> and <code>make matcaffe</code> respectively.
 Be sure to set your MATLAB and Python paths in <code>Makefile.config</code> first!</p>
 
-<p><em>Distribution</em>: run <code>make distribute</code> to create a <code>distribute</code> directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.</p>
+<p><strong>Distribution</strong>: run <code>make distribute</code> to create a <code>distribute</code> directory with all the Caffe headers, compiled libraries, binaries, etc. needed for distribution to other machines.</p>
 
-<p><em>Speed</em>: for a faster build, compile in parallel by doing <code>make all -j8</code> where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).</p>
+<p><strong>Speed</strong>: for a faster build, compile in parallel by doing <code>make all -j8</code> where 8 is the number of parallel threads for compilation (a good choice for the number of threads is the number of cores in your machine).</p>
 
 <p>Now that you have installed Caffe, check out the <a href="gathered/examples/mnist.html">MNIST tutorial</a> and the <a href="gathered/examples/imagenet.html">reference ImageNet model tutorial</a>.</p>
 
-<h3 id="compilation-using-cmake-beta">Compilation using CMake (beta)</h3>
+<h3 id="cmake-compilation">CMake Compilation</h3>
 
-<p>In lieu of manually editing <code>Makefile.config</code> to tell Caffe where dependencies are located, Caffe also provides a CMake-based build system (currently in “beta”).
-It requires CMake version &gt;= 2.8.8.
-The basic installation steps are as follows:</p>
+<p>In lieu of manually editing <code>Makefile.config</code> to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version &gt;= 2.8.7.
+The basic steps are as follows:</p>
 
 <pre><code>mkdir build
 cd build
@@ -353,25 +188,17 @@ make all
 make runtest
 </code></pre>
 
-<h4 id="ubuntu-1204">Ubuntu 12.04</h4>
+<p>See <a href="https://github.com/BVLC/caffe/pull/1667">PR #1667</a> for options and details.</p>
 
-<p>Note that in Ubuntu 12.04, Aptitude will install version CMake 2.8.7 by default, which is not supported by Caffe’s CMake build (requires at least 2.8.8).
-As a workaround, if you are using Ubuntu 12.04 you can try the following steps to install (or upgrade to) CMake 2.8.9:</p>
+<h2 id="hardware">Hardware</h2>
 
-<pre><code>sudo add-apt-repository ppa:ubuntu-sdk-team/ppa -y
-sudo apt-get -y update
-sudo apt-get install cmake
-</code></pre>
-
-<h2 id="hardware-questions">Hardware Questions</h2>
-
-<p><strong>Laboratory Tested Hardware</strong>: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability &gt;= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.</p>
+<p><strong>Laboratory Tested Hardware</strong>: Berkeley Vision runs Caffe with K40s, K20s, and Titans including models at ImageNet/ILSVRC scale. We also run on GTX series cards (980s and 770s) and GPU-equipped MacBook Pros. We have not encountered any trouble in-house with devices with CUDA capability &gt;= 3.0. All reported hardware issues thus-far have been due to GPU configuration, overheating, and the like.</p>
 
 <p><strong>CUDA compute capability</strong>: devices with compute capability &lt;= 2.0 may have to reduce CUDA thread numbers and batch sizes due to hardware constraints. Your mileage may vary.</p>
 
 <p>Once installed, check your times against our <a href="performance_hardware.html">reference performance numbers</a> to make sure everything is configured properly.</p>
 
-<p>Refer to the project’s issue tracker for <a href="https://github.com/BVLC/caffe/issues?labels=hardware%2Fcompatibility&amp;page=1&amp;state=open">hardware/compatibility</a>.</p>
+<p>Ask hardware questions on the <a href="https://groups.google.com/forum/#!forum/caffe-users">caffe-users group</a>.</p>
 
 
       </section>

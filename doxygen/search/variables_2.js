@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['k_5f',['K_',['../classcaffe_1_1ConvolutionLayer.html#a917cf494c7845d3be0234dad754d4f49',1,'caffe::ConvolutionLayer']]]
+  ['has_5fignore_5flabel_5f',['has_ignore_label_',['../classcaffe_1_1SoftmaxWithLossLayer.html#ad77bc32fa576ad025102d29acf79aefb',1,'caffe::SoftmaxWithLossLayer']]]
 ];

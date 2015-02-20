@@ -11,6 +11,8 @@
       Caffe | Solver / Model Optimization
     </title>
 
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
     <link rel="stylesheet" href="/stylesheets/reset.css">
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -34,8 +36,16 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
         </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
         <ul>
           <li>
             <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
@@ -49,7 +59,7 @@
 <p>The solver orchestrates model optimization by coordinating the network’s forward inference and backward gradients to form parameter updates that attempt to improve the loss.
 The responsibilities of learning are divided between the Solver for overseeing the optimization and generating parameter updates and the Net for yielding loss and gradients.</p>
 
-<p>The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAGRAD), and Nesterov’s Accelerated Gradient (NAG).</p>
+<p>The Caffe solvers are Stochastic Gradient Descent (SGD), Adaptive Gradient (ADAGRAD), and Nesterov’s Accelerated Gradient (NESTEROV).</p>
 
 <p>The solver</p>
 
@@ -175,7 +185,7 @@ the update formulas proposed by [1] are as follows, specified for each component
 
 <h3 id="nag">NAG</h3>
 
-<p><strong>Nesterov’s accelerated gradient</strong> (<code>solver_type: NAG</code>) was proposed by Nesterov [1] as an “optimal” method of convex optimization, achieving a convergence rate of <script type="math/tex"> \mathcal{O}(1/t^2) </script> rather than the <script type="math/tex"> \mathcal{O}(1/t) </script>.
+<p><strong>Nesterov’s accelerated gradient</strong> (<code>solver_type: NESTEROV</code>) was proposed by Nesterov [1] as an “optimal” method of convex optimization, achieving a convergence rate of <script type="math/tex"> \mathcal{O}(1/t^2) </script> rather than the <script type="math/tex"> \mathcal{O}(1/t) </script>.
 Though the required assumptions to achieve the <script type="math/tex"> \mathcal{O}(1/t^2) </script> convergence typically will not hold for deep networks trained with Caffe (e.g., due to non-smoothness and non-convexity), in practice NAG can be a very effective method for optimizing certain types of deep learning architectures, as demonstrated for deep MNIST autoencoders by Sutskever et al. [2].</p>
 
 <p>The weight update formulas look very similar to the SGD updates given above:</p>

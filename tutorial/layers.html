@@ -11,6 +11,8 @@
       Caffe | Layer Catalogue
     </title>
 
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
     <link rel="stylesheet" href="/stylesheets/reset.css">
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -34,8 +36,16 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
         </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
         <ul>
           <li>
             <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
@@ -699,6 +709,29 @@ layers {
 <h4 id="slicing">Slicing</h4>
 
 <p>The <code>SLICE</code> layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.</p>
+
+<ul>
+  <li>
+    <p>Sample</p>
+
+    <p>layers {
+     name: “slicer_label”
+     type: SLICE
+     bottom: “label”
+     ## Example of label with a shape N x 3 x 1 x 1
+     top: “label1”
+     top: “label2”
+     top: “label3”
+     slice_param {
+         slice_dim: 1
+         slice_point: 1
+         slice_point: 2
+     }
+   }</p>
+  </li>
+</ul>
+
+<p><code>slice_dim</code> indicates the target dimension and can assume only two values: 0 for num or 1 for channel; <code>slice_point</code> indicates indexes in the selected dimension (the number of indexes must be equal to the number of top blobs minus one). </p>
 
 <h4 id="elementwise-operations">Elementwise Operations</h4>
 

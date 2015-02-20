@@ -11,6 +11,8 @@
       Caffe | ImageNet tutorial
     </title>
 
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
     <link rel="stylesheet" href="/stylesheets/reset.css">
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -34,8 +36,16 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
         </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
         <ul>
           <li>
             <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
@@ -106,7 +116,7 @@ Note that if you deviated from file paths suggested in this guide, you’ll need
   <li>We will run in batches of 256, and run a total of 450,000 iterations (about 90 epochs).</li>
   <li>For every 1,000 iterations, we test the learned net on the validation data.</li>
   <li>We set the initial learning rate to 0.01, and decrease it every 100,000 iterations (about 20 epochs).</li>
-  <li>Information will be displayed every 20 epochs.</li>
+  <li>Information will be displayed every 20 iterations.</li>
   <li>The network will be trained with momentum 0.9 and a weight decay of 0.0005.</li>
   <li>For every 10,000 iterations, we will take a snapshot of the current status.</li>
 </ul>

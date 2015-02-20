@@ -11,6 +11,8 @@
       Caffe | Model Zoo
     </title>
 
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
     <link rel="stylesheet" href="/stylesheets/reset.css">
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -34,8 +36,16 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
         </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
         <ul>
           <li>
             <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
@@ -51,22 +61,26 @@ To lower the friction of sharing these models, we introduce the model zoo framew
 
 <ul>
   <li>A standard format for packaging Caffe model info.</li>
-  <li>Tools to upload/download model info to/from Github Gists, and to download trained <code>.caffemodel</code> binaries.</li>
+  <li>Tools to upload/download model info to/from Github Gists, and to download trained <code>.caffemodel</code> parameters.</li>
   <li>A central wiki page for sharing model info Gists.</li>
 </ul>
 
-<h2 id="where-to-get-trained-models">Where to get trained models</h2>
+<h2 id="bvlc-reference-models">BVLC Reference Models</h2>
 
 <p>First of all, we provide some trained models out of the box.
 Each one of these can be downloaded by running <code>scripts/download_model_binary.py &lt;dirname&gt;</code> where <code>&lt;dirname&gt;</code> is specified below:</p>
 
 <ul>
-  <li><strong>BVLC Reference CaffeNet</strong> in <code>models/bvlc_reference_caffenet</code>: AlexNet trained on ILSVRC 2012, with a minor variation from the version as described in the NIPS 2012 paper.</li>
-  <li><strong>BVLC AlexNet</strong> in <code>models/bvlc_alexnet</code>: AlexNet trained on ILSVRC 2012, almost exactly as described in NIPS 2012.</li>
-  <li><strong>BVLC Reference R-CNN ILSVRC-2013</strong> in <code>models/bvlc_reference_rcnn_ilsvrc13</code>: pure Caffe implementation of <a href="https://github.com/rbgirshick/rcnn">R-CNN</a>.</li>
+  <li><strong>BVLC Reference CaffeNet</strong> in <code>models/bvlc_reference_caffenet</code>: AlexNet trained on ILSVRC 2012, with a minor variation from the version as described in the NIPS 2012 paper. (Trained by Jeff Donahue @jeffdonahue)</li>
+  <li><strong>BVLC AlexNet</strong> in <code>models/bvlc_alexnet</code>: AlexNet trained on ILSVRC 2012, almost exactly as described in NIPS 2012. (Trained by Evan Shelhamer @shelhamer)</li>
+  <li><strong>BVLC Reference R-CNN ILSVRC-2013</strong> in <code>models/bvlc_reference_rcnn_ilsvrc13</code>: pure Caffe implementation of <a href="https://github.com/rbgirshick/rcnn">R-CNN</a>. (Trained by Ross Girshick @rbgirshick)</li>
+  <li><strong>BVLC GoogleNet</strong> in <code>models/bvlc_googlenet</code>: GoogleNet trained on ILSVRC 2012, almost exactly as described in <a href="http://arxiv.org/abs/1409.4842">GoogleNet</a>. (Trained by Sergio Guadarrama @sguada)</li>
 </ul>
 
-<p>User-provided models are posted to a public-editable <a href="https://github.com/BVLC/caffe/wiki/Model-Zoo">wiki page</a>.</p>
+<h2 id="community-models">Community Models</h2>
+
+<p>The publicly-editable <a href="https://github.com/BVLC/caffe/wiki/Model-Zoo">Caffe Model Zoo wiki</a> catalogues user-made models.
+Refer to the model details for authorship and conditions – please respect licenses and citations.</p>
 
 <h2 id="model-info-format">Model info format</h2>
 
@@ -90,7 +104,7 @@ Each one of these can be downloaded by running <code>scripts/download_model_bina
   <li>[optional] Other helpful scripts.</li>
 </ul>
 
-<h2 id="hosting-model-info">Hosting model info</h2>
+<h3 id="hosting-model-info">Hosting model info</h3>
 
 <p>Github Gist is a good format for model info distribution because it can contain multiple files, is versionable, and has in-browser syntax highlighting and markdown rendering.</p>
 

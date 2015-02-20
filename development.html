@@ -11,6 +11,8 @@
       Caffe | Developing and Contributing
     </title>
 
+    <link rel="icon" type="image/png" href="/images/caffeine-icon.png">
+
     <link rel="stylesheet" href="/stylesheets/reset.css">
     <link rel="stylesheet" href="/stylesheets/styles.css">
     <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
@@ -34,8 +36,16 @@
       <header>
         <h1 class="header"><a href="/">Caffe</a></h1>
         <p class="header">
-          Deep learning framework developed by <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a> / <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
+          Deep learning framework by the <a class="header name" href="http://bvlc.eecs.berkeley.edu/">BVLC</a>
         </p>
+        <p class="header">
+          Created by
+          <br>
+          <a class="header name" href="http://daggerfs.com/">Yangqing Jia</a>
+          <br>
+          Lead Developer
+          <br>
+          <a class="header name" href="http://imaginarynumber.net/">Evan Shelhamer</a>
         <ul>
           <li>
             <a class="buttons github" href="https://github.com/BVLC/caffe">View On GitHub</a>
@@ -44,10 +54,10 @@
       </header>
       <section>
 
-      <h1 id="development">Development</h1>
+      <h1 id="development-and-contributing">Development and Contributing</h1>
 
 <p>Caffe is developed with active participation of the community.<br />
-The <a href="http://bvlc.eecs.berkeley.edu/">BVLC</a> maintainers welcome all contributions!</p>
+The <a href="http://bvlc.eecs.berkeley.edu/">BVLC</a> brewers welcome all contributions!</p>
 
 <p>The exact details of contributions are recorded by versioning and cited in our <a href="http://caffe.berkeleyvision.org/#acknowledgements">acknowledgements</a>.
 This method is impartial and always up-to-date.</p>
@@ -64,7 +74,7 @@ This method is impartial and always up-to-date.</p>
 
 <h3 id="documentation">Documentation</h3>
 
-<p>This website, written with <a href="http://jekyllrb.com/">Jekyll</a>, functions as the official Caffe documentation – simply run <code>scripts/build_docs.sh</code> and view the website at <code>http://0.0.0.0:4000</code>.</p>
+<p>This website, written with <a href="http://jekyllrb.com/">Jekyll</a>, acts as the official Caffe documentation – simply run <code>scripts/build_docs.sh</code> and view the website at <code>http://0.0.0.0:4000</code>.</p>
 
 <p>We prefer tutorials and examples to be documented close to where they live, in <code>readme.md</code> files.
 The <code>build_docs.sh</code> script gathers all <code>examples/**/readme.md</code> and <code>examples/*.ipynb</code> files, and makes a table of contents.
@@ -76,36 +86,27 @@ Similarly for IPython notebooks: simply include <code>"include_in_docs": true</c
 <p>We strive to provide provide lots of usage examples, and to document all code in docstrings.
 We absolutely appreciate any contribution to this effort!</p>
 
-<h3 id="the-release-cycle">The release cycle</h3>
+<h3 id="versioning">Versioning</h3>
 
-<ul>
-  <li>The <code>dev</code> branch receives all new development, including community contributions.
-We aim to keep it in a functional state, but large changes do occur, and things do get broken every now and then.
-Use only if you want the “bleeding edge”.</li>
-  <li>BVLC maintainers will periodically update the <code>master</code> branch with changes from <code>dev</code>, giving it a release tag (<a href="https://github.com/BVLC/caffe/releases">releases so far</a>).
-Use this if you want more stability.</li>
-</ul>
+<p>The <code>master</code> branch receives all new development including community contributions.
+We try to keep it in a reliable state, but it is the bleeding edge, and things do get broken every now and then.
+BVLC maintainers will periodically make releases by marking stable checkpoints as tags and maintenance branches. <a href="https://github.com/BVLC/caffe/releases">Past releases</a> are catalogued online.</p>
 
-<h3 id="issues--pull-request-protocol">Issues &amp; Pull Request Protocol</h3>
+<h4 id="issues--pull-request-protocol">Issues &amp; Pull Request Protocol</h4>
 
-<p>Use Github Issues to report <a href="https://github.com/BVLC/caffe/issues?labels=bug&amp;page=1&amp;state=open">bugs</a>, propose features, and ask development <a href="https://github.com/BVLC/caffe/issues?labels=question&amp;page=1&amp;state=open">questions</a>.
-Large-scale development work is guided by <a href="https://github.com/BVLC/caffe/issues?milestone=1">milestones</a>, which are sets of Issues selected for concurrent release (integration from <code>dev</code> to <code>master</code>).</p>
+<p>Post <a href="https://github.com/BVLC/caffe/issues">Issues</a> to propose features, report <a href="https://github.com/BVLC/caffe/issues?labels=bug&amp;page=1&amp;state=open">bugs</a>, and discuss framework code.
+Large-scale development work is guided by <a href="https://github.com/BVLC/caffe/issues?milestone=1">milestones</a>, which are sets of Issues selected for bundling as releases.</p>
 
 <p>Please note that since the core developers are largely researchers, we may work on a feature in isolation for some time before releasing it to the community, so as to claim honest academic contribution.
 We do release things as soon as a reasonable technical report may be written, and we still aim to inform the community of ongoing development through Github Issues.</p>
 
-<p>When you are ready to start developing your feature or fixing a bug, follow this protocol:</p>
+<p><strong>When you are ready to develop a feature or fixing a bug, follow this protocol</strong>:</p>
 
 <ul>
-  <li>Develop in <a href="https://www.atlassian.com/git/workflows#!workflow-feature-branch">feature branches</a> with descriptive names.
-    <ul>
-      <li>For new development branch off <code>dev</code>.</li>
-      <li>For documentation and fixes for <code>master</code> branch off <code>master</code>.</li>
-    </ul>
-  </li>
-  <li>Bring your work up-to-date by <a href="http://git-scm.com/book/en/Git-Branching-Rebasing">rebasing</a> onto the latest <code>dev</code> / <code>master</code>.
-(Polish your changes by <a href="https://help.github.com/articles/interactive-rebase">interactive rebase</a>, if you’d like.)</li>
-  <li><a href="https://help.github.com/articles/using-pull-requests">Pull request</a> your contribution to <code>BVLC/caffe</code>’s <code>dev</code> / <code>master</code> branch for discussion and review.
+  <li>Develop in <a href="https://www.atlassian.com/git/workflows#!workflow-feature-branch">feature branches</a> with descriptive names. Branch off of the latest <code>master</code>.</li>
+  <li>Bring your work up-to-date by <a href="http://git-scm.com/book/en/Git-Branching-Rebasing">rebasing</a> onto the latest <code>master</code> when done.
+(Groom your changes by <a href="https://help.github.com/articles/interactive-rebase">interactive rebase</a>, if you’d like.)</li>
+  <li><a href="https://help.github.com/articles/using-pull-requests">Pull request</a> your contribution to <code>BVLC/caffe</code>’s <code>master</code> branch for discussion and review.
     <ul>
       <li>Make PRs <em>as soon as development begins</em>, to let discussion guide development.</li>
       <li>A PR is only ready for merge review when it is a fast-forward merge, and all code is documented, linted, and tested – that means your PR must include tests!</li>
@@ -114,43 +115,46 @@ We do release things as soon as a reasonable technical report may be written, an
   <li>When the PR satisfies the above properties, use comments to request maintainer review.</li>
 </ul>
 
-<p>Below is a poetic presentation of the protocol in code form.</p>
+<p>The following is a poetic presentation of the protocol in code form.</p>
 
 <h4 id="shelhamershttpsgithubcomshelhamer-life-of-a-branch-in-four-acts"><a href="https://github.com/shelhamer">Shelhamer’s</a> “life of a branch in four acts”</h4>
 
-<p>Make the <code>feature</code> branch off of the latest <code>bvlc/dev</code>
+<p>Make the <code>feature</code> branch off of the latest <code>bvlc/master</code>
 <code>
-git checkout dev
-git pull upstream dev
+git checkout master
+git pull upstream master
 git checkout -b feature
 # do your work, make commits
 </code></p>
 
-<p>Prepare to merge by rebasing your branch on the latest <code>bvlc/dev</code>
+<p>Prepare to merge by rebasing your branch on the latest <code>bvlc/master</code>
 <code>
-# make sure dev is fresh
-git checkout dev
-git pull upstream dev
-# rebase your branch on the tip of dev
+# make sure master is fresh
+git checkout master
+git pull upstream master
+# rebase your branch on the tip of master
 git checkout feature
-git rebase dev
+git rebase master
 </code></p>
 
-<p>Push your branch to pull request it into <code>dev</code>
+<p>Push your branch to pull request it into <code>BVLC/caffe:master</code>
 <code>
 git push origin feature
-# ...make pull request to dev...
+# ...make pull request to master...
 </code></p>
 
-<p>Now make a pull request! You can do this from the command line (<code>git pull-request -b dev</code>) if you install <a href="https://github.com/github/hub">hub</a>.</p>
+<p>Now make a pull request! You can do this from the command line (<code>git pull-request -b master</code>) if you install <a href="https://github.com/github/hub">hub</a>. Hub has many other magical uses.</p>
 
-<p>The pull request of <code>feature</code> into <code>dev</code> will be a clean merge. Applause.</p>
+<p>The pull request of <code>feature</code> into <code>master</code> will be a clean merge. Applause.</p>
+
+<p><strong>Historical note</strong>: Caffe once relied on a two branch <code>master</code> and <code>dev</code> workflow.
+PRs from this time are still open but these will be merged into <code>master</code> or closed.</p>
 
 <h3 id="testing">Testing</h3>
 
 <p>Run <code>make runtest</code> to check the project tests. New code requires new tests. Pull requests that fail tests will not be accepted.</p>
 
-<p>The <code>googletest</code> framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is <code>--gtest_filter</code>, which allows you to filter tests by name:</p>
+<p>The <code>gtest</code> framework we use provides many additional options, which you can access by running the test binaries directly. One of the more useful options is <code>--gtest_filter</code>, which allows you to filter tests by name:</p>
 
 <pre><code># run all tests with CPU in the name
 build/test/test_all.testbin --gtest_filter='*CPU*'
@@ -167,10 +171,10 @@ build/test/test_all.testbin --gtest_filter=-'*GPU*'
 <h3 id="style">Style</h3>
 
 <ul>
-  <li>Follow <a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml">Google C++ style</a> and <a href="http://google-styleguide.googlecode.com/svn/trunk/pyguide.html">Google python style</a> + <a href="http://legacy.python.org/dev/peps/pep-0008/">PEP 8</a>.</li>
-  <li>Wrap lines at 80 chars.</li>
-  <li>Remember that “a foolish consistency is the hobgoblin of little minds,” so use your best judgement to write the clearest code for your particular case.</li>
   <li><strong>Run <code>make lint</code> to check C++ code.</strong></li>
+  <li>Wrap lines at 80 chars.</li>
+  <li>Follow <a href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml">Google C++ style</a> and <a href="http://google-styleguide.googlecode.com/svn/trunk/pyguide.html">Google python style</a> + <a href="http://legacy.python.org/dev/peps/pep-0008/">PEP 8</a>.</li>
+  <li>Remember that “a foolish consistency is the hobgoblin of little minds,” so use your best judgement to write the clearest code for your particular case.</li>
 </ul>
 
 

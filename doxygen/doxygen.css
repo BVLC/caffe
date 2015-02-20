@@ -1,4 +1,4 @@
-/* The standard CSS for doxygen 1.8.8 */
+/* The standard CSS for doxygen 1.8.9.1 */
 
 body, table, div, p, dl {
 	font: 400 14px/22px Roboto,sans-serif;
@@ -227,7 +227,7 @@ span.lineno a:hover {
 	background-color: #C8C8C8;
 }
 
-div.ah {
+div.ah, span.ah {
 	background-color: black;
 	font-weight: bold;
 	color: #ffffff;
@@ -243,6 +243,15 @@ div.ah {
 	-moz-box-shadow: rgba(0, 0, 0, 0.15) 2px 2px 2px;
 	background-image: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#000),color-stop(0.3, #444));
 	background-image: -moz-linear-gradient(center top, #eee 0%, #444 40%, #000);
+}
+
+div.classindex ul {
+        list-style: none;
+        padding-left: 0;
+}
+
+div.classindex span.ai {
+        display: inline-block;
 }
 
 div.groupHeader {
@@ -773,7 +782,7 @@ div.directory {
     width: 24px;
     height: 18px;
     margin-bottom: 4px;
-    background-image:url('ftv2folderopen.png');
+    background-image:url('folderopen.png');
     background-position: 0px -4px;
     background-repeat: repeat-y;
     vertical-align:top;
@@ -784,7 +793,7 @@ div.directory {
     width: 24px;
     height: 18px;
     margin-bottom: 4px;
-    background-image:url('ftv2folderclosed.png');
+    background-image:url('folderclosed.png');
     background-position: 0px -4px;
     background-repeat: repeat-y;
     vertical-align:top;
@@ -795,7 +804,7 @@ div.directory {
     width: 24px;
     height: 18px;
     margin-bottom: 4px;
-    background-image:url('ftv2doc.png');
+    background-image:url('doc.png');
     background-position: 0px -4px;
     background-repeat: repeat-y;
     vertical-align:top;

@@ -122,3 +122,6 @@
 \form#121:$ \hat{p}_{n,l_n} $
 \form#122:$ n $
 \form#123:$ l_n $
+\form#124:$ y = \gamma ^ {\alpha x + \beta} $
+\form#125:$ e \approx 2.718 $
+\form#126:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y \alpha \log_e(gamma) $
