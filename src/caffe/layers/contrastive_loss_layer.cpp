@@ -10,7 +10,7 @@ namespace caffe {
 
 template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::LayerSetUp(
-  const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+  const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
   CHECK_EQ(bottom[0]->height(), 1);
@@ -32,7 +32,7 @@ void ContrastiveLossLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& top) {
   int count = bottom[0]->count();
   caffe_sub(
       count,
@@ -52,23 +52,23 @@ void ContrastiveLossLayer<Dtype>::Forward_cpu(
     }
   }
   loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
-  (*top)[0]->mutable_cpu_data()[0] = loss;
+  top[0]->mutable_cpu_data()[0] = loss;
 }
 
 template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   Dtype margin = this->layer_param_.contrastive_loss_param().margin();
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
-          static_cast<Dtype>((*bottom)[i]->num());
-      int num = (*bottom)[i]->num();
-      int channels = (*bottom)[i]->channels();
+          static_cast<Dtype>(bottom[i]->num());
+      int num = bottom[i]->num();
+      int channels = bottom[i]->channels();
       for (int j = 0; j < num; ++j) {
-        Dtype* bout = (*bottom)[i]->mutable_cpu_diff();
-        if (static_cast<int>((*bottom)[2]->cpu_data()[j])) {  // similar pairs
+        Dtype* bout = bottom[i]->mutable_cpu_diff();
+        if (static_cast<int>(bottom[2]->cpu_data()[j])) {  // similar pairs
           caffe_cpu_axpby(
               channels,
               alpha,
@@ -97,5 +97,6 @@ STUB_GPU(ContrastiveLossLayer);
 #endif
 
 INSTANTIATE_CLASS(ContrastiveLossLayer);
+REGISTER_LAYER_CLASS(ContrastiveLoss);
 
 }  // namespace caffe

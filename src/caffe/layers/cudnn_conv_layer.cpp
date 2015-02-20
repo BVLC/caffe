@@ -19,7 +19,7 @@ namespace caffe {
  */
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
   // Initialize CUDA streams and cuDNN.
   stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
@@ -58,11 +58,13 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   if (this->bias_term_) {
     cudnn::createTensor4dDesc<Dtype>(&bias_desc_);
   }
+
+  handles_setup_ = true;
 }
 
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Reshape(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::Reshape(bottom, top);
   bottom_offset_ = (this->channels_ / this->group_)
       * this->height_ * this->width_;
@@ -98,6 +100,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
+  // Check that handles have been setup before destroying.
+  if (!handles_setup_) { return; }
+
   for (int i = 0; i < bottom_descs_.size(); i++) {
     cudnnDestroyTensor4dDescriptor(bottom_descs_[i]);
     cudnnDestroyTensor4dDescriptor(top_descs_[i]);

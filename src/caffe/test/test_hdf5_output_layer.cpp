@@ -11,9 +11,6 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
-using std::string;
-using std::vector;
-
 namespace caffe {
 
 template<typename TypeParam>
@@ -95,9 +92,9 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
   //   the output hdf5 file is closed.
   {
     HDF5OutputLayer<Dtype> layer(param);
+    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_EQ(layer.file_name(), this->output_file_name_);
-    layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-    layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   }
   file_id = H5Fopen(this->output_file_name_.c_str(), H5F_ACC_RDONLY,
                           H5P_DEFAULT);

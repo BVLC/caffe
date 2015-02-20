@@ -64,9 +64,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
        "lr_policy: 'fixed' "
        "net_param { "
        "  name: 'TestNetwork' "
-       "  layers: { "
+       "  layer { "
        "    name: 'data' "
-       "    type: DUMMY_DATA "
+       "    type: 'DummyData' "
        "    dummy_data_param { "
        "      num: " << num_ << " "
        "      channels: " << channels_ << " "
@@ -83,9 +83,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
        "    top: 'data' "
        "    top: 'targets' "
        "  } "
-       "  layers: { "
+       "  layer { "
        "    name: 'innerprod' "
-       "    type: INNER_PRODUCT "
+       "    type: 'InnerProduct' "
        "    inner_product_param { "
        "      num_output: 1 "
        "      weight_filler { "
@@ -100,9 +100,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
        "    bottom: 'data' "
        "    top: 'innerprod' "
        "  } "
-       "  layers: { "
+       "  layer { "
        "    name: 'loss' "
-       "    type: EUCLIDEAN_LOSS "
+       "    type: 'EuclideanLoss' "
        "    bottom: 'innerprod' "
        "    bottom: 'targets' "
        "  } "
@@ -323,7 +323,6 @@ class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
 TYPED_TEST_CASE(SGDSolverTest, TestDtypesAndDevices);
 
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdate) {
-  typedef typename TypeParam::Dtype Dtype;
   this->TestLeastSquaresUpdate();
 }
 
@@ -390,7 +389,6 @@ class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
 TYPED_TEST_CASE(AdaGradSolverTest, TestDtypesAndDevices);
 
 TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdate) {
-  typedef typename TypeParam::Dtype Dtype;
   this->TestLeastSquaresUpdate();
 }
 
@@ -435,7 +433,6 @@ class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
 TYPED_TEST_CASE(NesterovSolverTest, TestDtypesAndDevices);
 
 TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdate) {
-  typedef typename TypeParam::Dtype Dtype;
   this->TestLeastSquaresUpdate();
 }
 

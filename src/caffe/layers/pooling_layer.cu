@@ -152,18 +152,18 @@ __global__ void StoPoolForwardTest(const int nthreads,
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = (*top)[0]->mutable_gpu_data();
-  int count = (*top)[0]->count();
+  Dtype* top_data = top[0]->mutable_gpu_data();
+  int count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
-  const bool use_top_mask = top->size() > 1;
+  const bool use_top_mask = top.size() > 1;
   int* mask = NULL;
   Dtype* top_mask = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     if (use_top_mask) {
-      top_mask = (*top)[1]->mutable_gpu_data();
+      top_mask = top[1]->mutable_gpu_data();
     } else {
       mask = max_idx_.mutable_gpu_data();
     }
@@ -182,7 +182,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    if (Caffe::phase() == Caffe::TRAIN) {
+    if (this->phase_ == TRAIN) {
       // We need to create the random index as well.
       caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
                             rand_idx_.mutable_gpu_data());
@@ -325,13 +325,13 @@ __global__ void StoPoolBackward(const int nthreads,
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
   }
   const Dtype* top_diff = top[0]->gpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-  const int count = (*bottom)[0]->count();
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  const int count = bottom[0]->count();
   caffe_gpu_set(count, Dtype(0.), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
@@ -373,7 +373,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(PoolingLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(PoolingLayer);
 
 
 }  // namespace caffe

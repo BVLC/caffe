@@ -6,13 +6,17 @@ input_dim: 1
 input_dim: 3
 input_dim: 32
 input_dim: 32
-layers {
+layer {
   name: "conv1"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "data"
   top: "conv1"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
   convolution_param {
     num_output: 32
     pad: 2
@@ -20,9 +24,9 @@ layers {
     stride: 1
   }
 }
-layers {
+layer {
   name: "pool1"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv1"
   top: "pool1"
   pooling_param {
@@ -31,31 +35,35 @@ layers {
     stride: 2
   }
 }
-layers {
+layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "pool1"
   top: "pool1"
 }
-layers {
+layer {
   name: "norm1"
-  type: LRN
+  type: "LRN"
   bottom: "pool1"
   top: "norm1"
   lrn_param {
-    norm_region: WITHIN_CHANNEL
     local_size: 3
     alpha: 5e-05
     beta: 0.75
+    norm_region: WITHIN_CHANNEL
   }
 }
-layers {
+layer {
   name: "conv2"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "norm1"
   top: "conv2"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
   convolution_param {
     num_output: 32
     pad: 2
@@ -63,15 +71,15 @@ layers {
     stride: 1
   }
 }
-layers {
+layer {
   name: "relu2"
-  type: RELU
+  type: "ReLU"
   bottom: "conv2"
   top: "conv2"
 }
-layers {
+layer {
   name: "pool2"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv2"
   top: "pool2"
   pooling_param {
@@ -80,21 +88,21 @@ layers {
     stride: 2
   }
 }
-layers {
+layer {
   name: "norm2"
-  type: LRN
+  type: "LRN"
   bottom: "pool2"
   top: "norm2"
   lrn_param {
-    norm_region: WITHIN_CHANNEL
     local_size: 3
     alpha: 5e-05
     beta: 0.75
+    norm_region: WITHIN_CHANNEL
   }
 }
-layers {
+layer {
   name: "conv3"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "norm2"
   top: "conv3"
   convolution_param {
@@ -104,15 +112,15 @@ layers {
     stride: 1
   }
 }
-layers {
+layer {
   name: "relu3"
-  type: RELU
+  type: "ReLU"
   bottom: "conv3"
   top: "conv3"
 }
-layers {
+layer {
   name: "pool3"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv3"
   top: "pool3"
   pooling_param {
@@ -121,22 +129,26 @@ layers {
     stride: 2
   }
 }
-layers {
+layer {
   name: "ip1"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "pool3"
   top: "ip1"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 250
-  weight_decay: 0
+  param {
+    lr_mult: 1
+    decay_mult: 250
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
   inner_product_param {
     num_output: 10
   }
 }
-layers {
+layer {
   name: "prob"
-  type: SOFTMAX
+  type: "Softmax"
   bottom: "ip1"
   top: "prob"
 }

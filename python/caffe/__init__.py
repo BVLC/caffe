@@ -1,6 +1,6 @@
 from .pycaffe import Net, SGDSolver
-from .pycaffe import set_mode_cpu, set_mode_gpu, set_phase_train, set_phase_test
-from .pycaffe import set_device
+from ._caffe import set_mode_cpu, set_mode_gpu, set_device, Layer, get_solver
+from .proto.caffe_pb2 import TRAIN, TEST
 from .classifier import Classifier
 from .detector import Detector
 import io

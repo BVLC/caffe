@@ -44,18 +44,18 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
     // equivalent to explicitly specifiying a weight of 1.
     LayerParameter layer_param;
     EuclideanLossLayer<Dtype> layer_weight_1(layer_param);
-    layer_weight_1.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer_weight_1.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype loss_weight_1 =
-        layer_weight_1.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+        layer_weight_1.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
     // Get the loss again with a different objective weight; check that it is
     // scaled appropriately.
     const Dtype kLossWeight = 3.7;
     layer_param.add_loss_weight(kLossWeight);
     EuclideanLossLayer<Dtype> layer_weight_2(layer_param);
-    layer_weight_2.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+    layer_weight_2.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype loss_weight_2 =
-        layer_weight_2.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+        layer_weight_2.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype kErrorMargin = 1e-5;
     EXPECT_NEAR(loss_weight_1 * kLossWeight, loss_weight_2, kErrorMargin);
     // Make sure the loss is non-trivial.
@@ -82,10 +82,10 @@ TYPED_TEST(EuclideanLossLayerTest, TestGradient) {
   const Dtype kLossWeight = 3.7;
   layer_param.add_loss_weight(kLossWeight);
   EuclideanLossLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 }  // namespace caffe
