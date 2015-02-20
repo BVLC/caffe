@@ -4,6 +4,7 @@
 
 #include <cudnn.h>
 
+#include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 #define CUDNN_CHECK(condition) \

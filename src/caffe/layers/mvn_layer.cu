@@ -9,9 +9,9 @@ namespace caffe {
 
 template <typename Dtype>
 void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = (*top)[0]->mutable_gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
   int num;
   if (this->layer_param_.mvn_param().across_channels())
     num = bottom[0]->num();
@@ -73,19 +73,19 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
+    const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->gpu_diff();
   const Dtype* top_data = top[0]->gpu_data();
-  const Dtype* bottom_data = (*bottom)[0]->gpu_data();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
+  const Dtype* bottom_data = bottom[0]->gpu_data();
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
   int num;
   if (this->layer_param_.mvn_param().across_channels())
-    num = (*bottom)[0]->num();
+    num = bottom[0]->num();
   else
-    num = (*bottom)[0]->num() * (*bottom)[0]->channels();
+    num = bottom[0]->num() * bottom[0]->channels();
 
-  int dim = (*bottom)[0]->count() / num;
+  int dim = bottom[0]->count() / num;
 
   Dtype eps = 1e-10;
 
@@ -139,7 +139,7 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(MVNLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(MVNLayer);
 
 
 }  // namespace caffe

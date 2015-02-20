@@ -106,6 +106,15 @@ class Blob {
   Dtype asum_data() const;
   /// @brief Compute the sum of absolute values (L1 norm) of the diff.
   Dtype asum_diff() const;
+  /// @brief Compute the sum of squares (L2 norm squared) of the data.
+  Dtype sumsq_data() const;
+  /// @brief Compute the sum of squares (L2 norm squared) of the diff.
+  Dtype sumsq_diff() const;
+
+  /// @brief Scale the blob data by a constant factor.
+  void scale_data(Dtype scale_factor);
+  /// @brief Scale the blob diff by a constant factor.
+  void scale_diff(Dtype scale_factor);
 
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the

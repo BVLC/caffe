@@ -13,10 +13,10 @@ __global__ void sync_conv_groups() { }
 
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
-    Dtype* top_data = (*top)[i]->mutable_gpu_data();
+    Dtype* top_data = top[i]->mutable_gpu_data();
     const Dtype* weight = this->blobs_[0]->gpu_data();
 
     // Forward through cuDNN in parallel over groups.
@@ -48,7 +48,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
   if (this->param_propagate_down_[0]) {
@@ -75,7 +75,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       // Gradient w.r.t. weights.
       if (this->param_propagate_down_[0]) {
-        const Dtype* bottom_data = (*bottom)[i]->gpu_data();
+        const Dtype* bottom_data = bottom[i]->gpu_data();
         CUDNN_CHECK(cudnnConvolutionBackwardFilter(handle_[1*this->group_ + g],
             bottom_descs_[i], bottom_data + bottom_offset_ * g,
             top_descs_[i],    top_diff + top_offset_ * g,
@@ -86,7 +86,10 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       // Gradient w.r.t. bottom data.
       if (propagate_down[i]) {
-        Dtype* bottom_diff = (*bottom)[i]->mutable_gpu_diff();
+        if (weight == NULL) {
+          weight = this->blobs_[0]->gpu_data();
+        }
+        Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
         CUDNN_CHECK(cudnnConvolutionBackwardData(handle_[2*this->group_ + g],
             filter_desc_, weight + weight_offset_ * g,
             top_descs_[i],    top_diff + top_offset_ * g,
@@ -103,7 +106,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(CuDNNConvolutionLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
 
 }  // namespace caffe
 #endif
