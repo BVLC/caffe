@@ -115,7 +115,7 @@ def main(argv):
             context_pad=args.context_pad)
 
     if args.gpu:
-        print 'GPU mode'
+        print('GPU mode')
 
     # Load input.
     t = time.time()
@@ -139,8 +139,8 @@ def main(argv):
         detections = detector.detect_windows(images_windows)
     else:
         detections = detector.detect_selective_search(inputs)
-    print("Processed {} windows in {:.3f} s.".format(len(detections),
-                                                     time.time() - t))
+    print(("Processed {} windows in {:.3f} s.".format(len(detections),
+                                                     time.time() - t)))
 
     # Collect into dataframe with labeled fields.
     df = pd.DataFrame(detections)
@@ -161,8 +161,8 @@ def main(argv):
     else:
         # h5
         df.to_hdf(args.output_file, 'df', mode='w')
-    print("Saved to {} in {:.3f} s.".format(args.output_file,
-                                            time.time() - t))
+    print(("Saved to {} in {:.3f} s.".format(args.output_file,
+                                            time.time() - t)))
 
 
 if __name__ == "__main__":

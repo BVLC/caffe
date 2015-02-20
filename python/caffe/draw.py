@@ -23,7 +23,7 @@ def get_pooling_types_dict():
     """
     desc = caffe_pb2.PoolingParameter.PoolMethod.DESCRIPTOR
     d = {}
-    for k,v in desc.values_by_name.items():
+    for k,v in list(desc.values_by_name.items()):
         d[v.number] = k
     return d
 
@@ -137,7 +137,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
                           'dst': top_blob + '_blob',
                           'label': edge_label})
   # Now, add the nodes and edges to the graph.
-  for node in pydot_nodes.values():
+  for node in list(pydot_nodes.values()):
     pydot_graph.add_node(node)
   for edge in pydot_edges:
     pydot_graph.add_edge(

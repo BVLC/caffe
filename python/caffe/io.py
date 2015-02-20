@@ -3,7 +3,11 @@ import skimage.io
 from scipy.ndimage import zoom
 from skimage.transform import resize
 
-from caffe.proto import caffe_pb2
+try:
+	# Python3 will most likely not be able to load protobuf
+	from caffe.proto import caffe_pb2
+except:
+	pass
 
 ## proto / datum / ndarray conversion
 
