@@ -137,15 +137,15 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
 // On Windows, std::signbit is not available, so use a replacement.
 #ifdef _MSC_VER
 template <typename T>
-bool signbit(const T &arg);
+inline static bool signbit(const T &arg);
 
 template <>
-bool signbit<float>(const float &arg) {
+inline static bool signbit<float>(const float &arg) {
   return (*reinterpret_cast<const long*>(&arg) & (1L << 31)) != 0;
 };
 
 template <>
-bool signbit<double>(const double &arg) {
+inline static bool signbit<double>(const double &arg) {
   return (*reinterpret_cast<const long long*>(&arg) & (1LL << 63)) != 0;
 };
 DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
