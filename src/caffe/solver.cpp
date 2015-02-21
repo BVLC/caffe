@@ -159,7 +159,7 @@ void Solver<Dtype>::InitTestNets() {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Step(int iters) {
+void Solver<Dtype>::Step(int iters, boost::posix_time::ptime stop_time) {
   vector<Blob<Dtype>*> bottom_vec;
   const int start_iter = iter_;
   const int stop_iter = iter_ + iters;
@@ -167,7 +167,9 @@ void Solver<Dtype>::Step(int iters) {
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
 
-  for (; iter_ < stop_iter; ++iter_) {
+  for (; iter_ < stop_iter &&
+         boost::posix_time::second_clock::local_time() < stop_time;
+       ++iter_) {
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -227,9 +229,17 @@ void Solver<Dtype>::Solve(const char* resume_file) {
     Restore(resume_file);
   }
 
+  // by default the stop time is never...
+  boost::posix_time::ptime stop_time(boost::posix_time::pos_infin);
+  // if max_seconds is provided, compute the stop time
+  if (param_.max_seconds() > 0) {
+    stop_time = boost::posix_time::second_clock::local_time() +
+      boost::posix_time::seconds(param_.max_seconds());
+  }
+
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
-  Step(param_.max_iter() - iter_);
+  Step(param_.max_iter() - iter_, stop_time);
   // If we haven't already, save a snapshot after optimization, unless
   // overridden by setting snapshot_after_train := false
   if (param_.snapshot_after_train()
