@@ -4,7 +4,7 @@ if(NOT HAVE_PYTHON)
 endif()
 
 include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-file(GLOB_RECURSE python_srcs ${PROJECT_SOURCE_DIR}/python/*.cpp)
+file(GLOB_RECURSE python_srcs ${CMAKE_SOURCE_DIR}/python/*.cpp)
 
 add_library(pycaffe SHARED ${python_srcs})
 target_link_libraries(pycaffe ${Caffe_LINK} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
@@ -22,9 +22,13 @@ if(UNIX OR APPLE)
 endif()
 
 # ---[ Install
-file(GLOB files *.py requirements.txt)
-install(FILES  ${files} DESTINATION python)
-install(DIRECTORY caffe DESTINATION python)
-install(TARGETS pycaffe DESTINATION python/caffe)
+file(GLOB files1 *.py requirements.txt)
+install(FILES ${files1} DESTINATION python)
+
+file(GLOB files2 caffe/*.py)
+install(FILES  ${files2} DESTINATION python/caffe)
+install(TARGETS pycaffe  DESTINATION python/caffe)
+install(DIRECTORY caffe/imagenet caffe/proto caffe/test DESTINATION python/caffe)
+
 
 
