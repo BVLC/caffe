@@ -18,7 +18,6 @@ template <typename Dtype>
 void AbsValLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int count = top[0]->count();
-  const Dtype* top_data = top[0]->gpu_data();
   const Dtype* top_diff = top[0]->gpu_diff();
   if (propagate_down[0]) {
     const Dtype* bottom_data = bottom[0]->gpu_data();

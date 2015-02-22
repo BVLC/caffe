@@ -39,13 +39,18 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   blob_helper_.DataBlob(top)->Reshape(input_blob->num(), input_blob->channels(),
       input_blob->height(), input_blob->width());
 
-  mean_.Reshape(input_blob->num(), input_blob->channels(), 1, 1);
+  // If across_channels is false, then there's a separate mean for
+  // each channel. Otherwise there's just one mean.
+  int mean_var_channels = this->layer_param_.mvn_param().across_channels() ?
+              1 : input_blob->channels();
+
+  mean_.Reshape(input_blob->num(), mean_var_channels, 1, 1);
   if (blob_helper_.HasMeanTop()) {
     // If the mean_ is exported as a top blob, have to shape it too.
     blob_helper_.MeanBlob(top)->ReshapeLike(mean_);
   }
 
-  variance_.Reshape(input_blob->num(), input_blob->channels(), 1, 1);
+  variance_.Reshape(input_blob->num(), mean_var_channels, 1, 1);
   if (blob_helper_.HasVarianceTop()) {
     // If variance_ is exported as a top blob, have to shape it too.
     blob_helper_.VarianceBlob(top)->ReshapeLike(variance_);
@@ -53,7 +58,14 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   temp_.Reshape(input_blob->num(), input_blob->channels(),
       input_blob->height(), input_blob->width());
-  sum_multiplier_.Reshape(1, 1, input_blob->height(), input_blob->width());
+
+  if ( this->layer_param_.mvn_param().across_channels() ) {
+    sum_multiplier_.Reshape(1, input_blob->channels(), input_blob->height(),
+                            input_blob->width());
+  } else {
+    sum_multiplier_.Reshape(1, 1, input_blob->height(),
+                            input_blob->width());
+  }
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
 }
@@ -66,10 +78,11 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Get the blob that has our output
   Blob<Dtype>* top_blob = blob_helper_.DataBlob(top);
   int num;
-  if (this->layer_param_.mvn_param().across_channels())
+  if (this->layer_param_.mvn_param().across_channels()) {
     num = bottom[0]->num();
-  else
+  } else {
     num = bottom[0]->num() * bottom[0]->channels();
+  }
 
   int dim = bottom[0]->count() / num;
   Dtype eps = 1e-10;
@@ -78,7 +91,6 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // put the squares of bottom into temp_
     caffe_powx(bottom[0]->count(), bottom_data, Dtype(2),
         temp_.mutable_cpu_data());
-
     // computes variance using var(X) = E(X^2) - (EX)^2
     caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, bottom_data,
         sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());  // EX
@@ -97,7 +109,6 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < variance_.count(); ++i) {
       write_var[i] = read_var[i] < eps ? eps : read_var[i];
     }
-
     // do mean and variance normalization
     // subtract mean
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,

@@ -53,7 +53,12 @@ void InverseMVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   temp_.Reshape(input_blob->num(), input_blob->channels(),
       input_blob->height(), input_blob->width());
-  sum_multiplier_.Reshape(1, 1, input_blob->height(), input_blob->width());
+  if ( this->layer_param_.mvn_param().across_channels() ) {
+    sum_multiplier_.Reshape(1, input_blob->channels(), input_blob->height(),
+                            input_blob->width());
+  } else {
+    sum_multiplier_.Reshape(1, 1, input_blob->height(), input_blob->width());
+  }
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
 }
@@ -77,8 +82,6 @@ void InverseMVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // Get the variance blob.
     Blob<Dtype>* variance_blob = blob_helper_.VarianceBlob(bottom);
 
-    // Fill a matrix of the same dimension as the input data blob that has
-    // the variance at every location.
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, 1.,
           variance_blob->cpu_data(), sum_multiplier_.cpu_data(), 0.,
           temp_.mutable_cpu_data());
