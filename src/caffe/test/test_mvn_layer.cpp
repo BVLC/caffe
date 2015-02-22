@@ -308,8 +308,6 @@ TYPED_TEST(MVNLayerTest, TestForwardAcrossChannels) {
 
   for (int i = 0; i < num; ++i) {
     Dtype sum = 0, var = 0;
-    Dtype bsum = 0;
-    Dtype bvar = 0;
     for (int j = 0; j < channels; ++j) {
       for (int k = 0; k < height; ++k) {
         for (int l = 0; l < width; ++l) {
@@ -318,16 +316,11 @@ TYPED_TEST(MVNLayerTest, TestForwardAcrossChannels) {
           var += data * data;
 
           data = this->blob_bottom_->data_at(i, j, k, l);
-          bsum += data;
-          bvar += data * data;
         }
       }
     }
     sum /= height * width * channels;
     var /= height * width * channels;
-
-    bsum /= height * width * channels;
-    bvar /= height * width * channels;
 
     const Dtype kErrorBound = 0.001;
     // expect zero mean
