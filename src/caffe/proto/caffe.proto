@@ -374,6 +374,9 @@ message AccuracyParameter {
   // (N x C x H x W), the label blob is expected to contain N*H*W ground truth
   // labels with integer values in {0, 1, ..., C-1}.
   optional int32 axis = 2 [default = 1];
+
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 3;
 }
 
 // Message that stores parameters used by ArgMaxLayer
