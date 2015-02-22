@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstring>
 #include <vector>
 
@@ -98,6 +99,23 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     ExpLayer<Dtype> layer(layer_param);
     GradientChecker<Dtype> checker(1e-2, 1e-3);
     checker.CheckGradientEltwise(&layer, blob_bottom_vec_, blob_top_vec_);
+  }
+
+  void TestPReLU(PReLULayer<Dtype> *layer) {
+    layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+    const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+    const Dtype* top_data = this->blob_top_->cpu_data();
+    const Dtype* slope_data = layer->blobs()[0]->cpu_data();
+    int hw = this->blob_bottom_->height() * this->blob_bottom_->width();
+    int channels = this->blob_bottom_->channels();
+    bool channel_shared = layer->layer_param().prelu_param().channel_shared();
+    for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+      int c = channel_shared ? 0 : (i / hw) % channels;
+      EXPECT_EQ(top_data[i],
+        std::max(bottom_data[i], (Dtype)(0))
+        + slope_data[c] * std::min(bottom_data[i], (Dtype)(0)));
+    }
   }
 };
 
@@ -389,6 +407,50 @@ TYPED_TEST(NeuronLayerTest, TestBNLLGradient) {
   BNLLLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLU1) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(layer.blobs()[0].get());
+  this->TestPReLU(&layer);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLU2ChannelShared) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_prelu_param()->set_channel_shared(true);
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  this->TestPReLU(&layer);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLU3Gradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  FillerParameter filler_param;
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(layer.blobs()[0].get());
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestPReLU4GradientChannelShared) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_prelu_param()->set_channel_shared(true);
+  PReLULayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
 
