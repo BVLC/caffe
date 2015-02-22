@@ -14,6 +14,12 @@ template <typename Dtype>
 void AccuracyLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   top_k_ = this->layer_param_.accuracy_param().top_k();
+
+  has_ignore_label_ =
+    this->layer_param_.accuracy_param().has_ignore_label();
+  if (has_ignore_label_) {
+    ignore_label_ = this->layer_param_.accuracy_param().ignore_label();
+  }
 }
 
 template <typename Dtype>
@@ -44,8 +50,16 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int num_labels = bottom[0]->shape(label_axis_);
   vector<Dtype> maxval(top_k_+1);
   vector<int> max_id(top_k_+1);
+  int count = 0;
   for (int i = 0; i < outer_num_; ++i) {
     for (int j = 0; j < inner_num_; ++j) {
+      const int label_value =
+          static_cast<int>(bottom_label[i * inner_num_ + j]);
+      if (has_ignore_label_ && label_value == ignore_label_) {
+        continue;
+      }
+      DCHECK_GE(label_value, 0);
+      DCHECK_LT(label_value, num_labels);
       // Top-k accuracy
       std::vector<std::pair<Dtype, int> > bottom_data_vector;
       for (int k = 0; k < num_labels; ++k) {
@@ -56,19 +70,18 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
           bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
       // check if true label is in top k predictions
-      const int label_value =
-          static_cast<int>(bottom_label[i * inner_num_ + j]);
       for (int k = 0; k < top_k_; k++) {
         if (bottom_data_vector[k].second == label_value) {
           ++accuracy;
           break;
         }
       }
+      ++count;
     }
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  top[0]->mutable_cpu_data()[0] = accuracy / outer_num_ / inner_num_;
+  top[0]->mutable_cpu_data()[0] = accuracy / count;
   // Accuracy layer should not be used as a loss function.
 }
 
