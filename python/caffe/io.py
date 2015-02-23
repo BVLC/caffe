@@ -238,11 +238,16 @@ class Transformer:
         """
         self.__check_input(in_)
         if mean.ndim == 1:
+            # broadcast pixel
             mean = mean[:, np.newaxis, np.newaxis]
-        mk, mh, mw = mean.shape
-        in_k, in_h, in_w = self.inputs[in_][1:]
-        #if mk != in_k or (mh, mw) != (in_h, in_w) and (mh, mw) != (1, 1):
-        #    raise Exception('Mean shape incompatible with input shape.')
+        else:
+            ms = mean.shape
+            if len(ms) == 2:
+                ms = (1,) + ms
+            if len(ms) != 3:
+                raise ValueError('Mean shape invalid')
+            if ms != self.inputs[in_][1:]:
+                raise ValueError('Mean shape incompatible with input shape.')
         self.mean[in_] = mean
 
 
