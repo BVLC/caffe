@@ -98,6 +98,12 @@ class Net {
    */
   void CopyTrainedLayersFrom(const NetParameter& param);
   void CopyTrainedLayersFrom(const string trained_filename);
+  /**
+   * @brief For an already initialized net, implicitly copies (i.e., using no
+   *        additional memory) the blobs (storing intermediate results) from
+   *        another Net.
+   */
+  void ShareBlobsWith(const Net* other);
   /// @brief Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false) const;
 
@@ -208,6 +214,9 @@ class Net {
 
   /// @brief Get misc parameters, e.g. the LR multiplier and weight decay.
   void GetLearningRateAndWeightDecay();
+
+  /// @brief Update refered blobs
+  void UpdateBlobPointers();
 
   /// @brief The network name
   string name_;
