@@ -115,7 +115,7 @@ def main(argv):
             context_pad=args.context_pad)
 
     if args.gpu:
-        print 'GPU mode'
+        print('GPU mode')
 
     # Load input.
     t = time.time()
