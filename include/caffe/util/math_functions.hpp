@@ -10,6 +10,25 @@
 #include "caffe/util/device_alternate.hpp"
 #include "caffe/util/mkl_alternate.hpp"
 
+// It's necessary to put signbit into the std namespace to avoid
+// clash with ::caffe::signbit.
+#ifdef _MSC_VER
+namespace std {
+template <typename T>
+inline static bool signbit(const T &arg);
+
+template <>
+inline static bool signbit<float>(const float &arg) {
+  return (*reinterpret_cast<const long*>(&arg) & (1L << 31)) != 0;
+};
+
+template <>
+inline static bool signbit<double>(const double &arg) {
+  return (*reinterpret_cast<const long long*>(&arg) & (1LL << 63)) != 0;
+};
+};
+#endif
+
 namespace caffe {
 
 // Caffe gemm provides a simpler interface to the gemm functions, with the
@@ -135,25 +154,8 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]));
 // The extra parens are needed because CUDA < 6.5 defines signbit as a macro,
 // and we don't want that to expand here when CUDA headers are also included.
 // On Windows, std::signbit is not available, so use a replacement.
-#ifdef _MSC_VER
-template <typename T>
-inline static bool signbit(const T &arg);
-
-template <>
-inline static bool signbit<float>(const float &arg) {
-  return (*reinterpret_cast<const long*>(&arg) & (1L << 31)) != 0;
-};
-
-template <>
-inline static bool signbit<double>(const double &arg) {
-  return (*reinterpret_cast<const long long*>(&arg) & (1LL << 63)) != 0;
-};
-DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
-    y[i] = static_cast<bool>((signbit)(x[i])));
-#else
 DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
     y[i] = static_cast<bool>((std::signbit)(x[i])));
-#endif
 
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]));
 

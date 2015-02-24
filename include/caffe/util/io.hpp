@@ -29,7 +29,7 @@ inline void MakeTempFilename(string* temp_filename) {
   temp_filename->clear();
 #ifdef _MSC_VER
   // Use the system method to create temporary files.
-  *temp_filename = string(tmpnam(nullptr));
+  *temp_filename = "C:\\temp" + string(tmpnam(nullptr));
 #else
   *temp_filename = "/tmp/caffe_test.XXXXXX";
 #endif
@@ -52,7 +52,7 @@ inline void MakeTempFilename(string* temp_filename) {
 inline void MakeTempDir(string* temp_dirname) {
   temp_dirname->clear();
 #ifdef _MSC_VER
-  *temp_dirname = string(tmpnam(nullptr));
+  *temp_dirname = "C:\\temp" + string(tmpnam(nullptr));
 #else
   *temp_dirname = "/tmp/caffe_test.XXXXXX";
 #endif
@@ -60,7 +60,7 @@ inline void MakeTempDir(string* temp_dirname) {
   // NOLINT_NEXT_LINE(runtime/printf)
   strcpy(temp_dirname_cstr, temp_dirname->c_str());
 #ifdef _MSC_VER
-  int mkdtemp_result = _mkdir(temp_dirname_cstr);
+  int mkdtemp_result = 1 - _mkdir(temp_dirname_cstr);
 #else
   char* mkdtemp_result = mkdtemp(temp_dirname_cstr);
 #endif
