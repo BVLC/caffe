@@ -155,6 +155,9 @@ void Solver<Dtype>::InitTestNets() {
         << "Creating test net (#" << i << ") specified by " << sources[i];
     test_nets_[i].reset(new Net<Dtype>(net_params[i]));
     test_nets_[i]->set_debug_info(param_.debug_info());
+    if (param_.share_blobs()) {
+      test_nets_[i]->ShareBlobsWith(net_.get());
+    }
   }
 }
 
