@@ -1,0 +1,2 @@
+/usr/bin/ar cr libtest_im2col_kernel.testbin.lib.a  CMakeFiles/test_im2col_kernel.testbin.lib.dir/./test_im2col_kernel.testbin.lib_generated_test_im2col_kernel.cu.o
+/usr/bin/ranlib libtest_im2col_kernel.testbin.lib.a
