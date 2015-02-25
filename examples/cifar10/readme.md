@@ -24,8 +24,8 @@ You will first need to download and convert the data format from the [CIFAR-10 w
 
     cd $CAFFE_ROOT/data/cifar10
     ./get_cifar10.sh
-    cd $CAFFE_ROOT/examples/cifar10
-    ./create_cifar10.sh
+    cd $CAFFE_ROOT
+    ./examples/cifar10/create_cifar10.sh
 
 If it complains that `wget` or `gunzip` are not installed, you need to install them respectively. After running the script there should be the dataset, `./cifar10-leveldb`, and the data set image mean `./mean.binaryproto`.
 
@@ -39,8 +39,8 @@ Training and Testing the "Quick" Model
 
 Training the model is simple after you have written the network definition protobuf and solver protobuf files (refer to [MNIST Tutorial](../examples/mnist.html)). Simply run `train_quick.sh`, or the following command directly:
 
-    cd $CAFFE_ROOT/examples/cifar10
-    ./train_quick.sh
+    cd $CAFFE_ROOT
+    ./examples/cifar10/train_quick.sh
 
 `train_quick.sh` is a simple script, so have a look inside. The main tool for training is `caffe` with the `train` action, and the solver protobuf text file as its argument.
 

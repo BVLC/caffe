@@ -47,17 +47,26 @@ BLAS := atlas
 PYTHON_INCLUDE := /usr/include/python2.7 \
 		/usr/lib/python2.7/dist-packages/numpy/core/include
 # Anaconda Python distribution is quite popular. Include path:
-# PYTHON_INCLUDE := $(HOME)/anaconda/include \
-		# $(HOME)/anaconda/include/python2.7 \
-		# $(HOME)/anaconda/lib/python2.7/site-packages/numpy/core/include
+# Verify anaconda location, sometimes it's in root.
+# ANACONDA_HOME := $(HOME)/anaconda
+# PYTHON_INCLUDE := $(ANACONDA_HOME)/include \
+		# $(ANACONDA_HOME)/include/python2.7 \
+		# $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include \
 
 # We need to be able to find libpythonX.X.so or .dylib.
 PYTHON_LIB := /usr/lib
-# PYTHON_LIB := $(HOME)/anaconda/lib
+# PYTHON_LIB := $(ANACONDA_HOME)/lib
+
+# Uncomment to support layers written in Python (will link against Python libs)
+# WITH_PYTHON_LAYER := 1
 
 # Whatever else you find you need goes here.
 INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
+
+# Uncomment to use `pkg-config` to specify OpenCV library paths.
+# (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)
+# USE_PKG_CONFIG := 1
 
 BUILD_DIR := build
 DISTRIBUTE_DIR := distribute
@@ -67,3 +76,6 @@ DISTRIBUTE_DIR := distribute
 
 # The ID of the GPU that 'make runtest' will use to run unit tests.
 TEST_GPUID := 0
+
+# enable pretty build (comment to see full commands)
+Q ?= @

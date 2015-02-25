@@ -1,42 +1,49 @@
 name: "LeNet"
-layers {
+layer {
   name: "mnist"
-  type: DATA
+  type: "Data"
   top: "data"
   top: "label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.00390625
+  }
   data_param {
     source: "examples/mnist/mnist_train_lmdb"
-    backend: LMDB
     batch_size: 64
+    backend: LMDB
   }
-  transform_param {
-    scale: 0.00390625
-  }
-  include: { phase: TRAIN }
 }
-layers {
+layer {
   name: "mnist"
-  type: DATA
+  type: "Data"
   top: "data"
   top: "label"
-  data_param {
-    source: "examples/mnist/mnist_test_lmdb"
-    backend: LMDB
-    batch_size: 100
+  include {
+    phase: TEST
   }
   transform_param {
     scale: 0.00390625
   }
-  include: { phase: TEST }
+  data_param {
+    source: "examples/mnist/mnist_test_lmdb"
+    batch_size: 100
+    backend: LMDB
+  }
 }
-
-layers {
+layer {
   name: "conv1"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "data"
   top: "conv1"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
   convolution_param {
     num_output: 20
     kernel_size: 5
@@ -49,9 +56,9 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "pool1"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv1"
   top: "pool1"
   pooling_param {
@@ -60,13 +67,17 @@ layers {
     stride: 2
   }
 }
-layers {
+layer {
   name: "conv2"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "pool1"
   top: "conv2"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
   convolution_param {
     num_output: 50
     kernel_size: 5
@@ -79,9 +90,9 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "pool2"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv2"
   top: "pool2"
   pooling_param {
@@ -90,13 +101,17 @@ layers {
     stride: 2
   }
 }
-layers {
+layer {
   name: "ip1"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "pool2"
   top: "ip1"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 500
     weight_filler {
@@ -107,19 +122,23 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "ip1"
   top: "ip1"
 }
-layers {
+layer {
   name: "ip2"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "ip1"
   top: "ip2"
-  blobs_lr: 1
-  blobs_lr: 2
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
   inner_product_param {
     num_output: 10
     weight_filler {
@@ -130,17 +149,19 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "accuracy"
-  type: ACCURACY
+  type: "Accuracy"
   bottom: "ip2"
   bottom: "label"
   top: "accuracy"
-  include: { phase: TEST }
+  include {
+    phase: TEST
+  }
 }
-layers {
+layer {
   name: "loss"
-  type: SOFTMAX_LOSS
+  type: "SoftmaxWithLoss"
   bottom: "ip2"
   bottom: "label"
   top: "loss"

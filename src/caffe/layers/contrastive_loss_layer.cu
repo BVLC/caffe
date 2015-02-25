@@ -10,7 +10,7 @@ namespace caffe {
 
 template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Forward_gpu(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int count = bottom[0]->count();
   caffe_gpu_sub(
       count,
@@ -41,7 +41,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
     }
   }
   loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
-  (*top)[0]->mutable_cpu_data()[0] = loss;
+  top[0]->mutable_cpu_data()[0] = loss;
 }
 
 template <typename Dtype>
@@ -65,27 +65,27 @@ __global__ void CLLForward(const int count, const int channels,
 
 template <typename Dtype>
 void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
-      const int count = (*bottom)[0]->count();
-      const int channels = (*bottom)[0]->channels();
+      const int count = bottom[0]->count();
+      const int channels = bottom[0]->channels();
       Dtype margin = this->layer_param_.contrastive_loss_param().margin();
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
-          static_cast<Dtype>((*bottom)[0]->num());
+          static_cast<Dtype>(bottom[0]->num());
       // NOLINT_NEXT_LINE(whitespace/operators)
       CLLForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
           count, channels, margin, alpha,
-          (*bottom)[2]->gpu_data(),  // pair similarity 0 or 1
+          bottom[2]->gpu_data(),  // pair similarity 0 or 1
           diff_.gpu_data(),  // the cached eltwise difference between a and b
           dist_sq_.gpu_data(),  // the cached square distance between a and b
-          (*bottom)[i]->mutable_gpu_diff());
+          bottom[i]->mutable_gpu_diff());
       CUDA_POST_KERNEL_CHECK;
     }
   }
 }
 
-INSTANTIATE_CLASS(ContrastiveLossLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(ContrastiveLossLayer);
 
 }  // namespace caffe

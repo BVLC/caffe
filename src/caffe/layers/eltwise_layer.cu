@@ -33,10 +33,10 @@ __global__ void MaxForward(const int nthreads, const Dtype* bottom_data_a,
 
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& top) {
   int* mask = NULL;
-  const int count = (*top)[0]->count();
-  Dtype* top_data = (*top)[0]->mutable_gpu_data();
+  const int count = top[0]->count();
+  Dtype* top_data = top[0]->mutable_gpu_data();
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
     caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
@@ -82,26 +82,26 @@ __global__ void MaxBackward(const int nthreads, const Dtype* top_diff,
 
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const int* mask = NULL;
   const int count = top[0]->count();
   const Dtype* top_data = top[0]->gpu_data();
   const Dtype* top_diff = top[0]->gpu_diff();
-  for (int i = 0; i < bottom->size(); ++i) {
+  for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
-      const Dtype* bottom_data = (*bottom)[i]->gpu_data();
-      Dtype* bottom_diff = (*bottom)[i]->mutable_gpu_diff();
+      const Dtype* bottom_data = bottom[i]->gpu_data();
+      Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
       switch (op_) {
       case EltwiseParameter_EltwiseOp_PROD:
         if (stable_prod_grad_) {
           bool initialized = false;
-          for (int j = 0; j < bottom->size(); ++j) {
+          for (int j = 0; j < bottom.size(); ++j) {
             if (i == j) { continue; }
             if (!initialized) {
-              caffe_copy(count, (*bottom)[j]->gpu_data(), bottom_diff);
+              caffe_copy(count, bottom[j]->gpu_data(), bottom_diff);
               initialized = true;
             } else {
-              caffe_gpu_mul(count, (*bottom)[j]->gpu_data(), bottom_diff,
+              caffe_gpu_mul(count, bottom[j]->gpu_data(), bottom_diff,
                             bottom_diff);
             }
           }
@@ -130,6 +130,6 @@ void EltwiseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(EltwiseLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(EltwiseLayer);
 
 }  // namespace caffe

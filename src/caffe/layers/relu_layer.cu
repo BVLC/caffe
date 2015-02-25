@@ -16,9 +16,9 @@ __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out,
 
 template <typename Dtype>
 void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = (*top)[0]->mutable_gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
   Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
   // NOLINT_NEXT_LINE(whitespace/operators)
@@ -44,12 +44,12 @@ __global__ void ReLUBackward(const int n, const Dtype* in_diff,
 template <typename Dtype>
 void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
+    const vector<Blob<Dtype>*>& bottom) {
   if (propagate_down[0]) {
-    const Dtype* bottom_data = (*bottom)[0]->gpu_data();
+    const Dtype* bottom_data = bottom[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-    const int count = (*bottom)[0]->count();
+    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+    const int count = bottom[0]->count();
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     // NOLINT_NEXT_LINE(whitespace/operators)
     ReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
@@ -59,7 +59,7 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 }
 
 
-INSTANTIATE_CLASS(ReLULayer);
+INSTANTIATE_LAYER_GPU_FUNCS(ReLULayer);
 
 
 }  // namespace caffe

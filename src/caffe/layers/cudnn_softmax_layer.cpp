@@ -13,17 +13,18 @@ namespace caffe {
 
 template <typename Dtype>
 void CuDNNSoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   SoftmaxLayer<Dtype>::LayerSetUp(bottom, top);
   // Initialize CUDNN.
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
+  handles_setup_ = true;
 }
 
 template <typename Dtype>
 void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   SoftmaxLayer<Dtype>::Reshape(bottom, top);
   int N = bottom[0]->num();
   int K = bottom[0]->channels();
@@ -35,6 +36,9 @@ void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 CuDNNSoftmaxLayer<Dtype>::~CuDNNSoftmaxLayer() {
+  // Check that handles have been setup before destroying.
+  if (!handles_setup_) { return; }
+
   cudnnDestroyTensor4dDescriptor(bottom_desc_);
   cudnnDestroyTensor4dDescriptor(top_desc_);
   cudnnDestroy(handle_);
