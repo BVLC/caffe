@@ -69,9 +69,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->width();
   // label
   if (this->output_labels_) {
-    top[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
-    this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
-        1, 1, 1);
+    vector<int> label_shape(1, this->layer_param_.data_param().batch_size());
+    top[1]->Reshape(label_shape);
+    this->prefetch_label_.Reshape(label_shape);
   }
 }
 

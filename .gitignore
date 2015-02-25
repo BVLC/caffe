@@ -44,6 +44,9 @@
 # QtCreator files
 *.user
 
+# PyCharm files
+.idea
+
 # OSX dir files
 .DS_Store
 
