@@ -98,11 +98,12 @@ def main(argv):
 
     # Make classifier.
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
-            image_dims=image_dims, gpu=args.gpu, mean=mean,
+            image_dims=image_dims, mean=mean,
             input_scale=args.input_scale, raw_scale=args.raw_scale,
             channel_swap=channel_swap)
 
     if args.gpu:
+        caffe.set_mode_gpu()
         print('GPU mode')
 
     # Load numpy array (.npy), directory glob (*.jpg), or image file.

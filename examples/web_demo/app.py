@@ -119,10 +119,12 @@ class ImagenetClassifier(object):
     def __init__(self, model_def_file, pretrained_model_file, mean_file,
                  raw_scale, class_labels_file, bet_file, image_dim, gpu_mode):
         logging.info('Loading net and associated files...')
+        if gpu_mode:
+            caffe.set_mode_gpu()
         self.net = caffe.Classifier(
             model_def_file, pretrained_model_file,
             image_dims=(image_dim, image_dim), raw_scale=raw_scale,
-            mean=np.load(mean_file), channel_swap=(2, 1, 0), gpu=gpu_mode
+            mean=np.load(mean_file), channel_swap=(2, 1, 0)
         )
 
         with open(class_labels_file) as f:

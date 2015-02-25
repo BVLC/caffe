@@ -109,12 +109,13 @@ def main(argv):
 
     # Make detector.
     detector = caffe.Detector(args.model_def, args.pretrained_model,
-            gpu=args.gpu, mean=mean,
+            mean=mean,
             input_scale=args.input_scale, raw_scale=args.raw_scale,
             channel_swap=channel_swap,
             context_pad=args.context_pad)
 
     if args.gpu:
+        caffe.set_mode_gpu()
         print('GPU mode')
 
     # Load input.
