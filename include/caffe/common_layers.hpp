@@ -237,6 +237,62 @@ class FlattenLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Reshapes the input Blob into any possible shape.
+ *
+ * Note: because this layer does not change the input values -- merely the
+ * dimensions -- it can simply copy the input. The copy happens "virtually"
+ * (thus taking effectively 0 real time) by setting, in Forward, the data
+ * pointer of the top Blob to that of the bottom Blob (see Blob::ShareData),
+ * and in Backward, the diff pointer of the bottom Blob to that of the top Blob
+ * (see Blob::ShareDiff).
+ */
+template <typename Dtype>
+class ReshapeLayer : public Layer<Dtype> {
+ public:
+  explicit ReshapeLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Reshape"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 2+)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs
+   * @param top output Blob vector (length 2+)
+   *   -# @f$ (N' \times C' \times H' \times W') @f$
+   *      the outputs -- i.e., the (virtually) copied, reshaped inputs
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. reshaped inputs.
+   *
+   * @param top output Blob vector (length K), providing the error gradient with
+   *        respect to the outputs
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length K), into which the top error
+   *        gradient is (virtually) copied
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int c_;
+  int h_;
+  int w_;
+};
+
+
+/**
  * @brief Also known as a "fully-connected" layer, computes an inner product
  *        with a set of learned weights, and (optionally) adds biases.
  *
