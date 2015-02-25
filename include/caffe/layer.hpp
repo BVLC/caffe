@@ -13,6 +13,8 @@
 
 namespace caffe {
 
+template <typename Dtype> class Net;
+
 /**
  * @brief An interface for the units of computation which can be composed into a
  *        Net.
@@ -285,6 +287,10 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
+  /**
+   * @brief Used by Net to give layers a pointer to their owning net.
+   */
+  void set_net(Net<Dtype>* net) { net_ = net; }
 
  protected:
   /** The protobuf that stores the layer parameters */
@@ -299,6 +305,9 @@ class Layer {
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
   vector<Dtype> loss_;
+
+  /** The net to which this layer belongs. */
+  Net<Dtype>* net_;
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

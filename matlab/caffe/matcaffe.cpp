@@ -272,7 +272,7 @@ static void get_init_key(MEX_ARGS) {
 static void init(MEX_ARGS) {
   if (nrhs != 3) {
     ostringstream error_msg;
-    error_msg << "Expected 2 arguments, got " << nrhs;
+    error_msg << "Expected 3 arguments, got " << nrhs;
     mex_error(error_msg.str());
   }
 
