@@ -3,6 +3,8 @@
 
 #include <unistd.h>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "google/protobuf/message.h"
 #include "hdf5.h"
@@ -153,6 +155,10 @@ void hdf5_load_nd_dataset(
 template <typename Dtype>
 void hdf5_save_nd_dataset(
     const hid_t file_id, const string& dataset_name, const Blob<Dtype>& blob);
+
+void read_image_data_file(
+    const std::string& source,
+    std::vector<std::pair<std::string, int> >* lines);
 
 }  // namespace caffe
 

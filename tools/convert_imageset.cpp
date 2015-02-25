@@ -67,13 +67,9 @@ int main(int argc, char** argv) {
   const bool encoded = FLAGS_encoded;
   const string encode_type = FLAGS_encode_type;
 
-  std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
-  std::string filename;
-  int label;
-  while (infile >> filename >> label) {
-    lines.push_back(std::make_pair(filename, label));
-  }
+  read_image_data_file(argv[2], &lines);
+
   if (FLAGS_shuffle) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
