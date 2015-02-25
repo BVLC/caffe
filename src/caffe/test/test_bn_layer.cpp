@@ -62,7 +62,6 @@ namespace caffe {
         for ( int k = 0; k < height; ++k ) {
           for ( int l = 0; l < width; ++l ) {
             Dtype data = this->blob_top_->data_at(i, j, k, l);
-            Dtype bottom_data = this->blob_bottom_->data_at(i, j, k, l);
             sum += data;
             var += data * data;
           }
@@ -99,7 +98,6 @@ namespace caffe {
         for ( int k = 0; k < height; ++k ) {
           for ( int l = 0; l < width; ++l ) {
             Dtype data = this->blob_top_->data_at(i, j, k, l);
-            Dtype bottom_data = this->blob_bottom_->data_at(i, j, k, l);
             sum += data;
             var += data * data;
           }
@@ -137,7 +135,6 @@ namespace caffe {
         for ( int k = 0; k < height; ++k ) {
           for ( int l = 0; l < width; ++l ) {
             Dtype data = this->blob_top_->data_at(i, j, k, l);
-            Dtype bottom_data = this->blob_bottom_->data_at(i, j, k, l);
             sum += data;
             var += data * data;
           }
