@@ -261,7 +261,8 @@ ifneq (,$(findstring clang++,$(CXX)))
 else ifneq (,$(findstring g++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
 else
-	$(error Cannot static link with the $(CXX) compiler.)
+  # The following line must not be indented with a tab, since we are not inside a target
+  $(error Cannot static link with the $(CXX) compiler)
 endif
 
 # Debugging
