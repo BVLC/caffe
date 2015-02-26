@@ -43,7 +43,8 @@ __global__ void SPPForward(const int nthreads, const Dtype* bottom_data,
           "c: %d\t"
           "n: %d\t"
           "kernel_d: %d\t"
-          "OS: %d\n", index, shifted_index, num_pools, pw, ph, c, n, kernel_depth, output_size);
+          "OS: %d\n", index, shifted_index, num_pools, pw, ph, c, n,
+          kernel_depth, output_size);
     }
     int kernel_h = (height + num_pools - 1) / num_pools;
     int kernel_w = (width + num_pools - 1) / num_pools;
@@ -76,7 +77,7 @@ template <typename Dtype>
 __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     const Dtype* bottom_window_data, const int num, const int channels,
     const int height, const int width, const int kernel_depth,
-    const int output_size, const int bottom_height, Dtype* top_data, int* mask,
+    const int output_size, const int window_count, Dtype* top_data, int* mask,
     Dtype* top_mask) {
 
   CUDA_KERNEL_LOOP(index, nthreads) {
@@ -94,14 +95,14 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int num_pools = 1 << j;
     int pw = shifted_index % num_pools;
     int ph = (shifted_index / num_pools) % num_pools;
-    int w = (index / output_size) % bottom_height;
+    int win = (index / output_size) % window_count;
     // 4 = number of coordinates per row. 227 = width of original image.
-    int window_x = bottom_window_data[w * 4] * width / 227;
-    int window_y = bottom_window_data[w * 4 + 1] * height / 227;
-    int window_w = bottom_window_data[w * 4 + 2] * width / 227;
-    int window_h = bottom_window_data[w * 4 + 3] * height / 227;
-    int c = (index / output_size / bottom_height) % channels;
-    int n = index / output_size / bottom_height / channels;
+    int window_x = bottom_window_data[win * 4] * width / 227;
+    int window_y = bottom_window_data[win * 4 + 1] * height / 227;
+    int window_w = bottom_window_data[win * 4 + 2] * width / 227;
+    int window_h = bottom_window_data[win * 4 + 3] * height / 227;
+    int c = (index / output_size / window_count) % channels;
+    int n = index / output_size / window_count / channels;
     if (debug) {
       printf("Forwrard "
           "Index: %d\t"
@@ -109,7 +110,7 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           "Num Pools: %d\t"
           "PW: %d\t"
           "PH: %d\t"
-          "W: %d\t"
+          "win: %d\t"
           "window_x: %d\t"
           "window_y: %d\t"
           "window_w: %d\t"
@@ -118,7 +119,7 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           "n: %d\t"
           "kernel_d: %d\t"
           "OS: %d\n", index, shifted_index, num_pools, pw, ph,
-          w, window_x, window_y, window_w, window_h, c, n, kernel_depth,
+          win, window_x, window_y, window_w, window_h, c, n, kernel_depth,
           output_size);
     }
     // Using fractional heights to better represent smaller sections instead of
@@ -202,8 +203,8 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
     Dtype gradient = 0;
     int offset = (n * channels + c) * output_size;
     top_diff += offset;
-    // Iterate through all positions in top array that could have resulted in this
-    // index being the max.
+    // Iterate through all positions in top array that could have resulted in
+    // this index being the max.
     if (mask) {
       mask += offset;
       int shift = 0;
@@ -224,7 +225,8 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
               "pw: %d\t"
               "ph: %d\t"
               "c: %d\t"
-              "n: %d\t\n", index, w, h, num_pools, kernel_h, kernel_w, pw, ph, c, n);
+              "n: %d\t\n", index, w, h, num_pools, kernel_h, kernel_w, pw, ph,
+              c, n);
         }
         if (mask[shift + ph * num_pools + pw] == h * width + w) {
           gradient += top_diff[ph * num_pools + pw];
@@ -251,7 +253,8 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
               "pw: %d\t"
               "ph: %d\t"
               "c: %d\t"
-              "n: %d\t\n", index, w, h, num_pools, kernel_h, kernel_w, pw, ph, c, n);
+              "n: %d\t\n", index, w, h, num_pools, kernel_h, kernel_w, pw, ph,
+              c, n);
         }
         if (top_mask[shift + ph * num_pools + pw] == h * width + w) {
           gradient += top_diff[ph * num_pools + pw];
@@ -260,7 +263,90 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
       }
     }
   }
+}
 
+
+template <typename Dtype>
+__global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
+    const int* mask, const Dtype* top_mask, const int num, const int channels,
+    const int height, const int width, const int kernel_depth,
+    const int output_size, const int window_count, Dtype* bottom_diff) {
+  // Shift holds the total of kernels at step i.
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    // Index in the bottom array.
+    int w = index % width;
+    int h = (index / width) % height;
+    int c = (index / width / height) % channels;
+    int n = index / width / height / channels;
+    Dtype gradient = 0;
+    int offset = (n * channels + c) * output_size * window_count;
+    top_diff += offset;
+    // Iterate through all positions in top array that could have resulted in
+    // this index being the max.
+    if (mask) {
+      mask += offset;
+      for (int win = 0; win < window_count; ++win) {
+        int shift = 0;
+        for (int i = 0; i < kernel_depth; ++i) {
+          int num_pools = 1 << i;
+          int kernel_h = (height + num_pools - 1) / num_pools;
+          int kernel_w = (width + num_pools - 1) / num_pools;
+          int pw = w / num_pools;
+          int ph = h / num_pools;
+          if (debug) {
+              printf("Mask Backward "
+                "Index: %d\t"
+                "w: %d\t"
+                "h: %d\t"
+                "num_pools : %d\t"
+                "kernel_h: %d\t"
+                "kernel_w: %d\t"
+                "pw: %d\t"
+                "ph: %d\t"
+                "c: %d\t"
+                "n: %d\t\n", index, w, h, num_pools, kernel_h, kernel_w, pw, ph,
+                c, n);
+          }
+          if (mask[win * output_size + shift + ph * num_pools + pw] ==
+              h * width + w) {
+            gradient += top_diff[ph * num_pools + pw];
+          }
+          shift += num_pools * num_pools;
+        }
+      }
+    } else {
+      top_mask += offset;
+      for (int win = 0; win < window_count; ++win) {
+        int shift = 0;
+        for (int i = 0; i < kernel_depth; ++i) {
+          int num_pools = 1 << i;
+          int kernel_h = (height + num_pools - 1) / num_pools;
+          int kernel_w = (width + num_pools - 1) / num_pools;
+          int pw = w / num_pools;
+          int ph = h / num_pools;
+          if (debug) {
+              printf("No Mask Backward "
+                "Index: %d\t"
+                "w: %d\t"
+                "h: %d\t"
+                "num_pools : %d\t"
+                "kernel_h: %d\t"
+                "kernel_w: %d\t"
+                "pw: %d\t"
+                "ph: %d\t"
+                "c: %d\t"
+                "n: %d\t\n", index, w, h, num_pools, kernel_h, kernel_w, pw, ph,
+                c, n);
+          }
+          if (top_mask[win * output_size + shift + ph * num_pools + pw] ==
+              h * width + w) {
+            gradient += top_diff[ph * num_pools + pw];
+          }
+          shift += num_pools * num_pools;
+        }
+      }
+    }
+  }
 }
 
 template <typename Dtype>
@@ -282,10 +368,19 @@ void SPPLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   } else {
     mask = max_idx_.gpu_data();
   }
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  SPPBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, top_diff, mask, top_mask, top[0]->num(), channels_,
-      height_, width_, kernel_depth_, output_size_, bottom_diff);
+  if (bottom.size() > 1) {
+    const int window_count = bottom[1]->height();
+    SPPBackwardWindowed<Dtype><<<CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS>>>(
+            count, top_diff, mask, top_mask, top[0]->num(), channels_,
+            height_, width_, kernel_depth_, output_size_, window_count,
+            bottom_diff);
+  } else {
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    SPPBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, top_diff, mask, top_mask, top[0]->num(), channels_,
+        height_, width_, kernel_depth_, output_size_, bottom_diff);
+  }
 
   CUDA_POST_KERNEL_CHECK;
 }

@@ -79,13 +79,13 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
-        for (int w = 0; w < window_count; ++w) {
+        for (int win = 0; win < window_count; ++win) {
           int pool_index = 0;
           // 4 = number of coordinates per row. 227 = width of original image.
-          int window_x = bottom_window_data[w * 4] * width_ / 227;
-          int window_y = bottom_window_data[w * 4 + 1] * height_ / 227;
-          int window_w = bottom_window_data[w * 4 + 2] * width_ / 227;
-          int window_h = bottom_window_data[w * 4 + 3] * height_ / 227;
+          int window_x = bottom_window_data[win * 4] * width_ / 227;
+          int window_y = bottom_window_data[win * 4 + 1] * height_ / 227;
+          int window_w = bottom_window_data[win * 4 + 2] * width_ / 227;
+          int window_h = bottom_window_data[win * 4 + 3] * height_ / 227;
           for (int d = 0; d < kernel_depth_; ++d) {
             int num_pools = std::pow(2, d);
             // Using fractional heights to better represent smaller sections
@@ -94,8 +94,8 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             int kernel_w = window_w * 1.0f / num_pools;
             for (int ph = 0; ph < num_pools; ++ph) {
               for (int pw = 0; pw < num_pools; ++pw) {
-                int hstart = int(ph * kernel_h) + window_x;
-                int wstart = int(pw * kernel_w) + window_y;
+                int hstart = int(ph * kernel_h) + window_y;
+                int wstart = int(pw * kernel_w) + window_x;
                 // Make sure each pool is over at least one element.
                 int hend = min(hstart + std::max(int(kernel_h), 1), window_h);
                 int wend = min(wstart + std::max(int(kernel_w), 1), window_w);
@@ -213,7 +213,7 @@ void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const int window_count = bottom[1]->height();
     for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
-        for (int w = 0; w < window_count; ++w) {
+        for (int win = 0; win < window_count; ++win) {
           for (int i = 0; i < output_size_; ++i) {
             const int bottom_index =
                 use_top_mask ? top_mask[i] : mask[i];
