@@ -175,7 +175,6 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       //     << current_blob->cpu_diff()[feat_id];
       if (kink_ - kink_range_ > fabs(feature)
           || fabs(feature) > kink_ + kink_range_) {
-
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
         Dtype scale = std::max(
