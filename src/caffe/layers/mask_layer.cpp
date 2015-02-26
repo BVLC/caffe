@@ -69,5 +69,6 @@ STUB_GPU(MaskLayer);
 #endif
 
 INSTANTIATE_CLASS(MaskLayer);
+REGISTER_LAYER_CLASS(Mask);
 
 }  // namespace caffe
