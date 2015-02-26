@@ -107,16 +107,16 @@ def main(argv):
     if args.channel_swap:
         channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
+    if args.gpu:
+        caffe.set_mode_gpu()
+        print('GPU mode')
+
     # Make detector.
     detector = caffe.Detector(args.model_def, args.pretrained_model,
             mean=mean,
             input_scale=args.input_scale, raw_scale=args.raw_scale,
             channel_swap=channel_swap,
             context_pad=args.context_pad)
-
-    if args.gpu:
-        caffe.set_mode_gpu()
-        print('GPU mode')
 
     # Load input.
     t = time.time()
