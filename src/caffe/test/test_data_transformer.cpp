@@ -42,12 +42,17 @@ class DataTransformTest : public ::testing::Test {
     DataTransformer<Dtype>* transformer =
         new DataTransformer<Dtype>(transform_param, phase);
     const int crop_size = transform_param.crop_size();
+    int crop_h = transform_param.crop_h();
+    int crop_w = transform_param.crop_w();
+    if (crop_size > 0) {
+      crop_h = crop_w = crop_size;
+    }
     Caffe::set_random_seed(seed_);
     transformer->InitRand();
     Blob<Dtype>* blob =
         new Blob<Dtype>(1, datum.channels(), datum.height(), datum.width());
-    if (transform_param.crop_size() > 0) {
-      blob->Reshape(1, datum.channels(), crop_size, crop_size);
+    if (crop_h > 0 || crop_w > 0) {
+      blob->Reshape(1, datum.channels(), crop_h, crop_w);
     }
 
     vector<vector<Dtype> > crop_sequence;
@@ -157,6 +162,37 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
   }
 }
 
+TYPED_TEST(DataTransformTest, TestCrop) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = false;  // all pixels the same equal to label
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int crop_h = 3;
+  const int crop_w = 2;
+
+  transform_param.set_crop_h(crop_h);
+  transform_param.set_crop_w(crop_w);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  DataTransformer<TypeParam>* transformer =
+      new DataTransformer<TypeParam>(transform_param, TEST);
+  transformer->InitRand();
+  Blob<TypeParam>* blob =
+      new Blob<TypeParam>(1, channels, crop_h, crop_w);
+  for (int iter = 0; iter < this->num_iter_; ++iter) {
+    transformer->Transform(datum, blob);
+    EXPECT_EQ(blob->num(), 1);
+    EXPECT_EQ(blob->channels(), datum.channels());
+    EXPECT_EQ(blob->height(), crop_h);
+    EXPECT_EQ(blob->width(), crop_w);
+    for (int j = 0; j < blob->count(); ++j) {
+      EXPECT_EQ(blob->cpu_data()[j], label);
+    }
+  }
+}
+
 TYPED_TEST(DataTransformTest, TestCropTrain) {
   TransformationParameter transform_param;
   const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
@@ -164,10 +200,12 @@ TYPED_TEST(DataTransformTest, TestCropTrain) {
   const int channels = 3;
   const int height = 4;
   const int width = 5;
-  const int crop_size = 2;
-  const int size = channels * crop_size * crop_size;
+  const int crop_h = 3;
+  const int crop_w = 2;
+  const int size = channels * crop_h * crop_w;
 
-  transform_param.set_crop_size(crop_size);
+  transform_param.set_crop_h(crop_h);
+  transform_param.set_crop_w(crop_w);
   Datum datum;
   FillDatum(label, channels, height, width, unique_pixels, &datum);
   int num_matches = this->NumSequenceMatches(transform_param, datum, TRAIN);
@@ -181,15 +219,18 @@ TYPED_TEST(DataTransformTest, TestCropTest) {
   const int channels = 3;
   const int height = 4;
   const int width = 5;
-  const int crop_size = 2;
-  const int size = channels * crop_size * crop_size;
+  const int crop_h = 3;
+  const int crop_w = 2;
+  const int size = channels * crop_h * crop_w;
 
-  transform_param.set_crop_size(crop_size);
+  transform_param.set_crop_h(crop_h);
+  transform_param.set_crop_w(crop_w);
   Datum datum;
   FillDatum(label, channels, height, width, unique_pixels, &datum);
   int num_matches = this->NumSequenceMatches(transform_param, datum, TEST);
   EXPECT_EQ(num_matches, size * this->num_iter_);
 }
+
 
 TYPED_TEST(DataTransformTest, TestMirrorTrain) {
   TransformationParameter transform_param;
@@ -230,11 +271,13 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTrain) {
   const int channels = 3;
   const int height = 4;
   const int width = 5;
-  const int crop_size = 2;
+  const int crop_h = 3;
+  const int crop_w = 2;
 
   Datum datum;
   FillDatum(label, channels, height, width, unique_pixels, &datum);
-  transform_param.set_crop_size(crop_size);
+  transform_param.set_crop_h(crop_h);
+  transform_param.set_crop_w(crop_w);
   int num_matches_crop = this->NumSequenceMatches(
       transform_param, datum, TRAIN);
 
@@ -252,11 +295,13 @@ TYPED_TEST(DataTransformTest, TestCropMirrorTest) {
   const int channels = 3;
   const int height = 4;
   const int width = 5;
-  const int crop_size = 2;
+  const int crop_h = 3;
+  const int crop_w = 2;
 
   Datum datum;
   FillDatum(label, channels, height, width, unique_pixels, &datum);
-  transform_param.set_crop_size(crop_size);
+  transform_param.set_crop_h(crop_h);
+  transform_param.set_crop_w(crop_w);
   int num_matches_crop = this->NumSequenceMatches(transform_param, datum, TEST);
 
   transform_param.set_mirror(true);

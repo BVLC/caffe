@@ -67,11 +67,16 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int width = cv_img.cols;
   // image
   const int crop_size = this->layer_param_.transform_param().crop_size();
+  int crop_h = this->layer_param_.transform_param().crop_h();
+  int crop_w = this->layer_param_.transform_param().crop_w();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   if (crop_size > 0) {
-    top[0]->Reshape(batch_size, channels, crop_size, crop_size);
-    this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
-    this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
+    crop_h = crop_w = crop_size;
+  }
+  if (crop_h > 0 || crop_w > 0) {
+    top[0]->Reshape(batch_size, channels, crop_h, crop_w);
+    this->prefetch_data_.Reshape(batch_size, channels, crop_h, crop_w);
+    this->transformed_data_.Reshape(1, channels, crop_h, crop_w);
   } else {
     top[0]->Reshape(batch_size, channels, height, width);
     this->prefetch_data_.Reshape(batch_size, channels, height, width);
@@ -107,11 +112,14 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
   const int crop_size = this->layer_param_.transform_param().crop_size();
+  const int crop_h = this->layer_param_.transform_param().crop_h();
+  const int crop_w = this->layer_param_.transform_param().crop_w();
+  const bool needs_crop = crop_size != 0 || crop_h != 0 || crop_w != 0;
   const bool is_color = image_data_param.is_color();
   string root_folder = image_data_param.root_folder();
 
   // Reshape on single input batches for inputs of varying dimension.
-  if (batch_size == 1 && crop_size == 0 && new_height == 0 && new_width == 0) {
+  if (batch_size == 1 && !needs_crop && new_height == 0 && new_width == 0) {
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         0, 0, is_color);
     this->prefetch_data_.Reshape(1, cv_img.channels(),

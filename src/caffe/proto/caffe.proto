@@ -331,6 +331,8 @@ message TransformationParameter {
   optional bool mirror = 2 [default = false];
   // Specify if we would like to randomly crop an image.
   optional uint32 crop_size = 3 [default = 0];
+  optional uint32 crop_h = 6 [default = 0]; // The crop height
+  optional uint32 crop_w = 7 [default = 0]; // The crop width
   // mean_file and mean_value cannot be specified at the same time
   optional string mean_file = 4;
   // if specified can be repeated once (would substract it from all the channels)
