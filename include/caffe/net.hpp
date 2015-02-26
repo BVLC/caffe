@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+#include "caffe/blob_finder.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -188,7 +189,8 @@ class Net {
   /// @brief Append a new input or top blob to the net.
   void AppendTop(const NetParameter& param, const int layer_id,
                  const int top_id, set<string>* available_blobs,
-                 map<string, int>* blob_name_to_idx);
+                 map<string, int>* blob_name_to_idx,
+                 BlobFinder<Dtype>* blob_finder);
   /// @brief Append a new bottom blob to the net.
   int AppendBottom(const NetParameter& param, const int layer_id,
                    const int bottom_id, set<string>* available_blobs,
