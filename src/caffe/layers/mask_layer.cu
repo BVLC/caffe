@@ -35,8 +35,8 @@ __global__ void MaskForward(
 
 template <typename Dtype>
 void MaskLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
-  Dtype* top_data = (*top)[0]->mutable_gpu_data();
+      const vector<Blob<Dtype>*>& top) {
+  Dtype* top_data = top[0]->mutable_gpu_data();
   const Dtype* bottom_data = bottom[0]->gpu_data();
   const int bottom_count = bottom[0]->count();
 
@@ -49,11 +49,11 @@ void MaskLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void MaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*> bottom) {
   for (int i = 0; i < bottom->size(); ++i) {
     if (propagate_down[i]) {
-      caffe_gpu_set((*bottom)[i]->count(), Dtype(0),
-                    (*bottom)[i]->mutable_gpu_data());
+      caffe_gpu_set(bottom[i]->count(), Dtype(0),
+                    bottom[i]->mutable_gpu_data());
     }
   }
 }

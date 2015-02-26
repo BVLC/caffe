@@ -237,6 +237,58 @@ class FlattenLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Takes a layer and splits its channels into masks for each input value.
+ */
+template <typename Dtype>
+class MaskLayer : public Layer<Dtype> {
+ public:
+  explicit MaskLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Mask"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  /**
+   * @param bottom input Blob vector (length 2+)
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the inputs
+   * @param top output Blob vector (length 1)
+   *   -# @f$ (N \times CHW \times 1 \times 1) @f$
+   *      the outputs -- i.e., the (virtually) copied, maksed out inputs
+   */
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  /**
+   * @brief Computes the error gradient w.r.t. the concatenate inputs.
+   *
+   * @param top output Blob vector (length 1), providing the error gradient with
+   *        respect to the outputs
+   * @param propagate_down see Layer::Backward.
+   * @param bottom input Blob vector (length K), into which the top error
+   *        gradient is (virtually) copied
+   */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  Blob<Dtype> col_bob_;
+  int count_;
+  int num_;
+  int channels_;
+  int height_;
+  int width_;
+  int mask_channels_count_;
+};
+
+/**
  * @brief Also known as a "fully-connected" layer, computes an inner product
  *        with a set of learned weights, and (optionally) adds biases.
  *
