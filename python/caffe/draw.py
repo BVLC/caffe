@@ -92,11 +92,11 @@ def choose_color_by_layertype(layertype):
     """Define colors for nodes based on the layer type
     """
     color = '#6495ED'  # Default
-    if layertype == 'Convolution':
+    if layertype == 'CONVOLUTION':
         color = '#FF5050'
-    elif layertype == 'Pooling':
+    elif layertype == 'POOLING':
         color = '#FF9900'
-    elif layertype == 'InnerProduct':
+    elif layertype == 'INNER_PRODUCT':
         color = '#CC33FF'
     return color
 
@@ -105,9 +105,10 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
   pydot_graph = pydot.Dot(caffe_net.name, graph_type='digraph', rankdir=rankdir)
   pydot_nodes = {}
   pydot_edges = []
-  for layer in caffe_net.layer:
+  for layer in caffe_net.layers:
     name = layer.name
-    layertype = layer.type
+    layertype_num = layer.type
+    layertype = layer.LayerType.DESCRIPTOR.values_by_number[layertype_num].name
     node_label = determine_node_label_by_layertype(layer, layertype, rankdir)
     if (len(layer.bottom) == 1 and len(layer.top) == 1 and
         layer.bottom[0] == layer.top[0]):
