@@ -13,7 +13,7 @@ void ReshapeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   channels_ = reshape_param.channels();
   height_ = reshape_param.height();
   width_ = reshape_param.width();
-  count_ = bottom[0]->num() * channels_out;
+  count_ = bottom[0]->num() * channels_ * height_ * width_;
   CHECK_EQ(count_, bottom[0]->count());
   CHECK_EQ(count_, top[0]->count());
 }
