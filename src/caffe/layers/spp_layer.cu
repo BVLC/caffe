@@ -71,6 +71,87 @@ __global__ void SPPForward(const int nthreads, const Dtype* bottom_data,
   }
 }
 
+
+template <typename Dtype>
+__global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
+    const Dtype* bottom_window_data, const int num, const int channels,
+    const int height, const int width, const int kernel_depth,
+    const int output_size, const int bottom_height, Dtype* top_data, int* mask,
+    Dtype* top_mask) {
+
+  CUDA_KERNEL_LOOP(index, nthreads) {
+    int non_channel_index = index % output_size;
+    int j = 0;
+    // Shift holds the total of kernels at step i.
+    int shift = 0;
+    int next_shift = 1;
+    while (non_channel_index >= next_shift) {
+      shift = next_shift;
+      ++j;
+      next_shift += (1 << j) * (1 << j);
+    }
+    int shifted_index = non_channel_index - shift;
+    int num_pools = 1 << j;
+    int pw = shifted_index % num_pools;
+    int ph = (shifted_index / num_pools) % num_pools;
+    int w = (index / output_size) % bottom_height;
+    // 4 = number of coordinates per row. 227 = width of original image.
+    int window_x = bottom_window_data[w * 4] * width / 227;
+    int window_y = bottom_window_data[w * 4 + 1] * height / 227;
+    int window_w = bottom_window_data[w * 4 + 2] * width / 227;
+    int window_h = bottom_window_data[w * 4 + 3] * height / 227;
+    int c = (index / output_size / bottom_height) % channels;
+    int n = index / output_size / bottom_height / channels;
+    if (debug) {
+      printf("Forwrard "
+          "Index: %d\t"
+          "Shifted Index: %d\t"
+          "Num Pools: %d\t"
+          "PW: %d\t"
+          "PH: %d\t"
+          "W: %d\t"
+          "window_x: %d\t"
+          "window_y: %d\t"
+          "window_w: %d\t"
+          "window_h: %d\t"
+          "c: %d\t"
+          "n: %d\t"
+          "kernel_d: %d\t"
+          "OS: %d\n", index, shifted_index, num_pools, pw, ph,
+          w, window_x, window_y, window_w, window_h, c, n, kernel_depth,
+          output_size);
+    }
+    // Using fractional heights to better represent smaller sections instead of
+    // defaulting to repeating the end pixels over and over.
+    float kernel_h = height * 1.0f / num_pools;
+    float kernel_w = width * 1.0f / num_pools;
+    int hstart = int(ph * kernel_h) + window_y;
+    int wstart = int(pw * kernel_w) + window_x;
+    int kernel_h_int = kernel_h < 0 ? 1 : int(kernel_h);
+    int kernel_w_int = kernel_w < 0 ? 1 : int(kernel_w);
+    int hend = min(hstart + kernel_h_int, window_h);
+    int wend = min(wstart + kernel_w_int, window_w);
+    Dtype maxval = -FLT_MAX;
+    int maxidx = -1;
+    bottom_data += (n * channels + c) * height * width;
+    for (int h = hstart; h < hend; ++h) {
+      for (int w = wstart; w < wend; ++w) {
+        if (bottom_data[h * width + w] > maxval) {
+          maxidx = h * width + w;
+          maxval = bottom_data[maxidx];
+        }
+      }
+    }
+    top_data[index] = maxval;
+    if (mask) {
+      mask[index] = maxidx;
+    } else {
+      top_mask[index] = maxidx;
+    }
+  }
+}
+
+
 template <typename Dtype>
 void SPPLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -86,10 +167,21 @@ void SPPLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
     mask = max_idx_.mutable_gpu_data();
   }
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  SPPForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom_data, bottom[0]->num(), channels_,
-      height_, width_, kernel_depth_, output_size_, top_data, mask, top_mask);
+  if (bottom.size() > 1) {
+    // Windowed case
+    const Dtype* bottom_window_data = bottom[1]->gpu_data();
+    SPPForwardWindowed<Dtype><<<CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS>>>(
+            count, bottom_data, bottom_window_data, bottom[0]->num(), channels_,
+            height_, width_, kernel_depth_, output_size_, bottom[1]->height(),
+            top_data, mask, top_mask);
+
+  } else {
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    SPPForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, bottom_data, bottom[0]->num(), channels_,
+        height_, width_, kernel_depth_, output_size_, top_data, mask, top_mask);
+  }
 
   CUDA_POST_KERNEL_CHECK;
 }
