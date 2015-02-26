@@ -16,10 +16,10 @@ __global__ void SPPForward(const int nthreads, const Dtype* bottom_data,
     const int width, const int kernel_depth, const int output_size,
     Dtype* top_data, int* mask, Dtype* top_mask) {
 
-  // Shift holds the total of kernels at step i.
   CUDA_KERNEL_LOOP(index, nthreads) {
     int non_channel_index = index % output_size;
     int j = 0;
+    // Shift holds the total of kernels at step i.
     int shift = 0;
     int next_shift = 1;
     while (non_channel_index >= next_shift) {
