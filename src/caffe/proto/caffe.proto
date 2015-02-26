@@ -246,7 +246,6 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 131 (last added: python_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -289,6 +288,7 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
+  // Next ID: 133
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional ConcatParameter concat_param = 104;
@@ -306,6 +306,7 @@ message LayerParameter {
   optional InfogainLossParameter infogain_loss_param = 116;
   optional InnerProductParameter inner_product_param = 117;
   optional LRNParameter lrn_param = 118;
+  optional MaskParameter mask_param = 132;
   optional MemoryDataParameter memory_data_param = 119;
   optional MVNParameter mvn_param = 120;
   optional PoolingParameter pooling_param = 121;
@@ -315,6 +316,7 @@ message LayerParameter {
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SliceParameter slice_param = 126;
+  optional SPPParameter spp_param = 131;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
@@ -609,6 +611,13 @@ message PoolingParameter {
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
 }
+
+
+// Message that stores parameters used by SPPLayer
+message SPPParameter {
+  optional uint32 kernel_depth = 1; // The kernel depth (implies (2^n)^2 pools in the smallest pool.)
+}
+
 
 // Message that stores parameters used by PowerLayer
 message PowerParameter {

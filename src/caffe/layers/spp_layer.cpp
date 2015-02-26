@@ -16,7 +16,7 @@ using std::max;
 
 template <typename Dtype>
 void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   SPPParameter spp_param = this->layer_param_.spp_param();
   CHECK(spp_param.has_kernel_depth())
       << "Needs kernel depth.";
@@ -26,7 +26,7 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void SPPLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
@@ -37,29 +37,29 @@ void SPPLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < kernel_depth_; ++i) {
     output_size_ += (1 << i)* (1 << i) ;
   }
-  (*top)[0]->Reshape(bottom[0]->num(), channels_, output_size_, 1);
-  if (top->size() > 1) {
-    (*top)[1]->ReshapeLike(*(*top)[0]);
+  top[0]->Reshape(bottom[0]->num(), channels_, output_size_, 1);
+  if (top.size() > 1) {
+    top[1]->ReshapeLike(*top[0]);
   }
   // Holds the index where the max was found for backprop.
-  else if (top->size() == 1) {
+  else if (top.size() == 1) {
     max_idx_.Reshape(bottom[0]->num(), channels_, output_size_, 1);
   }
 }
 
 template <typename Dtype>
 void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
-  const int top_count = (*top)[0]->count();
+  Dtype* top_data = top[0]->mutable_cpu_data();
+  const int top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
-  const bool use_top_mask = top->size() > 1;
+  const bool use_top_mask = top.size() > 1;
   int* mask = NULL;  // suppress warnings about uninitalized variables
   Dtype* top_mask = NULL;
   // Initialize
   if (use_top_mask) {
-    top_mask = (*top)[1]->mutable_cpu_data();
+    top_mask = top[1]->mutable_cpu_data();
     caffe_set(top_count, Dtype(-1), top_mask);
   } else {
     mask = max_idx_.mutable_cpu_data();
@@ -102,11 +102,11 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
       // compute offset
       bottom_data += bottom[0]->offset(0, 1);
-      top_data += (*top)[0]->offset(0, 1);
+      top_data += top[0]->offset(0, 1);
       if (use_top_mask) {
-        top_mask += (*top)[0]->offset(0, 1);
+        top_mask += top[0]->offset(0, 1);
       } else {
-        mask += (*top)[0]->offset(0, 1);
+        mask += top[0]->offset(0, 1);
       }
     }
   }
@@ -114,13 +114,13 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
   }
   const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
-  caffe_set((*bottom)[0]->count(), Dtype(0), bottom_diff);
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;  // suppress warnings about uninitialized variables
@@ -138,7 +138,7 @@ void SPPLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             use_top_mask ? top_mask[i] : mask[i];
         bottom_diff[bottom_index] += top_diff[i];
       }
-      bottom_diff += (*bottom)[0]->offset(0, 1);
+      bottom_diff += bottom[0]->offset(0, 1);
       top_diff += top[0]->offset(0, 1);
       if (use_top_mask) {
         top_mask += top[0]->offset(0, 1);
