@@ -288,6 +288,7 @@ class ReshapeLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  int count_;
   int channels_;
   int height_;
   int width_;
