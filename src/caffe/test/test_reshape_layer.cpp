@@ -19,7 +19,7 @@ class ReshapeLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   ReshapeLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
-        blob_top_(new Blob<Dtype>()) {
+        blob_top_(new Blob<Dtype>(2,3,5,6)) {
     Caffe::set_random_seed(1701);
     // fill the values
     FillerParameter filler_param;
