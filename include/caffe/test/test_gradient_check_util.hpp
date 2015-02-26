@@ -26,12 +26,15 @@ class GradientChecker {
       const unsigned int seed = 1701, const Dtype kink = 0.,
       const Dtype kink_range = -1)
       : stepsize_(stepsize), threshold_(threshold), seed_(seed),
-        kink_(kink), kink_range_(kink_range) {}
+        kink_(kink), kink_range_(kink_range), epsilon_(0.0) {}
 
   // For layers that need a blob finder, allow it to be set.
   void SetBlobFinder(const BlobFinder<Dtype>& blob_finder) {
     blob_finder_ = blob_finder;
   }
+
+  // Extra allowed error in the exhaustive gradient compare.
+  void SetEpsilon(Dtype epsilon);
 
   // Checks the gradient of a layer, with provided bottom layers and top
   // layers.
@@ -72,8 +75,13 @@ class GradientChecker {
   Dtype kink_;
   Dtype kink_range_;
   BlobFinder<Dtype> blob_finder_;
+  Dtype epsilon_;
 };
 
+template <typename Dtype>
+void GradientChecker<Dtype>::SetEpsilon(Dtype epsilon) {
+  epsilon_ = epsilon;
+}
 
 template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
@@ -167,11 +175,13 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       //     << current_blob->cpu_diff()[feat_id];
       if (kink_ - kink_range_ > fabs(feature)
           || fabs(feature) > kink_ + kink_range_) {
+
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
         Dtype scale = std::max(
             std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
-        EXPECT_NEAR(computed_gradient, estimated_gradient, threshold_ * scale)
+        EXPECT_NEAR(computed_gradient, estimated_gradient,
+                    threshold_ * scale + epsilon_)
           << "debug: (top_id, top_data_id, blob_id, feat_id)="
           << top_id << "," << top_data_id << "," << blob_id << "," << feat_id
           << "; feat = " << feature
