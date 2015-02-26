@@ -155,6 +155,6 @@ STUB_GPU(SPPLayer);
 #endif
 
 INSTANTIATE_CLASS(SPPLayer);
-
+REGISTER_LAYER_CLASS(SPP);
 
 }  // namespace caffe
