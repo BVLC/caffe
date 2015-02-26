@@ -13,9 +13,6 @@ void ReshapeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   channels_ = reshape_param.channels();
   height_ = reshape_param.height();
   width_ = reshape_param.width();
-  CHECK_GE(channels_, 1);
-  CHECK_GE(height_, 1);
-  CHECK_GE(width_, 1);
 }
 
 template <typename Dtype>
