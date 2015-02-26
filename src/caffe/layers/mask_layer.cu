@@ -17,7 +17,6 @@ __global__ void MaskForward(
     int c = (index / width / height) % channels;
     int n = index / width / height / channels;
     Dtype true_mask_channel = bottom_data[index];
-    int mask_index_one = w + width * (h + height * (1 + mask_channels_count * (c + channels * n)));
     for (Dtype m = Dtype(0); m < mask_channels_count; ++m) {
       // Obvious Form:
       // int mask_index = n * (channels * mask_channels_count * height * width) +
@@ -49,14 +48,14 @@ void MaskLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void MaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*> bottom) {
-  for (int i = 0; i < bottom->size(); ++i) {
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  for (int i = 0; i < bottom.size(); ++i) {
     if (propagate_down[i]) {
       caffe_gpu_set(bottom[i]->count(), Dtype(0),
                     bottom[i]->mutable_gpu_data());
     }
   }
 }
-INSTANTIATE_CLASS(MaskLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(MaskLayer);
 
 }  // namespace caffe

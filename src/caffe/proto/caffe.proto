@@ -565,6 +565,11 @@ message LRNParameter {
   optional float k = 5 [default = 1.];
 }
 
+// Message that stores parameters used by MaskLayer
+message MaskParameter {
+  optional uint32 mask_channels_count = 1; // The number of channels to mask out.
+}
+
 // Message that stores parameters used by MemoryDataLayer
 message MemoryDataParameter {
   optional uint32 batch_size = 1;

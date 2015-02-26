@@ -198,6 +198,6 @@ void SPPLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   CUDA_POST_KERNEL_CHECK;
 }
 
-INSTANTIATE_CLASS(SPPLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(SPPLayer);
 
 }  // namespace caffe
