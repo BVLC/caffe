@@ -111,7 +111,7 @@ class Classifier(caffe.Net):
         # Classify
         out = self.forward_all(**{self.inputs[0]: caffe_in})
         multipreds = {}
-        for bname in self.ouputs:
+        for bname in self.outputs:
             multipreds[bname] = out[bname].squeeze(axis=(2,3))
             if oversample:
                 tmparray = multipreds[bname].reshape(
