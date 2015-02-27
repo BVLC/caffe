@@ -15,7 +15,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
     : param_(param), phase_(phase) {
   CHECK(param_.crop_size() == 0 ||
-        param_.crop_h() == 0 && param_.crop_w() == 0)
+        (param_.crop_h() == 0 && param_.crop_w() == 0))
         << "Crop size is crop_size OR crop_h and crop_w; not both";
   CHECK((param_.crop_h() != 0) == (param_.crop_w() != 0))
         << "For non-square crops both crop_h and crop_w are required.";
