@@ -77,8 +77,8 @@ template <typename Dtype>
 __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     const Dtype* bottom_window_data, const int num, const int channels,
     const int height, const int width, const int kernel_depth,
-    const int output_size, const int window_count, Dtype* top_data, int* mask,
-    Dtype* top_mask) {
+    const int output_size, const int window_count, const int image_w,
+    const int image_h, Dtype* top_data, int* mask, Dtype* top_mask) {
 
   CUDA_KERNEL_LOOP(index, nthreads) {
     int non_channel_index = index % output_size;
@@ -96,11 +96,11 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int pw = shifted_index % num_pools;
     int ph = (shifted_index / num_pools) % num_pools;
     int win = (index / output_size) % window_count;
-    // 4 = number of coordinates per row. 227 = width of original image.
-    int window_x = bottom_window_data[win * 4] * width / 227;
-    int window_y = bottom_window_data[win * 4 + 1] * height / 227;
-    int window_w = bottom_window_data[win * 4 + 2] * width / 227;
-    int window_h = bottom_window_data[win * 4 + 3] * height / 227;
+    // 4 = number of coordinates per row.
+    int window_x = bottom_window_data[win * 4] * width / image_w;
+    int window_y = bottom_window_data[win * 4 + 1] * height / image_h;
+    int window_w = bottom_window_data[win * 4 + 2] * width / image_w;
+    int window_h = bottom_window_data[win * 4 + 3] * height / image_h;
     int c = (index / output_size / window_count) % channels;
     int n = index / output_size / window_count / channels;
     if (debug) {
@@ -175,7 +175,7 @@ void SPPLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         CAFFE_CUDA_NUM_THREADS>>>(
             count, bottom_data, bottom_window_data, bottom[0]->num(), channels_,
             height_, width_, kernel_depth_, output_size_, bottom[1]->height(),
-            top_data, mask, top_mask);
+            image_w_, image_h_, top_data, mask, top_mask);
 
   } else {
     // NOLINT_NEXT_LINE(whitespace/operators)

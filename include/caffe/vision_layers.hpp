@@ -482,6 +482,7 @@ class SPPLayer : public Layer<Dtype> {
   int kernel_depth_;
   int output_size_;
   int height_, width_;
+  int image_w_, image_h_;
   int channels_;
   Blob<int> max_idx_;
 };

@@ -22,6 +22,8 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "Needs kernel depth.";
   kernel_depth_ = spp_param.kernel_depth();
   CHECK_GT(kernel_depth_, 0) << "Kernel depth cannot be zero.";
+  image_w_ = spp_param.image_w();
+  image_h_ = spp_param.image_h();
 }
 
 template <typename Dtype>
@@ -81,11 +83,11 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int c = 0; c < channels_; ++c) {
         for (int win = 0; win < window_count; ++win) {
           int pool_index = 0;
-          // 4 = number of coordinates per row. 227 = width of original image.
-          int window_x = bottom_window_data[win * 4] * width_ / 227;
-          int window_y = bottom_window_data[win * 4 + 1] * height_ / 227;
-          int window_w = bottom_window_data[win * 4 + 2] * width_ / 227;
-          int window_h = bottom_window_data[win * 4 + 3] * height_ / 227;
+          // 4 = number of coordinates per row.
+          int window_x = bottom_window_data[win * 4] * width_ / image_w_;
+          int window_y = bottom_window_data[win * 4 + 1] * height_ / image_h_;
+          int window_w = bottom_window_data[win * 4 + 2] * width_ / image_w_;
+          int window_h = bottom_window_data[win * 4 + 3] * height_ / image_h_;
           for (int d = 0; d < kernel_depth_; ++d) {
             int num_pools = std::pow(2, d);
             // Using fractional heights to better represent smaller sections

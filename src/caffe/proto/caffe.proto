@@ -621,6 +621,8 @@ message PoolingParameter {
 // Message that stores parameters used by SPPLayer
 message SPPParameter {
   optional uint32 kernel_depth = 1; // The kernel depth (implies (2^n)^2 pools in the smallest pool.)
+  optional uint32 image_w = 2; // The width of the original image.
+  optional uint32 image_h = 3; // The height of the original image.
 }
 
 
