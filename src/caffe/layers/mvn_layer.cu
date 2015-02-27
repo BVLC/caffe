@@ -103,8 +103,10 @@ template <typename Dtype>
 void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* top_diff = top[0]->gpu_diff();
-  const Dtype* top_data = top[0]->gpu_data();
+
+  Blob<Dtype>* top_blob = blob_helper_.DataBlob(top);
+  const Dtype* top_diff = top_blob->gpu_diff();
+  const Dtype* top_data = top_blob->gpu_data();
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
@@ -163,12 +165,17 @@ void MVNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
     caffe_gpu_div(temp_.count(), bottom_diff, temp_.gpu_data(), bottom_diff);
   } else {
-    caffe_copy(temp_.count(), top_diff, bottom_diff);
+    caffe_gpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, top_diff,
+            sum_multiplier_.gpu_data(), 0., mean_.mutable_gpu_diff());  // EX
+
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
+            mean_.gpu_diff(), sum_multiplier_.gpu_data(), 0.,
+            temp_.mutable_gpu_diff());
+
+    caffe_gpu_add(temp_.count(), top_diff, temp_.gpu_diff(), bottom_diff);
   }
 }
 
-
 INSTANTIATE_LAYER_GPU_FUNCS(MVNLayer);
-
 
 }  // namespace caffe

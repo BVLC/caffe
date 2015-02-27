@@ -156,8 +156,10 @@ template <typename Dtype>
 void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* top_diff = top[0]->cpu_diff();
-  const Dtype* top_data = top[0]->cpu_data();
+
+  Blob<Dtype>* top_blob = blob_helper_.DataBlob(top);
+  const Dtype* top_diff = top_blob->cpu_diff();
+  const Dtype* top_data = top_blob->cpu_data();
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
 
@@ -215,7 +217,13 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
     caffe_div(temp_.count(), bottom_diff, temp_.cpu_data(), bottom_diff);
   } else {
-    caffe_copy(temp_.count(), top_diff, bottom_diff);
+    caffe_cpu_gemv<Dtype>(CblasNoTrans, num, dim, 1. / dim, top_diff,
+            sum_multiplier_.cpu_data(), 0., mean_.mutable_cpu_data());  // EX
+
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim, 1, -1.,
+            mean_.cpu_data(), sum_multiplier_.cpu_data(), 0.,
+            temp_.mutable_cpu_data());
+    caffe_add(temp_.count(), top_diff, temp_.cpu_data(), bottom_diff);
   }
 }
 

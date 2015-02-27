@@ -348,7 +348,7 @@ TYPED_TEST(MVNLayerTest, TestGradientMeanOnly) {
           "mvn_param{normalize_variance: false}", &layer_param));
   MVNLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.SetEpsilon(2e-1);
+//  checker.SetEpsilon(2e-1);
   checker.SetBlobFinder(this->blob_finder_);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
