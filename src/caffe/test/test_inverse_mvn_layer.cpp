@@ -477,6 +477,56 @@ TYPED_TEST(InverseMVNLayerTest, TestForward_MeanOnly) {
   }
 }
 
+TYPED_TEST(InverseMVNLayerTest, TestGradientAcrossChannels) {
+  typedef typename TypeParam::Dtype Dtype;
+
+  LayerParameter mvn_layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "mvn_param { mean_blob: \"mean_a\" variance_blob: \"variance_a\" "
+      " normalize_variance: true  across_channels: true   } "
+      " top: \"normalized\" top: \"variance_a\" top: \"mean_a\" ",
+          &mvn_layer_param));
+
+  MVNLayer<Dtype> mvn_layer(mvn_layer_param);
+  mvn_layer.SetUp(this->mvn_bottom_blob_vec_, this->mvn_blob_top_vec_,
+                  this->blob_finder_);
+
+  LayerParameter inverse_mvn_layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "mvn_param { mean_blob: \"mean_a\" variance_blob: \"variance_a\" "
+      " normalize_variance: true   across_channels: true } "
+      " bottom: \"normalized\" bottom: \"variance_a\" bottom: \"mean_a\" "
+      " top: \"unnormalized\"", &inverse_mvn_layer_param));
+  InverseMVNLayer<Dtype> inverse_mvn_layer(inverse_mvn_layer_param);
+  inverse_mvn_layer.SetUp(this->inverse_mvn_bottom_blob_vec_,
+                           this->inverse_mvn_blob_top_vec_,
+                          this->blob_finder_);
+
+  // Run the blob forward through the MVN layer.
+  mvn_layer.Forward(this->mvn_bottom_blob_vec_,
+                this->mvn_blob_top_vec_);
+
+  // Run the output of the MVN layer forward through the Inverse MVN layer.
+  inverse_mvn_layer.Forward(this->inverse_mvn_bottom_blob_vec_,
+                this->inverse_mvn_blob_top_vec_);
+
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.SetBlobFinder(this->blob_finder_);
+
+  int blob_index_to_check = -1;
+  for (int index = 0; index < this->inverse_mvn_bottom_blob_vec_.size();
+       ++index) {
+    if (this->inverse_mvn_bottom_blob_vec_[index] ==
+         this->blob_finder_.PointerFromName("normalized")) {
+      blob_index_to_check = index;
+    }
+  }
+
+  checker.CheckGradientExhaustive(&inverse_mvn_layer,
+      this->inverse_mvn_bottom_blob_vec_,
+      this->inverse_mvn_blob_top_vec_, blob_index_to_check);
+}
+
 TYPED_TEST(InverseMVNLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
 
@@ -493,7 +543,7 @@ TYPED_TEST(InverseMVNLayerTest, TestGradient) {
   LayerParameter inverse_mvn_layer_param;
   CHECK(google::protobuf::TextFormat::ParseFromString(
       "mvn_param { mean_blob: \"mean_a\" variance_blob: \"variance_a\" "
-      " normalize_variance: true   } "
+      " normalize_variance: true  } "
       " bottom: \"normalized\" bottom: \"variance_a\" bottom: \"mean_a\" "
       " top: \"unnormalized\"", &inverse_mvn_layer_param));
   InverseMVNLayer<Dtype> inverse_mvn_layer(inverse_mvn_layer_param);
