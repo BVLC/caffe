@@ -999,6 +999,7 @@ message V1LayerParameter {
     CONCAT = 3;
     CONTRASTIVE_LOSS = 37;
     CONVOLUTION = 4;
+    CROP = 40;
     DATA = 5;
     DECONVOLUTION = 39;
     DROPOUT = 6;

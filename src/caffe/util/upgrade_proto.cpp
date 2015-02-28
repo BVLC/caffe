@@ -476,6 +476,8 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     return V1LayerParameter_LayerType_CONCAT;
   } else if (type == "conv") {
     return V1LayerParameter_LayerType_CONVOLUTION;
+  } else if (type == "crop") {
+    return V1LayerParameter_LayerType_CROP;
   } else if (type == "data") {
     return V1LayerParameter_LayerType_DATA;
   } else if (type == "dropout") {
@@ -853,6 +855,8 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     return "ContrastiveLoss";
   case V1LayerParameter_LayerType_CONVOLUTION:
     return "Convolution";
+  case V1LayerParameter_LayerType_CROP:
+    return "Crop";
   case V1LayerParameter_LayerType_DECONVOLUTION:
     return "Deconvolution";
   case V1LayerParameter_LayerType_DATA:
