@@ -4,33 +4,8 @@
 #include <exception>
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
-#include <glog/logging.h>
-
-// avoid fatal checks from glog
-#define CAFFE_THROW_ON_ERROR
-#ifdef CAFFE_THROW_ON_ERROR
-#undef CHECK
-#undef CHECK_OP_LOG
-#include <sstream>
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
-		 ( std::ostringstream() << std::dec << x ) ).str()
-class CaffeErrorException : public std::exception
-{
-public:
-  CaffeErrorException(const std::string &s):_s(s) {}
-  ~CaffeErrorException() throw() {}
-  const char* what() const throw() { return _s.c_str(); }
-  std::string _s;
-};
-
-#define CHECK(condition)						\
-  if (GOOGLE_PREDICT_BRANCH_NOT_TAKEN(!(condition)))			\
-    throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Check failed (custom): " #condition ""); \
-  LOG_IF(ERROR, false) \
-  << "Check failed (custom): " #condition " "
-
-#define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1) op (val2))
-#endif
+//#include <glog/logging.h>
+#include "llogging.h"
 
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
