@@ -665,6 +665,12 @@ message PowerParameter {
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
+  // This value is set to the attribute `param_str_` of your custom
+  // `PythonLayer` object in Python before calling `setup()` method. This could
+  // be a number, a string, a dictionary in Python dict format or JSON etc. You
+  // may parse this string in `setup` method and use them in `forward` and
+  // `backward`.
+  optional string param_str = 3 [default = ''];
 }
 
 // Message that stores parameters used by ReLULayer
