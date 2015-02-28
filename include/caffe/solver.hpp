@@ -1,6 +1,8 @@
 #ifndef CAFFE_OPTIMIZATION_SOLVER_HPP_
 #define CAFFE_OPTIMIZATION_SOLVER_HPP_
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 #include <string>
 #include <vector>
 
@@ -26,7 +28,8 @@ class Solver {
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
-  void Step(int iters);
+  void Step(int iters,
+            boost::posix_time::ptime stop_time = boost::posix_time::pos_infin);
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
