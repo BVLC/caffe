@@ -23,8 +23,10 @@ class TemporaryMemory {
   explicit TemporaryMemory(size_t size);
   ~TemporaryMemory();
 
-  void acquire();
-  void release();
+  void acquire_gpu();
+  void release_gpu();
+  void acquire_cpu();
+  void release_cpu();
   const Dtype* cpu_data() const;
   const Dtype* gpu_data() const;
   Dtype* mutable_cpu_data();

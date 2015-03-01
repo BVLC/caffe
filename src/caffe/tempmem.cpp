@@ -52,6 +52,10 @@ class GlobalTemporaryMemory {
       TemporaryMemoryAllocator<gpu>::free(data_);
   }
   void * lock() {
+    // Note: If we expect a concurrrent access, we might need to
+    //       make this check atomic
+    //       We might also want to keep a thread_local temp memory
+    //       around.
     CHECK(!is_locked_) << "Temporary memory is already locked!";
     is_locked_ = true;
     if (!data_)  // We allocate here to make Travis happy
@@ -81,12 +85,6 @@ static GlobalTemporaryMemory<true> gpu_memory_;
 #endif
 static GlobalTemporaryMemory<false> cpu_memory_;
 
-#ifdef CPU_ONLY
-#define GMEM(x) cpu_memory_.x
-#else
-#define GMEM(x) gpu_memory_.x; cpu_memory_.x
-#endif
-
 template<typename Dtype>
 TemporaryMemory<Dtype>::TemporaryMemory(size_t size):cpu_ptr_(NULL),
   gpu_ptr_(NULL), size_(0) {
@@ -97,16 +95,30 @@ TemporaryMemory<Dtype>::~TemporaryMemory() {
 }
 
 template<typename Dtype>
-void TemporaryMemory<Dtype>::acquire() {
-#ifndef CPU_ONLY
-  gpu_ptr_ = gpu_memory_.lock<Dtype>();
-#endif
+void TemporaryMemory<Dtype>::acquire_cpu() {
   cpu_ptr_ = cpu_memory_.lock<Dtype>();
 }
 template<typename Dtype>
-void TemporaryMemory<Dtype>::release() {
-  GMEM(unlock());
-  gpu_ptr_ = cpu_ptr_ = NULL;
+void TemporaryMemory<Dtype>::acquire_gpu() {
+#ifdef CPU_ONLY
+  NO_GPU;
+#else
+  gpu_ptr_ = gpu_memory_.lock<Dtype>();
+#endif
+}
+template<typename Dtype>
+void TemporaryMemory<Dtype>::release_cpu() {
+  cpu_memory_.unlock();
+  cpu_ptr_ = NULL;
+}
+template<typename Dtype>
+void TemporaryMemory<Dtype>::release_gpu() {
+#ifdef CPU_ONLY
+  NO_GPU;
+#else
+  gpu_memory_.unlock();
+  gpu_ptr_ = NULL;
+#endif
 }
 template<typename Dtype>
 const Dtype* TemporaryMemory<Dtype>::cpu_data() const {
@@ -131,7 +143,10 @@ Dtype* TemporaryMemory<Dtype>::mutable_gpu_data() {
 template<typename Dtype>
 void TemporaryMemory<Dtype>::resize(size_t size) {
   size_ = size;
-  GMEM(allocate(size_*sizeof(Dtype)));
+#ifndef CPU_ONLY
+  gpu_memory_.allocate(size_*sizeof(Dtype));
+#endif
+  cpu_memory_.allocate(size_*sizeof(Dtype));
 }
 
 INSTANTIATE_CLASS(TemporaryMemory);
@@ -139,4 +154,3 @@ template class TemporaryMemory<int>;
 template class TemporaryMemory<unsigned int>;
 
 }  // namespace caffe
-
