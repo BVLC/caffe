@@ -14,3 +14,4 @@ python-dateutil>=1.4,<2
 protobuf>=2.5.0
 python-gflags>=2.0
 pyyaml>=3.10
+Pillow>=2.7.0
