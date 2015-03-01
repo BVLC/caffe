@@ -54,13 +54,13 @@ class GlobalTemporaryMemory {
   void * lock() {
     CHECK(!is_locked_) << "Temporary memory is already locked!";
     is_locked_ = true;
+    if (!data_)  // We allocate here to make Travis happy
+      data_ = TemporaryMemoryAllocator<gpu>::calloc(size_+1);
     return data_;
   }
   template<typename Dtype>
   Dtype * lock() {
-    CHECK(!is_locked_) << "Temporary memory is already locked!";
-    is_locked_ = true;
-    return static_cast<Dtype*>(data_);
+    return static_cast<Dtype*>(lock());
   }
   void unlock() {
     is_locked_ = false;
@@ -68,10 +68,11 @@ class GlobalTemporaryMemory {
   void allocate(size_t size) {
     if (size_ < size) {
       CHECK(!is_locked_) << "Cannot allocate memory while locked!";
-      if (data_)
-        TemporaryMemoryAllocator<gpu>::free(data_);
       size_ = size;
-      data_ = TemporaryMemoryAllocator<gpu>::calloc(size_);
+      if (data_) {
+        TemporaryMemoryAllocator<gpu>::free(data_);
+        data_ = TemporaryMemoryAllocator<gpu>::calloc(size_);
+      }
     }
   }
 };
