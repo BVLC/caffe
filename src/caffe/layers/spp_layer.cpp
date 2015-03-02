@@ -122,8 +122,8 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           }
         }
         // compute offset
-        std::cout << "Bottom offset: " << bottom[0]->offset(0, 1);
-        std::cout << "Top offset: " << top[0]->offset(0, 1);
+        // std::cout << "Bottom offset: " << bottom[0]->offset(0, 1);
+        // std::cout << "Top offset: " << top[0]->offset(0, 1);
         bottom_data += bottom[0]->offset(0, 1);
         top_data += top[0]->offset(0, 1);
         if (use_top_mask) {
@@ -178,8 +178,8 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           }
         }
         // compute offset
-        std::cout << "Bottom offset: " << bottom[0]->offset(0, 1);
-        std::cout << "Top offset: " << top[0]->offset(0, 1);
+        // std::cout << "Bottom offset: " << bottom[0]->offset(0, 1);
+        // std::cout << "Top offset: " << top[0]->offset(0, 1);
         bottom_data += bottom[0]->offset(0, 1);
         top_data += top[0]->offset(0, 1);
         if (use_top_mask) {
