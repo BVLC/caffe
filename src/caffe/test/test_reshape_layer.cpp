@@ -72,6 +72,9 @@ TYPED_TEST(ReshapeLayerTest, Test) {
 TYPED_TEST(ReshapeLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
+  layer_param.mutable_reshape_param()->set_channels(3);
+  layer_param.mutable_reshape_param()->set_height(5);
+  layer_param.mutable_reshape_param()->set_width(6);
   ReshapeLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
