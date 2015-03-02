@@ -1,9 +1,13 @@
+#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/mutex.hpp>
 #include <cstring>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/tempmem.hpp"
 #include "caffe/util/math_functions.hpp"
-
 namespace caffe {
 
 template<bool gpu>
@@ -41,43 +45,70 @@ struct TemporaryMemoryAllocator<false> {
 template<bool gpu>
 class GlobalTemporaryMemory {
  private:
-  size_t size_;
-  void * data_;
-  bool is_locked_;
+  class Block{
+   private:
+    Block(const Block& o):data_(NULL), size_(0), is_locked_(false) {}
+
+   public:
+    void * data_;
+    size_t size_;
+    bool is_locked_;
+    Block():data_(NULL), size_(0), is_locked_(false) {}
+    ~Block() {
+      if (data_)
+        TemporaryMemoryAllocator<gpu>::free(data_);
+    }
+    void * try_lock(size_t max_size) {
+      if (is_locked_) return NULL;
+      is_locked_ = true;
+      if (size_ < max_size) {
+        size_ = max_size;
+        if (data_)
+          TemporaryMemoryAllocator<gpu>::free(data_);
+        data_ = TemporaryMemoryAllocator<gpu>::calloc(size_);
+      }
+      return data_;
+    }
+    void unlock() {
+      is_locked_ = false;
+    }
+  };
+  std::vector< boost::shared_ptr<Block> > blocks_;
+  size_t max_size_;
+  boost::mutex mtx_;
+  GlobalTemporaryMemory(const GlobalTemporaryMemory & o):max_size_(0) {}
 
  public:
-  GlobalTemporaryMemory():size_(0), data_(NULL), is_locked_(false) {}
-  ~GlobalTemporaryMemory() {
-    if (data_)
-      TemporaryMemoryAllocator<gpu>::free(data_);
-  }
+  GlobalTemporaryMemory():max_size_(0) {}
   void * lock() {
-    // Note: If we expect a concurrrent access, we might need to
-    //       make this check atomic
-    //       We might also want to keep a thread_local temp memory
-    //       around.
-    CHECK(!is_locked_) << "Temporary memory is already locked!";
-    is_locked_ = true;
-    if (!data_)  // We allocate here to make Travis happy
-      data_ = TemporaryMemoryAllocator<gpu>::calloc(size_+1);
-    return data_;
+    // Note: Currently concurrent accesses allocate duplicate memory of
+    //       max_size_ in order to reduce the need to reallocate memory
+    //       This might be a bit wasteful.
+    boost::lock_guard<boost::mutex> guard(mtx_);
+    for (int i = 0; i < blocks_.size(); i++) {
+      void * r = blocks_[i]->try_lock(max_size_);
+      if (r) return r;
+    }
+    blocks_.push_back(boost::make_shared<Block>());
+    return blocks_.back()->try_lock(max_size_);
   }
   template<typename Dtype>
   Dtype * lock() {
     return static_cast<Dtype*>(lock());
   }
-  void unlock() {
-    is_locked_ = false;
+  void unlock(void * mem) {
+    boost::lock_guard<boost::mutex> guard(mtx_);
+    for (int i = 0; i < blocks_.size(); i++)
+      if (blocks_[i]->is_locked_ && blocks_[i]->data_ == mem) {
+        blocks_[i]->unlock();
+        return;
+      }
+    LOG(WARNING) << "Unlock failed! Lost the memory block!";
   }
   void allocate(size_t size) {
-    if (size_ < size) {
-      CHECK(!is_locked_) << "Cannot allocate memory while locked!";
-      size_ = size;
-      if (data_) {
-        TemporaryMemoryAllocator<gpu>::free(data_);
-        data_ = TemporaryMemoryAllocator<gpu>::calloc(size_);
-      }
-    }
+    boost::lock_guard<boost::mutex> guard(mtx_);
+    if (size > max_size_)
+      max_size_ = size;
   }
 };
 #ifndef CPU_ONLY
@@ -97,6 +128,7 @@ TemporaryMemory<Dtype>::~TemporaryMemory() {
 template<typename Dtype>
 void TemporaryMemory<Dtype>::acquire_cpu() {
   cpu_ptr_ = cpu_memory_.lock<Dtype>();
+  CHECK(cpu_ptr_ != NULL) << "acquire failed!";
 }
 template<typename Dtype>
 void TemporaryMemory<Dtype>::acquire_gpu() {
@@ -104,11 +136,13 @@ void TemporaryMemory<Dtype>::acquire_gpu() {
   NO_GPU;
 #else
   gpu_ptr_ = gpu_memory_.lock<Dtype>();
+  CHECK(gpu_ptr_ != NULL) << "acquire failed!";
 #endif
 }
 template<typename Dtype>
 void TemporaryMemory<Dtype>::release_cpu() {
-  cpu_memory_.unlock();
+  CHECK(cpu_ptr_ != NULL) << "Need to allocate and acquire the data first";
+  cpu_memory_.unlock(cpu_ptr_);
   cpu_ptr_ = NULL;
 }
 template<typename Dtype>
@@ -116,7 +150,8 @@ void TemporaryMemory<Dtype>::release_gpu() {
 #ifdef CPU_ONLY
   NO_GPU;
 #else
-  gpu_memory_.unlock();
+  CHECK(gpu_ptr_ != NULL) << "Need to allocate and acquire the data first";
+  gpu_memory_.unlock(gpu_ptr_);
   gpu_ptr_ = NULL;
 #endif
 }
