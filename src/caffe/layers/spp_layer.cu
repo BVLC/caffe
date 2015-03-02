@@ -6,8 +6,8 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-#define DEBUG debug && index < 100
-#define debug 0
+#define DEBUG debug && index > 6881000 && index < 6882000
+#define debug 1
 #define MAX(A,B) A > B ? A : B
 #define MIN(A,B) A < B ? A : B
 
@@ -97,15 +97,19 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int shifted_index = non_channel_index - shift;
     int num_pools = 1 << j;
     int pw = shifted_index % num_pools;
-    int ph = (shifted_index / num_pools) % num_pools;
+    int ph = shifted_index / num_pools;
+
+    int c = (index / output_size / window_count) % channels;
+    int n = index / output_size / window_count / channels;
+
     int win = (index / output_size) % window_count;
     // 4 = number of coordinates per row.
+    bottom_window_data += n * 4;
     int window_x = bottom_window_data[win * 4] * width / image_w;
     int window_y = bottom_window_data[win * 4 + 1] * height / image_h;
     int window_w = MAX((bottom_window_data[win * 4 + 2] * width / image_w), 1);
     int window_h = MAX((bottom_window_data[win * 4 + 3] * height / image_h), 1);
-    int c = (index / output_size / window_count) % channels;
-    int n = index / output_size / window_count / channels;
+
     if (DEBUG) {
       printf("Forward "
           "Index: %d\t"
@@ -119,12 +123,9 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           "window_w: %d\t"
           "window_h: %d\t"
           "c: %d\t"
-          "channels: %d\t"
-          "n: %d\t"
-          "kernel_d: %d\t"
-          "OS: %d\n", index, shifted_index, num_pools, pw, ph,
-          win, window_x, window_y, window_w, window_h, c, channels, n, kernel_depth,
-          output_size);
+          "n: %d\n",
+          index, shifted_index, num_pools, pw, ph,
+          win, window_x, window_y, window_w, window_h, c, n);
     }
     // Using fractional heights to better represent smaller sections instead of
     // defaulting to repeating the end pixels over and over.
@@ -137,24 +138,18 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int hend = MIN(MIN(hstart + kernel_h_int, height), window_y + window_h);
     int wend = MIN(MIN(wstart + kernel_w_int, width), window_x + window_w);
     Dtype maxval = -FLT_MAX;
-    if (index < 1000 && (hend - hstart < 1 || wend - wstart < 1)) {
+    if (DEBUG && (hend - hstart < 1 || wend - wstart < 1)) {
       printf("No work\n");
     }
     int maxidx = -1;
     bottom_data += (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
-        if (DEBUG) {
-          printf("Val: %f\n", bottom_data[h * width + w]);
-        }
         if (bottom_data[h * width + w] > maxval) {
           maxidx = h * width + w;
           maxval = bottom_data[maxidx];
         }
       }
-    }
-    if (DEBUG) {
-      printf("Max Val: %f\n", maxval);
     }
     top_data[index] = maxval;
     if (mask) {
