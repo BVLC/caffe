@@ -21,6 +21,7 @@ template <typename Dtype>
 void ReshapeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   top[0]->Reshape(bottom[0]->num(), channels_, height_, width_);
+  CHECK_EQ(bottom[0]->num(), top[0]->num());
   CHECK_EQ(channels_, top[0]->channels());
   CHECK_EQ(height_, top[0]->height());
   CHECK_EQ(width_, top[0]->width());

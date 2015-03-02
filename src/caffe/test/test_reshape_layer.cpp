@@ -54,6 +54,9 @@ TYPED_TEST(ReshapeLayerTest, TestSetup) {
 TYPED_TEST(ReshapeLayerTest, Test) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
+  layer_param.mutable_reshape_param()->set_channels(3);
+  layer_param.mutable_reshape_param()->set_height(5);
+  layer_param.mutable_reshape_param()->set_width(6);
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
