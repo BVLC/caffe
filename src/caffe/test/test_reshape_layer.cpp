@@ -1,5 +1,6 @@
 #include <cstring>
 #include <vector>
+#include <cmath>
 
 #include "gtest/gtest.h"
 
@@ -18,7 +19,7 @@ class ReshapeLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   ReshapeLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
+      : blob_bottom_(new Blob<Dtype>(2, 9, 1, 1)),
         blob_top_(new Blob<Dtype>()) {
     Caffe::set_random_seed(1701);
     // fill the values
@@ -40,15 +41,15 @@ TYPED_TEST_CASE(ReshapeLayerTest, TestDtypesAndDevices);
 TYPED_TEST(ReshapeLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.mutable_reshape_param()->set_channels(3);
-  layer_param.mutable_reshape_param()->set_height(5);
-  layer_param.mutable_reshape_param()->set_width(6);
+  layer_param.mutable_reshape_param()->set_channels(1);
+  layer_param.mutable_reshape_param()->set_height(3);
+  layer_param.mutable_reshape_param()->set_width(3);
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->channels(), 3);
-  EXPECT_EQ(this->blob_top_->height(), 5);
-  EXPECT_EQ(this->blob_top_->width(), 6);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 3);
+  EXPECT_EQ(this->blob_top_->width(), 3);
 }
 
 TYPED_TEST(ReshapeLayerTest, Test) {
@@ -60,15 +61,11 @@ TYPED_TEST(ReshapeLayerTest, Test) {
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int n = 0; n < this->blob_top_->num(); ++n) {
-    for (int c = 0; c < this->blob_top_->channels(); ++n) {
-      for (int h = 0; h < this->blob_top_->height(); ++h) {
-        for (int w = 0; w < this->blob_top_->width(); ++w) {
-          EXPECT_EQ(this->blob_bottom_->data_at(n, c, h-w+1, (w+c)/2),
-                    this->blob_top_->data_at(n, c, h, w));
-        }
-      }
-    }
+  for (int n = 1; n <= 9; n++) {
+      EXPECT_EQ(this->blob_bottom_->data_at(1, n, 1, 1),
+                this->blob_top_->data_at(1, 1, n-(ceil(n/3)-1)*3,ceil(n/3)));
+      EXPECT_EQ(this->blob_bottom_->data_at(2, n, 1, 1),
+                this->blob_top_->data_at(2, 1, n-(ceil(n/3)-1)*3,ceil(n/3)));
   }
 }
 
