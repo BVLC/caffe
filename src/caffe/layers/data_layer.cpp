@@ -89,9 +89,17 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   // Reshape on single input batches for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
   const int crop_size = this->layer_param_.transform_param().crop_size();
+  bool force_color = this->layer_param_.data_param().force_encoded_color();
   if (batch_size == 1 && crop_size == 0) {
     Datum datum;
     datum.ParseFromString(cursor_->value());
+    if (datum.encoded()) {
+      if (force_color) {
+        DecodeDatum(&datum, true);
+      } else {
+        DecodeDatumNative(&datum);
+      }
+    }
     this->prefetch_data_.Reshape(1, datum.channels(),
         datum.height(), datum.width());
     this->transformed_data_.Reshape(1, datum.channels(),
@@ -104,7 +112,6 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
-  bool force_color = this->layer_param_.data_param().force_encoded_color();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
