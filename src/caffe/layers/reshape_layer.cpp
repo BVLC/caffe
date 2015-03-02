@@ -10,9 +10,9 @@ template <typename Dtype>
 void ReshapeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const ReshapeParameter& reshape_param = this->layer_param_.reshape_param();
-  channels_ = reshape_param.channels() > 0 ? reshape_param.channels() : bottom[0]->channels;
-  height_ = reshape_param.height() > 0 ? reshape_param.height() : bottom[0]->height;
-  width_ = reshape_param.width() > 0 ? reshape_param.width() : bottom[0]->width;
+  channels_ = reshape_param.channels() > 0 ? reshape_param.channels() : bottom[0]->channels();
+  height_ = reshape_param.height() > 0 ? reshape_param.height() : bottom[0]->height();
+  width_ = reshape_param.width() > 0 ? reshape_param.width() : bottom[0]->width();
   count_ = bottom[0]->num() * channels_ * height_ * width_;
   CHECK_EQ(count_, bottom[0]->count());
   CHECK_EQ(count_, top[0]->count());
