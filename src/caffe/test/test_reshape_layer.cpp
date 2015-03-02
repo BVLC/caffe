@@ -63,9 +63,9 @@ TYPED_TEST(ReshapeLayerTest, Test) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int n = 0; n < 9; ++n) {
       EXPECT_EQ(this->blob_bottom_->data_at(0, n, 0, 0),
-                this->blob_top_->data_at(0, 0, n-(floor(n/3))*3,floor(n/3)));
+                this->blob_top_->data_at(0, 0, floor(n/3), n-(floor(n/3))*3));
       EXPECT_EQ(this->blob_bottom_->data_at(1, n, 0, 0),
-                this->blob_top_->data_at(1, 0, n-(floor(n/3))*3,floor(n/3)));
+                this->blob_top_->data_at(1, 0, floor(n/3), n-(floor(n/3))*3));
   }
 }
 
