@@ -6,6 +6,7 @@
 #include "caffe/vision_layers.hpp"
 
 #ifdef WITH_PYTHON_LAYER
+#include <boost/regex.hpp>
 #include "caffe/python_layer.hpp"
 #endif
 
@@ -162,6 +163,12 @@ template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
   string module_name = param.python_param().module();
   string layer_name = param.python_param().layer();
+  // Check injection. This doesn't allow nested importing.
+  boost::regex expression("[a-zA-Z_][a-zA-Z0-9_]*");
+  CHECK(boost::regex_match(module_name, expression))
+    << "Module name is invalid: " << module_name;
+  CHECK(boost::regex_match(layer_name, expression))
+    << "Layer name is invalid: " << layer_name;
   Py_Initialize();
   try {
     bp::object globals = bp::import("__main__").attr("__dict__");
