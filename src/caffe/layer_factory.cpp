@@ -163,8 +163,9 @@ template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
   string module_name = param.python_param().module();
   string layer_name = param.python_param().layer();
-  // Check injection. This doesn't allow nested importing.
-  boost::regex expression("[a-zA-Z_][a-zA-Z0-9_]*");
+  // Check injection. This allows nested import.
+  boost::regex expression("[a-zA-Z_][a-zA-Z0-9_]*"
+    "(\\.[a-zA-Z_][a-zA-Z0-9_]*)*");
   CHECK(boost::regex_match(module_name, expression))
     << "Module name is invalid: " << module_name;
   CHECK(boost::regex_match(layer_name, expression))
