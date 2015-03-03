@@ -2,6 +2,7 @@
 #define CAFFE_COMMON_HPP_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -158,7 +159,7 @@ class Caffe {
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
-  static shared_ptr<Caffe> singleton_;
+  static boost::thread_specific_ptr<Caffe> singleton_;
 
  private:
   // The private constructor to avoid duplicate instantiation.

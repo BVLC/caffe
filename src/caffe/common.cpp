@@ -7,7 +7,7 @@
 
 namespace caffe {
 
-shared_ptr<Caffe> Caffe::singleton_;
+boost::thread_specific_ptr<Caffe> Caffe::singleton_;
 
 // random seeding
 int64_t cluster_seedgen(void) {
