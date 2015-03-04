@@ -46,7 +46,10 @@ EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 BUILD_INCLUDE_DIR := $(BUILD_DIR)/src
 # PROTO_SRCS are the protocol buffer definitions
 PROTO_SRC_DIR := src/$(PROJECT)/proto
-PROTO_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto)
+PROTO_VAR_EXT_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto.varextnum)
+PROTO_GEN_SRCS := $(PROTO_VAR_EXT_SRCS:.proto.varextnum=.proto)
+PROTO_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto) $(PROTO_GEN_SRCS)
+PROTO_VAR_EXT_FILLER := ./scripts/fill_proto_ext_num.py
 # PROTO_BUILD_DIR will contain the .cc and obj files generated from
 # PROTO_SRCS; PROTO_BUILD_INCLUDE_DIR will contain the .h header files
 PROTO_BUILD_DIR := $(BUILD_DIR)/$(PROTO_SRC_DIR)
@@ -555,6 +558,9 @@ $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_BUILD_DIR)/%.pb.h : \
 		$(PROTO_SRC_DIR)/%.proto | $(PROTO_BUILD_DIR)
 	@ echo PROTOC $<
 	$(Q)protoc --proto_path=$(PROTO_SRC_DIR) --cpp_out=$(PROTO_BUILD_DIR) $<
+
+$(PROTO_SRC_DIR)/%.proto : $(PROTO_SRC_DIR)/%.proto.varextnum
+	$(PROTO_VAR_EXT_FILLER) $< $@
 
 $(PY_PROTO_BUILD_DIR)/%_pb2.py : $(PROTO_SRC_DIR)/%.proto \
 		$(PY_PROTO_INIT) | $(PY_PROTO_BUILD_DIR)
