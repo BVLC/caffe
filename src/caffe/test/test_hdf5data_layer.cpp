@@ -77,15 +77,13 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   EXPECT_EQ(this->blob_top_data_->height(), height);
   EXPECT_EQ(this->blob_top_data_->width(), width);
 
-  EXPECT_EQ(this->blob_top_label_->num(), batch_size);
-  EXPECT_EQ(this->blob_top_label_->channels(), 1);
-  EXPECT_EQ(this->blob_top_label_->height(), 1);
-  EXPECT_EQ(this->blob_top_label_->width(), 1);
+  EXPECT_EQ(this->blob_top_label_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_label_->shape(0), batch_size);
+  EXPECT_EQ(this->blob_top_label_->shape(1), 1);
 
-  EXPECT_EQ(this->blob_top_label2_->num(), batch_size);
-  EXPECT_EQ(this->blob_top_label2_->channels(), 1);
-  EXPECT_EQ(this->blob_top_label2_->height(), 1);
-  EXPECT_EQ(this->blob_top_label2_->width(), 1);
+  EXPECT_EQ(this->blob_top_label2_->num_axes(), 2);
+  EXPECT_EQ(this->blob_top_label2_->shape(0), batch_size);
+  EXPECT_EQ(this->blob_top_label2_->shape(1), 1);
 
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
