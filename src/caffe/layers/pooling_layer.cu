@@ -101,14 +101,16 @@ __global__ void StoPoolForwardTrain(const int nthreads,
         cumsum += bottom_data[h * width + w];
       }
     }
-    float thres = rand_idx[index] * cumsum;
+    Dtype thres = rand_idx[index] * cumsum;
     // Second pass: get value, and set index.
     cumsum = 0;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
         cumsum += bottom_data[h * width + w];
         if (cumsum >= thres) {
-          rand_idx[index] = ((n * channels + c) * height + h) * width + w;
+          // Force correct rounding on truncate by adding 0.5
+          rand_idx[index] = ((n * channels + c) * height + h) * width + w
+                            + Dtype(0.5);
           top_data[index] = bottom_data[h * width + w];
           return;
         }
