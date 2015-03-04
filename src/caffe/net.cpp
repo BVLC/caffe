@@ -48,8 +48,16 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   name_ = param.name();
   map<string, int> blob_name_to_idx;
   set<string> available_blobs;
-  CHECK_EQ(param.input_size() * 4, param.input_dim_size())
-      << "Incorrect input blob dimension specifications.";
+  CHECK(param.input_dim_size() == 0 || param.input_shape_size() == 0)
+      << "Must specify either input_shape OR deprecated input_dim, not both.";
+  if (param.input_dim_size() > 0) {
+    // Deprecated 4D dimensions.
+    CHECK_EQ(param.input_size() * 4, param.input_dim_size())
+        << "Incorrect input blob dimension specifications.";
+  } else {
+    CHECK_EQ(param.input_size(), param.input_shape_size())
+        << "Exactly one input_shape must be specified per input.";
+  }
   memory_used_ = 0;
   // set the input blobs
   for (int input_id = 0; input_id < param.input_size(); ++input_id) {
@@ -109,11 +117,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
       }
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
-      LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
-          << top_vecs_[layer_id][top_id]->channels() << " "
-          << top_vecs_[layer_id][top_id]->height() << " "
-          << top_vecs_[layer_id][top_id]->width() << " ("
-          << top_vecs_[layer_id][top_id]->count() << ")";
+      LOG(INFO) << "Top shape: " << top_vecs_[layer_id][top_id]->shape_string();
       if (layer->loss(top_id)) {
         LOG(INFO) << "    with loss weight " << layer->loss(top_id);
       }
@@ -209,6 +213,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
   GetLearningRateAndWeightDecay();
+  ShareWeightData();
   debug_info_ = param.debug_info();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
@@ -343,10 +348,14 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     if (blob_name_to_idx) { (*blob_name_to_idx)[blob_name] = blob_id; }
     if (layer_id == -1) {
       // Set the (explicitly specified) dimensions of the input blob.
-      blob_pointer->Reshape(param.input_dim(top_id * 4),
-                            param.input_dim(top_id * 4 + 1),
-                            param.input_dim(top_id * 4 + 2),
-                            param.input_dim(top_id * 4 + 3));
+      if (param.input_dim_size() > 0) {
+        blob_pointer->Reshape(param.input_dim(top_id * 4),
+                              param.input_dim(top_id * 4 + 1),
+                              param.input_dim(top_id * 4 + 2),
+                              param.input_dim(top_id * 4 + 3));
+      } else {
+        blob_pointer->Reshape(param.input_shape(top_id));
+      }
       net_input_blob_indices_.push_back(blob_id);
       net_input_blobs_.push_back(blob_pointer.get());
     } else {
@@ -427,17 +436,8 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
           << "Shared parameter blobs must have the same count.";
     } else {
       // Strict dimension checking -- all dims must be the same.
-      CHECK_EQ(this_blob->num(), owner_blob->num())
-          << "Shared parameter blobs must have the same num.";
-      CHECK_EQ(this_blob->channels(), owner_blob->channels())
-          << "Shared parameter blobs must have the same channels.";
-      CHECK_EQ(this_blob->height(), owner_blob->height())
-          << "Shared parameter blobs must have the same height.";
-      CHECK_EQ(this_blob->width(), owner_blob->width())
-          << "Shared parameter blobs must have the same width.";
+      CHECK(this_blob->shape() == owner_blob->shape());
     }
-    layers_[layer_id]->blobs()[param_id]->ShareData(
-        *layers_[owner_layer_id]->blobs()[owner_param_id]);
   }
 }
 
@@ -640,10 +640,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
-      CHECK_EQ(target_blobs[j]->num(), source_blob->num());
-      CHECK_EQ(target_blobs[j]->channels(), source_blob->channels());
-      CHECK_EQ(target_blobs[j]->height(), source_blob->height());
-      CHECK_EQ(target_blobs[j]->width(), source_blob->width());
+      CHECK(target_blobs[j]->shape() == source_blob->shape());
       target_blobs[j]->ShareData(*source_blob);
     }
   }
@@ -707,11 +704,8 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
-      CHECK_EQ(target_blobs[j]->num(), source_layer.blobs(j).num());
-      CHECK_EQ(target_blobs[j]->channels(), source_layer.blobs(j).channels());
-      CHECK_EQ(target_blobs[j]->height(), source_layer.blobs(j).height());
-      CHECK_EQ(target_blobs[j]->width(), source_layer.blobs(j).width());
-      target_blobs[j]->FromProto(source_layer.blobs(j));
+      const bool kReshape = false;
+      target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
     }
   }
 }
@@ -746,39 +740,20 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
 
 template <typename Dtype>
 void Net<Dtype>::Update() {
-  // First, accumulate the diffs of any shared parameters into their owner's
-  // diff. (Assumes that the learning rate, weight decay, etc. have already been
-  // accounted for in the current diff.)
-  for (int i = 0; i < params_.size(); ++i) {
-    if (param_owners_[i] < 0) { continue; }
-    if (debug_info_) { UpdateDebugInfo(i); }
-    const int count = params_[i]->count();
-    const Dtype* this_diff;
-    Dtype* owner_diff;
-    switch (Caffe::mode()) {
-    case Caffe::CPU:
-      this_diff = params_[i]->cpu_diff();
-      owner_diff = params_[param_owners_[i]]->mutable_cpu_diff();
-      caffe_add(count, this_diff, owner_diff, owner_diff);
-      break;
-#ifndef CPU_ONLY
-    case Caffe::GPU:
-      this_diff = params_[i]->gpu_diff();
-      owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
-      caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
-      break;
-#else
-      NO_GPU;
-#endif
-    default:
-      LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-    }
-  }
-  // Now, update the owned parameters.
+  // Update only the owned parameters.
   for (int i = 0; i < params_.size(); ++i) {
     if (param_owners_[i] >= 0) { continue; }
     if (debug_info_) { UpdateDebugInfo(i); }
     params_[i]->Update();
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::ShareWeightData() {
+  for (int i = 0; i < params_.size(); ++i) {
+    if (param_owners_[i] < 0) { continue; }
+    params_[i]->ShareData(*params_[param_owners_[i]]);
+    params_[i]->ShareDiff(*params_[param_owners_[i]]);
   }
 }
 
