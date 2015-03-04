@@ -90,36 +90,33 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* scale_data = scale_.mutable_gpu_data();
   int count = bottom[0]->count();
-  int num = bottom[0]->num();
-  int channels = bottom[0]->channels();
-  int spatial_dim = bottom[0]->height() * bottom[0]->width();
+  int channels = top[0]->shape(softmax_axis_);
   caffe_copy(count, bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.
   // compute max
   // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
-      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_data,
+  kernel_channel_max<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
       scale_data);
   // subtract
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
-      CAFFE_CUDA_NUM_THREADS>>>(count, num, channels, spatial_dim,
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, top_data);
   // exponentiate
   // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(num * channels * spatial_dim),
-      CAFFE_CUDA_NUM_THREADS>>>(num * channels * spatial_dim, top_data,
-      top_data);
+  kernel_exp<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, top_data, top_data);
   // sum after exp
   // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
-      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_data,
+  kernel_channel_sum<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_, top_data,
       scale_data);
   // divide
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),
-      CAFFE_CUDA_NUM_THREADS>>>(count, num, channels, spatial_dim,
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, top_data);
 }
 
@@ -131,18 +128,16 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   Dtype* scale_data = scale_.mutable_gpu_data();
   int count = top[0]->count();
-  int num = top[0]->num();
-  int channels = top[0]->channels();
-  int spatial_dim = top[0]->height() * top[0]->width();
-  caffe_copy(top[0]->count(), top_diff, bottom_diff);
+  int channels = top[0]->shape(softmax_axis_);
+  caffe_copy(count, top_diff, bottom_diff);
   // Compute inner1d(top_diff, top_data) and subtract them from the bottom diff.
   // NOLINT_NEXT_LINE(whitespace/operators)
-  kernel_channel_dot<Dtype><<<CAFFE_GET_BLOCKS(num * spatial_dim),
-      CAFFE_CUDA_NUM_THREADS>>>(num, channels, spatial_dim, top_diff, top_data,
-      scale_data);
+  kernel_channel_dot<Dtype><<<CAFFE_GET_BLOCKS(outer_num_ * inner_num_),
+      CAFFE_CUDA_NUM_THREADS>>>(outer_num_, channels, inner_num_,
+      top_diff, top_data, scale_data);
   // NOLINT_NEXT_LINE(whitespace/operators)
   kernel_channel_subtract<Dtype><<<CAFFE_GET_BLOCKS(count),
-      CAFFE_CUDA_NUM_THREADS>>>(count, num, channels, spatial_dim,
+      CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, bottom_diff);
   // elementwise multiplication
   caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
