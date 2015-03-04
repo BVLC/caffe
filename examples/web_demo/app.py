@@ -122,7 +122,7 @@ class ImagenetClassifier(object):
         self.net = caffe.Classifier(
             model_def_file, pretrained_model_file,
             image_dims=(image_dim, image_dim), raw_scale=raw_scale,
-            mean=np.load(mean_file), channel_swap=(2, 1, 0), gpu=gpu_mode
+            mean=np.load(mean_file).mean(1).mean(1), channel_swap=(2, 1, 0)
         )
 
         with open(class_labels_file) as f:
