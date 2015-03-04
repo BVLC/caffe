@@ -41,12 +41,12 @@ def _Net_params(self):
 
 @property
 def _Net_inputs(self):
-    return [self.blobs.keys()[i] for i in self._inputs]
+    return [list(self.blobs.keys())[i] for i in self._inputs]
 
 
 @property
 def _Net_outputs(self):
-    return [self.blobs.keys()[i] for i in self._outputs]
+    return [list(self.blobs.keys())[i] for i in self._outputs]
 
 
 def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):

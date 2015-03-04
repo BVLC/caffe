@@ -4,7 +4,7 @@ if(NOT HAVE_PYTHON)
 endif()
 
 include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-file(GLOB_RECURSE python_srcs ${CMAKE_SOURCE_DIR}/python/*.cpp)
+file(GLOB_RECURSE python_srcs ${PROJECT_SOURCE_DIR}/python/*.cpp)
 
 add_library(pycaffe SHARED ${python_srcs})
 target_link_libraries(pycaffe ${Caffe_LINK} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
