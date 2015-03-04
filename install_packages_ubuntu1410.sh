@@ -16,6 +16,8 @@ apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libbo
 apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
 
 sudo apt-get install gcc-4.7 g++-4.7 gcc-4.7-multilib g++-4.7-multilib
+sudo apt-get install python-sklearn python-protobuf python-skimage
+
 # Compiling Caffe
 # https://github.com/BVLC/caffe/issues/337
 # CUSTOM_CXX := g++-4.7
