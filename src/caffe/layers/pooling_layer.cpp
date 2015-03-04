@@ -68,11 +68,6 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "With Global_pooling: true; only pad = 0 and stride = 1";
   }
   if (pad_h_ != 0 || pad_w_ != 0) {
-    CHECK(this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_AVE
-        || this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_MAX)
-        << "Padding implemented only for average and max pooling.";
     CHECK_LT(pad_h_, kernel_h_);
     CHECK_LT(pad_w_, kernel_w_);
   }
