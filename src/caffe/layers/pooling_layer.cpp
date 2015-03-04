@@ -106,15 +106,12 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
       pooled_width_);
-  printf("Pooling layer\n");
   if (top.size() > 1) {
-    printf("Pooling layer has mask\n");
     top[1]->ReshapeLike(*top[0]);
   }
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX && top.size() == 1) {
-    printf("Pooling layer no mask\n");
     max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
         pooled_width_);
   }
@@ -131,7 +128,6 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  printf("Pooling layer cpu");
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int top_count = top[0]->count();

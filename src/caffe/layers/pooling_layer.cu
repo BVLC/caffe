@@ -16,9 +16,6 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     const int stride_w, const int pad_h, const int pad_w, Dtype* top_data,
     int* mask, Dtype* top_mask) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-      if (index < 10) {
-        printf("in max pool");
-      }
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
@@ -31,7 +28,6 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     wstart = max(wstart, 0);
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
-
     bottom_data += (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
@@ -43,15 +39,8 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
     }
     top_data[index] = maxval;
     if (mask) {
-      if (index < 10) {
-        printf("pool has mask");
-
-      }
       mask[index] = maxidx;
     } else {
-      if (index < 10) {
-        printf("pool no mask");
-      }
       top_mask[index] = maxidx;
     }
   }
