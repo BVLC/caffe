@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <climits>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
