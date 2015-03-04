@@ -6,8 +6,10 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-#define DEBUG debug && index > 6881000 && index < 6882000
+#define DEBUG (debug && index >= 0 && index < 50)
 #define debug 1
+#define TOP 1
+#define BOTTOM 0
 #define MAX(A,B) A > B ? A : B
 #define MIN(A,B) A < B ? A : B
 
@@ -110,7 +112,35 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int window_w = MAX((bottom_window_data[win * 4 + 2] * width / image_w), 1);
     int window_h = MAX((bottom_window_data[win * 4 + 3] * height / image_h), 1);
 
+    // Using fractional heights to better represent smaller sections instead of
+    // defaulting to repeating the end pixels over and over.
+    float kernel_h = window_h * 1.0f / num_pools;
+    float kernel_w = window_w * 1.0f / num_pools;
+    int hstart = int(ph * kernel_h) + window_y;
+    int wstart = int(pw * kernel_w) + window_x;
+    int kernel_h_int = MAX((int)kernel_h, 1);
+    int kernel_w_int = MAX((int)kernel_w, 1);
+    int hend = MIN(MIN(hstart + kernel_h_int, height), window_y + window_h);
+    int wend = MIN(MIN(wstart + kernel_w_int, width), window_x + window_w);
+    Dtype maxval = -FLT_MAX;
+    int maxidx = -1;
+
+    bottom_data += (n * channels + c) * height * width;
+    for (int h = hstart; h < hend; ++h) {
+      for (int w = wstart; w < wend; ++w) {
+        if (bottom_data[h * width + w] > maxval) {
+          maxidx = h * width + w;
+          maxval = bottom_data[maxidx];
+        }
+      }
+    }
+    top_data[index] = maxval;
     if (DEBUG) {
+      printf("forward "
+          "index: %d\t"
+          "maxval: %f\n", index, top_data[index]);
+    }
+    if ((DEBUG && TOP) || maxval < Dtype(0)) {
       printf("Forward "
           "Index: %d\t"
           "Shifted Index: %d\t"
@@ -123,35 +153,12 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           "window_w: %d\t"
           "window_h: %d\t"
           "c: %d\t"
-          "n: %d\n",
-          index, shifted_index, num_pools, pw, ph,
-          win, window_x, window_y, window_w, window_h, c, n);
+          "n: %d\t"
+          "maxidx: %d\t"
+          "maxval: %f\t"
+          "\n", index, shifted_index, num_pools, pw, ph,
+          win, window_x, window_y, window_w, window_h, c, n, maxidx, maxval);
     }
-    // Using fractional heights to better represent smaller sections instead of
-    // defaulting to repeating the end pixels over and over.
-    float kernel_h = window_h * 1.0f / num_pools;
-    float kernel_w = window_w * 1.0f / num_pools;
-    int hstart = int(ph * kernel_h) + window_y;
-    int wstart = int(pw * kernel_w) + window_x;
-    int kernel_h_int = MAX((int)kernel_h, 1);
-    int kernel_w_int = MAX((int)kernel_w, 1);
-    int hend = MIN(MIN(hstart + kernel_h_int, height), window_y + window_h);
-    int wend = MIN(MIN(wstart + kernel_w_int, width), window_x + window_w);
-    Dtype maxval = -FLT_MAX;
-    if (DEBUG && (hend - hstart < 1 || wend - wstart < 1)) {
-      printf("No work\n");
-    }
-    int maxidx = -1;
-    bottom_data += (n * channels + c) * height * width;
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        if (bottom_data[h * width + w] > maxval) {
-          maxidx = h * width + w;
-          maxval = bottom_data[maxidx];
-        }
-      }
-    }
-    top_data[index] = maxval;
     if (mask) {
       mask[index] = maxidx;
     } else {
@@ -178,6 +185,7 @@ void SPPLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
   if (bottom.size() > 1) {
     // Windowed case
+    printf("Count: %d\n", count);
     const Dtype* bottom_window_data = bottom[1]->gpu_data();
     SPPForwardWindowed<Dtype><<<CAFFE_GET_BLOCKS(count),
         CAFFE_CUDA_NUM_THREADS>>>(
@@ -262,6 +270,7 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
         shift += num_pools * num_pools;
       }
     }
+    bottom_diff[index] = gradient;
   }
 }
 
@@ -286,6 +295,7 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
     if (mask) {
       mask += offset;
       for (int win = 0; win < window_count; ++win) {
+        /*
         int shift = 0;
         for (int i = 0; i < kernel_depth; ++i) {
           int num_pools = 1 << i;
@@ -309,8 +319,31 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
           }
           shift += num_pools * num_pools;
         }
+          */
+        // Because of crazy indexing in windows, easier to check every window.
+        for (int i = 0; i < output_size; ++i) {
+          if (mask[win * output_size + i] == h * width + w) {
+            gradient += top_diff[i];
+            if (DEBUG && BOTTOM) {
+              printf("Mask Backward "
+                "Index: %d\t"
+                "w: %d\t"
+                "h: %d\t"
+                "c: %d\t"
+                "n: %d\t"
+                "i: %d\t"
+                "win: %d\t"
+                "idx: %d\t"
+                "gradient: %f\t"
+                "top_diff[i]: %f\t"
+                "mask[i]: %d\t"
+                "\n", index, w, h, c, n, i, win, win * output_size + i, gradient, top_diff[i], mask[win * output_size + i]);
+            }
+          }
+        }
       }
     } else {
+      printf("Top mask backward");
       top_mask += offset;
       for (int win = 0; win < window_count; ++win) {
         int shift = 0;
@@ -339,6 +372,10 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
           shift += num_pools * num_pools;
         }
       }
+    }
+    bottom_diff[index] = gradient;
+    if (DEBUG) {
+      printf("Gradient: %f\n", bottom_diff[index]);
     }
   }
 }
