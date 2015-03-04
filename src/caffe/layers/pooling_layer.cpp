@@ -217,9 +217,10 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    if (this->phase_ == TRAIN)
-    {
-      // We need random indexes for training. Initially used as probability values, as element indexes in back propagation
+    if (this->phase_ == TRAIN) {
+      // We need random indexes for training.
+      // Initially used as probability values but
+      // later as element indexes in back propagation
       Dtype *rand_idx = rand_idx_.mutable_cpu_data();
       caffe_rng_uniform(top_count, Dtype(0), Dtype(1), rand_idx);
 
@@ -258,8 +259,8 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                     // rand_idx is a floating point variable.
                     // Force correct rounding on truncate by adding 0.5
                     rand_idx[pool_index] = static_cast<Dtype>(
-                        ((n * channels_ + c) * height_ + h) * width_ + w
-                        ) + Dtype(0.5);
+                        ((n * channels_ + c) * height_ + h) * width_ + w)
+                        + Dtype(0.5);
                     top_data[pool_index] = bottom_data[index];
 
                     // Fastest way to break two for-loops
@@ -267,7 +268,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                   }
                 }
               }
-              next_element:; // Quick break from the loop
+              next_element: {}  // Quick break from the loop
             }
           }
 
@@ -277,9 +278,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           rand_idx += top[0]->offset(0, 1);
         }
       }
-
-    } else
-    {
+    } else {
       // Test phase: Generate probability weighted values for output
       // The main loop
       for (int n = 0; n < bottom[0]->num(); ++n) {
@@ -300,7 +299,8 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
               for (int h = hstart; h < hend; ++h) {
                 for (int w = wstart; w < wend; ++w) {
                   cumsum += bottom_data[h * width_ + w];
-                  cumvalues += bottom_data[h * width_ + w] * bottom_data[h * width_ + w];
+                  cumvalues += bottom_data[h * width_ + w] *
+                               bottom_data[h * width_ + w];
                 }
               }
               top_data[ph * pooled_width_ + pw] = cumvalues / cumsum;

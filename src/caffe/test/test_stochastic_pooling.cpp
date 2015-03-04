@@ -18,7 +18,8 @@ namespace caffe {
 
 template <typename TypeParam>
 class StochasticPoolingLayerTest : public MultiDeviceTest<TypeParam> {
- typedef typename TypeParam::Dtype Dtype;
+  typedef typename TypeParam::Dtype Dtype;
+
  protected:
   StochasticPoolingLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
@@ -172,7 +173,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestGradientPadded) {
   PoolingLayer<Dtype> layer(layer_param);
 
   // Avoid bad random values that change the randomly selected bottom element
-  // during finite differenceing with a better seed. This test is really fragile.
+  // during finite differenceing with a better seed. This test is really
+  // fragile.
   GradientChecker<Dtype> checker(1e-3, 1e-2, 2);
   // it is too expensive to call curand multiple times, so we don't do an
   // exhaustive gradient check.
