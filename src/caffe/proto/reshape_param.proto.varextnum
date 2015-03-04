@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+package caffe;
+
+import "caffe.proto";
+
+extend LayerParameter {
+  optional ReshapeParameter reshape_param = ${FIELD_NUM:20000,max,reshape_param};
+}
+
+// Message that stores parameters used by ReshapeLayer
+message ReshapeParameter {
+  // The new shape of the Blob. Must have the same "count" (product of
+  // dimensions) as the input Blob.
+  optional BlobShape shape = 1;
+}
