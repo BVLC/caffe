@@ -508,6 +508,13 @@ message ConvolutionParameter {
   // N independent 3D convolutions, sliding (C/g)-channels
   // filters across the spatial axes (D, H, W) of the input.
   optional int32 axis = 16 [default = 1];
+
+  // Whether to force use of the general ND convolution, even if a specific
+  // implementation for blobs of the appropriate number of spatial dimensions
+  // is available. (Currently, there is only a 2D-specific convolution
+  // implementation; for input blobs with num_axes != 2, this option is
+  // ignored and the ND implementation will be used.)
+  optional bool force_nd_im2col = 17 [default = false];
 }
 
 message DataParameter {
