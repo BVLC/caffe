@@ -32,7 +32,7 @@ If using Anaconda Python, HDF5 is bundled and the `hdf5` formula can be skipped.
 
     # with Python pycaffe needs dependencies built from source
     brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --fresh -vd boost
+    brew install --build-from-source --fresh -vd boost boost-python
     # without Python the usual installation suffices
     brew install protobuf boost
 
