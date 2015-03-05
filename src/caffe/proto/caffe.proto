@@ -274,7 +274,7 @@ message LayerParameter {
     WINDOW_DATA = 24;
     THRESHOLD = 31;
 
-    PROTOBUF_DATA = 999;
+    IMAGE_MULTIREGRESSION_DATA = 38;
   }
   optional LayerType type = 5; // the layer type from the enum above
 

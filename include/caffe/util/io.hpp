@@ -102,6 +102,24 @@ inline bool ReadImageToDatum(const string& filename, const int label,
   return ReadImageToDatum(filename, label, 0, 0, datum);
 }
 
+// MultiRegression
+bool ReadImageToDatumMultiRegression(const string& filename, const vector<float>& label,
+    const int height, const int width, const bool is_color, DatumMultiRegression* datum);
+
+inline bool ReadImageToDatumMultiRegression(const string& filename, const vector<float>& label,
+    const int height, const int width, DatumMultiRegression* datum) {
+  return ReadImageToDatumMultiRegression(filename, label, height, width, true, datum);
+}
+
+inline bool ReadImageToDatumMultiRegression(const string& filename, const vector<float>& label,
+    DatumMultiRegression* datum) {
+  return ReadImageToDatumMultiRegression(filename, label, 0, 0, datum);
+}
+
+
+
+
+
 leveldb::Options GetLevelDBOptions();
 
 template <typename Dtype>

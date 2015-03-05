@@ -1,6 +1,7 @@
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
 #include <string>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -13,13 +14,14 @@
 namespace caffe {
 
 template <typename Dtype>
-ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
+ImageDataLayerMultiRegression<Dtype>::~ImageDataLayerMultiRegression<Dtype>() {
   this->JoinPrefetchThread();
 }
 
 template <typename Dtype>
-void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void ImageDataLayerMultiRegression<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+
   const int new_height = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_width();
   CHECK((new_height == 0 && new_width == 0) ||
@@ -29,11 +31,28 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
+#if 0
   string filename;
   int label;
   while (infile >> filename >> label) {
+    LOG(INFO) << filename;
     lines_.push_back(std::make_pair(filename, label));
   }
+#else
+  size_t label_dim = 0;
+  for(string line; getline(infile, line);) {
+    stringstream line_s(line);
+    string filename;
+
+    line_s >> filename;
+    vector<float> labels;
+    float label;
+    while(line_s >> label) labels.push_back(label);
+    if(label_dim == 0) label_dim = labels.size();
+
+    lines_.push_back(std::make_pair(filename, labels)); 
+  }
+#endif
 
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
@@ -54,9 +73,9 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     lines_id_ = skip;
   }
   // Read a data point, and use it to initialize the top blob.
-  Datum datum;
-  CHECK(ReadImageToDatum(lines_[lines_id_].first, lines_[lines_id_].second,
-                         new_height, new_width, &datum));
+  DatumMultiRegression datum;
+  CHECK(ReadImageToDatumMultiRegression(lines_[lines_id_].first, lines_[lines_id_].second,
+                                         new_height, new_width, &datum));
   // image
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
@@ -75,8 +94,14 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
       << (*top)[0]->width();
   // label
+#if 0
   (*top)[1]->Reshape(batch_size, 1, 1, 1);
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
+#else
+  (*top)[1]->Reshape(batch_size, label_dim, 1, 1);
+  this->prefetch_label_.Reshape(batch_size, label_dim, 1, 1);
+#endif  
+
   // datum size
   this->datum_channels_ = datum.channels();
   this->datum_height_ = datum.height();
@@ -85,7 +110,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void ImageDataLayer<Dtype>::ShuffleImages() {
+void ImageDataLayerMultiRegression<Dtype>::ShuffleImages() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
@@ -93,8 +118,8 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
-void ImageDataLayer<Dtype>::InternalThreadEntry() {
-  Datum datum;
+void ImageDataLayerMultiRegression<Dtype>::InternalThreadEntry() {
+  DatumMultiRegression datum;
   CHECK(this->prefetch_data_.count());
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
@@ -108,7 +133,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     CHECK_GT(lines_size, lines_id_);
-    if (!ReadImageToDatum(lines_[lines_id_].first,
+    if (!ReadImageToDatumMultiRegression(lines_[lines_id_].first,
           lines_[lines_id_].second,
           new_height, new_width, &datum)) {
       continue;
@@ -117,7 +142,10 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     // Apply transformations (mirror, crop...) to the data
     this->data_transformer_.Transform(item_id, datum, this->mean_, top_data);
 
-    top_label[item_id] = datum.label();
+    //top_label[item_id] = datum.label();
+    size_t label_dim = datum.label().size();
+    caffe_copy(label_dim, (Dtype*) datum.mutable_label(), &top_label[item_id * label_dim]);
+
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {
@@ -131,6 +159,6 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   }
 }
 
-INSTANTIATE_CLASS(ImageDataLayer);
+INSTANTIATE_CLASS(ImageDataLayerMultiRegression);
 
 }  // namespace caffe
