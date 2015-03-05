@@ -23,7 +23,7 @@ message Datum {
   optional int32 width = 3;
   // the actual image data, in bytes
   optional bytes data = 4;
-  optional int32 label = 5;
+  optional int32 label = 5; // *** modify label
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
 }
@@ -262,6 +262,8 @@ message LayerParameter {
     TANH = 23;
     WINDOW_DATA = 24;
     THRESHOLD = 31;
+
+    PROTOBUF_DATA = 999;
   }
   optional LayerType type = 5; // the layer type from the enum above
 
@@ -317,6 +319,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 37;
   optional ThresholdParameter threshold_param = 25;
   optional WindowDataParameter window_data_param = 20;
+  optional ProtobufDataParameter protobuf_data_param = 999;
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 36;
@@ -522,6 +525,18 @@ message ImageDataParameter {
   // DEPRECATED. See TransformationParameter. Specify if we want to randomly mirror
   // data.
   optional bool mirror = 6 [default = false];
+}
+
+message ProtobufDataParameter {
+  optional string source = 1;
+  optional uint32 batch_size = 2;
+  optional uint32 rand_skip = 3 [default = 0];
+  optional bool shuffle = 4 [default = false];
+  optional uint32 crop_height = 5;
+  optional uint32 crop_width = 6;
+  repeated string labels = 7;
+  optional bool no_crop = 8 [default = false];
+  optional float jitter = 9;
 }
 
 // Message that stores parameters InfogainLossLayer
@@ -779,4 +794,288 @@ message V0LayerParameter {
   optional uint32 concat_dim = 65 [default = 1];
 
   optional HDF5OutputParameter hdf5_output_param = 1001;
+}
+message LogRecord {
+  enum Type {
+    VISUALIZATION = 1;
+    INSPECTION = 2;
+    LOSS = 3;
+    SCORE = 4;
+  };
+
+  optional uint64 timestamp = 1;
+  optional uint64 iteration = 2;
+  optional Type type = 3;
+
+  extensions 100 to max;
+}
+
+message BlobSnapshot {
+  optional bytes png = 1;
+  optional string layer_name = 2;
+  optional int32 layer_index = 3;
+}
+
+message VisualizationRecord {
+  extend LogRecord {
+    optional VisualizationRecord parent = 100;
+  }
+
+  repeated BlobSnapshot weight_snapshots = 1;
+  repeated BlobSnapshot activation_snapshots = 2;
+}
+
+message InspectionResult {
+  optional string layer_name = 1;
+  optional int32 layer_index = 2;
+
+  optional float weight_0pct = 9;
+  optional float weight_15pct = 3;
+  optional float weight_50pct = 4;
+  optional float weight_85pct = 5;
+  optional float weight_100pct = 10;
+
+  optional float grad_0pct = 11;
+  optional float grad_15pct = 6;
+  optional float grad_50pct = 7;
+  optional float grad_85pct = 8;
+  optional float grad_100pct = 12;
+}
+
+message InspectionRecord {
+  extend LogRecord {
+    optional InspectionRecord parent = 101;
+  }
+
+  repeated InspectionResult inspection_results = 1;
+}
+
+message LossRecord {
+  extend LogRecord {
+    optional LossRecord parent = 102;
+  }
+
+  repeated float loss = 1;
+  optional string name = 2;
+}
+
+message ScoreRecord {
+  extend LogRecord {
+    optional ScoreRecord parent = 103;
+  }
+
+  optional float score = 1;
+  optional string name = 2;
+}
+
+message LabelDefinition {
+  optional string name = 1;
+  optional uint32 dim = 2;
+  optional float mean = 3;
+  optional float stdev = 4;
+  repeated float weights = 5;
+}
+
+message ProtobufManifest {
+  repeated ProtobufRecord records = 1;
+  repeated LabelDefinition label_defs = 2;
+}
+
+message ProtobufRecord {
+  optional string image_url = 1;
+  optional int32 crop_x1 = 2;
+  optional int32 crop_x2 = 3;
+  optional int32 crop_y1 = 4;
+  optional int32 crop_y2 = 5;
+
+  optional int32 blackout_x1 = 6;
+  optional int32 blackout_x2 = 7;
+  optional int32 blackout_y1 = 8;
+  optional int32 blackout_y2 = 9;
+
+  extensions 100 to max;
+}
+
+message ClassificationRecord {
+  extend ProtobufRecord {
+    optional ClassificationRecord parent = 101;
+  }
+
+  optional uint32 class_id = 1;
+}
+
+message TestRecord {
+  extend ProtobufRecord {
+    optional TestRecord parent = 102;
+  }
+
+  optional uint32 single_int = 1;
+  optional float single_float = 2;
+  optional float single_float_sub = 3;
+  optional float single_float_sub_scale = 4;
+  optional float weighted = 5;
+  repeated uint32 multi_int = 6;
+  repeated float multi_float = 7;
+  repeated float multi_float_sub = 8;
+  repeated float multi_float_sub_scale = 9;
+}
+
+message StylyzeRecord {
+  extend ProtobufRecord {
+    optional StylyzeRecord parent = 103;
+  }
+
+  optional uint32 city_id = 1;
+  optional float latitude = 2;
+  optional float longitude = 3;
+  optional uint32 filter = 4;
+  optional uint32 created_time = 5;
+  optional float temperature = 6;
+  optional uint32 condition = 7;
+  optional float dpm_score = 8;
+  optional uint32 year = 9;
+  optional uint32 month = 10;
+  optional uint32 day_of_week = 11;
+  optional uint32 hour = 12;
+  optional uint32 season = 13;
+  optional uint32 tag_id = 14;
+  optional uint32 person = 15;
+}
+
+message DistributedCall {
+  enum DistributedCallType {
+    BACKPROP = 1;
+    PUSHGRAD = 2;
+    PULLPARAM = 3;
+    ENDPOINTS = 4;
+    REGISTRATION = 5;
+    HEARTBEAT = 6;
+    TERMINATE = 7;
+    INSPECTION = 8;
+    VISUALIZATION = 9;
+    NOOP = 10;
+    TEST = 11;
+  }
+
+  optional DistributedCallType type = 1;
+
+  extensions 100 to max;
+}
+
+message BackpropCall {
+  extend DistributedCall {
+    optional BackpropCall parent = 100;
+  }
+
+  optional int32 display = 1;
+}
+
+message PushGradientCall {
+  extend DistributedCall {
+    optional PushGradientCall parent = 101;
+  }
+
+  optional uint32 partition_id = 1;
+  optional string server_endpoint = 2;
+  repeated float data = 3;
+  optional string checkpoint = 4;
+}
+
+message RegistrationCall {
+  extend DistributedCall {
+    optional RegistrationCall parent = 102;
+  }
+
+  enum Role {
+    SERVER = 1;
+    WORKER = 2;
+  }
+
+  optional string endpoint = 1;
+  optional Role role = 2;
+  optional string heartbeat_endpoint = 3;
+}
+
+message HeartbeatCall {
+  extend DistributedCall {
+    optional HeartbeatCall parent = 103;
+  }
+
+  repeated string endpoints = 1;
+  repeated uint32 livenesses = 2;
+}
+
+message PullParameterCall {
+  extend DistributedCall {
+    optional PullParameterCall parent = 104;
+  }
+
+  optional uint32 partition_id = 1;
+  optional string server_endpoint = 2;
+  optional string checkpoint = 3;
+}
+
+message TerminateCall {
+  extend DistributedCall {
+    optional TerminateCall parent = 105;
+  }
+}
+
+message InspectionCall {
+  extend DistributedCall {
+    optional InspectionCall parent = 106;
+  }
+}
+
+message VisualizationCall {
+  extend DistributedCall {
+    optional VisualizationCall parent = 107;
+  }
+}
+
+message NoopCall {
+  extend DistributedCall {
+    optional NoopCall parent = 108;
+  }
+}
+
+message TestCall {
+  extend DistributedCall {
+    optional TestCall parent = 109;
+  }
+
+  optional int32 net_id = 1;
+}
+
+message EndpointDescription {
+  optional string endpoint = 1;
+  optional string name = 2;
+  optional string description = 3;
+}
+
+message EndpointsResponse {
+  repeated EndpointDescription endpoints = 1;
+}
+
+message PartitionCheckpoint {
+  optional string name = 1;
+  optional uint32 partition_id = 2;
+  repeated float data = 3;
+  repeated float history = 4;
+}
+
+message Patch {
+  optional string image_url = 1;
+  optional bytes image_data = 2;
+  optional float change = 3;
+  optional int32 center_x = 4;
+  optional int32 center_y = 5;w
+  optional int32 width = 6;
+  optional int32 height = 7;
+  optional bytes patch_data = 8;
+  optional int32 feature_id = 9;
+  repeated float fc7_diff = 10;
+  optional string filename = 11;
+  optional float score = 12;
+  repeated float fc7 = 13;
 }
