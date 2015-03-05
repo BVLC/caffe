@@ -23,7 +23,18 @@ message Datum {
   optional int32 width = 3;
   // the actual image data, in bytes
   optional bytes data = 4;
-  optional int32 label = 5; // *** modify label
+  optional int32 label = 5;
+  // Optionally, the datum could also hold float data.
+  repeated float float_data = 6;
+}
+
+message DatumMultiRegression {
+  optional int32 channels = 1;
+  optional int32 height = 2;
+  optional int32 width = 3;
+  // the actual image data, in bytes
+  optional bytes data = 4;
+  repeated float label = 5;
   // Optionally, the datum could also hold float data.
   repeated float float_data = 6;
 }
@@ -996,86 +1007,3 @@ message RegistrationCall {
   optional string heartbeat_endpoint = 3;
 }
 
-message HeartbeatCall {
-  extend DistributedCall {
-    optional HeartbeatCall parent = 103;
-  }
-
-  repeated string endpoints = 1;
-  repeated uint32 livenesses = 2;
-}
-
-message PullParameterCall {
-  extend DistributedCall {
-    optional PullParameterCall parent = 104;
-  }
-
-  optional uint32 partition_id = 1;
-  optional string server_endpoint = 2;
-  optional string checkpoint = 3;
-}
-
-message TerminateCall {
-  extend DistributedCall {
-    optional TerminateCall parent = 105;
-  }
-}
-
-message InspectionCall {
-  extend DistributedCall {
-    optional InspectionCall parent = 106;
-  }
-}
-
-message VisualizationCall {
-  extend DistributedCall {
-    optional VisualizationCall parent = 107;
-  }
-}
-
-message NoopCall {
-  extend DistributedCall {
-    optional NoopCall parent = 108;
-  }
-}
-
-message TestCall {
-  extend DistributedCall {
-    optional TestCall parent = 109;
-  }
-
-  optional int32 net_id = 1;
-}
-
-message EndpointDescription {
-  optional string endpoint = 1;
-  optional string name = 2;
-  optional string description = 3;
-}
-
-message EndpointsResponse {
-  repeated EndpointDescription endpoints = 1;
-}
-
-message PartitionCheckpoint {
-  optional string name = 1;
-  optional uint32 partition_id = 2;
-  repeated float data = 3;
-  repeated float history = 4;
-}
-
-message Patch {
-  optional string image_url = 1;
-  optional bytes image_data = 2;
-  optional float change = 3;
-  optional int32 center_x = 4;
-  optional int32 center_y = 5;w
-  optional int32 width = 6;
-  optional int32 height = 7;
-  optional bytes patch_data = 8;
-  optional int32 feature_id = 9;
-  repeated float fc7_diff = 10;
-  optional string filename = 11;
-  optional float score = 12;
-  repeated float fc7 = 13;
-}
