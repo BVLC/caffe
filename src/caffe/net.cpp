@@ -62,7 +62,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // set the input blobs
   for (int input_id = 0; input_id < param.input_size(); ++input_id) {
     const int layer_id = -1;  // inputs have fake layer ID -1
-    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
+    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx,
+        NULL);
   }
   DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
   // For each layer, set up its input and output
@@ -72,6 +73,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
   bottom_need_backward_.resize(param.layer_size());
+  layer_parents_.resize(param.layer_size());
+  layer_children_.resize(param.layer_size());
+  map<int, int> top_blob_idx_to_layer;
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
@@ -87,13 +91,15 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
       const int blob_id = AppendBottom(param, layer_id, bottom_id,
-                                       &available_blobs, &blob_name_to_idx);
+                                       &available_blobs, blob_name_to_idx,
+                                       top_blob_idx_to_layer);
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
     }
     int num_top = layer_param.top_size();
     for (int top_id = 0; top_id < num_top; ++top_id) {
-      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
+      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx,
+          &top_blob_idx_to_layer);
     }
     // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
     // specified fewer than the required number (as specified by
@@ -106,7 +112,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         // Add "anonymous" top blobs -- do not modify available_blobs or
         // blob_name_to_idx as we don't want these blobs to be usable as input
         // to other layers.
-        AppendTop(param, layer_id, num_top, NULL, NULL);
+        AppendTop(param, layer_id, num_top, NULL, NULL, NULL);
       }
     }
     // After this layer is connected, set it up.
@@ -314,7 +320,8 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
                            const int top_id, set<string>* available_blobs,
-                           map<string, int>* blob_name_to_idx) {
+                           map<string, int>* blob_name_to_idx,
+                           map<int, int>* top_blob_idx_to_layer) {
   shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
     (new LayerParameter(param.layer(layer_id))) : NULL);
   const string& blob_name = layer_param ?
@@ -325,8 +332,12 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
       blob_name == layer_param->bottom(top_id)) {
     // In-place computation
     LOG(INFO) << layer_param->name() << " -> " << blob_name << " (in-place)";
-    top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
-    top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
+    const int blob_id = (*blob_name_to_idx)[blob_name];
+    top_vecs_[layer_id].push_back(blobs_[blob_id].get());
+    top_id_vecs_[layer_id].push_back(blob_id);
+    if (top_blob_idx_to_layer) {
+      (*top_blob_idx_to_layer)[blob_id] = layer_id;
+    }
   } else if (blob_name_to_idx &&
              blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
@@ -358,8 +369,11 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
       net_input_blob_indices_.push_back(blob_id);
       net_input_blobs_.push_back(blob_pointer.get());
     } else {
-      top_id_vecs_[layer_id].push_back(blob_id);
       top_vecs_[layer_id].push_back(blob_pointer.get());
+      top_id_vecs_[layer_id].push_back(blob_id);
+      if (top_blob_idx_to_layer) {
+        (*top_blob_idx_to_layer)[blob_id] = layer_id;
+      }
     }
   }
   if (available_blobs) { available_blobs->insert(blob_name); }
@@ -369,17 +383,21 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
 template <typename Dtype>
 int Net<Dtype>::AppendBottom(const NetParameter& param,
     const int layer_id, const int bottom_id,
-    set<string>* available_blobs, map<string, int>* blob_name_to_idx) {
+    set<string>* available_blobs, const map<string, int>& blob_name_to_idx,
+    const map<int, int>& top_blob_idx_to_layer) {
   const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {
     LOG(FATAL) << "Unknown blob input " << blob_name
                << " (at index " << bottom_id << ") to layer " << layer_id;
   }
-  const int blob_id = (*blob_name_to_idx)[blob_name];
+  const int blob_id = blob_name_to_idx.find(blob_name)->second;
   LOG(INFO) << layer_names_[layer_id] << " <- " << blob_name;
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
   bottom_id_vecs_[layer_id].push_back(blob_id);
+  const int parent_layer = top_blob_idx_to_layer.find(blob_id)->second;
+  layer_parents_[layer_id].push_back(parent_layer);
+  layer_children_[parent_layer].push_back(layer_id);
   available_blobs->erase(blob_name);
   const bool need_backward = blob_need_backward_[blob_id];
   bottom_need_backward_[layer_id].push_back(need_backward);

@@ -165,6 +165,12 @@ class Net {
   inline const vector<int>& output_blob_indices() const {
     return net_output_blob_indices_;
   }
+  inline const vector<vector<int> > layer_parents() const {
+    return layer_parents_;
+  }
+  inline const vector<vector<int> > layer_children() const {
+    return layer_children_;
+  }
   bool has_blob(const string& blob_name) const;
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
   bool has_layer(const string& layer_name) const;
@@ -188,11 +194,13 @@ class Net {
   /// @brief Append a new input or top blob to the net.
   void AppendTop(const NetParameter& param, const int layer_id,
                  const int top_id, set<string>* available_blobs,
-                 map<string, int>* blob_name_to_idx);
+                 map<string, int>* blob_name_to_idx,
+                 map<int, int>* top_blob_idx_to_layer);
   /// @brief Append a new bottom blob to the net.
   int AppendBottom(const NetParameter& param, const int layer_id,
                    const int bottom_id, set<string>* available_blobs,
-                   map<string, int>* blob_name_to_idx);
+                   const map<string, int>& blob_name_to_idx,
+                   const map<int, int>& top_blob_idx_to_layer);
   /// @brief Append a new parameter blob to the net.
   void AppendParam(const NetParameter& param, const int layer_id,
                    const int param_id);
@@ -218,6 +226,10 @@ class Net {
   vector<string> layer_names_;
   map<string, int> layer_names_index_;
   vector<bool> layer_need_backward_;
+  /// Keep track of the graph of layers (note that this is different from
+  /// keeping track of the input/output blobs, since blobs may be reused).
+  vector<vector<int> > layer_parents_;
+  vector<vector<int> > layer_children_;
   /// @brief the blobs storing intermediate results between the layer.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
