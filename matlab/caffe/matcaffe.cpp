@@ -55,7 +55,6 @@ static uint16_t add_net(shared_ptr<Net<float> >& net, uint16_t handle=0) {
 
 static shared_ptr<Net<float> > get_net(const uint16_t handle = 0) {
     if (handle == 0) {
-        CHECK(net_) << "Returned null pointer for lookup for global net";
         return net_;
     } else {
         std::map<uint16_t, shared_ptr<Net<float> > >::iterator it;
@@ -431,8 +430,10 @@ static void init(MEX_ARGS) {
     }
   }
 
+  LOG(INFO) << "Starting instantiation...";
   // Instantiate a new net
   if (net_handle == GLOBAL_NET) {
+    LOG(INFO) << "Instantiating global net...";
     net_.reset(new Net<float>(string(param_file), phase, input_count));
     net_->CopyTrainedLayersFrom(string(model_file));
 
@@ -516,6 +517,9 @@ static void forward(MEX_ARGS) {
   }
 
   shared_ptr<Net<float> > net = get_net(handle);
+  if (!net) {
+    mex_error("Net was uninitialized in call to 'forward'");
+  }
 
   // Do forward
   plhs[0] = do_forward(prhs[0], blob_names, net);
@@ -523,7 +527,7 @@ static void forward(MEX_ARGS) {
 
 static void backward(MEX_ARGS) {
   if ((nrhs < 1) && (nrhs > 2)) {
-    mex_error("Wrong number of arguments. Usage: caffe('backward', top_diff[, net_handle=<common>]");
+    mex_error("Wrong number of arguments. Usage: caffe('backward', top_diff[, net_handle=<common>])");
   }
 
   uint16_t handle = 0;
@@ -531,13 +535,16 @@ static void backward(MEX_ARGS) {
     handle = get_handle(prhs[0]);
   }
   shared_ptr<Net<float> > net = get_net(handle);
+  if (!net) {
+    mex_error("Net was uninitialized in call to 'backward'");
+  }
 
   plhs[0] = do_backward(prhs[0], net);
 }
 
 static void is_initialized(MEX_ARGS) {
-  if ((nrhs != 0) || (nrhs != 1)) {
-    mex_error("Wrong number of arguments. Usage: caffe('is_initialized'[, net_handle=<common>]");
+  if ((nrhs != 0) && (nrhs != 1)) {
+    mex_error("Wrong number of arguments. Usage: caffe('is_initialized'[, net_handle=<common>])");
   }
 
   uint16_t handle = 0;
@@ -555,7 +562,7 @@ static void is_initialized(MEX_ARGS) {
 
 static void read_mean(MEX_ARGS) {
     if (nrhs != 1) {
-      mex_error("Wrong number of arguments. Usage: caffe('read_mean', 'path_to_binary_mean_file'");
+      mex_error("Wrong number of arguments. Usage: caffe('read_mean', 'path_to_binary_mean_file')");
     }
     const string& mean_file = mxArrayToString(prhs[0]);
     Blob<float> data_mean;
@@ -608,6 +615,9 @@ static void get_blob_size(MEX_ARGS) {
     }
 
     shared_ptr<Net<float> > net = get_net(handle);
+    if (!net) {
+      mex_error("Net was uninitialized in call to 'get_blob_size'");
+    }
 
     if ((nrhs >= 1) && (!mxIsEmpty(prhs[0]))) {
       if (!mxIsCell(prhs[0])) mex_error("blob_names should be a cell array of strings");
