@@ -7,6 +7,7 @@ try:
     # Python3 will most likely not be able to load protobuf
     from caffe.proto import caffe_pb2
 except:
+    import sys
     if sys.version_info >= (3,0):
         print("Failed to include caffe_pb2, things might go wrong!")
     else:
