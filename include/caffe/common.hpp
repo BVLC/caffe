@@ -7,6 +7,7 @@
 //#include <glog/logging.h>
 #include "llogging.h"
 
+#include <climits>
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)

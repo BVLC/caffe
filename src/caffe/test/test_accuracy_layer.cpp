@@ -19,10 +19,16 @@ template <typename Dtype>
 class AccuracyLayerTest : public ::testing::Test {
  protected:
   AccuracyLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(100, 10, 1, 1)),
-        blob_bottom_label_(new Blob<Dtype>(100, 1, 1, 1)),
+      : blob_bottom_data_(new Blob<Dtype>()),
+        blob_bottom_label_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()),
         top_k_(3) {
+    vector<int> shape(2);
+    shape[0] = 100;
+    shape[1] = 10;
+    blob_bottom_data_->Reshape(shape);
+    shape.resize(1);
+    blob_bottom_label_->Reshape(shape);
     // fill the probability values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
