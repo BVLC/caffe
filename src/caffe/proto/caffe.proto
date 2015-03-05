@@ -259,7 +259,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 132 (last added: prelu_param)
+// LayerParameter next available layer-specific ID: 133 (last added: parameter_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -321,6 +321,7 @@ message LayerParameter {
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
   optional MVNParameter mvn_param = 120;
+  optional ParameterParameter parameter_param = 132;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
@@ -620,6 +621,10 @@ message MVNParameter {
 
   // This parameter can be set to true to perform DNN-like MVN
   optional bool across_channels = 2 [default = false];
+}
+
+message ParameterParameter {
+  optional BlobShape shape = 1;
 }
 
 // Message that stores parameters used by PoolingLayer
