@@ -237,11 +237,14 @@ class Transformer:
         mean: mean ndarray (input dimensional or broadcastable)
         """
         self.__check_input(in_)
+        ms = mean.shape
         if mean.ndim == 1:
-            # broadcast pixel
+            # broadcast channels
+            if ms[0] != self.inputs[in_][1]:
+                raise ValueError('Mean channels incompatible with input.')
             mean = mean[:, np.newaxis, np.newaxis]
         else:
-            ms = mean.shape
+            # elementwise mean
             if len(ms) == 2:
                 ms = (1,) + ms
             if len(ms) != 3:
