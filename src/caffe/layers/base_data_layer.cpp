@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "caffe/data_layers.hpp"
-#include "caffe/net.hpp"
 #include "caffe/util/io.hpp"
 
 namespace caffe {
