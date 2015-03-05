@@ -30,7 +30,7 @@ Caffe has several dependencies.
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
-* For Python Caffe:  `Python 2.7`, `numpy (>= 1.7)`, boost-provided `boost.python`
+* For Python Caffe:  `Python 2.7` or `Python 3.3+`, `numpy (>= 1.7)`, boost-provided `boost.python`
 * For MATLAB Caffe: MATLAB with the `mex` compiler.
 
 **cuDNN Caffe**: for fastest operation Caffe is accelerated by drop-in integration of [NVIDIA cuDNN](https://developer.nvidia.com/cudnn). To speed up your Caffe models, install cuDNN then uncomment the `USE_CUDNN := 1` flag in `Makefile.config` when installing Caffe. Acceleration is automatic. For now cuDNN v1 is integrated but see [PR #1731](https://github.com/BVLC/caffe/pull/1731) for v2.
@@ -69,7 +69,7 @@ but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/
 
 To import the `caffe` Python module after completing the installation, add the module directory to your `$PYTHONPATH` by `export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH` or the like. You should not import the module in the `caffe/python/caffe` directory!
 
-*Caffe's Python interface works with Python 2.7. Python 3 or earlier Pythons are your own adventure.*
+*Caffe's Python interface works with Python 2.7. Python 3.3+ should work out of the box without protobuf support. For protobuf support please install protobuf 3.0 alpha (https://developers.google.com/protocol-buffers/). Earlier Pythons are your own adventure.*
 
 #### MATLAB
 
