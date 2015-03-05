@@ -1,5 +1,6 @@
 import numpy as np
 import skimage.io
+import sys
 from scipy.ndimage import zoom
 from skimage.transform import resize
 
@@ -280,7 +281,8 @@ def load_image(filename, color=True):
     if img.ndim == 2:
         img = img[:, :, np.newaxis]
         if color:
-            img = np.tile(img, (1, 1, 3))
+            img = np.tile(img, (1, 1, 1))
+        print('changed')
     elif img.shape[2] == 4:
         img = img[:, :, :3]
     return img
