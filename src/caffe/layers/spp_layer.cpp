@@ -46,17 +46,13 @@ void SPPLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     top[0]->Reshape(bottom[0]->num(), channels_, output_size_, 1);
   }
   if (top.size() > 1) {
-    printf("spp has mask\n");
     top[1]->ReshapeLike(*top[0]);
   }
   // Holds the index where the max was found for backprop.
   else if (top.size() == 1) {
-    printf("spp no mask\n");
     if (bottom.size() > 1) {
-      printf("spp windowed\n");
       max_idx_.Reshape(bottom[0]->num(), channels_, output_size_, bottom[1]->height());
     } else {
-    printf("spp one\n");
       max_idx_.Reshape(bottom[0]->num(), channels_, output_size_, 1);
     }
   }
