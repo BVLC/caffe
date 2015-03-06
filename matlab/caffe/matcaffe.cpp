@@ -3,10 +3,10 @@
 // caffe::Caffe functions so that one could easily call it from matlab.
 // Note that for matlab, we will simply use float as the data type.
 
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "mex.h"
 
@@ -35,7 +35,7 @@ pthread_mutex_t mutex_add_net_;
  ** net handle management
  **/
 
-static uint16_t add_net(shared_ptr<Net<float> >& net, uint16_t handle=0) {
+static uint16_t add_net(shared_ptr<Net<float> >* net, uint16_t handle = 0) {
     static uint16_t handle_ctr = 0;
 
     if (handle < 1) {
@@ -43,12 +43,12 @@ static uint16_t add_net(shared_ptr<Net<float> >& net, uint16_t handle=0) {
         uint16_t next_handle = ++handle_ctr;
         pthread_mutex_unlock(&mutex_add_net_);
 
-        nets_[next_handle] = net;
+        nets_[next_handle] = (*net);
 
         CHECK_GE(next_handle, 1);
         return next_handle;
     } else {
-        nets_[handle] = net;
+        nets_[handle] = (*net);
         return handle;
     }
 }
@@ -123,7 +123,8 @@ static uint16_t get_handle(const mxArray* array) {
 // input and outputs a cell array.
 
 static mxArray* do_forward(const mxArray* const bottom,
-                           const std::vector<std::string>& blob_names = std::vector<std::string>(),
+                           const std::vector<std::string>& blob_names =
+                             std::vector<std::string>(),
                            shared_ptr<Net<float> > net = net_) {
   if (!net) {
     mex_error("Calling 'forward' on an uninitialized net - call 'init' first");
@@ -176,7 +177,8 @@ static mxArray* do_forward(const mxArray* const bottom,
     result_blobs = &output_blobs;
   } else {
     for (size_t i = 0; i < blob_names.size(); ++i) {
-      const shared_ptr<Blob<float> > custom_output_blob = net->blob_by_name(blob_names[i]);
+      const shared_ptr<Blob<float> > custom_output_blob =
+        net->blob_by_name(blob_names[i]);
       extract_blobs[i] = const_cast<Blob<float>*>(custom_output_blob.get());
     }
     // but get pointers to requested custom output blobs if specified
@@ -190,8 +192,10 @@ static mxArray* do_forward(const mxArray* const bottom,
     // where width is the fastest dimension
     const vector<Blob<float>*>& result_blobs_ref = *result_blobs;
 
-    mwSize dims[4] = {result_blobs_ref[i]->width(), result_blobs_ref[i]->height(),
-      result_blobs_ref[i]->channels(), result_blobs_ref[i]->num()};
+    mwSize dims[4] = {result_blobs_ref[i]->width(),
+                      result_blobs_ref[i]->height(),
+                      result_blobs_ref[i]->channels(),
+                      result_blobs_ref[i]->num()};
     mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
 
     float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
@@ -382,7 +386,8 @@ static void get_init_key(MEX_ARGS) {
 static void init(MEX_ARGS) {
   if ((nrhs < 3) || (nrhs > 5)) {
     ostringstream error_msg;
-    error_msg << "Wrong number of arguments. Usage: caffe('init', model_def_file, model_file, phase_name,"
+    error_msg << "Wrong number of arguments. Usage: caffe('init', "
+              << "model_def_file, model_file, phase_name,"
               << "[, input_count=<0=from model>, net_handle=<0>])"
               << "Where net_handle=N and "
               << "N=0 (use singleton global net instance), "
@@ -421,7 +426,8 @@ static void init(MEX_ARGS) {
   // Handle output params
 
   if (((net_handle == GLOBAL_NET) || (net_handle > 0)) && (nlhs != 0))
-    mexErrMsgTxt("0 output arugments if net_handle>=0 (use global net/existing handle)");
+    mexErrMsgTxt("0 output arugments if net_handle>=0"
+                 "(use global net/existing handle)");
   if (net_handle == CREATE_NET) {
     if (nlhs != 1) {
       LOG(ERROR) << "Must provide output arugment if using net_handle<0"
@@ -443,7 +449,9 @@ static void init(MEX_ARGS) {
       plhs[0] = mxCreateDoubleScalar(init_key);
     }
   } else if (net_handle == CREATE_NET) {
-    shared_ptr<Net<float > > net(new Net<float>(string(param_file), phase, input_count));
+    shared_ptr<Net<float > >
+      net(new Net<float>(string(param_file),
+                         phase, input_count));
     net->CopyTrainedLayersFrom(string(model_file));
 
     uint16_t* created_handle;
@@ -451,12 +459,14 @@ static void init(MEX_ARGS) {
     plhs[0] = mxCreateNumericArray(2, dims, mxUINT16_CLASS, mxREAL);
     created_handle = static_cast<uint16_t*>(mxGetData(plhs[0]));
 
-    (*created_handle) = add_net(net);
+    (*created_handle) = add_net(&net);
   } else if (net_handle > 0) {
-    shared_ptr<Net<float > > net(new Net<float>(string(param_file), phase, input_count));
+    shared_ptr<Net<float > >
+      net(new Net<float>(string(param_file),
+                         phase, input_count));
     net->CopyTrainedLayersFrom(string(model_file));
 
-    add_net(net, net_handle);
+    add_net(&net, net_handle);
 
     uint16_t* return_handle;
     mwSize dims[3] = {1, 1};
@@ -476,7 +486,8 @@ static void init(MEX_ARGS) {
 
 static void reset(MEX_ARGS) {
   if ((nrhs != 0) || (nrhs != 1)) {
-    mex_error("Wrong number of arguments. Usage: caffe('reset'[, net_handle=<common>]");
+    mex_error("Wrong number of arguments. "
+              "Usage: caffe('reset'[, net_handle=<common>]");
   }
 
   uint16_t handle = 0;
@@ -505,7 +516,9 @@ static void forward(MEX_ARGS) {
   uint16_t handle = 0;
 
   if ((nrhs >= 2) && (!mxIsEmpty(prhs[1]))) {
-    if (!mxIsCell(prhs[1])) mex_error("blob_names should be a cell array of strings");
+    if (!mxIsCell(prhs[1])) {
+      mex_error("blob_names should be a cell array of strings");
+    }
     size_t blob_count = mxGetNumberOfElements(prhs[1]);
     for (size_t i = 0; i < blob_count; ++i) {
       blob_names.push_back(std::string(mxArrayToString(mxGetCell(prhs[1], i))));
@@ -527,7 +540,9 @@ static void forward(MEX_ARGS) {
 
 static void backward(MEX_ARGS) {
   if ((nrhs < 1) && (nrhs > 2)) {
-    mex_error("Wrong number of arguments. Usage: caffe('backward', top_diff[, net_handle=<common>])");
+    mex_error("Wrong number of arguments. "
+              "Usage: caffe('backward', top_diff"
+              "[, net_handle=<common>])");
   }
 
   uint16_t handle = 0;
@@ -544,7 +559,9 @@ static void backward(MEX_ARGS) {
 
 static void is_initialized(MEX_ARGS) {
   if ((nrhs != 0) && (nrhs != 1)) {
-    mex_error("Wrong number of arguments. Usage: caffe('is_initialized'[, net_handle=<common>])");
+    mex_error("Wrong number of arguments. "
+              "Usage: caffe('is_initialized'"
+              "[, net_handle=<common>])");
   }
 
   uint16_t handle = 0;
@@ -562,7 +579,9 @@ static void is_initialized(MEX_ARGS) {
 
 static void read_mean(MEX_ARGS) {
     if (nrhs != 1) {
-      mex_error("Wrong number of arguments. Usage: caffe('read_mean', 'path_to_binary_mean_file')");
+      mex_error("Wrong number of arguments. "
+                "Usage: caffe('read_mean', "
+                "'path_to_binary_mean_file')");
     }
     const string& mean_file = mxArrayToString(prhs[0]);
     Blob<float> data_mean;
@@ -586,7 +605,8 @@ static void read_mean(MEX_ARGS) {
 
 static void get_backend(MEX_ARGS) {
     if ((nlhs != 1) || (nrhs != 0)) {
-      mex_error("Wrong number of arguments. Usage: backend = caffe('get_backend')");
+      mex_error("Wrong number of arguments. "
+                "Usage: backend = caffe('get_backend')");
     }
 
     switch (Caffe::mode()) {
@@ -603,7 +623,9 @@ static void get_backend(MEX_ARGS) {
 
 static void get_blob_size(MEX_ARGS) {
     if (((nrhs != 1) && (nrhs != 2)) || (nlhs != 1)) {
-      mex_error("Wrong number of arguments. Usage: size = caffe('get_blob_size', blob_names=<[]=final>[, net_handle=<common>])");
+      mex_error("Wrong number of arguments. "
+                "Usage: size = caffe('get_blob_size', "
+                "blob_names=<[]=final>[, net_handle=<common>])");
     }
 
     // Handle params
@@ -620,10 +642,14 @@ static void get_blob_size(MEX_ARGS) {
     }
 
     if ((nrhs >= 1) && (!mxIsEmpty(prhs[0]))) {
-      if (!mxIsCell(prhs[0])) mex_error("blob_names should be a cell array of strings");
+      if (!mxIsCell(prhs[0])) {
+        mex_error("blob_names should be a cell array of strings");
+      }
       size_t blob_count = mxGetNumberOfElements(prhs[0]);
       for (size_t i = 0; i < blob_count; ++i) {
-        blob_names.push_back(std::string(mxArrayToString(mxGetCell(prhs[0], i))));
+        std::string blob_name =
+          std::string(mxArrayToString(mxGetCell(prhs[0], i)));
+        blob_names.push_back(blob_name);
       }
     } else {
       const vector<string>& all_blob_names = net->blob_names();
@@ -634,9 +660,11 @@ static void get_blob_size(MEX_ARGS) {
     plhs[0] = mxCreateCellMatrix(blob_names.size(), 1);
 
     for (size_t i = 0; i < blob_names.size(); ++i) {
-      const shared_ptr<Blob<float> > custom_output_blob = net->blob_by_name(blob_names[i]);
-      mxArray* mx_blob_sz = mxCreateNumericMatrix(4, 1,mxDOUBLE_CLASS,mxREAL);
-      double *data = (double*)mxGetData(mx_blob_sz);
+      const shared_ptr<Blob<float> > custom_output_blob =
+        net->blob_by_name(blob_names[i]);
+      mxArray* mx_blob_sz =
+        mxCreateNumericMatrix(4, 1, mxDOUBLE_CLASS, mxREAL);
+      double* data = static_cast<double*>(mxGetData(mx_blob_sz));
       data[0] = custom_output_blob->num();
       data[1] = custom_output_blob->channels();
       data[2] = custom_output_blob->height();
@@ -647,7 +675,9 @@ static void get_blob_size(MEX_ARGS) {
 
 static void destroy_net_by_handle(MEX_ARGS) {
     if (nrhs != 1) {
-      mex_error("Wrong number of arguments. Usage: caffe('destroy_net_by_handle', net_handle)");
+      mex_error("Wrong number of arguments. "
+                "Usage: caffe('destroy_net_by_handle', "
+                "net_handle)");
     }
 
     remove_net(get_handle(prhs[0]));

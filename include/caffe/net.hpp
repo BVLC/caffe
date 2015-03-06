@@ -23,8 +23,10 @@ namespace caffe {
 template <typename Dtype>
 class Net {
  public:
-  explicit Net(const NetParameter& param, const size_t force_input_count = 0);
-  explicit Net(const string& param_file, Phase phase, const size_t force_input_count = 0);
+  explicit Net(const NetParameter& param,
+               const size_t force_input_count = 0);
+  explicit Net(const string& param_file, Phase phase,
+               const size_t force_input_count = 0);
   virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.
