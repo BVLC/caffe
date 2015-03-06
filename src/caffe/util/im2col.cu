@@ -78,10 +78,71 @@ void im2col_gpu(const Dtype* data_im, const int num_spatial_axes,
     const int num_kernels, const int* im_shape, const int* col_shape,
     const int* kernel_shape, const int* pad, const int* stride,
     Dtype* data_col) {
-  im2col_gpu_kernel<Dtype, 2>  // NOLINT_NEXT_LINE(whitespace/operators)
-      <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
-      num_kernels, data_im, im_shape, col_shape,
-      kernel_shape, pad, stride, data_col);
+  switch (num_spatial_axes) {
+  case 1:
+    im2col_gpu_kernel<Dtype, 1>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 2:
+    im2col_gpu_kernel<Dtype, 2>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 3:
+    im2col_gpu_kernel<Dtype, 3>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 4:
+    im2col_gpu_kernel<Dtype, 4>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 5:
+    im2col_gpu_kernel<Dtype, 5>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 6:
+    im2col_gpu_kernel<Dtype, 6>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 7:
+    im2col_gpu_kernel<Dtype, 7>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 8:
+    im2col_gpu_kernel<Dtype, 8>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 9:
+    im2col_gpu_kernel<Dtype, 9>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  case 10:
+    im2col_gpu_kernel<Dtype, 10>  // NOLINT_NEXT_LINE(whitespace/operators)
+        <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
+        num_kernels, data_im, im_shape, col_shape,
+        kernel_shape, pad, stride, data_col);
+    break;
+  default:
+    LOG(FATAL) << "im2col_gpu does not support computation with "
+               << num_spatial_axes << " spatial axes";
+  }
   CUDA_POST_KERNEL_CHECK;
 }
 
@@ -172,10 +233,71 @@ void col2im_gpu(const Dtype* data_col, const int num_spatial_axes,
     const int im_size, const int* im_shape, const int* col_shape,
     const int* kernel_shape, const int* pad, const int* stride,
     Dtype* data_im) {
-  col2im_gpu_kernel<Dtype, 2>  // NOLINT_NEXT_LINE(whitespace/operators)
-        <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
-        im_size, data_col, im_shape, col_shape,
-        kernel_shape, pad, stride, data_im);
+  switch (num_spatial_axes) {
+  case 1:
+    col2im_gpu_kernel<Dtype, 1>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 2:
+    col2im_gpu_kernel<Dtype, 2>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 3:
+    col2im_gpu_kernel<Dtype, 3>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 4:
+    col2im_gpu_kernel<Dtype, 4>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 5:
+    col2im_gpu_kernel<Dtype, 5>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 6:
+    col2im_gpu_kernel<Dtype, 6>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 7:
+    col2im_gpu_kernel<Dtype, 7>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 8:
+    col2im_gpu_kernel<Dtype, 8>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 9:
+    col2im_gpu_kernel<Dtype, 9>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  case 10:
+    col2im_gpu_kernel<Dtype, 10>  // NOLINT_NEXT_LINE(whitespace/operators)
+          <<<CAFFE_GET_BLOCKS(im_size), CAFFE_CUDA_NUM_THREADS>>>(
+          im_size, data_col, im_shape, col_shape,
+          kernel_shape, pad, stride, data_im);
+    break;
+  default:
+    LOG(FATAL) << "im2col_gpu does not support computation with "
+               << num_spatial_axes << " spatial axes";
+  }
   CUDA_POST_KERNEL_CHECK;
 }
 
