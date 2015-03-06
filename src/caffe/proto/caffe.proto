@@ -288,7 +288,7 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-  // Next ID: 133
+  // Next ID: 134
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional ConcatParameter concat_param = 104;
@@ -312,6 +312,7 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PythonParameter python_param = 130;
+  optional ReshapeParameter reshape_param = 133;
   optional ReLUParameter relu_param = 123;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
@@ -615,6 +616,13 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+}
+
+
+message ReshapeParameter {
+  optional uint32 new_channels = 1;
+  optional uint32 new_height = 2;
+  optional uint32 new_width = 3;
 }
 
 

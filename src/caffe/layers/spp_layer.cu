@@ -292,7 +292,6 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
     const int* mask, const Dtype* top_mask, const int num, const int channels,
     const int height, const int width, const int kernel_depth,
     const int output_size, const int window_count, Dtype* bottom_diff) {
-  // Shift holds the total of kernels at step i.
   CUDA_KERNEL_LOOP(index, nthreads) {
     // Index in the bottom array.
     int w = index % width;
@@ -307,31 +306,6 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
     if (mask) {
       mask += offset;
       for (int win = 0; win < window_count; ++win) {
-        /*
-        int shift = 0;
-        for (int i = 0; i < kernel_depth; ++i) {
-          int num_pools = 1 << i;
-          int pw = w / num_pools;
-          int ph = h / num_pools;
-          if (DEBUG) {
-              printf("Mask Backward "
-                "Index: %d\t"
-                "w: %d\t"
-                "h: %d\t"
-                "num_pools : %d\t"
-                "pw: %d\t"
-                "ph: %d\t"
-                "c: %d\t"
-                "n: %d\t\n", index, w, h, num_pools, pw, ph,
-                c, n);
-          }
-          if (mask[win * output_size + shift + ph * num_pools + pw] ==
-              h * width + w) {
-            gradient += top_diff[ph * num_pools + pw];
-          }
-          shift += num_pools * num_pools;
-        }
-          */
         // Because of crazy indexing in windows, easier to check every window.
         for (int i = 0; i < output_size; ++i) {
           if (mask[win * output_size + i] == h * width + w) {
@@ -357,30 +331,26 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
     } else {
       top_mask += offset;
       for (int win = 0; win < window_count; ++win) {
-        int shift = 0;
-        for (int i = 0; i < kernel_depth; ++i) {
-          int num_pools = 1 << i;
-          int pw = w / num_pools;
-          int ph = h / num_pools;
-          if (DEBUG) {
-              printf("No Mask Backward "
+        // Because of crazy indexing in windows, easier to check every window.
+        for (int i = 0; i < output_size; ++i) {
+          if (top_mask[win * output_size + i] == h * width + w) {
+            gradient += top_diff[i];
+            if (DEBUG && BOTTOM) {
+              printf("Mask Backward "
                 "Index: %d\t"
                 "w: %d\t"
                 "h: %d\t"
-                "num_pools : %d\t"
-                "kernel_h: %d\t"
-                "kernel_w: %d\t"
-                "pw: %d\t"
-                "ph: %d\t"
                 "c: %d\t"
-                "n: %d\t\n", index, w, h, num_pools, pw, ph,
-                c, n);
+                "n: %d\t"
+                "i: %d\t"
+                "win: %d\t"
+                "idx: %d\t"
+                "gradient: %f\t"
+                "top_diff[i]: %f\t"
+                "mask[i]: %d\t"
+                "\n", index, w, h, c, n, i, win, win * output_size + i, gradient, top_diff[i], top_mask[win * output_size + i]);
+            }
           }
-          if (top_mask[win * output_size + shift + ph * num_pools + pw] ==
-              h * width + w) {
-            gradient += top_diff[ph * num_pools + pw];
-          }
-          shift += num_pools * num_pools;
         }
       }
     }
