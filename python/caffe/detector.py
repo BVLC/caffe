@@ -24,7 +24,7 @@ class Detector(caffe.Net):
     Detector extends Net for windowed detection by a list of crops or
     selective search proposals.
     """
-    def __init__(self, model_file, pretrained_file, gpu=False, mean=None,
+    def __init__(self, model_file, pretrained_file, mean=None,
                  input_scale=None, raw_scale=None, channel_swap=None,
                  context_pad=None):
         """
