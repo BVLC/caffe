@@ -96,16 +96,18 @@ def main(argv):
     if args.channel_swap:
         channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
-    # Make classifier.
-    classifier = caffe.Classifier(args.model_def, args.pretrained_model,
-            image_dims=image_dims, gpu=args.gpu, mean=mean,
-            input_scale=args.input_scale, raw_scale=args.raw_scale,
-            channel_swap=channel_swap)
-
     if args.gpu:
+        caffe.set_mode_gpu()
         print("GPU mode")
     else:
+        caffe.set_mode_cpu()
         print("CPU mode")
+
+    # Make classifier.
+    classifier = caffe.Classifier(args.model_def, args.pretrained_model,
+            image_dims=image_dims, mean=mean,
+            input_scale=args.input_scale, raw_scale=args.raw_scale,
+            channel_swap=channel_swap)
 
     # Load numpy array (.npy), directory glob (*.jpg), or image file.
     args.input_file = os.path.expanduser(args.input_file)
