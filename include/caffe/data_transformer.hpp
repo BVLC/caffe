@@ -5,6 +5,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -107,6 +108,10 @@ class DataTransformer {
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+  vector<Dtype> eigen_values_;
+  Blob<Dtype> eigen_vectors_;
+  shared_ptr<Filler<Dtype> > relight_filler_;
+  Blob<Dtype> relight_;
 };
 
 }  // namespace caffe

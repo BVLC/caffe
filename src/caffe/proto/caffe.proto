@@ -337,6 +337,14 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
+  // For relighting augmentation we need both the eigenvectors and eigenvalues.
+  // Unless both are defined, relighting augmentation will be disabled.
+  // the eigen values of the components, same as number of channels.
+  repeated float eigen_value = 6;
+  // the eigen vectors of the components, there should be channels*channels elements.
+  repeated float eigen_vector_component = 7;
+  // filler for re-lighting random variable
+  optional FillerParameter relight_filler = 8;
 }
 
 // Message that stores parameters shared by loss layers
