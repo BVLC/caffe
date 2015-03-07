@@ -40,7 +40,7 @@ class Detector(caffe.Net):
         # configure pre-processing
         in_ = self.inputs[0]
         self.transformer = caffe.io.Transformer(
-            {in_: self.blobs[in_].data.shape for in_ in self.inputs})
+            {in_: self.blobs[in_].data.shape})
         self.transformer.set_transpose(in_, (2,0,1))
         if mean is not None:
             self.transformer.set_mean(in_, mean)
