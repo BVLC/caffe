@@ -13,6 +13,16 @@ namespace caffe {
  *        computational unit through which Layer%s, Net%s, and Solver%s
  *        interact.
  *
+ * Blob%s are 4-dimensional arrays that store data (e.g. images, model
+ * parameters and derivatives) in the order of (Num, Channels, Height, Width).
+ * These data are stored in a C-contiguous fashion in CPU and/or GPU memory.
+ + Blob%s conceal the computational overhead of mixed CPU/GPU operation.
+ * Syncronization between the CPU and the GPU is provided by the SyncedMemory
+ * objects, when it is necessary in order to provide communication between
+ * layers (e.g. when the network is trained in GPU but one layer does not
+ * implement the Layer<Dtype>::Forward_gpu() or the Layer<Dtype>::Backward_gpu() 
+ * function).
+ *
  * TODO(dox): more thorough description.
  */
 template <typename Dtype>
@@ -36,15 +46,40 @@ class Blob {
    * Note that reshaping an input blob and immediately calling Net::Backward is
    * an error; either Net::Forward or Net::Reshape need to be called to
    * propagate the new input shape to higher layers.
+   *
+   * @param num
+   *     (in general) the number of 3-dimensional arrays or otherwise the batch
+   *     size
+   * @param channels
+   *     (in general) the number of dimensions per 2-dimensional array or
+   *     otherwise the number of channels per image
+   * @param height
+   *     the first dimension of the 2-dimensional array or otherwise the height
+   *     per image
+   * @param width
+   *     the second dimension of the 2-dimensional array or otherwise the width
+   *     per image
    */
   void Reshape(const int num, const int channels, const int height,
     const int width);
+  /**
+   * @brief Change the dimensions of the blob, based on the dimensions of
+   *        another blob, while allocating new memory if necessary.
+   *
+   * @param Blob
+   *     the blob which's dimensions are used as a reference to reshape the
+   *     callig blob
+   */
   void ReshapeLike(const Blob& other);
   inline int num() const { return num_; }
   inline int channels() const { return channels_; }
   inline int height() const { return height_; }
   inline int width() const { return width_; }
   inline int count() const { return count_; }
+  /**
+   * @brief Return the position of a 4-dimensional array as it is store in a
+   *        C-contiguous arrays
+   */
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     CHECK_GE(n, 0);
@@ -69,6 +104,10 @@ class Blob {
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
+  /**
+   * @brief Return the Dtype value of the data which are in the (n, c, h, w)
+   *        position of the blob (the 4-dimensional array)
+   */
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {
     return *(cpu_data() + offset(n, c, h, w));
@@ -79,6 +118,9 @@ class Blob {
     return *(cpu_diff() + offset(n, c, h, w));
   }
 
+  /**
+   * @brief return the SyncedMemory pointer to data
+   */
   inline const shared_ptr<SyncedMemory>& data() const {
     CHECK(data_);
     return data_;
@@ -118,7 +160,7 @@ class Blob {
 
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
-   *        data_ of Blob other -- useful in Layer&s which simply perform a copy
+   *        data_ of Blob other -- useful in Layer%s which simply perform a copy
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's data_, as
@@ -127,7 +169,7 @@ class Blob {
   void ShareData(const Blob& other);
   /**
    * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
-   *        diff_ of Blob other -- useful in Layer&s which simply perform a copy
+   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
    *        in their Forward pass.
    *
    * This deallocates the SyncedMemory holding this Blob's diff_, as
