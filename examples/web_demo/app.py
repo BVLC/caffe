@@ -210,8 +210,9 @@ def start_from_terminal(app):
     opts, args = parser.parse_args()
     ImagenetClassifier.default_args.update({'gpu_mode': opts.gpu})
 
-    # Initialize classifier
+    # Initialize classifier + warm start by forward for allocation
     app.clf = ImagenetClassifier(**ImagenetClassifier.default_args)
+    app.clf.net.forward()
 
     if opts.debug:
         app.run(debug=True, host='0.0.0.0', port=opts.port)
