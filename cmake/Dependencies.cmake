@@ -25,7 +25,7 @@ include(cmake/ProtoBuf.cmake)
 
 # ---[ HDF5
 find_package(HDF5 COMPONENTS HL REQUIRED)
-include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
+include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${HDF5_LIBRARIES})
 
 # ---[ LMDB
