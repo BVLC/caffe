@@ -228,6 +228,55 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   datum->set_data(buffer);
 }
 
+template <typename Dtype, int channels>
+cv::Mat BlobToCVMat(Blob<Dtype> *blob, int num) {
+  CHECK(blob->channels() == channels)
+      << "Blob does not have correct number of channels";
+  cv::Mat img = cv::Mat(blob->height(), blob->width(),
+      CV_MAKETYPE(cv::DataDepth<Dtype>::value, channels));
+  for (int y = 0; y < blob->height(); y++) {
+    for (int x = 0; x < blob->width(); x++) {
+      cv::Vec<Dtype, channels> val;
+      for (int c = 0; c < channels; c++) {
+        img.at<cv::Vec<Dtype, channels> >(y, x)[c] =
+          static_cast<Dtype>(*(blob->cpu_data()+blob->offset(num, c, y, x)));
+      }
+    }
+  }
+  return img;
+}
+
+template
+cv::Mat BlobToCVMat<float, 3>(Blob<float> *blob, int num);
+
+template
+cv::Mat BlobToCVMat<double, 3>(Blob<double> *blob, int num);
+
+template <typename Dtype, int channels>
+void CVMatToBlob(cv::Mat img, Blob<Dtype> *blob) {
+  CHECK(img.depth() == CV_MAKETYPE(cv::DataDepth<Dtype>::value, channels))
+    << "OpenCV matrix and Blob must have same type";
+  CHECK(img.channels() == channels)
+    << "OpenCV matrix does not have correct number of channels";
+  blob->Reshape(1, channels, img.rows, img.cols);
+
+  for (int y = 0; y < blob->height(); y++) {
+    for (int x = 0; x < blob->width(); x++) {
+      cv::Vec<Dtype, channels> val;
+      for (int c = 0; c < channels; c++) {
+        *(blob->mutable_cpu_data()+blob->offset(0, c, y, x)) =
+          img.at<cv::Vec<Dtype, channels> >(y, x)[c];
+      }
+    }
+  }
+}
+
+template
+void CVMatToBlob<float, 3>(cv::Mat img, Blob<float> *blob);
+
+template
+void CVMatToBlob<double, 3>(cv::Mat img, Blob<double> *blob);
+
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -14,8 +15,15 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
-namespace caffe {
+#include "google/protobuf/io/coded_stream.h"
+#include "google/protobuf/io/zero_copy_stream_impl.h"
+#include "google/protobuf/text_format.h"
 
+using google::protobuf::io::ZeroCopyInputStream;
+using google::protobuf::io::ArrayInputStream;
+using google::protobuf::io::CodedInputStream;
+
+namespace caffe {
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
@@ -38,9 +46,17 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       cursor_->Next();
     }
   }
+
   // Read a data point, and use it to initialize the top blob.
+  string stringcoding = cursor_->value();
+  ZeroCopyInputStream* raw_input =
+      new ArrayInputStream(stringcoding.c_str(), stringcoding.length());
+  CodedInputStream* coded_input = new CodedInputStream(raw_input);
+  coded_input->SetTotalBytesLimit(std::numeric_limits<int>::max(),
+      std::numeric_limits<int>::max()*0.8);
+
   Datum datum;
-  datum.ParseFromString(cursor_->value());
+  datum.ParseFromCodedStream(coded_input);
 
   bool force_color = this->layer_param_.data_param().force_encoded_color();
   if ((force_color && DecodeDatum(&datum, true)) ||
@@ -73,6 +89,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
         1, 1, 1);
   }
+
+  delete coded_input;
+  delete raw_input;
 }
 
 // This function is used to create a thread that prefetches the data.
@@ -108,8 +127,15 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
+    string stringcoding = cursor_->value();
+    ZeroCopyInputStream* raw_input =
+        new ArrayInputStream(stringcoding.c_str(), stringcoding.length());
+    CodedInputStream* coded_input = new CodedInputStream(raw_input);
+    coded_input->SetTotalBytesLimit(std::numeric_limits<int>::max(),
+        std::numeric_limits<int>::max()*0.8);
+
     Datum datum;
-    datum.ParseFromString(cursor_->value());
+    datum.ParseFromCodedStream(coded_input);
 
     cv::Mat cv_img;
     if (datum.encoded()) {
@@ -146,6 +172,9 @@ void DataLayer<Dtype>::InternalThreadEntry() {
       DLOG(INFO) << "Restarting data prefetching from start.";
       cursor_->SeekToFirst();
     }
+
+    delete coded_input;
+    delete raw_input;
   }
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
