@@ -171,6 +171,8 @@ class HDF5DataLayer : public Layer<Dtype> {
   unsigned int current_file_;
   hsize_t current_row_;
   std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
+  std::vector<unsigned int> data_permutation_;
+  std::vector<unsigned int> file_permutation_;
 };
 
 /**
