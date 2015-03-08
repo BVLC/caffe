@@ -277,14 +277,19 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  int batch_size_, channels_, height_, width_, size_;
+  int batch_size_, channels_, size_;
+  // This is input data shape
+  int height_, width_;
+  // This correspones to tops blob shape
+  int top_width_, top_height_;
+
   Dtype* data_;
   Dtype* labels_;
   int n_;
   size_t pos_;
   Blob<Dtype> added_data_;
   Blob<Dtype> added_label_;
-  bool has_new_data_;
+  bool has_new_data_, need_reshape_;
 };
 
 /**
