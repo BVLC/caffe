@@ -131,6 +131,7 @@ ReadImageToDatumMultiRegression(const string& filename,
     LOG(ERROR) << "Could not open or find file " << filename;
     return false;
   }
+
   if (height > 0 && width > 0) {
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
   } else {
@@ -166,12 +167,9 @@ ReadImageToDatumMultiRegression(const string& filename,
         }
       }
   }
+
   return true;
 }
-
-
-
-
 
 leveldb::Options GetLevelDBOptions() {
   // In default, we will return the leveldb option and set the max open files

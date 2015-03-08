@@ -76,6 +76,12 @@ void ImageDataLayerMultiRegression<Dtype>::DataLayerSetUp(const vector<Blob<Dtyp
   DatumMultiRegression datum;
   CHECK(ReadImageToDatumMultiRegression(lines_[lines_id_].first, lines_[lines_id_].second,
                                          new_height, new_width, &datum));
+
+  // for(int debug_i = 0; debug_i < label_dim; debug_i++) {
+  //   LOG(INFO) << "XXX datum.mutable_label()[debug_i] = " << datum.label(debug_i);
+  //   LOG(INFO) << "YYY lines_[lines_id_].second = " << lines_[lines_id_].second[debug_i];
+  // }
+
   // image
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
@@ -144,7 +150,9 @@ void ImageDataLayerMultiRegression<Dtype>::InternalThreadEntry() {
 
     //top_label[item_id] = datum.label();
     size_t label_dim = datum.label().size();
-    caffe_copy(label_dim, (Dtype*) datum.mutable_label(), &top_label[item_id * label_dim]);
+    for(int ldim = 0; ldim < label_dim; ldim++) {
+      top_label[item_id * label_dim + ldim] = datum.label(ldim);
+    }
 
     // go to the next iter
     lines_id_++;
