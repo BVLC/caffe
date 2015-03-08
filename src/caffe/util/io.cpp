@@ -114,26 +114,32 @@ static bool matchExt(const std::string & fn,
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color,
     const std::string & encoding, Datum* datum) {
-  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
-  if (cv_img.data) {
-    if (encoding.size()) {
-      if ( (cv_img.channels() == 3) == is_color && !height && !width &&
-          matchExt(filename, encoding) )
+  if (encoding.size()) {
+    if ( !height && !width && matchExt(filename, encoding) ) {
+      // Try to just copy the file on disk
+      cv::Mat cv_img = cv::imread(filename, -1);
+      if (!cv_img.data) return false;
+      const int expected_channels = is_color ? 3 : 1;
+      if (cv_img.channels() == expected_channels)
         return ReadFileToDatum(filename, label, datum);
-      std::vector<uchar> buf;
-      cv::imencode("."+encoding, cv_img, buf);
-      datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
-                      buf.size()));
-      datum->set_label(label);
-      datum->set_encoded(true);
-      return true;
     }
-    CVMatToDatum(cv_img, datum);
+    // Re-encode the image
+    cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
+    if (!cv_img.data) return false;
+    std::vector<uchar> buf;
+    cv::imencode("."+encoding, cv_img, buf);
+    datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
+                    buf.size()));
     datum->set_label(label);
+    datum->set_encoded(true);
     return true;
-  } else {
-    return false;
   }
+  // Store the unencoded image
+  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
+  if (!cv_img.data) return false;
+  CVMatToDatum(cv_img, datum);
+  datum->set_label(label);
+  return true;
 }
 
 bool ReadFileToDatum(const string& filename, const int label,
