@@ -44,7 +44,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param;
   InsertSplits(filtered_param, &param);
-  // Basically, build all the layers and set up its connections.
+  // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
   set<string> available_blobs;
@@ -65,7 +65,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
   }
   DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
-  // For each layer, set up their input and output
+  // For each layer, set up its input and output
   bottom_vecs_.resize(param.layer_size());
   top_vecs_.resize(param.layer_size());
   bottom_id_vecs_.resize(param.layer_size());
