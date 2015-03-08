@@ -15,15 +15,39 @@ __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out,
 }
 
 template <typename Dtype>
+__global__ void TRECforward(const int n, const Dtype* in, Dtype* out,
+    Dtype negative_slope, Dtype theta) {
+  CUDA_KERNEL_LOOP(index, n) {
+    Dtype input = in[index];
+    if (abs(input) > theta) {
+      out[index] = input > 0 ? input : input * negative_slope;
+    } else {
+      out[index] = Dtype(0);
+    }
+  }
+}
+
+template <typename Dtype>
 void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
   Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  ReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom_data, top_data, negative_slope);
+
+  // Thresholded RELU (TREC) has zero derivative in the TRAIN phase when the
+  // input magnitude does not exceed the threshold theta.
+  if ( Caffe::phase() == Caffe::TRAIN &&
+       this->layer_param_.relu_param().has_theta() ) {
+    Dtype theta = this->layer_param_.relu_param().theta();
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    TRECforward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, bottom_data, top_data, negative_slope, theta);
+  } else {
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    ReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, bottom_data, top_data, negative_slope);
+  }
   CUDA_POST_KERNEL_CHECK;
   // << " count: " << count << " bottom_data: "
   //     << (unsigned long)bottom_data
@@ -41,6 +65,22 @@ __global__ void ReLUBackward(const int n, const Dtype* in_diff,
   }
 }
 
+// Thresholded RELU back propagation.
+template<typename Dtype>
+__global__ void TRECbackward(const int n, const Dtype* in_diff,
+         const Dtype* in_data, Dtype* out_diff, Dtype negative_slope,
+                             Dtype theta ) {
+  CUDA_KERNEL_LOOP(index, n) {
+    Dtype input = in_data[index];
+    if (abs(input) > theta) {
+      out_diff[index] = in_diff[index] * ((input > 0) +
+                                          (input <= 0) * negative_slope);
+    } else {
+      out_diff[index] = Dtype(0);
+    }
+  }
+}
+
 template <typename Dtype>
 void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
@@ -51,9 +91,19 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
     const int count = bottom[0]->count();
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    ReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, bottom_data, bottom_diff, negative_slope);
+    // Threshholded RELU (TREC) has zero derivative in the TRAIN phase when the
+    // input does not exceed the threshold theta.
+    if ( Caffe::phase() == Caffe::TRAIN &&
+         this->layer_param_.relu_param().has_theta() ) {
+      Dtype theta = this->layer_param_.relu_param().theta();
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      TRECbackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+          count, top_diff, bottom_data, bottom_diff, negative_slope, theta);
+    } else {
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      ReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+          count, top_diff, bottom_data, bottom_diff, negative_slope);
+    }
     CUDA_POST_KERNEL_CHECK;
   }
 }

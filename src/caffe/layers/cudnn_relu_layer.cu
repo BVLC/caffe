@@ -15,6 +15,11 @@ void CuDNNReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     return ReLULayer<Dtype>::Forward_gpu(bottom, top);
   }
 
+  // Fallback to standard Caffe for thresholded RELU (TREC).
+  if (ReLULayer<Dtype>::layer_param_.relu_param().has_theta()) {
+    return ReLULayer<Dtype>::Forward_gpu(bottom, top);
+  }
+
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   CUDNN_CHECK(cudnnActivationForward(this->handle_,
@@ -32,6 +37,11 @@ void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   // Fallback to standard Caffe for leaky ReLU.
   if (ReLULayer<Dtype>::layer_param_.relu_param().negative_slope() != 0) {
+    return ReLULayer<Dtype>::Backward_gpu(top, propagate_down, bottom);
+  }
+
+  // Fallback to standard Caffe for thresholded ReLU (TRec).
+  if (ReLULayer<Dtype>::layer_param.relu_param().has_theta()) {
     return ReLULayer<Dtype>::Backward_gpu(top, propagate_down, bottom);
   }
 
