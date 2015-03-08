@@ -1,3 +1,4 @@
+#include <boost/thread.hpp>
 #include <glog/logging.h>
 #include <cstdio>
 #include <ctime>
@@ -37,6 +38,13 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InitGoogleLogging(*(pargv)[0]);
   // Provide a backtrace on segfault.
   ::google::InstallFailureSignalHandler();
+}
+
+Caffe& Caffe::Get() {
+  if (!singleton_.get()) {
+    singleton_.reset(new Caffe());
+  }
+  return *singleton_;
 }
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
