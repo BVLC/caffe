@@ -66,7 +66,7 @@ private:\
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
 // See PR #1236
-namespace cv {class Mat;}
+namespace cv { class Mat; }
 
 namespace caffe {
 
