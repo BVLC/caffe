@@ -19,6 +19,12 @@ inline void mex_error(const std::string &msg) {
   mexErrMsgTxt(msg.c_str());
 }
 
+// Log and print Warning message
+inline void mex_warn(const std::string &msg) {
+  LOG(INFO) << msg;
+  mexWarnMsgTxt(msg.c_str());
+}
+
 using namespace caffe;  // NOLINT(build/namespaces)
 
 // The pointer to the internal caffe::Net instance
@@ -51,7 +57,8 @@ static int init_key = -2;
 // The actual forward function. It takes in a cell array of 4-D arrays as
 // input and outputs a cell array.
 
-static mxArray* do_forward(const mxArray* const bottom) {
+static mxArray* do_forward(const mxArray* const bottom,
+    const bool is_conv = false) {
   const vector<Blob<float>*>& input_blobs = net_->input_blobs();
   if (static_cast<unsigned int>(mxGetDimensions(bottom)[0]) !=
       input_blobs.size()) {
@@ -62,13 +69,34 @@ static mxArray* do_forward(const mxArray* const bottom) {
     if (!mxIsSingle(elem)) {
       mex_error("MatCaffe require single-precision float point data");
     }
-    if (mxGetNumberOfElements(elem) != input_blobs[i]->count()) {
+    if (!is_conv && mxGetNumberOfElements(elem) != input_blobs[i]->count()) {
       std::string error_msg;
       error_msg += "MatCaffe input size does not match the input size ";
       error_msg += "of the network";
       mex_error(error_msg);
     }
-
+    if (is_conv) {
+      // allow dynamic input size, when the net is fully convolutional.
+      const int num_dims = mxGetNumberOfDimensions(elem);
+      if (num_dims > 4) {
+        ostringstream error_msg;
+        error_msg << "Expected input blob has at most 4 dimensions, got "
+            << num_dims;
+        mex_error(error_msg.str());
+      }
+      const mwSize* dim = mxGetDimensions(elem);
+      int width = dim[0];   // width in caffe is the fastest dimension
+      int height = dim[1];
+      int channels = num_dims > 2 ? dim[2] : 1;
+      int num = num_dims > 3 ? dim[3] : 1;
+      if (input_blobs[i]->width() != width
+          || input_blobs[i]->height() != height
+          || input_blobs[i]->channels() != channels
+          || input_blobs[i]->num() != num) {
+        input_blobs[i]->Reshape(num, channels, height, width);
+        // The shape of other layers will be reshaped when calling forward.
+      }
+    }
     const float* const data_ptr =
         reinterpret_cast<const float* const>(mxGetPr(elem));
     switch (Caffe::mode()) {
@@ -242,8 +270,124 @@ static mxArray* do_get_weights() {
   return mx_layers;
 }
 
+static void do_set_weights(const mxArray* const mx_layers) {
+  // check input
+  if (!mxIsStruct(mx_layers)) {
+    mex_error("Expected input structure array with \"weights\" "
+        "and \"layer_names\" fields");
+  }
+  const int num_layers = mxGetNumberOfElements(mx_layers);
+  const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
+  const vector<string>& layer_names = net_->layer_names();
+  for (int i = 0; i < num_layers; ++i) {
+    char* c_l_name = mxArrayToString(mxGetField(mx_layers, i, "layer_names"));
+    const mxArray* mx_l_weights = mxGetField(mx_layers, i, "weights");
+    if (!c_l_name || !mx_l_weights || !mxIsCell(mx_l_weights)) {
+      // fail to find corresponding field
+      mex_error("Expected field \"weights\" contain "
+          "cells of single-precision number, "
+          "and field \"layer_names\" contain string");
+    }
+    const string l_name(c_l_name);
+    mxFree(static_cast<void*>(c_l_name));
+    // Step 1: find corresponding layer in the net_
+    unsigned int ln;
+    for (ln = 0; ln < layer_names.size(); ++ln) {
+      if (l_name == layer_names[ln]) break;
+    }
+    if (ln >= layer_names.size()) {
+      mex_warn("Ignoring source layer " + l_name);
+      continue;
+    }
+    // Step 2: set layer weights
+    const vector<shared_ptr<Blob<float> > >& layer_blobs = layers[ln]->blobs();
+    if (layer_blobs.size() != mxGetNumberOfElements(mx_l_weights)) {
+      ostringstream error_msg;
+      error_msg << "Layer " << l_name << " expected "
+          << layer_blobs.size() << " blob(s), got "
+          << mxGetNumberOfElements(mx_l_weights);
+      mex_error(error_msg.str());
+    }
+    for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
+      // internally data is stored as (width, height, channels, num)
+      // where width is the fastest dimension
+      const mxArray* mx_weights = mxGetCell(mx_l_weights, j);
+      if (!mxIsSingle(mx_weights)) {
+        mex_error("MatCaffe require single-precision float point data");
+      }
+      const int num_dims = mxGetNumberOfDimensions(mx_weights);
+      if (num_dims > 4) {
+        ostringstream error_msg;
+        error_msg << "Expected input blob has at most 4 dimensions, got "
+            << num_dims;
+        mex_error(error_msg.str());
+      }
+      const mwSize *dims = mxGetDimensions(mx_weights);
+      const int width = dims[0];
+      const int height = dims[1];
+      const int channels = num_dims > 2 ? dims[2] : 1;
+      const int num = num_dims > 3 ? dims[3] : 1;
+      if (layer_blobs[j]->width() != width) {
+        ostringstream error_msg;
+        error_msg << "Expected blob " << j << " in layer " << l_name
+            << " has width = " << layer_blobs[j]->width()
+            << ", got " << width;
+        mex_error(error_msg.str());
+      }
+      if (layer_blobs[j]->height() != height) {
+        ostringstream error_msg;
+        error_msg << "Expected blob " << j << " in layer " << l_name
+            << " has height = " << layer_blobs[j]->height()
+            << ", got " << height;
+        mex_error(error_msg.str());
+      }
+      if (layer_blobs[j]->channels() != channels) {
+        ostringstream error_msg;
+        error_msg << "Expected blob " << j << " in layer " << l_name
+            << " has channels = " << layer_blobs[j]->channels()
+            << ", got " << channels;
+        mex_error(error_msg.str());
+      }
+      if (layer_blobs[j]->num() != num) {
+        ostringstream error_msg;
+        error_msg << "Expected blob " << j << " in layer " << l_name
+            << " has width = " << layer_blobs[j]->num()
+            << ", got " << num;
+        mex_error(error_msg.str());
+      }
+
+      const float* weights_ptr =
+          reinterpret_cast<const float*>(mxGetPr(mx_weights));
+      switch (Caffe::mode()) {
+      case Caffe::CPU:
+        caffe_copy(layer_blobs[j]->count(), weights_ptr,
+            layer_blobs[j]->mutable_cpu_data());
+        break;
+      case Caffe::GPU:
+        caffe_copy(layer_blobs[j]->count(), weights_ptr,
+            layer_blobs[j]->mutable_gpu_data());
+        break;
+      default:
+        mex_error("Unknown Caffe mode");
+      }
+    }
+  }
+}
+
 static void get_weights(MEX_ARGS) {
+  if (!net_) {
+    mex_error("Init net before get weights");
+  }
   plhs[0] = do_get_weights();
+}
+
+static void set_weights(MEX_ARGS) {
+  if (nrhs != 1) {
+    ostringstream error_msg;
+    error_msg << "Expected 1 argument, got " << nrhs;
+    mex_error(error_msg.str());
+  }
+  do_set_weights(prhs[0]);
 }
 
 static void set_mode_cpu(MEX_ARGS) {
@@ -311,6 +455,28 @@ static void reset(MEX_ARGS) {
   }
 }
 
+// save the network weights to binary proto
+static void save(MEX_ARGS) {
+  if (nrhs != 1) {
+    ostringstream error_msg;
+    error_msg << "Expected 1 argument, got " << nrhs;
+    mex_error(error_msg.str());
+  }
+  if (!net_) {
+    mex_error("Init net before save it");
+  }
+  char* c_model_file = mxArrayToString(prhs[0]);
+  if (!c_model_file) {
+    mex_error("Expected string input for model name");
+  }
+  string model_file(c_model_file);
+  mxFree(static_cast<void*>(c_model_file));
+
+  NetParameter net_param;
+  net_->ToProto(&net_param, false);
+  WriteProtoToBinaryFile(net_param, model_file);
+}
+
 static void forward(MEX_ARGS) {
   if (nrhs != 1) {
     ostringstream error_msg;
@@ -319,6 +485,16 @@ static void forward(MEX_ARGS) {
   }
 
   plhs[0] = do_forward(prhs[0]);
+}
+
+static void conv_forward(MEX_ARGS) {
+  if (nrhs != 1) {
+    ostringstream error_msg;
+    error_msg << "Expected 1 argument, got " << nrhs;
+    mex_error(error_msg.str());
+  }
+
+  plhs[0] = do_forward(prhs[0], true);
 }
 
 static void backward(MEX_ARGS) {
@@ -375,6 +551,7 @@ struct handler_registry {
 static handler_registry handlers[] = {
   // Public API functions
   { "forward",            forward         },
+  { "conv_forward",       conv_forward    },
   { "backward",           backward        },
   { "init",               init            },
   { "is_initialized",     is_initialized  },
@@ -382,8 +559,10 @@ static handler_registry handlers[] = {
   { "set_mode_gpu",       set_mode_gpu    },
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
+  { "set_weights",        set_weights     },
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
+  { "save",               save            },
   { "read_mean",          read_mean       },
   // The end.
   { "END",                NULL            },
