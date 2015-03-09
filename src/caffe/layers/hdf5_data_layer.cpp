@@ -36,7 +36,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   hdf_blobs_.resize(top_size);
 
   const int MIN_DATA_DIM = 1;
-  const int MAX_DATA_DIM = 4;
+  const int MAX_DATA_DIM = INT_MAX;
 
   for (int i = 0; i < top_size; ++i) {
     hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
@@ -88,9 +88,14 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Reshape blobs.
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int top_size = this->layer_param_.top_size();
+  vector<int> top_shape;
   for (int i = 0; i < top_size; ++i) {
-    top[i]->Reshape(batch_size, hdf_blobs_[i]->channels(),
-                    hdf_blobs_[i]->height(), hdf_blobs_[i]->width());
+    top_shape.resize(hdf_blobs_[i]->num_axes());
+    top_shape[0] = batch_size;
+    for (int j = 1; j < top_shape.size(); ++j) {
+      top_shape[j] = hdf_blobs_[i]->shape(j);
+    }
+    top[i]->Reshape(top_shape);
   }
 }
 

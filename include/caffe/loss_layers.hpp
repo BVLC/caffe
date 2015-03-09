@@ -79,6 +79,7 @@ class AccuracyLayer : public Layer<Dtype> {
   }
 
 
+  int label_axis_, outer_num_, inner_num_;
   int top_k_;
 
   /// Whether to ignore instances with a certain label.
@@ -760,6 +761,8 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// Whether to normalize the loss by the total number of values present
   /// (otherwise just by the batch size).
   bool normalize_;
+
+  int softmax_axis_, outer_num_, inner_num_;
 };
 
 }  // namespace caffe
