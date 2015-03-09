@@ -1,5 +1,5 @@
-net: "examples/hdf5_classification/train_val2.prototxt"
-test_iter: 1000
+net: "hdf5_classification/train_val2.prototxt"
+test_iter: 250
 test_interval: 1000
 base_lr: 0.01
 lr_policy: "step"
@@ -10,5 +10,5 @@ max_iter: 10000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 10000
-snapshot_prefix: "examples/hdf5_classification/data/train"
+snapshot_prefix: "hdf5_classification/data/train"
 solver_mode: CPU
