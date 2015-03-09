@@ -77,8 +77,14 @@ using boost::shared_ptr;
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
 using std::ios;
+#ifdef _MSC_VER
+// For MSVC it is necessary to define these:
+#define isnan(x) _isnan(x)
+#define isinf(x) (!_finite(x))
+#else
 using std::isnan;
 using std::isinf;
+#endif
 using std::iterator;
 using std::make_pair;
 using std::map;

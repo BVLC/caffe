@@ -1,4 +1,6 @@
-#include <unistd.h>  // for usleep
+// Replace unistd.h with C++ 11 standard methods for portability.
+#include <chrono>
+#include <thread>
 
 #include "gtest/gtest.h"
 
@@ -64,7 +66,7 @@ TYPED_TEST(BenchmarkTest, TestTimerMilliSeconds) {
   EXPECT_FALSE(timer.running());
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
-  usleep(300 * 1000);
+  std::this_thread::sleep_for(std::chrono::microseconds(300 * 1000));
   EXPECT_GE(timer.MilliSeconds(), 300 - kMillisecondsThreshold);
   EXPECT_LE(timer.MilliSeconds(), 300 + kMillisecondsThreshold);
   EXPECT_TRUE(timer.initted());
@@ -79,7 +81,7 @@ TYPED_TEST(BenchmarkTest, TestTimerSeconds) {
   EXPECT_FALSE(timer.running());
   EXPECT_FALSE(timer.has_run_at_least_once());
   timer.Start();
-  usleep(300 * 1000);
+  std::this_thread::sleep_for(std::chrono::microseconds(300 * 1000));
   EXPECT_GE(timer.Seconds(), 0.3 - kMillisecondsThreshold / 1000.);
   EXPECT_LE(timer.Seconds(), 0.3 + kMillisecondsThreshold / 1000.);
   EXPECT_TRUE(timer.initted());

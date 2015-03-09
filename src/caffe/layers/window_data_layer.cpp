@@ -19,6 +19,16 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
 
+#ifdef _MSC_VER
+// On Windows, the round function is not yet available in the
+// standard library. This is a version for round to int.
+template <typename T>
+int round(const T &arg) {
+    return (arg > static_cast<T>(0.)) ? 
+                (arg + static_cast<T>(0.5)) :
+                (arg - static_cast<T>(0.5));
+}
+#endif
 // caffe.proto > LayerParameter > WindowDataParameter
 //   'source' field specifies the window_file
 //   'crop_size' indicates the desired warped size

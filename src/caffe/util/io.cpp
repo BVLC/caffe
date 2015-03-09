@@ -7,6 +7,10 @@
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdint.h>
+#ifdef _MSC_VER
+// On Windows, the additional include is required:
+#include <io.h>
+#endif
 
 #include <algorithm>
 #include <fstream>  // NOLINT(readability/streams)
