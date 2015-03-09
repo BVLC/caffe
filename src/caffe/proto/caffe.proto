@@ -38,6 +38,15 @@ message Datum {
   optional bool encoded = 7 [default = false];
 }
 
+message DeviceParameter {
+  enum DeviceType {
+    CPU = 0;
+    GPU = 1;
+  }
+  optional DeviceType type = 1 [default = GPU];
+  optional int32 device_id = 2;
+}
+
 message FillerParameter {
   // The filler type.
   optional string type = 1 [default = 'constant'];
@@ -292,6 +301,10 @@ message LayerParameter {
 
   // Number of parameters to take from bottoms.
   optional int32 param_bottoms = 11 [default = 0];
+
+  // Specify where to compute this layer.
+  optional DeviceParameter device = 12;
+  optional int32 thread_id = 13;
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 100;
