@@ -67,8 +67,6 @@ class Classifier(caffe.Net):
             ])
             crop = crop.astype(int)
             input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
-
-        # Classify
         caffe_in = np.zeros(np.array(input_.shape)[[0, 3, 1, 2]],
                             dtype=np.float32)
         for ix, in_ in enumerate(input_):
@@ -76,9 +74,31 @@ class Classifier(caffe.Net):
         return caffe_in
 
 
+    def predict_multi(self, inputs, oversample=True):
+        """
+        Predicts multi-label classification probabilities of inputs. 
+
+        Works very similarly to the method predict, but returns a dictionary
+        of probabilities, where the keys are the names of the top blobs of the 
+        last network's level.
+        """
+        # Preparing the input data.
+        caffe_in = self._prepare_inputs(inputs, oversample)
+        # Classify
+        out = self.forward_all(**{self.inputs[0]: caffe_in})
+        multipreds = {}
+        for bname in self.outputs:
+            multipreds[bname] = out[bname]
+            if oversample:
+                tmparray = multipreds[bname].reshape(
+                    (len(predictions) / 10, 10, -1))
+                multipreds[bname] = tmparray.mean(1)
+        return multipreds
+
+    
     def predict(self, inputs, oversample=True):
         """
-        Predict classification probabilities of inputs.
+        Predicts classification probabilities of inputs.
 
         Parameters
         ----------
@@ -92,29 +112,5 @@ class Classifier(caffe.Net):
         predictions: (N x C) ndarray of class probabilities for N images and C
             classes.
         """
-        # Preparing the input data.
-        caffe_in = self.prepare_inputs(inputs, oversample)
-        # Classify
-        out = self.forward_all(**{self.inputs[0]: caffe_in})
-        predictions = out[self.outputs[0]]
-
-        # For oversampling, average predictions across crops.
-        if oversample:
-            predictions = predictions.reshape((len(predictions) / 10, 10, -1))
-            predictions = predictions.mean(1)
-        return predictions
-
-
-    def predict_multi(self, inputs, oversample=True):
-        # Preparing the input data.
-        caffe_in = self.prepare_inputs(inputs, oversample)
-        # Classify
-        out = self.forward_all(**{self.inputs[0]: caffe_in})
-        multipreds = {}
-        for bname in self.outputs:
-            multipreds[bname] = out[bname].squeeze(axis=(2,3))
-            if oversample:
-                tmparray = multipreds[bname].reshape(
-                    (len(predictions) / 10, 10, -1))
-                multipreds[bname] = tmparray.mean(1)
-        return multipreds
+        multipreds = self.predict_multi(inputs, oversample)
+        return multipreds[self.outputs[0]]
