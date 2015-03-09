@@ -420,6 +420,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   case Caffe::GPU:
     Forward_gpu(bottom, top);
 #ifndef CPU_ONLY
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
       const int count = top[top_id]->count();
@@ -447,6 +448,9 @@ inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     break;
   case Caffe::GPU:
     Backward_gpu(top, propagate_down, bottom);
+#ifndef CPU_ONLY
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
+#endif
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";
