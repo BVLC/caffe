@@ -35,7 +35,7 @@ list(APPEND Caffe_LINKER_LIBS ${LMDB_LIBRARIES})
 
 # ---[ LevelDB
 find_package(LevelDB REQUIRED)
-include_directories(SYSTEM ${LEVELDB_INCLUDE})
+include_directories(SYSTEM ${LevelDB_INCLUDE})
 list(APPEND Caffe_LINKER_LIBS ${LevelDB_LIBRARIES})
 
 # ---[ Snappy
