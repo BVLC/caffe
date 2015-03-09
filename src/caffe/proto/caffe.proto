@@ -809,6 +809,7 @@ message V1LayerParameter {
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SILENCE = 36;
+    SMOOTH_L1_LOSS = 40;
     SOFTMAX = 20;
     SOFTMAX_LOSS = 21;
     SPLIT = 22;
