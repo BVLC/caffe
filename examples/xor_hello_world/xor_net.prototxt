@@ -1,0 +1,74 @@
+name: "SIMPLE_XOR_NET"
+layers {
+  name: "data"
+  type: HDF5_DATA
+  top: "data"
+  top: "label"
+  hdf5_data_param {
+    source: "xor_data.filelist.txt"
+    batch_size: 4
+  }
+}
+layers {
+  name: "fc1"
+  type: INNER_PRODUCT
+  bottom: "data"
+  top: "fc1"
+  inner_product_param {
+    num_output: 1
+    weight_filler {
+      type: "constant"
+      value: 1
+    }
+    bias_filler {
+      type: "constant"
+      value: -1.5
+    }
+  }
+}
+layers {
+  name: "relu1"
+  type: RELU
+  bottom: "fc1"
+  top: "fc1"
+}
+layers {
+  name: "concat1"
+  type: CONCAT
+  bottom: "data"
+  bottom: "fc1"
+  top: "concat1"
+}
+layers {
+  name: "fc2"
+  type: INNER_PRODUCT
+  bottom: "concat1"
+  top: "fc2"
+  inner_product_param {
+    num_output: 2
+    # weight_filler {
+    #   type: "gaussian"
+    #   std: 0.01
+    # }
+    # bias_filler {
+    #   type: "constant"
+    #   value: 0
+    # }
+  }
+}
+layers {
+  name: "loss"
+  # type: SIGMOID_CROSS_ENTROPY_LOSS  # n categories in 1 field!
+  type: SOFTMAX_LOSS # n categories in n fields!
+  # type: EUCLIDEAN_LOSS  # n categories in 1 field!?!
+  bottom: "fc2"
+  bottom: "label"
+  top: "loss"
+}
+layers {
+  name: "accuracy"
+  type: ACCURACY
+  bottom: "fc2"
+  bottom: "label"
+  top: "accuracy"
+}

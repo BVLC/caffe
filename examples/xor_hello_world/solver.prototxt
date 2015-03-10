@@ -1,0 +1,20 @@
+# Mihkaels example broken ... why?
+# net: "xor_net.prototxt"    # hardcoded weights/bias to illustrate analogy with perceptron 
+# net: "xor_net.prototxt2"    # caffe layer version 2 format
+
+net: "xor_net.pure.prototxt2" # standard example (no concat layer)
+# net: "xor_net.minimal.prototxt2" # euclidean loss -> no accuracy, but loss < 0.1 is fine (right?)
+
+test_iter: 1
+test_interval: 1
+base_lr: 0.009
+lr_policy: "step"
+gamma: 0.1
+stepsize: 10
+display: 10
+max_iter: 30
+snapshot: 10000
+snapshot_prefix: "snapshot"
+momentum: 0.9
+weight_decay: 0.0005
+solver_mode: CPU
