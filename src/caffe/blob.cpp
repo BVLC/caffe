@@ -17,6 +17,9 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
   height_ = height;
   width_ = width;
   count_ = num_ * channels_ * height_ * width_;
+  // Check for overflow.
+  CHECK_GE(count_, 0) << "num: " << num_ << ", channels: " << channels_
+      << ", height: " << height_ << ", width: " << width_;
   if (count_ > capacity_) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
