@@ -268,6 +268,7 @@ endif
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
 	NVCCFLAGS += -G
+	LDFLAGS += -rdynamic
 else
 	COMMON_FLAGS += -DNDEBUG -O2
 endif

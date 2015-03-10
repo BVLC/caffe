@@ -55,8 +55,12 @@ class SyncedMemory {
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
+  static void set_debug_info(const bool debug_info) {
+    debug_info_ = debug_info;
+  }
 
  private:
+  void debug_alloc();
   void to_cpu();
   void to_gpu();
   void* cpu_ptr_;
@@ -64,6 +68,7 @@ class SyncedMemory {
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
+  static bool debug_info_;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
