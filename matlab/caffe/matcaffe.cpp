@@ -65,6 +65,36 @@ static int init_key = -2;
 // input and outputs a cell array.
 
 // TODO(matcaffe) no loss pointer arg
+static mxArray* do_forward_prefilled(mxArray* mx_loss) {
+  float* loss_ptr = reinterpret_cast<float*>(mxGetPr(mx_loss));
+  const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled(loss_ptr);
+  DLOG(INFO) << "loss: " << mxGetScalar(mx_loss);
+  mxArray* mx_out = mxCreateCellMatrix(output_blobs.size(), 1);
+  for (unsigned int i = 0; i < output_blobs.size(); ++i) {
+    // internally data is stored as (width, height, channels, num)
+    // where width is the fastest dimension
+    mwSize dims[4] = {output_blobs[i]->width(), output_blobs[i]->height(),
+      output_blobs[i]->channels(), output_blobs[i]->num()};
+    mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+    mxSetCell(mx_out, i, mx_blob);
+    float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      memcpy(data_ptr, output_blobs[i]->cpu_data(),
+          sizeof(float) * output_blobs[i]->count());
+      break;
+    case Caffe::GPU:
+      cudaMemcpy(data_ptr, output_blobs[i]->gpu_data(),
+          sizeof(float) * output_blobs[i]->count(), cudaMemcpyDeviceToHost);
+      break;
+    default:
+      mex_error("Unknown Caffe mode");
+    }  // switch (Caffe::mode())
+  }
+  return mx_out;
+}
+
+// TODO(matcaffe) no loss pointer arg
 static mxArray* do_forward(const mxArray* const bottom) {
   const vector<Blob<float>*>& input_blobs = net_->input_blobs();
   if (static_cast<unsigned int>(mxGetDimensions(bottom)[0]) !=
@@ -125,36 +155,6 @@ static mxArray* do_forward(const mxArray* const bottom) {
     }  // switch (Caffe::mode())
   }
 
-  return mx_out;
-}
-
-// TODO(matcaffe) no loss pointer arg
-static mxArray* do_forward_prefilled(mxArray* mx_loss) {
-  float* loss_ptr = reinterpret_cast<float*>(mxGetPr(mx_loss));
-  const vector<Blob<float>*>& output_blobs = net_->ForwardPrefilled(loss_ptr);
-  DLOG(INFO) << "loss: " << mxGetScalar(mx_loss);
-  mxArray* mx_out = mxCreateCellMatrix(output_blobs.size(), 1);
-  for (unsigned int i = 0; i < output_blobs.size(); ++i) {
-    // internally data is stored as (width, height, channels, num)
-    // where width is the fastest dimension
-    mwSize dims[4] = {output_blobs[i]->width(), output_blobs[i]->height(),
-      output_blobs[i]->channels(), output_blobs[i]->num()};
-    mxArray* mx_blob =  mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
-    mxSetCell(mx_out, i, mx_blob);
-    float* data_ptr = reinterpret_cast<float*>(mxGetPr(mx_blob));
-    switch (Caffe::mode()) {
-    case Caffe::CPU:
-      memcpy(data_ptr, output_blobs[i]->cpu_data(),
-          sizeof(float) * output_blobs[i]->count());
-      break;
-    case Caffe::GPU:
-      cudaMemcpy(data_ptr, output_blobs[i]->gpu_data(),
-          sizeof(float) * output_blobs[i]->count(), cudaMemcpyDeviceToHost);
-      break;
-    default:
-      mex_error("Unknown Caffe mode");
-    }  // switch (Caffe::mode())
-  }
   return mx_out;
 }
 
@@ -808,7 +808,7 @@ static void init_net(MEX_ARGS) {
   char* phase_name = mxArrayToString(prhs[2]);
 
   CheckFile(string(param_file));
-  
+
   Phase phase;
   if (strcmp(phase_name, "train") == 0) {
       phase = TRAIN;
@@ -883,7 +883,7 @@ static void forward(MEX_ARGS) {
     mex_error(error_msg.str());
   }
 
-  plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);  
+  plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
   if (nrhs == 0) {
     //Forward without arguments behaves as forward_prefilled
     plhs[0] = do_forward_prefilled(plhs[1]);
@@ -896,7 +896,7 @@ static void forward_prefilled(MEX_ARGS) {
   if (nrhs != 0) {
     mex_error("forward_prefilled takes no arguments");
   }
-  plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);  
+  plhs[1] = mxCreateNumericMatrix(1, 1, mxSINGLE_CLASS, mxREAL);
   plhs[0] = do_forward_prefilled(plhs[1]);
 
 }
