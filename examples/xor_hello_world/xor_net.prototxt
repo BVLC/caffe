@@ -1,7 +1,7 @@
 name: "SIMPLE_XOR_NET"
-layers {
+layer {
   name: "data"
-  type: HDF5_DATA
+  type: "HDF5Data"
   top: "data"
   top: "label"
   hdf5_data_param {
@@ -9,9 +9,9 @@ layers {
     batch_size: 4
   }
 }
-layers {
+layer {
   name: "fc1"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "data"
   top: "fc1"
   inner_product_param {
@@ -26,48 +26,38 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "fc1"
   top: "fc1"
 }
-layers {
+layer {
   name: "concat1"
-  type: CONCAT
+  type: "Concat"
   bottom: "data"
   bottom: "fc1"
   top: "concat1"
 }
-layers {
+layer {
   name: "fc2"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "concat1"
   top: "fc2"
   inner_product_param {
     num_output: 2
-    # weight_filler {
-    #   type: "gaussian"
-    #   std: 0.01
-    # }
-    # bias_filler {
-    #   type: "constant"
-    #   value: 0
-    # }
   }
 }
-layers {
+layer {
   name: "loss"
-  # type: SIGMOID_CROSS_ENTROPY_LOSS  # n categories in 1 field!
-  type: SOFTMAX_LOSS # n categories in n fields!
-  # type: EUCLIDEAN_LOSS  # n categories in 1 field!?!
+  type: "SoftmaxWithLoss"
   bottom: "fc2"
   bottom: "label"
   top: "loss"
 }
-layers {
+layer {
   name: "accuracy"
-  type: ACCURACY
+  type: "Accuracy"
   bottom: "fc2"
   bottom: "label"
   top: "accuracy"
