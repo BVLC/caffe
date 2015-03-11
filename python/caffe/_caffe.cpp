@@ -225,6 +225,16 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+#ifndef CPU_ONLY
+size_t Blob_GpuDataPtr(Blob<Dtype>* self) {
+  return (size_t)(self->mutable_gpu_data());
+}
+
+size_t Blob_GpuDiffPtr(Blob<Dtype>* self) {
+  return (size_t)(self->mutable_gpu_diff());
+}
+#endif
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -282,6 +292,10 @@ BOOST_PYTHON_MODULE(_caffe) {
         &Blob<Dtype>::count))
     .add_property("shape", &Blob_Shape)
     .def("reshape",           bp::raw_function(&Blob_Reshape))
+#ifndef CPU_ONLY
+    .add_property("gpu_data_ptr", &Blob_GpuDataPtr)
+    .add_property("gpu_diff_ptr", &Blob_GpuDiffPtr)
+#endif
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
