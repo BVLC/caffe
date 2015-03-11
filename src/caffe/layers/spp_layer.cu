@@ -10,7 +10,6 @@
 #define debug 0
 #define TOP 1
 #define BOTTOM 1
-#define MAX(A,B) A > B ? A : B
 #define MIN(A,B) A < B ? A : B
 
 namespace caffe {
@@ -55,8 +54,8 @@ __global__ void SPPForward(const int nthreads, const Dtype* bottom_data,
     int kernel_w = (width + num_pools - 1) / num_pools;
     int hstart = ph * kernel_h;
     int wstart = pw * kernel_w;
-    int hend = MIN(hstart + kernel_h, height);
-    int wend = MIN(wstart + kernel_w, width);
+    int hend = min(hstart + kernel_h, height);
+    int wend = min(wstart + kernel_w, width);
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
     bottom_data += (n * channels + c) * height * width;
@@ -101,17 +100,17 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int pw = shifted_index % num_pools;
     int ph = shifted_index / num_pools;
 
+    int win = (index / output_size) % window_count;
     int c = (index / output_size / window_count) % channels;
     int n = index / output_size / window_count / channels;
 
-    int win = (index / output_size) % window_count;
     // 4 = number of coordinates per row.
     bottom_window_data += n * 4;
-    int window_x = bottom_window_data[win * 4] * width / image_w;
-    int window_y = bottom_window_data[win * 4 + 1] * height / image_h;
-    int window_w = MAX((bottom_window_data[win * 4 + 2] * width / image_w), 1);
-    int window_h = MAX((bottom_window_data[win * 4 + 3] * height / image_h), 1);
-    if (DEBUG) {
+    float window_x = bottom_window_data[win * 4] * width / image_w;
+    float window_y = bottom_window_data[win * 4 + 1] * height / image_h;
+    float window_w = max((bottom_window_data[win * 4 + 2] * width / image_w), 1.0f);
+    float window_h = max((bottom_window_data[win * 4 + 3] * height / image_h), 1.0f);
+    if (DEBUG && TOP) {
       printf("Window info: "
           "Index: %d\t"
           "win: %d\t"
@@ -119,6 +118,8 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           "wy: %f\t"
           "ww: %f\t"
           "wh: %f\t"
+          "width: %d\t"
+          "height: %d\t"
           "window_count: %d\n",
           index,
           win,
@@ -126,20 +127,44 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           bottom_window_data[win*4+1],
           bottom_window_data[win*4+2],
           bottom_window_data[win*4+3],
+          width,
+          height,
           window_count);
     }
 
 
     // Using fractional heights to better represent smaller sections instead of
     // defaulting to repeating the end pixels over and over.
-    float kernel_h = window_h * 1.0f / num_pools;
-    float kernel_w = window_w * 1.0f / num_pools;
-    int hstart = int(ph * kernel_h) + window_y;
-    int wstart = int(pw * kernel_w) + window_x;
-    int kernel_h_int = int(kernel_h) + 1;
-    int kernel_w_int = int(kernel_w) + 1;
-    int hend = MIN(MIN(hstart + kernel_h_int, height), window_y + window_h);
-    int wend = MIN(MIN(wstart + kernel_w_int, width), window_x + window_w);
+    float kernel_h = window_h / num_pools;
+    float kernel_w = window_w / num_pools;
+    float f_hstart = ph * kernel_h + window_y;
+    float f_wstart = pw * kernel_w + window_x;
+    int hstart = (int)f_hstart;
+    int wstart = (int)f_wstart;
+    int kernel_h_int = (int)ceil(kernel_h);
+    int kernel_w_int = (int)ceil(kernel_w);
+    int hend = min(min((int)ceil(f_hstart + kernel_h_int), height), (int)ceil(window_y + window_h));
+    int wend = min(min((int)ceil(f_wstart + kernel_w_int), width), (int)ceil(window_x + window_w));
+    if (hstart == hend) {
+      if (hend < height) {
+        hend++;
+      } else {
+        hstart--;
+      }
+    }
+    if (wstart == wend) {
+      if (wend < width) {
+        wend++;
+      } else {
+        wstart--;
+      }
+    }
+    /*
+    int mhend = MIN(f_hend, height);
+    int mwend = MIN(f_wend, width);
+    int hend = MIN(mhend, (int)(window_y + window_h));
+    int wend = MIN(mwend, (int)(window_x + window_w));
+    */
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
 
@@ -170,7 +195,9 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           "maxidx: %d\t"
           "maxval: %f"
           "\n", index, shifted_index, num_pools, pw, ph,
-          win, hstart, hend, wstart, wend, c, n, maxidx, maxval);
+          win,
+          wstart, wend,
+          hstart, hend, c, n, maxidx, maxval);
     }
     if (mask) {
       mask[index] = maxidx;
@@ -195,6 +222,9 @@ void SPPLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     top_mask = top[1]->mutable_gpu_data();
   } else {
     mask = max_idx_.mutable_gpu_data();
+  }
+  if(debug) {
+    printf("Forward_gpu\n");
   }
   if (bottom.size() > 1) {
     // Windowed case
