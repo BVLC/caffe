@@ -176,6 +176,34 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
   }
 };
 
+// Blob constructor with shape iterable
+shared_ptr<Blob<Dtype> > Blob_Init(bp::object shape_object) {
+  size_t ndim;
+  try {
+    ndim = bp::len(shape_object);
+  } catch(...) {
+    throw std::runtime_error("1st arg must be iterable.");
+  }
+  vector<int> shape(ndim);
+  try {
+    for (int i = 0; i < ndim; ++i) {
+      shape[i] = bp::extract<int>(shape_object[i]);
+    }
+  } catch(...) {
+    throw std::runtime_error("All element in shape iterable must be integer.");
+  }
+  return shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape));
+}
+
+bp::tuple Blob_Shape(const Blob<Dtype>* self) {
+  const vector<int> &shape = self->shape();
+  bp::list shape_list;
+  BOOST_FOREACH(int s, shape) {
+    shape_list.append(s);
+  }
+  return bp::tuple(shape_list);
+}
+
 bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   if (bp::len(kwargs) > 0) {
     throw std::runtime_error("Blob.reshape takes no kwargs");
@@ -236,6 +264,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("width",    &Blob<Dtype>::width)
     .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
         &Blob<Dtype>::count))
+    .add_property("shape", &Blob_Shape)
     .def("reshape",           bp::raw_function(&Blob_Reshape))
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
