@@ -2,8 +2,8 @@
 
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
-#include <string>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -46,7 +46,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < num_images; ++i)
       ss >> filenames[i];
     ss >> label;
-    if (!ss.fail()) 
+    if (!ss.fail())
       lines_.push_back(std::make_pair(filenames, label));
     else
       break;
@@ -81,11 +81,13 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   if (crop_size > 0) {
     top[0]->Reshape(batch_size, channels * num_images, crop_size, crop_size);
-    this->prefetch_data_.Reshape(batch_size, channels * num_images, crop_size, crop_size);
+    this->prefetch_data_.Reshape(batch_size, channels * num_images,
+        crop_size, crop_size);
     this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
   } else {
     top[0]->Reshape(batch_size, channels * num_images, height, width);
-    this->prefetch_data_.Reshape(batch_size, channels * num_images, height, width);
+    this->prefetch_data_.Reshape(batch_size, channels * num_images,
+        height, width);
     this->transformed_data_.Reshape(1, channels, height, width);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
@@ -139,11 +141,12 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    // get blobs    
+    // get blobs
     for (int i = 0; i < num_images; ++i) {
       timer.Start();
       CHECK_GT(lines_size, lines_id_);
-      cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first[i],
+      cv::Mat cv_img = ReadImageToCVMat(
+          root_folder + lines_[lines_id_].first[i],
           new_height, new_width, is_color);
       CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first[i];
       read_time += timer.MicroSeconds();
@@ -152,10 +155,11 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
       // Apply transformations (mirror, crop...) to the image
       int offset = this->prefetch_data_.offset(item_id);
       int imgOffset = this->transformed_data_.count();
-      this->transformed_data_.set_cpu_data(prefetch_data + offset + imgOffset*i);
+      this->transformed_data_.set_cpu_data(
+          prefetch_data + offset + imgOffset*i);
       this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
       trans_time += timer.MicroSeconds();
-    }  
+    }
 
     prefetch_label[item_id] = lines_[lines_id_].second;
     // go to the next iter
