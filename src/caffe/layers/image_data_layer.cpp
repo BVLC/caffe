@@ -150,7 +150,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
           new_height, new_width, is_color);
       CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first[i];
       read_time += timer.MicroSeconds();
-      
+
       timer.Start();
       // Apply transformations (mirror, crop...) to the image
       int offset = this->prefetch_data_.offset(item_id);
