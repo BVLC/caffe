@@ -226,6 +226,18 @@ class Blob {
   Dtype* mutable_gpu_data();
   Dtype* mutable_cpu_diff();
   Dtype* mutable_gpu_diff();
+  inline const Dtype* data(Caffe::Brew device) const {
+    return device == Caffe::CPU ? cpu_data() : gpu_data();
+  }
+  inline const Dtype* diff(Caffe::Brew device) const {
+    return device == Caffe::CPU ? cpu_diff() : gpu_diff();
+  }
+  inline Dtype* mutable_data(Caffe::Brew device) {
+    return device == Caffe::CPU ? mutable_cpu_data() : mutable_gpu_data();
+  }
+  inline Dtype* mutable_diff(Caffe::Brew device) {
+    return device == Caffe::CPU ? mutable_cpu_diff() : mutable_gpu_diff();
+  }
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
   void ToProto(BlobProto* proto, bool write_diff = false) const;
