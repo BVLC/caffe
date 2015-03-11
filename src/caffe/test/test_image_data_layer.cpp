@@ -43,6 +43,15 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
     reshapefile << EXAMPLES_SOURCE_DIR "images/cat.jpg " << 0 << std::endl;
     reshapefile << EXAMPLES_SOURCE_DIR "images/fish-bike.jpg " << 1 << std::endl;
     reshapefile.close();
+    // Create test input file for multiple images.
+    MakeTempFilename(&filename_multiple_);
+    std::ofstream multpilefile(filename_multiple_.c_str(), std::ofstream::out);
+    LOG(INFO) << "Using temporary file " << filename_multiple_;
+    for (int i = 0; i < 5; ++i) {
+      multpilefile << EXAMPLES_SOURCE_DIR "images/cat.jpg "
+        << EXAMPLES_SOURCE_DIR "images/cat.jpg " << i << std::endl;
+    }
+    multpilefile.close();
   }
 
   virtual ~ImageDataLayerTest() {
@@ -53,6 +62,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
   int seed_;
   string filename_;
   string filename_reshape_;
+  string filename_multiple_;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -87,6 +97,33 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   }
 }
 
+TYPED_TEST(ImageDataLayerTest, TestReadMultiple) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter param;
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_source(this->filename_multiple_.c_str());
+  image_data_param->set_shuffle(false);
+  image_data_param->set_num_images(2);
+  ImageDataLayer<Dtype> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_data_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->channels(), 6);
+  EXPECT_EQ(this->blob_top_data_->height(), 360);
+  EXPECT_EQ(this->blob_top_data_->width(), 480);
+  EXPECT_EQ(this->blob_top_label_->num(), 5);
+  EXPECT_EQ(this->blob_top_label_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label_->height(), 1);
+  EXPECT_EQ(this->blob_top_label_->width(), 1);
+  // Go through the data twice
+  for (int iter = 0; iter < 2; ++iter) {
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+  }
+}
+
 TYPED_TEST(ImageDataLayerTest, TestResize) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter param;
@@ -100,6 +137,35 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
+  EXPECT_EQ(this->blob_top_data_->height(), 256);
+  EXPECT_EQ(this->blob_top_data_->width(), 256);
+  EXPECT_EQ(this->blob_top_label_->num(), 5);
+  EXPECT_EQ(this->blob_top_label_->channels(), 1);
+  EXPECT_EQ(this->blob_top_label_->height(), 1);
+  EXPECT_EQ(this->blob_top_label_->width(), 1);
+  // Go through the data twice
+  for (int iter = 0; iter < 2; ++iter) {
+    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+    for (int i = 0; i < 5; ++i) {
+      EXPECT_EQ(i, this->blob_top_label_->cpu_data()[i]);
+    }
+  }
+}
+
+TYPED_TEST(ImageDataLayerTest, TestResizeMultiple) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter param;
+  ImageDataParameter* image_data_param = param.mutable_image_data_param();
+  image_data_param->set_batch_size(5);
+  image_data_param->set_source(this->filename_multiple_.c_str());
+  image_data_param->set_new_height(256);
+  image_data_param->set_new_width(256);
+  image_data_param->set_shuffle(false);
+  image_data_param->set_num_images(2);
+  ImageDataLayer<Dtype> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_data_->num(), 5);
+  EXPECT_EQ(this->blob_top_data_->channels(), 6);
   EXPECT_EQ(this->blob_top_data_->height(), 256);
   EXPECT_EQ(this->blob_top_data_->width(), 256);
   EXPECT_EQ(this->blob_top_label_->num(), 5);
