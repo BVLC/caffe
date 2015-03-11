@@ -38,6 +38,10 @@ void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
 // Checking current mode.
 bool check_mode_cpu() { return Caffe::mode() == Caffe::CPU; }
 bool check_mode_gpu() { return Caffe::mode() == Caffe::GPU; }
+#ifndef CPU_ONLY
+// Cuda num threads
+int get_cuda_num_threads() { return CAFFE_CUDA_NUM_THREADS; }
+#endif
 
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
@@ -234,6 +238,10 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("set_device", &Caffe::SetDevice);
   bp::def("get_device", &Caffe::GetDevice);
   bp::def("set_random_seed", &Caffe::set_random_seed);
+#ifndef CPU_ONLY
+  bp::def("get_cuda_num_threads", &get_cuda_num_threads);
+  bp::def("get_blocks", &CAFFE_GET_BLOCKS);
+#endif
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
