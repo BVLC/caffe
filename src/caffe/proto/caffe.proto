@@ -367,6 +367,16 @@ message AccuracyParameter {
   // the top k scoring classes.  By default, only compare to the top scoring
   // class (i.e. argmax).
   optional uint32 top_k = 1 [default = 1];
+
+  // The "label" axis of the prediction blob, whose argmax corresponds to the
+  // predicted label -- may be negative to index from the end (e.g., -1 for the
+  // last axis).  For example, if axis == 1 and the predictions are
+  // (N x C x H x W), the label blob is expected to contain N*H*W ground truth
+  // labels with integer values in {0, 1, ..., C-1}.
+  optional int32 axis = 2 [default = 1];
+
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 3;
 }
 
 // Message that stores parameters used by ArgMaxLayer

@@ -1,4 +1,4 @@
-# This file is for the net_surgery.ipynb example notebook.
+# Fully convolutional network version of CaffeNet.
 name: "CaffeNetConv"
 input: "data"
 input_dim: 1
