@@ -226,15 +226,15 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a7a2c28420611a960a964e56acdbe2b47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a2c28420611a960a964e56acdbe2b47"></a>
 <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DropoutLayer.html#a7a2c28420611a960a964e56acdbe2b47">rand_vec_</a></td></tr>
-<tr class="memdesc:a7a2c28420611a960a964e56acdbe2b47"><td class="mdescLeft">&#160;</td><td class="mdescRight">when divided by UINT_MAX, the randomly generated values <img class="formulaInl" alt="$u\sim U(0,1)$" src="form_109.png"/> <br /></td></tr>
+<tr class="memdesc:a7a2c28420611a960a964e56acdbe2b47"><td class="mdescLeft">&#160;</td><td class="mdescRight">when divided by UINT_MAX, the randomly generated values <img class="formulaInl" alt="$u\sim U(0,1)$" src="form_110.png"/> <br /></td></tr>
 <tr class="separator:a7a2c28420611a960a964e56acdbe2b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e9d88e6128a97101c27ce8a11158ca6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e9d88e6128a97101c27ce8a11158ca6"></a>
 Dtype&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DropoutLayer.html#a8e9d88e6128a97101c27ce8a11158ca6">threshold_</a></td></tr>
-<tr class="memdesc:a8e9d88e6128a97101c27ce8a11158ca6"><td class="mdescLeft">&#160;</td><td class="mdescRight">the probability <img class="formulaInl" alt="$ p $" src="form_105.png"/> of dropping any input <br /></td></tr>
+<tr class="memdesc:a8e9d88e6128a97101c27ce8a11158ca6"><td class="mdescLeft">&#160;</td><td class="mdescRight">the probability <img class="formulaInl" alt="$ p $" src="form_106.png"/> of dropping any input <br /></td></tr>
 <tr class="separator:a8e9d88e6128a97101c27ce8a11158ca6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8702c053de0fea389f5a0ded8cdc544"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac8702c053de0fea389f5a0ded8cdc544"></a>
 Dtype&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1DropoutLayer.html#ac8702c053de0fea389f5a0ded8cdc544">scale_</a></td></tr>
-<tr class="memdesc:ac8702c053de0fea389f5a0ded8cdc544"><td class="mdescLeft">&#160;</td><td class="mdescRight">the scale for undropped inputs at train time <img class="formulaInl" alt="$ 1 / (1 - p) $" src="form_110.png"/> <br /></td></tr>
+<tr class="memdesc:ac8702c053de0fea389f5a0ded8cdc544"><td class="mdescLeft">&#160;</td><td class="mdescRight">the scale for undropped inputs at train time <img class="formulaInl" alt="$ 1 / (1 - p) $" src="form_111.png"/> <br /></td></tr>
 <tr class="separator:ac8702c053de0fea389f5a0ded8cdc544"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8ba2b98a7bc12643eec8ad72a66be21"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae8ba2b98a7bc12643eec8ad72a66be21"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>uint_thres_</b></td></tr>
@@ -242,6 +242,8 @@ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>uint_thres_</
 <tr class="inherit_header pro_attribs_classcaffe_1_1Layer"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classcaffe_1_1Layer')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classcaffe_1_1Layer.html">caffe::Layer&lt; Dtype &gt;</a></td></tr>
 <tr class="memitem:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">LayerParameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a7ed12bb2df25c887e41d7ea9557fc701">layer_param_</a></td></tr>
 <tr class="separator:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a1d04ad7f595a82a1c811f102d68b8a19">phase_</a></td></tr>
+<tr class="separator:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321">blobs_</a></td></tr>
 <tr class="separator:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd4a05def9ff3b42ad72404210613ef7 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#acd4a05def9ff3b42ad72404210613ef7">param_propagate_down_</a></td></tr>
@@ -294,7 +296,7 @@ template&lt;typename Dtype &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">param</td><td>provides DropoutParameter dropout_param, with <a class="el" href="classcaffe_1_1DropoutLayer.html" title="During training only, sets a random portion of  to 0, adjusting the rest of the vector magnitude acco...">DropoutLayer</a> options:<ul>
-<li>dropout_ratio (<b>optional</b>, default 0.5). Sets the probability <img class="formulaInl" alt="$ p $" src="form_105.png"/> that any given unit is dropped. </li>
+<li>dropout_ratio (<b>optional</b>, default 0.5). Sets the probability <img class="formulaInl" alt="$ p $" src="form_106.png"/> that any given unit is dropped. </li>
 </ul>
 </td></tr>
   </table>
@@ -344,7 +346,7 @@ template&lt;typename Dtype &gt; </div>
 </ol>
 </td></tr>
     <tr><td class="paramname">top</td><td>output <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 1)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs. At training time, we have <img class="formulaInl" alt="$ y_{\mbox{train}} = \left\{ \begin{array}{ll} \frac{x}{1 - p} &amp; \mbox{if } u > p \\ 0 &amp; \mbox{otherwise} \end{array} \right. $" src="form_106.png"/>, where <img class="formulaInl" alt="$ u \sim U(0, 1)$" src="form_107.png"/> is generated independently for each input at each iteration. At test time, we simply have <img class="formulaInl" alt="$ y_{\mbox{test}} = \mathbb{E}[y_{\mbox{train}}] = x $" src="form_108.png"/>. </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs. At training time, we have <img class="formulaInl" alt="$ y_{\mbox{train}} = \left\{ \begin{array}{ll} \frac{x}{1 - p} &amp; \mbox{if } u > p \\ 0 &amp; \mbox{otherwise} \end{array} \right. $" src="form_107.png"/>, where <img class="formulaInl" alt="$ u \sim U(0, 1)$" src="form_108.png"/> is generated independently for each input at each iteration. At test time, we simply have <img class="formulaInl" alt="$ y_{\mbox{test}} = \mathbb{E}[y_{\mbox{train}}] = x $" src="form_109.png"/>. </li>
 </ol>
 </td></tr>
   </table>
@@ -458,7 +460,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:17 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 11 2015 14:02:41 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

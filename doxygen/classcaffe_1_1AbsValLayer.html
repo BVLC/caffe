@@ -227,6 +227,8 @@ Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_attribs_classcaffe_1_1Layer"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classcaffe_1_1Layer')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classcaffe_1_1Layer.html">caffe::Layer&lt; Dtype &gt;</a></td></tr>
 <tr class="memitem:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">LayerParameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a7ed12bb2df25c887e41d7ea9557fc701">layer_param_</a></td></tr>
 <tr class="separator:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a1d04ad7f595a82a1c811f102d68b8a19">phase_</a></td></tr>
+<tr class="separator:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321">blobs_</a></td></tr>
 <tr class="separator:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd4a05def9ff3b42ad72404210613ef7 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#acd4a05def9ff3b42ad72404210613ef7">param_propagate_down_</a></td></tr>
@@ -302,7 +304,7 @@ template&lt;typename Dtype &gt; </div>
 </td></tr>
     <tr><td class="paramname">propagate_down</td><td>see <a class="el" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a" title="Given the top blob error gradients, compute the bottom blob error gradients. ">Layer::Backward</a>. </td></tr>
     <tr><td class="paramname">bottom</td><td>input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 2)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \mathrm{sign}(x) \frac{\partial E}{\partial y} $" src="form_104.png"/> if propagate_down[0] </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \mathrm{sign}(x) \frac{\partial E}{\partial y} $" src="form_105.png"/> if propagate_down[0] </li>
 </ol>
 </td></tr>
   </table>
@@ -481,7 +483,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:15 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 11 2015 14:02:39 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

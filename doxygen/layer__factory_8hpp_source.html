@@ -106,7 +106,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
 <div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classcaffe_1_1LayerRegistry.html">   54</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1LayerRegistry.html">LayerRegistry</a> {</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="keyword">typedef</span> <a class="code" href="classcaffe_1_1Layer.html">Layer&lt;Dtype&gt;</a>* (*Creator)(<span class="keyword">const</span> LayerParameter&amp;);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="keyword">typedef</span> shared_ptr&lt;Layer&lt;Dtype&gt; &gt; (*Creator)(<span class="keyword">const</span> LayerParameter&amp;);</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <span class="keyword">typedef</span> std::map&lt;string, Creator&gt; CreatorRegistry;</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="keyword">static</span> CreatorRegistry&amp; Registry() {</div>
@@ -123,9 +123,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  }</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="comment">// Get a layer using a LayerParameter.</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">static</span> <a class="code" href="classcaffe_1_1Layer.html">Layer&lt;Dtype&gt;</a>* CreateLayer(<span class="keyword">const</span> LayerParameter&amp; param) {</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">static</span> shared_ptr&lt;Layer&lt;Dtype&gt; &gt; CreateLayer(<span class="keyword">const</span> LayerParameter&amp; param) {</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    LOG(INFO) &lt;&lt; <span class="stringliteral">&quot;Creating layer &quot;</span> &lt;&lt; param.name();</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">string</span>&amp; type = param.<a class="code" href="classcaffe_1_1Layer.html#a8c5deb0263ae572036c564d53902a08d">type</a>();</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">string</span>&amp; type = param.type();</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    CreatorRegistry&amp; registry = Registry();</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    CHECK_EQ(registry.count(type), 1) &lt;&lt; <span class="stringliteral">&quot;Unknown layer type: &quot;</span> &lt;&lt; type</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        &lt;&lt; <span class="stringliteral">&quot; (known types: &quot;</span> &lt;&lt; LayerTypeList() &lt;&lt; <span class="stringliteral">&quot;)&quot;</span>;</div>
@@ -156,7 +156,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00103"></a><span class="lineno"><a class="line" href="classcaffe_1_1LayerRegisterer.html">  103</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1LayerRegisterer.html">LayerRegisterer</a> {</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <a class="code" href="classcaffe_1_1LayerRegisterer.html">LayerRegisterer</a>(<span class="keyword">const</span> <span class="keywordtype">string</span>&amp; type,</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                  <a class="code" href="classcaffe_1_1Layer.html">Layer&lt;Dtype&gt;</a>* (*creator)(<span class="keyword">const</span> LayerParameter&amp;)) {</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                  shared_ptr&lt;<a class="code" href="classcaffe_1_1Layer.html">Layer&lt;Dtype&gt;</a> &gt; (*creator)(<span class="keyword">const</span> LayerParameter&amp;)) {</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="comment">// LOG(INFO) &lt;&lt; &quot;Registering layer type: &quot; &lt;&lt; type;</span></div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <a class="code" href="classcaffe_1_1LayerRegistry.html">LayerRegistry&lt;Dtype&gt;::AddCreator</a>(type, creator);</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  }</div>
@@ -169,23 +169,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="preprocessor">#define REGISTER_LAYER_CLASS(type)                                             \</span></div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="preprocessor">  template &lt;typename Dtype&gt;                                                    \</span></div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">  Layer&lt;Dtype&gt;* Creator_##type##Layer(const LayerParameter&amp; param) {           \</span></div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">    return new type##Layer&lt;Dtype&gt;(param);                                      \</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">  }                                                                            \</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="preprocessor">  REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)</span></div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;}  <span class="comment">// namespace caffe</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="preprocessor">#endif  // CAFFE_LAYER_FACTORY_H_</span></div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">  shared_ptr&lt;Layer&lt;Dtype&gt; &gt; Creator_##type##Layer(const LayerParameter&amp; param) \</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">  {                                                                            \</span></div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">    return shared_ptr&lt;Layer&lt;Dtype&gt; &gt;(new type##Layer&lt;Dtype&gt;(param));           \</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="preprocessor">  }                                                                            \</span></div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">  REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)</span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;}  <span class="comment">// namespace caffe</span></div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="preprocessor">#endif  // CAFFE_LAYER_FACTORY_H_</span></div>
 <div class="ttc" id="classcaffe_1_1Layer_html"><div class="ttname"><a href="classcaffe_1_1Layer.html">caffe::Layer</a></div><div class="ttdoc">An interface for the units of computation which can be composed into a Net. </div><div class="ttdef"><b>Definition:</b> layer.hpp:27</div></div>
-<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:9</div></div>
+<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
 <div class="ttc" id="classcaffe_1_1LayerRegisterer_html"><div class="ttname"><a href="classcaffe_1_1LayerRegisterer.html">caffe::LayerRegisterer</a></div><div class="ttdef"><b>Definition:</b> layer_factory.hpp:103</div></div>
-<div class="ttc" id="classcaffe_1_1Layer_html_a8c5deb0263ae572036c564d53902a08d"><div class="ttname"><a href="classcaffe_1_1Layer.html#a8c5deb0263ae572036c564d53902a08d">caffe::Layer::type</a></div><div class="ttdeci">virtual const char * type() const </div><div class="ttdoc">Returns the layer type. </div><div class="ttdef"><b>Definition:</b> layer.hpp:184</div></div>
 <div class="ttc" id="classcaffe_1_1LayerRegistry_html"><div class="ttname"><a href="classcaffe_1_1LayerRegistry.html">caffe::LayerRegistry</a></div><div class="ttdef"><b>Definition:</b> layer_factory.hpp:54</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:14 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 11 2015 14:02:38 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

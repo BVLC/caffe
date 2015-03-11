@@ -108,9 +108,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5a5655a49c702c6c4a2f5bd7bf7adf12"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a5655a49c702c6c4a2f5bd7bf7adf12"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Net</b> (const NetParameter &amp;param)</td></tr>
 <tr class="separator:a5a5655a49c702c6c4a2f5bd7bf7adf12"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adda8f582b67677815d77dfc14946772b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adda8f582b67677815d77dfc14946772b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Net</b> (const string &amp;param_file)</td></tr>
-<tr class="separator:adda8f582b67677815d77dfc14946772b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c42f2a47319979419d60aa61c347c0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c42f2a47319979419d60aa61c347c0f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Net</b> (const string &amp;param_file, Phase <a class="el" href="classcaffe_1_1Net.html#a73a53387587ebcab5c3317343121f07b">phase</a>)</td></tr>
+<tr class="separator:a5c42f2a47319979419d60aa61c347c0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9fcfaabc89165d6c0cb4b14b4c6b584"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9fcfaabc89165d6c0cb4b14b4c6b584"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ae9fcfaabc89165d6c0cb4b14b4c6b584">Init</a> (const NetParameter &amp;param)</td></tr>
 <tr class="memdesc:ae9fcfaabc89165d6c0cb4b14b4c6b584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize a network with a NetParameter. <br /></td></tr>
@@ -190,6 +190,10 @@ const vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blo
 const vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a74320943ecc3c9e3da1dca1ba9f60034">layers</a> () const </td></tr>
 <tr class="memdesc:a74320943ecc3c9e3da1dca1ba9f60034"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns the layers <br /></td></tr>
 <tr class="separator:a74320943ecc3c9e3da1dca1ba9f60034"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73a53387587ebcab5c3317343121f07b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73a53387587ebcab5c3317343121f07b"></a>
+Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a73a53387587ebcab5c3317343121f07b">phase</a> () const </td></tr>
+<tr class="memdesc:a73a53387587ebcab5c3317343121f07b"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns the phase: TRAIN or TEST <br /></td></tr>
+<tr class="separator:a73a53387587ebcab5c3317343121f07b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41abdf5ab1e3ed6f6b0bc6ce67aa80a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41abdf5ab1e3ed6f6b0bc6ce67aa80a6"></a>
 const vector&lt; vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a41abdf5ab1e3ed6f6b0bc6ce67aa80a6">bottom_vecs</a> () const </td></tr>
 <tr class="memdesc:a41abdf5ab1e3ed6f6b0bc6ce67aa80a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns the bottom vecs for each layer &ndash; usually you won't need this unless you do per-layer checks such as gradients. <br /></td></tr>
@@ -307,6 +311,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
+<tr class="memitem:aef7021f31e355ab8f8991755125f6b2b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef7021f31e355ab8f8991755125f6b2b"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#aef7021f31e355ab8f8991755125f6b2b">name_</a></td></tr>
+<tr class="memdesc:aef7021f31e355ab8f8991755125f6b2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">The network name. <br /></td></tr>
+<tr class="separator:aef7021f31e355ab8f8991755125f6b2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1fe921a602b4f96602702a13ad605693"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1fe921a602b4f96602702a13ad605693"></a>
+Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#a1fe921a602b4f96602702a13ad605693">phase_</a></td></tr>
+<tr class="memdesc:a1fe921a602b4f96602702a13ad605693"><td class="mdescLeft">&#160;</td><td class="mdescRight">The phase: TRAIN or TEST. <br /></td></tr>
+<tr class="separator:a1fe921a602b4f96602702a13ad605693"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9e30392aa01dcf182d1a5cbd34ec45e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9e30392aa01dcf182d1a5cbd34ec45e"></a>
 vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#ab9e30392aa01dcf182d1a5cbd34ec45e">layers_</a></td></tr>
 <tr class="memdesc:ab9e30392aa01dcf182d1a5cbd34ec45e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Individual layers in the net. <br /></td></tr>
@@ -378,9 +390,6 @@ vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; 
 <tr class="memitem:abbcd68a31a7ddc67dcac789fe880da23"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abbcd68a31a7ddc67dcac789fe880da23"></a>
 vector&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>net_output_blobs_</b></td></tr>
 <tr class="separator:abbcd68a31a7ddc67dcac789fe880da23"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef7021f31e355ab8f8991755125f6b2b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef7021f31e355ab8f8991755125f6b2b"></a>
-string&#160;</td><td class="memItemRight" valign="bottom"><b>name_</b></td></tr>
-<tr class="separator:aef7021f31e355ab8f8991755125f6b2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:accf52332675952dd27dfc8d3c27fa583"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="accf52332675952dd27dfc8d3c27fa583"></a>
 vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Net.html#accf52332675952dd27dfc8d3c27fa583">params_</a></td></tr>
 <tr class="memdesc:accf52332675952dd27dfc8d3c27fa583"><td class="mdescLeft">&#160;</td><td class="mdescRight">The parameters in the network. <br /></td></tr>
@@ -551,7 +560,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:21 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 11 2015 14:02:45 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

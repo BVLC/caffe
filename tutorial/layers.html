@@ -714,20 +714,21 @@ layers {
   <li>
     <p>Sample</p>
 
-    <p>layers {
-     name: “slicer_label”
-     type: SLICE
-     bottom: “label”
-     ## Example of label with a shape N x 3 x 1 x 1
-     top: “label1”
-     top: “label2”
-     top: “label3”
-     slice_param {
-         slice_dim: 1
-         slice_point: 1
-         slice_point: 2
-     }
-   }</p>
+    <pre><code>layers {
+  name: "slicer_label"
+  type: SLICE
+  bottom: "label"
+  ## Example of label with a shape N x 3 x 1 x 1
+  top: "label1"
+  top: "label2"
+  top: "label3"
+  slice_param {
+      slice_dim: 1
+      slice_point: 1
+      slice_point: 2
+  }
+}
+</code></pre>
   </li>
 </ul>
 

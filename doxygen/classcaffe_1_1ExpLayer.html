@@ -97,7 +97,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Computes <img class="formulaInl" alt="$ y = \gamma ^ {\alpha x + \beta} $" src="form_124.png"/>, as specified by the scale <img class="formulaInl" alt="$ \alpha $" src="form_98.png"/>, shift <img class="formulaInl" alt="$ \beta $" src="form_99.png"/>, and base <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/>.  
+<p>Computes <img class="formulaInl" alt="$ y = \gamma ^ {\alpha x + \beta} $" src="form_97.png"/>, as specified by the scale <img class="formulaInl" alt="$ \alpha $" src="form_98.png"/>, shift <img class="formulaInl" alt="$ \beta $" src="form_99.png"/>, and base <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/>.  
  <a href="classcaffe_1_1ExpLayer.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="neuron__layers_8hpp_source.html">neuron_layers.hpp</a>&gt;</code></p>
@@ -232,6 +232,8 @@ Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>outer_scale_</b></td
 <tr class="inherit_header pro_attribs_classcaffe_1_1Layer"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classcaffe_1_1Layer')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classcaffe_1_1Layer.html">caffe::Layer&lt; Dtype &gt;</a></td></tr>
 <tr class="memitem:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">LayerParameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a7ed12bb2df25c887e41d7ea9557fc701">layer_param_</a></td></tr>
 <tr class="separator:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a1d04ad7f595a82a1c811f102d68b8a19">phase_</a></td></tr>
+<tr class="separator:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321">blobs_</a></td></tr>
 <tr class="separator:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd4a05def9ff3b42ad72404210613ef7 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#acd4a05def9ff3b42ad72404210613ef7">param_propagate_down_</a></td></tr>
@@ -243,7 +245,7 @@ Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>outer_scale_</b></td
 <div class="textblock"><h3>template&lt;typename Dtype&gt;<br />
 class caffe::ExpLayer&lt; Dtype &gt;</h3>
 
-<p>Computes <img class="formulaInl" alt="$ y = \gamma ^ {\alpha x + \beta} $" src="form_124.png"/>, as specified by the scale <img class="formulaInl" alt="$ \alpha $" src="form_98.png"/>, shift <img class="formulaInl" alt="$ \beta $" src="form_99.png"/>, and base <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/>. </p>
+<p>Computes <img class="formulaInl" alt="$ y = \gamma ^ {\alpha x + \beta} $" src="form_97.png"/>, as specified by the scale <img class="formulaInl" alt="$ \alpha $" src="form_98.png"/>, shift <img class="formulaInl" alt="$ \beta $" src="form_99.png"/>, and base <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/>. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a87a0fae261ad3d2c8947f463686a6de0"></a>
 <div class="memitem">
@@ -273,7 +275,7 @@ template&lt;typename Dtype &gt; </div>
     <tr><td class="paramname">param</td><td>provides ExpParameter exp_param, with <a class="el" href="classcaffe_1_1ExpLayer.html" title="Computes , as specified by the scale , shift , and base . ">ExpLayer</a> options:<ul>
 <li>scale (<b>optional</b>, default 1) the scale <img class="formulaInl" alt="$ \alpha $" src="form_98.png"/></li>
 <li>shift (<b>optional</b>, default 0) the shift <img class="formulaInl" alt="$ \beta $" src="form_99.png"/></li>
-<li>base (<b>optional</b>, default -1 for a value of <img class="formulaInl" alt="$ e \approx 2.718 $" src="form_125.png"/>) the base <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/> </li>
+<li>base (<b>optional</b>, default -1 for a value of <img class="formulaInl" alt="$ e \approx 2.718 $" src="form_112.png"/>) the base <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/> </li>
 </ul>
 </td></tr>
   </table>
@@ -332,7 +334,7 @@ template&lt;typename Dtype &gt; </div>
 </td></tr>
     <tr><td class="paramname">propagate_down</td><td>see <a class="el" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a" title="Given the top blob error gradients, compute the bottom blob error gradients. ">Layer::Backward</a>. </td></tr>
     <tr><td class="paramname">bottom</td><td>input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 1)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y \alpha \log_e(gamma) $" src="form_126.png"/> if propagate_down[0] </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y \alpha \log_e(gamma) $" src="form_113.png"/> if propagate_down[0] </li>
 </ol>
 </td></tr>
   </table>
@@ -383,7 +385,7 @@ template&lt;typename Dtype &gt; </div>
 </ol>
 </td></tr>
     <tr><td class="paramname">top</td><td>output <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 1)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs <img class="formulaInl" alt="$ y = \gamma ^ {\alpha x + \beta} $" src="form_124.png"/> </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs <img class="formulaInl" alt="$ y = \gamma ^ {\alpha x + \beta} $" src="form_97.png"/> </li>
 </ol>
 </td></tr>
   </table>
@@ -449,7 +451,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:18 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 11 2015 14:02:42 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

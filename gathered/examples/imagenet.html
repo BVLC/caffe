@@ -73,7 +73,7 @@ If you just want an ImageNet-trained network, then note that since training take
 
 <p>You will first need to prepare some auxiliary data for training. This data can be downloaded by:</p>
 
-<pre><code>./data/get_ilsvrc_aux.sh
+<pre><code>./data/ilsvrc12/get_ilsvrc_aux.sh
 </code></pre>
 
 <p>The training and validation input are described in <code>train.txt</code> and <code>val.txt</code> as text listing all the files and their labels. Note that we use a different indexing for labels than the ILSVRC devkit: we sort the synset names in their ASCII order, and then label them from 0 to 999. See <code>synset_words.txt</code> for the synset/name mapping.</p>

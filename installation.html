@@ -90,7 +90,7 @@ The official Makefile and <code>Makefile.config</code> build are complemented by
 <p>Pycaffe and Matcaffe interfaces have their own natural needs.</p>
 
 <ul>
-  <li>For Python Caffe:  <code>Python 2.7</code>, <code>numpy (&gt;= 1.7)</code>, boost-provided <code>boost.python</code></li>
+  <li>For Python Caffe:  <code>Python 2.7</code> or <code>Python 3.3+</code>, <code>numpy (&gt;= 1.7)</code>, boost-provided <code>boost.python</code></li>
   <li>For MATLAB Caffe: MATLAB with the <code>mex</code> compiler.</li>
 </ul>
 
@@ -139,7 +139,7 @@ There are several implementations of this library. The choice is yours:</p>
 
 <p>To import the <code>caffe</code> Python module after completing the installation, add the module directory to your <code>$PYTHONPATH</code> by <code>export PYTHONPATH=/path/to/caffe/python:$PYTHONPATH</code> or the like. You should not import the module in the <code>caffe/python/caffe</code> directory!</p>
 
-<p><em>Caffe’s Python interface works with Python 2.7. Python 3 or earlier Pythons are your own adventure.</em></p>
+<p><em>Caffe’s Python interface works with Python 2.7. Python 3.3+ should work out of the box without protobuf support. For protobuf support please install protobuf 3.0 alpha (https://developers.google.com/protocol-buffers/). Earlier Pythons are your own adventure.</em></p>
 
 <h4 id="matlab">MATLAB</h4>
 

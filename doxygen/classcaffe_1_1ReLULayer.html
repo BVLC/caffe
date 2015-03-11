@@ -96,7 +96,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_101.png"/>. The simple max is fast to compute, and the function does not saturate.  
+<p>Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_102.png"/>. The simple max is fast to compute, and the function does not saturate.  
  <a href="classcaffe_1_1ReLULayer.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="neuron__layers_8hpp_source.html">neuron_layers.hpp</a>&gt;</code></p>
@@ -225,6 +225,8 @@ Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_attribs_classcaffe_1_1Layer"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classcaffe_1_1Layer')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classcaffe_1_1Layer.html">caffe::Layer&lt; Dtype &gt;</a></td></tr>
 <tr class="memitem:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">LayerParameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a7ed12bb2df25c887e41d7ea9557fc701">layer_param_</a></td></tr>
 <tr class="separator:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a1d04ad7f595a82a1c811f102d68b8a19">phase_</a></td></tr>
+<tr class="separator:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321">blobs_</a></td></tr>
 <tr class="separator:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd4a05def9ff3b42ad72404210613ef7 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#acd4a05def9ff3b42ad72404210613ef7">param_propagate_down_</a></td></tr>
@@ -236,7 +238,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="textblock"><h3>template&lt;typename Dtype&gt;<br />
 class caffe::ReLULayer&lt; Dtype &gt;</h3>
 
-<p>Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_101.png"/>. The simple max is fast to compute, and the function does not saturate. </p>
+<p>Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_102.png"/>. The simple max is fast to compute, and the function does not saturate. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="aa6770fbbfd5e6f564c2ca19de7f7e712"></a>
 <div class="memitem">
@@ -264,7 +266,7 @@ template&lt;typename Dtype &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">param</td><td>provides ReLUParameter relu_param, with <a class="el" href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa...">ReLULayer</a> options:<ul>
-<li>negative_slope (<b>optional</b>, default 0). the value <img class="formulaInl" alt="$ \nu $" src="form_113.png"/> by which negative values are multiplied. </li>
+<li>negative_slope (<b>optional</b>, default 0). the value <img class="formulaInl" alt="$ \nu $" src="form_116.png"/> by which negative values are multiplied. </li>
 </ul>
 </td></tr>
   </table>
@@ -323,7 +325,7 @@ template&lt;typename Dtype &gt; </div>
 </td></tr>
     <tr><td class="paramname">propagate_down</td><td>see <a class="el" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a" title="Given the top blob error gradients, compute the bottom blob error gradients. ">Layer::Backward</a>. </td></tr>
     <tr><td class="paramname">bottom</td><td>input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 1)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} 0 &amp; \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} &amp; \mathrm{if} \; x > 0 \end{array} \right. $" src="form_115.png"/> if propagate_down[0], by default. If a non-zero negative_slope <img class="formulaInl" alt="$ \nu $" src="form_113.png"/> is provided, the computed gradients are <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} \nu \frac{\partial E}{\partial y} &amp; \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} &amp; \mathrm{if} \; x > 0 \end{array} \right. $" src="form_116.png"/>. </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} 0 &amp; \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} &amp; \mathrm{if} \; x > 0 \end{array} \right. $" src="form_118.png"/> if propagate_down[0], by default. If a non-zero negative_slope <img class="formulaInl" alt="$ \nu $" src="form_116.png"/> is provided, the computed gradients are <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \left\{ \begin{array}{lr} \nu \frac{\partial E}{\partial y} &amp; \mathrm{if} \; x \le 0 \\ \frac{\partial E}{\partial y} &amp; \mathrm{if} \; x > 0 \end{array} \right. $" src="form_119.png"/>. </li>
 </ol>
 </td></tr>
   </table>
@@ -374,7 +376,7 @@ template&lt;typename Dtype &gt; </div>
 </ol>
 </td></tr>
     <tr><td class="paramname">top</td><td>output <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 1)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_101.png"/> by default. If a non-zero negative_slope <img class="formulaInl" alt="$ \nu $" src="form_113.png"/> is provided, the computed outputs are <img class="formulaInl" alt="$ y = \max(0, x) + \nu \min(0, x) $" src="form_114.png"/>. </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_102.png"/> by default. If a non-zero negative_slope <img class="formulaInl" alt="$ \nu $" src="form_116.png"/> is provided, the computed outputs are <img class="formulaInl" alt="$ y = \max(0, x) + \nu \min(0, x) $" src="form_117.png"/>. </li>
 </ol>
 </td></tr>
   </table>
@@ -392,7 +394,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:22 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 11 2015 14:02:46 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

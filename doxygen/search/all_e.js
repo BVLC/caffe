@@ -8,6 +8,7 @@ var searchData=
   ['setlossweights',['SetLossWeights',['../classcaffe_1_1Layer.html#a8bd62d1505dd35d6a3a25954ae9e6014',1,'caffe::Layer']]],
   ['setup',['SetUp',['../classcaffe_1_1Layer.html#ac427a267f4c5ba93caac53b7ba64841d',1,'caffe::Layer']]],
   ['sgdsolver',['SGDSolver',['../classcaffe_1_1SGDSolver.html',1,'caffe']]],
+  ['shape',['shape',['../classcaffe_1_1Blob.html#a3aab16f3e07ddc78e29a101d022a34cd',1,'caffe::Blob']]],
   ['sharedata',['ShareData',['../classcaffe_1_1Blob.html#a8fce5a816a2b9629686db69108610d93',1,'caffe::Blob']]],
   ['sharediff',['ShareDiff',['../classcaffe_1_1Blob.html#a004781965b09f94c409cec9a6fc7c35c',1,'caffe::Blob']]],
   ['sharetrainedlayerswith',['ShareTrainedLayersWith',['../classcaffe_1_1Net.html#a3661ca5f30bf8e731cb54cfc3c320023',1,'caffe::Net']]],

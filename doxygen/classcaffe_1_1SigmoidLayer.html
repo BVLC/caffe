@@ -96,7 +96,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Sigmoid function non-linearity <img class="formulaInl" alt="$ y = (1 + \exp(-x))^{-1} $" src="form_102.png"/>, a classic choice in neural networks.  
+<p>Sigmoid function non-linearity <img class="formulaInl" alt="$ y = (1 + \exp(-x))^{-1} $" src="form_103.png"/>, a classic choice in neural networks.  
  <a href="classcaffe_1_1SigmoidLayer.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="neuron__layers_8hpp_source.html">neuron_layers.hpp</a>&gt;</code></p>
@@ -226,6 +226,8 @@ Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_attribs_classcaffe_1_1Layer"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classcaffe_1_1Layer')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classcaffe_1_1Layer.html">caffe::Layer&lt; Dtype &gt;</a></td></tr>
 <tr class="memitem:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">LayerParameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a7ed12bb2df25c887e41d7ea9557fc701">layer_param_</a></td></tr>
 <tr class="separator:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a1d04ad7f595a82a1c811f102d68b8a19">phase_</a></td></tr>
+<tr class="separator:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321">blobs_</a></td></tr>
 <tr class="separator:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd4a05def9ff3b42ad72404210613ef7 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#acd4a05def9ff3b42ad72404210613ef7">param_propagate_down_</a></td></tr>
@@ -237,7 +239,7 @@ Additional Inherited Members</h2></td></tr>
 <div class="textblock"><h3>template&lt;typename Dtype&gt;<br />
 class caffe::SigmoidLayer&lt; Dtype &gt;</h3>
 
-<p>Sigmoid function non-linearity <img class="formulaInl" alt="$ y = (1 + \exp(-x))^{-1} $" src="form_102.png"/>, a classic choice in neural networks. </p>
+<p>Sigmoid function non-linearity <img class="formulaInl" alt="$ y = (1 + \exp(-x))^{-1} $" src="form_103.png"/>, a classic choice in neural networks. </p>
 <p>Note that the gradient vanishes as the values move away from 0. The <a class="el" href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa...">ReLULayer</a> is often a better choice for this reason. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="afde12451a26311e04a108fb21f79f134"></a>
@@ -289,7 +291,7 @@ template&lt;typename Dtype &gt; </div>
 </td></tr>
     <tr><td class="paramname">propagate_down</td><td>see <a class="el" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a" title="Given the top blob error gradients, compute the bottom blob error gradients. ">Layer::Backward</a>. </td></tr>
     <tr><td class="paramname">bottom</td><td>input <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 1)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y (1 - y) $" src="form_117.png"/> if propagate_down[0] </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the inputs <img class="formulaInl" alt="$ x $" src="form_3.png"/>; Backward fills their diff with gradients <img class="formulaInl" alt="$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y (1 - y) $" src="form_120.png"/> if propagate_down[0] </li>
 </ol>
 </td></tr>
   </table>
@@ -340,7 +342,7 @@ template&lt;typename Dtype &gt; </div>
 </ol>
 </td></tr>
     <tr><td class="paramname">top</td><td>output <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> vector (length 1)<ol type="1">
-<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs <img class="formulaInl" alt="$ y = (1 + \exp(-x))^{-1} $" src="form_102.png"/> </li>
+<li><img class="formulaInl" alt="$ (N \times C \times H \times W) $" src="form_2.png"/> the computed outputs <img class="formulaInl" alt="$ y = (1 + \exp(-x))^{-1} $" src="form_103.png"/> </li>
 </ol>
 </td></tr>
   </table>
@@ -358,7 +360,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:22 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 11 2015 14:02:46 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
