@@ -6,7 +6,7 @@
 #ifdef _MSC_VER
 // For _mkdir
 #include <direct.h>
-#endif _MSC_VER
+#endif
 
 namespace caffe { namespace db {
 
