@@ -1,4 +1,4 @@
-# This is a fork of Caffe that works with Python 2.7 and Python 3.4
+This is a fork of Caffe that works with Python 2.7 and Python 3.4
 
 # Caffe
 
