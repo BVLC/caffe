@@ -24,7 +24,7 @@ class Detector(caffe.Net):
     Detector extends Net for windowed detection by a list of crops or
     selective search proposals.
     """
-    def __init__(self, model_file, pretrained_file, gpu=False, mean=None,
+    def __init__(self, model_file, pretrained_file, mean=None,
                  input_scale=None, raw_scale=None, channel_swap=None,
                  context_pad=None):
         """
@@ -40,7 +40,7 @@ class Detector(caffe.Net):
         # configure pre-processing
         in_ = self.inputs[0]
         self.transformer = caffe.io.Transformer(
-            {in_: self.blobs[in_].data.shape for in_ in self.inputs})
+            {in_: self.blobs[in_].data.shape})
         self.transformer.set_transpose(in_, (2,0,1))
         if mean is not None:
             self.transformer.set_mean(in_, mean)

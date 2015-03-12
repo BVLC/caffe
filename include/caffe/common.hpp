@@ -5,6 +5,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
+#include <climits>
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
@@ -65,7 +66,7 @@ private:\
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
 // See PR #1236
-namespace cv {class Mat;}
+namespace cv { class Mat; }
 
 namespace caffe {
 
