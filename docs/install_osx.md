@@ -15,7 +15,7 @@ In other `ENV` settings, things may not work as expected.
 
 **General dependencies**
 
-    brew install --fresh -vd snappy leveldb gflags glog szip lmdb
+    brew install -vd snappy leveldb gflags glog szip lmdb
     # need the homebrew science source for OpenCV and hdf5
     brew tap homebrew/science
     brew install hdf5 opencv
@@ -31,8 +31,8 @@ If using Anaconda Python, HDF5 is bundled and the `hdf5` formula can be skipped.
 **Remaining dependencies, with / without Python**
 
     # with Python pycaffe needs dependencies built from source
-    brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --fresh -vd boost boost-python
+    brew install --build-from-source --with-python -vd protobuf
+    brew install --build-from-source -vd boost boost-python
     # without Python the usual installation suffices
     brew install protobuf boost
 
@@ -78,9 +78,9 @@ To edit the formulae in turn, run
 
 After this, run
 
-    for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source --fresh -vd $x; done
-    brew uninstall protobuf; brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --fresh -vd boost boost-python
+    for x in snappy leveldb gflags glog szip lmdb homebrew/science/opencv; do brew uninstall $x; brew install --build-from-source -vd $x; done
+    brew uninstall protobuf; brew install --build-from-source --with-python -vd protobuf
+    brew install --build-from-source -vd boost boost-python
 
 If this is not done exactly right then linking errors will trouble you.
 
