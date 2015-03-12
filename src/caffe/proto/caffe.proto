@@ -485,6 +485,11 @@ message DummyDataParameter {
   repeated uint32 channels = 3;
   repeated uint32 height = 4;
   repeated uint32 width = 5;
+  // Force to refill top blobs even if the filler is constant every `Forward`
+  // step. This is usefull in a special case that top blobs are overwritten by
+  // other nets and layers etc after layer setup. Default is refilling every
+  // time. If you want to save computational cost, set it false.
+  optional bool refill_constant = 21414 [default = true];
 }
 
 // Message that stores parameters used by EltwiseLayer

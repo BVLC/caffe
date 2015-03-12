@@ -132,6 +132,8 @@ class DummyDataLayer : public Layer<Dtype> {
 
   vector<shared_ptr<Filler<Dtype> > > fillers_;
   vector<bool> refill_;
+  bool refill_constant_;  // flag refilling constant values in `Forward`
+  vector<vector<int> > shapes_;
 };
 
 /**
