@@ -2,6 +2,7 @@
 
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -27,6 +28,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int new_width  = this->layer_param_.image_data_param().new_width();
   const bool is_color  = this->layer_param_.image_data_param().is_color();
   string root_folder = this->layer_param_.image_data_param().root_folder();
+  const int num_images = this->layer_param_.image_data_param().num_images();
 
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
@@ -35,10 +37,19 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
-  string filename;
+  std::string line;
+  std::vector<std::string> filenames(num_images, "");
   int label;
-  while (infile >> filename >> label) {
-    lines_.push_back(std::make_pair(filename, label));
+  while (!infile.eof()) {
+    std::getline(infile, line);
+    std::istringstream ss(line);
+    for (int i = 0; i < num_images; ++i)
+      ss >> filenames[i];
+    ss >> label;
+    if (!ss.fail())
+      lines_.push_back(std::make_pair(filenames, label));
+    else
+      break;
   }
 
   if (this->layer_param_.image_data_param().shuffle()) {
@@ -59,8 +70,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_GT(lines_.size(), skip) << "Not enough points to skip";
     lines_id_ = skip;
   }
-  // Read an image, and use it to initialize the top blob.
-  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+  // Read an image, and use it to initialize the top blobs.
+  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first[0],
                                     new_height, new_width, is_color);
   const int channels = cv_img.channels();
   const int height = cv_img.rows;
@@ -69,12 +80,14 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   if (crop_size > 0) {
-    top[0]->Reshape(batch_size, channels, crop_size, crop_size);
-    this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
+    top[0]->Reshape(batch_size, channels * num_images, crop_size, crop_size);
+    this->prefetch_data_.Reshape(batch_size, channels * num_images,
+        crop_size, crop_size);
     this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
   } else {
-    top[0]->Reshape(batch_size, channels, height, width);
-    this->prefetch_data_.Reshape(batch_size, channels, height, width);
+    top[0]->Reshape(batch_size, channels * num_images, height, width);
+    this->prefetch_data_.Reshape(batch_size, channels * num_images,
+        height, width);
     this->transformed_data_.Reshape(1, channels, height, width);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
@@ -110,12 +123,13 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const bool is_color = image_data_param.is_color();
   string root_folder = image_data_param.root_folder();
+  const int num_images = image_data_param.num_images();
 
   // Reshape on single input batches for inputs of varying dimension.
   if (batch_size == 1 && crop_size == 0 && new_height == 0 && new_width == 0) {
-    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first[0],
         0, 0, is_color);
-    this->prefetch_data_.Reshape(1, cv_img.channels(),
+    this->prefetch_data_.Reshape(1, cv_img.channels() * num_images,
         cv_img.rows, cv_img.cols);
     this->transformed_data_.Reshape(1, cv_img.channels(),
         cv_img.rows, cv_img.cols);
@@ -127,19 +141,25 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   // datum scales
   const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    // get a blob
-    timer.Start();
-    CHECK_GT(lines_size, lines_id_);
-    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-        new_height, new_width, is_color);
-    CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
-    read_time += timer.MicroSeconds();
-    timer.Start();
-    // Apply transformations (mirror, crop...) to the image
-    int offset = this->prefetch_data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(prefetch_data + offset);
-    this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
-    trans_time += timer.MicroSeconds();
+    // get blobs
+    for (int i = 0; i < num_images; ++i) {
+      timer.Start();
+      CHECK_GT(lines_size, lines_id_);
+      cv::Mat cv_img = ReadImageToCVMat(
+          root_folder + lines_[lines_id_].first[i],
+          new_height, new_width, is_color);
+      CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first[i];
+      read_time += timer.MicroSeconds();
+
+      timer.Start();
+      // Apply transformations (mirror, crop...) to the image
+      int offset = this->prefetch_data_.offset(item_id);
+      int imgOffset = this->transformed_data_.count();
+      this->transformed_data_.set_cpu_data(
+          prefetch_data + offset + imgOffset*i);
+      this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+      trans_time += timer.MicroSeconds();
+    }
 
     prefetch_label[item_id] = lines_[lines_id_].second;
     // go to the next iter

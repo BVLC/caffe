@@ -564,6 +564,8 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+  // Number of images in each line
+  optional uint32 num_images = 13 [default = 1];
 }
 
 // Message that stores parameters InfogainLossLayer
