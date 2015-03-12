@@ -1,8 +1,8 @@
 ## Refer to http://caffe.berkeleyvision.org/installation.html
 # Contributions simplifying and improving our build system are welcome!
 
-# cuDNN acceleration switch (uncomment to build with cuDNN).
-# USE_CUDNN := 1
+# cuDNN acceleration switch (comment to build without cuDNN).
+USE_CUDNN := 1
 
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
@@ -45,7 +45,8 @@ BLAS := atlas
 # NOTE: this is required only if you will compile the python interface.
 # We need to be able to find Python.h and numpy/arrayobject.h.
 PYTHON_INCLUDE := /usr/include/python2.7 \
-		/usr/lib/python2.7/dist-packages/numpy/core/include
+		/usr/lib/python2.7/dist-packages/numpy/core/include \
+		/usr/local/lib/python2.7/dist-packages/numpy/core/include
 # Anaconda Python distribution is quite popular. Include path:
 # Verify anaconda location, sometimes it's in root.
 # ANACONDA_HOME := $(HOME)/anaconda
@@ -79,3 +80,6 @@ TEST_GPUID := 0
 
 # enable pretty build (comment to see full commands)
 Q ?= @
+
+# shared object suffix name to differentiate branches
+LIBRARY_NAME_SUFFIX := -nv
