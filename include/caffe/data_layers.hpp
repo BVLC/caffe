@@ -218,7 +218,8 @@ class HDF5OutputLayer : public Layer<Dtype> {
 /**
  * @brief Provides data to the Net from image files.
  *
- * TODO(dox): thorough documentation for Forward and proto params.
+ * In the case of multiple simultaneous input images they will be concatenated
+ * along the channels dimension.
  */
 template <typename Dtype>
 class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
@@ -238,7 +239,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void ShuffleImages();
   virtual void InternalThreadEntry();
 
-  vector<std::pair<std::string, int> > lines_;
+  vector<std::pair<std::vector<std::string>, int> > lines_;
   int lines_id_;
 };
 
