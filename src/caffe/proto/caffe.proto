@@ -301,7 +301,7 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-  // Next ID: 135
+  // Next ID: 136
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional ConcatParameter concat_param = 104;
@@ -324,7 +324,7 @@ message LayerParameter {
   optional MVNParameter mvn_param = 120;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
-  optional PReLUParameter prelu_param = 131;
+  optional PReLUParameter prelu_param = 135;
   optional PythonParameter python_param = 130;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
