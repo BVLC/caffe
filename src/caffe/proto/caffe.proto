@@ -288,7 +288,7 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-  // Next ID: 134
+  // Next ID: 135
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional ConcatParameter concat_param = 104;
@@ -312,8 +312,9 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PythonParameter python_param = 130;
-  optional ReshapeParameter reshape_param = 133;
   optional ReLUParameter relu_param = 123;
+  optional ReshapeParameter reshape_param = 133;
+  optional ResampleParameter resample_param = 134;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SliceParameter slice_param = 126;
@@ -623,6 +624,14 @@ message ReshapeParameter {
   optional uint32 new_channels = 1;
   optional uint32 new_height = 2;
   optional uint32 new_width = 3;
+}
+
+
+// Message that stores parameters used by ResampleLayer
+message ResampleParameter {
+  optional uint32 num_output = 1; // The number of outputs to be sampled.
+  optional uint32 image_w = 2; // The width of the original image.
+  optional uint32 image_h = 3; // The height of the original image.
 }
 
 

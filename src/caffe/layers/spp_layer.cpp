@@ -21,9 +21,11 @@ void SPPLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK(spp_param.has_kernel_depth())
       << "Needs kernel depth.";
   kernel_depth_ = spp_param.kernel_depth();
-  CHECK_GT(kernel_depth_, 0) << "Kernel depth cannot be zero.";
-  image_w_ = spp_param.image_w();
-  image_h_ = spp_param.image_h();
+  CHECK_GT(kernel_depth_, 0) << "Kernel depth must be greater than zero.";
+  if (spp_param.has_image_w()) {
+    image_w_ = spp_param.image_w();
+    image_h_ = spp_param.image_h();
+  }
 }
 
 template <typename Dtype>
@@ -35,10 +37,9 @@ void SPPLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(height_, std::pow(2, (kernel_depth_ - 1))) << "SPP Kernel too deep.";
   CHECK_GT(width_, std::pow(2, (kernel_depth_ - 1))) << "SPP Kernel too deep.";
 
-  output_size_ = 0;
-  for (int i = 0; i < kernel_depth_; ++i) {
-    output_size_ += (1 << i) * (1 << i) ;
-  }
+  // sum_i=1^n i^2 = i(i+1)(2i+1)/6
+  output_size_ = kernel_depth_ * (kernel_depth_ + 1) * (2 * kernel_depth_ + 1) / 6;
+
   // For windowed case.
   if (bottom.size() > 1) {
     top[0]->Reshape(bottom[0]->num(), channels_, output_size_, bottom[1]->height());

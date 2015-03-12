@@ -10,7 +10,6 @@
 #define debug 0
 #define TOP 1
 #define BOTTOM 1
-#define MIN(A,B) A < B ? A : B
 
 namespace caffe {
 
@@ -22,17 +21,17 @@ __global__ void SPPForward(const int nthreads, const Dtype* bottom_data,
 
   CUDA_KERNEL_LOOP(index, nthreads) {
     int non_channel_index = index % output_size;
-    int j = 0;
+    int j = 1;
     // Shift holds the total of kernels at step i.
     int shift = 0;
     int next_shift = 1;
     while (non_channel_index >= next_shift) {
       shift = next_shift;
       ++j;
-      next_shift += (1 << j) * (1 << j);
+      next_shift += j * j;
     }
     int shifted_index = non_channel_index - shift;
-    int num_pools = 1 << j;
+    int num_pools = j;
     int pw = shifted_index % num_pools;
     int ph = (shifted_index / num_pools) % num_pools;
     int c = (index / output_size) % channels;
@@ -86,17 +85,17 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
 
   CUDA_KERNEL_LOOP(index, nthreads) {
     int non_channel_index = index % output_size;
-    int j = 0;
-    // Shift holds the total of kernels at step i.
+    int j = 1;
+    // Shift holds the total number of pools at step j.
     int shift = 0;
     int next_shift = 1;
     while (non_channel_index >= next_shift) {
       shift = next_shift;
       ++j;
-      next_shift += (1 << j) * (1 << j);
+      next_shift += j * j;
     }
     int shifted_index = non_channel_index - shift;
-    int num_pools = 1 << j;
+    int num_pools = j;
     int pw = shifted_index % num_pools;
     int ph = shifted_index / num_pools;
 
@@ -178,7 +177,7 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
       }
     }
     top_data[index] = maxval;
-    if ((DEBUG && TOP) || maxval < Dtype(0)) {
+    if (DEBUG && TOP) {
       printf("Forward "
           "Index: %d\t"
           "Shifted Index: %d\t"
@@ -266,8 +265,7 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
     if (mask) {
       mask += offset;
       int shift = 0;
-      for (int i = 0; i < kernel_depth; ++i) {
-        int num_pools = 1 << i;
+      for (int num_pools = 1; num_pools < kernel_depth; ++num_pools) {
         int pw = w / num_pools;
         int ph = h / num_pools;
         if (DEBUG) {
@@ -283,15 +281,14 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
               c, n);
         }
         if (mask[shift + ph * num_pools + pw] == h * width + w) {
-          gradient += top_diff[ph * num_pools + pw];
+          gradient += top_diff[shift + ph * num_pools + pw];
         }
         shift += num_pools * num_pools;
       }
     } else {
       top_mask += offset;
       int shift = 0;
-      for (int i = 0; i < kernel_depth; ++i) {
-        int num_pools = 1 << i;
+      for (int num_pools = 1; num_pools < kernel_depth; ++num_pools) {
         int pw = w / num_pools;
         int ph = h / num_pools;
         if (DEBUG) {
@@ -307,7 +304,7 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
               c, n);
         }
         if (top_mask[shift + ph * num_pools + pw] == h * width + w) {
-          gradient += top_diff[ph * num_pools + pw];
+          gradient += top_diff[shift + ph * num_pools + pw];
         }
         shift += num_pools * num_pools;
       }
@@ -337,9 +334,9 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
       mask += offset;
       for (int win = 0; win < window_count; ++win) {
         // Because of crazy indexing in windows, easier to check every window.
-        for (int i = 0; i < output_size; ++i) {
-          if (mask[win * output_size + i] == h * width + w) {
-            gradient += top_diff[i];
+        for (int pool = 0; pool < output_size; ++pool) {
+          if (mask[win * output_size + pool] == h * width + w) {
+            gradient += top_diff[win * output_size + pool];
             if (DEBUG && BOTTOM) {
               printf("Mask Backward "
                 "Index: %d\t"
@@ -347,13 +344,13 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
                 "h: %d\t"
                 "c: %d\t"
                 "n: %d\t"
-                "i: %d\t"
+                "pool: %d\t"
                 "win: %d\t"
                 "idx: %d\t"
                 "gradient: %f\t"
                 "top_diff[i]: %f\t"
                 "mask[i]: %d\t"
-                "\n", index, w, h, c, n, i, win, win * output_size + i, gradient, top_diff[i], mask[win * output_size + i]);
+                "\n", index, w, h, c, n, pool, win, win * output_size + pool, gradient, top_diff[win * output_size + pool], mask[win * output_size + pool]);
             }
           }
         }
@@ -362,9 +359,9 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
       top_mask += offset;
       for (int win = 0; win < window_count; ++win) {
         // Because of crazy indexing in windows, easier to check every window.
-        for (int i = 0; i < output_size; ++i) {
-          if (top_mask[win * output_size + i] == h * width + w) {
-            gradient += top_diff[i];
+        for (int pool = 0; pool < output_size; ++pool) {
+          if (top_mask[win * output_size + pool] == h * width + w) {
+            gradient += top_diff[win * output_size + pool];
             if (DEBUG && BOTTOM) {
               printf("Mask Backward "
                 "Index: %d\t"
@@ -378,7 +375,7 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
                 "gradient: %f\t"
                 "top_diff[i]: %f\t"
                 "mask[i]: %d\t"
-                "\n", index, w, h, c, n, i, win, win * output_size + i, gradient, top_diff[i], top_mask[win * output_size + i]);
+                "\n", index, w, h, c, n, pool, win, win * output_size + pool, gradient, top_diff[win * output_size + pool], mask[win * output_size + pool]);
             }
           }
         }
@@ -400,7 +397,7 @@ void SPPLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   const int count = bottom[0]->count();
-  caffe_gpu_set(count, Dtype(0.), bottom_diff);
+  caffe_gpu_set(count, Dtype(0), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;
