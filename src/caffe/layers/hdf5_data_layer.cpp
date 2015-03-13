@@ -14,9 +14,9 @@ TODO:
 #include "hdf5_hl.h"
 #include "stdint.h"
 
+#include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/vision_layers.hpp"
 
 namespace caffe {
 
@@ -48,23 +48,24 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
   CHECK_GE(status, 0) << "Failed to close HDF5 file: " << filename;
 
   // MinTopBlobs==1 guarantees at least one top blob
-  int num = hdf_blobs_[0]->num();
+  CHECK_GE(hdf_blobs_[0]->num_axes(), 1) << "Input must have at least 1 axis.";
+  const int num = hdf_blobs_[0]->shape(0);
   for (int i = 1; i < top_size; ++i) {
-    CHECK_EQ(hdf_blobs_[i]->num(), num);
+    CHECK_EQ(hdf_blobs_[i]->shape(0), num);
   }
-  //  permutation in file is identity by default
+  // Default to identity permutation.
   data_permutation_.clear();
-  data_permutation_.resize(hdf_blobs_[0]->num());
-  for (int i = 0; i < hdf_blobs_[0]->num(); i++)
+  data_permutation_.resize(hdf_blobs_[0]->shape(0));
+  for (int i = 0; i < hdf_blobs_[0]->shape(0); i++)
     data_permutation_[i] = i;
 
-  //  shuffle data when asked
+  // Shuffle if needed.
   if (this->layer_param_.hdf5_data_param().shuffle()) {
     std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
-    DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->num()
-    << " rows (shuffled)";
+    DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->shape(0)
+               << " rows (shuffled)";
   } else {
-    DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->num() << " rows";
+    DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->shape(0) << " rows";
   }
 }
 
@@ -96,11 +97,12 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   file_permutation_.clear();
   file_permutation_.resize(num_files_);
-  // default order-permutation is identity permutation
-  for (int i = 0; i < num_files_; i++)
+  // Default to identity permutation.
+  for (int i = 0; i < num_files_; i++) {
     file_permutation_[i] = i;
+  }
 
-  //  only change order, when asked
+  // Shuffle if needed.
   if (this->layer_param_.hdf5_data_param().shuffle()) {
     std::random_shuffle(file_permutation_.begin(), file_permutation_.end());
   }
@@ -131,25 +133,26 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
-    if (current_row_ == hdf_blobs_[0]->num()) {
+    if (current_row_ == hdf_blobs_[0]->shape(0)) {
       if (num_files_ > 1) {
         ++current_file_;
         if (current_file_ == num_files_) {
           current_file_ = 0;
-          if (this->layer_param_.hdf5_data_param().shuffle())
+          if (this->layer_param_.hdf5_data_param().shuffle()) {
             std::random_shuffle(file_permutation_.begin(),
-              file_permutation_.end());
+                                file_permutation_.end());
+          }
           DLOG(INFO) << "Looping around to first file.";
         }
-        LoadHDF5FileData(hdf_filenames_[file_permutation_[current_file_]].
-          c_str());
+        LoadHDF5FileData(
+            hdf_filenames_[file_permutation_[current_file_]].c_str());
       }
       current_row_ = 0;
       if (this->layer_param_.hdf5_data_param().shuffle())
         std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     }
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
-      int data_dim = top[j]->count() / top[j]->num();
+      int data_dim = top[j]->count() / top[j]->shape(0);
       caffe_copy(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
