@@ -207,6 +207,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_forward", &Net<Dtype>::ForwardFromTo)
     .def("_backward", &Net<Dtype>::BackwardFromTo)
     .def("reshape", &Net<Dtype>::Reshape)
+    .def("reset", &Net<Dtype>::Reset)
     // The cast is to select a particular overload.
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(
         &Net<Dtype>::CopyTrainedLayersFrom))
