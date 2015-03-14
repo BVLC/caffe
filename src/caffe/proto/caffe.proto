@@ -259,7 +259,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 131 (last added: python_param)
+// LayerParameter next available layer-specific ID: 132 (last added: prelu_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -323,6 +323,7 @@ message LayerParameter {
   optional MVNParameter mvn_param = 120;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
+  optional PReLUParameter prelu_param = 131;
   optional PythonParameter python_param = 130;
   optional ReLUParameter relu_param = 123;
   optional SigmoidParameter sigmoid_param = 124;
@@ -517,6 +518,13 @@ message HDF5DataParameter {
   optional string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 2;
+
+  // Specify whether to shuffle the data.
+  // If shuffle == true, the ordering of the HDF5 files is shuffled,
+  // and the ordering of data within any given HDF5 file is shuffled,
+  // but data between different files are not interleaved; all of a file's
+  // data are output (in a random order) before moving onto another file.
+  optional bool shuffle = 3 [default = false];
 }
 
 // Message that stores parameters used by HDF5OutputLayer
@@ -945,4 +953,15 @@ message V0LayerParameter {
   optional uint32 concat_dim = 65 [default = 1];
 
   optional HDF5OutputParameter hdf5_output_param = 1001;
+}
+
+// Message that stores parameters used by PReLULayer
+message PReLUParameter {
+  // Parametric ReLU described in K. He et al, Delving Deep into Rectifiers:
+  // Surpassing Human-Level Performance on ImageNet Classification, 2015.
+
+  // Initial value of a_i. Default is a_i=0.25 for all i.
+  optional FillerParameter filler = 1;
+  // Whether or not slope paramters are shared across channels.
+  optional bool channel_shared = 2 [default = false];
 }
