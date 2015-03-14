@@ -11,6 +11,6 @@ from .classifier import Classifier
 from .detector import Detector
 import io
 try:
-	from ._caffe import get_cuda_num_threads, get_blocks
+	from ._caffe import get_cuda_num_threads, get_blocks, cublas_handle
 except ImportError:
 	pass

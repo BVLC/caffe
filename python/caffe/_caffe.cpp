@@ -41,6 +41,9 @@ bool check_mode_gpu() { return Caffe::mode() == Caffe::GPU; }
 #ifndef CPU_ONLY
 // Cuda num threads
 int get_cuda_num_threads() { return CAFFE_CUDA_NUM_THREADS; }
+bp::object cublas_handle() {
+  return bp::object((size_t)Caffe::cublas_handle());
+}
 #endif
 
 // For convenience, check that input files can be opened, and raise an
@@ -251,6 +254,7 @@ BOOST_PYTHON_MODULE(_caffe) {
 #ifndef CPU_ONLY
   bp::def("get_cuda_num_threads", &get_cuda_num_threads);
   bp::def("get_blocks", &CAFFE_GET_BLOCKS);
+  bp::def("cublas_handle", &cublas_handle);
 #endif
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
