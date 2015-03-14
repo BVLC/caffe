@@ -26,6 +26,7 @@ const int kProtoReadBytesLimit = INT_MAX;  // Max size of 2 GB minus 1 byte.
 namespace caffe {
 
 using google::protobuf::io::FileInputStream;
+using google::protobuf::io::IstreamInputStream;
 using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
 using google::protobuf::io::CodedInputStream;
@@ -34,12 +35,12 @@ using google::protobuf::io::CodedOutputStream;
 using google::protobuf::Message;
 
 bool ReadProtoFromTextFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
-  CHECK_NE(fd, -1) << "File not found: " << filename;
-  FileInputStream* input = new FileInputStream(fd);
+  std::fstream infile(filename, std::ios_base::in);
+  CHECK_EQ(infile.is_open(), true) << "File not found: " << filename;
+  IstreamInputStream *input = new IstreamInputStream(&infile);
   bool success = google::protobuf::TextFormat::Parse(input, proto);
   delete input;
-  close(fd);
+  infile.close();
   return success;
 }
 
@@ -52,9 +53,9 @@ void WriteProtoToTextFile(const Message& proto, const char* filename) {
 }
 
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
-  int fd = open(filename, O_RDONLY);
-  CHECK_NE(fd, -1) << "File not found: " << filename;
-  ZeroCopyInputStream* raw_input = new FileInputStream(fd);
+  std::fstream infile(filename, std::ios_base::in);
+  CHECK_EQ(infile.is_open(), true) << "File not found: " << filename;
+  IstreamInputStream * raw_input = new IstreamInputStream(&infile);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
   coded_input->SetTotalBytesLimit(kProtoReadBytesLimit, 536870912);
 
@@ -62,7 +63,7 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
 
   delete coded_input;
   delete raw_input;
-  close(fd);
+  infile.close();
   return success;
 }
 
