@@ -57,12 +57,12 @@ __global__ void SPPForward(const int nthreads, const Dtype* bottom_data,
     int wend = min(wstart + kernel_w, width);
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
-    bottom_data += (n * channels + c) * height * width;
+    int bottom_data_shift = (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
-        if (bottom_data[h * width + w] > maxval) {
+        if (bottom_data[bottom_data_shift + h * width + w] > maxval) {
           maxidx = h * width + w;
-          maxval = bottom_data[maxidx];
+          maxval = bottom_data[bottom_data_shift + maxidx];
         }
       }
     }
@@ -104,11 +104,10 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int n = index / output_size / window_count / channels;
 
     // 4 = number of coordinates per row.
-    bottom_window_data += n * 4;
-    float window_x = bottom_window_data[win * 4] * width / image_w;
-    float window_y = bottom_window_data[win * 4 + 1] * height / image_h;
-    float window_w = max((bottom_window_data[win * 4 + 2] * width / image_w), 1.0f);
-    float window_h = max((bottom_window_data[win * 4 + 3] * height / image_h), 1.0f);
+    float window_x = bottom_window_data[(n + win) * 4] * width / image_w;
+    float window_y = bottom_window_data[(n + win) * 4 + 1] * height / image_h;
+    float window_w = max((bottom_window_data[(n + win) * 4 + 2] * width / image_w), 1.0f);
+    float window_h = max((bottom_window_data[(n + win) * 4 + 3] * height / image_h), 1.0f);
     if (DEBUG && TOP) {
       printf("Window info: "
           "Index: %d\t"
@@ -167,12 +166,12 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
 
-    bottom_data += (n * channels + c) * height * width;
+    int bottom_data_shift = (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
-        if (bottom_data[h * width + w] > maxval) {
+        if (bottom_data[bottom_data_shift + h * width + w] > maxval) {
           maxidx = h * width + w;
-          maxval = bottom_data[maxidx];
+          maxval = bottom_data[bottom_data_shift + maxidx];
         }
       }
     }
@@ -259,11 +258,9 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
     int n = index / width / height / channels;
     Dtype gradient = 0;
     int offset = (n * channels + c) * output_size;
-    top_diff += offset;
     // Iterate through all positions in top array that could have resulted in
     // this index being the max.
     if (mask) {
-      mask += offset;
       int shift = 0;
       for (int num_pools = 1; num_pools < kernel_depth; ++num_pools) {
         int pw = w / num_pools;
@@ -280,13 +277,12 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
               "n: %d\t\n", index, w, h, num_pools, pw, ph,
               c, n);
         }
-        if (mask[shift + ph * num_pools + pw] == h * width + w) {
-          gradient += top_diff[shift + ph * num_pools + pw];
+        if (mask[offset + shift + ph * num_pools + pw] == h * width + w) {
+          gradient += top_diff[offset + shift + ph * num_pools + pw];
         }
         shift += num_pools * num_pools;
       }
     } else {
-      top_mask += offset;
       int shift = 0;
       for (int num_pools = 1; num_pools < kernel_depth; ++num_pools) {
         int pw = w / num_pools;
@@ -303,8 +299,8 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
               "n: %d\t\n", index, w, h, num_pools, pw, ph,
               c, n);
         }
-        if (top_mask[shift + ph * num_pools + pw] == h * width + w) {
-          gradient += top_diff[shift + ph * num_pools + pw];
+        if (top_mask[offset + shift + ph * num_pools + pw] == h * width + w) {
+          gradient += top_diff[offset + shift + ph * num_pools + pw];
         }
         shift += num_pools * num_pools;
       }
@@ -327,16 +323,14 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
     int n = index / width / height / channels;
     Dtype gradient = 0;
     int offset = (n * channels + c) * output_size * window_count;
-    top_diff += offset;
     // Iterate through all positions in top array that could have resulted in
     // this index being the max.
     if (mask) {
-      mask += offset;
       for (int win = 0; win < window_count; ++win) {
         // Because of crazy indexing in windows, easier to check every window.
         for (int pool = 0; pool < output_size; ++pool) {
-          if (mask[win * output_size + pool] == h * width + w) {
-            gradient += top_diff[win * output_size + pool];
+          if (mask[offset + win * output_size + pool] == h * width + w) {
+            gradient += top_diff[offset + win * output_size + pool];
             if (DEBUG && BOTTOM) {
               printf("Mask Backward "
                 "Index: %d\t"
@@ -350,18 +344,17 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
                 "gradient: %f\t"
                 "top_diff[i]: %f\t"
                 "mask[i]: %d\t"
-                "\n", index, w, h, c, n, pool, win, win * output_size + pool, gradient, top_diff[win * output_size + pool], mask[win * output_size + pool]);
+                "\n", index, w, h, c, n, pool, win, win * output_size + pool, gradient, top_diff[win * output_size + pool], mask[offset + win * output_size + pool]);
             }
           }
         }
       }
     } else {
-      top_mask += offset;
       for (int win = 0; win < window_count; ++win) {
         // Because of crazy indexing in windows, easier to check every window.
         for (int pool = 0; pool < output_size; ++pool) {
-          if (top_mask[win * output_size + pool] == h * width + w) {
-            gradient += top_diff[win * output_size + pool];
+          if (top_mask[offset + win * output_size + pool] == h * width + w) {
+            gradient += top_diff[offset + win * output_size + pool];
             if (DEBUG && BOTTOM) {
               printf("Mask Backward "
                 "Index: %d\t"
@@ -375,7 +368,7 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
                 "gradient: %f\t"
                 "top_diff[i]: %f\t"
                 "mask[i]: %d\t"
-                "\n", index, w, h, c, n, pool, win, win * output_size + pool, gradient, top_diff[win * output_size + pool], mask[win * output_size + pool]);
+                "\n", index, w, h, c, n, pool, win, win * output_size + pool, gradient, top_diff[offset + win * output_size + pool], top_mask[offset + win * output_size + pool]);
             }
           }
         }
