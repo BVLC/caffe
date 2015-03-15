@@ -27,6 +27,7 @@ namespace caffe {
 
 using google::protobuf::io::FileInputStream;
 using google::protobuf::io::IstreamInputStream;
+using google::protobuf::io::OstreamOutputStream;
 using google::protobuf::io::FileOutputStream;
 using google::protobuf::io::ZeroCopyInputStream;
 using google::protobuf::io::CodedInputStream;
@@ -45,15 +46,25 @@ bool ReadProtoFromTextFile(const char* filename, Message* proto) {
 }
 
 void WriteProtoToTextFile(const Message& proto, const char* filename) {
+#ifdef _MSC_VER
+  std::fstream outfile(filename, std::ios_base::out);
+  CHECK_EQ(outfile.is_open(), true) << "Could not open file: " << filename;
+  OstreamOutputStream *output = new OstreamOutputStream(&outfile);
+#else  
   int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   FileOutputStream* output = new FileOutputStream(fd);
+#endif
   CHECK(google::protobuf::TextFormat::Print(proto, output));
   delete output;
+#ifdef _MSC_VER
+  outfile.close();
+#else
   close(fd);
+#endif
 }
 
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
-  std::fstream infile(filename, std::ios_base::in);
+  std::fstream infile(filename, std::ios_base::in | std::ifstream::binary);
   CHECK_EQ(infile.is_open(), true) << "File not found: " << filename;
   IstreamInputStream * raw_input = new IstreamInputStream(&infile);
   CodedInputStream* coded_input = new CodedInputStream(raw_input);
@@ -68,7 +79,7 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
 }
 
 void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
-  fstream output(filename, ios::out | ios::trunc | ios::binary);
+  std::fstream output(filename, ios::out | ios::trunc | ios::binary);
   CHECK(proto.SerializeToOstream(&output));
 }
 
