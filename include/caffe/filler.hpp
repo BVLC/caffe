@@ -156,6 +156,20 @@ class XavierFiller : public Filler<Dtype> {
   }
 };
 
+template <typename Dtype>
+class CountFiller : public Filler<Dtype> {
+ public:
+  explicit CountFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    Dtype* data = blob->mutable_cpu_data();
+    for (int i = 0; i < blob->count(); ++i) {
+      data[i] = i/Dtype(blob->count());
+      // std::cout << data[i] << " ";
+    }
+    // std::cout << std::endl;
+  }
+};
 
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
