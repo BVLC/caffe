@@ -48,8 +48,6 @@ void XCovLossLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void XCovLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_cpu_data();
-
   // for now, we support only two inputs
   CHECK_EQ(bottom.size(), 2);
 
