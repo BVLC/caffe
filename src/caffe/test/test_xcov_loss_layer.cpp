@@ -16,6 +16,7 @@ namespace caffe {
 template <typename TypeParam>
 class XCovLossLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
+
  protected:
   XCovLossLayerTest()
       : blob_bottom_0_(new Blob<Dtype>(5, 3, 1, 1)),
