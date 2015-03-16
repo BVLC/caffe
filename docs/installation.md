@@ -11,7 +11,7 @@ The official Makefile and `Makefile.config` build are complemented by an automat
 - [Prerequisites](#prerequisites)
 - [Compilation](#compilation)
 - [Hardware](#hardware)
-- Platforms: [Ubuntu guide](install_apt.html), [OS X guide](install_osx.html), and [RHEL / CentOS / Fedora guide](install_yum.html)
+- Platforms: [Ubuntu guide](install_apt.html), [[Ubuntu guide (step by step, including external libraries)](install_apt2.html), (OS X guide](install_osx.html), and [RHEL / CentOS / Fedora guide](install_yum.html).
 
 When updating Caffe, it's best to `make clean` before re-compiling.
 
