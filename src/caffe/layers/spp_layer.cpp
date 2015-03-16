@@ -68,10 +68,10 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   // Checks for the windowed case where many outputs are required.
-  const bool is_windowed = bottom.size() > 1;
   int* mask = NULL;  // suppress warnings about uninitalized variables
   Dtype* top_mask = NULL;
-  if (is_windowed) {
+  if (bottom.size() > 1) {
+    // Windowed case.
     const int window_count = bottom[1]->height();
     const Dtype* bottom_window_data = bottom[1]->cpu_data();
     // Initialize
@@ -89,25 +89,51 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         for (int win = 0; win < window_count; ++win) {
           int pool_index = 0;
           // 4 = number of coordinates per row.
-          int window_x = bottom_window_data[win * 4] * width_ / image_w_;
-          int window_y = bottom_window_data[win * 4 + 1] * height_ / image_h_;
-          int window_w = bottom_window_data[win * 4 + 2] * width_ / image_w_;
-          int window_h = bottom_window_data[win * 4 + 3] * height_ / image_h_;
-          for (int d = 0; d < kernel_depth_; ++d) {
-            int num_pools = std::pow(2, d);
+          const Dtype* bottom_window_data_shifted = bottom_window_data + (n * window_count + win) * 4;
+          float window_x = bottom_window_data_shifted[0] * width_ / image_w_;
+          float window_y = bottom_window_data_shifted[1] * height_ / image_h_;
+          // Make sure window is over at least a 1x1 patch.
+          float window_w = max((float)bottom_window_data_shifted[2] * width_ / image_w_, 1.0f);
+          float window_h = max((float)bottom_window_data_shifted[3] * height_ / image_h_, 1.0f);
+          for (int num_pools = 1; num_pools < kernel_depth_; ++num_pools) {
             // Using fractional heights to better represent smaller sections
             // instead of defaulting to repeating the end pixels over and over.
-            float kernel_h = window_h  * 1.0f / num_pools;
-            int kernel_w = window_w * 1.0f / num_pools;
+            float kernel_h = window_h  / num_pools;
+            float kernel_w = window_w / num_pools;
             for (int ph = 0; ph < num_pools; ++ph) {
               for (int pw = 0; pw < num_pools; ++pw) {
-                int hstart = int(ph * kernel_h) + window_y;
-                int wstart = int(pw * kernel_w) + window_x;
-                // Make sure each pool is over at least one element.
-                int hend = min(hstart + std::max(int(kernel_h), 1), window_h);
-                int wend = min(wstart + std::max(int(kernel_w), 1), window_w);
-                // Not sure how their initialization works, so I'll do my own.
+                float hstart_float = ph * kernel_h + window_y;
+                float wstart_float = pw * kernel_w + window_x;
+                // Starting point is floor of possible window.
+                int hstart = (int)hstart_float;
+                int wstart = (int)wstart_float;
+                // Ending point is ceiling of possible window bounded by
+                // dimensions of image and dimensions of patch.
+                int hend = min(min((int)ceil(hstart_float + kernel_h), height_), (int)ceil(window_y + window_h));
+                int wend = min(min((int)ceil(wstart_float + kernel_w), width_), (int)ceil(window_x + window_w));
+                // Make sure over at least 1x1 patch for sure. Could have happened if hit
+                // image size constraint I think.
+                if (hstart == hend) {
+                  if (hend < height_) {
+                    ++hend;
+                  } else {
+                    --hstart;
+                  }
+                }
+                if (wstart == wend) {
+                  if (wend < width_) {
+                    ++wend;
+                  } else {
+                    --wstart;
+                  }
+                }
+                // Initialize max to first element.
                 top_data[pool_index] = bottom_data[hstart * width_ + wstart];
+                if (use_top_mask) {
+                  top_mask[pool_index] = static_cast<Dtype>(hstart * width_ + wstart);
+                } else {
+                  mask[pool_index] = hstart * width_ + wstart;
+                }
                 for (int h = hstart; h < hend; ++h) {
                   for (int w = wstart; w < wend; ++w) {
                     const int index = h * width_ + w;
@@ -139,7 +165,7 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
   } else {
-    // Initialize
+    // Single window case.
     if (use_top_mask) {
       top_mask = top[1]->mutable_cpu_data();
       caffe_set(top_count, Dtype(-1), top_mask);
@@ -152,8 +178,7 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int n = 0; n < bottom[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {
         int pool_index = 0;
-        for (int d = 0; d < kernel_depth_; ++d) {
-          int num_pools = std::pow(2, d);
+        for (int num_pools = 0; num_pools < kernel_depth_; ++num_pools) {
           // Trick to get the kernel over the whole zone.
           int kernel_h = (height_ + num_pools - 1) / num_pools;
           int kernel_w = (width_ + num_pools - 1) / num_pools;
@@ -165,6 +190,11 @@ void SPPLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
               int wend = min(wstart + kernel_w, width_);
               // Not sure how their initialization works, so I'll do my own.
               top_data[pool_index] = bottom_data[hstart * width_ + wstart];
+              if (use_top_mask) {
+                top_mask[pool_index] = static_cast<Dtype>(hstart * width_ + wstart);
+              } else {
+                mask[pool_index] = hstart * width_ + wstart;
+              }
               for (int h = hstart; h < hend; ++h) {
                 for (int w = wstart; w < wend; ++w) {
                   const int index = h * width_ + w;

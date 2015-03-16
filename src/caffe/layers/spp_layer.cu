@@ -57,12 +57,12 @@ __global__ void SPPForward(const int nthreads, const Dtype* bottom_data,
     int wend = min(wstart + kernel_w, width);
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
-    int bottom_data_shift = (n * channels + c) * height * width;
+    const Dtype* bottom_data_shifted = bottom_data + (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
-        if (bottom_data[bottom_data_shift + h * width + w] > maxval) {
+        if (bottom_data_shifted[h * width + w] > maxval) {
           maxidx = h * width + w;
-          maxval = bottom_data[bottom_data_shift + maxidx];
+          maxval = bottom_data_shifted[maxidx];
         }
       }
     }
@@ -104,10 +104,11 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     int n = index / output_size / window_count / channels;
 
     // 4 = number of coordinates per row.
-    float window_x = bottom_window_data[(n + win) * 4] * width / image_w;
-    float window_y = bottom_window_data[(n + win) * 4 + 1] * height / image_h;
-    float window_w = max((bottom_window_data[(n + win) * 4 + 2] * width / image_w), 1.0f);
-    float window_h = max((bottom_window_data[(n + win) * 4 + 3] * height / image_h), 1.0f);
+    const Dtype* bottom_window_data_shifted = bottom_window_data + (n * window_count + win)* 4;
+    float window_x = bottom_window_data_shifted[0] * width / image_w;
+    float window_y = bottom_window_data_shifted[1] * height / image_h;
+    float window_w = max((bottom_window_data_shifted[2] * width / image_w), 1.0f);
+    float window_h = max((bottom_window_data_shifted[3] * height / image_h), 1.0f);
     if (DEBUG && TOP) {
       printf("Window info: "
           "Index: %d\t"
@@ -135,26 +136,29 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     // defaulting to repeating the end pixels over and over.
     float kernel_h = window_h / num_pools;
     float kernel_w = window_w / num_pools;
-    float f_hstart = ph * kernel_h + window_y;
-    float f_wstart = pw * kernel_w + window_x;
-    int hstart = (int)f_hstart;
-    int wstart = (int)f_wstart;
-    int kernel_h_int = (int)ceil(kernel_h);
-    int kernel_w_int = (int)ceil(kernel_w);
-    int hend = min(min((int)ceil(f_hstart + kernel_h_int), height), (int)ceil(window_y + window_h));
-    int wend = min(min((int)ceil(f_wstart + kernel_w_int), width), (int)ceil(window_x + window_w));
+    float hstart_float = ph * kernel_h + window_y;
+    float wstart_float = pw * kernel_w + window_x;
+    // Starting point is floor of possible window.
+    int hstart = (int)hstart_float;
+    int wstart = (int)wstart_float;
+    // Ending point is ceiling of possible window bounded by
+    // dimensions of image and dimensions of patch.
+    int hend = min(min((int)ceil(hstart_float + kernel_h), height), (int)ceil(window_y + window_h));
+    int wend = min(min((int)ceil(wstart_float + kernel_w), width), (int)ceil(window_x + window_w));
+    // Make sure over at least 1x1 patch for sure. Could have happened if hit
+    // image size constraint I think.
     if (hstart == hend) {
       if (hend < height) {
-        hend++;
+        ++hend;
       } else {
-        hstart--;
+        --hstart;
       }
     }
     if (wstart == wend) {
       if (wend < width) {
-        wend++;
+        ++wend;
       } else {
-        wstart--;
+        --wstart;
       }
     }
     /*
@@ -166,12 +170,12 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
 
-    int bottom_data_shift = (n * channels + c) * height * width;
+    const Dtype* bottom_data_shifted = bottom_data + (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
-        if (bottom_data[bottom_data_shift + h * width + w] > maxval) {
+        if (bottom_data_shifted[h * width + w] > maxval) {
           maxidx = h * width + w;
-          maxval = bottom_data[bottom_data_shift + maxidx];
+          maxval = bottom_data_shifted[maxidx];
         }
       }
     }
@@ -310,12 +314,21 @@ __global__ void SPPBackward(const int nthreads, const Dtype* top_diff,
 }
 
 
-template <typename Dtype>
-__global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
-    const int* mask, const Dtype* top_mask, const int num, const int channels,
+// Float version should be the only one ever called.
+__global__ void SPPBackwardWindowed(const int nthreads, const float* top_diff,
+    const int* mask, const float* top_mask, const int num, const int channels,
     const int height, const int width, const int kernel_depth,
-    const int output_size, const int window_count, Dtype* bottom_diff) {
+    const int output_size, const int window_count, float* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
+    int c = (index / output_size / window_count) % channels;
+    int n = index / output_size / window_count / channels;
+    float* bottom_diff_shifted = bottom_diff + (n * channels + c) * height * width;
+    if (mask) {
+      atomicAdd(&bottom_diff_shifted[mask[index]], top_diff[index]);
+    } else {
+      atomicAdd(&bottom_diff_shifted[(int)top_mask[index]], top_diff[index]);
+    }
+    /*
     // Index in the bottom array.
     int w = index % width;
     int h = (index / width) % height;
@@ -378,7 +391,16 @@ __global__ void SPPBackwardWindowed(const int nthreads, const Dtype* top_diff,
     if (DEBUG) {
       printf("Gradient: %f\n", bottom_diff[index]);
     }
+  */
   }
+}
+
+
+__global__ void SPPBackwardWindowed(const int nthreads, const double* top_diff,
+    const int* mask, const double* top_mask, const int num, const int channels,
+    const int height, const int width, const int kernel_depth,
+    const int output_size, const int window_count, double* bottom_diff) {
+  printf("No double type implemented. You done fucked up.");
 }
 
 template <typename Dtype>
@@ -390,6 +412,7 @@ void SPPLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   const int count = bottom[0]->count();
+  const int top_count = top[0]->count();
   caffe_gpu_set(count, Dtype(0), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
@@ -402,7 +425,7 @@ void SPPLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
   if (bottom.size() > 1) {
     const int window_count = bottom[1]->height();
-    SPPBackwardWindowed<Dtype><<<CAFFE_GET_BLOCKS(count),
+    SPPBackwardWindowed<<<CAFFE_GET_BLOCKS(top_count),
         CAFFE_CUDA_NUM_THREADS>>>(
             count, top_diff, mask, top_mask, top[0]->num(), channels_,
             height_, width_, kernel_depth_, output_size_, window_count,
