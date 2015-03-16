@@ -10,8 +10,6 @@ namespace caffe {
 template <typename Dtype>
 void XCovLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  Dtype* top_data = top[0]->mutable_gpu_data();
-
   // for now, we support only two inputs
   CHECK_EQ(bottom.size(), 2);
 
