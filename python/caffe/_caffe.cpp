@@ -205,6 +205,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("check_mode_gpu", &check_mode_gpu);
   bp::def("set_device", &Caffe::SetDevice);
   bp::def("get_device", &Caffe::GetDevice);
+  bp::def("set_random_seed", &Caffe::set_random_seed);
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
