@@ -3,6 +3,8 @@
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
+#include <google/protobuf/text_format.h>
+
 #include <boost/make_shared.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
@@ -15,6 +17,7 @@
 #include <fstream>  // NOLINT
 
 #include "caffe/caffe.hpp"
+#include "caffe/proto/caffe.pb.h"
 #include "caffe/python_layer.hpp"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -190,6 +193,42 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+// LayerParameter
+shared_ptr<LayerParameter> LayerParameter_Init(bp::object py_layer_param) {
+  shared_ptr<LayerParameter> layer_param(new LayerParameter);
+  if (PyObject_HasAttrString(py_layer_param.ptr(), "SerializeToString")) {
+    string dump = bp::extract<string>(
+        py_layer_param.attr("SerializeToString")());
+    layer_param->ParseFromString(dump);
+  } else {
+    try {
+      string dump = bp::extract<string>(py_layer_param);
+      google::protobuf::TextFormat::ParseFromString(dump, layer_param.get());
+    } catch(...) {
+      throw std::runtime_error("1st arg must be LayerPrameter or string.");
+    }
+  }
+  if (!layer_param->IsInitialized()) {
+    throw std::runtime_error(
+      "LayerParameter not initialized: Missing required fields.");
+  }
+  return layer_param;
+}
+void LayerParameter_FromPython(
+    LayerParameter *layer_param, bp::object py_layer_param) {
+  shared_ptr<LayerParameter> copy = \
+      LayerParameter_Init(py_layer_param);
+  layer_param->Clear();
+  layer_param->CopyFrom(*copy);
+}
+bp::object LayerParameter_ToPython(
+    const LayerParameter *layer_param, bp::object py_layer_param) {
+  string dump;
+  layer_param->SerializeToString(&dump);
+  py_layer_param.attr("ParseFromString")(bp::object(dump));
+  return py_layer_param;
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -251,7 +290,11 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("type", bp::make_function(&Layer<Dtype>::type));
   bp::register_ptr_to_python<shared_ptr<Layer<Dtype> > >();
 
-  bp::class_<LayerParameter>("LayerParameter", bp::no_init);
+  bp::class_<LayerParameter, shared_ptr<LayerParameter> >(
+      "LayerParameter", bp::no_init)
+    .def("__init__", bp::make_constructor(&LayerParameter_Init))
+    .def("from_python", &LayerParameter_FromPython)
+    .def("_to_python", &LayerParameter_ToPython);
 
   bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
     "Solver", bp::no_init)
