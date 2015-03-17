@@ -65,13 +65,15 @@ void XCovLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int dim0 = bottom[0]->count() / num;
   int dim1 = bottom[1]->count() / num;
 
-  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, num, dim0, dim1, top_diff/num,
+  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, num, dim0, dim1,
+      top_diff/num,
       temp_vec_[1]->gpu_data(),
       xcov_.gpu_data(),
       0.,
       bottom_diff_0);
 
-  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim1, dim0, top_diff/num,
+  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, dim1, dim0,
+      top_diff/num,
       temp_vec_[0]->gpu_data(),
       xcov_.gpu_data(),
       0.,
