@@ -39,6 +39,7 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         << " to HDF5 file " << file_name_;
     hdf5_save_nd_dataset(file_id_, batch_id.str(), *bottom[i]);
   }
+  H5Fflush(file_id_, H5F_SCOPE_GLOBAL);
   current_batch_++;
 }
 
