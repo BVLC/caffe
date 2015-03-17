@@ -525,7 +525,7 @@ class ResampleLayer : public Layer<Dtype> {
 };
 
 /**
- * @brief Pools at multiple scales.
+ * @brief Reshapes a layer to a new size with an equivalent number of params.
  */
 template <typename Dtype>
 class ReshapeLayer : public Layer<Dtype> {
@@ -555,6 +555,43 @@ class ReshapeLayer : public Layer<Dtype> {
   int new_height_, new_width_;
   int height_, width_;
   int channels_;
+  int num_;
+};
+
+
+/**
+ * @brief Augments data randomly but synchronized.
+ */
+template <typename Dtype>
+class AugmentLayer : public Layer<Dtype> {
+ public:
+  explicit AugmentLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Augment"; }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool mirror_;
+  int crop_width_, crop_height_;
+  int label_crop_width_, label_crop_height_;
+  int input_channels_, input_height_, input_width_;
+  int label_channels_, label_height_, label_width_;
+  Blob<float> mirror_image_vec_, h_shift_vec_, w_shift_vec_;
   int num_;
 };
 

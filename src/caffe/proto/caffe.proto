@@ -301,9 +301,10 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-  // Next ID: 136
+  // Next ID: 137
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
+  optional AugmentParameter augment_param = 136;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -389,6 +390,15 @@ message ArgMaxParameter {
   // If true produce pairs (argmax, maxval)
   optional bool out_max_val = 1 [default = false];
   optional uint32 top_k = 2 [default = 1];
+}
+
+// Message that stores parameters used by AugmentLayer
+message AugmentParameter {
+  optional bool mirror = 1; // Mirror mirror on the wall.
+  optional uint32 crop_size = 2; // The square crop dimension.
+  // Crop width and height are unnecessary if crop_size is provided.
+  optional uint32 crop_width = 3;
+  optional uint32 crop_height = 4;
 }
 
 // Message that stores parameters used by ConcatLayer
