@@ -34,7 +34,7 @@ void MaskLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   int picture_size = width_ * height_;
   int bottom_offset = picture_size;
   int top_offset = picture_size * mask_channels_count_;
-  for (int i = 0; i < num_; ++i) {
+  for (int n = 0; n < num_; ++n) {
     for (int c = 0; c < channels_; ++c) {
       for (int h = 0; h < height_; ++h) {
         for (int w = 0; w < width_; ++w) {
