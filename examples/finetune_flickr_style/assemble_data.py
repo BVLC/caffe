@@ -9,6 +9,7 @@ import hashlib
 import argparse
 import numpy as np
 import pandas as pd
+from skimage import io
 import multiprocessing
 
 # Flickr returns a special image if the request is unavailable.
@@ -27,6 +28,7 @@ def download_image(args_tuple):
             urllib.urlretrieve(url, filename)
         with open(filename) as f:
             assert hashlib.sha1(f.read()).hexdigest() != MISSING_IMAGE_SHA1
+        test_read_image = io.imread(filename)
         return True
     except KeyboardInterrupt:
         raise Exception()  # multiprocessing doesn't catch keyboard exceptions
@@ -48,6 +50,10 @@ if __name__ == '__main__':
         '-w', '--workers', type=int, default=-1,
         help="num workers used to download images. -x uses (all - x) cores [-1 default]."
     )
+    parser.add_argument(
+        '-l', '--labels', type=int, default=0,
+        help="if set to a positive value, only sample images from the first number of labels."
+    )
 
     args = parser.parse_args()
     np.random.seed(args.seed)
@@ -56,6 +62,8 @@ if __name__ == '__main__':
     csv_filename = os.path.join(example_dirname, 'flickr_style.csv.gz')
     df = pd.read_csv(csv_filename, index_col=0, compression='gzip')
     df = df.iloc[np.random.permutation(df.shape[0])]
+    if args.labels > 0:
+        df = df.loc[df['label'] < args.labels]
     if args.images > 0 and args.images < df.shape[0]:
         df = df.iloc[:args.images]
 
