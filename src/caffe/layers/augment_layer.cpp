@@ -46,9 +46,11 @@ void AugmentLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   label_crop_width_ = (int)(label_width_ *
       (cropped_width * 1.0 / input_width_));
 
-  // Scale channels up, one set for each mask.
   top[0]->Reshape(num_, input_channels_, cropped_height_, cropped_width_);
   top[1]->Reshape(num_, label_channels_, label_crop_height, label_crop_width_);
+  mirror_image_.Reshape(num_);
+  h_shift_.Reshape(num_);
+  w_shift_.Reshape(num_);
 }
 
 template <typename Dtype>
@@ -59,12 +61,14 @@ void AugmentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* label_top_data = top[1]->mutable_cpu_data();
   const Dtype* label_bottom_data = bottom[1]->cpu_data();
   int offset = width * height;
-  float mirror_image[num_];
+  float* mirror_image = mirror_image_.mutable_cpu_data();
+  float* h_shift = h_shift_.mutable_cpu_data();
+  float* w_shift = w_shift_.mutable_cpu_data();
+
   if (mirror_) {
     caffe_rng_uniform(num_, 0, 1, mirror_image);
   }
-  float w_shift [num_] = {0};
-  float h_shift [num_] = {0};
+
   if (crop_width_ < input_width_) {
     // Need to crop width.
     // In 0-1 range for reuse with labels.

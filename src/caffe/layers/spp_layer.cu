@@ -427,7 +427,7 @@ void SPPLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const int window_count = bottom[1]->height();
     SPPBackwardWindowed<<<CAFFE_GET_BLOCKS(top_count),
         CAFFE_CUDA_NUM_THREADS>>>(
-            count, top_diff, mask, top_mask, top[0]->num(), channels_,
+            top_count, top_diff, mask, top_mask, top[0]->num(), channels_,
             height_, width_, kernel_depth_, output_size_, window_count,
             bottom_diff);
   } else {
