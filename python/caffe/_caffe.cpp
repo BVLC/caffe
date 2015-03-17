@@ -257,7 +257,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("save", &Net_Save);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
-    "Blob", bp::no_init)
+      "Blob", bp::no_init)
+    .def("__init__", bp::make_constructor(&Blob_Init))
     .add_property("num",      &Blob<Dtype>::num)
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
