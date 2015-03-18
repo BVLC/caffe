@@ -1,5 +1,7 @@
 # Caffe
 
+**Welcome to our tutorial!** [Follow along with the presentation](https://docs.google.com/presentation/d/12iXIIJ3PRP8HWYzWpzD9jesSZxCYBqCJaWiE5GXHyJ4/edit#slide=id.g759d26301_832).
+
 Caffe is a deep learning framework made with expression, speed, and modularity in mind.
 It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
 
