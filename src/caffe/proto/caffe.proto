@@ -301,7 +301,7 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
-  // Next ID: 137
+  // Next ID: 138
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional AugmentParameter augment_param = 136;
@@ -337,6 +337,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+  optional WeightedEuclideanLossParameter weighted_euclidean_loss_param = 137;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1008,3 +1009,10 @@ message PReLUParameter {
   // Whether or not slope paramters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
+
+// Message that stores parameters used by WeightedEuclideanLossLayer
+message WeightedEuclideanLossParameter {
+  optional float positive_weight = 1; // The amount to weight the positive class.
+}
+
+
