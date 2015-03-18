@@ -31,9 +31,6 @@ __global__ void AugmentForward(
     } else {
       top_data[index] = bottom_data_shifted[h_on * bottom_width + w_on];
     }
-    if (index < 100) {
-      printf("%f\n", top_data[index]);
-    }
   }
 }
 
