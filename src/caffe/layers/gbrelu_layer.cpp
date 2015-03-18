@@ -43,5 +43,6 @@ STUB_GPU(GBReLULayer);
 #endif
 
 INSTANTIATE_CLASS(GBReLULayer);
+REGISTER_LAYER_CLASS(GBReLU);
 
 }  // namespace caffe
