@@ -24,26 +24,12 @@ def assign_proto(proto, name, val):
     else:
         setattr(proto, name, val)
 
-def to_proto(tops, names=None):
-    if not isinstance(tops, tuple):
-        tops = (tops,)
-    if names is None:
-        names = {}
-    autonames = {}
-    layers = OrderedDict()
-    for top in tops:
-        top.fn._to_proto(layers, names, autonames)
-
-    net = caffe_pb2.NetParameter()
-    net.layer.extend(layers.values())
-    return net
-
-class Top:
+class Top(object):
     def __init__(self, fn, n):
         self.fn = fn
         self.n = n
 
-class Function:
+class Function(object):
     def __init__(self, type_name, inputs, params):
         self.type_name = type_name
         self.inputs = inputs
@@ -64,10 +50,11 @@ class Function:
         return names[top]
 
     def _to_proto(self, layers, names, autonames):
+        if self in layers:
+            return
         bottom_names = []
         for inp in self.inputs:
-            if inp.fn not in layers:
-                inp.fn._to_proto(layers, names, autonames)
+            inp.fn._to_proto(layers, names, autonames)
             bottom_names.append(layers[inp.fn].top[inp.n])
         layer = caffe_pb2.LayerParameter()
         layer.type = self.type_name
@@ -92,7 +79,27 @@ class Function:
 
         layers[self] = layer
 
-class Layers:
+class NetSpec(object):
+    def __init__(self):
+        super(NetSpec, self).__setattr__('tops', OrderedDict())
+
+    def __setattr__(self, name, value):
+        self.tops[name] = value
+
+    def __getattr__(self, name):
+        return self.tops[name]
+
+    def to_proto(self):
+        names = {v: k for k, v in self.tops.iteritems()}
+        autonames = {}
+        layers = OrderedDict()
+        for name, top in self.tops.iteritems():
+            top.fn._to_proto(layers, names, autonames)
+        net = caffe_pb2.NetParameter()
+        net.layer.extend(layers.values())
+        return net
+
+class Layers(object):
     def __getattr__(self, name):
         def layer_fn(*args, **kwargs):
             fn = Function(name, args, kwargs)
@@ -102,7 +109,7 @@ class Layers:
                 return fn.tops
         return layer_fn
 
-class Parameters:
+class Parameters(object):
     def __getattr__(self, name):
        class Param:
             def __getattr__(self, param_name):
