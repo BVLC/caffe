@@ -7,7 +7,7 @@ from google import protobuf
 def uncamel(s):
     """Convert CamelCase to underscore_case."""
 
-    return re.sub('(?!^)([A-Z])(?=[^A-Z])', r'_\1', s).lower()
+    return re.sub('(?!^)([A-Z])(?=[^A-Z0-9])', r'_\1', s).lower()
 
 def assign_proto(proto, name, val):
     if isinstance(val, list):
