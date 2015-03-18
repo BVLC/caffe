@@ -6,7 +6,7 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
-#define DEBUG (debug && index >= 0 && index < 50)
+#define DEBUG (debug && index >= 0 && index < 200)
 #define debug 0
 #define TOP 1
 #define BOTTOM 1
@@ -122,15 +122,14 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
           "window_count: %d\n",
           index,
           win,
-          bottom_window_data[win*4],
-          bottom_window_data[win*4+1],
-          bottom_window_data[win*4+2],
-          bottom_window_data[win*4+3],
+          bottom_window_data_shifted[0],
+          bottom_window_data_shifted[1],
+          bottom_window_data_shifted[2],
+          bottom_window_data_shifted[3],
           width,
           height,
           window_count);
     }
-
 
     // Using fractional heights to better represent smaller sections instead of
     // defaulting to repeating the end pixels over and over.
@@ -161,12 +160,6 @@ __global__ void SPPForwardWindowed(const int nthreads, const Dtype* bottom_data,
         --wstart;
       }
     }
-    /*
-    int mhend = MIN(f_hend, height);
-    int mwend = MIN(f_wend, width);
-    int hend = MIN(mhend, (int)(window_y + window_h));
-    int wend = MIN(mwend, (int)(window_x + window_w));
-    */
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
 

@@ -61,8 +61,6 @@ void AugmentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* input_bottom_data = bottom[0]->cpu_data();
   Dtype* label_top_data = top[1]->mutable_cpu_data();
   const Dtype* label_bottom_data = bottom[1]->cpu_data();
-  int input_offset = input_width_ * input_height_;
-  int label_offset = label_width_ * label_height_;
   float* mirror_image = mirror_image_vec_.mutable_cpu_data();
   float* h_shift = h_shift_vec_.mutable_cpu_data();
   float* w_shift = w_shift_vec_.mutable_cpu_data();
@@ -91,18 +89,20 @@ void AugmentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           int w_on = w + (int)(w_shift[n] * (input_width_ - crop_width_ + 1));
           if (mirror_ && mirror_image[n] > .5) {
             input_top_data[h * crop_width_ + w] =
-                input_bottom_data[h_on * crop_width_ + w_end - w_on];
+                input_bottom_data[h_on * input_width_ + w_end - w_on];
           } else {
             input_top_data[h * crop_width_ + w] =
-                input_bottom_data[h_on * crop_width_ + w_on];
+                input_bottom_data[h_on * input_width_ + w_on];
           }
         }
       }
-      input_bottom_data += input_offset;
-      input_top_data += input_offset;
+      input_bottom_data += input_width_ * input_height_;
+      input_top_data += crop_width_ * crop_height_;
     }
+    std::cout << "N: " << n << std::endl;
   }
 
+  std::cout << "Label Forward_cpu" << std::endl;
   // Label crop/mirroring.
   for (int n = 0; n < num_; ++n) {
     for (int c = 0; c < label_channels_; ++c) {
@@ -116,17 +116,18 @@ void AugmentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                 (label_width_ - label_crop_width_ + 1));
           if (mirror_ && mirror_image[n] > .5) {
             label_top_data[h * label_crop_width_ + w] =
-                label_bottom_data[h_on * label_crop_width_ + w_end - w_on];
+                label_bottom_data[h_on * label_width_ + w_end - w_on];
           } else {
             label_top_data[h * label_crop_width_ + w] =
-                label_bottom_data[h_on * label_crop_width_ + w_on];
+                label_bottom_data[h_on * label_width_ + w_on];
           }
         }
       }
-      label_bottom_data += label_offset;
-      label_top_data += label_offset;
+      label_bottom_data += label_width_ * label_height_;
+      label_top_data += label_crop_width_ * label_crop_height_;
     }
   }
+  std::cout << "End Forward_cpu" << std::endl;
 }
 template <typename Dtype>
 void AugmentLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,

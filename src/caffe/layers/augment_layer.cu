@@ -24,11 +24,15 @@ __global__ void AugmentForward(
 
     int h_on = h + (int)(h_shift[n] * (bottom_height - crop_height + 1));
     int w_on = w + (int)(w_shift[n] * (bottom_width - crop_width + 1));
-    int w_end = crop_width - 1 + (int)(w_shift[n] * (bottom_width - crop_width + 1));
+    int w_end = crop_width - 1 +
+        (int)(w_shift[n] * (bottom_width - crop_width + 1));
     if (mirror && mirror_image[n] > .5) {
-      top_data[index] = bottom_data_shifted[h_on * crop_width + w_end - w_on];
+      top_data[index] = bottom_data_shifted[h_on * bottom_width + w_end - w_on];
     } else {
-      top_data[index] = bottom_data_shifted[h_on * crop_width + w_on];
+      top_data[index] = bottom_data_shifted[h_on * bottom_width + w_on];
+    }
+    if (index < 100) {
+      printf("%f\n", top_data[index]);
     }
   }
 }
@@ -59,8 +63,8 @@ void AugmentLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   AugmentForward<Dtype><<<CAFFE_GET_BLOCKS(label_top_count),
     CAFFE_CUDA_NUM_THREADS>>>(label_top_count, label_bottom_data, num_,
-        label_channels_, crop_height_, crop_width_, label_height_, label_width_,
-        mirror_, mirror_image, h_shift, w_shift, label_top_data);
+        label_channels_, label_crop_height_, label_crop_width_, label_height_,
+        label_width_, mirror_, mirror_image, h_shift, w_shift, label_top_data);
 
   CUDA_POST_KERNEL_CHECK;
 }
