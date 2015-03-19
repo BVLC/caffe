@@ -10,6 +10,7 @@ namespace caffe {
 template <typename Dtype>
 void WeightedEuclideanLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  LossLayer<Dtype>::LayerSetUp(bottom, top);
   scalar_ = sqrt(this->layer_param_.weighted_euclidean_loss_param().positive_weight());
 }
 template <typename Dtype>
