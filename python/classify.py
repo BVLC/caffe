@@ -112,7 +112,7 @@ def main(argv):
     # Load numpy array (.npy), directory glob (*.jpg), or image file.
     args.input_file = os.path.expanduser(args.input_file)
     if args.input_file.endswith('npy'):
-        print("Loading file: %s" %s args.input_file
+        print("Loading file: %s" % args.input_file)
         inputs = np.load(args.input_file)
     elif os.path.isdir(args.input_file):
         print("Loading folder: %s" % args.input_file)
