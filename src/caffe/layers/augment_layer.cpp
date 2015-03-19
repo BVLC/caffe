@@ -99,10 +99,8 @@ void AugmentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       input_bottom_data += input_width_ * input_height_;
       input_top_data += crop_width_ * crop_height_;
     }
-    std::cout << "N: " << n << std::endl;
   }
 
-  std::cout << "Label Forward_cpu" << std::endl;
   // Label crop/mirroring.
   for (int n = 0; n < num_; ++n) {
     for (int c = 0; c < label_channels_; ++c) {
@@ -127,7 +125,6 @@ void AugmentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       label_top_data += label_crop_width_ * label_crop_height_;
     }
   }
-  std::cout << "End Forward_cpu" << std::endl;
 }
 template <typename Dtype>
 void AugmentLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
