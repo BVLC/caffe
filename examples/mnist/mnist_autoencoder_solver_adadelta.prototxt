@@ -6,6 +6,7 @@ test_iter: 100
 test_interval: 500
 test_compute_loss: true
 momentum: 0.95
+delta: 1e-8
 display: 100
 max_iter: 65000
 weight_decay: 0.0005
@@ -14,4 +15,3 @@ snapshot_prefix: "examples/mnist/mnist_autoencoder_adadelta_train"
 # solver mode: CPU or GPU
 solver_mode: GPU
 solver_type: ADADELTA
-delta: 1e-8

@@ -821,35 +821,21 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
 
 template <typename Dtype>
 void AdaDeltaSolver<Dtype>::PreSolve() {
-  // Initialize the history
-  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
-  this->history_.clear();
-  this->update_.clear();
-  this->temp_.clear();
+  // Add the extra history entries for AdaDelta after those from
+  // SGDSolver::PreSolve
+  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   for (int i = 0; i < net_params.size(); ++i) {
-    const Blob<Dtype>* net_param = net_params[i].get();
-    this->history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-        net_param->num(), net_param->channels(), net_param->height(),
-        net_param->width())));
-    this->update_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-        net_param->num(), net_param->channels(), net_param->height(),
-        net_param->width())));
-    this->temp_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-        net_param->num(), net_param->channels(), net_param->height(),
-        net_param->width())));
-  }
-  for (int i = 0; i < net_params.size(); ++i) {
-    const Blob<Dtype>* net_param = net_params[i].get();
-    this->history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-        net_param->num(), net_param->channels(), net_param->height(),
-        net_param->width())));
+        const vector<int>& shape = net_params[i]->shape();
+        this->history_.push_back(
+                shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
   }
 }
 
 template <typename Dtype>
 void AdaDeltaSolver<Dtype>::ComputeUpdateValue() {
-  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
-  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const vector<float>& net_params_weight_decay =
+          this->net_->params_weight_decay();
   Dtype delta = this->param_.delta();
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
