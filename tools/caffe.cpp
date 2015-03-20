@@ -30,6 +30,8 @@ DEFINE_string(weights, "",
     "Cannot be set simultaneously with snapshot.");
 DEFINE_int32(iterations, 50,
     "The number of iterations to run.");
+DEFINE_bool(time_layers, true,
+    "Whether to time individual layers, or an entire Forward/Backward pass");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -226,6 +228,18 @@ int time() {
   // not take any input blobs.
   float initial_loss = caffe_net.ForwardBackward(vector<Blob<float>*>());
   LOG(INFO) << "Initial loss: " << initial_loss;
+
+  if (!FLAGS_time_layers) {
+    for (int i = 0; i < FLAGS_iterations; ++i) {
+      Timer timer;
+      timer.Start();
+      caffe_net.ForwardBackward(vector<Blob<float>*>());
+      timer.Stop();
+      LOG(INFO) << "Iteration " << i + 1 << " Forward/Backward time: "
+        << timer.MilliSeconds();
+    }
+    return 0;
+  }
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   LOG(INFO) << "*** Benchmark begins ***";
