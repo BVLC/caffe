@@ -9,6 +9,9 @@ namespace caffe {
 template<typename T>
 class blocking_queue {
  public:
+  explicit blocking_queue() { }
+  virtual ~blocking_queue() { }
+
   void push(const T& t) {
     boost::mutex::scoped_lock lock(mutex_);
     queue_.push(t);
@@ -21,32 +24,9 @@ class blocking_queue {
     return queue_.empty();
   }
 
-  bool try_pop(T& t) {
+  T pop() {
+    T t = peek();
     boost::mutex::scoped_lock lock(mutex_);
-
-    if (queue_.empty())
-      return false;
-
-    t = queue_.front();
-    queue_.pop();
-    return true;
-  }
-
-  T pop(const string& log_on_wait = "") {
-    boost::mutex::scoped_lock lock(mutex_);
-
-    while (queue_.empty()) {
-      if (!log_on_wait.empty()) {
-        time_t now = time(0);
-        if (now - last_wait_log_ > 5) {
-          last_wait_log_ = now;
-          LOG(INFO) << log_on_wait;
-        }
-      }
-      condition_.wait(lock);
-    }
-
-    T t = queue_.front();
     queue_.pop();
     return t;
   }
@@ -54,18 +34,18 @@ class blocking_queue {
   // Return element without removing it
   T peek() {
     boost::mutex::scoped_lock lock(mutex_);
-
-    while (queue_.empty())
-      condition_.wait(lock);
-
+    while (queue_.empty()) {
+      cond_push_.wait(lock);
+    }
     return queue_.front();
   }
 
  private:
   std::queue<T> queue_;
   mutable boost::mutex mutex_;
-  boost::condition_variable condition_;
-  time_t last_wait_log_;
+  boost::condition_variable cond_push_;
+
+  DISABLE_COPY_AND_ASSIGN(blocking_queue);
 };
 
 }  // namespace caffe
