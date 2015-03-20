@@ -828,6 +828,43 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
   return layer_ptr;
 }
 
+template <typename Dtype>
+void Net<Dtype>::ComputeThread::InternalThreadEntry() {
+  Caffe::SetDevice(device_);
+  while (true) {
+    Operation op = queue_.peek();
+    const vector<vector<int> >& layer_prereqs =
+      op.direction_ == Operation::FORWARD
+      ? net_->layer_parents() : net_->layer_children();
+    vector<bool>& layer_done = op.direction_ == Operation::FORWARD ?
+      net_->layer_forward_done_ : net_->layer_backward_done_;
+
+    for (int i = 0; i < layer_prereqs[op.layer_index_].size(); ++i) {
+      boost::mutex::scoped_lock lock(net_->layer_done_mutex_);
+      while (!layer_done[layer_prereqs[op.layer_index_][i]]) {
+        net_->layer_done_cond_.wait(lock);
+      }
+    }
+    if (op.direction_ == Operation::FORWARD) {
+      loss_ += net_->layers()[op.layer_index_]->Forward(
+          net_->bottom_vecs()[op.layer_index_],
+          net_->top_vecs()[op.layer_index_]);
+      if (net_->debug_info_) { net_->ForwardDebugInfo(op.layer_index_); }
+    } else {
+      net_->layers()[op.layer_index_]->Backward(
+          net_->top_vecs()[op.layer_index_],
+          net_->bottom_need_backward()[op.layer_index_],
+          net_->bottom_vecs()[op.layer_index_]);
+      if (net_->debug_info_) { net_->BackwardDebugInfo(op.layer_index_); }
+    }
+    boost::mutex::scoped_lock lock(net_->layer_done_mutex_);
+    layer_done[op.layer_index_] = true;
+    net_->layer_done_cond_.notify_all();
+    lock.unlock();
+    queue_.pop();
+  }
+}
+
 INSTANTIATE_CLASS(Net);
 
 }  // namespace caffe

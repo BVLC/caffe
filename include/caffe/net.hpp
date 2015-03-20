@@ -9,8 +9,10 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
 
@@ -190,6 +192,32 @@ class Net {
       const string& layer_name);
 
  protected:
+  // The message we'll pass to ComputeThreads to give them work.
+  struct Operation {
+    enum Direction { FORWARD, BACKWARD };
+    Operation(int layer_index, Direction direction)
+      : layer_index_(layer_index), direction_(direction) { }
+    int layer_index_;
+    Direction direction_;
+  };
+  class ComputeThread : public InternalThread {
+   public:
+    ComputeThread(const DeviceParameter& device, Net<Dtype>* net)
+      : device_(device), net_(net) { }
+    void enqueue(Operation op) { queue_.push(op); }
+    Dtype loss() const { return loss_; }
+    void reset_loss() { loss_ = 0; }
+    void wait() { queue_.wait_for_empty(); }
+
+   protected:
+    void InternalThreadEntry();
+
+   private:
+    DeviceParameter device_;
+    Net<Dtype>* net_;
+    Dtype loss_;
+    blocking_queue<Operation> queue_;
+  };
   // Helpers for Init.
   /// @brief Append a new input or top blob to the net.
   void AppendTop(const NetParameter& param, const int layer_id,
@@ -267,6 +295,12 @@ class Net {
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
+
+  // Keep the status of computation, and synchronize threads accordingly.
+  vector<bool> layer_forward_done_;
+  vector<bool> layer_backward_done_;
+  boost::mutex layer_done_mutex_;
+  boost::condition_variable layer_done_cond_;
 
   DISABLE_COPY_AND_ASSIGN(Net);
 };

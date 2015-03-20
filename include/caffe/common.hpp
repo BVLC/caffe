@@ -2,6 +2,8 @@
 #define CAFFE_COMMON_HPP_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -77,6 +79,7 @@ namespace caffe {
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
+using boost::tuple;
 
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
