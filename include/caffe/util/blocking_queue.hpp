@@ -24,10 +24,20 @@ class blocking_queue {
     return queue_.empty();
   }
 
+  void wait_for_empty() {
+    boost::mutex::scoped_lock lock(mutex_);
+    while (!queue_.empty()) {
+      cond_empty_.wait(lock);
+    }
+  }
+
   T pop() {
     T t = peek();
     boost::mutex::scoped_lock lock(mutex_);
     queue_.pop();
+    if (queue_.empty()) {
+      cond_empty_.notify_all();
+    }
     return t;
   }
 
@@ -44,6 +54,7 @@ class blocking_queue {
   std::queue<T> queue_;
   mutable boost::mutex mutex_;
   boost::condition_variable cond_push_;
+  boost::condition_variable cond_empty_;
 
   DISABLE_COPY_AND_ASSIGN(blocking_queue);
 };
