@@ -1,4 +1,7 @@
 #include <boost/make_shared.hpp>
+#ifdef WITH_NVTX
+#include <nvToolsExt.h>
+#endif
 
 #include <algorithm>
 #include <map>
@@ -974,16 +977,30 @@ void Net<Dtype>::ComputeThread::InternalThreadEntry() {
       }
     }
     if (op.direction_ == Operation::FORWARD) {
+#ifdef WITH_NVTX
+      nvtxRangeId_t id = nvtxRangeStartA(
+          (net_->layer_names()[op.layer_index_] + " forward").c_str());
+#endif
       loss_ += net_->layers()[op.layer_index_]->Forward(
           net_->bottom_vecs()[op.layer_index_],
           net_->top_vecs()[op.layer_index_]);
       if (net_->debug_info_) { net_->ForwardDebugInfo(op.layer_index_); }
+#ifdef WITH_NVTX
+      nvtxRangeEnd(id);
+#endif
     } else {
+#ifdef WITH_NVTX
+      nvtxRangeId_t id = nvtxRangeStartA(
+          (net_->layer_names()[op.layer_index_] + " backward").c_str());
+#endif
       net_->layers()[op.layer_index_]->Backward(
           net_->top_vecs()[op.layer_index_],
           net_->bottom_need_backward()[op.layer_index_],
           net_->bottom_vecs()[op.layer_index_]);
       if (net_->debug_info_) { net_->BackwardDebugInfo(op.layer_index_); }
+#ifdef WITH_NVTX
+      nvtxRangeEnd(id);
+#endif
     }
     boost::mutex::scoped_lock lock(net_->layer_done_mutex_);
     layer_done[op.layer_index_] = true;

@@ -79,3 +79,6 @@ TEST_GPUID := 0
 
 # enable pretty build (comment to see full commands)
 Q ?= @
+
+# Uncomment to enable NVTX instrumentation
+# WITH_NVTX := 1

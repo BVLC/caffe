@@ -294,6 +294,12 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
+# nvtx instrumentation
+ifeq ($(WITH_NVTX), 1)
+	COMMON_FLAGS += -DWITH_NVTX
+	LIBRARIES += nvToolsExt
+endif
+
 # BLAS configuration (default = ATLAS)
 BLAS ?= atlas
 ifeq ($(BLAS), mkl)
