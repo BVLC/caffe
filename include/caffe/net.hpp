@@ -27,7 +27,7 @@ class Net {
  public:
   explicit Net(const NetParameter& param);
   explicit Net(const string& param_file, Phase phase);
-  virtual ~Net() {}
+  virtual ~Net();
 
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
@@ -182,11 +182,13 @@ class Net {
 
   // Helpers for Init.
   /**
-   * @brief Remove layers that the user specified should be excluded given the current
-   *        phase, level, and stage.
+   * @brief First pass through the net: remove layers that the user specified
+   *   should be excluded given the current phase, level, and stage, and map
+   *   logical devices to physical ones.
    */
   static void FilterNet(const NetParameter& param,
       NetParameter* param_filtered);
+  void SetupThreads(NetParameter* param);
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
@@ -295,6 +297,10 @@ class Net {
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
+
+  /// For each layer, keep track of which thread will run that layer.
+  vector<int> thread_ids_;
+  vector<shared_ptr<ComputeThread> > threads_;
 
   // Keep the status of computation, and synchronize threads accordingly.
   vector<bool> layer_forward_done_;

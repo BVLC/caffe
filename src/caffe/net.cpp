@@ -1,3 +1,5 @@
+#include <boost/make_shared.hpp>
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -32,6 +34,14 @@ Net<Dtype>::Net(const string& param_file, Phase phase) {
 }
 
 template <typename Dtype>
+Net<Dtype>::~Net() {
+  for (int id = 0; id < threads_.size(); ++id) {
+    threads_[id]->Interrupt();
+    threads_[id]->WaitForInternalThreadToExit();
+  }
+}
+
+template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   // Set phase from the state.
   phase_ = in_param.state().phase();
@@ -44,6 +54,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param;
   InsertSplits(filtered_param, &param);
+  // Assign devices, translate ids, and create thread objects.
+  SetupThreads(&param);
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -73,6 +85,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
   bottom_need_backward_.resize(param.layer_size());
+  layer_parents_.resize(param.layer_size());
+  layer_children_.resize(param.layer_size());
+  layer_forward_done_.resize(param.layer_size());
+  layer_backward_done_.resize(param.layer_size());
+  map<int, int> top_blob_idx_to_layer;
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
@@ -220,6 +237,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   debug_info_ = param.debug_info();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
+  // Start the compute threads.
+  for (int id = 0; id < threads_.size(); ++id) {
+    threads_[id]->StartInternalThread();
+  }
 }
 
 template <typename Dtype>
@@ -250,6 +271,59 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
       param_filtered->add_layer()->CopyFrom(layer_param);
     }
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::SetupThreads(NetParameter* param) {
+  set<int> device_ids;
+  map<tuple<DeviceParameter_DeviceType, int, int>, int> thread_map;
+  map<int, int> device_map;
+  for (int i = 0; i < param->layer_size(); ++i) {
+    const LayerParameter& layer_param = param->layer(i);
+    if (layer_param.device().type() == DeviceParameter_DeviceType_GPU) {
+      device_ids.insert(layer_param.device().device_id());
+    }
+    tuple<DeviceParameter_DeviceType, int, int> thread_key
+        (layer_param.device().type(), layer_param.device().device_id(),
+         layer_param.thread_id());
+    if (thread_map.find(thread_key) == thread_map.end()) {
+      const int thread_id = thread_map.size();
+      thread_map[thread_key] = thread_id;
+    }
+    thread_ids_.push_back(thread_map[thread_key]);
+  }
+  // Assign logical device ids to physical ones.
+  // XXX there is currently no way to specify which physical devices to use
+  int physical_id = 0;
+  for (set<int>::iterator it = device_ids.begin();
+      it != device_ids.end(); ++it) {
+    device_map[*it] = physical_id;
+    physical_id++;
+  }
+  // Create thread objects.
+  for (map<tuple<DeviceParameter_DeviceType, int, int>, int>::iterator it =
+       thread_map.begin(); it != thread_map.end(); ++it) {
+    DeviceParameter device;
+    device.set_type(it->first.get<0>());
+    device.set_device_id(device_map[it->first.get<1>()]);
+    threads_.push_back(boost::make_shared<ComputeThread>(device, this));
+  }
+  // Convert logical ids to physical ones.
+  for (int i = 0; i < param->layer_size(); ++i) {
+    LayerParameter* layer_param = param->mutable_layer(i);
+    layer_param->mutable_device()->set_device_id(
+        device_map[layer_param->device().device_id()]);
+    if (string(layer_param->type()) == "Split") {
+      SplitParameter* split_param = layer_param->mutable_split_param();
+      // XXX check that top device is correct
+      for (int j = 0; j < split_param->top_device_size(); ++j) {
+        split_param->mutable_top_device(j)->set_device_id(
+            device_map[split_param->top_device(j).device_id()]);
+      }
+    }
+  }
+  LOG(INFO) << "Computing with " << threads_.size() << " thread(s) on "
+    << device_map.size() << " GPU(s).";
 }
 
 template <typename Dtype>
