@@ -549,22 +549,61 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 }
 
 template <typename Dtype>
-Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
+void Net<Dtype>::ForwardFromToAsync(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
-  Dtype loss = 0;
   if (debug_info_) {
     for (int i = 0; i < net_input_blobs_.size(); ++i) {
       InputDebugInfo(i);
     }
   }
+  for (int i = 0; i < threads_.size(); ++i) {
+    threads_[i]->reset_loss();
+  }
+  for (int i = 0; i < layers_.size(); ++i) {
+    layer_forward_done_[i] = i < start;
+  }
   for (int i = start; i <= end; ++i) {
-    // LOG(ERROR) << "Forwarding " << layer_names_[i];
-    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
-    loss += layer_loss;
-    if (debug_info_) { ForwardDebugInfo(i); }
+    threads_[thread_ids_[i]]->enqueue(Operation(i, Operation::FORWARD));
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::BackwardFromToAsync(int start, int end) {
+  CHECK_GE(end, 0);
+  CHECK_LT(start, layers_.size());
+  for (int i = 0; i < layers_.size(); ++i) {
+    layer_backward_done_[i] = i > start;
+  }
+  for (int i = start; i >= end; --i) {
+    threads_[thread_ids_[i]]->enqueue(Operation(i, Operation::BACKWARD));
+  }
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::SyncThreads() {
+  Dtype loss = 0;
+  for (int i = 0; i < threads_.size(); ++i) {
+    threads_[i]->wait();
+    loss += threads_[i]->loss();
   }
   return loss;
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::ForwardBackward(const vector<Blob<Dtype>*>& bottom) {
+  for (int i = 0; i < bottom.size(); ++i) {
+    net_input_blobs_[i]->CopyFrom(*bottom[i]);
+  }
+  ForwardFromToAsync(0, layers_.size() - 1);
+  BackwardFromToAsync(layers_.size() - 1, 0);
+  return SyncThreads();
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
+  ForwardFromToAsync(start, end);
+  return SyncThreads();
 }
 
 template <typename Dtype>
@@ -620,15 +659,8 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
 
 template <typename Dtype>
 void Net<Dtype>::BackwardFromTo(int start, int end) {
-  CHECK_GE(end, 0);
-  CHECK_LT(start, layers_.size());
-  for (int i = start; i >= end; --i) {
-    if (layer_need_backward_[i]) {
-      layers_[i]->Backward(
-          top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
-      if (debug_info_) { BackwardDebugInfo(i); }
-    }
-  }
+  BackwardFromToAsync(start, end);
+  SyncThreads();
 }
 
 template <typename Dtype>

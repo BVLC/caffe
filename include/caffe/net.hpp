@@ -77,12 +77,7 @@ class Net {
    */
   void Reshape();
 
-  Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
-    Dtype loss;
-    Forward(bottom, &loss);
-    Backward();
-    return loss;
-  }
+  Dtype ForwardBackward(const vector<Blob<Dtype>*>& bottom);
 
   /// @brief Updates the network weights based on the diff values computed.
   void Update();
@@ -234,6 +229,11 @@ class Net {
   /// @brief Append a new parameter blob to the net.
   void AppendParam(const NetParameter& param, const int layer_id,
                    const int param_id);
+
+  // Helpers for computation.
+  void ForwardFromToAsync(int start, int end);
+  void BackwardFromToAsync(int start, int end);
+  Dtype SyncThreads();
 
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
