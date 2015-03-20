@@ -63,6 +63,10 @@ void Caffe::SetDevice(const int device_id) {
   NO_GPU;
 }
 
+void Caffe::SetDevice(const DeviceParameter& device) {
+  NO_GPU;
+}
+
 void Caffe::DeviceQuery() {
   NO_GPU;
 }
@@ -153,6 +157,15 @@ void Caffe::SetDevice(const int device_id) {
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
       cluster_seedgen()));
+}
+
+void Caffe::SetDevice(const DeviceParameter& device) {
+  if (device.type() == DeviceParameter_DeviceType_CPU) {
+    Caffe::set_mode(Caffe::CPU);
+  } else {
+    Caffe::SetDevice(device.device_id());
+    Caffe::set_mode(Caffe::GPU);
+  }
 }
 
 void Caffe::DeviceQuery() {
