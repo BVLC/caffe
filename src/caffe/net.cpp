@@ -322,6 +322,28 @@ void Net<Dtype>::SetupThreads(NetParameter* param) {
       }
     }
   }
+  // Enable P2P access.
+  int current_device;
+  CUDA_CHECK(cudaGetDevice(&current_device));
+  for (int i = 0; i < device_map.size(); ++i) {
+    for (int j = 0; j < device_map.size(); ++j) {
+      if (i == j) { continue; }
+      int can_access;
+      CUDA_CHECK(cudaDeviceCanAccessPeer(&can_access,
+            device_map[i], device_map[j]));
+      if (can_access) {
+        CUDA_CHECK(cudaSetDevice(device_map[i]));
+        CUDA_CHECK(cudaDeviceEnablePeerAccess(device_map[j], 0));
+        LOG(INFO) << "Enabled P2P access: " << device_map[j] << " -> "
+          << device_map[i];
+      } else {
+        LOG(INFO) << "Cannot enable P2P access: " << device_map[j] << " -> "
+          << device_map[i];
+      }
+    }
+  }
+  CUDA_CHECK(cudaSetDevice(current_device));
+
   LOG(INFO) << "Computing with " << threads_.size() << " thread(s) on "
     << device_map.size() << " GPU(s).";
 }
