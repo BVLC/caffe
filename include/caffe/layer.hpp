@@ -1,6 +1,9 @@
 #ifndef CAFFE_LAYER_H_
 #define CAFFE_LAYER_H_
 
+// For null_deleter (can use boost/core/null_deleter.hpp for boost >= 1.56).
+#include <boost/serialization/shared_ptr.hpp>
+
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -12,6 +15,8 @@
 #include "caffe/util/device_alternate.hpp"
 
 namespace caffe {
+
+using boost::serialization::null_deleter;
 
 /**
  * @brief An interface for the units of computation which can be composed into a
@@ -35,12 +40,11 @@ class Layer {
     : layer_param_(param) {
       // Set phase and copy blobs (if there are any).
       phase_ = param.phase();
-      if (layer_param_.blobs_size() > 0) {
-        blobs_.resize(layer_param_.blobs_size());
-        for (int i = 0; i < layer_param_.blobs_size(); ++i) {
-          blobs_[i].reset(new Blob<Dtype>());
-          blobs_[i]->FromProto(layer_param_.blobs(i));
-        }
+      blobs_.resize(layer_param_.param_bottoms() + layer_param_.blobs_size());
+      for (int i = layer_param_.param_bottoms();
+          i < layer_param_.param_bottoms() + layer_param_.blobs_size(); ++i) {
+        blobs_[i].reset(new Blob<Dtype>());
+        blobs_[i]->FromProto(layer_param_.blobs(i));
       }
     }
   virtual ~Layer() {}
@@ -60,9 +64,19 @@ class Layer {
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-    CheckBlobCounts(bottom, top);
-    LayerSetUp(bottom, top);
-    Reshape(bottom, top);
+    // Set up params that come from bottoms.
+    CHECK_GE(bottom.size(), layer_param_.param_bottoms());
+    for (int i = 0; i < layer_param_.param_bottoms(); ++i) {
+      const int bottom_idx = bottom.size() - layer_param_.param_bottoms() + i;
+      // We use null_deleter since we don't own these bottoms, and can't share
+      // through a raw pointer.
+      blobs_[i].reset(bottom[bottom_idx], null_deleter());
+    }
+    bottom_.assign(bottom.begin(), bottom.end() - layer_param_.param_bottoms());
+    top_.assign(top.begin(), top.end());
+    CheckBlobCounts(bottom_, top);
+    LayerSetUp(bottom_, top);
+    Reshape(bottom_, top);
     SetLossWeights(top);
   }
 
@@ -99,6 +113,7 @@ class Layer {
    */
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) = 0;
+  inline void ReshapeOnly() { Reshape(bottom_, top_); }
 
   /**
    * @brief Given the bottom blobs, compute the top blobs and the loss.
@@ -285,7 +300,6 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
-
  protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;
@@ -293,6 +307,9 @@ class Layer {
   Phase phase_;
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
+  // Store bottom and top in case bottom is modified by param_bottoms.
+  vector<Blob<Dtype>*> bottom_;
+  vector<Blob<Dtype>*> top_;
   /** Vector indicating whether to compute the diff of each param blob. */
   vector<bool> param_propagate_down_;
 
@@ -310,7 +327,7 @@ class Layer {
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     // LOG(WARNING) << "Using CPU code as backup.";
-    return Forward_cpu(bottom, top);
+    return Forward_cpu(bottom_, top);
   }
 
   /**
@@ -329,7 +346,7 @@ class Layer {
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom) {
     // LOG(WARNING) << "Using CPU code as backup.";
-    Backward_cpu(top, propagate_down, bottom);
+    Backward_cpu(top, propagate_down, bottom_);
   }
 
   /**
@@ -406,10 +423,10 @@ template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   Dtype loss = 0;
-  Reshape(bottom, top);
+  ReshapeOnly();
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    Forward_cpu(bottom, top);
+    Forward_cpu(bottom_, top);
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
       const int count = top[top_id]->count();
@@ -419,7 +436,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case Caffe::GPU:
-    Forward_gpu(bottom, top);
+    Forward_gpu(bottom_, top);
 #ifndef CPU_ONLY
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
     for (int top_id = 0; top_id < top.size(); ++top_id) {
@@ -443,12 +460,14 @@ template <typename Dtype>
 inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
+  vector<bool> prop_down(propagate_down.begin(),
+      propagate_down.end() - layer_param_.param_bottoms());
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    Backward_cpu(top, propagate_down, bottom);
+    Backward_cpu(top, prop_down, bottom_);
     break;
   case Caffe::GPU:
-    Backward_gpu(top, propagate_down, bottom);
+    Backward_gpu(top, prop_down, bottom_);
 #ifndef CPU_ONLY
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
 #endif

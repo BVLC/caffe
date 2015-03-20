@@ -290,6 +290,9 @@ message LayerParameter {
   repeated NetStateRule include = 8;
   repeated NetStateRule exclude = 9;
 
+  // Number of parameters to take from bottoms.
+  optional int32 param_bottoms = 11 [default = 0];
+
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 100;
 
