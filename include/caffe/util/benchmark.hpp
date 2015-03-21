@@ -49,4 +49,73 @@ class CPUTimer : public Timer {
 
 }  // namespace caffe
 
+#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
+#define	BENCH(result, this)\
+{\
+	struct timeval s;\
+	double bgn = 0.0;\
+	if (gettimeofday(&s, 0) == 0) {\
+		bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+	}\
+	(this); \
+	double end = 0.0;\
+	if (gettimeofday(&s, 0) == 0) {\
+		end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+	}\
+	result.time 	= ((float) floor(1000*(1000*(end-bgn))))/1000;\
+	result.function = __func__;\
+	result.file     = __FILE__;\
+	LOG(INFO) << "TIME::C++::"<<result.function.c_str()<<" = "<<result.time<<"ms";\
+	caffe::Timer::log("bench.csv", result);\
+}
+#endif // CPU_ONLY
+
+
+#if defined(USE_CUDA)
+
+#define	BENCH(result, this)\
+{\
+	struct timeval s;\
+	double bgn = 0.0;\
+	if (gettimeofday(&s, 0) == 0) {\
+		bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+	}\
+	(this); \
+	cudaDeviceSynchronize();\
+	double end = 0.0;\
+	if (gettimeofday(&s, 0) == 0) {\
+		end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+	}\
+	result.time 	= ((float) floor(1000*(1000*(end-bgn))))/1000;\
+	result.function = __func__;\
+	result.file     = __FILE__;\
+	LOG(INFO) << "TIME::CUDA::"<<result.function.c_str()<<" = "<<result.time<<"ms";\
+	caffe::Timer::log("bench.csv", result);\
+}
+
+#endif // USE_CUDA
+
+#if defined(USE_OPENCL)
+
+#define	BENCH(result, this)\
+{\
+	struct timeval s;\
+	double bgn = 0.0;\
+	if (gettimeofday(&s, 0) == 0) {\
+		bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+	}\
+	(this); \
+	double end = 0.0;\
+	if (gettimeofday(&s, 0) == 0) {\
+		end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+	}\
+	result.time 	= ((float) floor(1000*(1000*(end-bgn))))/1000;\
+	result.function = __func__;\
+	result.file     = __FILE__;\
+	LOG(INFO) << "TIME::OpenCL::"<<result.function.c_str()<<" = "<<result.time<<"ms";\
+	caffe::Timer::log("bench.csv", result);\
+}
+
+#endif // USE_OPENCL
+
 #endif   // CAFFE_UTIL_BENCHMARK_H_

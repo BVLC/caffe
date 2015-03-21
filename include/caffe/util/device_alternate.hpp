@@ -1,7 +1,7 @@
 #ifndef CAFFE_UTIL_DEVICE_ALTERNATE_H_
 #define CAFFE_UTIL_DEVICE_ALTERNATE_H_
 
-#ifdef CPU_ONLY  // CPU-only Caffe.
+#if defined(CPU_ONLY) || defined(USE_OPENCL)// CPU-only Caffe.
 
 #include <vector>
 
@@ -98,5 +98,18 @@ inline int CAFFE_GET_BLOCKS(const int N) {
 }  // namespace caffe
 
 #endif  // CPU_ONLY
+
+#if defined(USE_OPENCL)
+#include <CL/cl.h>
+
+inline int CAFFE_GET_GLOBAL_WORKITEMS(const int problem_size, const int local_size) {
+	return ((problem_size / local_size) + 1) * local_size; // returns number larger than problem_size that is divisible by local_size
+}
+
+inline int CAFFE_GET_LOCAL_WORKITEMS(const int problem_size, const int local_size) {
+	return local_size;
+}
+#endif // USE_OPENCL
+
 
 #endif  // CAFFE_UTIL_DEVICE_ALTERNATE_H_
