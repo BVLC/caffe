@@ -43,7 +43,7 @@ void BNLLLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-#if defined(USE_OPENCL1)
+#if defined(USE_OPENCL)
 
 namespace OpenCL {
 
@@ -129,9 +129,9 @@ template bool clBNLLLayerBackward<double>(const int count, const double* top_dif
 } // namespace OpenCL
 
 template<typename Dtype>
-void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 	const Dtype* bottom_data = bottom[0]->gpu_data();
-	Dtype* top_data = (*top)[0]->mutable_gpu_data();
+	Dtype* top_data = (top)[0]->mutable_gpu_data();
 	const int count = bottom[0]->count();
 	// NOLINT_NEXT_LINE(whitespace/operators)
 	/*
@@ -143,12 +143,12 @@ void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, vector<Bl
 
 
 template<typename Dtype>
-void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 	if (propagate_down[0]) {
-		const Dtype* bottom_data = (*bottom)[0]->gpu_data();
+		const Dtype* bottom_data = (bottom)[0]->gpu_data();
 		const Dtype* top_diff = top[0]->gpu_diff();
-		Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-		const int count = (*bottom)[0]->count();
+		Dtype* bottom_diff = (bottom)[0]->mutable_gpu_diff();
+		const int count = (bottom)[0]->count();
 		// NOLINT_NEXT_LINE(whitespace/operators)
 		/*
 		BNLLBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, top_diff, bottom_data, bottom_diff);
@@ -161,7 +161,7 @@ void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const vecto
 #endif // USE_OPENCL
 
 
-#ifdef CPU_ONLY
+#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 STUB_GPU(BNLLLayer);
 #endif
 

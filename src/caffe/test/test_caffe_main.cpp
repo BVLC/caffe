@@ -5,19 +5,19 @@
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
-#ifndef CPU_ONLY
+#if defined(USE_CUDA)
   cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 #endif
 }
 
-#ifndef CPU_ONLY
+#if defined(USE_CUDA)
 using caffe::CAFFE_TEST_CUDA_PROP;
 #endif
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   caffe::GlobalInit(&argc, &argv);
-#ifndef CPU_ONLY
+#if defined(USE_CUDA)
   // Before starting testing, let's first print out a few cuda defice info.
   int device;
   cudaGetDeviceCount(&device);

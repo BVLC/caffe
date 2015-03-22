@@ -41,7 +41,7 @@ class Timer {
   bool initted_;
   bool running_;
   bool has_run_at_least_once_;
-#ifndef CPU_ONLY
+#ifdef USE_CUDA
   cudaEvent_t start_gpu_;
   cudaEvent_t stop_gpu_;
 #endif

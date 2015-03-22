@@ -8,8 +8,8 @@ DEBUG := 1
 
 # uncomment one
 #CPU_ONLY := 1
-#USE_CUDA := 1
-USE_OPENCL := 1
+USE_CUDA := 1
+#USE_OPENCL := 1
 
 HOSTNAME := $(shell hostname)
 include Makefile.config.tools

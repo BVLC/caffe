@@ -16,6 +16,15 @@ using caffe::shared_ptr;
 using caffe::Timer;
 using caffe::vector;
 
+namespace caffe {
+#ifdef USE_CUDA
+  cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
+}
+
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif
 
 DEFINE_int32(gpu, -1,
     "Run in GPU mode on given device ID.");

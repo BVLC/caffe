@@ -271,20 +271,20 @@ bool init() {
 	}
 
 	std::vector<std::string> cl_files;
-	cl_files.push_back("src/caffe/util/math_functions.cl");
-	cl_files.push_back("src/caffe/util/im2col.cl");
-	cl_files.push_back("src/caffe/layers/pooling_layer.cl");
-	cl_files.push_back("src/caffe/layers/relu_layer.cl");
-	cl_files.push_back("src/caffe/layers/sigmoid_layer.cl");
-	cl_files.push_back("src/caffe/layers/tanh_layer.cl");
-	cl_files.push_back("src/caffe/layers/dropout_layer.cl");
-	cl_files.push_back("src/caffe/layers/bnll_layer.cl");
-	cl_files.push_back("src/caffe/layers/contrastive_loss_layer.cl");
-	cl_files.push_back("src/caffe/layers/eltwise_layer.cl");
-	cl_files.push_back("src/caffe/layers/lrn_layer.cl");
-	cl_files.push_back("src/caffe/layers/softmax_layer.cl");
-	cl_files.push_back("src/caffe/layers/threshold_layer.cl");
-	cl_files.push_back("src/caffe/layers/mvn_layer.cl");
+	cl_files.push_back("src/caffe/util/OpenCL/math_functions.cl");
+	cl_files.push_back("src/caffe/util/OpenCL/im2col.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/pooling_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/relu_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/sigmoid_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/tanh_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/dropout_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/bnll_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/contrastive_loss_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/eltwise_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/lrn_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/softmax_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/threshold_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/mvn_layer.cl");
 
 	std::vector<std::string>::iterator it;
 

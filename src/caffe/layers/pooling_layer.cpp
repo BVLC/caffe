@@ -8,6 +8,12 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
+#if defined(USE_OPENCL)
+#include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#include <caffe/util/OpenCL/pooling_layer.hpp>
+#include <caffe/util/benchmark.hpp>
+#endif
+
 namespace caffe {
 
 using std::min;
@@ -309,8 +315,696 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+#if defined(USE_OPENCL)
 
-#ifdef CPU_ONLY
+namespace OpenCL {
+
+template<typename T>
+bool clMaxPoolBackward(
+		const int nthreads,
+		const T* top_diff,
+		const int* mask,
+		const T* top_mask,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		const int pad_h,
+		const int pad_w,
+		T* bottom_diff) {
+
+	std::string kernel_name = clGetKernelName<T>("MaxPoolBackward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
+	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
+	CL_SET_ARRAY_KERNEL_ARG(&mask)
+	CL_SET_ARRAY_KERNEL_ARG(&top_mask)
+	CL_SET_TYPE_KERNEL_ARG(int, num)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, height)
+	CL_SET_TYPE_KERNEL_ARG(int, width)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
+	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clMaxPoolBackward<float>(const int nthreads, const float* top_diff, const int* mask, const float* top_mask, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, const int pad_h, const int pad_w, float* bottom_diff);
+template bool clMaxPoolBackward<double>(const int nthreads, const double* top_diff, const int* mask, const double* top_mask, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, const int pad_h, const int pad_w, double* bottom_diff);
+
+template<typename T>
+bool clAvePoolBackward(
+		const int nthreads,
+		const T* top_diff,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		const int pad_h,
+		const int pad_w,
+		T* bottom_diff) {
+
+	std::string kernel_name = clGetKernelName<T>("AvePoolBackward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
+	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
+	CL_SET_TYPE_KERNEL_ARG(int, num)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, height)
+	CL_SET_TYPE_KERNEL_ARG(int, width)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
+	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clAvePoolBackward<float>(const int nthreads, const float* top_diff, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, const int pad_h, const int pad_w, float* bottom_diff);
+template bool clAvePoolBackward<double>(const int nthreads, const double* top_diff, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, const int pad_h, const int pad_w, double* bottom_diff);
+
+template<typename T>
+bool clStoPoolBackward(
+		const int nthreads,
+		const T* rand_idx,
+		const T* top_diff,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		T* bottom_diff) {
+
+	std::string kernel_name = clGetKernelName<T>("StoPoolBackward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
+	CL_SET_ARRAY_KERNEL_ARG(&rand_idx)
+	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
+	CL_SET_TYPE_KERNEL_ARG(int, num)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, height)
+	CL_SET_TYPE_KERNEL_ARG(int, width)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
+	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clStoPoolBackward<float>(const int nthreads, const float* rand_idx, const float* top_diff, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, float* bottom_diff);
+template bool clStoPoolBackward<double>(const int nthreads, const double* rand_idx, const double* top_diff, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, double* bottom_diff);
+
+template<typename T>
+bool clMaxPoolForward(
+		const int nthreads,
+		const T* bottom_data,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		const int pad_h,
+		const int pad_w,
+		T* top_data,
+		int* mask,
+		T* top_mask
+		) {
+
+	std::string	kernel_name = clGetKernelName<T>("MaxPoolForward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
+	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
+	CL_SET_TYPE_KERNEL_ARG(int, num)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, height)
+	CL_SET_TYPE_KERNEL_ARG(int, width)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
+	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+	CL_SET_ARRAY_KERNEL_ARG(&mask)
+	CL_SET_ARRAY_KERNEL_ARG(&top_mask)
+
+
+	int dim = 1;
+	size_t *global;
+	size_t *local;
+
+	size_t global3D[3] 	= {CAFFE_GET_GLOBAL_WORKITEMS(pooled_width, OPENCL_LOCAL_SIZE), (size_t) pooled_height, (size_t) num*channels};
+	size_t local3D[3]  	= {OPENCL_LOCAL_SIZE, 1, 1};
+
+	size_t global1D 	= CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local1D  	= CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+
+	switch(OPENCL_OPT_LEVEL) {
+	case 1:
+		dim = 3;
+		global 	= &global3D[0];
+		local	= &local3D[0];
+		break;
+	default:
+		dim = 1;
+		global 	= &global1D;
+		local	= &local1D;
+	}
+
+	std::string function = __func__;
+	TIME(kernel_name.c_str(),
+			{
+	err = clEnqueueNDRangeKernel(*queue, *kernel, dim, NULL, global, local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	//LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+			});
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clMaxPoolForward<float>(
+		const int nthreads,
+		const float* bottom_data,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		const int pad_h,
+		const int pad_w,
+		float* top_data,
+		int* mask,
+		float* top_mask
+		);
+template bool clMaxPoolForward<double>(
+		const int nthreads,
+		const double* bottom_data,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		const int pad_h,
+		const int pad_w,
+		double* top_data,
+		int* mask,
+		double* top_mask
+		);
+
+template<typename T>
+bool clAvePoolForward(
+		const int nthreads,
+		const T* bottom_data,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		const int pad_h,
+		const int pad_w,
+		T* top_data,
+		int* mask,
+		T* top_mask) {
+
+	std::string kernel_name = clGetKernelName<T>("AvePoolForward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
+	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
+	CL_SET_TYPE_KERNEL_ARG(int, num)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, height)
+	CL_SET_TYPE_KERNEL_ARG(int, width)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
+	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
+	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+	CL_SET_ARRAY_KERNEL_ARG(&mask)
+	CL_SET_ARRAY_KERNEL_ARG(&top_mask)
+
+	int dim = 1;
+	size_t *global;
+	size_t *local;
+
+	size_t global3D[3] 	= {CAFFE_GET_GLOBAL_WORKITEMS(pooled_width, OPENCL_LOCAL_SIZE), (size_t) pooled_height, (size_t) num*channels};
+	size_t local3D[3]  	= {OPENCL_LOCAL_SIZE, 1, 1};
+
+	size_t global1D 	= CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local1D  	= CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+
+	switch(OPENCL_OPT_LEVEL) {
+	case 1:
+		dim = 3;
+		global 	= &global3D[0];
+		local	= &local3D[0];
+		break;
+	default:
+		dim = 1;
+		global 	= &global1D;
+		local	= &local1D;
+	}
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, dim, NULL, global, local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clAvePoolForward<float>(const int nthreads, const float* bottom_data, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, const int pad_h, const int pad_w, float* top_data, int* mask, float* top_mask);
+template bool clAvePoolForward<double>(const int nthreads, const double* bottom_data, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, const int pad_h, const int pad_w, double* top_data, int* mask, double* top_mask);
+
+template<typename T>
+bool clStoPoolForwardTrain(
+		const int nthreads,
+		const T* bottom_data,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		T* rand_idx,
+		T* top_data) {
+
+	std::string kernel_name = clGetKernelName<T>("StoPoolForwardTrain");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
+	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
+	CL_SET_TYPE_KERNEL_ARG(int, num)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, height)
+	CL_SET_TYPE_KERNEL_ARG(int, width)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
+	CL_SET_ARRAY_KERNEL_ARG(&rand_idx)
+	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clStoPoolForwardTrain<float>(const int nthreads, const float* bottom_data, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, float* rand_idx, float* top_data);
+template bool clStoPoolForwardTrain<double>(const int nthreads, const double* bottom_data, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, double* rand_idx, double* top_data);
+
+template<typename T>
+bool clStoPoolForwardTest(
+		const int nthreads,
+		const T* bottom_data,
+		const int num,
+		const int channels,
+		const int height,
+		const int width,
+		const int pooled_height,
+		const int pooled_width,
+		const int kernel_h,
+		const int kernel_w,
+		const int stride_h,
+		const int stride_w,
+		T* top_data) {
+
+	std::string kernel_name = clGetKernelName<T>("StoPoolForwardTest");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
+	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
+	CL_SET_TYPE_KERNEL_ARG(int, num)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, height)
+	CL_SET_TYPE_KERNEL_ARG(int, width)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
+	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
+	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
+	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
+	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clStoPoolForwardTest<float>(const int nthreads, const float* bottom_data, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, float* top_data);
+template bool clStoPoolForwardTest<double>(const int nthreads, const double* bottom_data, const int num, const int channels, const int height, const int width, const int pooled_height, const int pooled_width, const int kernel_h, const int kernel_w, const int stride_h, const int stride_w, double* top_data);
+} // namespace OpenCL
+
+template<typename Dtype>
+void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+
+	const Dtype* bottom_data = bottom[0]->gpu_data();
+	Dtype* top_data = (top)[0]->mutable_gpu_data();
+	int count = (top)[0]->count();
+
+	// We'll output the mask to top[1] if it's of size >1.
+	const bool use_top_mask = top.size() > 1;
+	int* mask = NULL;
+	Dtype* top_mask = NULL;
+
+	switch (this->layer_param_.pooling_param().pool()) {
+
+	case PoolingParameter_PoolMethod_MAX:
+		if (use_top_mask) {
+			top_mask = (top)[1]->mutable_gpu_data();
+		} else {
+			mask = max_idx_.mutable_gpu_data();
+		}
+		// NOLINT_NEXT_LINE(whitespace/operators)
+		/*
+		MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+				count, bottom_data, bottom[0]->num(), channels_,
+				height_, width_, pooled_height_, pooled_width_, kernel_h_,
+				kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
+				mask, top_mask);
+		*/
+
+		caffe::OpenCL::clMaxPoolForward(count, bottom_data, bottom[0]->num(), channels_, height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data, mask, top_mask);
+		break;
+
+	case PoolingParameter_PoolMethod_AVE:
+		// NOLINT_NEXT_LINE(whitespace/operators)
+		/*
+		AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+				count, bottom_data, bottom[0]->num(), channels_,
+				height_, width_, pooled_height_, pooled_width_, kernel_h_,
+				kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
+		 */
+		BOOL_CHECK( caffe::OpenCL::clAvePoolForward(count, bottom_data, bottom[0]->num(), channels_, height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data, mask, top_mask ) );
+		break;
+
+	case PoolingParameter_PoolMethod_STOCHASTIC:
+		if (this->phase_ == TRAIN) {
+			// We need to create the random index as well.
+			//caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1), rand_idx_.mutable_gpu_data());
+			// NOLINT_NEXT_LINE(whitespace/operators)
+			/*
+			StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count),
+			CAFFE_CUDA_NUM_THREADS>>>(
+				count, bottom_data, bottom[0]->num(), channels_,
+				height_, width_, pooled_height_, pooled_width_, kernel_h_,
+				kernel_w_, stride_h_, stride_w_,
+				rand_idx_.mutable_gpu_data(), top_data);
+				*/
+
+			caffe_rng_uniform(count, Dtype(0), Dtype(1), rand_idx_.mutable_cpu_data());
+			BOOL_CHECK( caffe::OpenCL::clStoPoolForwardTrain(count, bottom_data, bottom[0]->num(), channels_, height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_, rand_idx_.mutable_gpu_data(), top_data) );
+		} else {
+			// NOLINT_NEXT_LINE(whitespace/operators)
+			/*
+			StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+			count, bottom_data, bottom[0]->num(), channels_,
+			height_, width_, pooled_height_, pooled_width_, kernel_h_,
+			kernel_w_, stride_h_, stride_w_, top_data);
+			*/
+			BOOL_CHECK( caffe::OpenCL::clStoPoolForwardTest(count, bottom_data, bottom[0]->num(), channels_, height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_, top_data) );
+		}
+		break;
+
+	default:
+		LOG(FATAL)<< "Unknown pooling method.";
+	}
+}
+
+template<typename Dtype>
+void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+	if (!propagate_down[0]) {
+		return;
+	}
+	const Dtype* top_diff = top[0]->gpu_diff();
+	Dtype* bottom_diff = (bottom)[0]->mutable_gpu_diff();
+	const int count = (bottom)[0]->count();
+	caffe_gpu_set(count, Dtype(0.), bottom_diff);
+	// We'll output the mask to top[1] if it's of size >1.
+	const bool use_top_mask = top.size() > 1;
+	const int* mask = NULL;
+	const Dtype* top_mask = NULL;
+
+	switch (this->layer_param_.pooling_param().pool()) {
+	case PoolingParameter_PoolMethod_MAX:
+		if (use_top_mask) {
+			top_mask = top[1]->gpu_data();
+		} else {
+			mask = max_idx_.gpu_data();
+		}
+		// NOLINT_NEXT_LINE(whitespace/operators)
+		/*
+		MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+				count, top_diff, mask, top_mask, top[0]->num(), channels_,
+				height_, width_, pooled_height_, pooled_width_,
+				kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
+				bottom_diff);
+		*/
+		BOOL_CHECK( caffe::OpenCL::clMaxPoolBackward(count, top_diff, mask, top_mask, top[0]->num(), channels_, height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff) );
+		break;
+
+	case PoolingParameter_PoolMethod_AVE:
+		// NOLINT_NEXT_LINE(whitespace/operators)
+		/*
+		AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+				count, top_diff, top[0]->num(), channels_,
+				height_, width_, pooled_height_, pooled_width_, kernel_h_,
+				kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
+				*/
+		BOOL_CHECK( caffe::OpenCL::clAvePoolBackward(count, top_diff, top[0]->num(), channels_, height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff) );
+		break;
+
+	case PoolingParameter_PoolMethod_STOCHASTIC:
+		// NOLINT_NEXT_LINE(whitespace/operators)
+		/*
+		StoPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+				count, rand_idx_.gpu_data(), top_diff,
+				top[0]->num(), channels_, height_, width_, pooled_height_,
+				pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_,
+				bottom_diff);
+				*/
+		BOOL_CHECK( caffe::OpenCL::clStoPoolBackward(count, rand_idx_.gpu_data(), top_diff, top[0]->num(), channels_, height_, width_, pooled_height_, pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_, bottom_diff) );
+		break;
+	default:
+		LOG(FATAL)<< "Unknown pooling method.";
+	}
+	//CUDA_POST_KERNEL_CHECK;
+}
+
+#endif // USE_OPENCL
+
+#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 STUB_GPU(PoolingLayer);
 #endif
 
