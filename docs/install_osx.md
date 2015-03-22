@@ -115,7 +115,7 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     # Update homebrew; hopefully this works without errors!
     brew update
 
-    # Switch back to the caffe branches with the forumlae that you modified earlier
+    # Switch back to the caffe branches with the formulae that you modified earlier
     cd /usr/local
     git rebase master caffe
     # Fix any merge conflicts and commit to caffe branch
