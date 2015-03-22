@@ -102,12 +102,12 @@ inline int CAFFE_GET_BLOCKS(const int N) {
 #if defined(USE_OPENCL)
 #include <CL/cl.h>
 
-inline int CAFFE_GET_GLOBAL_WORKITEMS(const int problem_size, const int local_size) {
-	return ((problem_size / local_size) + 1) * local_size; // returns number larger than problem_size that is divisible by local_size
+inline size_t CAFFE_GET_GLOBAL_WORKITEMS(const int problem_size, const int local_size) {
+	return (((size_t) problem_size / (size_t) local_size) + 1) * (size_t) local_size; // returns number larger than problem_size that is divisible by local_size
 }
 
-inline int CAFFE_GET_LOCAL_WORKITEMS(const int problem_size, const int local_size) {
-	return local_size;
+inline size_t CAFFE_GET_LOCAL_WORKITEMS(const int problem_size, const int local_size) {
+	return (size_t) local_size;
 }
 #endif // USE_OPENCL
 

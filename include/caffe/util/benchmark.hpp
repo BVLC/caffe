@@ -2,8 +2,21 @@
 #define CAFFE_UTIL_BENCHMARK_H_
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-
 #include "caffe/util/device_alternate.hpp"
+#include <typeinfo>
+
+struct record {
+  std::string device;
+  std::string sdk;
+  std::string function;
+  std::string file;
+  std::string type;
+  int		  num_images;
+  int		  num_channels;
+  int		  img_width;
+  int		  img_height;
+  float		  time;
+};
 
 namespace caffe {
 
@@ -20,6 +33,7 @@ class Timer {
   inline bool initted() { return initted_; }
   inline bool running() { return running_; }
   inline bool has_run_at_least_once() { return has_run_at_least_once_; }
+  static bool log(std::string file, record result);
 
  protected:
   void Init();
