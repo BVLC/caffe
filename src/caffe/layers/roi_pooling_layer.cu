@@ -1,10 +1,13 @@
-#include <algorithm>
-#include <cfloat>
-#include <vector>
+// ------------------------------------------------------------------
+// Fast R-CNN
+// Copyright (c) 2015 Microsoft
+// Licensed under The MIT License [see fast-rcnn/LICENSE for details]
+// Written by Ross Girshick
+// ------------------------------------------------------------------
 
-#include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
-#include "caffe/util/math_functions.hpp"
+#include <cfloat>
+
+#include "caffe/fast_rcnn_layers.hpp"
 
 using std::max;
 using std::min;
@@ -125,14 +128,6 @@ __global__ void ROIPoolBackward(const int nthreads, const Dtype* top_diff,
       int offset = (roi_n * channels + c) * pooled_height * pooled_width;
       const Dtype* offset_top_diff = top_diff + offset;
       const int* offset_argmax_data = argmax_data + offset;
-
-//      // TODO(rbg): naive computation that loops over all elements in the
-//      // pooled output. Can narrow this to loop over only those elements
-//      // that could have pooled this one. Need to work out the indexes.
-//      int phstart = 0;
-//      int phend = pooled_height;
-//      int pwstart = 0;
-//      int pwend = pooled_width;
 
       // Compute feasible set of pooled units that could have pooled
       // this bottom unit

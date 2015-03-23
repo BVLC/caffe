@@ -1,3 +1,10 @@
+// ------------------------------------------------------------------
+// Fast R-CNN
+// Copyright (c) 2015 Microsoft
+// Licensed under The MIT License [see fast-rcnn/LICENSE for details]
+// Written by Ross Girshick
+// ------------------------------------------------------------------
+
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -9,7 +16,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/fast_rcnn_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -90,34 +97,5 @@ TYPED_TEST(ROIPoolingLayerTest, TestGradient) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 0);
 }
-
-//TYPED_TEST(SoftmaxWithLossLayerTest, TestGradient) {
-//  typedef typename TypeParam::Dtype Dtype;
-//  LayerParameter layer_param;
-//  layer_param.add_loss_weight(3);
-//  SoftmaxWithLossLayer<Dtype> layer(layer_param);
-//  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-//  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-//      this->blob_top_vec_, 0);
-//}
-//
-//TYPED_TEST(PoolingLayerTest, TestGradientMax) {
-//  typedef typename TypeParam::Dtype Dtype;
-//  for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
-//    for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
-//      LayerParameter layer_param;
-//      PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-//      pooling_param->set_kernel_h(kernel_h);
-//      pooling_param->set_kernel_w(kernel_w);
-//      pooling_param->set_stride(2);
-//      pooling_param->set_pad(1);
-//      pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
-//      PoolingLayer<Dtype> layer(layer_param);
-//      GradientChecker<Dtype> checker(1e-4, 1e-2);
-//      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-//          this->blob_top_vec_);
-//    }
-//  }
-//}
 
 }  // namespace caffe

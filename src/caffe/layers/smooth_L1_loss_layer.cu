@@ -1,9 +1,11 @@
-#include <vector>
+// ------------------------------------------------------------------
+// Fast R-CNN
+// Copyright (c) 2015 Microsoft
+// Licensed under The MIT License [see fast-rcnn/LICENSE for details]
+// Written by Ross Girshick
+// ------------------------------------------------------------------
 
-#include "caffe/layer.hpp"
-#include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/fast_rcnn_layers.hpp"
 
 namespace caffe {
 
