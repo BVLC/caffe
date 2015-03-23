@@ -35,6 +35,14 @@ int main(int argc, char** argv) {
   cout << "Current device id: " << device << endl;
   cudaGetDeviceProperties(&CAFFE_TEST_CUDA_PROP, device);
 #endif
+
+#ifdef USE_OPENCL
+  if ( ! caffe::OpenCL::init() ) {
+	  LOG(ERROR) << "failed to initialize OpenCL";
+	  return 1;
+  }
+#endif
+
   // invoke the test.
   return RUN_ALL_TESTS();
 }

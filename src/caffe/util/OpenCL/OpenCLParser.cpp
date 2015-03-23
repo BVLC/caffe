@@ -39,16 +39,18 @@ bool OpenCLParser::getKernelNames(std::string fileName, std::vector<std::string>
 	}
 
 	boost::regex kernel_line("^__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
-	boost::regex template_kernel_line("^template\\s+\\<class \\w+\\>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
+	boost::regex template_kernel_line("^template\\s+\<class \\w+\>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
 	boost::regex split("[\\s+(]");
 
 	boost::smatch what;
     std::string str;
 
     while (std::getline(file, str)) {
+    	//std::cout << str.c_str() << std::endl;
 
     	if ( boost::regex_match(str, what, kernel_line, boost::match_default) ) {
     		for(int m = 0; m < what.size(); m++) {
+    			//std::cout << "match[" << m << "] = \'" << what[m] << "\'" << std::endl;
     			boost::sregex_token_iterator it(str.begin(),str.end(), split, -1);
     			it++;
     			it++;
@@ -58,6 +60,7 @@ bool OpenCLParser::getKernelNames(std::string fileName, std::vector<std::string>
 
     	if ( boost::regex_match(str, what, template_kernel_line, boost::match_default) ) {
     		for(int m = 0; m < what.size(); m++) {
+    			//std::cout << "match[" << m << "] = \'" << what[m] << "\'" << std::endl;
     			boost::sregex_token_iterator it(str.begin(),str.end(), split, -1);
     			it++;
      			it++;
@@ -90,7 +93,7 @@ bool OpenCLParser::isKernelLine(std::string line) {
 
 bool OpenCLParser::isTemplateKernelLine(std::string line) {
 
-	boost::regex re("^template\\s+\\<class \\w+\\>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
+	boost::regex re("^template\\s+\<class \\w+\>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
 	return this->match(line, re);
 }
 
@@ -116,8 +119,8 @@ std::string OpenCLParser::getKernelName(std::string line) {
 
 std::string OpenCLParser::getKernelType(std::string line) {
 
-	boost::regex split_bgn("template\\s+\\<class\\s+");
-	boost::regex split_end("\\s*\\>");
+	boost::regex split_bgn("template\\s+\<class\\s+");
+	boost::regex split_end("\\s*\>");
 	boost::sregex_token_iterator it;
 
 	it = boost::sregex_token_iterator(line.begin(),line.end(), split_bgn, -1);
