@@ -517,6 +517,7 @@ bool OpenCLDevice::get(const void* ptr, OpenCLMemory& clMem) {
 			found++;
 		}
 	}
+
 	if ( found > 1 ) {
 		LOG(INFO) << "found "<<found<<" matching for "<<ptr;
 		for ( it = memory.begin(); it != memory.end(); it++ ) {
@@ -527,7 +528,6 @@ bool OpenCLDevice::get(const void* ptr, OpenCLMemory& clMem) {
 
 	}
 
-	//std::map<const void*, OpenCLMemory>::iterator it;
 	for ( it = memory.begin(); it != memory.end(); it++ ) {
 		if ( (it->second).contains(ptr) ) {
 			clMem = it->second;

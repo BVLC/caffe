@@ -55,10 +55,8 @@ struct DoubleCPU {
   static const Caffe::Brew device = Caffe::CPU;
 };
 
-#ifdef CPU_ONLY
-
+#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 typedef ::testing::Types<FloatCPU, DoubleCPU> TestDtypesAndDevices;
-
 #else
 
 struct FloatGPU {

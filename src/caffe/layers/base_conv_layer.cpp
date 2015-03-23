@@ -227,6 +227,7 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_bias(Dtype* bias,
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) {
+
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     if (!skip_im2col) {
@@ -235,10 +236,18 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
     col_buff = col_buffer_.gpu_data();
   }
   for (int g = 0; g < group_; ++g) {
+#if defined(USE_CUDA)
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
         group_, conv_out_spatial_dim_, kernel_dim_ / group_,
         (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)0., output + output_offset_ * g);
+#endif
+#if defined(USE_OPENCL)
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
+        group_, conv_out_spatial_dim_, kernel_dim_ / group_,
+        (Dtype)1., weights, weight_offset_ * g, col_buff, col_offset_ * g,
+        (Dtype)0., output,  output_offset_ * g);
+#endif
   }
 }
 
@@ -258,10 +267,18 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
     col_buff = input;
   }
   for (int g = 0; g < group_; ++g) {
-    caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
+#if defined(USE_CUDA)
+  	caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
         conv_out_spatial_dim_, conv_out_channels_ / group_,
         (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
         (Dtype)0., col_buff + col_offset_ * g);
+#endif
+#if defined(USE_OPENCL)
+  	caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
+        conv_out_spatial_dim_, conv_out_channels_ / group_,
+        (Dtype)1., weights, weight_offset_ * g, output, output_offset_ * g,
+        (Dtype)0., col_buff, col_offset_ * g);
+#endif
   }
   if (!is_1x1_) {
     conv_col2im_gpu(col_buff, input);
@@ -277,10 +294,18 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
     col_buff = col_buffer_.gpu_data();
   }
   for (int g = 0; g < group_; ++g) {
+#if defined(USE_CUDA)
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
         kernel_dim_ / group_, conv_out_spatial_dim_,
         (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)1., weights + weight_offset_ * g);
+#endif
+#if defined(USE_OPENCL)
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
+        kernel_dim_ / group_, conv_out_spatial_dim_,
+        (Dtype)1., output, output_offset_ * g, col_buff, col_offset_ * g,
+        (Dtype)1., weights, weight_offset_ * g);
+#endif
   }
 }
 

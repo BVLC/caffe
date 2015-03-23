@@ -10,6 +10,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -141,6 +142,61 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+	void ConvolutionLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+
+		blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+		blob_bottom_2_->Reshape(num_images, num_channels, im_height, im_width);
+
+		FillerParameter filler_param;
+		filler_param.set_value(1.);
+		GaussianFiller<Dtype> filler(filler_param);
+		filler.Fill(this->blob_bottom_);
+		filler.Fill(this->blob_bottom_2_);
+
+		blob_bottom_vec_.clear();
+		blob_bottom_vec_.push_back(blob_bottom_);
+
+		blob_top_vec_.clear();
+		blob_top_vec_.push_back(blob_top_);
+
+		LayerParameter layer_param;
+		ConvolutionParameter* convolution_param = layer_param.mutable_convolution_param();
+		convolution_param->set_kernel_size(3);
+		convolution_param->set_stride(2);
+		convolution_param->set_num_output(4);
+		convolution_param->mutable_weight_filler()->set_type("gaussian");
+		convolution_param->mutable_bias_filler()->set_type("constant");
+		convolution_param->mutable_bias_filler()->set_value(0.1);
+		shared_ptr<Layer<Dtype> > layer(new ConvolutionLayer<Dtype>(layer_param));
+
+		layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		Caffe::set_mode(Caffe::GPU);
+		blob_bottom_->mutable_gpu_data();
+		blob_bottom_->mutable_gpu_diff();
+		blob_bottom_2_->mutable_gpu_data();
+		blob_bottom_2_->mutable_gpu_diff();
+		blob_top_->mutable_gpu_data();
+		blob_top_->mutable_gpu_diff();
+#endif
+
+		record r;
+		r.type 			= std::string(typeid(Dtype).name());
+		r.num_images 	= num_images;
+		r.num_channels 	= num_channels;
+		r.img_width		= im_width;
+		r.img_height	= im_height;
+
+		BENCH(r, {
+				layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+		});
+
+	}
+
 };
 
 TYPED_TEST_CASE(ConvolutionLayerTest, TestDtypesAndDevices);
@@ -237,8 +293,10 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
   const Dtype* ref_top_data;
   caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_));
+
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
+
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
   }
@@ -419,6 +477,13 @@ TYPED_TEST(ConvolutionLayerTest, TestGradientGroup) {
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+TYPED_TEST(ConvolutionLayerTest, TestForwardPerformance){
+	//for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX*4; i*=2 ) {
+  for(int i=64; i<=64; i*=2 ) {
+		this->ConvolutionLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
 }
 
 #ifdef USE_CUDNN

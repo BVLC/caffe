@@ -777,7 +777,7 @@ bool clReleaseBufferMap(std::map<const void*, std::pair<void*, size_t> >& buffer
 		if ( ! clMemcpy(const_cast<void*>(virtual_ptr), buffer_ptr, buffer_size, caffe::OpenCL::COPY_DEFAULT) ) {
 			return false;
 		}
-		clFree((void*) virtual_ptr);
+		clFree((void*) buffer_ptr);
 	}
 	return true;
 }
@@ -1477,8 +1477,8 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 		LOG(INFO) << "clblasDgemm() succeeded on GPU "<<gpu->name();
 	}
 
-	clReleaseSubBuffers(sb);
 	clReleaseBufferMap(bm);
+	clReleaseSubBuffers(sb);
 	return true;
 }
 template bool clBLASgemm<float>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const float alpha, const float* A, const float* x, const float beta, float* y);
@@ -1493,18 +1493,21 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 		return false;
 	}
 
+	std::vector<cl_mem> sb;
+	std::map<const void*, std::pair<void*, size_t> > bm;
+
 	const void* A_logical;
-	if ( ! clMakeLogical(A, &A_logical) ) {
+	if ( ! clMakeLogical2(A, &A_logical, sb, bm) ) {
 		return false;
 	}
 
 	const void* x_logical;
-	if ( ! clMakeLogical(x, &x_logical) ) {
+	if ( ! clMakeLogical2(x, &x_logical, sb, bm) ) {
 		return false;
 	}
 
 	const void* y_logical;
-	if ( ! clMakeLogical(y, &y_logical) ) {
+	if ( ! clMakeLogical2(y, &y_logical, sb, bm) ) {
 		return false;
 	}
 
@@ -1530,6 +1533,9 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 		clFinish(*queue);
 		LOG(INFO) << "clblasDgemm() succeeded on GPU "<<gpu->name();
 	}
+
+	clReleaseBufferMap(bm);
+	clReleaseSubBuffers(sb);
 
 	return true;
 }

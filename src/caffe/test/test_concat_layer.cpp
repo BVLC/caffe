@@ -10,6 +10,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -54,6 +55,58 @@ class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_0_, blob_bottom_vec_1_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+  void ConcatLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+  		typedef typename TypeParam::Dtype Dtype;
+  		LayerParameter layer_param;
+  		ConcatLayer<Dtype> layer(layer_param);
+
+  		blob_bottom_0_->Reshape(num_images, num_channels, im_height, im_width);
+  		blob_bottom_1_->Reshape(num_images, num_channels, im_height, im_width);
+
+ 	    shared_ptr<ConstantFiller<Dtype> > filler;
+ 	    FillerParameter filler_param;
+
+ 	    filler_param.set_value(1.);
+ 	    filler.reset(new ConstantFiller<Dtype>(filler_param));
+ 	    filler->Fill(this->blob_bottom_0_);
+
+ 	    filler_param.set_value(2.);
+ 	    filler.reset(new ConstantFiller<Dtype>(filler_param));
+ 	    filler->Fill(this->blob_bottom_1_);
+
+ 	    blob_bottom_vec_0_.clear();
+ 	    blob_bottom_vec_0_.push_back(blob_bottom_0_);
+ 	    blob_bottom_vec_0_.push_back(blob_bottom_1_);
+
+ 	    blob_top_vec_.clear();
+ 	    blob_top_vec_.push_back(blob_top_);
+
+ 	    layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+ 			blob_bottom_0_->mutable_gpu_data();
+ 			blob_bottom_0_->mutable_gpu_diff();
+ 			blob_bottom_1_->mutable_gpu_data();
+ 			blob_bottom_1_->mutable_gpu_diff();
+ 			blob_bottom_2_->mutable_gpu_data();
+ 			blob_bottom_2_->mutable_gpu_diff();
+ 			blob_top_->mutable_gpu_data();
+ 			blob_top_->mutable_gpu_diff();
+#endif
+
+  		record r;
+  		r.type 			= std::string(typeid(Dtype).name());
+  		r.num_images 	= num_images;
+  		r.num_channels 	= num_channels;
+  		r.img_width		= im_width;
+  		r.img_height	= im_height;
+
+  		BENCH(r, {
+  				layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
+  		});
+  	}
 };
 
 TYPED_TEST_CASE(ConcatLayerTest, TestDtypesAndDevices);
@@ -171,6 +224,13 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannels) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
     this->blob_top_vec_);
+}
+
+TYPED_TEST(ConcatLayerTest, TestForwardPerformance){
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
+		this->ConcatLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
 }
 
 }  // namespace caffe
