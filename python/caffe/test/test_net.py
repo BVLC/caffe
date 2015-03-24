@@ -76,3 +76,38 @@ class TestNet(unittest.TestCase):
             for i in range(len(self.net.params[name])):
                 self.assertEqual(abs(self.net.params[name][i].data
                     - net2.params[name][i].data).sum(), 0)
+
+def auto_top_blobs_net():
+    """Create a net proto which includes two layers each of which creates an
+    automatic top blob. Those layers are followed by another layer which
+    has a named top blob, but not connected."""
+
+    f = tempfile.NamedTemporaryFile(delete=False)
+    f.write("""name: 'auto_top_blobs_net'
+    layer { type: 'DummyData' name: 'data' top: 'data' top: 'label'
+      dummy_data_param { num: 2 channels: 1  height: 1 width: 1
+        num: 2 channels: 1 height: 1 width: 1
+        data_filler { type: 'gaussian' std: 1 }
+        data_filler { type: 'constant' } } }
+    layer { type: 'SoftmaxWithLoss' name: 'loss' bottom: 'data' bottom: 'label'
+      }
+    layer { type: 'SoftmaxWithLoss' name: 'loss2' bottom: 'data' bottom: 'label'
+      }
+    layer { type: 'Accuracy' name: 'acc' bottom: 'data' bottom: 'label',
+      top: 'acc'
+      }
+    """)
+    f.close()
+    return f.name
+
+class TestAutoTopBlobsNet(unittest.TestCase):
+    def setUp(self):
+        net_file = auto_top_blobs_net()
+        self.net = caffe.Net(net_file, caffe.TRAIN)
+        os.remove(net_file)
+
+    def test_blobs(self):
+        blobs = self.net.blobs
+
+    def test_outputs(self):
+        outputs = self.net.outputs

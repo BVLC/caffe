@@ -209,6 +209,9 @@ class Net {
   /// @brief Get misc parameters, e.g. the LR multiplier and weight decay.
   void GetLearningRateAndWeightDecay();
 
+  /// @brief Get an automatic blob name for layers with AutoTopBlobs() == true
+  string GetAutoTopBlobName();
+
   /// @brief The network name
   string name_;
   /// @brief The phase: TRAIN or TEST
@@ -255,6 +258,8 @@ class Net {
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
+  /// Auto top blob index to be incremented in GetAutoTopBlobName
+  size_t current_auto_top_blob_index_;
 
   DISABLE_COPY_AND_ASSIGN(Net);
 };

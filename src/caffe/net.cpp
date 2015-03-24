@@ -1,3 +1,5 @@
+#include <boost/format.hpp>
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -309,6 +311,12 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
   return true;
 }
 
+template <typename Dtype>
+string Net<Dtype>::GetAutoTopBlobName() {
+  return boost::str(
+      boost::format("(automatic%1%)") % (current_auto_top_blob_index_++));
+}
+
 // Helper for Net::Init: add a new input or top blob to the net.  (Inputs have
 // layer_id == -1, tops have layer_id >= 0.)
 template <typename Dtype>
@@ -319,7 +327,8 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     (new LayerParameter(param.layer(layer_id))) : NULL);
   const string& blob_name = layer_param ?
       (layer_param->top_size() > top_id ?
-          layer_param->top(top_id) : "(automatic)") : param.input(top_id);
+          layer_param->top(top_id) : GetAutoTopBlobName()) :
+          param.input(top_id);
   // Check if we are doing in-place computation
   if (blob_name_to_idx && layer_param && layer_param->bottom_size() > top_id &&
       blob_name == layer_param->bottom(top_id)) {
