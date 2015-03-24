@@ -316,6 +316,9 @@ void caffe_gpu_add_scalar(const int N, const T alpha, T* Y);
 template <typename T>
 void caffe_gpu_powx(const int n, const T* a, const T alpha, T* y);
 
+template <typename Dtype>
+void caffe_gpu_exp(const int n, const Dtype* a, Dtype* y);
+
 template <typename T>
 void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int m, const int n, const T alpha, const T* A, const T* x, const T beta, T* y);
 

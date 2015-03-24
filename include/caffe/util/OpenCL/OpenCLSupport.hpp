@@ -161,6 +161,7 @@ namespace OpenCL {
 	template<typename T> bool cladd(const int n, const T* array_GPU_x, const T* array_GPU_y, T* array_GPU_z);
 	template<typename T> bool cladd_scalar(const int N, const T alpha, T* Y);
 	template<typename T> bool clpowx(const int n, const T* array_GPU_x, const T alpha, T* array_GPU_z);
+	template<typename T> bool clexp(const int n, const T* array_GPU_x, T* array_GPU_y);
 	template<typename T> bool clgemm(const int m, const int n, const int k, const T* A, const T* B, T* C);
 
 	/* clBLAS wrapper functions */

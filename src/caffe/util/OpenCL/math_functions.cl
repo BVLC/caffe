@@ -130,8 +130,18 @@ template <class T> __kernel void clpowx(const int n, global T* x, const T alpha,
 		//printf("z[%d] = %f <> pow(%f, %f)\n", idx, z[idx], x[idx], alpha);
 	}
 }
-template __attribute__((mangled_name(clpowxFloat))) kernel void clpowx(const int n, global float* x, const float alpha, global float* z); 
-template __attribute__((mangled_name(clpowxDouble))) kernel void clpowx(const int n, global double* x, const double alpha, global double* z);
+template __attribute__((mangled_name(clpowxFloat))) kernel void clpowx(const int n, global float* x, float alpha, global float* z); 
+template __attribute__((mangled_name(clpowxDouble))) kernel void clpowx(const int n, global double* x, double alpha, global double* z);
+
+template <class T> __kernel void clexp(const int n, global T* x, global T* y) {
+
+	int idx = get_global_id(0);
+	if ( idx < n ) {
+		y[idx] = exp(x[idx]);
+	}
+}
+template __attribute__((mangled_name(clexpFloat))) kernel void clexp(const int n, global float* x, global float* y); 
+template __attribute__((mangled_name(clexpDouble))) kernel void clexp(const int n, global double* x, global double* y);
 
 /* Source: OpenCL Programming Guide by authors Munshi, Gaster, Mattson, Fung, Ginsburg
  * Ch 21 Matrix Multiplication with OpenCL

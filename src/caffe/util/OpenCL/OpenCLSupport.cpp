@@ -275,6 +275,7 @@ bool init() {
 	cl_files.push_back("src/caffe/util/OpenCL/im2col.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/pooling_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/relu_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/prelu_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/sigmoid_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/tanh_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/dropout_layer.cl");
@@ -1880,6 +1881,45 @@ bool clpowx(const int n, const T* array_GPU_x, const T alpha, T* array_GPU_z) {
 }
 template bool clpowx<float>(const int n, const float* array_GPU_x, const float alpha, float* array_GPU_z);
 template bool clpowx<double>(const int n, const double* array_GPU_x, const double alpha, double* array_GPU_z);
+
+template<typename T>
+bool clexp(const int n, const T* array_GPU_x, T* array_GPU_y) {
+
+	std::string kernel_name = clGetKernelName<T>("clexp");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, n)
+	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
+	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clexp<float>(const int n, const float* array_GPU_x, float* array_GPU_z);
+template bool clexp<double>(const int n, const double* array_GPU_x, double* array_GPU_z);
 
 bool cl_caffe_gpu_rng_uniform(const int n, unsigned int* r) {
 

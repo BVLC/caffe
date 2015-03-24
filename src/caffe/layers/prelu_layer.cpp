@@ -5,6 +5,11 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
+#if defined(USE_OPENCL)
+#include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#include <caffe/util/OpenCL/prelu_layer.hpp>
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
@@ -129,8 +134,248 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+#if defined(USE_OPENCL)
 
-#ifdef CPU_ONLY
+namespace OpenCL {
+
+template<typename T>
+bool clPReLUForward(const int n, const int channels, const int dim,
+    const T* in, T* out, const T* slope_data,
+    const int div_factor) {
+
+	std::string kernel_name = clGetKernelName<T>("PReLUForward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, n)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, dim)
+	CL_SET_ARRAY_KERNEL_ARG(&in)
+	CL_SET_ARRAY_KERNEL_ARG(&out)
+	CL_SET_ARRAY_KERNEL_ARG(&slope_data)
+	CL_SET_TYPE_KERNEL_ARG(int, div_factor)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clPReLUForward<float>(const int n, const int channels, const int dim,
+    const float* in, float* out, const float* slope_data,
+    const int div_factor);
+template bool clPReLUForward<double>(const int n, const int channels, const int dim,
+    const double* in, double* out, const double* slope_data,
+    const int div_factor);
+
+template<typename T>
+bool PReLUBackward(const int n, const int channels, const int dim,
+    const T* in_diff, const T* in_data, T* out_diff,
+    const T* slope_data, const int div_factor) {
+
+	std::string kernel_name = clGetKernelName<T>("PReLUBackward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, n)
+	CL_SET_TYPE_KERNEL_ARG(int, channels)
+	CL_SET_TYPE_KERNEL_ARG(int, dim)
+	CL_SET_ARRAY_KERNEL_ARG(&in_diff)
+	CL_SET_ARRAY_KERNEL_ARG(&in_data)
+	CL_SET_ARRAY_KERNEL_ARG(&out_diff)
+	CL_SET_ARRAY_KERNEL_ARG(&slope_data)
+	CL_SET_TYPE_KERNEL_ARG(int, div_factor)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool PReLUBackward<float>(const int n, const int channels, const int dim,
+    const float* in_diff, const float* in_data, float* out_diff,
+    const float* slope_data, const int div_factor);
+template bool PReLUBackward<double>(const int n, const int channels, const int dim,
+    const double* in_diff, const double* in_data, double* out_diff,
+    const double* slope_data, const int div_factor);
+
+template<typename T>
+bool PReLUParamBackward(const int n, const T* in_diff,
+    const T* in_data, T* out_diff) {
+
+	std::string kernel_name = clGetKernelName<T>("PReLUBackward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, n)
+	CL_SET_ARRAY_KERNEL_ARG(&in_diff)
+	CL_SET_ARRAY_KERNEL_ARG(&in_data)
+	CL_SET_ARRAY_KERNEL_ARG(&out_diff)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	clFinish(*queue);
+	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool PReLUParamBackward<float>(const int n, const float* in_diff, const float* in_data, float* out_diff);
+template bool PReLUParamBackward<double>(const int n, const double* in_diff, const double* in_data, double* out_diff);
+
+} // namespace OpenCL
+
+template <typename Dtype>
+void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  const Dtype* bottom_data = bottom[0]->gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
+  const int count = bottom[0]->count();
+  const int dim = bottom[0]->count(2);
+  const int channels = bottom[0]->channels();
+  const Dtype* slope_data = this->blobs_[0]->gpu_data();
+  const int div_factor = channel_shared_ ? channels : 1;
+
+  // For in-place computation
+  if (top[0] == bottom[0]) {
+    caffe_copy(count, bottom_data, bottom_memory_.mutable_gpu_data());
+  }
+
+  /*
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  PReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, channels, dim, bottom_data, top_data, slope_data, div_factor);
+  CUDA_POST_KERNEL_CHECK;
+  */
+}
+
+template <typename Dtype>
+void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  const Dtype* bottom_data = bottom[0]->gpu_data();
+  const Dtype* top_diff = top[0]->gpu_diff();
+  const int count = bottom[0]->count();
+  const int dim = bottom[0]->count(2);
+  const int channels = bottom[0]->channels();
+
+  // For in-place computation
+  if (top[0] == bottom[0]) {
+    bottom_data = bottom_memory_.gpu_data();
+  }
+
+  // Propagte to param
+  // Since to write bottom diff will affect top diff if top and bottom blobs
+  // are identical (in-place computaion), we first compute param backward to
+  // keep top_diff unchanged.
+  if (this->param_propagate_down_[0]) {
+    Dtype* slope_diff = this->blobs_[0]->mutable_gpu_diff();
+    // slope_diff is set as 0, then accumulated over batches
+    caffe_gpu_set<Dtype>(this->blobs_[0]->count(), Dtype(0), slope_diff);
+    int cdim = channels * dim;
+    Dtype dsum = 0.;
+    for (int n = 0; n < bottom[0]->num(); ++n) {
+      Dtype* temp_buff = multiplier_.mutable_gpu_diff();
+
+      /*
+      // compute element-wise diff
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
+          CAFFE_CUDA_NUM_THREADS>>>(
+          cdim, top_diff + top[0]->offset(n),
+          bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
+      CUDA_POST_KERNEL_CHECK;
+      */
+      if (channel_shared_) {
+        Dtype d;
+        caffe_gpu_dot<Dtype>(channels * dim, multiplier_.gpu_diff(),
+            multiplier_.gpu_data(), &d);
+        dsum += d;
+      } else {
+        caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
+            multiplier_.gpu_diff(), multiplier_.gpu_data(), 1.,
+            slope_diff);
+      }
+    }
+    if (channel_shared_) {
+      caffe_gpu_set(this->blobs_[0]->count(), Dtype(dsum), slope_diff);
+    }
+  }
+  // Propagate to bottom
+  if (propagate_down[0]) {
+    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+    const Dtype* slope_data = this->blobs_[0]->gpu_data();
+    int div_factor = channel_shared_ ? channels : 1;
+
+    /*
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS>>>(
+        count, channels, dim, top_diff, bottom_data, bottom_diff, slope_data,
+        div_factor);
+    CUDA_POST_KERNEL_CHECK;
+    */
+  }
+}
+
+#endif // USE_OPENCL
+
+#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 STUB_GPU(PReLULayer);
 #endif
 

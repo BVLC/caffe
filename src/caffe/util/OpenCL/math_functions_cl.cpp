@@ -136,6 +136,13 @@ void caffe_gpu_powx(const int n, const T* a, const T alpha, T* y) {
 template void caffe_gpu_powx<float>(const int n, const float* a, const float alpha, float* y);
 template void caffe_gpu_powx<double>(const int n, const double* a, const double alpha, double* y);
 
+template <typename T>
+void caffe_gpu_exp(const int n, const T* a, T* y) {
+	BOOL_CHECK(caffe::OpenCL::clexp<T>(n, a, y));
+}
+template void caffe_gpu_exp<float>(const int n, const float* a, float* y);
+template void caffe_gpu_exp<double>(const int n, const double* a, double* y);
+
 template<typename T>
 void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int m, const int n, const T alpha, const T* A, const T* x, const T beta, T* y) {
 
