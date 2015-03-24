@@ -19,6 +19,11 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     Dtype* top_data = top[i]->mutable_gpu_data();
     const Dtype* weight = this->blobs_[0]->gpu_data();
 
+    size_t workspace_limit_bytes = this->kernel_h_ *
+                                   this->kernel_w_ *
+                                   this->channels_ *
+                                   sizeof(int) + 1;
+
     // Forward through cuDNN in parallel over groups.
     for (int g = 0; g < this->group_; g++) {
       cudnnConvolutionFwdAlgo_t algo;
@@ -32,8 +37,8 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
         filter_desc_,
         conv_descs_[i],
         top_descs_[i],
-        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-        0,  // memoryLimitInBytes,
+        CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT,
+        workspace_limit_bytes,  // memoryLimitInBytes,
         &algo));
 
       // get minimum size of the workspace needed for the desired algorithm
@@ -45,13 +50,19 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
         conv_descs_[i],
         top_descs_[i],
         algo,
-        &workspaceSizeInBytes));
+        &workspaceSizeInBytes_temp));
 
       if (workspaceSizeInBytes_temp > workspaceSizeInBytes) {
         workspaceSizeInBytes = workspaceSizeInBytes_temp;
         // free the existing workspace and allocate a new (larger) one
         cudaFree(this->workspace);
-        cudaMalloc(&(this->workspace), workspaceSizeInBytes);
+        cudaError_t err = cudaMalloc(&(this->workspace), workspaceSizeInBytes);
+        if (err != cudaSuccess) {
+          // force zero memory path
+          algo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+          workspace = NULL;
+          workspaceSizeInBytes = 0;
+        }
       }
 
       // Filters.
