@@ -109,6 +109,8 @@ class Caffe {
     return *singleton_;
   }
   enum Brew { CPU, GPU };
+  static bool GPU_USE_CUDA;
+  static bool GPU_USE_OPENCL;
 
   // This random number generator facade hides boost and CUDA rng
   // implementation from one another (for cross-platform compatibility).

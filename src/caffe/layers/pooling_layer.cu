@@ -5,6 +5,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -223,12 +224,11 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     int h = (index / width) % height;
     int c = (index / width / height) % channels;
     int n = index / width / height / channels;
-    int phstart =
-        (h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;
-    int phend = min((h + pad_h) / stride_h + 1, pooled_height);
-    int pwstart =
-        (w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;
-    int pwend = min((w + pad_w) / stride_w + 1, pooled_width);
+    int phstart = (h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;
+    int phend 	= min((h + pad_h) / stride_h + 1, pooled_height);
+    int pwstart = (w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;
+    int pwend 	= min((w + pad_w) / stride_w + 1, pooled_width);
+    
     Dtype gradient = 0;
     int offset = (n * channels + c) * pooled_height * pooled_width;
     top_diff += offset;
@@ -343,6 +343,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       top_mask = top[1]->gpu_data();
     } else {
       mask = max_idx_.gpu_data();
+      snap(max_idx_.cpu_data(), max_idx_.count());
     }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(

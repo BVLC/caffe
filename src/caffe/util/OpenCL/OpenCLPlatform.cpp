@@ -254,6 +254,21 @@ OpenCLDevice* OpenCLPlatform::getDevice(cl_device_type type, unsigned int idx) {
 	return NULL;
 }
 
+int OpenCLPlatform::getNumDevices(cl_device_type type) {
+
+	switch(type) {
+	case CL_DEVICE_TYPE_CPU:
+		return numCPUDevices;
+		break;
+	case CL_DEVICE_TYPE_GPU:
+		return numGPUDevices;
+		break;
+	default:
+		LOG(ERROR) << "device type unsupported.";
+		return -1;
+	}
+}
+
 cl_platform_id OpenCLPlatform::id() {
 	return platformID;
 }

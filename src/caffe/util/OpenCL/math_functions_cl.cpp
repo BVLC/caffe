@@ -348,6 +348,15 @@ void caffe_gpu_rng_gaussian(const int n, const T mu, const T sigma, T* r) {
 template void caffe_gpu_rng_gaussian<float>(const int n, const float mu, const float sigma, float* r);
 template void caffe_gpu_rng_gaussian<double>(const int n, const double mu, const double sigma, double* r);
 
+template<typename T1, typename T2>
+void caffe_gpu_rng_bernoulli(const int n, const T1 p, T2* r) {
+	BOOL_CHECK( caffe::OpenCL::cl_caffe_gpu_rng_bernoulli(n, p, r) );
+}
+template void caffe_gpu_rng_bernoulli<float, int>(const int n, const float p, int* r);
+template void caffe_gpu_rng_bernoulli<double, int>(const int n, const double p, int* r);
+template void caffe_gpu_rng_bernoulli<float, unsigned int>(const int n, const float p, unsigned int* r);
+template void caffe_gpu_rng_bernoulli<double, unsigned int>(const int n, const double p, unsigned int* r);
+
 }  // namespace caffe
 
 #endif // USE_OPENCL

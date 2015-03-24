@@ -1902,6 +1902,7 @@ bool cl_caffe_gpu_rng_uniform(const int n, unsigned int* r) {
 	caffe_rng_uniform(n, (double) 0, (double) UINT_MAX, fBuffer);
 	for ( int i = 0; i < n; i++ ) {
 		buffer[i] = (unsigned int) fBuffer[i];
+		printf("buffer[%3d] = %u\n", i, buffer[i]);
 	}
 
 	BOOL_CHECK( caffe::OpenCL::clMemcpy(r, buffer, bytes, COPY_CPU_TO_GPU) );
@@ -1952,6 +1953,27 @@ bool cl_caffe_gpu_rng_gaussian(const int n, const T mu, const T sigma, T* r) {
 template bool cl_caffe_gpu_rng_gaussian<float>(const int n, const float mu, const float sigma, float* r);
 template bool cl_caffe_gpu_rng_gaussian<double>(const int n, const double mu, const double sigma, double* r);
 
+template<typename T1, typename T2>
+bool cl_caffe_gpu_rng_bernoulli(const int n, const T1 p, T2* r) {
+
+	size_t	bytes = n*sizeof(T2);
+	T2* buffer = (T2*) malloc(bytes);
+	if ( buffer == NULL ) {
+		LOG(ERROR)<<"failed to allocate cpu memory for buffer of "<<bytes<<" Bytes.";
+		return false;
+	}
+
+	caffe_rng_bernoulli(n, p, buffer);
+	BOOL_CHECK( caffe::OpenCL::clMemcpy(r, buffer, bytes, COPY_CPU_TO_GPU) );
+	free(buffer);
+	LOG(WARNING)<<"caffe_gpu_rng_bernoulli() was executed on the CPU and random array copied back to GPU.";
+
+	return true;
+}
+template bool cl_caffe_gpu_rng_bernoulli<float, int>(const int n, const float p, int* r);
+template bool cl_caffe_gpu_rng_bernoulli<double, int>(const int n, const double p, int* r);
+template bool cl_caffe_gpu_rng_bernoulli<float, unsigned int>(const int n, const float p, unsigned int* r);
+template bool cl_caffe_gpu_rng_bernoulli<double, unsigned int>(const int n, const double p, unsigned int* r);
 
 } // namespace OpenCL
 

@@ -7,6 +7,9 @@
 
 namespace caffe {
 
+bool caffe::Caffe::GPU_USE_CUDA 	= false;
+bool caffe::Caffe::GPU_USE_OPENCL = false;
+
 shared_ptr<Caffe> Caffe::singleton_;
 
 // random seeding
@@ -42,7 +45,10 @@ void GlobalInit(int* pargc, char*** pargv) {
 #if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 
 Caffe::Caffe()
-    : random_generator_(), mode_(Caffe::CPU) { }
+    : random_generator_(), mode_(Caffe::CPU) {
+	GPU_USE_CUDA   = false;
+	GPU_USE_OPENCL = false;
+}
 
 Caffe::~Caffe() { }
 
@@ -101,6 +107,9 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
+	GPU_USE_CUDA   = true;
+	GPU_USE_OPENCL = false;
+
 }
 
 Caffe::~Caffe() {
@@ -274,6 +283,8 @@ const char* curandGetErrorString(curandStatus_t error) {
 
 Caffe::Caffe() : random_generator_(), mode_(Caffe::CPU) {
 	caffe::OpenCL::init();
+	GPU_USE_CUDA   = false;
+	GPU_USE_OPENCL = true;
 }
 
 Caffe::~Caffe() {

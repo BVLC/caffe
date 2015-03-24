@@ -10,6 +10,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -36,6 +37,45 @@ class MaxPoolingDropoutTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+  void MaxPoolingDropoutLayerTestSetup(int num_images, int num_channels, int im_width, int im_height) {
+
+	  blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+	  blob_bottom_vec_.clear();
+	  blob_bottom_vec_.push_back(blob_bottom_);
+  }
+
+  void MaxPoolingDropoutLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+	  this->MaxPoolingDropoutLayerTestSetup(num_images, num_channels, im_width, im_height);
+
+	  typedef typename TypeParam::Dtype Dtype;
+	  LayerParameter layer_param;
+	  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+	  pooling_param->set_kernel_size(3);
+	  pooling_param->set_stride(2);
+	  PoolingLayer<Dtype> layer(layer_param);
+	  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+	  record r;
+	  r.type 			= std::string(typeid(Dtype).name());
+	  r.num_images 		= num_images;
+	  r.num_channels 	= num_channels;
+	  r.img_width		= im_width;
+	  r.img_height		= im_height;
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+			blob_bottom_->mutable_gpu_data();
+			blob_bottom_->mutable_gpu_diff();
+			blob_top_->mutable_gpu_data();
+			blob_top_->mutable_gpu_diff();
+#endif
+
+	  BENCH(r, {
+			  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	  });
+  }
+
 };
 
 TYPED_TEST_CASE(MaxPoolingDropoutTest, TestDtypesAndDevices);
@@ -96,32 +136,41 @@ TYPED_TEST(MaxPoolingDropoutTest, TestBackward) {
   PoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
   for (int i = 0; i < this->blob_top_->count(); ++i) {
     this->blob_top_->mutable_cpu_diff()[i] = 1.;
   }
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
   layer.Backward(this->blob_top_vec_, propagate_down,
                  this->blob_bottom_vec_);
+
   const Dtype* bottom_diff = this->blob_bottom_->cpu_diff();
   Dtype sum = 0.;
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     sum += bottom_diff[i];
   }
   EXPECT_EQ(sum, this->blob_top_->count());
+
   // Dropout in-place
   DropoutLayer<Dtype> dropout_layer(layer_param);
   dropout_layer.SetUp(this->blob_top_vec_, this->blob_top_vec_);
   dropout_layer.Forward(this->blob_top_vec_, this->blob_top_vec_);
-  dropout_layer.Backward(this->blob_top_vec_, propagate_down,
-                         this->blob_top_vec_);
-  layer.Backward(this->blob_top_vec_, propagate_down,
-                 this->blob_bottom_vec_);
+  dropout_layer.Backward(this->blob_top_vec_, propagate_down, this->blob_top_vec_);
+  layer.Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
+
   Dtype sum_with_dropout = 0.;
   bottom_diff = this->blob_bottom_->cpu_diff();
   for (int i = 0; i < this->blob_bottom_->count(); ++i) {
     sum_with_dropout += bottom_diff[i];
   }
   EXPECT_GE(sum_with_dropout, sum);
+}
+
+TYPED_TEST(MaxPoolingDropoutTest, TestForwardPerformance) {
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=64; i*=2 ) {
+		this->MaxPoolingDropoutLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
 }
 
 }  // namespace caffe

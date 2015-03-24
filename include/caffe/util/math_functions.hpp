@@ -345,6 +345,8 @@ void caffe_gpu_rng_uniform(const int n, const T a, const T b, T* r);
 template<typename T>
 void caffe_gpu_rng_gaussian(const int n, const T mu, const T sigma, T* r);
 
+template <typename T1, typename T2>
+void caffe_gpu_rng_bernoulli(const int n, const T1 p, T2* r);
 
 #endif  // USE_OPENCL
 

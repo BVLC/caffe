@@ -252,7 +252,7 @@ void LRNLayer<Dtype>::WithinChannelBackward(
 namespace OpenCL {
 
 template<typename T>
-bool clLRNFillScale(const int nthreads, const T* in, const int num, const int channels, const int height, const int width, const int size2, const T alpha_over_size, T* scale) {
+bool clLRNFillScale(const int nthreads, const T* in, const int num, const int channels, const int height, const int width, const int size2, const T alpha_over_size, const T k, T* scale) {
 
 	std::string kernel_name = clGetKernelName<T>("LRNFillScale");
 
@@ -276,6 +276,7 @@ bool clLRNFillScale(const int nthreads, const T* in, const int num, const int ch
 	CL_SET_TYPE_KERNEL_ARG(int, width)
 	CL_SET_TYPE_KERNEL_ARG(int, size2)
 	CL_SET_TYPE_KERNEL_ARG(T, alpha_over_size)
+	CL_SET_TYPE_KERNEL_ARG(T, k)
 	CL_SET_ARRAY_KERNEL_ARG(&scale)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
@@ -293,8 +294,8 @@ bool clLRNFillScale(const int nthreads, const T* in, const int num, const int ch
 
 	return true;
 }
-template bool clLRNFillScale<float>(const int nthreads, const float* in, const int num, const int channels, const int height, const int width, const int size, const float alpha_over_size, float* scale);
-template bool clLRNFillScale<double>(const int nthreads, const double* in, const int num, const int channels, const int height, const int width, const int size, const double alpha_over_size, double* scale);
+template bool clLRNFillScale<float>(const int nthreads, const float* in, const int num, const int channels, const int height, const int width, const int size, const float alpha_over_size, const float k, float* scale);
+template bool clLRNFillScale<double>(const int nthreads, const double* in, const int num, const int channels, const int height, const int width, const int size, const double alpha_over_size, const double k, double* scale);
 
 template<typename T>
 bool clLRNComputeOutput(const int nthreads, const T* in, const T* scale, const T negative_beta, T* out) {
@@ -390,73 +391,81 @@ template bool clLRNComputeDiff<double>(const int nthreads, const double* bottom_
 
 template<typename Dtype>
 void LRNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+
 	switch (this->layer_param_.lrn_param().norm_region()) {
-	case LRNParameter_NormRegion_ACROSS_CHANNELS:
-		CrossChannelForward_gpu(bottom, top);
-		break;
-	case LRNParameter_NormRegion_WITHIN_CHANNEL:
-		WithinChannelForward(bottom, top);
-		break;
-	default:
-		LOG(FATAL)<< "Unknown normalization region.";
+	  case LRNParameter_NormRegion_ACROSS_CHANNELS:
+	    CrossChannelForward_gpu(bottom, top);
+	    break;
+	  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+	    WithinChannelForward(bottom, top);
+	    break;
+	  default:
+	    LOG(FATAL) << "Unknown normalization region.";
 	}
 }
 
 template<typename Dtype>
 void LRNLayer<Dtype>::CrossChannelForward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-	// First, compute scale
-	const Dtype* bottom_data = bottom[0]->gpu_data();
-	Dtype* top_data = (top)[0]->mutable_gpu_data();
-	Dtype* scale_data = scale_.mutable_gpu_data();
-	// We will launch one kernel for each pixel location, and have the kernel
-	// go through all the channels.
-	int n_threads = num_ * height_ * width_;
 
-	/*
-	// NOLINT_NEXT_LINE(whitespace/operators)
-	LRNFillScale<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
-			n_threads, bottom_data, num_, channels_, height_, width_, size_,
-			alpha_ / size_, scale_data);
-	CUDA_POST_KERNEL_CHECK;
-	n_threads = bottom[0]->count();
-	// NOLINT_NEXT_LINE(whitespace/operators)
-	LRNComputeOutput<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
-			n_threads, bottom_data, scale_data, -beta_, top_data);
-	CUDA_POST_KERNEL_CHECK;
+	const Dtype* bottom_data = bottom[0]->gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
+  Dtype* scale_data = scale_.mutable_gpu_data();
+  // We will launch one kernel for each pixel location, and have the kernel
+  // go through all the channels.
+  int n_threads = num_ * height_ * width_;
+
+  /*
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  LRNFillScale<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
+      n_threads, bottom_data, num_, channels_, height_, width_, size_,
+      alpha_ / size_, k_, scale_data);
+  CUDA_POST_KERNEL_CHECK;
+  n_threads = bottom[0]->count();
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  LRNComputeOutput<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
+      n_threads, bottom_data, scale_data, -beta_, top_data);
+  CUDA_POST_KERNEL_CHECK;
 	*/
 
-	BOOL_CHECK( caffe::OpenCL::clLRNFillScale(n_threads, bottom_data, num_, channels_, height_, width_, size_, alpha_ / size_, scale_data) );
+	BOOL_CHECK( caffe::OpenCL::clLRNFillScale(n_threads, bottom_data, num_, channels_, height_, width_, size_, alpha_ / size_, k_, scale_data) );
 	n_threads = bottom[0]->count();
 	BOOL_CHECK( caffe::OpenCL::clLRNComputeOutput(n_threads, bottom_data, scale_data, -beta_, top_data) );
 }
 
 template<typename Dtype>
 void LRNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-	switch (this->layer_param_.lrn_param().norm_region()) {
-	case LRNParameter_NormRegion_ACROSS_CHANNELS:
-		CrossChannelBackward_gpu(top, propagate_down, bottom);
-		break;
-	case LRNParameter_NormRegion_WITHIN_CHANNEL:
-		WithinChannelBackward(top, propagate_down, bottom);
-		break;
-	default:
-		LOG(FATAL)<< "Unknown normalization region.";
-	}
+  switch (this->layer_param_.lrn_param().norm_region()) {
+  case LRNParameter_NormRegion_ACROSS_CHANNELS:
+    CrossChannelBackward_gpu(top, propagate_down, bottom);
+    break;
+  case LRNParameter_NormRegion_WITHIN_CHANNEL:
+    WithinChannelBackward(top, propagate_down, bottom);
+    break;
+  default:
+    LOG(FATAL) << "Unknown normalization region.";
+  }
 }
 
 template<typename Dtype>
 void LRNLayer<Dtype>::CrossChannelBackward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-	int n_threads = num_ * height_ * width_;
 
-	/*
-	// NOLINT_NEXT_LINE(whitespace/operators)
-LRNComputeDiff<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
-		n_threads, (*bottom)[0]->gpu_data(), top[0]->gpu_data(),
-		scale_.gpu_data(), top[0]->gpu_diff(), num_, channels_, height_, width_,
-		size_, -beta_, Dtype(2. * alpha_ * beta_ / size_),
-		(*bottom)[0]->mutable_gpu_diff());
-		*/
-	BOOL_CHECK( caffe::OpenCL::clLRNComputeDiff(n_threads, (bottom)[0]->gpu_data(), top[0]->gpu_data(), scale_.gpu_data(), top[0]->gpu_diff(), num_, channels_, height_, width_, size_, -beta_, Dtype(2. * alpha_ * beta_ / size_), (bottom)[0]->mutable_gpu_diff()) );
+  int n_threads = num_ * height_ * width_;
+  /*
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  LRNComputeDiff<<<CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS>>>(
+      n_threads, bottom[0]->gpu_data(), top[0]->gpu_data(),
+      scale_.gpu_data(), top[0]->gpu_diff(), num_, channels_, height_, width_,
+      size_, -beta_, Dtype(2. * alpha_ * beta_ / size_),
+      bottom[0]->mutable_gpu_diff());
+	*/
+	BOOL_CHECK(
+			caffe::OpenCL::clLRNComputeDiff(
+					n_threads, bottom[0]->gpu_data(), top[0]->gpu_data(),
+		      scale_.gpu_data(), top[0]->gpu_diff(), num_, channels_, height_, width_,
+		      size_, -beta_, Dtype(2. * alpha_ * beta_ / size_),
+		      bottom[0]->mutable_gpu_diff()
+			)
+	);
 }
 
 #endif // USE_OPENCL

@@ -175,6 +175,7 @@ namespace OpenCL {
 	bool cl_caffe_gpu_rng_uniform(const int n, unsigned int* r);
 	template<typename T> bool cl_caffe_gpu_rng_uniform(const int n, const T a, const T b, T* r);
 	template<typename T> bool cl_caffe_gpu_rng_gaussian(const int n, const T mu, const T sigma, T* r);
+	template<typename T1, typename T2> bool cl_caffe_gpu_rng_bernoulli(const int n, const T1 p, T2* r);
 
 	const char* what(cl_int value);
 

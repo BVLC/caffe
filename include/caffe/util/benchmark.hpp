@@ -132,17 +132,19 @@ class CPUTimer : public Timer {
 
 #endif // USE_OPENCL
 
+#define SNAP_LENGTH 36
 #define snap(array, length) \
 	{ \
 		char buffer[1024];\
 		std::cout<<"snap[" << length << "] = ";\
-		int limit_length  = length < 10 ? length : 10;\
+		int limit_length  = length < SNAP_LENGTH ? length : SNAP_LENGTH;\
 		for( int i = 0; i < limit_length; i++ ) {\
 			sprintf(buffer, "%6.4f ", (array)[i]);\
 			std::cout<<buffer;\
 		}\
 		if ( limit_length < length ) {\
-			std::cout<<" ...";\
+			sprintf(buffer, "%6.4f ", (array)[length-1]);\
+			std::cout<<" ... "<<buffer;\
 		}\
 		std::cout<<std::endl;\
 	}\
@@ -151,8 +153,8 @@ class CPUTimer : public Timer {
 	{ \
 		char buffer[1024];\
 		std::cout<<name<<"[" << width << " x " << height << "] = " <<std::endl;\
-		int limit_width  = width < 10 ? width : 10;\
-		int limit_height = height < 10 ? height : 10;\
+		int limit_width  = width < SNAP_LENGTH ? width : SNAP_LENGTH;\
+		int limit_height = height < SNAP_LENGTH ? height : SNAP_LENGTH;\
 		for( int i = 0; i < limit_height; i++ ) {\
 			for( int j = 0; j < limit_width; j++ ) {\
 				sprintf(buffer, "%4.1f ", (array)[i*width+j]);\

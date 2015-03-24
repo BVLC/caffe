@@ -7,7 +7,7 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
-
+#include "caffe/util/benchmark.hpp"
 #if defined(USE_OPENCL)
 #include <caffe/util/OpenCL/OpenCLDevice.hpp>
 #include <caffe/util/OpenCL/dropout_layer.hpp>
@@ -100,8 +100,8 @@ bool clDropoutLayerForward(const int count, const T* bottom_data, const unsigned
 	CL_SET_TYPE_KERNEL_ARG(T, scale)
 	CL_SET_ARRAY_KERNEL_ARG(&top_data)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t global = count;//CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
@@ -142,8 +142,8 @@ bool clDropoutLayerBackward(const int count, const T* top_diff, const unsigned i
 	CL_SET_TYPE_KERNEL_ARG(T, scale)
 	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t global = count;//CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
+	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
@@ -165,49 +165,50 @@ template bool clDropoutLayerBackward<double>(const int count, const double* top_
 
 template<typename Dtype>
 void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-	const Dtype* bottom_data = bottom[0]->gpu_data();
-	Dtype* top_data = (top)[0]->mutable_gpu_data();
-	const int count = bottom[0]->count();
 
-	if ( this->phase_ == TRAIN) {
-		/*
-		unsigned int* mask = static_cast<unsigned int*>(rand_vec_.mutable_gpu_data());
-		caffe_gpu_rng_uniform(count, mask);
-		// set thresholds
-		// NOLINT_NEXT_LINE(whitespace/operators)
-		DropoutForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, bottom_data, mask, uint_thres_, scale_, top_data);
-		CUDA_POST_KERNEL_CHECK;
-		*/
+  const Dtype* bottom_data = bottom[0]->gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
+  const int count = bottom[0]->count();
+  if (this->phase_ == TRAIN) {
+    unsigned int* mask = static_cast<unsigned int*>(rand_vec_.mutable_gpu_data());
+    caffe_gpu_rng_bernoulli(count, 1. - threshold_, mask);
 
-		unsigned int* mask = rand_vec_.mutable_cpu_data();
-		const int count = bottom[0]->count();
-		// Create random numbers
-		caffe_rng_bernoulli(count, 1. - threshold_, mask);
-		const unsigned int* mask_gpu = rand_vec_.gpu_data();
-		BOOL_CHECK( caffe::OpenCL::clDropoutLayerForward(count, bottom_data, mask_gpu, 0, scale_, top_data) );
-	} else {
-		caffe_copy(count, bottom_data, top_data);
-	}
+    //caffe_gpu_rng_uniform(count, mask);
+
+    /*
+    // set thresholds
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    DropoutForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+        count, bottom_data, mask, uint_thres_, scale_, top_data);
+    CUDA_POST_KERNEL_CHECK;
+    */
+    BOOL_CHECK( caffe::OpenCL::clDropoutLayerForward(count, bottom_data, mask, uint_thres_, scale_, top_data));
+  } else {
+    caffe_copy(count, bottom_data, top_data);
+  }
 }
 
 template<typename Dtype>
 void DropoutLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-	if (propagate_down[0]) {
-		const Dtype* top_diff = top[0]->gpu_diff();
-		Dtype* bottom_diff = (bottom)[0]->mutable_gpu_diff();
-		if ( this->phase_ == TRAIN) {
-			const unsigned int* mask = static_cast<const unsigned int*>(rand_vec_.gpu_data());
-			const int count = (bottom)[0]->count();
-			// NOLINT_NEXT_LINE(whitespace/operators)
-			/*
-			DropoutBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, top_diff, mask, uint_thres_, scale_, bottom_diff);
-			CUDA_POST_KERNEL_CHECK;
-			*/
-			BOOL_CHECK( caffe::OpenCL::clDropoutLayerBackward(count, top_diff, mask, 0, scale_, bottom_diff) );
-		} else {
-			caffe_copy(top[0]->count(), top_diff, bottom_diff);
-		}
-	}
+
+  if (propagate_down[0]) {
+    const Dtype* top_diff = top[0]->gpu_diff();
+    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+    if (this->phase_ == TRAIN) {
+      const unsigned int* mask = static_cast<const unsigned int*>(rand_vec_.gpu_data());
+      const int count = bottom[0]->count();
+      /*
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      DropoutBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
+        CAFFE_CUDA_NUM_THREADS>>>(
+          count, top_diff, mask, uint_thres_, scale_, bottom_diff);
+      CUDA_POST_KERNEL_CHECK;
+      */
+			BOOL_CHECK( caffe::OpenCL::clDropoutLayerBackward(count, top_diff, mask, uint_thres_, scale_, bottom_diff) );
+    } else {
+      caffe_copy(top[0]->count(), top_diff, bottom_diff);
+    }
+  }
 }
 
 #endif // USE_OPENCL
