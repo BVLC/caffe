@@ -9,6 +9,9 @@ TOOLS=build/tools
 TRAIN_DATA_ROOT=/path/to/imagenet/train/
 VAL_DATA_ROOT=/path/to/imagenet/val/
 
+# leveldb|lmdb|datumfile
+DB_TYPE=datumfile
+
 # Set RESIZE=true to resize the images to 256x256. Leave as false if images have
 # already been resized using another tool.
 RESIZE=false
@@ -34,24 +37,26 @@ if [ ! -d "$VAL_DATA_ROOT" ]; then
   exit 1
 fi
 
-echo "Creating train lmdb..."
+echo "Creating train $DB_TYPE ..."
 
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
+    --backend=$DB_TYPE \
     $TRAIN_DATA_ROOT \
     $DATA/train.txt \
-    $EXAMPLE/ilsvrc12_train_lmdb
+    $EXAMPLE/ilsvrc12_train_$DB_TYPE
 
-echo "Creating val lmdb..."
+echo "Creating val $DB_TYPE ..."
 
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
+    --backend=$DB_TYPE \
     $VAL_DATA_ROOT \
     $DATA/val.txt \
-    $EXAMPLE/ilsvrc12_val_lmdb
+    $EXAMPLE/ilsvrc12_val_$DB_TYPE
 
 echo "Done."
