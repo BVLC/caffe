@@ -23,6 +23,16 @@ void RNNLayer<Dtype>::RecurrentOutputBlobNames(vector<string>* names) const {
 }
 
 template <typename Dtype>
+void RNNLayer<Dtype>::RecurrentInputShapes(vector<BlobShape>* shapes) const {
+  const int num_output = this->layer_param_.recurrent_param().num_output();
+  shapes->resize(1);
+  (*shapes)[0].Clear();
+  (*shapes)[0].add_dim(1);  // a single timestep
+  (*shapes)[0].add_dim(this->N_);
+  (*shapes)[0].add_dim(num_output);
+}
+
+template <typename Dtype>
 void RNNLayer<Dtype>::OutputBlobNames(vector<string>* names) const {
   names->resize(1);
   (*names)[0] = "o";
@@ -64,12 +74,11 @@ void RNNLayer<Dtype>::FillUnrolledNet(NetParameter* net_param) const {
   slice_param.set_type("Slice");
   slice_param.mutable_slice_param()->set_axis(0);
 
-  BlobShape input_shape;
-  input_shape.add_dim(1);  // h_0 is a single timestep
-  input_shape.add_dim(this->N_);
-  input_shape.add_dim(num_output);
+  vector<BlobShape> input_shapes;
+  RecurrentInputShapes(&input_shapes);
+  CHECK_EQ(1, input_shapes.size());
   net_param->add_input("h_0");
-  net_param->add_input_shape()->CopyFrom(input_shape);
+  net_param->add_input_shape()->CopyFrom(input_shapes[0]);
 
   LayerParameter* cont_slice_param = net_param->add_layer();
   cont_slice_param->CopyFrom(slice_param);

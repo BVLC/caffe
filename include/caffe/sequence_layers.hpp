@@ -57,6 +57,13 @@ class RecurrentLayer : public Layer<Dtype> {
   virtual void RecurrentInputBlobNames(vector<string>* names) const = 0;
 
   /**
+   * @brief Fills shapes with the shapes of the recurrent input Blob&s.
+   *        Subclasses should define this -- see RNNLayer and LSTMLayer
+   *        for examples.
+   */
+  virtual void RecurrentInputShapes(vector<BlobShape>* shapes) const = 0;
+
+  /**
    * @brief Fills names with the names of the Tth timestep recurrent output
    *        Blob&s.  Subclasses should define this -- see RNNLayer and LSTMLayer
    *        for examples.
@@ -190,6 +197,7 @@ class LSTMLayer : public RecurrentLayer<Dtype> {
   virtual void FillUnrolledNet(NetParameter* net_param) const;
   virtual void RecurrentInputBlobNames(vector<string>* names) const;
   virtual void RecurrentOutputBlobNames(vector<string>* names) const;
+  virtual void RecurrentInputShapes(vector<BlobShape>* shapes) const;
   virtual void OutputBlobNames(vector<string>* names) const;
 };
 
@@ -304,6 +312,7 @@ class RNNLayer : public RecurrentLayer<Dtype> {
   virtual void FillUnrolledNet(NetParameter* net_param) const;
   virtual void RecurrentInputBlobNames(vector<string>* names) const;
   virtual void RecurrentOutputBlobNames(vector<string>* names) const;
+  virtual void RecurrentInputShapes(vector<BlobShape>* shapes) const;
   virtual void OutputBlobNames(vector<string>* names) const;
 };
 
