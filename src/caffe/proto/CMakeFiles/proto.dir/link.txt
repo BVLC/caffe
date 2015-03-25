@@ -1,2 +1,0 @@
-/usr/bin/ar cr libproto.a  CMakeFiles/proto.dir/caffe_pretty_print.pb.cc.o CMakeFiles/proto.dir/caffe.pb.cc.o
-/usr/bin/ranlib libproto.a

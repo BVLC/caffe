@@ -1,1 +1,0 @@
-/home/xkcd/Documents/external_code/caffe-master/examples/images/fish-bike.jpg

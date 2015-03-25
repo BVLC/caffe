@@ -246,11 +246,13 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   bool handles_setup_;
   cudnnHandle_t* handle_;
   cudaStream_t*  stream_;
-  vector<cudnnTensor4dDescriptor_t> bottom_descs_, top_descs_;
-  cudnnTensor4dDescriptor_t    bias_desc_;
+  vector<cudnnTensorDescriptor_t> bottom_descs_, top_descs_;
+  cudnnTensorDescriptor_t    bias_desc_;
   cudnnFilterDescriptor_t      filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
   int bottom_offset_, top_offset_, weight_offset_, bias_offset_;
+  size_t workspaceSizeInBytes;
+  void *workspace;
 };
 #endif
 
@@ -445,155 +447,11 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
 
   bool handles_setup_;
   cudnnHandle_t             handle_;
-  cudnnTensor4dDescriptor_t bottom_desc_, top_desc_;
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
   cudnnPoolingDescriptor_t  pooling_desc_;
   cudnnPoolingMode_t        mode_;
 };
 #endif
-
-/**
- * @brief Pools at multiple scales.
- */
-template <typename Dtype>
-class SPPLayer : public Layer<Dtype> {
- public:
-  explicit SPPLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
-  virtual inline const char* type() const { return "SPP"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int MaxBottomBlobs() const { return 2; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
-  int kernel_depth_;
-  int output_size_;
-  int height_, width_;
-  int image_w_, image_h_;
-  int channels_;
-  Blob<int> max_idx_;
-};
-
-/**
- * @brief Pools at multiple scales.
- */
-template <typename Dtype>
-class ResampleLayer : public Layer<Dtype> {
- public:
-  explicit ResampleLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
-  virtual inline const char* type() const { return "Resample"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
-  virtual inline int MaxBottomBlobs() const { return 2; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
-  int num_output_;
-  int height_, width_;
-  int image_w_, image_h_;
-  int channels_;
-  Blob<int> index_mask_;
-};
-
-/**
- * @brief Reshapes a layer to a new size with an equivalent number of params.
- */
-template <typename Dtype>
-class ReshapeLayer : public Layer<Dtype> {
- public:
-  explicit ReshapeLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
-  virtual inline const char* type() const { return "Reshape"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
-  int new_channels_;
-  int new_height_, new_width_;
-  int height_, width_;
-  int channels_;
-  int num_;
-};
-
-
-/**
- * @brief Augments data randomly but synchronized.
- */
-template <typename Dtype>
-class AugmentLayer : public Layer<Dtype> {
- public:
-  explicit AugmentLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
-  virtual inline const char* type() const { return "Augment"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
-  bool mirror_;
-  int crop_width_, crop_height_;
-  int label_crop_width_, label_crop_height_;
-  int input_channels_, input_height_, input_width_;
-  int label_channels_, label_height_, label_width_;
-  Blob<float> mirror_image_vec_, h_shift_vec_, w_shift_vec_;
-  int num_;
-};
 
 }  // namespace caffe
 
