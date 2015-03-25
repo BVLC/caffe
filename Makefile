@@ -510,7 +510,8 @@ $(BUILD_DIR)/.linked:
 #	@ touch $@
 
 $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
-	@ mkdir -p $@
+	@ echo $@
+	@ mkdir -p $(ALL_BUILD_DIRS)
 
 $(NAME): $(PROTO_OBJS) $(OBJS) | $(LIB_BUILD_DIR)
 	$(CXX) -shared -o $@ $(OBJS) $(LINKFLAGS) $(LDFLAGS)

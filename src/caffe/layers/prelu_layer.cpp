@@ -188,7 +188,7 @@ template bool clPReLUForward<double>(const int n, const int channels, const int 
     const int div_factor);
 
 template<typename T>
-bool PReLUBackward(const int n, const int channels, const int dim,
+bool clPReLUBackward(const int n, const int channels, const int dim,
     const T* in_diff, const T* in_data, T* out_diff,
     const T* slope_data, const int div_factor) {
 
@@ -230,18 +230,18 @@ bool PReLUBackward(const int n, const int channels, const int dim,
 
 	return true;
 }
-template bool PReLUBackward<float>(const int n, const int channels, const int dim,
+template bool clPReLUBackward<float>(const int n, const int channels, const int dim,
     const float* in_diff, const float* in_data, float* out_diff,
     const float* slope_data, const int div_factor);
-template bool PReLUBackward<double>(const int n, const int channels, const int dim,
+template bool clPReLUBackward<double>(const int n, const int channels, const int dim,
     const double* in_diff, const double* in_data, double* out_diff,
     const double* slope_data, const int div_factor);
 
 template<typename T>
-bool PReLUParamBackward(const int n, const T* in_diff,
+bool clPReLUParamBackward(const int n, const T* in_diff,
     const T* in_data, T* out_diff) {
 
-	std::string kernel_name = clGetKernelName<T>("PReLUBackward");
+	std::string kernel_name = clGetKernelName<T>("PReLUParamBackward");
 
 	queue = gpu->getQueue();
 	if ( ! queue ) {
@@ -275,8 +275,8 @@ bool PReLUParamBackward(const int n, const T* in_diff,
 
 	return true;
 }
-template bool PReLUParamBackward<float>(const int n, const float* in_diff, const float* in_data, float* out_diff);
-template bool PReLUParamBackward<double>(const int n, const double* in_diff, const double* in_data, double* out_diff);
+template bool clPReLUParamBackward<float>(const int n, const float* in_diff, const float* in_data, float* out_diff);
+template bool clPReLUParamBackward<double>(const int n, const double* in_diff, const double* in_data, double* out_diff);
 
 } // namespace OpenCL
 
@@ -302,6 +302,7 @@ void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       count, channels, dim, bottom_data, top_data, slope_data, div_factor);
   CUDA_POST_KERNEL_CHECK;
   */
+  BOOL_CHECK(caffe::OpenCL::clPReLUForward(count, channels, dim, bottom_data, top_data, slope_data, div_factor));
 }
 
 template <typename Dtype>
@@ -341,6 +342,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
       CUDA_POST_KERNEL_CHECK;
       */
+      BOOL_CHECK(caffe::OpenCL::clPReLUParamBackward(cdim, top_diff + top[0]->offset(n), bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff()));
       if (channel_shared_) {
         Dtype d;
         caffe_gpu_dot<Dtype>(channels * dim, multiplier_.gpu_diff(),
@@ -370,6 +372,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         div_factor);
     CUDA_POST_KERNEL_CHECK;
     */
+    BOOL_CHECK(caffe::OpenCL::clPReLUBackward(count, channels, dim, top_diff, bottom_data, bottom_diff, slope_data, div_factor));
   }
 }
 

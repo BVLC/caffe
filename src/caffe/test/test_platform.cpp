@@ -1,5 +1,3 @@
-#ifndef CPU_ONLY
-
 #include <cstdio>
 #include <cstdlib>
 
@@ -10,11 +8,15 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
 
 class PlatformTest : public ::testing::Test {};
 
 TEST_F(PlatformTest, TestInitialization) {
+
+#ifdef USE_CUDA
   printf("Major revision number:         %d\n",  CAFFE_TEST_CUDA_PROP.major);
   printf("Minor revision number:         %d\n",  CAFFE_TEST_CUDA_PROP.minor);
   printf("Name:                          %s\n",  CAFFE_TEST_CUDA_PROP.name);
@@ -50,8 +52,12 @@ TEST_F(PlatformTest, TestInitialization) {
   printf("Unified virtual addressing:    %s\n",
          (CAFFE_TEST_CUDA_PROP.unifiedAddressing ? "Yes" : "No"));
   EXPECT_TRUE(true);
+#endif
+
+#ifdef USE_OPENCL
+  EXPECT_TRUE( caffe::OpenCL::init() );
+#endif
 }
 
 }  // namespace caffe
 
-#endif  // CPU_ONLY

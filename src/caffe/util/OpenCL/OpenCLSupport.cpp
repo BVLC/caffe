@@ -284,6 +284,7 @@ bool init() {
 	cl_files.push_back("src/caffe/layers/OpenCL/eltwise_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/lrn_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/softmax_layer.cl");
+	cl_files.push_back("src/caffe/layers/OpenCL/softmax_loss_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/threshold_layer.cl");
 	cl_files.push_back("src/caffe/layers/OpenCL/mvn_layer.cl");
 
@@ -894,8 +895,9 @@ template bool clSetKernelTypeArg<const int>(const int variable, unsigned int& id
 template bool clSetKernelTypeArg<unsigned int>(unsigned int variable, unsigned int& idx);
 template bool clSetKernelTypeArg<const unsigned int>(const unsigned int variable, unsigned int& idx);
 template bool clSetKernelTypeArg<float>(float variable, unsigned int& idx);
+template bool clSetKernelTypeArg<const float>(const float variable, unsigned int& idx);
 template bool clSetKernelTypeArg<double>(double variable, unsigned int& idx);
-
+template bool clSetKernelTypeArg<const double>(const double variable, unsigned int& idx);
 
 template<typename T>
 bool clBLASasum(const int N, const void* array_virtual, T* y) {

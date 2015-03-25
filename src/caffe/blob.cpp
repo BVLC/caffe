@@ -256,7 +256,7 @@ Dtype Blob<Dtype>::sumsq_data() const {
     break;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
+#if defined(USE_CUDA) || defined(USE_OPENCL)
     data = gpu_data();
     caffe_gpu_dot(count_, data, data, &sumsq);
 #else
@@ -293,7 +293,7 @@ Dtype Blob<Dtype>::sumsq_diff() const {
     break;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
+#if defined(USE_CUDA) || defined(USE_OPENCL)
     diff = gpu_diff();
     caffe_gpu_dot(count_, diff, diff, &sumsq);
     break;
@@ -327,7 +327,7 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
     return;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
+#if defined(USE_CUDA) || defined(USE_OPENCL)
     data = mutable_gpu_data();
     caffe_gpu_scal(count_, scale_factor, data);
     return;
@@ -360,7 +360,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
     return;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
+#if defined(USE_CUDA) || defined(USE_OPENCL)
     diff = mutable_gpu_diff();
     caffe_gpu_scal(count_, scale_factor, diff);
     return;

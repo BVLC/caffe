@@ -40,7 +40,7 @@ template <class T> __kernel void MaxPoolForward(const int nthreads, global T* bo
 			}
 		}
 		top_data[gidx] = maxval;
-		if ( mask != NULL ) {
+		if ( mask ) {
 			mask[gidx] = maxidx;
 		} else {
 			top_mask[gidx] = maxidx;

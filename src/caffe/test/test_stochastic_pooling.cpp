@@ -60,6 +60,7 @@ TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
   EXPECT_EQ(this->blob_top_->width(), 2);
 }
 
+#if defined(USE_CUDA) || defined(USE_OPENCL)
 TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
   Caffe::set_mode(Caffe::GPU);
   LayerParameter layer_param;
@@ -157,7 +158,7 @@ TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
   checker.CheckGradient(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
-
+#endif
 
 
 }  // namespace caffe

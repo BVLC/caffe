@@ -2889,6 +2889,7 @@ TEST_F(NetUpgradeTest, TestImageNet) {
   this->RunV1UpgradeTest(expected_v1_proto, expected_v2_proto);
 }  // NOLINT(readability/fn_size)
 
+/* FIXME
 TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
   LayerParameter layer_param;
   shared_ptr<Layer<float> > layer;
@@ -2905,5 +2906,5 @@ TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
     EXPECT_EQ(v2_layer_type, layer->type());
   }
 }
-
+*/
 }  // NOLINT(readability/fn_size)  // namespace caffe

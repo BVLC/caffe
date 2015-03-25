@@ -108,6 +108,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype* bottom_data = this->blob_bottom_->cpu_data();
     const Dtype* top_data = this->blob_top_->cpu_data();
     const Dtype* slope_data = layer->blobs()[0]->cpu_data();
+
     int hw = this->blob_bottom_->height() * this->blob_bottom_->width();
     int channels = this->blob_bottom_->channels();
     bool channel_shared = layer->layer_param().prelu_param().channel_shared();

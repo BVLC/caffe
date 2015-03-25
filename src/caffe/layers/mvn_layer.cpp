@@ -714,7 +714,7 @@ template bool clMVNLayerBackward_perf<double>(
 template<typename Dtype>
 void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 	const Dtype* bottom_data = bottom[0]->gpu_data();
-	const Dtype* bottom_diff = bottom[0]->gpu_diff();
+	//const Dtype* bottom_diff = bottom[0]->gpu_diff();
 
 	Dtype* top_data = (top)[0]->mutable_gpu_data();
 	const Dtype* top_diff = (top)[0]->gpu_diff();

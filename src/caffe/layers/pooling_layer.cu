@@ -343,7 +343,6 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       top_mask = top[1]->gpu_data();
     } else {
       mask = max_idx_.gpu_data();
-      snap(max_idx_.cpu_data(), max_idx_.count());
     }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(

@@ -16,8 +16,8 @@ namespace caffe {
 namespace OpenCL {
 
 	template<typename T> bool clPReLUForward(const int n, const int channels, const int dim, const T* in, T* out, const T* slope_data, const int div_factor);
-	template<typename T> bool PReLUBackward(const int n, const int channels, const int dim, const T* in_diff, const T* in_data, T* out_diff, const T* slope_data, const int div_factor);
-	template<typename T> bool PReLUParamBackward(const int n, const T* in_diff, const T* in_data, T* out_diff);
+	template<typename T> bool clPReLUBackward(const int n, const int channels, const int dim, const T* in_diff, const T* in_data, T* out_diff, const T* slope_data, const int div_factor);
+	template<typename T> bool clPReLUParamBackward(const int n, const T* in_diff, const T* in_data, T* out_diff);
 
 } // namespace OpenCL
 
