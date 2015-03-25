@@ -182,30 +182,29 @@ class LMDB : public DB {
 };
 
 
-#define MAX_BUF 10485760	//max entry size
+#define MAX_BUF 10485760  // max entry size
 class DatumFileCursor : public Cursor {
  public:
-  explicit DatumFileCursor(string& path) {
+  explicit DatumFileCursor(const string& path) {
     this->path = path;
     in = NULL;
     SeekToFirst();
   }
   virtual ~DatumFileCursor() {
-
   }
   virtual void SeekToFirst();
 
   virtual void Next();
 
   virtual string key() {
-    if(!valid()){
-	LOG(WARNING) << "not valid at key()";
-	return "";
+    if (!valid()) {
+      LOG(WARNING) << "not valid at key()";
+      return "";
     }
     return _key;
   }
   virtual string value() {
-    if(!valid()){
+    if (!valid()) {
       LOG(WARNING) << "not valid at value()";
       return "";
     }
@@ -224,7 +223,7 @@ class DatumFileCursor : public Cursor {
 
 class DatumFileTransaction : public Transaction {
  public:
-  explicit DatumFileTransaction(std::ofstream* out){
+  explicit DatumFileTransaction(std::ofstream* out) {
     this->out = out;
   }
 
@@ -235,7 +234,6 @@ class DatumFileTransaction : public Transaction {
   }
 
  private:
-
   std::ofstream* out;
   DISABLE_COPY_AND_ASSIGN(DatumFileTransaction);
 };
@@ -245,17 +243,17 @@ class DatumFileDB : public DB {
  public:
   DatumFileDB() { out = NULL; }
   virtual ~DatumFileDB() { Close(); }
-  virtual void Open(const string& source, Mode mode){
+  virtual void Open(const string& source, Mode mode) {
     path = source;
     this->can_write = mode != db::READ;
   }
   virtual void Close() {
-    if(out){
-	out->close();
-	out = NULL;
+    if (out) {
+      out->close();
+      out = NULL;
     }
   }
-  virtual DatumFileCursor* NewCursor(){return new DatumFileCursor(this->path);}
+  virtual DatumFileCursor* NewCursor() {return new DatumFileCursor(this->path);}
   virtual Transaction* NewTransaction();
 
  private:

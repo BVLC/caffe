@@ -61,75 +61,84 @@ void LMDBTransaction::Put(const string& key, const string& value) {
 
 
 void DatumFileCursor::SeekToFirst() {
-    if(in && in->is_open()){
-	in->close();
+    if (in && in->is_open()) {
+      in->close();
     }
     LOG(INFO) << "reset ifstream" << path;
-    in = new std::ifstream(path.c_str(), std::ifstream::in|std::ifstream::binary);
+    in = new std::ifstream(path.c_str(),
+            std::ifstream::in|std::ifstream::binary);
     Next();
   }
 
 void DatumFileCursor::Next() {
   valid_ = false;
-  if(!in->is_open()){
-      LOG(WARNING) << "file not open!" << path;
+  if (!in->is_open()) {
+    LOG(WARNING) << "file not open!" << path;
   }
   uint32_t record_size, key_size, value_size;
   in->read(reinterpret_cast<char*>(&record_size), sizeof record_size);
-  if(in->gcount() != (sizeof record_size) || record_size > MAX_BUF){
-      if(!in->eof()){
-	LOG(WARNING) << "record_size read error: gcount\t" << in->gcount() << "\trecord_size\t" << record_size;
-      }
-      return;
+  if (in->gcount() != (sizeof record_size) || record_size > MAX_BUF) {
+    if (!in->eof()) {
+      LOG(WARNING) << "record_size read error: gcount\t"
+          << in->gcount() << "\trecord_size\t" << record_size;
+    }
+    return;
   }
   in->read(reinterpret_cast<char*>(&key_size), sizeof key_size);
-  if(in->gcount() != sizeof key_size || key_size > MAX_BUF){
-      LOG(WARNING) << "key_size read error: gcount\t" << in->gcount() << "\tkey_size\t" << key_size;
-      return;
+  if (in->gcount() != sizeof key_size || key_size > MAX_BUF) {
+    LOG(WARNING) << "key_size read error: gcount\t"
+        << in->gcount() << "\tkey_size\t" << key_size;
+    return;
   }
   _key.resize(key_size);
   in->read(&_key[0], key_size);
-  if(in->gcount() != key_size){
-      LOG(WARNING) << "key read error: gcount\t" << in->gcount() << "\tkey_size\t" << key_size;
-      return;
+  if (in->gcount() != key_size) {
+    LOG(WARNING) << "key read error: gcount\t"
+        << in->gcount() << "\tkey_size\t" << key_size;
+    return;
   }
   in->read(reinterpret_cast<char*>(&value_size), sizeof value_size);
-  if(in->gcount() != sizeof value_size || value_size > MAX_BUF){
-      LOG(WARNING) << "value_size read error: gcount\t" << in->gcount() << "\tvalue_size\t" << value_size;
-      return;
+  if (in->gcount() != sizeof value_size || value_size > MAX_BUF) {
+    LOG(WARNING) << "value_size read error: gcount\t"
+        << in->gcount() << "\tvalue_size\t" << value_size;
+    return;
   }
   _value.resize(value_size);
   in->read(&_value[0], value_size);
-  if(in->gcount() != value_size){
-      LOG(WARNING) << "value read error: gcount\t" << in->gcount() << "\tvalue_size\t" << value_size;
-      return;
+  if (in->gcount() != value_size) {
+    LOG(WARNING) << "value read error: gcount\t"
+        << in->gcount() << "\tvalue_size\t" << value_size;
+    return;
   }
-  valid_=true;
+  valid_ = true;
 }
 
-void DatumFileTransaction::Put(const string& key, const string& value){
-  try{
+void DatumFileTransaction::Put(const string& key, const string& value) {
+  try {
     uint32_t key_size = key.size(), value_size = value.size();
-    uint32_t record_size = key_size + value_size + sizeof key_size + sizeof value_size;
+    uint32_t record_size = key_size + value_size
+        + sizeof key_size + sizeof value_size;
     out->write(reinterpret_cast<char*>(&record_size), sizeof record_size);
     out->write(reinterpret_cast<char*>(&key_size), sizeof key_size);
     out->write(key.data(), key_size);
     out->write(reinterpret_cast<char*>(&value_size), sizeof value_size);
     out->write(value.data(), value_size);
-  }catch(std::ios_base::failure& e){
-	LOG(WARNING) << "exception: "<< e.what() << "rdstate: " << out->rdstate() << '\n';
+  } catch(std::ios_base::failure& e) {
+    LOG(WARNING) << "exception: "
+        << e.what() << "rdstate: " << out->rdstate() << '\n';
   }
 }
 
-Transaction* DatumFileDB::NewTransaction(){
-  if(!this->out){
+Transaction* DatumFileDB::NewTransaction() {
+  if (!this->out) {
     out = new std::ofstream();
-    out->open(this->path.c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+    out->open(this->path.c_str(),
+            std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
     out->exceptions(out->exceptions() | std::ios::failbit);
     LOG(INFO) << "out created!" << path << std::endl;
   }
   return new DatumFileTransaction(this->out);
-};
+}
 
 DB* GetDB(DataParameter::DB backend) {
   switch (backend) {
