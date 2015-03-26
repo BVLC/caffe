@@ -693,15 +693,11 @@ message ReLUParameter {
 
 // Message that stores parameters used by ReshapeLayer
 message ReshapeParameter {
-  // Specify the output dimensions. If some of the following parameters are
-  // omitted or set to 0 explicitly, the corresponding dimension from the bottom
-  // layer is used (unchanged). Also, if exactly one of them is set to -1, its
-  // value is calculated from the count of the bottom layer and the remaining
-  // dimensions, if possible.
-  optional int32 num = 1 [default = 0];
-  optional int32 channels = 2 [default = 0];
-  optional int32 height = 3 [default = 0];
-  optional int32 width = 4 [default = 0];
+  // Specify the output dimensions. If some of the dimensions are set to 0,
+  // the corresponding dimension from the bottom layer is used (unchanged).
+  // Exactly one dimension may be set to -1, in which case its value is
+  // inferred from the count of the bottom layer and the remaining dimensions.
+  optional BlobShape shape = 1;
 }
 
 // Message that stores parameters used by SigmoidLayer
