@@ -404,7 +404,9 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     if (reshape) {
       ReshapeLike(source);
     } else {
-      LOG(FATAL) << "Trying to copy blobs of different sizes.";
+      LOG(FATAL) << "Trying to copy blobs of different shapes (my shape = "
+          << shape_string() << "; source shape = "
+          << source.shape_string() << ")";
     }
   }
   switch (Caffe::mode()) {
