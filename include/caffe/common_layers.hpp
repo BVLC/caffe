@@ -313,23 +313,28 @@ class ReshapeLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+  virtual inline const char* type() const { return "Reshape"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<bool>& propagate_down,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top) {}
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top) {}
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
-  void FillInSingleUnspecifiedDimension(int bottom_count);
-
-  int num_out;
-  int channels_out;
-  int height_out;
-  int width_out;
+  /// @brief the current output shape
+  vector<int> top_shape_;
+  /// @brief vector of axes indices whose dimensions we'll copy from the bottom
+  vector<int> copy_axes_;
+  /// @brief the index of the axis whose dimension we infer, or -1 if none
+  int inferred_axis_;
+  /// @brief the product of the "constant" output dimensions
+  int constant_count_;
 };
 
 /**

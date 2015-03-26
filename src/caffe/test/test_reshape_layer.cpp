@@ -41,11 +41,11 @@ TYPED_TEST_CASE(ReshapeLayerTest, TestDtypesAndDevices);
 TYPED_TEST(ReshapeLayerTest, TestFlattenOutputSizes) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ReshapeParameter* reshape_param =
-      layer_param.mutable_reshape_param();
-  reshape_param->set_channels(-1);
-  reshape_param->set_height(1);
-  reshape_param->set_width(1);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(0);
+  blob_shape->add_dim(-1);
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
 
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -58,11 +58,11 @@ TYPED_TEST(ReshapeLayerTest, TestFlattenOutputSizes) {
 TYPED_TEST(ReshapeLayerTest, TestFlattenValues) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ReshapeParameter* reshape_param =
-      layer_param.mutable_reshape_param();
-  reshape_param->set_channels(-1);
-  reshape_param->set_height(1);
-  reshape_param->set_width(1);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(0);
+  blob_shape->add_dim(-1);
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -79,12 +79,11 @@ TYPED_TEST(ReshapeLayerTest, TestFlattenValues) {
 TYPED_TEST(ReshapeLayerTest, TestCopyDimensions) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ReshapeParameter* reshape_param =
-      layer_param.mutable_reshape_param();
-  // Omitting num to test implicit zeroes.
-  reshape_param->set_channels(0);
-  reshape_param->set_height(0);
-  reshape_param->set_width(0);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(0);
+  blob_shape->add_dim(0);
+  blob_shape->add_dim(0);
+  blob_shape->add_dim(0);
   ReshapeLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -99,12 +98,11 @@ TYPED_TEST(ReshapeLayerTest, TestCopyDimensions) {
 TYPED_TEST(ReshapeLayerTest, TestInferenceOfUnspecified) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ReshapeParameter* reshape_param =
-      layer_param.mutable_reshape_param();
-  // Since omitted, num is implicitly set to 0 (thus, copies 2).
-  reshape_param->set_channels(3);
-  reshape_param->set_height(10);
-  reshape_param->set_width(-1);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(0);
+  blob_shape->add_dim(3);
+  blob_shape->add_dim(10);
+  blob_shape->add_dim(-1);
 
   // Count is 180, thus height should be 180 / (2*3*10) = 3.
 
