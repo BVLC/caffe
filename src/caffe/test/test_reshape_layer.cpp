@@ -115,6 +115,111 @@ TYPED_TEST(ReshapeLayerTest, TestInferenceOfUnspecified) {
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
 
+TYPED_TEST(ReshapeLayerTest, TestInferenceOfUnspecifiedWithStartAxis) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_reshape_param()->set_axis(1);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(3);
+  blob_shape->add_dim(10);
+  blob_shape->add_dim(-1);
+
+  ReshapeLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  ASSERT_EQ(this->blob_top_->num_axes(), 4);
+  EXPECT_EQ(this->blob_top_->num(), 2);
+  EXPECT_EQ(this->blob_top_->channels(), 3);
+  EXPECT_EQ(this->blob_top_->height(), 10);
+  EXPECT_EQ(this->blob_top_->width(), 3);
+}
+
+TYPED_TEST(ReshapeLayerTest, TestInsertSingletonAxesStart) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_reshape_param()->set_axis(0);
+  layer_param.mutable_reshape_param()->set_num_axes(0);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
+
+  ReshapeLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  ASSERT_EQ(this->blob_top_->num_axes(), 7);
+  EXPECT_EQ(this->blob_top_->shape(0), 1);
+  EXPECT_EQ(this->blob_top_->shape(1), 1);
+  EXPECT_EQ(this->blob_top_->shape(2), 1);
+  EXPECT_EQ(this->blob_top_->shape(3), 2);
+  EXPECT_EQ(this->blob_top_->shape(4), 3);
+  EXPECT_EQ(this->blob_top_->shape(5), 6);
+  EXPECT_EQ(this->blob_top_->shape(6), 5);
+}
+
+TYPED_TEST(ReshapeLayerTest, TestInsertSingletonAxesMiddle) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_reshape_param()->set_axis(2);
+  layer_param.mutable_reshape_param()->set_num_axes(0);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
+
+  ReshapeLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  ASSERT_EQ(this->blob_top_->num_axes(), 7);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3);
+  EXPECT_EQ(this->blob_top_->shape(2), 1);
+  EXPECT_EQ(this->blob_top_->shape(3), 1);
+  EXPECT_EQ(this->blob_top_->shape(4), 1);
+  EXPECT_EQ(this->blob_top_->shape(5), 6);
+  EXPECT_EQ(this->blob_top_->shape(6), 5);
+}
+
+TYPED_TEST(ReshapeLayerTest, TestInsertSingletonAxesEnd) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_reshape_param()->set_axis(-1);
+  layer_param.mutable_reshape_param()->set_num_axes(0);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
+  blob_shape->add_dim(1);
+
+  ReshapeLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  ASSERT_EQ(this->blob_top_->num_axes(), 7);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3);
+  EXPECT_EQ(this->blob_top_->shape(2), 6);
+  EXPECT_EQ(this->blob_top_->shape(3), 5);
+  EXPECT_EQ(this->blob_top_->shape(4), 1);
+  EXPECT_EQ(this->blob_top_->shape(5), 1);
+  EXPECT_EQ(this->blob_top_->shape(6), 1);
+}
+
+TYPED_TEST(ReshapeLayerTest, TestFlattenMiddle) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_reshape_param()->set_axis(1);
+  layer_param.mutable_reshape_param()->set_num_axes(2);
+  BlobShape* blob_shape = layer_param.mutable_reshape_param()->mutable_shape();
+  blob_shape->add_dim(-1);
+
+  ReshapeLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+  ASSERT_EQ(this->blob_top_->num_axes(), 3);
+  EXPECT_EQ(this->blob_top_->shape(0), 2);
+  EXPECT_EQ(this->blob_top_->shape(1), 3 * 6);
+  EXPECT_EQ(this->blob_top_->shape(2), 5);
+}
+
 TYPED_TEST(ReshapeLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
