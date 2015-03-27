@@ -182,84 +182,82 @@ class LMDB : public DB {
 };
 
 
-#define MAX_BUF 10485760  // max entry size
+#define MAX_BUF 104857600  // max entry size
 class DatumFileCursor : public Cursor {
  public:
   explicit DatumFileCursor(const string& path) {
-    this->path = path;
-    in = NULL;
+    this->path_ = path;
+    in_ = NULL;
     SeekToFirst();
   }
   virtual ~DatumFileCursor() {
+    if (in_ && in_->is_open()) {
+      in_->close();
+    }
   }
   virtual void SeekToFirst();
 
   virtual void Next();
 
   virtual string key() {
-    if (!valid()) {
-      LOG(WARNING) << "not valid at key()";
-      return "";
-    }
-    return _key;
+    CHECK(valid()) << "not valid state at key()";
+    return key_;
   }
   virtual string value() {
-    if (!valid()) {
-      LOG(WARNING) << "not valid at value()";
-      return "";
-    }
-    return _value;
+    CHECK(valid()) << "not valid state at value()";
+    return value_;
   }
 
   virtual bool valid() { return valid_; }
 
  private:
-  string path;
-  std::ifstream* in;
+  string path_;
+  std::ifstream* in_;
   bool valid_;
 
-  string _key, _value;
+  string key_, value_;
 };
 
 class DatumFileTransaction : public Transaction {
  public:
   explicit DatumFileTransaction(std::ofstream* out) {
-    this->out = out;
+    this->out_ = out;
   }
 
   virtual void Put(const string& key, const string& value);
 
   virtual void Commit() {
-    out->flush();
+    out_->flush();
   }
 
  private:
-  std::ofstream* out;
+  std::ofstream* out_;
   DISABLE_COPY_AND_ASSIGN(DatumFileTransaction);
 };
 
 
 class DatumFileDB : public DB {
  public:
-  DatumFileDB() { out = NULL; }
+  DatumFileDB() { out_ = NULL; can_write_ = false;}
   virtual ~DatumFileDB() { Close(); }
   virtual void Open(const string& source, Mode mode) {
-    path = source;
-    this->can_write = mode != db::READ;
+    path_ = source;
+    this->can_write_ = mode != db::READ;
   }
   virtual void Close() {
-    if (out) {
-      out->close();
-      out = NULL;
+    if (out_) {
+      out_->close();
+      out_ = NULL;
     }
   }
-  virtual DatumFileCursor* NewCursor() {return new DatumFileCursor(this->path);}
+  virtual DatumFileCursor* NewCursor() { return new DatumFileCursor(this->path_); }
   virtual Transaction* NewTransaction();
 
  private:
-  string path;
-  std::ofstream* out;
-  bool can_write;
+  string path_;
+  std::ofstream* out_;
+
+  bool can_write_;
 };
 
 DB* GetDB(DataParameter::DB backend);
