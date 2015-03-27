@@ -227,16 +227,15 @@ ifeq ($(LINUX), 1)
 	LIBRARIES += boost_thread stdc++
 endif
 
+CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -Eo 'release [^,]+' | cut -f2 -d' ')
+ifeq ($(shell echo $(CUDA_VERSION) \< 7.0 | bc), 1)
+  $(error CUDA 7 is required.)
+endif
+
 # OS X:
 # clang++ instead of g++
-# libstdc++ for NVCC compatibility on OS X >= 10.9 with CUDA < 7.0
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
-	CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release \d' | grep -o '\d')
-	ifeq ($(shell echo $(CUDA_VERSION) \< 7.0 | bc), 1)
-		CXXFLAGS += -stdlib=libstdc++
-		LINKFLAGS += -stdlib=libstdc++
-	endif
 	# clang throws this warning for cuda headers
 	WARNINGS += -Wno-unneeded-internal-declaration
 	# gtest needs to use its own tuple to not conflict with clang
@@ -339,7 +338,7 @@ CXXFLAGS += -MMD -MP
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
-NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS) --default-stream per-thread
 # mex may invoke an older gcc that is too liberal with -Wuninitalized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
