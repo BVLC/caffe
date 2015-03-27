@@ -191,8 +191,10 @@ class DatumFileCursor : public Cursor {
     SeekToFirst();
   }
   virtual ~DatumFileCursor() {
-    if (in_ && in_->is_open()) {
+    if (in_ != NULL && in_->is_open()) {
       in_->close();
+      delete in_;
+      in_ = NULL;
     }
   }
   virtual void SeekToFirst();
@@ -245,8 +247,9 @@ class DatumFileDB : public DB {
     this->can_write_ = mode != db::READ;
   }
   virtual void Close() {
-    if (out_) {
+    if (out_ != NULL) {
       out_->close();
+      delete out_;
       out_ = NULL;
     }
   }
