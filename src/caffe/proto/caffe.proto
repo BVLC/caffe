@@ -259,7 +259,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 132 (last added: prelu_param)
+// LayerParameter next available layer-specific ID: 133 (last added: reshape_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -326,6 +326,7 @@ message LayerParameter {
   optional PReLUParameter prelu_param = 131;
   optional PythonParameter python_param = 130;
   optional ReLUParameter relu_param = 123;
+  optional ReshapeParameter reshape_param = 132;
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SliceParameter slice_param = 126;
@@ -664,6 +665,13 @@ message PowerParameter {
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
+}
+
+// Message that stores parameters used by ReshapeLayer
+message ReshapeParameter {
+  // The new shape of the Blob. Must have the same "count" (product of
+  // dimensions) as the input Blob.
+  optional BlobShape shape = 1;
 }
 
 // Message that stores parameters used by ReLULayer
