@@ -17,6 +17,7 @@ void CuDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(this->pad_h_, 0);
   CHECK_EQ(this->pad_w_, 0);
   CUDNN_CHECK(cudnnCreate(&handle_));
+  CUDNN_CHECK(cudnnSetStream(handle_, cudaStreamPerThread));
   cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
   cudnn::createTensor4dDesc<Dtype>(&top_desc_);
   cudnn::createPoolingDesc<Dtype>(&pooling_desc_,
