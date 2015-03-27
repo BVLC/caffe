@@ -250,7 +250,9 @@ class DatumFileDB : public DB {
       out_ = NULL;
     }
   }
-  virtual DatumFileCursor* NewCursor() { return new DatumFileCursor(this->path_); }
+  virtual DatumFileCursor* NewCursor() {
+    return new DatumFileCursor(this->path_);
+  }
   virtual Transaction* NewTransaction();
 
  private:
