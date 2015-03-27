@@ -56,6 +56,10 @@ public:
 	OpenCLMemoryException(std::string message) {
 		message_ = message;
 	}
+
+	virtual ~OpenCLMemoryException() throw() {
+	}
+
 	virtual const char* what() const throw() {
 		return message_.c_str();
 	}

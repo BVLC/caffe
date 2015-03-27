@@ -7,6 +7,7 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/OpenCL/OpenCLSupport.hpp"
+#include "cblas.h"
 
 namespace caffe {
 
@@ -157,9 +158,6 @@ void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int m, const int n, cons
 		case CblasConjTrans:
 			clTransA = clblasConjTrans;
 			break;
-		case CblasConjNoTrans:
-			LOG(ERROR) << "'CblasConjNoTrans' not supported by clBLAS";
-			return;
 		default:
 			LOG(ERROR) << "unknown transpose mode.";
 			return;
@@ -184,9 +182,6 @@ void caffe_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int m, const int n, cons
 		case CblasConjTrans:
 			clTransA = clblasConjTrans;
 			break;
-		case CblasConjNoTrans:
-			LOG(ERROR) << "'CblasConjNoTrans' not supported by clBLAS";
-			return;
 		default:
 			LOG(ERROR) << "unknown transpose mode.";
 			return;
@@ -219,9 +214,6 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, 
 		case CblasConjTrans:
 			clTransA = clblasConjTrans;
 			break;
-		case CblasConjNoTrans:
-			LOG(ERROR) << "'CblasConjNoTrans' not supported by clBLAS";
-			return;
 		default:
 			LOG(ERROR) << "unknown transpose mode.";
 			return;
@@ -238,9 +230,6 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, 
 		case CblasConjTrans:
 			clTransB = clblasConjTrans;
 			break;
-		case CblasConjNoTrans:
-			LOG(ERROR) << "'CblasConjNoTrans' not supported by clBLAS";
-			return;
 		default:
 			LOG(ERROR) << "unknown transpose mode.";
 			return;
@@ -276,9 +265,6 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, 
 		case CblasConjTrans:
 			clTransA = clblasConjTrans;
 			break;
-		case CblasConjNoTrans:
-			LOG(ERROR) << "'CblasConjNoTrans' not supported by clBLAS";
-			return;
 		default:
 			LOG(ERROR) << "unknown transpose mode.";
 			return;
@@ -295,9 +281,6 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, 
 		case CblasConjTrans:
 			clTransB = clblasConjTrans;
 			break;
-		case CblasConjNoTrans:
-			LOG(ERROR) << "'CblasConjNoTrans' not supported by clBLAS";
-			return;
 		default:
 			LOG(ERROR) << "unknown transpose mode.";
 			return;

@@ -163,6 +163,6 @@ STUB_GPU(TanHLayer);
 #endif
 
 INSTANTIATE_CLASS(TanHLayer);
-REGISTER_LAYER_CLASS(TanH);
+//REGISTER_LAYER_CLASS(TanH);
 
 }  // namespace caffe

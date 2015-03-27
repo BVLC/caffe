@@ -11,7 +11,7 @@ BLAS := open
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
 BLAS_DIR     := /usr
-BLAS_INCLUDE  := ${BLAS_DIR}/include/openblas
+BLAS_INCLUDE  := /home/robert/workspace/OpenBLAS/build/include
 BLAS_LIB      := ${BLAS_DIR}/lib
 
 # This is required only if you will compile the matlab interface.

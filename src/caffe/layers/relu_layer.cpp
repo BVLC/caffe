@@ -168,6 +168,6 @@ STUB_GPU(ReLULayer);
 #endif
 
 INSTANTIATE_CLASS(ReLULayer);
-REGISTER_LAYER_CLASS(ReLU);
+//REGISTER_LAYER_CLASS(ReLU);
 
 }  // namespace caffe

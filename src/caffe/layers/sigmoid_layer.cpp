@@ -167,7 +167,7 @@ STUB_GPU(SigmoidLayer);
 #endif
 
 INSTANTIATE_CLASS(SigmoidLayer);
-REGISTER_LAYER_CLASS(Sigmoid);
+//REGISTER_LAYER_CLASS(Sigmoid);
 
 
 }  // namespace caffe

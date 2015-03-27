@@ -717,7 +717,7 @@ void MVNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vect
 	//const Dtype* bottom_diff = bottom[0]->gpu_diff();
 
 	Dtype* top_data = (top)[0]->mutable_gpu_data();
-	const Dtype* top_diff = (top)[0]->gpu_diff();
+	//const Dtype* top_diff = (top)[0]->gpu_diff();
 
 	int num_images	 = bottom[0]->num();
 	int num_channels = bottom[0]->channels();

@@ -39,17 +39,18 @@ bool OpenCLParser::getKernelNames(std::string fileName, std::vector<std::string>
 	}
 
 	boost::regex kernel_line("^__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
-	boost::regex template_kernel_line("^template\\s+\<class \\w+\>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
+	boost::regex template_kernel_line("^template\\s+<class \\w+>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
 	boost::regex split("[\\s+(]");
 
 	boost::smatch what;
     std::string str;
 
     while (std::getline(file, str)) {
-    	//std::cout << str.c_str() << std::endl;
+    	//LOG(ERROR)<<str.c_str();
 
     	if ( boost::regex_match(str, what, kernel_line, boost::match_default) ) {
     		for(int m = 0; m < what.size(); m++) {
+    			//LOG(ERROR)<<"match";
     			//std::cout << "match[" << m << "] = \'" << what[m] << "\'" << std::endl;
     			boost::sregex_token_iterator it(str.begin(),str.end(), split, -1);
     			it++;
@@ -93,7 +94,7 @@ bool OpenCLParser::isKernelLine(std::string line) {
 
 bool OpenCLParser::isTemplateKernelLine(std::string line) {
 
-	boost::regex re("^template\\s+\<class \\w+\>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
+	boost::regex re("^template\\s+<class \\w+>\\s+__kernel[[:space:]]+void[[:space:]]+[[:word:]]+\\(.*", boost::regex::perl);
 	return this->match(line, re);
 }
 
@@ -119,8 +120,8 @@ std::string OpenCLParser::getKernelName(std::string line) {
 
 std::string OpenCLParser::getKernelType(std::string line) {
 
-	boost::regex split_bgn("template\\s+\<class\\s+");
-	boost::regex split_end("\\s*\>");
+	boost::regex split_bgn("template\\s+<class\\s+");
+	boost::regex split_end("\\s*>");
 	boost::sregex_token_iterator it;
 
 	it = boost::sregex_token_iterator(line.begin(),line.end(), split_bgn, -1);
@@ -233,8 +234,7 @@ bool OpenCLParser::convert(std::string fileNameIN, std::string fileNameOUT) {
           		recording = false;
        		}
         	kernel_name_typed = getTypedKernelName(line);
-        	//LOG(INFO) << "found template_attribute_line for kernel '"<<kernel_name_typed<<"'";
-    		kernel_line_typed = "__kernel void " + kernel_name_typed + getTypedKernelLine(line) + " {";
+        	kernel_line_typed = "__kernel void " + kernel_name_typed + getTypedKernelLine(line) + " {";
 
         	if ( isFloatType(kernel_name_typed) ) {
         		type_replace = "float";
@@ -259,7 +259,7 @@ bool OpenCLParser::convert(std::string fileNameIN, std::string fileNameOUT) {
     	if ( isTemplateKernelLine(line) ) {
     		kernel_name = getKernelName(line);
     		kernel_type = getKernelType(line);
-        	//LOG(INFO)<<"found template kernel '"<<kernel_name<<"' with type '"<<kernel_type<<"'";
+        LOG(INFO)<<"found template kernel '"<<kernel_name<<"' with type '"<<kernel_type<<"'";
 
         	if ( recording == false ) {
         		recording = true;

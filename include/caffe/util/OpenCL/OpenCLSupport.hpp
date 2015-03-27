@@ -204,6 +204,9 @@ public:
 	OpenCLSupportException(std::string message) {
 		message_ = message;
 	}
+	virtual ~OpenCLSupportException() throw() {
+	}
+
 	virtual const char* what() const throw() {
 		return message_.c_str();
 	}

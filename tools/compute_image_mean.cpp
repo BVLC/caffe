@@ -14,6 +14,16 @@
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
+namespace caffe {
+#ifdef USE_CUDA
+  cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
+}
+
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif
+
 using std::max;
 using std::pair;
 using boost::scoped_ptr;

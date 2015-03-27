@@ -331,9 +331,8 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     int cdim = channels * dim;
     Dtype dsum = 0.;
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      Dtype* temp_buff = multiplier_.mutable_gpu_diff();
-
       /*
+       Dtype* temp_buff = multiplier_.mutable_gpu_diff();
       // compute element-wise diff
       // NOLINT_NEXT_LINE(whitespace/operators)
       PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
