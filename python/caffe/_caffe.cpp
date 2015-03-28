@@ -198,7 +198,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
-  bp::def("set_device", &Caffe::SetDevice);
+  bp::def("set_device", static_cast<void (*)(const int)>(&Caffe::SetDevice));
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)

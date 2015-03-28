@@ -1,3 +1,4 @@
+#include <boost/thread.hpp>
 #include <glog/logging.h>
 #include <cstdio>
 #include <ctime>
@@ -7,7 +8,7 @@
 
 namespace caffe {
 
-shared_ptr<Caffe> Caffe::singleton_;
+boost::thread_specific_ptr<Caffe> Caffe::singleton_;
 
 // random seeding
 int64_t cluster_seedgen(void) {
@@ -39,6 +40,13 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InstallFailureSignalHandler();
 }
 
+Caffe& Caffe::Get() {
+  if (!singleton_.get()) {
+    singleton_.reset(new Caffe());
+  }
+  return *singleton_;
+}
+
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
@@ -52,6 +60,10 @@ void Caffe::set_random_seed(const unsigned int seed) {
 }
 
 void Caffe::SetDevice(const int device_id) {
+  NO_GPU;
+}
+
+void Caffe::SetDevice(const DeviceParameter& device) {
   NO_GPU;
 }
 
@@ -92,6 +104,7 @@ Caffe::Caffe()
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Cublas handle. Cublas won't be available.";
   }
+  CUBLAS_CHECK(cublasSetStream(cublas_handle_, cudaStreamPerThread));
   // Try to create a curand handler.
   if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
       != CURAND_STATUS_SUCCESS ||
@@ -144,6 +157,15 @@ void Caffe::SetDevice(const int device_id) {
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
       cluster_seedgen()));
+}
+
+void Caffe::SetDevice(const DeviceParameter& device) {
+  if (device.type() == DeviceParameter_DeviceType_CPU) {
+    Caffe::set_mode(Caffe::CPU);
+  } else {
+    Caffe::SetDevice(device.device_id());
+    Caffe::set_mode(Caffe::GPU);
+  }
 }
 
 void Caffe::DeviceQuery() {

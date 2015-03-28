@@ -9,8 +9,6 @@
 
 namespace caffe {
 
-__global__ void sync_conv_groups() { }
-
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
@@ -86,10 +84,9 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
       }
     }
 
-    // Synchronize the work across groups, each of which went into its own
-    // stream, by launching an empty kernel into the default (null) stream.
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    for (int g = 0; g < this->group_; g++) {
+      CUDA_CHECK(cudaStreamSynchronize(stream_[g]));
+    }
   }
 }
 
@@ -102,12 +99,17 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     weight = this->blobs_[0]->gpu_data();
     weight_diff = this->blobs_[0]->mutable_gpu_diff();
     caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
+    CUDA_CHECK(cudaMemsetAsync(weight_diff, Dtype(0),
+          this->blobs_[0]->count() * sizeof(Dtype), stream_[0]));
   }
   Dtype* bias_diff = NULL;
   if (this->bias_term_ && this->param_propagate_down_[1]) {
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
     caffe_gpu_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
+    CUDA_CHECK(cudaMemsetAsync(weight_diff, Dtype(0),
+          this->blobs_[0]->count() * sizeof(Dtype), stream_[0]));
   }
+  CUDA_CHECK(cudaStreamSynchronize(stream_[0]));
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
     // Backward through cuDNN in parallel over groups and gradients.
@@ -149,10 +151,9 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       }
     }
 
-    // Synchronize the work across groups, each of which went into its own
-    // stream, by launching an empty kernel into the default (null) stream.
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    for (int g = 0; g < 3 * this->group_; ++g) {
+      CUDA_CHECK(cudaStreamSynchronize(stream_[g]));
+    }
   }
 }
 

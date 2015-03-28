@@ -9,8 +9,10 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
 
@@ -25,7 +27,7 @@ class Net {
  public:
   explicit Net(const NetParameter& param);
   explicit Net(const string& param_file, Phase phase);
-  virtual ~Net() {}
+  virtual ~Net();
 
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
@@ -75,12 +77,7 @@ class Net {
    */
   void Reshape();
 
-  Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
-    Dtype loss;
-    Forward(bottom, &loss);
-    Backward();
-    return loss;
-  }
+  Dtype ForwardBackward(const vector<Blob<Dtype>*>& bottom);
 
   /// @brief Updates the network weights based on the diff values computed.
   void Update();
@@ -165,6 +162,12 @@ class Net {
   inline const vector<int>& output_blob_indices() const {
     return net_output_blob_indices_;
   }
+  inline const vector<vector<int> > layer_parents() const {
+    return layer_parents_;
+  }
+  inline const vector<vector<int> > layer_children() const {
+    return layer_children_;
+  }
   bool has_blob(const string& blob_name) const;
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
   bool has_layer(const string& layer_name) const;
@@ -174,28 +177,63 @@ class Net {
 
   // Helpers for Init.
   /**
-   * @brief Remove layers that the user specified should be excluded given the current
-   *        phase, level, and stage.
+   * @brief First pass through the net: remove layers that the user specified
+   *   should be excluded given the current phase, level, and stage, and map
+   *   logical devices to physical ones.
    */
   static void FilterNet(const NetParameter& param,
       NetParameter* param_filtered);
+  void SetupThreads(NetParameter* param);
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
 
  protected:
+  // The message we'll pass to ComputeThreads to give them work.
+  struct Operation {
+    enum Direction { FORWARD, BACKWARD };
+    Operation(int layer_index, Direction direction)
+      : layer_index_(layer_index), direction_(direction) { }
+    int layer_index_;
+    Direction direction_;
+  };
+  class ComputeThread : public InternalThread {
+   public:
+    ComputeThread(const DeviceParameter& device, Net<Dtype>* net)
+      : device_(device), net_(net) { }
+    void enqueue(Operation op) { queue_.push(op); }
+    Dtype loss() const { return loss_; }
+    void reset_loss() { loss_ = 0; }
+    void wait() { queue_.wait_for_empty(); }
+
+   protected:
+    void InternalThreadEntry();
+
+   private:
+    DeviceParameter device_;
+    Net<Dtype>* net_;
+    Dtype loss_;
+    blocking_queue<Operation> queue_;
+  };
   // Helpers for Init.
   /// @brief Append a new input or top blob to the net.
   void AppendTop(const NetParameter& param, const int layer_id,
                  const int top_id, set<string>* available_blobs,
-                 map<string, int>* blob_name_to_idx);
+                 map<string, int>* blob_name_to_idx,
+                 map<int, int>* top_blob_idx_to_layer);
   /// @brief Append a new bottom blob to the net.
   int AppendBottom(const NetParameter& param, const int layer_id,
                    const int bottom_id, set<string>* available_blobs,
-                   map<string, int>* blob_name_to_idx);
+                   const map<string, int>& blob_name_to_idx,
+                   const map<int, int>& top_blob_idx_to_layer);
   /// @brief Append a new parameter blob to the net.
   void AppendParam(const NetParameter& param, const int layer_id,
                    const int param_id);
+
+  // Helpers for computation.
+  void ForwardFromToAsync(int start, int end);
+  void BackwardFromToAsync(int start, int end);
+  Dtype SyncThreads();
 
   /// @brief Helper for displaying debug info in Forward about input Blobs.
   void InputDebugInfo(const int layer_id);
@@ -218,6 +256,10 @@ class Net {
   vector<string> layer_names_;
   map<string, int> layer_names_index_;
   vector<bool> layer_need_backward_;
+  /// Keep track of the graph of layers (note that this is different from
+  /// keeping track of the input/output blobs, since blobs may be reused).
+  vector<vector<int> > layer_parents_;
+  vector<vector<int> > layer_children_;
   /// @brief the blobs storing intermediate results between the layer.
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   vector<string> blob_names_;
@@ -255,6 +297,16 @@ class Net {
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
+
+  /// For each layer, keep track of which thread will run that layer.
+  vector<int> thread_ids_;
+  vector<shared_ptr<ComputeThread> > threads_;
+
+  // Keep the status of computation, and synchronize threads accordingly.
+  vector<bool> layer_forward_done_;
+  vector<bool> layer_backward_done_;
+  boost::mutex layer_done_mutex_;
+  boost::condition_variable layer_done_cond_;
 
   DISABLE_COPY_AND_ASSIGN(Net);
 };

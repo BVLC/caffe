@@ -27,6 +27,8 @@ class InternalThread {
   /** Will not return until the internal thread has exited. */
   bool WaitForInternalThreadToExit();
 
+  void Interrupt();
+
   bool is_started() const;
 
  protected:

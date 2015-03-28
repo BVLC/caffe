@@ -1,0 +1,1184 @@
+layer {
+  name: "conv1w"
+  type: "Parameter"
+  top: "conv1w"
+  parameter_param {
+    shape {
+      dim: 96
+      dim: 3
+      dim: 11
+      dim: 11
+    }
+  }
+}
+layer {
+  name: "conv1b"
+  type: "Parameter"
+  top: "conv1b"
+  parameter_param {
+    shape {
+      dim: 96
+    }
+  }
+}
+layer {
+  name: "conv2w"
+  type: "Parameter"
+  top: "conv2w"
+  parameter_param {
+    shape {
+      dim: 256
+      dim: 48
+      dim: 5
+      dim: 5
+    }
+  }
+}
+layer {
+  name: "conv2b"
+  type: "Parameter"
+  top: "conv2b"
+  parameter_param {
+    shape {
+      dim: 256
+    }
+  }
+}
+layer {
+  name: "conv3w"
+  type: "Parameter"
+  top: "conv3w"
+  parameter_param {
+    shape {
+      dim: 384
+      dim: 256
+      dim: 3
+      dim: 3
+    }
+  }
+}
+layer {
+  name: "conv3b"
+  type: "Parameter"
+  top: "conv3b"
+  parameter_param {
+    shape {
+      dim: 384
+    }
+  }
+}
+layer {
+  name: "conv4w"
+  type: "Parameter"
+  top: "conv4w"
+  parameter_param {
+    shape {
+      dim: 384
+      dim: 192
+      dim: 3
+      dim: 3
+    }
+  }
+}
+layer {
+  name: "conv4b"
+  type: "Parameter"
+  top: "conv4b"
+  parameter_param {
+    shape {
+      dim: 384
+    }
+  }
+}
+layer {
+  name: "conv5w"
+  type: "Parameter"
+  top: "conv5w"
+  parameter_param {
+    shape {
+      dim: 256
+      dim: 192
+      dim: 3
+      dim: 3
+    }
+  }
+}
+layer {
+  name: "conv5b"
+  type: "Parameter"
+  top: "conv5b"
+  parameter_param {
+    shape {
+      dim: 256
+    }
+  }
+}
+layer {
+  name: "fc6w"
+  type: "Parameter"
+  top: "fc6w"
+  parameter_param {
+    shape {
+      dim: 4096
+      dim: 9216
+    }
+  }
+}
+layer {
+  name: "fc6b"
+  type: "Parameter"
+  top: "fc6b"
+  parameter_param {
+    shape {
+      dim: 4096
+    }
+  }
+}
+layer {
+  name: "fc7w"
+  type: "Parameter"
+  top: "fc7w"
+  parameter_param {
+    shape {
+      dim: 4096
+      dim: 4096
+    }
+  }
+}
+layer {
+  name: "fc7b"
+  type: "Parameter"
+  top: "fc7b"
+  parameter_param {
+    shape {
+      dim: 4096
+    }
+  }
+}
+layer {
+  name: "fc8w"
+  type: "Parameter"
+  top: "fc8w"
+  parameter_param {
+    shape {
+      dim: 1000
+      dim: 4096
+    }
+  }
+}
+layer {
+  name: "fc8b"
+  type: "Parameter"
+  top: "fc8b"
+  parameter_param {
+    shape {
+      dim: 1000
+    }
+  }
+}
+layer {
+  name: "dummy_data1"
+  type: "DummyData"
+  top: "dummy_data1"
+  device {
+    type: GPU
+    device_id: 0
+  }
+  dummy_data_param {
+    shape {
+      dim: 85
+      dim: 3
+      dim: 227
+      dim: 227
+    }
+  }
+}
+layer {
+  name: "convolution1"
+  type: "Convolution"
+  bottom: "dummy_data1"
+  bottom: "conv1w"
+  bottom: "conv1b"
+  top: "convolution1"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  convolution_param {
+    num_output: 96
+    pad: 0
+    kernel_size: 11
+    group: 1
+    stride: 4
+  }
+}
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "convolution1"
+  top: "convolution1"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "pooling1"
+  type: "Pooling"
+  bottom: "convolution1"
+  top: "pooling1"
+  device {
+    type: GPU
+    device_id: 0
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "lrn1"
+  type: "LRN"
+  bottom: "pooling1"
+  top: "lrn1"
+  device {
+    type: GPU
+    device_id: 0
+  }
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "convolution2"
+  type: "Convolution"
+  bottom: "lrn1"
+  bottom: "conv2w"
+  bottom: "conv2b"
+  top: "convolution2"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 2
+    kernel_size: 5
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu2"
+  type: "ReLU"
+  bottom: "convolution2"
+  top: "convolution2"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "pooling2"
+  type: "Pooling"
+  bottom: "convolution2"
+  top: "pooling2"
+  device {
+    type: GPU
+    device_id: 0
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "lrn2"
+  type: "LRN"
+  bottom: "pooling2"
+  top: "lrn2"
+  device {
+    type: GPU
+    device_id: 0
+  }
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "convolution3"
+  type: "Convolution"
+  bottom: "lrn2"
+  bottom: "conv3w"
+  bottom: "conv3b"
+  top: "convolution3"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+  }
+}
+layer {
+  name: "relu3"
+  type: "ReLU"
+  bottom: "convolution3"
+  top: "convolution3"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "convolution4"
+  type: "Convolution"
+  bottom: "convolution3"
+  bottom: "conv4w"
+  bottom: "conv4b"
+  top: "convolution4"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu4"
+  type: "ReLU"
+  bottom: "convolution4"
+  top: "convolution4"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "convolution5"
+  type: "Convolution"
+  bottom: "convolution4"
+  bottom: "conv5w"
+  bottom: "conv5b"
+  top: "convolution5"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu5"
+  type: "ReLU"
+  bottom: "convolution5"
+  top: "convolution5"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "pooling3"
+  type: "Pooling"
+  bottom: "convolution5"
+  top: "pooling3"
+  device {
+    type: GPU
+    device_id: 0
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "inner_product1"
+  type: "InnerProduct"
+  bottom: "pooling3"
+  bottom: "fc6w"
+  bottom: "fc6b"
+  top: "inner_product1"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  inner_product_param {
+    num_output: 4096
+  }
+}
+layer {
+  name: "relu6"
+  type: "ReLU"
+  bottom: "inner_product1"
+  top: "inner_product1"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "inner_product2"
+  type: "InnerProduct"
+  bottom: "inner_product1"
+  bottom: "fc7w"
+  bottom: "fc7b"
+  top: "inner_product2"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  inner_product_param {
+    num_output: 4096
+  }
+}
+layer {
+  name: "relu7"
+  type: "ReLU"
+  bottom: "inner_product2"
+  top: "inner_product2"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "inner_product3"
+  type: "InnerProduct"
+  bottom: "inner_product2"
+  bottom: "fc8w"
+  bottom: "fc8b"
+  top: "inner_product3"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 0
+  }
+  inner_product_param {
+    num_output: 1000
+  }
+}
+layer {
+  name: "dummy_data2"
+  type: "DummyData"
+  top: "dummy_data2"
+  device {
+    type: GPU
+    device_id: 0
+  }
+  dummy_data_param {
+    shape {
+      dim: 85
+    }
+  }
+}
+layer {
+  name: "loss1"
+  type: "SoftmaxWithLoss"
+  bottom: "inner_product3"
+  bottom: "dummy_data2"
+  top: "loss1"
+  device {
+    type: GPU
+    device_id: 0
+  }
+}
+layer {
+  name: "dummy_data3"
+  type: "DummyData"
+  top: "dummy_data3"
+  device {
+    type: GPU
+    device_id: 1
+  }
+  dummy_data_param {
+    shape {
+      dim: 85
+      dim: 3
+      dim: 227
+      dim: 227
+    }
+  }
+}
+layer {
+  name: "convolution6"
+  type: "Convolution"
+  bottom: "dummy_data3"
+  bottom: "conv1w"
+  bottom: "conv1b"
+  top: "convolution6"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  convolution_param {
+    num_output: 96
+    pad: 0
+    kernel_size: 11
+    group: 1
+    stride: 4
+  }
+}
+layer {
+  name: "relu8"
+  type: "ReLU"
+  bottom: "convolution6"
+  top: "convolution6"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "pooling4"
+  type: "Pooling"
+  bottom: "convolution6"
+  top: "pooling4"
+  device {
+    type: GPU
+    device_id: 1
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "lrn3"
+  type: "LRN"
+  bottom: "pooling4"
+  top: "lrn3"
+  device {
+    type: GPU
+    device_id: 1
+  }
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "convolution7"
+  type: "Convolution"
+  bottom: "lrn3"
+  bottom: "conv2w"
+  bottom: "conv2b"
+  top: "convolution7"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  convolution_param {
+    num_output: 256
+    pad: 2
+    kernel_size: 5
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu9"
+  type: "ReLU"
+  bottom: "convolution7"
+  top: "convolution7"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "pooling5"
+  type: "Pooling"
+  bottom: "convolution7"
+  top: "pooling5"
+  device {
+    type: GPU
+    device_id: 1
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "lrn4"
+  type: "LRN"
+  bottom: "pooling5"
+  top: "lrn4"
+  device {
+    type: GPU
+    device_id: 1
+  }
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "convolution8"
+  type: "Convolution"
+  bottom: "lrn4"
+  bottom: "conv3w"
+  bottom: "conv3b"
+  top: "convolution8"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+  }
+}
+layer {
+  name: "relu10"
+  type: "ReLU"
+  bottom: "convolution8"
+  top: "convolution8"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "convolution9"
+  type: "Convolution"
+  bottom: "convolution8"
+  bottom: "conv4w"
+  bottom: "conv4b"
+  top: "convolution9"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu11"
+  type: "ReLU"
+  bottom: "convolution9"
+  top: "convolution9"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "convolution10"
+  type: "Convolution"
+  bottom: "convolution9"
+  bottom: "conv5w"
+  bottom: "conv5b"
+  top: "convolution10"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu12"
+  type: "ReLU"
+  bottom: "convolution10"
+  top: "convolution10"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "pooling6"
+  type: "Pooling"
+  bottom: "convolution10"
+  top: "pooling6"
+  device {
+    type: GPU
+    device_id: 1
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "inner_product4"
+  type: "InnerProduct"
+  bottom: "pooling6"
+  bottom: "fc6w"
+  bottom: "fc6b"
+  top: "inner_product4"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  inner_product_param {
+    num_output: 4096
+  }
+}
+layer {
+  name: "relu13"
+  type: "ReLU"
+  bottom: "inner_product4"
+  top: "inner_product4"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "inner_product5"
+  type: "InnerProduct"
+  bottom: "inner_product4"
+  bottom: "fc7w"
+  bottom: "fc7b"
+  top: "inner_product5"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  inner_product_param {
+    num_output: 4096
+  }
+}
+layer {
+  name: "relu14"
+  type: "ReLU"
+  bottom: "inner_product5"
+  top: "inner_product5"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "inner_product6"
+  type: "InnerProduct"
+  bottom: "inner_product5"
+  bottom: "fc8w"
+  bottom: "fc8b"
+  top: "inner_product6"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 1
+  }
+  inner_product_param {
+    num_output: 1000
+  }
+}
+layer {
+  name: "dummy_data4"
+  type: "DummyData"
+  top: "dummy_data4"
+  device {
+    type: GPU
+    device_id: 1
+  }
+  dummy_data_param {
+    shape {
+      dim: 85
+    }
+  }
+}
+layer {
+  name: "loss2"
+  type: "SoftmaxWithLoss"
+  bottom: "inner_product6"
+  bottom: "dummy_data4"
+  top: "loss2"
+  device {
+    type: GPU
+    device_id: 1
+  }
+}
+layer {
+  name: "dummy_data5"
+  type: "DummyData"
+  top: "dummy_data5"
+  device {
+    type: GPU
+    device_id: 2
+  }
+  dummy_data_param {
+    shape {
+      dim: 85
+      dim: 3
+      dim: 227
+      dim: 227
+    }
+  }
+}
+layer {
+  name: "convolution11"
+  type: "Convolution"
+  bottom: "dummy_data5"
+  bottom: "conv1w"
+  bottom: "conv1b"
+  top: "convolution11"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  convolution_param {
+    num_output: 96
+    pad: 0
+    kernel_size: 11
+    group: 1
+    stride: 4
+  }
+}
+layer {
+  name: "relu15"
+  type: "ReLU"
+  bottom: "convolution11"
+  top: "convolution11"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+layer {
+  name: "pooling7"
+  type: "Pooling"
+  bottom: "convolution11"
+  top: "pooling7"
+  device {
+    type: GPU
+    device_id: 2
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "lrn5"
+  type: "LRN"
+  bottom: "pooling7"
+  top: "lrn5"
+  device {
+    type: GPU
+    device_id: 2
+  }
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "convolution12"
+  type: "Convolution"
+  bottom: "lrn5"
+  bottom: "conv2w"
+  bottom: "conv2b"
+  top: "convolution12"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  convolution_param {
+    num_output: 256
+    pad: 2
+    kernel_size: 5
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu16"
+  type: "ReLU"
+  bottom: "convolution12"
+  top: "convolution12"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+layer {
+  name: "pooling8"
+  type: "Pooling"
+  bottom: "convolution12"
+  top: "pooling8"
+  device {
+    type: GPU
+    device_id: 2
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "lrn6"
+  type: "LRN"
+  bottom: "pooling8"
+  top: "lrn6"
+  device {
+    type: GPU
+    device_id: 2
+  }
+  lrn_param {
+    local_size: 5
+    alpha: 0.0001
+    beta: 0.75
+  }
+}
+layer {
+  name: "convolution13"
+  type: "Convolution"
+  bottom: "lrn6"
+  bottom: "conv3w"
+  bottom: "conv3b"
+  top: "convolution13"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+  }
+}
+layer {
+  name: "relu17"
+  type: "ReLU"
+  bottom: "convolution13"
+  top: "convolution13"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+layer {
+  name: "convolution14"
+  type: "Convolution"
+  bottom: "convolution13"
+  bottom: "conv4w"
+  bottom: "conv4b"
+  top: "convolution14"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  convolution_param {
+    num_output: 384
+    pad: 1
+    kernel_size: 3
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu18"
+  type: "ReLU"
+  bottom: "convolution14"
+  top: "convolution14"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+layer {
+  name: "convolution15"
+  type: "Convolution"
+  bottom: "convolution14"
+  bottom: "conv5w"
+  bottom: "conv5b"
+  top: "convolution15"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  convolution_param {
+    num_output: 256
+    pad: 1
+    kernel_size: 3
+    group: 2
+    stride: 1
+  }
+}
+layer {
+  name: "relu19"
+  type: "ReLU"
+  bottom: "convolution15"
+  top: "convolution15"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+layer {
+  name: "pooling9"
+  type: "Pooling"
+  bottom: "convolution15"
+  top: "pooling9"
+  device {
+    type: GPU
+    device_id: 2
+  }
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "inner_product7"
+  type: "InnerProduct"
+  bottom: "pooling9"
+  bottom: "fc6w"
+  bottom: "fc6b"
+  top: "inner_product7"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  inner_product_param {
+    num_output: 4096
+  }
+}
+layer {
+  name: "relu20"
+  type: "ReLU"
+  bottom: "inner_product7"
+  top: "inner_product7"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+layer {
+  name: "inner_product8"
+  type: "InnerProduct"
+  bottom: "inner_product7"
+  bottom: "fc7w"
+  bottom: "fc7b"
+  top: "inner_product8"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  inner_product_param {
+    num_output: 4096
+  }
+}
+layer {
+  name: "relu21"
+  type: "ReLU"
+  bottom: "inner_product8"
+  top: "inner_product8"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+layer {
+  name: "inner_product9"
+  type: "InnerProduct"
+  bottom: "inner_product8"
+  bottom: "fc8w"
+  bottom: "fc8b"
+  top: "inner_product9"
+  param_bottoms: 2
+  device {
+    type: GPU
+    device_id: 2
+  }
+  inner_product_param {
+    num_output: 1000
+  }
+}
+layer {
+  name: "dummy_data6"
+  type: "DummyData"
+  top: "dummy_data6"
+  device {
+    type: GPU
+    device_id: 2
+  }
+  dummy_data_param {
+    shape {
+      dim: 85
+    }
+  }
+}
+layer {
+  name: "loss3"
+  type: "SoftmaxWithLoss"
+  bottom: "inner_product9"
+  bottom: "dummy_data6"
+  top: "loss3"
+  device {
+    type: GPU
+    device_id: 2
+  }
+}
+

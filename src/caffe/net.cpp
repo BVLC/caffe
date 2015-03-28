@@ -1,3 +1,8 @@
+#include <boost/make_shared.hpp>
+#ifdef WITH_NVTX
+#include <nvToolsExt.h>
+#endif
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -32,6 +37,14 @@ Net<Dtype>::Net(const string& param_file, Phase phase) {
 }
 
 template <typename Dtype>
+Net<Dtype>::~Net() {
+  for (int id = 0; id < threads_.size(); ++id) {
+    threads_[id]->Interrupt();
+    threads_[id]->WaitForInternalThreadToExit();
+  }
+}
+
+template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   // Set phase from the state.
   phase_ = in_param.state().phase();
@@ -44,6 +57,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param;
   InsertSplits(filtered_param, &param);
+  // Assign devices, translate ids, and create thread objects.
+  SetupThreads(&param);
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -62,7 +77,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // set the input blobs
   for (int input_id = 0; input_id < param.input_size(); ++input_id) {
     const int layer_id = -1;  // inputs have fake layer ID -1
-    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
+    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx,
+        NULL);
   }
   DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
   // For each layer, set up its input and output
@@ -72,6 +88,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
   bottom_need_backward_.resize(param.layer_size());
+  layer_parents_.resize(param.layer_size());
+  layer_children_.resize(param.layer_size());
+  layer_forward_done_.resize(param.layer_size());
+  layer_backward_done_.resize(param.layer_size());
+  map<int, int> top_blob_idx_to_layer;
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
@@ -87,13 +108,15 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
       const int blob_id = AppendBottom(param, layer_id, bottom_id,
-                                       &available_blobs, &blob_name_to_idx);
+                                       &available_blobs, blob_name_to_idx,
+                                       top_blob_idx_to_layer);
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
     }
     int num_top = layer_param.top_size();
     for (int top_id = 0; top_id < num_top; ++top_id) {
-      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
+      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx,
+          &top_blob_idx_to_layer);
     }
     // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
     // specified fewer than the required number (as specified by
@@ -106,11 +129,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         // Add "anonymous" top blobs -- do not modify available_blobs or
         // blob_name_to_idx as we don't want these blobs to be usable as input
         // to other layers.
-        AppendTop(param, layer_id, num_top, NULL, NULL);
+        AppendTop(param, layer_id, num_top, NULL, NULL, NULL);
       }
     }
     // After this layer is connected, set it up.
     LOG(INFO) << "Setting up " << layer_names_[layer_id];
+    Caffe::SetDevice(param.layer(layer_id).device());
     layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
@@ -216,6 +240,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   debug_info_ = param.debug_info();
   LOG(INFO) << "Network initialization done.";
   LOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
+  // Start the compute threads.
+  for (int id = 0; id < threads_.size(); ++id) {
+    threads_[id]->StartInternalThread();
+  }
 }
 
 template <typename Dtype>
@@ -246,6 +274,81 @@ void Net<Dtype>::FilterNet(const NetParameter& param,
       param_filtered->add_layer()->CopyFrom(layer_param);
     }
   }
+}
+
+template <typename Dtype>
+void Net<Dtype>::SetupThreads(NetParameter* param) {
+  set<int> device_ids;
+  map<tuple<DeviceParameter_DeviceType, int, int>, int> thread_map;
+  map<int, int> device_map;
+  for (int i = 0; i < param->layer_size(); ++i) {
+    const LayerParameter& layer_param = param->layer(i);
+    if (layer_param.device().type() == DeviceParameter_DeviceType_GPU) {
+      device_ids.insert(layer_param.device().device_id());
+    }
+    tuple<DeviceParameter_DeviceType, int, int> thread_key
+        (layer_param.device().type(), layer_param.device().device_id(),
+         layer_param.thread_id());
+    if (thread_map.find(thread_key) == thread_map.end()) {
+      const int thread_id = thread_map.size();
+      thread_map[thread_key] = thread_id;
+    }
+    thread_ids_.push_back(thread_map[thread_key]);
+  }
+  // Assign logical device ids to physical ones.
+  // XXX there is currently no way to specify which physical devices to use
+  int physical_id = 0;
+  for (set<int>::iterator it = device_ids.begin();
+      it != device_ids.end(); ++it) {
+    device_map[*it] = physical_id;
+    physical_id++;
+  }
+  // Create thread objects.
+  for (map<tuple<DeviceParameter_DeviceType, int, int>, int>::iterator it =
+       thread_map.begin(); it != thread_map.end(); ++it) {
+    DeviceParameter device;
+    device.set_type(it->first.get<0>());
+    device.set_device_id(device_map[it->first.get<1>()]);
+    threads_.push_back(boost::make_shared<ComputeThread>(device, this));
+  }
+  // Convert logical ids to physical ones.
+  for (int i = 0; i < param->layer_size(); ++i) {
+    LayerParameter* layer_param = param->mutable_layer(i);
+    layer_param->mutable_device()->set_device_id(
+        device_map[layer_param->device().device_id()]);
+    if (string(layer_param->type()) == "Split") {
+      SplitParameter* split_param = layer_param->mutable_split_param();
+      // XXX check that top device is correct
+      for (int j = 0; j < split_param->top_device_size(); ++j) {
+        split_param->mutable_top_device(j)->set_device_id(
+            device_map[split_param->top_device(j).device_id()]);
+      }
+    }
+  }
+  // Enable P2P access.
+  int current_device;
+  CUDA_CHECK(cudaGetDevice(&current_device));
+  for (int i = 0; i < device_map.size(); ++i) {
+    for (int j = 0; j < device_map.size(); ++j) {
+      if (i == j) { continue; }
+      int can_access;
+      CUDA_CHECK(cudaDeviceCanAccessPeer(&can_access,
+            device_map[i], device_map[j]));
+      if (can_access) {
+        CUDA_CHECK(cudaSetDevice(device_map[i]));
+        CUDA_CHECK(cudaDeviceEnablePeerAccess(device_map[j], 0));
+        LOG(INFO) << "Enabled P2P access: " << device_map[j] << " -> "
+          << device_map[i];
+      } else {
+        LOG(INFO) << "Cannot enable P2P access: " << device_map[j] << " -> "
+          << device_map[i];
+      }
+    }
+  }
+  CUDA_CHECK(cudaSetDevice(current_device));
+
+  LOG(INFO) << "Computing with " << threads_.size() << " thread(s) on "
+    << device_map.size() << " GPU(s).";
 }
 
 template <typename Dtype>
@@ -314,7 +417,8 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
                            const int top_id, set<string>* available_blobs,
-                           map<string, int>* blob_name_to_idx) {
+                           map<string, int>* blob_name_to_idx,
+                           map<int, int>* top_blob_idx_to_layer) {
   shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
     (new LayerParameter(param.layer(layer_id))) : NULL);
   const string& blob_name = layer_param ?
@@ -325,8 +429,12 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
       blob_name == layer_param->bottom(top_id)) {
     // In-place computation
     LOG(INFO) << layer_param->name() << " -> " << blob_name << " (in-place)";
-    top_vecs_[layer_id].push_back(blobs_[(*blob_name_to_idx)[blob_name]].get());
-    top_id_vecs_[layer_id].push_back((*blob_name_to_idx)[blob_name]);
+    const int blob_id = (*blob_name_to_idx)[blob_name];
+    top_vecs_[layer_id].push_back(blobs_[blob_id].get());
+    top_id_vecs_[layer_id].push_back(blob_id);
+    if (top_blob_idx_to_layer) {
+      (*top_blob_idx_to_layer)[blob_id] = layer_id;
+    }
   } else if (blob_name_to_idx &&
              blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
@@ -358,8 +466,11 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
       net_input_blob_indices_.push_back(blob_id);
       net_input_blobs_.push_back(blob_pointer.get());
     } else {
-      top_id_vecs_[layer_id].push_back(blob_id);
       top_vecs_[layer_id].push_back(blob_pointer.get());
+      top_id_vecs_[layer_id].push_back(blob_id);
+      if (top_blob_idx_to_layer) {
+        (*top_blob_idx_to_layer)[blob_id] = layer_id;
+      }
     }
   }
   if (available_blobs) { available_blobs->insert(blob_name); }
@@ -369,17 +480,21 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
 template <typename Dtype>
 int Net<Dtype>::AppendBottom(const NetParameter& param,
     const int layer_id, const int bottom_id,
-    set<string>* available_blobs, map<string, int>* blob_name_to_idx) {
+    set<string>* available_blobs, const map<string, int>& blob_name_to_idx,
+    const map<int, int>& top_blob_idx_to_layer) {
   const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);
   if (available_blobs->find(blob_name) == available_blobs->end()) {
     LOG(FATAL) << "Unknown blob input " << blob_name
                << " (at index " << bottom_id << ") to layer " << layer_id;
   }
-  const int blob_id = (*blob_name_to_idx)[blob_name];
+  const int blob_id = blob_name_to_idx.find(blob_name)->second;
   LOG(INFO) << layer_names_[layer_id] << " <- " << blob_name;
   bottom_vecs_[layer_id].push_back(blobs_[blob_id].get());
   bottom_id_vecs_[layer_id].push_back(blob_id);
+  const int parent_layer = top_blob_idx_to_layer.find(blob_id)->second;
+  layer_parents_[layer_id].push_back(parent_layer);
+  layer_children_[parent_layer].push_back(layer_id);
   available_blobs->erase(blob_name);
   const bool need_backward = blob_need_backward_[blob_id];
   bottom_need_backward_[layer_id].push_back(need_backward);
@@ -459,23 +574,61 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
 }
 
 template <typename Dtype>
-Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
+void Net<Dtype>::ForwardFromToAsync(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
-  Dtype loss = 0;
   if (debug_info_) {
     for (int i = 0; i < net_input_blobs_.size(); ++i) {
       InputDebugInfo(i);
     }
   }
+  for (int i = 0; i < threads_.size(); ++i) {
+    threads_[i]->reset_loss();
+  }
+  for (int i = 0; i < layers_.size(); ++i) {
+    layer_forward_done_[i] = i < start;
+  }
   for (int i = start; i <= end; ++i) {
-    // LOG(ERROR) << "Forwarding " << layer_names_[i];
-    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
-    Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
-    loss += layer_loss;
-    if (debug_info_) { ForwardDebugInfo(i); }
+    threads_[thread_ids_[i]]->enqueue(Operation(i, Operation::FORWARD));
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::BackwardFromToAsync(int start, int end) {
+  CHECK_GE(end, 0);
+  CHECK_LT(start, layers_.size());
+  for (int i = 0; i < layers_.size(); ++i) {
+    layer_backward_done_[i] = i > start;
+  }
+  for (int i = start; i >= end; --i) {
+    threads_[thread_ids_[i]]->enqueue(Operation(i, Operation::BACKWARD));
+  }
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::SyncThreads() {
+  Dtype loss = 0;
+  for (int i = 0; i < threads_.size(); ++i) {
+    threads_[i]->wait();
+    loss += threads_[i]->loss();
   }
   return loss;
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::ForwardBackward(const vector<Blob<Dtype>*>& bottom) {
+  for (int i = 0; i < bottom.size(); ++i) {
+    net_input_blobs_[i]->CopyFrom(*bottom[i]);
+  }
+  ForwardFromToAsync(0, layers_.size() - 1);
+  BackwardFromToAsync(layers_.size() - 1, 0);
+  return SyncThreads();
+}
+
+template <typename Dtype>
+Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
+  ForwardFromToAsync(start, end);
+  return SyncThreads();
 }
 
 template <typename Dtype>
@@ -531,15 +684,8 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
 
 template <typename Dtype>
 void Net<Dtype>::BackwardFromTo(int start, int end) {
-  CHECK_GE(end, 0);
-  CHECK_LT(start, layers_.size());
-  for (int i = start; i >= end; --i) {
-    if (layer_need_backward_[i]) {
-      layers_[i]->Backward(
-          top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
-      if (debug_info_) { BackwardDebugInfo(i); }
-    }
-  }
+  BackwardFromToAsync(start, end);
+  SyncThreads();
 }
 
 template <typename Dtype>
@@ -680,7 +826,7 @@ void Net<Dtype>::Backward() {
 template <typename Dtype>
 void Net<Dtype>::Reshape() {
   for (int i = 0; i < layers_.size(); ++i) {
-    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
+    layers_[i]->ReshapeOnly();
   }
 }
 
@@ -811,6 +957,57 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
     LOG(WARNING) << "Unknown layer name " << layer_name;
   }
   return layer_ptr;
+}
+
+template <typename Dtype>
+void Net<Dtype>::ComputeThread::InternalThreadEntry() {
+  Caffe::SetDevice(device_);
+  while (true) {
+    Operation op = queue_.peek();
+    const vector<vector<int> >& layer_prereqs =
+      op.direction_ == Operation::FORWARD
+      ? net_->layer_parents() : net_->layer_children();
+    vector<bool>& layer_done = op.direction_ == Operation::FORWARD ?
+      net_->layer_forward_done_ : net_->layer_backward_done_;
+
+    for (int i = 0; i < layer_prereqs[op.layer_index_].size(); ++i) {
+      boost::mutex::scoped_lock lock(net_->layer_done_mutex_);
+      while (!layer_done[layer_prereqs[op.layer_index_][i]]) {
+        net_->layer_done_cond_.wait(lock);
+      }
+    }
+    if (op.direction_ == Operation::FORWARD) {
+#ifdef WITH_NVTX
+      nvtxRangeId_t id = nvtxRangeStartA(
+          (net_->layer_names()[op.layer_index_] + " forward").c_str());
+#endif
+      loss_ += net_->layers()[op.layer_index_]->Forward(
+          net_->bottom_vecs()[op.layer_index_],
+          net_->top_vecs()[op.layer_index_]);
+      if (net_->debug_info_) { net_->ForwardDebugInfo(op.layer_index_); }
+#ifdef WITH_NVTX
+      nvtxRangeEnd(id);
+#endif
+    } else {
+#ifdef WITH_NVTX
+      nvtxRangeId_t id = nvtxRangeStartA(
+          (net_->layer_names()[op.layer_index_] + " backward").c_str());
+#endif
+      net_->layers()[op.layer_index_]->Backward(
+          net_->top_vecs()[op.layer_index_],
+          net_->bottom_need_backward()[op.layer_index_],
+          net_->bottom_vecs()[op.layer_index_]);
+      if (net_->debug_info_) { net_->BackwardDebugInfo(op.layer_index_); }
+#ifdef WITH_NVTX
+      nvtxRangeEnd(id);
+#endif
+    }
+    boost::mutex::scoped_lock lock(net_->layer_done_mutex_);
+    layer_done[op.layer_index_] = true;
+    net_->layer_done_cond_.notify_all();
+    lock.unlock();
+    queue_.pop();
+  }
 }
 
 INSTANTIATE_CLASS(Net);

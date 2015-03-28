@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/util/insert_splits.hpp"
@@ -15,6 +16,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
   param_split->clear_layer();
   map<string, pair<int, int> > blob_name_to_last_top_idx;
   map<pair<int, int>, pair<int, int> > bottom_idx_to_source_top_idx;
+  map<pair<int, int>, vector<int> > top_idx_to_splits;
   map<pair<int, int>, int> top_idx_to_bottom_count;
   map<pair<int, int>, float> top_idx_to_loss_weight;
   map<pair<int, int>, int> top_idx_to_bottom_split_idx;
@@ -37,6 +39,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       const pair<int, int>& bottom_idx = make_pair(i, j);
       const pair<int, int>& top_idx = blob_name_to_last_top_idx[blob_name];
       bottom_idx_to_source_top_idx[bottom_idx] = top_idx;
+      top_idx_to_splits[top_idx].push_back(i);
       ++top_idx_to_bottom_count[top_idx];
     }
     for (int j = 0; j < layer_param.top_size(); ++j) {
@@ -96,6 +99,20 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
         const float loss_weight = top_idx_to_loss_weight[top_idx];
         ConfigureSplitLayer(layer_name, blob_name, j, split_count,
             loss_weight, split_layer_param);
+        split_layer_param->mutable_device()->set_type(
+            layer_param->device().type());
+        split_layer_param->mutable_device()->set_device_id(
+            layer_param->device().device_id());
+        // XXX what should we do here?
+        split_layer_param->set_thread_id(-1);
+        for (int k = 0; k < split_count; ++k) {
+          DeviceParameter* top_device =
+            split_layer_param->mutable_split_param()->add_top_device();
+          top_device->set_type(
+              param.layer(top_idx_to_splits[top_idx][k]).device().type());
+          top_device->set_device_id(
+              param.layer(top_idx_to_splits[top_idx][k]).device().device_id());
+        }
         if (loss_weight) {
           layer_param->clear_loss_weight();
           top_idx_to_bottom_split_idx[top_idx]++;

@@ -30,6 +30,8 @@ DEFINE_string(weights, "",
     "Cannot be set simultaneously with snapshot.");
 DEFINE_int32(iterations, 50,
     "The number of iterations to run.");
+DEFINE_bool(time_layers, true,
+    "Whether to time individual layers, or an entire Forward/Backward pass");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -221,20 +223,25 @@ int time() {
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
-  LOG(INFO) << "Performing Forward";
+  LOG(INFO) << "Performing Forward/Backward";
   // Note that for the speed benchmark, we will assume that the network does
   // not take any input blobs.
-  float initial_loss;
-  caffe_net.Forward(vector<Blob<float>*>(), &initial_loss);
+  float initial_loss = caffe_net.ForwardBackward(vector<Blob<float>*>());
   LOG(INFO) << "Initial loss: " << initial_loss;
-  LOG(INFO) << "Performing Backward";
-  caffe_net.Backward();
+
+  if (!FLAGS_time_layers) {
+    for (int i = 0; i < FLAGS_iterations; ++i) {
+      Timer timer;
+      timer.Start();
+      caffe_net.ForwardBackward(vector<Blob<float>*>());
+      timer.Stop();
+      LOG(INFO) << "Iteration " << i + 1 << " Forward/Backward time: "
+        << timer.MilliSeconds();
+    }
+    return 0;
+  }
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
-  const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
-  const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
-  const vector<vector<bool> >& bottom_need_backward =
-      caffe_net.bottom_need_backward();
   LOG(INFO) << "*** Benchmark begins ***";
   LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";
   Timer total_timer;
@@ -252,18 +259,14 @@ int time() {
     forward_timer.Start();
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
-      // Although Reshape should be essentially free, we include it here
-      // so that we will notice Reshape performance bugs.
-      layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
-      layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+      caffe_net.ForwardFromTo(i, i);
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
     backward_timer.Start();
     for (int i = layers.size() - 1; i >= 0; --i) {
       timer.Start();
-      layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
-                          bottom_vecs[i]);
+      caffe_net.BackwardFromTo(i, i);
       backward_time_per_layer[i] += timer.MicroSeconds();
     }
     backward_time += backward_timer.MicroSeconds();

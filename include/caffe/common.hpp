@@ -2,6 +2,8 @@
 #define CAFFE_COMMON_HPP_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -16,6 +18,7 @@
 #include <utility>  // pair
 #include <vector>
 
+#include "caffe/proto/caffe.pb.h"
 #include "caffe/util/device_alternate.hpp"
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
@@ -68,11 +71,15 @@ private:\
 // See PR #1236
 namespace cv { class Mat; }
 
+// Avoid issues with including boost/thread in NVCC source (#1009).
+namespace boost { template <typename T> class thread_specific_ptr; }
+
 namespace caffe {
 
 // We will use the boost shared_ptr instead of the new C++11 one mainly
 // because cuda does not work (at least now) well with C++11 features.
 using boost::shared_ptr;
+using boost::tuple;
 
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
@@ -98,12 +105,7 @@ void GlobalInit(int* pargc, char*** pargv);
 class Caffe {
  public:
   ~Caffe();
-  inline static Caffe& Get() {
-    if (!singleton_.get()) {
-      singleton_.reset(new Caffe());
-    }
-    return *singleton_;
-  }
+  static Caffe& Get();
   enum Brew { CPU, GPU };
 
   // This random number generator facade hides boost and CUDA rng
@@ -147,6 +149,7 @@ class Caffe {
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
+  static void SetDevice(const DeviceParameter& device);
   // Prints the current GPU status.
   static void DeviceQuery();
 
@@ -158,7 +161,7 @@ class Caffe {
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
-  static shared_ptr<Caffe> singleton_;
+  static boost::thread_specific_ptr<Caffe> singleton_;
 
  private:
   // The private constructor to avoid duplicate instantiation.

@@ -37,4 +37,8 @@ bool InternalThread::WaitForInternalThreadToExit() {
   return true;
 }
 
+void InternalThread::Interrupt() {
+  thread_->interrupt();
+}
+
 }  // namespace caffe
