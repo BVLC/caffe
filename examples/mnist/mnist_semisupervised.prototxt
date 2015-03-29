@@ -75,7 +75,7 @@ layer {
     num_output: 1000
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 15
     }
     bias_filler {
@@ -86,7 +86,7 @@ layer {
 }
 layer {
   name: "encode1neuron"
-  type: "Sigmoid"
+  type: "ReLU"
   bottom: "encode1"
   top: "encode1neuron"
 }
@@ -107,7 +107,7 @@ layer {
     num_output: 500
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 15
     }
     bias_filler {
@@ -118,7 +118,7 @@ layer {
 }
 layer {
   name: "encode2neuron"
-  type: "Sigmoid"
+  type: "ReLU"
   bottom: "encode2"
   top: "encode2neuron"
 }
@@ -139,7 +139,7 @@ layer {
     num_output: 250
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 15
     }
     bias_filler {
@@ -150,7 +150,7 @@ layer {
 }
 layer {
   name: "encode3neuron"
-  type: "Sigmoid"
+  type: "ReLU"
   bottom: "encode3"
   top: "encode3neuron"
 }
@@ -171,7 +171,7 @@ layer {
     num_output: 2
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 1
     }
     bias_filler {
@@ -198,7 +198,7 @@ layer {
     num_output: 10
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 5
     }
     bias_filler {
@@ -227,6 +227,14 @@ layer {
     phase: TEST
   }
 }
+
+layer{
+  name: "softmax4_y"
+  type: "Softmax"
+  bottom: "encode4_y"
+  top: "softmax4_y"
+}
+
 layer {
   name: "softmax_loss"
   type: "SoftmaxWithLoss"
@@ -240,7 +248,7 @@ layer {
 layer {
   name: "encode4"
   bottom: "encode4_z"
-  bottom: "encode4_y"
+  bottom: "softmax4_y"
   top: "encode4"
   type: "Concat"
 }
@@ -262,7 +270,7 @@ layer {
     num_output: 250
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 15
     }
     bias_filler {
@@ -274,7 +282,7 @@ layer {
 
 layer {
   name: "decode4neuron"
-  type: "Sigmoid"
+  type: "ReLU"
   bottom: "decode4"
   top: "decode4neuron"
 }
@@ -295,7 +303,7 @@ layer {
     num_output: 500
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 15
     }
     bias_filler {
@@ -306,7 +314,7 @@ layer {
 }
 layer {
   name: "decode3neuron"
-  type: "Sigmoid"
+  type: "ReLU"
   bottom: "decode3"
   top: "decode3neuron"
 }
@@ -327,7 +335,7 @@ layer {
     num_output: 1000
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 15
     }
     bias_filler {
@@ -338,7 +346,7 @@ layer {
 }
 layer {
   name: "decode2neuron"
-  type: "Sigmoid"
+  type: "ReLU"
   bottom: "decode2"
   top: "decode2neuron"
 }
@@ -359,7 +367,7 @@ layer {
     num_output: 784
     weight_filler {
       type: "gaussian"
-      std: 1
+      std: 0.1
       sparse: 15
     }
     bias_filler {
@@ -374,7 +382,7 @@ layer {
   bottom: "decode1"
   bottom: "flatdata"
   top: "cross_entropy_loss"
-  loss_weight: .1
+  loss_weight: 0.1
 }
 layer {
   name: "decode1neuron"
