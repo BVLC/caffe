@@ -1,4 +1,4 @@
-name: "MNISTAutoencoder"
+name: "MNISTEncoder"
 layer {
   name: "data"
   type: "Data"
