@@ -155,10 +155,10 @@ layer {
   top: "encode3neuron"
 }
 layer {
-  name: "encode4"
+  name: "encode4_z"
   type: "InnerProduct"
   bottom: "encode3neuron"
-  top: "encode4"
+  top: "encode4_z"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -168,11 +168,11 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 30
+    num_output: 2
     weight_filler {
       type: "gaussian"
       std: 1
-      sparse: 15
+      sparse: 1
     }
     bias_filler {
       type: "constant"
@@ -195,11 +195,11 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 30
+    num_output: 10
     weight_filler {
       type: "gaussian"
       std: 1
-      sparse: 15
+      sparse: 5
     }
     bias_filler {
       type: "constant"
@@ -209,30 +209,18 @@ layer {
 }
 
 layer {
-  name: "ip2"
-  type: "InnerProduct"
+  name: "xcov_loss"
+  type: "XCovLoss"
   bottom: "encode4_y"
-  top: "ip2"
-  param {
-    lr_mult: 1
-  }
-  param {
-    lr_mult: 2
-  }
-  inner_product_param {
-    num_output: 10
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
+  bottom: "encode4_z"
+  top: "xcov_loss"
+  loss_weight: 1.
 }
+
 layer {
   name: "accuracy"
   type: "Accuracy"
-  bottom: "ip2"
+  bottom: "encode4_y"
   bottom: "label"
   top: "accuracy"
   include {
@@ -242,10 +230,19 @@ layer {
 layer {
   name: "softmax_loss"
   type: "SoftmaxWithLoss"
-  bottom: "ip2"
+  bottom: "encode4_y"
   bottom: "label"
   top: "softmax_loss"
   loss_weight: 1.
+}
+
+
+layer {
+  name: "encode4"
+  bottom: "encode4_z"
+  bottom: "encode4_y"
+  top: "encode4"
+  type: "Concat"
 }
 
 layer {
@@ -274,6 +271,7 @@ layer {
     }
   }
 }
+
 layer {
   name: "decode4neuron"
   type: "Sigmoid"
