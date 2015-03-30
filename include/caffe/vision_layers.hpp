@@ -298,6 +298,40 @@ class BiasChannelLayer : public Layer<Dtype> {
 };
 
 /**
+   @brief Counts the number of occurrences of a given value across
+   spatial positions.
+   Ignores values in the ignore_label list.
+   It assumes that the input is integers in the [0 num_labels) range.
+   Input:  [num 1 height width]
+   Output: [num num_labels 1 1]
+ */
+template <typename Dtype>
+class HistogramLayer : public Layer<Dtype> {
+ public:
+  explicit HistogramLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Histogram"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  
+  int num_, height_, width_;
+  int num_labels_;
+  // set of ignore labels
+  std::set<int> ignore_label_;
+};
+
+/**
  * @brief A helper for image operations that rearranges image regions into
  *        column vectors.  Used by ConvolutionLayer to perform convolution
  *        by matrix multiplication.
