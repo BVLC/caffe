@@ -390,7 +390,9 @@ class PoolingLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Pooling"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumBottomBlobs() const { 
+    return (this->layer_param_.pooling_param().do_spm()) ? 2 : 1;
+  }
   virtual inline int MinTopBlobs() const { return 1; }
   // MAX POOL layers can output an extra top blob for the mask;
   // others can only output the pooled inputs.
@@ -414,8 +416,9 @@ class PoolingLayer : public Layer<Dtype> {
   int pad_h_, pad_w_;
   int channels_;
   int height_, width_;
-  int pooled_height_, pooled_width_;
-  bool global_pooling_;
+  int pool_h_, pool_w_;
+  bool do_spm_;
+  int shrink_factor_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
 };
