@@ -6,6 +6,8 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include "matio.h"
+
 namespace caffe {
 
 template <typename Dtype>
@@ -67,9 +69,9 @@ Blob<Dtype>::Blob(const vector<int>& shape)
 }
 
 template <typename Dtype>
-const Dtype* Blob<Dtype>::cpu_data() const {
+const Dtype* Blob<Dtype>::cpu_data(const int n, const int c, const int h, const int w) const {
   CHECK(data_);
-  return (const Dtype*)data_->cpu_data();
+  return (const Dtype*)data_->cpu_data() + offset(n, c, h, w);
 }
 
 template <typename Dtype>
@@ -79,45 +81,45 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
 }
 
 template <typename Dtype>
-const Dtype* Blob<Dtype>::gpu_data() const {
+const Dtype* Blob<Dtype>::gpu_data(const int n, const int c, const int h, const int w) const {
   CHECK(data_);
-  return (const Dtype*)data_->gpu_data();
+  return (const Dtype*)data_->gpu_data() + offset(n, c, h, w);
 }
 
 template <typename Dtype>
-const Dtype* Blob<Dtype>::cpu_diff() const {
+const Dtype* Blob<Dtype>::cpu_diff(const int n, const int c, const int h, const int w) const {
   CHECK(diff_);
-  return (const Dtype*)diff_->cpu_data();
+  return (const Dtype*)diff_->cpu_data() + offset(n, c, h, w);
 }
 
 template <typename Dtype>
-const Dtype* Blob<Dtype>::gpu_diff() const {
+const Dtype* Blob<Dtype>::gpu_diff(const int n, const int c, const int h, const int w) const {
   CHECK(diff_);
-  return (const Dtype*)diff_->gpu_data();
+  return (const Dtype*)diff_->gpu_data() + offset(n, c, h, w);
 }
 
 template <typename Dtype>
-Dtype* Blob<Dtype>::mutable_cpu_data() {
+Dtype* Blob<Dtype>::mutable_cpu_data(const int n, const int c, const int h, const int w) {
   CHECK(data_);
-  return static_cast<Dtype*>(data_->mutable_cpu_data());
+  return static_cast<Dtype*>(data_->mutable_cpu_data()) + offset(n, c, h, w);
 }
 
 template <typename Dtype>
-Dtype* Blob<Dtype>::mutable_gpu_data() {
+Dtype* Blob<Dtype>::mutable_gpu_data(const int n, const int c, const int h, const int w) {
   CHECK(data_);
-  return static_cast<Dtype*>(data_->mutable_gpu_data());
+  return static_cast<Dtype*>(data_->mutable_gpu_data()) + offset(n, c, h, w);
 }
 
 template <typename Dtype>
-Dtype* Blob<Dtype>::mutable_cpu_diff() {
+Dtype* Blob<Dtype>::mutable_cpu_diff(const int n, const int c, const int h, const int w) {
   CHECK(diff_);
-  return static_cast<Dtype*>(diff_->mutable_cpu_data());
+  return static_cast<Dtype*>(diff_->mutable_cpu_data()) + offset(n, c, h, w);
 }
 
 template <typename Dtype>
-Dtype* Blob<Dtype>::mutable_gpu_diff() {
+Dtype* Blob<Dtype>::mutable_gpu_diff(const int n, const int c, const int h, const int w) {
   CHECK(diff_);
-  return static_cast<Dtype*>(diff_->mutable_gpu_data());
+  return static_cast<Dtype*>(diff_->mutable_gpu_data()) + offset(n, c, h, w);
 }
 
 template <typename Dtype>
@@ -484,6 +486,82 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
       proto->add_diff(diff_vec[i]);
     }
   }
+}
+
+template <typename Dtype> enum matio_types matio_type_map();
+template <> enum matio_types matio_type_map<float>() { return MAT_T_SINGLE; }
+template <> enum matio_types matio_type_map<double>() { return MAT_T_DOUBLE; }
+template <> enum matio_types matio_type_map<int>() { return MAT_T_INT32; }
+template <> enum matio_types matio_type_map<unsigned int>() { return MAT_T_UINT32; }
+
+template <typename Dtype> enum matio_classes matio_class_map();
+template <> enum matio_classes matio_class_map<float>() { return MAT_C_SINGLE; }
+template <> enum matio_classes matio_class_map<double>() { return MAT_C_DOUBLE; }
+template <> enum matio_classes matio_class_map<int>() { return MAT_C_INT32; }
+template <> enum matio_classes matio_class_map<unsigned int>() { return MAT_C_UINT32; }
+
+template <typename Dtype>
+void Blob<Dtype>::FromMat(const char *fname) {
+  mat_t *matfp;
+  matfp = Mat_Open(fname, MAT_ACC_RDONLY);
+  CHECK(matfp) << "Error opening MAT file " << fname;
+  // Read data
+  matvar_t *matvar;
+  matvar = Mat_VarReadInfo(matfp,"data");
+  CHECK(matvar) << "Field 'data' not present in MAT file " << fname;
+  {
+    CHECK_EQ(matvar->class_type, matio_class_map<Dtype>())
+      << "Field 'data' must be of the right class (single/double) in MAT file " << fname;
+    CHECK(matvar->rank < 5) << "Field 'data' cannot have ndims > 4 in MAT file " << fname;
+    Reshape((matvar->rank > 3) ? matvar->dims[3] : 1,
+	    (matvar->rank > 2) ? matvar->dims[2] : 1,
+	    (matvar->rank > 1) ? matvar->dims[1] : 1,
+	    (matvar->rank > 0) ? matvar->dims[0] : 0);
+    Dtype* data = mutable_cpu_data();
+    int ret = Mat_VarReadDataLinear(matfp, matvar, data, 0, 1, count());	 
+    CHECK(ret == 0) << "Error reading array 'data' from MAT file " << fname;
+    Mat_VarFree(matvar);
+  }
+  // Read diff, if present
+  matvar = Mat_VarReadInfo(matfp,"diff");
+  if (matvar && matvar -> data_size > 0) {
+    CHECK_EQ(matvar->class_type, matio_class_map<Dtype>())
+      << "Field 'diff' must be of the right class (single/double) in MAT file " << fname;
+    Dtype* diff = mutable_cpu_diff();
+    int ret = Mat_VarReadDataLinear(matfp, matvar, diff, 0, 1, count());	 
+    CHECK(ret == 0) << "Error reading array 'diff' from MAT file " << fname;
+    Mat_VarFree(matvar);
+  }
+  Mat_Close(matfp);
+}
+
+template <typename Dtype>
+void Blob<Dtype>::ToMat(const char *fname, bool write_diff) {
+  mat_t *matfp;
+  matfp = Mat_Create(fname, 0);
+  CHECK(matfp) << "Error creating MAT file " << fname;
+  size_t dims[4];
+  dims[0] = shape_[3]; dims[1] = shape_[2]; dims[2] = shape_[1]; dims[3] = shape_[0];
+  matvar_t *matvar;
+  // save data
+  {
+    matvar = Mat_VarCreate("data", matio_class_map<Dtype>(), matio_type_map<Dtype>(),
+			   4, dims, mutable_cpu_data(), 0);
+    CHECK(matvar) << "Error creating 'data' variable";
+    CHECK_EQ(Mat_VarWrite(matfp, matvar, MAT_COMPRESSION_NONE), 0) 
+      << "Error saving array 'data' into MAT file " << fname;
+    Mat_VarFree(matvar);
+  }
+  // save diff
+  if (write_diff) {
+    matvar = Mat_VarCreate("diff", matio_class_map<Dtype>(), matio_type_map<Dtype>(),
+			   4, dims, mutable_cpu_diff(), 0);
+    CHECK(matvar) << "Error creating 'diff' variable";
+    CHECK_EQ(Mat_VarWrite(matfp, matvar, MAT_COMPRESSION_NONE), 0)
+      << "Error saving array 'diff' into MAT file " << fname;
+    Mat_VarFree(matvar);
+  }
+  Mat_Close(matfp);
 }
 
 INSTANTIATE_CLASS(Blob);
