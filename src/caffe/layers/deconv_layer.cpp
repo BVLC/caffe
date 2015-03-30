@@ -10,9 +10,11 @@ namespace caffe {
 
 template <typename Dtype>
 void DeconvolutionLayer<Dtype>::compute_output_shape() {
-  this->height_out_ = this->stride_h_ * (this->height_ - 1) + this->kernel_h_
+  const int kernel_h_eff = this->kernel_h_ + (this->kernel_h_ - 1) * (this->hole_h_ - 1);
+  const int kernel_w_eff = this->kernel_w_ + (this->kernel_w_ - 1) * (this->hole_w_ - 1);
+  this->height_out_ = this->stride_h_ * (this->height_ - 1) + kernel_h_eff
       - 2 * this->pad_h_;
-  this->width_out_ = this->stride_w_ * (this->width_ - 1) + this->kernel_w_
+  this->width_out_ = this->stride_w_ * (this->width_ - 1) + kernel_w_eff
       - 2 * this->pad_w_;
 }
 

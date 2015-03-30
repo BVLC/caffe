@@ -12,6 +12,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
+#include "caffe/util/im2col.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -69,6 +70,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int num_;
   int channels_;
   int pad_h_, pad_w_;
+  int hole_h_, hole_w_;
   int height_, width_;
   int group_;
   int num_output_;
@@ -79,21 +81,25 @@ class BaseConvolutionLayer : public Layer<Dtype> {
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
-    im2col_cpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff);
+    im2col_cpu(data, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, col_buff);
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
-    col2im_cpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data);
+    col2im_cpu(col_buff, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, data);
   }
 #ifndef CPU_ONLY
   inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
-    im2col_gpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff);
+    im2col_gpu(data, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, col_buff);
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
-    col2im_gpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data);
+    col2im_gpu(col_buff, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, data);
   }
 #endif
 
@@ -292,6 +298,7 @@ class Im2colLayer : public Layer<Dtype> {
   int channels_;
   int height_, width_;
   int pad_h_, pad_w_;
+  int hole_h_, hole_w_;
 };
 
 // Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
