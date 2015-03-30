@@ -303,35 +303,50 @@ message LayerParameter {
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
-  optional ArgMaxParameter argmax_param = 103;
-  optional ConcatParameter concat_param = 104;
-  optional ContrastiveLossParameter contrastive_loss_param = 105;
-  optional ConvolutionParameter convolution_param = 106;
-  optional DataParameter data_param = 107;
-  optional DropoutParameter dropout_param = 108;
-  optional DummyDataParameter dummy_data_param = 109;
-  optional EltwiseParameter eltwise_param = 110;
-  optional ExpParameter exp_param = 111;
-  optional HDF5DataParameter hdf5_data_param = 112;
-  optional HDF5OutputParameter hdf5_output_param = 113;
-  optional HingeLossParameter hinge_loss_param = 114;
-  optional ImageDataParameter image_data_param = 115;
-  optional InfogainLossParameter infogain_loss_param = 116;
-  optional InnerProductParameter inner_product_param = 117;
-  optional LRNParameter lrn_param = 118;
-  optional MemoryDataParameter memory_data_param = 119;
-  optional MVNParameter mvn_param = 120;
-  optional PoolingParameter pooling_param = 121;
-  optional PowerParameter power_param = 122;
-  optional PReLUParameter prelu_param = 131;
-  optional PythonParameter python_param = 130;
-  optional ReLUParameter relu_param = 123;
-  optional SigmoidParameter sigmoid_param = 124;
-  optional SoftmaxParameter softmax_param = 125;
-  optional SliceParameter slice_param = 126;
-  optional TanHParameter tanh_param = 127;
-  optional ThresholdParameter threshold_param = 128;
-  optional WindowDataParameter window_data_param = 129;
+  optional AdaptiveBiasChannelParameter adaptive_bias_channel_param = 103;
+  optional ArgMaxParameter argmax_param = 104;
+  optional BiasChannelParameter bias_channel_param = 105;
+  optional CensorLabelParameter censor_label_param = 106;
+  optional ChannelAggregatorParameter channel_aggregator_param = 107;
+  optional ConcatParameter concat_param = 108;
+  optional ContrastiveLossParameter contrastive_loss_param = 109;
+  optional ConvolutionParameter convolution_param = 110;
+  optional DataParameter data_param = 111;
+  optional DenseCRFParameter dense_crf_param = 112;
+  optional DominantChannelParameter dominant_channel_param = 113;
+  optional DropoutParameter dropout_param = 114;
+  optional DummyDataParameter dummy_data_param = 115;
+  optional EltwiseParameter eltwise_param = 116;
+  optional EuclideanLossParameter euclidean_loss_param = 117;
+  optional ExpParameter exp_param = 118;
+  optional GainChannelParameter gain_channel_param = 119;
+  optional HDF5DataParameter hdf5_data_param = 120;
+  optional HDF5OutputParameter hdf5_output_param = 121;
+  optional HingeLossParameter hinge_loss_param = 122;
+  optional ImageDataParameter image_data_param = 123;
+  optional InfogainLossParameter infogain_loss_param = 124;
+  optional InnerProductParameter inner_product_param = 125;
+  optional InterpParameter interp_param = 126;
+  optional LRNParameter lrn_param = 127;
+  optional MatReadParameter mat_read_param = 128;
+  optional MatWriteParameter mat_write_param = 129;
+  optional MemoryDataParameter memory_data_param = 130;
+  optional MVNParameter mvn_param = 131;
+  optional OneHotParameter onehot_param = 132;
+  //optional PaddingParameter padding_param = 133;
+  optional PoolingParameter pooling_param = 134;
+  optional PowerParameter power_param = 135;
+  optional PReLUParameter prelu_param = 136;
+  optional PythonParameter python_param = 137;
+  optional ReLUParameter relu_param = 138;
+  optional SegAccuracyParameter seg_accuracy_param = 139;
+  optional SigmoidParameter sigmoid_param = 140;
+  optional SoftmaxParameter softmax_param = 141;
+  optional SliceParameter slice_param = 142;
+  optional TanHParameter tanh_param = 143;
+  optional ThresholdParameter threshold_param = 144;
+  optional UniqueLabelParameter unique_label_param = 145;
+  optional WindowDataParameter window_data_param = 146;
 }
 
 // Message that stores parameters used to apply transformation
@@ -380,11 +395,39 @@ message AccuracyParameter {
   optional int32 ignore_label = 3;
 }
 
+// Message that stores parameters used by AdaptiveBiasChannelLayer
+message AdaptiveBiasChannelParameter {
+  optional int32 num_iter = 1 [default = 1];
+  optional float bg_portion = 2 [default = 0.2];
+  optional float fg_portion = 3 [default = 0.2];
+  optional bool suppress_others = 4 [default = true];
+  optional float margin_others = 5 [default = 1e-5];
+}
+
 // Message that stores parameters used by ArgMaxLayer
 message ArgMaxParameter {
   // If true produce pairs (argmax, maxval)
   optional bool out_max_val = 1 [default = false];
   optional uint32 top_k = 2 [default = 1];
+}
+
+// Message that stores parameters used by BiasChannelLayer
+message BiasChannelParameter {
+  // Used for initializing the bias. Separate values for BG / FG
+  optional float bg_bias = 1 [default = 1.];
+  optional float fg_bias = 2 [default = 2.];
+  // will ignore labels with this value when adding bias
+  repeated int32 ignore_label = 3;
+}
+
+// Message that stores parameters used by CensorLabelLayer
+message CensorLabelParameter {
+  required int32 ignore_label = 1;
+}
+
+// Message that stores parameters used by ChannelAggregatorLayer
+message ChannelAggregatorParameter {
+  optional string label_map_file = 1;
 }
 
 // Message that stores parameters used by ConcatLayer
@@ -421,6 +464,9 @@ message ConvolutionParameter {
   optional uint32 stride = 6 [default = 1]; // The stride (equal in Y, X)
   optional uint32 stride_h = 13; // The stride height
   optional uint32 stride_w = 14; // The stride width
+  optional uint32 hole = 17 [default = 1]; // The filter stride (equal in Y, X)
+  optional uint32 hole_h = 18 [default = 1]; // The filter stride height
+  optional uint32 hole_w = 19 [default = 1]; // The filter stride width
   optional FillerParameter weight_filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
   enum Engine {
@@ -460,6 +506,26 @@ message DataParameter {
   optional bool mirror = 6 [default = false];
   // Force the encoded image to have 3 color channels
   optional bool force_encoded_color = 9 [default = false];
+}
+
+// Message that sotres parameters used by DenseCRFLayer
+message DenseCRFParameter {
+  // max number of iteration for message passing
+  optional int32 max_iter = 1 [default = 10];
+  // positional std and weight for "Positional" filter (color-independent)
+  repeated float pos_xy_std = 2;
+  repeated float pos_w = 3;
+  // positional std, color std and weight for Bilateral filter
+  repeated float bi_xy_std = 4;
+  repeated float bi_rgb_std = 5;
+  repeated float bi_w = 6; 
+  // output is probability or score (score = log(prob))
+  optional bool output_probability = 7 [default = true];
+}
+
+// Message that stores parameters used by DominantChannelLayer
+message DominantChannelParameter {
+  optional int32 top_k = 1 [default = 1];
 }
 
 // Message that stores parameters used by DropoutLayer
@@ -502,6 +568,15 @@ message EltwiseParameter {
   optional bool stable_prod_grad = 3 [default = true];
 }
 
+// Message that stores parametres used by EuclideanLossLayer
+message EuclideanLossParameter {
+  enum Type {
+    L2 = 0;
+    L2sqrt = 1;
+  }
+  optional Type type = 1 [default = L2];
+}
+
 // Message that stores parameters used by ExpLayer
 message ExpParameter {
   // ExpLayer computes outputs y = base ^ (shift + scale * x), for base > 0.
@@ -510,6 +585,15 @@ message ExpParameter {
   optional float base = 1 [default = -1.0];
   optional float scale = 2 [default = 1.0];
   optional float shift = 3 [default = 0.0];
+}
+
+message GainChannelParameter {
+  required int32 num_output_nz = 1 [default = 0];
+  optional float drift = 2 [default = 0.0];
+  optional float stdev = 3 [default = 0.0];
+  optional FillerParameter gain_filler = 4;
+  optional bool norm_mean = 5 [default = true];
+  optional float thresh = 6 [default = 1e-3];
 }
 
 // Message that stores parameters used by HDF5DataLayer
@@ -537,8 +621,22 @@ message HingeLossParameter {
     L1 = 1;
     L2 = 2;
   }
+  enum Type {
+    MULTICLASS = 1; // each example only has one label
+    ONEVSALL = 2;   // one example can have multiple labels
+  }
   // Specify the Norm to use L1 or L2
   optional Norm norm = 1 [default = L1];
+  optional Type type = 2 [default = MULTICLASS];
+}
+
+message HistogramParameter {
+  required int32 num_labels = 1;
+  repeated int32 ignore_label = 2;
+}
+
+message IgnoreOverlayParameter {
+  optional int32 ignore_label = 1;
 }
 
 // Message that stores parameters used by ImageDataLayer
@@ -559,6 +657,14 @@ message ImageDataParameter {
   optional uint32 new_width = 10 [default = 0];
   // Specify if the images are color or gray
   optional bool is_color = 11 [default = true];
+  // This is the value set for pixels or images where we don't know the label
+  optional int32 ignore_label = 15 [default = 255];
+  enum LabelType {
+    NONE = 0;
+    IMAGE = 1;
+    PIXEL = 2;
+  }
+  optional LabelType label_type = 16 [default = IMAGE];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
   // simple scaling and subtracting the data mean, if provided. Note that the
   // mean subtraction is always carried out before scaling.
@@ -571,6 +677,7 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+  optional int32 max_labels = 14 [default = 1];
 }
 
 // Message that stores parameters InfogainLossLayer
@@ -592,6 +699,16 @@ message InnerProductParameter {
   optional int32 axis = 5 [default = 1];
 }
 
+// Message that stores parameters used by InterpLayer
+message InterpParameter {
+  optional int32 height = 1 [default = 0]; // Height of output
+  optional int32 width = 2 [default = 0]; // Width of output
+  optional int32 zoom_factor = 3 [default = 1]; // zoom factor
+  optional int32 shrink_factor = 4 [default = 1]; // shrink factor
+  optional int32 pad_beg = 5 [default = 0]; // padding at begin of input
+  optional int32 pad_end = 6 [default = 0]; // padding at end of input
+}
+
 // Message that stores parameters used by LRNLayer
 message LRNParameter {
   optional uint32 local_size = 1 [default = 5];
@@ -603,6 +720,22 @@ message LRNParameter {
   }
   optional NormRegion norm_region = 4 [default = ACROSS_CHANNELS];
   optional float k = 5 [default = 1.];
+}
+
+// Message that stores parameters used by MatReadLayer
+message MatReadParameter {
+  required string prefix = 1;
+  optional string source = 2 [default = ""];
+  optional int32 strip = 3 [default = 0];
+  optional int32 batch_size = 4 [default = 1];
+}
+
+// Message that stores parameters used by MatWriteLayer
+message MatWriteParameter {
+  required string prefix = 1;
+  optional string source = 2 [default = ""];
+  optional int32 strip = 3 [default = 0];
+  optional int32 period = 4 [default = 1];
 }
 
 // Message that stores parameters used by MemoryDataLayer
@@ -620,6 +753,17 @@ message MVNParameter {
 
   // This parameter can be set to true to perform DNN-like MVN
   optional bool across_channels = 2 [default = false];
+}
+
+// Message that stores parameters used by OneHotLayer
+message OneHotParameter {
+  required int32 num_labels = 1;
+}
+
+// Message that stores parameters used by PaddingLayer
+message PaddingParameter {
+  optional int32 pad_beg = 1 [default = 0]; // Padding at the beginning
+  optional int32 pad_end = 2 [default = 0]; // Padding at the end
 }
 
 // Message that stores parameters used by PoolingLayer
@@ -647,9 +791,13 @@ message PoolingParameter {
     CUDNN = 2;
   }
   optional Engine engine = 11 [default = DEFAULT];
-  // If global_pooling then it will pool over the size of the bottom by doing
-  // kernel_h = bottom->height and kernel_w = bottom->width
-  optional bool global_pooling = 12 [default = false];
+  // If do_spm, then you need to specify directly the pool_size
+  // instead of the kernel_size.
+  optional bool do_spm = 13 [default = false];
+  optional uint32 pool_size = 14 [default = 0];
+  optional uint32 pool_h = 15 [default = 0];
+  optional uint32 pool_w = 16 [default = 0];
+  optional int32  shrink_factor = 17 [default = 1]; // shrink factor
 }
 
 // Message that stores parameters used by PowerLayer
@@ -680,6 +828,19 @@ message ReLUParameter {
     CUDNN = 2;
   }
   optional Engine engine = 2 [default = DEFAULT];
+}
+
+// Message that stores parametres used by SegAccuracyLayer
+message SegAccuracyParameter {
+  enum AccuracyMetric {
+    PixelAccuracy = 0;
+    ClassAccuracy = 1;
+    PixelIOU = 2;
+  }
+  optional AccuracyMetric metric = 1 [default = PixelAccuracy];
+  // will ignore pixels with this value when computing accuracy
+  repeated int32 ignore_label = 2;
+  optional bool reset = 3 [default = true];
 }
 
 // Message that stores parameters used by SigmoidLayer
@@ -719,6 +880,14 @@ message SoftmaxParameter {
   optional int32 axis = 2 [default = 1];
 }
 
+// Message that stores parametres used by SoftmaxWithLossLayer
+message SoftmaxLossParameter {
+  // specify the data source for loss_weights_
+  optional string weight_source = 16;
+  // will ignore pixels with this value when computing accuracy
+  repeated int32 ignore_label = 2;
+}
+
 // Message that stores parameters used by TanHLayer
 message TanHParameter {
   enum Engine {
@@ -732,6 +901,13 @@ message TanHParameter {
 // Message that stores parameters used by ThresholdLayer
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
+}
+
+// Message that stores parameters used by UniqueLabelLayer
+message UniqueLabelParameter {
+  required int32 max_labels = 1;
+  repeated float ignore_label = 2;
+  repeated float force_label = 3;
 }
 
 // Message that stores parameters used by WindowDataLayer
