@@ -135,6 +135,31 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
       PyArray_DIMS(data_arr)[0]);
 }
 
+// Scoped GIL releasing
+class ReleaseGIL {
+ public:
+  ReleaseGIL() {
+    state_ = PyEval_SaveThread();
+  }
+  ~ReleaseGIL() {
+    PyEval_RestoreThread(state_);
+  }
+ private:
+  PyThreadState* state_;
+};
+
+// Run forward prop without GIL
+Dtype Net_ForwardFromToNoGIL(Net<Dtype>* net, int start, int end) {
+  ReleaseGIL gil;
+  return net->ForwardFromTo(start, end);
+}
+
+// Run backward prop without GIL
+void Net_BackwardFromToNoGIL(Net<Dtype>* net, int start, int end) {
+  ReleaseGIL gil;
+  net->BackwardFromTo(start, end);
+}
+
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadProtoFromTextFileOrDie(filename, &param);
@@ -206,20 +231,29 @@ vector<T> py_to_vector(bp::object pyiter) {
 void Layer_SetUp(Layer<Dtype> *layer, bp::object py_bottom, bp::object py_top) {
   vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
   vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
-  layer->SetUp(bottom, top);
+  {
+    ReleaseGIL gil;
+    layer->SetUp(bottom, top);
+  }
 }
 void Layer_Reshape(
     Layer<Dtype> *layer, bp::object py_bottom, bp::object py_top) {
   vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
   vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
-  layer->Reshape(bottom, top);
+  {
+    ReleaseGIL gil;
+    layer->Reshape(bottom, top);
+  }
 }
 Dtype Layer_Forward(
     Layer<Dtype> *layer, bp::object py_bottom, bp::object py_top) {
   vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
   vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
   Dtype loss;
-  loss = layer->Forward(bottom, top);
+  {
+    ReleaseGIL gil;
+    loss = layer->Forward(bottom, top);
+  }
   return loss;
 }
 void Layer_Backward(
@@ -228,7 +262,10 @@ void Layer_Backward(
   vector<Blob<Dtype>*> top = py_to_vector<Blob<Dtype>*>(py_top);
   vector<bool> propagate_down = py_to_vector<bool>(py_propagate_down);
   vector<Blob<Dtype>*> bottom = py_to_vector<Blob<Dtype>*>(py_bottom);
-  layer->Backward(top, propagate_down, bottom);
+  {
+    ReleaseGIL gil;
+    layer->Backward(top, propagate_down, bottom);
+  }
 }
 
 // LayerParameter
@@ -287,8 +324,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     bp::no_init)
     .def("__init__", bp::make_constructor(&Net_Init))
     .def("__init__", bp::make_constructor(&Net_Init_Load))
-    .def("_forward", &Net<Dtype>::ForwardFromTo)
-    .def("_backward", &Net<Dtype>::BackwardFromTo)
+    .def("_forward", &Net_ForwardFromToNoGIL)
+    .def("_backward", &Net_BackwardFromToNoGIL)
     .def("reshape", &Net<Dtype>::Reshape)
     // The cast is to select a particular overload.
     .def("copy_from", static_cast<void (Net<Dtype>::*)(const string)>(

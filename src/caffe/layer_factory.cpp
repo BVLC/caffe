@@ -170,8 +170,10 @@ shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
     << "Module name is invalid: " << module_name;
   CHECK(boost::regex_match(layer_name, expression))
     << "Layer name is invalid: " << layer_name;
+  PyEval_InitThreads();
   Py_Initialize();
   try {
+    AcquireGIL gil;
     bp::object globals = bp::import("__main__").attr("__dict__");
     bp::exec(("import " + module_name).c_str(), globals, globals);
     bp::object layer_class = bp::eval((module_name + "." + layer_name).c_str(),

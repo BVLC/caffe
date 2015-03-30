@@ -13,6 +13,7 @@ namespace bp = boost::python;
 namespace caffe {
 
 #define PYTHON_LAYER_ERROR() { \
+  AcquireGIL gil; \
   PyObject *petype, *pevalue, *petrace; \
   PyErr_Fetch(&petype, &pevalue, &petrace); \
   bp::object etype(bp::handle<>(bp::borrowed(petype))); \
@@ -26,6 +27,20 @@ namespace caffe {
   throw; \
 }
 
+// Scoped GIL Acquiring
+class AcquireGIL {
+ public:
+  AcquireGIL() {
+    state_ = PyGILState_Ensure();
+  }
+
+  ~AcquireGIL() {
+    PyGILState_Release(state_);
+  }
+ private:
+  PyGILState_STATE state_;
+};
+
 template <typename Dtype>
 class PythonLayer : public Layer<Dtype> {
  public:
@@ -35,6 +50,7 @@ class PythonLayer : public Layer<Dtype> {
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     try {
+      AcquireGIL gil;
       self_.attr("param_str_") = bp::str(
         this->layer_param_.python_param().param_str());
       self_.attr("setup")(bottom, top);
@@ -46,6 +62,7 @@ class PythonLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     try {
+      AcquireGIL gil;
       self_.attr("reshape")(bottom, top);
     } catch (bp::error_already_set) {
       PYTHON_LAYER_ERROR();
@@ -58,6 +75,7 @@ class PythonLayer : public Layer<Dtype> {
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     try {
+      AcquireGIL gil;
       self_.attr("forward")(bottom, top);
     } catch (bp::error_already_set) {
       PYTHON_LAYER_ERROR();
@@ -66,6 +84,7 @@ class PythonLayer : public Layer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     try {
+      AcquireGIL gil;
       self_.attr("backward")(top, propagate_down, bottom);
     } catch (bp::error_already_set) {
       PYTHON_LAYER_ERROR();
