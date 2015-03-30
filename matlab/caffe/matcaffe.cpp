@@ -242,8 +242,89 @@ static mxArray* do_get_weights() {
   return mx_layers;
 }
 
+static mxArray* do_get_diffs() {
+  const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
+  const vector<string>& layer_names = net_->layer_names();
+
+  // Step 1: count the number of layers with weights
+  int num_layers = 0;
+  {
+    string prev_layer_name = "";
+    for (unsigned int i = 0; i < layers.size(); ++i) {
+      vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
+      if (layer_blobs.size() == 0) {
+        continue;
+      }
+      if (layer_names[i] != prev_layer_name) {
+        prev_layer_name = layer_names[i];
+        num_layers++;
+      }
+    }
+  }
+
+  // Step 2: prepare output array of structures
+  mxArray* mx_layers;
+  {
+    const mwSize dims[2] = {num_layers, 1};
+    const char* fnames[2] = {"weights", "layer_names"};
+    mx_layers = mxCreateStructArray(2, dims, 2, fnames);
+  }
+
+  // Step 3: copy weights into output
+  {
+    string prev_layer_name = "";
+    int mx_layer_index = 0;
+    for (unsigned int i = 0; i < layers.size(); ++i) {
+      vector<shared_ptr<Blob<float> > >& layer_blobs = layers[i]->blobs();
+      if (layer_blobs.size() == 0) {
+        continue;
+      }
+
+      mxArray* mx_layer_cells = NULL;
+      if (layer_names[i] != prev_layer_name) {
+        prev_layer_name = layer_names[i];
+        const mwSize dims[2] = {static_cast<mwSize>(layer_blobs.size()), 1};
+        mx_layer_cells = mxCreateCellArray(2, dims);
+        mxSetField(mx_layers, mx_layer_index, "weights", mx_layer_cells);
+        mxSetField(mx_layers, mx_layer_index, "layer_names",
+            mxCreateString(layer_names[i].c_str()));
+        mx_layer_index++;
+      }
+
+      for (unsigned int j = 0; j < layer_blobs.size(); ++j) {
+        // internally data is stored as (width, height, channels, num)
+        // where width is the fastest dimension
+        mwSize dims[4] = {layer_blobs[j]->width(), layer_blobs[j]->height(),
+            layer_blobs[j]->channels(), layer_blobs[j]->num()};
+
+        mxArray* mx_weights =
+          mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+        mxSetCell(mx_layer_cells, j, mx_weights);
+        float* weights_ptr = reinterpret_cast<float*>(mxGetPr(mx_weights));
+
+        switch (Caffe::mode()) {
+        case Caffe::CPU:
+          caffe_copy(layer_blobs[j]->count(), layer_blobs[j]->cpu_diff(),
+              weights_ptr);
+          break;
+        case Caffe::GPU:
+          caffe_copy(layer_blobs[j]->count(), layer_blobs[j]->gpu_diff(),
+              weights_ptr);
+          break;
+        default:
+          LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+        }
+      }
+    }
+  }
+  return mx_layers;
+}
+
 static void get_weights(MEX_ARGS) {
   plhs[0] = do_get_weights();
+}
+static void get_diffs(MEX_ARGS) {
+  plhs[0] = do_get_diffs();
 }
 
 static void set_mode_cpu(MEX_ARGS) {
@@ -364,6 +445,108 @@ static void read_mean(MEX_ARGS) {
     plhs[0] = mx_blob;
 }
 
+static void do_set_weights(const mxArray* mx_layers) {
+	const vector<shared_ptr<Layer<float> > >& layers = net_->layers();
+	const vector<string>& layer_names = net_->layer_names();
+
+	unsigned int input_layer_num = mxGetNumberOfElements(mx_layers);
+	for (unsigned int i = 0; i < input_layer_num; ++i)
+	{
+
+		// Step 1: get input layer information
+		mxArray *mx_layer_name = mxGetField(mx_layers, i, "layer_names");
+		if (mx_layer_name == NULL)
+		{
+			mexPrintf("layer %d has no field ""layer_names"", ignore\n", i);
+			continue;
+		}
+		char *layer_name = mxArrayToString(mx_layer_name);
+		mxArray *mx_weights_cell = mxGetField(mx_layers, i, "weights");
+		if (mx_weights_cell == NULL)
+		{
+			mexPrintf("layer %d has no field ""weights"", ignore\n", i);
+			continue;
+		}
+		if (!mxIsCell(mx_weights_cell))
+		{
+			mexPrintf("layer %d field ""weights"" is not cell, ignore\n", i);
+			continue;
+		}
+		unsigned int weight_blob_num = mxGetNumberOfElements(mx_weights_cell);
+
+
+		// Step 2: scan model layers, and try to set layer
+		string prev_layer_name = "";
+		for (unsigned int j = 0; j < layers.size(); ++j) {
+
+			vector<shared_ptr<Blob<float> > >& layer_blobs = layers[j]->blobs();
+			if (layer_blobs.size() == 0)
+				continue;
+
+			if (layer_names[j] != string(layer_name))
+				continue;
+
+			if (weight_blob_num != layer_blobs.size())
+			{
+				mexPrintf("%s has % blobs, while model layer has %d blobs, ignore\n", layer_name, weight_blob_num, layer_blobs.size());
+				continue;
+			}
+
+			for (unsigned int k = 0; k < layer_blobs.size(); ++k) {
+				bool setted = false;
+				mxArray *mx_weights = mxGetCell(mx_weights_cell, k);
+				const mwSize* input_blob_dims = mxGetDimensions(mx_weights);
+				int dim_num = mxGetNumberOfDimensions(mx_weights);
+				size_t input_dims[4] = {1, 1, 1, 1};
+				for (int idim = 0; idim < dim_num; ++idim)
+					input_dims[idim] = input_blob_dims[idim];
+
+				if (layer_blobs[k]->width() != (int)input_dims[0] || layer_blobs[k]->height() != (int)input_dims[1] || layer_blobs[k]->channels() != (int)input_dims[2] || layer_blobs[k]->num() != (int)input_dims[3])
+				{
+					mexPrintf("%s blobs %d dims don't match, ignore\n", layer_name, k);
+					continue;
+				}
+
+				float* weights_ptr = reinterpret_cast<float*>(mxGetPr(mx_weights));
+				
+				switch (Caffe::mode()) {
+				case Caffe::CPU:
+					caffe_copy(layer_blobs[k]->count(), weights_ptr, layer_blobs[k]->mutable_cpu_data());
+					setted = true;
+					break;
+				case Caffe::GPU:
+					caffe_copy(layer_blobs[k]->count(), weights_ptr, layer_blobs[k]->mutable_gpu_data());
+					setted = true;
+					break;
+				default:
+					LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+				}
+
+				if (setted)
+					;//mexPrintf("copied weights for %s blob %d \n", layer_name, k);
+			}
+
+		}
+		mxFree(layer_name);
+	}
+}
+
+static void set_weights(MEX_ARGS) {
+	if (nrhs != 1) {
+		LOG(ERROR) << "Only given " << nrhs << " arguments";
+		mexErrMsgTxt("caffe_mex : Wrong number of arguments");
+	}
+
+	if (net_.use_count() == 0)
+	{
+		mexPrintf("No solver inited!\n");
+		plhs[0] = mxCreateDoubleScalar(-1);
+		return;
+	}
+
+	do_set_weights(prhs[0]);
+}
+
 /** -----------------------------------------------------------------
  ** Available commands.
  **/
@@ -382,6 +565,8 @@ static handler_registry handlers[] = {
   { "set_mode_gpu",       set_mode_gpu    },
   { "set_device",         set_device      },
   { "get_weights",        get_weights     },
+  { "set_weights",	  set_weights	  }, 
+  { "get_diffs",	  get_diffs	  },
   { "get_init_key",       get_init_key    },
   { "reset",              reset           },
   { "read_mean",          read_mean       },
