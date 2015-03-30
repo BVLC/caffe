@@ -9,7 +9,7 @@ namespace caffe {
 
 template <typename Dtype>
 void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   CHECK(!conv_param.has_kernel_size() !=
       !(conv_param.has_kernel_h() && conv_param.has_kernel_w()))
@@ -49,11 +49,13 @@ void Im2colLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
+  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
+      << "corresponding to (num, channels, height, width)";
   channels_ = bottom[0]->channels();
   height_ = bottom[0]->height();
   width_ = bottom[0]->width();
-  (*top)[0]->Reshape(
+  top[0]->Reshape(
       bottom[0]->num(), channels_ * kernel_h_ * kernel_w_,
       (height_ + 2 * pad_h_ - kernel_h_) / stride_h_ + 1,
       (width_ + 2 * pad_w_ - kernel_w_) / stride_w_ + 1);
@@ -61,25 +63,25 @@ void Im2colLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void Im2colLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
   for (int n = 0; n < bottom[0]->num(); ++n) {
     im2col_cpu(bottom_data + bottom[0]->offset(n), channels_, height_,
         width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
-        stride_h_, stride_w_, top_data + (*top)[0]->offset(n));
+        stride_h_, stride_w_, top_data + top[0]->offset(n));
   }
 }
 
 template <typename Dtype>
 void Im2colLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   for (int n = 0; n < top[0]->num(); ++n) {
     col2im_cpu(top_diff + top[0]->offset(n), channels_, height_, width_,
         kernel_h_, kernel_w_, pad_h_, pad_w_,
-        stride_h_, stride_w_, bottom_diff + (*bottom)[0]->offset(n));
+        stride_h_, stride_w_, bottom_diff + bottom[0]->offset(n));
   }
 }
 
@@ -88,5 +90,6 @@ STUB_GPU(Im2colLayer);
 #endif
 
 INSTANTIATE_CLASS(Im2colLayer);
+REGISTER_LAYER_CLASS(Im2col);
 
 }  // namespace caffe

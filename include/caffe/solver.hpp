@@ -26,16 +26,19 @@ class Solver {
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
+  void Step(int iters);
+  // The Restore function implements how one should restore the solver to a
+  // previously snapshotted state. You should implement the RestoreSolverState()
+  // function that restores the state from a SolverState protocol buffer.
+  void Restore(const char* resume_file);
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
+  int iter() { return iter_; }
 
  protected:
-  // PreSolve is run before any solving iteration starts, allowing one to
-  // put up some scaffold.
-  virtual void PreSolve() {}
   // Get the update value for the current iteration.
   virtual void ComputeUpdateValue() = 0;
   // The Solver::Snapshot function implements the basic snapshotting utility
@@ -47,10 +50,6 @@ class Solver {
   void TestAll();
   void Test(const int test_net_id = 0);
   virtual void SnapshotSolverState(SolverState* state) = 0;
-  // The Restore function implements how one should restore the solver to a
-  // previously snapshotted state. You should implement the RestoreSolverState()
-  // function that restores the state from a SolverState protocol buffer.
-  void Restore(const char* resume_file);
   virtual void RestoreSolverState(const SolverState& state) = 0;
   void DisplayOutputBlobs(const int net_id);
 
@@ -72,16 +71,17 @@ template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
   explicit SGDSolver(const SolverParameter& param)
-      : Solver<Dtype>(param) {}
+      : Solver<Dtype>(param) { PreSolve(); }
   explicit SGDSolver(const string& param_file)
-      : Solver<Dtype>(param_file) {}
+      : Solver<Dtype>(param_file) { PreSolve(); }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
 
  protected:
-  virtual void PreSolve();
+  void PreSolve();
   Dtype GetLearningRate();
   virtual void ComputeUpdateValue();
+  virtual void ClipGradients();
   virtual void SnapshotSolverState(SolverState * state);
   virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.

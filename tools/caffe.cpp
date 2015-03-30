@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
 
 using caffe::Blob;
@@ -21,7 +22,7 @@ DEFINE_int32(gpu, -1,
 DEFINE_string(solver, "",
     "The solver definition protocol buffer text file.");
 DEFINE_string(model, "",
-    "The model definition protocol buffer text file.");
+    "The model definition protocol buffer text file..");
 DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
 DEFINE_string(weights, "",
@@ -76,6 +77,19 @@ int device_query() {
 }
 RegisterBrewFunction(device_query);
 
+// Load the weights from the specified caffemodel(s) into the train and
+// test nets.
+void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
+  std::vector<std::string> model_names;
+  boost::split(model_names, model_list, boost::is_any_of(",") );
+  for (int i = 0; i < model_names.size(); ++i) {
+    LOG(INFO) << "Finetuning from " << model_names[i];
+    solver->net()->CopyTrainedLayersFrom(model_names[i]);
+    for (int j = 0; j < solver->test_nets().size(); ++j) {
+      solver->test_nets()[j]->CopyTrainedLayersFrom(model_names[i]);
+    }
+  }
+}
 
 // Train / Finetune a model.
 int train() {
@@ -112,8 +126,7 @@ int train() {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Solve(FLAGS_snapshot);
   } else if (FLAGS_weights.size()) {
-    LOG(INFO) << "Finetuning from " << FLAGS_weights;
-    solver->net()->CopyTrainedLayersFrom(FLAGS_weights);
+    CopyLayers(&*solver, FLAGS_weights);
     solver->Solve();
   } else {
     solver->Solve();
@@ -139,8 +152,7 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Caffe::set_phase(Caffe::TEST);
-  Net<float> caffe_net(FLAGS_model);
+  Net<float> caffe_net(FLAGS_model, caffe::TEST);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
@@ -205,8 +217,7 @@ int time() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Caffe::set_phase(Caffe::TRAIN);
-  Net<float> caffe_net(FLAGS_model);
+  Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
@@ -220,8 +231,8 @@ int time() {
   caffe_net.Backward();
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
-  vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
-  vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
+  const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
+  const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
       caffe_net.bottom_need_backward();
   LOG(INFO) << "*** Benchmark begins ***";
@@ -229,38 +240,54 @@ int time() {
   Timer total_timer;
   total_timer.Start();
   Timer forward_timer;
-  forward_timer.Start();
+  Timer backward_timer;
   Timer timer;
-  for (int i = 0; i < layers.size(); ++i) {
-    const caffe::string& layername = layers[i]->layer_param().name();
-    timer.Start();
-    for (int j = 0; j < FLAGS_iterations; ++j) {
+  std::vector<double> forward_time_per_layer(layers.size(), 0.0);
+  std::vector<double> backward_time_per_layer(layers.size(), 0.0);
+  double forward_time = 0.0;
+  double backward_time = 0.0;
+  for (int j = 0; j < FLAGS_iterations; ++j) {
+    Timer iter_timer;
+    iter_timer.Start();
+    forward_timer.Start();
+    for (int i = 0; i < layers.size(); ++i) {
+      timer.Start();
       // Although Reshape should be essentially free, we include it here
       // so that we will notice Reshape performance bugs.
-      layers[i]->Reshape(bottom_vecs[i], &top_vecs[i]);
-      layers[i]->Forward(bottom_vecs[i], &top_vecs[i]);
+      layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
+      layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+      forward_time_per_layer[i] += timer.MicroSeconds();
     }
-    LOG(INFO) << layername << "\tforward: " << timer.MilliSeconds() <<
-        " milliseconds.";
-  }
-  LOG(INFO) << "Forward pass: " << forward_timer.MilliSeconds() <<
-      " milliseconds.";
-  Timer backward_timer;
-  backward_timer.Start();
-  for (int i = layers.size() - 1; i >= 0; --i) {
-    const caffe::string& layername = layers[i]->layer_param().name();
-    timer.Start();
-    for (int j = 0; j < FLAGS_iterations; ++j) {
+    forward_time += forward_timer.MicroSeconds();
+    backward_timer.Start();
+    for (int i = layers.size() - 1; i >= 0; --i) {
+      timer.Start();
       layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
-                          &bottom_vecs[i]);
+                          bottom_vecs[i]);
+      backward_time_per_layer[i] += timer.MicroSeconds();
     }
-    LOG(INFO) << layername << "\tbackward: "
-        << timer.MilliSeconds() << " milliseconds.";
+    backward_time += backward_timer.MicroSeconds();
+    LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
+      << iter_timer.MilliSeconds() << " ms.";
   }
-  LOG(INFO) << "Backward pass: " << backward_timer.MilliSeconds() <<
-      " milliseconds.";
-  LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() <<
-      " milliseconds.";
+  LOG(INFO) << "Average time per layer: ";
+  for (int i = 0; i < layers.size(); ++i) {
+    const caffe::string& layername = layers[i]->layer_param().name();
+    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
+      "\tforward: " << forward_time_per_layer[i] / 1000 /
+      FLAGS_iterations << " ms.";
+    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
+      "\tbackward: " << backward_time_per_layer[i] / 1000 /
+      FLAGS_iterations << " ms.";
+  }
+  total_timer.Stop();
+  LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
+    FLAGS_iterations << " ms.";
+  LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
+    FLAGS_iterations << " ms.";
+  LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
+    FLAGS_iterations << " ms.";
+  LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
 }

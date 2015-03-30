@@ -76,13 +76,12 @@ class GaussianFiller : public Filler<Dtype> {
     CHECK_GE(sparse, -1);
     if (sparse >= 0) {
       // Sparse initialization is implemented for "weight" blobs; i.e. matrices.
-      // These have num == channels == 1; height is number of inputs; width is
+      // These have num == channels == 1; width is number of inputs; height is
       // number of outputs.  The 'sparse' variable specifies the mean number
       // of non-zero input weights for a given output.
-      CHECK_EQ(blob->num(), 1);
-      CHECK_EQ(blob->channels(), 1);
-      int num_inputs = blob->height();
-      Dtype non_zero_probability = Dtype(sparse) / Dtype(num_inputs);
+      CHECK_GE(blob->num_axes(), 1);
+      const int num_outputs = blob->shape(0);
+      Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);
       rand_vec_.reset(new SyncedMemory(blob->count() * sizeof(int)));
       int* mask = reinterpret_cast<int*>(rand_vec_->mutable_cpu_data());
       caffe_rng_bernoulli(blob->count(), non_zero_probability, mask);

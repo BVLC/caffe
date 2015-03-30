@@ -9,8 +9,8 @@ namespace caffe {
 
 template <typename Dtype>
 void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
-  (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
+      const vector<Blob<Dtype>*>& top) {
+  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
   mean_.Reshape(bottom[0]->num(), bottom[0]->channels(),
       1, 1);
@@ -26,9 +26,9 @@ void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = (*top)[0]->mutable_cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
   int num;
   if (this->layer_param_.mvn_param().across_channels())
     num = bottom[0]->num();
@@ -89,19 +89,19 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
+    const vector<Blob<Dtype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   const Dtype* top_data = top[0]->cpu_data();
-  const Dtype* bottom_data = (*bottom)[0]->cpu_data();
-  Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
 
   int num;
   if (this->layer_param_.mvn_param().across_channels())
-    num = (*bottom)[0]->num();
+    num = bottom[0]->num();
   else
-    num = (*bottom)[0]->num() * (*bottom)[0]->channels();
+    num = bottom[0]->num() * bottom[0]->channels();
 
-  int dim = (*bottom)[0]->count() / num;
+  int dim = bottom[0]->count() / num;
   Dtype eps = 1e-10;
 
   if (this->layer_param_.mvn_param().normalize_variance()) {
@@ -159,6 +159,6 @@ STUB_GPU(MVNLayer);
 #endif
 
 INSTANTIATE_CLASS(MVNLayer);
-
+REGISTER_LAYER_CLASS(MVN);
 
 }  // namespace caffe

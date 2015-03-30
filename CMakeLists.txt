@@ -1,90 +1,67 @@
-cmake_minimum_required(VERSION 2.8.8)
-project( Caffe )
+cmake_minimum_required(VERSION 2.8.7)
 
-###    Build Options     ##########################################################################
+# ---[ Caffe project
+project(Caffe C CXX)
 
-option(CPU_ONLY "Build Caffe without GPU support" OFF)
-option(BUILD_PYTHON "Build Python wrapper" OFF)
-option(BUILD_MATLAB "Build Matlab wrapper" OFF)
-option(BUILD_EXAMPLES "Build examples" ON)
-option(BUILD_SHARED_LIBS "Build SHARED libs if ON and STATIC otherwise" OFF)
+# ---[ Using cmake scripts and modules
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
-if(NOT BLAS)
-    set(BLAS atlas)
+include(cmake/Utils.cmake)
+include(cmake/Targets.cmake)
+include(cmake/Misc.cmake)
+include(cmake/Summary.cmake)
+include(cmake/ConfigGen.cmake)
+
+# ---[ Options
+caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA support" OFF) # TODO: rename to USE_CUDA
+caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" ON IF NOT CPU_ONLY)
+caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+caffe_option(BUILD_python "Build Python wrapper" ON)
+set(python_version "2" CACHE STRING "Specify which python version to use")
+caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
+caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
+caffe_option(BUILD_python_layer "Build the caffe python layer" ON)
+
+# ---[ Dependencies
+include(cmake/Dependencies.cmake)
+
+# ---[ Flags
+if(UNIX OR APPLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
 endif()
 
-if(NOT CUDA_TEST_DEVICE)
-    set(CUDA_TEST_DEVICE -1)
+if(USE_libstdcpp)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+  message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 
-#    Install Prefix
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Default install path" FORCE )
-endif()
+add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
 
-###    Configuration    ###########################################################################
-#    Compiler Flags
-set(CMAKE_CXX_COMPILER_FLAGS ${CMAKE_CXX_COMPILER_FLAGS} -Wall)
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC) # set global flags
-set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}) # set debug flags
-set(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}) # set release flags
+# ---[ Warnings
+caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
 
-#    Global Definitions
-if(CPU_ONLY)
-    add_definitions(-DCPU_ONLY)
-endif()
+# ---[ Config generation
+configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_config.h")
 
-#    Include Directories
-set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
-include_directories(${${PROJECT_NAME}_INCLUDE_DIRS})
-include_directories(${CMAKE_SOURCE_DIR}/src)
+# ---[ Includes
+set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
+include_directories(BEFORE src) # This is needed for gtest.
 
-#    CMake Scripts dir
-set(CMAKE_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/CMakeScripts)
-
-#	CMake module path for custom module finding
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SCRIPT_DIR})
-
-#    CUDA is required globally
-if(NOT CPU_ONLY)
-    find_package(CUDA 5.5 REQUIRED)
-    include_directories(${CUDA_INCLUDE_DIRS})
-endif()
-
-###    Subdirectories    ##########################################################################
-
+# ---[ Subdirectories
 add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)
+add_subdirectory(examples)
+add_subdirectory(python)
+add_subdirectory(matlab)
+add_subdirectory(docs)
 
-if(BUILD_EXAMPLES)
-    message(STATUS "Examples enabled")
-    add_subdirectory(examples)
-endif()
+# ---[ Linter target
+add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
 
-if(BUILD_PYTHON)
-    message(STATUS "Python enabled")
-    add_subdirectory(python)
-endif()
+# ---[ Configuration summary
+caffe_print_configuration_summary()
 
-if(BUILD_MATLAB)
-    message(STATUS "Matlab enabled")
-    add_subdirectory(matlab)
-endif()
-
-###    Lint Target Setup    ##########################################################################
-
-set(LINT_TARGET lint)
-set(LINT_SCRIPT ${CMAKE_SCRIPT_DIR}/lint.cmake)
-add_custom_target(
-    ${LINT_TARGET} 
-    COMMAND ${CMAKE_COMMAND} -P ${LINT_SCRIPT}
-)
-
-###    Install    #################################################################################
-
-#    Install Includes
-file(GLOB folders ${${PROJECT_NAME}_INCLUDE_DIRS}/*)
-install(DIRECTORY ${folders} DESTINATION include)
-
-
+# ---[ Export configs generation
+caffe_generate_export_configs()

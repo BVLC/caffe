@@ -2,24 +2,43 @@
 """
 Draw a graph of the net architecture.
 """
-import os
+import argparse
 from google.protobuf import text_format
 
-import caffe, caffe.draw
+import caffe
+import caffe.draw
 from caffe.proto import caffe_pb2
 
 
-def main(argv):
-    if len(argv) != 3:
-        print 'Usage: %s input_net_proto_file output_image_file' % \
-                os.path.basename(sys.argv[0])
-    else:
-        net = caffe_pb2.NetParameter()
-        text_format.Merge(open(sys.argv[1]).read(), net)
-        print 'Drawing net to %s' % sys.argv[2]
-        caffe.draw.draw_net_to_file(net, sys.argv[2])
+def parse_args():
+    """Parse input arguments
+    """
+
+    parser = argparse.ArgumentParser(description='Draw a network graph')
+
+    parser.add_argument('input_net_proto_file',
+                        help='Input network prototxt file')
+    parser.add_argument('output_image_file',
+                        help='Output image file')
+    parser.add_argument('--rankdir',
+                        help=('One of TB (top-bottom, i.e., vertical), '
+                              'RL (right-left, i.e., horizontal), or another'
+                              'valid dot option; see'
+                              'http://www.graphviz.org/doc/info/attrs.html#k:rankdir'
+                              '(default: LR)'),
+                        default='LR')
+
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    args = parse_args()
+    net = caffe_pb2.NetParameter()
+    text_format.Merge(open(args.input_net_proto_file).read(), net)
+    print('Drawing net to %s' % args.output_image_file)
+    caffe.draw.draw_net_to_file(net, args.output_image_file, args.rankdir)
 
 
 if __name__ == '__main__':
-    import sys
-    main(sys.argv)
+    main()

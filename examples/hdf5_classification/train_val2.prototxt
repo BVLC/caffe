@@ -1,35 +1,43 @@
 name: "LogisticRegressionNet"
-layers {
+layer {
   name: "data"
-  type: HDF5_DATA
+  type: "HDF5Data"
   top: "data"
   top: "label"
+  include {
+    phase: TRAIN
+  }
   hdf5_data_param {
-    source: "examples/hdf5_classification/data/train.txt"
+    source: "hdf5_classification/data/train.txt"
     batch_size: 10
   }
-  include: { phase: TRAIN }
 }
-layers {
+layer {
   name: "data"
-  type: HDF5_DATA
+  type: "HDF5Data"
   top: "data"
   top: "label"
+  include {
+    phase: TEST
+  }
   hdf5_data_param {
-    source: "examples/hdf5_classification/data/test.txt"
+    source: "hdf5_classification/data/test.txt"
     batch_size: 10
   }
-  include: { phase: TEST }
 }
-layers {
+layer {
   name: "fc1"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "data"
   top: "fc1"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
   inner_product_param {
     num_output: 40
     weight_filler {
@@ -42,21 +50,25 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "fc1"
   top: "fc1"
 }
-layers {
+layer {
   name: "fc2"
-  type: INNER_PRODUCT
+  type: "InnerProduct"
   bottom: "fc1"
   top: "fc2"
-  blobs_lr: 1
-  blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 0
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
   inner_product_param {
     num_output: 2
     weight_filler {
@@ -69,18 +81,20 @@ layers {
     }
   }
 }
-layers {
+layer {
   name: "loss"
-  type: SOFTMAX_LOSS
+  type: "SoftmaxWithLoss"
   bottom: "fc2"
   bottom: "label"
   top: "loss"
 }
-layers {
+layer {
   name: "accuracy"
-  type: ACCURACY
+  type: "Accuracy"
   bottom: "fc2"
   bottom: "label"
   top: "accuracy"
-  include: { phase: TEST }
+  include {
+    phase: TEST
+  }
 }

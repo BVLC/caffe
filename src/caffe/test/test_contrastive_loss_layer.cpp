@@ -62,8 +62,8 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ContrastiveLossLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
   const Dtype margin = layer_param.contrastive_loss_param().margin();
   const int num = this->blob_bottom_data_i_->num();
@@ -90,13 +90,13 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   ContrastiveLossLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   // check the gradient for the first two bottom layers
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0);
-  checker.CheckGradientExhaustive(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 1);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 1);
 }
 
 }  // namespace caffe

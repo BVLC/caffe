@@ -4,31 +4,33 @@ title: Deep Learning Framework
 
 # Caffe
 
-Caffe is a deep learning framework developed with cleanliness, readability, and speed in mind.
-It was created by [Yangqing Jia](http://daggerfs.com) during his PhD at UC Berkeley, and is in active development by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
+Caffe is a deep learning framework made with expression, speed, and modularity in mind.
+It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and by community contributors.
+[Yangqing Jia](http://daggerfs.com) created the project during his PhD at UC Berkeley.
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
 
 Check out our web image classification [demo](http://demo.caffe.berkeleyvision.org)!
 
-## Why use Caffe?
+## Why Caffe?
 
-**Clean architecture** enables rapid deployment.
-Networks are specified in simple config files, with no hard-coded parameters in the code.
-Switching between CPU and GPU is as simple as setting a flag -- so models can be trained on a GPU machine, and then used on commodity clusters.
+**Expressive architecture** encourages application and innovation.
+Models and optimization are defined by configuration without hard-coding.
+Switch between CPU and GPU by setting a single flag to train on a GPU machine then deploy to commodity clusters or mobile devices.
 
-**Readable & modifiable implementation** fosters active development.
-In Caffe's first year, it has been forked by over 600 developers on Github, and many have pushed significant changes.
+**Extensible code** fosters active development.
+In Caffe's first year, it has been forked by over 1,000 developers and had many significant changes contributed back.
+Thanks to these contributors the framework tracks the state-of-the-art in both code and models.
 
-**Speed** makes Caffe perfect for industry use.
-Caffe can process over **40M images per day** with a single NVIDIA K40 or Titan GPU\*.
-That's 5 ms/image in training, and 2 ms/image in test.
-We believe that Caffe is the fastest CNN implementation available.
+**Speed** makes Caffe perfect for research experiments and industry deployment.
+Caffe can process **over 60M images per day** with a single NVIDIA K40 GPU\*.
+That's 1 ms/image for inference and 4 ms/image for learning.
+We believe that Caffe is the fastest convnet implementation available.
 
 **Community**: Caffe already powers academic research projects, startup prototypes, and even large-scale industrial applications in vision, speech, and multimedia.
-There is an active discussion and support community on [Github](https://github.com/BVLC/caffe/issues).
+Join our community of brewers on the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) and [Github](https://github.com/BVLC/caffe/).
 
 <p class="footnote" markdown="1">
-\* When files are properly cached, and using the ILSVRC2012-winning [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model.
+\* With the ILSVRC2012-winning [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model and caching IO.
 Consult performance [details](/performance_hardware.html).
 </p>
 
@@ -46,7 +48,7 @@ Tested on Ubuntu, Red Hat, OS X.
 BVLC suggests a standard distribution format for Caffe models, and provides trained models.
 * [Developing & Contributing](/development.html)<br>
 Guidelines for development and contributing to Caffe.
-* [API Documentation](/doxygen/)<br>
+* [API Documentation](/doxygen/annotated.html)<br>
 Developer documentation automagically generated from code comments.
 
 ### Examples
@@ -56,7 +58,7 @@ Developer documentation automagically generated from code comments.
 - <div><a href="{{page.url}}">{{page.title}}</a><br>{{page.description}}</div>
 {% endfor %}
 
-### Notebook examples
+### Notebook Examples
 
 {% assign notebooks = site.pages | where:'category','notebook' | sort: 'priority' %}
 {% for page in notebooks %}
@@ -77,6 +79,17 @@ Please cite Caffe in your publications if it helps your research:
 If you do publish a paper where Caffe helped your research, we encourage you to update the [publications wiki](https://github.com/BVLC/caffe/wiki/Publications).
 Citations are also tracked automatically by [Google Scholar](http://scholar.google.com/scholar?oi=bibs&hl=en&cites=17333247995453974016).
 
+## Contacting Us
+
+Join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) to ask questions and discuss methods and models. This is where we talk about usage, installation, and applications.
+
+Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+
+Contact [caffe-dev](mailto:caffe-dev@googlegroups.com) if you have a confidential proposal for the framework *and the ability to act on it*.
+Requests for features, explanations, or personal help will be ignored; post to [caffe-users](https://groups.google.com/forum/#!forum/caffe-users) instead.
+
+The core Caffe developers offer [consulting services](mailto:caffe-coldpress@googlegroups.com) for appropriate projects.
+
 ## Acknowledgements
 
 The BVLC Caffe developers would like to thank NVIDIA for GPU donation, A9 and Amazon Web Services for a research grant in support of Caffe development and reproducible research in deep learning, and BVLC PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for guidance.
@@ -85,20 +98,9 @@ The BVLC members who have contributed to Caffe are (alphabetical by first name):
 [Eric Tzeng](https://github.com/erictzeng), [Evan Shelhamer](http://imaginarynumber.net/), [Jeff Donahue](http://jeffdonahue.com/), [Jon Long](https://github.com/longjon), [Ross Girshick](http://www.cs.berkeley.edu/~rbg/), [Sergey Karayev](http://sergeykarayev.com/), [Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/), and [Yangqing Jia](http://daggerfs.com/).
 
 The open-source community plays an important and growing role in Caffe's development.
-Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity, and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for a sorted list.
+Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for the full list.
 
 We sincerely appreciate your interest and contributions!
 If you'd like to contribute, please read the [developing & contributing](development.html) guide.
 
 Yangqing would like to give a personal thanks to the NVIDIA Academic program for providing GPUs, [Oriol Vinyals](http://www1.icsi.berkeley.edu/~vinyals/) for discussions along the journey, and BVLC PI [Trevor Darrell](http://www.eecs.berkeley.edu/~trevor/) for advice.
-
-## Contacting us
-
-All questions about usage, installation, code, and applications should be searched for and asked on the [caffe-users mailing list](https://groups.google.com/forum/#!forum/caffe-users).
-
-All development discussion should be carried out at [GitHub Issues](https://github.com/BVLC/caffe/issues).
-
-If you have a proposal that may not be suited for public discussion *and an ability to act on it*, please email us [directly](mailto:caffe-dev@googlegroups.com).
-Requests for features, explanations, or personal help will be ignored; post such matters publicly as issues.
-
-The core Caffe developers may be able to provide [consulting services](mailto:caffe-coldpress@googlegroups.com) for appropriate projects.

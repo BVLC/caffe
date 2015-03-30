@@ -3,16 +3,17 @@
 
 EXAMPLE=examples/cifar10
 DATA=data/cifar10
+DBTYPE=lmdb
 
-echo "Creating leveldb..."
+echo "Creating $DBTYPE..."
 
-rm -rf $EXAMPLE/cifar10_train_leveldb $EXAMPLE/cifar10_test_leveldb
+rm -rf $EXAMPLE/cifar10_train_$DBTYPE $EXAMPLE/cifar10_test_$DBTYPE
 
-./build/examples/cifar10/convert_cifar_data.bin $DATA $EXAMPLE
+./build/examples/cifar10/convert_cifar_data.bin $DATA $EXAMPLE $DBTYPE
 
 echo "Computing image mean..."
 
-./build/tools/compute_image_mean $EXAMPLE/cifar10_train_leveldb \
-  $EXAMPLE/mean.binaryproto leveldb
+./build/tools/compute_image_mean -backend=$DBTYPE \
+  $EXAMPLE/cifar10_train_$DBTYPE $EXAMPLE/mean.binaryproto
 
 echo "Done."

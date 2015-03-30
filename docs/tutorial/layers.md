@@ -451,6 +451,26 @@ The `CONCAT` layer is a utility layer that concatenates its multiple input blobs
 
 The `SLICE` layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.
 
+* Sample
+
+      layers {
+        name: "slicer_label"
+        type: SLICE
+        bottom: "label"
+        ## Example of label with a shape N x 3 x 1 x 1
+        top: "label1"
+        top: "label2"
+        top: "label3"
+        slice_param {
+            slice_dim: 1
+            slice_point: 1
+            slice_point: 2
+        }
+      }
+
+`slice_dim` indicates the target dimension and can assume only two values: 0 for num or 1 for channel; `slice_point` indicates indexes in the selected dimension (the number of indexes must be equal to the number of top blobs minus one). 
+
+
 #### Elementwise Operations
 
 `ELTWISE`

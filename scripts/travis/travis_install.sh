@@ -57,3 +57,14 @@ $MAKE
 $MAKE install
 popd
 rm -f $LMDB_FILE
+
+# Install the Python runtime dependencies via miniconda (this is much faster
+# than using pip for everything).
+wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+chmod +x miniconda.sh
+./miniconda.sh -b
+export PATH=/home/travis/miniconda/bin:$PATH
+conda update --yes conda
+conda install --yes numpy scipy matplotlib scikit-image pip
+pip install protobuf
+rm /home/travis/miniconda/lib/libm.*
