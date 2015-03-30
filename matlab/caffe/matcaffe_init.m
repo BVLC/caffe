@@ -4,7 +4,7 @@ function  matcaffe_init(use_gpu, model_def_file, model_file)
 
 if nargin < 1
   % By default use CPU
-  use_gpu = 1;
+  use_gpu = 0;
 end
 if nargin < 2 || isempty(model_def_file)
   % By default use imagenet_deploy
@@ -12,7 +12,7 @@ if nargin < 2 || isempty(model_def_file)
 end
 if nargin < 3 || isempty(model_file)
   % By default use caffe reference model
-  model_file = 'test.caffemodel';
+  model_file = '../../models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel';
 end
 
 
