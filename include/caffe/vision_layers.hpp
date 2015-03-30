@@ -346,6 +346,38 @@ class BiasChannelLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Censors (i.e., sets to "ignore label") the labels not
+ * included in the input weak label set.
+ * INPUTS:
+ * 0: (num, 1, height, width)
+ * 1: (num, max_labels, 1, 1)
+ */
+template <typename Dtype>
+class CensorLabelLayer : public Layer<Dtype> {
+ public:
+  explicit CensorLabelLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "CensorLabel"; }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  
+  int num_, channels_, height_, width_;
+  int max_labels_;
+  int ignore_label_;
+};
+
+/**
  * @brief Aggregates the scores (log-probabilities) from a larger label
  * space to a smaller label space via a softmax operation.
  * The mapping between the two label spaces is provided via a text file.
