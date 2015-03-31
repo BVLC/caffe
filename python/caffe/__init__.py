@@ -4,6 +4,7 @@ from ._caffe import (
     get_device,
     check_mode_cpu, check_mode_gpu,
     set_random_seed,
+    Blob,
 )
 from .proto.caffe_pb2 import TRAIN, TEST
 from .classifier import Classifier
