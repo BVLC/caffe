@@ -66,6 +66,5 @@ void CensorLabelLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 #endif
 
 INSTANTIATE_CLASS(CensorLabelLayer);
-REGISTER_LAYER_CLASS(CENSOR_LABEL, CensorLabelLayer);
 
 }  // namespace caffe

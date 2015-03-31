@@ -165,6 +165,5 @@ STUB_GPU(PaddingLayer);
 #endif
 
 INSTANTIATE_CLASS(PaddingLayer);
-REGISTER_LAYER_CLASS(PADDING, PaddingLayer);
 
 }  // namespace caffe
