@@ -19,11 +19,13 @@ namespace caffe {
  */
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
   // Initialize CUDA streams and cuDNN.
   stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
   handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
+  workspaceSizeInBytes = 0;
+  workspace = NULL;
 
   for (int g = 0; g < this->group_ * CUDNN_STREAMS_PER_GROUP; g++) {
     CUDA_CHECK(cudaStreamCreate(&stream_[g]));
@@ -43,10 +45,10 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 
   // Create tensor descriptor(s) for data and corresponding convolution(s).
   for (int i = 0; i < bottom.size(); i++) {
-    cudnnTensor4dDescriptor_t bottom_desc;
+    cudnnTensorDescriptor_t bottom_desc;
     cudnn::createTensor4dDesc<Dtype>(&bottom_desc);
     bottom_descs_.push_back(bottom_desc);
-    cudnnTensor4dDescriptor_t top_desc;
+    cudnnTensorDescriptor_t top_desc;
     cudnn::createTensor4dDesc<Dtype>(&top_desc);
     top_descs_.push_back(top_desc);
     cudnnConvolutionDescriptor_t conv_desc;
@@ -58,11 +60,13 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   if (this->bias_term_) {
     cudnn::createTensor4dDesc<Dtype>(&bias_desc_);
   }
+
+  handles_setup_ = true;
 }
 
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Reshape(
-    const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top) {
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::Reshape(bottom, top);
   bottom_offset_ = (this->channels_ / this->group_)
       * this->height_ * this->width_;
@@ -98,13 +102,16 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
 
 template <typename Dtype>
 CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
+  // Check that handles have been setup before destroying.
+  if (!handles_setup_) { return; }
+
   for (int i = 0; i < bottom_descs_.size(); i++) {
-    cudnnDestroyTensor4dDescriptor(bottom_descs_[i]);
-    cudnnDestroyTensor4dDescriptor(top_descs_[i]);
+    cudnnDestroyTensorDescriptor(bottom_descs_[i]);
+    cudnnDestroyTensorDescriptor(top_descs_[i]);
     cudnnDestroyConvolutionDescriptor(conv_descs_[i]);
   }
   if (this->bias_term_) {
-    cudnnDestroyTensor4dDescriptor(bias_desc_);
+    cudnnDestroyTensorDescriptor(bias_desc_);
   }
   cudnnDestroyFilterDescriptor(filter_desc_);
 

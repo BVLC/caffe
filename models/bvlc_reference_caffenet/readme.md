@@ -2,7 +2,7 @@
 name: BVLC CaffeNet Model
 caffemodel: bvlc_reference_caffenet.caffemodel
 caffemodel_url: http://dl.caffe.berkeleyvision.org/bvlc_reference_caffenet.caffemodel
-license: non-commercial
+license: unrestricted
 sha1: 4c8d77deb20ea792f84eb5e6d0a11ca0a8660a46
 caffe_commit: 709dc15af4a06bebda027c1eb2b3f3e3375d5077
 ---
@@ -18,8 +18,8 @@ The best validation performance during training was iteration 313,000 with valid
 This model obtains a top-1 accuracy 57.4% and a top-5 accuracy 80.4% on the validation set, using just the center crop.
 (Using the average of 10 crops, (4 + 1 center) * 2 mirror, should obtain a bit higher accuracy still.)
 
+This model was trained by Jeff Donahue @jeffdonahue
+
 ## License
 
-The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
-"Researcher shall use the Database only for non-commercial research and educational purposes."
-Accordingly, this model is distributed under a non-commercial license.
+This model is released for unrestricted use.

@@ -41,7 +41,7 @@ TYPED_TEST(FlattenLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3 * 6 * 5);
   EXPECT_EQ(this->blob_top_->height(), 1);
@@ -52,8 +52,8 @@ TYPED_TEST(FlattenLayerTest, Test) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int c = 0; c < 3 * 6 * 5; ++c) {
     EXPECT_EQ(this->blob_top_->data_at(0, c, 0, 0),
         this->blob_bottom_->data_at(0, c / (6 * 5), (c / 5) % 6, c % 5));
@@ -67,8 +67,8 @@ TYPED_TEST(FlattenLayerTest, TestGradient) {
   LayerParameter layer_param;
   FlattenLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
-  checker.CheckGradientEltwise(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 

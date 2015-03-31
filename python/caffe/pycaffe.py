@@ -4,7 +4,10 @@ interface.
 """
 
 from collections import OrderedDict
-from itertools import izip_longest
+try:
+	from itertools import izip_longest
+except:
+	from itertools import zip_longest as izip_longest
 import numpy as np
 
 from ._caffe import Net, SGDSolver
@@ -34,6 +37,17 @@ def _Net_params(self):
     return OrderedDict([(name, lr.blobs)
                         for name, lr in zip(self._layer_names, self.layers)
                         if len(lr.blobs) > 0])
+
+
+@property
+def _Net_inputs(self):
+    return [list(self.blobs.keys())[i] for i in self._inputs]
+
+
+@property
+def _Net_outputs(self):
+    return [list(self.blobs.keys())[i] for i in self._outputs]
+
 
 def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
     """
@@ -71,8 +85,6 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
         # Set input according to defined shapes and make arrays single and
         # C-contiguous as Caffe expects.
         for in_, blob in kwargs.iteritems():
-            if blob.ndim != 4:
-                raise Exception('{} blob is not 4-d'.format(in_))
             if blob.shape[0] != self.blobs[in_].num:
                 raise Exception('Input is not batch sized')
             self.blobs[in_].data[...] = blob
@@ -202,138 +214,6 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
     return all_outs, all_diffs
 
 
-def _Net_set_mean(self, input_, mean, mode='elementwise'):
-    """
-    Set the mean to subtract for data centering.
-
-    Take
-    input_: which input to assign this mean.
-    mean: mean K x H x W ndarray (input dimensional or broadcastable)
-    mode: elementwise = use the whole mean (and check dimensions)
-          channel = channel constant (e.g. mean pixel instead of mean image)
-    """
-    if input_ not in self.inputs:
-        raise Exception('Input not in {}'.format(self.inputs))
-    in_shape = self.blobs[input_].data.shape
-    if mode == 'elementwise':
-        if mean.shape[1:] != in_shape[2:]:
-            # Resize mean (which requires H x W x K input).
-            mean = caffe.io.resize_image(mean.transpose((1,2,0)),
-                                         in_shape[2:]).transpose((2,0,1))
-        self.mean[input_] = mean
-    elif mode == 'channel':
-        self.mean[input_] = mean.mean(1).mean(1).reshape((in_shape[1], 1, 1))
-    else:
-        raise Exception('Mode not in {}'.format(['elementwise', 'channel']))
-
-
-def _Net_set_input_scale(self, input_, scale):
-    """
-    Set the scale of preprocessed inputs s.t. the blob = blob * scale.
-    N.B. input_scale is done AFTER mean subtraction and other preprocessing
-    while raw_scale is done BEFORE.
-
-    Take
-    input_: which input to assign this scale factor
-    scale: scale coefficient
-    """
-    if input_ not in self.inputs:
-        raise Exception('Input not in {}'.format(self.inputs))
-    self.input_scale[input_] = scale
-
-
-def _Net_set_raw_scale(self, input_, scale):
-    """
-    Set the scale of raw features s.t. the input blob = input * scale.
-    While Python represents images in [0, 1], certain Caffe models
-    like CaffeNet and AlexNet represent images in [0, 255] so the raw_scale
-    of these models must be 255.
-
-    Take
-    input_: which input to assign this scale factor
-    scale: scale coefficient
-    """
-    if input_ not in self.inputs:
-        raise Exception('Input not in {}'.format(self.inputs))
-    self.raw_scale[input_] = scale
-
-
-def _Net_set_channel_swap(self, input_, order):
-    """
-    Set the input channel order for e.g. RGB to BGR conversion
-    as needed for the reference ImageNet model.
-
-    Take
-    input_: which input to assign this channel order
-    order: the order to take the channels.
-           (2,1,0) maps RGB to BGR for example.
-    """
-    if input_ not in self.inputs:
-        raise Exception('Input not in {}'.format(self.inputs))
-    self.channel_swap[input_] = order
-
-
-def _Net_preprocess(self, input_name, input_):
-    """
-    Format input for Caffe:
-    - convert to single
-    - resize to input dimensions (preserving number of channels)
-    - reorder channels (for instance color to BGR)
-    - scale raw input (e.g. from [0, 1] to [0, 255] for ImageNet models)
-    - transpose dimensions to K x H x W
-    - subtract mean
-    - scale feature
-
-    Take
-    input_name: name of input blob to preprocess for
-    input_: (H' x W' x K) ndarray
-
-    Give
-    caffe_inputs: (K x H x W) ndarray
-    """
-    caffe_in = input_.astype(np.float32, copy=False)
-    mean = self.mean.get(input_name)
-    input_scale = self.input_scale.get(input_name)
-    raw_scale = self.raw_scale.get(input_name)
-    channel_order = self.channel_swap.get(input_name)
-    in_size = self.blobs[input_name].data.shape[2:]
-    if caffe_in.shape[:2] != in_size:
-        caffe_in = caffe.io.resize_image(caffe_in, in_size)
-    if channel_order is not None:
-        caffe_in = caffe_in[:, :, channel_order]
-    caffe_in = caffe_in.transpose((2, 0, 1))
-    if raw_scale is not None:
-        caffe_in *= raw_scale
-    if mean is not None:
-        caffe_in -= mean
-    if input_scale is not None:
-        caffe_in *= input_scale
-    return caffe_in
-
-
-def _Net_deprocess(self, input_name, input_):
-    """
-    Invert Caffe formatting; see Net.preprocess().
-    """
-    decaf_in = input_.copy().squeeze()
-    mean = self.mean.get(input_name)
-    input_scale = self.input_scale.get(input_name)
-    raw_scale = self.raw_scale.get(input_name)
-    channel_order = self.channel_swap.get(input_name)
-    if input_scale is not None:
-        decaf_in /= input_scale
-    if mean is not None:
-        decaf_in += mean
-    if raw_scale is not None:
-        decaf_in /= raw_scale
-    decaf_in = decaf_in.transpose((1,2,0))
-    if channel_order is not None:
-        channel_order_inverse = [channel_order.index(i)
-                                 for i in range(decaf_in.shape[2])]
-        decaf_in = decaf_in[:, :, channel_order_inverse]
-    return decaf_in
-
-
 def _Net_set_input_arrays(self, data, labels):
     """
     Set input arrays of the in-memory MemoryDataLayer.
@@ -376,7 +256,6 @@ def _Net_batch(self, blobs):
                                                  padding])
         yield padded_batch
 
-
 # Attach methods to Net.
 Net.blobs = _Net_blobs
 Net.params = _Net_params
@@ -384,11 +263,7 @@ Net.forward = _Net_forward
 Net.backward = _Net_backward
 Net.forward_all = _Net_forward_all
 Net.forward_backward_all = _Net_forward_backward_all
-Net.set_mean = _Net_set_mean
-Net.set_input_scale = _Net_set_input_scale
-Net.set_raw_scale = _Net_set_raw_scale
-Net.set_channel_swap = _Net_set_channel_swap
-Net.preprocess = _Net_preprocess
-Net.deprocess = _Net_deprocess
 Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
+Net.inputs = _Net_inputs
+Net.outputs = _Net_outputs

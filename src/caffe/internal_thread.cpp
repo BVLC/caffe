@@ -1,23 +1,24 @@
+#include <boost/thread.hpp>
 #include "caffe/internal_thread.hpp"
-
-#include "caffe/util/thread.hpp"
 
 namespace caffe {
 
 InternalThread::~InternalThread() {
   WaitForInternalThreadToExit();
-  if (thread_ != NULL) {
-    delete thread_;
-  }
 }
+
+bool InternalThread::is_started() const {
+  return thread_.get() != NULL && thread_->joinable();
+}
+
 
 bool InternalThread::StartInternalThread() {
   if (!WaitForInternalThreadToExit()) {
     return false;
   }
   try {
-    thread_ = new caffe::Thread
-        (&InternalThread::InternalThreadEntry, this);
+    thread_.reset(
+        new boost::thread(&InternalThread::InternalThreadEntry, this));
   } catch (...) {
     return false;
   }

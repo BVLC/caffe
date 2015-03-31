@@ -24,33 +24,32 @@ class Detector(caffe.Net):
     Detector extends Net for windowed detection by a list of crops or
     selective search proposals.
     """
-    def __init__(self, model_file, pretrained_file, gpu=False, mean=None,
+    def __init__(self, model_file, pretrained_file, mean=None,
                  input_scale=None, raw_scale=None, channel_swap=None,
                  context_pad=None):
         """
         Take
-        gpu, mean, input_scale, raw_scale, channel_swap: params for
+            mean, input_scale, raw_scale, channel_swap: params for
             preprocessing options.
         context_pad: amount of surrounding context to take s.t. a `context_pad`
             sized border of pixels in the network input image is context, as in
             R-CNN feature extraction.
         """
-        caffe.Net.__init__(self, model_file, pretrained_file)
-        self.set_phase_test()
+        caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
 
-        if gpu:
-            self.set_mode_gpu()
-        else:
-            self.set_mode_cpu()
-
+        # configure pre-processing
+        in_ = self.inputs[0]
+        self.transformer = caffe.io.Transformer(
+            {in_: self.blobs[in_].data.shape})
+        self.transformer.set_transpose(in_, (2,0,1))
         if mean is not None:
-            self.set_mean(self.inputs[0], mean)
+            self.transformer.set_mean(in_, mean)
         if input_scale is not None:
-            self.set_input_scale(self.inputs[0], input_scale)
+            self.transformer.set_input_scale(in_, input_scale)
         if raw_scale is not None:
-            self.set_raw_scale(self.inputs[0], raw_scale)
+            self.transformer.set_raw_scale(in_, raw_scale)
         if channel_swap is not None:
-            self.set_channel_swap(self.inputs[0], channel_swap)
+            self.transformer.set_channel_swap(in_, channel_swap)
 
         self.configure_crop(context_pad)
 
@@ -76,12 +75,13 @@ class Detector(caffe.Net):
                 window_inputs.append(self.crop(image, window))
 
         # Run through the net (warping windows to input dimensions).
+        in_ = self.inputs[0]
         caffe_in = np.zeros((len(window_inputs), window_inputs[0].shape[2])
-                            + self.blobs[self.inputs[0]].data.shape[2:],
+                            + self.blobs[in_].data.shape[2:],
                             dtype=np.float32)
         for ix, window_in in enumerate(window_inputs):
-            caffe_in[ix] = self.preprocess(self.inputs[0], window_in)
-        out = self.forward_all(**{self.inputs[0]: caffe_in})
+            caffe_in[ix] = self.transformer.preprocess(in_, window_in)
+        out = self.forward_all(**{in_: caffe_in})
         predictions = out[self.outputs[0]].squeeze(axis=(2,3))
 
         # Package predictions with images and windows.
@@ -170,7 +170,7 @@ class Detector(caffe.Net):
             # with mean padding
             context_crop = im[box[0]:box[2], box[1]:box[3]]
             context_crop = caffe.io.resize_image(context_crop, (crop_h, crop_w))
-            crop = self.crop_mean.copy()
+            crop = np.ones(self.crop_dims, dtype=np.float32) * self.crop_mean
             crop[pad_y:(pad_y + crop_h), pad_x:(pad_x + crop_w)] = context_crop
 
         return crop
@@ -178,20 +178,30 @@ class Detector(caffe.Net):
 
     def configure_crop(self, context_pad):
         """
-        Configure amount of context for cropping.
+        Configure crop dimensions and amount of context for cropping.
         If context is included, make the special input mean for context padding.
 
         Take
         context_pad: amount of context for cropping.
         """
+        # crop dimensions
+        in_ = self.inputs[0]
+        tpose = self.transformer.transpose[in_]
+        inv_tpose = [tpose[t] for t in tpose]
+        self.crop_dims = np.array(self.blobs[in_].data.shape[1:])[inv_tpose]
+        #.transpose(inv_tpose)
+        # context padding
         self.context_pad = context_pad
         if self.context_pad:
-            raw_scale = self.raw_scale.get(self.inputs[0])
-            channel_order = self.channel_swap.get(self.inputs[0])
+            in_ = self.inputs[0]
+            transpose = self.transformer.transpose.get(in_)
+            channel_order = self.transformer.channel_swap.get(in_)
+            raw_scale = self.transformer.raw_scale.get(in_)
             # Padding context crops needs the mean in unprocessed input space.
-            mean = self.mean.get(self.inputs[0])
+            mean = self.transformer.mean.get(in_)
             if mean is not None:
-                crop_mean = mean.copy().transpose((1,2,0))
+                inv_transpose = [transpose[t] for t in transpose]
+                crop_mean = mean.copy().transpose(inv_transpose)
                 if channel_order is not None:
                     channel_order_inverse = [channel_order.index(i)
                                             for i in range(crop_mean.shape[2])]
@@ -200,5 +210,4 @@ class Detector(caffe.Net):
                     crop_mean /= raw_scale
                 self.crop_mean = crop_mean
             else:
-                self.crop_mean = np.zeros(self.blobs[self.inputs[0]].data.shape,
-                                          dtype=np.float32)
+                self.crop_mean = np.zeros(self.crop_dims, dtype=np.float32)

@@ -15,7 +15,7 @@ This pass goes from bottom to top.
 
 <img src="fig/forward.jpg" alt="Forward pass" width="320">
 
-The data $x$ is passed through an inner product layer for $g(x)$ then through a softmax for $h(g(x))$ and softmax loss to give $f_W(x)$.
+The data $$x$$ is passed through an inner product layer for $$g(x)$$ then through a softmax for $$h(g(x))$$ and softmax loss to give $$f_W(x)$$.
 
 The **backward** pass computes the gradient given the loss for learning.
 In backward Caffe reverse-composes the gradient of each layer to compute the gradient of the whole model by automatic differentiation.
@@ -24,7 +24,7 @@ This pass goes from top to bottom.
 
 <img src="fig/backward.jpg" alt="Backward pass" width="320">
 
-The backward pass begins with the loss and computes the gradient with respect to the output $\frac{\partial f_W}{\partial h}$. The gradient with respect to the rest of the model is computed layer-by-layer through the chain rule. Layers with parameters, like the `INNER_PRODUCT` layer, compute the gradient with respect to their parameters $\frac{\partial f_W}{\partial W_{\text{ip}}}$ during the backward step.
+The backward pass begins with the loss and computes the gradient with respect to the output $$\frac{\partial f_W}{\partial h}$$. The gradient with respect to the rest of the model is computed layer-by-layer through the chain rule. Layers with parameters, like the `INNER_PRODUCT` layer, compute the gradient with respect to their parameters $$\frac{\partial f_W}{\partial W_{\text{ip}}}$$ during the backward step.
 
 These computations follow immediately from defining the model: Caffe plans and carries out the forward and backward passes for you.
 

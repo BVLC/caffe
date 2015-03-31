@@ -1,3 +1,4 @@
+#include <opencv2/highgui/highgui_c.h>
 #include <stdint.h>
 
 #include <algorithm>
@@ -13,6 +14,7 @@
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
@@ -30,7 +32,7 @@ WindowDataLayer<Dtype>::~WindowDataLayer<Dtype>() {
 
 template <typename Dtype>
 void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top) {
+      const vector<Blob<Dtype>*>& top) {
   // LayerSetUp runs through the window_file and creates two structures
   // that hold windows: one for foreground (object) windows and one
   // for background (non-object) windows. We use an overlap threshold
@@ -52,7 +54,14 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "  background (non-object) overlap threshold: "
       << this->layer_param_.window_data_param().bg_threshold() << std::endl
       << "  foreground sampling fraction: "
-      << this->layer_param_.window_data_param().fg_fraction();
+      << this->layer_param_.window_data_param().fg_fraction() << std::endl
+      << "  cache_images: "
+      << this->layer_param_.window_data_param().cache_images() << std::endl
+      << "  root_folder: "
+      << this->layer_param_.window_data_param().root_folder();
+
+  cache_images_ = this->layer_param_.window_data_param().cache_images();
+  string root_folder = this->layer_param_.window_data_param().root_folder();
 
   const bool prefetch_needs_rand =
       this->transform_param_.mirror() ||
@@ -81,12 +90,21 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     // read image path
     string image_path;
     infile >> image_path;
+    image_path = root_folder + image_path;
     // read image dimensions
     vector<int> image_size(3);
     infile >> image_size[0] >> image_size[1] >> image_size[2];
     channels = image_size[0];
     image_database_.push_back(std::make_pair(image_path, image_size));
 
+    if (cache_images_) {
+      Datum datum;
+      if (!ReadFileToDatum(image_path, &datum)) {
+        LOG(ERROR) << "Could not open or find file " << image_path;
+        return;
+      }
+      image_database_cache_.push_back(std::make_pair(image_path, datum));
+    }
     // read each box
     int num_windows;
     infile >> num_windows;
@@ -152,21 +170,43 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int crop_size = this->transform_param_.crop_size();
   CHECK_GT(crop_size, 0);
   const int batch_size = this->layer_param_.window_data_param().batch_size();
-  (*top)[0]->Reshape(batch_size, channels, crop_size, crop_size);
+  top[0]->Reshape(batch_size, channels, crop_size, crop_size);
   this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
 
-  LOG(INFO) << "output data size: " << (*top)[0]->num() << ","
-      << (*top)[0]->channels() << "," << (*top)[0]->height() << ","
-      << (*top)[0]->width();
-  // datum size
-  this->datum_channels_ = (*top)[0]->channels();
-  this->datum_height_ = (*top)[0]->height();
-  this->datum_width_ = (*top)[0]->width();
-  this->datum_size_ =
-      (*top)[0]->channels() * (*top)[0]->height() * (*top)[0]->width();
+  LOG(INFO) << "output data size: " << top[0]->num() << ","
+      << top[0]->channels() << "," << top[0]->height() << ","
+      << top[0]->width();
   // label
-  (*top)[1]->Reshape(batch_size, 1, 1, 1);
-  this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
+  vector<int> label_shape(1, batch_size);
+  top[1]->Reshape(label_shape);
+  this->prefetch_label_.Reshape(label_shape);
+
+  // data mean
+  has_mean_file_ = this->transform_param_.has_mean_file();
+  has_mean_values_ = this->transform_param_.mean_value_size() > 0;
+  if (has_mean_file_) {
+    const string& mean_file =
+          this->transform_param_.mean_file();
+    LOG(INFO) << "Loading mean file from: " << mean_file;
+    BlobProto blob_proto;
+    ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
+    data_mean_.FromProto(blob_proto);
+  }
+  if (has_mean_values_) {
+    CHECK(has_mean_file_ == false) <<
+      "Cannot specify mean_file and mean_value at the same time";
+    for (int c = 0; c < this->transform_param_.mean_value_size(); ++c) {
+      mean_values_.push_back(this->transform_param_.mean_value(c));
+    }
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == channels) <<
+     "Specify either 1 mean_value or as many as channels: " << channels;
+    if (channels > 1 && mean_values_.size() == 1) {
+      // Replicate the mean_value for simplicity
+      for (int c = 1; c < channels; ++c) {
+        mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
 }
 
 template <typename Dtype>
@@ -182,7 +222,11 @@ template <typename Dtype>
 void WindowDataLayer<Dtype>::InternalThreadEntry() {
   // At each iteration, sample N windows where N*p are foreground (object)
   // windows and N*(1-p) are background (non-object) windows
-
+  CPUTimer batch_timer;
+  batch_timer.Start();
+  double read_time = 0;
+  double trans_time = 0;
+  CPUTimer timer;
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
   Dtype* top_label = this->prefetch_label_.mutable_cpu_data();
   const Dtype scale = this->layer_param_.window_data_param().scale();
@@ -192,10 +236,16 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   const bool mirror = this->transform_param_.mirror();
   const float fg_fraction =
       this->layer_param_.window_data_param().fg_fraction();
-  const Dtype* mean = this->data_mean_.cpu_data();
-  const int mean_off = (this->data_mean_.width() - crop_size) / 2;
-  const int mean_width = this->data_mean_.width();
-  const int mean_height = this->data_mean_.height();
+  Dtype* mean = NULL;
+  int mean_off = 0;
+  int mean_width = 0;
+  int mean_height = 0;
+  if (this->has_mean_file_) {
+    mean = this->data_mean_.mutable_cpu_data();
+    mean_off = (this->data_mean_.width() - crop_size) / 2;
+    mean_width = this->data_mean_.width();
+    mean_height = this->data_mean_.height();
+  }
   cv::Size cv_crop_size(crop_size, crop_size);
   const string& crop_mode = this->layer_param_.window_data_param().crop_mode();
 
@@ -213,25 +263,32 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
   for (int is_fg = 0; is_fg < 2; ++is_fg) {
     for (int dummy = 0; dummy < num_samples[is_fg]; ++dummy) {
       // sample a window
+      timer.Start();
       const unsigned int rand_index = PrefetchRand();
       vector<float> window = (is_fg) ?
           fg_windows_[rand_index % fg_windows_.size()] :
           bg_windows_[rand_index % bg_windows_.size()];
 
-      bool do_mirror = false;
-      if (mirror && PrefetchRand() % 2) {
-        do_mirror = true;
-      }
+      bool do_mirror = mirror && PrefetchRand() % 2;
 
       // load the image containing the window
       pair<std::string, vector<int> > image =
           image_database_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
 
-      cv::Mat cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
-      if (!cv_img.data) {
-        LOG(ERROR) << "Could not open or find file " << image.first;
-        return;
+      cv::Mat cv_img;
+      if (this->cache_images_) {
+        pair<std::string, Datum> image_cached =
+          image_database_cache_[window[WindowDataLayer<Dtype>::IMAGE_INDEX]];
+        cv_img = DecodeDatumToCVMat(image_cached.second, true);
+      } else {
+        cv_img = cv::imread(image.first, CV_LOAD_IMAGE_COLOR);
+        if (!cv_img.data) {
+          LOG(ERROR) << "Could not open or find file " << image.first;
+          return;
+        }
       }
+      read_time += timer.MicroSeconds();
+      timer.Start();
       const int channels = cv_img.channels();
 
       // crop window out of image and warp it
@@ -334,22 +391,30 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       }
 
       // copy the warped window into top_data
-      for (int c = 0; c < channels; ++c) {
-        for (int h = 0; h < cv_cropped_img.rows; ++h) {
-          for (int w = 0; w < cv_cropped_img.cols; ++w) {
-            Dtype pixel =
-                static_cast<Dtype>(cv_cropped_img.at<cv::Vec3b>(h, w)[c]);
-
-            top_data[((item_id * channels + c) * crop_size + h + pad_h)
-                     * crop_size + w + pad_w]
-                = (pixel
-                    - mean[(c * mean_height + h + mean_off + pad_h)
-                           * mean_width + w + mean_off + pad_w])
-                  * scale;
+      for (int h = 0; h < cv_cropped_img.rows; ++h) {
+        const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+        int img_index = 0;
+        for (int w = 0; w < cv_cropped_img.cols; ++w) {
+          for (int c = 0; c < channels; ++c) {
+            int top_index = ((item_id * channels + c) * crop_size + h + pad_h)
+                     * crop_size + w + pad_w;
+            // int top_index = (c * height + h) * width + w;
+            Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+            if (this->has_mean_file_) {
+              int mean_index = (c * mean_height + h + mean_off + pad_h)
+                           * mean_width + w + mean_off + pad_w;
+              top_data[top_index] = (pixel - mean[mean_index]) * scale;
+            } else {
+              if (this->has_mean_values_) {
+                top_data[top_index] = (pixel - this->mean_values_[c]) * scale;
+              } else {
+                top_data[top_index] = pixel * scale;
+              }
+            }
           }
         }
       }
-
+      trans_time += timer.MicroSeconds();
       // get window label
       top_label[item_id] = window[WindowDataLayer<Dtype>::LABEL];
 
@@ -389,8 +454,13 @@ void WindowDataLayer<Dtype>::InternalThreadEntry() {
       item_id++;
     }
   }
+  batch_timer.Stop();
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(WindowDataLayer);
+REGISTER_LAYER_CLASS(WindowData);
 
 }  // namespace caffe

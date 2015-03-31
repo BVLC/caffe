@@ -53,7 +53,7 @@ TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
   EXPECT_EQ(this->blob_top_->height(), 3);
@@ -62,15 +62,15 @@ TYPED_TEST(StochasticPoolingLayerTest, TestSetup) {
 
 TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
   Caffe::set_mode(Caffe::GPU);
-  Caffe::set_phase(Caffe::TRAIN);
   LayerParameter layer_param;
+  layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
   // Check if the output is correct - it should do random sampling
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
@@ -106,15 +106,15 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPU) {
 
 TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
   Caffe::set_mode(Caffe::GPU);
-  Caffe::set_phase(Caffe::TEST);
   LayerParameter layer_param;
+  layer_param.set_phase(TEST);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
-  layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
   // Check if the output is correct - it should do random sampling
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
@@ -144,8 +144,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestStochasticGPUTestPhase) {
 
 TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
   Caffe::set_mode(Caffe::GPU);
-  Caffe::set_phase(Caffe::TRAIN);
   LayerParameter layer_param;
+  layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_kernel_size(3);
   pooling_param->set_stride(2);
@@ -154,8 +154,8 @@ TYPED_TEST(StochasticPoolingLayerTest, TestGradientGPU) {
   GradientChecker<TypeParam> checker(1e-4, 1e-2);
   // it is too expensive to call curand multiple times, so we don't do an
   // exhaustive gradient check.
-  checker.CheckGradient(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_));
+  checker.CheckGradient(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
 }
 
 

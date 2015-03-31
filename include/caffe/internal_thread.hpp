@@ -3,21 +3,13 @@
 
 #include "caffe/common.hpp"
 
-namespace caffe {
-
 /**
- * A minimal wrapper for boost::thread to force host compilation for boost
- * Defined in caffe/util/thread.hpp
+ Forward declare boost::thread instead of including boost/thread.hpp
+ to avoid a boost/NVCC issues (#1009, #1010) on OSX.
  */
-class Thread {
- public:
-  template<typename Callable, class A1>
-  Thread(Callable func, A1 a1);
-  void join();
-  bool joinable();
- private:
-  void* thread_;
-};
+namespace boost { class thread; }
+
+namespace caffe {
 
 /**
  * Virtual class encapsulate boost::thread for use in base class
@@ -26,7 +18,7 @@ class Thread {
  */
 class InternalThread {
  public:
-  InternalThread() : thread_(NULL) {}
+  InternalThread() : thread_() {}
   virtual ~InternalThread();
 
   /** Returns true if the thread was successfully started. **/
@@ -35,16 +27,16 @@ class InternalThread {
   /** Will not return until the internal thread has exited. */
   bool WaitForInternalThreadToExit();
 
-  bool is_started() const { return thread_ != NULL && thread_->joinable(); }
+  bool is_started() const;
 
  protected:
   /* Implement this method in your subclass
       with the code you want your thread to run. */
   virtual void InternalThreadEntry() {}
 
-  caffe::Thread* thread_;
+  shared_ptr<boost::thread> thread_;
 };
 
 }  // namespace caffe
 
-#endif
+#endif  // CAFFE_INTERNAL_THREAD_HPP_

@@ -60,8 +60,8 @@ def main(argv):
         "--mean_file",
         default=os.path.join(pycaffe_dir,
                              'caffe/imagenet/ilsvrc_2012_mean.npy'),
-        help="Data set image mean of H x W x K dimensions (numpy array). " +
-             "Set to '' for no mean subtraction."
+        help="Data set image mean of [Channels x Height x Width] dimensions " +
+             "(numpy array). Set to '' for no mean subtraction."
     )
     parser.add_argument(
         "--input_scale",
@@ -96,33 +96,41 @@ def main(argv):
     if args.channel_swap:
         channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
+    if args.gpu:
+        caffe.set_mode_gpu()
+        print("GPU mode")
+    else:
+        caffe.set_mode_cpu()
+        print("CPU mode")
+
     # Make classifier.
     classifier = caffe.Classifier(args.model_def, args.pretrained_model,
-            image_dims=image_dims, gpu=args.gpu, mean=mean,
+            image_dims=image_dims, mean=mean,
             input_scale=args.input_scale, raw_scale=args.raw_scale,
             channel_swap=channel_swap)
-
-    if args.gpu:
-        print 'GPU mode'
 
     # Load numpy array (.npy), directory glob (*.jpg), or image file.
     args.input_file = os.path.expanduser(args.input_file)
     if args.input_file.endswith('npy'):
+        print("Loading file: %s" % args.input_file)
         inputs = np.load(args.input_file)
     elif os.path.isdir(args.input_file):
+        print("Loading folder: %s" % args.input_file)
         inputs =[caffe.io.load_image(im_f)
                  for im_f in glob.glob(args.input_file + '/*.' + args.ext)]
     else:
+        print("Loading file: %s" % args.input_file)
         inputs = [caffe.io.load_image(args.input_file)]
 
-    print "Classifying %d inputs." % len(inputs)
+    print("Classifying %d inputs." % len(inputs))
 
     # Classify.
     start = time.time()
     predictions = classifier.predict(inputs, not args.center_only)
-    print "Done in %.2f s." % (time.time() - start)
+    print("Done in %.2f s." % (time.time() - start))
 
     # Save
+    print("Saving results into %s" % args.output_file)
     np.save(args.output_file, predictions)
 
 
