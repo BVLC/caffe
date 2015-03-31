@@ -41,12 +41,12 @@ def _Net_params(self):
 
 @property
 def _Net_inputs(self):
-    return [self.blobs.keys()[i] for i in self._inputs]
+    return [list(self.blobs.keys())[i] for i in self._inputs]
 
 
 @property
 def _Net_outputs(self):
-    return [self.blobs.keys()[i] for i in self._outputs]
+    return [list(self.blobs.keys())[i] for i in self._outputs]
 
 
 def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
@@ -85,8 +85,6 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
         # Set input according to defined shapes and make arrays single and
         # C-contiguous as Caffe expects.
         for in_, blob in kwargs.iteritems():
-            if blob.ndim != 4:
-                raise Exception('{} blob is not 4-d'.format(in_))
             if blob.shape[0] != self.blobs[in_].num:
                 raise Exception('Input is not batch sized')
             self.blobs[in_].data[...] = blob
