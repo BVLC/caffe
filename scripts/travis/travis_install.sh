@@ -67,4 +67,3 @@ export PATH=/home/travis/miniconda/bin:$PATH
 conda update --yes conda
 conda install --yes numpy scipy matplotlib scikit-image pip
 pip install protobuf
-rm /home/travis/miniconda/lib/libm.*
