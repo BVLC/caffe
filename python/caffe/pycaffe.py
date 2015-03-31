@@ -10,7 +10,7 @@ except:
 	from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, SGDSolver
+from ._caffe import Net, SGDSolver, LayerParameter
 import caffe.io
 
 # We directly update methods from Net here (rather than using composition or
@@ -267,3 +267,11 @@ Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
 Net.inputs = _Net_inputs
 Net.outputs = _Net_outputs
+
+# LayerParameter
+def _LayerParameter_to_python(self):
+    from caffe.proto import caffe_pb2
+    layer_param = caffe_pb2.LayerParameter()
+    return self._to_python(layer_param)
+# Attach method
+LayerParameter.to_python = _LayerParameter_to_python
