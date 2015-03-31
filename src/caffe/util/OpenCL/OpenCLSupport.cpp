@@ -2070,7 +2070,6 @@ bool cl_caffe_gpu_rng_uniform(const int n, unsigned int* r) {
 	caffe_rng_uniform(n, (double) 0, (double) UINT_MAX, fBuffer);
 	for ( int i = 0; i < n; i++ ) {
 		buffer[i] = (unsigned int) fBuffer[i];
-		printf("buffer[%3d] = %u\n", i, buffer[i]);
 	}
 
 	BOOL_CHECK( caffe::OpenCL::clMemcpy(r, buffer, bytes, COPY_CPU_TO_GPU) );
