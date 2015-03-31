@@ -67,7 +67,7 @@ message NetParameter {
   // Whether the network will force every layer to carry out backward operation.
   // If set False, then whether to carry out backward is determined
   // automatically according to the net structure and learning rates.
-  optional bool force_backward = 5 [default = true];
+  optional bool force_backward = 5 [default = false];
   // The current "state" of the network, including the phase, level, and stage.
   // Some layers may be included/excluded depending on this state and the states
   // specified in the layers' include and exclude fields.
