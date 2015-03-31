@@ -303,7 +303,7 @@ bool OpenCLDevice::compile(std::string cl_source) {
 		LOG(ERROR) << "failed to create program from file = '"<< cl_standard.c_str() <<"'";
 		return false;
 	}
-	LOG(INFO) << "create program with source from file = '"<< cl_standard.c_str() <<"' for device "<<this->name();
+	DLOG(INFO) << "create program with source from file = '"<< cl_standard.c_str() <<"' for device "<<this->name();
 
 	//-x clc++ -O5
 	std::string clIncludes = "-cl-unsafe-math-optimizations -cl-finite-math-only -cl-fast-relaxed-math -cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -I ../../CL/include/";
@@ -331,12 +331,12 @@ bool OpenCLDevice::compile(std::string cl_source) {
 		} else {
 			fwrite(logBuffer, 1, tempSize, tempLogFile);
 			fclose(tempLogFile);
-			LOG(INFO) << "OpenCL build log written to file '" << os.str().c_str() << "'";
+			DLOG(INFO) << "OpenCL build log written to file '" << os.str().c_str() << "'";
 		}
 
 		return false;
 	}
-	LOG(INFO) << "create program from file = '"<< cl_standard.c_str() <<"' for device " << this->name();
+	DLOG(INFO) << "create program from file = '"<< cl_standard.c_str() <<"' for device " << this->name();
 	programs.push_back(program);
 
 
@@ -355,7 +355,7 @@ bool OpenCLDevice::compile(std::string cl_source) {
 		}
 
 		kernel[(*it)] = kern;
-		LOG(INFO) << "create kernel '"<<(*it).c_str()<<"' from file '" << cl_standard.c_str() << "' for device " << this->name() << " @ " << kernel[(*it)];
+		DLOG(INFO) << "create kernel '"<<(*it).c_str()<<"' from file '" << cl_standard.c_str() << "' for device " << this->name() << " @ " << kernel[(*it)];
 	}
 
 
@@ -424,12 +424,12 @@ bool OpenCLDevice::add(OpenCLMemory& clMem) {
 	/*
 	for ( std::vector<OpenCLMemory>::iterator li = list.begin(); li != list.end(); li++ ) {
 		if ( rmMemoryPtr((*li).getVirtualPointer()) ) {
-			LOG(INFO) << "remove memory pointer " << (*li).getTag().c_str();
+			DLOG(INFO) << "remove memory pointer " << (*li).getTag().c_str();
 		}
 	}
 	*/
 
-	LOG(INFO) << "add memory " << clMem.getTag().c_str();
+	DLOG(INFO) << "add memory " << clMem.getTag().c_str();
 	memory[clMem.getVirtualPointer()] = clMem;
 
 	return true;
@@ -453,10 +453,10 @@ bool OpenCLDevice::rmMemoryPtr(const void* ptr) {
 		return false;
 	}
 
-	LOG(INFO)<<"free "<<memory[ptr].getTag();
+	DLOG(INFO)<<"free "<<memory[ptr].getTag();
 
 	int count = memory.erase(ptr);
-	LOG(INFO) << count << " erased for " << ptr;
+	DLOG(INFO) << count << " erased for " << ptr;
 
 	if ( memory.find(ptr) != memory.end() ) {
 		LOG(ERROR) << this->name() <<" ptr @ " << ptr <<" still on this device.";
@@ -519,10 +519,10 @@ bool OpenCLDevice::get(const void* ptr, OpenCLMemory& clMem) {
 	}
 
 	if ( found > 1 ) {
-		LOG(INFO) << "found "<<found<<" matching for "<<ptr;
+		DLOG(INFO) << "found "<<found<<" matching for "<<ptr;
 		for ( it = memory.begin(); it != memory.end(); it++ ) {
 			if ( (it->second).contains(ptr) ) {
-				LOG(INFO) << it->second.getTag().c_str();
+				DLOG(INFO) << it->second.getTag().c_str();
 			}
 		}
 

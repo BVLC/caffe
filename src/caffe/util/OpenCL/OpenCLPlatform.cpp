@@ -341,7 +341,7 @@ bool OpenCLPlatform::compile(std::string cl_source) {
 		LOG(ERROR) << "failed to create program from file = '"<< cl_standard.c_str() <<"'";
 		return false;
 	}
-	LOG(INFO) << "create program with source from file = '"<< cl_standard.c_str() <<"' for platform " << this->name();
+	DLOG(INFO) << "create program with source from file = '"<< cl_standard.c_str() <<"' for platform " << this->name();
 
 	//-x clc++ -O5
 	std::string clIncludes = std::string("-cl-unsafe-math-optimizations -cl-finite-math-only -cl-fast-relaxed-math -cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -I ../../CL/include/");
@@ -371,12 +371,12 @@ bool OpenCLPlatform::compile(std::string cl_source) {
 			} else {
 				fwrite(logBuffer, 1, tempSize, tempLogFile);
 				fclose(tempLogFile);
-				LOG(INFO) << "OpenCL build log written to file '" << os.str().c_str() << "'";
+				DLOG(INFO) << "OpenCL build log written to file '" << os.str().c_str() << "'";
 			}
 		}
 		return false;
 	}
-	LOG(INFO) << "create program for all devices from file = '"<< cl_standard.c_str() <<"' for platform " << this->name();
+	DLOG(INFO) << "create program for all devices from file = '"<< cl_standard.c_str() <<"' for platform " << this->name();
 	programs.push_back(program);
 
 	std::vector<caffe::OpenCLDevice>::iterator it;

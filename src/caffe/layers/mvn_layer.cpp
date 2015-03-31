@@ -214,8 +214,8 @@ namespace OpenCL {
 			LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 			return false;
 		}
-		clFinish(*queue);
-		LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+		//clFinish(*queue);
+		DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 		CL_SET_KERNEL_ARG_END
 
@@ -264,8 +264,8 @@ template<typename T> bool clMVNLayerForwardMV2(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -317,8 +317,8 @@ template<typename T> bool clMVNLayerForward(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -376,8 +376,8 @@ template<typename T> bool clMVNLayerForwardS2(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -438,8 +438,8 @@ template<typename T> bool clMVNLayerBackward(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -500,8 +500,8 @@ template<typename T> bool clMVNLayerBackwardMV2(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -552,8 +552,8 @@ template<typename T> bool clMVNLayerBackwardS1(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -619,8 +619,8 @@ template<typename T> bool clMVNLayerForward_perf(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -685,8 +685,8 @@ template<typename T> bool clMVNLayerBackward_perf(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 

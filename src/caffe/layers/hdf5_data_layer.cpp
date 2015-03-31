@@ -77,7 +77,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->type() << " does not transform data.";
   // Read the source to parse the filenames.
   const string& source = this->layer_param_.hdf5_data_param().source();
-  LOG(INFO) << "Loading list of HDF5 filenames from: " << source;
+  DLOG(INFO) << "Loading list of HDF5 filenames from: " << source;
   hdf_filenames_.clear();
   std::ifstream source_file(source.c_str());
   if (source_file.is_open()) {
@@ -91,7 +91,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   source_file.close();
   num_files_ = hdf_filenames_.size();
   current_file_ = 0;
-  LOG(INFO) << "Number of HDF5 files: " << num_files_;
+  DLOG(INFO) << "Number of HDF5 files: " << num_files_;
   CHECK_GE(num_files_, 1) << "Must have at least 1 HDF5 filename listed in "
     << source;
 

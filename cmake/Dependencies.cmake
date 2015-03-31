@@ -101,7 +101,7 @@ if(USE_OPENCL)
         include_directories(SYSTEM ${OPENCL_INCLUDE_DIRS})
         list(APPEND Caffe_LINKER_LIBS ${OPENCL_LIBRARIES})
         add_definitions(-DUSE_OPENCL)
-        add_definitions(-DUSE_OPENCL)        
+    	set(HAVE_OPENCL TRUE)
     endif()
 endif()
 
@@ -111,7 +111,14 @@ if(USE_OPENCL)
     if ( clBLAS_FOUND ) 
         include_directories(SYSTEM ${clBLAS_INCLUDE_DIR})
         list(APPEND Caffe_LINKER_LIBS ${clBLAS_LIB})
+    	set(HAVE_CLBLAS TRUE)
     endif()
+endif()
+
+# ---[ clBLAS
+if(USE_TIMER)
+   add_definitions(-DUSE_TIMER)
+   set(HAVE_TIMER TRUE)
 endif()
 
 # ---[ Python

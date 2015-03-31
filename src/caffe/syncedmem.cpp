@@ -24,7 +24,7 @@ SyncedMemory::~SyncedMemory() {
 #ifdef USE_OPENCL
 	if (gpu_ptr_) {
 		BOOL_CHECK(caffe::OpenCL::clFree(gpu_ptr_));
-		LOG(INFO)<<"gpu_ptr_ = "<<gpu_ptr_<<" goind out of scope.";
+		DLOG(INFO)<<"gpu_ptr_ = "<<gpu_ptr_<<" going out of scope.";
 		gpu_ptr_ = NULL;
 	}
 #endif
@@ -45,7 +45,7 @@ inline void SyncedMemory::to_cpu() {
 		oss << "CPU@" << cpu_ptr_;
 		memoryTag[cpu_ptr_] = oss.str();
 		memoryCount++;
-		//LOG(INFO) << "malloc() " << getMemoryTag(cpu_ptr_).c_str() << " for " << size() << " Byte";
+		//DLOG(INFO) << "malloc() " << getMemoryTag(cpu_ptr_).c_str() << " for " << size() << " Byte";
 
     caffe_memset(size_, 0, cpu_ptr_);
     head_ = HEAD_AT_CPU;
@@ -69,7 +69,7 @@ inline void SyncedMemory::to_cpu() {
 			oss << "CPU@" << cpu_ptr_;
 			memoryTag[cpu_ptr_] = oss.str();
 			memoryCount++;
-			//LOG(INFO) << "malloc() " << getMemoryTag(cpu_ptr_).c_str() << " for " << size() << " Byte";
+			//DLOG(INFO) << "malloc() " << getMemoryTag(cpu_ptr_).c_str() << " for " << size() << " Byte";
 
 			own_cpu_data_ = true;
 		}

@@ -23,7 +23,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   K_ = bottom[0]->count(axis);
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
-    LOG(INFO) << "Skipping parameter initialization";
+    DLOG(INFO) << "Skipping parameter initialization";
   } else {
     if (bias_term_) {
       this->blobs_.resize(2);

@@ -3,6 +3,7 @@ file(GLOB_RECURSE srcs ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 # Build each source file independently
 foreach(source ${srcs})
+  message(STATUS "${source}")
   get_filename_component(name ${source} NAME_WE)
 
   # caffe target already exits

@@ -10,6 +10,8 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "caffe/util/benchmark.hpp"
+
 
 namespace caffe {
 
@@ -168,6 +170,7 @@ void Solver<Dtype>::Step(int iters) {
   Dtype smoothed_loss = 0;
 
   for (; iter_ < stop_iter; ++iter_) {
+    DLOG(INFO)<<"current iteration = "<<iter_;
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -175,7 +178,10 @@ void Solver<Dtype>::Step(int iters) {
 
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
-    Dtype loss = net_->ForwardBackward(bottom_vec);
+    Dtype loss;
+    TIME("ForwardBackward()", {
+        loss = net_->ForwardBackward(bottom_vec);
+    });
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
@@ -207,9 +213,12 @@ void Solver<Dtype>::Step(int iters) {
         }
       }
     }
-    ComputeUpdateValue();
-    net_->Update();
-
+    TIME("ComputeUpdateValue()", {
+        ComputeUpdateValue();
+    });
+    TIME("net_->Update()", {
+        net_->Update();
+    });
     // Save a snapshot if needed.
     if (param_.snapshot() && (iter_ + 1) % param_.snapshot() == 0) {
       Snapshot();

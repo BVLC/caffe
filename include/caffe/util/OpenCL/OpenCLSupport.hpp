@@ -104,27 +104,6 @@
 
 #define _format(message,...)  "%s[%6d] in %s :" message, __FILE__, __LINE__, __func__,  ##__VA_ARGS__
 
-#define	TIME(name, this) {\
-\
-struct timeval s;\
-\
-double bgn = 0.0;\
-if (gettimeofday(&s, 0) == 0) {\
-	bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
-}\
-\
-(this); \
-\
-double end = 0.0;\
-if (gettimeofday(&s, 0) == 0) {\
-	end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
-}\
-\
-LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<<"ms"; \
-\
-}
-
-
 namespace caffe {
 
 namespace OpenCL {
@@ -149,6 +128,7 @@ namespace OpenCL {
 
 	size_t clGetMemoryOffset(const void* ptr_virtual);
 	size_t clGetMemorySize(const void* ptr_virtual);
+	void* clGetMemoryBase(const void* ptr_virtual);
 
 	template<typename T> std::string clGetKernelName(std::string name);
 

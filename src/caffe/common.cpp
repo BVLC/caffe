@@ -296,11 +296,9 @@ void Caffe::set_random_seed(const unsigned int seed) {
 }
 
 void Caffe::SetDevice(const int device_id) {
-	NO_GPU;
 }
 
 void Caffe::DeviceQuery() {
-	NO_GPU;
 }
 
 class Caffe::RNG::Generator {

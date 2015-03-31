@@ -201,7 +201,7 @@ bool OpenCLParser::convert(std::string fileNameIN, std::string fileNameOUT) {
 		 }
 
 		 if ( statOUT.st_mtime > statIN.st_mtime ) {
-			 LOG(INFO) << "kernel source file = '" << fileNameOUT.c_str() << "' up-to-date";
+			 DLOG(INFO) << "kernel source file = '" << fileNameOUT.c_str() << "' up-to-date";
 			 return true;
 		 }
 	}
@@ -259,7 +259,7 @@ bool OpenCLParser::convert(std::string fileNameIN, std::string fileNameOUT) {
     	if ( isTemplateKernelLine(line) ) {
     		kernel_name = getKernelName(line);
     		kernel_type = getKernelType(line);
-        LOG(INFO)<<"found template kernel '"<<kernel_name<<"' with type '"<<kernel_type<<"'";
+        DLOG(INFO)<<"found template kernel '"<<kernel_name<<"' with type '"<<kernel_type<<"'";
 
         	if ( recording == false ) {
         		recording = true;
@@ -282,7 +282,7 @@ bool OpenCLParser::convert(std::string fileNameIN, std::string fileNameOUT) {
     std::ofstream out(fileNameOUT.c_str());
     out << stdOpenCL;
     out.close();
-    LOG(INFO) << "convert AMD OpenCL '"<<fileNameIN.c_str()<<"' to standard OpenCL '"<<fileNameOUT.c_str()<<"'";
+    DLOG(INFO) << "convert AMD OpenCL '"<<fileNameIN.c_str()<<"' to standard OpenCL '"<<fileNameOUT.c_str()<<"'";
 	return true;
 }
 

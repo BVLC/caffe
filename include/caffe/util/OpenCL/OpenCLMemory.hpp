@@ -30,8 +30,8 @@ public:
 	size_t getSize();
 
 	static void statictics() {
-		LOG(INFO)<<"numCallsMalloc = "<<numCallsMalloc;
-		LOG(INFO)<<"numCallsFree   = "<<numCallsFree;
+		DLOG(INFO)<<"numCallsMalloc = "<<numCallsMalloc;
+		DLOG(INFO)<<"numCallsFree   = "<<numCallsFree;
 	}
 
 protected:

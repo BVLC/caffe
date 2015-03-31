@@ -21,7 +21,7 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int channels = bottom[0]->channels();
   channel_shared_ = prelu_param.channel_shared();
   if (this->blobs_.size() > 0) {
-    LOG(INFO) << "Skipping parameter initialization";
+    DLOG(INFO) << "Skipping parameter initialization";
   } else {
     this->blobs_.resize(1);
     if (channel_shared_) {
@@ -173,8 +173,8 @@ bool clPReLUForward(const int n, const int channels, const int dim,
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -223,8 +223,8 @@ bool clPReLUBackward(const int n, const int channels, const int dim,
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -268,8 +268,8 @@ bool clPReLUParamBackward(const int n, const T* in_diff,
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 

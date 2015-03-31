@@ -63,9 +63,9 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 	oss << "GPU@" << this->ptr_device_mem << "("<<this->size<<") MEM"<< this->count;
 	this->tag = oss.str();
 
-	LOG(INFO) << caffe::OpenCL::gpu->name() << "> create CL_MEM_READ_WRITE buffer of "<<allocSizeMB<<" MByte at "<<getTag().c_str()<<" total mem utilization = "<<deviceMemUsedMB<<" MByte";
-	LOG(INFO)<<"cl_mem = "<<this->ptr_device_mem_;
-	LOG(INFO) << "new memory "<<this->tag.c_str();
+	DLOG(INFO) << caffe::OpenCL::gpu->name() << "> create CL_MEM_READ_WRITE buffer of "<<allocSizeMB<<" MByte at "<<getTag().c_str()<<" total mem utilization = "<<deviceMemUsedMB<<" MByte";
+	DLOG(INFO)<<"cl_mem = "<<this->ptr_device_mem_;
+	DLOG(INFO) << "new memory "<<this->tag.c_str();
 	this->count++;
 	numCallsMalloc++;
 	statictics();
@@ -92,7 +92,7 @@ void OpenCLMemory::free() {
 				throw new OpenCLMemoryException(oss.str());
 		}
 		this->ptr_device_mem_ = NULL;
-		LOG(INFO)<<caffe::OpenCL::gpu->name() << "> clReleaseMemObject("<<this->ptr_device_mem<<") succeeded.";
+		DLOG(INFO)<<caffe::OpenCL::gpu->name() << "> clReleaseMemObject("<<this->ptr_device_mem<<") succeeded.";
 		numCallsFree++;
 		statictics();
 	}
@@ -148,7 +148,7 @@ bool OpenCLMemory::contains(const void* ptr) {
 	if ( ptr > this->ptr_virtual_end ) {
 		return false;
 	}
-	//LOG(INFO)<<ptr_virtual_bgn<<" < "<<ptr<<" < "<<ptr_virtual_end;
+	//DLOG(INFO)<<ptr_virtual_bgn<<" < "<<ptr<<" < "<<ptr_virtual_end;
 
 	return true;
 }

@@ -33,7 +33,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->layer_param_.data_param().rand_skip()) {
     unsigned int skip = caffe_rng_rand() %
                         this->layer_param_.data_param().rand_skip();
-    LOG(INFO) << "Skipping first " << skip << " data points.";
+    DLOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       cursor_->Next();
     }
@@ -45,7 +45,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bool force_color = this->layer_param_.data_param().force_encoded_color();
   if ((force_color && DecodeDatum(&datum, true)) ||
       DecodeDatumNative(&datum)) {
-    LOG(INFO) << "Decoding Datum";
+    DLOG(INFO) << "Decoding Datum";
   }
   // image
   int crop_size = this->layer_param_.transform_param().crop_size();
@@ -64,7 +64,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->transformed_data_.Reshape(1, datum.channels(),
       datum.height(), datum.width());
   }
-  LOG(INFO) << "output data size: " << top[0]->num() << ","
+  DLOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label

@@ -142,8 +142,8 @@ bool clCLLForward(
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 

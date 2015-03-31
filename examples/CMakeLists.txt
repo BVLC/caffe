@@ -29,3 +29,29 @@ foreach(source_file ${examples_srcs})
                        COMMAND ln -sf "${__outname}" "${__outname}.bin")
   endif()
 endforeach()
+
+# copy shell scripts
+file(GLOB_RECURSE examples_sh "${PROJECT_SOURCE_DIR}/examples/*.sh")
+foreach(sh_file ${examples_sh})
+  # get file name
+  get_filename_component(name ${sh_file} NAME)
+
+  # get folder name
+  get_filename_component(path ${sh_file} PATH)
+  get_filename_component(folder ${path} NAME_WE)
+
+  install(PROGRAMS ${sh_file} DESTINATION examples/${folder}/)
+endforeach()
+
+# copy *.prototxt
+file(GLOB_RECURSE examples_prototxt "${PROJECT_SOURCE_DIR}/examples/*.prototxt")
+foreach(prototxt_file ${examples_prototxt})
+  # get file name
+  get_filename_component(name ${prototxt_file} NAME)
+
+  # get folder name
+  get_filename_component(path ${prototxt_file} PATH)
+  get_filename_component(folder ${path} NAME_WE)
+
+  install(FILES ${prototxt_file} DESTINATION examples/${folder}/)
+endforeach()

@@ -63,6 +63,32 @@ class CPUTimer : public Timer {
 
 }  // namespace caffe
 
+#ifdef USE_TIMER
+#define TIME(name, this) {\
+\
+struct timeval s;\
+\
+double bgn = 0.0;\
+if (gettimeofday(&s, 0) == 0) {\
+  bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}\
+\
+(this); \
+\
+double end = 0.0;\
+if (gettimeofday(&s, 0) == 0) {\
+  end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
+}\
+\
+LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<<"ms"; \
+\
+}
+#else
+#define TIME(name, this) {\
+(this); \
+}
+#endif
+
 #if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 #define	BENCH(result, this)\
 {\

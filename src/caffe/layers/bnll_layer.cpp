@@ -76,8 +76,8 @@ bool clBNLLLayerForward(const int count, const T* bottom_data, T* top_data) {
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -116,8 +116,8 @@ bool clBNLLLayerBackward(const int count, const T* top_diff, const T* bottom_dat
 		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
-	clFinish(*queue);
-	LOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 

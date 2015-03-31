@@ -57,6 +57,9 @@ add_subdirectory(examples)
 add_subdirectory(python)
 add_subdirectory(matlab)
 add_subdirectory(docs)
+add_subdirectory(data)
+add_subdirectory(src/caffe/util/OpenCL)
+add_subdirectory(src/caffe/layers/OpenCL)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
