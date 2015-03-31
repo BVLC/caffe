@@ -13,6 +13,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -54,6 +55,66 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_loss_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+	void ContrastiveLossLayerTestForwardPerformance(int num_images, int num_channels) {
+
+		typedef typename TypeParam::Dtype Dtype;
+		LayerParameter layer_param;
+		ContrastiveLossLayer<Dtype> layer(layer_param);
+
+		int im_height = 1;
+		int im_width  = 1;
+
+		blob_bottom_data_i_->Reshape(num_images, num_channels, im_height, im_width);
+		blob_bottom_data_j_->Reshape(num_images, num_channels, im_height, im_width);
+
+		FillerParameter filler_param;
+		filler_param.set_mean(0.0);
+		filler_param.set_std(0.3);  // distances~=1.0 to test both sides of margin
+		GaussianFiller<Dtype> filler(filler_param);
+
+		blob_bottom_vec_.clear();
+
+		filler.Fill(this->blob_bottom_data_i_);
+		blob_bottom_vec_.push_back(blob_bottom_data_i_);
+
+		filler.Fill(this->blob_bottom_data_j_);
+		blob_bottom_vec_.push_back(blob_bottom_data_j_);
+
+		blob_bottom_y_->Reshape(num_images, 1, 1, 1);
+		for (int i = 0; i < blob_bottom_y_->count(); i++) {
+			blob_bottom_y_->mutable_cpu_data()[i] = caffe_rng_rand() % 2;  // 0 or 1
+		}
+		blob_bottom_vec_.push_back(blob_bottom_y_);
+		blob_top_vec_.clear();
+		blob_top_vec_.push_back(blob_top_loss_);
+
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		blob_bottom_data_i_->mutable_gpu_data();
+		blob_bottom_data_i_->mutable_gpu_diff();
+		blob_bottom_data_j_->mutable_gpu_data();
+		blob_bottom_data_j_->mutable_gpu_diff();
+		blob_bottom_y_->mutable_gpu_data();
+		blob_bottom_y_->mutable_gpu_diff();
+		blob_top_loss_->mutable_gpu_data();
+		blob_top_loss_->mutable_gpu_diff();
+#endif
+
+		record r;
+		r.type 			= std::string(typeid(Dtype).name());
+		r.num_images 	= num_images;
+		r.num_channels 	= num_channels;
+		r.img_width		= im_width;
+		r.img_height	= im_height;
+
+		BENCH(r, {
+				layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+		});
+
+	}
+
 };
 
 TYPED_TEST_CASE(ContrastiveLossLayerTest, TestDtypesAndDevices);
@@ -97,6 +158,13 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
       this->blob_top_vec_, 0);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 1);
+}
+
+TYPED_TEST(ContrastiveLossLayerTest, TestForwardPerformance){
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
+		this->ContrastiveLossLayerTestForwardPerformance(i, i);
+	}
 }
 
 }  // namespace caffe

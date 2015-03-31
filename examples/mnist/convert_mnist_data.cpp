@@ -19,6 +19,17 @@
 #include <string>
 
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/device_alternate.hpp"
+
+namespace caffe {
+#ifdef USE_CUDA
+  cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
+}
+
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;

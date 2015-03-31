@@ -2,7 +2,7 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
-find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
+find_package(Boost 1.46 REQUIRED COMPONENTS system thread regex)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 
@@ -51,9 +51,13 @@ if(NOT HAVE_CUDA)
   else()
     message("-- CUDA is not detected by cmake. Building without it...")
   endif()
-
+  
   # TODO: remove this not cross platform define in future. Use caffe_config.h instead.
   add_definitions(-DCPU_ONLY)
+else()
+  if(NOT USE_OPENCL)
+      add_definitions(-DUSE_CUDA)
+  endif()
 endif()
 
 # ---[ OpenCV
@@ -88,6 +92,33 @@ elseif(APPLE)
   find_package(vecLib REQUIRED)
   include_directories(SYSTEM ${vecLib_INCLUDE_DIR})
   list(APPEND Caffe_LINKER_LIBS ${vecLib_LINKER_LIBS})
+endif()
+
+# ---[ OpenCL
+if(USE_OPENCL)
+    find_package(OpenCL REQUIRED)
+    if ( OPENCL_FOUND ) 
+        include_directories(SYSTEM ${OPENCL_INCLUDE_DIRS})
+        list(APPEND Caffe_LINKER_LIBS ${OPENCL_LIBRARIES})
+        add_definitions(-DUSE_OPENCL)
+    	set(HAVE_OPENCL TRUE)
+    endif()
+endif()
+
+# ---[ clBLAS
+if(USE_OPENCL)
+    find_package(clBLAS REQUIRED)
+    if ( clBLAS_FOUND ) 
+        include_directories(SYSTEM ${clBLAS_INCLUDE_DIR})
+        list(APPEND Caffe_LINKER_LIBS ${clBLAS_LIB})
+    	set(HAVE_CLBLAS TRUE)
+    endif()
+endif()
+
+# ---[ clBLAS
+if(USE_TIMER)
+   add_definitions(-DUSE_TIMER)
+   set(HAVE_TIMER TRUE)
 endif()
 
 # ---[ Python

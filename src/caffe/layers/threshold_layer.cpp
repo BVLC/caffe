@@ -3,6 +3,10 @@
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
 
+#if defined(USE_OPENCL)
+#include <caffe/util/OpenCL/OpenCLDevice.hpp>
+#include <caffe/util/OpenCL/threshold_layer.hpp>
+#endif
 
 namespace caffe {
 
@@ -24,7 +28,70 @@ void ThresholdLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-#ifdef CPU_ONLY
+#if defined(USE_OPENCL)
+
+namespace OpenCL {
+
+template<typename T>
+bool clThresholdForward(const int n, const T threshold, const T* in, T* out) {
+
+	std::string kernel_name = clGetKernelName<T>("ThresholdForward");
+
+	queue = gpu->getQueue();
+	if ( ! queue ) {
+		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+		return false;
+	}
+
+	kernel = gpu->getKernel(kernel_name);
+	if ( kernel == NULL ) {
+		return false;
+	}
+
+	CL_SET_KERNEL_ARG
+	CL_SET_TYPE_KERNEL_ARG(int, n)
+	CL_SET_TYPE_KERNEL_ARG(T, threshold)
+	CL_SET_ARRAY_KERNEL_ARG(&in)
+	CL_SET_ARRAY_KERNEL_ARG(&out)
+
+	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+		return false;
+	}
+	//clFinish(*queue);
+	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+
+	CL_SET_KERNEL_ARG_END
+
+	return true;
+}
+template bool clThresholdForward<float>(const int n, const float threshold, const float* in, float* out);
+template bool clThresholdForward<double>(const int n, const double threshold, const double* in, double* out);
+
+} // namespace OpenCL
+
+
+template<typename Dtype>
+void ThresholdLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+	const Dtype* bottom_data = bottom[0]->gpu_data();
+	Dtype* top_data = (top)[0]->mutable_gpu_data();
+	const int count = bottom[0]->count();
+	/*
+	// NOLINT_NEXT_LINE(whitespace/operators)
+	ThresholdForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, threshold_, bottom_data, top_data);
+	CUDA_POST_KERNEL_CHECK;
+	*/
+	BOOL_CHECK( caffe::OpenCL::clThresholdForward(count, threshold_, bottom_data, top_data) );
+
+}
+
+#endif
+
+#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 STUB_GPU_FORWARD(ThresholdLayer, Forward);
 #endif
 

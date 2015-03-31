@@ -52,6 +52,8 @@ class SyncedMemory {
   const void* gpu_data();
   void* mutable_cpu_data();
   void* mutable_gpu_data();
+	std::string getMemoryTag(const void* ptr);
+
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
@@ -64,6 +66,8 @@ class SyncedMemory {
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
+	int memoryCount;
+	std::map<const void*, std::string> memoryTag;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

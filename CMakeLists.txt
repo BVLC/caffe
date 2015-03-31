@@ -13,8 +13,9 @@ include(cmake/Summary.cmake)
 include(cmake/ConfigGen.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY  "Build Caffe wihtout CUDA support" OFF) # TODO: rename to USE_CUDA
-caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" ON IF NOT CPU_ONLY)
+caffe_option(CPU_ONLY   "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
+caffe_option(USE_OPENCL "Build Caffe with OpenCL support" OFF)
+caffe_option(USE_CUDNN "Build Caffe with cuDNN libary support" ON IF NOT CPU_ONLY OR USE_OPENCL)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 caffe_option(BUILD_python "Build Python wrapper" ON)
 set(python_version "2" CACHE STRING "Specify which python version to use")
@@ -56,6 +57,9 @@ add_subdirectory(examples)
 add_subdirectory(python)
 add_subdirectory(matlab)
 add_subdirectory(docs)
+add_subdirectory(data)
+add_subdirectory(src/caffe/util/OpenCL)
+add_subdirectory(src/caffe/layers/OpenCL)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)

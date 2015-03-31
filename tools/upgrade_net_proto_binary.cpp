@@ -13,6 +13,16 @@
 
 using std::ofstream;
 
+namespace caffe {
+#ifdef USE_CUDA
+  cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
+}
+
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif
+
 using namespace caffe;  // NOLINT(build/namespaces)
 
 int main(int argc, char** argv) {

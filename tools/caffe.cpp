@@ -16,6 +16,15 @@ using caffe::shared_ptr;
 using caffe::Timer;
 using caffe::vector;
 
+namespace caffe {
+#ifdef USE_CUDA
+  cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
+}
+
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif
 
 DEFINE_int32(gpu, -1,
     "Run in GPU mode on given device ID.");
@@ -109,7 +118,14 @@ int train() {
   }
 
   // Set device id and mode
-  if (FLAGS_gpu >= 0) {
+#if ! (defined(USE_CUDA) || defined(USE_OPENCL))
+  if (FLAGS_gpu >= 0 ) {
+  	LOG(WARNING)<<"This build of Caffe was build without GPU support, switching to CPU mode.";
+  	FLAGS_gpu = -1;
+  }
+#endif
+
+  if ( FLAGS_gpu >= 0 ) {
     LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
     Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
@@ -143,7 +159,14 @@ int test() {
   CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
 
   // Set device id and mode
-  if (FLAGS_gpu >= 0) {
+#if ! (defined(USE_CUDA) || defined(USE_OPENCL))
+  if (FLAGS_gpu >= 0 ) {
+  	LOG(WARNING)<<"This build of Caffe was build without GPU support, switching to CPU mode.";
+  	FLAGS_gpu = -1;
+  }
+#endif
+
+  if ( FLAGS_gpu >= 0 ) {
     LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
     Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
@@ -151,6 +174,7 @@ int test() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TEST);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
@@ -208,7 +232,14 @@ int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
 
   // Set device id and mode
-  if (FLAGS_gpu >= 0) {
+#if ! (defined(USE_CUDA) || defined(USE_OPENCL))
+  if (FLAGS_gpu >= 0 ) {
+  	LOG(WARNING)<<"This build of Caffe was build without GPU support, switching to CPU mode.";
+  	FLAGS_gpu = -1;
+  }
+#endif
+
+  if ( FLAGS_gpu >= 0 ) {
     LOG(INFO) << "Use GPU with device ID " << FLAGS_gpu;
     Caffe::SetDevice(FLAGS_gpu);
     Caffe::set_mode(Caffe::GPU);
@@ -216,6 +247,7 @@ int time() {
     LOG(INFO) << "Use CPU.";
     Caffe::set_mode(Caffe::CPU);
   }
+
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TRAIN);
 

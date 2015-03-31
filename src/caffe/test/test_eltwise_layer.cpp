@@ -10,6 +10,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -47,6 +48,102 @@ class EltwiseLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+  void EltwiseLayerTestSetup(int num_images, int num_channels, int im_width, int im_height) {
+
+	  blob_bottom_a_->Reshape(num_images, num_channels, im_height, im_width);
+	  blob_bottom_b_->Reshape(num_images, num_channels, im_height, im_width);
+	  blob_bottom_c_->Reshape(num_images, num_channels, im_height, im_width);
+
+	  FillerParameter filler_param;
+	  UniformFiller<Dtype> filler(filler_param);
+	  filler.Fill(this->blob_bottom_a_);
+	  filler.Fill(this->blob_bottom_b_);
+	  filler.Fill(this->blob_bottom_c_);
+
+	  blob_bottom_vec_.clear();
+	  blob_bottom_vec_.push_back(blob_bottom_a_);
+	  blob_bottom_vec_.push_back(blob_bottom_b_);
+	  blob_bottom_vec_.push_back(blob_bottom_c_);
+  }
+
+  void EltwiseLayerTestSumPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+	  this->EltwiseLayerTestSetup(num_images, num_channels, im_width, im_height);
+
+	  LayerParameter layer_param;
+	  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+	  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_SUM);
+	  shared_ptr<EltwiseLayer<Dtype> > layer(new EltwiseLayer<Dtype>(layer_param));
+	  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+	  record r;
+	  r.type 			= std::string(typeid(Dtype).name());
+	  r.num_images 	= num_images;
+	  r.num_channels 	= num_channels;
+	  r.img_width		= im_width;
+	  r.img_height	= im_height;
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+			blob_bottom_a_->mutable_gpu_data();
+			blob_bottom_a_->mutable_gpu_diff();
+			blob_bottom_b_->mutable_gpu_data();
+			blob_bottom_b_->mutable_gpu_diff();
+			blob_bottom_c_->mutable_gpu_data();
+			blob_bottom_c_->mutable_gpu_diff();
+			blob_top_->mutable_gpu_data();
+			blob_top_->mutable_gpu_diff();
+#endif
+
+	  BENCH(r, {
+			  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	  });
+  }
+
+  void EltwiseLayerTestProdPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+	  this->EltwiseLayerTestSetup(num_images, num_channels, im_width, im_height);
+
+	  LayerParameter layer_param;
+	  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+	  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_PROD);
+	  shared_ptr<EltwiseLayer<Dtype> > layer(new EltwiseLayer<Dtype>(layer_param));
+	  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+	  record r;
+	  r.type 			= std::string(typeid(Dtype).name());
+	  r.num_images 	= num_images;
+	  r.num_channels 	= num_channels;
+	  r.img_width		= im_width;
+	  r.img_height	= im_height;
+
+	  BENCH(r, {
+			  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	  });
+  }
+
+  void EltwiseLayerTestMaxPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+	  this->EltwiseLayerTestSetup(num_images, num_channels, im_width, im_height);
+
+	  LayerParameter layer_param;
+	  EltwiseParameter* eltwise_param = layer_param.mutable_eltwise_param();
+	  eltwise_param->set_operation(EltwiseParameter_EltwiseOp_MAX);
+	  shared_ptr<EltwiseLayer<Dtype> > layer(new EltwiseLayer<Dtype>(layer_param));
+	  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+	  record r;
+	  r.type 			= std::string(typeid(Dtype).name());
+	  r.num_images 	= num_images;
+	  r.num_channels 	= num_channels;
+	  r.img_width		= im_width;
+	  r.img_height	= im_height;
+
+	  BENCH(r, {
+			  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	  });
+  }
+
 };
 
 TYPED_TEST_CASE(EltwiseLayerTest, TestDtypesAndDevices);
@@ -204,6 +301,27 @@ TYPED_TEST(EltwiseLayerTest, TestMaxGradient) {
   GradientChecker<Dtype> checker(1e-4, 1e-3);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+TYPED_TEST(EltwiseLayerTest, TestSumPerformance) {
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX*4; i*=2 ) {
+		this->EltwiseLayerTestSumPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
+}
+
+TYPED_TEST(EltwiseLayerTest, TestProdPerformance) {
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX*4; i*=2 ) {
+		this->EltwiseLayerTestProdPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
+}
+
+TYPED_TEST(EltwiseLayerTest, TestMaxPerformance) {
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX*4; i*=2 ) {
+		this->EltwiseLayerTestMaxPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
 }
 
 }  // namespace caffe

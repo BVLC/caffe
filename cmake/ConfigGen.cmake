@@ -35,6 +35,11 @@ endfunction()
 #  caffe_generate_export_configs()
 function(caffe_generate_export_configs)
   set(install_cmake_suffix "share/Caffe")
+  
+  if(USE_OPENCL)
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/caffe/util/OpenCL/" DESTINATION share/Caffe/OpenCL FILES_MATCHING PATTERN "*.cl")  
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/src/caffe/layers/OpenCL/" DESTINATION share/Caffe/OpenCL FILES_MATCHING PATTERN "*.cl")  
+  endif()
 
   # ---[ Configure build-tree CaffeConfig.cmake file ]---
   caffe_get_current_includes(Caffe_INCLUDE_DIRS)

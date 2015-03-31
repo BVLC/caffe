@@ -48,7 +48,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   //    num_windows
   //    class_index overlap x1 y1 x2 y2
 
-  LOG(INFO) << "Window data layer:" << std::endl
+  DLOG(INFO) << "Window data layer:" << std::endl
       << "  foreground (object) overlap threshold: "
       << this->layer_param_.window_data_param().fg_threshold() << std::endl
       << "  background (non-object) overlap threshold: "
@@ -143,7 +143,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
 
     if (image_index % 100 == 0) {
-      LOG(INFO) << "num: " << image_index << " "
+      DLOG(INFO) << "num: " << image_index << " "
           << image_path << " "
           << image_size[0] << " "
           << image_size[1] << " "
@@ -152,18 +152,18 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   } while (infile >> hashtag >> image_index);
 
-  LOG(INFO) << "Number of images: " << image_index+1;
+  DLOG(INFO) << "Number of images: " << image_index+1;
 
   for (map<int, int>::iterator it = label_hist.begin();
       it != label_hist.end(); ++it) {
-    LOG(INFO) << "class " << it->first << " has " << label_hist[it->first]
+    DLOG(INFO) << "class " << it->first << " has " << label_hist[it->first]
               << " samples";
   }
 
-  LOG(INFO) << "Amount of context padding: "
+  DLOG(INFO) << "Amount of context padding: "
       << this->layer_param_.window_data_param().context_pad();
 
-  LOG(INFO) << "Crop mode: "
+  DLOG(INFO) << "Crop mode: "
       << this->layer_param_.window_data_param().crop_mode();
 
   // image
@@ -173,7 +173,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(batch_size, channels, crop_size, crop_size);
   this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
 
-  LOG(INFO) << "output data size: " << top[0]->num() << ","
+  DLOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
@@ -187,7 +187,7 @@ void WindowDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (has_mean_file_) {
     const string& mean_file =
           this->transform_param_.mean_file();
-    LOG(INFO) << "Loading mean file from: " << mean_file;
+    DLOG(INFO) << "Loading mean file from: " << mean_file;
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);

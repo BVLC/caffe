@@ -12,6 +12,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -53,6 +54,61 @@ class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_loss_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+	void InfogainLossLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+		LayerParameter layer_param;
+		InfogainLossLayer<Dtype> layer(layer_param);
+
+		blob_bottom_data_->Reshape(num_images, num_channels, 1, 1);
+		blob_bottom_label_->Reshape(num_images, 1, 1, 1);
+		blob_bottom_infogain_->Reshape(1, 1, num_channels, num_channels);
+
+		FillerParameter filler_param;
+		UniformFiller<Dtype> filler(filler_param);
+		filler.Fill(this->blob_bottom_data_);
+
+		for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+			blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
+		}
+
+		filler_param.set_min(0.1);
+		filler_param.set_max(2.0);
+		UniformFiller<Dtype> infogain_filler(filler_param);
+		infogain_filler.Fill(this->blob_bottom_infogain_);
+
+		blob_bottom_vec_.clear();
+		blob_bottom_vec_.push_back(blob_bottom_data_);
+		blob_bottom_vec_.push_back(blob_bottom_label_);
+		blob_bottom_vec_.push_back(blob_bottom_infogain_);
+
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		blob_bottom_data_->mutable_gpu_data();
+		blob_bottom_data_->mutable_gpu_diff();
+		blob_bottom_label_->mutable_gpu_data();
+		blob_bottom_label_->mutable_gpu_diff();
+		blob_bottom_infogain_->mutable_gpu_data();
+		blob_bottom_infogain_->mutable_gpu_diff();
+		blob_top_loss_->mutable_gpu_data();
+		blob_top_loss_->mutable_gpu_diff();
+#endif
+
+		record r;
+		r.type = std::string(typeid(Dtype).name());
+		r.num_images = num_images;
+		r.num_channels = num_channels;
+		r.img_width = im_width;
+		r.img_height = im_height;
+
+		BENCH(r, {
+			layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_)
+			;
+		});
+	}
+
 };
 
 TYPED_TEST_CASE(InfogainLossLayerTest, TestDtypesAndDevices);
@@ -65,6 +121,15 @@ TYPED_TEST(InfogainLossLayerTest, TestGradient) {
   GradientChecker<Dtype> checker(1e-4, 2e-2, 1701, 1, 0.01);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 0);
+}
+
+TYPED_TEST(InfogainLossLayerTest, TestForwardPerformance) {
+
+	for( int num_images = 10; num_images <= 10000; num_images *= 10 ) {
+		for ( int num_channels = 2; num_channels <= 4096; num_channels *= 2 ) {
+			this->InfogainLossLayerTestForwardPerformance(num_images, num_channels, 1, 1);
+		}
+	}
 }
 
 }  // namespace caffe

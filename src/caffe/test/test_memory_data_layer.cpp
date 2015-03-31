@@ -7,6 +7,7 @@
 #include "caffe/filler.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -57,6 +58,64 @@ class MemoryDataLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const label_blob_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+  void MemoryDataLayerTestSetup(int num_batches, int batch_size, int num_channels, int im_width, int im_height) {
+
+		FillerParameter filler_param;
+		GaussianFiller<Dtype> filler(filler_param);
+		data_->Reshape(num_batches * batch_size, num_channels, im_height, im_width);
+		labels_->Reshape(num_batches * batch_size, 1, 1, 1);
+		filler.Fill(this->data_);
+		filler.Fill(this->labels_);
+
+	  blob_bottom_vec_.clear();
+		blob_top_vec_.push_back(data_blob_);
+		blob_top_vec_.push_back(label_blob_);
+  }
+
+  void MemoryDataLayerTestForwardPerformance(int num_batches, int batch_size, int num_channels, int im_width, int im_height) {
+
+	  this->MemoryDataLayerTestSetup(num_batches, batch_size, num_channels, im_width, im_height);
+
+	  typedef typename TypeParam::Dtype Dtype;
+
+	  LayerParameter layer_param;
+	  MemoryDataParameter* md_param = layer_param.mutable_memory_data_param();
+	  md_param->set_batch_size(batch_size);
+	  md_param->set_channels(num_channels);
+	  md_param->set_height(im_height);
+	  md_param->set_width(im_width);
+
+	  shared_ptr<MemoryDataLayer<Dtype> > layer(new MemoryDataLayer<Dtype>(layer_param));
+	  layer->DataLayerSetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	  layer->Reset(this->data_->mutable_cpu_data(),	this->labels_->mutable_cpu_data(), this->data_->num());
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+			data_->mutable_gpu_data();
+			data_->mutable_gpu_diff();
+			labels_->mutable_gpu_data();
+			labels_->mutable_gpu_diff();
+			data_blob_->mutable_gpu_data();
+			data_blob_->mutable_gpu_diff();
+			label_blob_->mutable_gpu_data();
+			label_blob_->mutable_gpu_diff();
+#endif
+
+  	record r;
+	  r.type 					= std::string(typeid(Dtype).name());
+	  r.num_images 		= num_batches*6*batch_size;
+	  r.num_channels 	= num_channels;
+	  r.img_width			= im_width;
+	  r.img_height		= im_height;
+
+	  BENCH(r, {
+			for (int i = 0; i < num_batches * 6; ++i) {
+				layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+			}
+	  });
+
+  }
+
 };
 
 TYPED_TEST_CASE(MemoryDataLayerTest, TestDtypesAndDevices);
@@ -291,6 +350,13 @@ TYPED_TEST(MemoryDataLayerTest, TestSetBatchSize) {
       }
     }
   }
+}
+
+TYPED_TEST(MemoryDataLayerTest, TestForwardPerformance) {
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MIN; i*=2 ) {
+		this->MemoryDataLayerTestForwardPerformance(12, 8, 3, i, i);
+	}
 }
 
 }  // namespace caffe

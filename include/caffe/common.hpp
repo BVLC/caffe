@@ -18,6 +18,10 @@
 
 #include "caffe/util/device_alternate.hpp"
 
+#ifdef USE_OPENCL
+#include <caffe/util/OpenCL/OpenCLSupport.hpp>
+#endif
+
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 // Luckily we will be able to use GFLAGS_GFAGS_H_ to detect if it is version
 // 2.1. If yes, we will add a temporary solution to redirect the namespace.
@@ -105,6 +109,8 @@ class Caffe {
     return *singleton_;
   }
   enum Brew { CPU, GPU };
+  static bool GPU_USE_CUDA;
+  static bool GPU_USE_OPENCL;
 
   // This random number generator facade hides boost and CUDA rng
   // implementation from one another (for cross-platform compatibility).
@@ -127,7 +133,7 @@ class Caffe {
     }
     return *(Get().random_generator_);
   }
-#ifndef CPU_ONLY
+#ifdef USE_CUDA
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
@@ -151,7 +157,7 @@ class Caffe {
   static void DeviceQuery();
 
  protected:
-#ifndef CPU_ONLY
+#ifdef USE_CUDA
   cublasHandle_t cublas_handle_;
   curandGenerator_t curand_generator_;
 #endif

@@ -9,11 +9,11 @@ echo "Creating $DBTYPE..."
 
 rm -rf $EXAMPLE/cifar10_train_$DBTYPE $EXAMPLE/cifar10_test_$DBTYPE
 
-./build/examples/cifar10/convert_cifar_data.bin $DATA $EXAMPLE $DBTYPE
+bin/convert_cifar_data $DATA $EXAMPLE $DBTYPE
 
 echo "Computing image mean..."
 
-./build/tools/compute_image_mean -backend=$DBTYPE \
+bin/compute_image_mean -backend=$DBTYPE \
   $EXAMPLE/cifar10_train_$DBTYPE $EXAMPLE/mean.binaryproto
 
 echo "Done."

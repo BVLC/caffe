@@ -4,6 +4,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/benchmark.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -73,7 +74,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // - blobs_[1] holds the biases (optional)
   bias_term_ = this->layer_param_.convolution_param().bias_term();
   if (this->blobs_.size() > 0) {
-    LOG(INFO) << "Skipping parameter initialization";
+    DLOG(INFO) << "Skipping parameter initialization";
   } else {
     if (bias_term_) {
       this->blobs_.resize(2);
@@ -222,32 +223,60 @@ void BaseConvolutionLayer<Dtype>::backward_cpu_bias(Dtype* bias,
       input, bias_multiplier_.cpu_data(), 1., bias);
 }
 
-#ifndef CPU_ONLY
+#if defined(USE_CUDA) || defined(USE_OPENCL)
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) {
+
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     if (!skip_im2col) {
+      TIME("forward_gpu_gemm()->conv_im2col_gpu()",
+          {
       conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+          });
     }
+    TIME("forward_gpu_gemm()->col_buffer_.gpu_data()",
+        {
     col_buff = col_buffer_.gpu_data();
+        });
   }
+
+  TIME("2nd step()",
+      {
   for (int g = 0; g < group_; ++g) {
+#if defined(USE_CUDA)
+    TIME("forward_gpu_gemm()->caffe_gpu_gemm()",
+        {
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
         group_, conv_out_spatial_dim_, kernel_dim_ / group_,
         (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)0., output + output_offset_ * g);
+        });
+#endif
+#if defined(USE_OPENCL)
+    TIME("forward_gpu_gemm()->caffe_gpu_gemm()", {
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
+        group_, conv_out_spatial_dim_, kernel_dim_ / group_,
+        (Dtype)1., (Dtype*) weights + weight_offset_ * g,
+        col_buff + col_offset_ * g,
+        (Dtype)0., (Dtype*) output +  output_offset_ * g);
+    });
+#endif
   }
+    });
 }
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
     const Dtype* bias) {
+  TIME("caffe_gpu_gemm()",
+      {
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
       height_out_ * width_out_, 1, (Dtype)1., bias, bias_multiplier_.gpu_data(),
       (Dtype)1., output);
+      });
 }
 
 template <typename Dtype>
@@ -258,10 +287,23 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
     col_buff = input;
   }
   for (int g = 0; g < group_; ++g) {
-    caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
+#if defined(USE_CUDA)
+  	caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
         conv_out_spatial_dim_, conv_out_channels_ / group_,
         (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
         (Dtype)0., col_buff + col_offset_ * g);
+#endif
+#if defined(USE_OPENCL)
+    TIME("backward_gpu_gemm()->caffe_gpu_gemm()", {
+  	caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
+        conv_out_spatial_dim_, conv_out_channels_ / group_,
+        (Dtype)1.,
+        weights + weight_offset_ * g,
+        output + output_offset_ * g,
+        (Dtype)0.,
+        col_buff + col_offset_ * g);
+    });
+#endif
   }
   if (!is_1x1_) {
     conv_col2im_gpu(col_buff, input);
@@ -277,18 +319,33 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
     col_buff = col_buffer_.gpu_data();
   }
   for (int g = 0; g < group_; ++g) {
+#if defined(USE_CUDA)
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
         kernel_dim_ / group_, conv_out_spatial_dim_,
         (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)1., weights + weight_offset_ * g);
+#endif
+#if defined(USE_OPENCL)
+    TIME("weight_gpu_gemm()->caffe_gpu_gemm()", {
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
+        kernel_dim_ / group_, conv_out_spatial_dim_,
+        (Dtype)1.,
+        output + output_offset_ * g,
+        col_buff +  col_offset_ * g,
+        (Dtype)1.,
+        weights + weight_offset_ * g);
+    });
+#endif
   }
 }
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
     const Dtype* input) {
+  TIME("backward_gpu_bias()->caffe_gpu_gemv()", {
   caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_, 1.,
       input, bias_multiplier_.gpu_data(), 1., bias);
+  });
 }
 
 #endif  // !CPU_ONLY

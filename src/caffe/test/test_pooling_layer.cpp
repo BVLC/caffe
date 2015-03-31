@@ -10,6 +10,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -20,28 +21,55 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   PoolingLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
+        blob_bottom__(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()),
-        blob_top_mask_(new Blob<Dtype>()) {}
+        blob_top__(new Blob<Dtype>()),
+        blob_top_mask_(new Blob<Dtype>()) {
+
+  }
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
-    blob_bottom_->Reshape(2, 3, 6, 5);
-    // fill the values
-    FillerParameter filler_param;
-    GaussianFiller<Dtype> filler(filler_param);
-    filler.Fill(this->blob_bottom_);
-    blob_bottom_vec_.push_back(blob_bottom_);
-    blob_top_vec_.push_back(blob_top_);
+		int num_images 		= 2;
+		int num_channels 	= 3;
+		int im_width		= 6;
+		int im_height		= 5;
+
+		blob_bottom_->Reshape(num_images, num_channels, im_width, im_height);
+		blob_bottom__->Reshape(num_images, num_channels, im_width, im_height);
+
+		// fill the values
+		FillerParameter filler_param;
+		GaussianFiller<Dtype> filler(filler_param);
+
+		filler.Fill(this->blob_bottom_);
+		blob_bottom_vec_.push_back(blob_bottom_);
+		blob_top_vec_.push_back(blob_top_);
+
+		for (int i = 0; i < num_images * num_channels * im_width * im_height; i++ ) {
+			blob_bottom__->mutable_cpu_data()[i] = blob_bottom_->cpu_data()[i];
+		}
+		blob_bottom_vec__.push_back(blob_bottom__);
+		blob_top_vec__.push_back(blob_top__);
   }
-  virtual ~PoolingLayerTest() {
-    delete blob_bottom_;
-    delete blob_top_;
-    delete blob_top_mask_;
-  }
-  Blob<Dtype>* const blob_bottom_;
-  Blob<Dtype>* const blob_top_;
-  Blob<Dtype>* const blob_top_mask_;
-  vector<Blob<Dtype>*> blob_bottom_vec_;
-  vector<Blob<Dtype>*> blob_top_vec_;
+
+	virtual ~PoolingLayerTest() {
+		delete blob_bottom_;
+		delete blob_bottom__;
+		delete blob_top_;
+		delete blob_top__;
+		delete blob_top_mask_;
+	}
+	Blob<Dtype>* const blob_bottom_;
+	Blob<Dtype>* const blob_bottom__;
+	Blob<Dtype>* const blob_top_;
+	Blob<Dtype>* const blob_top__;
+
+	Blob<Dtype>* const blob_top_mask_;
+	vector<Blob<Dtype>*> blob_bottom_vec_;
+	vector<Blob<Dtype>*> blob_bottom_vec__;
+	vector<Blob<Dtype>*> blob_top_vec_;
+	vector<Blob<Dtype>*> blob_top_vec__;
+
   // Test for 2x 2 square pooling layer
   void TestForwardSquare() {
     LayerParameter layer_param;
@@ -366,6 +394,228 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
       }
     }
   }
+
+	void PoolingLayerTestForwardMaxPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+
+		LayerParameter layer_param;
+		PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+		pooling_param->set_kernel_h(3);
+		pooling_param->set_kernel_w(2);
+		pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+		blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+
+		FillerParameter filler_param;
+		GaussianFiller<Dtype> filler(filler_param);
+
+		filler.Fill(this->blob_bottom_);
+		blob_bottom_vec_.clear();
+		blob_bottom_vec_.push_back(blob_bottom_);
+		blob_top_vec_.clear();
+		blob_top_vec_.push_back(blob_top_);
+
+		PoolingLayer<Dtype> layer(layer_param);
+		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+
+		EXPECT_EQ(blob_top_->num(), num_images);
+		EXPECT_EQ(blob_top_->channels(), num_channels);
+		EXPECT_EQ(blob_top_->height(), im_height-2);
+		EXPECT_EQ(blob_top_->width(), im_width-1);
+
+		if (blob_top_vec_.size() > 1) {
+			EXPECT_EQ(blob_top_mask_->num(), num_images);
+			EXPECT_EQ(blob_top_mask_->channels(), num_channels);
+			EXPECT_EQ(blob_top_mask_->height(), im_height-2);
+			EXPECT_EQ(blob_top_mask_->width(), im_width-2);
+		}
+
+		record r;
+		r.type 			= std::string(typeid(Dtype).name());
+		r.num_images 	= num_images;
+		r.num_channels 	= num_channels;
+		r.img_width		= im_width;
+		r.img_height	= im_height;
+
+		BENCH(r, {
+				layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		});
+	}
+
+	void PoolingLayerTestForwardMaxValidation(int num_images, int num_channels, int im_width, int im_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+
+		LayerParameter layer_param;
+		PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+		pooling_param->set_kernel_h(3);
+		pooling_param->set_kernel_w(2);
+		pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+		blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+		blob_bottom__->Reshape(num_images, num_channels, im_height, im_width);
+
+		FillerParameter filler_param;
+		GaussianFiller<Dtype> filler(filler_param);
+
+		filler.Fill(this->blob_bottom_);
+		blob_bottom_vec_.clear();
+		blob_bottom_vec_.push_back(blob_bottom_);
+		blob_top_vec_.clear();
+		blob_top_vec_.push_back(blob_top_);
+
+		for (int i = 0; i < num_images * num_channels * im_width * im_height; i++ ) {
+			blob_bottom__->mutable_cpu_data()[i] = blob_bottom_->cpu_data()[i];
+		}
+		blob_bottom_vec__.clear();
+		blob_bottom_vec__.push_back(blob_bottom__);
+		blob_top_vec__.clear();
+		blob_top_vec__.push_back(blob_top__);
+
+		PoolingLayer<Dtype> layer(layer_param);
+		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(blob_bottom_vec__, blob_top_vec__);
+
+		EXPECT_EQ(blob_top_->num(), num_images);
+		EXPECT_EQ(blob_top_->channels(), num_channels);
+		EXPECT_EQ(blob_top_->height(), im_height-2);
+		EXPECT_EQ(blob_top_->width(), im_width-1);
+
+		if (blob_top_vec_.size() > 1) {
+			EXPECT_EQ(blob_top_mask_->num(), num_images);
+			EXPECT_EQ(blob_top_mask_->channels(), num_channels);
+			EXPECT_EQ(blob_top_mask_->height(), im_height-2);
+			EXPECT_EQ(blob_top_mask_->width(), im_width-2);
+		}
+
+		Caffe::set_mode(Caffe::CPU);
+		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+
+		Caffe::set_mode(Caffe::GPU);
+		layer.Forward(blob_bottom_vec__, blob_top_vec__);
+
+		for (int i = 0; i < blob_bottom_->count(); i++) {
+			EXPECT_EQ(blob_bottom_->cpu_data()[i], blob_bottom__->cpu_data()[i]);
+		}
+
+		for (int i = 0; i < blob_top_->count(); i++) {
+			EXPECT_EQ(blob_top_->cpu_data()[i], blob_top__->cpu_data()[i]);
+		}
+	}
+
+	void PoolingLayerTestForwardAveValidation(int num_images, int num_channels, int im_width, int im_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+
+		LayerParameter layer_param;
+		PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+		pooling_param->set_kernel_h(3);
+		pooling_param->set_kernel_w(2);
+		pooling_param->set_stride(1);
+		pooling_param->set_pad(1);
+		pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+		blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+		blob_bottom__->Reshape(num_images, num_channels, im_height, im_width);
+
+		FillerParameter filler_param;
+		filler_param.set_value(Dtype(2));
+		GaussianFiller<Dtype> filler(filler_param);
+
+		filler.Fill(this->blob_bottom_);
+		blob_bottom_vec_.clear();
+		blob_bottom_vec_.push_back(blob_bottom_);
+		blob_top_vec_.clear();
+		blob_top_vec_.push_back(blob_top_);
+
+		for (int i = 0; i < num_images * num_channels * im_width * im_height; i++ ) {
+			blob_bottom__->mutable_cpu_data()[i] = blob_bottom_->cpu_data()[i];
+		}
+		blob_bottom_vec__.clear();
+		blob_bottom_vec__.push_back(blob_bottom__);
+		blob_top_vec__.clear();
+		blob_top_vec__.push_back(blob_top__);
+
+		PoolingLayer<Dtype> layer(layer_param);
+		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(blob_bottom_vec__, blob_top_vec__);
+
+		EXPECT_EQ(blob_top_->num(), num_images);
+		EXPECT_EQ(blob_top_->channels(), num_channels);
+		EXPECT_EQ(blob_top_->height(), im_height);
+		EXPECT_EQ(blob_top_->width(), im_width+1);
+
+		if (blob_top_vec_.size() > 1) {
+			EXPECT_EQ(blob_top_mask_->num(), num_images);
+			EXPECT_EQ(blob_top_mask_->channels(), num_channels);
+			EXPECT_EQ(blob_top_mask_->height(), im_height-2);
+			EXPECT_EQ(blob_top_mask_->width(), im_width-2);
+		}
+
+		Caffe::set_mode(Caffe::CPU);
+		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+
+		Caffe::set_mode(Caffe::GPU);
+		layer.Forward(blob_bottom_vec__, blob_top_vec__);
+
+		Dtype epsilon = 1e-5;
+
+		for (int i = 0; i < blob_bottom_->count(); i++) {
+			EXPECT_NEAR(blob_bottom_->cpu_data()[i], blob_bottom__->cpu_data()[i], epsilon);
+		}
+
+		for (int i = 0; i < blob_top_->count(); i++) {
+			EXPECT_NEAR(blob_top_->cpu_data()[i], blob_top__->cpu_data()[i], epsilon);
+		}
+	}
+
+	void PoolingLayerTestForwardAvePerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+
+		LayerParameter layer_param;
+		PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+		pooling_param->set_kernel_h(3);
+		pooling_param->set_kernel_w(2);
+		pooling_param->set_stride(1);
+		pooling_param->set_pad(1);
+		pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+		blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+
+		FillerParameter filler_param;
+		filler_param.set_value(Dtype(2));
+		GaussianFiller<Dtype> filler(filler_param);
+
+		filler.Fill(this->blob_bottom_);
+		blob_bottom_vec_.clear();
+		blob_bottom_vec_.push_back(blob_bottom_);
+		blob_top_vec_.clear();
+		blob_top_vec_.push_back(blob_top_);
+
+		PoolingLayer<Dtype> layer(layer_param);
+		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+
+		EXPECT_EQ(blob_top_->num(), num_images);
+		EXPECT_EQ(blob_top_->channels(), num_channels);
+		EXPECT_EQ(blob_top_->height(), im_height);
+		EXPECT_EQ(blob_top_->width(), im_width+1);
+
+		if (blob_top_vec_.size() > 1) {
+			EXPECT_EQ(blob_top_mask_->num(), num_images);
+			EXPECT_EQ(blob_top_mask_->channels(), num_channels);
+			EXPECT_EQ(blob_top_mask_->height(), im_height-2);
+			EXPECT_EQ(blob_top_mask_->width(), im_width-2);
+		}
+
+		record r;
+		r.type 			= std::string(typeid(Dtype).name());
+		r.num_images 	= num_images;
+		r.num_channels 	= num_channels;
+		r.img_width		= im_width;
+		r.img_height	= im_height;
+
+		BENCH(r, {
+			layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		});
+	}
 };
 
 TYPED_TEST_CASE(PoolingLayerTest, TestDtypesAndDevices);
@@ -604,6 +854,17 @@ TYPED_TEST(PoolingLayerTest, TestGradientAvePadded) {
           this->blob_top_vec_);
     }
   }
+}
+
+TYPED_TEST(PoolingLayerTest, TestForwardMaxValidation){
+	this->PoolingLayerTestForwardMaxValidation(10, 3, 64, 64);
+}
+
+TYPED_TEST(PoolingLayerTest, TestForwardMaxPerformance){
+
+	for(int i = TEST_IMAGE_WIDTH_MIN; i <= TEST_IMAGE_WIDTH_MAX; i *= 2 ) {
+		this->PoolingLayerTestForwardMaxPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
 }
 
 #ifdef USE_CUDNN

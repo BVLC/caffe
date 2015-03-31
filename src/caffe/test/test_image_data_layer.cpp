@@ -12,6 +12,7 @@
 #include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -57,6 +58,88 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+	void ImageDataLayerTestReadPerformance() {
+
+		typedef typename TypeParam::Dtype Dtype;
+		LayerParameter param;
+		ImageDataParameter* image_data_param = param.mutable_image_data_param();
+		image_data_param->set_batch_size(5);
+		image_data_param->set_source(this->filename_.c_str());
+		image_data_param->set_shuffle(false);
+		ImageDataLayer<Dtype> layer(param);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		blob_top_data_->mutable_gpu_data();
+		blob_top_data_->mutable_gpu_diff();
+		blob_top_label_->mutable_gpu_data();
+		blob_top_label_->mutable_gpu_diff();
+#endif
+
+		record r;
+		r.type = std::string(typeid(Dtype).name());
+		r.num_images 	= this->blob_top_data_->num();
+		r.num_channels 	= this->blob_top_data_->channels();
+		r.img_width 	= this->blob_top_data_->width();
+		r.img_height 	= this->blob_top_data_->height();
+
+		BENCH(r, {
+			layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_)
+			;
+		});
+	}
+
+	void ImageDataLayerTestResizePerformance(int scaled_width, int scaled_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+		LayerParameter param;
+		ImageDataParameter* image_data_param = param.mutable_image_data_param();
+		image_data_param->set_batch_size(5);
+		image_data_param->set_source(this->filename_.c_str());
+		image_data_param->set_new_height(scaled_width);
+		image_data_param->set_new_width(scaled_height);
+		image_data_param->set_shuffle(false);
+		ImageDataLayer<Dtype> layer(param);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+		record r;
+		r.type = std::string(typeid(Dtype).name());
+		r.num_images 	= this->blob_top_data_->num();
+		r.num_channels 	= this->blob_top_data_->channels();
+		r.img_width 	= this->blob_top_data_->width();
+		r.img_height 	= this->blob_top_data_->height();
+
+		BENCH(r, {
+			layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_)
+			;
+		});
+	}
+
+	void ImageDataLayerTestShufflePerformance() {
+
+		typedef typename TypeParam::Dtype Dtype;
+		LayerParameter param;
+		ImageDataParameter* image_data_param = param.mutable_image_data_param();
+		image_data_param->set_batch_size(5);
+		image_data_param->set_source(this->filename_.c_str());
+		image_data_param->set_shuffle(true);
+		ImageDataLayer<Dtype> layer(param);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+		record r;
+		r.type = std::string(typeid(Dtype).name());
+		r.num_images 	= this->blob_top_data_->num();
+		r.num_channels 	= this->blob_top_data_->channels();
+		r.img_width 	= this->blob_top_data_->width();
+		r.img_height 	= this->blob_top_data_->height();
+
+		BENCH(r, {
+			layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_)
+			;
+		});
+	}
+
 };
 
 TYPED_TEST_CASE(ImageDataLayerTest, TestDtypesAndDevices);
@@ -174,6 +257,23 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
     EXPECT_EQ(5, values_to_indices.size());
     EXPECT_GT(5, num_in_order);
   }
+}
+
+TYPED_TEST(ImageDataLayerTest, TestReadPerformance) {
+
+	this->ImageDataLayerTestReadPerformance();
+}
+
+TYPED_TEST(ImageDataLayerTest, TestResizePerformance) {
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
+		this->ImageDataLayerTestResizePerformance(i, i);
+	}
+}
+
+TYPED_TEST(ImageDataLayerTest, TestShufflePerformance) {
+
+	this->ImageDataLayerTestShufflePerformance();
 }
 
 }  // namespace caffe

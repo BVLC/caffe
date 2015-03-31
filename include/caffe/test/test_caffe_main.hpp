@@ -14,6 +14,11 @@
 using std::cout;
 using std::endl;
 
+#define TEST_NUM_IMAGES 1
+#define TEST_NUM_CHANNELS 3
+#define TEST_IMAGE_WIDTH_MIN 64
+#define TEST_IMAGE_WIDTH_MAX 1024
+
 #ifdef CMAKE_BUILD
   #include "caffe_config.h"
 #else
@@ -50,10 +55,8 @@ struct DoubleCPU {
   static const Caffe::Brew device = Caffe::CPU;
 };
 
-#ifdef CPU_ONLY
-
+#if defined(CPU_ONLY) && ! defined(USE_OPENCL)
 typedef ::testing::Types<FloatCPU, DoubleCPU> TestDtypesAndDevices;
-
 #else
 
 struct FloatGPU {

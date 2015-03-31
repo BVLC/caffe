@@ -10,6 +10,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -32,6 +33,41 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
+
+	void Im2colLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+		typedef typename TypeParam::Dtype Dtype;
+		LayerParameter layer_param;
+		ConvolutionParameter* convolution_param = layer_param.mutable_convolution_param();
+		convolution_param->set_kernel_size(3);
+		convolution_param->set_stride(2);
+		Im2colLayer<Dtype> layer(layer_param);
+
+		blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+		blob_bottom_vec_.clear();
+		blob_bottom_vec_.push_back(blob_bottom_);
+
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		blob_bottom_->mutable_gpu_data();
+		blob_bottom_->mutable_gpu_diff();
+		blob_top_->mutable_gpu_data();
+		blob_top_->mutable_gpu_diff();
+#endif
+
+		record r;
+		r.type 			= std::string(typeid(Dtype).name());
+		r.num_images 	= num_images;
+		r.num_channels 	= num_channels;
+		r.img_width		= im_width;
+		r.img_height	= im_height;
+
+		BENCH(r, {
+				layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+		});
+
+	}
 };
 
 TYPED_TEST_CASE(Im2colLayerTest, TestDtypesAndDevices);
@@ -113,6 +149,13 @@ TYPED_TEST(Im2colLayerTest, TestRectGradient) {
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+TYPED_TEST(Im2colLayerTest, TestForwardPerformance){
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=1024; i*=2 ) {
+		this->Im2colLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
 }
 
 }  // namespace caffe

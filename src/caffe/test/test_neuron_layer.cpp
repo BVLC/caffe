@@ -12,6 +12,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -107,6 +108,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype* bottom_data = this->blob_bottom_->cpu_data();
     const Dtype* top_data = this->blob_top_->cpu_data();
     const Dtype* slope_data = layer->blobs()[0]->cpu_data();
+
     int hw = this->blob_bottom_->height() * this->blob_bottom_->width();
     int channels = this->blob_bottom_->channels();
     bool channel_shared = layer->layer_param().prelu_param().channel_shared();
@@ -117,6 +119,106 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
           + slope_data[c] * std::min(bottom_data[i], (Dtype)(0)));
     }
   }
+
+  void TestSetup(int num_images, int num_channels, int im_width, int im_height) {
+
+	  blob_bottom_->Reshape(num_images, num_channels, im_height, im_width);
+
+	  FillerParameter filler_param;
+	  UniformFiller<Dtype> filler(filler_param);
+	  filler.Fill(this->blob_bottom_);
+
+	  blob_bottom_vec_.clear();
+	  blob_bottom_vec_.push_back(blob_bottom_);
+  }
+
+  void AbsValLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+  	this->TestSetup(num_images, num_channels, im_width, im_height);
+
+	  typedef typename TypeParam::Dtype Dtype;
+
+		LayerParameter layer_param;
+		AbsValLayer<Dtype> layer(layer_param);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		blob_bottom_->mutable_gpu_data();
+		blob_bottom_->mutable_gpu_diff();
+		blob_top_->mutable_gpu_data();
+		blob_top_->mutable_gpu_diff();
+#endif
+
+	  record r;
+	  r.type 			= std::string(typeid(Dtype).name());
+	  r.num_images 		= num_images;
+	  r.num_channels 	= num_channels;
+	  r.img_width		= im_width;
+	  r.img_height		= im_height;
+
+	  BENCH(r, {
+			  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	  });
+  }
+
+  void ReLULayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+  	this->TestSetup(num_images, num_channels, im_width, im_height);
+
+	  typedef typename TypeParam::Dtype Dtype;
+
+		LayerParameter layer_param;
+		ReLULayer<Dtype> layer(layer_param);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		blob_bottom_->mutable_gpu_data();
+		blob_bottom_->mutable_gpu_diff();
+		blob_top_->mutable_gpu_data();
+		blob_top_->mutable_gpu_diff();
+#endif
+
+	  record r;
+	  r.type 			= std::string(typeid(Dtype).name());
+	  r.num_images 		= num_images;
+	  r.num_channels 	= num_channels;
+	  r.img_width		= im_width;
+	  r.img_height		= im_height;
+
+	  BENCH(r, {
+			  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	  });
+  }
+
+  void SigmoidLayerTestForwardPerformance(int num_images, int num_channels, int im_width, int im_height) {
+
+  	this->TestSetup(num_images, num_channels, im_width, im_height);
+
+	  typedef typename TypeParam::Dtype Dtype;
+
+		LayerParameter layer_param;
+		SigmoidLayer<Dtype> layer(layer_param);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+		blob_bottom_->mutable_gpu_data();
+		blob_bottom_->mutable_gpu_diff();
+		blob_top_->mutable_gpu_data();
+		blob_top_->mutable_gpu_diff();
+#endif
+
+	  record r;
+	  r.type 			= std::string(typeid(Dtype).name());
+	  r.num_images 		= num_images;
+	  r.num_channels 	= num_channels;
+	  r.img_width		= im_width;
+	  r.img_height		= im_height;
+
+	  BENCH(r, {
+			  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	  });
+  }
+
 };
 
 TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
@@ -586,6 +688,15 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
     EXPECT_EQ(prelu.blobs()[0]->cpu_diff()[s],
         prelu2.blobs()[0]->cpu_diff()[s]);
   }
+}
+
+TYPED_TEST(NeuronLayerTest, TestForwardPerformance) {
+
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=TEST_IMAGE_WIDTH_MAX; i*=2 ) {
+		this->AbsValLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+		this->ReLULayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+		this->SigmoidLayerTestForwardPerformance(TEST_NUM_IMAGES, TEST_NUM_CHANNELS, i, i);
+	}
 }
 
 #ifdef USE_CUDNN

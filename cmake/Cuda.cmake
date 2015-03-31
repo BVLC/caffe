@@ -1,4 +1,4 @@
-if(CPU_ONLY)
+if(CPU_ONLY OR USE_OPENCL)
   return()
 endif()
 

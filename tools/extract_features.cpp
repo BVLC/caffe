@@ -21,6 +21,16 @@ using boost::shared_ptr;
 using std::string;
 namespace db = caffe::db;
 
+namespace caffe {
+#ifdef USE_CUDA
+  cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
+}
+
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif
+
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv);
 

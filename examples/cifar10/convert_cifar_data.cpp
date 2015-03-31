@@ -17,6 +17,16 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 
+namespace caffe {
+#ifdef USE_CUDA
+  cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+#endif
+}
+
+#ifdef USE_CUDA
+using caffe::CAFFE_TEST_CUDA_PROP;
+#endif
+
 using caffe::Datum;
 using boost::scoped_ptr;
 using std::string;
