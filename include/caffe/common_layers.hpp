@@ -392,8 +392,8 @@ class CuDNNSoftmaxLayer : public SoftmaxLayer<Dtype> {
 
   bool handles_setup_;
   cudnnHandle_t             handle_;
-  cudnnTensorDescriptor_t bottom_desc_;
-  cudnnTensorDescriptor_t top_desc_;
+  cudnnTensor4dDescriptor_t bottom_desc_;
+  cudnnTensor4dDescriptor_t top_desc_;
 };
 #endif
 
