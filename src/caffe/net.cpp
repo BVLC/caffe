@@ -331,7 +331,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
              blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
     // raise an error.
-    LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
+    LOG(FATAL) << "Duplicate blob (name = " << blob_name << ") produced by multiple sources.";
   } else {
     // Normal output.
     if (layer_param) {

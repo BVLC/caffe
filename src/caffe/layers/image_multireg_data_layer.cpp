@@ -50,7 +50,9 @@ void ImageDataMultiRegressionLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtyp
     line_s >> filename;
     vector<Dtype> labels;
     Dtype label;
-    while(line_s >> label) labels.push_back(label);
+    while(line_s >> label) {
+        labels.push_back(label);
+    }
     if(label_dim == 0) label_dim = labels.size();
 
     lines_.push_back(std::make_pair(filename, labels));
@@ -170,7 +172,22 @@ void ImageDataMultiRegressionLayer<Dtype>::InternalThreadEntry() {
 #if 0
     prefetch_label[item_id] = lines_[lines_id_].second;
 #else
-    this->prefetch_label_.set_cpu_data(&lines_[lines_id_].second[0]);
+    // this->prefetch_label_.set_cpu_data(&lines_[lines_id_].second[0]);
+
+    // for (int i = 0; i < lines_[lines_id_].second.size(); ++i) {
+    //     LOG(INFO) << "lines_[lines_id_].second["<<i<<"] = " << lines_[lines_id_].second[i];
+    // }
+    // for (int i = 0; i < lines_[lines_id_].second.size(); ++i) {
+    //     LOG(INFO) << "prefetch_label["<<i<<"] = " << prefetch_label[i];
+    // }
+
+
+    // for (int i = 0; i < lines_[lines_id_].second.size(); ++i) {
+    //     prefetch_label[i] = lines_[lines_id_].second[i];
+    // }
+
+    memcpy(prefetch_label, &lines_[lines_id_].second[0], sizeof(Dtype) * lines_[lines_id_].second.size());
+
 #endif
 
     // go to the next iter
