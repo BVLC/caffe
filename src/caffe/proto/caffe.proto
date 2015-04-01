@@ -417,10 +417,12 @@ message ConvolutionParameter {
   optional uint32 kernel_size = 4; // The kernel size (square)
   optional uint32 kernel_h = 11; // The kernel height
   optional uint32 kernel_w = 12; // The kernel width
+  optional uint32 kernel_d = 16;
   optional uint32 group = 5 [default = 1]; // The group size for group conv
   optional uint32 stride = 6 [default = 1]; // The stride (equal in Y, X)
   optional uint32 stride_h = 13; // The stride height
   optional uint32 stride_w = 14; // The stride width
+  optional uint32 stride_d = 17;
   optional FillerParameter weight_filler = 7; // The filler for the weight
   optional FillerParameter bias_filler = 8; // The filler for the bias
   enum Engine {
