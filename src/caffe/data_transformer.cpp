@@ -1,4 +1,5 @@
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <string>
 #include <vector>
@@ -393,6 +394,165 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     DLOG(INFO) << "Scale: " << scale;
     caffe_scal(size, scale, transformed_data);
   }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::TransformImgAndSeg(const std::vector<cv::Mat>& cv_img_seg,
+  Blob<Dtype>* transformed_data_blob, Blob<Dtype>* transformed_label_blob, const int ignore_label) {
+  CHECK(cv_img_seg.size() == 2) << "Input must contain image and seg.";
+
+  const int img_channels = cv_img_seg[0].channels();
+  // height and width may change due to pad for cropping
+  int img_height   = cv_img_seg[0].rows;
+  int img_width    = cv_img_seg[0].cols;
+
+  const int seg_channels = cv_img_seg[1].channels();
+  int seg_height   = cv_img_seg[1].rows;
+  int seg_width    = cv_img_seg[1].cols;
+
+  const int data_channels = transformed_data_blob->channels();
+  const int data_height   = transformed_data_blob->height();
+  const int data_width    = transformed_data_blob->width();
+
+  const int label_channels = transformed_label_blob->channels();
+  const int label_height   = transformed_label_blob->height();
+  const int label_width    = transformed_label_blob->width();
+
+  CHECK_EQ(seg_channels, 1);
+  CHECK_EQ(img_channels, data_channels);
+  CHECK_EQ(img_height, seg_height);
+  CHECK_EQ(img_width, seg_width);
+
+  CHECK_EQ(label_channels, 1);
+  CHECK_EQ(data_height, label_height);
+  CHECK_EQ(data_width, label_width);
+
+  CHECK(cv_img_seg[0].depth() == CV_8U) << "Image data type must be unsigned byte";
+  CHECK(cv_img_seg[1].depth() == CV_8U) << "Seg data type must be unsigned byte";
+
+  const int crop_size = param_.crop_size();
+  const Dtype scale = param_.scale();
+  const bool do_mirror = param_.mirror() && Rand(2);
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
+
+  CHECK_GT(img_channels, 0);
+
+  Dtype* mean = NULL;
+  if (has_mean_file) {
+    CHECK_EQ(img_channels, data_mean_.channels());
+    CHECK_EQ(img_height, data_mean_.height());
+    CHECK_EQ(img_width, data_mean_.width());
+    mean = data_mean_.mutable_cpu_data();
+  }
+  if (has_mean_values) {
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+     "Specify either 1 mean_value or as many as channels: " << img_channels;
+    if (img_channels > 1 && mean_values_.size() == 1) {
+      // Replicate the mean_value for simplicity
+      for (int c = 1; c < img_channels; ++c) {
+        mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
+ 
+  int h_off = 0;
+  int w_off = 0;
+  cv::Mat cv_cropped_img = cv_img_seg[0];  
+  cv::Mat cv_cropped_seg = cv_img_seg[1];
+  
+  // transform to double, since we will pad mean pixel values
+  cv_cropped_img.convertTo(cv_cropped_img, CV_64F);
+
+  // Check if we need to pad img to fit for crop_size
+  // copymakeborder
+  int pad_height = std::max(crop_size - img_height, 0);
+  int pad_width  = std::max(crop_size - img_width, 0);
+  if (pad_height > 0 || pad_width > 0) {
+    cv::copyMakeBorder(cv_cropped_img, cv_cropped_img, 0, pad_height, 
+          0, pad_width, cv::BORDER_CONSTANT, 
+          cv::Scalar(mean_values_[0], mean_values_[1], mean_values_[2]));
+    cv::copyMakeBorder(cv_cropped_seg, cv_cropped_seg, 0, pad_height, 
+          0, pad_width, cv::BORDER_CONSTANT, 
+		       cv::Scalar(ignore_label));
+    // update height/width
+    img_height   = cv_cropped_img.rows;
+    img_width    = cv_cropped_img.cols;
+
+    seg_height   = cv_cropped_seg.rows;
+    seg_width    = cv_cropped_seg.cols;
+  }
+
+  // crop img/seg
+  if (crop_size) {
+    CHECK_EQ(crop_size, data_height);
+    CHECK_EQ(crop_size, data_width);    
+    // We only do random crop when we do training.
+    if (phase_ == TRAIN) {
+      h_off = Rand(img_height - crop_size + 1);
+      w_off = Rand(img_width - crop_size + 1);
+    } else {
+      // CHECK: use middle crop
+      h_off = (img_height - crop_size) / 2;
+      w_off = (img_width - crop_size) / 2;
+    }
+    cv::Rect roi(w_off, h_off, crop_size, crop_size);
+    cv_cropped_img = cv_cropped_img(roi);
+    cv_cropped_seg = cv_cropped_seg(roi);
+  } 
+  
+  CHECK(cv_cropped_img.data);
+  CHECK(cv_cropped_seg.data);
+
+  Dtype* transformed_data  = transformed_data_blob->mutable_cpu_data();
+  Dtype* transformed_label = transformed_label_blob->mutable_cpu_data();
+
+  int top_index;
+  const double* data_ptr;
+  const uchar* label_ptr;
+
+  for (int h = 0; h < data_height; ++h) {
+    data_ptr = cv_cropped_img.ptr<double>(h);
+    label_ptr = cv_cropped_seg.ptr<uchar>(h);
+
+    int data_index = 0;
+    int label_index = 0;
+
+    for (int w = 0; w < data_width; ++w) {
+      // for image
+      for (int c = 0; c < img_channels; ++c) {
+	if (do_mirror) {
+          top_index = (c * data_height + h) * data_width + (data_width - 1 - w);
+        } else {
+          top_index = (c * data_height + h) * data_width + w;
+        }
+        Dtype pixel = static_cast<Dtype>(data_ptr[data_index++]);
+        if (has_mean_file) {
+          int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
+          transformed_data[top_index] =
+            (pixel - mean[mean_index]) * scale;
+        } else {
+          if (has_mean_values) {
+            transformed_data[top_index] =
+              (pixel - mean_values_[c]) * scale;
+          } else {
+            transformed_data[top_index] = pixel * scale;
+          }
+        }
+      }
+
+      // for segmentation
+      if (do_mirror) {
+	top_index = h * data_width + data_width - 1 - w;
+      } else {
+	top_index = h * data_width + w;
+      }
+      Dtype pixel = static_cast<Dtype>(label_ptr[label_index++]);
+      transformed_label[top_index] = pixel;
+    }
+
+  }
+
 }
 
 template <typename Dtype>
