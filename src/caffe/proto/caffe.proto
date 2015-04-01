@@ -689,6 +689,9 @@ message ROIPoolingParameter {
   // dimensions in height and width or as Y, X pairs.
   optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
   optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
+  // Multiplicative spatial scale factor to translate ROI coords from their
+  // input scale to the scale used when pooling
+  optional float spatial_scale = 3 [default = 1];
 }
 
 // Message that stores parameters used by SigmoidLayer

@@ -16,9 +16,9 @@ namespace caffe {
 
 template <typename Dtype>
 __global__ void ROIPoolForward(const int nthreads, const Dtype* bottom_data,
-    const int channels, const int height, const int width,
-    const int pooled_height, const int pooled_width, const Dtype* bottom_rois,
-    Dtype* top_data, int* argmax_data) {
+    const Dtype spatial_scale, const int channels, const int height,
+    const int width, const int pooled_height, const int pooled_width,
+    const Dtype* bottom_rois, Dtype* top_data, int* argmax_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // (n, c, ph, pw) is an element in the pooled output
     int pw = index % pooled_width;
@@ -27,11 +27,11 @@ __global__ void ROIPoolForward(const int nthreads, const Dtype* bottom_data,
     int n = index / pooled_width / pooled_height / channels;
 
     bottom_rois += n * 5;
-    int roi_level = bottom_rois[0];
-    int roi_start_w = bottom_rois[1];
-    int roi_start_h = bottom_rois[2];
-    int roi_end_w = bottom_rois[3];
-    int roi_end_h = bottom_rois[4];
+    int roi_batch_ind = bottom_rois[0];
+    int roi_start_w = round(bottom_rois[1] * spatial_scale);
+    int roi_start_h = round(bottom_rois[2] * spatial_scale);
+    int roi_end_w = round(bottom_rois[3] * spatial_scale);
+    int roi_end_h = round(bottom_rois[4] * spatial_scale);
 
     // Force malformed ROIs to be 1x1
     int roi_width = max(roi_end_w - roi_start_w + 1, 1);
@@ -61,7 +61,7 @@ __global__ void ROIPoolForward(const int nthreads, const Dtype* bottom_data,
     Dtype maxval = is_empty ? 0 : -FLT_MAX;
     // If nothing is pooled, argmax = -1 causes nothing to be backprop'd
     int maxidx = -1;
-    bottom_data += (roi_level * channels + c) * height * width;
+    bottom_data += (roi_batch_ind * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
         int bottom_index = h * width + w;
@@ -86,16 +86,17 @@ void ROIPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int count = top[0]->count();
   // NOLINT_NEXT_LINE(whitespace/operators)
   ROIPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom_data, channels_, height_, width_, pooled_height_,
-      pooled_width_, bottom_rois, top_data, argmax_data);
+      count, bottom_data, spatial_scale_, channels_, height_, width_,
+      pooled_height_, pooled_width_, bottom_rois, top_data, argmax_data);
   CUDA_POST_KERNEL_CHECK;
 }
 
 template <typename Dtype>
 __global__ void ROIPoolBackward(const int nthreads, const Dtype* top_diff,
-    const int* argmax_data, const int num_rois, const int channels,
-    const int height, const int width, const int pooled_height,
-    const int pooled_width, Dtype* bottom_diff, const Dtype* bottom_rois) {
+    const int* argmax_data, const int num_rois, const Dtype spatial_scale,
+    const int channels, const int height, const int width,
+    const int pooled_height, const int pooled_width, Dtype* bottom_diff,
+    const Dtype* bottom_rois) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // (n, c, h, w) coords in bottom data
     int w = index % width;
@@ -107,16 +108,16 @@ __global__ void ROIPoolBackward(const int nthreads, const Dtype* top_diff,
     // Accumulate gradient over all ROIs that pooled this element
     for (int roi_n = 0; roi_n < num_rois; ++roi_n) {
       const Dtype* offset_bottom_rois = bottom_rois + roi_n * 5;
-      int roi_level = offset_bottom_rois[0];
-      // Skip if ROI's level doesn't match n
-      if (n != roi_level) {
+      int roi_batch_ind = offset_bottom_rois[0];
+      // Skip if ROI's batch index doesn't match n
+      if (n != roi_batch_ind) {
         continue;
       }
 
-      int roi_start_w = offset_bottom_rois[1];
-      int roi_start_h = offset_bottom_rois[2];
-      int roi_end_w = offset_bottom_rois[3];
-      int roi_end_h = offset_bottom_rois[4];
+      int roi_start_w = round(offset_bottom_rois[1] * spatial_scale);
+      int roi_start_h = round(offset_bottom_rois[2] * spatial_scale);
+      int roi_end_w = round(offset_bottom_rois[3] * spatial_scale);
+      int roi_end_h = round(offset_bottom_rois[4] * spatial_scale);
 
       // Skip if ROI doesn't include (h, w)
       const bool in_roi = (w >= roi_start_w && w <= roi_end_w &&
@@ -177,7 +178,7 @@ void ROIPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int* argmax_data = max_idx_.gpu_data();
   // NOLINT_NEXT_LINE(whitespace/operators)
   ROIPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, top_diff, argmax_data, top[0]->num(), channels_,
+      count, top_diff, argmax_data, top[0]->num(), spatial_scale_, channels_,
       height_, width_, pooled_height_, pooled_width_, bottom_diff, bottom_rois);
   CUDA_POST_KERNEL_CHECK;
 }
