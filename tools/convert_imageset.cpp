@@ -70,7 +70,6 @@ int main(int argc, char** argv) {
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
   std::string filename;
-  int label;
   std::string line;
   while (std::getline(infile, line)) {
     int label;
