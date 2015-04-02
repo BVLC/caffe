@@ -15,7 +15,7 @@ TEST_F(InternalThreadTest, TestStartAndExit) {
   EXPECT_FALSE(thread.is_started());
   EXPECT_TRUE(thread.StartInternalThread());
   EXPECT_TRUE(thread.is_started());
-  EXPECT_TRUE(thread.WaitForInternalThreadToExit());
+  EXPECT_TRUE(thread.StopInternalThread());
   EXPECT_FALSE(thread.is_started());
 }
 

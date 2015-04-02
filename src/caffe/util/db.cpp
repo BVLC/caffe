@@ -28,7 +28,17 @@ void LMDB::Open(const string& source, Mode mode) {
   }
   int flags = 0;
   if (mode == READ) {
-    flags = MDB_RDONLY | MDB_NOTLS;
+    // No locking, assume DB is not written to at the same time, otherwise
+    // LMDB tries to lock the file, which fails if filesystem is read-only
+    flags = MDB_RDONLY | MDB_NOTLS | MDB_NOLOCK;
+  }
+  // Allow DB to be stand-alone file
+  {
+    struct stat st_buf;
+    stat(source.c_str(), &st_buf);
+    if (S_ISREG(st_buf.st_mode)) {
+      flags |= MDB_NOSUBDIR;
+    }
   }
   MDB_CHECK(mdb_env_open(mdb_env_, source.c_str(), flags, 0664));
   LOG(INFO) << "Opened lmdb " << source;
