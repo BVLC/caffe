@@ -2,6 +2,7 @@ import numpy as np
 import skimage.io
 from scipy.ndimage import zoom
 from skimage.transform import resize
+import sys
 
 try:
     # Python3 will most likely not be able to load protobuf
@@ -141,18 +142,36 @@ class Transformer:
         mean = self.mean.get(in_)
         input_scale = self.input_scale.get(in_)
         in_dims = self.inputs[in_][2:]
-        if caffe_in.shape[:2] != in_dims:
-            caffe_in = resize_image(caffe_in, in_dims)
-        if transpose is not None:
-            caffe_in = caffe_in.transpose(transpose)
-        if channel_swap is not None:
-            caffe_in = caffe_in[channel_swap, :, :]
-        if raw_scale is not None:
-            caffe_in *= raw_scale
-        if mean is not None:
-            caffe_in -= mean
-        if input_scale is not None:
-            caffe_in *= input_scale
+
+        if True: #original code
+            if caffe_in.shape[:2] != in_dims:
+                caffe_in = resize_image(caffe_in, in_dims)
+            if transpose is not None:
+                caffe_in = caffe_in.transpose(transpose)
+            if channel_swap is not None:
+                caffe_in = caffe_in[channel_swap, :, :]
+            if raw_scale is not None:
+                caffe_in *= raw_scale
+            if mean is not None:
+                caffe_in -= mean
+            if input_scale is not None:
+                caffe_in *= input_scale
+        else:
+            if caffe_in.shape[:2] != mean.shape[1:]:
+                caffe_in = resize_image(caffe_in, mean.shape[1:])
+            if transpose is not None:
+                caffe_in = caffe_in.transpose(transpose)
+            if channel_swap is not None:
+                caffe_in = caffe_in[channel_swap, :, :]
+            if raw_scale is not None:
+                caffe_in *= raw_scale
+            if mean is not None:
+                caffe_in -= mean
+            if input_scale is not None:
+                caffe_in *= input_scale
+            if caffe_in.shape[:2] != in_dims:
+                caffe_in = resize_image(caffe_in, in_dims)
+
         return caffe_in
 
 
@@ -251,7 +270,10 @@ class Transformer:
             if len(ms) != 3:
                 raise ValueError('Mean shape invalid')
             if ms != self.inputs[in_][1:]:
-                raise ValueError('Mean shape incompatible with input shape.')
+                if True: # debug
+                    mean = resize_image(mean.transpose(2,1,0), self.inputs[in_][2:]).transpose(2,1,0)
+                else:
+                    raise ValueError('Mean shape incompatible with input shape.')
         self.mean[in_] = mean
 
 

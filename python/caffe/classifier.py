@@ -31,6 +31,7 @@ class Classifier(caffe.Net):
             {in_: self.blobs[in_].data.shape})
         self.transformer.set_transpose(in_, (2,0,1))
         if mean is not None:
+            print 'xxxxxxx', self.blobs[in_].data.shape
             self.transformer.set_mean(in_, mean)
         if input_scale is not None:
             self.transformer.set_input_scale(in_, input_scale)
