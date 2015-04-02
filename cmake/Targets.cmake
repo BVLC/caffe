@@ -110,6 +110,10 @@ function(caffe_default_properties target)
     ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib"
     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+  # make sure we build all external depepdencies first
+  if (DEFINED external_project_dependencies)
+    add_dependencies(${target} ${external_project_dependencies})
+  endif()
 endfunction()
 
 ################################################################################################
