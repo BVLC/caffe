@@ -38,7 +38,8 @@ void Convolution3DLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     is_1x1_ = false;
 
     // Configure output channels and groups.
-    channels_ = bottom[0]->channels();
+    channels_ = bottom[0]->shape(1);
+    // channels_ = bottom[0]->channels();
     num_output_ = this->layer_param_.convolution_param().num_output();
     CHECK_GT(num_output_, 0);
     group_ = this->layer_param_.convolution_param().group();
@@ -190,11 +191,11 @@ void Convolution3DLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + bottom[i]->offset(n), weight,
-          top_data + top[i]->offset(n));
+      this->forward_cpu_gemm(bottom_data + bottom[i]->offset(vector<int>(1,n)), weight,
+          top_data + top[i]->offset(vector<int>(1,n)));
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
-        this->forward_cpu_bias(top_data + top[i]->offset(n), bias);
+        this->forward_cpu_bias(top_data + top[i]->offset(vector<int>(1,n)), bias);
       }
     }
   }
@@ -220,20 +221,21 @@ void Convolution3DLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
       for (int n = 0; n < this->num_; ++n) {
-        this->backward_cpu_bias(bias_diff, top_diff + top[i]->offset(n));
+        this->backward_cpu_bias(bias_diff, top_diff + 
+            top[i]->offset(vector<int>(1,n)));
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          this->weight_cpu_gemm(bottom_data + bottom[i]->offset(n),
-              top_diff + top[i]->offset(n), weight_diff);
+          this->weight_cpu_gemm(bottom_data + bottom[i]->offset(vector<int>(1,n)),
+              top_diff + top[i]->offset(vector<int>(1,n)), weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
-          this->backward_cpu_gemm(top_diff + top[i]->offset(n), weight,
-              bottom_diff + bottom[i]->offset(n));
+          this->backward_cpu_gemm(top_diff + top[i]->offset(vector<int>(1,n)), 
+              weight, bottom_diff + bottom[i]->offset(vector<int>(1,n)));
         }
       }
     }
@@ -380,6 +382,11 @@ void Convolution3DLayer<Dtype>::backward_cpu_bias(Dtype* bias,
 
 // #endif  // !CPU_ONLY
 
+#ifdef CPU_ONLY
+STUB_GPU(Convolution3DLayer);
+#endif
+
 INSTANTIATE_CLASS(Convolution3DLayer);
+REGISTER_LAYER_CLASS(Convolution3D);
 
 }  // namespace caffe
