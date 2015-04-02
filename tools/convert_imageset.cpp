@@ -70,16 +70,9 @@ int main(int argc, char** argv) {
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
   std::string filename;
-  std::string line;
-  while (std::getline(infile, line)) {
-    int label;
-    std::istringstream iss(line);
-    iss >> filename;
-    std::vector<int> labels;
-    while(iss >> label) {
-      labels.push_back(label);
-    }
-    lines.push_back(std::make_pair(filename, labels));
+  int label;
+  while (infile >> filename >> label) {
+    lines.push_back(std::make_pair(filename, label));
   }
   if (FLAGS_shuffle) {
     // randomly shuffle data
