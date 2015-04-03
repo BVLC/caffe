@@ -1,3 +1,4 @@
+#include <boost/thread/tss.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdint.h>
@@ -153,6 +154,51 @@ namespace caffe {
         (ptr[i])[2] = val[2];
       }
     }
+  }
+
+  // don't overflow uchar
+  uchar inline applyNormalizeNoise(uchar pixel, float noise) {
+    return (noise == 0) * pixel
+        + (noise > 0) * (pixel + noise * (255.0 - pixel) /128.0)
+        + (noise < 0) * (pixel + noise * pixel/128.0);
+  }
+
+  boost::thread_specific_ptr<cv::Mat> noise_buf;
+  void gaussianNoise(cv::Mat* image_ptr, const float fraction,
+      const float stddev) {
+    cv::Mat image = * image_ptr;
+    const int cols = image.cols;
+    const int rows = image.rows;
+    if (!noise_buf.get()) {
+      noise_buf.reset(new cv::Mat());
+    }
+    noise_buf->create(cv::Size(cols, rows), image.type());
+    cv::randn(*noise_buf, 0, stddev);
+    if (noise_buf->channels() == 1) {
+      for (int i = 0; i < rows; i++) {
+        uchar* ptr = noise_buf->ptr<uchar>(i);
+        uchar* image_ptr = image.ptr<uchar>(i);
+        for (int j = 0; j < cols; j++) {
+          int chosen = (caffe_rng_rand() % 1000) / 1000.0 < fraction;
+          image_ptr[j] = applyNormalizeNoise(image_ptr[j], ptr[j] * chosen);
+        }
+      }
+    } else if (noise_buf->channels() == 3) {
+      for (int i = 0; i < rows; i++) {
+        cv::Vec3b* ptr = noise_buf->ptr<cv::Vec3b>(i);
+        cv::Vec3b* image_ptr = image.ptr<cv::Vec3b>(i);
+        for (int j = 0; j < cols; j++) {
+          int chosen = (caffe_rng_rand() % 1000) / 1000.0 < fraction;
+          image_ptr[j][0] = applyNormalizeNoise(
+              image_ptr[j][0], ptr[j][0] * chosen);
+          image_ptr[j][1] = applyNormalizeNoise(
+              image_ptr[j][1], ptr[j][1] * chosen);
+          image_ptr[j][2] = applyNormalizeNoise(
+              image_ptr[j][1], ptr[j][1] * chosen);
+        }
+      }
+    }
+//    image += *noise_buf;
   }
 
   cv::Mat ApplyResize(const cv::Mat &in_img, const ResizeParameter param) {
@@ -384,7 +430,14 @@ namespace caffe {
       const int noise_pixels_num =
           floor(param.saltpepper_param().fraction()
               * out_img.cols * out_img.rows);
-      constantNoise(out_img, noise_pixels_num, noise_values);
+      switch (param.saltpepper_param().type()) {
+        case SaltPepperParameter_SaltType_absolute:
+          constantNoise(out_img, noise_pixels_num, noise_values);
+          break;
+        case SaltPepperParameter_SaltType_relative:
+          gaussianNoise(&out_img,
+              param.saltpepper_param().fraction(), noise_values[0]);
+      }
     }
     return  out_img;
   }

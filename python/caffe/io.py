@@ -7,6 +7,7 @@ try:
     # Python3 will most likely not be able to load protobuf
     from caffe.proto import caffe_pb2
 except:
+    import sys
     if sys.version_info >= (3,0):
         print("Failed to include caffe_pb2, things might go wrong!")
     else:
@@ -237,12 +238,20 @@ class Transformer:
         mean: mean ndarray (input dimensional or broadcastable)
         """
         self.__check_input(in_)
+        ms = mean.shape
         if mean.ndim == 1:
+            # broadcast channels
+            if ms[0] != self.inputs[in_][1]:
+                raise ValueError('Mean channels incompatible with input.')
             mean = mean[:, np.newaxis, np.newaxis]
-        mk, mh, mw = mean.shape
-        in_k, in_h, in_w = self.inputs[in_][1:]
-        #if mk != in_k or (mh, mw) != (in_h, in_w) and (mh, mw) != (1, 1):
-        #    raise Exception('Mean shape incompatible with input shape.')
+        else:
+            # elementwise mean
+            if len(ms) == 2:
+                ms = (1,) + ms
+            if len(ms) != 3:
+                raise ValueError('Mean shape invalid')
+            if ms != self.inputs[in_][1:]:
+                raise ValueError('Mean shape incompatible with input shape.')
         self.mean[in_] = mean
 
 

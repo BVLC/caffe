@@ -32,7 +32,7 @@ If using Anaconda Python, HDF5 is bundled and the `hdf5` formula can be skipped.
 
     # with Python pycaffe needs dependencies built from source
     brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --fresh -vd boost
+    brew install --build-from-source --fresh -vd boost boost-python
     # without Python the usual installation suffices
     brew install protobuf boost
 
@@ -115,7 +115,7 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     # Update homebrew; hopefully this works without errors!
     brew update
 
-    # Switch back to the caffe branches with the forumlae that you modified earlier
+    # Switch back to the caffe branches with the formulae that you modified earlier
     cd /usr/local
     git rebase master caffe
     # Fix any merge conflicts and commit to caffe branch

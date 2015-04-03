@@ -5,6 +5,7 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/python.hpp>
+#include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <numpy/arrayobject.h>
 
@@ -163,9 +164,10 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
     // the shape information from the blob.
     void* data = PyArray_DATA(reinterpret_cast<PyArrayObject*>(result));
     Py_DECREF(result);
-    npy_intp dims[] = {blob->num(), blob->channels(),
-                       blob->height(), blob->width()};
-    PyObject* arr_obj = PyArray_SimpleNewFromData(4, dims, NPY_FLOAT32, data);
+    const int num_axes = blob->num_axes();
+    vector<npy_intp> dims(blob->shape().begin(), blob->shape().end());
+    PyObject *arr_obj = PyArray_SimpleNewFromData(num_axes, dims.data(),
+                                                  NPY_FLOAT32, data);
     // SetBaseObject steals a ref, so we need to INCREF.
     Py_INCREF(pyblob.ptr());
     PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(arr_obj),
@@ -173,6 +175,20 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
     return arr_obj;
   }
 };
+
+bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
+  if (bp::len(kwargs) > 0) {
+    throw std::runtime_error("Blob.reshape takes no kwargs");
+  }
+  Blob<Dtype>* self = bp::extract<Blob<Dtype>*>(args[0]);
+  vector<int> shape(bp::len(args) - 1);
+  for (int i = 1; i < bp::len(args); ++i) {
+    shape[i - 1] = bp::extract<int>(args[i]);
+  }
+  self->Reshape(shape);
+  // We need to explicitly return None to use bp::raw_function.
+  return bp::object();
+}
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
@@ -218,8 +234,9 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
     .add_property("width",    &Blob<Dtype>::width)
-    .add_property("count",    &Blob<Dtype>::count)
-    .def("reshape",           &Blob<Dtype>::Reshape)
+    .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
+        &Blob<Dtype>::count))
+    .def("reshape",           bp::raw_function(&Blob_Reshape))
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
@@ -244,7 +261,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("iter", &Solver<Dtype>::iter)
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
           &Solver<Dtype>::Solve), SolveOverloads())
-    .def("step", &Solver<Dtype>::Step);
+    .def("step", &Solver<Dtype>::Step)
+    .def("restore", &Solver<Dtype>::Restore);
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(
