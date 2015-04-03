@@ -407,6 +407,11 @@ optional float max_angle = 9 [default = 0];
 }
 
 message SaltPepperParameter {
+enum SaltType{
+	relative = 1;
+	absolute = 2;
+}
+required SaltType type = 3 [default = relative];
 //Percentage of pixels
 optional float fraction = 1 [default = 0];
 repeated float value = 2;
