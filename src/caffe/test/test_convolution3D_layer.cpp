@@ -44,17 +44,18 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     stride_w = conv_param->stride_w();
     stride_d = conv_param->stride_d();
   }
+
+  vector<int> out_shape = out->shape();
+  vector<int> in_shape = in->shape();
   // Groups
   int groups = conv_param->group();
-  int o_g = out->channels() / groups;
-  int k_g = in->channels() / groups;
+  int o_g = out_shape[1] / groups;
+  int k_g = in_shape[1] / groups;
   int o_head, k_head;
   // Convolution
   const Dtype* in_data = in->cpu_data();
   const Dtype* weight_data = weights[0]->cpu_data();
   Dtype* out_data = out->mutable_cpu_data();
-  vector<int> out_shape = out->shape();
-  vector<int> in_shape = in->shape();
   for (int n = 0; n < out_shape[0]; n++) {
     for (int g = 0; g < groups; g++) {
       o_head = o_g * g;
@@ -228,59 +229,59 @@ TYPED_TEST(Convolution3DLayerTest, TestSetup) {
   // EXPECT_EQ(blob_top_2_shape[4], 3);
 }
 
-// TYPED_TEST(Convolution3DLayerTest, TestSimpleConvolution) {
-//   typedef typename TypeParam::Dtype Dtype;
-//   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-//   this->blob_top_vec_.push_back(this->blob_top_2_);
-//   LayerParameter layer_param;
-//   ConvolutionParameter* convolution_param =
-//       layer_param.mutable_convolution_param();
-//   convolution_param->set_kernel_size(3);
-//   convolution_param->set_stride(2);
-//   convolution_param->set_num_output(4);
-//   convolution_param->mutable_weight_filler()->set_type("gaussian");
-//   convolution_param->mutable_bias_filler()->set_type("constant");
-//   convolution_param->mutable_bias_filler()->set_value(0.1);
-//   shared_ptr<Layer<Dtype> > layer(
-//       new Convolution3DLayer<Dtype>(layer_param));
-//   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-//   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-//   // Check against reference convolution.
-//   const Dtype* top_data;
-//   const Dtype* ref_top_data;
-//   caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
-//       this->MakeReferenceTop(this->blob_top_));
-//   top_data = this->blob_top_->cpu_data();
-//   ref_top_data = this->ref_blob_top_->cpu_data();
-//   for (int i = 0; i < this->blob_top_->count(); ++i) {
-//     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
-//   }
-//   caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
-//       this->MakeReferenceTop(this->blob_top_2_));
-//   top_data = this->blob_top_2_->cpu_data();
-//   ref_top_data = this->ref_blob_top_->cpu_data();
-//   for (int i = 0; i < this->blob_top_->count(); ++i) {
-//     EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
-//   }
-// }
+TYPED_TEST(Convolution3DLayerTest, TestSimpleConvolution) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(4);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("constant");
+  convolution_param->mutable_bias_filler()->set_value(0.1);
+  shared_ptr<Layer<Dtype> > layer(
+      new Convolution3DLayer<Dtype>(layer_param));
+  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Check against reference convolution.
+  const Dtype* top_data;
+  const Dtype* ref_top_data;
+  caffe_conv(this->blob_bottom_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_));
+  top_data = this->blob_top_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+  caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
+      this->MakeReferenceTop(this->blob_top_2_));
+  top_data = this->blob_top_2_->cpu_data();
+  ref_top_data = this->ref_blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+  }
+}
 
-// TYPED_TEST(Convolution3DLayerTest, TestGradient) {
-//   typedef typename TypeParam::Dtype Dtype;
-//   LayerParameter layer_param;
-//   ConvolutionParameter* convolution_param =
-//       layer_param.mutable_convolution_param();
-//   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-//   this->blob_top_vec_.push_back(this->blob_top_2_);
-//   convolution_param->set_kernel_size(3);
-//   convolution_param->set_stride(2);
-//   convolution_param->set_num_output(2);
-//   convolution_param->mutable_weight_filler()->set_type("gaussian");
-//   convolution_param->mutable_bias_filler()->set_type("gaussian");
-//   ConvolutionLayer<Dtype> layer(layer_param);
-//   GradientChecker<Dtype> checker(1e-2, 1e-3);
-//   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-//       this->blob_top_vec_);
-// }
+TYPED_TEST(Convolution3DLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  ConvolutionParameter* convolution_param =
+      layer_param.mutable_convolution_param();
+  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+  this->blob_top_vec_.push_back(this->blob_top_2_);
+  convolution_param->set_kernel_size(3);
+  convolution_param->set_stride(2);
+  convolution_param->set_num_output(2);
+  convolution_param->mutable_weight_filler()->set_type("gaussian");
+  convolution_param->mutable_bias_filler()->set_type("gaussian");
+  Convolution3DLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
 
 // TYPED_TEST(Convolution3DLayerTest, Test1x1Gradient) {
 //   typedef typename TypeParam::Dtype Dtype;
