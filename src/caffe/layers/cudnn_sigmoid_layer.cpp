@@ -35,8 +35,8 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
-  cudnnDestroyTensor4dDescriptor(this->bottom_desc_);
-  cudnnDestroyTensor4dDescriptor(this->top_desc_);
+  cudnnDestroyTensorDescriptor(this->bottom_desc_);
+  cudnnDestroyTensorDescriptor(this->top_desc_);
   cudnnDestroy(this->handle_);
 }
 

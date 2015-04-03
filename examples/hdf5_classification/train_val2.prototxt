@@ -8,7 +8,7 @@ layer {
     phase: TRAIN
   }
   hdf5_data_param {
-    source: "examples/hdf5_classification/data/train.txt"
+    source: "hdf5_classification/data/train.txt"
     batch_size: 10
   }
 }
@@ -21,7 +21,7 @@ layer {
     phase: TEST
   }
   hdf5_data_param {
-    source: "examples/hdf5_classification/data/test.txt"
+    source: "hdf5_classification/data/test.txt"
     batch_size: 10
   }
 }
