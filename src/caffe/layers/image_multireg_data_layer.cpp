@@ -54,7 +54,6 @@ void ImageDataMultiRegressionLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtyp
         labels.push_back(label);
     }
     if(label_dim == 0) label_dim = labels.size();
-
     lines_.push_back(std::make_pair(filename, labels));
   }
 #endif
@@ -99,10 +98,6 @@ void ImageDataMultiRegressionLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtyp
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
-  // label
-  top[1]->Reshape(batch_size, 1, 1, 1);
-  this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
-
 
   // label
 #if 0
@@ -110,6 +105,8 @@ void ImageDataMultiRegressionLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtyp
   this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
 #else
   top[1]->Reshape(batch_size, label_dim, 1, 1);
+  LOG_DCH_EXPR(top[1]->shape_string());
+  LOG_DCH_EXPR(label_dim);
   this->prefetch_label_.Reshape(batch_size, label_dim, 1, 1);
 #endif
 }
@@ -181,12 +178,12 @@ void ImageDataMultiRegressionLayer<Dtype>::InternalThreadEntry() {
     //     LOG(INFO) << "prefetch_label["<<i<<"] = " << prefetch_label[i];
     // }
 
-
+    int offset_label = this->prefetch_label_.offset(item_id);
     // for (int i = 0; i < lines_[lines_id_].second.size(); ++i) {
-    //     prefetch_label[i] = lines_[lines_id_].second[i];
+    //     prefetch_label[offset_label + i] = lines_[lines_id_].second[i];
     // }
 
-    memcpy(prefetch_label, &lines_[lines_id_].second[0], sizeof(Dtype) * lines_[lines_id_].second.size());
+    memcpy(prefetch_label + offset_label, &lines_[lines_id_].second[0], sizeof(Dtype) * lines_[lines_id_].second.size());
 
 #endif
 

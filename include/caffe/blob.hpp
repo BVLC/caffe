@@ -117,7 +117,6 @@ class Blob {
    *        Dies on out of range index.
    */
   inline int CanonicalAxisIndex(int axis_index) const {
-    LOG(INFO) << "DCH num_axes() = " << num_axes();
     CHECK_GE(axis_index, -num_axes())
         << "axis " << axis_index << " out of range for " << num_axes()
         << "-D Blob with shape " << shape_string();

@@ -19,6 +19,8 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
+  LOG_DCH_EXPR(outer_num_);
+  LOG_DCH_EXPR(inner_num_);
   vector<int> scale_dims = bottom[0]->shape();
   scale_dims[softmax_axis_] = 1;
   scale_.Reshape(scale_dims);
@@ -55,6 +57,13 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // division
     for (int j = 0; j < channels; j++) {
       caffe_div(inner_num_, top_data, scale_data, top_data);
+
+#if 0
+    LOG_DCH_EXPR(dim);
+    for (int jj = 0; jj < inner_num_; jj++) {
+        LOG_DCH_EXPR(top_data[jj]);
+    }
+#endif
       top_data += inner_num_;
     }
   }
