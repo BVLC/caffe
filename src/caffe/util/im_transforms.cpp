@@ -164,8 +164,9 @@ namespace caffe {
   }
 
   boost::thread_specific_ptr<cv::Mat> noise_buf;
-  void gaussianNoise(const cv::Mat &image, const float fraction,
+  void gaussianNoise(cv::Mat* image_ptr, const float fraction,
       const float stddev) {
+    cv::Mat image = * image_ptr;
     const int cols = image.cols;
     const int rows = image.rows;
     if (!noise_buf.get()) {
@@ -434,7 +435,7 @@ namespace caffe {
           constantNoise(out_img, noise_pixels_num, noise_values);
           break;
         case SaltPepperParameter_SaltType_relative:
-          gaussianNoise(out_img,
+          gaussianNoise(&out_img,
               param.saltpepper_param().fraction(), noise_values[0]);
       }
     }
