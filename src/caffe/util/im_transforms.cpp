@@ -157,21 +157,21 @@ namespace caffe {
   }
 
   // don't overflow uchar
-  uchar inline applyNormalizeNoise(uchar pixel, float noise){
+  uchar inline applyNormalizeNoise(uchar pixel, float noise) {
     return (noise == 0) * pixel
-        + (noise > 0) * (pixel + noise * ( 255.0 - pixel ) /128.0)
+        + (noise > 0) * (pixel + noise * (255.0 - pixel) /128.0)
         + (noise < 0) * (pixel + noise * pixel/128.0);
   }
 
   boost::thread_specific_ptr<cv::Mat> noise_buf;
-  void gaussianNoise(cv::Mat &image, const float fraction,
+  void gaussianNoise(const cv::Mat &image, const float fraction,
       const float stddev) {
     const int cols = image.cols;
     const int rows = image.rows;
-    if(!noise_buf.get()){
+    if (!noise_buf.get()) {
       noise_buf.reset(new cv::Mat());
     }
-    noise_buf->create(cv::Size(cols,rows), image.type());
+    noise_buf->create(cv::Size(cols, rows), image.type());
     cv::randn(*noise_buf, 0, stddev);
     if (noise_buf->channels() == 1) {
       for (int i = 0; i < rows; i++) {
@@ -188,9 +188,12 @@ namespace caffe {
         cv::Vec3b* image_ptr = image.ptr<cv::Vec3b>(i);
         for (int j = 0; j < cols; j++) {
           int chosen = (caffe_rng_rand() % 1000) / 1000.0 < fraction;
-          image_ptr[j][0] = applyNormalizeNoise(image_ptr[j][0], ptr[j][0] * chosen);
-          image_ptr[j][1] = applyNormalizeNoise(image_ptr[j][1], ptr[j][1] * chosen);
-          image_ptr[j][2] = applyNormalizeNoise(image_ptr[j][1], ptr[j][1] * chosen);
+          image_ptr[j][0] = applyNormalizeNoise(
+              image_ptr[j][0], ptr[j][0] * chosen);
+          image_ptr[j][1] = applyNormalizeNoise(
+              image_ptr[j][1], ptr[j][1] * chosen);
+          image_ptr[j][2] = applyNormalizeNoise(
+              image_ptr[j][1], ptr[j][1] * chosen);
         }
       }
     }
@@ -426,12 +429,13 @@ namespace caffe {
       const int noise_pixels_num =
           floor(param.saltpepper_param().fraction()
               * out_img.cols * out_img.rows);
-      switch(param.saltpepper_param().type()){
+      switch (param.saltpepper_param().type()) {
         case SaltPepperParameter_SaltType_absolute:
           constantNoise(out_img, noise_pixels_num, noise_values);
           break;
         case SaltPepperParameter_SaltType_relative:
-          gaussianNoise(out_img, param.saltpepper_param().fraction(), noise_values[0]);
+          gaussianNoise(out_img,
+              param.saltpepper_param().fraction(), noise_values[0]);
       }
     }
     return  out_img;
