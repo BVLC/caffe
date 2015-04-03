@@ -156,6 +156,13 @@ namespace caffe {
     }
   }
 
+  // don't overflow uchar
+  uchar inline applyNormalizeNoise(uchar pixel, float noise){
+    return (noise == 0) * pixel
+        + (noise > 0) * (pixel + noise * ( 255.0 - pixel ) /128.0)
+        + (noise < 0) * (pixel + noise * pixel/128.0);
+  }
+
   boost::thread_specific_ptr<cv::Mat> noise_buf;
   void gaussianNoise(cv::Mat &image, const float fraction,
       const float stddev) {
@@ -171,7 +178,8 @@ namespace caffe {
         uchar* ptr = noise_buf->ptr<uchar>(i);
         uchar* image_ptr = image.ptr<uchar>(i);
         for (int j = 0; j < cols; j++) {
-          image_ptr[i] += ptr[j] * (caffe_rng_rand() % 1000) / 1000.0 < fraction;
+          int chosen = (caffe_rng_rand() % 1000) / 1000.0 < fraction;
+          image_ptr[j] = applyNormalizeNoise(image_ptr[j], ptr[j] * chosen);
         }
       }
     } else if (noise_buf->channels() == 3) {
@@ -180,9 +188,9 @@ namespace caffe {
         cv::Vec3b* image_ptr = image.ptr<cv::Vec3b>(i);
         for (int j = 0; j < cols; j++) {
           int chosen = (caffe_rng_rand() % 1000) / 1000.0 < fraction;
-          image_ptr[j][0] += ptr[j][0] * chosen;
-          image_ptr[j][1] += ptr[j][1] * chosen;
-          image_ptr[j][2] += ptr[j][2] * chosen;
+          image_ptr[j][0] = applyNormalizeNoise(image_ptr[j][0], ptr[j][0] * chosen);
+          image_ptr[j][1] = applyNormalizeNoise(image_ptr[j][1], ptr[j][1] * chosen);
+          image_ptr[j][2] = applyNormalizeNoise(image_ptr[j][1], ptr[j][1] * chosen);
         }
       }
     }
