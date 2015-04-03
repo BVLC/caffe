@@ -15,21 +15,22 @@ void Convolution3DLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           << "corresponding to (num, channels, height, width, depth)";
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  CHECK(conv_param.has_kernel_size() != !(conv_param.has_kernel_h() && 
-      conv_param.has_kernel_w() && conv_param.has_kernel_d())) << "Filter 
-      size is kernel_size OR kernel_h and kernel_w and kernel_d; not both.";
-  CHECK(conv_param.has_kernel_size() || (conv_param.has_kernel_h() && 
-      conv_param.has_kernel_w() && conv_param.has_kernel_d())) << "For non-
-      cube filters all of kernel_h, kernel_w and kernel_d are required.";
-  CHECK((!conv_param.has_pad() && conv_param.has_pad_h() && 
-      conv_param.has_pad_w() conv_param.has_pad_d()) || (!conv_param.has_pad_h()
-      && !conv_param.has_pad_w() && !conv_param.has_pad_d())) 
-      << "pad is pad OR pad_h, pad_w and pad_d are required.";
-  CHECK((!conv_param.has_stride() && conv_param.has_stride_h() && 
-      conv_param.has_stride_w() && conv_param.has_stride_d()) || 
+  CHECK(conv_param.has_kernel_size() != !(conv_param.has_kernel_h() &&
+      conv_param.has_kernel_w() && conv_param.has_kernel_d())) << "Filter " <<
+      "size is kernel_size OR kernel_h and kernel_w and kernel_d; not both.";
+  CHECK(conv_param.has_kernel_size() || (conv_param.has_kernel_h() &&
+      conv_param.has_kernel_w() && conv_param.has_kernel_d())) << "For non- " <<
+      "cube filters all of kernel_h, kernel_w and kernel_d are required.";
+  CHECK((!conv_param.has_pad() && conv_param.has_pad_h() &&
+      conv_param.has_pad_w() && conv_param.has_pad_d()) ||
+      (!conv_param.has_pad_h() && !conv_param.has_pad_w() &&
+      !conv_param.has_pad_d())) <<
+      "pad is pad OR pad_h, pad_w and pad_d are required.";
+  CHECK((!conv_param.has_stride() && conv_param.has_stride_h() &&
+      conv_param.has_stride_w() && conv_param.has_stride_d()) ||
       (!conv_param.has_stride_h() && !conv_param.has_stride_w()) &&
-      !conv_param.has_stride_d()) << "Stride is stride OR stride_h, stride_w and
-      stride_d are required.";
+      !conv_param.has_stride_d()) << "Stride is stride OR stride_h, " <<
+      "stride_w and stride_d are required.";
   if (conv_param.has_kernel_size()) {
     kernel_h_ = kernel_w_ = kernel_d_ = conv_param.kernel_size();
   } else {
