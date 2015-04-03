@@ -414,7 +414,7 @@ message ConvolutionParameter {
   optional uint32 pad = 3 [default = 0]; // The padding size (equal in Y, X)
   optional uint32 pad_h = 9 [default = 0]; // The padding height
   optional uint32 pad_w = 10 [default = 0]; // The padding width
-  optional uint32 pad_d = 16; [default = 0]; // The padding depth (conv3D only)
+  optional uint32 pad_d = 16 [default = 0]; // The padding depth (conv3D only)
   optional uint32 kernel_size = 4; // The kernel size (square)
   optional uint32 kernel_h = 11; // The kernel height
   optional uint32 kernel_w = 12; // The kernel width

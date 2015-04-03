@@ -15,7 +15,7 @@ void Convolution3DLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           << "corresponding to (num, channels, height, width, depth)";
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  CHECK(conv_param.has_kernel_size() != !(conv_param.has_kernel_h() &&
+  CHECK(!conv_param.has_kernel_size() != !(conv_param.has_kernel_h() &&
       conv_param.has_kernel_w() && conv_param.has_kernel_d())) << "Filter " <<
       "size is kernel_size OR kernel_h and kernel_w and kernel_d; not both.";
   CHECK(conv_param.has_kernel_size() || (conv_param.has_kernel_h() &&
@@ -58,20 +58,21 @@ void Convolution3DLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
-  // is_1x1_ = kernel_w_ == 1 && kernel_h_ == 1 && kernel_h_ == 1
-  //     && stride_h_ == 1 && stride_w_ == 1 && stride_d_ &&
-  //     pad_h_ == 0 && pad_w_ == 0 && pad_d_ ==;
   is_1x1_ = false;
+  // is_1x1_ = kernel_w_ == 1 && kernel_h_ == 1 && kernel_d_ == 1 
+  //     && stride_h_ == 1 && stride_w_ == 1 && stride_d_ == 1
+  //     && pad_h_ == 0 && pad_w_ == 0 && pad_d_ == 0;
 
   // Configure output channels and groups.
   channels_ = bottom[0]->shape(1);
-  // channels_ = bottom[0]->channels();
   num_output_ = this->layer_param_.convolution_param().num_output();
   CHECK_GT(num_output_, 0);
   group_ = this->layer_param_.convolution_param().group();
+  CHECK_EQ(group_, 1)
+      << "Only groups sizes of 1 currently supported.";
   CHECK_EQ(channels_ % group_, 0);
   CHECK_EQ(num_output_ % group_, 0)
-          << "Number of output should be multiples of group.";
+      << "Number of output should be multiples of group.";
   if (reverse_dimensions()) {
       conv_out_channels_ = channels_;
       conv_in_channels_ = num_output_;

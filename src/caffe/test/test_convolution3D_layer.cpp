@@ -131,11 +131,23 @@ class Convolution3DLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  Convolution3DLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
-        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4)),
-        blob_top_(new Blob<Dtype>()),
-        blob_top_2_(new Blob<Dtype>()) {}
+  Convolution3DLayerTest() 
+    : blob_bottom_(new Blob<Dtype>(vector<int>())),
+      blob_bottom_2_(new Blob<Dtype>(vector<int>())),
+      blob_top_(new Blob<Dtype>()),
+      blob_top_2_(new Blob<Dtype>())
+  {
+    // update the blob shapes
+    int bot_shape_arr[] = {2, 3, 6, 4, 8};
+    vector<int> bot_shape (bot_shape_arr, bot_shape_arr + 
+        sizeof(bot_shape_arr) / sizeof(int) );
+    blob_bottom_->Reshape(bot_shape);
+    int bot_shape_arr_2[] = {2, 3, 6, 4, 8};
+    vector<int> bot_shape_2 (bot_shape_arr_2, bot_shape_arr_2 + 
+        sizeof(bot_shape_arr_2) / sizeof(int) );
+    blob_bottom_2_->Reshape(bot_shape_2);
+  }
+
   virtual void SetUp() {
     // fill the values
     FillerParameter filler_param;
@@ -184,27 +196,36 @@ TYPED_TEST(Convolution3DLayerTest, TestSetup) {
   shared_ptr<Layer<Dtype> > layer(
       new Convolution3DLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->channels(), 4);
-  EXPECT_EQ(this->blob_top_->height(), 2);
-  EXPECT_EQ(this->blob_top_->width(), 1);
-  EXPECT_EQ(this->blob_top_2_->num(), 2);
-  EXPECT_EQ(this->blob_top_2_->channels(), 4);
-  EXPECT_EQ(this->blob_top_2_->height(), 2);
-  EXPECT_EQ(this->blob_top_2_->width(), 1);
-  // setting group should not change the shape
-  convolution_param->set_num_output(3);
-  convolution_param->set_group(3);
-  layer.reset(new Convolution3DLayer<Dtype>(layer_param));
-  layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  EXPECT_EQ(this->blob_top_->num(), 2);
-  EXPECT_EQ(this->blob_top_->channels(), 3);
-  EXPECT_EQ(this->blob_top_->height(), 2);
-  EXPECT_EQ(this->blob_top_->width(), 1);
-  EXPECT_EQ(this->blob_top_2_->num(), 2);
-  EXPECT_EQ(this->blob_top_2_->channels(), 3);
-  EXPECT_EQ(this->blob_top_2_->height(), 2);
-  EXPECT_EQ(this->blob_top_2_->width(), 1);
+  vector<int> blob_top_shape = this->blob_top_->shape();
+  EXPECT_EQ(blob_top_shape[0], 2);
+  EXPECT_EQ(blob_top_shape[1], 4);
+  EXPECT_EQ(blob_top_shape[2], 2);
+  EXPECT_EQ(blob_top_shape[3], 1);
+  EXPECT_EQ(blob_top_shape[4], 3);
+  vector<int> blob_top_2_shape = this->blob_top_2_->shape();
+  EXPECT_EQ(blob_top_2_shape[0], 2);
+  EXPECT_EQ(blob_top_2_shape[1], 4);
+  EXPECT_EQ(blob_top_2_shape[2], 2);
+  EXPECT_EQ(blob_top_2_shape[3], 1);
+  EXPECT_EQ(blob_top_2_shape[4], 3);
+
+  // // setting group should not change the shape
+  // convolution_param->set_num_output(3);
+  // convolution_param->set_group(3);
+  // layer.reset(new Convolution3DLayer<Dtype>(layer_param));
+  // layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  // blob_top_shape = this->blob_top_->shape();
+  // EXPECT_EQ(blob_top_shape[0], 2);
+  // EXPECT_EQ(blob_top_shape[1], 4);
+  // EXPECT_EQ(blob_top_shape[2], 2);
+  // EXPECT_EQ(blob_top_shape[3], 1);
+  // EXPECT_EQ(blob_top_shape[3], 3);
+  // blob_top_2_shape = this->blob_top_2_->shape();
+  // EXPECT_EQ(blob_top_2_shape[0], 2);
+  // EXPECT_EQ(blob_top_2_shape[1], 4);
+  // EXPECT_EQ(blob_top_2_shape[2], 2);
+  // EXPECT_EQ(blob_top_2_shape[3], 1);
+  // EXPECT_EQ(blob_top_2_shape[4], 3);
 }
 
 // TYPED_TEST(Convolution3DLayerTest, TestSimpleConvolution) {
