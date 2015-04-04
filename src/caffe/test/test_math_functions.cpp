@@ -144,9 +144,8 @@ TYPED_TEST(MathFunctionsTest, TestCopyCPU) {
   }
 }
 
-#ifndef CPU_ONLY
-
 // TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
+/*
 TYPED_TEST(MathFunctionsTest, DISABLED_TestHammingDistanceGPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
@@ -157,6 +156,9 @@ TYPED_TEST(MathFunctionsTest, DISABLED_TestHammingDistanceGPU) {
   int computed_distance = caffe_gpu_hamming_distance<TypeParam>(n, x, y);
   EXPECT_EQ(reference_distance, computed_distance);
 }
+*/
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
 
 TYPED_TEST(MathFunctionsTest, TestAsumGPU) {
   int n = this->blob_bottom_->count();

@@ -46,6 +46,7 @@
 #    target_link_libraries(foo ${OPENCL_LIBRARIES})
 #
 #-----------------------
+set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS ON)
 
 find_path(OPENCL_INCLUDE_DIRS
     NAMES OpenCL/cl.h CL/cl.h
@@ -71,9 +72,9 @@ if( LIB64 )
             $ENV{AMDAPPSDKROOT}/lib
             $ENV{CUDA_PATH}/lib
         DOC "OpenCL dynamic library path"
-        PATH_SUFFIXES x86_64 x64 x86_64/sdk x86/sdk
+        PATH_SUFFIXES x86_64 x64 x86_64/sdk
         PATHS
-            /usr/lib
+            /usr/lib /usr/lib/x86_64-linux-gnu
     )
 else( )
     find_library( OPENCL_LIBRARIES
@@ -83,9 +84,9 @@ else( )
             $ENV{AMDAPPSDKROOT}/lib
             $ENV{CUDA_PATH}/lib
         DOC "OpenCL dynamic library path"
-        PATH_SUFFIXES x86 Win32
+        PATH_SUFFIXES x86 x86/sdk Win32
         PATHS
-            /usr/lib
+            /usr/lib /usr/lib/i386-linux-gnu
     )
 endif( )
 mark_as_advanced( OPENCL_LIBRARIES )

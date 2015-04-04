@@ -34,19 +34,18 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 	if ( ! context ) {
 		std::ostringstream oss;
 		oss<<caffe::OpenCL::gpu->name() << "> failed to get OpenCL context.";
-		throw new OpenCLMemoryException(oss.str());
+		throw OpenCLMemoryException(oss.str());
 	}
 
-	double allocSizeMB = size;
-	allocSizeMB /= 1024.0;
-	allocSizeMB /= 1024.0;
+	double allocSizeMB = size / (1024.0*1024.0);
 
 	cl_int err;
 	this->ptr_device_mem_ = clCreateBuffer(*context, CL_MEM_READ_WRITE, size, NULL, &err);
 	if ( err != CL_SUCCESS ) {
 		std::ostringstream oss;
 		oss<<caffe::OpenCL::gpu->name() << "> failed to create CL_MEM_READ_WRITE buffer of "<<allocSizeMB<<" MByte";
-		throw new OpenCLMemoryException(oss.str());
+		LOG(ERROR)<<oss.str();
+		throw OpenCLMemoryException(oss.str());
 	}
 	size_t bytesUsed = caffe::OpenCL::gpu->getMemoryUsage();
 	double deviceMemUsedMB = bytesUsed;
@@ -89,7 +88,7 @@ void OpenCLMemory::free() {
 				std::ostringstream oss;
 				oss<<caffe::OpenCL::gpu->name() << "> failed to call clReleaseMemObject("<<this->ptr_device_mem<<").";
 				LOG(ERROR) << oss.str().c_str();
-				throw new OpenCLMemoryException(oss.str());
+				throw OpenCLMemoryException(oss.str());
 		}
 		this->ptr_device_mem_ = NULL;
 		DLOG(INFO)<<caffe::OpenCL::gpu->name() << "> clReleaseMemObject("<<this->ptr_device_mem<<") succeeded.";

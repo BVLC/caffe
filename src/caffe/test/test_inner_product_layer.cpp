@@ -135,10 +135,11 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
   }
 }
 
+#if defined(USE_CUDA) || defined(USE_OPENCL)
 TYPED_TEST(InnerProductLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   bool IS_VALID_CUDA = false;
-#ifndef CPU_ONLY
+#if defined(USE_CUDA)
   IS_VALID_CUDA = CAFFE_TEST_CUDA_PROP.major >= 2;
 #endif
 #ifdef USE_OPENCL
@@ -161,6 +162,7 @@ TYPED_TEST(InnerProductLayerTest, TestGradient) {
     LOG(ERROR) << "Skipping test due to old architecture.";
   }
 }
+#endif
 
 TYPED_TEST(InnerProductLayerTest, TestForwardPerformance) {
 

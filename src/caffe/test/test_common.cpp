@@ -12,7 +12,7 @@ namespace caffe {
 
 class CommonTest : public ::testing::Test {};
 
-#ifndef CPU_ONLY  // GPU Caffe singleton test.
+#ifdef USE_CUDA  // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestCublasHandlerGPU) {
   int cuda_device_id;
@@ -44,7 +44,7 @@ TEST_F(CommonTest, TestRandSeedCPU) {
   }
 }
 
-#ifndef CPU_ONLY  // GPU Caffe singleton test.
+#if defined(USE_CUDA) // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestRandSeedGPU) {
   SyncedMemory data_a(10 * sizeof(unsigned int));

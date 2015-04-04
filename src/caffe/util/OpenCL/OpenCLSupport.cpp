@@ -355,7 +355,6 @@ bool clMalloc(void** virtualPtr, size_t size) {
 	try {
 		clMem = OpenCLMemory(size);
 	} catch (std::exception& e) {
-		LOG(ERROR)<<e.what();
 		return false;
 	}
 	gpu->add(clMem);
@@ -377,28 +376,10 @@ bool clFree(void* virtualPtr) {
 		return false;
 	}
 
-	/*
-
-	cl_mem* logicalPtr = clMem.getLogicalPointer2();
-	DLOG(INFO)<<"cl_mem* = "<<logicalPtr;
-	DLOG(INFO)<<"cl_mem  = "<<*logicalPtr;
-
-	if ( logicalPtr == NULL ) {
-		LOG(ERROR) << gpu->name() << "> received logical NULL pointer from virtual pointer @ " << virtualPtr;
-		return false;
-	}
-
-	if ( ! CL_CHECK(clReleaseMemObject(*logicalPtr) ) ) {
-		return false;
-	}
-
-	DLOG(INFO) << gpu->name() << "> release OpenCL memory object at "<<gpu->getMemoryTag(virtualPtr).c_str();
-	*/
 	gpu->rmMemoryPtr(clMem.getVirtualPointer());
-
 	queue = gpu->getQueue();
 	if ( queue != NULL ) {
-		//clFinish(*queue);
+		clFinish(*queue);
 	}
 	return true;
 }
@@ -427,9 +408,16 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
 	size_t mem_offset	= clGetMemoryOffset(virtualPtr);
 	cl_mem base 			= (cl_mem) clMem.getLogicalPointer();
 
-	if ( ! CL_CHECK(clEnqueueFillBuffer(*queue, base, &alpha, sizeof(T), mem_offset, Bytes, 0, NULL, NULL) ) ) {
+	cl_int err = clEnqueueFillBuffer(*queue, base, &alpha, sizeof(T), mem_offset, Bytes, 0, NULL, NULL);
+	if ( err != CL_SUCCESS ) {
+    std::ostringstream oss;
+    oss << "clEnqueueFillBuffer() failed on GPU "<<gpu->name()<<" : "<<what(err);
+    //LOG(ERROR)<<oss.str();
+    throw OpenCLSupportException(oss.str());
 		return false;
 	}
+  DLOG(INFO)<<"clEnqueueFillBuffer() succeeded to set memory to "<<alpha;
+
 #else
 	std::string kernel_name = clGetKernelName<T>("clFillBuffer");
 
@@ -451,6 +439,7 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
 	if ( err != CL_SUCCESS ) {
 		std::ostringstream oss;
 		oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<what(err);
+		//LOG(ERROR)<<oss.str();
 		throw OpenCLSupportException(oss.str());
 		return false;
 	}
