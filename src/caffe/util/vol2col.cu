@@ -30,7 +30,7 @@ __global__ void vol2col_gpu_kernel(const int n, const Dtype* data_im,
     data_col_ptr += ((channel_out * height_col + h_out) * width_col + w_out) 
         * depth_col + d_out;
     const Dtype* data_im_ptr = data_im;
-    data_im_ptr += ((channel_in * height + h_in) * width + w_in) * depth * d_in;
+    data_im_ptr += ((channel_in * height + h_in) * width + w_in) * depth + d_in;
     for (int i = 0; i < kernel_h; ++i) {
       for (int j = 0; j < kernel_w; ++j) {
         for (int k = 0; k < kernel_d; ++k) {
