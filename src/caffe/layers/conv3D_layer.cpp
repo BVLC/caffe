@@ -28,8 +28,8 @@ void Convolution3DLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       "pad is pad OR pad_h, pad_w and pad_d are required.";
   CHECK((!conv_param.has_stride() && conv_param.has_stride_h() &&
       conv_param.has_stride_w() && conv_param.has_stride_d()) ||
-      (!conv_param.has_stride_h() && !conv_param.has_stride_w()) &&
-      !conv_param.has_stride_d()) << "Stride is stride OR stride_h, " <<
+      (!conv_param.has_stride_h() && !conv_param.has_stride_w() &&
+      !conv_param.has_stride_d())) << "Stride is stride OR stride_h, " <<
       "stride_w and stride_d are required.";
   if (conv_param.has_kernel_size()) {
     kernel_h_ = kernel_w_ = kernel_d_ = conv_param.kernel_size();
@@ -338,76 +338,76 @@ void Convolution3DLayer<Dtype>::backward_cpu_bias(Dtype* bias,
       depth_out_, 1., input, bias_multiplier_.cpu_data(), 1., bias);
 }
 
-// #ifndef CPU_ONLY
+#ifndef CPU_ONLY
 
-// template <typename Dtype>
-// void Convolution3DLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
-//     const Dtype* weights, Dtype* output, bool skip_im2col) {
-//   const Dtype* col_buff = input;
-//   if (!is_1x1_) {
-//     if (!skip_im2col) {
-//       conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
-//     }
-//     col_buff = col_buffer_.gpu_data();
-//   }
-//   for (int g = 0; g < group_; ++g) {
-//     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
-//         group_, conv_out_spatial_dim_, kernel_dim_ / group_,
-//         (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
-//         (Dtype)0., output + output_offset_ * g);
-//   }
-// }
+template <typename Dtype>
+void Convolution3DLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
+    const Dtype* weights, Dtype* output, bool skip_vol2col) {
+  const Dtype* col_buff = input;
+  if (!is_1x1_) {
+    if (!skip_vol2col) {
+      conv_vol2col_gpu(input, col_buffer_.mutable_gpu_data());
+    }
+    col_buff = col_buffer_.gpu_data();
+  }
+  for (int g = 0; g < group_; ++g) {
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
+        group_, conv_out_spatial_dim_, kernel_dim_ / group_,
+        (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
+        (Dtype)0., output + output_offset_ * g);
+  }
+}
 
-// template <typename Dtype>
-// void Convolution3DLayer<Dtype>::forward_gpu_bias(Dtype* output,
-//     const Dtype* bias) {
-//   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-//       height_out_ * width_out_, 1, (Dtype)1., bias, bias_multiplier_.gpu_data(),
-//       (Dtype)1., output);
-// }
+template <typename Dtype>
+void Convolution3DLayer<Dtype>::forward_gpu_bias(Dtype* output,
+    const Dtype* bias) {
+  caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
+      height_out_ * width_out_, 1, (Dtype)1., bias, bias_multiplier_.gpu_data(),
+      (Dtype)1., output);
+}
 
-// template <typename Dtype>
-// void Convolution3DLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
-//     const Dtype* weights, Dtype* input) {
-//   Dtype* col_buff = col_buffer_.mutable_gpu_data();
-//   if (is_1x1_) {
-//     col_buff = input;
-//   }
-//   for (int g = 0; g < group_; ++g) {
-//     caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
-//         conv_out_spatial_dim_, conv_out_channels_ / group_,
-//         (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
-//         (Dtype)0., col_buff + col_offset_ * g);
-//   }
-//   if (!is_1x1_) {
-//     conv_col2im_gpu(col_buff, input);
-//   }
-// }
+template <typename Dtype>
+void Convolution3DLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
+    const Dtype* weights, Dtype* input) {
+  Dtype* col_buff = col_buffer_.mutable_gpu_data();
+  if (is_1x1_) {
+    col_buff = input;
+  }
+  for (int g = 0; g < group_; ++g) {
+    caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_ / group_,
+        conv_out_spatial_dim_, conv_out_channels_ / group_,
+        (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
+        (Dtype)0., col_buff + col_offset_ * g);
+  }
+  if (!is_1x1_) {
+    conv_col2vol_gpu(col_buff, input);
+  }
+}
 
-// template <typename Dtype>
-// void Convolution3DLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
-//     const Dtype* output, Dtype* weights) {
-//   const Dtype* col_buff = input;
-//   if (!is_1x1_) {
-//     conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
-//     col_buff = col_buffer_.gpu_data();
-//   }
-//   for (int g = 0; g < group_; ++g) {
-//     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
-//         kernel_dim_ / group_, conv_out_spatial_dim_,
-//         (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
-//         (Dtype)1., weights + weight_offset_ * g);
-//   }
-// }
+template <typename Dtype>
+void Convolution3DLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
+    const Dtype* output, Dtype* weights) {
+  const Dtype* col_buff = input;
+  if (!is_1x1_) {
+    conv_vol2col_gpu(input, col_buffer_.mutable_gpu_data());
+    col_buff = col_buffer_.gpu_data();
+  }
+  for (int g = 0; g < group_; ++g) {
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
+        kernel_dim_ / group_, conv_out_spatial_dim_,
+        (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
+        (Dtype)1., weights + weight_offset_ * g);
+  }
+}
 
-// template <typename Dtype>
-// void Convolution3DLayer<Dtype>::backward_gpu_bias(Dtype* bias,
-//     const Dtype* input) {
-//   caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_, 1.,
-//       input, bias_multiplier_.gpu_data(), 1., bias);
-// }
+template <typename Dtype>
+void Convolution3DLayer<Dtype>::backward_gpu_bias(Dtype* bias,
+    const Dtype* input) {
+  caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_, 1.,
+      input, bias_multiplier_.gpu_data(), 1., bias);
+}
 
-// #endif  // !CPU_ONLY
+#endif  // !CPU_ONLY
 
 #ifdef CPU_ONLY
 STUB_GPU(Convolution3DLayer);
