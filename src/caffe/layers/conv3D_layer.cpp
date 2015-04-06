@@ -2,7 +2,7 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/util/im2col.hpp"
+#include "caffe/util/vol2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
@@ -269,14 +269,12 @@ void Convolution3DLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-// MODIFIED BASE_CONV_LAYER_FUNCTIONS
-
 template <typename Dtype>
 void Convolution3DLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
-    const Dtype* weights, Dtype* output, bool skip_im2col) {
+    const Dtype* weights, Dtype* output, bool skip_vol2col) {
   const Dtype* col_buff = input;
   if (!is_1x1_) {
-    if (!skip_im2col) {
+    if (!skip_vol2col) {
       conv_vol2col_cpu(input, col_buffer_.mutable_cpu_data());
     }
     col_buff = col_buffer_.cpu_data();
@@ -362,8 +360,8 @@ template <typename Dtype>
 void Convolution3DLayer<Dtype>::forward_gpu_bias(Dtype* output,
     const Dtype* bias) {
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-      height_out_ * width_out_, 1, (Dtype)1., bias, bias_multiplier_.gpu_data(),
-      (Dtype)1., output);
+      height_out_ * width_out_ * depth_out_, 1, (Dtype)1., bias, 
+      bias_multiplier_.gpu_data(), (Dtype)1., output);
 }
 
 template <typename Dtype>
@@ -403,8 +401,8 @@ void Convolution3DLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
 template <typename Dtype>
 void Convolution3DLayer<Dtype>::backward_gpu_bias(Dtype* bias,
     const Dtype* input) {
-  caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_, 1.,
-      input, bias_multiplier_.gpu_data(), 1., bias);
+  caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_ *
+      depth_out_, 1., input, bias_multiplier_.gpu_data(), 1., bias);
 }
 
 #endif  // !CPU_ONLY

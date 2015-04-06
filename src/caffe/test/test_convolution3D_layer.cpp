@@ -139,11 +139,11 @@ class Convolution3DLayerTest : public MultiDeviceTest<TypeParam> {
       blob_top_2_(new Blob<Dtype>())
   {
     // update the blob shapes
-    int bot_shape_arr[] = {2, 3, 6, 4, 8};
+    int bot_shape_arr[] = {2, 3, 6, 4, 3};
     vector<int> bot_shape (bot_shape_arr, bot_shape_arr + 
         sizeof(bot_shape_arr) / sizeof(int) );
     blob_bottom_->Reshape(bot_shape);
-    int bot_shape_arr_2[] = {2, 3, 6, 4, 8};
+    int bot_shape_arr_2[] = {2, 3, 6, 4, 3};
     vector<int> bot_shape_2 (bot_shape_arr_2, bot_shape_arr_2 + 
         sizeof(bot_shape_arr_2) / sizeof(int) );
     blob_bottom_2_->Reshape(bot_shape_2);
@@ -202,13 +202,13 @@ TYPED_TEST(Convolution3DLayerTest, TestSetup) {
   EXPECT_EQ(blob_top_shape[1], 4);
   EXPECT_EQ(blob_top_shape[2], 2);
   EXPECT_EQ(blob_top_shape[3], 1);
-  EXPECT_EQ(blob_top_shape[4], 3);
+  EXPECT_EQ(blob_top_shape[4], 1);
   vector<int> blob_top_2_shape = this->blob_top_2_->shape();
   EXPECT_EQ(blob_top_2_shape[0], 2);
   EXPECT_EQ(blob_top_2_shape[1], 4);
   EXPECT_EQ(blob_top_2_shape[2], 2);
   EXPECT_EQ(blob_top_2_shape[3], 1);
-  EXPECT_EQ(blob_top_2_shape[4], 3);
+  EXPECT_EQ(blob_top_2_shape[4], 1);
 
   // // setting group should not change the shape
   // convolution_param->set_num_output(3);
@@ -265,23 +265,23 @@ TYPED_TEST(Convolution3DLayerTest, TestSimpleConvolution) {
   }
 }
 
-TYPED_TEST(Convolution3DLayerTest, TestGradient) {
-  typedef typename TypeParam::Dtype Dtype;
-  LayerParameter layer_param;
-  ConvolutionParameter* convolution_param =
-      layer_param.mutable_convolution_param();
-  this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
-  this->blob_top_vec_.push_back(this->blob_top_2_);
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
-  convolution_param->set_num_output(2);
-  convolution_param->mutable_weight_filler()->set_type("gaussian");
-  convolution_param->mutable_bias_filler()->set_type("gaussian");
-  Convolution3DLayer<Dtype> layer(layer_param);
-  GradientChecker<Dtype> checker(1e-2, 1e-3);
-  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-      this->blob_top_vec_);
-}
+// TYPED_TEST(Convolution3DLayerTest, TestGradient) {
+//   typedef typename TypeParam::Dtype Dtype;
+//   LayerParameter layer_param;
+//   ConvolutionParameter* convolution_param =
+//       layer_param.mutable_convolution_param();
+//   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+//   this->blob_top_vec_.push_back(this->blob_top_2_);
+//   convolution_param->set_kernel_size(3);
+//   convolution_param->set_stride(2);
+//   convolution_param->set_num_output(2);
+//   convolution_param->mutable_weight_filler()->set_type("gaussian");
+//   convolution_param->mutable_bias_filler()->set_type("gaussian");
+//   Convolution3DLayer<Dtype> layer(layer_param);
+//   GradientChecker<Dtype> checker(1e-2, 1e-3);
+//   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+//       this->blob_top_vec_);
+// }
 
 // TYPED_TEST(Convolution3DLayerTest, Test1x1Gradient) {
 //   typedef typename TypeParam::Dtype Dtype;
