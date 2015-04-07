@@ -27,12 +27,12 @@ label2 = label + 1
 print data
 print label
 
-with h5py.File(os.path.dirname(__file__) + '/sample_data.h5', 'w') as f:
+with h5py.File(os.path.dirname(os.path.abspath(__file__)) + '/sample_data.h5', 'w') as f:
     f['data'] = data
     f['label'] = label
     f['label2'] = label2
 
-with h5py.File(os.path.dirname(__file__) + '/sample_data_2_gzip.h5', 'w') as f:
+with h5py.File(os.path.dirname(os.path.abspath(__file__)) + '/sample_data_2_gzip.h5', 'w') as f:
     f.create_dataset(
         'data', data=data + total_size,
         compression='gzip', compression_opts=1
@@ -46,6 +46,6 @@ with h5py.File(os.path.dirname(__file__) + '/sample_data_2_gzip.h5', 'w') as f:
         compression='gzip', compression_opts=1
     )
 
-with open(os.path.dirname(__file__) + '/sample_data_list.txt', 'w') as f:
-    f.write(os.path.dirname(__file__) + '/sample_data.h5\n')
-    f.write(os.path.dirname(__file__) + '/sample_data_2_gzip.h5\n')
+with open(os.path.dirname(os.path.abspath(__file__)) + '/sample_data_list.txt', 'w') as f:
+    f.write(os.path.dirname(os.path.abspath(__file__)) + '/sample_data.h5\n')
+    f.write(os.path.dirname(os.path.abspath(__file__)) + '/sample_data_2_gzip.h5\n')
