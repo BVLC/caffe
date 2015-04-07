@@ -1,10 +1,8 @@
 /*
 TODO:
-- load file in a separate thread ("prefetch")
 - can be smarter about the memcpy call instead of doing it row-by-row
   :: use util functions caffe_copy, and Blob->offset()
   :: don't forget to update hdf5_daa_layer.cu accordingly
-- add ability to shuffle filenames if flag is set
 */
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
@@ -21,7 +19,9 @@ TODO:
 namespace caffe {
 
 template <typename Dtype>
-HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
+HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() {
+  this->JoinPrefetchThread();
+}
 
 // Load data and label from HDF5 filename into the class property blobs.
 template <typename Dtype>
@@ -29,7 +29,8 @@ void HDF5DataLayer<Dtype>::FillHDF5FileData() {
   int num_rows_filled = 0;
   while (true) {
     CHECK_LT(current_file_, hdf_filenames_.size());
-    const char* filename = hdf_filenames_[current_file_].c_str();
+    const char* filename
+      = hdf_filenames_[file_permutation_[current_file_]].c_str();
     DLOG(INFO) << "Loading HDF5 file: " << filename;
     hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
     if (file_id < 0) {
@@ -59,6 +60,10 @@ void HDF5DataLayer<Dtype>::FillHDF5FileData() {
         ++current_file_;
         if (current_file_ == num_files_) {
           current_file_ = 0;
+          if (this->layer_param_.hdf5_data_param().shuffle()) {
+            std::random_shuffle(file_permutation_.begin(),
+                                file_permutation_.end());
+          }
           DLOG(INFO) << "Looping around to first file.";
         }
       }
@@ -71,7 +76,7 @@ void HDF5DataLayer<Dtype>::FillHDF5FileData() {
 }
 
 template <typename Dtype>
-void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void HDF5DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Refuse transformation parameters since HDF5 is totally generic.
   CHECK(!this->layer_param_.has_transform_param()) <<
@@ -98,6 +103,18 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(num_files_, 1) << "Must have at least 1 HDF5 filename listed in "
     << source;
 
+  file_permutation_.clear();
+  file_permutation_.resize(num_files_);
+  // Default to identity permutation.
+  for (int i = 0; i < num_files_; i++) {
+    file_permutation_[i] = i;
+  }
+
+  // Shuffle if needed.
+  if (this->layer_param_.hdf5_data_param().shuffle()) {
+    std::random_shuffle(file_permutation_.begin(), file_permutation_.end());
+  }
+
   // Reshape blobs.
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   const int top_size = this->layer_param_.top_size();
@@ -108,7 +125,6 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     hdf_blobs_[i].reset(new Blob<Dtype>(1, 1, 1, 1));
     HDF5PrepareBlob(file_id, this->layer_param_.top(i).c_str(), batch_size,
                     hdf_blobs_[i].get());
-    hdf_blobs_[i]->mutable_cpu_data();
     top[i]->ReshapeLike(*hdf_blobs_[i]);
   }
   herr_t status = H5Fclose(file_id);
@@ -116,9 +132,10 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   Reset();
 
-  DLOG(INFO) << "Initializing prefetch";
-  this->CreatePrefetchThread();
-  DLOG(INFO) << "Prefetch initialized.";
+  // initialize dummy data members
+  // to avoid null pointer access in BasePrefetchingDataLayer::LayerSetUp()
+  this->prefetch_data_.Reshape(1, 1, 1, 1);
+  this->prefetch_label_.Reshape(1, 1, 1, 1);
 }
 
 template <typename Dtype>
@@ -136,10 +153,12 @@ template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   this->JoinPrefetchThread();
+
   for (int i = 0; i < top.size(); ++i) {
     const int count = top[i]->count();
     caffe_copy(count, hdf_blobs_[i]->cpu_data(), top[i]->mutable_cpu_data());
   }
+
   this->CreatePrefetchThread();
 }
 

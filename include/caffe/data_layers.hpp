@@ -145,7 +145,7 @@ class HDF5DataLayer : public BasePrefetchingDataLayer<Dtype> {
   explicit HDF5DataLayer(const LayerParameter& param)
       : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~HDF5DataLayer();
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -169,7 +169,6 @@ class HDF5DataLayer : public BasePrefetchingDataLayer<Dtype> {
   unsigned int current_file_;
   int current_row_;
   std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
-  std::vector<unsigned int> data_permutation_;
   std::vector<unsigned int> file_permutation_;
 };
 

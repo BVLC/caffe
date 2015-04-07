@@ -240,8 +240,9 @@ void HDF5PrepareBlob(hid_t file_id, const char* dataset_name, int num,
   CHECK_LE(0, H5LTget_dataset_ndims(file_id, dataset_name, &ndims))
       << "Failed to get dataset ndims for " << dataset_name;
   CHECK_GE(ndims, 1) << "HDF5 dataset must have at least 1 dimension.";
-  CHECK_LE(ndims, 4)
-      << "HDF5 dataset must have at most 4 dimensions, to fit in a Blob.";
+  CHECK_LE(ndims, kMaxBlobAxes)
+      << "HDF5 dataset must have at most "
+      << kMaxBlobAxes << " dimensions, to fit in a Blob.";
 
   // Verify that the data format is what we expect: float or double.
   std::vector<hsize_t> dims(ndims);
@@ -252,12 +253,13 @@ void HDF5PrepareBlob(hid_t file_id, const char* dataset_name, int num,
   CHECK_EQ(h5_class, H5T_FLOAT) << "Expected float or double data";
   CHECK_GE(num, -1) << "num must be -1 (to indicate the number of rows"
                        "in the dataset) or non-negative.";
-  const int blob_num = (num == -1) ? dims[0] : num;
-  blob->Reshape(
-    blob_num,
-    (dims.size() > 1) ? dims[1] : 1,
-    (dims.size() > 2) ? dims[2] : 1,
-    (dims.size() > 3) ? dims[3] : 1);
+
+  vector<int> blob_dims(dims.size());
+  blob_dims[0] = (num == -1) ? dims[0] : num;
+  for (int i = 1; i < dims.size(); ++i) {
+    blob_dims[i] = dims[i];
+  }
+  blob->Reshape(blob_dims);
 }
 
 template
@@ -280,12 +282,12 @@ int HDF5ReadRowsToBlob(hid_t file_id, const char* dataset_name,
       file_id, dataset_name, dims.data(), &h5_class, NULL);
   CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name;
   CHECK_EQ(h5_class, H5T_FLOAT) << "Expected float or double data";
-  hid_t dataset = H5Dopen(file_id, dataset_name, H5P_DEFAULT);
+  hid_t dataset = H5Dopen2(file_id, dataset_name, H5P_DEFAULT);
   hid_t dataspace = H5Dget_space(dataset);
   vector<hsize_t> slab_start(ndims, 0);
   slab_start[0] = h5_offset;
   const int num_rows_available = dims[0] - h5_offset;
-  const int num_rows = std::min(blob->num(), num_rows_available);
+  const int num_rows = std::min(blob->num() - blob_offset, num_rows_available);
   if (num_rows <= 0) {
     return 0;
   }
@@ -297,7 +299,9 @@ int HDF5ReadRowsToBlob(hid_t file_id, const char* dataset_name,
       slab_start.data(), NULL, slab_count.data(), NULL);
   CHECK_GE(status, 0) << "Failed to select slab.";
   hid_t memspace = H5Screate_simple(ndims, slab_count.data(), NULL);
-  const int blob_offset_size = blob_offset * blob->count() / blob->num();
+  const int data_size = blob->count() / blob->num();
+  // separate multiplication to avoid a possible overflow
+  const int blob_offset_size = blob_offset * data_size;
   hid_t type = (sizeof(Dtype) == 4) ? H5T_NATIVE_FLOAT : H5T_NATIVE_DOUBLE;
   status = H5Dread(dataset, type, memspace, dataspace, H5P_DEFAULT,
                    blob->mutable_cpu_data() + blob_offset_size);

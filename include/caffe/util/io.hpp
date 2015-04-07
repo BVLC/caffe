@@ -150,12 +150,7 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
  *                     or num == -1 for the number of rows in the HDF5 dataset
  * @param blob         the Blob to shape
  *
- * The HDF5 dataset must have 1-4 dimensions. blob will be shaped like the
- * the HDF5 dataset, except that the HDF5 dataset's first dimension is ignored
- * and replaced by num, and if the dataset has \@$ D < 4 \@$ dimensions, the
- * remaining \@$ 4 - D \@$ dimensions are replaced with 1's -- so an
- * \@$ N \times D \times H \@$ HDF5 dataset will result in a
- * \@$ \mathrm{num} \times D \times H \times 1 \@$ Blob.
+ * The HDF5 dataset could be N(>=1) dimensions as long as N doesn't exceed Blob's maximum dimension.
  */
 template <typename Dtype>
 void HDF5PrepareBlob(hid_t file_id, const char* dataset_name, int num,

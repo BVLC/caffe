@@ -22,7 +22,7 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   this->JoinPrefetchThread();
   for (int i = 0; i < top.size(); ++i) {
     const int count = top[i]->count();
-    caffe_copy(count, hdf_blobs_[i]->gpu_data(), top[i]->mutable_gpu_data());
+    caffe_copy(count, hdf_blobs_[i]->cpu_data(), top[i]->mutable_gpu_data());
   }
   this->CreatePrefetchThread();
 }

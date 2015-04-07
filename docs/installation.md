@@ -27,6 +27,7 @@ Caffe has several dependencies.
 * [OpenCV](http://opencv.org/) >= 2.4 including 3.0
 * `protobuf`, `glog`, `gflags`
 * IO libraries `hdf5`, `leveldb`, `snappy`, `lmdb`
+    * hdf5 needs to be built with thread-safe enabled, if you need to access the same HDF5 file concurrently. (See [this](http://www.hdfgroup.org/hdf5-quest.html#gconc))
 
 Pycaffe and Matcaffe interfaces have their own natural needs.
 
