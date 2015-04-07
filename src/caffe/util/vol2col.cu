@@ -91,10 +91,13 @@ __global__ void col2vol_gpu_kernel(const int n, const Dtype* data_col,
     Dtype* data_im) {
   CUDA_KERNEL_LOOP(index, n) {
     Dtype val = 0;
-    int w = index % width + pad_w;
-    int h = (index / width) % height + pad_h;
-    int c = index / (width * height);
+    int d = index % depth + pad_d;
+    int w = (index / depth) % width + pad_w;
+    int h = ((index / depth) / width) % height + pad_h; 
+    int c = index / (width * height * depth);
     // compute the start and end of the output
+    int d_col_start = (d < patch_d) ? 0 : (d - patch_d) / stride_d + 1;
+    int d_col_end = min(d / stride_d + 1, depth_col);
     int w_col_start = (w < patch_w) ? 0 : (w - patch_w) / stride_w + 1;
     int w_col_end = min(w / stride_w + 1, width_col);
     int h_col_start = (h < patch_h) ? 0 : (h - patch_h) / stride_h + 1;
@@ -109,14 +112,21 @@ __global__ void col2vol_gpu_kernel(const int n, const Dtype* data_col,
       }
     }
     */
-    // equivalent implementation
+    // equivalent implementation 
     int offset =
-        (c * patch_h * patch_w + h * patch_w + w) * height_col * width_col;
-    int coeff_h_col = (1 - stride_h * patch_w * height_col) * width_col;
-    int coeff_w_col = (1 - stride_w * height_col * width_col);
+        ((c * patch_h * patch_w * patch_d) + h * patch_w * patch_d + 
+            w * patch_d + d) * height_col * width_col * depth_col;
+    int coeff_h_col = (1 - stride_h * (patch_d * patch_w) * height_col) *
+        width_col * depth_col;
+    int coeff_w_col = (1 - stride_w * patch_d * height_col * width_col) *
+        depth_col;
+    int coeff_d_col = (1 - stride_d * height_col * width_col * depth_col);
     for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
       for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
-        val += data_col[offset + h_col * coeff_h_col + w_col * coeff_w_col];
+        for (int d_col = d_col_start; d_col < d_col_end; ++d_col) {
+          val += data_col[offset + h_col * coeff_h_col + w_col * coeff_w_col + 
+              d_col * coeff_d_col];
+        }
       }
     }
     data_im[index] = val;
