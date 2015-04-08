@@ -480,6 +480,18 @@ Dtype SGDSolver<Dtype>::ResetAvgGradNorm() {
   return avg_grad_norm;
 }
 
+template<typename Dtype>
+void SGDSolver<Dtype>::DisplayIterInfo(Dtype rate) {
+  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+    if (this->param_.log_avg_gradient_norm()) {
+      Dtype avg_grad_norm = ResetAvgGradNorm();
+      LOG(INFO)<< "Iteration " << this->iter_ << \
+          ", avg_grad_norm = " << avg_grad_norm;
+    }
+  }
+}
+
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue() {
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
@@ -489,15 +501,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   // get the learning rate
   Dtype rate = GetLearningRate();
   TrackAvgGradNorm();
-  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    if (this->param_.log_avg_gradient_norm()) {
-      Dtype avg_grad_norm = ResetAvgGradNorm();
-      LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate << \
-          ", avg_grad_norm = " << avg_grad_norm;
-    } else {
-      LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
-    }
-  }
+  DisplayIterInfo(rate);
   ClipGradients();
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
@@ -611,16 +615,7 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
   // get the learning rate
   Dtype rate = this->GetLearningRate();
   this->TrackAvgGradNorm();
-  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    if (this->param_.log_avg_gradient_norm()) {
-      Dtype avg_grad_norm = this->ResetAvgGradNorm();
-      LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate << \
-          ", avg_grad_norm = " << avg_grad_norm;
-      // reset sufficient statistic totals
-    } else {
-      LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
-    }
-  }
+  this->DisplayIterInfo(rate);
   SGDSolver<Dtype>::ClipGradients();
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
@@ -737,15 +732,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
   Dtype rate = this->GetLearningRate();
   Dtype delta = this->param_.delta();
   this->TrackAvgGradNorm();
-  if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    if (this->param_.log_avg_gradient_norm()) {
-      Dtype avg_grad_norm = this->ResetAvgGradNorm();
-      LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate << \
-          ", avg_grad_norm = " << avg_grad_norm;
-    } else {
-      LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
-    }
-  }
+  this->DisplayIterInfo(rate);
   SGDSolver<Dtype>::ClipGradients();
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();

@@ -80,6 +80,7 @@ class SGDSolver : public Solver<Dtype> {
  protected:
   void PreSolve();
   Dtype GetLearningRate();
+  void DisplayIterInfo(Dtype rate);
   Dtype GetGradNorm();
   void TrackAvgGradNorm();
   Dtype ResetAvgGradNorm();

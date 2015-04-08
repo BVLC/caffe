@@ -41,14 +41,16 @@ def parse_log(path_to_log):
     re_train_loss = re.compile('Iteration \d+, loss = ([\.\d]+)')
     re_output_loss = re.compile('output #\d+: loss = ([\.\d]+)')
     re_lr = re.compile('lr = ([\.\d]+)')
+    re_grad_norm = re.compile('avg_grad_norm = ([\.\d]+)')
 
     # Pick out lines of interest
     iteration = -1
     test_accuracy = -1
     learning_rate = float('NaN')
+    avg_grad_norm = float('NaN')
     train_dict_list = []
     test_dict_list = []
-    train_dict_names = ('NumIters', 'Seconds', 'TrainingLoss', 'LearningRate')
+    train_dict_names = ('NumIters', 'Seconds', 'TrainingLoss', 'LearningRate', 'AvgGradientNorm')
     test_dict_names = ('NumIters', 'Seconds', 'TestAccuracy', 'TestLoss')
 
     logfile_year = extract_seconds.get_log_created_year(path_to_log)
@@ -71,6 +73,10 @@ def parse_log(path_to_log):
             if lr_match:
                 learning_rate = float(lr_match.group(1))
 
+            grad_norm_match = re_grad_norm.search(line)
+            if grad_norm_match:
+                avg_grad_norm = float(grad_norm_match.group(1))
+
             accuracy_match = re_accuracy.search(line)
             if accuracy_match and get_line_type(line) == 'test':
                 test_accuracy = float(accuracy_match.group(1))
@@ -81,7 +87,8 @@ def parse_log(path_to_log):
                 train_dict_list.append({'NumIters': iteration,
                                         'Seconds': seconds,
                                         'TrainingLoss': train_loss,
-                                        'LearningRate': learning_rate})
+                                        'LearningRate': learning_rate,
+                                        'AvgGradientNorm': avg_grad_norm})
 
             output_loss_match = re_output_loss.search(line)
             if output_loss_match and get_line_type(line) == 'test':
