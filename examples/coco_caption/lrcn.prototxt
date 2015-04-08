@@ -567,7 +567,6 @@ layer {
     lr_mult: 0.2
     decay_mult: 0
   }
-  # exclude { stage: "freeze-convnet" }
   inner_product_param {
     num_output: 1000
     weight_filler {
