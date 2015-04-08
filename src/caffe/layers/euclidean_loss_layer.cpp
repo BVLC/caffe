@@ -20,6 +20,14 @@ template <typename Dtype>
 void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   int count = bottom[0]->count();
+
+#if 0
+  LOG(INFO) << "DEBUG " << "bottom[0]->count()" << bottom[0]->count();
+  for (int i = 0; i < bottom[0]->count(); ++i) {
+    LOG(INFO) << bottom[0]->cpu_data()[i] << ", " << bottom[1]->cpu_data()[i];
+  }
+#endif
+
   caffe_sub(
       count,
       bottom[0]->cpu_data(),

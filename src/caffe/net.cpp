@@ -91,6 +91,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
     }
+    LOG(INFO) << "Need backward: " << need_backward;
     int num_top = layer_param.top_size();
     for (int top_id = 0; top_id < num_top; ++top_id) {
       AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
@@ -331,7 +332,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
              blob_name_to_idx->find(blob_name) != blob_name_to_idx->end()) {
     // If we are not doing in-place computation but have duplicated blobs,
     // raise an error.
-    LOG(FATAL) << "Duplicate blobs produced by multiple sources.";
+    LOG(FATAL) << "Duplicate blob (name = " << blob_name << ") produced by multiple sources.";
   } else {
     // Normal output.
     if (layer_param) {

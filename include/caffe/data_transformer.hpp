@@ -87,6 +87,9 @@ class DataTransformer {
    */
   void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
 
+  void Transform(const int batch_item_id, const DatumMultiRegression& datum,
+                 const Dtype* mean, Dtype* transformed_data);
+
  protected:
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).

@@ -16,12 +16,12 @@
 namespace caffe {
 
 template <typename Dtype>
-ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
+ImageDataMultiRegressionLayer<Dtype>::~ImageDataMultiRegressionLayer<Dtype>() {
   this->JoinPrefetchThread();
 }
 
 template <typename Dtype>
-void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+void ImageDataMultiRegressionLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int new_height = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_width();
@@ -35,11 +35,28 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
+#if 0
   string filename;
   int label;
   while (infile >> filename >> label) {
     lines_.push_back(std::make_pair(filename, label));
   }
+#else
+  size_t label_dim = 0;
+  for(string line; getline(infile, line);) {
+    stringstream line_s(line);
+    string filename;
+
+    line_s >> filename;
+    vector<Dtype> labels;
+    Dtype label;
+    while(line_s >> label) {
+        labels.push_back(label);
+    }
+    if(label_dim == 0) label_dim = labels.size();
+    lines_.push_back(std::make_pair(filename, labels));
+  }
+#endif
 
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
@@ -81,14 +98,21 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
+
   // label
-  vector<int> label_shape(1, batch_size);
-  top[1]->Reshape(label_shape);
-  this->prefetch_label_.Reshape(label_shape);
+#if 0
+  top[1]->Reshape(batch_size, 1, 1, 1);
+  this->prefetch_label_.Reshape(batch_size, 1, 1, 1);
+#else
+  top[1]->Reshape(batch_size, label_dim, 1, 1);
+  LOG_DCH_EXPR(top[1]->shape_string());
+  LOG_DCH_EXPR(label_dim);
+  this->prefetch_label_.Reshape(batch_size, label_dim, 1, 1);
+#endif
 }
 
 template <typename Dtype>
-void ImageDataLayer<Dtype>::ShuffleImages() {
+void ImageDataMultiRegressionLayer<Dtype>::ShuffleImages() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
@@ -96,7 +120,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
 
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
-void ImageDataLayer<Dtype>::InternalThreadEntry() {
+void ImageDataMultiRegressionLayer<Dtype>::InternalThreadEntry() {
   CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
@@ -142,7 +166,27 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
 
+#if 0
     prefetch_label[item_id] = lines_[lines_id_].second;
+#else
+    // this->prefetch_label_.set_cpu_data(&lines_[lines_id_].second[0]);
+
+    // for (int i = 0; i < lines_[lines_id_].second.size(); ++i) {
+    //     LOG(INFO) << "lines_[lines_id_].second["<<i<<"] = " << lines_[lines_id_].second[i];
+    // }
+    // for (int i = 0; i < lines_[lines_id_].second.size(); ++i) {
+    //     LOG(INFO) << "prefetch_label["<<i<<"] = " << prefetch_label[i];
+    // }
+
+    int offset_label = this->prefetch_label_.offset(item_id);
+    // for (int i = 0; i < lines_[lines_id_].second.size(); ++i) {
+    //     prefetch_label[offset_label + i] = lines_[lines_id_].second[i];
+    // }
+
+    memcpy(prefetch_label + offset_label, &lines_[lines_id_].second[0], sizeof(Dtype) * lines_[lines_id_].second.size());
+
+#endif
+
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {
@@ -160,7 +204,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
-INSTANTIATE_CLASS(ImageDataLayer);
-REGISTER_LAYER_CLASS(ImageData);
+INSTANTIATE_CLASS(ImageDataMultiRegressionLayer);
+REGISTER_LAYER_CLASS(ImageDataMultiRegression);
 
 }  // namespace caffe
