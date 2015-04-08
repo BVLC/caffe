@@ -45,9 +45,11 @@ string(REPLACE ";" ":"  rpath_folders   "${folders}")
 if(build_using MATCHES "Matlab")
   set(libflags -lcaffe${CAffe_POSTFIX} ${libflags}) # Matlab R2014a complans for -Wl,--whole-archive
 
+  string(REPLACE ";-lpython2" "" matlab_libflags "${libflags}")
+
   caffe_fetch_and_set_proper_mexext(Matlab_caffe_mex)
   add_custom_command(OUTPUT ${Matlab_caffe_mex} COMMAND ${Matlab_mex}
-      ARGS -output ${Matlab_caffe_mex} ${Matlab_srcs} ${cflags} ${link_folders} ${libflags}
+      ARGS -output ${Matlab_caffe_mex} ${Matlab_srcs} ${cflags} ${link_folders} ${matlab_libflags}
       DEPENDS caffe COMMENT "Building Matlab interface: ${Matlab_caffe_mex}" VERBATIM)
   add_custom_target(matlab ALL DEPENDS ${Matlab_caffe_mex} SOURCES ${Matlab_srcs})
 
