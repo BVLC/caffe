@@ -102,17 +102,7 @@ __global__ void col2vol_gpu_kernel(const int n, const Dtype* data_col,
     int w_col_end = min(w / stride_w + 1, width_col);
     int h_col_start = (h < patch_h) ? 0 : (h - patch_h) / stride_h + 1;
     int h_col_end = min(h / stride_h + 1, height_col);
-    /*
-    for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
-      for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
-        // the col location: [c * width * height + h_out, w_out]
-        int c_col = c * patch_h * patch_w + (h - h_col * stride_h) * ksize
-            + (w - w_col * stride_w);
-        val += data_col[(c_col * height_col + h_col) * width_col + w_col];
-      }
-    }
-    */
-    // equivalent implementation
+
     int offset =
         ((c * patch_h * patch_w * patch_d) + h * patch_w * patch_d +
             w * patch_d + d) * height_col * width_col * depth_col;
