@@ -531,13 +531,13 @@ class Convolution3DLayer : public Layer<Dtype> {
   }
   inline void conv_col2vol_cpu(const Dtype* col_buff, Dtype* data) {
     col2vol_cpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
-        conv_in_depth_,kernel_h_, kernel_w_, kernel_d_, pad_h_, pad_w_, 
+        conv_in_depth_, kernel_h_, kernel_w_, kernel_d_, pad_h_, pad_w_,
         pad_d_, stride_h_, stride_w_, stride_d_, data);
   }
 #ifndef CPU_ONLY
   inline void conv_vol2col_gpu(const Dtype* data, Dtype* col_buff) {
     vol2col_gpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
-        conv_in_depth_, kernel_h_, kernel_w_, kernel_d_, pad_h_, pad_w_, 
+        conv_in_depth_, kernel_h_, kernel_w_, kernel_d_, pad_h_, pad_w_,
         pad_d_, stride_h_, stride_w_, stride_d_, col_buff);
   }
   inline void conv_col2vol_gpu(const Dtype* col_buff, Dtype* data) {

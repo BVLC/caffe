@@ -75,15 +75,15 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
                         && in_x >= 0 && in_x < in_shape[3]
                         && in_w >= 0 && in_w < in_shape[4]) {
                         int in_arr[] = {n, o + o_head, y, x, w};
-                        vector<int> in_off_shape (in_arr, 
-                            in_arr + sizeof(in_arr) / sizeof(int) );
+                        vector<int> in_off_shape(in_arr,
+                            in_arr + sizeof(in_arr) / sizeof(int));
                         int out_arr[] = {n, k + k_head, in_y, in_x, in_w};
-                        vector<int> out_off_shape (out_arr, 
-                            out_arr + sizeof(out_arr) / sizeof(int) );
+                        vector<int> out_off_shape(out_arr,
+                            out_arr + sizeof(out_arr) / sizeof(int));
                         int w_arr[] = {o + o_head, k, p, q, r};
-                        vector<int> w_off_shape (w_arr, 
-                            w_arr + sizeof(w_arr) / sizeof(int) );
-                        out_data[out->offset(in_off_shape)] += 
+                        vector<int> w_off_shape(w_arr,
+                            w_arr + sizeof(w_arr) / sizeof(int));
+                        out_data[out->offset(in_off_shape)] +=
                             in_data[in->offset(out_off_shape)] *
                             weight_data[weights[0]->offset(w_off_shape)];
                       }
@@ -107,8 +107,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
           for (int x = 0; x < out_shape[3]; x++) {
             for (int w = 0; w < out_shape[4]; w++) {
               int out_arr[] = {n, o, y, x, w};
-              vector<int> out_shape (out_arr, 
-                  out_arr + sizeof(out_arr) / sizeof(int) );
+              vector<int> out_shape(out_arr,
+                  out_arr + sizeof(out_arr) / sizeof(int));
               out_data[out->offset(out_shape)] += bias_data[o];
             }
           }
@@ -132,20 +132,19 @@ class Convolution3DLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  Convolution3DLayerTest() 
+  Convolution3DLayerTest()
     : blob_bottom_(new Blob<Dtype>(vector<int>())),
       blob_bottom_2_(new Blob<Dtype>(vector<int>())),
       blob_top_(new Blob<Dtype>()),
-      blob_top_2_(new Blob<Dtype>())
-  {
+      blob_top_2_(new Blob<Dtype>()) {
     // update the blob shapes
     int bot_shape_arr[] = {2, 3, 6, 4, 3};
-    vector<int> bot_shape (bot_shape_arr, bot_shape_arr + 
-        sizeof(bot_shape_arr) / sizeof(int) );
+    vector<int> bot_shape(bot_shape_arr, bot_shape_arr +
+        sizeof(bot_shape_arr) / sizeof(int));
     blob_bottom_->Reshape(bot_shape);
     int bot_shape_arr_2[] = {2, 3, 6, 4, 3};
-    vector<int> bot_shape_2 (bot_shape_arr_2, bot_shape_arr_2 + 
-        sizeof(bot_shape_arr_2) / sizeof(int) );
+    vector<int> bot_shape_2(bot_shape_arr_2, bot_shape_arr_2 +
+        sizeof(bot_shape_arr_2) / sizeof(int));
     blob_bottom_2_->Reshape(bot_shape_2);
   }
 

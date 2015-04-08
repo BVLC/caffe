@@ -32,11 +32,10 @@ class Vol2colKernelTest : public ::testing::Test {
       : blob_bottom_(new Blob<Dtype>(vector<int>())),
         blob_top_(new Blob<Dtype>()),
         blob_top_cpu_(new Blob<Dtype>()) {
-
     // update the blob shape
     int bot_shape_arr[] = {5, 500, 10, 10, 10};
-    vector<int> bot_shape (bot_shape_arr, bot_shape_arr + 
-        sizeof(bot_shape_arr) / sizeof(int) );
+    vector<int> bot_shape(bot_shape_arr, bot_shape_arr +
+        sizeof(bot_shape_arr) / sizeof(int));
     blob_bottom_->Reshape(bot_shape);
 
     FillerParameter filler_param;
@@ -99,12 +98,12 @@ TYPED_TEST(Vol2colKernelTest, TestGPU) {
 
   // CPU Version
   for (int n = 0; n < this->blob_bottom_->shape(0); ++n) {
-    vol2col_cpu(this->blob_bottom_->cpu_data() + 
-      this->blob_bottom_->offset(vector<int>(1,n)), this->channels_, 
-      this->height_, this->width_, this->depth_, this->kernel_size_, 
-      this->kernel_size_, this->kernel_size_, this->pad_, this->pad_, 
-      this->pad_, this->stride_, this->stride_, this->stride_, 
-      cpu_data + this->blob_top_cpu_->offset(vector<int>(1,n)));
+    vol2col_cpu(this->blob_bottom_->cpu_data() +
+      this->blob_bottom_->offset(vector<int>(1, n)), this->channels_,
+      this->height_, this->width_, this->depth_, this->kernel_size_,
+      this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
+      this->pad_, this->stride_, this->stride_, this->stride_, cpu_data
+      + this->blob_top_cpu_->offset(vector<int>(1, n)));
   }
 
   // GPU version
@@ -118,12 +117,13 @@ TYPED_TEST(Vol2colKernelTest, TestGPU) {
       int grid_dim = default_grid_dim/grid_div;
       // NOLINT_NEXT_LINE(whitespace/operators)
       vol2col_gpu_kernel<TypeParam><<<grid_dim, CAFFE_CUDA_NUM_THREADS>>>(
-        num_kernels, bottom_data + this->blob_bottom_->offset(vector<int>(1,n)),
-        this->height_, this->width_, this->depth_, this->kernel_size_,
-        this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
-        this->pad_, this->stride_, this->stride_, this->stride_,
-        this->height_col_, this->width_col_, this->depth_col_,
-        top_data + this->blob_top_->offset(vector<int>(1,n)));
+        num_kernels, bottom_data +
+        this->blob_bottom_->offset(vector<int>(1, n)), this->height_,
+        this->width_, this->depth_, this->kernel_size_, this->kernel_size_,
+        this->kernel_size_, this->pad_, this->pad_, this->pad_, this->stride_,
+        this->stride_, this->stride_, this->height_col_, this->width_col_,
+        this->depth_col_, top_data +
+        this->blob_top_->offset(vector<int>(1, n)));
       CUDA_POST_KERNEL_CHECK;
     }
 

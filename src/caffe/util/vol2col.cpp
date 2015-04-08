@@ -2,14 +2,14 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "caffe/util/vol2col.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/vol2col.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
 void vol2col_cpu(const Dtype* data_im, const int channels,
-    const int height, const int width, const int depth, 
+    const int height, const int width, const int depth,
     const int kernel_h, const int kernel_w, const int kernel_d,
     const int pad_h, const int pad_w, const int pad_d,
     const int stride_h, const int stride_w, const int stride_d,
@@ -32,9 +32,11 @@ void vol2col_cpu(const Dtype* data_im, const int channels,
           if (h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width &&
               d_pad >= 0 && d_pad < depth)
             data_col[((c * height_col + h) * width_col + w) * depth_col + d] =
-              data_im[((c_im * height + h_pad) * width + w_pad) * depth + d_pad];
+              data_im[((c_im * height + h_pad) * width + w_pad) *
+                  depth + d_pad];
           else
-            data_col[((c * height_col + h) * width_col + w) * depth_col + d] = 0;
+            data_col[((c * height_col + h) * width_col + w) *
+              depth_col + d] = 0;
         }
       }
     }
@@ -43,19 +45,19 @@ void vol2col_cpu(const Dtype* data_im, const int channels,
 
 // Explicit instantiation
 template void vol2col_cpu<float>(const float* data_im, const int channels,
-    const int height, const int width, const int depth, const int kernel_h, 
-    const int kernel_w, const int kernel_d, const int pad_h, const int pad_w, 
-    const int pad_d, const int stride_h, const int stride_w, const int stride_d, 
+    const int height, const int width, const int depth, const int kernel_h,
+    const int kernel_w, const int kernel_d, const int pad_h, const int pad_w,
+    const int pad_d, const int stride_h, const int stride_w, const int stride_d,
     float* data_col);
 template void vol2col_cpu<double>(const double* data_im, const int channels,
-    const int height, const int width, const int depth, const int kernel_h, 
-    const int kernel_w, const int kernel_d, const int pad_h, const int pad_w, 
+    const int height, const int width, const int depth, const int kernel_h,
+    const int kernel_w, const int kernel_d, const int pad_h, const int pad_w,
     const int pad_d, const int stride_h, const int stride_w, const int stride_d,
     double* data_col);
 
 template <typename Dtype>
 void col2vol_cpu(const Dtype* data_col, const int channels,
-    const int height, const int width, const int depth, const int patch_h, 
+    const int height, const int width, const int depth, const int patch_h,
     const int patch_w, const int patch_d, const int pad_h, const int pad_w,
     const int pad_d, const int stride_h, const int stride_w, const int stride_d,
     Dtype* data_im) {
@@ -77,8 +79,9 @@ void col2vol_cpu(const Dtype* data_col, const int channels,
           int d_pad = d * stride_d - pad_d + d_offset;
           if (h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width &&
               d_pad >= 0 && d_pad < depth)
-            data_im[((c_im * height + h_pad) * width + w_pad) * depth + d_pad] 
-                += data_col[((c * height_col + h) * width_col + w) * depth_col + d];
+            data_im[((c_im * height + h_pad) * width + w_pad) * depth + d_pad]
+                += data_col[((c * height_col + h) * width_col + w) *
+                depth_col + d];
         }
       }
     }
@@ -87,13 +90,13 @@ void col2vol_cpu(const Dtype* data_col, const int channels,
 
 // Explicit instantiation
 template void col2vol_cpu<float>(const float* data_col, const int channels,
-    const int height, const int width, const int depth, const int patch_h, 
-    const int patch_w, const int patch_d, const int pad_h, const int pad_w, 
-    const int pad_d, const int stride_h, const int stride_w, const int stride_d, 
+    const int height, const int width, const int depth, const int patch_h,
+    const int patch_w, const int patch_d, const int pad_h, const int pad_w,
+    const int pad_d, const int stride_h, const int stride_w, const int stride_d,
     float* data_im);
 template void col2vol_cpu<double>(const double* data_col, const int channels,
-    const int height, const int width, const int depth, const int patch_h, 
-    const int patch_w, const int patch_d, const int pad_h, const int pad_w, 
+    const int height, const int width, const int depth, const int patch_h,
+    const int patch_w, const int patch_d, const int pad_h, const int pad_w,
     const int pad_d, const int stride_h, const int stride_w, const int stride_d,
     double* data_im);
 

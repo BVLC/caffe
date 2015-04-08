@@ -27,7 +27,7 @@ __global__ void vol2col_gpu_kernel(const int n, const Dtype* data_im,
     int w_in = w_out * stride_w - pad_w;
     int d_in = d_out * stride_d - pad_d;
     Dtype* data_col_ptr = data_col;
-    data_col_ptr += ((channel_out * height_col + h_out) * width_col + w_out) 
+    data_col_ptr += ((channel_out * height_col + h_out) * width_col + w_out)
         * depth_col + d_out;
     const Dtype* data_im_ptr = data_im;
     data_im_ptr += ((channel_in * height + h_in) * width + w_in) * depth + d_in;
@@ -52,7 +52,7 @@ void vol2col_gpu(const Dtype* data_im, const int channels, const int height,
     const int kernel_d, const int pad_h, const int pad_w, const int pad_d,
     const int stride_h, const int stride_w, const int stride_d,
     Dtype* data_col) {
-  // We are going to launch channels * height_col * width_col * depth_col 
+  // We are going to launch channels * height_col * width_col * depth_col
   // kernels, each kernel responsible for copying a single-channel grid.
   int height_col = (height + 2 * pad_h - kernel_h) / stride_h + 1;
   int width_col = (width + 2 * pad_w - kernel_w) / stride_w + 1;
@@ -93,7 +93,7 @@ __global__ void col2vol_gpu_kernel(const int n, const Dtype* data_col,
     Dtype val = 0;
     int d = index % depth + pad_d;
     int w = (index / depth) % width + pad_w;
-    int h = ((index / depth) / width) % height + pad_h; 
+    int h = ((index / depth) / width) % height + pad_h;
     int c = index / (width * height * depth);
     // compute the start and end of the output
     int d_col_start = (d < patch_d) ? 0 : (d - patch_d) / stride_d + 1;
@@ -112,9 +112,9 @@ __global__ void col2vol_gpu_kernel(const int n, const Dtype* data_col,
       }
     }
     */
-    // equivalent implementation 
+    // equivalent implementation
     int offset =
-        ((c * patch_h * patch_w * patch_d) + h * patch_w * patch_d + 
+        ((c * patch_h * patch_w * patch_d) + h * patch_w * patch_d +
             w * patch_d + d) * height_col * width_col * depth_col;
     int coeff_h_col = (1 - stride_h * (patch_d * patch_w) * height_col) *
         width_col * depth_col;
@@ -124,7 +124,7 @@ __global__ void col2vol_gpu_kernel(const int n, const Dtype* data_col,
     for (int h_col = h_col_start; h_col < h_col_end; ++h_col) {
       for (int w_col = w_col_start; w_col < w_col_end; ++w_col) {
         for (int d_col = d_col_start; d_col < d_col_end; ++d_col) {
-          val += data_col[offset + h_col * coeff_h_col + w_col * coeff_w_col + 
+          val += data_col[offset + h_col * coeff_h_col + w_col * coeff_w_col +
               d_col * coeff_d_col];
         }
       }
@@ -134,10 +134,10 @@ __global__ void col2vol_gpu_kernel(const int n, const Dtype* data_col,
 }
 
 template <typename Dtype>
-void col2vol_gpu(const Dtype* data_col, const int channels, const int height, 
-    const int width, const int depth, const int patch_h, const int patch_w, 
-    const int patch_d, const int pad_h, const int pad_w, const int pad_d, 
-    const int stride_h, const int stride_w, const int stride_d, 
+void col2vol_gpu(const Dtype* data_col, const int channels, const int height,
+    const int width, const int depth, const int patch_h, const int patch_w,
+    const int patch_d, const int pad_h, const int pad_w, const int pad_d,
+    const int stride_h, const int stride_w, const int stride_d,
     Dtype* data_im) {
   int height_col = (height + 2 * pad_h - patch_h) / stride_h + 1;
   int width_col = (width + 2 * pad_w - patch_w) / stride_w + 1;
@@ -156,13 +156,13 @@ void col2vol_gpu(const Dtype* data_col, const int channels, const int height,
 
 // Explicit instantiation
 template void col2vol_gpu<float>(const float* data_col, const int channels,
-    const int height, const int width, const int depth, const int patch_h, 
-    const int patch_w, const int patch_d, const int pad_h, const int pad_w, 
+    const int height, const int width, const int depth, const int patch_h,
+    const int patch_w, const int patch_d, const int pad_h, const int pad_w,
     const int pad_d, const int stride_h, const int stride_w, const int stride_d,
     float* data_im);
 template void col2vol_gpu<double>(const double* data_col, const int channels,
-    const int height, const int width, const int depth, const int patch_h, 
-    const int patch_w, const int patch_d, const int pad_h, const int pad_w, 
+    const int height, const int width, const int depth, const int patch_h,
+    const int patch_w, const int patch_d, const int pad_h, const int pad_w,
     const int pad_d, const int stride_h, const int stride_w, const int stride_d,
     double* data_im);
 

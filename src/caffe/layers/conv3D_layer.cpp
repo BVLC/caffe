@@ -2,8 +2,8 @@
 
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/util/vol2col.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/vol2col.hpp"
 #include "caffe/vision_layers.hpp"
 
 namespace caffe {
@@ -59,7 +59,7 @@ void Convolution3DLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
   // is_1x1_ = false;
-  is_1x1_ = kernel_w_ == 1 && kernel_h_ == 1 && kernel_d_ == 1 
+  is_1x1_ = kernel_w_ == 1 && kernel_h_ == 1 && kernel_d_ == 1
       && stride_h_ == 1 && stride_w_ == 1 && stride_d_ == 1
       && pad_h_ == 0 && pad_w_ == 0 && pad_d_ == 0;
 
@@ -94,7 +94,7 @@ void Convolution3DLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
 
     // Initialize and fill the weights:
-    // output channels x input channels per-group x 
+    // output channels x input channels per-group x
     // kernel depth x kernel height x kernel width
     vector<int> weights_shape(5);
     weights_shape[0] = conv_out_channels_;
@@ -135,7 +135,7 @@ void Convolution3DLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(5, bottom[0]->num_axes()) << "Input must have 5 axes, "
       << "corresponding to (num, channels, height, width, depth)";
-  
+
   vector<int> shape = bottom[0]->shape();
   num_ = shape[0];
   CHECK_EQ(shape[1], channels_) << "Input size incompatible with"
@@ -159,7 +159,7 @@ void Convolution3DLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     vector<int> out_shape(5);
     out_shape[0] = num_;
     out_shape[1] = num_output_;
-    out_shape[2] = height_out_; 
+    out_shape[2] = height_out_;
     out_shape[3] = width_out_;
     out_shape[4] = depth_out_;
     top[top_id]->Reshape(out_shape);
@@ -176,7 +176,7 @@ void Convolution3DLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     conv_out_spatial_dim_ = height_out_ * width_out_ * depth_out_;
   }
   kernel_dim_ = conv_in_channels_ * kernel_h_ * kernel_w_ * kernel_d_;
-  weight_offset_ = conv_out_channels_ * 
+  weight_offset_ = conv_out_channels_ *
       kernel_dim_ / group_ / group_ / group_;
   col_offset_ = kernel_dim_ * conv_out_spatial_dim_ / group_;
   output_offset_ = conv_out_channels_ * conv_out_spatial_dim_ / group_;
@@ -187,7 +187,7 @@ void Convolution3DLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     vector<int> back_shape(5);
     back_shape[0] = 1;
     back_shape[1] = kernel_dim_;
-    back_shape[2] = height_; 
+    back_shape[2] = height_;
     back_shape[3] = width_;
     back_shape[4] = depth_;
     col_buffer_.Reshape(back_shape);
@@ -195,14 +195,14 @@ void Convolution3DLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     vector<int> forw_shape(5);
     forw_shape[0] = 1;
     forw_shape[1] = kernel_dim_;
-    forw_shape[2] = height_out_; 
+    forw_shape[2] = height_out_;
     forw_shape[3] = width_out_;
     forw_shape[4] = depth_out_;
     col_buffer_.Reshape(forw_shape);
   }
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
-    vector<int> bias_multiplier_shape(1, height_out_ * 
+    vector<int> bias_multiplier_shape(1, height_out_ *
         width_out_ * depth_out_);
     bias_multiplier_.Reshape(bias_multiplier_shape);
     caffe_set(bias_multiplier_.count(), Dtype(1),
@@ -218,11 +218,12 @@ void Convolution3DLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + bottom[i]->offset(vector<int>(1,n)), 
-          weight, top_data + top[i]->offset(vector<int>(1,n)));
+      this->forward_cpu_gemm(bottom_data + bottom[i]->offset(vector<int>(1, n)),
+          weight, top_data + top[i]->offset(vector<int>(1, n)));
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
-        this->forward_cpu_bias(top_data + top[i]->offset(vector<int>(1,n)), bias);
+        this->forward_cpu_bias(top_data + top[i]->offset(vector<int>(1, n)),
+          bias);
       }
     }
   }
@@ -248,21 +249,22 @@ void Convolution3DLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
       for (int n = 0; n < this->num_; ++n) {
-        this->backward_cpu_bias(bias_diff, top_diff + 
-            top[i]->offset(vector<int>(1,n)));
+        this->backward_cpu_bias(bias_diff, top_diff +
+            top[i]->offset(vector<int>(1, n)));
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
       for (int n = 0; n < this->num_; ++n) {
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
-          this->weight_cpu_gemm(bottom_data + bottom[i]->offset(vector<int>(1,n)),
-              top_diff + top[i]->offset(vector<int>(1,n)), weight_diff);
+          this->weight_cpu_gemm(bottom_data +
+            bottom[i]->offset(vector<int>(1, n)), top_diff +
+            top[i]->offset(vector<int>(1, n)), weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
-          this->backward_cpu_gemm(top_diff + top[i]->offset(vector<int>(1,n)), 
-              weight, bottom_diff + bottom[i]->offset(vector<int>(1,n)));
+          this->backward_cpu_gemm(top_diff + top[i]->offset(vector<int>(1, n)),
+              weight, bottom_diff + bottom[i]->offset(vector<int>(1, n)));
         }
       }
     }
@@ -291,7 +293,7 @@ template <typename Dtype>
 void Convolution3DLayer<Dtype>::forward_cpu_bias(Dtype* output,
     const Dtype* bias) {
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-      height_out_ * width_out_ * depth_out_, 1, (Dtype)1., bias, 
+      height_out_ * width_out_ * depth_out_, 1, (Dtype)1., bias,
       bias_multiplier_.cpu_data(), (Dtype)1., output);
 }
 
@@ -332,7 +334,7 @@ void Convolution3DLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
 template <typename Dtype>
 void Convolution3DLayer<Dtype>::backward_cpu_bias(Dtype* bias,
     const Dtype* input) {
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_ * 
+  caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, height_out_ * width_out_ *
       depth_out_, 1., input, bias_multiplier_.cpu_data(), 1., bias);
 }
 
@@ -360,7 +362,7 @@ template <typename Dtype>
 void Convolution3DLayer<Dtype>::forward_gpu_bias(Dtype* output,
     const Dtype* bias) {
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-      height_out_ * width_out_ * depth_out_, 1, (Dtype)1., bias, 
+      height_out_ * width_out_ * depth_out_, 1, (Dtype)1., bias,
       bias_multiplier_.gpu_data(), (Dtype)1., output);
 }
 
