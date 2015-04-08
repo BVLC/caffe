@@ -80,10 +80,16 @@ class SGDSolver : public Solver<Dtype> {
  protected:
   void PreSolve();
   Dtype GetLearningRate();
+  Dtype GetGradNorm();
+  void TrackAvgGradNorm();
+  Dtype ResetAvgGradNorm();
+  Dtype grad_norm;
+  int n_grad_norm_iters;
   virtual void ComputeUpdateValue();
   virtual void ClipGradients();
   virtual void SnapshotSolverState(SolverState * state);
   virtual void RestoreSolverState(const SolverState& state);
+
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
   // temp maintains other information that might be needed in computation
