@@ -31,6 +31,7 @@ void Im2colLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
+
 INSTANTIATE_LAYER_GPU_FUNCS(Im2colLayer);
 
 }  // namespace caffe
