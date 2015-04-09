@@ -6,12 +6,14 @@
 #     Visual Recognition and Description." arXiv preprint arXiv:1411.4389 (2014).
 
 name: "lrcn_caffenet_to_lstm"
+
+# train data layers
 layer {
   name: "data"
   type: "ImageData"
   top: "data"
   top: "label"
-  include { phase: TRAIN }
+  include { phase: TRAIN  not_stage: 'trainval' }
   transform_param {
     mirror: true
     crop_size: 227
@@ -32,12 +34,48 @@ layer {
   top: "cont_sentence"
   top: "input_sentence"
   top: "target_sentence"
-  include { phase: TRAIN }
+  include { phase: TRAIN  not_stage: 'trainval' }
   hdf5_data_param {
     source: "./examples/coco_caption/h5_data/buffer_100/train_aligned_20_batches/hdf5_chunk_list.txt"
     batch_size: 20
   }
 }
+
+# trainval data layers (for finetuning final model)
+layer {
+  name: "data"
+  type: "ImageData"
+  top: "data"
+  top: "label"
+  include { phase: TRAIN  stage: 'trainval' }
+  transform_param {
+    mirror: true
+    crop_size: 227
+    mean_value: 104
+    mean_value: 117
+    mean_value: 123
+  }
+  image_data_param {
+    source: "./examples/coco_caption/h5_data/buffer_100/trainval_aligned_20_batches/image_list.with_dummy_labels.txt"
+    batch_size: 100
+    new_height: 256
+    new_width: 256
+  }
+}
+layer {
+  name: "data"
+  type: "HDF5Data"
+  top: "cont_sentence"
+  top: "input_sentence"
+  top: "target_sentence"
+  include { phase: TRAIN  stage: 'trainval' }
+  hdf5_data_param {
+    source: "./examples/coco_caption/h5_data/buffer_100/trainval_aligned_20_batches/hdf5_chunk_list.txt"
+    batch_size: 20
+  }
+}
+
+# test on train data layers
 layer {
   name: "data"
   type: "ImageData"
@@ -76,6 +114,8 @@ layer {
     batch_size: 20
   }
 }
+
+# test on val data layers
 layer {
   name: "data"
   type: "ImageData"
@@ -114,6 +154,7 @@ layer {
     batch_size: 20
   }
 }
+
 layer {
   name: "silence"
   type: "Silence"
