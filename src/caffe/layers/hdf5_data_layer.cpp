@@ -82,7 +82,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   std::ifstream source_file(source.c_str());
   if (source_file.is_open()) {
     std::string line;
-    while (source_file >> line) {
+    while (std::getline(source_file,line)) {
       hdf_filenames_.push_back(line);
     }
   } else {
