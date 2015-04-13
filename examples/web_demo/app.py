@@ -10,7 +10,7 @@ import tornado.wsgi
 import tornado.httpserver
 import numpy as np
 import pandas as pd
-import Image
+from PIL import Image
 import cStringIO as StringIO
 import urllib
 import exifutil
