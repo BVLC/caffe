@@ -317,7 +317,14 @@ void Solver<Dtype>::Test(const int test_net_id) {
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
+    if(param_.create_test_trace()) {
+      TestTracePoint* new_point = trace_.add_test_trace_point();
+      new_point->set_test_net_id(test_net_id);
+      new_point->set_iter(iter_);
+      new_point->set_test_loss(loss);
+    }
   }
+  
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
@@ -331,6 +338,14 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
         << mean_score << loss_msg_stream.str();
+    if(param_.create_test_trace()) {
+      TestTracePoint* new_point = trace_.add_test_trace_point();
+      new_point->set_test_net_id(test_net_id);
+      new_point->set_iter(iter_);
+      new_point->set_score_name(output_name);
+      new_point->set_loss_weight(loss_weight);
+      new_point->set_mean_score(mean_score);
+    }
   }
 }
 
@@ -445,9 +460,12 @@ template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
   // Initialize the history
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
-  history_.clear();
-  update_.clear();
-  temp_.clear();
+  if(history_.size())
+    history_.clear();
+  if(update_.size())
+    update_.clear();
+  if(temp_.size())
+    temp_.clear();
   for (int i = 0; i < net_params.size(); ++i) {
     const vector<int>& shape = net_params[i]->shape();
     history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
