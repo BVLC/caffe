@@ -1,6 +1,9 @@
 PROJECT := caffe
 
 CONFIG_FILE := Makefile.config
+ifeq ($(wildcard $(CONFIG_FILE)),)
+$(error $(CONFIG_FILE): file not found.)
+endif
 include $(CONFIG_FILE)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
