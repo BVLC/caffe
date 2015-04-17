@@ -4,7 +4,7 @@
 namespace caffe {
 
 InternalThread::~InternalThread() {
-  WaitForInternalThreadToExit();
+  StopInternalThread();
 }
 
 bool InternalThread::is_started() const {
@@ -13,9 +13,10 @@ bool InternalThread::is_started() const {
 
 
 bool InternalThread::StartInternalThread() {
-  if (!WaitForInternalThreadToExit()) {
+  if (!StopInternalThread()) {
     return false;
   }
+  must_stop_ = false;
   try {
     thread_.reset(
         new boost::thread(&InternalThread::InternalThreadEntry, this));
@@ -26,8 +27,10 @@ bool InternalThread::StartInternalThread() {
 }
 
 /** Will not return until the internal thread has exited. */
-bool InternalThread::WaitForInternalThreadToExit() {
+bool InternalThread::StopInternalThread() {
+  must_stop_ = true;
   if (is_started()) {
+    thread_->interrupt();
     try {
       thread_->join();
     } catch (...) {

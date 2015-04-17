@@ -18,16 +18,20 @@ namespace caffe {
  */
 class InternalThread {
  public:
-  InternalThread() : thread_() {}
+  InternalThread() : thread_(), must_stop_() {}
   virtual ~InternalThread();
 
   /** Returns true if the thread was successfully started. **/
   bool StartInternalThread();
 
   /** Will not return until the internal thread has exited. */
-  bool WaitForInternalThreadToExit();
+  bool StopInternalThread();
 
   bool is_started() const;
+
+  bool must_stop() {
+    return must_stop_;
+  }
 
  protected:
   /* Implement this method in your subclass
@@ -35,6 +39,7 @@ class InternalThread {
   virtual void InternalThreadEntry() {}
 
   shared_ptr<boost::thread> thread_;
+  bool must_stop_;
 };
 
 }  // namespace caffe

@@ -1,6 +1,6 @@
 PROJECT := caffe
 
-CONFIG_FILE := Makefile.config
+CONFIG_FILE ?= Makefile.config
 include $(CONFIG_FILE)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
@@ -271,6 +271,8 @@ endif
 # Debugging
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
+	# Compile issue in DEBUG on MAC (https://svn.boost.org/trac/boost/ticket/9392)
+	COMMON_FLAGS += -DBOOST_NOINLINE='__attribute__ ((noinline))'
 	NVCCFLAGS += -G
 else
 	COMMON_FLAGS += -DNDEBUG -O2

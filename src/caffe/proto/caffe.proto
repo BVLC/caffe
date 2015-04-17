@@ -432,13 +432,14 @@ message ConvolutionParameter {
 }
 
 // Message that stores parameters used by DataLayer
+// next available ID: 12 (last added: probability)
 message DataParameter {
   enum DB {
     LEVELDB = 0;
     LMDB = 1;
   }
   // Specify the data source.
-  optional string source = 1;
+  repeated string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 4;
   // The rand_skip variable is for the data layer to skip a few data points
@@ -446,7 +447,7 @@ message DataParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the database.
   optional uint32 rand_skip = 7 [default = 0];
-  optional DB backend = 8 [default = LEVELDB];
+  repeated DB backend = 8;
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
   // simple scaling and subtracting the data mean, if provided. Note that the
   // mean subtraction is always carried out before scaling.
@@ -460,6 +461,14 @@ message DataParameter {
   optional bool mirror = 6 [default = false];
   // Force the encoded image to have 3 color channels
   optional bool force_encoded_color = 9 [default = false];
+  // Prefetch queue (Number of batches to prefetch to host memory
+  // from each source, increase if read bandwidth has glitches).
+  optional uint32 prefetch = 10 [default = 4];
+  // If multiple sources are given, a probability can be set on each source.
+  // Samples will be picked from it with given probability, and the label will
+  // be set to the source index. This allows experimenting with different
+  // class ratios at runtime without rebuilding datasets.
+  repeated float probability = 11;
 }
 
 // Message that stores parameters used by DropoutLayer
