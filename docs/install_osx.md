@@ -18,7 +18,7 @@ In other `ENV` settings, things may not work as expected.
     brew install --fresh -vd snappy leveldb gflags glog szip lmdb
     # need the homebrew science source for OpenCV and hdf5
     brew tap homebrew/science
-    hdf5 opencv
+    brew install hdf5 opencv
 
 If using Anaconda Python, a modification to the OpenCV formula might be needed
 Do `brew edit opencv` and change the lines that look like the two lines below to exactly the two lines below.
