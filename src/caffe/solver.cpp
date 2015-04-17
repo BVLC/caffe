@@ -53,9 +53,11 @@ void Solver<Dtype>::InitTrainNet() {
       << "using one of these fields: " << field_names;
   CHECK_LE(num_train_nets, 1) << "SolverParameter must not contain more than "
       << "one of these fields specifying a train_net: " << field_names;
+  CHECK_GE(param_.weight_trace_interval(), 0) << "weight_trace_interval paramter must be non negative, currently set to " << param_.weight_trace_interval();
   CHECK_GE(param_.train_trace_interval(),0) << "train_trace_interval paramter must be non negative, currently set to " << param_.train_trace_interval();
   CHECK_GE(param_.snapshot_trace(),0) << "snapshot_trace interval must be non negative";
-  
+  CHECK_GE(param_.num_weight_traces(),0) << "num_weight_traces must be non negative"; 
+
   NetParameter net_param;
   if (param_.has_train_net_param()) {
     LOG(INFO) << "Creating training net specified in train_net_param.";
@@ -171,6 +173,8 @@ void Solver<Dtype>::Step(int iters) {
   Dtype smoothed_loss = 0;
 
   for (; iter_ < stop_iter; ++iter_) {
+    if(param_.weight_trace_interval() && iter_% param_.weight_trace_interval() == 0 && (start_iter == 0 || iter_ > start_iter))
+      WeightTrace();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -349,6 +353,35 @@ void Solver<Dtype>::Test(const int test_net_id) {
   }
 }
 
+template <typename Dtype>
+void Solver<Dtype>::WeightTrace() {
+  const vector<shared_ptr<Layer<Dtype> > >& layers = this->net_->layers();
+  const vector<string>& layer_names = this->net_->layer_names();
+  const vector<string>& blob_names  = this->net_->blob_names();  
+  for (int layer_id = 0; layer_id < layers.size(); ++layer_id) {
+    const vector<shared_ptr<Blob<Dtype> > >& blobs = layers[layer_id]->blobs();
+    for (int blob_id = 0; blob_id  < blobs.size(); ++blob_id) {
+      WeightTracePoint* new_point = trace_.add_weight_trace_point();
+      new_point->set_iter(iter_);
+      new_point->set_layer_name(layer_names[layer_id]);
+      new_point->set_blob_id(blob_id);
+      new_point->set_blob_name(blob_names[blob_id]);
+      int count = blobs[blob_id]->count();
+      if(count > param_.num_weight_traces()) {
+        int start = count / (param_.num_weight_traces() * 2 + 2);
+        int step  = count / (param_.num_weight_traces() + 1);
+        for(int i = 0; i < param_.num_weight_traces(); ++i) {
+          new_point->add_weight(*(blobs[blob_id]->cpu_data() + start + i * step));
+        }
+      }
+      else {
+        for(int i = 0; i < count; ++i) {
+          new_point->add_weight(*(blobs[blob_id]->cpu_data() + i));
+        }
+      }
+    }
+  }
+}
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
