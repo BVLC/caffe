@@ -53,6 +53,9 @@ void Solver<Dtype>::InitTrainNet() {
       << "using one of these fields: " << field_names;
   CHECK_LE(num_train_nets, 1) << "SolverParameter must not contain more than "
       << "one of these fields specifying a train_net: " << field_names;
+  CHECK_GE(param_.train_trace_interval(),0) << "train_trace_interval paramter must be non negative, currently set to " << param_.train_trace_interval();
+  CHECK_GE(param_.snapshot_trace(),0) << "snapshot_trace interval must be non negative";
+  
   NetParameter net_param;
   if (param_.has_train_net_param()) {
     LOG(INFO) << "Creating training net specified in train_net_param.";
@@ -185,6 +188,13 @@ void Solver<Dtype>::Step(int iters) {
       smoothed_loss += (loss - losses[idx]) / average_loss;
       losses[idx] = loss;
     }
+    if(param_.train_trace_interval() && iter_ % param_.train_trace_interval() == 0 && (start_iter == 0 || iter_ > start_iter)) { 
+      TrainTracePoint* new_point = trace_.add_train_trace_point();
+      new_point->set_iter(iter_);
+      new_point->set_train_loss(loss);
+      new_point->set_train_smoothed_loss(smoothed_loss);
+    }
+
     if (display) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
@@ -214,6 +224,9 @@ void Solver<Dtype>::Step(int iters) {
     if (param_.snapshot() && (iter_ + 1) % param_.snapshot() == 0) {
       Snapshot();
     }
+    if (param_.snapshot_trace() && (iter_ + 1) % param_.snapshot_trace() == 0) {
+      SnapshotTrace();
+    }
   }
 }
 
@@ -235,6 +248,10 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   if (param_.snapshot_after_train()
       && (!param_.snapshot() || iter_ % param_.snapshot() != 0)) {
     Snapshot();
+  }
+  if (param_.snapshot_trace_after_train()
+      && (!param_.snapshot_trace() || iter_ % param_.snapshot_trace() != 0)) {
+    SnapshotTrace();
   }
   // After the optimization is done, run an additional train and test pass to
   // display the train and test loss/outputs if appropriate (based on the
@@ -341,6 +358,18 @@ void Solver<Dtype>::Snapshot() {
   snapshot_filename = filename + ".solverstate";
   LOG(INFO) << "Snapshotting solver state to " << snapshot_filename;
   WriteProtoToBinaryFile(state, snapshot_filename.c_str());
+}
+
+template <typename Dtype>
+void Solver<Dtype>::SnapshotTrace() const {
+  string filename(param_.snapshot_prefix());
+  string trace_filename = filename + ".caffetrace";
+  LOG(INFO) << "Snapshotting trace to " << trace_filename;
+  WriteProtoToBinaryFile(trace_, trace_filename.c_str());
+  if(param_.human_readable_trace()) {
+    string trace_filename_txt = trace_filename + "_txt";
+    WriteProtoToTextFile(trace_,trace_filename_txt.c_str());
+  }
 }
 
 template <typename Dtype>

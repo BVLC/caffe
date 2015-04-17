@@ -46,6 +46,9 @@ class Solver {
   // function that produces a SolverState protocol buffer that needs to be
   // written to disk together with the learned net.
   void Snapshot();
+  // The Solver::SnapshotTrace function saves the trace of the weights and errors 
+  // that have been recorded so far to disk
+  void SnapshotTrace() const;
   // The test routine
   void TestAll();
   void Test(const int test_net_id = 0);
@@ -54,6 +57,7 @@ class Solver {
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
+  SolverTrace trace_;
   int iter_;
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
