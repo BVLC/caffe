@@ -242,13 +242,17 @@ void Solver<Dtype>::Step(int iters) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file) {
+void Solver<Dtype>::Solve(const char* resume_file, const char* trace_file) {
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
 
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
+  }
+  if (trace_file) {
+    LOG(INFO) << "Restoring previous solver trace status from " << trace_file;
+    RestoreTrace(trace_file);
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
@@ -440,6 +444,35 @@ void Solver<Dtype>::Restore(const char* state_file) {
   RestoreSolverState(state);
 }
 
+template <typename Dtype>
+void Solver<Dtype>::RestoreTrace(const char* trace_file) {
+  SolverTrace trace;
+  ReadProtoFromBinaryFileOrDie(trace_file, &trace);
+  // clear out any garbage that may be in here
+  trace_.clear_train_trace_point();
+  trace_.clear_test_trace_point();
+  trace_.clear_weight_trace_point();
+
+  // add all the fields from the trace that happend when iter <= current iter
+  for (int i = 0; i < trace.train_trace_point_size(); i++) {
+    if (trace.train_trace_point(i).iter() <= iter_) {
+      TrainTracePoint* point = trace_.add_train_trace_point();
+      *point = trace.train_trace_point(i);
+    }
+  }
+  for (int i = 0; i < trace.test_trace_point_size(); i++) {
+    if (trace.test_trace_point(i).iter() <= iter_) {
+      TestTracePoint* point = trace_.add_test_trace_point();
+      *point = trace.test_trace_point(i);
+    }
+  }
+  for (int i = 0; i < trace.weight_trace_point_size(); i++) {
+    if (trace.weight_trace_point(i).iter() <= iter_) {
+      WeightTracePoint* point = trace_.add_weight_trace_point();
+      *point = trace.weight_trace_point(i);
+    }
+  }
+}
 
 // Return the current learning rate. The currently implemented learning rate
 // policies are as follows:
