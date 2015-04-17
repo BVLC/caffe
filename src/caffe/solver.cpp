@@ -75,6 +75,7 @@ void Solver<Dtype>::InitTrainNet() {
     LOG(INFO) << "Creating training net from net file: " << param_.net();
     ReadNetParamsFromTextFileOrDie(param_.net(), &net_param);
   }
+
   // Set the correct NetState.  We start with the solver defaults (lowest
   // precedence); then, merge in any NetState specified by the net_param itself;
   // finally, merge in any NetState specified by the train_state (highest
