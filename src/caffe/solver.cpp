@@ -53,6 +53,11 @@ void Solver<Dtype>::InitTrainNet() {
       << "using one of these fields: " << field_names;
   CHECK_LE(num_train_nets, 1) << "SolverParameter must not contain more than "
       << "one of these fields specifying a train_net: " << field_names;
+  CHECK_GE(param_.weight_trace_interval(), 0) << "weight_trace_interval paramter must be non negative, currently set to " << param_.weight_trace_interval();
+  CHECK_GE(param_.train_trace_interval(),0) << "train_trace_interval paramter must be non negative, currently set to " << param_.train_trace_interval();
+  CHECK_GE(param_.snapshot_trace(),0) << "snapshot_trace interval must be non negative";
+  CHECK_GE(param_.num_weight_traces(),0) << "num_weight_traces must be non negative"; 
+
   NetParameter net_param;
   if (param_.has_train_net_param()) {
     LOG(INFO) << "Creating training net specified in train_net_param.";
@@ -70,6 +75,7 @@ void Solver<Dtype>::InitTrainNet() {
     LOG(INFO) << "Creating training net from net file: " << param_.net();
     ReadNetParamsFromTextFileOrDie(param_.net(), &net_param);
   }
+
   // Set the correct NetState.  We start with the solver defaults (lowest
   // precedence); then, merge in any NetState specified by the net_param itself;
   // finally, merge in any NetState specified by the train_state (highest
@@ -168,6 +174,8 @@ void Solver<Dtype>::Step(int iters) {
   Dtype smoothed_loss = 0;
 
   for (; iter_ < stop_iter; ++iter_) {
+    if(param_.weight_trace_interval() && iter_% param_.weight_trace_interval() == 0 && (start_iter == 0 || iter_ > start_iter))
+      WeightTrace();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -185,6 +193,13 @@ void Solver<Dtype>::Step(int iters) {
       smoothed_loss += (loss - losses[idx]) / average_loss;
       losses[idx] = loss;
     }
+    if(param_.train_trace_interval() && iter_ % param_.train_trace_interval() == 0 && (start_iter == 0 || iter_ > start_iter)) { 
+      TrainTracePoint* new_point = trace_.add_train_trace_point();
+      new_point->set_iter(iter_);
+      new_point->set_train_loss(loss);
+      new_point->set_train_smoothed_loss(smoothed_loss);
+    }
+
     if (display) {
       LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss;
       const vector<Blob<Dtype>*>& result = net_->output_blobs();
@@ -214,17 +229,24 @@ void Solver<Dtype>::Step(int iters) {
     if (param_.snapshot() && (iter_ + 1) % param_.snapshot() == 0) {
       Snapshot();
     }
+    if (param_.snapshot_trace() && (iter_ + 1) % param_.snapshot_trace() == 0) {
+      SnapshotTrace();
+    }
   }
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file) {
+void Solver<Dtype>::Solve(const char* resume_file, const char* trace_file) {
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
 
   if (resume_file) {
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
+  }
+  if (trace_file) {
+    LOG(INFO) << "Restoring previous solver trace status from " << trace_file;
+    RestoreTrace(trace_file);
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
@@ -235,6 +257,10 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   if (param_.snapshot_after_train()
       && (!param_.snapshot() || iter_ % param_.snapshot() != 0)) {
     Snapshot();
+  }
+  if (param_.snapshot_trace_after_train()
+      && (!param_.snapshot_trace() || iter_ % param_.snapshot_trace() != 0)) {
+    SnapshotTrace();
   }
   // After the optimization is done, run an additional train and test pass to
   // display the train and test loss/outputs if appropriate (based on the
@@ -300,7 +326,14 @@ void Solver<Dtype>::Test(const int test_net_id) {
   if (param_.test_compute_loss()) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
+    if(param_.create_test_trace()) {
+      TestTracePoint* new_point = trace_.add_test_trace_point();
+      new_point->set_test_net_id(test_net_id);
+      new_point->set_iter(iter_);
+      new_point->set_test_loss(loss);
+    }
   }
+  
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
@@ -314,9 +347,46 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
         << mean_score << loss_msg_stream.str();
+    if(param_.create_test_trace()) {
+      TestTracePoint* new_point = trace_.add_test_trace_point();
+      new_point->set_test_net_id(test_net_id);
+      new_point->set_iter(iter_);
+      new_point->set_score_name(output_name);
+      new_point->set_loss_weight(loss_weight);
+      new_point->set_mean_score(mean_score);
+    }
   }
 }
 
+template <typename Dtype>
+void Solver<Dtype>::WeightTrace() {
+  const vector<shared_ptr<Layer<Dtype> > >& layers = this->net_->layers();
+  const vector<string>& layer_names = this->net_->layer_names();
+  const vector<string>& blob_names  = this->net_->blob_names();  
+  for (int layer_id = 0; layer_id < layers.size(); ++layer_id) {
+    const vector<shared_ptr<Blob<Dtype> > >& blobs = layers[layer_id]->blobs();
+    for (int blob_id = 0; blob_id  < blobs.size(); ++blob_id) {
+      WeightTracePoint* new_point = trace_.add_weight_trace_point();
+      new_point->set_iter(iter_);
+      new_point->set_layer_name(layer_names[layer_id]);
+      new_point->set_blob_id(blob_id);
+      new_point->set_blob_name(blob_names[blob_id]);
+      int count = blobs[blob_id]->count();
+      if(count > param_.num_weight_traces()) {
+        int start = count / (param_.num_weight_traces() * 2 + 2);
+        int step  = count / (param_.num_weight_traces() + 1);
+        for(int i = 0; i < param_.num_weight_traces(); ++i) {
+          new_point->add_weight(*(blobs[blob_id]->cpu_data() + start + i * step));
+        }
+      }
+      else {
+        for(int i = 0; i < count; ++i) {
+          new_point->add_weight(*(blobs[blob_id]->cpu_data() + i));
+        }
+      }
+    }
+  }
+}
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
@@ -344,6 +414,18 @@ void Solver<Dtype>::Snapshot() {
 }
 
 template <typename Dtype>
+void Solver<Dtype>::SnapshotTrace() const {
+  string filename(param_.snapshot_prefix());
+  string trace_filename = filename + ".caffetrace";
+  LOG(INFO) << "Snapshotting trace to " << trace_filename;
+  WriteProtoToBinaryFile(trace_, trace_filename.c_str());
+  if(param_.human_readable_trace()) {
+    string trace_filename_txt = trace_filename + "_txt";
+    WriteProtoToTextFile(trace_,trace_filename_txt.c_str());
+  }
+}
+
+template <typename Dtype>
 void Solver<Dtype>::Restore(const char* state_file) {
   SolverState state;
   NetParameter net_param;
@@ -357,6 +439,35 @@ void Solver<Dtype>::Restore(const char* state_file) {
   RestoreSolverState(state);
 }
 
+template <typename Dtype>
+void Solver<Dtype>::RestoreTrace(const char* trace_file) {
+  SolverTrace trace;
+  ReadProtoFromBinaryFileOrDie(trace_file, &trace);
+  //clear out any garbage that may be in here
+  trace_.clear_train_trace_point();
+  trace_.clear_test_trace_point();
+  trace_.clear_weight_trace_point();
+ 
+  //add all the fields from the trace that happend when iter <= current iter 
+  for(int i = 0; i < trace.train_trace_point_size(); i++) {
+    if(trace.train_trace_point(i).iter() <= iter_) {
+      TrainTracePoint* point = trace_.add_train_trace_point();
+      *point = trace.train_trace_point(i);
+    }
+  }
+  for(int i = 0; i < trace.test_trace_point_size(); i++) {
+    if(trace.test_trace_point(i).iter() <= iter_) {
+      TestTracePoint* point = trace_.add_test_trace_point();
+      *point = trace.test_trace_point(i);
+    }
+  }
+  for(int i = 0; i < trace.weight_trace_point_size(); i++) {
+    if(trace.weight_trace_point(i).iter() <= iter_) {
+      WeightTracePoint* point = trace_.add_weight_trace_point();
+      *point = trace.weight_trace_point(i);
+    }
+  }
+}
 
 // Return the current learning rate. The currently implemented learning rate
 // policies are as follows:
@@ -416,9 +527,12 @@ template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
   // Initialize the history
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
-  history_.clear();
-  update_.clear();
-  temp_.clear();
+  if(history_.size())
+    history_.clear();
+  if(update_.size())
+    update_.clear();
+  if(temp_.size())
+    temp_.clear();
   for (int i = 0; i < net_params.size(); ++i) {
     const vector<int>& shape = net_params[i]->shape();
     history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
