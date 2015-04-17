@@ -88,7 +88,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 42 (last added: create_test_trace)
+// SolverParameter next available ID: 44 (last added: num_weight_traces)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -211,6 +211,14 @@ message SolverParameter {
 
   // during test phase, record the loss / accuracy in the caffetrace prototext file
   optional bool create_test_trace = 41 [default = true];
+
+  // tells us how often we should take weight trace values.
+  // set to zero if no snapshot should be made
+  // determines how detailed the weight trace will be
+  optional int32 weight_trace_interval = 42 [default = 100];
+
+  // number of parameters to track from every layer 
+  optional int32 num_weight_traces = 43 [default = 10];
 }
 
 // A message that stores the solver snapshots
@@ -1018,8 +1026,17 @@ message TestTracePoint{
   optional float loss_weight = 6;
 }
 
+message WeightTracePoint {
+  optional int32  iter = 1;
+  optional string layer_name = 2;
+  optional int32  blob_id = 3;
+  optional string blob_name = 4;
+  repeated float  weight = 5;
+}
+
 message SolverTrace {
   repeated TrainTracePoint  train_trace_point = 1;
   repeated TestTracePoint   test_trace_point = 2;
+  repeated WeightTracePoint weight_trace_point = 3;
 }
 
