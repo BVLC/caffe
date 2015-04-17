@@ -37,7 +37,8 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
     if (static_cast<int>(bottom[2]->cpu_data()[i])) {  // similar pairs
       loss += dist_sq_.cpu_data()[i];
     } else {  // dissimilar pairs
-      loss += std::max(margin-dist_sq_.cpu_data()[i], Dtype(0.0));
+      Dtype dist = std::max(margin - sqrt(dist_sq_.cpu_data()[i]), Dtype(0.0));
+      loss += dist*dist;
     }
   }
   loss = loss / static_cast<Dtype>(bottom[0]->num()) / Dtype(2);
@@ -45,7 +46,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
 }
 
 template <typename Dtype>
-__global__ void CLLForward(const int count, const int channels,
+__global__ void CLLBackward(const int count, const int channels,
     const Dtype margin, const Dtype alpha,
     const Dtype* y, const Dtype* diff, const Dtype* dist_sq,
     Dtype *bottom_diff) {
@@ -54,8 +55,10 @@ __global__ void CLLForward(const int count, const int channels,
     if (static_cast<int>(y[n])) {  // similar pairs
       bottom_diff[i] = alpha * diff[i];
     } else {  // dissimilar pairs
-      if ((margin-dist_sq[n]) > 0.0) {
-        bottom_diff[i] = -alpha * diff[i];
+      Dtype dist = sqrt(dist_sq[n]);
+      Dtype mdist = (margin - dist);
+      if (mdist > 0.0) {
+        bottom_diff[i] = -alpha * mdist / dist * diff[i];
       } else {
         bottom_diff[i] = 0;
       }
@@ -75,7 +78,7 @@ void ContrastiveLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const Dtype alpha = sign * top[0]->cpu_diff()[0] /
           static_cast<Dtype>(bottom[0]->num());
       // NOLINT_NEXT_LINE(whitespace/operators)
-      CLLForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      CLLBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
           count, channels, margin, alpha,
           bottom[2]->gpu_data(),  // pair similarity 0 or 1
           diff_.gpu_data(),  // the cached eltwise difference between a and b
