@@ -23,3 +23,8 @@ snapshot: 5000
 snapshot_prefix: "examples/mnist/lenet"
 # solver mode: CPU or GPU
 solver_mode: GPU
+
+test_compute_loss:true
+human_readable_trace:true
+snapshot_trace:1000
+
