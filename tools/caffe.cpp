@@ -25,6 +25,8 @@ DEFINE_string(model, "",
     "The model definition protocol buffer text file..");
 DEFINE_string(snapshot, "",
     "Optional; the snapshot solver state to resume training.");
+DEFINE_string(trace, "",
+    "Optional; the trace file to resume training, can only be defined if snapshot is defined.");
 DEFINE_string(weights, "",
     "Optional; the pretrained weights to initialize finetuning. "
     "Cannot be set simultaneously with snapshot.");
@@ -97,7 +99,8 @@ int train() {
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
       << "Give a snapshot to resume training or weights to finetune "
       "but not both.";
-
+  if(FLAGS_trace.size())
+    CHECK(FLAGS_snapshot.size()) << "You can not restore a trace without also giving a snapshot from which to restore";
   caffe::SolverParameter solver_param;
   caffe::ReadProtoFromTextFileOrDie(FLAGS_solver, &solver_param);
 

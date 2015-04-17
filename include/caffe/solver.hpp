@@ -24,8 +24,10 @@ class Solver {
   void InitTestNets();
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
-  virtual void Solve(const char* resume_file = NULL);
+  virtual void Solve(const char* resume_file, const char* trace_file);
+  inline void Solve(const char* resume_file = NULL) { Solve(resume_file, NULL);}
   inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
+  inline void Solve(const string resume_file, const string trace_file) { Solve(resume_file.c_str(), trace_file.c_str()); }
   void Step(int iters);
   // The Restore function implements how one should restore the solver to a
   // previously snapshotted state. You should implement the RestoreSolverState()
@@ -56,6 +58,7 @@ class Solver {
   void WeightTrace();
   virtual void SnapshotSolverState(SolverState* state) = 0;
   virtual void RestoreSolverState(const SolverState& state) = 0;
+  void RestoreTrace(const char* trace_file);
   void DisplayOutputBlobs(const int net_id);
 
   SolverParameter param_;
