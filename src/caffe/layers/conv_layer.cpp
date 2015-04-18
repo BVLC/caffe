@@ -8,7 +8,7 @@
 
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void ConvolutionLayer<Dtype>::compute_output_shape() {
   this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
       / this->stride_h_ + 1;
@@ -16,16 +16,16 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
       / this->stride_w_ + 1;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+                                          const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + bottom[i]->offset(n), weight,
-          top_data + top[i]->offset(n));
+                             top_data + top[i]->offset(n));
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + top[i]->offset(n), bias);
@@ -34,9 +34,10 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+                                           const vector<bool>& propagate_down,
+                                           const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   if (this->param_propagate_down_[0]) {
@@ -44,7 +45,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   if (this->bias_term_ && this->param_propagate_down_[1]) {
     caffe_set(this->blobs_[1]->count(), Dtype(0),
-        this->blobs_[1]->mutable_cpu_diff());
+              this->blobs_[1]->mutable_cpu_diff());
   }
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
@@ -62,12 +63,12 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           this->weight_cpu_gemm(bottom_data + bottom[i]->offset(n),
-              top_diff + top[i]->offset(n), weight_diff);
+                                top_diff + top[i]->offset(n), weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
           this->backward_cpu_gemm(top_diff + top[i]->offset(n), weight,
-              bottom_diff + bottom[i]->offset(n));
+                                  bottom_diff + bottom[i]->offset(n));
         }
       }
     }

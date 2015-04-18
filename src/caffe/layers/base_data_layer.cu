@@ -11,7 +11,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   JoinPrefetchThread();
   // Reshape to loaded data.
   top[0]->Reshape(this->prefetch_data_.num(), this->prefetch_data_.channels(),
-      this->prefetch_data_.height(), this->prefetch_data_.width());
+      this->prefetch_data_.height(), this->prefetch_data_.width(), this->device_context_);
   // Copy the data
   caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
       top[0]->mutable_gpu_data());

@@ -6,13 +6,15 @@
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include "caffe/greentea/greentea.hpp"
+
 namespace caffe {
 
 // Theoretically, CaffeMallocHost and CaffeFreeHost should simply call the
 // cudaMallocHost and cudaFree functions in order to create pinned memory.
 // However, those codes rely on the existence of a cuda GPU (I don't know
 // why that is a must since allocating memory should not be accessing the
-// GPU resource, but it just creates an error as of Cuda 5.0) and will cause
+// GPU resorce, but it just creates an error as of Cuda 5.0) and will cause
 // problem when running on a machine without GPU. Thus, we simply define
 // these two functions for safety and possible future change if the problem
 // of calling cuda functions disappears in a future version.
@@ -40,12 +42,23 @@ inline void CaffeFreeHost(void* ptr) {
  */
 class SyncedMemory {
  public:
-  SyncedMemory()
+#ifdef USE_GREENTEA
+  SyncedMemory(DeviceContext device_context)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
-  explicit SyncedMemory(size_t size)
+        own_cpu_data_(false), device_context_(device_context), cl_gpu_mem_(NULL) {}
+  explicit SyncedMemory(size_t size, DeviceContext device_context)
       : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-        own_cpu_data_(false) {}
+        own_cpu_data_(false), device_context_(device_context), cl_gpu_mem_(NULL) {}
+#else
+  SyncedMemory(DeviceContext device_context)
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
+        own_cpu_data_(false), device_context_(device_context) {}
+  explicit SyncedMemory(size_t size, DeviceContext device_context)
+      : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
+        own_cpu_data_(false), device_context_(device_context) {}
+#endif
+
+
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
@@ -61,9 +74,14 @@ class SyncedMemory {
   void to_gpu();
   void* cpu_ptr_;
   void* gpu_ptr_;
+
   size_t size_;
   SyncedHead head_;
   bool own_cpu_data_;
+  DeviceContext device_context_;
+#ifdef USE_GREENTEA
+  cl_mem cl_gpu_mem_;
+#endif
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory

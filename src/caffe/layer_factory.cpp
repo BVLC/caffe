@@ -11,10 +11,24 @@
 
 namespace caffe {
 
+template<typename Dtype>
+shared_ptr<Layer<Dtype> > GetDataRandTransformLayer(const LayerParameter& param) {
+  return shared_ptr<Layer<Dtype> >(new DataRandTransformLayer<Dtype>(param));
+}
+
+template<typename Dtype>
+shared_ptr<Layer<Dtype> > GetConvolutionSKLayer(const LayerParameter& param) {
+  return shared_ptr<Layer<Dtype> >(new ConvolutionSKLayer<Dtype>(param));
+}
+
+template<typename Dtype>
+shared_ptr<Layer<Dtype> > GetPoolingSKLayer(const LayerParameter& param) {
+  return shared_ptr<Layer<Dtype> >(new PoolingSKLayer<Dtype>(param));
+}
+
 // Get convolution layer according to engine.
-template <typename Dtype>
-shared_ptr<Layer<Dtype> > GetConvolutionLayer(
-    const LayerParameter& param) {
+template<typename Dtype>
+shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
@@ -29,14 +43,14 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL)<< "Layer " << param.name() << " has unknown engine.";
   }
 }
 
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
 // Get pooling layer according to engine.
-template <typename Dtype>
+template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   PoolingParameter_Engine engine = param.pooling_param().engine();
   if (engine == PoolingParameter_Engine_DEFAULT) {
@@ -53,20 +67,20 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     if (p_param.pad() || p_param.pad_h() || p_param.pad_w() ||
         param.top_size() > 1) {
       LOG(INFO) << "CUDNN does not support padding or multiple tops. "
-                << "Using Caffe's own pooling layer.";
+      << "Using Caffe's own pooling layer.";
       return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     }
     return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL)<< "Layer " << param.name() << " has unknown engine.";
   }
 }
 
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
 
 // Get relu layer according to engine.
-template <typename Dtype>
+template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   ReLUParameter_Engine engine = param.relu_param().engine();
   if (engine == ReLUParameter_Engine_DEFAULT) {
@@ -82,14 +96,14 @@ shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL)<< "Layer " << param.name() << " has unknown engine.";
   }
 }
 
 REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 
 // Get sigmoid layer according to engine.
-template <typename Dtype>
+template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
   SigmoidParameter_Engine engine = param.sigmoid_param().engine();
   if (engine == SigmoidParameter_Engine_DEFAULT) {
@@ -105,14 +119,14 @@ shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNSigmoidLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL)<< "Layer " << param.name() << " has unknown engine.";
   }
 }
 
 REGISTER_LAYER_CREATOR(Sigmoid, GetSigmoidLayer);
 
 // Get softmax layer according to engine.
-template <typename Dtype>
+template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
   SoftmaxParameter_Engine engine = param.softmax_param().engine();
   if (engine == SoftmaxParameter_Engine_DEFAULT) {
@@ -128,14 +142,14 @@ shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNSoftmaxLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL)<< "Layer " << param.name() << " has unknown engine.";
   }
 }
 
 REGISTER_LAYER_CREATOR(Softmax, GetSoftmaxLayer);
 
 // Get tanh layer according to engine.
-template <typename Dtype>
+template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
   TanHParameter_Engine engine = param.tanh_param().engine();
   if (engine == TanHParameter_Engine_DEFAULT) {
@@ -151,7 +165,7 @@ shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
     return shared_ptr<Layer<Dtype> >(new CuDNNTanHLayer<Dtype>(param));
 #endif
   } else {
-    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    LOG(FATAL)<< "Layer " << param.name() << " has unknown engine.";
   }
 }
 

@@ -16,7 +16,7 @@ namespace caffe {
 template <typename Dtype>
 class DataTransformer {
  public:
-  explicit DataTransformer(const TransformationParameter& param, Phase phase);
+  explicit DataTransformer(const TransformationParameter& param, Phase phase, DeviceContext device_context);
   virtual ~DataTransformer() {}
 
   /**
@@ -107,6 +107,7 @@ class DataTransformer {
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+  DeviceContext device_context_;
 };
 
 }  // namespace caffe

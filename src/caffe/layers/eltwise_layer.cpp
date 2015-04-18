@@ -31,14 +31,21 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  const int num = bottom[0]->num();
+  const int channels = bottom[0]->channels();
+  const int height = bottom[0]->height();
+  const int width = bottom[0]->width();
   for (int i = 1; i < bottom.size(); ++i) {
-    CHECK(bottom[i]->shape() == bottom[0]->shape());
+    CHECK_EQ(num, bottom[i]->num());
+    CHECK_EQ(channels, bottom[i]->channels());
+    CHECK_EQ(height, bottom[i]->height());
+    CHECK_EQ(width, bottom[i]->width());
   }
-  top[0]->ReshapeLike(*bottom[0]);
+  top[0]->Reshape(num, channels, height, width, this->device_context_);
   // If max operation, we will initialize the vector index part.
   if (this->layer_param_.eltwise_param().operation() ==
       EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
-    max_idx_.Reshape(bottom[0]->shape());
+    max_idx_.Reshape(bottom[0]->num(), channels, height, width, this->device_context_);
   }
 }
 

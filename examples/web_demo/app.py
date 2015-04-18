@@ -10,12 +10,11 @@ import tornado.wsgi
 import tornado.httpserver
 import numpy as np
 import pandas as pd
-from PIL import Image
+from PIL import Image as PILImage
 import cStringIO as StringIO
 import urllib
-import exifutil
-
 import caffe
+import exifutil
 
 REPO_DIRNAME = os.path.abspath(os.path.dirname(__file__) + '/../..')
 UPLOAD_FOLDER = '/tmp/caffe_demos_uploads'
@@ -81,7 +80,7 @@ def classify_upload():
 
 def embed_image_html(image):
     """Creates an image embedded in HTML base64 format."""
-    image_pil = Image.fromarray((255 * image).astype('uint8'))
+    image_pil = PILImage.fromarray((255 * image).astype('uint8'))
     image_pil = image_pil.resize((256, 256))
     string_buf = StringIO.StringIO()
     image_pil.save(string_buf, format='png')
@@ -115,18 +114,15 @@ class ImagenetClassifier(object):
                 "File for {} is missing. Should be at: {}".format(key, val))
     default_args['image_dim'] = 256
     default_args['raw_scale'] = 255.
+    default_args['gpu_mode'] = False
 
     def __init__(self, model_def_file, pretrained_model_file, mean_file,
                  raw_scale, class_labels_file, bet_file, image_dim, gpu_mode):
         logging.info('Loading net and associated files...')
-        if gpu_mode:
-            caffe.set_mode_gpu()
-        else:
-            caffe.set_mode_cpu()
         self.net = caffe.Classifier(
             model_def_file, pretrained_model_file,
             image_dims=(image_dim, image_dim), raw_scale=raw_scale,
-            mean=np.load(mean_file).mean(1).mean(1), channel_swap=(2, 1, 0)
+            mean=np.load(mean_file), channel_swap=(2, 1, 0), gpu=gpu_mode
         )
 
         with open(class_labels_file) as f:
@@ -210,9 +206,8 @@ def start_from_terminal(app):
     opts, args = parser.parse_args()
     ImagenetClassifier.default_args.update({'gpu_mode': opts.gpu})
 
-    # Initialize classifier + warm start by forward for allocation
+    # Initialize classifier
     app.clf = ImagenetClassifier(**ImagenetClassifier.default_args)
-    app.clf.net.forward()
 
     if opts.debug:
         app.run(debug=True, host='0.0.0.0', port=opts.port)

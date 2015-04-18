@@ -18,7 +18,8 @@ void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     // some strange effects in practice...)
     CHECK_NE(top[i], bottom[0]) << this->type() << " Layer does not "
         "allow in-place computation.";
-    top[i]->ReshapeLike(*bottom[0]);
+    top[i]->Reshape(bottom[0]->num(), bottom[0]->channels(),
+                       bottom[0]->height(), bottom[0]->width(),this->device_context_);
     CHECK_EQ(count_, top[i]->count());
   }
 }
