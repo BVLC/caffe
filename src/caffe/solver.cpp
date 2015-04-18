@@ -176,6 +176,8 @@ void Solver<Dtype>::Step(int iters) {
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
     Dtype loss = net_->ForwardBackward(bottom_vec);
+    CHECK(!isnan(loss) || !param_.die_on_nan())
+        << "loss is NaN at iteration " << iter_ << " (die_on_nan is set)";
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
