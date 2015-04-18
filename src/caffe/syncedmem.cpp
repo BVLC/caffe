@@ -4,6 +4,13 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include "caffe/greentea/greentea.hpp"
+
+#ifdef USE_GREENTEA
+#include "caffe/greentea/greentea_math_functions.hpp"
+#include "caffe/greentea/greentea_im2col.hpp"
+#endif
+
 namespace caffe {
 
 SyncedMemory::~SyncedMemory() {
@@ -13,55 +20,100 @@ SyncedMemory::~SyncedMemory() {
 
 #ifndef CPU_ONLY
   if (gpu_ptr_) {
-    CUDA_CHECK(cudaFree(gpu_ptr_));
+    if (device_context_.backend() == Backend::BACKEND_CUDA) {
+      CUDA_CHECK(cudaFree(gpu_ptr_));
+    } else {
+#ifdef USE_GREENTEA
+      clReleaseMemObject(cl_gpu_mem_);
+#endif
+    }
   }
 #endif  // CPU_ONLY
 }
 
 inline void SyncedMemory::to_cpu() {
   switch (head_) {
-  case UNINITIALIZED:
-    CaffeMallocHost(&cpu_ptr_, size_);
-    caffe_memset(size_, 0, cpu_ptr_);
-    head_ = HEAD_AT_CPU;
-    own_cpu_data_ = true;
-    break;
-  case HEAD_AT_GPU:
-#ifndef CPU_ONLY
-    if (cpu_ptr_ == NULL) {
+    case UNINITIALIZED: {
       CaffeMallocHost(&cpu_ptr_, size_);
+      caffe_memset(size_, 0, cpu_ptr_);
+      head_ = HEAD_AT_CPU;
       own_cpu_data_ = true;
+      break;
     }
-    caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
-    head_ = SYNCED;
-#else
-    NO_GPU;
+    case HEAD_AT_GPU: {
+#ifndef CPU_ONLY
+      if (cpu_ptr_ == NULL) {
+        CaffeMallocHost(&cpu_ptr_, size_);
+        own_cpu_data_ = true;
+      }
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
+      } else {
+#ifdef USE_GREENTEA
+        viennacl::ocl::context ctx = viennacl::ocl::get_context(
+            device_context_.id());
+        greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, cpu_ptr_, ctx);
 #endif
-    break;
-  case HEAD_AT_CPU:
-  case SYNCED:
-    break;
+      }
+      head_ = SYNCED;
+#else
+      NO_GPU;
+#endif
+      break;
+    }
+    case HEAD_AT_CPU:
+    case SYNCED:
+      break;
   }
 }
 
 inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY
   switch (head_) {
-  case UNINITIALIZED:
-    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
-    caffe_gpu_memset(size_, 0, gpu_ptr_);
-    head_ = HEAD_AT_GPU;
-    break;
-  case HEAD_AT_CPU:
-    if (gpu_ptr_ == NULL) {
-      CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    case UNINITIALIZED: {
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+        caffe_gpu_memset(size_, 0, gpu_ptr_);
+      } else {
+#ifdef USE_GREENTEA
+        viennacl::ocl::context ctx = viennacl::ocl::get_context(
+            device_context_.id());
+        cl_int err;
+        cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                     size_, NULL, &err);
+        gpu_ptr_ = (void*) cl_gpu_mem_;
+        ctx.get_queue().finish();
+#endif
+      }
+      head_ = HEAD_AT_GPU;
+      break;
     }
-    caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
-    head_ = SYNCED;
-    break;
-  case HEAD_AT_GPU:
-  case SYNCED:
-    break;
+    case HEAD_AT_CPU: {
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        if (gpu_ptr_ == NULL) {
+          CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+        }
+        caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
+      } else {
+#ifdef USE_GREENTEA
+        viennacl::ocl::context ctx = viennacl::ocl::get_context(
+            device_context_.id());
+        if (gpu_ptr_ == NULL) {
+          cl_int err;
+          cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                       size_, NULL, &err);
+          gpu_ptr_ = (void*) cl_gpu_mem_;
+          ctx.get_queue().finish();
+        }
+        greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, ctx);
+#endif
+      }
+      head_ = SYNCED;
+      break;
+    }
+    case HEAD_AT_GPU:
+    case SYNCED:
+      break;
   }
 #else
   NO_GPU;
@@ -70,7 +122,7 @@ inline void SyncedMemory::to_gpu() {
 
 const void* SyncedMemory::cpu_data() {
   to_cpu();
-  return (const void*)cpu_ptr_;
+  return (const void*) cpu_ptr_;
 }
 
 void SyncedMemory::set_cpu_data(void* data) {
@@ -86,7 +138,7 @@ void SyncedMemory::set_cpu_data(void* data) {
 const void* SyncedMemory::gpu_data() {
 #ifndef CPU_ONLY
   to_gpu();
-  return (const void*)gpu_ptr_;
+  return (const void*) gpu_ptr_;
 #else
   NO_GPU;
 #endif
@@ -107,7 +159,6 @@ void* SyncedMemory::mutable_gpu_data() {
   NO_GPU;
 #endif
 }
-
 
 }  // namespace caffe
 

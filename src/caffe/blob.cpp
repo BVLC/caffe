@@ -1,132 +1,112 @@
-#include <climits>
-#include <vector>
-
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#ifdef USE_GREENTEA
+#include "caffe/greentea/greentea.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
+#endif
+
 namespace caffe {
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
-    const int width) {
-  vector<int> shape(4);
-  shape[0] = num;
-  shape[1] = channels;
-  shape[2] = height;
-  shape[3] = width;
-  Reshape(shape);
-}
-
-template <typename Dtype>
-void Blob<Dtype>::Reshape(const vector<int>& shape) {
-  CHECK_LE(shape.size(), kMaxBlobAxes);
-  count_ = 1;
-  shape_.resize(shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
-    CHECK_GE(shape[i], 0);
-    count_ *= shape[i];
-    shape_[i] = shape[i];
-  }
+                          const int width, DeviceContext device_context) {
+  CHECK_GE(num, 0);
+  CHECK_GE(channels, 0);
+  CHECK_GE(height, 0);
+  CHECK_GE(width, 0);
+  num_ = num;
+  channels_ = channels;
+  height_ = height;
+  width_ = width;
+  count_ = num_ * channels_ * height_ * width_;
+  device_context_ = device_context;
   if (count_ > capacity_) {
     capacity_ = count_;
-    data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
-    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
+    data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_context_));
+    diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_context_));
   }
 }
 
-template <typename Dtype>
-void Blob<Dtype>::Reshape(const BlobShape& shape) {
-  CHECK_LE(shape.dim_size(), kMaxBlobAxes);
-  vector<int> shape_vec(shape.dim_size());
-  for (int i = 0; i < shape.dim_size(); ++i) {
-    shape_vec[i] = shape.dim(i);
-  }
-  Reshape(shape_vec);
+template<typename Dtype>
+void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other,
+                              DeviceContext device_context) {
+  Reshape(other.num(), other.channels(), other.height(), other.width(),
+          device_context);
 }
 
-template <typename Dtype>
-void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
-  Reshape(other.shape());
-}
-
-template <typename Dtype>
+template<typename Dtype>
 Blob<Dtype>::Blob(const int num, const int channels, const int height,
-    const int width)
-  // capacity_ must be initialized before calling Reshape
-  : capacity_(0) {
-  Reshape(num, channels, height, width);
+                  const int width, DeviceContext device_context)
+    // capacity_ must be initialized before calling Reshape
+    : capacity_(0),
+      device_context_(device_context) {
+  Reshape(num, channels, height, width, device_context);
 }
 
-template <typename Dtype>
-Blob<Dtype>::Blob(const vector<int>& shape)
-  // capacity_ must be initialized before calling Reshape
-  : capacity_(0) {
-  Reshape(shape);
-}
-
-template <typename Dtype>
+template<typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
-  return (const Dtype*)data_->cpu_data();
+  return (const Dtype*) data_->cpu_data();
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
   data_->set_cpu_data(data);
 }
 
-template <typename Dtype>
+template<typename Dtype>
 const Dtype* Blob<Dtype>::gpu_data() const {
   CHECK(data_);
-  return (const Dtype*)data_->gpu_data();
+  return (const Dtype*) data_->gpu_data();
 }
 
-template <typename Dtype>
+template<typename Dtype>
 const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
-  return (const Dtype*)diff_->cpu_data();
+  return (const Dtype*) diff_->cpu_data();
 }
 
-template <typename Dtype>
+template<typename Dtype>
 const Dtype* Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);
-  return (const Dtype*)diff_->gpu_data();
+  return (const Dtype*) diff_->gpu_data();
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_gpu_data());
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_cpu_data());
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype* Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_gpu_data());
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();
@@ -135,324 +115,387 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as Blob<float> or Blob<double> -- hence we do not define it for
 // Blob<int> or Blob<unsigned int>.
-template <> void Blob<unsigned int>::Update() { NOT_IMPLEMENTED; }
-template <> void Blob<int>::Update() { NOT_IMPLEMENTED; }
+template<> void Blob<unsigned int>::Update() {
+  NOT_IMPLEMENTED;
+}
+template<> void Blob<int>::Update() {
+  NOT_IMPLEMENTED;
+}
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
   switch (data_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    // perform computation on CPU
-    caffe_axpy<Dtype>(count_, Dtype(-1),
-        static_cast<const Dtype*>(diff_->cpu_data()),
-        static_cast<Dtype*>(data_->mutable_cpu_data()));
-    break;
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
+    case SyncedMemory::HEAD_AT_CPU: {
+      // perform computation on CPU
+      caffe_axpy<Dtype>(count_, Dtype(-1),
+                        static_cast<const Dtype*>(diff_->cpu_data()),
+                        static_cast<Dtype*>(data_->mutable_cpu_data()));
+
+      break;
+    }
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-    // perform computation on GPU
-    caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
-        static_cast<const Dtype*>(diff_->gpu_data()),
-        static_cast<Dtype*>(data_->mutable_gpu_data()));
-#else
-    NO_GPU;
+      // perform computation on GPU
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
+                              static_cast<const Dtype*>(diff_->gpu_data()),
+                              static_cast<Dtype*>(data_->mutable_gpu_data()));
+      } else {
+#ifdef USE_GREENTEA
+        // TODO
+        //greentea_gpu_axpy<Dtype>(count_, Dtype(-1), (cl_mem)(diff_->gpu_data()), (cl_mem)(data_->mutable_gpu_data()));
 #endif
-    break;
-  default:
-    LOG(FATAL) << "Syncedmem not initialized.";
+      }
+#else
+      NO_GPU;
+#endif
+      break;
+    }
+    default:
+      LOG(FATAL)<< "Syncedmem not initialized.";
+    }
   }
-}
 
-template <> unsigned int Blob<unsigned int>::asum_data() const {
+template<> unsigned int Blob<unsigned int>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <> int Blob<int>::asum_data() const {
+template<typename Dtype>
+DeviceContext Blob<Dtype>::device_context() {
+  return device_context_;
+}
+
+template<> int Blob<int>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
-  if (!data_) { return 0; }
+  if (!data_) {
+    return 0;
+  }
   switch (data_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    return caffe_cpu_asum(count_, cpu_data());
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
+    case SyncedMemory::HEAD_AT_CPU:
+      return caffe_cpu_asum(count_, cpu_data());
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-  {
-    Dtype asum;
-    caffe_gpu_asum(count_, gpu_data(), &asum);
-    return asum;
-  }
-#else
-    NO_GPU;
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        Dtype asum;
+        caffe_gpu_asum(count_, gpu_data(), &asum);
+        return asum;
+      } else {
+#ifdef USE_GREENTEA
+        // TODO
+        //greentea_gpu_asum(count_, (cl_mem) gpu_data(), &asum);
+        return 0;
 #endif
-  case SyncedMemory::UNINITIALIZED:
-    return 0;
-  default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
-  }
+      }
+#else
+      NO_GPU;
+#endif
+    }
+    case SyncedMemory::UNINITIALIZED:
+      return 0;
+    default:
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << data_->head();
+    }
   return 0;
 }
 
-template <> unsigned int Blob<unsigned int>::asum_diff() const {
+template<> unsigned int Blob<unsigned int>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <> int Blob<int>::asum_diff() const {
+template<> int Blob<int>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
-  if (!diff_) { return 0; }
-  switch (diff_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    return caffe_cpu_asum(count_, cpu_diff());
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
-  {
-    Dtype asum;
-    caffe_gpu_asum(count_, gpu_diff(), &asum);
-    return asum;
-  }
-#else
-    NO_GPU;
-#endif
-  case SyncedMemory::UNINITIALIZED:
+  if (!diff_) {
     return 0;
-  default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
   }
+  switch (diff_->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+      return caffe_cpu_asum(count_, cpu_diff());
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
+#ifndef CPU_ONLY
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        Dtype asum;
+        caffe_gpu_asum(count_, gpu_diff(), &asum);
+        return asum;
+      } else {
+#ifdef USE_GREENTEA
+        // TODO
+        //greentea_gpu_asum(count_, gpu_diff(), &asum);
+        return 0;
+#endif
+      }
+#else
+      NO_GPU;
+#endif
+    }
+    case SyncedMemory::UNINITIALIZED:
+      return 0;
+    default:
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << diff_->head();
+    }
   return 0;
 }
 
-template <> unsigned int Blob<unsigned int>::sumsq_data() const {
+template<> unsigned int Blob<unsigned int>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <> int Blob<int>::sumsq_data() const {
+template<> int Blob<int>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype Blob<Dtype>::sumsq_data() const {
   Dtype sumsq;
   const Dtype* data;
-  if (!data_) { return 0; }
-  switch (data_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    data = cpu_data();
-    sumsq = caffe_cpu_dot(count_, data, data);
-    break;
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
-    data = gpu_data();
-    caffe_gpu_dot(count_, data, data, &sumsq);
-#else
-    NO_GPU;
-#endif
-    break;
-  case SyncedMemory::UNINITIALIZED:
+  if (!data_) {
     return 0;
-  default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
   }
+  switch (data_->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+      data = cpu_data();
+      sumsq = caffe_cpu_dot(count_, data, data);
+      break;
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
+#ifndef CPU_ONLY
+      data = gpu_data();
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        caffe_gpu_dot(count_, data, data, &sumsq);
+      } else {
+#ifdef USE_GREENTEA
+        // TODO
+        //greentea_gpu_dot(count_, data, data, &sumsq);
+#endif
+      }
+#else
+      NO_GPU;
+#endif
+      break;
+    }
+    case SyncedMemory::UNINITIALIZED:
+      return 0;
+    default:
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << data_->head();
+    }
   return sumsq;
 }
 
-template <> unsigned int Blob<unsigned int>::sumsq_diff() const {
+template<> unsigned int Blob<unsigned int>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <> int Blob<int>::sumsq_diff() const {
+template<> int Blob<int>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 Dtype Blob<Dtype>::sumsq_diff() const {
   Dtype sumsq;
   const Dtype* diff;
-  if (!diff_) { return 0; }
-  switch (diff_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    diff = cpu_diff();
-    sumsq = caffe_cpu_dot(count_, diff, diff);
-    break;
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
-    diff = gpu_diff();
-    caffe_gpu_dot(count_, diff, diff, &sumsq);
-    break;
-#else
-    NO_GPU;
-#endif
-  case SyncedMemory::UNINITIALIZED:
+  if (!diff_) {
     return 0;
-  default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
   }
+  switch (diff_->head()) {
+    case SyncedMemory::HEAD_AT_CPU: {
+      diff = cpu_diff();
+      sumsq = caffe_cpu_dot(count_, diff, diff);
+      break;
+    }
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
+#ifndef CPU_ONLY
+      diff = gpu_diff();
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        caffe_gpu_dot(count_, diff, diff, &sumsq);
+      } else {
+#ifdef USE_GREENTEA
+        // TODO
+        // greentea_gpu_dot(count_, diff, diff, &sumsq);
+#endif
+      }
+      break;
+#else
+      NO_GPU;
+#endif
+    }
+    case SyncedMemory::UNINITIALIZED:
+      return 0;
+    default:
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << data_->head();
+    }
   return sumsq;
 }
 
-template <> void Blob<unsigned int>::scale_data(unsigned int scale_factor) {
+template<> void Blob<unsigned int>::scale_data(unsigned int scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template <> void Blob<int>::scale_data(int scale_factor) {
+template<> void Blob<int>::scale_data(int scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::scale_data(Dtype scale_factor) {
   Dtype* data;
-  if (!data_) { return; }
-  switch (data_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    data = mutable_cpu_data();
-    caffe_scal(count_, scale_factor, data);
+  if (!data_) {
     return;
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
-#ifndef CPU_ONLY
-    data = mutable_gpu_data();
-    caffe_gpu_scal(count_, scale_factor, data);
-    return;
-#else
-    NO_GPU;
-#endif
-  case SyncedMemory::UNINITIALIZED:
-    return;
-  default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << data_->head();
   }
-}
+  switch (data_->head()) {
+    case SyncedMemory::HEAD_AT_CPU: {
+      data = mutable_cpu_data();
+      caffe_scal(count_, scale_factor, data);
+      return;
+    }
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
+#ifndef CPU_ONLY
+      data = mutable_gpu_data();
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        caffe_gpu_scal(count_, scale_factor, data);
+      } else {
+#ifdef USE_GREENTEA
+        // TODO
+        //greentea_gpu_scal(count_, scale_factor, data);
+#endif
+      }
+      return;
+#else
+      NO_GPU;
+#endif
+    }
+    case SyncedMemory::UNINITIALIZED:
+      return;
+    default:
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << data_->head();
+    }
+  }
 
-template <> void Blob<unsigned int>::scale_diff(unsigned int scale_factor) {
+template<> void Blob<unsigned int>::scale_diff(unsigned int scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template <> void Blob<int>::scale_diff(int scale_factor) {
+template<> void Blob<int>::scale_diff(int scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   Dtype* diff;
-  if (!diff_) { return; }
+  if (!diff_) {
+    return;
+  }
   switch (diff_->head()) {
-  case SyncedMemory::HEAD_AT_CPU:
-    diff = mutable_cpu_diff();
-    caffe_scal(count_, scale_factor, diff);
-    return;
-  case SyncedMemory::HEAD_AT_GPU:
-  case SyncedMemory::SYNCED:
+    case SyncedMemory::HEAD_AT_CPU: {
+      diff = mutable_cpu_diff();
+      caffe_scal(count_, scale_factor, diff);
+      return;
+    }
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-    diff = mutable_gpu_diff();
-    caffe_gpu_scal(count_, scale_factor, diff);
-    return;
-#else
-    NO_GPU;
+      diff = mutable_gpu_diff();
+      if (device_context_.backend() == Backend::BACKEND_CUDA) {
+        caffe_gpu_scal(count_, scale_factor, diff);
+      } else {
+#ifdef USE_GREENTEA
+        // TODO
+        //greentea_gpu_scal(count_, scale_factor, diff);
 #endif
-  case SyncedMemory::UNINITIALIZED:
-    return;
-  default:
-    LOG(FATAL) << "Unknown SyncedMemory head state: " << diff_->head();
+      }
+      return;
+    }
+#else
+      NO_GPU;
+#endif
+    case SyncedMemory::UNINITIALIZED:
+      return;
+    default:
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << diff_->head();
+    }
   }
-}
 
-template <typename Dtype>
-bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
-  if (other.has_num() || other.has_channels() ||
-      other.has_height() || other.has_width()) {
-    // Using deprecated 4D Blob dimensions --
-    // shape is (num, channels, height, width).
-    // Note: we do not use the normal Blob::num(), Blob::channels(), etc.
-    // methods as these index from the beginning of the blob shape, where legacy
-    // parameter blobs were indexed from the end of the blob shape (e.g., bias
-    // Blob shape (1 x 1 x 1 x N), IP layer weight Blob shape (1 x 1 x M x N)).
-    return shape_.size() <= 4 &&
-           LegacyShape(-4) == other.num() &&
-           LegacyShape(-3) == other.channels() &&
-           LegacyShape(-2) == other.height() &&
-           LegacyShape(-1) == other.width();
-  }
-  vector<int> other_shape(other.shape().dim_size());
-  for (int i = 0; i < other.shape().dim_size(); ++i) {
-    other_shape[i] = other.shape().dim(i);
-  }
-  return shape_ == other_shape;
-}
+template<typename Dtype>
+void Blob<Dtype>::CopyFrom(const Blob& source, DeviceContext device_context,
+                           bool copy_diff, bool reshape) {
 
-template <typename Dtype>
-void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
-  if (source.count() != count_ || source.shape() != shape_) {
+  device_context_ = device_context;
+
+  if (num_ != source.num() || channels_ != source.channels()
+      || height_ != source.height() || width_ != source.width()) {
     if (reshape) {
-      ReshapeLike(source);
+      Reshape(source.num(), source.channels(), source.height(), source.width(),
+              device_context);
     } else {
-      LOG(FATAL) << "Trying to copy blobs of different sizes.";
+      LOG(FATAL)<< "Trying to copy blobs of different sizes.";
     }
   }
   switch (Caffe::mode()) {
-  case Caffe::GPU:
-    if (copy_diff) {
-      caffe_copy(count_, source.gpu_diff(),
-          static_cast<Dtype*>(diff_->mutable_gpu_data()));
-    } else {
-      caffe_copy(count_, source.gpu_data(),
-          static_cast<Dtype*>(data_->mutable_gpu_data()));
-    }
-    break;
-  case Caffe::CPU:
-    if (copy_diff) {
-      caffe_copy(count_, source.cpu_diff(),
-          static_cast<Dtype*>(diff_->mutable_cpu_data()));
-    } else {
-      caffe_copy(count_, source.cpu_data(),
-          static_cast<Dtype*>(data_->mutable_cpu_data()));
-    }
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode.";
-  }
-}
-
-template <typename Dtype>
-void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
-  if (reshape) {
-    vector<int> shape;
-    if (proto.has_num() || proto.has_channels() ||
-        proto.has_height() || proto.has_width()) {
-      // Using deprecated 4D Blob dimensions --
-      // shape is (num, channels, height, width).
-      shape.resize(4);
-      shape[0] = proto.num();
-      shape[1] = proto.channels();
-      shape[2] = proto.height();
-      shape[3] = proto.width();
-    } else {
-      shape.resize(proto.shape().dim_size());
-      for (int i = 0; i < proto.shape().dim_size(); ++i) {
-        shape[i] = proto.shape().dim(i);
+    case Caffe::GPU: {
+      if (device_context_.backend() == BACKEND_CUDA) {
+        if (copy_diff) {
+          caffe_copy(count_, source.gpu_diff(),
+                     static_cast<Dtype*>(diff_->mutable_gpu_data()));
+        } else {
+          caffe_copy(count_, source.gpu_data(),
+                     static_cast<Dtype*>(data_->mutable_gpu_data()));
+        }
+      } else {
+#ifdef USE_GREENTEA
+        if (copy_diff) {
+          greentea_copy<Dtype>(
+              count_, (cl_mem) (source.gpu_diff()),
+              (cl_mem) (diff_->mutable_gpu_data()),
+              viennacl::ocl::get_context(device_context_.id()));
+        } else {
+          greentea_copy<Dtype>(
+              count_, (cl_mem) (source.gpu_data()),
+              (cl_mem) (data_->mutable_gpu_data()),
+              viennacl::ocl::get_context(device_context_.id()));
+        }
+#endif
       }
+      break;
     }
-    Reshape(shape);
-  } else {
-    CHECK(ShapeEquals(proto)) << "shape mismatch (reshape not set)";
+    case Caffe::CPU: {
+      if (copy_diff) {
+        caffe_copy(count_, source.cpu_diff(),
+                   static_cast<Dtype*>(diff_->mutable_cpu_data()));
+      } else {
+        caffe_copy(count_, source.cpu_data(),
+                   static_cast<Dtype*>(data_->mutable_cpu_data()));
+      }
+      break;
+    }
+    default:
+      LOG(FATAL)<< "Unknown caffe mode.";
+    }
   }
+
+template<typename Dtype>
+void Blob<Dtype>::FromProto(const BlobProto& proto,
+                            DeviceContext device_context) {
+  Reshape(proto.num(), proto.channels(), proto.height(), proto.width(),
+          device_context);
   // copy data
   Dtype* data_vec = mutable_cpu_data();
   for (int i = 0; i < count_; ++i) {
@@ -466,12 +509,12 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   }
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
-  proto->clear_shape();
-  for (int i = 0; i < shape_.size(); ++i) {
-    proto->mutable_shape()->add_dim(shape_[i]);
-  }
+  proto->set_num(num_);
+  proto->set_channels(channels_);
+  proto->set_height(height_);
+  proto->set_width(width_);
   proto->clear_data();
   proto->clear_diff();
   const Dtype* data_vec = cpu_data();
@@ -487,8 +530,8 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
 }
 
 INSTANTIATE_CLASS(Blob);
-template class Blob<int>;
-template class Blob<unsigned int>;
+template class Blob<int> ;
+template class Blob<unsigned int> ;
 
 }  // namespace caffe
 

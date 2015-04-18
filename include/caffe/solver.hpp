@@ -14,7 +14,7 @@ namespace caffe {
  * Requires implementation of ComputeUpdateValue to compute a parameter update
  * given the current state of the Net parameters.
  */
-template <typename Dtype>
+template<typename Dtype>
 class Solver {
  public:
   explicit Solver(const SolverParameter& param);
@@ -25,31 +25,39 @@ class Solver {
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
-  inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
+  inline void Solve(const string resume_file) {
+    Solve(resume_file.c_str());
+  }
   void Step(int iters);
-  // The Restore function implements how one should restore the solver to a
-  // previously snapshotted state. You should implement the RestoreSolverState()
-  // function that restores the state from a SolverState protocol buffer.
-  void Restore(const char* resume_file);
-  virtual ~Solver() {}
-  inline shared_ptr<Net<Dtype> > net() { return net_; }
+  void StepPrefilled();
+  virtual ~Solver() {
+  }
+  inline shared_ptr<Net<Dtype> > net() {
+    return net_;
+  }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
-
- protected:
+  int iter() {
+    return iter_;
+  }
+  void Snapshot();
+  void Restore(const char* resume_file);
   // Get the update value for the current iteration.
   virtual void ComputeUpdateValue() = 0;
+
+ protected:
   // The Solver::Snapshot function implements the basic snapshotting utility
   // that stores the learned net. You should implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
   // written to disk together with the learned net.
-  void Snapshot();
   // The test routine
   void TestAll();
   void Test(const int test_net_id = 0);
   virtual void SnapshotSolverState(SolverState* state) = 0;
+  // The Restore function implements how one should restore the solver to a
+  // previously snapshotted state. You should implement the RestoreSolverState()
+  // function that restores the state from a SolverState protocol buffer.
   virtual void RestoreSolverState(const SolverState& state) = 0;
   void DisplayOutputBlobs(const int net_id);
 
@@ -59,28 +67,34 @@ class Solver {
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
 
-  DISABLE_COPY_AND_ASSIGN(Solver);
+DISABLE_COPY_AND_ASSIGN(Solver);
 };
-
 
 /**
  * @brief Optimizes the parameters of a Net using
  *        stochastic gradient descent (SGD) with momentum.
  */
-template <typename Dtype>
+template<typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
   explicit SGDSolver(const SolverParameter& param)
-      : Solver<Dtype>(param) { PreSolve(); }
+      : Solver<Dtype>(param) {
+    PreSolve();
+  }
   explicit SGDSolver(const string& param_file)
-      : Solver<Dtype>(param_file) { PreSolve(); }
+      : Solver<Dtype>(param_file) {
+    PreSolve();
+  }
 
-  const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+  const vector<shared_ptr<Blob<Dtype> > >& history() {
+    return history_;
+  }
+
+  virtual void ComputeUpdateValue();
 
  protected:
   void PreSolve();
   Dtype GetLearningRate();
-  virtual void ComputeUpdateValue();
   virtual void ClipGradients();
   virtual void SnapshotSolverState(SolverState * state);
   virtual void RestoreSolverState(const SolverState& state);
@@ -90,55 +104,61 @@ class SGDSolver : public Solver<Dtype> {
   //   of gradients/updates and is not needed in snapshots
   vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
 
-  DISABLE_COPY_AND_ASSIGN(SGDSolver);
+DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
 
-template <typename Dtype>
+template<typename Dtype>
 class NesterovSolver : public SGDSolver<Dtype> {
  public:
   explicit NesterovSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) {}
+      : SGDSolver<Dtype>(param) {
+  }
   explicit NesterovSolver(const string& param_file)
-      : SGDSolver<Dtype>(param_file) {}
+      : SGDSolver<Dtype>(param_file) {
+  }
 
- protected:
   virtual void ComputeUpdateValue();
 
-  DISABLE_COPY_AND_ASSIGN(NesterovSolver);
+ protected:
+
+DISABLE_COPY_AND_ASSIGN(NesterovSolver);
 };
 
-template <typename Dtype>
+template<typename Dtype>
 class AdaGradSolver : public SGDSolver<Dtype> {
  public:
   explicit AdaGradSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param) {
+    constructor_sanity_check();
+  }
   explicit AdaGradSolver(const string& param_file)
-      : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param_file) {
+    constructor_sanity_check();
+  }
 
- protected:
   virtual void ComputeUpdateValue();
+ protected:
   void constructor_sanity_check() {
-    CHECK_EQ(0, this->param_.momentum())
-        << "Momentum cannot be used with AdaGrad.";
+    CHECK_EQ(0, this->param_.momentum())<< "Momentum cannot be used with AdaGrad.";
   }
 
   DISABLE_COPY_AND_ASSIGN(AdaGradSolver);
 };
 
-template <typename Dtype>
+template<typename Dtype>
 Solver<Dtype>* GetSolver(const SolverParameter& param) {
   SolverParameter_SolverType type = param.solver_type();
 
   switch (type) {
-  case SolverParameter_SolverType_SGD:
+    case SolverParameter_SolverType_SGD:
       return new SGDSolver<Dtype>(param);
-  case SolverParameter_SolverType_NESTEROV:
+    case SolverParameter_SolverType_NESTEROV:
       return new NesterovSolver<Dtype>(param);
-  case SolverParameter_SolverType_ADAGRAD:
+    case SolverParameter_SolverType_ADAGRAD:
       return new AdaGradSolver<Dtype>(param);
-  default:
-      LOG(FATAL) << "Unknown SolverType: " << type;
-  }
+    default:
+      LOG(FATAL)<< "Unknown SolverType: " << type;
+    }
   return (Solver<Dtype>*) NULL;
 }
 

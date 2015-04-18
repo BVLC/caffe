@@ -21,7 +21,7 @@ class Filler {
  public:
   explicit Filler(const FillerParameter& param) : filler_param_(param) {}
   virtual ~Filler() {}
-  virtual void Fill(Blob<Dtype>* blob) = 0;
+  virtual void Fill(Blob<Dtype>* blob, DeviceContext &device_context) = 0;
  protected:
   FillerParameter filler_param_;
 };  // class Filler
@@ -33,7 +33,7 @@ class ConstantFiller : public Filler<Dtype> {
  public:
   explicit ConstantFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
-  virtual void Fill(Blob<Dtype>* blob) {
+  virtual void Fill(Blob<Dtype>* blob, DeviceContext &device_context) {
     Dtype* data = blob->mutable_cpu_data();
     const int count = blob->count();
     const Dtype value = this->filler_param_.value();
@@ -52,7 +52,7 @@ class UniformFiller : public Filler<Dtype> {
  public:
   explicit UniformFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
-  virtual void Fill(Blob<Dtype>* blob) {
+  virtual void Fill(Blob<Dtype>* blob, DeviceContext &device_context) {
     CHECK(blob->count());
     caffe_rng_uniform<Dtype>(blob->count(), Dtype(this->filler_param_.min()),
         Dtype(this->filler_param_.max()), blob->mutable_cpu_data());
@@ -67,7 +67,7 @@ class GaussianFiller : public Filler<Dtype> {
  public:
   explicit GaussianFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
-  virtual void Fill(Blob<Dtype>* blob) {
+  virtual void Fill(Blob<Dtype>* blob, DeviceContext &device_context) {
     Dtype* data = blob->mutable_cpu_data();
     CHECK(blob->count());
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
@@ -79,10 +79,11 @@ class GaussianFiller : public Filler<Dtype> {
       // These have num == channels == 1; width is number of inputs; height is
       // number of outputs.  The 'sparse' variable specifies the mean number
       // of non-zero input weights for a given output.
-      CHECK_GE(blob->num_axes(), 1);
-      const int num_outputs = blob->shape(0);
+      CHECK_EQ(blob->num(), 1);
+      CHECK_EQ(blob->channels(), 1);
+      int num_outputs = blob->height();
       Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);
-      rand_vec_.reset(new SyncedMemory(blob->count() * sizeof(int)));
+      rand_vec_.reset(new SyncedMemory(blob->count() * sizeof(int), device_context));
       int* mask = reinterpret_cast<int*>(rand_vec_->mutable_cpu_data());
       caffe_rng_bernoulli(blob->count(), non_zero_probability, mask);
       for (int i = 0; i < blob->count(); ++i) {
@@ -103,7 +104,7 @@ class PositiveUnitballFiller : public Filler<Dtype> {
  public:
   explicit PositiveUnitballFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
-  virtual void Fill(Blob<Dtype>* blob) {
+  virtual void Fill(Blob<Dtype>* blob, DeviceContext &device_context) {
     Dtype* data = blob->mutable_cpu_data();
     DCHECK(blob->count());
     caffe_rng_uniform<Dtype>(blob->count(), 0, 1, blob->mutable_cpu_data());
@@ -145,7 +146,7 @@ class XavierFiller : public Filler<Dtype> {
  public:
   explicit XavierFiller(const FillerParameter& param)
       : Filler<Dtype>(param) {}
-  virtual void Fill(Blob<Dtype>* blob) {
+  virtual void Fill(Blob<Dtype>* blob, DeviceContext &device_context) {
     CHECK(blob->count());
     int fan_in = blob->count() / blob->num();
     Dtype scale = sqrt(Dtype(3) / fan_in);

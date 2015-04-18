@@ -5,7 +5,6 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include <climits>
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
@@ -17,6 +16,8 @@
 #include <vector>
 
 #include "caffe/util/device_alternate.hpp"
+
+#include "caffe/greentea/greentea.hpp"
 
 // gflags 2.1 issue: namespace google was changed to gflags without warning.
 // Luckily we will be able to use GFLAGS_GFAGS_H_ to detect if it is version
@@ -66,7 +67,7 @@ private:\
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
 // See PR #1236
-namespace cv { class Mat; }
+namespace cv {class Mat;}
 
 namespace caffe {
 
@@ -150,6 +151,22 @@ class Caffe {
   // Prints the current GPU status.
   static void DeviceQuery();
 
+  // Get the default device
+  static DeviceContext& GetDefaultDeviceContext();
+
+  // Prints info about all devices
+  static void EnumerateDevices();
+  // Prepares contexts for devices to use
+  static void SetDevices(std::vector<int> device_ids);
+
+  // Get a device context
+  static DeviceContext& GetDeviceContext(int id);
+
+  // Get a device OpenCL program
+#ifdef USE_GREENTEA
+  viennacl::ocl::program & GetDeviceProgram(int id);
+#endif
+
  protected:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
@@ -159,6 +176,15 @@ class Caffe {
 
   Brew mode_;
   static shared_ptr<Caffe> singleton_;
+
+  vector<DeviceContext> device_contexts_;
+
+  DeviceContext default_device_context_;
+
+#ifdef USE_GREENTEA
+  vector<viennacl::ocl::program> ocl_programs_;
+  viennacl::ocl::program default_ocl_program_;
+#endif
 
  private:
   // The private constructor to avoid duplicate instantiation.
