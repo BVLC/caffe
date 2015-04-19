@@ -20,8 +20,8 @@ namespace caffe {
 
 template<typename Dtype>
 void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
-                            viennacl::ocl::context &ctx,
-                            const cl_mem data_im, const int channels,
+                            viennacl::ocl::context &ctx, const cl_mem data_im,
+                            const int data_offset, const int channels,
                             const int height, const int width,
                             const int kernel_h, const int kernel_w,
                             const int pad_h, const int pad_w,

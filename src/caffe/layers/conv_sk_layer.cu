@@ -76,8 +76,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         greentea_im2col_sk_gpu<Dtype>(
             program,
             ctx,
-            Subregion<Dtype>(bottom_data, bottom[i]->offset(n),
-                             channels_ * height_ * width_),
+            bottom_data, bottom[i]->offset(n),
             channels_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
             stride_h_, stride_w_, kstride_h_, kstride_w_, col_data);
         ctx.get_queue().finish();

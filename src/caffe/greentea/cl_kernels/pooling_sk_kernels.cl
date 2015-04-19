@@ -10,7 +10,7 @@
 #pragma OPENCL EXTENSION cl_amd_fp64 : enable
 
 __kernel void max_pool_forward_sk_s(const int nthreads,
-                                    __global const float* bottom_data,
+                                    __global float* bottom_data,
                                     const int num, const int channels,
                                     const int height, const int width,
                                     const int pooled_height,
@@ -23,7 +23,6 @@ __kernel void max_pool_forward_sk_s(const int nthreads,
                                     const int use_mask,
                                     __global int* mask,
                                     __global float* top_mask) {
-
   for (int index = get_global_id(0); index < nthreads;
       index += get_global_size(0)) {
     int pw = index % pooled_width;
@@ -38,12 +37,12 @@ __kernel void max_pool_forward_sk_s(const int nthreads,
     wstart = max(wstart, 0);
     float maxval = -FLT_MAX;
     int maxidx = -1;
-    bottom_data += (n * channels + c) * height * width;
+    __global float* bottom_data_ptr = bottom_data + (n * channels + c) * height * width;
     for (int h = hstart; h < hend; h += kstride_h) {
       for (int w = wstart; w < wend; w += kstride_w) {
-        if (bottom_data[h * width + w] > maxval) {
+        if (bottom_data_ptr[h * width + w] > maxval) {
           maxidx = h * width + w;
-          maxval = bottom_data[maxidx];
+          maxval = bottom_data_ptr[maxidx];
         }
       }
     }
@@ -85,12 +84,12 @@ __kernel void max_pool_forward_sk_d(const int nthreads,
     wstart = max(wstart, 0);
     double maxval = -FLT_MAX;
     int maxidx = -1;
-    bottom_data += (n * channels + c) * height * width;
+    __global float* bottom_data_ptr = bottom_data + (n * channels + c) * height * width;
     for (int h = hstart; h < hend; h += kstride_h) {
       for (int w = wstart; w < wend; w += kstride_w) {
-        if (bottom_data[h * width + w] > maxval) {
+        if (bottom_data_ptr[h * width + w] > maxval) {
           maxidx = h * width + w;
-          maxval = bottom_data[maxidx];
+          maxval = bottom_data_ptr[maxidx];
         }
       }
     }
