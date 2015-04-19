@@ -13,21 +13,44 @@ namespace caffe {
 template<typename Dtype>
 void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
                           const int width, DeviceContext device_context) {
-  CHECK_GE(num, 0);
-  CHECK_GE(channels, 0);
-  CHECK_GE(height, 0);
-  CHECK_GE(width, 0);
-  num_ = num;
-  channels_ = channels;
-  height_ = height;
-  width_ = width;
-  count_ = num_ * channels_ * height_ * width_;
+  vector<int> shape(4);
+  shape[0] = num;
+  shape[1] = channels;
+  shape[2] = height;
+  shape[3] = width;
   device_context_ = device_context;
+  Reshape(shape, device_context);
+}
+
+template<typename Dtype>
+void Blob<Dtype>::Reshape(const vector<int>& shape,
+                          DeviceContext device_context) {
+  CHECK_LE(shape.size(), kMaxBlobAxes);
+  count_ = 1;
+  shape_.resize(shape.size());
+  device_context_ = device_context;
+  for (int i = 0; i < shape.size(); ++i) {
+    CHECK_GE(shape[i], 0);
+    count_ *= shape[i];
+    shape_[i] = shape[i];
+  }
   if (count_ > capacity_) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_context_));
     diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype), device_context_));
   }
+}
+
+template<typename Dtype>
+void Blob<Dtype>::Reshape(const BlobShape& shape,
+                          DeviceContext device_context) {
+  CHECK_LE(shape.dim_size(), kMaxBlobAxes);
+  vector<int> shape_vec(shape.dim_size());
+  device_context_ = device_context;
+  for (int i = 0; i < shape.dim_size(); ++i) {
+    shape_vec[i] = shape.dim(i);
+  }
+  Reshape(shape_vec, device_context_);
 }
 
 template<typename Dtype>
@@ -434,19 +457,40 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
     }
   }
 
+template <typename Dtype>
+bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
+  if (other.has_num() || other.has_channels() ||
+      other.has_height() || other.has_width()) {
+    // Using deprecated 4D Blob dimensions --
+    // shape is (num, channels, height, width).
+    // Note: we do not use the normal Blob::num(), Blob::channels(), etc.
+    // methods as these index from the beginning of the blob shape, where legacy
+    // parameter blobs were indexed from the end of the blob shape (e.g., bias
+    // Blob shape (1 x 1 x 1 x N), IP layer weight Blob shape (1 x 1 x M x N)).
+    return shape_.size() <= 4 &&
+           LegacyShape(-4) == other.num() &&
+           LegacyShape(-3) == other.channels() &&
+           LegacyShape(-2) == other.height() &&
+           LegacyShape(-1) == other.width();
+  }
+  vector<int> other_shape(other.shape().dim_size());
+  for (int i = 0; i < other.shape().dim_size(); ++i) {
+    other_shape[i] = other.shape().dim(i);
+  }
+  return shape_ == other_shape;
+}
+
 template<typename Dtype>
 void Blob<Dtype>::CopyFrom(const Blob& source, DeviceContext device_context,
                            bool copy_diff, bool reshape) {
 
   device_context_ = device_context;
 
-  if (num_ != source.num() || channels_ != source.channels()
-      || height_ != source.height() || width_ != source.width()) {
+  if (source.count() != count_ || source.shape() != shape_) {
     if (reshape) {
-      Reshape(source.num(), source.channels(), source.height(), source.width(),
-              device_context);
+      ReshapeLike(source, device_context_);
     } else {
-      LOG(FATAL)<< "Trying to copy blobs of different sizes.";
+      LOG(FATAL) << "Trying to copy blobs of different sizes.";
     }
   }
   switch (Caffe::mode()) {
@@ -491,11 +535,30 @@ void Blob<Dtype>::CopyFrom(const Blob& source, DeviceContext device_context,
     }
   }
 
-template<typename Dtype>
-void Blob<Dtype>::FromProto(const BlobProto& proto,
-                            DeviceContext device_context) {
-  Reshape(proto.num(), proto.channels(), proto.height(), proto.width(),
-          device_context);
+template <typename Dtype>
+void Blob<Dtype>::FromProto(const BlobProto& proto, DeviceContext device_context, bool reshape) {
+  device_context_ = device_context;
+  if (reshape) {
+    vector<int> shape;
+    if (proto.has_num() || proto.has_channels() ||
+        proto.has_height() || proto.has_width()) {
+      // Using deprecated 4D Blob dimensions --
+      // shape is (num, channels, height, width).
+      shape.resize(4);
+      shape[0] = proto.num();
+      shape[1] = proto.channels();
+      shape[2] = proto.height();
+      shape[3] = proto.width();
+    } else {
+      shape.resize(proto.shape().dim_size());
+      for (int i = 0; i < proto.shape().dim_size(); ++i) {
+        shape[i] = proto.shape().dim(i);
+      }
+    }
+    Reshape(shape, device_context_);
+  } else {
+    CHECK(ShapeEquals(proto)) << "shape mismatch (reshape not set)";
+  }
   // copy data
   Dtype* data_vec = mutable_cpu_data();
   for (int i = 0; i < count_; ++i) {
@@ -509,12 +572,12 @@ void Blob<Dtype>::FromProto(const BlobProto& proto,
   }
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
-  proto->set_num(num_);
-  proto->set_channels(channels_);
-  proto->set_height(height_);
-  proto->set_width(width_);
+  proto->clear_shape();
+  for (int i = 0; i < shape_.size(); ++i) {
+    proto->mutable_shape()->add_dim(shape_[i]);
+  }
   proto->clear_data();
   proto->clear_diff();
   const Dtype* data_vec = cpu_data();
