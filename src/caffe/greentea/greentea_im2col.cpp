@@ -12,16 +12,16 @@ namespace caffe {
 template<typename Dtype>
 void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
                             viennacl::ocl::context &ctx, const cl_mem data_im,
-                            const int channels, const int height,
-                            const int width, const int kernel_h,
-                            const int kernel_w, const int pad_h,
-                            const int pad_w, const int stride_h,
-                            const int stride_w, const int kstride_h,
-                            const int kstride_w, cl_mem data_col) {
+                            const int data_offset, const int channels,
+                            const int height, const int width,
+                            const int kernel_h, const int kernel_w,
+                            const int pad_h, const int pad_w,
+                            const int stride_h, const int stride_w,
+                            const int kstride_h, const int kstride_w,
+                            cl_mem data_col) {
 
   std::cout << "DATA_IM: " << data_im << std::endl;
   std::cout << "DATA_COL: " << data_col << std::endl;
-
 
   int ext_kernel_h = (kernel_h - 1) * kstride_h + 1;
   int ext_kernel_w = (kernel_w - 1) * kstride_w + 1;
@@ -33,7 +33,7 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
       CL_KERNEL_SELECT("im2col_sk_gpu_kernel"));
 
   viennacl::ocl::enqueue(
-      kernel(num_kernels, WrapHandle(data_im, ctx), height, width, kernel_h,
+      kernel(num_kernels, WrapHandle(data_im, ctx), data_offset, height, width, kernel_h,
              kernel_w, ext_kernel_h, ext_kernel_w, pad_h, pad_w, stride_h,
              stride_w, kstride_h, kstride_w, height_col, width_col,
              WrapHandle(data_col, ctx)),
@@ -46,6 +46,7 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
 template void greentea_im2col_sk_gpu<float>(viennacl::ocl::program &prog,
                                             viennacl::ocl::context &ctx,
                                             const cl_mem data_im,
+                                            const int data_offset,
                                             const int channels,
                                             const int height, const int width,
                                             const int kernel_h,
@@ -59,6 +60,7 @@ template void greentea_im2col_sk_gpu<float>(viennacl::ocl::program &prog,
 template void greentea_im2col_sk_gpu<double>(viennacl::ocl::program &prog,
                                              viennacl::ocl::context &ctx,
                                              const cl_mem data_im,
+                                             const int data_offset,
                                              const int channels,
                                              const int height, const int width,
                                              const int kernel_h,

@@ -19,6 +19,7 @@ cl_mem Subregion(cl_mem in, size_t off, size_t size) {
   const cl_mem out = clCreateSubBuffer(in, CL_MEM_READ_WRITE,
   CL_BUFFER_CREATE_TYPE_REGION,
                                        region, &status);
+  std::cout << "SUBREGION: " << status << std::endl;
   return out;
 }
 
