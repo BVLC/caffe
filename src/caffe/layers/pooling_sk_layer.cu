@@ -218,15 +218,16 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
           CL_KERNEL_SELECT("max_pool_forward_sk"));
       viennacl::ocl::enqueue(
-          oclk_max_pool_forward(count, WrapVector<Dtype>((cl_mem) bottom_data),
+          oclk_max_pool_forward(count, WrapHandle((cl_mem) bottom_data, ctx),
                                 bottom[0]->num(), channels_, height_, width_,
                                 pooled_height_, pooled_width_, kernel_h_,
                                 kernel_w_, ext_kernel_h, ext_kernel_w,
                                 stride_h_, stride_w_, kstride_h_, kstride_w_,
                                 pad_h_, pad_w_,
-                                WrapVector<Dtype>((cl_mem) top_data),
-                                WrapVector<int>((cl_mem) mask),
-                                WrapVector<Dtype>((cl_mem) top_mask)),
+                                WrapHandle((cl_mem) top_data, ctx),
+                                mask == NULL ? 0 : 1,
+                                WrapHandle((cl_mem) mask, ctx),
+                                WrapHandle((cl_mem) top_mask, ctx)),
           ctx.get_queue());
       ctx.get_queue().finish();
       std::cout << "POOLING GREENTEA END" << std::endl;

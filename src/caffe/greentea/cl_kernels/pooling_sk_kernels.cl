@@ -20,6 +20,7 @@ __kernel void max_pool_forward_sk_s(const int nthreads,
                                     const int stride_w, const int kstride_h,
                                     const int kstride_w, const int pad_h,
                                     const int pad_w, __global float* top_data,
+                                    const int use_mask,
                                     __global int* mask,
                                     __global float* top_mask) {
 
@@ -47,7 +48,7 @@ __kernel void max_pool_forward_sk_s(const int nthreads,
       }
     }
     top_data[index] = maxval;
-    if (mask) {
+    if (use_mask == 1) {
       mask[index] = maxidx;
     } else {
       top_mask[index] = maxidx;

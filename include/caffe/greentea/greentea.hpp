@@ -34,8 +34,7 @@ namespace caffe {
 template<typename Dtype>
 cl_mem Subregion(cl_mem in, size_t off, size_t size);
 
-template<typename Dtype>
-viennacl::vector<Dtype> WrapVector(cl_mem in);
+viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in, viennacl::ocl::context &ctx);
 #endif
 
 enum Backend {

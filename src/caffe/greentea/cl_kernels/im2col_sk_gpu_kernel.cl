@@ -35,7 +35,7 @@ __kernel void im2col_sk_gpu_kernel_s(const int n, __global const float* data_im,
       for (int j = 0; j < ext_kernel_w; j += kstride_w) {
         int h = h_in + i;
         int w = w_in + j;
-        *data_col_ptr =
+        (*data_col_ptr) =
             (h >= 0 && w >= 0 && h < height && w < width) ?
                 data_im_ptr[i * width + j] : 0;
         data_col_ptr += height_col * width_col;
@@ -73,7 +73,7 @@ __kernel void im2col_sk_gpu_kernel_d(const int n,
       for (int j = 0; j < ext_kernel_w; j += kstride_w) {
         int h = h_in + i;
         int w = w_in + j;
-        *data_col_ptr =
+        (*data_col_ptr) =
             (h >= 0 && w >= 0 && h < height && w < width) ?
                 data_im_ptr[i * width + j] : 0;
         data_col_ptr += height_col * width_col;

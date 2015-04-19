@@ -180,24 +180,30 @@ ifeq ($(USE_GREENTEA),1)
 		CLLINC = '$(AMDAPPSDKROOT)/include'
 	endif
 	
+	# Use AMD clBLAS, TODO: Not implemented yet
+	ifeq ($(USE_CLBLAS), 1)
+		LIBRARIES += clblas
+		COMMON_FLAGS += -DUSE_CLBLAS
+	endif
+	
+	# Use ViennaCL BLAS
+	ifeq ($(USE_VIENNACLBLAS), 1)
+		LIBRARIES += viennacl
+		COMMON_FLAGS += -DUSE_VIENNACLBLAS
+	endif
+	
 	# Requires valid OpenCL library
 	LIBRARY_DIRS += $(CLLIBS)
 	# Requires valid OpenCL headers and valid ViennaCL
 	INCLUDE_DIRS += $(CLLINC) $(VIENNACL_DIR)
 	# Requires OpenCL compile library flag and librt
-	LIBRARIES +=  viennacl OpenCL rt
+	LIBRARIES += OpenCL rt
 	# Additional flags
 	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
 	
 	# Viennacl runtime debug output
-	ifeq ($(DEBUG), 1)
+	ifeq ($(DEBUG), 0)
 		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
-	endif
-	
-	# Use AMD clBLAS, TODO: Not implemented yet
-	ifeq ($(USE_CLBLAS), 1)
-		LIBRARIES += clblas
-		COMMON_FLAGS += -USE_CLBLAS
 	endif
 	
 	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp

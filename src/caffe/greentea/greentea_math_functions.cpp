@@ -106,12 +106,12 @@ void greentea_gpu_gemm<float>(int ctx_id, const CBLAS_TRANSPOSE TransA,
   int ldb = (TransB == CblasNoTrans) ? N : K;
   int ldc = N;
 
-  /*GREENTEA_BLAS_CHECK(
+  GREENTEA_BLAS_CHECK(
       ViennaCLOpenCLSgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
                           vclOrderC, M, N, K, alpha, A, offArow, offAcol,
                           incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
                           incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
-                          incCcol, ldc));*/
+                          incCcol, ldc));
 
 }
 
