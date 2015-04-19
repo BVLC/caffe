@@ -37,7 +37,7 @@ void SilenceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         viennacl::ocl::enqueue(
             oclk_gpu_set(
                 bottom[i]->count(), Dtype(0),
-                WrapVector<Dtype>((cl_mem) bottom[i]->mutable_gpu_data())),
+                WrapHandle((cl_mem) bottom[i]->mutable_gpu_data(),ctx)),
             ctx.get_queue());
         ctx.get_queue().finish();
 #endif

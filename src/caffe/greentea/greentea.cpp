@@ -19,33 +19,28 @@ cl_mem Subregion(cl_mem in, size_t off, size_t size) {
   const cl_mem out = clCreateSubBuffer(in, CL_MEM_READ_WRITE,
   CL_BUFFER_CREATE_TYPE_REGION,
                                        region, &status);
-  std::cout << "Subregion: " << status << std::endl;
   return out;
 }
 
 template cl_mem Subregion<float>(cl_mem in, size_t off, size_t size);
 template cl_mem Subregion<double>(cl_mem in, size_t off, size_t size);
+template cl_mem Subregion<long>(cl_mem in, size_t off, size_t size);
+template cl_mem Subregion<int>(cl_mem in, size_t off, size_t size);
 
-template<typename Dtype>
-viennacl::vector<Dtype> WrapVector(cl_mem in) {
-  if (in == NULL) {
-    size_t size;
-    clGetMemObjectInfo(in, CL_MEM_SIZE, sizeof(size_t), &size, NULL);
-    viennacl::vector<Dtype> out(in, viennacl::OPENCL_MEMORY,
-                                size / sizeof(Dtype));
-    return out;
+viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
+                                         viennacl::ocl::context &ctx) {
+  if (in != NULL) {
+    viennacl::ocl::handle<cl_mem> memhandle(in, ctx);
+    memhandle.inc();
+    return memhandle;
   } else {
-    std::cout << "HERE!" << std::endl;
-    void* ptr = NULL;
-    viennacl::vector<Dtype> out((cl_mem)&ptr, viennacl::OPENCL_MEMORY, 0);
-    return out;
+    cl_int err;
+    cl_mem dummy = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE, 0,
+                                  NULL, &err);
+    viennacl::ocl::handle<cl_mem> memhandle(dummy, ctx);
+    return memhandle;
   }
 }
-
-template viennacl::vector<float> WrapVector<float>(cl_mem in);
-template viennacl::vector<double> WrapVector<double>(cl_mem in);
-template viennacl::vector<int> WrapVector<int>(cl_mem in);
-template viennacl::vector<long> WrapVector<long>(cl_mem in);
 
 #endif
 
