@@ -180,9 +180,9 @@ ifeq ($(USE_GREENTEA),1)
 		CLLINC = '$(AMDAPPSDKROOT)/include'
 	endif
 	
-	# Use AMD clBLAS, TODO: Not implemented yet
+	# Use AMD clBLAS
 	ifeq ($(USE_CLBLAS), 1)
-		LIBRARIES += clblas
+		LIBRARIES += clBLAS
 		COMMON_FLAGS += -DUSE_CLBLAS
 	endif
 	
@@ -202,7 +202,7 @@ ifeq ($(USE_GREENTEA),1)
 	COMMON_FLAGS += -DUSE_GREENTEA -DVIENNACL_WITH_OPENCL
 	
 	# Viennacl runtime debug output
-	ifeq ($(DEBUG), 0)
+	ifeq ($(DEBUG), 1)
 		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
 	endif
 	
