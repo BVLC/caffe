@@ -80,14 +80,15 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
-  if (this->output_labels_) {
-    top[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1);
-    this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
-        1, 1, 1);
-    if ( 0 < this->layer_param_.data_param().shuffle_buffer_size() ) {
-      this->shuffle_buffer_label_.Reshape(
-          this->layer_param_.data_param().shuffle_buffer_size() *
-              this->layer_param_.data_param().batch_size(), 1, 1, 1);
+  if  (this->output_labels_) {
+    vector<int> label_shape(1, this->layer_param_.data_param().batch_size());
+    top[1]->Reshape(label_shape);
+    this->prefetch_label_.Reshape(label_shape);
+    if (0 < this->layer_param_.data_param().shuffle_buffer_size()) {
+      vector<int> shuffle_buffer_label_shape(1,
+      this->layer_param_.data_param().batch_size()
+      * this->layer_param_.data_param().shuffle_buffer_size() );
+      this->shuffle_buffer_label_.Reshape(shuffle_buffer_label_shape);
     }
   }
 }
@@ -106,9 +107,17 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   // Reshape on single input batches for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
   const int crop_size = this->layer_param_.transform_param().crop_size();
+  bool force_color = this->layer_param_.data_param().force_encoded_color();
   if (batch_size == 1 && crop_size == 0) {
     Datum datum;
     datum.ParseFromString(cursor_->value());
+    if (datum.encoded()) {
+      if (force_color) {
+        DecodeDatum(&datum, true);
+      } else {
+        DecodeDatumNative(&datum);
+      }
+    }
     this->prefetch_data_.Reshape(1, datum.channels(),
         datum.height(), datum.width());
     this->transformed_data_.Reshape(1, datum.channels(),
@@ -121,14 +130,14 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
-  bool force_color = this->layer_param_.data_param().force_encoded_color();
+
     int read_cycles = 1;
-    if ( !(this->shuffle_on_init) &&
-        (0 < this->layer_param_.data_param().shuffle_buffer_size())) {
+    if (!this->shuffle_on_init &&
+    (0 < this->layer_param_.data_param().shuffle_buffer_size())) {
       read_cycles = 1+this->layer_param_.data_param().shuffle_buffer_size();
     }
-    for ( int cycle = 0; cycle < read_cycles ; ++cycle ) {
-      for ( int item_id = 0; item_id < batch_size; ++item_id ) {
+    for (int cycle = 0; cycle < read_cycles ; ++cycle) {
+      for (int item_id = 0; item_id < batch_size; ++item_id) {
         timer.Start();
         // get a blob
         Datum datum;
@@ -200,12 +209,6 @@ void DataLayer<Dtype>::InternalThreadEntry() {
           cursor_->SeekToFirst();
         }
       }
-      if (cv_img.channels() != this->transformed_data_.channels()) {
-        LOG(WARNING) << "Your dataset contains encoded images with mixed "
-        << "channel sizes. Consider adding a 'force_color' flag to the "
-        << "model definition, or rebuild your dataset using "
-        << "convert_imageset.";
-      }
 
     read_time += timer.MicroSeconds();
     timer.Start();
@@ -254,7 +257,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
               this->prefetch_label_.mutable_cpu_data()[item_id]);
         }
       }
-      LOG(INFO) << swap_timer.MicroSeconds()/1000.0 << "ms for shuffle";
+//      LOG(INFO) << swap_timer.MicroSeconds()/1000.0 << "ms for shuffle";
     }
     this->shuffle_on_init = true;
   batch_timer.Stop();

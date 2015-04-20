@@ -13,8 +13,11 @@ void CuDNNSigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   CUDNN_CHECK(cudnnActivationForward(this->handle_,
-      CUDNN_ACTIVATION_SIGMOID,
-      this->bottom_desc_, bottom_data, this->top_desc_, top_data));
+        CUDNN_ACTIVATION_SIGMOID,
+        cudnn::dataType<Dtype>::one,
+        this->bottom_desc_, bottom_data,
+        cudnn::dataType<Dtype>::zero,
+        this->top_desc_, top_data));
 }
 
 template <typename Dtype>
@@ -30,9 +33,12 @@ void CuDNNSigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   CUDNN_CHECK(cudnnActivationBackward(this->handle_,
-      CUDNN_ACTIVATION_SIGMOID,
-      this->top_desc_, top_data, this->top_desc_, top_diff,
-      this->bottom_desc_, bottom_data, this->bottom_desc_, bottom_diff));
+        CUDNN_ACTIVATION_SIGMOID,
+        cudnn::dataType<Dtype>::one,
+        this->top_desc_, top_data, this->top_desc_, top_diff,
+        this->bottom_desc_, bottom_data,
+        cudnn::dataType<Dtype>::zero,
+        this->bottom_desc_, bottom_diff));
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNSigmoidLayer);

@@ -14,6 +14,7 @@ layer {
     source: "examples/cifar10/cifar10_train_lmdb"
     batch_size: 111
     backend: LMDB
+    force_encoded_color: true
   }
 }
 layer {
@@ -31,6 +32,7 @@ layer {
     source: "examples/cifar10/cifar10_test_lmdb"
     batch_size: 1000
     backend: LMDB
+    force_encoded_color: true
   }
 }
 layer {

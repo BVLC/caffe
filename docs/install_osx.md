@@ -18,7 +18,7 @@ In other `ENV` settings, things may not work as expected.
     brew install --fresh -vd snappy leveldb gflags glog szip lmdb
     # need the homebrew science source for OpenCV and hdf5
     brew tap homebrew/science
-    hdf5 opencv
+    brew install hdf5 opencv
 
 If using Anaconda Python, a modification to the OpenCV formula might be needed
 Do `brew edit opencv` and change the lines that look like the two lines below to exactly the two lines below.
@@ -32,7 +32,7 @@ If using Anaconda Python, HDF5 is bundled and the `hdf5` formula can be skipped.
 
     # with Python pycaffe needs dependencies built from source
     brew install --build-from-source --with-python --fresh -vd protobuf
-    brew install --build-from-source --fresh -vd boost
+    brew install --build-from-source --fresh -vd boost boost-python
     # without Python the usual installation suffices
     brew install protobuf boost
 
@@ -115,7 +115,7 @@ Then, whenever you want to update homebrew, switch back to the master branches, 
     # Update homebrew; hopefully this works without errors!
     brew update
 
-    # Switch back to the caffe branches with the forumlae that you modified earlier
+    # Switch back to the caffe branches with the formulae that you modified earlier
     cd /usr/local
     git rebase master caffe
     # Fix any merge conflicts and commit to caffe branch

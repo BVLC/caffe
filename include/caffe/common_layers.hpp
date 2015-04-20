@@ -147,8 +147,8 @@ class ConcatLayer : public Layer<Dtype> {
    *   - K @f$ (N \times C \times H \times W) @f$
    *      the inputs @f$ x_K @f$
    * @param top output Blob vector (length 1)
-   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
-   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
+   *   -# @f$ (KN \times C \times H \times W) @f$ if axis == 0, or
+   *      @f$ (N \times KC \times H \times W) @f$ if axis == 1:
    *      the concatenated output @f$
    *        y = [\begin{array}{cccc} x_1 & x_2 & ... & x_K \end{array}]
    *      @f$
@@ -163,8 +163,8 @@ class ConcatLayer : public Layer<Dtype> {
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *        respect to the outputs
-   *   -# @f$ (KN \times C \times H \times W) @f$ if concat_dim == 0, or
-   *      @f$ (N \times KC \times H \times W) @f$ if concat_dim == 1:
+   *   -# @f$ (KN \times C \times H \times W) @f$ if axis == 0, or
+   *      @f$ (N \times KC \times H \times W) @f$ if axis == 1:
    *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
    *      with respect to concatenated outputs @f$ y @f$
    * @param propagate_down see Layer::Backward.
@@ -185,13 +185,10 @@ class ConcatLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> col_bob_;
   int count_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
-  int concat_dim_;
+  int num_concats_;
+  int concat_input_size_;
+  int concat_axis_;
 };
 
 /**
@@ -264,8 +261,6 @@ class FlattenLayer : public Layer<Dtype> {
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
 
   /**
    * @brief Computes the error gradient w.r.t. the concatenate inputs.
@@ -278,10 +273,6 @@ class FlattenLayer : public Layer<Dtype> {
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-
-  int count_;
 };
 
 /**
@@ -410,6 +401,9 @@ class SoftmaxLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  int outer_num_;
+  int inner_num_;
+  int softmax_axis_;
   /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
   /// scale is an intermediate Blob to hold temporary results.
@@ -440,8 +434,8 @@ class CuDNNSoftmaxLayer : public SoftmaxLayer<Dtype> {
 
   bool handles_setup_;
   cudnnHandle_t             handle_;
-  cudnnTensor4dDescriptor_t bottom_desc_;
-  cudnnTensor4dDescriptor_t top_desc_;
+  cudnnTensorDescriptor_t bottom_desc_;
+  cudnnTensorDescriptor_t top_desc_;
 };
 #endif
 
@@ -506,13 +500,10 @@ class SliceLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> col_bob_;
   int count_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
-  int slice_dim_;
+  int num_slices_;
+  int slice_size_;
+  int slice_axis_;
   vector<int> slice_point_;
 };
 

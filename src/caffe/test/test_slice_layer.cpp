@@ -62,7 +62,7 @@ TYPED_TEST_CASE(SliceLayerTest, TestDtypesAndDevices);
 TYPED_TEST(SliceLayerTest, TestSetupNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.mutable_slice_param()->set_slice_dim(0);
+  layer_param.mutable_slice_param()->set_axis(0);
   SliceLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_1_);
   EXPECT_EQ(this->blob_bottom_->num(), 3 * this->blob_top_0_->num());
@@ -91,7 +91,7 @@ TYPED_TEST(SliceLayerTest, TestSetupChannels) {
 TYPED_TEST(SliceLayerTest, TestSliceAcrossNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.mutable_slice_param()->set_slice_dim(0);
+  layer_param.mutable_slice_param()->set_axis(0);
   SliceLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_0_);
   const int top_num = this->blob_bottom_->num() / 2;
@@ -166,7 +166,7 @@ TYPED_TEST(SliceLayerTest, TestGradientAcrossNum) {
   // Gradient checks are slow; reduce blob size.
   this->ReduceBottomBlobSize();
   LayerParameter layer_param;
-  layer_param.mutable_slice_param()->set_slice_dim(0);
+  layer_param.mutable_slice_param()->set_axis(0);
   SliceLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

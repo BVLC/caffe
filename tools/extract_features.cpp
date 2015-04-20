@@ -147,9 +147,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
       int dim_features = feature_blob->count() / batch_size;
       const Dtype* feature_blob_data;
       for (int n = 0; n < batch_size; ++n) {
-        datum.set_height(dim_features);
-        datum.set_width(1);
-        datum.set_channels(1);
+        datum.set_height(feature_blob->height());
+        datum.set_width(feature_blob->width());
+        datum.set_channels(feature_blob->channels());
         datum.clear_data();
         datum.clear_float_data();
         feature_blob_data = feature_blob->cpu_data() +

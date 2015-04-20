@@ -207,8 +207,8 @@ namespace caffe {
         bottom_diff);
 
     // put the squares of bottom into buffer_blob_
-    caffe_gpu_powx(buffer_blob_.count(), bottom_data, Dtype(2),
-        buffer_blob_.mutable_gpu_data());
+//    caffe_gpu_powx(buffer_blob_.count(), bottom_data, Dtype(2),
+//        buffer_blob_.mutable_gpu_data());
 
     caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, N_, C_, 1, Dtype(1),
         batch_sum_multiplier_.gpu_data(), batch_variance_.gpu_data(), Dtype(0),

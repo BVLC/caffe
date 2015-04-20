@@ -171,6 +171,7 @@ WARNINGS := -Wall -Wno-sign-compare
 # Set build directories
 ##############################
 
+DISTRIBUTE_DIR ?= distribute
 DISTRIBUTE_SUBDIRS := $(DISTRIBUTE_DIR)/bin $(DISTRIBUTE_DIR)/lib
 DIST_ALIASES := dist
 ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
@@ -232,13 +233,15 @@ endif
 # libstdc++ for NVCC compatibility on OS X >= 10.9 with CUDA < 7.0
 ifeq ($(OSX), 1)
 	CXX := /usr/bin/clang++
-	CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release \d' | grep -o '\d')
-	ifeq ($(shell echo $(CUDA_VERSION) \< 7.0 | bc), 1)
-		CXXFLAGS += -stdlib=libstdc++
-		LINKFLAGS += -stdlib=libstdc++
+	ifneq ($(CPU_ONLY), 1)
+		CUDA_VERSION := $(shell $(CUDA_DIR)/bin/nvcc -V | grep -o 'release \d' | grep -o '\d')
+		ifeq ($(shell echo $(CUDA_VERSION) \< 7.0 | bc), 1)
+			CXXFLAGS += -stdlib=libstdc++
+			LINKFLAGS += -stdlib=libstdc++
+		endif
+		# clang throws this warning for cuda headers
+		WARNINGS += -Wno-unneeded-internal-declaration
 	endif
-	# clang throws this warning for cuda headers
-	WARNINGS += -Wno-unneeded-internal-declaration
 	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X

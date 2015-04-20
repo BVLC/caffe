@@ -50,6 +50,9 @@ namespace caffe {
   template <typename Dtype>
   void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+    CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
+    "allow in-place computation.";
+
     top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
         bottom[0]->height(), bottom[0]->width());
 
@@ -323,8 +326,8 @@ namespace caffe {
         bottom_diff);
 
     // put the squares of bottom into buffer_blob_
-    caffe_powx(buffer_blob_.count(), bottom_data, Dtype(2),
-        buffer_blob_.mutable_cpu_data());
+//    caffe_powx(buffer_blob_.count(), bottom_data, Dtype(2),
+//        buffer_blob_.mutable_cpu_data());
 
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
         N_, C_, 1, Dtype(1),

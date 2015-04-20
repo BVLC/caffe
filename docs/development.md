@@ -30,7 +30,7 @@ Similarly for IPython notebooks: simply include `"include_in_docs": true` in the
 
 Other docs, such as installation guides, are written in the `docs` directory and manually linked to from the `index.md` page.
 
-We strive to provide provide lots of usage examples, and to document all code in docstrings.
+We strive to provide lots of usage examples, and to document all code in docstrings.
 We absolutely appreciate any contribution to this effort!
 
 ### Versioning
