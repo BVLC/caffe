@@ -26,6 +26,12 @@
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/ocl/backend.hpp"
 
+// TODO: Remove:
+
+#ifdef USE_CLBLAS
+#include <clBLAS.h>
+#endif USE_CLBLAS
+
 namespace caffe {
 
 // Copy from OpenCL buffer to main memory
@@ -43,7 +49,8 @@ void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
                          viennacl::ocl::context &ctx) {
   if (X != NULL) {
     cl_int err = clEnqueueWriteBuffer(ctx.get_queue().handle().get(), Y,
-                                      CL_TRUE, 0, N, X, 0, NULL, NULL);
+    CL_TRUE,
+                                      0, N, X, 0, NULL, NULL);
   }
   ctx.get_queue().finish();
 }
@@ -69,35 +76,22 @@ template void greentea_copy<float>(const int N, const cl_mem X, cl_mem Y,
 template void greentea_copy<double>(const int N, const cl_mem X, cl_mem Y,
                                     viennacl::ocl::context &ctx);
 
-template<>
-void greentea_gpu_gemm<float>(int ctx_id, const CBLAS_TRANSPOSE TransA,
-                              const CBLAS_TRANSPOSE TransB, const int M,
-                              const int N, const int K, const float alpha,
-                              const cl_mem A, const cl_mem B, const float beta,
-                              cl_mem C) {
+template<class Dtype>
+void greentea_gpu_gemm(int ctx_id, const CBLAS_TRANSPOSE TransA,
+                       const CBLAS_TRANSPOSE TransB, const int M, const int N,
+                       const int K, const Dtype alpha, const cl_mem A, int offA,
+                       const cl_mem B, int offB, const Dtype beta, cl_mem C,
+                       int offC) {
 
-  ViennaCLBackend backend;
-  ViennaCLBackendCreate(&backend);
-  ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
-
-  ViennaCLTranspose vclTransA =
-      (TransA == CblasNoTrans) ? ViennaCLNoTrans : ViennaCLTrans;
-  ViennaCLTranspose vclTransB =
-      (TransB == CblasNoTrans) ? ViennaCLNoTrans : ViennaCLTrans;
-
-  ViennaCLOrder vclOrderA = ViennaCLRowMajor;
-  ViennaCLOrder vclOrderB = ViennaCLRowMajor;
-  ViennaCLOrder vclOrderC = ViennaCLRowMajor;
-
-  int offArow = 0;
+  int offArow = offA;
   int offAcol = 0;
   int incArow = 1;
   int incAcol = 1;
-  int offBrow = 0;
+  int offBrow = offB;
   int offBcol = 0;
   int incBrow = 1;
   int incBcol = 1;
-  int offCrow = 0;
+  int offCrow = offC;
   int offCcol = 0;
   int incCrow = 1;
   int incCcol = 1;
@@ -106,22 +100,7 @@ void greentea_gpu_gemm<float>(int ctx_id, const CBLAS_TRANSPOSE TransA,
   int ldb = (TransB == CblasNoTrans) ? N : K;
   int ldc = N;
 
-  GREENTEA_BLAS_CHECK(
-      ViennaCLOpenCLSgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
-                          vclOrderC, M, N, K, alpha, A, offArow, offAcol,
-                          incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
-                          incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
-                          incCcol, ldc));
-
-}
-
-template<>
-void greentea_gpu_gemm<double>(int ctx_id, const CBLAS_TRANSPOSE TransA,
-                               const CBLAS_TRANSPOSE TransB, const int M,
-                               const int N, const int K, const double alpha,
-                               const cl_mem A, const cl_mem B,
-                               const double beta, cl_mem C) {
-
+#ifdef USE_VIENNACLBLAS
   ViennaCLBackend backend;
   ViennaCLBackendCreate(&backend);
   ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
@@ -135,31 +114,56 @@ void greentea_gpu_gemm<double>(int ctx_id, const CBLAS_TRANSPOSE TransA,
   ViennaCLOrder vclOrderB = ViennaCLRowMajor;
   ViennaCLOrder vclOrderC = ViennaCLRowMajor;
 
-  int offArow = 0;
-  int offAcol = 0;
-  int incArow = 1;
-  int incAcol = 1;
-  int offBrow = 0;
-  int offBcol = 0;
-  int incBrow = 1;
-  int incBcol = 1;
-  int offCrow = 0;
-  int offCcol = 0;
-  int incCrow = 1;
-  int incCcol = 1;
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_BLAS_CHECK(
+        ViennaCLOpenCLSgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
+                            vclOrderC, M, N, K, alpha, A, offArow, offAcol,
+                            incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
+                            incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
+                            incCcol, ldc));
+  } else {
+    GREENTEA_BLAS_CHECK(
+        ViennaCLOpenCLDgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
+                            vclOrderC, M, N, K, alpha, A, offArow, offAcol,
+                            incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
+                            incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
+                            incCcol, ldc));
+  }
+#endif
+#ifdef USE_CLBLAS
+  clblasOrder clOrder = clblasRowMajor;
+  clblasTranspose clTransA =
+      (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
+  clblasTranspose clTransB =
+      (TransB == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
-  int lda = (TransA == CblasNoTrans) ? K : M;
-  int ldb = (TransB == CblasNoTrans) ? N : K;
-  int ldc = 0;
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
 
-  GREENTEA_BLAS_CHECK(
-      ViennaCLOpenCLDgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
-                          vclOrderC, M, N, K, alpha, A, offArow, offAcol,
-                          incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
-                          incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
-                          incCcol, ldc));
+  cl_command_queue queue = ctx.get_queue().handle().get();
+
+  if (std::is_same<Dtype, float>::value) {
+    clblasSgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
+                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL);
+  } else {
+    clblasDgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
+                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL);
+  }
+#endif
 
 }
+
+template void greentea_gpu_gemm<float>(int ctx_id, const CBLAS_TRANSPOSE TransA,
+                                       const CBLAS_TRANSPOSE TransB,
+                                       const int M, const int N, const int K,
+                                       const float alpha, const cl_mem A,
+                                       int offA, const cl_mem B, int offB,
+                                       const float beta, cl_mem C, int offC);
+template void greentea_gpu_gemm<double>(int ctx_id, const CBLAS_TRANSPOSE TransA,
+                                       const CBLAS_TRANSPOSE TransB,
+                                       const int M, const int N, const int K,
+                                       const double alpha, const cl_mem A,
+                                       int offA, const cl_mem B, int offB,
+                                       const double beta, cl_mem C, int offC);
 
 /*  template<>
  void greentea_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
