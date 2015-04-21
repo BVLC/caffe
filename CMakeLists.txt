@@ -22,6 +22,8 @@ caffe_option(BUILD_matlab "Build Matlab wrapper" OFF IF UNIX OR APPLE)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
 caffe_option(BUILD_python_layer "Build the caffe python layer" ON)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "/media/ssd/caffe_bvlc/build")
+
 # ---[ Dependencies
 include(cmake/Dependencies.cmake)
 
