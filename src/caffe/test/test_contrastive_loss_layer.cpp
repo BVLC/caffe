@@ -22,15 +22,15 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   ContrastiveLossLayerTest()
-      : blob_bottom_data_i_(new Blob<Dtype>(128, 10, 1, 1)),
-        blob_bottom_data_j_(new Blob<Dtype>(128, 10, 1, 1)),
-        blob_bottom_y_(new Blob<Dtype>(128, 1, 1, 1)),
+      : blob_bottom_data_i_(new Blob<Dtype>(512, 2, 1, 1)),
+        blob_bottom_data_j_(new Blob<Dtype>(512, 2, 1, 1)),
+        blob_bottom_y_(new Blob<Dtype>(512, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
-    filler_param.set_mean(0.0);
-    filler_param.set_std(0.3);  // distances~=1.0 to test both sides of margin
-    GaussianFiller<Dtype> filler(filler_param);
+    filler_param.set_min(-1.0);
+    filler_param.set_max(1.0);  // distances~=1.0 to test both sides of margin
+    UniformFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_data_i_);
     blob_bottom_vec_.push_back(blob_bottom_data_i_);
     filler.Fill(this->blob_bottom_data_j_);

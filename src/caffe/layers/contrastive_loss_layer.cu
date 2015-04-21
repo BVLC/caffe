@@ -58,7 +58,7 @@ __global__ void CLLBackward(const int count, const int channels,
       Dtype dist = sqrt(dist_sq[n]);
       Dtype mdist = (margin - dist);
       if (mdist > 0.0) {
-        bottom_diff[i] = -alpha * mdist / dist * diff[i];
+        bottom_diff[i] = -alpha * mdist / (dist + Dtype(1e-4)) * diff[i];
       } else {
         bottom_diff[i] = 0;
       }
