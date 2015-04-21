@@ -170,7 +170,7 @@ static void forward(MEX_ARGS) {
 //PURPOSE:
 //	PROPAGATES DATA diffs BACKWARD THROUGH THE NETWORK
 //ARGUMENTS:
-//	4-D SINGLE ARRAY INSIDE A CELL WITH LAST LAYER OUTPUT DATA(e.g.SOFTMAX)
+//	-NOTHING-
 //RETURNS:
 //	-NOTHING-
 //-----------------------------------------------------------------------------
