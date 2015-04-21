@@ -82,7 +82,7 @@ void ContrastiveLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           if (mdist > Dtype(0.0)) {
             caffe_cpu_axpby(
                 channels,
-                -alpha * mdist / dist,
+                -alpha * mdist / (dist + Dtype(1e-4)),
                 diff_.cpu_data() + (j*channels),
                 Dtype(0.0),
                 bout + (j*channels));
