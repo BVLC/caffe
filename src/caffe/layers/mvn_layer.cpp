@@ -163,64 +163,70 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 namespace OpenCL {
 
 	template<typename T> bool clMVNLayerForwardResidual(
-			const T* bottom_data, const int bottom_data_height, const int bottom_data_width,
+      const T* bottom_data, const int bottom_data_height,
+      const int bottom_data_width,
 			const T* sum_multiplier, const int sum_multiplier_width,
 			const T* mean, const int mean_width,
 			const T* variance, const int variance_width,
 			const T eps,
 			T* top_data, const int top_data_height, const int top_data_width
 		    ) {
+    OpenCLDevice& current_device =
+        OpenCLManager::CurrentPlatform().CurrentDevice();
+    std::string kernel_name = clGetKernelName<T>("MVNLayerForwardResidual");
+    cl_command_queue* queue = current_device.getQueue();
+    if ( ! queue ) {
+      LOG(ERROR) << current_device.name()
+                 << "> failed to get OpenCL command queue";
+      return false;
+    }
 
-		std::string kernel_name = clGetKernelName<T>("MVNLayerForwardResidual");
+    cl_kernel* kernel = current_device.getKernel(kernel_name);
+    if (kernel == NULL) {
+      return false;
+    }
 
-		queue = gpu->getQueue();
-		if ( ! queue ) {
-			LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
-			return false;
-		}
+    CL_SET_KERNEL_ARG
+    CL_SET_ARRAY_KERNEL_ARG(&bottom_data, kernel)
+    CL_SET_TYPE_KERNEL_ARG(const int, bottom_data_height, kernel)
+    CL_SET_TYPE_KERNEL_ARG(const int, bottom_data_width, kernel)
+    CL_SET_ARRAY_KERNEL_ARG(&sum_multiplier, kernel)
+    CL_SET_TYPE_KERNEL_ARG(const int, sum_multiplier_width, kernel)
+    CL_SET_ARRAY_KERNEL_ARG(&mean, kernel)
+    CL_SET_TYPE_KERNEL_ARG(const int, mean_width, kernel)
+    CL_SET_ARRAY_KERNEL_ARG(&variance, kernel)
+    CL_SET_TYPE_KERNEL_ARG(const int, variance_width, kernel)
+    CL_SET_TYPE_KERNEL_ARG(T, eps, kernel)
+    CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
+    CL_SET_TYPE_KERNEL_ARG(const int, top_data_height, kernel)
+    CL_SET_TYPE_KERNEL_ARG(const int, top_data_width, kernel)
 
-		kernel = gpu->getKernel(kernel_name);
-		if ( kernel == NULL ) {
-			return false;
-		}
+    int dim = 1;
+    size_t global[1] = {CAFFE_GET_GLOBAL_WORKITEMS(bottom_data_width*bottom_data_height, OPENCL_LOCAL_SIZE)};
+    size_t local[1]  = {CAFFE_GET_LOCAL_WORKITEMS(bottom_data_width*bottom_data_height, OPENCL_LOCAL_SIZE)};
 
-		CL_SET_KERNEL_ARG
-		CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
-		CL_SET_TYPE_KERNEL_ARG(const int, bottom_data_height)
-		CL_SET_TYPE_KERNEL_ARG(const int, bottom_data_width)
-		CL_SET_ARRAY_KERNEL_ARG(&sum_multiplier)
-		CL_SET_TYPE_KERNEL_ARG(const int, sum_multiplier_width)
-		CL_SET_ARRAY_KERNEL_ARG(&mean)
-		CL_SET_TYPE_KERNEL_ARG(const int, mean_width)
-		CL_SET_ARRAY_KERNEL_ARG(&variance)
-		CL_SET_TYPE_KERNEL_ARG(const int, variance_width)
-		CL_SET_TYPE_KERNEL_ARG(T, eps)
-		CL_SET_ARRAY_KERNEL_ARG(&top_data)
-		CL_SET_TYPE_KERNEL_ARG(const int, top_data_height)
-		CL_SET_TYPE_KERNEL_ARG(const int, top_data_width)
+    //int dim = 2;
+    //size_t global[2] = {bottom_data_height, 256};
+    //size_t local[2] = {bottom_data_height, 32};
+    //LOG(ERROR)<<"global = "<<global[0]<<" x "<<global[1];
+    //LOG(ERROR)<<"local  = "<<local[0]<<" x "<<local[1];
 
-		int dim 			= 1;
-		size_t global[1] = {CAFFE_GET_GLOBAL_WORKITEMS(bottom_data_width*bottom_data_height, OPENCL_LOCAL_SIZE)};
-		size_t local[1]  = {CAFFE_GET_LOCAL_WORKITEMS(bottom_data_width*bottom_data_height, OPENCL_LOCAL_SIZE)};
+    err = clEnqueueNDRangeKernel(*queue, *kernel, dim, NULL,
+                                 global, local, 0, NULL, NULL);
+    if ( err != CL_SUCCESS ) {
+      LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+                 <<"' on GPU "<< current_device.name()
+                 <<" : "<<caffe::OpenCL::what(err);
+      return false;
+    }
+    //clFinish(*queue);
+    DLOG(INFO) << "kernel '" << kernel_name.c_str()
+               << "' executed on GPU " << current_device.name();
 
-		//int dim = 2;
-		//size_t global[2] = {bottom_data_height, 256};
-		//size_t local[2] = {bottom_data_height, 32};
-		//LOG(ERROR)<<"global = "<<global[0]<<" x "<<global[1];
-		//LOG(ERROR)<<"local  = "<<local[0]<<" x "<<local[1];
+    CL_SET_KERNEL_ARG_END
 
-		err = clEnqueueNDRangeKernel(*queue, *kernel, dim, NULL, global, local, 0, NULL, NULL);
-		if ( err != CL_SUCCESS ) {
-			LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
-			return false;
-		}
-		//clFinish(*queue);
-		DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
-
-		CL_SET_KERNEL_ARG_END
-
-		return true;
-	};
+    return true;
+  };
 	template bool clMVNLayerForwardResidual<float>(const float* bottom_data, const int bottom_data_height, const int bottom_data_width, const float* sum_multiplier, const int sum_multiplier_width, const float* mean, const int mean_width, const float* variance, const int variance_width, const float eps, float* top_data, const int top_data_height, const int top_data_width);
 	template bool clMVNLayerForwardResidual<double>(const double* bottom_data, const int bottom_data_height, const int bottom_data_width, const double* sum_multiplier, const int sum_multiplier_width, const double* mean, const int mean_width, const double* variance, const int variance_width, const double eps, double* top_data, const int top_data_height, const int top_data_width);
 
@@ -233,39 +239,44 @@ template<typename T> bool clMVNLayerForwardMV2(
 		T* linear_term,
 		T* quadratic_term
 	    ) {
-
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForwardMV2");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&data2D)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_height)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_width)
-	CL_SET_ARRAY_KERNEL_ARG(&data1D)
-	CL_SET_TYPE_KERNEL_ARG(int, data1D_length)
-	CL_SET_ARRAY_KERNEL_ARG(&linear_term)
-	CL_SET_ARRAY_KERNEL_ARG(&quadratic_term)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data1D, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data1D_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&linear_term, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&quadratic_term, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_height, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_height, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
-	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
+  if (err != CL_SUCCESS) {
+    LOG(ERROR) << "Failed to enqueue kernel '"
+               << kernel_name.c_str() << "' on GPU "
+               << current_device.name() << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -282,43 +293,48 @@ template<typename T> bool clMVNLayerForward(
 		const T eps,
 		T* data2D_out
 	    ) {
-
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForward");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width)
-	CL_SET_ARRAY_KERNEL_ARG(&data1D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length)
-	CL_SET_ARRAY_KERNEL_ARG(&linear_term)
-	CL_SET_TYPE_KERNEL_ARG(int, linear_term_length)
-	CL_SET_ARRAY_KERNEL_ARG(&quadratic_term)
-	CL_SET_TYPE_KERNEL_ARG(int, quadratic_term_length)
-	CL_SET_TYPE_KERNEL_ARG(T, eps)
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_out)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data1D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&linear_term, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, linear_term_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&quadratic_term, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, quadratic_term_length, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, eps, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_out, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_in_height*data2D_in_width,
+                                             OPENCL_LOCAL_SIZE);
+  size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_in_height*data2D_in_width,
+                                            OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
+                               &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+               <<"' on GPU "<< current_device.name()
+               << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             <<"' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -333,51 +349,56 @@ template bool clMVNLayerForward<float>(
 		float* data2D_out
 	    );
 template bool clMVNLayerForward<double>(
-		const double* data2D_in, const int data2D_in_height, const int data2D_in_width,
-		const double* data1D_in, const int data1D_in_length,
-		const double* linear_term, const int linear_term_length,
-		const double* quadratic_term, const int quadratic_term_length,
-		const double eps,
-		double* data2D_out
-	    );
+    const double* data2D_in, const int data2D_in_height,
+    const int data2D_in_width, const double* data1D_in,
+    const int data1D_in_length, const double* linear_term,
+    const int linear_term_length, const double* quadratic_term,
+    const int quadratic_term_length, const double eps, double* data2D_out);
 
 template<typename T> bool clMVNLayerForwardS2(
 		const T* data2D_in, const int data2D_in_height, const int data2D_in_width,
 		const T* data1D_in, const int data1D_in_length,
 		T* data2D_out
 	    ) {
-
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForwardS2");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width)
-	CL_SET_ARRAY_KERNEL_ARG(&data1D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length)
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_out)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data1D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_out, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_in_height*data2D_in_width,
+                                             OPENCL_LOCAL_SIZE);
+  size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_in_height*data2D_in_width,
+                                            OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
+                               &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+               << "' on GPU "<< current_device.name()
+               << " : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             <<"' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -401,45 +422,48 @@ template<typename T> bool clMVNLayerBackward(
 		const T* linear_term, const int linear_term_length,
 		const T* quadratic_term, const int quadratic_term_length,
 		const T eps,
-		T* data2D_out
-	    ) {
-
+    T* data2D_out ) {
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerBackward");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width)
-	CL_SET_ARRAY_KERNEL_ARG(&data1D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length)
-	CL_SET_ARRAY_KERNEL_ARG(&linear_term)
-	CL_SET_TYPE_KERNEL_ARG(int, linear_term_length)
-	CL_SET_ARRAY_KERNEL_ARG(&quadratic_term)
-	CL_SET_TYPE_KERNEL_ARG(int, quadratic_term_length)
-	CL_SET_TYPE_KERNEL_ARG(T, eps)
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_out)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data1D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&linear_term, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, linear_term_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&quadratic_term, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, quadratic_term_length, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, eps, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_out, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+               <<"' on GPU " << current_device.name()<<" : "
+               << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "
+             << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -463,111 +487,130 @@ template bool clMVNLayerBackward<double>(
 	    );
 
 template<typename T> bool clMVNLayerBackwardMV2(
-		const T* data2D, const T* diff2D, const int data2D_height, const int data2D_width,
-		const T* data1D, const int data1D_length,
+    const T* data2D, const T* diff2D, const int data2D_height,
+    const int data2D_width, const T* data1D, const int data1D_length,
 		T* linear_term,
 		T* quadratic_term
 	    ) {
-
-	std::string kernel_name = clGetKernelName<T>("MVNLayerBackwardMV2");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  std::string kernel_name = clGetKernelName<T>("MVNLayerBackwardMV2");
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&data2D)
-	CL_SET_ARRAY_KERNEL_ARG(&diff2D)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_height)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_width)
-	CL_SET_ARRAY_KERNEL_ARG(&data1D)
-	CL_SET_TYPE_KERNEL_ARG(int, data1D_length)
-	CL_SET_ARRAY_KERNEL_ARG(&linear_term)
-	CL_SET_ARRAY_KERNEL_ARG(&quadratic_term)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&diff2D, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data1D, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data1D_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&linear_term, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&quadratic_term, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_height, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_height, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()
+               << "' on GPU " << current_device.name()
+               << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
 	return true;
 };
-template bool clMVNLayerBackwardMV2<float>(const float* data2D, const float* diff2D, const int data2D_height, const int data2D_width, const float* data1D, const int data1D_length, float* linear_term, float* quadratic_term);
-template bool clMVNLayerBackwardMV2<double>(const double* data2D, const double* diff2D, const int data2D_height, const int data2D_width, const double* data1D, const int data1D_length, double* linear_term, double* quadratic_term);
+template bool clMVNLayerBackwardMV2<float>(const float* data2D,
+    const float* diff2D, const int data2D_height, const int data2D_width,
+    const float* data1D, const int data1D_length, float* linear_term,
+    float* quadratic_term);
+template bool clMVNLayerBackwardMV2<double>(const double* data2D,
+    const double* diff2D, const int data2D_height, const int data2D_width,
+    const double* data1D, const int data1D_length, double* linear_term,
+    double* quadratic_term);
 
 template<typename T> bool clMVNLayerBackwardS1(
-		const T* data2D_in, const T* diff2D_in, const int data2D_in_height, const int data2D_in_width,
+    const T* data2D_in, const T* diff2D_in, const int data2D_in_height,
+    const int data2D_in_width,
 		const T* data1D_in, const int data1D_in_length,
 		const T* linear_term, const int linear_term_length,
 		const T* quadratic_term, const int quadratic_term_length,
 		T* data2D_out
 	    ) {
-
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerBackwardS1");
-
-	queue = gpu->getQueue();
+  cl_command_queue* queue = current_device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_in)
-	CL_SET_ARRAY_KERNEL_ARG(&diff2D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height)
-	CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width)
-	CL_SET_ARRAY_KERNEL_ARG(&data1D_in)
-	CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length)
-	CL_SET_ARRAY_KERNEL_ARG(&linear_term)
-	CL_SET_TYPE_KERNEL_ARG(int, linear_term_length)
-	CL_SET_ARRAY_KERNEL_ARG(&quadratic_term)
-	CL_SET_TYPE_KERNEL_ARG(int, quadratic_term_length)
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_out)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_in, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&diff2D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data2D_in_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data1D_in, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, data1D_in_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&linear_term, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, linear_term_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&quadratic_term, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, quadratic_term_length, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_out, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_in_height*data2D_in_width, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(data2D_in_height*data2D_in_width,
+                                             OPENCL_LOCAL_SIZE);
+  size_t local  = CAFFE_GET_LOCAL_WORKITEMS(data2D_in_height*data2D_in_width,
+                                            OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
+                               &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"
+               << kernel_name.c_str() << "' on GPU " << current_device.name()
+               <<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             <<"' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
 	return true;
 };
 template bool clMVNLayerBackwardS1<float>(
-		const float* data2D_in, const float* diff2D_in, const int data2D_in_height, const int data2D_in_width,
+    const float* data2D_in, const float* diff2D_in, const int data2D_in_height,
+    const int data2D_in_width,
 		const float* data1D_in, const int data1D_in_length,
 		const float* linear_term, const int linear_term_length,
 		const float* quadratic_term, const int quadratic_term_length,
 		float* data2D_out
 	    );
 template bool clMVNLayerBackwardS1<double>(
-		const double* data2D_in, const double* diff2D_in, const int data2D_in_height, const int data2D_in_width,
+    const double* data2D_in, const double* diff2D_in,
+    const int data2D_in_height, const int data2D_in_width,
 		const double* data1D_in, const int data1D_in_length,
 		const double* linear_term, const int linear_term_length,
 		const double* quadratic_term, const int quadratic_term_length,
@@ -575,118 +618,130 @@ template bool clMVNLayerBackwardS1<double>(
 	    );
 
 template<typename T> bool clMVNLayerForward_perf(
-		const T* A2D_top, const T* A2D_top_diff, const int top_height, const int top_width,
-		const T* A2D_bottom, const T* A2D_bottom_diff, const int bottom_height, const int bottom_width,
-		const T* A1D_sum_multiplier, const T* A1D_buffer, const int sum_multiplier_length,
-		const T eps,
-		T* data2D_out
+    const T* A2D_top, const T* A2D_top_diff, const int top_height,
+    const int top_width, const T* A2D_bottom, const T* A2D_bottom_diff,
+    const int bottom_height, const int bottom_width,
+    const T* A1D_sum_multiplier, const T* A1D_buffer,
+    const int sum_multiplier_length, const T eps, T* data2D_out
 	    ) {
-
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("MVNLayerForward_perf");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_top)
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_top_diff)
-	CL_SET_TYPE_KERNEL_ARG(int, top_height)
-	CL_SET_TYPE_KERNEL_ARG(int, top_width)
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom)
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom_diff)
-	CL_SET_TYPE_KERNEL_ARG(int, bottom_height)
-	CL_SET_TYPE_KERNEL_ARG(int, bottom_width)
-	CL_SET_ARRAY_KERNEL_ARG(&A1D_sum_multiplier)
-	CL_SET_ARRAY_KERNEL_ARG(&A1D_buffer)
-	CL_SET_TYPE_KERNEL_ARG(int, sum_multiplier_length)
-	CL_SET_TYPE_KERNEL_ARG(T, eps)
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_out)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_top, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_top_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, top_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, top_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, bottom_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, bottom_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A1D_sum_multiplier, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A1D_buffer, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, sum_multiplier_length, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, eps, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_out, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(top_height*top_width, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(top_height*top_width, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(top_height*top_width,
+                                             OPENCL_LOCAL_SIZE);
+  size_t local  = CAFFE_GET_LOCAL_WORKITEMS(top_height*top_width,
+                                            OPENCL_LOCAL_SIZE);
 
 	std::string function = __func__;
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+               << "' on GPU " << current_device.name()
+               << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
 	return true;
 };
 template bool clMVNLayerForward_perf<float>(
-		const float* A2D_top, const float* A2D_top_diff, const int top_height, const int top_width,
-		const float* A2D_bottom, const float* A2D_bottom_diff, const int bottom_height, const int bottom_width,
-		const float* A1D_sum_multiplier, const float* A1D_buffer, const int sum_multiplier_length,
-		const float eps,
-		float* data2D_out
+    const float* A2D_top, const float* A2D_top_diff, const int top_height,
+    const int top_width, const float* A2D_bottom, const float* A2D_bottom_diff,
+    const int bottom_height, const int bottom_width,
+    const float* A1D_sum_multiplier, const float* A1D_buffer,
+    const int sum_multiplier_length, const float eps, float* data2D_out
 	    );
 template bool clMVNLayerForward_perf<double>(
-		const double* A2D_top, const double* A2D_top_diff, const int top_height, const int top_width,
-		const double* A2D_bottom, const double* A2D_bottom_diff, const int bottom_height, const int bottom_width,
-		const double* A1D_sum_multiplier, const double* A1D_buffer, const int sum_multiplier_length,
-		const double eps,
-		double* data2D_out
-	    );
+    const double* A2D_top, const double* A2D_top_diff, const int top_height,
+    const int top_width, const double* A2D_bottom,
+    const double* A2D_bottom_diff, const int bottom_height,
+    const int bottom_width, const double* A1D_sum_multiplier,
+    const double* A1D_buffer, const int sum_multiplier_length,
+    const double eps, double* data2D_out);
 
 template<typename T> bool clMVNLayerBackward_perf(
-		const T* A2D_top, const T* A2D_top_diff, const int top_height, const int top_width,
-		const T* A2D_bottom, const T* A2D_bottom_diff, const int bottom_height, const int bottom_width,
-		const T* A1D_sum_multiplier, const T* A1D_buffer, const int sum_multiplier_length,
-		const T eps,
-		T* data2D_out
-	    ) {
-
+    const T* A2D_top, const T* A2D_top_diff, const int top_height,
+    const int top_width, const T* A2D_bottom, const T* A2D_bottom_diff,
+    const int bottom_height, const int bottom_width,
+    const T* A1D_sum_multiplier, const T* A1D_buffer,
+    const int sum_multiplier_length, const T eps, T* data2D_out ) {
 	std::string kernel_name = clGetKernelName<T>("MVNLayerBackward_perf");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_top)
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_top_diff)
-	CL_SET_TYPE_KERNEL_ARG(int, top_height)
-	CL_SET_TYPE_KERNEL_ARG(int, top_width)
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom)
-	CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom_diff)
-	CL_SET_TYPE_KERNEL_ARG(int, bottom_height)
-	CL_SET_TYPE_KERNEL_ARG(int, bottom_width)
-	CL_SET_ARRAY_KERNEL_ARG(&A1D_sum_multiplier)
-	CL_SET_ARRAY_KERNEL_ARG(&A1D_buffer)
-	CL_SET_TYPE_KERNEL_ARG(int, sum_multiplier_length)
-	CL_SET_TYPE_KERNEL_ARG(T, eps)
-	CL_SET_ARRAY_KERNEL_ARG(&data2D_out)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_top, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_top_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, top_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, top_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A2D_bottom_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, bottom_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, bottom_width, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A1D_sum_multiplier, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A1D_buffer, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, sum_multiplier_length, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, eps, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&data2D_out, kernel)
 
-	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(top_height*top_width, OPENCL_LOCAL_SIZE);
-	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(top_height*top_width, OPENCL_LOCAL_SIZE);
+  size_t global = CAFFE_GET_GLOBAL_WORKITEMS(top_height*top_width,
+                                             OPENCL_LOCAL_SIZE);
+  size_t local  = CAFFE_GET_LOCAL_WORKITEMS(top_height*top_width,
+                                            OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
+                               &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+               << "' on GPU " << current_device.name() << " : "
+               << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 

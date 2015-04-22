@@ -110,40 +110,40 @@ bool clCLLForward(
 		const T* diff,
 		const T* dist_sq,
 		T *bottom_diff) {
-
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("CLLForward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue =  device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, count)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(T, margin)
-	CL_SET_TYPE_KERNEL_ARG(T, alpha)
-	CL_SET_ARRAY_KERNEL_ARG(&y)
-	CL_SET_ARRAY_KERNEL_ARG(&diff)
-	CL_SET_ARRAY_KERNEL_ARG(&dist_sq)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+  CL_SET_TYPE_KERNEL_ARG(int, count, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, margin, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, alpha, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&y, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&diff, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&dist_sq, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU " << device.name();
 
 	CL_SET_KERNEL_ARG_END
 

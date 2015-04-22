@@ -67,7 +67,7 @@ private:
 	cl_context context;
 	std::vector<cl_program> programs;
 	cl_command_queue queue;
-	std::map<std::string, cl_kernel> kernel;
+  std::map<std::string, cl_kernel> kernel_map_;
 
 	std::map<const void*, caffe::OpenCLMemory> memory;
 };

@@ -142,39 +142,43 @@ template<typename T>
 bool clPReLUForward(const int n, const int channels, const int dim,
     const T* in, T* out, const T* slope_data,
     const int div_factor) {
-
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("PReLUForward");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, dim)
-	CL_SET_ARRAY_KERNEL_ARG(&in)
-	CL_SET_ARRAY_KERNEL_ARG(&out)
-	CL_SET_ARRAY_KERNEL_ARG(&slope_data)
-	CL_SET_TYPE_KERNEL_ARG(int, div_factor)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, dim, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&in, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&out, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&slope_data, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, div_factor, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
+                               &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"
+               << kernel_name.c_str() << "' on GPU "<< current_device.name()
+               << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name.c_str()
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -191,40 +195,43 @@ template<typename T>
 bool clPReLUBackward(const int n, const int channels, const int dim,
     const T* in_diff, const T* in_data, T* out_diff,
     const T* slope_data, const int div_factor) {
-
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("PReLUBackward");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, dim)
-	CL_SET_ARRAY_KERNEL_ARG(&in_diff)
-	CL_SET_ARRAY_KERNEL_ARG(&in_data)
-	CL_SET_ARRAY_KERNEL_ARG(&out_diff)
-	CL_SET_ARRAY_KERNEL_ARG(&slope_data)
-	CL_SET_TYPE_KERNEL_ARG(int, div_factor)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, dim, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&in_diff, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&in_data, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&out_diff, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&slope_data, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, div_factor, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"
+               << kernel_name << "' on GPU "
+               << current_device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -240,36 +247,39 @@ template bool clPReLUBackward<double>(const int n, const int channels, const int
 template<typename T>
 bool clPReLUParamBackward(const int n, const T* in_diff,
     const T* in_data, T* out_diff) {
-
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("PReLUParamBackward");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&in_diff)
-	CL_SET_ARRAY_KERNEL_ARG(&in_data)
-	CL_SET_ARRAY_KERNEL_ARG(&out_diff)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&in_diff, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&in_data, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&out_diff, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
+                               &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"
+               << kernel_name.c_str() << "' on GPU "
+               << current_device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name.c_str()
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 

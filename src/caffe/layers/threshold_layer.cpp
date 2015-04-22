@@ -34,43 +34,49 @@ namespace OpenCL {
 
 template<typename T>
 bool clThresholdForward(const int n, const T threshold, const T* in, T* out) {
-
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("ThresholdForward");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_TYPE_KERNEL_ARG(T, threshold)
-	CL_SET_ARRAY_KERNEL_ARG(&in)
-	CL_SET_ARRAY_KERNEL_ARG(&out)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, threshold, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&in, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&out, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global,
+                               &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"
+               <<kernel_name.c_str()<<"' on GPU "
+              << current_device.name() << " : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             << "' executed on GPU " << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
 	return true;
 }
-template bool clThresholdForward<float>(const int n, const float threshold, const float* in, float* out);
-template bool clThresholdForward<double>(const int n, const double threshold, const double* in, double* out);
+template bool clThresholdForward<float>(const int n, const float threshold,
+                                        const float* in, float* out);
+template bool clThresholdForward<double>(const int n, const double threshold,
+                                          const double* in, double* out);
 
 } // namespace OpenCL
 

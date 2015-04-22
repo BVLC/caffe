@@ -14,7 +14,7 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-#include "caffe/test/test_caffe_main.hpp"
+//#include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
 

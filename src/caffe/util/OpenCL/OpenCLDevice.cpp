@@ -257,7 +257,6 @@ bool OpenCLDevice::createContext() {
 }
 
 bool OpenCLDevice::compile(std::string cl_source) {
-
 	if (context == NULL) {
 		LOG(ERROR)<< "cannot create OpenCL program without OpenCL context";
 		return false;
@@ -349,13 +348,13 @@ bool OpenCLDevice::compile(std::string cl_source) {
 			return false;
 		}
 
-		if ( kernel.find((*it)) != kernel.end() ) {
+    if ( kernel_map_.find((*it)) != kernel_map_.end() ) {
 			LOG(ERROR) << "kernel '" << *it << "' already present in map.";
 			return false;
 		}
 
-		kernel[(*it)] = kern;
-		DLOG(INFO) << "create kernel '"<<(*it).c_str()<<"' from file '" << cl_standard.c_str() << "' for device " << this->name() << " @ " << kernel[(*it)];
+    kernel_map_[(*it)] = kern;
+    DLOG(INFO) << "create kernel '"<<(*it).c_str()<<"' from file '" << cl_standard.c_str() << "' for device " << this->name() << " @ " << kernel_map_[(*it)];
 	}
 
 
@@ -385,18 +384,17 @@ cl_context* OpenCLDevice::getContext() {
 }
 
 cl_command_queue* OpenCLDevice::getQueue() {
-
 	return &queue;
 }
 
 cl_kernel* OpenCLDevice::getKernel(std::string name) {
 
-	if ( kernel.find(name) == kernel.end() ) {
-		LOG(ERROR) << "kernel '" << name << "' not found in map";
+  if (kernel_map_.find(name) == kernel_map_.end()) {
+    LOG(FATAL) << "kernel '" << name << "' not found in map";
 		return NULL;
 	}
 
-	return &kernel[name];
+  return &kernel_map_[name];
 }
 
 bool OpenCLDevice::add(OpenCLMemory& clMem) {

@@ -92,11 +92,11 @@
 	std::vector<cl_mem> sb;\
 	std::map<const void*, std::pair<void*, size_t> > bm;
 
-#define CL_SET_TYPE_KERNEL_ARG(type, variable) \
-	if ( ! clSetKernelTypeArg(variable, idx) ) return false;
+#define CL_SET_TYPE_KERNEL_ARG(type, variable, kernel) \
+  if ( ! clSetKernelTypeArg(variable, idx, kernel) ) return false;
 
-#define CL_SET_ARRAY_KERNEL_ARG(variable) \
-	if ( ! clSetKernelArrayArg(*variable, idx, sb, bm) ) return false;
+#define CL_SET_ARRAY_KERNEL_ARG(variable, kernel) \
+  if ( ! clSetKernelArrayArg(*variable, idx, sb, bm, kernel) ) return false;
 
 #define CL_SET_KERNEL_ARG_END\
 	clReleaseSubBuffers(sb);\
@@ -111,7 +111,7 @@ namespace OpenCL {
 	int64_t getTickCount();
 	double getTickFrequency();
 
-	bool init();
+//	bool init();
 
 	bool clMalloc(void** virtualPtr, size_t);
 	bool clFree(void* virtualPtr);
@@ -121,8 +121,9 @@ namespace OpenCL {
 	bool clIsVirtualMemory(const void* p);
 	bool clMakeLogical(const void* ptr_virtual, const void** ptr_logical);
 	bool clMakeLogical2(const void* ptr_virtual, const void** ptr_logical, std::vector<cl_mem>& subBuffers, std::map<const void*, std::pair<void*, size_t> >& bufferMap);
-	template<typename T> bool clSetKernelTypeArg(T variable, unsigned int& idx);
-	bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector<cl_mem>& subBuffers, std::map<const void*, std::pair<void*, size_t> >& bufferMap);
+  template<typename T> bool clSetKernelTypeArg(T variable, unsigned int& idx,
+                                               cl_kernel* kernel);
+  bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector<cl_mem>& subBuffers, std::map<const void*, std::pair<void*, size_t> >& bufferMap, cl_kernel* kernel);
 	bool clReleaseSubBuffers(std::vector<cl_mem>& subBuffers);
 	bool clReleaseBufferMap(std::map<const void*, std::pair<void*, size_t> >& bufferMap);
 
@@ -167,12 +168,12 @@ namespace OpenCL {
 	const static int COPY_DEFAULT    = 4;
 
 	extern bool inititialized;
-	extern caffe::OpenCLManager mgr;
-	extern caffe::OpenCLPlatform* pf;
-	extern caffe::OpenCLDevice* gpu;
-	extern cl_context*	context;
-	extern cl_command_queue* queue;
-	extern cl_kernel* kernel;
+//	extern caffe::OpenCLManager mgr;
+//	extern caffe::OpenCLPlatform* pf;
+//	extern caffe::OpenCLDevice* gpu;
+//	extern cl_context*	context;
+//	extern cl_command_queue* queue;
+//	extern cl_kernel* kernel;
 
 } // namespace OpenCL
 

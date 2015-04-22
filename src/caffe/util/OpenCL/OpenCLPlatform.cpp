@@ -13,14 +13,9 @@
 
 namespace caffe {
 
-OpenCLPlatform::OpenCLPlatform() {
-
-	platformID 			= NULL;
-	platformName 		= NULL;
-	platformVendor 		= NULL;
-	platformVersion 	= NULL;
-	platformExtensions 	= NULL;
-	platformProfile 	= NULL;
+OpenCLPlatform::OpenCLPlatform():
+  platform_(),
+  current_device_index_(-1) {
 	numCPUDevices 		= 0;
 	numGPUDevices 		= 0;
 	numDevices	  		= 0;
@@ -30,15 +25,14 @@ OpenCLPlatform::OpenCLPlatform() {
 	context				= NULL;
 }
 
-OpenCLPlatform::OpenCLPlatform(const OpenCLPlatform& pf) {
-
-	platformID 			= pf.platformID;
-	platformName 		= pf.platformName;
-	platformVendor 		= pf.platformVendor;
-	platformVersion 	= pf.platformVersion;
-	platformExtensions 	= pf.platformExtensions;
-	platformProfile 	= pf.platformProfile;
-	numCPUDevices 		= pf.numCPUDevices;
+OpenCLPlatform::OpenCLPlatform(const OpenCLPlatform& pf):
+  name_(pf.name_),
+  vendor_(pf.vendor_),
+  version_(pf.version_),
+  extensions_(pf.extensions_),
+  profile_(pf.profile_),
+  current_device_index_(-1) {
+  numCPUDevices 		= pf.numCPUDevices;
 	numGPUDevices 		= pf.numGPUDevices;
 	numDevices	  		= pf.numDevices;
 	cpuDevicePtr 		= pf.cpuDevicePtr;
@@ -49,14 +43,9 @@ OpenCLPlatform::OpenCLPlatform(const OpenCLPlatform& pf) {
 	programs			= pf.programs;
 }
 
-OpenCLPlatform::OpenCLPlatform(cl_platform_id id) {
-
-	platformID 			= id;
-	platformName 		= NULL;
-	platformVendor 		= NULL;
-	platformVersion 	= NULL;
-	platformExtensions 	= NULL;
-	platformProfile 	= NULL;
+OpenCLPlatform::OpenCLPlatform(cl::Platform platform):
+  platform_(platform),
+  current_device_index_(-1) {
 	numCPUDevices 		= 0;
 	numGPUDevices 		= 0;
 	numDevices	  		= 0;
@@ -81,89 +70,68 @@ OpenCLPlatform::~OpenCLPlatform() {
 	}
 }
 
-bool OpenCLPlatform::query() {
+// Check that we have an assigned cl::Platform object.
+void OpenCLPlatform::Check() {
+  if (!platform_()) {
+    LOG(FATAL) << "Unassigned platform.";
+  }
+}
 
-	size_t size;
+bool OpenCLPlatform::Query() {
+  Check();
 
 	// get the name
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_NAME, 0, NULL, &size) ) ) {
-		return false;
-	}
-	platformName = (char*) malloc(size * sizeof(char));
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_NAME, size, platformName, NULL) ) ) {
-		return false;
-	}
+  cl_int err;
+  name_ = platform_.getInfo<CL_PLATFORM_NAME>(&err);
+  if (!CL_CHECK(err)) return false;
 
 	// get the vendor
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_VENDOR, 0, NULL, &size) ) ) {
-		return false;
-	}
-	platformVendor = (char*) malloc(size * sizeof(char));
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_VENDOR, size, platformVendor, NULL) ) ) {
-		return false;
-	}
+  vendor_ = platform_.getInfo<CL_PLATFORM_VENDOR>(&err);
+  if (!CL_CHECK(err)) return false;
 
-	// get the version
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_VERSION, 0, NULL, &size) ) ) {
-		return false;
-	}
-	platformVersion = (char*) malloc(size * sizeof(char));
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_VERSION, size, platformVersion, NULL) ) ) {
-		return false;
-	}
+  version_ = platform_.getInfo<CL_PLATFORM_VERSION>(&err);
+  if (!CL_CHECK(err)) return false;
 
-	// get the extensions
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_EXTENSIONS, 0, NULL, &size) ) ) {
-		return false;
-	}
-	platformExtensions = (char*) malloc(size * sizeof(char));
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_EXTENSIONS, size, platformExtensions, NULL) ) ) {
-		return false;
-	}
+  extensions_ = platform_.getInfo<CL_PLATFORM_EXTENSIONS>(&err);
+  if (!CL_CHECK(err)) return false;
 
-	// get the profile
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_PROFILE, 0, NULL, &size) ) ) {
-		return false;
-	}
-	platformProfile = (char*) malloc(size * sizeof(char));
-	if ( ! CL_CHECK( clGetPlatformInfo(this->platformID, CL_PLATFORM_PROFILE, size, platformProfile, NULL) ) ) {
-		return false;
-	}
+  profile_ = platform_.getInfo<CL_PLATFORM_PROFILE>(&err);
+  if (!CL_CHECK(err)) return false;
 
 	// CPU & GPU devices
-	if ( ! CL_CHECK( clGetDeviceIDs(this->platformID, CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU, 0, NULL, &(numDevices)) ) ) {
+  if (!CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU, 0, NULL, &(numDevices)) ) ) {
 		return false;
 	}
 	devicePtr = (cl_device_id*) malloc(numDevices * sizeof(cl_device_id));
-	if ( ! CL_CHECK( clGetDeviceIDs(this->platformID, CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU, numDevices, devicePtr, NULL) ) ) {
+  if (!CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU, numDevices, devicePtr, NULL) ) ) {
 		return false;
 	}
 
 	// CPU devices
-	if ( clGetDeviceIDs(this->platformID, CL_DEVICE_TYPE_CPU, 0, NULL, &(numCPUDevices)) == CL_SUCCESS ) {
+  if ( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU, 0, NULL, &(numCPUDevices)) == CL_SUCCESS ) {
 		cpuDevicePtr = (cl_device_id*) malloc(numCPUDevices * sizeof(cl_device_id));
-		if ( ! CL_CHECK( clGetDeviceIDs(this->platformID, CL_DEVICE_TYPE_CPU, numCPUDevices, cpuDevicePtr, NULL) ) ) {
+    if ( ! CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU, numCPUDevices, cpuDevicePtr, NULL) ) ) {
 			return false;
 		}
 
 		for (int i = 0; i < numCPUDevices; i++) {
-			OpenCLDevice d = OpenCLDevice(this->platformID, cpuDevicePtr[i]);
+      OpenCLDevice d = OpenCLDevice(platform_(), cpuDevicePtr[i]);
 			d.query();
 			devices.push_back(d);
 		}
 	}
 
 	// GPU DEVICES
-	if ( ! CL_CHECK( clGetDeviceIDs(this->platformID, CL_DEVICE_TYPE_GPU, 0, NULL, &(numGPUDevices)) ) ) {
+  if (!CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_GPU, 0, NULL, &(numGPUDevices)) ) ) {
 		return false;
 	}
 	gpuDevicePtr = (cl_device_id*) malloc(numGPUDevices * sizeof(cl_device_id));
-	if ( ! CL_CHECK( clGetDeviceIDs(this->platformID, CL_DEVICE_TYPE_GPU, numGPUDevices, gpuDevicePtr, NULL) ) ) {
+  if ( ! CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_GPU, numGPUDevices, gpuDevicePtr, NULL) ) ) {
 		return false;
 	}
 
 	for (int i = 0; i < numGPUDevices; i++) {
-		OpenCLDevice d = OpenCLDevice(this->platformID, gpuDevicePtr[i]);
+    OpenCLDevice d = OpenCLDevice(platform_(), gpuDevicePtr[i]);
 		d.query();
 		devices.push_back(d);
 	}
@@ -171,15 +139,13 @@ bool OpenCLPlatform::query() {
 }
 
 void OpenCLPlatform::print() {
-
-
-	std::cout << "  Platform Name       " <<  this->platformName << std::endl;
-	std::cout << "  Platform Vendor     " <<  this->platformVendor << std::endl;
-	std::cout << "  Platform Version    " <<  this->platformVersion << std::endl;
-	std::cout << "  Platform Extensions " <<  this->platformExtensions << std::endl;
-	std::cout << "  Platform Profile    " <<  this->platformProfile << std::endl;
-	std::cout << "  Number of CPU Devs  " <<  this->numCPUDevices << std::endl;
-	std::cout << "  Number of GPU Devs  " <<  this->numGPUDevices << std::endl;
+  std::cout << "  Platform Name       " <<  name_ << std::endl;
+  std::cout << "  Platform Vendor     " <<  vendor_ << std::endl;
+  std::cout << "  Platform Version    " <<  version_ << std::endl;
+  std::cout << "  Platform Extensions " <<  extensions_ << std::endl;
+  std::cout << "  Platform Profile    " <<  profile_ << std::endl;
+  std::cout << "  Number of CPU Devs  " <<  numCPUDevices << std::endl;
+  std::cout << "  Number of GPU Devs  " <<  numGPUDevices << std::endl;
 
 	std::vector<caffe::OpenCLDevice>::iterator it;
 	for (it = devices.begin(); it != devices.end(); it++) {
@@ -195,24 +161,23 @@ int OpenCLPlatform::getNumGPUDevices() {
 	return numGPUDevices;
 }
 
-char* OpenCLPlatform::name() {
-	return platformName;
+std::string OpenCLPlatform::name() {
+  return name_;
 }
 
-char* OpenCLPlatform::vendor() {
-	return platformVendor;
+std::string OpenCLPlatform::vendor() {
+  return vendor_;
 }
 
-char* OpenCLPlatform::version() {
-	return platformVersion;
+std::string OpenCLPlatform::version() {
+  return version_;
 }
 
-char* OpenCLPlatform::profile() {
-	return platformProfile;
+std::string OpenCLPlatform::profile() {
+  return profile_;
 }
 
 OpenCLDevice* OpenCLPlatform::getDevice(cl_device_type type, unsigned int idx) {
-
 	switch(type) {
 	case CL_DEVICE_TYPE_CPU:
 		if ( idx >= numCPUDevices ) {
@@ -270,13 +235,12 @@ int OpenCLPlatform::getNumDevices(cl_device_type type) {
 }
 
 cl_platform_id OpenCLPlatform::id() {
-	return platformID;
+  return platform_();
 }
 
 bool OpenCLPlatform::createContext() {
-
 	cl_int err;
-	cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platformID, 0};
+  cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform_(), 0};
 	context = clCreateContext(contextProperties, numDevices, devicePtr, NULL, NULL, &err);
 	if ( err != CL_SUCCESS ) {
 		LOG(ERROR) << "failed to create context.";
@@ -295,7 +259,6 @@ bool OpenCLPlatform::createContext() {
 }
 
 bool OpenCLPlatform::compile(std::string cl_source) {
-
 	if ( context == NULL ) {
 		LOG(ERROR) << "cannot create OpenCL program without OpenCL context";
 		return false;
@@ -387,6 +350,27 @@ bool OpenCLPlatform::compile(std::string cl_source) {
 	}
 
 	return true;
+}
+
+OpenCLDevice& OpenCLPlatform::CurrentDevice() {
+  if (current_device_index_ < 0 ) {
+    LOG(FATAL) << "Current device not set.";
+  }
+//  OpenCLDevice& device = pf.getDevice(CL_DEVICE_TYPE_GPU, 0);
+//  if (!gpu) {
+//    LOG(ERROR) << "failed to select first GPU on platform " << pf.name();
+//		return false;
+//	}
+
+  return devices[current_device_index_];
+}
+
+void OpenCLPlatform::SetCurrentDevice(int device_index) {
+  if (device_index >= numCPUDevices + numGPUDevices ||
+      device_index < 0) {
+    LOG(FATAL) << "Device index out of range";
+  }
+  current_device_index_ = device_index;
 }
 
 

@@ -7,8 +7,8 @@
 
 namespace caffe {
 
-bool caffe::Caffe::GPU_USE_CUDA 	= false;
-bool caffe::Caffe::GPU_USE_OPENCL = false;
+//bool caffe::Caffe::GPU_USE_CUDA 	= false;
+//bool caffe::Caffe::GPU_USE_OPENCL = false;
 
 shared_ptr<Caffe> Caffe::singleton_;
 
@@ -46,8 +46,6 @@ void GlobalInit(int* pargc, char*** pargv) {
 
 Caffe::Caffe()
     : random_generator_(), mode_(Caffe::CPU) {
-	GPU_USE_CUDA   = false;
-	GPU_USE_OPENCL = false;
 }
 
 Caffe::~Caffe() { }
@@ -282,9 +280,9 @@ const char* curandGetErrorString(curandStatus_t error) {
 #ifdef USE_OPENCL // OpenCL Support
 
 Caffe::Caffe() : random_generator_(), mode_(Caffe::CPU) {
-	caffe::OpenCL::init();
-	GPU_USE_CUDA   = false;
-	GPU_USE_OPENCL = true;
+  caffe::OpenCLManager::Init();
+//	GPU_USE_CUDA   = false;
+//	GPU_USE_OPENCL = true;
 }
 
 Caffe::~Caffe() {
@@ -296,9 +294,11 @@ void Caffe::set_random_seed(const unsigned int seed) {
 }
 
 void Caffe::SetDevice(const int device_id) {
+  OpenCLManager::SetDeviceId(device_id);
 }
 
 void Caffe::DeviceQuery() {
+  OpenCLManager::CurrentPlatform().CurrentDevice().print();
 }
 
 class Caffe::RNG::Generator {

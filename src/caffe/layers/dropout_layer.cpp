@@ -78,38 +78,39 @@ namespace OpenCL {
 
 template<typename T>
 bool clDropoutLayerForward(const int count, const T* bottom_data, const unsigned int* mask, const unsigned int threshold, const T scale, T* top_data) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("DropoutForward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, count)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
-	CL_SET_ARRAY_KERNEL_ARG(&mask)
-	CL_SET_TYPE_KERNEL_ARG(const unsigned int, threshold)
-	CL_SET_TYPE_KERNEL_ARG(T, scale)
-	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+  CL_SET_TYPE_KERNEL_ARG(int, count, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_data, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&mask, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const unsigned int, threshold, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, scale, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
 
 	size_t global = count;//CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -120,38 +121,39 @@ template bool clDropoutLayerForward<double>(const int count, const double* botto
 
 template<typename T>
 bool clDropoutLayerBackward(const int count, const T* top_diff, const unsigned int* mask, const unsigned int threshold, const T scale, T* bottom_diff) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("DropoutBackward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, count)
-	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
-	CL_SET_ARRAY_KERNEL_ARG(&mask)
-	CL_SET_TYPE_KERNEL_ARG(unsigned int, threshold)
-	CL_SET_TYPE_KERNEL_ARG(T, scale)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+  CL_SET_TYPE_KERNEL_ARG(int, count, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_diff, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&mask, kernel)
+  CL_SET_TYPE_KERNEL_ARG(unsigned int, threshold, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, scale, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
 	size_t global = count;//CAFFE_GET_GLOBAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(count, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 

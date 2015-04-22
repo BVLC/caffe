@@ -137,14 +137,16 @@ bool clSoftmaxLossForwardGPU(const int nthreads,
           T* counts) {
 
 	std::string kernel_name = clGetKernelName<T>("SoftmaxLossForwardGPU");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  OpenCLDevice& current_device =
+      OpenCLManager::CurrentPlatform().CurrentDevice();
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name()
+               << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
@@ -152,27 +154,31 @@ bool clSoftmaxLossForwardGPU(const int nthreads,
 	int has_ignore_label_int_ = has_ignore_label_ ? 1 : 0;
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&prob_data)
-	CL_SET_ARRAY_KERNEL_ARG(&label)
-	CL_SET_ARRAY_KERNEL_ARG(&loss)
-	CL_SET_TYPE_KERNEL_ARG(const int, num)
-	CL_SET_TYPE_KERNEL_ARG(const int, dim)
-	CL_SET_TYPE_KERNEL_ARG(const int, spatial_dim)
-	CL_SET_TYPE_KERNEL_ARG(const int, has_ignore_label_int_)
-	CL_SET_TYPE_KERNEL_ARG(const int, ignore_label_)
-	CL_SET_ARRAY_KERNEL_ARG(&counts)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&prob_data, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&label, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&loss, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, dim, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, spatial_dim, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, has_ignore_label_int_, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, ignore_label_, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&counts, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+               << "' on GPU " << current_device.name()
+               << " : " << caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name << "' executed on GPU "
+             << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -194,49 +200,53 @@ bool clSoftmaxLossBackwardGPU(const int nthreads, const T* top,
           const T* label, T* bottom_diff, const int num, const int dim,
           const int spatial_dim, const bool has_ignore_label_,
           const int ignore_label_, T* counts) {
-
+  OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
 	std::string kernel_name = clGetKernelName<T>("SoftmaxLossBackwardGPU");
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = current_device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << current_device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = current_device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	int has_ignore_label_int_ = has_ignore_label_ ? 1 : 0;
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&top)
-	CL_SET_ARRAY_KERNEL_ARG(&label)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
-	CL_SET_TYPE_KERNEL_ARG(const int, num)
-	CL_SET_TYPE_KERNEL_ARG(const int, dim)
-	CL_SET_TYPE_KERNEL_ARG(const int, spatial_dim)
-	CL_SET_TYPE_KERNEL_ARG(const int, has_ignore_label_int_)
-	CL_SET_TYPE_KERNEL_ARG(const int, ignore_label_)
-	CL_SET_ARRAY_KERNEL_ARG(&counts)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&label, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, dim, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, spatial_dim, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, has_ignore_label_int_, kernel)
+  CL_SET_TYPE_KERNEL_ARG(const int, ignore_label_, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&counts, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '" << kernel_name
+               <<"' on GPU "<< current_device.name()
+              <<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name << "' executed on GPU "
+             << current_device.name();
 
 	CL_SET_KERNEL_ARG_END
 
 	return true;
 };
+
 template bool clSoftmaxLossBackwardGPU<float>(const int nthreads, const float* top,
     const float* label, float* bottom_diff, const int num, const int dim,
     const int spatial_dim, const bool has_ignore_label_,
