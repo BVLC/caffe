@@ -26,11 +26,14 @@
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/ocl/backend.hpp"
 
-// TODO: Remove:
 
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
 #endif USE_CLBLAS
+
+#ifdef USE_VIENNACLBLAS
+#include "libviennacl/include/viennacl.hpp"
+#endif
 
 namespace caffe {
 
