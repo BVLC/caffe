@@ -23,7 +23,6 @@
 #include "viennacl/ocl/device.hpp"
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/ocl/backend.hpp"
-#include "libviennacl/include/viennacl.hpp"
 #include "viennacl/backend/opencl.hpp"
 #include "viennacl/vector.hpp"
 #endif
