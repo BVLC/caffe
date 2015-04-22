@@ -5,6 +5,7 @@ classify.py is an out-of-the-box image classifer callable from the command line.
 By default it configures and runs the Caffe reference ImageNet model.
 """
 import numpy as np
+import pandas as pd
 import os
 import sys
 import argparse
@@ -86,13 +87,24 @@ def main(argv):
         help="Image file extension to take as input when a directory " +
              "is given as the input file."
     )
+    parser.add_argument(
+        "--labels_file",
+        default=os.path.join(pycaffe_dir,
+                "../data/ilsvrc12/synset_words.txt"),
+        help="Readable label definition file."
+    )
+    parser.add_argument(
+        "--print_results",
+        action='store_true',
+        help="Write output text to stdout rather than serializing to a file."
+    )
     args = parser.parse_args()
 
     image_dims = [int(s) for s in args.images_dim.split(',')]
 
     mean, channel_swap = None, None
     if args.mean_file:
-        mean = np.load(args.mean_file)
+        mean = np.load(args.mean_file).mean(1).mean(1)
     if args.channel_swap:
         channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
@@ -128,6 +140,27 @@ def main(argv):
     start = time.time()
     predictions = classifier.predict(inputs, not args.center_only)
     print("Done in %.2f s." % (time.time() - start))
+
+    if args.print_results:
+        with open(args.labels_file) as f:
+          labels_df = pd.DataFrame([
+               {
+                   'synset_id': l.strip().split(' ')[0],
+                   'name': ' '.join(l.strip().split(' ')[1:]).split(',')[0]
+               }
+               for l in f.readlines()
+            ])
+        labels = labels_df.sort('synset_id')['name'].values
+
+        indices = (-predictions[0]).argsort()[:5]
+        predicted_labels = labels[indices]
+
+        meta = [
+                   (p, '%.5f' % predictions[0][i])
+                   for i, p in zip(indices, predicted_labels)
+               ]
+
+        print meta
 
     # Save
     print("Saving results into %s" % args.output_file)
