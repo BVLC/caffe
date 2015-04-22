@@ -16,6 +16,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/sparse_blob.hpp"
 #include "caffe/util/db.hpp"
 
 namespace caffe {
@@ -98,6 +99,55 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   virtual void InternalThreadEntry();
 
+  shared_ptr<db::DB> db_;
+  shared_ptr<db::Cursor> cursor_;
+};
+
+/**
+ * @brief Provides sparse data to the Net.
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
+template <typename Dtype>
+class SparseDataLayer : public Layer<Dtype>, public InternalThread {
+ public:
+  explicit SparseDataLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~SparseDataLayer();
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  // Data layers have no bottoms, so reshaping is trivial.
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+       const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+       const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+
+  virtual inline const char* type() const { return "SparseData"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 2; }
+
+ protected:
+  virtual void CreatePrefetchThread();
+  virtual void JoinPrefetchThread();
+  virtual void InternalThreadEntry();
+
+  bool output_labels_;
+
+  int datum_size_;
+  shared_ptr<SparseBlob<Dtype> > prefetch_data_;
+  shared_ptr<SparseBlob<Dtype> > prefetch_data_copy_;
+  shared_ptr<Blob<Dtype> > prefetch_label_;
+  shared_ptr<Blob<Dtype> > prefetch_label_copy_;
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
 };
