@@ -6,6 +6,9 @@ TODO:
   :: don't forget to update hdf5_daa_layer.cu accordingly
 - add ability to shuffle filenames if flag is set
 */
+
+#ifndef NO_IO_DEPENDENCIES
+
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 #include <vector>
@@ -165,3 +168,5 @@ INSTANTIATE_CLASS(HDF5DataLayer);
 REGISTER_LAYER_CLASS(HDF5Data);
 
 }  // namespace caffe
+
+#endif

@@ -5,6 +5,9 @@
 //    convert_mnist_data input_image_file input_label_file output_db_file
 // The MNIST dataset could be downloaded at
 //    http://yann.lecun.com/exdb/mnist/
+
+#ifndef NO_IO_DEPENDENCIES
+
 #include <fstream>  // NOLINT(readability/streams)
 #include <string>
 
@@ -121,3 +124,10 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
+
+#else
+#include <stdio.h>
+int main(int argc, char** argv) {
+  fprintf(stderr, "NO_IO_DEPENDENCIES false");
+}
+#endif

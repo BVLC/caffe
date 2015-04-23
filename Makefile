@@ -1,6 +1,6 @@
 PROJECT := caffe
 
-CONFIG_FILE := Makefile.config
+CONFIG_FILE ?= Makefile.config
 include $(CONFIG_FILE)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
@@ -161,8 +161,11 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-LIBRARIES += glog gflags protobuf leveldb snappy \
-	lmdb boost_system hdf5_hl hdf5 m \
+ifneq ($(NO_IO_DEPENDENCIES), 1)
+	LIBRARIES += leveldb lmdb snappy hdf5_hl hdf5 # TODO opencv
+endif
+LIBRARIES += glog gflags protobuf m \
+	boost_system \
 	opencv_core opencv_highgui opencv_imgproc
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
@@ -271,6 +274,8 @@ endif
 # Debugging
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
+	# Compile issue in DEBUG on MAC (https://svn.boost.org/trac/boost/ticket/9392)
+	COMMON_FLAGS += -DBOOST_NOINLINE='__attribute__ ((noinline))'
 	NVCCFLAGS += -G
 else
 	COMMON_FLAGS += -DNDEBUG -O2
@@ -288,8 +293,13 @@ ifeq ($(CPU_ONLY), 1)
 	TEST_OBJS := $(TEST_CXX_OBJS)
 	TEST_BINS := $(TEST_CXX_BINS)
 	ALL_WARNS := $(ALL_CXX_WARNS)
-	TEST_FILTER := --gtest_filter="-*GPU*"
+	TEST_FILTER += --gtest_filter="-*GPU*"
 	COMMON_FLAGS += -DCPU_ONLY
+endif
+
+# No IO dependencies
+ifeq ($(NO_IO_DEPENDENCIES), 1)
+	COMMON_FLAGS += -DNO_IO_DEPENDENCIES
 endif
 
 # Python layer support

@@ -5,8 +5,10 @@
 #include <string>
 
 #include "google/protobuf/message.h"
+#ifndef NO_IO_DEPENDENCIES
 #include "hdf5.h"
 #include "hdf5_hl.h"
+#endif
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -140,6 +142,7 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color);
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
+#ifndef NO_IO_DEPENDENCIES
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
     hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
@@ -153,6 +156,46 @@ void hdf5_load_nd_dataset(
 template <typename Dtype>
 void hdf5_save_nd_dataset(
     const hid_t file_id, const string& dataset_name, const Blob<Dtype>& blob);
+#endif
+
+// Avoiding another dependency for now, but could be swapped for
+// something like cpp-netlib
+class URI {
+ public:
+  URI(const string& uri, bool no_host = false);
+  const string& scheme() const { return scheme_; }
+  const string& host() const { return host_; }
+  const string& port() const { return port_; }
+  const string& path() const { return path_; }
+
+ protected:
+  string scheme_;
+  string host_;
+  string port_;
+  string path_;
+};
+
+// Simple wrapper over C file (protobuf requires a file descriptor)
+class File {
+ public:
+  File(const string& path, int flags);
+  ~File();
+  int descriptor() { return fd_; }
+
+ protected:
+  int fd_;
+};
+
+// Simple wrapper over C socket (protobuf requires a file descriptor)
+class Socket {
+ public:
+  explicit Socket(const URI& uri);
+  ~Socket();
+  int descriptor() { return fd_; }
+
+ protected:
+  int fd_;
+};
 
 }  // namespace caffe
 

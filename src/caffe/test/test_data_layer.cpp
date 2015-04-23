@@ -9,6 +9,7 @@
 #include "caffe/data_layers.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/scheme.hpp"
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
 
@@ -24,14 +25,15 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   DataLayerTest()
-      : backend_(DataParameter_DB_LEVELDB),
-        blob_top_data_(new Blob<Dtype>()),
+      : blob_top_data_(new Blob<Dtype>()),
         blob_top_label_(new Blob<Dtype>()),
         seed_(1701) {}
   virtual void SetUp() {
-    filename_.reset(new string());
-    MakeTempDir(filename_.get());
-    *filename_ += "/db";
+    for (int i = 0; i < SOURCES_COUNT; ++i) {
+      sources_[i].reset(new string());
+      MakeTempDir(sources_[i].get());
+      *sources_[i] += "/db";
+    }
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
   }
@@ -39,13 +41,12 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   // Fill the DB with data: if unique_pixels, each pixel is unique but
   // all images are the same; else each image is unique but all pixels within
   // an image are the same.
-  void Fill(const bool unique_pixels, DataParameter_DB backend) {
-    backend_ = backend;
-    LOG(INFO) << "Using temporary dataset " << *filename_;
+  void Fill(const bool unique_pixels, DataParameter_DB backend, int index = 0) {
+    LOG(INFO) << "Using temporary dataset " << *sources_[index];
     scoped_ptr<db::DB> db(db::GetDB(backend));
-    db->Open(*filename_, db::NEW);
+    db->Open(*sources_[index], db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < BATCH_SIZE; ++i) {
       Datum datum;
       datum.set_label(i);
       datum.set_channels(2);
@@ -64,6 +65,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
     txn->Commit();
     db->Close();
+
+    string scheme = backend == DataParameter_DB_LMDB ? "lmdb://" : "leveldb://";
+    (*sources_[index]).insert(0, scheme);
   }
 
   void TestRead() {
@@ -71,9 +75,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
-    data_param->set_batch_size(5);
-    data_param->set_source(filename_->c_str());
-    data_param->set_backend(backend_);
+    data_param->set_batch_size(BATCH_SIZE);
+    data_param->add_source(*sources_[0]);
 
     TransformationParameter* transform_param =
         param.mutable_transform_param();
@@ -92,10 +95,10 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
     for (int iter = 0; iter < 100; ++iter) {
       layer.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < BATCH_SIZE; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < BATCH_SIZE; ++i) {
         for (int j = 0; j < 24; ++j) {
           EXPECT_EQ(scale * i, blob_top_data_->cpu_data()[i * 24 + j])
               << "debug: iter " << iter << " i " << i << " j " << j;
@@ -107,9 +110,9 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   void TestReshape(DataParameter_DB backend) {
     const int num_inputs = 5;
     // Save data of varying shapes.
-    LOG(INFO) << "Using temporary dataset " << *filename_;
+    LOG(INFO) << "Using temporary dataset " << *sources_[0];
     scoped_ptr<db::DB> db(db::GetDB(backend));
-    db->Open(*filename_, db::NEW);
+    db->Open(*sources_[0], db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
     for (int i = 0; i < num_inputs; ++i) {
       Datum datum;
@@ -131,13 +134,15 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     txn->Commit();
     db->Close();
 
+    string scheme = backend == DataParameter_DB_LMDB ? "lmdb://" : "leveldb://";
+    (*sources_[0]).insert(0, scheme);
+
     // Load and check data of various shapes.
     LayerParameter param;
     param.set_phase(TEST);
     DataParameter* data_param = param.mutable_data_param();
     data_param->set_batch_size(1);
-    data_param->set_source(filename_->c_str());
-    data_param->set_backend(backend);
+    data_param->add_source(sources_[0]->c_str());
 
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
@@ -171,14 +176,14 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
   void TestReadCrop(Phase phase) {
     const Dtype scale = 3;
+    const int batch = BATCH_SIZE;
     LayerParameter param;
     param.set_phase(phase);
     Caffe::set_random_seed(1701);
 
     DataParameter* data_param = param.mutable_data_param();
-    data_param->set_batch_size(5);
-    data_param->set_source(filename_->c_str());
-    data_param->set_backend(backend_);
+    data_param->set_batch_size(batch);
+    data_param->add_source(*sources_[0]);
 
     TransformationParameter* transform_param =
         param.mutable_transform_param();
@@ -187,22 +192,22 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
 
     DataLayer<Dtype> layer(param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
-    EXPECT_EQ(blob_top_data_->num(), 5);
+    EXPECT_EQ(blob_top_data_->num(), batch);
     EXPECT_EQ(blob_top_data_->channels(), 2);
     EXPECT_EQ(blob_top_data_->height(), 1);
     EXPECT_EQ(blob_top_data_->width(), 1);
-    EXPECT_EQ(blob_top_label_->num(), 5);
+    EXPECT_EQ(blob_top_label_->num(), batch);
     EXPECT_EQ(blob_top_label_->channels(), 1);
     EXPECT_EQ(blob_top_label_->height(), 1);
     EXPECT_EQ(blob_top_label_->width(), 1);
 
     for (int iter = 0; iter < 2; ++iter) {
       layer.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < batch; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
       int num_with_center_value = 0;
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < batch; ++i) {
         for (int j = 0; j < 2; ++j) {
           const Dtype center_value = scale * (j ? 17 : 5);
           num_with_center_value +=
@@ -227,9 +232,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
-    data_param->set_batch_size(5);
-    data_param->set_source(filename_->c_str());
-    data_param->set_backend(backend_);
+    data_param->set_batch_size(BATCH_SIZE);
+    data_param->add_source(*sources_[0]);
 
     TransformationParameter* transform_param =
         param.mutable_transform_param();
@@ -244,11 +248,11 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       layer1.SetUp(blob_bottom_vec_, blob_top_vec_);
       for (int iter = 0; iter < 2; ++iter) {
         layer1.Forward(blob_bottom_vec_, blob_top_vec_);
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < BATCH_SIZE; ++i) {
           EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
         }
         vector<Dtype> iter_crop_sequence;
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < BATCH_SIZE; ++i) {
           for (int j = 0; j < 2; ++j) {
             iter_crop_sequence.push_back(
                 blob_top_data_->cpu_data()[i * 2 + j]);
@@ -265,10 +269,10 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     layer2.SetUp(blob_bottom_vec_, blob_top_vec_);
     for (int iter = 0; iter < 2; ++iter) {
       layer2.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < BATCH_SIZE; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < BATCH_SIZE; ++i) {
         for (int j = 0; j < 2; ++j) {
           EXPECT_EQ(crop_sequence[iter][i * 2 + j],
                     blob_top_data_->cpu_data()[i * 2 + j])
@@ -282,9 +286,8 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     LayerParameter param;
     param.set_phase(TRAIN);
     DataParameter* data_param = param.mutable_data_param();
-    data_param->set_batch_size(5);
-    data_param->set_source(filename_->c_str());
-    data_param->set_backend(backend_);
+    data_param->set_batch_size(BATCH_SIZE);
+    data_param->add_source(*sources_[0]);
 
     TransformationParameter* transform_param =
         param.mutable_transform_param();
@@ -300,11 +303,11 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       layer1.SetUp(blob_bottom_vec_, blob_top_vec_);
       for (int iter = 0; iter < 2; ++iter) {
         layer1.Forward(blob_bottom_vec_, blob_top_vec_);
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < BATCH_SIZE; ++i) {
           EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
         }
         vector<Dtype> iter_crop_sequence;
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < BATCH_SIZE; ++i) {
           for (int j = 0; j < 2; ++j) {
             iter_crop_sequence.push_back(
                 blob_top_data_->cpu_data()[i * 2 + j]);
@@ -321,11 +324,11 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     layer2.SetUp(blob_bottom_vec_, blob_top_vec_);
     for (int iter = 0; iter < 2; ++iter) {
       layer2.Forward(blob_bottom_vec_, blob_top_vec_);
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < BATCH_SIZE; ++i) {
         EXPECT_EQ(i, blob_top_label_->cpu_data()[i]);
       }
       int num_sequence_matches = 0;
-      for (int i = 0; i < 5; ++i) {
+      for (int i = 0; i < BATCH_SIZE; ++i) {
         for (int j = 0; j < 2; ++j) {
           num_sequence_matches += (crop_sequence[iter][i * 2 + j] ==
                                    blob_top_data_->cpu_data()[i * 2 + j]);
@@ -335,10 +338,89 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
+  void TestProbabilities() {
+    LayerParameter param;
+    DataParameter* data_param = param.mutable_data_param();
+    data_param->set_batch_size(BATCH_SIZE);
+    for (int i = 0; i < SOURCES_COUNT; ++i) {
+      data_param->add_source(*sources_[i]);
+      data_param->add_probability(0);
+    }
+
+    Caffe::set_random_seed(544432);
+    int counts[SOURCES_COUNT];
+
+    // Balanced two
+    data_param->set_probability(0, .5f);
+    data_param->set_probability(1, .5f);
+    caffe_memset(sizeof(counts), 0, counts);
+    probabilities_run(param, counts);
+    EXPECT_EQ(56, counts[0]);
+    EXPECT_EQ(59, counts[1]);
+    EXPECT_EQ(0, counts[2]);
+
+    // Balanced three
+    data_param->set_probability(0, .33333333f);
+    data_param->set_probability(1, .33333333f);
+    data_param->set_probability(2, .33333333f);
+    caffe_memset(sizeof(counts), 0, counts);
+    probabilities_run(param, counts);
+    EXPECT_EQ(36, counts[0]);
+    EXPECT_EQ(34, counts[1]);
+    EXPECT_EQ(45, counts[2]);
+
+    // Only one
+    data_param->set_probability(0, 0);
+    data_param->set_probability(1, 0);
+    data_param->set_probability(2, 1);
+    caffe_memset(sizeof(counts), 0, counts);
+    probabilities_run(param, counts);
+    EXPECT_EQ(0, counts[0]);
+    EXPECT_EQ(0, counts[1]);
+    EXPECT_EQ(115, counts[2]);
+  }
+
+  void probabilities_run(LayerParameter param, int* counts) {
+    const int batch = BATCH_SIZE;
+    DataLayer<Dtype> layer(param);
+    layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+    EXPECT_EQ(blob_top_data_->num(), batch);
+    EXPECT_EQ(blob_top_data_->channels(), 2);
+    EXPECT_EQ(blob_top_data_->height(), 3);
+    EXPECT_EQ(blob_top_data_->width(), 4);
+    EXPECT_EQ(blob_top_label_->num(), batch);
+    EXPECT_EQ(blob_top_label_->channels(), 1);
+    EXPECT_EQ(blob_top_label_->height(), 1);
+    EXPECT_EQ(blob_top_label_->width(), 1);
+
+    const int examples = 100;
+    for (int iter = 0; iter < examples / batch; ++iter) {
+      layer.Forward(blob_bottom_vec_, blob_top_vec_);
+    }
+
+    for (;;) {
+      int total = 0;
+      for (int i = 0; i < SOURCES_COUNT; ++i) {
+        URI uri(param.data_param().source(i));
+        const shared_ptr<Scheme>& scheme = Scheme::get(uri.scheme());
+        shared_ptr<Reader> reader(scheme->get_reader(param.data_param(), i));
+        counts[i] = reader->full().pops();
+        total += counts[i];
+      }
+      // Wait until prefetch queue refills, for reproducibility
+      const int prefetch = BasePrefetchingDataLayer<TypeParam>::PREFETCH_COUNT;
+      if (total == examples + prefetch * batch) {
+        break;
+      }
+      usleep(1000);
+    }
+  }
+
   virtual ~DataLayerTest() { delete blob_top_data_; delete blob_top_label_; }
 
-  DataParameter_DB backend_;
-  shared_ptr<string> filename_;
+  static const int BATCH_SIZE = 5;
+  static const int SOURCES_COUNT = 3;
+  shared_ptr<string> sources_[SOURCES_COUNT];
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -422,6 +504,14 @@ TYPED_TEST(DataLayerTest, TestReadCropTestLMDB) {
   const bool unique_pixels = true;  // all images the same; pixels different
   this->Fill(unique_pixels, DataParameter_DB_LMDB);
   this->TestReadCrop(TEST);
+}
+
+TYPED_TEST(DataLayerTest, TestTwoProbabilities) {
+  const bool unique_pixels = true;  // all images the same; pixels different
+  this->Fill(unique_pixels, DataParameter_DB_LMDB, 0);
+  this->Fill(unique_pixels, DataParameter_DB_LEVELDB, 1);
+  this->Fill(unique_pixels, DataParameter_DB_LMDB, 2);
+  this->TestProbabilities();
 }
 
 }  // namespace caffe

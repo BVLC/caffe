@@ -3,9 +3,11 @@
 
 #include <string>
 
+#ifndef NO_IO_DEPENDENCIES
 #include "leveldb/db.h"
 #include "leveldb/write_batch.h"
 #include "lmdb.h"
+#endif
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -48,6 +50,8 @@ class DB {
 
   DISABLE_COPY_AND_ASSIGN(DB);
 };
+
+#ifndef NO_IO_DEPENDENCIES
 
 class LevelDBCursor : public Cursor {
  public:
@@ -180,6 +184,8 @@ class LMDB : public DB {
   MDB_env* mdb_env_;
   MDB_dbi mdb_dbi_;
 };
+
+#endif
 
 DB* GetDB(DataParameter::DB backend);
 DB* GetDB(const string& backend);

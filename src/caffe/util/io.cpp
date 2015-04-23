@@ -1,15 +1,20 @@
+#include <boost/lexical_cast.hpp>
 #include <fcntl.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
+#include <netdb.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdint.h>
+#include <sys/socket.h>
 
 #include <algorithm>
+#include <cctype>
 #include <fstream>  // NOLINT(readability/streams)
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -228,6 +233,8 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   datum->set_data(buffer);
 }
 
+#ifndef NO_IO_DEPENDENCIES
+
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
@@ -301,6 +308,80 @@ void hdf5_save_nd_dataset<double>(
   herr_t status = H5LTmake_dataset_double(
       file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
   CHECK_GE(status, 0) << "Failed to make double dataset " << dataset_name;
+}
+
+#endif
+
+// http://stackoverflow.com/questions/2616011/easy-way-to-parse-a-url-in-c-cross-platform
+URI::URI(const string& uri, bool no_host)
+    : scheme_(), host_(), port_(), path_() {
+  typedef string::const_iterator it;
+  it uriEnd = uri.end();
+
+  it schemeStart = uri.begin();
+  it schemeEnd = find(schemeStart, uriEnd, ':');
+  if (schemeEnd != uriEnd) {
+    string scheme = &*(schemeEnd);
+    if ((scheme.length() > 3) && (scheme.substr(0, 3) == "://")) {
+      scheme_ = string(schemeStart, schemeEnd);
+      schemeEnd += 3;
+    } else {
+      schemeEnd = uri.begin();
+    }
+  } else {
+    schemeEnd = uri.begin();
+  }
+
+  if (no_host) {
+    path_ = string(schemeEnd, uriEnd);
+  } else {
+    it hostStart = schemeEnd;
+    it pathStart = find(hostStart, uriEnd, '/');
+    it hostEnd = find(schemeEnd, pathStart, ':');  // check for port
+    host_ = string(hostStart, hostEnd);
+    if ((hostEnd != uriEnd) && ((&*(hostEnd))[0] == ':')) {
+      hostEnd++;
+      port_ = string(hostEnd, pathStart);
+    }
+    if (pathStart != uriEnd) {
+      path_ = string(pathStart, uriEnd);
+    }
+  }
+}
+
+File::File(const string& path, int flags) {
+  fd_ = open(path.c_str(), flags);
+  CHECK_GE(fd_, 0)<< "Could not open file " << path;
+}
+
+File::~File() {
+  close(fd_);
+}
+
+Socket::Socket(const URI& uri) {
+  addrinfo *res;
+  addrinfo hints;
+  caffe_memset(sizeof hints, 0, &hints);
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+  int n = getaddrinfo(uri.host().c_str(), uri.port().c_str(), &hints, &res);
+  CHECK_GE(n, 0)<< gai_strerror(n) << ": " << uri.host() << ":" << uri.port();
+  fd_ = -1;
+  for (addrinfo* t = res; t; t = t->ai_next) {
+    fd_ = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
+    if (fd_ >= 0) {
+      if (!connect(fd_, t->ai_addr, t->ai_addrlen))
+        break;
+      close(fd_);
+      fd_ = -1;
+    }
+  }
+  freeaddrinfo(res);
+  CHECK_GE(fd_, 0)<< "Could not connect to " << uri.host() << ":" << uri.port();
+}
+
+Socket::~Socket() {
+  close(fd_);
 }
 
 }  // namespace caffe
