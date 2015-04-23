@@ -30,9 +30,6 @@
 namespace caffe {
 
 #ifdef USE_GREENTEA
-/*template<typename Dtype>
-cl_mem Subregion(cl_mem in, size_t off, size_t size);*/
-
 viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in, viennacl::ocl::context &ctx);
 #endif
 
