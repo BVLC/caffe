@@ -5,6 +5,8 @@
 
 namespace caffe { namespace db {
 
+#ifndef NO_IO_DEPENDENCIES
+
 const size_t LMDB_MAP_SIZE = 1099511627776;  // 1 TB
 
 void LevelDB::Open(const string& source, Mode mode) {
@@ -28,7 +30,17 @@ void LMDB::Open(const string& source, Mode mode) {
   }
   int flags = 0;
   if (mode == READ) {
-    flags = MDB_RDONLY | MDB_NOTLS;
+    // No locking, assume DB is not written to at the same time, otherwise
+    // LMDB tries to lock the file, which fails if filesystem is read-only
+    flags = MDB_RDONLY | MDB_NOTLS | MDB_NOLOCK;
+  }
+  // Allow DB to be stand-alone file
+  {
+    struct stat st_buf;
+    stat(source.c_str(), &st_buf);
+    if (S_ISREG(st_buf.st_mode)) {
+      flags |= MDB_NOSUBDIR;
+    }
   }
   MDB_CHECK(mdb_env_open(mdb_env_, source.c_str(), flags, 0664));
   LOG(INFO) << "Opened lmdb " << source;
@@ -59,25 +71,30 @@ void LMDBTransaction::Put(const string& key, const string& value) {
   MDB_CHECK(mdb_put(mdb_txn_, *mdb_dbi_, &mdb_key, &mdb_value, 0));
 }
 
+#endif
+
 DB* GetDB(DataParameter::DB backend) {
   switch (backend) {
+#ifndef NO_IO_DEPENDENCIES
   case DataParameter_DB_LEVELDB:
     return new LevelDB();
   case DataParameter_DB_LMDB:
     return new LMDB();
+#endif
   default:
     LOG(FATAL) << "Unknown database backend";
   }
 }
 
 DB* GetDB(const string& backend) {
+#ifndef NO_IO_DEPENDENCIES
   if (backend == "leveldb") {
     return new LevelDB();
   } else if (backend == "lmdb") {
     return new LMDB();
-  } else {
-    LOG(FATAL) << "Unknown database backend";
   }
+#endif
+  LOG(FATAL) << "Unknown database backend";
 }
 
 }  // namespace db

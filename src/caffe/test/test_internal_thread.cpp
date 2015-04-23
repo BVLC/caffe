@@ -13,9 +13,9 @@ class InternalThreadTest : public ::testing::Test {};
 TEST_F(InternalThreadTest, TestStartAndExit) {
   InternalThread thread;
   EXPECT_FALSE(thread.is_started());
-  EXPECT_TRUE(thread.StartInternalThread());
+  thread.StartInternalThread();
   EXPECT_TRUE(thread.is_started());
-  EXPECT_TRUE(thread.WaitForInternalThreadToExit());
+  thread.StopInternalThread();
   EXPECT_FALSE(thread.is_started());
 }
 

@@ -303,7 +303,7 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_source()) {
       if (type == "data") {
-        layer_param->mutable_data_param()->set_source(v0_layer_param.source());
+        layer_param->mutable_data_param()->add_source(v0_layer_param.source());
       } else if (type == "hdf5_data") {
         layer_param->mutable_hdf5_data_param()->set_source(
             v0_layer_param.source());
@@ -731,6 +731,22 @@ bool UpgradeV1LayerParameter(const V1LayerParameter& v1_layer_param,
   if (v1_layer_param.has_data_param()) {
     layer_param->mutable_data_param()->CopyFrom(
         v1_layer_param.data_param());
+    for (int i = 0; i < layer_param->data_param().source().size(); ++i) {
+      DataParameter_DB db = DataParameter_DB_LEVELDB;
+      if (layer_param->data_param().backend_size() ==
+          layer_param->data_param().source().size()) {
+        db = layer_param->data_param().backend(i);
+      }
+      if (db == DataParameter_DB_LMDB) {
+        string s = "lmdb://" + layer_param->mutable_data_param()->source(i);
+        layer_param->mutable_data_param()->set_source(i, s);
+      }
+      if (db == DataParameter_DB_LEVELDB) {
+        string s = "leveldb://" + layer_param->mutable_data_param()->source(i);
+        layer_param->mutable_data_param()->set_source(i, s);
+      }
+    }
+    layer_param->mutable_data_param()->clear_backend();
   }
   if (v1_layer_param.has_dropout_param()) {
     layer_param->mutable_dropout_param()->CopyFrom(

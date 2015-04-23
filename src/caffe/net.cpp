@@ -39,6 +39,26 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // the current NetState.
   NetParameter filtered_param;
   FilterNet(in_param, &filtered_param);
+  // Make sure sources are in URI format
+  for (int layer_id = 0; layer_id < filtered_param.layer_size(); ++layer_id) {
+    LayerParameter* layer_param = filtered_param.mutable_layer(layer_id);
+    if (layer_param->has_data_param()) {
+      const DataParameter& data = layer_param->data_param();
+      for (int i = 0; i < data.source().size(); ++i) {
+        URI uri(data.source(i));
+        if (uri.scheme().size() == 0) {
+          DataParameter_DB db = DataParameter_DB_LEVELDB;
+          if (data.backend_size() == data.source_size()) {
+            db = data.backend(i);
+          }
+          string uri = db == DataParameter_DB_LMDB ? "lmdb://" : "leveldb://";
+          uri += data.source(i);
+          layer_param->mutable_data_param()->set_source(i, uri);
+        }
+      }
+      layer_param->mutable_data_param()->clear_backend();
+    }
+  }
   LOG(INFO) << "Initializing net from parameters: " << std::endl
             << filtered_param.DebugString();
   // Create a copy of filtered_param with splits added where necessary.

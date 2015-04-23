@@ -1,7 +1,11 @@
+#include <boost/thread.hpp>
 #include <opencv2/core/core.hpp>
 
 #include <stdint.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -17,106 +21,104 @@
 namespace caffe {
 
 template <typename Dtype>
-DataLayer<Dtype>::~DataLayer<Dtype>() {
-  this->JoinPrefetchThread();
+DataLayer<Dtype>::DataLayer(const LayerParameter& param)
+  : BasePrefetchingDataLayer<Dtype>(param),
+    random_distribution_(),
+    variate_generator_() {
+  const DataParameter& data = param.data_param();
+  if (data.probability_size()) {
+    CHECK_EQ(data.source().size(), data.probability().size())
+      << "Invalid DataParameter, there should be one probability per source";
+    float sum = 0;
+    for (int i = 0; i < data.probability().size(); ++i) {
+      sum += data.probability(i);
+    }
+    CHECK_LT(fabsf(sum - 1.0f), 1e-6f)
+      << "Invalid DataParameter, probabilities do not sum to 1";
+  }
+  for (int i = 0; i < data.source().size(); ++i) {
+    URI uri(data.source(i));
+    const shared_ptr<Scheme>& scheme(Scheme::get(uri.scheme()));
+    readers_.push_back(scheme->get_reader(data, i));
+  }
+}
+
+template <typename Dtype>
+DataLayer<Dtype>::~DataLayer() {
+  this->StopInternalThread();
 }
 
 template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // Initialize DB
-  db_.reset(db::GetDB(this->layer_param_.data_param().backend()));
-  db_->Open(this->layer_param_.data_param().source(), db::READ);
-  cursor_.reset(db_->NewCursor());
-
-  // Check if we should randomly skip a few data points
-  if (this->layer_param_.data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-                        this->layer_param_.data_param().rand_skip();
-    LOG(INFO) << "Skipping first " << skip << " data points.";
-    while (skip-- > 0) {
-      cursor_->Next();
-    }
-  }
-  // Read a data point, and use it to initialize the top blob.
-  Datum datum;
-  datum.ParseFromString(cursor_->value());
+  // Look at first data point to initialize the top blob.
+  Datum* datum = readers_[0].get()->full().peek();
 
   bool force_color = this->layer_param_.data_param().force_encoded_color();
-  if ((force_color && DecodeDatum(&datum, true)) ||
-      DecodeDatumNative(&datum)) {
+  if ((force_color && DecodeDatum(datum, true)) ||
+      DecodeDatumNative(datum)) {
     LOG(INFO) << "Decoding Datum";
   }
   // image
-  int crop_size = this->layer_param_.transform_param().crop_size();
+  const int crop_size = this->layer_param_.transform_param().crop_size();
+  const int batch_size = this->layer_param_.data_param().batch_size();
   if (crop_size > 0) {
-    top[0]->Reshape(this->layer_param_.data_param().batch_size(),
-        datum.channels(), crop_size, crop_size);
-    this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
-        datum.channels(), crop_size, crop_size);
-    this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size);
+    top[0]->Reshape(batch_size, datum->channels(), crop_size, crop_size);
+    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].data_.Reshape(batch_size, datum->channels(),
+          crop_size, crop_size);
+    }
+    this->transformed_data_.Reshape(1, datum->channels(),
+        crop_size, crop_size);
   } else {
-    top[0]->Reshape(
-        this->layer_param_.data_param().batch_size(), datum.channels(),
-        datum.height(), datum.width());
-    this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
-        datum.channels(), datum.height(), datum.width());
-    this->transformed_data_.Reshape(1, datum.channels(),
-      datum.height(), datum.width());
+    top[0]->Reshape(batch_size, datum->channels(),
+        datum->height(), datum->width());
+    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].data_.Reshape(batch_size, datum->channels(),
+          datum->height(), datum->width());
+    }
+    this->transformed_data_.Reshape(1, datum->channels(),
+        datum->height(), datum->width());
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
   if (this->output_labels_) {
-    vector<int> label_shape(1, this->layer_param_.data_param().batch_size());
+    vector<int> label_shape(1, batch_size);
     top[1]->Reshape(label_shape);
-    this->prefetch_label_.Reshape(label_shape);
+    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(label_shape);
+    }
   }
 }
 
-// This function is used to create a thread that prefetches the data.
+// This function is called on prefetch thread
 template <typename Dtype>
-void DataLayer<Dtype>::InternalThreadEntry() {
+void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
   double trans_time = 0;
   CPUTimer timer;
-  CHECK(this->prefetch_data_.count());
+  CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
 
-  // Reshape on single input batches for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
   const int crop_size = this->layer_param_.transform_param().crop_size();
   bool force_color = this->layer_param_.data_param().force_encoded_color();
-  if (batch_size == 1 && crop_size == 0) {
-    Datum datum;
-    datum.ParseFromString(cursor_->value());
-    if (datum.encoded()) {
-      if (force_color) {
-        DecodeDatum(&datum, true);
-      } else {
-        DecodeDatumNative(&datum);
-      }
-    }
-    this->prefetch_data_.Reshape(1, datum.channels(),
-        datum.height(), datum.width());
-    this->transformed_data_.Reshape(1, datum.channels(),
-        datum.height(), datum.width());
-  }
-
-  Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
-  Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
-
-  if (this->output_labels_) {
-    top_label = this->prefetch_label_.mutable_cpu_data();
-  }
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
-    // get a blob
-    Datum datum;
-    datum.ParseFromString(cursor_->value());
+    Reader* reader = next_reader();
+    const Datum& datum = *(reader->full().pop("Waiting on data reader"));
+
+    // Reshape on single input batches for inputs of varying dimension.
+    if (batch_size == 1 && crop_size == 0) {
+      batch->data_.Reshape(1, datum.channels(),
+          datum.height(), datum.width());
+      this->transformed_data_.Reshape(1, datum.channels(),
+          datum.height(), datum.width());
+    }
 
     cv::Mat cv_img;
     if (datum.encoded()) {
@@ -136,7 +138,8 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     timer.Start();
 
     // Apply data transformations (mirror, scale, crop...)
-    int offset = this->prefetch_data_.offset(item_id);
+    Dtype* top_data = batch->data_.mutable_cpu_data();
+    int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
     if (datum.encoded()) {
       this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
@@ -144,20 +147,51 @@ void DataLayer<Dtype>::InternalThreadEntry() {
       this->data_transformer_->Transform(datum, &(this->transformed_data_));
     }
     if (this->output_labels_) {
-      top_label[item_id] = datum.label();
+      batch->label_.mutable_cpu_data()[item_id] = datum.label();
     }
     trans_time += timer.MicroSeconds();
-    // go to the next iter
-    cursor_->Next();
-    if (!cursor_->valid()) {
-      DLOG(INFO) << "Restarting data prefetching from start.";
-      cursor_->SeekToFirst();
-    }
+
+    reader->free().push(const_cast<Datum*>(&datum));
   }
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+}
+
+// This function is called on prefetch thread
+template <typename Dtype>
+Reader* DataLayer<Dtype>::next_reader() {
+  const DataParameter& data = this->layer_param().data_param();
+  // Default case without probabilities, try to find a reader with
+  // data ready, or return first one
+  if (data.probability_size() == 0) {
+    for (int i = 0; i < readers_.size(); ++i) {
+      Reader* reader = readers_[i].get();
+      if (!reader->full().empty()) {
+        return reader;
+      }
+    }
+  } else {
+    // Create RNG on current thread if first run
+    if (!variate_generator_) {
+      variate_generator_.reset(
+          new boost::variate_generator<rng_t*, boost::uniform_real<float> >(
+              caffe_rng(), random_distribution_));
+    }
+    // Pick reader randomly with probability
+    boost::variate_generator<rng_t*, boost::uniform_real<float> >& rng =
+        *variate_generator_.get();
+    float rand = rng();
+    for (int i = 0; i < data.probability().size(); ++i) {
+      rand -= data.probability(i);
+      if (rand < 0) {
+        return readers_[i].get();
+      }
+    }
+  }
+  // If no data ready, or rounding error on probabilities
+  return readers_[0].get();
 }
 
 INSTANTIATE_CLASS(DataLayer);

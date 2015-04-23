@@ -419,4 +419,39 @@ TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
   }
 }
 
+TEST_F(IOTest, TestURI) {
+  {
+    URI uri("file:///absolute/path", true);
+    EXPECT_EQ("file", uri.scheme());
+    EXPECT_EQ("", uri.host());
+    EXPECT_EQ("", uri.port());
+    EXPECT_EQ("/absolute/path", uri.path());
+  }
+
+  {
+    URI uri("file://relative/path", true);
+    EXPECT_EQ("file", uri.scheme());
+    EXPECT_EQ("", uri.host());
+    EXPECT_EQ("", uri.port());
+    EXPECT_EQ("relative/path", uri.path());
+  }
+
+  {
+    URI uri("tcp://host/path", false);
+    EXPECT_EQ("tcp", uri.scheme());
+    EXPECT_EQ("host", uri.host());
+    EXPECT_EQ("", uri.port());
+    EXPECT_EQ("/path", uri.path());
+  }
+}
+
 }  // namespace caffe
+
+
+
+
+
+
+
+
+

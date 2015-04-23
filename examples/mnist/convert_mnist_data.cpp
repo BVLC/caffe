@@ -6,6 +6,8 @@
 // The MNIST dataset could be downloaded at
 //    http://yann.lecun.com/exdb/mnist/
 
+#ifndef NO_IO_DEPENDENCIES
+
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <google/protobuf/text_format.h>
@@ -196,3 +198,10 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
+
+#else
+#include <stdio.h>
+int main(int argc, char** argv) {
+  fprintf(stderr, "NO_IO_DEPENDENCIES false");
+}
+#endif
