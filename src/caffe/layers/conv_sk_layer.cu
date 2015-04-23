@@ -53,7 +53,8 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
     // GreenTea backend code
 #ifdef USE_GREENTEA
-    std::cout << "CONV GREENTEA BEGIN" << std::endl;
+    std::cout << "CONV GREENTEA BEGIN: " << this->layer_param().name()
+        << std::endl;
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_.id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
@@ -70,39 +71,45 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       int col_offset = K_ * N_;
       int top_offset = M_ * N_;
 
+      std::cout << "M:" << M_ << std::endl;
+      std::cout << "N:" << N_ << std::endl;
+      std::cout << "K:" << K_ << std::endl;
+
       for (int n = 0; n < num_; ++n) {
 
-        // First, im2col
-        greentea_im2col_sk_gpu<Dtype>(program, ctx, bottom_data,
-                                      bottom[i]->offset(n), channels_, height_,
-                                      width_, kernel_h_, kernel_w_, pad_h_,
-                                      pad_w_, stride_h_, stride_w_, kstride_h_,
-                                      kstride_w_, col_data);
-        ctx.get_queue().finish();
+        for (int k = 0; k < blocks_; ++k) {
+          // First, im2col
+          greentea_im2col_sk_gpu<Dtype>(program, ctx, bottom_data,
+                                        bottom[i]->offset(n), channels_,
+                                        height_, width_, kernel_h_, kernel_w_,
+                                        pad_h_, pad_w_, stride_h_, stride_w_,
+                                        kstride_h_, kstride_w_, col_data);
+          ctx.get_queue().finish();
 
-        std::cout << "After im2col" << std::endl;
+          std::cout << "After im2col" << std::endl;
 
-        // Second, innerproduct with groups
-        for (int g = 0; g < group_; ++g) {
-          greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
-                                   CblasNoTrans, M_, N_, K_, (Dtype) 1., weight,
-                                   weight_offset * g, col_data, col_offset * g,
-                                   (Dtype) 0., top_data,
-                                   top[i]->offset(n) + top_offset * g);
-        }
-        ctx.get_queue().finish();
+          // Second, innerproduct with groups
+          for (int g = 0; g < group_; ++g) {
+            greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+                                     CblasNoTrans, M_, N_, K_, (Dtype) 1.,
+                                     weight, weight_offset * g, col_data,
+                                     col_offset * g, (Dtype) 0., top_data,
+                                     top[i]->offset(n) + top_offset * g);
+            ctx.get_queue().finish();
+          }
 
-        std::cout << "After gpu gemm" << std::endl;
+          std::cout << "After gpu gemm" << std::endl;
 
 // Third, add bias
-        if (bias_term_) {
-          greentea_gpu_gemm<Dtype>(
-              this->device_context_.id(), CblasNoTrans, CblasNoTrans,
-              num_output_, N_, 1, (Dtype) 1.,
-              (cl_mem) (this->blobs_[1]->gpu_data()), 0,
-              (cl_mem) (bias_multiplier_.gpu_data()), 0, (Dtype) 1.,
-              top_data, top[i]->offset(n));
-          ctx.get_queue().finish();
+          if (bias_term_) {
+            greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+                                     CblasNoTrans, num_output_, N_, 1,
+                                     (Dtype) 1.,
+                                     (cl_mem) (this->blobs_[1]->gpu_data()), 0,
+                                     (cl_mem) (bias_multiplier_.gpu_data()), 0,
+                                     (Dtype) 1., top_data, top[i]->offset(n));
+            ctx.get_queue().finish();
+          }
         }
       }
     }

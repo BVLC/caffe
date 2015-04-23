@@ -26,7 +26,6 @@
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/ocl/backend.hpp"
 
-
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
 #endif
@@ -79,12 +78,12 @@ template void greentea_copy<float>(const int N, const cl_mem X, cl_mem Y,
 template void greentea_copy<double>(const int N, const cl_mem X, cl_mem Y,
                                     viennacl::ocl::context &ctx);
 
-template<class Dtype>
-void greentea_gpu_gemm(int ctx_id, const CBLAS_TRANSPOSE TransA,
+template<typename Dtype>
+void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                        const CBLAS_TRANSPOSE TransB, const int M, const int N,
-                       const int K, const Dtype alpha, const cl_mem A, int offA,
-                       const cl_mem B, int offB, const Dtype beta, cl_mem C,
-                       int offC) {
+                       const int K, const Dtype alpha, const cl_mem A,
+                       const int offA, const cl_mem B, const int offB,
+                       const Dtype beta, cl_mem C, const int offC) {
 
   int offArow = offA;
   int offAcol = 0;
@@ -141,91 +140,113 @@ void greentea_gpu_gemm(int ctx_id, const CBLAS_TRANSPOSE TransA,
       (TransB == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
   viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
-
   cl_command_queue queue = ctx.get_queue().handle().get();
 
   if (std::is_same<Dtype, float>::value) {
-    GREENTEA_CL_BLAS_CHECK(clblasSgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
-                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
+    GREENTEA_CL_BLAS_CHECK(
+        clblasSgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B, offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
   } else {
-    GREENTEA_CL_BLAS_CHECK(clblasDgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
-                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
+    GREENTEA_CL_BLAS_CHECK(
+        clblasDgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B, offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
   }
 #endif
 
 }
 
-template void greentea_gpu_gemm<float>(int ctx_id, const CBLAS_TRANSPOSE TransA,
+template void greentea_gpu_gemm<float>(const int ctx_id,
+                                       const CBLAS_TRANSPOSE TransA,
                                        const CBLAS_TRANSPOSE TransB,
                                        const int M, const int N, const int K,
                                        const float alpha, const cl_mem A,
-                                       int offA, const cl_mem B, int offB,
-                                       const float beta, cl_mem C, int offC);
-template void greentea_gpu_gemm<double>(int ctx_id, const CBLAS_TRANSPOSE TransA,
-                                       const CBLAS_TRANSPOSE TransB,
-                                       const int M, const int N, const int K,
-                                       const double alpha, const cl_mem A,
-                                       int offA, const cl_mem B, int offB,
-                                       const double beta, cl_mem C, int offC);
+                                       const int offA, const cl_mem B,
+                                       const int offB, const float beta,
+                                       cl_mem C, const int offC);
+template void greentea_gpu_gemm<double>(const int ctx_id,
+                                        const CBLAS_TRANSPOSE TransA,
+                                        const CBLAS_TRANSPOSE TransB,
+                                        const int M, const int N, const int K,
+                                        const double alpha, const cl_mem A,
+                                        const int offA, const cl_mem B,
+                                        const int offB, const double beta,
+                                        cl_mem C, const int offC);
 
-/*  template<>
- void greentea_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
- const CBLAS_TRANSPOSE TransB, const int M,
- const int N, const int K, const double alpha,
- const double* A, const double* B,
- const double beta, double* C) {
- // Note that cublas follows fortran order.
- int lda = (TransA == CblasNoTrans) ? K : M;
- int ldb = (TransB == CblasNoTrans) ? N : K;
- cublasOperation_t cuTransA =
- (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
- cublasOperation_t cuTransB =
- (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
- CUBLAS_CHECK(
- cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA, N, M, K, &alpha,
- B, ldb, A, lda, &beta, C, N));
- }
+template<typename Dtype>
+void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
+                       const int M, const int N, const Dtype alpha,
+                       const cl_mem A, const int offA, const cl_mem x,
+                       const int offx, const Dtype beta, cl_mem y,
+                       const int offy) {
 
- template<>
- void greentea_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
- const int N, const float alpha, const float* A,
- const float* x, const float beta, float* y) {
- cublasOperation_t cuTransA =
- (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
- CUBLAS_CHECK(
- cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha, A, N, x, 1,
- &beta, y, 1));
- }
+  int lda = (TransA == CblasNoTrans) ? N : M;
 
- template<>
- void greentea_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
- const int N, const double alpha, const double* A,
- const double* x, const double beta, double* y) {
- cublasOperation_t cuTransA =
- (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
- CUBLAS_CHECK(
- cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha, A, N, x, 1,
- &beta, y, 1));
- }
+#ifdef USE_VIENNACLBLAS
+  // TODO
+#endif
 
- template<>
- void greentea_gpu_axpy<float>(const int N, const float alpha, const float* X,
- float* Y) {
- CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
- }
+#ifdef USE_CLBLAS
 
- template<>
- void greentea_gpu_axpy<double>(const int N, const double alpha, const double* X,
- double* Y) {
- CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
- }
+  clblasOrder clOrder = clblasRowMajor;
+  clblasTranspose clTransA =
+      (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
- void greentea_gpu_memcpy(const size_t N, const void* X, void* Y) {
- if (X != Y) {
- CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
- }
- }
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
+  cl_command_queue queue = ctx.get_queue().handle().get();
 
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasSgemv(clOrder,clTransA,M,N,alpha,A,offA,lda,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
+  } else {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasDgemv(clOrder,clTransA,M,N,alpha,A,offA,lda,x,offx,1,beta,y,offy,1,1,&queue,0,NULL,NULL));
+  }
+#endif
+}
+
+template void greentea_gpu_gemv<float>(const int ctx_id,
+                                       const CBLAS_TRANSPOSE TransA,
+                                       const int M, const int N,
+                                       const float alpha, const cl_mem A,
+                                       const int offA, const cl_mem x,
+                                       const int offx, const float beta,
+                                       cl_mem y, const int offy);
+template void greentea_gpu_gemv<double>(const int ctx_id,
+                                        const CBLAS_TRANSPOSE TransA,
+                                        const int M, const int N,
+                                        const double alpha, const cl_mem A,
+                                        const int offA, const cl_mem x,
+                                        const int offx, const double beta,
+                                        cl_mem y, const int offy);
+
+template<typename Dtype>
+void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha, const cl_mem X,
+                              const int offX, cl_mem Y, const int offY) {
+
+#ifdef USE_VIENNACLBLAS
+  // TODO
+#endif
+
+#ifdef USE_CLBLAS
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
+  cl_command_queue queue = ctx.get_queue().handle().get();
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasSaxpy(N,alpha,X,offX,1,Y,offY,1,1,&queue,0,NULL,NULL));
+  } else {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasDaxpy(N,alpha,X,offX,1,Y,offY,1,1,&queue,0,NULL,NULL));
+
+  }
+#endif
+}
+
+template void greentea_gpu_axpy<float>(const int ctx_id, const int N, const float alpha, const cl_mem X,
+                              const int offX, cl_mem Y, const int offY);
+template void greentea_gpu_axpy<double>(const int ctx_id, const int N, const double alpha, const cl_mem X,
+                                const int offX, cl_mem Y, const int offY);
+
+
+/*
  template<>
  void greentea_gpu_scal<float>(const int N, const float alpha, float *X) {
  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));

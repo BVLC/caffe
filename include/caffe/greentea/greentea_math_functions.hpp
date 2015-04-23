@@ -8,15 +8,6 @@
 #ifndef GREENTEA_MATH_FUNCTIONS_HPP_
 #define GREENTEA_MATH_FUNCTIONS_HPP_
 
-// Define ViennaCL flags
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-
-#ifndef VIENNACL_WITH_OPENCL
-#define VIENNACL_WITH_OPENCL
-#endif
-
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "viennacl/ocl/context.hpp"
@@ -36,17 +27,24 @@ template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, cl_mem Y, viennacl::ocl::context &ctx);
 
 template<typename Dtype>
-void greentea_gpu_gemm(int ctx_id, const CBLAS_TRANSPOSE TransA,
+void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                               const CBLAS_TRANSPOSE TransB, const int M,
                               const int N, const int K, const Dtype alpha,
-                              const cl_mem A, int offA, const cl_mem B, int offB, const Dtype beta,
-                              cl_mem C, int offC);
+                              const cl_mem A, const int offA, const cl_mem B, const int offB, const Dtype beta,
+                              cl_mem C, const int offC);
 
-/*template <typename Dtype>
- void greentea_gpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
- const Dtype alpha, const Dtype* A, const Dtype* x, const Dtype beta,
- Dtype* y);
+template<typename Dtype>
+void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA, const int M, const int N,
+                       const Dtype alpha, const cl_mem A, const int offA,
+                       const cl_mem x, const int offx, const Dtype beta,
+                       cl_mem y, const int offy);
 
+template<typename Dtype>
+void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha, const cl_mem X,
+                              const int offX, cl_mem Y, const int offY);
+
+
+/*
  template <typename Dtype>
  void greentea_gpu_axpy(const int N, const Dtype alpha, const Dtype* X,
  Dtype* Y);

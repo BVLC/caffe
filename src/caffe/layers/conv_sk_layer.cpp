@@ -12,6 +12,9 @@ template<typename Dtype>
 void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                            const vector<Blob<Dtype>*>& top) {
 
+  // TODO: (FTschopp) Dynamically change this, or layer param
+  blocks_ = 8;
+
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   CHECK(
       !conv_param.has_kernel_size()
@@ -83,7 +86,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int height_out = (height_ - ext_kernel_h) / stride_h_ + 1;
   int width_out = (width_ - ext_kernel_w) / stride_w_ + 1;
   col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
-                      width_out, this->device_context_);
+                      width_out / blocks_, this->device_context_);
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)<< "Number of output should be multiples of group.";
   bias_term_ = this->layer_param_.convolution_param().bias_term();
@@ -132,7 +135,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void ConvolutionSKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
-  LayerSetUp(bottom, top);
+  //LayerSetUp(bottom, top);
 }
 
 template<typename Dtype>
