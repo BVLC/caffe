@@ -81,36 +81,44 @@ bool OpenCLPlatform::Query() {
   Check();
 
 	// get the name
-  cl_int err;
+  cl_int err = 0;
   name_ = platform_.getInfo<CL_PLATFORM_NAME>(&err);
-  if (!CL_CHECK(err)) return false;
+  if (!CL_CHECK(err)) { name_ = "Failed to get platform name."; }
 
 	// get the vendor
   vendor_ = platform_.getInfo<CL_PLATFORM_VENDOR>(&err);
-  if (!CL_CHECK(err)) return false;
+  if (!CL_CHECK(err)) { vendor_ = "Failed to get platform vendor."; }
 
   version_ = platform_.getInfo<CL_PLATFORM_VERSION>(&err);
-  if (!CL_CHECK(err)) return false;
+  if (!err) { version_ = "Failed to get platform version."; }
 
   extensions_ = platform_.getInfo<CL_PLATFORM_EXTENSIONS>(&err);
-  if (!CL_CHECK(err)) return false;
+  if (!CL_CHECK(err)) { extensions_ = "failed to get platform extensions."; }
 
   profile_ = platform_.getInfo<CL_PLATFORM_PROFILE>(&err);
-  if (!CL_CHECK(err)) return false;
+  if (!CL_CHECK(err)) { profile_ = "Failed to get platform profile."; }
 
 	// CPU & GPU devices
-  if (!CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU, 0, NULL, &(numDevices)) ) ) {
+  if (!CL_CHECK( clGetDeviceIDs(platform_(),
+                                CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU,
+                                0, NULL, &(numDevices)) ) ) {
 		return false;
 	}
 	devicePtr = (cl_device_id*) malloc(numDevices * sizeof(cl_device_id));
-  if (!CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU, numDevices, devicePtr, NULL) ) ) {
+  if (!CL_CHECK( clGetDeviceIDs(platform_(),
+                                CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU,
+                                numDevices, devicePtr, NULL) ) ) {
 		return false;
 	}
 
 	// CPU devices
-  if ( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU, 0, NULL, &(numCPUDevices)) == CL_SUCCESS ) {
-		cpuDevicePtr = (cl_device_id*) malloc(numCPUDevices * sizeof(cl_device_id));
-    if ( ! CL_CHECK( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU, numCPUDevices, cpuDevicePtr, NULL) ) ) {
+  if ( clGetDeviceIDs(platform_(), CL_DEVICE_TYPE_CPU, 0,
+                      NULL, &(numCPUDevices)) == CL_SUCCESS ) {
+    cpuDevicePtr =
+        (cl_device_id*) malloc(numCPUDevices * sizeof(cl_device_id));
+    if ( ! CL_CHECK( clGetDeviceIDs(platform_(),
+                     CL_DEVICE_TYPE_CPU,
+                     numCPUDevices, cpuDevicePtr, NULL) ) ) {
 			return false;
 		}
 
