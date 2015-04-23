@@ -8,6 +8,9 @@
 
 #ifdef USE_GREENTEA
 #include "caffe/greentea/cl_kernels.hpp"
+#ifdef USE_CLBLAS
+#include <clBLAS.h>
+#endif
 #endif
 
 namespace caffe {
@@ -280,6 +283,7 @@ void Caffe::SetDevice(const int device_id) {
   Get().default_device_context_ = GetDeviceContext(device_id);
 
   if (Get().default_device_context_.backend() == Backend::BACKEND_CUDA) {
+#ifdef USE_CUDA
     int current_device;
     CUDA_CHECK(cudaGetDevice(&current_device));
     if (current_device == device_id) {
@@ -300,9 +304,12 @@ void Caffe::SetDevice(const int device_id) {
     CURAND_CHECK(
         curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
                                            cluster_seedgen()));
+#endif
   } else {
 #ifdef USE_GREENTEA
-    // TODO: ???
+#ifdef USE_CLBLAS
+    clblasSetup();
+#endif
 #endif
   }
 }
