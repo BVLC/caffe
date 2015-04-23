@@ -89,8 +89,8 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                    weight_offset * g, col_data, col_offset * g,
                                    (Dtype) 0., top_data,
                                    top[i]->offset(n) + top_offset * g);
-          ctx.get_queue().finish();
         }
+        ctx.get_queue().finish();
 
         std::cout << "After gpu gemm" << std::endl;
 

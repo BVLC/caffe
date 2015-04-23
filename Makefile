@@ -213,8 +213,6 @@ endif
 
 ifeq ($(USE_CUDA),1)
 	COMMON_FLAGS += -DUSE_CUDA
-else
-	NVCC = 
 endif
 
 ##############################
@@ -582,20 +580,19 @@ $(PROTO_BUILD_DIR)/%.pb.o: $(PROTO_BUILD_DIR)/%.pb.cc $(PROTO_GEN_HEADER) \
 		|| (cat $@.$(WARNS_EXT); exit 1)
 	@ cat $@.$(WARNS_EXT)
 
+$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
 ifeq ($(USE_CUDA), 1)
-	$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
-		@ echo NVCC $<
-		$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
-			-odir $(@D)
-		$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
-			|| (cat $@.$(WARNS_EXT); exit 1)
-		@ cat $@.$(WARNS_EXT)
+	@ echo NVCC $<
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+		-odir $(@D)
+	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
 else
-	$(BUILD_DIR)/cuda/%.o: %.cu | $(ALL_BUILD_DIRS)
-		@ echo CXX $<
-		$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
-			|| (cat $@.$(WARNS_EXT); exit 1)
-		@ cat $@.$(WARNS_EXT)
+	@ echo CXX $<
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@ 2> $@.$(WARNS_EXT) \
+		|| (cat $@.$(WARNS_EXT); exit 1)
+	@ cat $@.$(WARNS_EXT)
 endif
 
 $(TEST_ALL_BIN): $(TEST_MAIN_SRC) $(TEST_OBJS) $(GTEST_OBJ) \

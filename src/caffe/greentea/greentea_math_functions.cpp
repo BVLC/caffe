@@ -29,7 +29,7 @@
 
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
-#endif USE_CLBLAS
+#endif
 
 #ifdef USE_VIENNACLBLAS
 #include "libviennacl/include/viennacl.hpp"
@@ -118,14 +118,14 @@ void greentea_gpu_gemm(int ctx_id, const CBLAS_TRANSPOSE TransA,
   ViennaCLOrder vclOrderC = ViennaCLRowMajor;
 
   if (std::is_same<Dtype, float>::value) {
-    GREENTEA_BLAS_CHECK(
+    GREENTEA_VCL_BLAS_CHECK(
         ViennaCLOpenCLSgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
                             vclOrderC, M, N, K, alpha, A, offArow, offAcol,
                             incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
                             incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
                             incCcol, ldc));
   } else {
-    GREENTEA_BLAS_CHECK(
+    GREENTEA_VCL_BLAS_CHECK(
         ViennaCLOpenCLDgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
                             vclOrderC, M, N, K, alpha, A, offArow, offAcol,
                             incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
@@ -145,11 +145,11 @@ void greentea_gpu_gemm(int ctx_id, const CBLAS_TRANSPOSE TransA,
   cl_command_queue queue = ctx.get_queue().handle().get();
 
   if (std::is_same<Dtype, float>::value) {
-    clblasSgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
-                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL);
+    GREENTEA_CL_BLAS_CHECK(clblasSgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
+                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
   } else {
-    clblasDgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
-                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL);
+    GREENTEA_CL_BLAS_CHECK(clblasDgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B,
+                offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
   }
 #endif
 
