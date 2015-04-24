@@ -167,7 +167,7 @@ namespace OpenCL {
 	const static int COPY_GPU_TO_GPU = 3;
 	const static int COPY_DEFAULT    = 4;
 
-	extern bool inititialized;
+//	extern bool inititialized;
 //	extern caffe::OpenCLManager mgr;
 //	extern caffe::OpenCLPlatform* pf;
 //	extern caffe::OpenCLDevice* gpu;

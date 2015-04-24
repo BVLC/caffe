@@ -14,7 +14,7 @@ namespace caffe {
 
 namespace OpenCL {
 
-bool inititialized = false;
+//bool inititialized = false;
 //caffe::OpenCLPlatform* pf;
 //caffe::OpenCLDevice* gpu;
 //cl_context*	context;

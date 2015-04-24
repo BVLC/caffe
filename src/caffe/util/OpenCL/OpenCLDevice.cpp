@@ -36,12 +36,10 @@ OpenCLDevice::OpenCLDevice() {
 	deviceLocalMemSize 			= 0;
 	deviceHostUnifiedMem 		= 0;
 	deviceMemBaseAddrAlign		= 0;
-	context 					= NULL;
 	queue 						= NULL;
 }
 
 OpenCLDevice::OpenCLDevice(cl_platform_id pid, cl_device_id did) {
-
 	deviceID = did;
 	platformID = pid;
 	deviceType = 0;
@@ -61,12 +59,10 @@ OpenCLDevice::OpenCLDevice(cl_platform_id pid, cl_device_id did) {
 	deviceLocalMemSize = 0;
 	deviceHostUnifiedMem = 0;
 	deviceMemBaseAddrAlign		= 0;
-	context = NULL;
 	queue = NULL;
 }
 
 OpenCLDevice::OpenCLDevice(const OpenCLDevice& dev) {
-
 	deviceID = dev.deviceID;
 	platformID = dev.platformID;
 	deviceType = dev.deviceType;
@@ -88,7 +84,7 @@ OpenCLDevice::OpenCLDevice(const OpenCLDevice& dev) {
 	deviceHostUnifiedMem = dev.deviceHostUnifiedMem;
 	deviceMemBaseAddrAlign	= dev.deviceMemBaseAddrAlign;
 	deviceName = dev.deviceName;
-	context = dev.context;
+  context_ = dev.context_;
 	programs	= dev.programs;
 	queue = dev.queue;
 }
@@ -98,10 +94,10 @@ OpenCLDevice::~OpenCLDevice() {
 		clReleaseCommandQueue(queue);
 		LOG(INFO)<< "release OpenCL command queue on device " << name();
 	}
-	if ( context != NULL ) {
-		clReleaseContext(context);
-		LOG(INFO) << "release OpenCL context on device " << name();
-	}
+//	if ( context != NULL ) {
+//		clReleaseContext(context);
+//		LOG(INFO) << "release OpenCL context on device " << name();
+//	}
 	std::vector<cl_program>::iterator it;
 	for ( it = programs.begin(); it != programs.end(); it++ ) {
 		if ( *it != NULL ) {
@@ -242,22 +238,22 @@ cl_device_id OpenCLDevice::id() {
 	return deviceID;
 }
 
-bool OpenCLDevice::createContext() {
+//bool OpenCLDevice::createContext() {
 
-	cl_int err;
-	cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platformID, 0 };
-	context = clCreateContext(contextProperties, 1, &deviceID, NULL, NULL, &err);
-	if (err != CL_SUCCESS) {
-		LOG(ERROR)<< "failed to create OpenCL context for device " << this->name();
-		return false;
-	}
-	LOG(INFO)<< "create OpenCL context for platform " << this->name();
+//	cl_int err;
+//	cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platformID, 0 };
+//	context = clCreateContext(contextProperties, 1, &deviceID, NULL, NULL, &err);
+//	if (err != CL_SUCCESS) {
+//		LOG(ERROR)<< "failed to create OpenCL context for device " << this->name();
+//		return false;
+//	}
+//	LOG(INFO)<< "create OpenCL context for platform " << this->name();
 
-	return true;
-}
+//	return true;
+//}
 
 bool OpenCLDevice::compile(std::string cl_source) {
-	if (context == NULL) {
+  if (context_() == NULL) {
 		LOG(ERROR)<< "cannot create OpenCL program without OpenCL context";
 		return false;
 	}
@@ -297,7 +293,7 @@ bool OpenCLDevice::compile(std::string cl_source) {
 	cl_int err;
 	const char *list = str.c_str();
 	size_t sourceSize[] = {strlen(str.c_str())};
-	cl_program program = clCreateProgramWithSource(context, 1, &list, sourceSize, &err);
+  cl_program program = clCreateProgramWithSource(context_(), 1, &list, sourceSize, &err);
 	if ( err != CL_SUCCESS ) {
 		LOG(ERROR) << "failed to create program from file = '"<< cl_standard.c_str() <<"'";
 		return false;
@@ -341,6 +337,10 @@ bool OpenCLDevice::compile(std::string cl_source) {
 
 	std::vector<std::string>::iterator it;
 
+  for( it = kernel_names.begin(); it != kernel_names.end(); it++ ) {
+    std::cout << *it << std::endl;
+  }
+
 	for( it = kernel_names.begin(); it != kernel_names.end(); it++ ) {
 		cl_kernel kern = clCreateKernel(program, (*it).c_str(), &err);
 		if ( err != CL_SUCCESS ) {
@@ -363,13 +363,13 @@ bool OpenCLDevice::compile(std::string cl_source) {
 
 bool OpenCLDevice::createQueue() {
 
-	if (!context) {
+  if (!context_()) {
 		LOG(ERROR)<< "cannot create command queue without context.";
 		return false;
 	}
 
 	cl_int err;
-	queue = clCreateCommandQueue(context, deviceID, 0, &err);
+  queue = clCreateCommandQueue(context_(), deviceID, 0, &err);
 	if ( err != CL_SUCCESS ) {
 		LOG(ERROR) << "failed to create OpenCL command queue for device " << this->name();
 		return false;
@@ -378,13 +378,17 @@ bool OpenCLDevice::createQueue() {
 	return true;
 }
 
-cl_context* OpenCLDevice::getContext() {
+cl_context OpenCLDevice::getContext() {
 
-	return &context;
+  return context_();
 }
 
 cl_command_queue* OpenCLDevice::getQueue() {
 	return &queue;
+}
+
+void OpenCLDevice::SetContext(cl::Context context) {
+  context_ = context;
 }
 
 cl_kernel* OpenCLDevice::getKernel(std::string name) {

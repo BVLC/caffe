@@ -30,8 +30,8 @@ OpenCLMemory::OpenCLMemory() {
 
 OpenCLMemory::OpenCLMemory(size_t size) {
   OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
-  cl_context* context = current_device.getContext();
-	if ( ! context ) {
+  cl_context context = current_device.getContext();
+  if ( ! context ) {
 		std::ostringstream oss;
     oss << current_device.name() << "> failed to get OpenCL context.";
     //throw OpenCLMemoryException(oss.str());
@@ -41,7 +41,7 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 	double allocSizeMB = size / (1024.0*1024.0);
 
 	cl_int err;
-	this->ptr_device_mem_ = clCreateBuffer(*context, CL_MEM_READ_WRITE, size, NULL, &err);
+  this->ptr_device_mem_ = clCreateBuffer(context, CL_MEM_READ_WRITE, size, NULL, &err);
 	if ( err != CL_SUCCESS ) {
 		std::ostringstream oss;
     oss << current_device.name() << "> failed to create CL_MEM_READ_WRITE buffer of "<<allocSizeMB<<" MByte";
@@ -70,7 +70,6 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 	numCallsMalloc++;
 	statictics();
 }
-
 
 OpenCLMemory::OpenCLMemory(const OpenCLMemory& mem) {
 

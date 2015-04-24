@@ -27,6 +27,8 @@ class OpenCLManager {
   int current_platform_index_;
   Platforms platforms_;
   int device_id_;
+  bool initialized_;
+  // singleton instance.
   static OpenCLManager instance_;
 };
 

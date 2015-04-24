@@ -9,13 +9,17 @@ namespace caffe {
 
 OpenCLManager OpenCLManager::instance_;
 
-OpenCLManager::OpenCLManager() {
+OpenCLManager::OpenCLManager():
+  initialized_(false) {
 }
 
 OpenCLManager::~OpenCLManager() {
 }
 
 bool OpenCLManager::Init() {
+  if (instance_.initialized_) {
+    return true;
+  }
   LOG(INFO) << "Initialize OpenCL";
   instance_.LazyQuery();
   if ( OpenCLManager::GetNumPlatforms() <= 0 ) {
@@ -28,6 +32,11 @@ bool OpenCLManager::Init() {
 
   OpenCLPlatform& pf = CurrentPlatform();
   pf.print();
+
+  if (!pf.createContext()) {
+    LOG(FATAL) << "failed to create OpenCL context for platform " << pf.name();
+    return false;
+  }
 
   std::vector<std::string> cl_files;
   cl_files.push_back("src/caffe/util/OpenCL/math_functions.cl");
@@ -51,32 +60,31 @@ bool OpenCLManager::Init() {
 
   for ( it = cl_files.begin(); it != cl_files.end(); it++ ) {
     if ( !pf.compile(*it) ) {
-      LOG(ERROR) << "failed to create to create OpenCL program for platform " << pf.name();
+      LOG(FATAL) << "failed to create to create OpenCL program for platform " << pf.name();
       return false;
     }
   }
 
   if ( pf.getNumGPUDevices() < 1 ) {
-    LOG(ERROR) << "No GPU devices available at platform " << pf.name();
+    LOG(FATAL) << "No GPU devices available at platform " << pf.name();
     return false;
   }
 
   pf.SetCurrentDevice(instance_.device_id_);
   OpenCLDevice& device = pf.CurrentDevice();
   if (!device.createQueue()) {
-    LOG(ERROR) << "failed to create OpenCL command queue for device "
+    LOG(FATAL) << "failed to create OpenCL command queue for device "
                << device.name();
     return false;
   }
 
   if ( clblasSetup() != CL_SUCCESS ) {
-    LOG(ERROR) << "failed to initialize clBlas";
+    LOG(FATAL) << "failed to initialize clBlas";
     return false;
   }
 
   device.print();
-  caffe::OpenCL::inititialized = true;
-
+  instance_.initialized_ = true;
   return true;
 }
 

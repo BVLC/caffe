@@ -46,8 +46,9 @@ private:
 	cl_device_id*	cpuDevicePtr;
 	cl_device_id*	gpuDevicePtr;
 	std::vector<caffe::OpenCLDevice>	devices;
-	cl_context context;
-	std::vector<cl_program> programs;
+//  cl_context context;
+  cl::Context context_;
+//	std::vector<cl_program> programs;
   int current_device_index_;
 };
 
