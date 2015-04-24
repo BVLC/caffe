@@ -291,7 +291,10 @@ def load_image(filename, color=True):
         if color:
             img = np.tile(img, (1, 1, 3))
     elif img.shape[2] == 4:
-        img = img[:, :, :3]
+        if color:
+            img = img[:, :, :3]
+        else:
+            img = img[:, :, :1]
     return img
 
 
