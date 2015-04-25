@@ -1,8 +1,9 @@
 PROJECT := caffe
 
 CONFIG_FILE := Makefile.config
+# Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
-$(error $(CONFIG_FILE): file not found.)
+$(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
 endif
 include $(CONFIG_FILE)
 
