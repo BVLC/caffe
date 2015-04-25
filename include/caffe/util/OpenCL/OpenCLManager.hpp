@@ -21,7 +21,6 @@ class OpenCLManager {
   OpenCLManager();
   ~OpenCLManager();
   OpenCLPlatform* getPlatform(unsigned int idx);
-  bool LazyQuery();
   bool Query();
   //cl::Platform current_platform_; // cl_platform_id* 					platformPtr;
   int current_platform_index_;

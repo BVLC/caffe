@@ -238,20 +238,6 @@ cl_device_id OpenCLDevice::id() {
 	return deviceID;
 }
 
-//bool OpenCLDevice::createContext() {
-
-//	cl_int err;
-//	cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platformID, 0 };
-//	context = clCreateContext(contextProperties, 1, &deviceID, NULL, NULL, &err);
-//	if (err != CL_SUCCESS) {
-//		LOG(ERROR)<< "failed to create OpenCL context for device " << this->name();
-//		return false;
-//	}
-//	LOG(INFO)<< "create OpenCL context for platform " << this->name();
-
-//	return true;
-//}
-
 bool OpenCLDevice::compile(std::string cl_source) {
   if (context_() == NULL) {
 		LOG(ERROR)<< "cannot create OpenCL program without OpenCL context";
@@ -334,12 +320,7 @@ bool OpenCLDevice::compile(std::string cl_source) {
 	DLOG(INFO) << "create program from file = '"<< cl_standard.c_str() <<"' for device " << this->name();
 	programs.push_back(program);
 
-
 	std::vector<std::string>::iterator it;
-
-  for( it = kernel_names.begin(); it != kernel_names.end(); it++ ) {
-    std::cout << *it << std::endl;
-  }
 
 	for( it = kernel_names.begin(); it != kernel_names.end(); it++ ) {
 		cl_kernel kern = clCreateKernel(program, (*it).c_str(), &err);

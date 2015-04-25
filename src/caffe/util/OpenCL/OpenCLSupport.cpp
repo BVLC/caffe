@@ -773,7 +773,7 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx,
 	/* check alignment */
   cl_uint bytes = device.getDeviceMemBaseAddrAlign();
 	if ( offset % bytes != 0 ) {
-		LOG(WARNING)<<"sub-buffer memory offset ("<<offset<<" Byte) is not aligned with device memory offset ("<<bytes<<" Byte)";
+    //LOG(WARNING)<<"sub-buffer memory offset ("<<offset<<" Byte) is not aligned with device memory offset ("<<bytes<<" Byte)";
 
 		cl_mem_flags flags;
 		err = clGetMemObjectInfo((cl_mem) ptr_logical, CL_MEM_FLAGS, sizeof(flags), &flags, NULL);
@@ -1534,6 +1534,14 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
       LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
 			//clReleaseSubBuffers(sb);
 			//clReleaseBufferMap(bm);
+
+      std::cout << "clblasRowMajor " << std::endl
+                << "TransA: " << TransA << std::endl
+                << "TransB: " << TransB << std::endl
+                << "m: " << m << std::endl
+                << "n: " << n << std::endl
+                << "k:" << k << std::endl
+                << "beta: " << beta << std::endl;
 			return false;
 		}
 		////clFinish(*queue);

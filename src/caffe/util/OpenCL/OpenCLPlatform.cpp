@@ -248,7 +248,6 @@ cl_platform_id OpenCLPlatform::id() {
 bool OpenCLPlatform::createContext() {
 	cl_int err;
   cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties) platform_(), 0};
-//	cl_context context = clCreateContext(contextProperties, numDevices, devicePtr, NULL, NULL, &err);
   context_ = cl::Context(CL_DEVICE_TYPE_CPU | CL_DEVICE_TYPE_GPU,
                          contextProperties, NULL, NULL, &err);
 	if ( err != CL_SUCCESS ) {
@@ -259,106 +258,19 @@ bool OpenCLPlatform::createContext() {
 
 	std::vector<caffe::OpenCLDevice>::iterator it;
 	for (it = devices.begin(); it != devices.end(); it++) {
-//		if ( ! (*it).createContext() ) {
-//			return false;
       it->SetContext(context_);
-//		}
 	}
 
 	return true;
 }
 
 bool OpenCLPlatform::compile(std::string cl_source) {
-//  if ( context_() == NULL ) {
-//		LOG(ERROR) << "cannot create OpenCL program without OpenCL context";
-//		return false;
-//	}
-
-//	if ( access( cl_source.c_str(), F_OK ) == -1 ) {
-//		LOG(ERROR) << "kernel source file = '" << cl_source.c_str() << "' doesn't exist";
-//		return false;
-//	}
-
-//	if ( access( cl_source.c_str(), R_OK ) == -1 ) {
-//		LOG(ERROR) << "kernel source file = '" << cl_source.c_str() << "' isn't readable";
-//		return false;
-//	}
-
-//	caffe::OpenCLParser parser;
-
-//	boost::regex re("\\.cl", boost::regex::perl);
-//	std::string cl_standard = boost::regex_replace(cl_source, re, "-STD.cl");
-
-//	if ( ! parser.convert(cl_source, cl_standard) ) {
-//		LOG(ERROR) << "failed to convert kernel source file = '" << cl_source.c_str() << "' to standard OpenCL";
-//		return false;
-//	}
-
-//	std::vector<std::string> kernel_names;
-//	if ( ! parser.getKernelNames(cl_standard, kernel_names) ) {
-//		LOG(ERROR) << "failed to parse kernel names from file '"<<cl_standard.c_str()<<"'";
-//		return false;
-//	}
-
-//	std::string str(std::istreambuf_iterator<char>(std::ifstream(cl_standard.c_str()).rdbuf()), std::istreambuf_iterator<char>());
-//	if ( str.size() <= 0 ) {
-//		LOG(ERROR) << "failed to read data from file = '"<< cl_standard.c_str() <<"'";
-//		return false;
-//	}
-
-//	cl_int err;
-//	const char *list = str.c_str();
-//	size_t sourceSize[] = {strlen(str.c_str())};
-//  cl_program program = clCreateProgramWithSource(context_(), 1, &list, sourceSize, &err);
-//	if ( err != CL_SUCCESS ) {
-//		LOG(ERROR) << "failed to create program from file = '"<< cl_standard.c_str() <<"'";
-//		return false;
-//	}
-//	DLOG(INFO) << "create program with source from file = '"<< cl_standard.c_str() <<"' for platform " << this->name();
-
-//	//-x clc++ -O5
-//	std::string clIncludes = std::string("-cl-unsafe-math-optimizations -cl-finite-math-only -cl-fast-relaxed-math -cl-single-precision-constant -cl-denorms-are-zero -cl-mad-enable -cl-no-signed-zeros -I ../../CL/include/");
-//	err = clBuildProgram(program, numDevices, devicePtr, clIncludes.c_str(), NULL, NULL);
-//	if ( err != CL_SUCCESS ) {
-//		LOG(ERROR) << "failed to build OpenCL program from file '" << cl_standard.c_str() << "' : error = " << err;
-
-//		char* logBuffer = (char*) malloc(1024 * 1024);
-//		size_t tempSize;
-
-//		std::vector<caffe::OpenCLDevice>::iterator it;
-//		for (it = devices.begin(); it != devices.end(); it++) {
-//			err = clGetProgramBuildInfo(program, (*it).id(), CL_PROGRAM_BUILD_LOG, 1000000, logBuffer, &tempSize);
-//			if ( err != CL_SUCCESS ) {
-//				LOG(ERROR) << "clGetProgramBuildInfo() failed.";
-//				return false;
-//			}
-//			LOG(ERROR) << (*it).name() << "> build log size is " << tempSize;
-//			LOG(ERROR) << logBuffer;
-
-//			std::ostringstream os;
-//			os<<"CLBuildLog_"<<(*it).name().c_str()<<".log";
-
-//			FILE* tempLogFile = fopen(os.str().c_str(), "w");
-//			if ( tempLogFile == NULL ) {
-//				LOG(ERROR) << "failed to open build log file '" << os.str().c_str() << "'";
-//			} else {
-//				fwrite(logBuffer, 1, tempSize, tempLogFile);
-//				fclose(tempLogFile);
-//				DLOG(INFO) << "OpenCL build log written to file '" << os.str().c_str() << "'";
-//			}
-//		}
-//		return false;
-//	}
-//	DLOG(INFO) << "create program for all devices from file = '"<< cl_standard.c_str() <<"' for platform " << this->name();
-//	programs.push_back(program);
-
 	std::vector<caffe::OpenCLDevice>::iterator it;
 	for (it = devices.begin(); it != devices.end(); it++) {
 		if ( ! (*it).compile(cl_source) ) {
 			return false;
 		}
 	}
-
 	return true;
 }
 
@@ -366,12 +278,6 @@ OpenCLDevice& OpenCLPlatform::CurrentDevice() {
   if (current_device_index_ < 0 ) {
     LOG(FATAL) << "Current device not set.";
   }
-//  OpenCLDevice& device = pf.getDevice(CL_DEVICE_TYPE_GPU, 0);
-//  if (!gpu) {
-//    LOG(ERROR) << "failed to select first GPU on platform " << pf.name();
-//		return false;
-//	}
-
   return devices[current_device_index_];
 }
 

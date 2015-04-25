@@ -21,7 +21,7 @@ bool OpenCLManager::Init() {
     return true;
   }
   LOG(INFO) << "Initialize OpenCL";
-  instance_.LazyQuery();
+  instance_.Query();
   if ( OpenCLManager::GetNumPlatforms() <= 0 ) {
     LOG(FATAL) << "No OpenCL platforms found.";
     return false;
@@ -88,15 +88,6 @@ bool OpenCLManager::Init() {
   return true;
 }
 
-bool OpenCLManager::LazyQuery() {
-  // Query if we haven't already.
-  if (!platforms_.empty()) {
-    return true;
-  } else {
-    return Query();
-  }
-}
-
 bool OpenCLManager::Query() {
   typedef std::vector<cl::Platform> ClPlatforms;
   typedef ClPlatforms::iterator ClPlatformsIter;
@@ -107,7 +98,6 @@ bool OpenCLManager::Query() {
     LOG(INFO) << "found no OpenCL platforms.";
     return false;
   }
-  LOG(INFO) << "found " << platforms_.size() << " OpenCL platforms";
 
   for(ClPlatformsIter it = cl_platforms.begin(); it != cl_platforms.end(); ++it) {
     OpenCLPlatform plat(*it);
@@ -117,6 +107,7 @@ bool OpenCLManager::Query() {
     }
     platforms_.push_back(plat);
   }
+  LOG(INFO) << "found " << platforms_.size() << " OpenCL platforms";
 
   // Temporary hack: platform is the first one.
   current_platform_index_ = 0;
@@ -125,16 +116,14 @@ bool OpenCLManager::Query() {
 }
 
 void OpenCLManager::Print() {
-  PlatformIter it;
 	std::cout << "-- OpenCL Manager Information -----------------------------------" << std::endl;
-  for (it = instance_.platforms_.begin();
+  for (PlatformIter it = instance_.platforms_.begin();
        it != instance_.platforms_.end(); it++) {
     it->print();
 	}
 }
 
 int OpenCLManager::GetNumPlatforms() {
-  instance_.LazyQuery();
   return instance_.platforms_.size();
 }
 
