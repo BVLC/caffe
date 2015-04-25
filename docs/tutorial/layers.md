@@ -348,7 +348,7 @@ The HDF5 output layer performs the opposite function of the other layers in this
 
 #### Images
 
-* LayerType: `IMAGE_DATA`
+* LayerType: `IMAGEDATA`
 * Parameters
     - Required
         - `source`: name of a text file, with each line giving an image filename and label
