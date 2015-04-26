@@ -33,7 +33,7 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       filler_param.set_value(0.25);
       filler.reset(GetFiller<Dtype>(filler_param));
     }
-    filler->Fill(this->blobs_[0].get(),this->device_context_);
+    filler->Fill(this->blobs_[0].get());
   }
   if (channel_shared_) {
     CHECK_EQ(this->blobs_[0]->count(), 1)

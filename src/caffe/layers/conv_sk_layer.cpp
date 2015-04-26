@@ -113,7 +113,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     shared_ptr<Filler<Dtype> > weight_filler(
         GetFiller<Dtype>(
             this->layer_param_.convolution_param().weight_filler()));
-    weight_filler->Fill(this->blobs_[0].get(), this->device_context_);
+    weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the bias term
     if (bias_term_) {
       this->blobs_[1].reset(
@@ -121,7 +121,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       shared_ptr<Filler<Dtype> > bias_filler(
           GetFiller<Dtype>(
               this->layer_param_.convolution_param().bias_filler()));
-      bias_filler->Fill(this->blobs_[1].get(), this->device_context_);
+      bias_filler->Fill(this->blobs_[1].get());
     }
   }
   // Set up the all ones "bias multiplier" for adding bias using blas

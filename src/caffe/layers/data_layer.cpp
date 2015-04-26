@@ -16,14 +16,14 @@
 
 namespace caffe {
 
-template<typename Dtype>
+template <typename Dtype>
 DataLayer<Dtype>::~DataLayer<Dtype>() {
   this->JoinPrefetchThread();
 }
 
-template<typename Dtype>
+template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-                                      const vector<Blob<Dtype>*>& top) {
+      const vector<Blob<Dtype>*>& top) {
   // Initialize DB
   db_.reset(db::GetDB(this->layer_param_.data_param().backend()));
   db_->Open(this->layer_param_.data_param().source(), db::READ);
@@ -31,9 +31,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Check if we should randomly skip a few data points
   if (this->layer_param_.data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand()
-        % this->layer_param_.data_param().rand_skip();
-    LOG(INFO)<< "Skipping first " << skip << " data points.";
+    unsigned int skip = caffe_rng_rand() %
+                        this->layer_param_.data_param().rand_skip();
+    LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       cursor_->Next();
     }
@@ -43,39 +43,40 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   datum.ParseFromString(cursor_->value());
 
   bool force_color = this->layer_param_.data_param().force_encoded_color();
-  if ((force_color && DecodeDatum(&datum, true)) || DecodeDatumNative(&datum)) {
-    LOG(INFO)<< "Decoding Datum";
+  if ((force_color && DecodeDatum(&datum, true)) ||
+      DecodeDatumNative(&datum)) {
+    LOG(INFO) << "Decoding Datum";
   }
   // image
   int crop_size = this->layer_param_.transform_param().crop_size();
   if (crop_size > 0) {
     top[0]->Reshape(this->layer_param_.data_param().batch_size(),
-                    datum.channels(), crop_size, crop_size, this->device_context_);
+        datum.channels(), crop_size, crop_size,this->device_context_);
     this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
-                                 datum.channels(), crop_size, crop_size, this->device_context_);
-    this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size, this->device_context_);
+        datum.channels(), crop_size, crop_size,this->device_context_);
+    this->transformed_data_.Reshape(1, datum.channels(), crop_size, crop_size,this->device_context_);
   } else {
-    top[0]->Reshape(this->layer_param_.data_param().batch_size(),
-                    datum.channels(), datum.height(), datum.width(), this->device_context_);
+    top[0]->Reshape(
+        this->layer_param_.data_param().batch_size(), datum.channels(),
+        datum.height(), datum.width(),this->device_context_);
     this->prefetch_data_.Reshape(this->layer_param_.data_param().batch_size(),
-                                 datum.channels(), datum.height(),
-                                 datum.width(), this->device_context_);
-    this->transformed_data_.Reshape(1, datum.channels(), datum.height(),
-                                    datum.width(), this->device_context_);
+        datum.channels(), datum.height(), datum.width(),this->device_context_);
+    this->transformed_data_.Reshape(1, datum.channels(),
+      datum.height(), datum.width(),this->device_context_);
   }
-  LOG(INFO)<< "output data size: " << top[0]->num() << ","
-  << top[0]->channels() << "," << top[0]->height() << ","
-  << top[0]->width();
+  LOG(INFO) << "output data size: " << top[0]->num() << ","
+      << top[0]->channels() << "," << top[0]->height() << ","
+      << top[0]->width();
   // label
   if (this->output_labels_) {
-    top[1]->Reshape(this->layer_param_.data_param().batch_size(), 1, 1, 1, this->device_context_);
-    this->prefetch_label_.Reshape(this->layer_param_.data_param().batch_size(),
-                                  1, 1, 1, this->device_context_);
+    vector<int> label_shape(1, this->layer_param_.data_param().batch_size());
+    top[1]->Reshape(label_shape,this->device_context_);
+    this->prefetch_label_.Reshape(label_shape,this->device_context_);
   }
 }
 
 // This function is used to create a thread that prefetches the data.
-template<typename Dtype>
+template <typename Dtype>
 void DataLayer<Dtype>::InternalThreadEntry() {
   CPUTimer batch_timer;
   batch_timer.Start();
@@ -99,10 +100,10 @@ void DataLayer<Dtype>::InternalThreadEntry() {
         DecodeDatumNative(&datum);
       }
     }
-    this->prefetch_data_.Reshape(1, datum.channels(), datum.height(),
-                                 datum.width(), this->device_context_);
-    this->transformed_data_.Reshape(1, datum.channels(), datum.height(),
-                                    datum.width(), this->device_context_);
+    this->prefetch_data_.Reshape(1, datum.channels(),
+        datum.height(), datum.width(),this->device_context_);
+    this->transformed_data_.Reshape(1, datum.channels(),
+        datum.height(), datum.width(),this->device_context_);
   }
 
   Dtype* top_data = this->prefetch_data_.mutable_cpu_data();
@@ -125,7 +126,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
         cv_img = DecodeDatumToCVMatNative(datum);
       }
       if (cv_img.channels() != this->transformed_data_.channels()) {
-        LOG(WARNING)<< "Your dataset contains encoded images with mixed "
+        LOG(WARNING) << "Your dataset contains encoded images with mixed "
         << "channel sizes. Consider adding a 'force_color' flag to the "
         << "model definition, or rebuild your dataset using "
         << "convert_imageset.";
@@ -149,14 +150,14 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     // go to the next iter
     cursor_->Next();
     if (!cursor_->valid()) {
-      DLOG(INFO)<< "Restarting data prefetching from start.";
+      DLOG(INFO) << "Restarting data prefetching from start.";
       cursor_->SeekToFirst();
     }
   }
   batch_timer.Stop();
-  DLOG(INFO)<< "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO)<< "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO)<< "Transform time: " << trans_time / 1000 << " ms.";
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 INSTANTIATE_CLASS(DataLayer);

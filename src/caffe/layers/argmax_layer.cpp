@@ -23,10 +23,10 @@ void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   if (out_max_val_) {
     // Produces max_ind and max_val
-    top[0]->Reshape(bottom[0]->num(), 2, top_k_, 1, this->device_context_);
+    top[0]->Reshape(bottom[0]->num(), 2, top_k_, 1);
   } else {
     // Produces only max_ind
-    top[0]->Reshape(bottom[0]->num(), 1, top_k_, 1, this->device_context_);
+    top[0]->Reshape(bottom[0]->num(), 1, top_k_, 1);
   }
 }
 

@@ -69,20 +69,21 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   if (crop_size > 0) {
-    top[0]->Reshape(batch_size, channels, crop_size, crop_size, this->device_context_);
-    this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size, this->device_context_);
-    this->transformed_data_.Reshape(1, channels, crop_size, crop_size, this->device_context_);
+    top[0]->Reshape(batch_size, channels, crop_size, crop_size);
+    this->prefetch_data_.Reshape(batch_size, channels, crop_size, crop_size);
+    this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
   } else {
-    top[0]->Reshape(batch_size, channels, height, width, this->device_context_);
-    this->prefetch_data_.Reshape(batch_size, channels, height, width, this->device_context_);
-    this->transformed_data_.Reshape(1, channels, height, width, this->device_context_);
+    top[0]->Reshape(batch_size, channels, height, width);
+    this->prefetch_data_.Reshape(batch_size, channels, height, width);
+    this->transformed_data_.Reshape(1, channels, height, width);
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
-  top[1]->Reshape(batch_size, 1, 1, 1, this->device_context_);
-  this->prefetch_label_.Reshape(batch_size, 1, 1, 1, this->device_context_);
+  vector<int> label_shape(1, batch_size);
+  top[1]->Reshape(label_shape);
+  this->prefetch_label_.Reshape(label_shape);
 }
 
 template <typename Dtype>
@@ -115,9 +116,9 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         0, 0, is_color);
     this->prefetch_data_.Reshape(1, cv_img.channels(),
-        cv_img.rows, cv_img.cols, this->device_context_);
+        cv_img.rows, cv_img.cols);
     this->transformed_data_.Reshape(1, cv_img.channels(),
-        cv_img.rows, cv_img.cols, this->device_context_);
+        cv_img.rows, cv_img.cols);
   }
 
   Dtype* prefetch_data = this->prefetch_data_.mutable_cpu_data();
