@@ -512,8 +512,6 @@ V1LayerParameter_LayerType UpgradeV0LayerType(const string& type) {
     return V1LayerParameter_LayerType_TANH;
   } else if (type == "window_data") {
     return V1LayerParameter_LayerType_WINDOW_DATA;
-  } else if (type == "data_rand_transform") {
-    return V1LayerParameter_LayerType_DATA_RAND_TRANSFORM;
   } else {
     LOG(FATAL)<< "Unknown layer name: " << type;
     return V1LayerParameter_LayerType_NONE;
@@ -938,8 +936,6 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
       return "WindowData";
     case V1LayerParameter_LayerType_THRESHOLD:
       return "Threshold";
-    case V1LayerParameter_LayerType_DATA_RAND_TRANSFORM:
-      return "DataRandTransform";
     case V1LayerParameter_LayerType_CONVOLUTION_SK:
       return "ConvolutionSK";
     case V1LayerParameter_LayerType_POOLING_SK:

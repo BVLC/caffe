@@ -17,9 +17,9 @@ void HDF5OutputLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   CHECK_GE(bottom.size(), 2);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   data_blob_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-                     bottom[0]->height(), bottom[0]->width());
+                     bottom[0]->height(), bottom[0]->width(), this->device_context_);
   label_blob_.Reshape(bottom[1]->num(), bottom[1]->channels(),
-                     bottom[1]->height(), bottom[1]->width());
+                     bottom[1]->height(), bottom[1]->width(), this->device_context_);
   const int data_datum_dim = bottom[0]->count() / bottom[0]->num();
   const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
 

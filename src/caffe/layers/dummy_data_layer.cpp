@@ -83,10 +83,10 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           (param.height_size() == 1) ? param.height(0) : param.height(i);
       const int width =
           (param.width_size() == 1) ? param.width(0) : param.width(i);
-      top[i]->Reshape(num, channels, height, width);
+      top[i]->Reshape(num, channels, height, width, this->device_context_);
     } else {
       const int shape_index = (param.shape_size() == 1) ? 0 : i;
-      top[i]->Reshape(param.shape(shape_index));
+      top[i]->Reshape(param.shape(shape_index), this->device_context_);
     }
   }
   // Run Forward once, with refill_ inverted, to fill the constant Blobs.

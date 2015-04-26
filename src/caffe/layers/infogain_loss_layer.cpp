@@ -20,7 +20,7 @@ void InfogainLossLayer<Dtype>::LayerSetUp(
     BlobProto blob_proto;
     ReadProtoFromBinaryFile(
       this->layer_param_.infogain_loss_param().source(), &blob_proto);
-    infogain_.FromProto(blob_proto);
+    infogain_.FromProto(blob_proto, this->device_context_);
   }
 }
 

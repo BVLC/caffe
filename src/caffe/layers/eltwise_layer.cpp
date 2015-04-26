@@ -34,11 +34,11 @@ void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   for (int i = 1; i < bottom.size(); ++i) {
     CHECK(bottom[i]->shape() == bottom[0]->shape());
   }
-  top[0]->ReshapeLike(*bottom[0]);
+  top[0]->ReshapeLike(*bottom[0], this->device_context_);
   // If max operation, we will initialize the vector index part.
   if (this->layer_param_.eltwise_param().operation() ==
       EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
-    max_idx_.Reshape(bottom[0]->shape());
+    max_idx_.Reshape(bottom[0]->shape(), this->device_context_);
   }
 }
 

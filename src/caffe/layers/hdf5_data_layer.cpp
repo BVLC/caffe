@@ -121,7 +121,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     for (int j = 1; j < top_shape.size(); ++j) {
       top_shape[j] = hdf_blobs_[i]->shape(j);
     }
-    top[i]->Reshape(top_shape);
+    top[i]->Reshape(top_shape, this->device_context_);
   }
 }
 
