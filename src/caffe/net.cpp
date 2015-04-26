@@ -522,7 +522,8 @@ string Net<Dtype>::Forward(const string& input_blob_protos, Dtype* loss) {
     blob_proto_vec.ParseFromString(input_blob_protos);
     CHECK_EQ(blob_proto_vec.blobs_size(), net_input_blobs_.size())<< "Incorrect input size.";
     for (int i = 0; i < blob_proto_vec.blobs_size(); ++i) {
-      net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i), net_input_blobs_[i]->device_context());
+      net_input_blobs_[i]->FromProto(blob_proto_vec.blobs(i),
+                                     net_input_blobs_[i]->device_context());
     }
   }
   ForwardPrefilled(loss);
@@ -724,7 +725,8 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       CHECK_EQ(target_blobs[j]->channels(), source_layer.blobs(j).channels());
       CHECK_EQ(target_blobs[j]->height(), source_layer.blobs(j).height());
       CHECK_EQ(target_blobs[j]->width(), source_layer.blobs(j).width());
-      target_blobs[j]->FromProto(source_layer.blobs(j), layers_[target_layer_id]->device_context());
+      target_blobs[j]->FromProto(source_layer.blobs(j),
+                                 layers_[target_layer_id]->device_context());
     }
   }
 }
