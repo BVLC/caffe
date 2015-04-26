@@ -48,7 +48,15 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   name_ = param.name();
   map<string, int> blob_name_to_idx;
   set<string> available_blobs;
-  CHECK_EQ(param.input_size() * 4, param.input_dim_size())<< "Incorrect input blob dimension specifications.";
+  CHECK(param.input_dim_size() == 0 || param.input_shape_size() == 0)
+      << "Must specify either input_shape OR deprecated input_dim, not both.";
+  if (param.input_dim_size() > 0) {
+    // Deprecated 4D dimensions.
+    CHECK_EQ(param.input_size() * 4, param.input_dim_size())<< "Incorrect input blob dimension specifications.";
+  } else {
+    CHECK_EQ(param.input_size(), param.input_shape_size())
+    << "Exactly one input_shape must be specified per input.";
+  }
   memory_used_ = 0;
   // set the input blobs
   for (int input_id = 0; input_id < param.input_size(); ++input_id) {
@@ -56,7 +64,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
   }
   DLOG(INFO)<< "Memory required for data: " << memory_used_ * sizeof(Dtype);
-  // For each layer, set up their input and output
+  // For each layer, set up its input and output
   bottom_vecs_.resize(param.layer_size());
   top_vecs_.resize(param.layer_size());
   bottom_id_vecs_.resize(param.layer_size());
@@ -108,11 +116,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
       }
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
-      LOG(INFO)<< "Top shape: " << top_vecs_[layer_id][top_id]->num() << " "
-      << top_vecs_[layer_id][top_id]->channels() << " "
-      << top_vecs_[layer_id][top_id]->height() << " "
-      << top_vecs_[layer_id][top_id]->width() << " ("
-      << top_vecs_[layer_id][top_id]->count() << ")";
+      LOG(INFO)<< "Top shape: " << top_vecs_[layer_id][top_id]->shape_string();
       if (layer->loss(top_id)) {
         LOG(INFO)<< "    with loss weight " << layer->loss(top_id);
       }
@@ -347,10 +351,16 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     if (blob_name_to_idx) {(*blob_name_to_idx)[blob_name] = blob_id;}
     if (layer_id == -1) {
       // Set the (explicitly specified) dimensions of the input blob.
-      blob_pointer->Reshape(param.input_dim(top_id * 4),
-          param.input_dim(top_id * 4 + 1),
-          param.input_dim(top_id * 4 + 2),
-          param.input_dim(top_id * 4 + 3), Caffe::GetDeviceContext(layer_param->device()));
+      if (param.input_dim_size() > 0) {
+        blob_pointer->Reshape(param.input_dim(top_id * 4),
+            param.input_dim(top_id * 4 + 1),
+            param.input_dim(top_id * 4 + 2),
+            param.input_dim(top_id * 4 + 3), Caffe::GetDeviceContext(layer_param->device()));
+      }
+      else
+      {
+        blob_pointer->Reshape(param.input_shape(top_id),Caffe::GetDeviceContext(layer_param->device()));
+      }
       net_input_blob_indices_.push_back(blob_id);
       net_input_blobs_.push_back(blob_pointer.get());
     } else {
@@ -433,14 +443,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
       CHECK_EQ(this_blob->count(), owner_blob->count())<< "Shared parameter blobs must have the same count.";
     } else {
       // Strict dimension checking -- all dims must be the same.
-      CHECK_EQ(this_blob->num(), owner_blob->num())
-      << "Shared parameter blobs must have the same num.";
-      CHECK_EQ(this_blob->channels(), owner_blob->channels())
-      << "Shared parameter blobs must have the same channels.";
-      CHECK_EQ(this_blob->height(), owner_blob->height())
-      << "Shared parameter blobs must have the same height.";
-      CHECK_EQ(this_blob->width(), owner_blob->width())
-      << "Shared parameter blobs must have the same width.";
+      CHECK(this_blob->shape() == owner_blob->shape());
     }
     layers_[layer_id]->blobs()[param_id]->ShareData(
         *layers_[owner_layer_id]->blobs()[owner_param_id]);
@@ -653,10 +656,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
     CHECK_EQ(target_blobs.size(), source_layer->blobs().size())<< "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
-      CHECK_EQ(target_blobs[j]->num(), source_blob->num());
-      CHECK_EQ(target_blobs[j]->channels(), source_blob->channels());
-      CHECK_EQ(target_blobs[j]->height(), source_blob->height());
-      CHECK_EQ(target_blobs[j]->width(), source_blob->width());
+      CHECK(target_blobs[j]->shape() == source_blob->shape());
       target_blobs[j]->ShareData(*source_blob);
     }
   }
@@ -721,12 +721,8 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
         ->blobs();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())<< "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
-      CHECK_EQ(target_blobs[j]->num(), source_layer.blobs(j).num());
-      CHECK_EQ(target_blobs[j]->channels(), source_layer.blobs(j).channels());
-      CHECK_EQ(target_blobs[j]->height(), source_layer.blobs(j).height());
-      CHECK_EQ(target_blobs[j]->width(), source_layer.blobs(j).width());
-      target_blobs[j]->FromProto(source_layer.blobs(j),
-                                 layers_[target_layer_id]->device_context());
+      const bool kReshape = false;
+      target_blobs[j]->FromProto(source_layer.blobs(j), layers_[target_layer_id]->device_context(), kReshape);
     }
   }
 }
