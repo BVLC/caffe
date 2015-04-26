@@ -485,16 +485,10 @@ void SGDSolver<Dtype>::PreSolve() {
   update_.clear();
   temp_.clear();
   for (int i = 0; i < net_params.size(); ++i) {
-    const Blob<Dtype>* net_param = net_params[i].get();
-    history_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-        net_param->num(), net_param->channels(), net_param->height(),
-        net_param->width(),Caffe::GetDefaultDeviceContext())));
-    update_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-        net_param->num(), net_param->channels(), net_param->height(),
-        net_param->width(),Caffe::GetDefaultDeviceContext())));
-    temp_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(
-        net_param->num(), net_param->channels(), net_param->height(),
-        net_param->width(),Caffe::GetDefaultDeviceContext())));
+    const vector<int>& shape = net_params[i]->shape();
+    history_.push_back(shared_ptr<Blob<Dtype>>(new Blob<Dtype>(shape,Caffe::GetDefaultDeviceContext())));
+    update_.push_back(shared_ptr<Blob<Dtype>>(new Blob<Dtype>(shape,Caffe::GetDefaultDeviceContext())));
+    temp_.push_back(shared_ptr<Blob<Dtype>>(new Blob<Dtype>(shape,Caffe::GetDefaultDeviceContext())));
   }
 }
 
