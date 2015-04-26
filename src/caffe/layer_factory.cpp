@@ -12,18 +12,13 @@
 namespace caffe {
 
 template<typename Dtype>
-shared_ptr<Layer<Dtype> > GetDataRandTransformLayer(const LayerParameter& param) {
-  return shared_ptr<Layer<Dtype> >(new DataRandTransformLayer<Dtype>(param));
-}
-
-template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionSKLayer(const LayerParameter& param) {
-  return shared_ptr<Layer<Dtype> >(new ConvolutionSKLayer<Dtype>(param));
+  return shared_ptr<Layer<Dtype>>(new ConvolutionSKLayer<Dtype>(param));
 }
 
 template<typename Dtype>
 shared_ptr<Layer<Dtype> > GetPoolingSKLayer(const LayerParameter& param) {
-  return shared_ptr<Layer<Dtype> >(new PoolingSKLayer<Dtype>(param));
+  return shared_ptr<Layer<Dtype>>(new PoolingSKLayer<Dtype>(param));
 }
 
 // Get convolution layer according to engine.

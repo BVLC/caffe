@@ -1,7 +1,6 @@
 #include <climits>
 #include <vector>
 
-
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
@@ -60,8 +59,7 @@ void Blob<Dtype>::Reshape(const BlobShape& shape,
 template<typename Dtype>
 void Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other,
                               DeviceContext device_context) {
-  Reshape(other.num(), other.channels(), other.height(), other.width(),
-          device_context);
+  Reshape(other.shape(), device_context);
 }
 
 template<typename Dtype>

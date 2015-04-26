@@ -77,8 +77,8 @@ void LRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   width_ = bottom[0]->width();
   switch (this->layer_param_.lrn_param().norm_region()) {
   case LRNParameter_NormRegion_ACROSS_CHANNELS:
-    top[0]->Reshape(num_, channels_, height_, width_);
-    scale_.Reshape(num_, channels_, height_, width_);
+    top[0]->Reshape(num_, channels_, height_, width_, this->device_context_);
+    scale_.Reshape(num_, channels_, height_, width_, this->device_context_);
     break;
   case LRNParameter_NormRegion_WITHIN_CHANNEL:
     split_layer_->Reshape(bottom, split_top_vec_);
@@ -115,7 +115,7 @@ void LRNLayer<Dtype>::CrossChannelForward_cpu(
   for (int i = 0; i < scale_.count(); ++i) {
     scale_data[i] = k_;
   }
-  Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_);
+  Blob<Dtype> padded_square(1, channels_ + size_ - 1, height_, width_, this->device_context_);
   Dtype* padded_square_data = padded_square.mutable_cpu_data();
   caffe_set(padded_square.count(), Dtype(0), padded_square_data);
   Dtype alpha_over_size = alpha_ / size_;
@@ -186,8 +186,8 @@ void LRNLayer<Dtype>::CrossChannelBackward_cpu(
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* scale_data = scale_.cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-  Blob<Dtype> padded_ratio(1, channels_ + size_ - 1, height_, width_);
-  Blob<Dtype> accum_ratio(1, 1, height_, width_);
+  Blob<Dtype> padded_ratio(1, channels_ + size_ - 1, height_, width_, this->device_context_);
+  Blob<Dtype> accum_ratio(1, 1, height_, width_, this->device_context_);
   Dtype* padded_ratio_data = padded_ratio.mutable_cpu_data();
   Dtype* accum_ratio_data = accum_ratio.mutable_cpu_data();
   // We hack a little bit by using the diff() to store an additional result
