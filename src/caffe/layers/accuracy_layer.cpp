@@ -37,7 +37,7 @@ void AccuracyLayer<Dtype>::Reshape(
       << "label count (number of labels) must be N*H*W, "
       << "with integer values in {0, 1, ..., C-1}.";
   vector<int> top_shape(0);  // Accuracy is a scalar; 0 axes.
-  top[0]->Reshape(top_shape);
+  top[0]->Reshape(top_shape,this->device_context_);
 }
 
 template <typename Dtype>

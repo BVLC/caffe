@@ -16,58 +16,6 @@
 
 namespace caffe {
 
-template<typename Dtype>
-class DataRandTransformLayer : public Layer<Dtype> {
- public:
-  explicit DataRandTransformLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {
-  }
-
-  virtual inline const char* type() const {
-    return "DataRandTransform";
-  }
-
-  virtual ~DataRandTransformLayer();
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-                          const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-                       const vector<Blob<Dtype>*>& top);
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                             const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                             const vector<bool>& propagate_down,
-                             const vector<Blob<Dtype>*>& bottom);
-
-  int NUM_;
-  int CHANNELS_;
-  int WIDTH_;
-  int HEIGHT_;
-
-  bool apply_normalization_;
-
-  bool apply_mirroring_;
-  float prob_mirroring_;
-
-  bool apply_rot_;
-  float rot_min_;
-  float rot_max_;
-
-  bool apply_blur_;
-  int blur_size_;
-  float blur_max_var_;
-
-  bool apply_contrast_brightness_;
-  float alpha_;
-  float beta_;
-};
-
 /**
  * @brief Abstract base class that factors out the BLAS code common to
  *        ConvolutionLayer and DeconvolutionLayer.
@@ -369,11 +317,13 @@ protected:
   bool handles_setup_;
   cudnnHandle_t* handle_;
   cudaStream_t* stream_;
-  vector<cudnnTensor4dDescriptor_t> bottom_descs_, top_descs_;
-  cudnnTensor4dDescriptor_t bias_desc_;
+  vector<cudnnTensorDescriptor_t> bottom_descs_, top_descs_;
+  cudnnTensorDescriptor_t bias_desc_;
   cudnnFilterDescriptor_t filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
   int bottom_offset_, top_offset_, weight_offset_, bias_offset_;
+  size_t workspaceSizeInBytes;
+  void *workspace;
 };
 #endif
 
