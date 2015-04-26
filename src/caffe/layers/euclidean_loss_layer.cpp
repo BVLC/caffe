@@ -13,7 +13,7 @@ void EuclideanLossLayer<Dtype>::Reshape(
   LossLayer<Dtype>::Reshape(bottom, top);
   CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
       << "Inputs must have the same dimension.";
-  diff_.ReshapeLike(*bottom[0]);
+  diff_.ReshapeLike(*bottom[0],this->device_context_,this->device_context_);
 }
 
 template <typename Dtype>
