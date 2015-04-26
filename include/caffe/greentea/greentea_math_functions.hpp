@@ -18,31 +18,39 @@
 
 namespace caffe {
 
-void greentea_gpu_memcpy(const size_t N, const cl_mem X, void *Y, viennacl::ocl::context &ctx);
+void greentea_gpu_memcpy(const size_t N, const cl_mem X, void *Y,
+                         viennacl::ocl::context &ctx);
 
-void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y, viennacl::ocl::context &ctx);
-
+void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
+                         viennacl::ocl::context &ctx);
 
 template<typename Dtype>
-void greentea_copy(const int N, const cl_mem X, cl_mem Y, viennacl::ocl::context &ctx);
+void greentea_copy(const int N, const cl_mem X, cl_mem Y,
+                   viennacl::ocl::context &ctx);
 
 template<typename Dtype>
 void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
-                              const CBLAS_TRANSPOSE TransB, const int M,
-                              const int N, const int K, const Dtype alpha,
-                              const cl_mem A, const int offA, const cl_mem B, const int offB, const Dtype beta,
-                              cl_mem C, const int offC);
+                       const CBLAS_TRANSPOSE TransB, const int M, const int N,
+                       const int K, const Dtype alpha, const cl_mem A,
+                       const int offA, const cl_mem B, const int offB,
+                       const Dtype beta, cl_mem C, const int offC);
 
 template<typename Dtype>
-void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA, const int M, const int N,
-                       const Dtype alpha, const cl_mem A, const int offA,
-                       const cl_mem x, const int offx, const Dtype beta,
-                       cl_mem y, const int offy);
+void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
+                       const int M, const int N, const Dtype alpha,
+                       const cl_mem A, const int offA, const cl_mem x,
+                       const int offx, const Dtype beta, cl_mem y,
+                       const int offy);
 
 template<typename Dtype>
-void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha, const cl_mem X,
-                              const int offX, cl_mem Y, const int offY);
+void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha,
+                       const cl_mem X, const int offX, cl_mem Y,
+                       const int offY);
 
+template<typename Dtype>
+void greentea_gpu_mul(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy);
 
 /*
  template <typename Dtype>

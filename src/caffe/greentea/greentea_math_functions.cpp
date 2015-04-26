@@ -86,23 +86,25 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                        const Dtype beta, cl_mem C, const int offC) {
 
   int offArow = offA;
-  int offAcol = 0;
-  int incArow = 1;
-  int incAcol = 1;
   int offBrow = offB;
-  int offBcol = 0;
-  int incBrow = 1;
-  int incBcol = 1;
   int offCrow = offC;
-  int offCcol = 0;
-  int incCrow = 1;
-  int incCcol = 1;
 
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
   int ldc = N;
 
 #ifdef USE_VIENNACLBLAS
+
+  int offAcol = 0;
+  int incArow = 1;
+  int incAcol = 1;
+  int offBcol = 0;
+  int incBrow = 1;
+  int incBcol = 1;
+  int offCcol = 0;
+  int incCrow = 1;
+  int incCcol = 1;
+
   ViennaCLBackend backend;
   ViennaCLBackendCreate(&backend);
   ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
@@ -218,8 +220,9 @@ template void greentea_gpu_gemv<double>(const int ctx_id,
                                         cl_mem y, const int offy);
 
 template<typename Dtype>
-void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha, const cl_mem X,
-                              const int offX, cl_mem Y, const int offY) {
+void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha,
+                       const cl_mem X, const int offX, cl_mem Y,
+                       const int offY) {
 
 #ifdef USE_VIENNACLBLAS
   // TODO
@@ -240,11 +243,38 @@ void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha, const c
 #endif
 }
 
-template void greentea_gpu_axpy<float>(const int ctx_id, const int N, const float alpha, const cl_mem X,
-                              const int offX, cl_mem Y, const int offY);
-template void greentea_gpu_axpy<double>(const int ctx_id, const int N, const double alpha, const cl_mem X,
-                                const int offX, cl_mem Y, const int offY);
+template void greentea_gpu_axpy<float>(const int ctx_id, const int N,
+                                       const float alpha, const cl_mem X,
+                                       const int offX, cl_mem Y,
+                                       const int offY);
+template void greentea_gpu_axpy<double>(const int ctx_id, const int N,
+                                        const double alpha, const cl_mem X,
+                                        const int offX, cl_mem Y,
+                                        const int offY);
 
+template<typename Dtype>
+void greentea_gpu_mul(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+
+  viennacl::ocl::kernel &oclk_mul = program.get_kernel(
+      CL_KERNEL_SELECT("kernel_mul"));
+  viennacl::ocl::enqueue(
+      oclk_mul(N, WrapHandle(a, ctx), offa, WrapHandle(b, ctx), offb,
+               WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
+
+template void greentea_gpu_mul<float>(const int ctx_id, const int N,
+                                      const cl_mem a, const int offa,
+                                      const cl_mem b, const int offb, cl_mem y,
+                                      const int offy);
+template void greentea_gpu_mul<double>(const int ctx_id, const int N,
+                                      const cl_mem a, const int offa,
+                                      const cl_mem b, const int offb, cl_mem y,
+                                      const int offy);
 
 /*
  template<>
@@ -406,22 +436,6 @@ template void greentea_gpu_axpy<double>(const int ctx_id, const int N, const dou
  CUDA_KERNEL_LOOP(index, n) {
  y[index] = a[index] * b[index];
  }
- }
-
- template<>
- void greentea_gpu_mul<float>(const int N, const float* a, const float* b,
- float* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- mul_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
- }
-
- template<>
- void greentea_gpu_mul<double>(const int N, const double* a, const double* b,
- double* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- mul_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
  }
 
  template <typename Dtype>
