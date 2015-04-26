@@ -58,8 +58,8 @@ message NetParameter {
   // The shape of the input blobs.
   repeated BlobShape input_shape = 8;
   
-  
-  // The dim of the input blobs. For each input blob there should be four
+  // 4D input dimensions -- deprecated.  Use "shape" instead
+  // If specified, for each input blob there should be four
   // values specifying the num, channels, height and width of the input blob.
   // Thus, there should be a total of (4 * #input) numbers.
   repeated int32 input_dim = 4;
@@ -394,6 +394,16 @@ message AccuracyParameter {
   // the top k scoring classes.  By default, only compare to the top scoring
   // class (i.e. argmax).
   optional uint32 top_k = 1 [default = 1];
+  
+  // The "label" axis of the prediction blob, whose argmax corresponds to the
+  // predicted label -- may be negative to index from the end (e.g., -1 for the
+  // last axis).  For example, if axis == 1 and the predictions are
+  // (N x C x H x W), the label blob is expected to contain N*H*W ground truth
+  // labels with integer values in {0, 1, ..., C-1}.
+  optional int32 axis = 2 [default = 1];
+  
+  // If specified, ignore instances with the given label.
+  optional int32 ignore_label = 3;
 }
 
 // Message that stores parameters used by ArgMaxLayer
@@ -405,9 +415,13 @@ message ArgMaxParameter {
 
 // Message that stores parameters used by ConcatLayer
 message ConcatParameter {
-  // Concat Layer needs to specify the dimension along the concat will happen,
-  // the other dimensions must be the same for all the bottom blobs
-  // By default it will concatenate blobs along channels dimension
+  // The axis along which to concatenate -- may be negative to index from the
+  // end (e.g., -1 for the last axis).  Other axes must have the
+  // same dimension for all the bottom blobs.
+  // By default, ConcatLayer concatenates blobs along the "channels" axis (
+  optional int32 axis = 2 [default = 1];
+  
+  // DEPRECATED: alias for "axis" -- does not support negative indexing.
   optional uint32 concat_dim = 1 [default = 1];
 }
 
@@ -496,6 +510,7 @@ message DummyDataParameter {
   repeated FillerParameter data_filler = 1;
   repeated BlobShape shape = 6;
   
+  // 4D dimensions -- deprecated.  Use "shape" instead.
   repeated uint32 num = 2;
   repeated uint32 channels = 3;
   repeated uint32 height = 4;
@@ -533,6 +548,13 @@ message HDF5DataParameter {
   optional string source = 1;
   // Specify the batch size.
   optional uint32 batch_size = 2;
+  
+  // Specify whether to shuffle the data.
+  // If shuffle == true, the ordering of the HDF5 files is shuffled,
+  // and the ordering of data within any given HDF5 file is shuffl
+  // but data between different files are not interleaved; all of a file'
+  // data are output (in a random order) before moving onto another file.
+  optional bool shuffle = 3 [default = false];
 }
 
 // Message that stores parameters used by HDF5OutputLayer
@@ -593,6 +615,11 @@ message InnerProductParameter {
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
   optional FillerParameter weight_filler = 3; // The filler for the weight
   optional FillerParameter bias_filler = 4; // The filler for the bias
+  
+  // The first axis to be lumped into a single inner product computation;
+  // all preceding axes are retained in the output.
+  // May be negative to index from the end (e.g., -1 for the last axis).
+  optional int32 axis = 5 [default = 1];
 }
 
 // Message that stores parameters used by LRNLayer
@@ -700,12 +727,14 @@ message SigmoidParameter {
 
 // Message that stores parameters used by SliceLayer
 message SliceParameter {
-  // SliceLayer needs to know which dimension to slice across.
-  // Currently, SliceLayer only supports slicing across num (dim 0)
-  // and channels (dim 1).
-  // By default, SliceLayer slices across channels.
-  optional uint32 slice_dim = 1 [default = 1];
+  // The axis along which to slice -- may be negative to index from the end
+  // (e.g., -1 for the last axis).
+  // By default, SliceLayer concatenates blobs along the "channels" axis (1).
+  optional int32 axis = 3 [default = 1]
   repeated uint32 slice_point = 2;
+  
+  // DEPRECATED: alias for "axis" -- does not support negative indexing.
+  optional uint32 slice_dim = 1 [default = 1];
 }
 
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
@@ -716,6 +745,11 @@ message SoftmaxParameter {
     CUDNN = 2;
   }
   optional Engine engine = 1 [default = DEFAULT];
+  
+  // The axis along which to perform the softmax -- may be negative to i
+  // from the end (e.g., -1 for the last axis).
+  // Any other axes will be evaluated as independent softmaxes.
+  optional int32 axis = 2 [default = 1];
 }
 
 // Message that stores parameters used by TanHLayer
