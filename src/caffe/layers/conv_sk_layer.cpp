@@ -11,10 +11,6 @@ namespace caffe {
 template<typename Dtype>
 void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                            const vector<Blob<Dtype>*>& top) {
-
-  // TODO: (FTschopp) Dynamically change this, or layer param
-  blocks_ = 8;
-
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   CHECK(
       !conv_param.has_kernel_size()
@@ -85,8 +81,9 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int ext_kernel_w = (kernel_w_ - 1) * kstride_w_ + 1;
   int height_out = (height_ - ext_kernel_h) / stride_h_ + 1;
   int width_out = (width_ - ext_kernel_w) / stride_w_ + 1;
+
   col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
-                      width_out / blocks_, this->device_context_);
+                      width_out, this->device_context_);
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)<< "Number of output should be multiples of group.";
   bias_term_ = this->layer_param_.convolution_param().bias_term();
@@ -95,7 +92,8 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   K_ = channels_ * kernel_h_ * kernel_w_ / group_;
   N_ = height_out * width_out;
   for (int top_id = 0; top_id < top.size(); ++top_id) {
-    top[top_id]->Reshape(num_, num_output_, height_out, width_out, this->device_context_);
+    top[top_id]->Reshape(num_, num_output_, height_out, width_out,
+                         this->device_context_);
   }
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
@@ -109,7 +107,8 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     // Intialize the weight
     this->blobs_[0].reset(
-        new Blob<Dtype>(num_output_, channels_ / group_, kernel_h_, kernel_w_, this->device_context_));
+        new Blob<Dtype>(num_output_, channels_ / group_, kernel_h_, kernel_w_,
+                        this->device_context_));
     // fill the weights
     shared_ptr<Filler<Dtype> > weight_filler(
         GetFiller<Dtype>(
@@ -117,7 +116,8 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     weight_filler->Fill(this->blobs_[0].get(), this->device_context_);
     // If necessary, initialize and fill the bias term
     if (bias_term_) {
-      this->blobs_[1].reset(new Blob<Dtype>(1, 1, 1, num_output_, this->device_context_));
+      this->blobs_[1].reset(
+          new Blob<Dtype>(1, 1, 1, num_output_, this->device_context_));
       shared_ptr<Filler<Dtype> > bias_filler(
           GetFiller<Dtype>(
               this->layer_param_.convolution_param().bias_filler()));
@@ -135,7 +135,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template<typename Dtype>
 void ConvolutionSKLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
-  //LayerSetUp(bottom, top);
+  LayerSetUp(bottom, top);
 }
 
 template<typename Dtype>

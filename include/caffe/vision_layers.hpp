@@ -218,9 +218,6 @@ class ConvolutionSKLayer : public Layer<Dtype> {
   Blob<Dtype> bias_multiplier_;
   bool bias_term_;
   int M_, K_, N_;
-
-  // (FTschopp) Additional parameter for block splitting of the GEMM call
-  int blocks_;
 };
 
 /**
