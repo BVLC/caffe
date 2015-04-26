@@ -1,2 +1,0 @@
-#include "+include/caffe/greentea/cl_kernels.hpp+"
-#include "include/caffe/greentea/cl_kernels.hpp"

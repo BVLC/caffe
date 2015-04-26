@@ -19,10 +19,11 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_GT(batch_size_ * size_, 0) <<
       "batch_size, channels, height, and width must be specified and"
       " positive in memory_data_param";
+  vector<int> label_shape(1, batch_size_);
   top[0]->Reshape(batch_size_, channels_, height_, width_, this->device_context_);
-  top[1]->Reshape(batch_size_, 1, 1, 1, this->device_context_);
+  top[1]->Reshape(label_shape, this->device_context_);
   added_data_.Reshape(batch_size_, channels_, height_, width_, this->device_context_);
-  added_label_.Reshape(batch_size_, 1, 1, 1, this->device_context_);
+  added_label_.Reshape(label_shape, this->device_context_);
   data_ = NULL;
   labels_ = NULL;
   added_data_.cpu_data();

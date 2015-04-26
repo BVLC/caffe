@@ -1,3 +1,7 @@
+#include <climits>
+#include <vector>
+
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"

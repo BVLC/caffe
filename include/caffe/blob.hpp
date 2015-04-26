@@ -196,12 +196,20 @@ class Blob {
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {
-    return *(cpu_data() + offset(n, c, h, w));
+    return cpu_data()[offset(n, c, h, w)];
   }
 
   inline Dtype diff_at(const int n, const int c, const int h,
       const int w) const {
-    return *(cpu_diff() + offset(n, c, h, w));
+    return cpu_diff()[offset(n, c, h, w)];
+  }
+
+  inline Dtype data_at(const vector<int>& index) const {
+    return cpu_data()[offset(index)];
+  }
+
+  inline Dtype diff_at(const vector<int>& index) const {
+    return cpu_diff()[offset(index)];
   }
 
   inline const shared_ptr<SyncedMemory>& data() const {

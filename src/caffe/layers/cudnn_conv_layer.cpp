@@ -24,6 +24,8 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   // Initialize CUDA streams and cuDNN.
   stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
   handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
+  workspaceSizeInBytes = 0;
+  workspace = NULL;
 
   for (int g = 0; g < this->group_ * CUDNN_STREAMS_PER_GROUP; g++) {
     CUDA_CHECK(cudaStreamCreate(&stream_[g]));
@@ -43,10 +45,10 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 
   // Create tensor descriptor(s) for data and corresponding convolution(s).
   for (int i = 0; i < bottom.size(); i++) {
-    cudnnTensor4dDescriptor_t bottom_desc;
+    cudnnTensorDescriptor_t bottom_desc;
     cudnn::createTensor4dDesc<Dtype>(&bottom_desc);
     bottom_descs_.push_back(bottom_desc);
-    cudnnTensor4dDescriptor_t top_desc;
+    cudnnTensorDescriptor_t top_desc;
     cudnn::createTensor4dDesc<Dtype>(&top_desc);
     top_descs_.push_back(top_desc);
     cudnnConvolutionDescriptor_t conv_desc;
@@ -104,12 +106,12 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
   if (!handles_setup_) { return; }
 
   for (int i = 0; i < bottom_descs_.size(); i++) {
-    cudnnDestroyTensor4dDescriptor(bottom_descs_[i]);
-    cudnnDestroyTensor4dDescriptor(top_descs_[i]);
+    cudnnDestroyTensorDescriptor(bottom_descs_[i]);
+    cudnnDestroyTensorDescriptor(top_descs_[i]);
     cudnnDestroyConvolutionDescriptor(conv_descs_[i]);
   }
   if (this->bias_term_) {
-    cudnnDestroyTensor4dDescriptor(bias_desc_);
+    cudnnDestroyTensorDescriptor(bias_desc_);
   }
   cudnnDestroyFilterDescriptor(filter_desc_);
 

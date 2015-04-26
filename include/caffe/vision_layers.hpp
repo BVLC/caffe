@@ -655,7 +655,7 @@ protected:
 
   bool handles_setup_;
   cudnnHandle_t handle_;
-  cudnnTensor4dDescriptor_t bottom_desc_, top_desc_;
+  cudnnTensorDescriptor_t bottom_desc_, top_desc_;
   cudnnPoolingDescriptor_t pooling_desc_;
   cudnnPoolingMode_t mode_;
 };

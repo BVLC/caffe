@@ -24,7 +24,7 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // The subclasses should setup the size of bottom and top
   DataLayerSetUp(bottom, top);
   data_transformer_.reset(
-      new DataTransformer<Dtype>(transform_param_, this->phase_, this->device_context_));
+      new DataTransformer<Dtype>(transform_param_, this->phase_));
   data_transformer_->InitRand();
 }
 
@@ -64,7 +64,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   DLOG(INFO) << "Thread joined";
   // Reshape to loaded data.
   top[0]->Reshape(this->prefetch_data_.num(), this->prefetch_data_.channels(),
-      this->prefetch_data_.height(), this->prefetch_data_.width(), this->device_context_);
+      this->prefetch_data_.height(), this->prefetch_data_.width());
   // Copy the data
   caffe_copy(prefetch_data_.count(), prefetch_data_.cpu_data(),
              top[0]->mutable_cpu_data());
