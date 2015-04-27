@@ -756,15 +756,15 @@ void Net<Dtype>::Update() {
       owner_diff = params_[param_owners_[i]]->mutable_cpu_diff();
       caffe_add(count, this_diff, owner_diff, owner_diff);
       break;
-#ifndef CPU_ONLY
     case Caffe::GPU:
+#ifndef CPU_ONLY
       this_diff = params_[i]->gpu_diff();
       owner_diff = params_[param_owners_[i]]->mutable_gpu_diff();
       caffe_gpu_add(count, this_diff, owner_diff, owner_diff);
-      break;
 #else
       NO_GPU;
 #endif
+      break;
     default:
       LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
     }
