@@ -112,6 +112,9 @@ class Caffe {
 //  static bool GPU_USE_CUDA;
 //  static bool GPU_USE_OPENCL;
 
+  // Used for benchmarking.
+  static void DeviceSync();
+
   // This random number generator facade hides boost and CUDA rng
   // implementation from one another (for cross-platform compatibility).
   class RNG {

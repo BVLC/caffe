@@ -39,6 +39,7 @@ public:
 	std::string getDeviceName();
 	cl_uint getDeviceMemBaseAddrAlign();
 	size_t getMemoryUsage();
+  void Synchronize();
 protected:
 
 private:

@@ -4,6 +4,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
+#include "caffe/util/OpenCL/OpenCLManager.hpp"
 
 namespace caffe {
 
@@ -11,6 +12,15 @@ namespace caffe {
 //bool caffe::Caffe::GPU_USE_OPENCL = false;
 
 shared_ptr<Caffe> Caffe::singleton_;
+
+void Caffe::DeviceSync() {
+#ifdef USE_CUDA
+  cudaDeviceSynchronize();
+#endif
+#ifdef USE_OPENCL
+  OpenCLManager::CurrentPlatform().DeviceSynchronize();
+#endif
+}
 
 // random seeding
 int64_t cluster_seedgen(void) {

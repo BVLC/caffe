@@ -281,6 +281,10 @@ OpenCLDevice& OpenCLPlatform::CurrentDevice() {
   return devices[current_device_index_];
 }
 
+void OpenCLPlatform::DeviceSynchronize() {
+  CurrentDevice().Synchronize();
+}
+
 void OpenCLPlatform::SetCurrentDevice(int device_index) {
   if (device_index >= numCPUDevices + numGPUDevices ||
       device_index < 0) {
@@ -288,7 +292,6 @@ void OpenCLPlatform::SetCurrentDevice(int device_index) {
   }
   current_device_index_ = device_index;
 }
-
 
 } // namespace caffe
 

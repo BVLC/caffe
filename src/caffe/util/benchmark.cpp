@@ -24,13 +24,15 @@ Timer::~Timer() {
 void Timer::Start() {
 
   if (!running()) {
-    if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
 #ifdef USE_CUDA
+    if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
       CUDA_CHECK(cudaEventRecord(start_gpu_, 0));
-#endif
     } else {
+#endif
       start_cpu_ = boost::posix_time::microsec_clock::local_time();
+#ifdef USE_CUDA
     }
+#endif
     running_ = true;
     has_run_at_least_once_ = true;
   }
@@ -38,14 +40,16 @@ void Timer::Start() {
 
 void Timer::Stop() {
   if (running()) {
-    if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA) {
 #if defined(USE_CUDA)
+    if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA) {
       CUDA_CHECK(cudaEventRecord(stop_gpu_, 0));
       CUDA_CHECK(cudaEventSynchronize(stop_gpu_));
-#endif
     } else {
+#endif
       stop_cpu_ = boost::posix_time::microsec_clock::local_time();
+#if defined(USE_CUDA)
     }
+#endif
     running_ = false;
   }
 }
@@ -59,16 +63,18 @@ float Timer::MicroSeconds() {
   if (running()) {
     Stop();
   }
-  if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
 #ifdef USE_CUDA
+  if (Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
                                     stop_gpu_));
     // Cuda only measure milliseconds
     elapsed_microseconds_ = elapsed_milliseconds_ * 1000;
-#endif
   } else {
+#endif
     elapsed_microseconds_ = (stop_cpu_ - start_cpu_).total_microseconds();
+#ifdef USE_CUDA
   }
+#endif
   return elapsed_microseconds_;
 }
 
@@ -80,14 +86,17 @@ float Timer::MilliSeconds() {
   if (running()) {
     Stop();
   }
-  if ( Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA ) {
+
 #ifdef USE_CUDA
+  if ( Caffe::mode() == Caffe::GPU ) { //&& Caffe::GPU_USE_CUDA {
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_milliseconds_, start_gpu_,
                                     stop_gpu_));
-#endif
   } else {
+#endif
     elapsed_milliseconds_ = (stop_cpu_ - start_cpu_).total_milliseconds();
+#ifdef USE_CUDA
   }
+#endif
   return elapsed_milliseconds_;
 }
 

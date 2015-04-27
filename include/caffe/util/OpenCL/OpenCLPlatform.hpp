@@ -30,6 +30,7 @@ public:
 	bool createContext();
 	bool compile(std::string sources);
 	int getNumDevices(cl_device_type type);
+  void DeviceSynchronize();
 private:
   void Check();
   //cl_platform_id platformID;

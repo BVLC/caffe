@@ -567,6 +567,12 @@ size_t OpenCLDevice::getMemoryUsage() {
 	return bytesUsed;
 }
 
+void OpenCLDevice::Synchronize() {
+  if (queue != NULL) {
+    clFinish(queue);
+  }
+}
+
 } // namespace caffe
 
 #endif //USE_OPENCL
