@@ -47,12 +47,12 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::CreatePrefetchThread() {
   this->data_transformer_->InitRand();
-  CHECK(StartInternalThread()) << "Thread execution failed";
+  StartInternalThread();
 }
 
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::JoinPrefetchThread() {
-  CHECK(WaitForInternalThreadToExit()) << "Thread joining failed";
+  StopInternalThread();
 }
 
 template <typename Dtype>

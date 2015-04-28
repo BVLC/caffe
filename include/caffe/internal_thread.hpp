@@ -25,12 +25,11 @@ class InternalThread {
    * Caffe's thread local state will be initialized using the current
    * thread values, e.g. device id, solver index etc. The random seed
    * is initialized using caffe_rng_rand.
-   * Will not return until the internal thread has exited.
    */
-  bool StartInternalThread();
+  void StartInternalThread();
 
   /** Will not return until the internal thread has exited. */
-  bool WaitForInternalThreadToExit();
+  void StopInternalThread();
 
   bool is_started() const;
 
@@ -38,6 +37,9 @@ class InternalThread {
   /* Implement this method in your subclass
       with the code you want your thread to run. */
   virtual void InternalThreadEntry() {}
+
+  /* Should be tested when running loops to exit when requested. */
+  bool must_stop();
 
  private:
   void entry();

@@ -1,4 +1,5 @@
 #include <boost/thread.hpp>
+#include <exception>
 
 #include "caffe/internal_thread.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -13,17 +14,22 @@ InternalThread::InternalThread()
 }
 
 InternalThread::~InternalThread() {
-  WaitForInternalThreadToExit();
+  StopInternalThread();
 }
 
 bool InternalThread::is_started() const {
-  return thread_.get() != NULL && thread_->joinable();
+  return thread_ && thread_->joinable();
 }
 
-bool InternalThread::StartInternalThread() {
-  if (!WaitForInternalThreadToExit()) {
-    return false;
-  }
+bool InternalThread::must_stop() {
+  return thread_ && thread_->interruption_requested();
+}
+
+void InternalThread::StartInternalThread() {
+  // TODO switch to failing once Caffe prefetch thread is persistent.
+  // Threads should not be started and stopped repeatedly.
+  // CHECK(!is_started());
+  StopInternalThread();
 
 #ifndef CPU_ONLY
   CUDA_CHECK(cudaGetDevice(&device_));
@@ -33,10 +39,9 @@ bool InternalThread::StartInternalThread() {
 
   try {
     thread_.reset(new boost::thread(&InternalThread::entry, this));
-  } catch (...) {
-    return false;
+  } catch (std::exception& e) {
+    CHECK(false) << e.what();
   }
-  return true;
 }
 
 void InternalThread::entry() {
@@ -49,16 +54,16 @@ void InternalThread::entry() {
   InternalThreadEntry();
 }
 
-/** Will not return until the internal thread has exited. */
-bool InternalThread::WaitForInternalThreadToExit() {
+void InternalThread::StopInternalThread() {
   if (is_started()) {
+    thread_->interrupt();
     try {
       thread_->join();
-    } catch (...) {
-      return false;
+    } catch (boost::thread_interrupted&) {
+    } catch (std::exception& e) {
+      CHECK(false) << e.what();
     }
   }
-  return true;
 }
 
 }  // namespace caffe

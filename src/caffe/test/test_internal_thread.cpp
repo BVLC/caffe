@@ -14,9 +14,9 @@ class InternalThreadTest : public ::testing::Test {};
 TEST_F(InternalThreadTest, TestStartAndExit) {
   InternalThread thread;
   EXPECT_FALSE(thread.is_started());
-  EXPECT_TRUE(thread.StartInternalThread());
+  thread.StartInternalThread();
   EXPECT_TRUE(thread.is_started());
-  EXPECT_TRUE(thread.WaitForInternalThreadToExit());
+  thread.StopInternalThread();
   EXPECT_FALSE(thread.is_started());
 }
 
@@ -35,18 +35,18 @@ class TestThreadB : public InternalThread {
 TEST_F(InternalThreadTest, TestRandomSeed) {
   TestThreadA t1;
   Caffe::set_random_seed(9658361);
-  EXPECT_TRUE(t1.StartInternalThread());
-  EXPECT_TRUE(t1.WaitForInternalThreadToExit());
+  t1.StartInternalThread();
+  t1.StopInternalThread();
 
   TestThreadA t2;
   Caffe::set_random_seed(9658361);
-  EXPECT_TRUE(t2.StartInternalThread());
-  EXPECT_TRUE(t2.WaitForInternalThreadToExit());
+  t2.StartInternalThread();
+  t2.StopInternalThread();
 
   TestThreadB t3;
   Caffe::set_random_seed(3435563);
-  EXPECT_TRUE(t3.StartInternalThread());
-  EXPECT_TRUE(t3.WaitForInternalThreadToExit());
+  t3.StartInternalThread();
+  t3.StopInternalThread();
 }
 
 }  // namespace caffe
