@@ -144,6 +144,37 @@ class ConcatLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Find the top_k stronger channels of the input blob and output their indices.
+ *
+ * Intended for use to prune class labels who are least promising (score low
+ * across the image). The following criterion is used:
+ * We count at how many image positions each label (channel) is argmax and
+ * sort the channels accordingly.
+ */
+template <typename Dtype>
+class DominantChannelLayer : public Layer<Dtype> {
+ public:
+  explicit DominantChannelLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "DominantChannel"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  int num_, channels_, height_, width_;
+  size_t top_k_;
+};
+
+/**
  * @brief Compute elementwise operations, such as product and sum,
  *        along multiple input Blobs.
  *
@@ -295,6 +326,35 @@ class MVNLayer : public Layer<Dtype> {
 
   /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
+};
+
+/**
+ * @brief Converts labels to one-hot encoding
+ */
+template <typename Dtype>
+class OneHotLayer : public Layer<Dtype> {
+ public:
+  explicit OneHotLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "OneHot"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  /// @brief Not implemented (non-differentiable function)
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+  int num_, channels_, height_, width_;
+  int num_labels_;
 };
 
 /**

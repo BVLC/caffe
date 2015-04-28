@@ -12,6 +12,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/loss_layers.hpp"
 #include "caffe/neuron_layers.hpp"
+#include "caffe/util/im2col.hpp"
+#include "caffe/util/densecrf_pairwise.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 namespace caffe {
@@ -69,6 +71,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int num_;
   int channels_;
   int pad_h_, pad_w_;
+  int hole_h_, hole_w_;
   int height_, width_;
   int group_;
   int num_output_;
@@ -79,21 +82,25 @@ class BaseConvolutionLayer : public Layer<Dtype> {
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
-    im2col_cpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff);
+    im2col_cpu(data, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, col_buff);
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
-    col2im_cpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data);
+    col2im_cpu(col_buff, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, data);
   }
 #ifndef CPU_ONLY
   inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
-    im2col_gpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_buff);
+    im2col_gpu(data, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, col_buff);
   }
   inline void conv_col2im_gpu(const Dtype* col_buff, Dtype* data) {
-    col2im_gpu(col_buff, conv_in_channels_, conv_in_height_, conv_in_width_,
-        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, data);
+    col2im_gpu(col_buff, 1, conv_in_channels_, conv_in_height_, conv_in_width_,
+        kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+        hole_h_, hole_w_, data);
   }
 #endif
 
@@ -257,6 +264,301 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
 #endif
 
 /**
+ * @brief Adds to the input scores (specified in bottom[0]) adaptive biases in the
+ * channels (listed in bottom[1]) so as they win on a target pre-defined portion
+ * of the image.
+ *
+ * The result is only approximate (i.e., the target portions are not reached exactly).
+ * In particular, the algorithm has an inner loop over the labels and at each iteration
+ * ensures that the particular label wins in at least a portion_ fraction of the pixels.
+ * When moving to the next labels we may lose some of the pixels that were claimed before.
+ * We have an outer loop of num_iter_ iterations in which we repeat the process.
+ * 
+ * We always visit the background score first. To alleviate the effect of visit order
+ * dependence, we iterate over the foreground classes which are present in random order.
+ *
+ * If suppress_others_ is true, then we make sure that the labels not listed in bottom[1]
+ * score lower throughout the image in comparison to both the background and the existing
+ * foreground labels.
+ */
+template <typename Dtype>
+class AdaptiveBiasChannelLayer : public Layer<Dtype> {
+ public:
+  explicit AdaptiveBiasChannelLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "AdaptiveBiasChannel"; }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+ 
+  int num_, channels_, height_, width_;
+  int max_labels_;
+
+  // configurable params
+  int num_iter_;
+  Dtype bg_portion_, fg_portion_;
+  bool suppress_others_;
+  Dtype margin_others_;
+};
+
+/**
+ * @brief Adds bg_bias to the scores of the background channel and
+ * fg_bias to the scores of each of the foreground channels
+ */
+template <typename Dtype>
+class BiasChannelLayer : public Layer<Dtype> {
+ public:
+  explicit BiasChannelLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "BiasChannel"; }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  
+  int num_, channels_, height_, width_;
+  int max_labels_;
+  Dtype bg_bias_, fg_bias_;
+  // set of ignore labels
+  std::set<int> ignore_label_;
+};
+
+/**
+ * @brief Censors (i.e., sets to "ignore label") the labels not
+ * included in the input weak label set.
+ * INPUTS:
+ * 0: (num, 1, height, width)
+ * 1: (num, max_labels, 1, 1)
+ */
+template <typename Dtype>
+class CensorLabelLayer : public Layer<Dtype> {
+ public:
+  explicit CensorLabelLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "CensorLabel"; }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  
+  int num_, channels_, height_, width_;
+  int max_labels_;
+  int ignore_label_;
+};
+
+/**
+ * @brief Aggregates the scores (log-probabilities) from a larger label
+ * space to a smaller label space via a softmax operation.
+ * The mapping between the two label spaces is provided via a text file.
+ */
+template <typename Dtype>
+class ChannelAggregatorLayer : public Layer<Dtype> {
+ public:
+  explicit ChannelAggregatorLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "ChannelAggregator"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  
+  int num_, channels_in_, height_, width_;
+  int channels_out_;
+  std::vector<std::vector<int> > label_map_;
+};
+
+/**
+ * @brief The DenseCRF layer performs mean-field inference under a
+ *  fully-connected CRF model with Gaussian potentials.
+ *
+ */
+template <typename Dtype>
+class DenseCRFLayer : public Layer<Dtype> {
+ public:
+  explicit DenseCRFLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual ~DenseCRFLayer();
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "DenseCrf"; }
+  // will take DCNN output, image (optional) and image_dim as input
+  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  virtual void SetupPairwiseFunctions(const vector<Blob<Dtype>*>& bottom);
+  virtual void ClearPairwiseFunctions();
+
+  virtual void SetupUnaryEnergy(const Dtype* bottom);
+
+  virtual void ComputeMap(Dtype* top_inf);
+
+  virtual void RunInference();
+  virtual void StartInference();
+  virtual void StepInference();
+
+  virtual void ExpAndNormalize(float* out, const float* in, float scale);
+
+  virtual void AllocateAllData();
+  virtual void DeAllocateAllData();
+
+  
+  bool has_image;
+
+  int num_;
+  int pad_height_;   // may have padded rows
+  int pad_width_;    // may have padded cols
+
+  int M_;   // number of input feature (channel)
+  int W_;   // effective width   (<= pad_width_)
+  int H_;   // effective height  (<= pad_height_)
+  int N_;   // = W_ * H_
+
+  int max_iter_;
+
+  // Gaussian pairwise potential with weight and positional standard deviation
+  std::vector<float> pos_w_;
+  std::vector<float> pos_xy_std_;
+  
+  // Bilateral pairwise potential with weight, positional std, and color std
+  std::vector<float> bi_w_;
+  std::vector<float> bi_xy_std_;
+  std::vector<float> bi_rgb_std_;
+
+  std::vector<PairwisePotential*> pairwise_;
+
+  int unary_element_;  // size of unary energy
+  int map_element_;    // size of map result
+
+  float* unary_;     // unary energy
+  float* current_;   // current inference values, will copy to top[0]
+  float* next_;      // next inference values
+  float* tmp_;       // buffer
+
+  /// sum_multiplier is used to carry out sum using BLAS
+  Blob<Dtype> sum_multiplier_;
+  /// scale is an intermediate Blob to hold temporary results.
+  Blob<Dtype> scale_;
+  /// norm_data is an intermediate Blob to hold temporary results.
+  Blob<Dtype> norm_data_;
+
+  // the output format is probability or score (score = log(probability))
+  bool output_prob_;
+};
+
+/**
+   @brief Counts the number of occurrences of a given value across
+   spatial positions.
+   Ignores values in the ignore_label list.
+   It assumes that the input is integers in the [0 num_labels) range.
+   Input:  [num 1 height width]
+   Output: [num num_labels 1 1]
+ */
+template <typename Dtype>
+class HistogramLayer : public Layer<Dtype> {
+ public:
+  explicit HistogramLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Histogram"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  
+  int num_, height_, width_;
+  int num_labels_;
+  // set of ignore labels
+  std::set<int> ignore_label_;
+};
+
+/**
+   @brief The output equals to bottom[1] except for the positions in bottom[0]
+   where the value of bottom[0] equals to ignore_label
+ */
+template <typename Dtype>
+class IgnoreOverlayLayer : public Layer<Dtype> {
+ public:
+  explicit IgnoreOverlayLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "IgnoreOverlay"; }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  
+  int num_, channels_, height_, width_;
+  int ignore_label_;
+};
+
+/**
  * @brief A helper for image operations that rearranges image regions into
  *        column vectors.  Used by ConvolutionLayer to perform convolution
  *        by matrix multiplication.
@@ -292,6 +594,44 @@ class Im2colLayer : public Layer<Dtype> {
   int channels_;
   int height_, width_;
   int pad_h_, pad_w_;
+  int hole_h_, hole_w_;
+};
+
+/**
+ * @brief Changes the spatial resolution by bi-linear interpolation.
+ *        The target size is specified in terms of pixels. 
+ *        The start and end pixels of the input are mapped to the start
+ *        and end pixels of the output.
+ */
+template <typename Dtype>
+class InterpLayer : public Layer<Dtype> {
+ public:
+  explicit InterpLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Interp"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  
+  int num_, channels_;
+  int height_in_, width_in_;
+  int height_out_, width_out_;
+  int pad_beg_, pad_end_;
+  int height_in_eff_, width_in_eff_;
 };
 
 // Forward declare PoolingLayer and SplitLayer for use in LRNLayer.
@@ -373,6 +713,95 @@ class LRNLayer : public Layer<Dtype> {
   vector<Blob<Dtype>*> product_bottom_vec_;
 };
 
+/*
+  MatReadLayer
+*/
+template <typename Dtype>
+class MatReadLayer : public Layer<Dtype> {
+ public:
+  explicit MatReadLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual inline const char* type() const { return "MatRead"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  bool reshape_;
+  int batch_size_;
+  int iter_;
+  string prefix_;
+  vector<string> fnames_;
+};
+
+/*
+  MatWriteLayer
+*/
+template <typename Dtype>
+class MatWriteLayer : public Layer<Dtype> {
+ public:
+  explicit MatWriteLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual inline const char* type() const { return "MatWrite"; }
+  virtual inline int ExactNumTopBlobs() const { return 0; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int iter_;
+  int period_;
+  string prefix_;
+  vector<string> fnames_;
+};
+
+/**
+ * @brief Pads (if pad >= 0) or crops (if pad < 0) parts of the input.
+ */
+template <typename Dtype>
+class PaddingLayer : public Layer<Dtype> {
+ public:
+  explicit PaddingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Padding"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int pad_beg_, pad_end_;
+  bool pad_pos_;
+  int num_, channels_;
+  int height_in_, width_in_;
+  int height_out_, width_out_;
+};
 
 /**
  * @brief Pools the input image by taking the max, average, etc. within regions.
@@ -390,7 +819,9 @@ class PoolingLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Pooling"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumBottomBlobs() const { 
+    return (this->layer_param_.pooling_param().do_spm()) ? 2 : 1;
+  }
   virtual inline int MinTopBlobs() const { return 1; }
   // MAX POOL layers can output an extra top blob for the mask;
   // others can only output the pooled inputs.
@@ -414,8 +845,9 @@ class PoolingLayer : public Layer<Dtype> {
   int pad_h_, pad_w_;
   int channels_;
   int height_, width_;
-  int pooled_height_, pooled_width_;
-  bool global_pooling_;
+  int pool_h_, pool_w_;
+  bool do_spm_;
+  int shrink_factor_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
 };
@@ -452,6 +884,39 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
   cudnnPoolingMode_t        mode_;
 };
 #endif
+
+/**
+ * @brief Finds the unique labels in (num, 1, height, width) input discarding
+ * the positions, resulting into a (num, max_labels, 1, 1) summary output
+ */
+template <typename Dtype>
+class UniqueLabelLayer : public Layer<Dtype> {
+ public:
+  explicit UniqueLabelLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "UniqueLabel"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  
+  int num_, channels_, height_, width_;
+  int max_labels_;
+  // set of ignore labels
+  std::set<Dtype> ignore_label_;
+  // set of forced labels
+  std::set<Dtype> force_label_;
+};
+
 
 }  // namespace caffe
 

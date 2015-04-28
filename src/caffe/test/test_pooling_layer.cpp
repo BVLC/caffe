@@ -20,24 +20,32 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
  protected:
   PoolingLayerTest()
       : blob_bottom_(new Blob<Dtype>()),
+        blob_bottom_size_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()),
         blob_top_mask_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 3, 6, 5);
+    blob_bottom_size_->Reshape(2, 2, 1, 1);
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_);
+    for (int i = 0; i < 2; ++i) {
+      blob_bottom_size_->mutable_cpu_data()[2 * i] = 6;
+      blob_bottom_size_->mutable_cpu_data()[2 * i +  1] = 5;
+    }
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
   }
   virtual ~PoolingLayerTest() {
     delete blob_bottom_;
+    delete blob_bottom_size_;
     delete blob_top_;
     delete blob_top_mask_;
   }
   Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>* const blob_bottom_size_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_mask_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
@@ -400,45 +408,23 @@ TYPED_TEST(PoolingLayerTest, TestSetupPadded) {
   EXPECT_EQ(this->blob_top_->width(), 3);
 }
 
-TYPED_TEST(PoolingLayerTest, TestSetupGlobalPooling) {
+
+TYPED_TEST(PoolingLayerTest, TestSetupSpmPooling) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_global_pooling(true);
-  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  pooling_param->set_do_spm(true);
+  pooling_param->set_pool_size(2);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
   PoolingLayer<Dtype> layer(layer_param);
+  this->blob_bottom_vec_.push_back(this->blob_bottom_size_);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
-  EXPECT_EQ(this->blob_top_->height(), 1);
-  EXPECT_EQ(this->blob_top_->width(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 2);
+  EXPECT_EQ(this->blob_top_->width(), 2);
+  this->blob_bottom_vec_.pop_back();
 }
-
-/*
-TYPED_TEST(PoolingLayerTest, PrintBackward) {
-  LayerParameter layer_param;
-  layer_param.set_kernelsize(3);
-  layer_param.set_stride(2);
-  layer_param.set_pool(LayerParameter_PoolMethod_MAX);
-  PoolingLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    cout << "bottom data " << i << " " << this->blob_bottom_->cpu_data()[i] << endl;
-  }
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    cout << "top data " << i << " " << this->blob_top_->cpu_data()[i] << endl;
-  }
-
-  for (int i = 0; i < this->blob_top_->count(); ++i) {
-    this->blob_top_->mutable_cpu_diff()[i] = i;
-  }
-  layer.Backward(this->blob_top_vec_, true, this->blob_bottom_vec_);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
-    cout << "bottom diff " << i << " " << this->blob_bottom_->cpu_diff()[i] << endl;
-  }
-}
-*/
 
 TYPED_TEST(PoolingLayerTest, TestForwardMax) {
   this->TestForwardSquare();
@@ -604,6 +590,40 @@ TYPED_TEST(PoolingLayerTest, TestGradientAvePadded) {
           this->blob_top_vec_);
     }
   }
+}
+
+TYPED_TEST(PoolingLayerTest, TestGradientMaxSpm) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_size_);
+  for (int pool_size = 2; pool_size <= 2; pool_size++) {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_do_spm(true);
+    pooling_param->set_pool_size(pool_size);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
+    PoolingLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-4, 1e-2);
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+	this->blob_top_vec_, 0);
+  }
+  this->blob_bottom_vec_.pop_back();
+}
+
+TYPED_TEST(PoolingLayerTest, TestGradientAveSpm) {
+  typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_vec_.push_back(this->blob_bottom_size_);
+  for (int pool_size = 1; pool_size <= 3; pool_size++) {
+    LayerParameter layer_param;
+    PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+    pooling_param->set_do_spm(true);
+    pooling_param->set_pool_size(pool_size);
+    pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+    PoolingLayer<Dtype> layer(layer_param);
+    GradientChecker<Dtype> checker(1e-2, 1e-2);
+    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+	this->blob_top_vec_, 0);
+  }
+  this->blob_bottom_vec_.pop_back();
 }
 
 #ifdef USE_CUDNN

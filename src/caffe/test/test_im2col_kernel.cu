@@ -40,10 +40,12 @@ class Im2colKernelTest : public ::testing::Test {
     width_ = blob_bottom_->width();
     channels_ = blob_bottom_->channels();
     pad_ = 0;
+    hole_ = 1;
     stride_ = 2;
     kernel_size_ = 3;
-    height_col_ = (height_ + 2 * pad_ - kernel_size_) / stride_ + 1;
-    width_col_ = (width_ + 2 * pad_ - kernel_size_) / stride_ + 1;
+    const int kernel_size_eff = kernel_size_ + (kernel_size_ - 1) * (hole_ - 1);
+    height_col_ = (height_ + 2 * pad_ - kernel_size_eff) / stride_ + 1;
+    width_col_ = (width_ + 2 * pad_ - kernel_size_eff) / stride_ + 1;
   }
 
   virtual ~Im2colKernelTest() {
@@ -59,6 +61,7 @@ class Im2colKernelTest : public ::testing::Test {
   int width_;
   int channels_;
   int pad_;
+  int hole_;
   int stride_;
   int kernel_size_;
   int height_col_;
@@ -86,40 +89,26 @@ TYPED_TEST(Im2colKernelTest, TestGPU) {
   TypeParam* cpu_data = this->blob_top_cpu_->mutable_cpu_data();
 
   // CPU Version
-  for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-    im2col_cpu(this->blob_bottom_->cpu_data() + this->blob_bottom_->offset(n),
-      this->channels_, this->height_, this->width_,
-      this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
-      this->stride_, this->stride_,
-      cpu_data + this->blob_top_cpu_->offset(n));
-  }
+  im2col_cpu(this->blob_bottom_->cpu_data(),
+	     this->blob_bottom_->num(), this->channels_, this->height_, this->width_,
+	     this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
+	     this->stride_, this->stride_, this->hole_, this->hole_,
+	     cpu_data);
 
   // GPU version
-  int num_kernels = this->channels_ * this->height_col_ * this->width_col_;
-  int default_grid_dim = CAFFE_GET_BLOCKS(num_kernels);
+  im2col_gpu(this->blob_bottom_->gpu_data(),
+	     this->blob_bottom_->num(), this->channels_, this->height_, this->width_,
+	     this->kernel_size_, this->kernel_size_, this->pad_, this->pad_,
+	     this->stride_, this->stride_, this->hole_, this->hole_,
+	     top_data);
 
-  // Launch with different grid sizes
-  for (int grid_div = 2; grid_div <= 8; grid_div++) {
-    for (int n = 0; n < this->blob_bottom_->num(); ++n) {
-      int grid_dim = default_grid_dim/grid_div;
-      // NOLINT_NEXT_LINE(whitespace/operators)
-      im2col_gpu_kernel<TypeParam><<<grid_dim, CAFFE_CUDA_NUM_THREADS>>>(
-        num_kernels, bottom_data + this->blob_bottom_->offset(n),
-        this->height_, this->width_, this->kernel_size_, this->kernel_size_,
-        this->pad_, this->pad_, this->stride_, this->stride_,
-        this->height_col_, this->width_col_,
-        top_data + this->blob_top_->offset(n));
-      CUDA_POST_KERNEL_CHECK;
-    }
-
-    // Compare results against CPU version
-    for (int i = 0; i < this->blob_top_->count(); ++i) {
-      TypeParam cpuval = cpu_data[i];
-      TypeParam gpuval = this->blob_top_->cpu_data()[i];
-      EXPECT_EQ(cpuval, gpuval);
-      if (cpuval != gpuval) {
-        break;
-      }
+  // Compare results against CPU version
+  for (int i = 0; i < this->blob_top_->count(); ++i) {
+    TypeParam cpuval = cpu_data[i];
+    TypeParam gpuval = this->blob_top_->cpu_data()[i];
+    EXPECT_EQ(cpuval, gpuval);
+    if (cpuval != gpuval) {
+      break;
     }
   }
 }
