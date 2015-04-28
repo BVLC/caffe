@@ -773,7 +773,7 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx,
 	/* check alignment */
   cl_uint bytes = device.getDeviceMemBaseAddrAlign();
 	if ( offset % bytes != 0 ) {
-    //LOG(WARNING)<<"sub-buffer memory offset ("<<offset<<" Byte) is not aligned with device memory offset ("<<bytes<<" Byte)";
+    LOG(WARNING)<<"sub-buffer memory offset ("<<offset<<" Byte) is not aligned with device memory offset ("<<bytes<<" Byte)";
 
 		cl_mem_flags flags;
 		err = clGetMemObjectInfo((cl_mem) ptr_logical, CL_MEM_FLAGS, sizeof(flags), &flags, NULL);

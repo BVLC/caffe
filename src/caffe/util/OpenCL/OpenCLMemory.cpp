@@ -38,6 +38,14 @@ OpenCLMemory::OpenCLMemory(size_t size) {
     LOG(FATAL) << oss;
 	}
 
+  cl_uint device_alignment = current_device.getDeviceMemBaseAddrAlign();
+  if (size % device_alignment != 0) {
+    // Requested size does not keep us on device alignment.
+    // Round up to nearest integer multiple of alignment.
+    cl_uint multiple = size / device_alignment + 1;
+    size = multiple * device_alignment;
+  }
+
 	double allocSizeMB = size / (1024.0*1024.0);
 
 	cl_int err;
