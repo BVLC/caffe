@@ -65,10 +65,6 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     int roi_end_h = round(bottom_rois[4] * spatial_scale_);
     CHECK_GE(roi_batch_ind, 0);
     CHECK_LT(roi_batch_ind, batch_size);
-    CHECK_GE(roi_start_w, 0);
-    CHECK_GE(roi_start_h, 0);
-    CHECK_LT(roi_end_w, width_);
-    CHECK_LT(roi_end_h, height_);
 
     int roi_height = max(roi_end_h - roi_start_h + 1, 1);
     int roi_width = max(roi_end_w - roi_start_w + 1, 1);
@@ -98,9 +94,6 @@ void ROIPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           hend = min(max(hend + roi_start_h, 0), height_);
           wstart = min(max(wstart + roi_start_w, 0), width_);
           wend = min(max(wend + roi_start_w, 0), width_);
-
-          CHECK_GT(hend, hstart);
-          CHECK_GT(wend, wstart);
 
           bool is_empty = (hend <= hstart) || (wend <= wstart);
 
