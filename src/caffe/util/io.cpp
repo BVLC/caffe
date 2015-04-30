@@ -2,10 +2,14 @@
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
+
+#ifndef NO_IO_DEPENDENCIES
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
+#endif
+
 #include <stdint.h>
 
 #include <algorithm>
@@ -70,6 +74,7 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width, const bool is_color) {
   cv::Mat cv_img;
+#ifndef NO_IO_DEPENDENCIES
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
@@ -82,6 +87,9 @@ cv::Mat ReadImageToCVMat(const string& filename,
   } else {
     cv_img = cv_img_origin;
   }
+#else
+  NO_IO;
+#endif
   return cv_img;
 }
 
@@ -98,6 +106,8 @@ cv::Mat ReadImageToCVMat(const string& filename,
 cv::Mat ReadImageToCVMat(const string& filename) {
   return ReadImageToCVMat(filename, 0, 0, true);
 }
+
+#ifndef NO_IO_DEPENDENCIES
 // Do the file extension and encoding match?
 static bool matchExt(const std::string & fn,
                      std::string en) {
@@ -111,9 +121,12 @@ static bool matchExt(const std::string & fn,
     return true;
   return false;
 }
+#endif
+
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color,
     const std::string & encoding, Datum* datum) {
+#ifndef NO_IO_DEPENDENCIES
   cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
   if (cv_img.data) {
     if (encoding.size()) {
@@ -131,9 +144,11 @@ bool ReadImageToDatum(const string& filename, const int label,
     CVMatToDatum(cv_img, datum);
     datum->set_label(label);
     return true;
-  } else {
-    return false;
   }
+#else
+  NO_IO;
+#endif
+  return false;
 }
 
 bool ReadFileToDatum(const string& filename, const int label,
@@ -158,6 +173,7 @@ bool ReadFileToDatum(const string& filename, const int label,
 
 cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
   cv::Mat cv_img;
+#ifndef NO_IO_DEPENDENCIES
   CHECK(datum.encoded()) << "Datum not encoded";
   const string& data = datum.data();
   std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
@@ -165,10 +181,14 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
   if (!cv_img.data) {
     LOG(ERROR) << "Could not decode datum ";
   }
+#else
+  NO_IO;
+#endif
   return cv_img;
 }
 cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   cv::Mat cv_img;
+#ifndef NO_IO_DEPENDENCIES
   CHECK(datum.encoded()) << "Datum not encoded";
   const string& data = datum.data();
   std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
@@ -178,6 +198,9 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   if (!cv_img.data) {
     LOG(ERROR) << "Could not decode datum ";
   }
+#else
+  NO_IO;
+#endif
   return cv_img;
 }
 
@@ -203,6 +226,7 @@ bool DecodeDatum(Datum* datum, bool is_color) {
 }
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
+#ifndef NO_IO_DEPENDENCIES
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   datum->set_channels(cv_img.channels());
   datum->set_height(cv_img.rows);
@@ -226,7 +250,12 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
     }
   }
   datum->set_data(buffer);
+#else
+  NO_IO;
+#endif
 }
+
+#ifndef NO_IO_DEPENDENCIES
 
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
@@ -302,5 +331,7 @@ void hdf5_save_nd_dataset<double>(
       file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
   CHECK_GE(status, 0) << "Failed to make double dataset " << dataset_name;
 }
+
+#endif
 
 }  // namespace caffe

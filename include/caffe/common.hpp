@@ -65,8 +65,16 @@ private:\
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
+#ifndef NO_IO_DEPENDENCIES
 // See PR #1236
 namespace cv { class Mat; }
+#else
+#define NO_IO LOG(FATAL) << "IO dependencies disabled, c.f. build options."
+
+namespace cv {
+class Mat {};
+}
+#endif
 
 namespace caffe {
 

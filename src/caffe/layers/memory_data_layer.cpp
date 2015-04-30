@@ -1,4 +1,6 @@
+#ifndef NO_IO_DEPENDENCIES
 #include <opencv2/core/core.hpp>
+#endif
 
 #include <vector>
 

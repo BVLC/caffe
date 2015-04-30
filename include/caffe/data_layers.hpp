@@ -6,7 +6,10 @@
 #include <vector>
 
 #include "boost/scoped_ptr.hpp"
+
+#ifndef NO_IO_DEPENDENCIES
 #include "hdf5.h"
+#endif
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -134,6 +137,8 @@ class DummyDataLayer : public Layer<Dtype> {
   vector<bool> refill_;
 };
 
+#ifndef NO_IO_DEPENDENCIES
+
 /**
  * @brief Provides data to the Net from HDF5 files.
  *
@@ -244,6 +249,8 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   int lines_id_;
 };
 
+#endif
+
 /**
  * @brief Provides data to the Net from memory.
  *
@@ -289,6 +296,8 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   bool has_new_data_;
 };
 
+#ifndef NO_IO_DEPENDENCIES
+
 /**
  * @brief Provides data to the Net from windows of images files, specified
  *        by a window data file.
@@ -324,6 +333,8 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   bool cache_images_;
   vector<std::pair<std::string, Datum > > image_database_cache_;
 };
+
+#endif
 
 }  // namespace caffe
 

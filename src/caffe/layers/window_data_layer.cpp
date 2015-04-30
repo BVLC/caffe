@@ -1,3 +1,5 @@
+#ifndef NO_IO_DEPENDENCIES
+
 #include <opencv2/highgui/highgui_c.h>
 #include <stdint.h>
 
@@ -7,9 +9,11 @@
 #include <utility>
 #include <vector>
 
+#ifndef NO_IO_DEPENDENCIES
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#endif
 
 #include "caffe/common.hpp"
 #include "caffe/data_layers.hpp"
@@ -464,3 +468,5 @@ INSTANTIATE_CLASS(WindowDataLayer);
 REGISTER_LAYER_CLASS(WindowData);
 
 }  // namespace caffe
+
+#endif

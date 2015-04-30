@@ -5,6 +5,8 @@
 
 namespace caffe { namespace db {
 
+#ifndef NO_IO_DEPENDENCIES
+
 const size_t LMDB_MAP_SIZE = 1099511627776;  // 1 TB
 
 void LevelDB::Open(const string& source, Mode mode) {
@@ -59,25 +61,30 @@ void LMDBTransaction::Put(const string& key, const string& value) {
   MDB_CHECK(mdb_put(mdb_txn_, *mdb_dbi_, &mdb_key, &mdb_value, 0));
 }
 
+#endif
+
 DB* GetDB(DataParameter::DB backend) {
   switch (backend) {
+#ifndef NO_IO_DEPENDENCIES
   case DataParameter_DB_LEVELDB:
     return new LevelDB();
   case DataParameter_DB_LMDB:
     return new LMDB();
+#endif
   default:
     LOG(FATAL) << "Unknown database backend";
   }
 }
 
 DB* GetDB(const string& backend) {
+#ifndef NO_IO_DEPENDENCIES
   if (backend == "leveldb") {
     return new LevelDB();
   } else if (backend == "lmdb") {
     return new LMDB();
-  } else {
-    LOG(FATAL) << "Unknown database backend";
   }
+#endif
+  LOG(FATAL) << "Unknown database backend";
 }
 
 }  // namespace db
