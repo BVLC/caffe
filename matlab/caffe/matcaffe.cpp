@@ -62,11 +62,23 @@ static mxArray* do_forward(const mxArray* const bottom) {
     if (!mxIsSingle(elem)) {
       mex_error("MatCaffe require single-precision float point data");
     }
+    // Reshape input to match data if needed
     if (mxGetNumberOfElements(elem) != input_blobs[i]->count()) {
-      std::string error_msg;
-      error_msg += "MatCaffe input size does not match the input size ";
-      error_msg += "of the network";
-      mex_error(error_msg);
+      const mwSize* dims = mxGetDimensions(elem);
+      const mwSize num_dims = mxGetNumberOfDimensions(elem);
+      const int input_dims = input_blobs[i]->shape().size();
+      const int pad = input_dims - num_dims;
+      vector<int> shape(input_dims);
+      // In matlab, you cannot have trailing singleton dimensions
+      // So an input batch of size 1 (W x H x C x 1) will come in with 3 dims
+      // like (W x H x C). Therefore, we need to pad with singleton dims.
+      for (int d = 0; d < pad; ++d) {
+        shape[d] = 1;
+      }
+      for (int d = pad; d < input_dims; ++d) {
+        shape[d] = dims[num_dims - (d - pad) - 1];
+      }
+      input_blobs[i]->Reshape(shape);
     }
 
     const float* const data_ptr =
