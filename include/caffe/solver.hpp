@@ -31,6 +31,12 @@ class Solver {
   // previously snapshotted state. You should implement the RestoreSolverState()
   // function that restores the state from a SolverState protocol buffer.
   void Restore(const char* resume_file);
+  // The Solver::Snapshot function implements the basic snapshotting utility
+    // that stores the learned net. You should implement the SnapshotSolverState()
+    // function that produces a SolverState protocol buffer that needs to be
+    // written to disk together with the learned net.
+  void Snapshot();
+
   virtual ~Solver() {}
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
@@ -41,11 +47,6 @@ class Solver {
  protected:
   // Get the update value for the current iteration.
   virtual void ComputeUpdateValue() = 0;
-  // The Solver::Snapshot function implements the basic snapshotting utility
-  // that stores the learned net. You should implement the SnapshotSolverState()
-  // function that produces a SolverState protocol buffer that needs to be
-  // written to disk together with the learned net.
-  void Snapshot();
   // The test routine
   void TestAll();
   void Test(const int test_net_id = 0);
@@ -76,14 +77,14 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param_file) { PreSolve(); }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
+  virtual void SnapshotSolverState(SolverState * state);
+  virtual void RestoreSolverState(const SolverState& state);
 
  protected:
   void PreSolve();
   Dtype GetLearningRate();
   virtual void ComputeUpdateValue();
   virtual void ClipGradients();
-  virtual void SnapshotSolverState(SolverState * state);
-  virtual void RestoreSolverState(const SolverState& state);
   // history maintains the historical momentum data.
   // update maintains update related data and is not needed in snapshots.
   // temp maintains other information that might be needed in computation
