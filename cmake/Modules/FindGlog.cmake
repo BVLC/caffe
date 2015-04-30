@@ -37,7 +37,7 @@ else()
         PATH_SUFFIXES lib lib64)
 endif()
 
-find_package_handle_standard_args(GLOG DEFAULT_MSG GLOG_INCLUDE_DIR GLOG_LIBRARY)
+find_package_handle_standard_args(Glog DEFAULT_MSG GLOG_INCLUDE_DIR GLOG_LIBRARY)
 
 if(GLOG_FOUND)
   set(GLOG_INCLUDE_DIRS ${GLOG_INCLUDE_DIR})

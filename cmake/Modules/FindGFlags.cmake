@@ -38,7 +38,7 @@ else()
     find_library(GFLAGS_LIBRARY gflags)
 endif()
 
-find_package_handle_standard_args(GFLAGS DEFAULT_MSG GFLAGS_INCLUDE_DIR GFLAGS_LIBRARY)
+find_package_handle_standard_args(GFlags DEFAULT_MSG GFLAGS_INCLUDE_DIR GFLAGS_LIBRARY)
 
 
 if(GFLAGS_FOUND)
