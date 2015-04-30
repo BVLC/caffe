@@ -1,6 +1,6 @@
 PROJECT := caffe
 
-CONFIG_FILE := Makefile.config
+CONFIG_FILE ?= Makefile.config
 # Explicitly check for the config file, otherwise make -k will proceed anyway.
 ifeq ($(wildcard $(CONFIG_FILE)),)
 $(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
@@ -292,7 +292,7 @@ ifeq ($(CPU_ONLY), 1)
 	TEST_OBJS := $(TEST_CXX_OBJS)
 	TEST_BINS := $(TEST_CXX_BINS)
 	ALL_WARNS := $(ALL_CXX_WARNS)
-	TEST_FILTER := --gtest_filter="-*GPU*"
+	TEST_FILTER += --gtest_filter="-*GPU*"
 	COMMON_FLAGS += -DCPU_ONLY
 endif
 
