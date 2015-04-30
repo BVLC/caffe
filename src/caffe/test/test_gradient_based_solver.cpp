@@ -303,11 +303,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     // Check that the solver's solution matches ours.
     CheckLeastSquaresUpdate(updated_params);
   }
-};
 
 void TestHistorySnapshot()
   {
-
 	const Dtype learning_rate = 1.0;
 	const Dtype weight_decay = 0.0;
 	const Dtype momentum = 0.9;
@@ -378,6 +376,7 @@ void TestHistorySnapshot()
 	}
 
   }
+};
 
 template <typename TypeParam>
 class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
