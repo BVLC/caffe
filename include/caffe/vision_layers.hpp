@@ -25,6 +25,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
  public:
   explicit BaseConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~BaseConvolutionLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -160,6 +161,7 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
    */
   explicit ConvolutionLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
+  virtual ~ConvolutionLayer() {}
 
   virtual inline const char* type() const { return "Convolution"; }
 
@@ -195,6 +197,7 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
  public:
   explicit DeconvolutionLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
+  virtual ~DeconvolutionLayer() {}
 
   virtual inline const char* type() const { return "Deconvolution"; }
 
@@ -268,6 +271,7 @@ class Im2colLayer : public Layer<Dtype> {
  public:
   explicit Im2colLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~Im2colLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -308,6 +312,7 @@ class LRNLayer : public Layer<Dtype> {
  public:
   explicit LRNLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~LRNLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -384,6 +389,7 @@ class PoolingLayer : public Layer<Dtype> {
  public:
   explicit PoolingLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~PoolingLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,

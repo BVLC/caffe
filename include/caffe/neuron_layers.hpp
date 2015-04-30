@@ -27,6 +27,7 @@ class NeuronLayer : public Layer<Dtype> {
  public:
   explicit NeuronLayer(const LayerParameter& param)
      : Layer<Dtype>(param) {}
+  virtual ~NeuronLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -49,6 +50,7 @@ class AbsValLayer : public NeuronLayer<Dtype> {
  public:
   explicit AbsValLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~AbsValLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -108,6 +110,7 @@ class BNLLLayer : public NeuronLayer<Dtype> {
  public:
   explicit BNLLLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~BNLLLayer() {}
 
   virtual inline const char* type() const { return "BNLL"; }
 
@@ -162,6 +165,7 @@ class DropoutLayer : public NeuronLayer<Dtype> {
    */
   explicit DropoutLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~DropoutLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -222,6 +226,7 @@ class ExpLayer : public NeuronLayer<Dtype> {
    */
   explicit ExpLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~ExpLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -285,6 +290,7 @@ class PowerLayer : public NeuronLayer<Dtype> {
    */
   explicit PowerLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~PowerLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -356,6 +362,7 @@ class ReLULayer : public NeuronLayer<Dtype> {
    */
   explicit ReLULayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~ReLULayer() {}
 
   virtual inline const char* type() const { return "ReLU"; }
 
@@ -451,6 +458,7 @@ class SigmoidLayer : public NeuronLayer<Dtype> {
  public:
   explicit SigmoidLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~SigmoidLayer() {}
 
   virtual inline const char* type() const { return "Sigmoid"; }
 
@@ -534,6 +542,7 @@ class TanHLayer : public NeuronLayer<Dtype> {
  public:
   explicit TanHLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~TanHLayer() {}
 
   virtual inline const char* type() const { return "TanH"; }
 
@@ -621,6 +630,7 @@ class ThresholdLayer : public NeuronLayer<Dtype> {
    */
   explicit ThresholdLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~ThresholdLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -675,6 +685,7 @@ class PReLULayer : public NeuronLayer<Dtype> {
    */
   explicit PReLULayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual ~PReLULayer() {}
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);

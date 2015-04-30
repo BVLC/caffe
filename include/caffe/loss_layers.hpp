@@ -32,6 +32,7 @@ class AccuracyLayer : public Layer<Dtype> {
    */
   explicit AccuracyLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~AccuracyLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -101,6 +102,7 @@ class LossLayer : public Layer<Dtype> {
  public:
   explicit LossLayer(const LayerParameter& param)
      : Layer<Dtype>(param) {}
+  virtual ~LossLayer() {}
   virtual void LayerSetUp(
       const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
   virtual void Reshape(
@@ -154,6 +156,7 @@ class ContrastiveLossLayer : public LossLayer<Dtype> {
  public:
   explicit ContrastiveLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), diff_() {}
+  virtual ~ContrastiveLossLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -241,6 +244,7 @@ class EuclideanLossLayer : public LossLayer<Dtype> {
  public:
   explicit EuclideanLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), diff_() {}
+  virtual ~EuclideanLossLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -349,6 +353,7 @@ class HingeLossLayer : public LossLayer<Dtype> {
  public:
   explicit HingeLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param) {}
+  virtual ~HingeLossLayer() {}
 
   virtual inline const char* type() const { return "HingeLoss"; }
 
@@ -425,6 +430,7 @@ class InfogainLossLayer : public LossLayer<Dtype> {
  public:
   explicit InfogainLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param), infogain_() {}
+  virtual ~InfogainLossLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -516,6 +522,7 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
  public:
   explicit MultinomialLogisticLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param) {}
+  virtual ~MultinomialLogisticLossLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -594,6 +601,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
       : LossLayer<Dtype>(param),
           sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
           sigmoid_output_(new Blob<Dtype>()) {}
+  virtual ~SigmoidCrossEntropyLossLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -697,6 +705,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
     */
   explicit SoftmaxWithLossLayer(const LayerParameter& param)
       : LossLayer<Dtype>(param) {}
+  virtual ~SoftmaxWithLossLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,

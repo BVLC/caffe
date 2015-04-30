@@ -38,6 +38,7 @@ class ArgMaxLayer : public Layer<Dtype> {
    */
   explicit ArgMaxLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~ArgMaxLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -79,6 +80,7 @@ class ConcatLayer : public Layer<Dtype> {
  public:
   explicit ConcatLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~ConcatLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -154,6 +156,7 @@ class EltwiseLayer : public Layer<Dtype> {
  public:
   explicit EltwiseLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~EltwiseLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -195,6 +198,7 @@ class FlattenLayer : public Layer<Dtype> {
  public:
   explicit FlattenLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~FlattenLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -238,6 +242,7 @@ class InnerProductLayer : public Layer<Dtype> {
  public:
   explicit InnerProductLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~InnerProductLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -274,6 +279,7 @@ class MVNLayer : public Layer<Dtype> {
  public:
   explicit MVNLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~MVNLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -306,6 +312,7 @@ class SilenceLayer : public Layer<Dtype> {
  public:
   explicit SilenceLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~SilenceLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
 
@@ -336,6 +343,7 @@ class SoftmaxLayer : public Layer<Dtype> {
  public:
   explicit SoftmaxLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~SoftmaxLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -402,6 +410,7 @@ class SplitLayer : public Layer<Dtype> {
  public:
   explicit SplitLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~SplitLayer() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -433,6 +442,7 @@ class SliceLayer : public Layer<Dtype> {
  public:
   explicit SliceLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~SliceLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,

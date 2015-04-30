@@ -112,6 +112,7 @@ class DummyDataLayer : public Layer<Dtype> {
  public:
   explicit DummyDataLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
+  virtual ~DummyDataLayer() {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   // Data layers have no bottoms, so reshaping is trivial.
@@ -254,6 +255,7 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
  public:
   explicit MemoryDataLayer(const LayerParameter& param)
       : BaseDataLayer<Dtype>(param), has_new_data_(false) {}
+  virtual ~MemoryDataLayer() {}
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 

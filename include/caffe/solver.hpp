@@ -74,6 +74,7 @@ class SGDSolver : public Solver<Dtype> {
       : Solver<Dtype>(param) { PreSolve(); }
   explicit SGDSolver(const string& param_file)
       : Solver<Dtype>(param_file) { PreSolve(); }
+  virtual ~SGDSolver() {}
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
 
@@ -100,6 +101,7 @@ class NesterovSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) {}
   explicit NesterovSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) {}
+  virtual ~NesterovSolver() {}
 
  protected:
   virtual void ComputeUpdateValue();
@@ -114,6 +116,7 @@ class AdaGradSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param) { constructor_sanity_check(); }
   explicit AdaGradSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { constructor_sanity_check(); }
+  virtual ~AdaGradSolver() {}
 
  protected:
   virtual void ComputeUpdateValue();
