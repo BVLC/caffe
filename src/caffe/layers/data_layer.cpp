@@ -29,15 +29,22 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   db_->Open(this->layer_param_.data_param().source(), db::READ);
   cursor_.reset(db_->NewCursor());
 
-  // Check if we should randomly skip a few data points
-  if (this->layer_param_.data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-                        this->layer_param_.data_param().rand_skip();
+  if (this->layer_param_.data_param().rand_skip() || 
+      this->layer_param_.data_param().skip()) {
+    unsigned int skip;
+    // Check if we should randomly skip a few data points
+    if (this->layer_param_.data_param().rand_skip()) {
+      skip = caffe_rng_rand() %
+                          this->layer_param_.data_param().rand_skip();
+    } else {
+      skip = this->layer_param_.data_param().skip(); 
+    }  
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       cursor_->Next();
     }
   }
+
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
   datum.ParseFromString(cursor_->value());
@@ -89,6 +96,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   // Reshape on single input batches for inputs of varying dimension.
   const int batch_size = this->layer_param_.data_param().batch_size();
   const int crop_size = this->layer_param_.transform_param().crop_size();
+  unsigned int rewind = this->layer_param_.data_param().rewind();
   bool force_color = this->layer_param_.data_param().force_encoded_color();
   if (batch_size == 1 && crop_size == 0) {
     Datum datum;
@@ -112,6 +120,19 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
+  
+  // rewind cursor
+  if (rewind) {
+    DLOG(INFO) << "Rewind " << rewind << " data points.";
+    while (rewind-- > 0) {
+      cursor_->Prev();
+      if (!cursor_->valid()) {
+        DLOG(INFO) << "Restarting data prefetching from last.";
+        cursor_->SeekToLast();
+      }
+    }
+  }
+
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
