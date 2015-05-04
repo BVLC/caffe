@@ -29,6 +29,10 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   db_->Open(this->layer_param_.data_param().source(), db::READ);
   cursor_.reset(db_->NewCursor());
 
+  // Move to start position
+  cursor_->Find(this->layer_param_.data_param().start());
+  DLOG(INFO) << "Start Key(" << this->layer_param_.data_param().batch_size() << "): " << cursor_->key() << std::endl;
+
   if (this->layer_param_.data_param().rand_skip() || 
       this->layer_param_.data_param().skip()) {
     unsigned int skip;
@@ -39,7 +43,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     } else {
       skip = this->layer_param_.data_param().skip(); 
     }  
-    LOG(INFO) << "Skipping first " << skip << " data points.";
+    DLOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       cursor_->Next();
     }
@@ -97,6 +101,12 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   const int batch_size = this->layer_param_.data_param().batch_size();
   const int crop_size = this->layer_param_.transform_param().crop_size();
   unsigned int rewind = this->layer_param_.data_param().rewind();
+  unsigned int start = this->layer_param_.data_param().start();
+  unsigned int end = this->layer_param_.data_param().end();
+  string startkeystr;
+  db::GetKeyStr(startkeystr, start);
+  string endkeystr;
+  db::GetKeyStr(endkeystr, end);
   bool force_color = this->layer_param_.data_param().force_encoded_color();
   if (batch_size == 1 && crop_size == 0) {
     Datum datum;
@@ -126,9 +136,13 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     DLOG(INFO) << "Rewind " << rewind << " data points.";
     while (rewind-- > 0) {
       cursor_->Prev();
-      if (!cursor_->valid()) {
+      if (!cursor_->valid() || 
+          (start > 0 && cursor_->key().compare(startkeystr) < 0)) {
         DLOG(INFO) << "Restarting data prefetching from last.";
-        cursor_->SeekToLast();
+        if (start <= 0)
+          cursor_->SeekToLast();
+        else // Move to end position
+          cursor_->Find(end - 1);
       }
     }
   }
@@ -138,6 +152,8 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     // get a blob
     Datum datum;
     datum.ParseFromString(cursor_->value());
+
+    DLOG(INFO) << "Key(" << batch_size << "): " << cursor_->key() << std::endl;
 
     cv::Mat cv_img;
     if (datum.encoded()) {
@@ -170,9 +186,13 @@ void DataLayer<Dtype>::InternalThreadEntry() {
     trans_time += timer.MicroSeconds();
     // go to the next iter
     cursor_->Next();
-    if (!cursor_->valid()) {
+    if (!cursor_->valid() || 
+         (end > 0 && cursor_->key().compare(endkeystr) >= 0)) {
       DLOG(INFO) << "Restarting data prefetching from start.";
-      cursor_->SeekToFirst();
+      if (end <= 0)
+        cursor_->SeekToFirst();
+      else // Move to start position
+        cursor_->Find(start);
     }
   }
   batch_timer.Stop();

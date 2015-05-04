@@ -453,6 +453,9 @@ message DataParameter {
   // The rewind is the amout of data points to rewind after batch learning.
   // Do not set to be larger than batch_size.
   optional uint32 rewind = 11 [default = 0];
+  // The range of iteration; start/end data point to iterate
+  optional uint32 start = 12 [default = 0];
+  optional uint32 end = 13 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
   // simple scaling and subtracting the data mean, if provided. Note that the
