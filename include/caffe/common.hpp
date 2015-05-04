@@ -65,8 +65,8 @@ private:\
 
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
-#define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
-
+#define CAFFE_NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
+  
 // See PR #1236
 namespace cv { class Mat; }
 

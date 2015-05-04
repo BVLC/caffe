@@ -222,7 +222,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+    CAFFE_NOT_IMPLEMENTED;
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
@@ -302,7 +302,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+    CAFFE_NOT_IMPLEMENTED;
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
