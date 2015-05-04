@@ -89,7 +89,7 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       Dtype* temp_buff = multiplier_.mutable_gpu_diff();
       // compute element-wise diff
       // NOLINT_NEXT_LINE(whitespace/operators)
-      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
+      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(cdim),
           CAFFE_CUDA_NUM_THREADS>>>(
           cdim, top_diff + top[0]->offset(n),
           bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
