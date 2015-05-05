@@ -212,6 +212,7 @@ ifeq ($(USE_GREENTEA),1)
 	
 	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp
 	CL_KERNELS = src/caffe/greentea/cl_kernels/*.cl
+	CL_HEADERS = src/caffe/greentea/cl_headers/*.cl
 	CL_KERNELS_SH = src/caffe/greentea/cl_kernels.sh
 endif
 
@@ -633,7 +634,7 @@ $(EXAMPLE_BINS): %.bin : %.o | $(DYNAMIC_NAME)
 		-Wl,-rpath,$(ORIGIN)/../../lib
 
 # Copy the OpenCL kernels into C++ char strings
-$(CL_KERNELS_CPP) : $(CL_KERNELS)
+$(CL_KERNELS_CPP) : $(CL_HEADERS) $(CL_KERNELS)
 	$(CL_KERNELS_SH)
 
 proto: $(PROTO_GEN_CC) $(PROTO_GEN_HEADER)

@@ -7,7 +7,7 @@
 
 #ifndef GREENTEA_MATH_FUNCTIONS_HPP_
 #define GREENTEA_MATH_FUNCTIONS_HPP_
-
+#ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "viennacl/ocl/context.hpp"
@@ -137,5 +137,5 @@ void greentea_gpu_mul(const int ctx_id, const int N, const cl_mem a,
  void greentea_gpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);*/
 
 }
-
+#endif
 #endif /* GREENTEA_MATH_FUNCTIONS_HPP_ */

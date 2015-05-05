@@ -269,8 +269,12 @@ break;
 default:
 LOG(FATAL)<< "Unknown pooling method.";
 }
-  CUDA_POST_KERNEL_CHECK
-  ;
+  if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    CUDA_POST_KERNEL_CHECK
+    ;
+#endif
+  }
 }
 
 template<typename Dtype>
@@ -366,8 +370,12 @@ void PoolingSKLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     default:
       LOG(FATAL)<< "Unknown or unsupported pooling method in Backward_gpu().";
     }
-  CUDA_POST_KERNEL_CHECK
-  ;
+  if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    CUDA_POST_KERNEL_CHECK
+    ;
+#endif
+  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(PoolingSKLayer);
