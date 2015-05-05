@@ -86,22 +86,22 @@ void PReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     int cdim = channels * dim;
     Dtype dsum = 0.;
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      Dtype* temp_buff = multiplier_.mutable_gpu_diff();
       // compute element-wise diff
       // NOLINT_NEXT_LINE(whitespace/operators)
-      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(count),
+      PReLUParamBackward<Dtype><<<CAFFE_GET_BLOCKS(cdim),
           CAFFE_CUDA_NUM_THREADS>>>(
           cdim, top_diff + top[0]->offset(n),
-          bottom_data + bottom[0]->offset(n), multiplier_.mutable_gpu_diff());
+          bottom_data + bottom[0]->offset(n),
+          backward_buff_.mutable_gpu_diff());
       CUDA_POST_KERNEL_CHECK;
       if (channel_shared_) {
         Dtype d;
-        caffe_gpu_dot<Dtype>(channels * dim, multiplier_.gpu_diff(),
+        caffe_gpu_dot<Dtype>(channels * dim, backward_buff_.gpu_diff(),
             multiplier_.gpu_data(), &d);
         dsum += d;
       } else {
         caffe_gpu_gemv<Dtype>(CblasNoTrans, channels, dim, 1.,
-            multiplier_.gpu_diff(), multiplier_.gpu_data(), 1.,
+            backward_buff_.gpu_diff(), multiplier_.gpu_data(), 1.,
             slope_diff);
       }
     }
