@@ -7,6 +7,7 @@
 
 #ifndef GREENTEA_IM2COL_HPP_
 #define GREENTEA_IM2COL_HPP_
+#ifdef USE_GREENTEA
 
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
@@ -50,4 +51,5 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
 
 }
 
+#endif
 #endif /* GREENTEA_IM2COL_HPP_ */

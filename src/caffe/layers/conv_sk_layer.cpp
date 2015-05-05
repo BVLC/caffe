@@ -82,8 +82,11 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int height_out = (height_ - ext_kernel_h) / stride_h_ + 1;
   int width_out = (width_ - ext_kernel_w) / stride_w_ + 1;
 
-  col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
+  // TODO: Change this
+  if(kstride_h_ != 8) {
+    col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
                       width_out, this->device_context_);
+  }
   // Set the parameters
   CHECK_EQ(num_output_ % group_, 0)<< "Number of output should be multiples of group.";
   bias_term_ = this->layer_param_.convolution_param().bias_term();

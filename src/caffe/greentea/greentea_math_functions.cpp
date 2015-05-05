@@ -4,7 +4,7 @@
  *  Created on: Apr 6, 2015
  *      Author: Fabian Tschopp
  */
-
+#ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
 
@@ -272,9 +272,9 @@ template void greentea_gpu_mul<float>(const int ctx_id, const int N,
                                       const cl_mem b, const int offb, cl_mem y,
                                       const int offy);
 template void greentea_gpu_mul<double>(const int ctx_id, const int N,
-                                      const cl_mem a, const int offa,
-                                      const cl_mem b, const int offb, cl_mem y,
-                                      const int offy);
+                                       const cl_mem a, const int offa,
+                                       const cl_mem b, const int offb, cl_mem y,
+                                       const int offy);
 
 /*
  template<>
@@ -624,3 +624,4 @@ template void greentea_gpu_mul<double>(const int ctx_id, const int N,
  */
 
 }
+#endif

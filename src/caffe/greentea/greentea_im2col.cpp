@@ -4,7 +4,7 @@
  *  Created on: Apr 8, 2015
  *      Author: Fabian Tschopp
  */
-
+#ifdef USE_GREENTEA
 #include "caffe/greentea/greentea_im2col.hpp"
 
 namespace caffe {
@@ -73,3 +73,4 @@ template void greentea_im2col_sk_gpu<double>(viennacl::ocl::program &prog,
                                              cl_mem data_col);
 
 }
+#endif
