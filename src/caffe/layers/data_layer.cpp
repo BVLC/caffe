@@ -31,7 +31,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Move to start position
   cursor_->Find(this->layer_param_.data_param().start());
-  DLOG(INFO) << "Start Key(" << this->layer_param_.data_param().batch_size() << "): " << cursor_->key() << std::endl;
+  LOG(INFO) << "Move to Start Position: " << cursor_->key();
 
   if (this->layer_param_.data_param().rand_skip() || 
       this->layer_param_.data_param().skip()) {
@@ -43,7 +43,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     } else {
       skip = this->layer_param_.data_param().skip(); 
     }  
-    DLOG(INFO) << "Skipping first " << skip << " data points.";
+    LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       cursor_->Next();
     }
