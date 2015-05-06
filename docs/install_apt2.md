@@ -31,7 +31,7 @@ This guide was based on the guides in:
 
 - - -
 
-Install Gitc
+Install Git:
 
         sudo apt-get install git
 
