@@ -455,7 +455,7 @@ class PoolingLayer : public Layer<Dtype> {
   /// @brief The spatial dimensions of the input.
   Blob<int> input_shape_;
   /// @brief The spatial dimensions of the output.
-  vector<int> output_shape_;
+  Blob<int> output_shape_;
 
   int num_spatial_axes_;
   int bottom_dim_;
@@ -463,6 +463,7 @@ class PoolingLayer : public Layer<Dtype> {
 
   int channel_axis_;
   int channels_;
+  int num_;
   bool global_pooling_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;

@@ -5,35 +5,65 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
-
+#define MAX_SPATIAL_AXES 10
 namespace caffe {
 
 template <typename Dtype>
 __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
-    const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, const int pad_h, const int pad_w, Dtype* top_data,
+    int num, int channels,int num_axes, const int* im_shape, const int* pooled_shape,
+    const int* kernel_shape, const int* stride, const int* pad, Dtype* top_data,
     int* mask, Dtype* top_mask) {
+    
+    int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int input_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int stops[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
   CUDA_KERNEL_LOOP(index, nthreads) {
-    int pw = index % pooled_width;
-    int ph = (index / pooled_width) % pooled_height;
-    int c = (index / pooled_width / pooled_height) % channels;
-    int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h - pad_h;
-    int wstart = pw * stride_w - pad_w;
-    int hend = min(hstart + kernel_h, height);
-    int wend = min(wstart + kernel_w, width);
-    hstart = max(hstart, 0);
-    wstart = max(wstart, 0);
+
+    // ind2sub
+    int k = index;
+    for (int i = num_axes-1; i >=0 ;--i) {
+      pool_loc[i] = k % pooled_shape[i];
+      k /= pooled_shape[i];
+    }
+    int c = k % channels;
+    int n = k / channels;
+    // Get starts and calc size (sub2ind)
+    int start = 1;
+    int stop = 1;
+    int im_size = 1;
+    for (int i = 0; i < num_axes; ++i) { 
+      starts[i] = pool_loc[i]*stride[i] - pad[i];
+      stops[i] = min(starts[i]+kernel_shape[i], im_shape[i+1]);
+      starts[i] = max(starts[i],0);
+      stops[i] = min(stops[i],im_shape[i+1]);
+      if (i!=0) {
+        start = start*im_shape[i+1]+starts[i];
+        stop = stop*im_shape[i+1]+stops[i];
+      } else {
+        start = starts[0];
+        stop = stops[0];
+      }
+      im_size *= im_shape[i+1];
+    }
+    // get input kernel and compute pool
     Dtype maxval = -FLT_MAX;
     int maxidx = -1;
-    bottom_data += (n * channels + c) * height * width;
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        if (bottom_data[h * width + w] > maxval) {
-          maxidx = h * width + w;
-          maxval = bottom_data[maxidx];
+    bottom_data += (n * channels + c) * im_size;
+    for (int input_index = start; input_index < stop; ++input_index){
+      bool in_range = true;
+      // ind2sub
+      int m = input_index;
+      for (int j = num_axes-1;j>=0;--j) {
+        input_loc[j] = m % im_shape[j+1];
+        m /= im_shape[j+1];
+        in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < stops[j]);
+        if (!in_range) { break; }
+      }
+      if (in_range){
+        if (bottom_data[input_index] > maxval) {
+          maxval = bottom_data[input_index];
+          maxidx = input_index;
         }
       }
     }
@@ -42,74 +72,147 @@ __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
       mask[index] = maxidx;
     } else {
       top_mask[index] = maxidx;
-    }
+    } 
   }
 }
 
 template <typename Dtype>
 __global__ void AvePoolForward(const int nthreads, const Dtype* bottom_data,
-    const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, const int pad_h, const int pad_w, Dtype* top_data) {
+    int num, int channels,int num_axes, const int* im_shape, const int* pooled_shape,
+    const int* kernel_shape, const int* stride, const int* pad, Dtype* top_data) {
+    int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int input_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int stops[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
   CUDA_KERNEL_LOOP(index, nthreads) {
-    int pw = index % pooled_width;
-    int ph = (index / pooled_width) % pooled_height;
-    int c = (index / pooled_width / pooled_height) % channels;
-    int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h - pad_h;
-    int wstart = pw * stride_w - pad_w;
-    int hend = min(hstart + kernel_h, height + pad_h);
-    int wend = min(wstart + kernel_w, width + pad_w);
-    int pool_size = (hend - hstart) * (wend - wstart);
-    hstart = max(hstart, 0);
-    wstart = max(wstart, 0);
-    hend = min(hend, height);
-    wend = min(wend, width);
-    Dtype aveval = 0;
-    bottom_data += (n * channels + c) * height * width;
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        aveval += bottom_data[h * width + w];
+    // ind2sub
+    int k = index;
+    for (int i = num_axes-1; i >=0 ;--i) {
+      pool_loc[i] = k % pooled_shape[i];
+      k /= pooled_shape[i];
+    }
+    int c = k % channels;
+    int n = k / channels;
+
+    // Get starts and calc size (sub2ind)
+    int pool_size = 1;
+    int start = 1;
+    int stop = 1;
+    int im_size = 1;
+
+    for (int i = 0; i < num_axes; ++i) {
+      starts[i] = pool_loc[i]*stride[i] - pad[i];
+      stops[i] = min(starts[i]+kernel_shape[i], im_shape[i+1] + pad[i]);
+      int s1 = stops[i];
+      int s2 = starts[i];
+      // if (index ==6)
+      //   printf("org [%d] %d %d ",i,s2,s1);
+      pool_size *= (s1 - s2);
+      starts[i] = max(starts[i],0);
+      if (i!=0) {
+        start = start*im_shape[i+1]+starts[i];
+        stop = stop*im_shape[i+1]+stops[i];
+      } else {
+        start = starts[0];
+        stop = stops[0];
       }
+      stops[i] = min(stops[i],im_shape[i+1]);
+      im_size *= im_shape[i+1];
+
+    }
+
+    Dtype aveval = 0;
+    bottom_data += (n * channels + c) * im_size;
+    for (int input_index = start; input_index < stop; ++input_index){
+      bool in_range = true;
+      // ind2sub
+      int m = input_index;
+      for (int j = num_axes-1;j>=0;--j) {
+        input_loc[j] = m % im_shape[j+1];
+        m /= im_shape[j+1];
+        in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < stops[j]);
+        if (!in_range) { break; }
+      }
+      if (in_range){
+        aveval += bottom_data[input_index];
+      } 
     }
     top_data[index] = aveval / pool_size;
   }
 }
 
 template <typename Dtype>
-__global__ void StoPoolForwardTrain(const int nthreads,
-    const Dtype* bottom_data,
-    const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* rand_idx, Dtype* top_data) {
+__global__ void StoPoolForwardTrain(const int nthreads, const Dtype* bottom_data,
+    int num, int channels,int num_axes, const int* im_shape, const int* pooled_shape,
+    const int* kernel_shape, const int* stride, Dtype* rand_idx, Dtype* top_data) {
+    int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int input_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int stops[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
   CUDA_KERNEL_LOOP(index, nthreads) {
-    int pw = index % pooled_width;
-    int ph = (index / pooled_width) % pooled_height;
-    int c = (index / pooled_width / pooled_height) % channels;
-    int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h;
-    int hend = min(hstart + kernel_h, height);
-    int wstart = pw * stride_w;
-    int wend = min(wstart + kernel_w, width);
+    // ind2sub
+    int k = index;
+    for (int i = num_axes-1; i >=0 ;--i) {
+      pool_loc[i] = k % pooled_shape[i];
+      k /= pooled_shape[i];
+    }
+    int c = k % channels;
+    int n = k / channels;
+
+    // Get starts and calc size (sub2ind)
+    int pool_size = 1;
+    int start = 1;
+    int stop = 1;
+    int im_size = 1;
+    for (int i = 0; i < num_axes; ++i) {
+      starts[i] = pool_loc[i]*stride[i];
+      stops[i] = min(starts[i]+kernel_shape[i] , im_shape[i+1]);
+      int s1 = stops[i];
+      int s2 = starts[i];
+      pool_size *= (s1 - s2);
+      im_size *= im_shape[i+1];
+      if (i!=0) {
+        start = start*im_shape[i+1]+starts[i];
+        stop = stop*im_shape[i+1]+stops[i];
+      } else {
+        start = starts[0];
+        stop = stops[0];
+      }
+    }
     Dtype cumsum = 0.;
-    bottom_data += (n * channels + c) * height * width;
+    bottom_data += (n * channels + c) * im_size;
     // First pass: get sum
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        cumsum += bottom_data[h * width + w];
+    for (int input_index = start; input_index < stop; ++input_index){
+      bool in_range = true;
+      // ind2sub
+      int m = input_index;
+      for (int j = num_axes-1;j>=0;--j) {
+        input_loc[j] = m % im_shape[j+1];
+        m /= im_shape[j+1];
+        in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < stops[j]);
+        if (!in_range) { break;}
+      }
+      if (in_range){
+        cumsum += bottom_data[input_index];
       }
     }
     float thres = rand_idx[index] * cumsum;
     // Second pass: get value, and set index.
     cumsum = 0;
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        cumsum += bottom_data[h * width + w];
+    for (int input_index = start; input_index < stop; ++input_index){
+      bool in_range = true;
+      // ind2sub
+      int m = input_index;
+      for (int j = num_axes-1;j>=0;--j) {
+        input_loc[j] = m % im_shape[j+1];
+        m /= im_shape[j+1];
+       in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < stops[j]);
+        if (!in_range) { break;}
+      }
+      if (in_range){
         if (cumsum >= thres) {
-          rand_idx[index] = ((n * channels + c) * height + h) * width + w;
-          top_data[index] = bottom_data[h * width + w];
+          rand_idx[index] = ((n * channels + c) * im_size) + input_index;
+          top_data[index] = bottom_data[input_index];
           return;
         }
       }
@@ -119,30 +222,61 @@ __global__ void StoPoolForwardTrain(const int nthreads,
 
 
 template <typename Dtype>
-__global__ void StoPoolForwardTest(const int nthreads,
-    const Dtype* bottom_data,
-    const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* top_data) {
+__global__ void StoPoolForwardTest(const int nthreads, const Dtype* bottom_data,
+    int num, int channels, int num_axes, const int* im_shape, const int* pooled_shape,
+    const int* kernel_shape, const int* stride, Dtype* top_data) {
+    int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int input_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int stops[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
   CUDA_KERNEL_LOOP(index, nthreads) {
-    int pw = index % pooled_width;
-    int ph = (index / pooled_width) % pooled_height;
-    int c = (index / pooled_width / pooled_height) % channels;
-    int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h;
-    int hend = min(hstart + kernel_h, height);
-    int wstart = pw * stride_w;
-    int wend = min(wstart + kernel_w, width);
-    // We set cumsum to be 0 to avoid divide-by-zero problems
+    // ind2sub
+    int k = index;
+    for (int i = num_axes-1; i >=0 ;--i) {
+      pool_loc[i] = k % pooled_shape[i];
+      k /= pooled_shape[i];
+    }
+    int c = k % channels;
+    int n = k / channels;
+
+    // Get starts and calc size (sub2ind)
+    int pool_size = 1;
+    int start = 1;
+    int stop = 1;
+    int im_size = 1;
+    for (int i = 0; i < num_axes; ++i) {
+      starts[i] = pool_loc[i]*stride[i];
+      stops[i] = min(starts[i]+kernel_shape[i] , im_shape[i+1]);
+      int s1 = stops[i];
+      int s2 = starts[i];
+      pool_size *= (s1 - s2); 
+      starts[i] = max(starts[i],0);
+      im_size *= im_shape[i+1];
+      if (i!=0) {
+        start = start*im_shape[i+1]+starts[i];
+        stop = stop*im_shape[i+1]+stops[i];
+      } else {
+        start = starts[0];
+        stop = stops[0];
+      }
+    }
     Dtype cumsum = FLT_MIN;
     Dtype cumvalues = 0.;
-    bottom_data += (n * channels + c) * height * width;
+    bottom_data += (n * channels + c) * im_size;
     // First pass: get sum
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        cumsum += bottom_data[h * width + w];
-        cumvalues += bottom_data[h * width + w] * bottom_data[h * width + w];
+    for (int input_index = start; input_index < stop; ++input_index){
+      bool in_range = true;
+      // ind2sub
+      int m = input_index;
+      for (int j = num_axes-1;j>=0;--j) {
+        input_loc[j] = m % im_shape[j+1];
+        m /= im_shape[j+1];
+        in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < stops[j]);
+        if (!in_range) { break;}
+      }
+      if (in_range){
+        cumsum += bottom_data[input_index];
+        cumvalues += bottom_data[input_index] * bottom_data[input_index];
       }
     }
     top_data[index] = cumvalues / cumsum;
@@ -160,8 +294,10 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const bool use_top_mask = top.size() > 1;
   int* mask = NULL;
   Dtype* top_mask = NULL;
+  
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
+  // printf("Forward_gpuMAX\n");
     if (use_top_mask) {
       top_mask = top[1]->mutable_gpu_data();
     } else {
@@ -169,17 +305,17 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
+        count, bottom_data, num_, channels_, num_spatial_axes_,
+        input_shape_.gpu_data(), output_shape_.gpu_data(), kernel_shape_.gpu_data(),
+        stride_.gpu_data(), pad_.gpu_data(), top_data,
         mask, top_mask);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
     AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
+        count, bottom_data,  num_, channels_, num_spatial_axes_,
+        input_shape_.gpu_data(), output_shape_.gpu_data(), kernel_shape_.gpu_data(),
+        stride_.gpu_data(), pad_.gpu_data(), top_data);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     if (this->phase_ == TRAIN) {
@@ -189,17 +325,17 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       // NOLINT_NEXT_LINE(whitespace/operators)
       StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count),
                                    CAFFE_CUDA_NUM_THREADS>>>(
-          count, bottom_data, bottom[0]->num(), channels_,
-          height_, width_, pooled_height_, pooled_width_, kernel_h_,
-          kernel_w_, stride_h_, stride_w_,
+        count, bottom_data,  num_, channels_, num_spatial_axes_,
+        input_shape_.gpu_data(), output_shape_.gpu_data(), kernel_shape_.gpu_data(),
+        stride_.gpu_data(),
           rand_idx_.mutable_gpu_data(), top_data);
     } else {
       // NOLINT_NEXT_LINE(whitespace/operators)
       StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count),
                                   CAFFE_CUDA_NUM_THREADS>>>(
-          count, bottom_data, bottom[0]->num(), channels_,
-          height_, width_, pooled_height_, pooled_width_, kernel_h_,
-          kernel_w_, stride_h_, stride_w_, top_data);
+          count, bottom_data,  num_, channels_, num_spatial_axes_,
+        input_shape_.gpu_data(), output_shape_.gpu_data(), kernel_shape_.gpu_data(),
+        stride_.gpu_data(), top_data);
     }
     break;
   default:
@@ -211,82 +347,188 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
-    const int* mask, const Dtype* top_mask, const int num, const int channels,
-    const int height, const int width, const int pooled_height,
-    const int pooled_width, const int kernel_h, const int kernel_w,
-    const int stride_h, const int stride_w, const int pad_h, const int pad_w,
+    const int* mask, const Dtype* top_mask, int num, 
+    int channels, int num_axes, const int* im_shape, const int* pooled_shape,
+    const int* kernel_shape, const int* stride, const int* pad,
     Dtype* bottom_diff) {
+    int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int im_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int ends[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+
   CUDA_KERNEL_LOOP(index, nthreads) {
-    // find out the local index
-    // find out the local offset
-    int w = index % width;
-    int h = (index / width) % height;
-    int c = (index / width / height) % channels;
-    int n = index / width / height / channels;
-    int phstart =
-        (h + pad_h < kernel_h) ? 0 : (h + pad_h - kernel_h) / stride_h + 1;
-    int phend = min((h + pad_h) / stride_h + 1, pooled_height);
-    int pwstart =
-        (w + pad_w < kernel_w) ? 0 : (w + pad_w - kernel_w) / stride_w + 1;
-    int pwend = min((w + pad_w) / stride_w + 1, pooled_width);
-    Dtype gradient = 0;
-    int offset = (n * channels + c) * pooled_height * pooled_width;
-    top_diff += offset;
-    if (mask) {
-      mask += offset;
-      for (int ph = phstart; ph < phend; ++ph) {
-        for (int pw = pwstart; pw < pwend; ++pw) {
-          if (mask[ph * pooled_width + pw] == h * width + w) {
-            gradient += top_diff[ph * pooled_width + pw];
-          }
-        }
+    int k = index;
+    for (int i = num_axes-1; i >=0 ;--i) {
+      im_loc[i] = k % im_shape[i+1];
+      k /= im_shape[i+1];
+    }
+    int c = k % channels;
+    int n = k / channels;
+    int shift_size = 1;
+    int start, end;
+    for (int i = 0; i < num_axes; ++i) {
+      starts[i] = (im_loc[i]+pad[i] < kernel_shape[i]) ? 0 : (im_loc[i] + pad[i] - kernel_shape[i]) / stride[i] + 1;
+      ends[i] = min((im_loc[i]+pad[i]) / stride[i] + 1, pooled_shape[i]);
+      shift_size *= pooled_shape[i];
+      if (num_axes > 0) {
+        if (i!=0) {
+          start = start*pooled_shape[i]+starts[i];
+          end = end*pooled_shape[i]+ends[i];
+        } else {
+          start = starts[0];
+          end = ends[0];
       }
-    } else {
-      top_mask += offset;
-      for (int ph = phstart; ph < phend; ++ph) {
-        for (int pw = pwstart; pw < pwend; ++pw) {
-          if (top_mask[ph * pooled_width + pw] == h * width + w) {
-            gradient += top_diff[ph * pooled_width + pw];
-          }
-        }
       }
     }
+    Dtype gradient = 0;
+    bool use_top_mask = !(mask);
+    int offset = (n * channels + c) * shift_size;
+    top_diff += offset;
+    mask += offset;
+    top_mask += offset;
+    if (num_axes == 2){
+      for (int ph = starts[0]; ph < ends[0]; ++ph) {
+        for (int pw = starts[1]; pw < ends[1]; ++pw) {
+          const int top_index = ph * pooled_shape[1] + pw;
+          const int im_index = im_loc[0] * im_shape[2] + im_loc[1];
+          const int index_match = 
+                use_top_mask ? top_mask[top_index] : mask[top_index];
+          if (index_match == im_index)
+              gradient += top_diff[top_index];
+        }
+      }
+    } else if (num_axes == 3) {
+          for (int ph = starts[0]; ph < ends[0]; ++ph) {
+            for (int pw = starts[1]; pw < ends[1]; ++pw) {
+              for (int pz = starts[2]; pz < ends[2]; ++pz) {
+                const int top_index = (ph * pooled_shape[1] + pw)*pooled_shape[2]+pz;
+                const int im_index = (im_loc[0] * im_shape[2] + im_loc[1])*im_shape[3]+im_loc[2];
+                const int index_match =
+                      use_top_mask ? top_mask[top_index] : mask[top_index];
+                if (index_match == im_index)
+                    gradient += top_diff[top_index];
+              }
+            }
+          }
+    } else {
+        // ND is slower...
+        for (int pool_index = start; pool_index < end; ++pool_index){
+          bool in_range = true;
+          // ind2sub
+          int m = pool_index;
+          for (int j = num_axes-1;j>=0;--j) {
+            pool_loc[j] = m % pooled_shape[j];
+            m /= pooled_shape[j];
+            in_range &= (m<pooled_shape[j])&&(pool_loc[j] >= starts[j]) && (pool_loc[j] < ends[j]);
+            //if (!in_range) { break;}
+          }
+          if (in_range){
+            int im_index = im_loc[0];
+            for (int i=1; i< num_axes; ++i){
+              im_index = im_index*im_shape[i+1]+im_loc[i];
+            }
+            const int index_match =
+                        use_top_mask ? top_mask[pool_index] : mask[pool_index];
+            if (index_match == im_index)
+                gradient += top_diff[pool_index];
+          }
+        }
+    }
     bottom_diff[index] = gradient;
+
   }
 }
 
 template <typename Dtype>
 __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
-    const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, const int pad_h, const int pad_w,
+    int num, int channels, int num_axes, const int* im_shape, const int* pooled_shape,
+    const int* kernel_shape, const int* stride, const int* pad,
     Dtype* bottom_diff) {
+    int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int im_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int ends[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
   CUDA_KERNEL_LOOP(index, nthreads) {
-    // find out the local index
-    // find out the local offset
-    int w = index % width + pad_w;
-    int h = (index / width) % height + pad_h;
-    int c = (index / width / height) % channels;
-    int n = index / width / height / channels;
-    int phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;
-    int phend = min(h / stride_h + 1, pooled_height);
-    int pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;
-    int pwend = min(w / stride_w + 1, pooled_width);
-    Dtype gradient = 0;
-    top_diff += (n * channels + c) * pooled_height * pooled_width;
-    for (int ph = phstart; ph < phend; ++ph) {
-      for (int pw = pwstart; pw < pwend; ++pw) {
-        // figure out the pooling size
-        int hstart = ph * stride_h - pad_h;
-        int wstart = pw * stride_w - pad_w;
-        int hend = min(hstart + kernel_h, height + pad_h);
-        int wend = min(wstart + kernel_w, width + pad_w);
-        int pool_size = (hend - hstart) * (wend - wstart);
-        gradient += top_diff[ph * pooled_width + pw] / pool_size;
+    // ind2sub
+    int k = index;
+    for (int i = num_axes-1; i >=0 ;--i) {
+      im_loc[i] = (k % im_shape[i+1])+pad[i];
+      k /= im_shape[i+1];
+    }
+    int c = k % channels;
+    int n = k / channels;
+    int shift_size = 1;
+    int start = 1;
+    int stop = 1;
+    for (int i = 0; i < num_axes; ++i) {
+      starts[i] = (im_loc[i] < kernel_shape[i]) ? 0 : (im_loc[i] - kernel_shape[i]) / stride[i] + 1;
+      ends[i] = min(im_loc[i] / stride[i] + 1, pooled_shape[i]);
+      shift_size *= pooled_shape[i];
+      if (num_axes > 3){
+        // obtain the stop index for ND calculation.
+        if (i!=0) {
+          start = start*pooled_shape[i]+starts[i];
+          stop = stop*pooled_shape[i]+ends[i];
+        } else {
+          start = starts[0];
+          stop = ends[0];
+        }
       }
     }
-    bottom_diff[index] = gradient;
+    int pool_size;
+    Dtype gradient = 0;
+    top_diff += (n * channels + c) * shift_size;
+    if (num_axes == 2) {
+      for (int ph = starts[0]; ph < ends[0]; ++ph) {
+        for (int pw = starts[1]; pw < ends[1]; ++pw) {
+          int hstart = ph * stride[0] - pad[0];
+          int wstart = pw * stride[1] - pad[1];
+          int hend = min(hstart + kernel_shape[0], im_shape[1] + pad[0]);
+          int wend = min(wstart + kernel_shape[1], im_shape[2] + pad[1]);
+          pool_size = (hend - hstart) * (wend - wstart);
+          gradient += top_diff[ph * pooled_shape[1] + pw] / pool_size;
+        }
+      }
+    } else if (num_axes == 3) {
+      for (int ph = starts[0]; ph < ends[0]; ++ph) {
+        for (int pw = starts[1]; pw < ends[1]; ++pw) {
+          for (int pz = starts[2]; pz < ends[2]; ++pz) {
+            int hstart = ph * stride[0] - pad[0];
+            int wstart = pw * stride[1] - pad[1];
+            int zstart = pz * stride[2] - pad[2];
+            int hend = min(hstart + kernel_shape[0], im_shape[1] + pad[0]);
+            int wend = min(wstart + kernel_shape[1], im_shape[2] + pad[1]);
+            int zend = min(wstart + kernel_shape[2], im_shape[3] + pad[2]);
+            pool_size = (hend - hstart) * (wend - wstart)*(zend - zstart);
+            gradient += top_diff[(ph * pooled_shape[1] + pw)*pooled_shape[2]+pz] / pool_size;
+          }
+        }
+      }
+    } else {
+      // ND loop (much slower)
+        for (int pool_index = start; pool_index < stop; ++pool_index){
+          bool in_range = true;
+          // ind2sub
+          int m = pool_index;
+          for (int j = num_axes-1;j>=0;--j) {
+            pool_loc[j] = m % pooled_shape[j];
+            m /= pooled_shape[j];
+            in_range &= (m<pooled_shape[j])&&(pool_loc[j] >= starts[j]) && (pool_loc[j] < ends[j]);
+            if (!in_range) { break;}
+          }
+          if (in_range){
+            pool_size = 1;
+            for (int i=0; i< num_axes; ++i){
+              int pstart = pool_loc[i]*stride[i]-pad[i];
+              int pend = min(pstart + kernel_shape[i], im_shape[i+1] + pad[i]);
+              pool_size *= (pend - pstart); 
+            }
+            gradient += top_diff[pool_index] / pool_size;
+          }
+        }
+    }
+ bottom_diff[index] = gradient;
+
   }
 }
 
@@ -294,29 +536,72 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* top_diff,
 template <typename Dtype>
 __global__ void StoPoolBackward(const int nthreads,
     const Dtype* rand_idx, const Dtype* top_diff,
-    const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* bottom_diff) {
+    int num, int channels, int num_axes, const int* im_shape, const int* pooled_shape,
+    const int* kernel_shape, const int* stride, Dtype* bottom_diff) {
+    int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int im_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int ends[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
   CUDA_KERNEL_LOOP(index, nthreads) {
-    // find out the local index
-    // find out the local offset
-    int w = index % width;
-    int h = (index / width) % height;
-    int c = (index / width / height) % channels;
-    int n = index / width / height / channels;
-    int phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;
-    int phend = min(h / stride_h + 1, pooled_height);
-    int pwstart = (w < kernel_w) ? 0 : (w - kernel_w) / stride_w + 1;
-    int pwend = min(w / stride_w + 1, pooled_width);
-    Dtype gradient = 0;
-    rand_idx += (n * channels + c) * pooled_height * pooled_width;
-    top_diff += (n * channels + c) * pooled_height * pooled_width;
-    for (int ph = phstart; ph < phend; ++ph) {
-      for (int pw = pwstart; pw < pwend; ++pw) {
-        gradient += top_diff[ph * pooled_width + pw] *
-            (index == static_cast<int>(rand_idx[ph * pooled_width + pw]));
+    // ind2sub
+    int k = index;
+    for (int i = num_axes-1; i >=0 ;--i) {
+      im_loc[i] = (k % im_shape[i+1]);
+      k /= im_shape[i+1];
+    }
+    int c = k % channels;
+    int n = k / channels;
+    int shift_size = 1;
+    int start, end;
+    for (int i = 0; i < num_axes; ++i) {
+      starts[i] = (im_loc[i] < kernel_shape[i]) ? 0 : (im_loc[i] - kernel_shape[i]) / stride[i] + 1;
+      ends[i] = min((im_loc[i]) / stride[i] + 1, pooled_shape[i]);
+      shift_size *= pooled_shape[i];
+      if (num_axes > 3) {
+        if (i!=0) {
+          start = start*pooled_shape[i]+starts[i];
+          end = end*pooled_shape[i]+ends[i];
+        } else {
+          start = starts[0];
+          end = ends[0];
+        }
       }
+    }
+    Dtype gradient = 0;
+    rand_idx += (n * channels + c) * shift_size;
+    top_diff += (n * channels + c) * shift_size;
+    if (num_axes == 2){
+      for (int ph = starts[0]; ph < ends[0]; ++ph) {
+        for (int pw = starts[1]; pw < ends[1]; ++pw) {
+          gradient += top_diff[ph * pooled_shape[1] + pw] *
+            (index == static_cast<int>(rand_idx[ph * pooled_shape[1] + pw]));
+        }
+      }
+    } else if (num_axes == 3){
+      for (int ph = starts[0]; ph < ends[0]; ++ph) {
+        for (int pw = starts[1]; pw < ends[1]; ++pw) {
+          for (int pz = starts[2]; pz < ends[2]; ++pz) {
+            gradient += top_diff[(ph * pooled_shape[1] + pw)*pooled_shape[2]+pz] *
+              (index == static_cast<int>(rand_idx[(ph * pooled_shape[1] + pw)*pooled_shape[2]+pz]));
+          }
+        }
+      }
+    } else {
+        for (int pool_index = start; pool_index < end; ++pool_index){
+          bool in_range = true;
+          // ind2sub
+          int m = pool_index;
+          for (int j = num_axes-1;j>=0;--j) {
+            pool_loc[j] = m % pooled_shape[j];
+            m /= pooled_shape[j];
+            in_range &= (m<pooled_shape[j])&&(pool_loc[j] >= starts[j]) && (pool_loc[j] < ends[j]);
+            if (!in_range) { break;}
+          }
+          if (in_range){
+             gradient += top_diff[pool_index] *
+              (index == static_cast<int>(rand_idx[pool_index]));
+          }
+        }
     }
     bottom_diff[index] = gradient;
   }
@@ -337,6 +622,8 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;
   const Dtype* top_mask = NULL;
+  const int* kernel_shape = kernel_shape_.gpu_data();
+  int top_num = top[0]->count(0, channel_axis_);
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     if (use_top_mask) {
@@ -346,24 +633,25 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, mask, top_mask, top[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_,
-        kernel_h_, kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
+        count, top_diff, mask, top_mask, top_num, channels_, num_spatial_axes_,
+        input_shape_.gpu_data(), output_shape_.gpu_data(), kernel_shape_.gpu_data(),
+          stride_.gpu_data(), pad_.gpu_data(),
         bottom_diff);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
     AvePoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, top[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
+        count, top_diff, top_num, channels_, num_spatial_axes_,
+        input_shape_.gpu_data(), output_shape_.gpu_data(), kernel_shape_.gpu_data(),
+          stride_.gpu_data(), pad_.gpu_data(), bottom_diff);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
     // NOLINT_NEXT_LINE(whitespace/operators)
     StoPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, rand_idx_.gpu_data(), top_diff,
-        top[0]->num(), channels_, height_, width_, pooled_height_,
-        pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_,
+        top_num, channels_, num_spatial_axes_,
+        input_shape_.gpu_data(), output_shape_.gpu_data(), kernel_shape_.gpu_data(),
+          stride_.gpu_data(),
         bottom_diff);
     break;
   default:
