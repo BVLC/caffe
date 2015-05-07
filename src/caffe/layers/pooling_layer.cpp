@@ -145,47 +145,49 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
-      << "corresponding to (num, channels, height, width)";
-  channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
+  PoolingParameter pool_param = this->layer_param_.pooling_param();
+  channel_axis_ = bottom[0]->CanonicalAxisIndex(pool_param.axis());
+  const int first_spatial_axis = channel_axis_ + 1;
+  const int num_axes = bottom[0]->num_axes();
+  num_spatial_axes_ = num_axes - first_spatial_axis;
+  CHECK_GE(num_spatial_axes_, 1);
+  const int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
   if (global_pooling_) {
-    kernel_h_ = bottom[0]->height();
-    kernel_w_ = bottom[0]->width();
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      kernel_shape_data[i] *= bottom[0]->shape(channel_axis_ + i);
+      }
   }
-  pooled_height_ = static_cast<int>(ceil(static_cast<float>(
-      height_ + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
-  pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      width_ + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
-  if (pad_h_ || pad_w_) {
-    // If we have padding, ensure that the last pooling starts strictly
-    // inside the image (instead of at the padding); otherwise clip the last.
-    if ((pooled_height_ - 1) * stride_h_ >= height_ + pad_h_) {
-      --pooled_height_;
+  //compute output shape
+  int* pad_data = this->pad_.cpu_data();
+  int* stride_data = this->stride_.cpu_data();
+  int* input_shape_data = this->input_shape_.cpu_data();
+  this->output_shape_.clear();
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+    this->output_shape_[i] *= static_cast<int>(ceil(static_cast<float>(
+          input_shape_data[i] + 2 * pad_data[i] - kernel_shape_data[i]) / stride_data[i])) + 1;
+    if( pad_data[i]) {
+        if ( (this->output_shape_[i] -1) * stride_data[i] >= input_shape_data[i] + pad_data[i] )
+            --input_shape_data[i];
+        CHECK_LT((this->output_shape_[i] -1) * stride_data[i],input_shape_data[i] + pad_data[i]);
     }
-    if ((pooled_width_ - 1) * stride_w_ >= width_ + pad_w_) {
-      --pooled_width_;
-    }
-    CHECK_LT((pooled_height_ - 1) * stride_h_, height_ + pad_h_);
-    CHECK_LT((pooled_width_ - 1) * stride_w_, width_ + pad_w_);
   }
-  top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_);
-  if (top.size() > 1) {
-    top[1]->ReshapeLike(*top[0]);
+  
+  vector<int> top_shape = bottom[0]->shape();
+  top_shape.resize(first_spatial_axis);  // Discard input spatial axes.
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+      top_shape.push_back(this->output_shape_[i]);
   }
+  top[0]->Reshape(top_shape);
+
   // If max pooling, we will initialize the vector index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_MAX && top.size() == 1) {
-    max_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-        pooled_width_);
+    max_idx_.Reshape(top_shape);
   }
   // If stochastic pooling, we will initialize the random index part.
   if (this->layer_param_.pooling_param().pool() ==
       PoolingParameter_PoolMethod_STOCHASTIC) {
-    rand_idx_.Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_);
+    rand_idx_.Reshape(top_shape);
   }
 }
 
