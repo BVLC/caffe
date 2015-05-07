@@ -17,64 +17,128 @@ template <typename Dtype>
 void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
-  if (pool_param.global_pooling()) {
-    CHECK(!(pool_param.has_kernel_size() ||
-      pool_param.has_kernel_h() || pool_param.has_kernel_w()))
-      << "With Global_pooling: true Filter size cannot specified";
-  } else {
-    CHECK(!pool_param.has_kernel_size() !=
-      !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
-      << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-    CHECK(pool_param.has_kernel_size() ||
-      (pool_param.has_kernel_h() && pool_param.has_kernel_w()))
-      << "For non-square filters both kernel_h and kernel_w are required.";
+  //find channel axis and compute spatial axes constants
+  channel_axis_ = bottom[0]->CanonicalAxisIndex(pool_param.axis());
+  channels_ = bottom[0]->shape(channel_axis_);
+  const int first_spatial_axis = channel_axis_ + 1;
+  const int num_axes = bottom[0]->num_axes();
+  num_spatial_axes_ = num_axes - first_spatial_axis;
+  CHECK_GE(num_spatial_axes_, 1);
+  // Setup input dimensions (input_shape_).
+  vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
+  input_shape_.Reshape(bottom_dim_blob_shape);
+  int* input_shape_data = input_shape_.mutable_cpu_data();
+  for (int i = 0; i < num_spatial_axes_ + 1; ++i) {
+    input_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
   }
-  CHECK((!pool_param.has_pad() && pool_param.has_pad_h()
-      && pool_param.has_pad_w())
-      || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
-      << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!pool_param.has_stride() && pool_param.has_stride_h()
-      && pool_param.has_stride_w())
-      || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
-      << "Stride is stride OR stride_h and stride_w are required.";
+  vector<int> spatial_dim_blob_shape(1, num_spatial_axes_);
+
   global_pooling_ = pool_param.global_pooling();
+  // Setup filter kernel dimensions (kernel_shape_).
+  kernel_shape_.Reshape(spatial_dim_blob_shape);
+  int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
   if (global_pooling_) {
-    kernel_h_ = bottom[0]->height();
-    kernel_w_ = bottom[0]->width();
+    //if global pooling height and width are set the entire blob, 
+    //and the layer cannot have a kernel set
+    CHECK_GE(0, pool_param.kernel_size_size())
+        << "With Global_pooling: true Filter size cannot specified.";
+    CHECK(pool_param.has_kernel_h() || pool_param.has_kernel_w())
+        << "With Global_pooling: true Filter size cannot specified.";
+    kernel_shape_data = bottom[0]->shape();
   } else {
-    if (pool_param.has_kernel_size()) {
-      kernel_h_ = kernel_w_ = pool_param.kernel_size();
-    } else {
-      kernel_h_ = pool_param.kernel_h();
-      kernel_w_ = pool_param.kernel_w();
+     //if kernel_h or kernel_w are set we cannot set the kernel another way
+     //And there must be 2 spatial dims
+    if (pool_param.has_kernel_h() || pool_param.has_kernel_w()) {
+        CHECK_EQ(num_spatial_axes_, 2)
+            << "kernel_h & kernel_w can only be used for 2D pooling.";
+        CHECK_EQ(0, pool_param.kernel_size_size())
+            << "Either kernel_size or kernel_h/w should be specified; not both.";
+        kernel_shape_data[0] = pool_param.kernel_h();
+        kernel_shape_data[1] = pool_param.kernel_w();
+      } else {
+        //using repeated kernel param
+        const int num_kernel_dims = pool_param.kernel_size_size();
+        CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_)
+            << "kernel_size must be specified once, or once per spatial dimension "
+            << "(kernel_size specified " << num_kernel_dims << " times; "
+            << num_spatial_axes_ << " spatial dims);";
+        for (int i = 0; i < num_spatial_axes_; ++i) {
+            kernel_shape_data[i] =
+                pool_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
+          }
+      }
+  }
+  for (int i = 0; i < num_spatial_axes_; ++i) {
+      CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
+  }
+
+  // setup padding dimensions (pad_)
+  pad_.Reshape(spatial_dim_blob_shape);
+  int* pad_data = pad_.mutable_cpu_data();
+  int pad_sum = 0;
+  if (pool_param.has_pad_h() || pool_param.has_pad_w()) {
+      //if pad_h or pad_w are set we cannot set the pad another way
+      //And there must be 2 spatial dims
+      CHECK_EQ(num_spatial_axes_, 2)
+        << "pad_h & pad_w can only be used for 2D convolution.";
+      CHECK_EQ(0, pool_param.pad_size())
+        << "Either pad or pad_h/w should be specified; not both.";
+      pad_data[0] = pool_param.pad_h();
+      pad_data[1] = pool_param.pad_w();
+  } else {
+    //using repeated pad param
+    const int num_pad_dims = pool_param.pad_size();
+    CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
+          num_pad_dims == num_spatial_axes_)
+        << "pad must be specified once, or once per spatial dimension "
+        << "(pad specified " << num_pad_dims << " times; "
+        << num_spatial_axes_ << " spatial dims);";
+    const int kDefaultPad = 0;
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
+          pool_param.pad((num_pad_dims == 1) ? 0 : i);
+      if (global_pooling_) {
+          CHECK(pad_data[i] == 0)
+            << "With Global_pooling: true; pool = 0";
+        }
+      CHECK_LT(pad_data[i], kernel_shape_[i]);
+      pad_sum += pad_data[i];
     }
   }
-  CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
-  CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
-  if (!pool_param.has_pad_h()) {
-    pad_h_ = pad_w_ = pool_param.pad();
-  } else {
-    pad_h_ = pool_param.pad_h();
-    pad_w_ = pool_param.pad_w();
-  }
-  if (!pool_param.has_stride_h()) {
-    stride_h_ = stride_w_ = pool_param.stride();
-  } else {
-    stride_h_ = pool_param.stride_h();
-    stride_w_ = pool_param.stride_w();
-  }
-  if (global_pooling_) {
-    CHECK(pad_h_ == 0 && pad_w_ == 0 && stride_h_ == 1 && stride_w_ == 1)
-      << "With Global_pooling: true; only pad = 0 and stride = 1";
-  }
-  if (pad_h_ != 0 || pad_w_ != 0) {
-    CHECK(this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_AVE
-        || this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_MAX)
+  if (pad_sum != 0 ) {
+     CHECK(this->layer_param_.pooling_param().pool() == PoolingParameter_PoolMethod_AVE
+        || this->layer_param_.pooling_param().pool() == PoolingParameter_PoolMethod_MAX)
         << "Padding implemented only for average and max pooling.";
-    CHECK_LT(pad_h_, kernel_h_);
-    CHECK_LT(pad_w_, kernel_w_);
+      }
+
+// Setup stride dimensions (stride_).
+  stride_.Reshape(spatial_dim_blob_shape);
+  int* stride_data = stride_.mutable_cpu_data();
+  if (pool_param.has_stride_h() || pool_param.has_stride_w()) {
+    CHECK_EQ(num_spatial_axes_, 2)
+        << "stride_h & stride_w can only be used for 2D convolution.";
+    CHECK_EQ(0, pool_param.stride_size())
+        << "Either stride or stride_h/w should be specified; not both.";
+    stride_data[0] = pool_param.stride_h();
+    stride_data[1] = pool_param.stride_w();
+  } else {
+    //using repeated stride param
+    const int num_stride_dims = pool_param.stride_size();
+    CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
+          num_stride_dims == num_spatial_axes_)
+        << "stride must be specified once, or once per spatial dimension "
+        << "(stride specified " << num_stride_dims << " times; "
+        << num_spatial_axes_ << " spatial dims);";
+    const int kDefaultStride = 1;
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+      stride_data[i] = (num_stride_dims == 0) ? kDefaultStride :
+          pool_param.stride((num_stride_dims == 1) ? 0 : i);
+      CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
+      if (global_pooling_) {
+        CHECK(stride_data[i] == 1)
+          << "With Global_pooling: true; stride = 1";
+      }
+    }
   }
 }
 
