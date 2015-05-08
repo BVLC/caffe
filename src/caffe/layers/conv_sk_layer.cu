@@ -63,7 +63,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
 
       // Cheating, for now
-      if (kstride_h_ != 8) {
+      if (kstride_h_ != 23) {
 
         const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
         cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
@@ -115,7 +115,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         const cl_mem weight = (cl_mem) (this->blobs_[0]->gpu_data());
 
         viennacl::ocl::kernel &oclk_ip4 = program.get_kernel(
-            CL_KERNEL_SELECT("convolution_ip4v2"));
+            CL_KERNEL_SELECT("convolution_ip4v3"));
 
         LOG(INFO)<< ctx.devices()[0].max_work_group_size();
 
@@ -124,11 +124,11 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[2];
         LOG(INFO)<< ctx.devices()[0].preferred_vector_width_float();
 
-        oclk_ip4.global_work_size(0, 128);
-        oclk_ip4.global_work_size(1, 128);
+        oclk_ip4.global_work_size(0, 16);
+        oclk_ip4.global_work_size(1, 16);
         oclk_ip4.global_work_size(2, 128);
-        oclk_ip4.local_work_size(0, 128);
-        oclk_ip4.local_work_size(1, 2);
+        oclk_ip4.local_work_size(0, 16);
+        oclk_ip4.local_work_size(1, 16);
         oclk_ip4.local_work_size(2, 1);
 
         viennacl::ocl::enqueue(

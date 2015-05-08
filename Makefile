@@ -214,13 +214,17 @@ ifeq ($(USE_GREENTEA),1)
 		COMMON_FLAGS += -DVIENNACL_DEBUG_ALL
 	endif
 	
+	ifeq ($(GREENTEA_DOUBLE_SUPPORT), 1)
+		COMMON_FLAGS += -DGREENTEA_DOUBLE_SUPPORT
+	endif
+	
 	CL_KERNELS_CPP = src/caffe/greentea/cl_kernels.cpp
 	CL_KERNELS = src/caffe/greentea/cl_kernels/*.cl
 	CL_HEADERS = src/caffe/greentea/cl_headers/*.cl
 	CL_KERNELS_SH = src/caffe/greentea/cl_kernels.sh
 endif
 
-ifeq ($(USE_CUDA),1)
+ifeq ($(USE_CUDA), 1)
 	COMMON_FLAGS += -DUSE_CUDA
 endif
 

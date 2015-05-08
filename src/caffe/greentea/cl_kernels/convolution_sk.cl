@@ -2,80 +2,149 @@
 #include "header.cl"
 #endif
 
-/*
-// Very naive implementation
-__kernel void TEMPLATE(convolution_ip4v0,Dtype)(__global const float *w,
-                                                __global const float *in,
-                                                const int height,
-                                                const int width,
-                                                __global float *out) {
+__kernel void TEMPLATE(convolution_ip4v3,Dtype)(__global const Dtype *w,
+                                                __global const Dtype *in,
+                                                __global Dtype *out) {
 
-  // TESTING
-  // Current tests for IP4.
-  // 10x10 kernel,
-
+  const int width = 200;
+  const int height = 200;
   const int kernel_h = 10;
   const int kernel_w = 10;
-  const int ext_kernel_h = 73;
-  const int ext_kernel_w = 73;
   const int fout_count = 1024;
   const int fin_count = 192;
   const int kstride_h = 8;
   const int kstride_w = 8;
   const int stride_h = 1;
   const int stride_w = 1;
+  const int batch_size = 1;
+  const int buff_w = 73;
+  const int buff_h = 73;
+
+  const int ext_kernel_h = (kernel_h - 1) * kstride_h + 1;
+  const int ext_kernel_w = (kernel_w - 1) * kstride_w + 1;
 
   const int out_h = (height - ext_kernel_h) / stride_h + 1;
   const int out_w = (width - ext_kernel_w) / stride_w + 1;
 
-  // Across y-dimension
-  for (int yoff = get_global_id(2); yoff < height - ext_kernel_h + 1; yoff +=
-      get_global_size(2)) {
+  // Clear the output
+  {
+#pragma unroll 1
+    for (int i =
+        get_global_id(
+            0)+get_global_id(1)*get_global_size(0)+get_global_id(2)*get_global_size(0)*get_global_size(1);
+        i < fout_count * out_h * out_w;
+        i += get_global_size(0) * get_global_size(1) * get_global_size(2)) {
+      out[i] = 0.0;
+    }
+  }
 
-    // Across x-dimension
-    for (int xoff = get_global_id(1); xoff < width - ext_kernel_w + 1; xoff +=
-        get_global_size(1)) {
+  // Local weight buffer (in local memory)
+  __local Dtype wl[10 * 10];
+  // Local input buffer (in local memory)
+  __local Dtype il[73 * 73];
+  // Local accumulators (in registers)
+  Dtype al[2 * 2];
 
-      // Across output features
-      for (int fout = get_global_id(0); fout < fout_count; fout +=
-          get_global_size(0)) {
+  // Across output features
+#pragma unroll 1
+  for (int fout = get_global_id(2); fout < fout_count;
+      fout += get_global_size(2)) {
 
-        int fout_w_ptr = fout * fin_count * kernel_h * kernel_w;
+    // Across input features
+#pragma unroll 1
+    for (int fin = 0; fin < fin_count; ++fin) {
 
-        // Across input features
-        float outval = 0.0;
-        for (int fin = 0; fin < fin_count; ++fin) {
-          // Across the kernel itself
-          int fin_ptr = fin * width * height;
-          int finout_w_ptr = fin * kernel_h * kernel_w + fout_w_ptr;
-          for (int i = 0; i < kernel_h; ++i) {
-            for (int j = 0; j < kernel_w; ++j) {
+      // Load local weights
+#pragma unroll 1
+      for (int i = get_local_id(1); i < kernel_h; i += get_local_size(1)) {
+#pragma unroll 1
+        for (int j = get_local_id(0); j < kernel_w; j += get_local_size(0)) {
+          wl[j + i * kernel_w] = w[j + i * kernel_w
+              + fout * fin_count * kernel_h * kernel_w
+              + fin * kernel_h * kernel_w];
+        }
+      }
 
-              outval += w[j + i * kernel_w + finout_w_ptr]
-                  * in[(xoff + j * kstride_w) + (yoff + i * kstride_h) * width
-                      + fin_ptr];
+      // Across batches (keeps weights in local memory)
+#pragma unroll 1
+      for (int batch = 0; batch < batch_size; ++batch) {
+
+        const int batch_in_off = batch * width * height * fin_count;
+        const int batch_out_off = batch * out_w * out_h * fout_count;
+
+        // Shift the patch window across width and height
+        for (int yoff = 0; yoff < height; yoff += buff_h) {
+          for (int xoff = 0; xoff < width; xoff += buff_w) {
+
+            // Load image patch
+#pragma unroll 1
+            for (int i = get_local_id(1); i < buff_h; i += get_local_size(1)) {
+#pragma unroll 1
+              for (int j = get_local_id(0); j < buff_w;
+                  j += get_local_size(0)) {
+                int xidx = (j + xoff);
+                int yidx = (i + yoff);
+                if (xidx < width && yidx < height) {
+                  il[j + i * buff_w] = in[xidx + yidx * width
+                      + fin * width * height + batch_in_off];
+                }
+              }
             }
+
+            barrier(CLK_LOCAL_MEM_FENCE);
+
+            // Kernel inner loop
+#pragma unroll 1
+            for (int i = get_local_id(1); i < buff_h; i += get_local_size(1)) {
+#pragma unroll 1
+              for (int j = get_local_id(0); j < buff_w;
+                  j += get_local_size(0)) {
+
+                // Load accumulators
+#pragma unroll 1
+                for (int k = 0; k < 4; k++) {
+                  int xidx = (j + xoff - k % 2 * buff_w);
+                  int yidx = (i + yoff - k / 2 * buff_h);
+                  if (xidx >= 0 && xidx < out_w && yidx >= 0 && yidx < out_h) {
+                    al[k] = out[xidx + yidx * out_w + fout * out_w * out_h
+                        + batch_out_off];
+                  }
+                }
+
+#pragma unroll 2
+                for (int ki = 0; ki < kernel_h; ++ki) {
+#pragma unroll 2
+                  for (int kj = 0; kj < kernel_w; ++kj) {
+                    al[(j + kj * kstride_w) / buff_w + (i + ki * kstride_h) / buff_h * 2] +=
+                        wl[kj + ki * kernel_w]
+                            * il[(j + kj * kstride_w) % buff_w
+                                + ((i + ki * kstride_h) % buff_h) * buff_w];
+                  }
+                }
+
+                // Store accumulators
+#pragma unroll 1
+                for (int k = 0; k < 4; k++) {
+                  int xidx = (j + xoff - k % 2 * buff_w);
+                  int yidx = (i + yoff - k / 2 * buff_h);
+                  if (xidx >= 0 && xidx < out_w && yidx >= 0 && yidx < out_h) {
+                    out[xidx + yidx * out_w + fout * out_w * out_h
+                        + batch_out_off] = al[k];
+                  }
+                }
+              }
+            }barrier(CLK_LOCAL_MEM_FENCE);
           }
         }
-        out[xoff + yoff * out_w + fout * out_w * out_h] = outval;
       }
     }
   }
 }
 
-// More optimized
-__kernel void TEMPLATE(convolution_ip4v1,Dtype)(__global const Dtype *w,
+// Fits into 32 KB
+__kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
                                                 __global const Dtype *in,
-                                                __global float *out) {
-
-  // Kernel uses Z-workers across batches and output features
-  // Y-workers across Y-input
-  // X-workers across X-input
-
-  // TESTING
-  // Current tests for IP4.
-  // 10x10 kernel,
-
+                                                __global Dtype *out) {
   const int width = 200;
   const int height = 200;
   const int kernel_h = 10;
@@ -94,8 +163,6 @@ __kernel void TEMPLATE(convolution_ip4v1,Dtype)(__global const Dtype *w,
   const int out_h = (height - ext_kernel_h) / stride_h + 1;
   const int out_w = (width - ext_kernel_w) / stride_w + 1;
 
-  const int fin_fraction = 16;
-
   // Clear the output
   {
 #pragma unroll 1
@@ -109,120 +176,7 @@ __kernel void TEMPLATE(convolution_ip4v1,Dtype)(__global const Dtype *w,
   }
 
   // Local weight buffer
-  __local Dtype wl[16 * 100];
-
-  // Across output features
-#pragma unroll 1
-  for (int fout = get_global_id(2); fout < fout_count;
-      fout += get_global_size(2)) {
-
-    const int fout_w_ptr = fout * fin_count * kernel_h * kernel_w;
-
-    // Across input features
-#pragma unroll 1
-    for (int fin = 0; fin < fin_count; fin += fin_fraction) {
-      const int finout_w_ptr = fin * kernel_h * kernel_w + fout_w_ptr;
-
-      // Load local weights
-      // TODO: Correction for non-fitting fraction divisors
-#pragma unroll 1
-      for (int k = 0; k < fin_fraction; ++k) {
-#pragma unroll 1
-        for (int i = get_local_id(1); i < kernel_h; i += get_local_size(1)) {
-#pragma unroll 1
-          for (int j = get_local_id(0); j < kernel_w; j += get_local_size(0)) {
-            wl[j + i * kernel_w + k * kernel_w * kernel_h] = w[j + i * kernel_w
-                + k * kernel_w * kernel_h + finout_w_ptr];
-          }
-        }
-      }
-
-      barrier(CLK_LOCAL_MEM_FENCE);
-
-      // Across batches (keeps weights in local memory)
-#pragma unroll 1
-      for (int batch = 0; batch < batch_size; ++batch) {
-
-        const int batch_in_off = batch * width * height * fin_count;
-        const int batch_out_off = batch * out_w * out_h * fout_count;
-
-        // Across a fraction of input features
-#pragma unroll 1
-        for (int finoff = 0; finoff < fin_fraction; ++finoff) {
-          const int finoff_ptr = (finoff + fin) * width * height;
-
-          // Across y-dimension
-#pragma unroll 1
-          for (int yoff = get_global_id(1); yoff < height - ext_kernel_h + 1;
-              yoff += get_global_size(1)) {
-
-            // Across x-dimension
-#pragma unroll 1
-            for (int xoff = get_global_id(0); xoff < width - ext_kernel_w + 1;
-                xoff += get_global_size(0)) {
-
-              Dtype outval = out[xoff + yoff * out_w + fout * out_w * out_h
-                  + batch_out_off];
-
-              // Across the kernel itself
-#pragma unroll 2
-              for (int i = 0; i < kernel_h; ++i) {
-#pragma unroll 2
-                for (int j = 0; j < kernel_w; ++j) {
-                  outval = fma(
-                      wl[j + i * kernel_w + finoff * kernel_w * kernel_h],
-                      in[(xoff + j * kstride_w) + (yoff + i * kstride_h) * width
-                          + finoff_ptr + batch_in_off],
-                      outval);
-                }
-              }
-
-              out[xoff + yoff * out_w + fout * out_w * out_h + batch_out_off] =
-                  outval;
-            }
-          }
-        }
-      }barrier(CLK_LOCAL_MEM_FENCE);
-    }
-  }
-}*/
-
-// Fits into 32 KB
-__kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
-                                                __global const Dtype *in,
-                                                __global float *out) {
-  const int width = 584;
-  const int height = 584;
-  const int kernel_h = 10;
-  const int kernel_w = 10;
-  const int fout_count = 1024;
-  const int fin_count = 192;
-  const int kstride_h = 8;
-  const int kstride_w = 8;
-  const int stride_h = 1;
-  const int stride_w = 1;
-  const int batch_size = 1;
-
-  const int ext_kernel_h = (kernel_h - 1) * kstride_h + 1;
-  const int ext_kernel_w = (kernel_w - 1) * kstride_w + 1;
-
-  const int out_h = (height - ext_kernel_h) / stride_h + 1;
-  const int out_w = (width - ext_kernel_w) / stride_w + 1;
-
-  // Clear the output
-  {
-#pragma unroll 1
-    for (int i =
-        get_global_id(
-            0)+get_global_id(1)*get_global_size(0)+get_global_id(2)*get_global_size(0)*get_global_size(1);
-        i < fout_count * out_h * out_w;
-        i += get_global_size(0) * get_global_size(1) * get_global_size(2)) {
-      out[i] = 0.0;
-    }
-  }
-
-  // Local weight buffer
-  __local Dtype wl[10*10];
+  __local Dtype wl[10 * 10];
 
   // Across output features
 #pragma unroll 1
@@ -235,12 +189,14 @@ __kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
 
       // Load local weights
 #pragma unroll 1
-        for (int i = get_local_id(1); i < kernel_h; i += get_local_size(1)) {
+      for (int i = get_local_id(1); i < kernel_h; i += get_local_size(1)) {
 #pragma unroll 1
-          for (int j = get_local_id(0); j < kernel_w; j += get_local_size(0)) {
-            wl[i+j*kernel_w] = w[j + i * kernel_w + fout * fin_count * kernel_h * kernel_w + fin * kernel_h * kernel_w];
-          }
+        for (int j = get_local_id(0); j < kernel_w; j += get_local_size(0)) {
+          wl[j + i * kernel_w] = w[j + i * kernel_w
+              + fout * fin_count * kernel_h * kernel_w
+              + fin * kernel_h * kernel_w];
         }
+      }
 
       barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -251,37 +207,37 @@ __kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
         const int batch_in_off = batch * width * height * fin_count;
         const int batch_out_off = batch * out_w * out_h * fout_count;
 
-          // Across y-dimension
+        // Across y-dimension
 #pragma unroll 1
-          for (int yoff = get_global_id(1); yoff < height - ext_kernel_h + 1;
-              yoff += get_global_size(1)) {
+        for (int yoff = get_global_id(1); yoff < height - ext_kernel_h + 1;
+            yoff += get_global_size(1)) {
 
-            // Across x-dimension
+          // Across x-dimension
 #pragma unroll 1
-            for (int xoff = get_global_id(0); xoff < width - ext_kernel_w + 1;
-                xoff += get_global_size(0)) {
+          for (int xoff = get_global_id(0); xoff < width - ext_kernel_w + 1;
+              xoff += get_global_size(0)) {
 
-              Dtype outval = out[xoff + yoff * out_w + fout * out_w * out_h
-                  + batch_out_off];
+            Dtype outval = out[xoff + yoff * out_w + fout * out_w * out_h
+                + batch_out_off];
 
-              // Across the kernel itself
-#pragma unroll 5
-              for (int i = 0; i < kernel_h; ++i) {
-#pragma unroll 5
-                for (int j = 0; j < kernel_w; ++j) {
-                  outval = fma(
-                      wl[i+j*kernel_w],
-                      in[(xoff + j * kstride_w) + (yoff + i * kstride_h) * width
-                          + fin*width*height + batch_in_off],
-                      outval);
-                }
+            // Across the kernel itself
+#pragma unroll 1
+            for (int i = 0; i < kernel_h; ++i) {
+#pragma unroll 1
+              for (int j = 0; j < kernel_w; ++j) {
+                outval = fma(
+                    wl[j + i * kernel_w],
+                    in[(xoff + j * kstride_w) + (yoff + i * kstride_h) * width
+                        + fin * width * height + batch_in_off],
+                    outval);
               }
-
-              out[xoff + yoff * out_w + fout * out_w * out_h + batch_out_off] =
-                  outval;
             }
+
+            out[xoff + yoff * out_w + fout * out_w * out_h + batch_out_off] =
+                outval;
+          }
         }
-      } barrier(CLK_LOCAL_MEM_FENCE);
+      }barrier(CLK_LOCAL_MEM_FENCE);
     }
   }
 }

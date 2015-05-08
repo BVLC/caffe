@@ -83,7 +83,7 @@ void ConvolutionSKLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int width_out = (width_ - ext_kernel_w) / stride_w_ + 1;
 
   // TODO: Change this
-  if(kstride_h_ != 8) {
+  if(kstride_h_ != 23 || this->device_context_.backend() == BACKEND_CUDA) {
     col_buffer_.Reshape(1, channels_ * kernel_h_ * kernel_w_, height_out,
                       width_out, this->device_context_);
   }
