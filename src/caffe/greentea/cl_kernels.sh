@@ -93,6 +93,7 @@ do
 done
 
 shopt -s nullglob
+echo "#ifdef GREENTEA_DOUBLE_SUPPORT" >> $SOURCE
 echo "  ss << \"#ifdef DOUBLE_SUPPORT_AVAILABLE\" << \"\\n\\n\";" >> $SOURCE
 echo "  ss << \"#undef Dtype\" << \"\\n\\n\";" >> $SOURCE
 echo "  ss << \"#define Dtype double\" << \"\\n\\n\";" >> $SOURCE
@@ -104,9 +105,11 @@ do
 	echo "  ss << ${CL_KERNEL_NAME}_double << \"\\n\\n\";" >> $SOURCE
 done
 echo "  ss << \"#endif\" << \"\\n\\n\";" >> $SOURCE
+echo "#endif // GREENTEA_DOUBLE_SUUPORT" >> $SOURCE
 
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
+echo "  ctx.build_options(\"-cl-fast-relaxed-math -cl-mad-enable\");" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx.add_program(kernel_program,\"kernel_program\");" >> $SOURCE
 echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
