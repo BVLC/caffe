@@ -34,6 +34,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape,
   device_context_ = device_context;
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
+    CHECK_LE(shape[i], INT_MAX / count_) << "blob size exceeds INT_MAX";
     count_ *= shape[i];
     shape_[i] = shape[i];
   }
