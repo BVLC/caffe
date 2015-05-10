@@ -63,94 +63,119 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int i = 0; i < bottom.size(); ++i) {
 
       // Cheating, for now
-      if (kstride_h_ != 23) {
+      //if (kstride_h_ != 23) {
 
-        const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
-        cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
-        cl_mem col_data = (cl_mem) (col_buffer_.mutable_gpu_data());
-        const cl_mem weight = (cl_mem) (this->blobs_[0]->gpu_data());
+      const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
+      cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
+      cl_mem col_data = (cl_mem) (col_buffer_.mutable_gpu_data());
+      const cl_mem weight = (cl_mem) (this->blobs_[0]->gpu_data());
 
-        int weight_offset = M_ * K_;
-        int col_offset = K_ * N_;
-        int top_offset = M_ * N_;
+      Dtype* top_data_cpu;
+      Dtype* col_data_cpu;
+      const Dtype* weight_cpu;
+      if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+        top_data_cpu = top[i]->mutable_cpu_data();
+        col_data_cpu = col_buffer_.mutable_cpu_data();
+        weight_cpu = this->blobs_[0]->cpu_data();
+      }
 
-        std::cout << "M:" << M_ << std::endl;
-        std::cout << "N:" << N_ << std::endl;
-        std::cout << "K:" << K_ << std::endl;
+      int weight_offset = M_ * K_;
+      int col_offset = K_ * N_;
+      int top_offset = M_ * N_;
 
-        for (int n = 0; n < num_; ++n) {
+      std::cout << "M:" << M_ << std::endl;
+      std::cout << "N:" << N_ << std::endl;
+      std::cout << "K:" << K_ << std::endl;
 
-          // First, im2col
-          greentea_im2col_sk_gpu<Dtype>(program, ctx, bottom_data,
-                                        bottom[i]->offset(n), channels_,
-                                        height_, width_, kernel_h_, kernel_w_,
-                                        pad_h_, pad_w_, stride_h_, stride_w_,
-                                        kstride_h_, kstride_w_, col_data);
+      for (int n = 0; n < num_; ++n) {
 
-          // Second, innerproduct with groups
-          for (int g = 0; g < group_; ++g) {
+        // First, im2col
+        greentea_im2col_sk_gpu<Dtype>(program, ctx, bottom_data,
+                                      bottom[i]->offset(n), channels_, height_,
+                                      width_, kernel_h_, kernel_w_, pad_h_,
+                                      pad_w_, stride_h_, stride_w_, kstride_h_,
+                                      kstride_w_, col_data);
+        ctx.get_queue().finish();
+
+        // Second, innerproduct with groups
+        for (int g = 0; g < group_; ++g) {
+          if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+            std::cout << "CPU GEMM" << std::endl;
+            caffe_cpu_gemm<Dtype>(
+                CblasNoTrans, CblasNoTrans, M_, N_, K_, (Dtype) 1.,
+                weight_cpu + weight_offset * g, col_data_cpu + col_offset * g,
+                (Dtype) 0., top_data_cpu + top[i]->offset(n) + top_offset * g);
+          } else {
             greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
                                      CblasNoTrans, M_, N_, K_, (Dtype) 1.,
                                      weight, weight_offset * g, col_data,
                                      col_offset * g, (Dtype) 0., top_data,
                                      top[i]->offset(n) + top_offset * g);
-            ctx.get_queue().finish();
           }
+          ctx.get_queue().finish();
+        }
 
-          // Third, add bias
-          if (bias_term_) {
+        // Third, add bias
+        if (bias_term_) {
+          if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+            caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_, N_,
+                                  1, (Dtype) 1., this->blobs_[1]->cpu_data(),
+                                  bias_multiplier_.cpu_data(), (Dtype) 1.,
+                                  top_data_cpu + top[i]->offset(n));
+          } else {
             greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
                                      CblasNoTrans, num_output_, N_, 1,
                                      (Dtype) 1.,
                                      (cl_mem) (this->blobs_[1]->gpu_data()), 0,
                                      (cl_mem) (bias_multiplier_.gpu_data()), 0,
                                      (Dtype) 1., top_data, top[i]->offset(n));
-            ctx.get_queue().finish();
           }
-        }
-      } else {
-
-        const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
-        cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
-        const cl_mem weight = (cl_mem) (this->blobs_[0]->gpu_data());
-
-        viennacl::ocl::kernel &oclk_ip4 = program.get_kernel(
-            CL_KERNEL_SELECT("convolution_ip4v3"));
-
-        LOG(INFO)<< ctx.devices()[0].max_work_group_size();
-
-        LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[0];
-        LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[1];
-        LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[2];
-        LOG(INFO)<< ctx.devices()[0].preferred_vector_width_float();
-
-        oclk_ip4.global_work_size(0, 16);
-        oclk_ip4.global_work_size(1, 16);
-        oclk_ip4.global_work_size(2, 128);
-        oclk_ip4.local_work_size(0, 16);
-        oclk_ip4.local_work_size(1, 16);
-        oclk_ip4.local_work_size(2, 1);
-
-        viennacl::ocl::enqueue(
-            oclk_ip4(WrapHandle(weight, ctx), WrapHandle(bottom_data, ctx),
-                     WrapHandle(top_data, ctx)),
-            ctx.get_queue());
-
-        ctx.get_queue().finish();
-
-        for (int n = 0; n < num_; ++n) {
-          // Third, add bias
-          if (bias_term_) {
-            greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
-                                     CblasNoTrans, num_output_, N_, 1,
-                                     (Dtype) 1.,
-                                     (cl_mem) (this->blobs_[i]->gpu_data()), 0,
-                                     (cl_mem) (bias_multiplier_.gpu_data()), 0,
-                                     (Dtype) 1., top_data, top[i]->offset(n));
-            ctx.get_queue().finish();
-          }
+          ctx.get_queue().finish();
         }
       }
+      /*} else {
+
+       const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
+       cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
+       const cl_mem weight = (cl_mem) (this->blobs_[0]->gpu_data());
+
+       viennacl::ocl::kernel &oclk_ip4 = program.get_kernel(
+       CL_KERNEL_SELECT("convolution_ip4v3"));
+
+       LOG(INFO)<< ctx.devices()[0].max_work_group_size();
+
+       LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[0];
+       LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[1];
+       LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[2];
+       LOG(INFO)<< ctx.devices()[0].preferred_vector_width_float();
+
+       oclk_ip4.global_work_size(0, 16);
+       oclk_ip4.global_work_size(1, 16);
+       oclk_ip4.global_work_size(2, 128);
+       oclk_ip4.local_work_size(0, 16);
+       oclk_ip4.local_work_size(1, 16);
+       oclk_ip4.local_work_size(2, 1);
+
+       viennacl::ocl::enqueue(
+       oclk_ip4(WrapHandle(weight, ctx), WrapHandle(bottom_data, ctx),
+       WrapHandle(top_data, ctx)),
+       ctx.get_queue());
+
+       ctx.get_queue().finish();
+
+       for (int n = 0; n < num_; ++n) {
+       // Third, add bias
+       if (bias_term_) {
+       greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
+       CblasNoTrans, num_output_, N_, 1,
+       (Dtype) 1.,
+       (cl_mem) (this->blobs_[i]->gpu_data()), 0,
+       (cl_mem) (bias_multiplier_.gpu_data()), 0,
+       (Dtype) 1., top_data, top[i]->offset(n));
+       ctx.get_queue().finish();
+       }
+       }
+       }*/
     }
 
     std::cout << "CONV GREENTEA END" << std::endl;

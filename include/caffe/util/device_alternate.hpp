@@ -90,6 +90,12 @@ const char* curandGetErrorString(curandStatus_t error);
     const int CAFFE_CUDA_NUM_THREADS = 512;
 #endif
 
+#ifdef __CDT_PARSER__
+#define CUDA_KERNEL(...)
+#else
+#define CUDA_KERNEL(...)  <<< __VA_ARGS__ >>>
+#endif
+
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {
   return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
