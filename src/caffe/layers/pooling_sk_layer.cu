@@ -9,10 +9,11 @@
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
-#endif
+#endif // USE_GREENTEA
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void MaxPoolForward(const int nthreads, const Dtype* bottom_data,
                                const int num, const int channels,
@@ -173,6 +174,7 @@ __global__ void StoPoolForwardTest(const int nthreads, const Dtype* bottom_data,
     top_data[index] = cumvalues / cumsum;
   }
 }
+#endif // USE_CUDA
 
 template<typename Dtype>
 void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -196,87 +198,103 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int ext_kernel_h = (kernel_h_ - 1) * kstride_h_ + 1;
   int ext_kernel_w = (kernel_w_ - 1) * kstride_w_ + 1;
 
-  switch (this->layer_param_.pooling_param().pool()) {
-    case PoolingParameter_PoolMethod_MAX:
-      if (use_top_mask) {
-        top_mask = top[1]->mutable_gpu_data();
-      } else {
-        mask = max_idx_.mutable_gpu_data();
-      }
-      if (this->device_context_.backend() == BACKEND_CUDA) {
-        // NOLINT_NEXT_LINE(whitespace/operators)
-      MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-          count, bottom_data, bottom[0]->num(), channels_,
-          height_, width_, pooled_height_, pooled_width_, kernel_h_,
-          kernel_w_, ext_kernel_h, ext_kernel_w,
-          stride_h_, stride_w_, kstride_h_, kstride_w_,
-          pad_h_, pad_w_, top_data,
-          mask, top_mask);
-    } else {
-#ifdef USE_GREENTEA
-      std::cout << "POOLING GREENTEA BEGIN" << std::endl;
-      viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
-          CL_KERNEL_SELECT("max_pool_forward_sk"));
-      viennacl::ocl::enqueue(
-          oclk_max_pool_forward(count, WrapHandle((cl_mem) bottom_data, ctx),
-                                bottom[0]->num(), channels_, height_, width_,
-                                pooled_height_, pooled_width_, kernel_h_,
-                                kernel_w_, ext_kernel_h, ext_kernel_w,
-                                stride_h_, stride_w_, kstride_h_, kstride_w_,
-                                pad_h_, pad_w_,
-                                WrapHandle((cl_mem) top_data, ctx),
-                                mask == NULL ? 0 : 1,
-                                WrapHandle((cl_mem) mask, ctx),
-                                WrapHandle((cl_mem) top_mask, ctx)),
-          ctx.get_queue());
-      ctx.get_queue().finish();
-      std::cout << "POOLING GREENTEA END" << std::endl;
-#endif
-    }
-    break;
-  case PoolingParameter_PoolMethod_AVE:
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, ext_kernel_h, ext_kernel_w,
-        stride_h_, stride_w_, kstride_h_, kstride_w_,
-        pad_h_, pad_w_, top_data);
-    break;
-  case PoolingParameter_PoolMethod_STOCHASTIC:
-    if (this->phase_ == caffe::TRAIN) {
-      // We need to create the random index as well.
-      caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
-                            rand_idx_.mutable_gpu_data());
-      // NOLINT_NEXT_LINE(whitespace/operators)
-    StoPoolForwardTrain<Dtype><<<CAFFE_GET_BLOCKS(count),
-    CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, ext_kernel_h, ext_kernel_w,
-        stride_h_, stride_w_, kstride_h_, kstride_w_,
-        rand_idx_.mutable_gpu_data(), top_data);
-  } else {
-    // NOLINT_NEXT_LINE(whitespace/operators)
-  StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count),
-  CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom_data, bottom[0]->num(), channels_,
-      height_, width_, pooled_height_, pooled_width_, kernel_h_,
-      kernel_w_, ext_kernel_h, ext_kernel_w,
-      stride_h_, stride_w_, kstride_h_, kstride_w_, top_data);
-}
-break;
-default:
-LOG(FATAL)<< "Unknown pooling method.";
-}
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif
-  }
-}
+    switch (this->layer_param_.pooling_param().pool()) {
+      case PoolingParameter_PoolMethod_MAX:
+        if (use_top_mask) {
+          top_mask = top[1]->mutable_gpu_data();
+        } else {
+          mask = max_idx_.mutable_gpu_data();
+        }
+        // NOLINT_NEXT_LINE(whitespace/operators)
+        MaxPoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+            count, bottom_data, bottom[0]->num(), channels_,
+            height_, width_, pooled_height_, pooled_width_, kernel_h_,
+            kernel_w_, ext_kernel_h, ext_kernel_w,
+            stride_h_, stride_w_, kstride_h_, kstride_w_,
+            pad_h_, pad_w_, top_data,
+            mask, top_mask);
+        break;
+      case PoolingParameter_PoolMethod_AVE:
+        // NOLINT_NEXT_LINE(whitespace/operators)
+        AvePoolForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+            count, bottom_data, bottom[0]->num(), channels_,
+            height_, width_, pooled_height_, pooled_width_, kernel_h_,
+            kernel_w_, ext_kernel_h, ext_kernel_w,
+            stride_h_, stride_w_, kstride_h_, kstride_w_,
+            pad_h_, pad_w_, top_data);
+        break;
+      case PoolingParameter_PoolMethod_STOCHASTIC:
+        if (this->phase_ == caffe::TRAIN) {
+          // We need to create the random index as well.
+          caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
+                                rand_idx_.mutable_gpu_data());
+          // NOLINT_NEXT_LINE(whitespace/operators)
+          StoPoolForwardTrain<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+              CAFFE_CUDA_NUM_THREADS)(
+              count, bottom_data, bottom[0]->num(), channels_,
+              height_, width_, pooled_height_, pooled_width_, kernel_h_,
+              kernel_w_, ext_kernel_h, ext_kernel_w,
+              stride_h_, stride_w_, kstride_h_, kstride_w_,
+              rand_idx_.mutable_gpu_data(), top_data);
+        } else {
+          // NOLINT_NEXT_LINE(whitespace/operators)
+          StoPoolForwardTest<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count),
+              CAFFE_CUDA_NUM_THREADS)(
+              count, bottom_data, bottom[0]->num(), channels_,
+              height_, width_, pooled_height_, pooled_width_, kernel_h_,
+              kernel_w_, ext_kernel_h, ext_kernel_w,
+              stride_h_, stride_w_, kstride_h_, kstride_w_, top_data);
+        }
+        break;
+      default:
+        LOG(FATAL)<< "Unknown pooling method.";
+      }
+      CUDA_POST_KERNEL_CHECK;
 
+#endif // USE_CUDA
+    } else {
+#ifdef USE_GREENTEA
+      switch (this->layer_param_.pooling_param().pool()) {
+        case PoolingParameter_PoolMethod_MAX:
+        {
+          if (use_top_mask) {
+            top_mask = top[1]->mutable_gpu_data();
+          } else {
+            mask = max_idx_.mutable_gpu_data();
+          }
+          std::cout << "POOLING GREENTEA BEGIN" << std::endl;
+          viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
+              CL_KERNEL_SELECT("max_pool_forward_sk"));
+          viennacl::ocl::enqueue(
+              oclk_max_pool_forward(count, WrapHandle((cl_mem) bottom_data, ctx),
+                  bottom[0]->num(), channels_, height_, width_,
+                  pooled_height_, pooled_width_, kernel_h_,
+                  kernel_w_, ext_kernel_h, ext_kernel_w,
+                  stride_h_, stride_w_, kstride_h_, kstride_w_,
+                  pad_h_, pad_w_,
+                  WrapHandle((cl_mem) top_data, ctx),
+                  mask == NULL ? 0 : 1,
+                  WrapHandle((cl_mem) mask, ctx),
+                  WrapHandle((cl_mem) top_mask, ctx)),
+              ctx.get_queue());
+          ctx.get_queue().finish();
+          std::cout << "POOLING GREENTEA END" << std::endl;
+        }
+        break;
+        case PoolingParameter_PoolMethod_AVE:
+        break;
+        case PoolingParameter_PoolMethod_STOCHASTIC:
+        break;
+        default:
+        LOG(FATAL)<< "Unknown pooling method.";
+      }
+#endif // USE_GREENTEA
+    }
+  }
+
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
                                 const int* mask, const Dtype* top_mask,
@@ -334,6 +352,7 @@ __global__ void MaxPoolBackward(const int nthreads, const Dtype* top_diff,
     bottom_diff[index] = gradient;
   }
 }
+#endif // USE_CUDA
 
 template<typename Dtype>
 void PoolingSKLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -351,32 +370,48 @@ void PoolingSKLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int ext_kernel_h = (kernel_h_ - 1) * kstride_h_ + 1;
   int ext_kernel_w = (kernel_w_ - 1) * kstride_w_ + 1;
 
-  switch (this->layer_param_.pooling_param().pool()) {
-    case PoolingParameter_PoolMethod_MAX:
-      if (use_top_mask) {
-        top_mask = top[1]->gpu_data();
-      } else {
-        mask = max_idx_.gpu_data();
-      }
-      // NOLINT_NEXT_LINE(whitespace/operators)
-      MaxPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-          count, top_diff, mask, top_mask, top[0]->num(), channels_,
-          height_, width_, pooled_height_, pooled_width_,
-          kernel_h_, kernel_w_, ext_kernel_h, ext_kernel_w,
-          stride_h_, stride_w_, kstride_h_, kstride_w_,
-          pad_h_, pad_w_,
-          bottom_diff);
-      break;
-    default:
-      LOG(FATAL)<< "Unknown or unsupported pooling method in Backward_gpu().";
-    }
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    CUDA_POST_KERNEL_CHECK
-    ;
-#endif
+    switch (this->layer_param_.pooling_param().pool()) {
+      case PoolingParameter_PoolMethod_MAX:
+        if (use_top_mask) {
+          top_mask = top[1]->gpu_data();
+        } else {
+          mask = max_idx_.gpu_data();
+        }
+        // NOLINT_NEXT_LINE(whitespace/operators)
+        MaxPoolBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+            count, top_diff, mask, top_mask, top[0]->num(), channels_,
+            height_, width_, pooled_height_, pooled_width_,
+            kernel_h_, kernel_w_, ext_kernel_h, ext_kernel_w,
+            stride_h_, stride_w_, kstride_h_, kstride_w_,
+            pad_h_, pad_w_,
+            bottom_diff);
+        break;
+      default:
+        LOG(FATAL)<<"Unknown or unsupported pooling method in Backward_gpu().";
+      }
+      CUDA_POST_KERNEL_CHECK;
+#endif // USE_CUDA
+    }
+    else
+    {
+#ifdef USE_GREENTEA
+      switch (this->layer_param_.pooling_param().pool()) {
+        case PoolingParameter_PoolMethod_MAX:
+        if (use_top_mask) {
+          top_mask = top[1]->gpu_data();
+        } else {
+          mask = max_idx_.gpu_data();
+        }
+        // TODO
+        break;
+        default:
+        LOG(FATAL)<<"Unknown or unsupported pooling method in Backward_gpu().";
+      }
+#endif // USE_GREENTEA
+    }
   }
-}
 
 INSTANTIATE_LAYER_GPU_FUNCS(PoolingSKLayer);
 

@@ -52,7 +52,10 @@ inline void SyncedMemory::to_cpu() {
 #ifdef USE_GREENTEA
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
             device_context_.id());
-        greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, cpu_ptr_, ctx);
+        // On the CPU, memory is shared (and no copy needed)
+        if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
+          greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, cpu_ptr_, ctx);
+        }
 #endif
       }
       head_ = SYNCED;
@@ -79,8 +82,18 @@ inline void SyncedMemory::to_gpu() {
         viennacl::ocl::context ctx = viennacl::ocl::get_context(
             device_context_.id());
         cl_int err;
-        cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                     size_, NULL, &err);
+        if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+          // CPU memory is shared
+          if (cpu_ptr_ == NULL) {
+            CaffeMallocHost(&cpu_ptr_, size_);
+          }
+          cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
+          CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                                       size_, cpu_ptr_, &err);
+        } else {
+          cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                       size_, NULL, &err);
+        }
         gpu_ptr_ = (void*) cl_gpu_mem_;
         ctx.get_queue().finish();
 #endif
@@ -100,12 +113,25 @@ inline void SyncedMemory::to_gpu() {
             device_context_.id());
         if (gpu_ptr_ == NULL) {
           cl_int err;
-          cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                                       size_, NULL, &err);
+          if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+            // CPU memory is shared
+            if (cpu_ptr_ == NULL) {
+              CaffeMallocHost(&cpu_ptr_, size_);
+            }
+            cl_gpu_mem_ = clCreateBuffer(
+                ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                size_, cpu_ptr_, &err);
+          } else {
+            cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                         size_, NULL, &err);
+          }
           gpu_ptr_ = (void*) cl_gpu_mem_;
           ctx.get_queue().finish();
         }
-        greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, ctx);
+        // On the CPU, memory is shared (and no copy needed)
+        if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
+          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, ctx);
+        }
 #endif
       }
       head_ = SYNCED;
@@ -131,6 +157,16 @@ void SyncedMemory::set_cpu_data(void* data) {
     CaffeFreeHost(cpu_ptr_);
   }
   cpu_ptr_ = data;
+  if (device_context_.backend() == Backend::BACKEND_OpenCL) {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context ctx = viennacl::ocl::get_context(
+        device_context_.id());
+    if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+      // If host memory is released and shared
+      gpu_ptr_ = NULL;
+    }
+#endif
+  }
   head_ = HEAD_AT_CPU;
   own_cpu_data_ = false;
 }
