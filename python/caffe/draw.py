@@ -11,19 +11,23 @@ from google.protobuf import text_format
 import pydot
 
 # Internal layer and blob styles.
-LAYER_STYLE_DEFAULT = {'shape': 'record', 'fillcolor': '#6495ED',
-         'style': 'filled'}
-NEURON_LAYER_STYLE = {'shape': 'record', 'fillcolor': '#90EE90',
-         'style': 'filled'}
-BLOB_STYLE = {'shape': 'octagon', 'fillcolor': '#E0E0E0',
-        'style': 'filled'}
+LAYER_STYLE_DEFAULT = {'shape': 'record',
+                       'fillcolor': '#6495ED',
+                       'style': 'filled'}
+NEURON_LAYER_STYLE = {'shape': 'record',
+                      'fillcolor': '#90EE90',
+                      'style': 'filled'}
+BLOB_STYLE = {'shape': 'octagon',
+              'fillcolor': '#E0E0E0',
+              'style': 'filled'}
+
 
 def get_pooling_types_dict():
     """Get dictionary mapping pooling type number to type name
     """
     desc = caffe_pb2.PoolingParameter.PoolMethod.DESCRIPTOR
     d = {}
-    for k,v in desc.values_by_name.items():
+    for k, v in desc.values_by_name.items():
         d[v.number] = k
     return d
 
@@ -145,21 +149,24 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True):
                    label=edge['label']))
   return pydot_graph
 
-def draw_net(caffe_net, rankdir, ext='png'):
-  """Draws a caffe net and returns the image string encoded using the given
-  extension.
 
-  Input:
+def draw_net(caffe_net, rankdir, ext='png'):
+    """Draws a caffe net and returns the image string encoded using the given
+    extension.
+
+    Parameters
+    ----------
     caffe_net: a caffe.proto.caffe_pb2.NetParameter protocol buffer.
     ext: the image extension. Default 'png'.
-  """
-  return get_pydot_graph(caffe_net, rankdir).create(format=ext)
+    """
+    return get_pydot_graph(caffe_net, rankdir).create(format=ext)
+
 
 def draw_net_to_file(caffe_net, filename, rankdir='LR'):
-  """Draws a caffe net, and saves it to file using the format given as the
-  file extension. Use '.raw' to output raw text that you can manually feed
-  to graphviz to draw graphs.
-  """
-  ext = filename[filename.rfind('.')+1:]
-  with open(filename, 'wb') as fid:
-    fid.write(draw_net(caffe_net, rankdir, ext))
+    """Draws a caffe net, and saves it to file using the format given as the
+    file extension. Use '.raw' to output raw text that you can manually feed
+    to graphviz to draw graphs.
+    """
+    ext = filename[filename.rfind('.')+1:]
+    with open(filename, 'wb') as fid:
+        fid.write(draw_net(caffe_net, rankdir, ext))
