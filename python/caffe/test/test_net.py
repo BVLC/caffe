@@ -5,6 +5,7 @@ import numpy as np
 
 import caffe
 
+
 def simple_net_file(num_output):
     """Make a simple net prototxt, based on test_net.cpp, returning the name
     of the (temporary) file."""
@@ -30,6 +31,7 @@ def simple_net_file(num_output):
       top: 'loss' }""")
     f.close()
     return f.name
+
 
 class TestNet(unittest.TestCase):
     def setUp(self):
