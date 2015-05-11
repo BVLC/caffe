@@ -35,6 +35,16 @@ const int NPY_DTYPE = NPY_FLOAT32;
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+// Checking current mode.
+bool check_mode_cpu() { return Caffe::mode() == Caffe::CPU; }
+bool check_mode_gpu() { return Caffe::mode() == Caffe::GPU; }
+#ifndef CPU_ONLY
+// Cuda num threads
+int get_cuda_num_threads() { return CAFFE_CUDA_NUM_THREADS; }
+bp::object cublas_handle() {
+  return bp::object((size_t)Caffe::cublas_handle());
+}
+#endif
 
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
@@ -176,6 +186,34 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
   }
 };
 
+// Blob constructor with shape iterable
+shared_ptr<Blob<Dtype> > Blob_Init(bp::object shape_object) {
+  size_t ndim;
+  try {
+    ndim = bp::len(shape_object);
+  } catch(...) {
+    throw std::runtime_error("1st arg must be iterable.");
+  }
+  vector<int> shape(ndim);
+  try {
+    for (int i = 0; i < ndim; ++i) {
+      shape[i] = bp::extract<int>(shape_object[i]);
+    }
+  } catch(...) {
+    throw std::runtime_error("All element in shape iterable must be integer.");
+  }
+  return shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape));
+}
+
+bp::tuple Blob_Shape(const Blob<Dtype>* self) {
+  const vector<int> &shape = self->shape();
+  bp::list shape_list;
+  BOOST_FOREACH(int s, shape) {
+    shape_list.append(s);
+  }
+  return bp::tuple(shape_list);
+}
+
 bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   if (bp::len(kwargs) > 0) {
     throw std::runtime_error("Blob.reshape takes no kwargs");
@@ -190,6 +228,16 @@ bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   return bp::object();
 }
 
+#ifndef CPU_ONLY
+size_t Blob_GpuDataPtr(Blob<Dtype>* self) {
+  return (size_t)(self->mutable_gpu_data());
+}
+
+size_t Blob_GpuDiffPtr(Blob<Dtype>* self) {
+  return (size_t)(self->mutable_gpu_diff());
+}
+#endif
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -198,7 +246,16 @@ BOOST_PYTHON_MODULE(_caffe) {
   // Caffe utility functions
   bp::def("set_mode_cpu", &set_mode_cpu);
   bp::def("set_mode_gpu", &set_mode_gpu);
+  bp::def("check_mode_cpu", &check_mode_cpu);
+  bp::def("check_mode_gpu", &check_mode_gpu);
   bp::def("set_device", &Caffe::SetDevice);
+  bp::def("get_device", &Caffe::GetDevice);
+  bp::def("set_random_seed", &Caffe::set_random_seed);
+#ifndef CPU_ONLY
+  bp::def("get_cuda_num_threads", &get_cuda_num_threads);
+  bp::def("get_blocks", &CAFFE_GET_BLOCKS);
+  bp::def("cublas_handle", &cublas_handle);
+#endif
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
@@ -229,14 +286,20 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("save", &Net_Save);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
-    "Blob", bp::no_init)
+      "Blob", bp::no_init)
+    .def("__init__", bp::make_constructor(&Blob_Init))
     .add_property("num",      &Blob<Dtype>::num)
     .add_property("channels", &Blob<Dtype>::channels)
     .add_property("height",   &Blob<Dtype>::height)
     .add_property("width",    &Blob<Dtype>::width)
     .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
         &Blob<Dtype>::count))
+    .add_property("shape", &Blob_Shape)
     .def("reshape",           bp::raw_function(&Blob_Reshape))
+#ifndef CPU_ONLY
+    .add_property("gpu_data_ptr", &Blob_GpuDataPtr)
+    .add_property("gpu_diff_ptr", &Blob_GpuDiffPtr)
+#endif
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
