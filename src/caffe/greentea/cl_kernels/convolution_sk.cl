@@ -2,7 +2,7 @@
 #include "header.cl"
 #endif
 
-__kernel void TEMPLATE(convolution_ip4v3,Dtype)(__global const Dtype *w,
+/*__kernel void TEMPLATE(convolution_ip4v3,Dtype)(__global const Dtype *w,
                                                 __global const Dtype *in,
                                                 __global Dtype *out) {
 
@@ -240,4 +240,4 @@ __kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
       }barrier(CLK_LOCAL_MEM_FENCE);
     }
   }
-}
+}*/
