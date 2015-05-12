@@ -17,7 +17,7 @@ template <typename Dtype>
 void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
-  //find channel axis and compute spatial axes constants
+  // find channel axis and compute spatial axes constants
   channel_axis_ = bottom[0]->CanonicalAxisIndex(pool_param.axis());
   channels_ = bottom[0]->shape(channel_axis_);
   const int first_spatial_axis = channel_axis_ + 1;
@@ -29,12 +29,9 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
   input_shape_.Reshape(bottom_dim_blob_shape);
   int* input_shape_data = input_shape_.mutable_cpu_data();
-  // printf("input_shape_data channel_axis_:%d ::",channel_axis_);
   for (int i = 0; i < num_spatial_axes_ + 1; ++i) {
     input_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
-     // printf("%d ",input_shape_data[i]);
   }
-   // printf("\n");
   vector<int> spatial_dim_blob_shape(1, num_spatial_axes_);
 
   global_pooling_ = pool_param.global_pooling();
@@ -42,8 +39,8 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   kernel_shape_.Reshape(spatial_dim_blob_shape);
   int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
   if (global_pooling_) {
-    //if global pooling height and width are set the entire blob, 
-    //and the layer cannot have a kernel set
+    // if global pooling height and width are set the entire blob,
+    // and the layer cannot have a kernel set
     CHECK_GE(0, pool_param.kernel_size_size())
         << "With Global_pooling: true Filter size cannot specified.";
     CHECK(!pool_param.has_kernel_h() || !pool_param.has_kernel_w())
@@ -52,22 +49,22 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       kernel_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
     }
   } else {
-     //if kernel_h or kernel_w are set we cannot set the kernel another way
-     //And there must be 2 spatial dims
+     // if kernel_h or kernel_w are set we cannot set the kernel another way
+     // And there must be 2 spatial dims
     if (pool_param.has_kernel_h() || pool_param.has_kernel_w()) {
         CHECK_EQ(num_spatial_axes_, 2)
-            << "kernel_h & kernel_w can only be used for 2D pooling.";
+          << "kernel_h & kernel_w can only be used for 2D pooling.";
         CHECK_EQ(0, pool_param.kernel_size_size())
-            << "Either kernel_size or kernel_h/w should be specified; not both.";
+          << "Either kernel_size or kernel_h/w should be specified; not both.";
         kernel_shape_data[0] = pool_param.kernel_h();
         kernel_shape_data[1] = pool_param.kernel_w();
       } else {
-        //using repeated kernel param
+        // using repeated kernel param
         const int num_kernel_dims = pool_param.kernel_size_size();
         CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_)
-            << "kernel_size must be specified once, or once per spatial dimension "
-            << "(kernel_size specified " << num_kernel_dims << " times; "
-            << num_spatial_axes_ << " spatial dims);";
+          << "kernel_size must be specified once, or once per spatial dimension"
+          << " (kernel_size specified " << num_kernel_dims << " times; "
+          << num_spatial_axes_ << " spatial dims);";
         for (int i = 0; i < num_spatial_axes_; ++i) {
             kernel_shape_data[i] =
                 pool_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
@@ -83,8 +80,8 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   int* pad_data = pad_.mutable_cpu_data();
   int pad_sum = 0;
   if (pool_param.has_pad_h() || pool_param.has_pad_w()) {
-      //if pad_h or pad_w are set we cannot set the pad another way
-      //And there must be 2 spatial dims
+      // if pad_h or pad_w are set we cannot set the pad another way
+      // And there must be 2 spatial dims
       CHECK_EQ(num_spatial_axes_, 2)
         << "pad_h & pad_w can only be used for 2D convolution.";
       CHECK_EQ(0, pool_param.pad_size())
@@ -92,7 +89,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       pad_data[0] = pool_param.pad_h();
       pad_data[1] = pool_param.pad_w();
   } else {
-    //using repeated pad param
+    // using repeated pad param
     const int num_pad_dims = pool_param.pad_size();
     CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
           num_pad_dims == num_spatial_axes_)
@@ -104,16 +101,18 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
           pool_param.pad((num_pad_dims == 1) ? 0 : i);
       if (global_pooling_) {
-          CHECK(pad_data[i] == 0)
+          CHECK_EQ(pad_data[i], 0)
             << "With Global_pooling: true; pool = 0";
         }
       CHECK_LT(pad_data[i], kernel_shape_data[i]);
       pad_sum += pad_data[i];
     }
   }
-  if (pad_sum != 0 ) {
-     CHECK(this->layer_param_.pooling_param().pool() == PoolingParameter_PoolMethod_AVE
-        || this->layer_param_.pooling_param().pool() == PoolingParameter_PoolMethod_MAX)
+  if (pad_sum != 0) {
+     CHECK(this->layer_param_.pooling_param().pool() ==
+      PoolingParameter_PoolMethod_AVE
+      || this->layer_param_.pooling_param().pool() ==
+      PoolingParameter_PoolMethod_MAX)
         << "Padding implemented only for average and max pooling.";
       }
 
@@ -128,7 +127,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     stride_data[0] = pool_param.stride_h();
     stride_data[1] = pool_param.stride_w();
   } else {
-    //using repeated stride param
+    // using repeated stride param
     const int num_stride_dims = pool_param.stride_size();
     CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
           num_stride_dims == num_spatial_axes_)
@@ -141,7 +140,7 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           pool_param.stride((num_stride_dims == 1) ? 0 : i);
       CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
       if (global_pooling_) {
-        CHECK(stride_data[i] == 1)
+        CHECK_EQ(stride_data[i], 1)
           << "With Global_pooling: true; stride = 1";
       }
     }
@@ -165,39 +164,37 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       kernel_shape_data[i] = input_shape_data[i+1];
     }
   }
-  // printf("num:%d\n",num_spatial_axes_);
-  //compute output shape
+  // compute output shape
   const int* pad_data = this->pad_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
-  
   vector<int> spatial_dim_blob_shape(1, num_spatial_axes_);
   output_shape_.Reshape(spatial_dim_blob_shape);
   int* output_shape_data = output_shape_.mutable_cpu_data();
   int pad_sum = 0;
-  for (int i = 0; i < num_spatial_axes_; ++i) {    
+  for (int i = 0; i < num_spatial_axes_; ++i) {
     int oc = static_cast<int>(ceil(static_cast<float>(
-          input_shape_data[i+1] + 2 * pad_data[i] - kernel_shape_data[i]) / stride_data[i])) + 1;
+          input_shape_data[i+1] + 2 * pad_data[i]
+          - kernel_shape_data[i]) / stride_data[i])) + 1;
     pad_sum += pad_data[i];
     output_shape_data[i] = oc;
-    // printf("output_shape_ %d\n\n",output_shape_[i]);
   }
-  if (pad_sum){
-    for(int i = 0; i < num_spatial_axes_; ++i){
-        if ( (output_shape_data[i] - 1) * stride_data[i] >= input_shape_data[i+1] + pad_data[i] )
+  if (pad_sum) {
+    for (int i = 0; i < num_spatial_axes_; ++i) {
+        if ( (output_shape_data[i] - 1) * stride_data[i] >=
+          input_shape_data[i+1] + pad_data[i] )
             --output_shape_data[i];
-        CHECK_LT((output_shape_data[i] - 1) * stride_data[i],input_shape_data[i+1] + pad_data[i]);
+        CHECK_LT((output_shape_data[i] - 1) * stride_data[i],
+          input_shape_data[i+1] + pad_data[i]);
     }
-  } 
+  }
 
   vector<int> top_shape = bottom[0]->shape();
   top_shape.resize(first_spatial_axis);  // Discard input spatial axes.
   for (int i = 0; i < num_spatial_axes_; ++i) {
       top_shape.push_back(output_shape_data[i]);
   }
-  // for (int i = 0; i < top_shape.size(); ++i) {
-  //     printf("%d ",top_shape[i]);
-  // }
-  // printf("\n");
+
+
   top[0]->Reshape(top_shape);
   if (top.size() > 1) {
     top[1]->ReshapeLike(*top[0]);
@@ -218,7 +215,8 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 // TODO(Yangqing): Is there a faster way to do pooling in the channel-first
 // case?
 template <typename Dtype>
-void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void PoolingLayer<Dtype>::Forward_cpu(
+      const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -227,7 +225,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const bool use_top_mask = top.size() > 1;
   int* mask = NULL;  // suppress warnings about uninitalized variables
   Dtype* top_mask = NULL;
-  vector<int> offset(2,0);
+  vector<int> offset(2, 0);
   offset[1] = 1;
 
   const int* kernel_shape = kernel_shape_.cpu_data();
@@ -291,11 +289,13 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                 hstart = max(hstart, 0);
                 wstart = max(wstart, 0);
                 zstart = max(zstart, 0);
-                const int pool_index = (ph * output_shape_data[1] + pw)*output_shape_data[2] +pz;
+                const int pool_index = (ph * output_shape_data[1] + pw)*
+                                                  output_shape_data[2] +pz;
                 for (int h = hstart; h < hend; ++h) {
                   for (int w = wstart; w < wend; ++w) {
                     for (int z = zstart; z < zend; ++z) {
-                      const int index = (h * input_shape_data[2] + w)*input_shape_data[3]+z;
+                      const int index = (h * input_shape_data[2] + w)*
+                                                    input_shape_data[3]+z;
                       if (bottom_data[index] > top_data[pool_index]) {
                         top_data[pool_index] = bottom_data[index];
                         if (use_top_mask) {
@@ -339,15 +339,15 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
               for (int pw = 0; pw < output_shape_data[1]; ++pw) {
                 int hstart = ph * stride_data[0] - pad_data[0];
                 int wstart = pw * stride_data[1] - pad_data[1];
-                int hend = min(hstart + kernel_shape[0], input_shape_data[1] + pad_data[0]);
-                int wend = min(wstart + kernel_shape[1], input_shape_data[2] + pad_data[1]);
+                int hend = min(hstart + kernel_shape[0],
+                         input_shape_data[1] + pad_data[0]);
+                int wend = min(wstart + kernel_shape[1],
+                         input_shape_data[2] + pad_data[1]);
                 int pool_size = (hend - hstart) * (wend - wstart);
                 hstart = max(hstart, 0);
                 wstart = max(wstart, 0);
-                hend = min(hend,input_shape_data[1]);
-                wend = min(wend,input_shape_data[2]);
-                
-
+                hend = min(hend, input_shape_data[1]);
+                wend = min(wend, input_shape_data[2]);
                 const int pool_index = ph * output_shape_data[1] + pw;
                 for (int h = hstart; h < hend; ++h) {
                   for (int w = wstart; w < wend; ++w) {
@@ -365,24 +365,29 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                   int hstart = ph * stride_data[0] - pad_data[0];
                   int wstart = pw * stride_data[1] - pad_data[1];
                   int zstart = pz * stride_data[2] - pad_data[2];
-                  int hend = min(hstart + kernel_shape[0], input_shape_data[1]+ pad_data[0]);
-                  int wend = min(wstart + kernel_shape[1], input_shape_data[2]+ pad_data[1]);
-                  int zend = min(zstart + kernel_shape[2], input_shape_data[3]+ pad_data[2]);
-                  int pool_size = (hend - hstart) * (wend - wstart) * (zend - zstart);
+                  int hend = min(hstart + kernel_shape[0],
+                            input_shape_data[1]+ pad_data[0]);
+                  int wend = min(wstart + kernel_shape[1],
+                          input_shape_data[2]+ pad_data[1]);
+                  int zend = min(zstart + kernel_shape[2],
+                           input_shape_data[3]+ pad_data[2]);
+                  int pool_size = (hend - hstart) *
+                                  (wend - wstart) *
+                                  (zend - zstart);
                   hstart = max(hstart, 0);
                   wstart = max(wstart, 0);
                   zstart = max(zstart, 0);
-                  hend = min(hend,input_shape_data[1]);
-                  wend = min(wend,input_shape_data[2]);
-                  zend = min(zend,input_shape_data[3]);
+                  hend = min(hend, input_shape_data[1]);
+                  wend = min(wend, input_shape_data[2]);
+                  zend = min(zend, input_shape_data[3]);
 
-                  const int pool_index = (ph * output_shape_data[1] + pw)*output_shape_data[2] +pz;
-                  //printf("n:%d c:%d ph:%d pw:%d pz:%d\n",n,c,ph,pw,pz);
-                  
+                  const int pool_index = (ph * output_shape_data[1] + pw)*
+                                                  output_shape_data[2] +pz;
                   for (int h = hstart; h < hend; ++h) {
                     for (int w = wstart; w < wend; ++w) {
                       for (int z = zstart; z < zend; ++z) {
-                        const int index = (h * input_shape_data[2] + w)*input_shape_data[3]+z;
+                        const int index = (h * input_shape_data[2] + w)*
+                                                      input_shape_data[3]+z;
                         top_data[pool_index] += bottom_data[index];
                       }
                     }
@@ -432,9 +437,8 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const int* input_shape_data = this->input_shape_.cpu_data();
   const int* output_shape_data = this->output_shape_.cpu_data();
   int top_num = top[0]->count(0, channel_axis_);
-  vector<int> offset(2,0);
+  vector<int> offset(2, 0);
   offset[1] = 1;
-  //printf("check %d==%d\n",top_num,top[0]->num());
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
@@ -458,7 +462,8 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             for (int ph = 0; ph < output_shape_data[0]; ++ph) {
               for (int pw = 0; pw < output_shape_data[1]; ++pw) {
                 for (int pz = 0; pz < output_shape_data[2]; ++pz) {
-                const int index = (ph * output_shape_data[1] + pw)*output_shape_data[2] +pz;
+                const int index = (ph * output_shape_data[1] + pw)*
+                                            output_shape_data[2] +pz;
                 const int bottom_index =
                     use_top_mask ? top_mask[index] : mask[index];
                 bottom_diff[bottom_index] += top_diff[index];
@@ -489,8 +494,10 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             for (int pw = 0; pw < output_shape_data[1]; ++pw) {
               int hstart = ph * stride_data[0] - pad_data[0];
               int wstart = pw * stride_data[1] - pad_data[1];
-              int hend = min(hstart + kernel_shape[0], input_shape_data[1]+pad_data[0]);
-              int wend = min(wstart + kernel_shape[1], input_shape_data[2]+pad_data[1]);
+              int hend = min(hstart + kernel_shape[0],
+                            input_shape_data[1]+pad_data[0]);
+              int wend = min(wstart + kernel_shape[1],
+                            input_shape_data[2]+pad_data[1]);
 
               int pool_size = (hend - hstart) * (wend - wstart);
               hstart = max(hstart, 0);
@@ -503,7 +510,6 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
               for (int h = hstart; h < hend; ++h) {
                 for (int w = wstart; w < wend; ++w) {
                   const int index = h * input_shape_data[2] + w;
-                  
                   bottom_diff[index] +=
                     top_diff[pool_index] / pool_size;
                 }
@@ -523,13 +529,16 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                   hstart = max(hstart, 0);
                   wstart = max(wstart, 0);
                   zstart = max(zstart, 0);
-                  const int pool_index = (ph * output_shape_data[1] + pw)*output_shape_data[2] +pz;
-                  int pool_size = (hend - hstart) * (wend - wstart) * (zend - zstart);
-
+                  const int pool_index = (ph * output_shape_data[1] + pw)*
+                                                    output_shape_data[2] +pz;
+                  int pool_size = (hend - hstart) *
+                                  (wend - wstart) *
+                                  (zend - zstart);
                   for (int h = hstart; h < hend; ++h) {
                     for (int w = wstart; w < wend; ++w) {
                       for (int z = zstart; z < zend; ++z) {
-                        const int index = (h * input_shape_data[2] + w)*input_shape_data[3]+z;
+                        const int index = (h * input_shape_data[2] + w)*
+                                                      input_shape_data[3]+z;
                         bottom_diff[index] +=
                                       top_diff[pool_index] / pool_size;
                       }

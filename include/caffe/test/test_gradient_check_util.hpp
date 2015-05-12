@@ -152,7 +152,6 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
         current_blob->mutable_cpu_data()[feat_id] += stepsize_;
         estimated_gradient = (positive_objective - negative_objective) /
             stepsize_ / 2.;
-
       }
       Dtype computed_gradient = computed_gradients[feat_id];
       Dtype feature = current_blob->cpu_data()[feat_id];
@@ -163,7 +162,6 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
           || fabs(feature) > kink_ + kink_range_) {
         // We check relative accuracy, but for too small values, we threshold
         // the scale factor by 1.
-        //printf("[%d,%d] %d,%d,%f,%f\n",top_id,top_data_id,blob_id,feat_id,computed_gradient,estimated_gradient);
         Dtype scale = std::max(
             std::max(fabs(computed_gradient), fabs(estimated_gradient)), 1.);
         EXPECT_NEAR(computed_gradient, estimated_gradient, threshold_ * scale)
