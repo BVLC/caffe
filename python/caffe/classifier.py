@@ -29,7 +29,7 @@ class Classifier(caffe.Net):
         in_ = self.inputs[0]
         self.transformer = caffe.io.Transformer(
             {in_: self.blobs[in_].data.shape})
-        self.transformer.set_transpose(in_, (2,0,1))
+        self.transformer.set_transpose(in_, (2, 0, 1))
         if mean is not None:
             self.transformer.set_mean(in_, mean)
         if input_scale is not None:
@@ -43,7 +43,6 @@ class Classifier(caffe.Net):
         if not image_dims:
             image_dims = self.crop_dims
         self.image_dims = image_dims
-
 
     def predict(self, inputs, oversample=True):
         """
@@ -78,7 +77,7 @@ class Classifier(caffe.Net):
             input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
 
         # Classify
-        caffe_in = np.zeros(np.array(input_.shape)[[0,3,1,2]],
+        caffe_in = np.zeros(np.array(input_.shape)[[0, 3, 1, 2]],
                             dtype=np.float32)
         for ix, in_ in enumerate(input_):
             caffe_in[ix] = self.transformer.preprocess(self.inputs[0], in_)

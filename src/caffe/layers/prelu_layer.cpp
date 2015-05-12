@@ -45,7 +45,8 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
-  multiplier_.Reshape(vector<int>(1, bottom[0]->count() / bottom[0]->num()));
+  multiplier_.Reshape(vector<int>(1, bottom[0]->count(1)));
+  backward_buff_.Reshape(vector<int>(1, bottom[0]->count(1)));
   caffe_set(multiplier_.count(), Dtype(1), multiplier_.mutable_cpu_data());
 }
 
