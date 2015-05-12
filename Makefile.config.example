@@ -1,6 +1,14 @@
 ## Refer to http://caffe.berkeleyvision.org/installation.html
 # Contributions simplifying and improving our build system are welcome!
 
+# GreenTea (ViennaCL/OpenCL) backend switch
+USE_CUDA := 1
+USE_GREENTEA := 1
+VIENNACL_DIR = ../ViennaCL
+USE_CLBLAS := 1
+USE_VIENNACLBLAS := 0
+GREENTEA_DOUBLE_SUPPORT := 1
+
 # cuDNN acceleration switch (uncomment to build with cuDNN).
 # USE_CUDNN := 1
 
@@ -30,7 +38,7 @@ CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 # atlas for ATLAS (default)
 # mkl for MKL
 # open for OpenBlas
-BLAS := atlas
+BLAS := open
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
