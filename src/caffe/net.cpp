@@ -80,6 +80,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Setup layer.
     const LayerParameter& layer_param = param.layer(layer_id);
     layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
+    layers_[layer_id]->set_net(this);
     layer_names_.push_back(layer_param.name());
     LOG(INFO) << "Creating Layer " << layer_param.name();
     bool need_backward = false;
