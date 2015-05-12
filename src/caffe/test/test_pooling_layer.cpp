@@ -473,6 +473,9 @@ TYPED_TEST(PoolingLayerTest, TestGradientMax) {
       pooling_param->add_pad(1);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       PoolingLayer<Dtype> layer(layer_param);
+      // for (int i=0;i<this->blob_bottom_vec_.size();++i)
+      //   std::cout << this->blob_bottom_vec_[i]->shape_string() << std::endl;
+      // printf("Kernel: %d %d\n",kernel_h,kernel_w);
       GradientChecker<Dtype> checker(1e-4, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -597,6 +600,9 @@ TYPED_TEST(PoolingLayerTest, TestGradientAve) {
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
       PoolingLayer<Dtype> layer(layer_param);
       GradientChecker<Dtype> checker(1e-2, 1e-2);
+      for (int i=0;i<this->blob_bottom_vec_.size();++i)
+        std::cout << this->blob_bottom_vec_[i]->shape_string() << std::endl;
+      printf("Kernel: %d %d\n",kernel_h,kernel_w);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
     }
