@@ -373,7 +373,7 @@ uint32_t caffe_gpu_hamming_distance<float>(const int n, const float* x,
                                   const float* y) {
   // TODO: Fix caffe_gpu_hamming_distance (see failing unit test
   // TestHammingDistanceGPU in test_math_functions.cpp).
-  NOT_IMPLEMENTED;
+  CAFFE_NOT_IMPLEMENTED;
   thrust::device_vector<uint8_t> popcounts(n);
   // NOLINT_NEXT_LINE(whitespace/operators)
   popc_kernel<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
@@ -387,7 +387,7 @@ uint32_t caffe_gpu_hamming_distance<double>(const int n, const double* x,
                                    const double* y) {
   // TODO: Fix caffe_gpu_hamming_distance (see failing unit test
   // TestHammingDistanceGPU in test_math_functions.cpp).
-  NOT_IMPLEMENTED;
+  CAFFE_NOT_IMPLEMENTED;
   thrust::device_vector<uint8_t> popcounts(n);
   // NOLINT_NEXT_LINE(whitespace/operators)
   popcll_kernel<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
