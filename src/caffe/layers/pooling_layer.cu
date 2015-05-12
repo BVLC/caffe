@@ -187,7 +187,7 @@ __global__ void StoPoolForwardTrain(const int nthreads, const Dtype* bottom_data
     int pool_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
     int input_loc[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
     int starts[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
-    int stops[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
+    int ends[MAX_SPATIAL_AXES];  // NOLINT(runtime/arrays)
   CUDA_KERNEL_LOOP(index, nthreads) {
     // ind2sub
     int k = index;
@@ -200,59 +200,103 @@ __global__ void StoPoolForwardTrain(const int nthreads, const Dtype* bottom_data
 
     // Get starts and calc size (sub2ind)
     int pool_size = 1;
-    int start = 1;
-    int stop = 1;
+    int start,end;
     int im_size = 1;
     for (int i = 0; i < num_axes; ++i) {
       starts[i] = pool_loc[i]*stride[i];
-      stops[i] = min(starts[i]+kernel_shape[i] , im_shape[i+1]);
-      int s1 = stops[i];
+      ends[i] = min(starts[i]+kernel_shape[i] , im_shape[i+1]);
+      int s1 = ends[i];
       int s2 = starts[i];
       pool_size *= (s1 - s2);
       im_size *= im_shape[i+1];
       if (i!=0) {
         start = start*im_shape[i+1]+starts[i];
-        stop = stop*im_shape[i+1]+stops[i];
+        end = end*im_shape[i+1]+ends[i];
       } else {
         start = starts[0];
-        stop = stops[0];
+        end = ends[0];
       }
     }
     Dtype cumsum = 0.;
     bottom_data += (n * channels + c) * im_size;
     // First pass: get sum
-    for (int input_index = start; input_index < stop; ++input_index){
-      bool in_range = true;
-      // ind2sub
-      int m = input_index;
-      for (int j = num_axes-1;j>=0;--j) {
-        input_loc[j] = m % im_shape[j+1];
-        m /= im_shape[j+1];
-        in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < stops[j]);
-        if (!in_range) { break;}
+    if (num_axes==2) { 
+      for (int h = starts[0]; h < ends[0]; ++h){
+        for (int w = starts[1]; w < ends[1]; ++w){
+          const int bottom_index = h * im_shape[2] + w;
+          cumsum += bottom_data[bottom_index];
+        }
       }
-      if (in_range){
-        cumsum += bottom_data[input_index];
+    } else if (num_axes == 3 ) {
+      for (int h = starts[0]; h < ends[0]; ++h){
+        for (int w = starts[1]; w < ends[1]; ++w){
+          for (int z = starts[2]; z < ends[2]; ++z){
+            const int bottom_index = (h * im_shape[2] + w)*im_shape[3]+z;
+            cumsum += bottom_data[bottom_index];
+          }
+        }
+      }
+    } else {
+      for (int input_index = start; input_index < end; ++input_index){
+        bool in_range = true;
+        // ind2sub
+        int m = input_index;
+        for (int j = num_axes-1;j>=0;--j) {
+          input_loc[j] = m % im_shape[j+1];
+          m /= im_shape[j+1];
+          in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < ends[j]);
+          if (!in_range) { break;}
+        }
+        if (in_range){
+          cumsum += bottom_data[input_index];
+        }
       }
     }
+
     float thres = rand_idx[index] * cumsum;
     // Second pass: get value, and set index.
     cumsum = 0;
-    for (int input_index = start; input_index < stop; ++input_index){
-      bool in_range = true;
-      // ind2sub
-      int m = input_index;
-      for (int j = num_axes-1;j>=0;--j) {
-        input_loc[j] = m % im_shape[j+1];
-        m /= im_shape[j+1];
-       in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < stops[j]);
-        if (!in_range) { break;}
+    if (num_axes==2) { 
+      for (int h = starts[0]; h < ends[0]; ++h){
+        for (int w = starts[1]; w < ends[1]; ++w){
+          const int bottom_index = h * im_shape[2] + w;
+          cumsum += bottom_data[bottom_index];
+          if (cumsum >= thres) {
+            rand_idx[index] = ((n * channels + c) * im_size) + bottom_index;
+            top_data[index] = bottom_data[bottom_index];
+          }
+        }
       }
-      if (in_range){
-        if (cumsum >= thres) {
-          rand_idx[index] = ((n * channels + c) * im_size) + input_index;
-          top_data[index] = bottom_data[input_index];
-          return;
+    } else if (num_axes == 3 ) {
+      for (int h = starts[0]; h < ends[0]; ++h){
+        for (int w = starts[1]; w < ends[1]; ++w){
+          for (int z = starts[2]; z < ends[2]; ++z){
+            const int bottom_index = (h * im_shape[2] + w)*im_shape[3]+z;
+            cumsum += bottom_data[bottom_index];
+            if (cumsum >= thres) {
+              rand_idx[index] = ((n * channels + c) * im_size) + bottom_index;
+              top_data[index] = bottom_data[bottom_index];
+            }
+          }
+        }
+      }
+    } else {
+      for (int input_index = start; input_index < end; ++input_index){
+        bool in_range = true;
+        // ind2sub
+        int m = input_index;
+        for (int j = num_axes-1;j>=0;--j) {
+          input_loc[j] = m % im_shape[j+1];
+          m /= im_shape[j+1];
+         in_range &= (m<im_shape[j+1])&&(input_loc[j] >= starts[j]) && (input_loc[j] < ends[j]);
+          if (!in_range) { break;}
+        }
+        if (in_range){
+          if (cumsum >= thres) {
+            rand_idx[index] = ((n * channels + c) * im_size) + input_index;
+            top_data[index] = bottom_data[input_index];
+            return;
+          }
         }
       }
     }
