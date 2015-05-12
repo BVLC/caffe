@@ -4,6 +4,7 @@
  *  Created on: Apr 6, 2015
  *      Author: Fabian Tschopp
  */
+
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea.hpp"
 #include "caffe/greentea/greentea_math_functions.hpp"
@@ -40,8 +41,9 @@ namespace caffe {
 void greentea_gpu_memcpy(const size_t N, const cl_mem X, void *Y,
                          viennacl::ocl::context &ctx) {
   if (Y != NULL) {
-    cl_int err = clEnqueueReadBuffer(ctx.get_queue().handle().get(), X, CL_TRUE,
-                                     0, N, Y, 0, NULL, NULL);
+    clEnqueueReadBuffer(ctx.get_queue().handle().get(), X, CL_TRUE, 0, N, Y, 0,
+    NULL,
+                        NULL);
   }
   ctx.get_queue().finish();
 }
@@ -50,9 +52,9 @@ void greentea_gpu_memcpy(const size_t N, const cl_mem X, void *Y,
 void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
                          viennacl::ocl::context &ctx) {
   if (X != NULL) {
-    cl_int err = clEnqueueWriteBuffer(ctx.get_queue().handle().get(), Y,
+    clEnqueueWriteBuffer(ctx.get_queue().handle().get(), Y,
     CL_TRUE,
-                                      0, N, X, 0, NULL, NULL);
+                         0, N, X, 0, NULL, NULL);
   }
   ctx.get_queue().finish();
 }
@@ -62,8 +64,8 @@ template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, cl_mem Y,
                    viennacl::ocl::context &ctx) {
   if (X != Y) {
-    cl_int err = clEnqueueCopyBuffer(ctx.get_queue().handle().get(), X, Y, 0, 0,
-                                     sizeof(Dtype) * N, 0, NULL, NULL);
+    clEnqueueCopyBuffer(ctx.get_queue().handle().get(), X, Y, 0, 0,
+                        sizeof(Dtype) * N, 0, NULL, NULL);
   }
   ctx.get_queue().finish();
 }
@@ -85,25 +87,11 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
                        const int offA, const cl_mem B, const int offB,
                        const Dtype beta, cl_mem C, const int offC) {
 
-  int offArow = offA;
-  int offBrow = offB;
-  int offCrow = offC;
-
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
   int ldc = N;
 
 #ifdef USE_VIENNACLBLAS
-
-  int offAcol = 0;
-  int incArow = 1;
-  int incAcol = 1;
-  int offBcol = 0;
-  int incBrow = 1;
-  int incBcol = 1;
-  int offCcol = 0;
-  int incCrow = 1;
-  int incCcol = 1;
 
   ViennaCLBackend backend;
   ViennaCLBackendCreate(&backend);
@@ -121,17 +109,13 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
   if (std::is_same<Dtype, float>::value) {
     GREENTEA_VCL_BLAS_CHECK(
         ViennaCLOpenCLSgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
-                            vclOrderC, M, N, K, alpha, A, offArow, offAcol,
-                            incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
-                            incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
-                            incCcol, ldc));
+                            vclOrderC, M, N, K, alpha, A, 0, offA, 1, 1, lda, B,
+                            0, offB, 1, 1, ldb, beta, C, 0, offC, 1, 1, ldc));
   } else {
     GREENTEA_VCL_BLAS_CHECK(
         ViennaCLOpenCLDgemm(backend, vclOrderA, vclTransA, vclOrderB, vclTransB,
-                            vclOrderC, M, N, K, alpha, A, offArow, offAcol,
-                            incArow, incAcol, lda, B, offBrow, offBcol, incBrow,
-                            incBcol, ldb, beta, C, offCrow, offCcol, incCrow,
-                            incCcol, ldc));
+                            vclOrderC, M, N, K, alpha, A, 0, offA, 1, 1, lda, B,
+                            0, offB, 1, 1, ldb, beta, C, 0, offC, 1, 1, ldc));
   }
 #endif
 #ifdef USE_CLBLAS
@@ -146,10 +130,10 @@ void greentea_gpu_gemm(const int ctx_id, const CBLAS_TRANSPOSE TransA,
 
   if (std::is_same<Dtype, float>::value) {
     GREENTEA_CL_BLAS_CHECK(
-        clblasSgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B, offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
+        clblasSgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offA, lda, B, offB, ldb, beta, C, offC, ldc, 1, &queue, 0, NULL, NULL));
   } else {
     GREENTEA_CL_BLAS_CHECK(
-        clblasDgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offArow, lda, B, offBrow, ldb, beta, C, offCrow, ldc, 1, &queue, 0, NULL, NULL));
+        clblasDgemm(clOrder, clTransA, clTransB, M, N, K, alpha, A, offA, lda, B, offB, ldb, beta, C, offC, ldc, 1, &queue, 0, NULL, NULL));
   }
 #endif
 
@@ -182,7 +166,23 @@ void greentea_gpu_gemv(const int ctx_id, const CBLAS_TRANSPOSE TransA,
   int lda = (TransA == CblasNoTrans) ? N : M;
 
 #ifdef USE_VIENNACLBLAS
-  // TODO
+  ViennaCLBackend backend;
+  ViennaCLBackendCreate(&backend);
+  ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
+
+  ViennaCLOrder vclOrder = ViennaCLRowMajor;
+  ViennaCLTranspose vclTransA =
+      (TransA == CblasNoTrans) ? ViennaCLNoTrans : ViennaCLTrans;
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLSgemv(backend, vclOrder, vclTransA, M, N, alpha, A, offA,
+                            0, 1, 1, lda, x, offx, 1, beta, y, offy, 1));
+  } else {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLDgemv(backend, vclOrder, vclTransA, M, N, alpha, A, offA,
+                            0, 1, 1, lda, x, offx, 1, beta, y, offy, 1));
+  }
 #endif
 
 #ifdef USE_CLBLAS
@@ -225,7 +225,17 @@ void greentea_gpu_axpy(const int ctx_id, const int N, const Dtype alpha,
                        const int offY) {
 
 #ifdef USE_VIENNACLBLAS
-  // TODO
+  ViennaCLBackend backend;
+  ViennaCLBackendCreate(&backend);
+  ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLSaxpy(backend, N, alpha, X, offX, 1, Y, offY, 1));
+  } else {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLDaxpy(backend, N, alpha, X, offX, 1, Y, offY, 1));
+  }
 #endif
 
 #ifdef USE_CLBLAS
@@ -276,66 +286,212 @@ template void greentea_gpu_mul<double>(const int ctx_id, const int N,
                                        const cl_mem b, const int offb, cl_mem y,
                                        const int offy);
 
+template<typename Dtype>
+void greentea_gpu_scal(const int ctx_id, const int N, const Dtype alpha,
+                       cl_mem x, int offx) {
+
+#ifdef USE_VIENNACLBLAS
+  ViennaCLBackend backend;
+  ViennaCLBackendCreate(&backend);
+  ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLSscal(backend, N, alpha, x, offx, 1));
+  } else {
+    GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLDscal(backend, N, alpha, x, offx, 1));
+  }
+#endif
+
+#ifdef USE_CLBLAS
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
+  cl_command_queue queue = ctx.get_queue().handle().get();
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_CL_BLAS_CHECK(clblasSscal(N,alpha,x,offx,1,1,&queue,0,NULL,NULL));
+  } else {
+    GREENTEA_CL_BLAS_CHECK(clblasDscal(N,alpha,x,offx,1,1,&queue,0,NULL,NULL));
+  }
+#endif
+}
+
+template void greentea_gpu_scal<float>(const int ctx_id, const int N,
+                                       const float alpha, cl_mem x,
+                                       const int offx);
+template void greentea_gpu_scal<double>(const int ctx_id, const int N,
+                                        const double alpha, cl_mem x,
+                                        const int offx);
+
+template<typename Dtype>
+void greentea_gpu_axpby(const int ctx_id, const int N, const Dtype alpha,
+                        const cl_mem X, const int offX, const Dtype beta,
+                        cl_mem Y, const int offY) {
+  greentea_gpu_scal<Dtype>(ctx_id, N, beta, Y, offY);
+  greentea_gpu_axpy<Dtype>(ctx_id, N, alpha, X, offX, Y, offY);
+}
+
+template void greentea_gpu_axpby<float>(const int ctx_id, const int N,
+                                        const float alpha, const cl_mem X,
+                                        const int offX, const float beta,
+                                        cl_mem Y, const int offY);
+
+template void greentea_gpu_axpby<double>(const int ctx_id, const int N,
+                                         const double alpha, const cl_mem X,
+                                         const int offX, const double beta,
+                                         cl_mem Y, const int offY);
+
+template<typename Dtype>
+void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
+                      const int offX, const cl_mem Y, const int offY,
+                      Dtype* out) {
+
+#ifdef USE_VIENNACLBLAS
+  ViennaCLBackend backend;
+  ViennaCLBackendCreate(&backend);
+  ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLSdot(backend, n, out, X, offX, 1, Y, offY, 1));
+  } else {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLDdot(backend, n, out, X, offX, 1, Y, offY, 1));
+  }
+#endif
+
+#ifdef USE_CLBLAS
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
+  cl_command_queue queue = ctx.get_queue().handle().get();
+
+  cl_int err;
+  cl_mem gpuout = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                 sizeof(Dtype), NULL, &err);
+  cl_mem scratch = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                  n * sizeof(Dtype), NULL, &err);
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasSdot(n,gpuout,0,X,offX,1,Y,offY,1,scratch,1,&queue,0,NULL,NULL));
+  } else {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasDdot(n,gpuout,0,X,offX,1,Y,offY,1,scratch,1,&queue,0,NULL,NULL));
+  }
+
+  greentea_gpu_memcpy(sizeof(Dtype), gpuout, &out, ctx);
+
+  ctx.get_queue().finish();
+  clReleaseMemObject(gpuout);
+  clReleaseMemObject(scratch);
+
+#endif
+}
+
+template void greentea_gpu_dot<float>(const int ctx_id, const int n,
+                                      const cl_mem X, const int offX,
+                                      const cl_mem Y, const int offY,
+                                      float* out);
+template void greentea_gpu_dot<double>(const int ctx_id, const int n,
+                                       const cl_mem X, const int offX,
+                                       const cl_mem Y, const int offY,
+                                       double* out);
+
+template<typename Dtype>
+void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
+                       const int offX, Dtype* Y) {
+
+#ifdef USE_VIENNACLBLAS
+  ViennaCLBackend backend;
+  ViennaCLBackendCreate(&backend);
+  ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLSasum(backend, n, Y, X, offX, 1));
+  } else {
+    GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLDasum(backend, n, Y, X, offX, 1));
+  }
+#endif
+
+#ifdef USE_CLBLAS
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
+  cl_command_queue queue = ctx.get_queue().handle().get();
+
+  cl_int err;
+  cl_mem gpuout = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                 sizeof(Dtype), NULL, &err);
+  cl_mem scratch = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
+                                  n * sizeof(Dtype), NULL, &err);
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasSasum(n,gpuout,0,X,offX,1,scratch,1,&queue,0,NULL,NULL));
+  } else {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasDasum(n,gpuout,0,X,offX,1,scratch,1,&queue,0,NULL,NULL));
+  }
+
+  greentea_gpu_memcpy(sizeof(Dtype), gpuout, &Y, ctx);
+
+  ctx.get_queue().finish();
+  clReleaseMemObject(gpuout);
+  clReleaseMemObject(scratch);
+#endif
+}
+
+template void greentea_gpu_asum<float>(const int ctx_id, const int n,
+                                       const cl_mem X, const int offX,
+                                       float* Y);
+template void greentea_gpu_asum<double>(const int ctx_id, const int n,
+                                        const cl_mem X, const int offX,
+                                        double* Y);
+
+template<typename Dtype>
+void greentea_gpu_scale(const int ctx_id, const int n, const Dtype alpha,
+                        const cl_mem X, const int offX, cl_mem Y,
+                        const int offY) {
+
+#ifdef USE_VIENNACLBLAS
+  ViennaCLBackend backend;
+  ViennaCLBackendCreate(&backend);
+  ViennaCLBackendSetOpenCLContextID(backend, static_cast<ViennaCLInt>(ctx_id));
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLScopy(backend, n, X, offX, 1, Y, offY, 1));
+    GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLSscal(backend, n, alpha, X, offX, 1));
+  } else {
+    GREENTEA_VCL_BLAS_CHECK(
+        ViennaCLOpenCLDcopy(backend, n, X, offX, 1, Y, offY, 1));
+    GREENTEA_VCL_BLAS_CHECK(ViennaCLOpenCLDscal(backend, n, alpha, X, offX, 1));
+  }
+#endif
+
+#ifdef USE_CLBLAS
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
+  cl_command_queue queue = ctx.get_queue().handle().get();
+
+  if (std::is_same<Dtype, float>::value) {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasScopy(n,X,offX,1,Y,offY,1,1,&queue,0,NULL,NULL));
+    GREENTEA_CL_BLAS_CHECK(clblasSscal(n,alpha,X,offX,1,1,&queue,0,NULL,NULL));
+  } else {
+    GREENTEA_CL_BLAS_CHECK(
+        clblasDcopy(n,X,offX,1,Y,offY,1,1,&queue,0,NULL,NULL));
+    GREENTEA_CL_BLAS_CHECK(clblasDscal(n,alpha,X,offX,1,1,&queue,0,NULL,NULL));
+  }
+#endif
+
+}
+
+template void greentea_gpu_scale<float>(const int ctx_id, const int n,
+                                        const float alpha, const cl_mem X,
+                                        const int offX, cl_mem Y,
+                                        const int offY);
+
+template void greentea_gpu_scale<double>(const int ctx_id, const int n,
+                                         const double alpha, const cl_mem X,
+                                         const int offX, cl_mem Y,
+                                         const int offY);
+
 /*
- template<>
- void greentea_gpu_scal<float>(const int N, const float alpha, float *X) {
- CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
- }
-
- template<>
- void greentea_gpu_scal<double>(const int N, const double alpha, double *X) {
- CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
- }
-
- template<>
- void greentea_gpu_axpby<float>(const int N, const float alpha, const float* X,
- const float beta, float* Y) {
- greentea_gpu_scal<float>(N, beta, Y);
- greentea_gpu_axpy<float>(N, alpha, X, Y);
- }
-
- template<>
- void greentea_gpu_axpby<double>(const int N, const double alpha,
- const double* X, const double beta, double* Y) {
- greentea_gpu_scal<double>(N, beta, Y);
- greentea_gpu_axpy<double>(N, alpha, X, Y);
- }
-
- template<>
- void greentea_gpu_dot<float>(const int n, const float* x, const float* y,
- float* out) {
- CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
- }
-
- template<>
- void greentea_gpu_dot<double>(const int n, const double* x, const double* y,
- double * out) {
- CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
- }
-
- template<>
- void greentea_gpu_asum<float>(const int n, const float* x, float* y) {
- CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
- }
-
- template<>
- void greentea_gpu_asum<double>(const int n, const double* x, double* y) {
- CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
- }
-
- template<>
- void greentea_gpu_scale<float>(const int n, const float alpha, const float *x,
- float* y) {
- CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), n, x, 1, y, 1));
- CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), n, &alpha, y, 1));
- }
-
- template<>
- void greentea_gpu_scale<double>(const int n, const double alpha,
- const double *x, double* y) {
- CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
- CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
- }
 
  template <typename Dtype>
  __global__ void set_kernel(const int n, const Dtype alpha, Dtype* y) {

@@ -46,7 +46,7 @@ list(APPEND Caffe_LINKER_LIBS ${Snappy_LIBRARIES})
 # ---[ CUDA
 include(cmake/Cuda.cmake)
 if(NOT HAVE_CUDA)
-  if(CPU_ONLY)
+  if(CPU_ONLY OR NOT USE_CUDA)
     message("-- CUDA is disabled. Building without it...")
   else()
     message("-- CUDA is not detected by cmake. Building without it...")

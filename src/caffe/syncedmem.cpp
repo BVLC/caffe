@@ -86,6 +86,7 @@ inline void SyncedMemory::to_gpu() {
           // CPU memory is shared
           if (cpu_ptr_ == NULL) {
             CaffeMallocHost(&cpu_ptr_, size_);
+            caffe_memset(size_, 0, cpu_ptr_);
           }
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
           CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
@@ -93,6 +94,8 @@ inline void SyncedMemory::to_gpu() {
         } else {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                        size_, NULL, &err);
+          int alpha = 0;
+          greentea_memset(size_, alpha, cl_gpu_mem_, 0, ctx);
         }
         gpu_ptr_ = (void*) cl_gpu_mem_;
         ctx.get_queue().finish();

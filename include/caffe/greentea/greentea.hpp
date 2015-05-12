@@ -63,14 +63,14 @@ struct is_same<T, T> {
 
 #ifdef USE_VIENNACLBLAS
 #define GREENTEA_VCL_BLAS_CHECK(condition) \
-    ViennaCLStatus status = condition; \
-    CHECK_EQ(status, ViennaCLSuccess) << "GreenTea ViennaCL BLAS ERROR";
+    {ViennaCLStatus status = condition; \
+    CHECK_EQ(status, ViennaCLSuccess) << "GreenTea ViennaCL BLAS ERROR";}
 #endif
 
 #ifdef USE_CLBLAS
 #define GREENTEA_CL_BLAS_CHECK(condition) \
-    clblasStatus status = condition; \
-    CHECK_EQ(status, clblasSuccess) << "GreenTea CL BLAS ERROR";
+    {clblasStatus status = condition; \
+    CHECK_EQ(status, clblasSuccess) << "GreenTea CL BLAS ERROR";}
 #endif
 
 // Macro to select the single (_s) or double (_d) precision kernel
