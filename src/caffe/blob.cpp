@@ -457,10 +457,10 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
 #endif
       }
       return;
-    }
 #else
       NO_GPU;
 #endif
+    }
     case SyncedMemory::UNINITIALIZED:
       return;
     default:
