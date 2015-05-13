@@ -54,7 +54,7 @@ inline void SyncedMemory::to_cpu() {
             device_context_.id());
         // On the CPU, memory is shared (and no copy needed)
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
-          greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, cpu_ptr_, ctx);
+          greentea_gpu_memcpy(size_, (cl_mem) gpu_ptr_, 0, cpu_ptr_, ctx);
         }
 #endif
       }
@@ -133,7 +133,7 @@ inline void SyncedMemory::to_gpu() {
         }
         // On the CPU, memory is shared (and no copy needed)
         if (ctx.devices()[0].type() != CL_DEVICE_TYPE_CPU) {
-          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, ctx);
+          greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, ctx);
         }
 #endif
       }

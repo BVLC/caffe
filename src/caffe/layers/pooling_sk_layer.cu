@@ -180,13 +180,6 @@ template<typename Dtype>
 void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
 
-#ifdef USE_GREENTEA
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-      this->device_context_.id());
-  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-      this->device_context_.id());
-#endif
-
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   int count = top[0]->count();
@@ -256,6 +249,11 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif // USE_CUDA
     } else {
 #ifdef USE_GREENTEA
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          this->device_context_.id());
+      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+          this->device_context_.id());
+
       switch (this->layer_param_.pooling_param().pool()) {
         case PoolingParameter_PoolMethod_MAX:
         {
@@ -284,8 +282,10 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         }
         break;
         case PoolingParameter_PoolMethod_AVE:
+        // TODO
         break;
         case PoolingParameter_PoolMethod_STOCHASTIC:
+        // TODO
         break;
         default:
         LOG(FATAL)<< "Unknown pooling method.";
