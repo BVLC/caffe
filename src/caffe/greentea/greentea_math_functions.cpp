@@ -27,6 +27,10 @@
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/ocl/backend.hpp"
 
+#include <sys/time.h>
+#include <random>
+#include <functional>
+
 #ifdef USE_CLBLAS
 #include <clBLAS.h>
 #endif
@@ -38,11 +42,12 @@
 namespace caffe {
 
 // Copy from OpenCL buffer to main memory
-void greentea_gpu_memcpy(const size_t N, const cl_mem X, void *Y,
-                         viennacl::ocl::context &ctx) {
+void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
+                         void *Y, viennacl::ocl::context &ctx) {
   if (Y != NULL) {
-    clEnqueueReadBuffer(ctx.get_queue().handle().get(), X, CL_TRUE, 0, N, Y, 0,
-    NULL,
+    clEnqueueReadBuffer(ctx.get_queue().handle().get(), X, CL_TRUE, offX, N, Y,
+                        0,
+                        NULL,
                         NULL);
   }
   ctx.get_queue().finish();
@@ -50,11 +55,11 @@ void greentea_gpu_memcpy(const size_t N, const cl_mem X, void *Y,
 
 // Copy from main memory to OpenCL buffer
 void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
-                         viennacl::ocl::context &ctx) {
+                         const int offY, viennacl::ocl::context &ctx) {
   if (X != NULL) {
     clEnqueueWriteBuffer(ctx.get_queue().handle().get(), Y,
     CL_TRUE,
-                         0, N, X, 0, NULL, NULL);
+                         offY, N, X, 0, NULL, NULL);
   }
   ctx.get_queue().finish();
 }
@@ -269,8 +274,7 @@ void greentea_gpu_mul(const int ctx_id, const int N, const cl_mem a,
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
-  viennacl::ocl::kernel &oclk_mul = program.get_kernel(
-      CL_KERNEL_SELECT("kernel_mul"));
+  viennacl::ocl::kernel &oclk_mul = program.get_kernel(CL_KERNEL_SELECT("mul"));
   viennacl::ocl::enqueue(
       oclk_mul(N, WrapHandle(a, ctx), offa, WrapHandle(b, ctx), offb,
                WrapHandle(y, ctx), offy),
@@ -282,6 +286,29 @@ template void greentea_gpu_mul<float>(const int ctx_id, const int N,
                                       const cl_mem b, const int offb, cl_mem y,
                                       const int offy);
 template void greentea_gpu_mul<double>(const int ctx_id, const int N,
+                                       const cl_mem a, const int offa,
+                                       const cl_mem b, const int offb, cl_mem y,
+                                       const int offy);
+
+template<typename Dtype>
+void greentea_gpu_div(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+
+  viennacl::ocl::kernel &oclk_div = program.get_kernel(CL_KERNEL_SELECT("div"));
+  viennacl::ocl::enqueue(
+      oclk_div(N, WrapHandle(a, ctx), offa, WrapHandle(b, ctx), offb,
+               WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
+
+template void greentea_gpu_div<float>(const int ctx_id, const int N,
+                                      const cl_mem a, const int offa,
+                                      const cl_mem b, const int offb, cl_mem y,
+                                      const int offy);
+template void greentea_gpu_div<double>(const int ctx_id, const int N,
                                        const cl_mem a, const int offa,
                                        const cl_mem b, const int offb, cl_mem y,
                                        const int offy);
@@ -376,7 +403,7 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
         clblasDdot(n,gpuout,0,X,offX,1,Y,offY,1,scratch,1,&queue,0,NULL,NULL));
   }
 
-  greentea_gpu_memcpy(sizeof(Dtype), gpuout, &out, ctx);
+  greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, &out, ctx);
 
   ctx.get_queue().finish();
   clReleaseMemObject(gpuout);
@@ -428,7 +455,7 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
         clblasDasum(n,gpuout,0,X,offX,1,scratch,1,&queue,0,NULL,NULL));
   }
 
-  greentea_gpu_memcpy(sizeof(Dtype), gpuout, &Y, ctx);
+  greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, &Y, ctx);
 
   ctx.get_queue().finish();
   clReleaseMemObject(gpuout);
@@ -491,293 +518,264 @@ template void greentea_gpu_scale<double>(const int ctx_id, const int n,
                                          const int offX, cl_mem Y,
                                          const int offY);
 
-/*
+template<typename Dtype>
+void greentea_gpu_set(const int ctx_id, const int N, const Dtype alpha,
+                      cl_mem Y, const int offY) {
+  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
+  cl_command_queue queue = ctx.get_queue().handle().get();
 
- template <typename Dtype>
- __global__ void set_kernel(const int n, const Dtype alpha, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = alpha;
- }
- }
+  clEnqueueFillBuffer(queue, Y, &alpha, sizeof(Dtype), offY, N, 0, NULL, NULL);
+}
 
- template<typename Dtype>
- void greentea_gpu_set(const int N, const Dtype alpha, Dtype* Y) {
- if (alpha == 0) {
- CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));  // NOLINT(caffe/alt_fn)
- return;
- }
- // NOLINT_NEXT_LINE(whitespace/operators)
- set_kernel<Dtype><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, alpha, Y);
- }
+template void greentea_gpu_set<int>(const int ctx_id, const int N,
+                                    const int alpha, cl_mem Y, const int offY);
+template void greentea_gpu_set<float>(const int ctx_id, const int N,
+                                      const float alpha, cl_mem Y,
+                                      const int offY);
+template void greentea_gpu_set<double>(const int ctx_id, const int N,
+                                       const double alpha, cl_mem Y,
+                                       const int offY);
 
- template void greentea_gpu_set<int>(const int N, const int alpha, int* Y);
- template void greentea_gpu_set<float>(const int N, const float alpha,
- float* Y);
- template void greentea_gpu_set<double>(const int N, const double alpha,
- double* Y);
+template<typename Dtype>
+void greentea_gpu_add_scalar(const int ctx_id, const int N, const Dtype alpha,
+                             cl_mem Y, const int offY) {
 
- template <typename Dtype>
- __global__ void add_scalar_kernel(const int n, const Dtype alpha, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] += alpha;
- }
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template<>
- void greentea_gpu_add_scalar(const int N, const float alpha, float* Y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- add_scalar_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, alpha, Y);
- }
+  viennacl::ocl::kernel &oclk_add_scalar = program.get_kernel(
+      CL_KERNEL_SELECT("add_scalar"));
+  viennacl::ocl::enqueue(oclk_add_scalar(N, alpha, WrapHandle(Y, ctx), offY),
+                         ctx.get_queue());
+}
 
- template<>
- void greentea_gpu_add_scalar(const int N, const double alpha, double* Y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- add_scalar_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, alpha, Y);
- }
+template void greentea_gpu_add_scalar<float>(const int ctx_id, const int N,
+                                             const float alpha, cl_mem Y,
+                                             const int offY);
+template void greentea_gpu_add_scalar<double>(const int ctx_id, const int N,
+                                              const double alpha, cl_mem Y,
+                                              const int offY);
 
- template <typename Dtype>
- __global__ void add_kernel(const int n, const Dtype* a,
- const Dtype* b, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = a[index] + b[index];
- }
- }
+template<typename Dtype>
+void greentea_gpu_add(const int ctx_id, const int n, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy) {
 
- template<>
- void greentea_gpu_add<float>(const int N, const float* a, const float* b,
- float* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- add_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template<>
- void greentea_gpu_add<double>(const int N, const double* a, const double* b,
- double* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- add_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
- }
+  viennacl::ocl::kernel &oclk_add = program.get_kernel(CL_KERNEL_SELECT("add"));
+  viennacl::ocl::enqueue(
+      oclk_add(n, WrapHandle(a, ctx), offa, WrapHandle(b, ctx), offb,
+               WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
 
- template <typename Dtype>
- __global__ void sub_kernel(const int n, const Dtype* a,
- const Dtype* b, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = a[index] - b[index];
- }
- }
+template void greentea_gpu_add<float>(const int ctx_id, const int n,
+                                      const cl_mem a, const int offa,
+                                      const cl_mem b, const int offb, cl_mem y,
+                                      const int offy);
+template void greentea_gpu_add<double>(const int ctx_id, const int n,
+                                       const cl_mem a, const int offa,
+                                       const cl_mem b, const int offb, cl_mem y,
+                                       const int offy);
 
- template<>
- void greentea_gpu_sub<float>(const int N, const float* a, const float* b,
- float* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- sub_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
- }
+template<typename Dtype>
+void greentea_gpu_sub(const int ctx_id, const int n, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy) {
 
- template<>
- void greentea_gpu_sub<double>(const int N, const double* a, const double* b,
- double* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- sub_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template <typename Dtype>
- __global__ void mul_kernel(const int n, const Dtype* a,
- const Dtype* b, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = a[index] * b[index];
- }
- }
+  viennacl::ocl::kernel &oclk_sub = program.get_kernel(CL_KERNEL_SELECT("sub"));
+  viennacl::ocl::enqueue(
+      oclk_sub(n, WrapHandle(a, ctx), offa, WrapHandle(b, ctx), offb,
+               WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
 
- template <typename Dtype>
- __global__ void div_kernel(const int n, const Dtype* a,
- const Dtype* b, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = a[index] / b[index];
- }
- }
+template void greentea_gpu_sub<float>(const int ctx_id, const int n,
+                                      const cl_mem a, const int offa,
+                                      const cl_mem b, const int offb, cl_mem y,
+                                      const int offy);
+template void greentea_gpu_sub<double>(const int ctx_id, const int n,
+                                       const cl_mem a, const int offa,
+                                       const cl_mem b, const int offb, cl_mem y,
+                                       const int offy);
 
- template<>
- void greentea_gpu_div<float>(const int N, const float* a, const float* b,
- float* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- div_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
- }
+template<typename Dtype>
+void greentea_gpu_abs(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, cl_mem y, const int offy) {
 
- template<>
- void greentea_gpu_div<double>(const int N, const double* a, const double* b,
- double* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- div_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, b, y);
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template <typename Dtype>
- __global__ void abs_kernel(const int n, const Dtype* a, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = abs(a[index]);
- }
- }
+  viennacl::ocl::kernel &oclk_abs = program.get_kernel(CL_KERNEL_SELECT("abs"));
+  viennacl::ocl::enqueue(
+      oclk_abs(N, WrapHandle(a, ctx), offa, WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
 
- template<>
- void greentea_gpu_abs<float>(const int N, const float* a, float* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- abs_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, y);
- }
+template void greentea_gpu_abs<float>(const int ctx_id, const int N,
+                                      const cl_mem a, const int offa, cl_mem y,
+                                      const int offy);
+template void greentea_gpu_abs<double>(const int ctx_id, const int N,
+                                       const cl_mem a, const int offa, cl_mem y,
+                                       const int offy);
 
- template<>
- void greentea_gpu_abs<double>(const int N, const double* a, double* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- abs_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, y);
- }
+template<typename Dtype>
+void greentea_gpu_exp(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, cl_mem y, const int offy) {
 
- template <typename Dtype>
- __global__ void exp_kernel(const int n, const Dtype* a, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = exp(a[index]);
- }
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template<>
- void greentea_gpu_exp<float>(const int N, const float* a, float* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- exp_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, y);
- }
+  viennacl::ocl::kernel &oclk_exp = program.get_kernel(CL_KERNEL_SELECT("exp"));
+  viennacl::ocl::enqueue(
+      oclk_exp(N, WrapHandle(a, ctx), offa, WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
 
- template<>
- void greentea_gpu_exp<double>(const int N, const double* a, double* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- exp_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, y);
- }
+template void greentea_gpu_exp<float>(const int ctx_id, const int N,
+                                      const cl_mem a, const int offa, cl_mem y,
+                                      const int offy);
+template void greentea_gpu_exp<double>(const int ctx_id, const int N,
+                                       const cl_mem a, const int offa, cl_mem y,
+                                       const int offy);
 
- template <typename Dtype>
- __global__ void powx_kernel(const int n, const Dtype* a,
- const Dtype alpha, Dtype* y) {
- CUDA_KERNEL_LOOP(index, n) {
- y[index] = pow(a[index], alpha);
- }
- }
+template<typename Dtype>
+void greentea_gpu_powx(const int ctx_id, const int N, const cl_mem a,
+                       const int offa, const Dtype alpha, cl_mem y,
+                       const int offy) {
 
- template<>
- void greentea_gpu_powx<float>(const int N, const float* a, const float alpha,
- float* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- powx_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, alpha, y);
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template<>
- void greentea_gpu_powx<double>(const int N, const double* a, const double alpha,
- double* y) {
- // NOLINT_NEXT_LINE(whitespace/operators)
- powx_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
- N, a, alpha, y);
- }
+  viennacl::ocl::kernel &oclk_powx = program.get_kernel(
+      CL_KERNEL_SELECT("powx"));
+  viennacl::ocl::enqueue(
+      oclk_powx(N, WrapHandle(a, ctx), offa, alpha, WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
 
- DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sign, y[index] = (Dtype(0) < x[index])
- - (x[index] < Dtype(0)));
- DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sgnbit, y[index] = signbit(x[index]));
+template void greentea_gpu_powx<float>(const int ctx_id, const int N,
+                                       const cl_mem a, const int offa,
+                                       const float alpha, cl_mem y,
+                                       const int offy);
+template void greentea_gpu_powx<double>(const int ctx_id, const int N,
+                                        const cl_mem a, const int offa,
+                                        const double alpha, cl_mem y,
+                                        const int offy);
 
- __global__ void popc_kernel(const int n, const float* a, const float* b,
- uint8_t* y) {
- CUDA_KERNEL_LOOP(index, n)
- {
- y[index] = __popc(
- static_cast<uint32_t>(a[index]) ^ static_cast<uint32_t>(b[index]));
- }
- }
+template<typename Dtype>
+void greentea_gpu_sign(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy) {
 
- __global__ void popcll_kernel(const int n, const double* a, const double* b,
- uint8_t* y) {
- CUDA_KERNEL_LOOP(index, n)
- {
- y[index] = __popcll(
- static_cast<uint64_t>(a[index]) ^ static_cast<uint64_t>(b[index]));
- }
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template<>
- uint32_t greentea_gpu_hamming_distance<float>(const int n, const float* x,
- const float* y) {
- // TODO: Fix caffe_gpu_hamming_distance (see failing unit test
- // TestHammingDistanceGPU in test_math_functions.cpp).
- NOT_IMPLEMENTED;
- thrust::device_vector<uint8_t> popcounts(n);
- // NOLINT_NEXT_LINE(whitespace/operators)
- popc_kernel<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
- n, x, y, thrust::raw_pointer_cast(popcounts.data()));
- return thrust::reduce(popcounts.begin(), popcounts.end(), (uint32_t) 0,
- thrust::plus<uint32_t>());
- }
+  viennacl::ocl::kernel &oclk_sign = program.get_kernel(CL_KERNEL_SELECT("sign"));
+  viennacl::ocl::enqueue(
+      oclk_sign(n, WrapHandle(x, ctx), offx, WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
 
- template<>
- uint32_t greentea_gpu_hamming_distance<double>(const int n, const double* x,
- const double* y) {
- // TODO: Fix caffe_gpu_hamming_distance (see failing unit test
- // TestHammingDistanceGPU in test_math_functions.cpp).
- NOT_IMPLEMENTED;
- thrust::device_vector<uint8_t> popcounts(n);
- // NOLINT_NEXT_LINE(whitespace/operators)
- popcll_kernel<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(
- n, x, y, thrust::raw_pointer_cast(popcounts.data()));
- return thrust::reduce(popcounts.begin(), popcounts.end(),
- (uint32_t) 0,
- thrust::plus<uint32_t>());
- }
+template void greentea_gpu_sign<float>(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy);
+template void greentea_gpu_sign<double>(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy);
 
- void greentea_gpu_rng_uniform(const int n, unsigned int* r) {
- CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
- }
+template<typename Dtype>
+void greentea_gpu_sgnbit(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy) {
 
- template<>
- void greentea_gpu_rng_uniform<float>(const int n, const float a, const float b,
- float* r) {
- CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(), r, n));
- const float range = b - a;
- if (range != static_cast<float>(1)) {
- greentea_gpu_scal(n, range, r);
- }
- if (a != static_cast<float>(0)) {
- greentea_gpu_add_scalar(n, a, r);
- }
- }
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
- template<>
- void greentea_gpu_rng_uniform<double>(const int n, const double a,
- const double b, double* r) {
- CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(), r, n));
- const double range = b - a;
- if (range != static_cast<double>(1)) {
- greentea_gpu_scal(n, range, r);
- }
- if (a != static_cast<double>(0)) {
- greentea_gpu_add_scalar(n, a, r);
- }
- }
+  viennacl::ocl::kernel &oclk_sgnbit = program.get_kernel(CL_KERNEL_SELECT("sgnbit"));
+  viennacl::ocl::enqueue(
+      oclk_sgnbit(n, WrapHandle(x, ctx), offx, WrapHandle(y, ctx), offy),
+      ctx.get_queue());
+}
 
- template<>
- void greentea_gpu_rng_gaussian(const int n, const float mu, const float sigma,
- float* r) {
- CURAND_CHECK(curandGenerateNormal(Caffe::curand_generator(), r, n, mu, sigma));
- }
+template void greentea_gpu_sgnbit<float>(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy);
+template void greentea_gpu_sgnbit<double>(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy);
 
- template<>
- void greentea_gpu_rng_gaussian(const int n, const double mu, const double sigma,
- double* r) {
- CURAND_CHECK(
- curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
- }
- */
+void greentea_gpu_rng_uniform(const int n, unsigned int* r) {
+  CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
+}
+
+template<typename Dtype>
+void greentea_gpu_rng_uniform(const int ctx_id, const int n, const Dtype a,
+                              const Dtype b, cl_mem r, const int offr) {
+
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
+#ifdef __APPLE__
+  std::seed_seq seq {(int)(start_time.tv_sec), (int)(start_time.tv_usec)};
+#else
+  std::seed_seq seq { start_time.tv_sec, start_time.tv_usec };
+#endif
+  std::mt19937_64 generator(seq);
+  std::uniform_real_distribution<Dtype> distribution(a, b);
+  std::function<Dtype()> rndfunc = std::bind(distribution, generator);
+
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+
+  std::vector<Dtype> random(n);
+
+  for (int i = 0; i < n; ++i) {
+    random[i] = rndfunc();
+  }
+
+  greentea_gpu_memcpy(n, &random[0], r, offr, ctx);
+}
+
+template void greentea_gpu_rng_uniform<float>(const int ctx_id, const int n,
+                                              const float a, const float b,
+                                              cl_mem r, const int offr);
+template void greentea_gpu_rng_uniform<double>(const int ctx_id, const int n,
+                                               const double a, const double b,
+                                               cl_mem r, const int offr);
+
+template<typename Dtype>
+void greentea_gpu_rng_gaussian(const int ctx_id, const int n, const Dtype mu,
+                               const Dtype sigma, cl_mem r, const int offr) {
+
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
+#ifdef __APPLE__
+  std::seed_seq seq {(int)(start_time.tv_sec), (int)(start_time.tv_usec)};
+#else
+  std::seed_seq seq { start_time.tv_sec, start_time.tv_usec };
+#endif
+  std::mt19937_64 generator(seq);
+  std::normal_distribution<Dtype> distribution(mu, sigma);
+  std::function<Dtype()> rndfunc = std::bind(distribution, generator);
+
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+
+  std::vector<Dtype> random(n);
+
+  for (int i = 0; i < n; ++i) {
+    random[i] = rndfunc();
+  }
+
+  greentea_gpu_memcpy(n, &random[0], r, offr, ctx);
+}
+
+template void greentea_gpu_rng_gaussian<float>(const int ctx_id, const int n,
+                                               const float mu,
+                                               const float sigma, cl_mem r,
+                                               const int offr);
+
+template void greentea_gpu_rng_gaussian<double>(const int ctx_id, const int n,
+                                                const double mu,
+                                                const double sigma, cl_mem r,
+                                                const int offr);
 
 }
 #endif

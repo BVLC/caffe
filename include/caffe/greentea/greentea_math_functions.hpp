@@ -24,11 +24,11 @@ inline void greentea_memset(const size_t N, const int alpha, cl_mem X,
                       offX, N, 0, NULL, NULL);
 }
 
-void greentea_gpu_memcpy(const size_t N, const cl_mem X, void *Y,
-                         viennacl::ocl::context &ctx);
+void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
+                         void *Y, viennacl::ocl::context &ctx);
 
 void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
-                         viennacl::ocl::context &ctx);
+                         const int offY, viennacl::ocl::context &ctx);
 
 template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, cl_mem Y,
@@ -81,6 +81,59 @@ void greentea_gpu_scale(const int ctx_id, const int n, const Dtype alpha,
                         const cl_mem X, const int offX, cl_mem Y,
                         const int offY);
 
+template<typename Dtype>
+void greentea_gpu_set(const int ctx_id, const int N, const Dtype alpha,
+                      cl_mem Y, const int offY);
+
+template<typename Dtype>
+void greentea_gpu_add_scalar(const int ctx_id, const int N, const Dtype alpha,
+                             cl_mem Y, const int offY);
+
+template<typename Dtype>
+void greentea_gpu_add(const int ctx_id, const int n, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy);
+
+template<typename Dtype>
+void greentea_gpu_sub(const int ctx_id, const int n, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy);
+
+template<typename Dtype>
+void greentea_gpu_div(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, const cl_mem b, const int offb, cl_mem y,
+                      const int offy);
+
+template<typename Dtype>
+void greentea_gpu_abs(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, cl_mem y, const int offy);
+
+template<typename Dtype>
+void greentea_gpu_exp(const int ctx_id, const int N, const cl_mem a,
+                      const int offa, cl_mem y, const int offy);
+
+template<typename Dtype>
+void greentea_gpu_powx(const int ctx_id, const int N, const cl_mem a,
+                       const int offa, const Dtype alpha, cl_mem y,
+                       const int offy);
+
+template<typename Dtype>
+void greentea_gpu_sign(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy);
+
+template<typename Dtype>
+void greentea_gpu_sgnbit(const int ctx_id, const int n, const cl_mem x, int offx,
+                      cl_mem y, const int offy);
+
+template<typename Dtype>
+void greentea_gpu_rng_uniform(const int ctx_id, const int n, const Dtype a,
+                              const Dtype b, cl_mem r, const int offr);
+
+template<typename Dtype>
+void greentea_gpu_rng_gaussian(const int ctx_id, const int n, const Dtype mu,
+                               const Dtype sigma, cl_mem r, const int offr);
+
 }
-#endif
+
+#endif // USE GREENTEA
 #endif /* GREENTEA_MATH_FUNCTIONS_HPP_ */
