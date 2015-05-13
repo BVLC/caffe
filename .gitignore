@@ -91,3 +91,8 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+# CTags
+.tags
+.tags_sorted_by_file
+.gemtags
