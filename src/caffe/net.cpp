@@ -410,7 +410,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     // (i.e., not given a param_name) or explicitly given a name that we
     // haven't already seen.
     param_owners_.push_back(-1);
-    if (param_size) {
+    if (param_name.size()) {
       param_names_index_[param_name] = net_param_id;
     }
   } else {
