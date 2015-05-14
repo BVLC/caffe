@@ -80,5 +80,13 @@ DB* GetDB(const string& backend) {
   }
 }
 
+void GetKeyStr(string& keystr, unsigned int keyuint) {
+  // Caution: it uses the key convention.
+  const int kMaxKeyLength = 10;
+  char key_cstr[kMaxKeyLength];
+  snprintf(key_cstr, kMaxKeyLength, "%08d", keyuint);
+  keystr = string(key_cstr);
+}
+
 }  // namespace db
 }  // namespace caffe

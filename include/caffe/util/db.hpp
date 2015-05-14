@@ -12,6 +12,8 @@
 
 namespace caffe { namespace db {
 
+void GetKeyStr(string& keystr, unsigned int keyuint);
+
 enum Mode { READ, WRITE, NEW };
 
 class Cursor {
@@ -19,7 +21,10 @@ class Cursor {
   Cursor() { }
   virtual ~Cursor() { }
   virtual void SeekToFirst() = 0;
+  virtual void SeekToLast() = 0;
   virtual void Next() = 0;
+  virtual void Prev() = 0;
+  virtual void Find(unsigned int keyuint) = 0;
   virtual string key() = 0;
   virtual string value() = 0;
   virtual bool valid() = 0;
@@ -55,7 +60,15 @@ class LevelDBCursor : public Cursor {
     : iter_(iter) { SeekToFirst(); }
   ~LevelDBCursor() { delete iter_; }
   virtual void SeekToFirst() { iter_->SeekToFirst(); }
+  virtual void SeekToLast() { iter_->SeekToLast(); }
   virtual void Next() { iter_->Next(); }
+  virtual void Prev() { iter_->Prev(); }
+  virtual void Find(unsigned int keyuint) { 
+    string keystr;
+    GetKeyStr(keystr, keyuint);
+    leveldb::Slice keyslice((const char *) keystr.c_str());
+    iter_->Seek(keyslice);
+  }
   virtual string key() { return iter_->key().ToString(); }
   virtual string value() { return iter_->value().ToString(); }
   virtual bool valid() { return iter_->Valid(); }
@@ -120,7 +133,10 @@ class LMDBCursor : public Cursor {
     mdb_txn_abort(mdb_txn_);
   }
   virtual void SeekToFirst() { Seek(MDB_FIRST); }
+  virtual void SeekToLast() { Seek(MDB_LAST); }
   virtual void Next() { Seek(MDB_NEXT); }
+  virtual void Prev() { Seek(MDB_PREV); }
+  virtual void Find(unsigned int keyuint) { Set(keyuint); }
   virtual string key() {
     return string(static_cast<const char*>(mdb_key_.mv_data), mdb_key_.mv_size);
   }
@@ -133,6 +149,24 @@ class LMDBCursor : public Cursor {
  private:
   void Seek(MDB_cursor_op op) {
     int mdb_status = mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, op);
+    if (mdb_status == MDB_NOTFOUND) {
+      valid_ = false;
+    } else {
+      MDB_CHECK(mdb_status);
+      valid_ = true;
+    }
+  }
+  void Set(unsigned int keyuint) {
+    // TODO memory leak?
+    string keystr;
+    GetKeyStr(keystr, keyuint);
+    char * writable = new char[keystr.size() + 1];
+    std::copy(keystr.begin(), keystr.end(), writable);
+    writable[keystr.size()] = '\0'; // don't forget the terminating 0
+
+    mdb_key_.mv_size = keystr.size();
+    mdb_key_.mv_data = reinterpret_cast<void*>(&writable[0]);
+    int mdb_status = mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_SET);
     if (mdb_status == MDB_NOTFOUND) {
       valid_ = false;
     } else {
