@@ -29,7 +29,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   db_->Open(this->layer_param_.data_param().source(), db::READ);
   cursor_.reset(db_->NewCursor());
 
-  if (this->layer_param_.data_param().rand_skip() || 
+  if (this->layer_param_.data_param().rand_skip() ||
       this->layer_param_.data_param().skip()) {
     unsigned int skip;
     // Check if we should randomly skip a few data points
@@ -37,8 +37,8 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       skip = caffe_rng_rand() %
                           this->layer_param_.data_param().rand_skip();
     } else {
-      skip = this->layer_param_.data_param().skip(); 
-    }  
+      skip = this->layer_param_.data_param().skip();
+    }
     LOG(INFO) << "Skipping first " << skip << " data points.";
     while (skip-- > 0) {
       cursor_->Next();
@@ -120,7 +120,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   if (this->output_labels_) {
     top_label = this->prefetch_label_.mutable_cpu_data();
   }
-  
+
   // rewind cursor
   if (rewind) {
     DLOG(INFO) << "Rewind " << rewind << " data points.";
