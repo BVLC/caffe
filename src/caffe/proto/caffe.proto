@@ -332,6 +332,9 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+
+  // Layer type-specific extensions.
+  extensions 20000 to max;
 }
 
 // Message that stores parameters used to apply transformation
