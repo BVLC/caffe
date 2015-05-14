@@ -38,6 +38,14 @@ message Datum {
   optional bool encoded = 7 [default = false];
 }
 
+message SparseDatum {
+  optional int32 size = 1 [default = 0];
+  optional int32 nnz = 2 [default = 0];  //number of non zeros entries
+  repeated int32 indices = 3 [packed=true];
+  optional int32 label = 4;
+  repeated float data = 5 [packed=true];
+}
+
 message FillerParameter {
   // The filler type.
   optional string type = 1 [default = 'constant'];
@@ -259,7 +267,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 132 (last added: prelu_param)
+// LayerParameter next available layer-specific ID: 133 (last added: sparse_data_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -329,6 +337,7 @@ message LayerParameter {
   optional SigmoidParameter sigmoid_param = 124;
   optional SoftmaxParameter softmax_param = 125;
   optional SliceParameter slice_param = 126;
+  optional SparseDataParameter sparse_data_param = 132;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
@@ -726,6 +735,19 @@ message SoftmaxParameter {
   optional int32 axis = 2 [default = 1];
 }
 
+message SparseDataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  // Specify the batch size. Size is the number of columns in the data.
+  optional uint32 batch_size = 2;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the leveldb.
+  optional uint32 rand_skip = 3 [default = 0];
+  optional DataParameter.DB backend = 4 [default = LEVELDB];
+}
+
 // Message that stores parameters used by TanHLayer
 message TanHParameter {
   enum Engine {
@@ -860,6 +882,7 @@ message V1LayerParameter {
   optional SigmoidParameter sigmoid_param = 38;
   optional SoftmaxParameter softmax_param = 39;
   optional SliceParameter slice_param = 31;
+  optional SparseDataParameter sparse_data_param = 43;
   optional TanHParameter tanh_param = 37;
   optional ThresholdParameter threshold_param = 25;
   optional WindowDataParameter window_data_param = 20;

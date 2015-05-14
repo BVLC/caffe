@@ -204,7 +204,9 @@ set(HAVE_CUDA TRUE)
 message(STATUS "CUDA detected: " ${CUDA_VERSION})
 include_directories(SYSTEM ${CUDA_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${CUDA_CUDART_LIBRARY}
-                              ${CUDA_curand_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
+                              ${CUDA_curand_LIBRARY} 
+                              ${CUDA_cusparse_LIBRARY}
+                              ${CUDA_CUBLAS_LIBRARIES})
 
 # cudnn detection
 if(USE_CUDNN)
