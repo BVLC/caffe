@@ -23,18 +23,18 @@ class Detector(caffe.Net):
     """
     Detector extends Net for windowed detection by a list of crops or
     selective search proposals.
+
+    Parameters
+    ----------
+    mean, input_scale, raw_scale, channel_swap : params for preprocessing
+        options.
+    context_pad : amount of surrounding context to take s.t. a `context_pad`
+        sized border of pixels in the network input image is context, as in
+        R-CNN feature extraction.
     """
     def __init__(self, model_file, pretrained_file, mean=None,
                  input_scale=None, raw_scale=None, channel_swap=None,
                  context_pad=None):
-        """
-        Take
-            mean, input_scale, raw_scale, channel_swap: params for
-            preprocessing options.
-        context_pad: amount of surrounding context to take s.t. a `context_pad`
-            sized border of pixels in the network input image is context, as in
-            R-CNN feature extraction.
-        """
         caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
 
         # configure pre-processing
