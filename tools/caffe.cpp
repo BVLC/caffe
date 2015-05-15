@@ -8,6 +8,11 @@
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
 
+#ifdef WITH_PYTHON_LAYER
+#include "boost/python.hpp"
+namespace bp = boost::python;
+#endif
+
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
@@ -304,7 +309,16 @@ int main(int argc, char** argv) {
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
   if (argc == 2) {
-    return GetBrewFunction(caffe::string(argv[1]))();
+#ifdef WITH_PYTHON_LAYER
+    try {
+#endif
+      return GetBrewFunction(caffe::string(argv[1]))();
+#ifdef WITH_PYTHON_LAYER
+    } catch (bp::error_already_set) {
+      PyErr_Print();
+      return 1;
+    }
+#endif
   } else {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
