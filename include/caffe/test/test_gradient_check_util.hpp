@@ -8,6 +8,7 @@
 #include <cmath>
 #include <vector>
 
+#include "caffe/blob_finder.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 
@@ -25,7 +26,12 @@ class GradientChecker {
       const unsigned int seed = 1701, const Dtype kink = 0.,
       const Dtype kink_range = -1)
       : stepsize_(stepsize), threshold_(threshold), seed_(seed),
-        kink_(kink), kink_range_(kink_range) {}
+        kink_(kink), kink_range_(kink_range)  {}
+
+  // For layers that need a blob finder, allow it to be set.
+  void SetBlobFinder(const BlobFinder<Dtype>& blob_finder) {
+    blob_finder_ = blob_finder;
+  }
   // Checks the gradient of a layer, with provided bottom layers and top
   // layers.
   // Note that after the gradient check, we do not guarantee that the data
@@ -64,8 +70,8 @@ class GradientChecker {
   unsigned int seed_;
   Dtype kink_;
   Dtype kink_range_;
+  BlobFinder<Dtype> blob_finder_;
 };
-
 
 template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
@@ -181,7 +187,7 @@ template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientExhaustive(Layer<Dtype>* layer,
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
     int check_bottom) {
-  layer->SetUp(bottom, top);
+  layer->SetUp(bottom, top, blob_finder_);
   CHECK_GT(top.size(), 0) << "Exhaustive mode requires at least one top blob.";
   // LOG(ERROR) << "Exhaustive Mode.";
   for (int i = 0; i < top.size(); ++i) {
@@ -196,7 +202,7 @@ void GradientChecker<Dtype>::CheckGradientExhaustive(Layer<Dtype>* layer,
 template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientEltwise(Layer<Dtype>* layer,
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  layer->SetUp(bottom, top);
+  layer->SetUp(bottom, top, blob_finder_);
   CHECK_GT(top.size(), 0) << "Eltwise mode requires at least one top blob.";
   const int check_bottom = -1;
   const bool element_wise = true;

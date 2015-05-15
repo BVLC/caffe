@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "caffe/blob.hpp"
+#include "caffe/blob_finder.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -59,11 +60,27 @@ class Layer {
    * This method may not be overridden.
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+     const vector<Blob<Dtype>*>& top,
+     const BlobFinder<Dtype>& blob_finder = BlobFinder<Dtype>()) {
+    SetBlobFinder(blob_finder);
     CheckBlobCounts(bottom, top);
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
+  }
+
+  /**
+   * @brief Sets the blob finder object. Can be overridden by layer classes that
+   *        need to lookup blobs by name.
+   *
+   * @param blob_finder
+   *     Object that can look up blobs by name, or name by pointer to the blob.
+   *
+   */
+  virtual void SetBlobFinder(const BlobFinder<Dtype>& blob_finder) {
+    // Default behavior is do nothing. Override this method in layers
+    // that need to be able to look up blobs by name.
+    (void) blob_finder;
   }
 
   /**
@@ -285,7 +302,6 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
-
  protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;
@@ -295,6 +311,8 @@ class Layer {
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   /** Vector indicating whether to compute the diff of each param blob. */
   vector<bool> param_propagate_down_;
+  /** Helper that gets blob pointer by its name, or NULL */
+  const BlobFinder<Dtype>* blob_info_;
 
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */

@@ -524,4 +524,78 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
 
 #### Mean-Variance Normalization
 
-`MVN`
+* LayerType: `MVN`
+* CPU implementation: `./src/caffe/layers/mvn_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/mvn_layer.cu`
+* Parameters (`MvnParameter mvn_param`)
+    - Optional
+        - `normalize_variance` [default true]: false to only subtract the mean. true will make the variance of each output instance 1.
+        - `across_channels` [default false]: true will perform normalization by computing a single mean and variance across all the channels. Setting to false will compute a separate mean and variance for each channel.
+        - `mean_blob`: name of the blob of means in the top blobs. A top blob must also be specified for this layer with this name.
+        - `variance_blob`: name of the blob of standard deviations in the top blobs. A top blob must also be specified for this layer with this name.
+        - if `mean_blob` (and/or `variance_blob`) are specified, they should also be specified as top blobs for the layer, and should appear as bottom blobs in an InverseMVNLayer.
+* Input
+    - `n * c * h * w`
+* Output
+    - `n * c * h * w`
+    - if `mean_blob` is specified, it will appear as:
+        - `n * c * 1 * 1` if across_channels is false, or
+        - `n * 1 * 1 * 1` if accross_channels is true
+    - if `variance_blob` is specified, it will appear as:
+        - `n * c * 1 * 1` if across_channels is false, or
+        - `n * 1 * 1 * 1` if accross_channels is true
+* Sample
+      layer {
+        name: "sample_mvn"
+        type: "MVN"
+        bottom: "data_input"
+        top: "input_minus_mean"
+        top: "input_means"
+        top: "input_stddevs"
+        mvn_param:
+        {
+          normalize_variance: true
+          mean_blob: "input_means"
+          variance_blob: "input_stddevs"
+        }
+      }
+
+#### Mean-Variance Denormalization
+
+* LayerType: `InverseMVN`
+* CPU implementation: `./src/caffe/layers/inverse_mvn_layer.cpp`
+* CUDA GPU implementation: `./src/caffe/layers/inverse_mvn_layer.cu`
+* Parameters (`MvnParameter mvn_param`)
+    - The mvn_param must of an InverseMVN layer must be identical to the mvn_param of the `MVN` layer providing the mean and variance blobs.
+    - Optional
+        - `normalize_variance` [default true]: false to only subtract the mean. true will make the variance of each output instance 1.
+        - `across_channels` [default false]: true will perform normalization by computing a single mean and variance across all the channels. Setting to false will compute a separate mean and variance for each channel.
+        - `mean_blob`: name of the blob of means in the bottom blobs. A bottom blob must also be specified for this layer with this name.
+        - `variance_blob`: name of the blob of standard deviations in the bottom blobs. A bottom blob must also be specified for this layer with this name.
+* Input
+    - `n * c * h * w`
+    - if `mean_blob` is specified, it will appear as:
+        - `n * c * 1 * 1` if across_channels is false, or
+        - `n * 1 * 1 * 1` if across_channels is true
+    - if `variance_blob` is specified, it will appear as:
+        - `n * c * 1 * 1` if across_channels is false, or
+        - `n * 1 * 1 * 1` if across_channels is true
+* Output
+    - `n * c * h * w`
+* Sample
+      layer {
+        name: "inverse_mvn_sample"
+        type: "InverseMVN"
+        bottom: "decode1_conv"
+        bottom: "input_means"
+        bottom: "input_stddevs"
+        top: "decode1_plus_mean"
+        mvn_param:
+        {
+          normalize_variance: true
+          mean_blob: "input_means"
+          variance_blob: "input_stddevs"
+        }
+      }
+
+The `InverseMVN` layer is a layer that performs the inverse operation of the `MVN` layer. The `MVN` layer is configured to export its mean and variance blobs as top blobs, which then are connected to the bottom blobs of the `InverseMVN` layer. This can be useful in autoencoders where the `MVN` operates on the input image, and the `InverseMVN` layer performs the inverse operation in generating the output image.

@@ -629,6 +629,16 @@ message MVNParameter {
 
   // This parameter can be set to true to perform DNN-like MVN
   optional bool across_channels = 2 [default = false];
+
+  // Specify the name of the mean blob, if it is to be added to the
+  // layer's vector of top blobs. The name must also appear amongst
+  // the layer's top blobs.
+  optional string mean_blob = 3 [default = ""];
+
+  // Specify the name of the variance blob, if it is to be added to
+  // the layer's vector of top blobs. The name must also appear amongst the
+  // layer's top blobs.
+  optional string variance_blob = 4 [default = ""];
 }
 
 // Message that stores parameters used by PoolingLayer

@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+#include "caffe/blob_finder.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
@@ -59,10 +60,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         << "Exactly one input_shape must be specified per input.";
   }
   memory_used_ = 0;
+  BlobFinder<Dtype> blob_finder;
   // set the input blobs
   for (int input_id = 0; input_id < param.input_size(); ++input_id) {
     const int layer_id = -1;  // inputs have fake layer ID -1
-    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx);
+    AppendTop(param, layer_id, input_id, &available_blobs, &blob_name_to_idx,
+              &blob_finder);
   }
   DLOG(INFO) << "Memory required for data: " << memory_used_ * sizeof(Dtype);
   // For each layer, set up its input and output
@@ -93,7 +96,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     int num_top = layer_param.top_size();
     for (int top_id = 0; top_id < num_top; ++top_id) {
-      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
+      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx,
+                &blob_finder);
     }
     // If the layer specifies that AutoTopBlobs() -> true and the LayerParameter
     // specified fewer than the required number (as specified by
@@ -106,12 +110,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         // Add "anonymous" top blobs -- do not modify available_blobs or
         // blob_name_to_idx as we don't want these blobs to be usable as input
         // to other layers.
-        AppendTop(param, layer_id, num_top, NULL, NULL);
+        AppendTop(param, layer_id, num_top, NULL, NULL, &blob_finder);
       }
     }
     // After this layer is connected, set it up.
     LOG(INFO) << "Setting up " << layer_names_[layer_id];
-    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
+    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id],
+                             blob_finder);
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
@@ -314,7 +319,8 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
                            const int top_id, set<string>* available_blobs,
-                           map<string, int>* blob_name_to_idx) {
+                           map<string, int>* blob_name_to_idx,
+                           BlobFinder<Dtype>* blob_finder ) {
   shared_ptr<LayerParameter> layer_param((layer_id >= 0) ?
     (new LayerParameter(param.layer(layer_id))) : NULL);
   const string& blob_name = layer_param ?
@@ -344,6 +350,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
     blob_need_backward_.push_back(false);
+    blob_finder->AddBlob(blob_name, blob_pointer.get());
     if (blob_name_to_idx) { (*blob_name_to_idx)[blob_name] = blob_id; }
     if (layer_id == -1) {
       // Set the (explicitly specified) dimensions of the input blob.
