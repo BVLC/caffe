@@ -12,12 +12,12 @@ namespace caffe {
 
 // Theoretically, CaffeMallocHost and CaffeFreeHost should simply call the
 // cudaMallocHost and cudaFree functions in order to create pinned memory.
-// However, those codes rely on the existence of a cuda GPU (I don't know
+// However, those codes rely on the existence of a CUDA GPU (I don't know
 // why that is a must since allocating memory should not be accessing the
-// GPU resorce, but it just creates an error as of Cuda 5.0) and will cause
+// GPU resource, but it just creates an error as of CUDA 5.0) and will cause
 // problem when running on a machine without GPU. Thus, we simply define
 // these two functions for safety and possible future change if the problem
-// of calling cuda functions disappears in a future version.
+// of calling CUDA functions disappears in a future version.
 //
 // In practice, although we are creating unpinned memory here, as long as we
 // are constantly accessing them the memory pages almost always stays in
