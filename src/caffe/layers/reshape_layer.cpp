@@ -82,7 +82,7 @@ void ReshapeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const int inferred_dim = bottom[0]->count() / explicit_count;
     top_shape[start_axis + inferred_axis_] = inferred_dim;
   }
-  top[0]->Reshape(top_shape);
+  top[0]->Reshape(top_shape, this->device_context_);
   CHECK_EQ(top[0]->count(), bottom[0]->count())
       << "output count must match input count";
   top[0]->ShareData(*bottom[0]);
