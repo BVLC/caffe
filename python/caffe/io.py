@@ -16,8 +16,9 @@ except:
 
 ## proto / datum / ndarray conversion
 def blobproto_to_array(blob, return_diff=False):
-    """Convert a blob proto to an array. In default, we will just return the
-    data, unless return_diff is True, in which case we will return the diff.
+    """
+    Convert a blob proto to an array. In default, we will just return the data,
+    unless return_diff is True, in which case we will return the diff.
     """
     if return_diff:
         return np.array(blob.diff).reshape(
@@ -125,12 +126,14 @@ class Transformer:
         - subtract mean
         - scale feature
 
-        Take
-        in_: name of input blob to preprocess for
-        data: (H' x W' x K) ndarray
+        Parameters
+        ----------
+        in_ : name of input blob to preprocess for
+        data : (H' x W' x K) ndarray
 
-        Give
-        caffe_in: (K x H x W) ndarray for input to a Net
+        Returns
+        -------
+        caffe_in : (K x H x W) ndarray for input to a Net
         """
         self.__check_input(in_)
         caffe_in = data.astype(np.float32, copy=False)
@@ -182,9 +185,10 @@ class Transformer:
         Set the input channel order for e.g. RGB to BGR conversion
         as needed for the reference ImageNet model.
 
-        Take
-        in_: which input to assign this channel order
-        order: the order to transpose the dimensions
+        Parameters
+        ----------
+        in_ : which input to assign this channel order
+        order : the order to transpose the dimensions
         """
         self.__check_input(in_)
         if len(order) != len(self.inputs[in_]) - 1:
@@ -198,9 +202,10 @@ class Transformer:
         as needed for the reference ImageNet model.
         N.B. this assumes the channels are the first dimension AFTER transpose.
 
-        Take
-        in_: which input to assign this channel order
-        order: the order to take the channels.
+        Parameters
+        ----------
+        in_ : which input to assign this channel order
+        order : the order to take the channels.
             (2,1,0) maps RGB to BGR for example.
         """
         self.__check_input(in_)
@@ -216,9 +221,10 @@ class Transformer:
         like CaffeNet and AlexNet represent images in [0, 255] so the raw_scale
         of these models must be 255.
 
-        Take
-        in_: which input to assign this scale factor
-        scale: scale coefficient
+        Parameters
+        ----------
+        in_ : which input to assign this scale factor
+        scale : scale coefficient
         """
         self.__check_input(in_)
         self.raw_scale[in_] = scale
@@ -227,9 +233,10 @@ class Transformer:
         """
         Set the mean to subtract for centering the data.
 
-        Take
-        in_: which input to assign this mean.
-        mean: mean ndarray (input dimensional or broadcastable)
+        Parameters
+        ----------
+        in_ : which input to assign this mean.
+        mean : mean ndarray (input dimensional or broadcastable)
         """
         self.__check_input(in_)
         ms = mean.shape
@@ -254,9 +261,10 @@ class Transformer:
         N.B. input_scale is done AFTER mean subtraction and other preprocessing
         while raw_scale is done BEFORE.
 
-        Take
-        in_: which input to assign this scale factor
-        scale: scale coefficient
+        Parameters
+        ----------
+        in_ : which input to assign this scale factor
+        scale : scale coefficient
         """
         self.__check_input(in_)
         self.input_scale[in_] = scale
@@ -268,13 +276,16 @@ def load_image(filename, color=True):
     """
     Load an image converting from grayscale or alpha as needed.
 
-    Take
-    filename: string
-    color: flag for color format. True (default) loads as RGB while False
+    Parameters
+    ----------
+    filename : string
+    color : boolean
+        flag for color format. True (default) loads as RGB while False
         loads as intensity (if image is already grayscale).
 
-    Give
-    image: an image with type np.float32 in range [0, 1]
+    Returns
+    -------
+    image : an image with type np.float32 in range [0, 1]
         of size (H x W x 3) in RGB or
         of size (H x W x 1) in grayscale.
     """
@@ -292,24 +303,28 @@ def resize_image(im, new_dims, interp_order=1):
     """
     Resize an image array with interpolation.
 
-    Take
-    im: (H x W x K) ndarray
-    new_dims: (height, width) tuple of new dimensions.
-    interp_order: interpolation order, default is linear.
+    Parameters
+    ----------
+    im : (H x W x K) ndarray
+    new_dims : (height, width) tuple of new dimensions.
+    interp_order : interpolation order, default is linear.
 
-    Give
-    im: resized ndarray with shape (new_dims[0], new_dims[1], K)
+    Returns
+    -------
+    im : resized ndarray with shape (new_dims[0], new_dims[1], K)
     """
     if im.shape[-1] == 1 or im.shape[-1] == 3:
         im_min, im_max = im.min(), im.max()
         if im_max > im_min:
-            # skimage is fast but only understands {1,3} channel images in [0, 1].
+            # skimage is fast but only understands {1,3} channel images
+            # in [0, 1].
             im_std = (im - im_min) / (im_max - im_min)
             resized_std = resize(im_std, new_dims, order=interp_order)
             resized_im = resized_std * (im_max - im_min) + im_min
         else:
             # the image is a constant -- avoid divide by 0
-            ret = np.empty((new_dims[0], new_dims[1], im.shape[-1]), dtype=np.float32)
+            ret = np.empty((new_dims[0], new_dims[1], im.shape[-1]),
+                           dtype=np.float32)
             ret.fill(im_min)
             return ret
     else:
@@ -323,12 +338,14 @@ def oversample(images, crop_dims):
     """
     Crop images into the four corners, center, and their mirrored versions.
 
-    Take
-    image: iterable of (H x W x K) ndarrays
-    crop_dims: (height, width) tuple for the crops.
+    Parameters
+    ----------
+    image : iterable of (H x W x K) ndarrays
+    crop_dims : (height, width) tuple for the crops.
 
-    Give
-    crops: (10*N x H x W x K) ndarray of crops for number of inputs N.
+    Returns
+    -------
+    crops : (10*N x H x W x K) ndarray of crops for number of inputs N.
     """
     # Dimensions and center.
     im_shape = np.array(images[0].shape)
