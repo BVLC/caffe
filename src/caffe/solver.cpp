@@ -216,7 +216,7 @@ void Solver<Dtype>::StepPrefilled() {
     net_->Update();
 
     // Save a snapshot if needed.
-    if (param_.snapshot() && (iter_ + 1) % param_.snapshot() == 0) {
+    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
       Snapshot();
     }
   }
