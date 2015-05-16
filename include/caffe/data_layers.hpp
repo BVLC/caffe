@@ -97,6 +97,9 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
+  Blob<Dtype> shuffle_buffer_data_;
+  Blob<Dtype> shuffle_buffer_label_;
+  bool shuffle_on_init;
 };
 
 /**
