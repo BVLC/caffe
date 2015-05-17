@@ -34,7 +34,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape,
   device_context_ = device_context;
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
-    CHECK_LE(shape[i], INT_MAX / count_) << "blob size exceeds INT_MAX";
+    CHECK_LE(shape[i], INT_MAX / count_)<< "blob size exceeds INT_MAX";
     count_ *= shape[i];
     shape_[i] = shape[i];
   }
@@ -178,8 +178,9 @@ void Blob<Dtype>::Update() {
                               static_cast<Dtype*>(data_->mutable_gpu_data()));
       } else {
 #ifdef USE_GREENTEA
-        // TODO
-        //greentea_gpu_axpy<Dtype>(count_, Dtype(-1), (cl_mem)(diff_->gpu_data()), (cl_mem)(data_->mutable_gpu_data()));
+        greentea_gpu_axpy<Dtype>(device_context_.id(), count_, Dtype(-1),
+                                 (cl_mem) (diff_->gpu_data()), 0,
+                                 (cl_mem) (data_->mutable_gpu_data()), 0);
 #endif
       }
 #else
@@ -224,9 +225,10 @@ Dtype Blob<Dtype>::asum_data() const {
         return asum;
       } else {
 #ifdef USE_GREENTEA
-        // TODO
-        //greentea_gpu_asum(count_, (cl_mem) gpu_data(), &asum);
-        return 0;
+        Dtype asum;
+        greentea_gpu_asum(device_context_.id(), count_, (cl_mem) gpu_data(), 0,
+                          &asum);
+        return asum;
 #endif
       }
 #else
@@ -268,9 +270,10 @@ Dtype Blob<Dtype>::asum_diff() const {
         return asum;
       } else {
 #ifdef USE_GREENTEA
-        // TODO
-        //greentea_gpu_asum(count_, gpu_diff(), &asum);
-        return 0;
+        Dtype asum;
+        greentea_gpu_asum(device_context_.id(), count_, (cl_mem) gpu_diff(), 0,
+                          &asum);
+        return asum;
 #endif
       }
 #else
@@ -315,8 +318,8 @@ Dtype Blob<Dtype>::sumsq_data() const {
         caffe_gpu_dot(count_, data, data, &sumsq);
       } else {
 #ifdef USE_GREENTEA
-        // TODO
-        //greentea_gpu_dot(count_, data, data, &sumsq);
+        greentea_gpu_dot(device_context_.id(), count_, data, 0, data, 0,
+                         &sumsq);
 #endif
       }
 #else
@@ -363,8 +366,8 @@ Dtype Blob<Dtype>::sumsq_diff() const {
         caffe_gpu_dot(count_, diff, diff, &sumsq);
       } else {
 #ifdef USE_GREENTEA
-        // TODO
-        // greentea_gpu_dot(count_, diff, diff, &sumsq);
+        greentea_gpu_dot(device_context_.id(), count_, diff, 0, diff, 0,
+                         &sumsq);
 #endif
       }
       break;
@@ -408,8 +411,7 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
         caffe_gpu_scal(count_, scale_factor, data);
       } else {
 #ifdef USE_GREENTEA
-        // TODO
-        //greentea_gpu_scal(count_, scale_factor, data);
+        greentea_gpu_scal(device_context_.id(), count_, scale_factor, data, 0);
 #endif
       }
       return;
@@ -452,8 +454,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
         caffe_gpu_scal(count_, scale_factor, diff);
       } else {
 #ifdef USE_GREENTEA
-        // TODO
-        //greentea_gpu_scal(count_, scale_factor, diff);
+        greentea_gpu_scal(device_context_.id(), count_, scale_factor, diff, 0);
 #endif
       }
       return;
