@@ -8,7 +8,6 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 
 #define HDF5_DATA_DATASET_NAME "data"
@@ -734,7 +733,8 @@ class PReLULayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
   bool channel_shared_;
-  Blob<Dtype> multiplier_;  // dot multipler for backward computation of params
+  Blob<Dtype> multiplier_;  // dot multiplier for backward computation of params
+  Blob<Dtype> backward_buff_;  // temporary buffer for backward computation
   Blob<Dtype> bottom_memory_;  // memory for in-place computation
 };
 

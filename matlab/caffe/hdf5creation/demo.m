@@ -52,9 +52,9 @@ fclose(FILE);
 fprintf('HDF5 filename listed in %s \n', 'list.txt');
 
 % NOTE: In net definition prototxt, use list.txt as input to HDF5_DATA as: 
-% layers {
+% layer {
 %   name: "data"
-%   type: HDF5_DATA
+%   type: "HDF5Data"
 %   top: "data"
 %   top: "labelvec"
 %   hdf5_data_param {
