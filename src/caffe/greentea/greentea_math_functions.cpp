@@ -64,6 +64,15 @@ void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
   ctx.get_queue().finish();
 }
 
+// Copy from OpenCL to OpenCL buffer
+void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
+                         cl_mem Y, const int offY,
+                         viennacl::ocl::context &ctx) {
+  clEnqueueCopyBuffer(ctx.get_queue().handle().get(), X, Y, offX, offY, N, 0, NULL,
+                      NULL);
+  ctx.get_queue().finish();
+}
+
 // Copy from OpenCL buffer to OpenCL buffer
 template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, cl_mem Y,
@@ -403,7 +412,7 @@ void greentea_gpu_dot(const int ctx_id, const int n, const cl_mem X,
         clblasDdot(n,gpuout,0,X,offX,1,Y,offY,1,scratch,1,&queue,0,NULL,NULL));
   }
 
-  greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, &out, ctx);
+  greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, out, ctx);
 
   ctx.get_queue().finish();
   clReleaseMemObject(gpuout);
@@ -455,7 +464,7 @@ void greentea_gpu_asum(const int ctx_id, const int n, const cl_mem X,
         clblasDasum(n,gpuout,0,X,offX,1,scratch,1,&queue,0,NULL,NULL));
   }
 
-  greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, &Y, ctx);
+  greentea_gpu_memcpy(sizeof(Dtype), gpuout, 0, Y, ctx);
 
   ctx.get_queue().finish();
   clReleaseMemObject(gpuout);

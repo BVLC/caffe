@@ -118,27 +118,38 @@ Caffe::~Caffe() {
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
-  // Curand seed
-  static bool g_curand_availability_logged = false;
-  if (Get().curand_generator_) {
-    CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator(), seed));
-    CURAND_CHECK(curandSetGeneratorOffset(curand_generator(), 0));
-  } else {
-    if (!g_curand_availability_logged) {
-      LOG(ERROR)<<
-      "Curand not available. Skipping setting the curand seed.";
-      g_curand_availability_logged = true;
+  if (Caffe::GetDefaultDeviceContext().backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    // Curand seed
+    static bool g_curand_availability_logged = false;
+    if (Get().curand_generator_) {
+      CURAND_CHECK(
+          curandSetPseudoRandomGeneratorSeed(curand_generator(), seed));
+      CURAND_CHECK(curandSetGeneratorOffset(curand_generator(), 0));
+    } else {
+      if (!g_curand_availability_logged) {
+        LOG(ERROR)<<
+        "Curand not available. Skipping setting the curand seed.";
+        g_curand_availability_logged = true;
+      }
     }
+    // RNG seed
+    Get().random_generator_.reset(new RNG(seed));
+#endif
+  } else {
+#ifdef USE_GREENTEA
+// TODO: Proper RNG and Seed for OpenCL
+#endif
   }
-  // RNG seed
-  Get().random_generator_.reset(new RNG(seed));
 }
 
 void Caffe::EnumerateDevices() {
   int cuda_device_count = 0;
   int greentea_device_count = 0;
 
+#ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
+#endif
 
 #ifdef USE_GREENTEA
   typedef std::vector<viennacl::ocl::platform> platforms_type;
@@ -166,6 +177,7 @@ void Caffe::EnumerateDevices() {
 #endif
 
   // Display info for all devices
+#ifdef USE_CUDA
   for (int i = 0; i < cuda_device_count; ++i) {
     cudaDeviceProp prop;
     CUDA_CHECK(cudaGetDeviceProperties(&prop, i));
@@ -176,6 +188,7 @@ void Caffe::EnumerateDevices() {
     LOG(INFO)<< "Name:                          " << prop.name;
     LOG(INFO)<< "Total global memory:           " << prop.totalGlobalMem;
   }
+#endif
 
 #ifdef USE_GREENTEA
   for (int i = 0; i < greentea_device_count; ++i) {
@@ -201,7 +214,9 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
   int cuda_device_count = 0;
   int greentea_device_count = 0;
 
+#ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
+#endif
 
   for (int i = 0; i < cuda_device_count; ++i) {
     Get().device_contexts_.push_back(DeviceContext(i, Backend::BACKEND_CUDA));
@@ -256,7 +271,7 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
     }
   }
 
-#endif
+#endif // USE_GREENTEA
 
 }
 
@@ -268,7 +283,7 @@ DeviceContext& Caffe::GetDeviceContext(int id) {
 viennacl::ocl::program & Caffe::GetDeviceProgram(int id) {
   return id == -1 ? Get().default_ocl_program_ : Get().ocl_programs_[id];
 }
-#endif
+#endif // USE_GREENTEA
 
 DeviceContext& Caffe::GetDefaultDeviceContext() {
   return Get().default_device_context_;
@@ -304,19 +319,20 @@ void Caffe::SetDevice(const int device_id) {
     CURAND_CHECK(
         curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
                                            cluster_seedgen()));
-#endif
+#endif // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
 #ifdef USE_CLBLAS
     clblasSetup();
-#endif
-#endif
+#endif // USE_CLBLAS
+#endif // USE_GREENTEA
   }
 }
 
 // TODO: (FTschopp) fix this for the new backend
 void Caffe::DeviceQuery() {
   if (Get().default_device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
     cudaDeviceProp prop;
     int device;
     if (cudaSuccess != cudaGetDevice(&device)) {
@@ -349,11 +365,12 @@ void Caffe::DeviceQuery() {
       << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
     }
   }
+#endif // USE_CUDA
   else
   {
 #ifdef USE_GREENTEA
-    // TODO
-#endif
+    // TODO: Complete OpenCL device information of current device
+#endif // USE_GREENTEA
   }
 
   return;
@@ -391,6 +408,7 @@ void* Caffe::RNG::generator() {
   return static_cast<void*>(generator_->rng());
 }
 
+#ifdef USE_CUDA
 const char* cublasGetErrorString(cublasStatus_t error) {
   switch (error) {
     case CUBLAS_STATUS_SUCCESS:
@@ -452,6 +470,7 @@ const char* curandGetErrorString(curandStatus_t error) {
   }
   return "Unknown curand status";
 }
+#endif // USE_CUDA
 
 #endif  // CPU_ONLY
 

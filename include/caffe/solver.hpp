@@ -66,6 +66,7 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
+  DeviceContext device_context_;
 
 DISABLE_COPY_AND_ASSIGN(Solver);
 };

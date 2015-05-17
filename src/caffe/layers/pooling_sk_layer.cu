@@ -262,7 +262,6 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           } else {
             mask = max_idx_.mutable_gpu_data();
           }
-          std::cout << "POOLING GREENTEA BEGIN" << std::endl;
           viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
               CL_KERNEL_SELECT("max_pool_forward_sk"));
           viennacl::ocl::enqueue(
@@ -278,7 +277,6 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                   WrapHandle((cl_mem) top_mask, ctx)),
               ctx.get_queue());
           ctx.get_queue().finish();
-          std::cout << "POOLING GREENTEA END" << std::endl;
         }
         break;
         case PoolingParameter_PoolMethod_AVE:
@@ -361,7 +359,6 @@ void PoolingSKLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* top_diff = top[0]->gpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
   const int count = bottom[0]->count();
-  caffe_gpu_set(count, Dtype(0.), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;
@@ -372,6 +369,7 @@ void PoolingSKLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
   if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
+    caffe_gpu_set(count, Dtype(0.), bottom_diff);
     switch (this->layer_param_.pooling_param().pool()) {
       case PoolingParameter_PoolMethod_MAX:
         if (use_top_mask) {
@@ -391,22 +389,44 @@ void PoolingSKLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       default:
         LOG(FATAL)<<"Unknown or unsupported pooling method in Backward_gpu().";
       }
-      CUDA_POST_KERNEL_CHECK;
+    CUDA_POST_KERNEL_CHECK
+    ;
 #endif // USE_CUDA
-    }
-    else
-    {
+  } else {
 #ifdef USE_GREENTEA
-      switch (this->layer_param_.pooling_param().pool()) {
-        case PoolingParameter_PoolMethod_MAX:
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
+
+    greentea_gpu_set(this->device_context_.id(), count, Dtype(0.),
+                     (cl_mem) bottom_diff, 0);
+
+    switch (this->layer_param_.pooling_param().pool()) {
+      case PoolingParameter_PoolMethod_MAX: {
         if (use_top_mask) {
           top_mask = top[1]->gpu_data();
         } else {
           mask = max_idx_.gpu_data();
         }
-        // TODO
+        viennacl::ocl::kernel &oclk_max_pool_backward = program.get_kernel(
+            CL_KERNEL_SELECT("max_pool_backward_sk"));
+        viennacl::ocl::enqueue(
+            oclk_max_pool_backward(count, WrapHandle((cl_mem) top_diff, ctx),
+                                   mask == NULL ? 0 : 1,
+                                   WrapHandle((cl_mem) mask, ctx),
+                                   WrapHandle((cl_mem) top_mask, ctx),
+                                   top[0]->num(), channels_, height_, width_,
+                                   pooled_height_, pooled_width_, kernel_h_,
+                                   kernel_w_, ext_kernel_h, ext_kernel_w,
+                                   stride_h_, stride_w_, kstride_h_, kstride_w_,
+                                   pad_h_, pad_w_,
+                                   WrapHandle((cl_mem) bottom_diff, ctx)),
+            ctx.get_queue());
+        ctx.get_queue().finish();
+      }
         break;
-        default:
+      default:
         LOG(FATAL)<<"Unknown or unsupported pooling method in Backward_gpu().";
       }
 #endif // USE_GREENTEA

@@ -44,7 +44,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
 
   if (this->device_context_.backend() == BACKEND_CUDA) {
-    // CUDA backend code
+#ifdef USE_CUDA
     const Dtype* prob_data = prob_.gpu_data();
     const Dtype* label = bottom[1]->gpu_data();
     const int num = prob_.num();
@@ -59,8 +59,8 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     // to avoid having to allocate additional GPU memory.
     Dtype* counts = prob_.mutable_gpu_diff();
     // NOLINT_NEXT_LINE(whitespace/operators)
-    SoftmaxLossForwardGPU<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
-    CAFFE_CUDA_NUM_THREADS>>>(nthreads, prob_data, label, loss_data,
+    SoftmaxLossForwardGPU<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads),
+        CAFFE_CUDA_NUM_THREADS)(nthreads, prob_data, label, loss_data,
         num, dim, spatial_dim, has_ignore_label_, ignore_label_, counts);
     Dtype loss;
     caffe_gpu_asum(nthreads, loss_data, &loss);
@@ -75,8 +75,51 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
     if (top.size() == 2) {
       top[1]->ShareData(prob_);
     }
+#endif // USE_CUDA
   } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
 
+    cl_mem prob_data = (cl_mem) (prob_.gpu_data());
+    cl_mem label = (cl_mem) (bottom[1]->gpu_data());
+    const int num = prob_.num();
+    const int dim = prob_.count() / num;
+    const int spatial_dim = prob_.height() * prob_.width();
+    const int nthreads = num * spatial_dim;
+    cl_mem loss_data = (cl_mem) (bottom[0]->mutable_gpu_diff());
+    cl_mem counts = (cl_mem) (prob_.mutable_gpu_diff());
+
+    viennacl::ocl::kernel &oclk_softmax_loss_forward = program.get_kernel(
+        CL_KERNEL_SELECT("softmax_loss_forward"));
+    viennacl::ocl::enqueue(
+        oclk_softmax_loss_forward(nthreads, WrapHandle(prob_data, ctx),
+                                  WrapHandle(label, ctx),
+                                  WrapHandle(loss_data, ctx), num, dim,
+                                  spatial_dim, has_ignore_label_ ? 1 : 0,
+                                  ignore_label_, WrapHandle(counts, ctx)),
+        ctx.get_queue());
+    ctx.get_queue().finish();
+
+    Dtype loss;
+
+    greentea_gpu_asum(this->device_context_.id(), nthreads, loss_data, 0,
+                      &loss);
+    if (normalize_) {
+      Dtype count;
+      greentea_gpu_asum(this->device_context_.id(), nthreads, counts, 0,
+                        &count);
+      loss /= count;
+    } else {
+      loss /= num;
+    }
+    top[0]->mutable_cpu_data()[0] = loss;
+    if (top.size() == 2) {
+      top[1]->ShareData(prob_);
+    }
+#endif // USE_GREENTEA
   }
 }
 
@@ -116,29 +159,67 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
     << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
-    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    const Dtype* prob_data = prob_.gpu_data();
-    const Dtype* top_data = top[0]->gpu_data();
-    caffe_gpu_memcpy(prob_.count() * sizeof(Dtype), prob_data, bottom_diff);
-    const Dtype* label = bottom[1]->gpu_data();
-    const int num = prob_.num();
-    const int dim = prob_.count() / num;
-    const int spatial_dim = prob_.height() * prob_.width();
-    const int nthreads = num * spatial_dim;
-    // Since this memory is never used for anything else,
-    // we use to to avoid allocating new GPU memory.
-    Dtype* counts = prob_.mutable_gpu_diff();
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    SoftmaxLossBackwardGPU<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
-    CAFFE_CUDA_NUM_THREADS>>>(nthreads, top_data, label, bottom_diff,
-        num, dim, spatial_dim, has_ignore_label_, ignore_label_, counts);
-    const Dtype loss_weight = top[0]->cpu_diff()[0];
-    if (normalize_) {
-      Dtype count;
-      caffe_gpu_asum(nthreads, counts, &count);
-      caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
+    if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+      Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+      const Dtype* prob_data = prob_.gpu_data();
+      const Dtype* top_data = top[0]->gpu_data();
+      caffe_gpu_memcpy(prob_.count() * sizeof(Dtype), prob_data, bottom_diff);
+      const Dtype* label = bottom[1]->gpu_data();
+      const int num = prob_.num();
+      const int dim = prob_.count() / num;
+      const int spatial_dim = prob_.height() * prob_.width();
+      const int nthreads = num * spatial_dim;
+      // Since this memory is never used for anything else,
+      // we use to to avoid allocating new GPU memory.
+      Dtype* counts = prob_.mutable_gpu_diff();
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      SoftmaxLossBackwardGPU<Dtype>CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads),
+          CAFFE_CUDA_NUM_THREADS)(nthreads, top_data, label, bottom_diff,
+          num, dim, spatial_dim, has_ignore_label_, ignore_label_, counts);
+      const Dtype loss_weight = top[0]->cpu_diff()[0];
+      if (normalize_) {
+        Dtype count;
+        caffe_gpu_asum(nthreads, counts, &count);
+        caffe_gpu_scal(prob_.count(), loss_weight / count, bottom_diff);
+      } else {
+        caffe_gpu_scal(prob_.count(), loss_weight / num, bottom_diff);
+      }
+#endif // USE_CUDA
     } else {
-      caffe_gpu_scal(prob_.count(), loss_weight / num, bottom_diff);
+#ifdef USE_GREENTEA
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          this->device_context_.id());
+      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+          this->device_context_.id());
+
+      cl_mem bottom_diff = (cl_mem)(bottom[0]->mutable_gpu_diff());
+      cl_mem prob_data = (cl_mem)(prob_.gpu_data());
+      cl_mem top_data = (cl_mem)(top[0]->gpu_data());
+      greentea_gpu_memcpy(prob_.count() * sizeof(Dtype), prob_data,0, bottom_diff,0,ctx);
+      cl_mem label = (cl_mem)(bottom[1]->gpu_data());
+      const int num = prob_.num();
+      const int dim = prob_.count() / num;
+      const int spatial_dim = prob_.height() * prob_.width();
+      const int nthreads = num * spatial_dim;
+      cl_mem counts = (cl_mem)(prob_.mutable_gpu_diff());
+
+      viennacl::ocl::kernel &oclk_softmax_loss_backward = program.get_kernel(
+          CL_KERNEL_SELECT("softmax_loss_backward"));
+      viennacl::ocl::enqueue(
+          oclk_softmax_loss_backward(nthreads, WrapHandle(top_data,ctx), WrapHandle(label,ctx), WrapHandle(bottom_diff,ctx), num, dim, spatial_dim, has_ignore_label_?1:0, ignore_label_, WrapHandle(counts,ctx)),
+          ctx.get_queue());
+      ctx.get_queue().finish();
+
+      const Dtype loss_weight = top[0]->cpu_diff()[0];
+      if (normalize_) {
+        Dtype count;
+        greentea_gpu_asum(this->device_context_.id(), nthreads, counts, 0, &count);
+        greentea_gpu_scal(this->device_context_.id(), prob_.count(), loss_weight / count, bottom_diff, 0);
+      } else {
+        greentea_gpu_scal(this->device_context_.id(), prob_.count(), loss_weight / num, bottom_diff, 0);
+      }
+#endif // USE_GREENTEA
     }
   }
 }
