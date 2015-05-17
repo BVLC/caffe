@@ -19,6 +19,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                             const vector<Blob<Dtype>*>& top) {
 
   if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
     // CUDA backend code
     for (int i = 0; i < bottom.size(); ++i) {
       const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -50,6 +51,7 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         }
       }
     }
+#endif
   } else {
     // GreenTea backend code
 #ifdef USE_GREENTEA
@@ -61,9 +63,6 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         this->device_context_.id());
 
     for (int i = 0; i < bottom.size(); ++i) {
-
-      // Cheating, for now
-      //if (kstride_h_ != 23) {
 
       const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
       cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
@@ -133,49 +132,6 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           ctx.get_queue().finish();
         }
       }
-      /*} else {
-
-       const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
-       cl_mem top_data = (cl_mem) (top[i]->mutable_gpu_data());
-       const cl_mem weight = (cl_mem) (this->blobs_[0]->gpu_data());
-
-       viennacl::ocl::kernel &oclk_ip4 = program.get_kernel(
-       CL_KERNEL_SELECT("convolution_ip4v3"));
-
-       LOG(INFO)<< ctx.devices()[0].max_work_group_size();
-
-       LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[0];
-       LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[1];
-       LOG(INFO)<< ctx.devices()[0].max_work_item_sizes()[2];
-       LOG(INFO)<< ctx.devices()[0].preferred_vector_width_float();
-
-       oclk_ip4.global_work_size(0, 16);
-       oclk_ip4.global_work_size(1, 16);
-       oclk_ip4.global_work_size(2, 128);
-       oclk_ip4.local_work_size(0, 16);
-       oclk_ip4.local_work_size(1, 16);
-       oclk_ip4.local_work_size(2, 1);
-
-       viennacl::ocl::enqueue(
-       oclk_ip4(WrapHandle(weight, ctx), WrapHandle(bottom_data, ctx),
-       WrapHandle(top_data, ctx)),
-       ctx.get_queue());
-
-       ctx.get_queue().finish();
-
-       for (int n = 0; n < num_; ++n) {
-       // Third, add bias
-       if (bias_term_) {
-       greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
-       CblasNoTrans, num_output_, N_, 1,
-       (Dtype) 1.,
-       (cl_mem) (this->blobs_[i]->gpu_data()), 0,
-       (cl_mem) (bias_multiplier_.gpu_data()), 0,
-       (Dtype) 1., top_data, top[i]->offset(n));
-       ctx.get_queue().finish();
-       }
-       }
-       }*/
     }
 
     std::cout << "CONV GREENTEA END" << std::endl;
@@ -187,72 +143,201 @@ template<typename Dtype>
 void ConvolutionSKLayer<Dtype>::Backward_gpu(
     const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* weight = NULL;
-  Dtype* weight_diff = NULL;
-  if (this->param_propagate_down_[0]) {
-    weight = this->blobs_[0]->gpu_data();
-    weight_diff = this->blobs_[0]->mutable_gpu_diff();
-    caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
-  }
-  Dtype* bias_diff = NULL;
-  if (bias_term_ && this->param_propagate_down_[1]) {
-    bias_diff = this->blobs_[1]->mutable_gpu_diff();
-    caffe_gpu_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
-  }
-  const int weight_offset = M_ * K_;
-  const int col_offset = K_ * N_;
-  const int top_offset = M_ * N_;
-  for (int i = 0; i < top.size(); ++i) {
-    const Dtype* top_diff = NULL;
-    // Bias gradient, if necessary.
+
+  if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    const Dtype* weight = NULL;
+    Dtype* weight_diff = NULL;
+    if (this->param_propagate_down_[0]) {
+      weight = this->blobs_[0]->gpu_data();
+      weight_diff = this->blobs_[0]->mutable_gpu_diff();
+      caffe_gpu_set(this->blobs_[0]->count(), Dtype(0), weight_diff);
+    }
+    Dtype* bias_diff = NULL;
     if (bias_term_ && this->param_propagate_down_[1]) {
-      top_diff = top[i]->gpu_diff();
-      for (int n = 0; n < num_; ++n) {
-        caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_, 1.,
-                              top_diff + top[0]->offset(n),
-                              bias_multiplier_.gpu_data(), 1., bias_diff);
-      }
+      bias_diff = this->blobs_[1]->mutable_gpu_diff();
+      caffe_gpu_set(this->blobs_[1]->count(), Dtype(0), bias_diff);
     }
-    if (this->param_propagate_down_[0] || propagate_down[i]) {
-      if (!top_diff) {
+    const int weight_offset = M_ * K_;
+    const int col_offset = K_ * N_;
+    const int top_offset = M_ * N_;
+    for (int i = 0; i < top.size(); ++i) {
+      const Dtype* top_diff = NULL;
+      // Bias gradient, if necessary.
+      if (bias_term_ && this->param_propagate_down_[1]) {
         top_diff = top[i]->gpu_diff();
-      }
-      Dtype* col_data = col_buffer_.mutable_gpu_data();
-      Dtype* col_diff = col_buffer_.mutable_gpu_diff();
-      const Dtype* bottom_data = bottom[i]->gpu_data();
-      Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
-      for (int n = 0; n < num_; ++n) {
-        // Since we saved memory in the forward pass by not storing all col
-        // data, we will need to recompute them.
-        im2col_sk_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
-                      width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_,
-                      stride_w_, kstride_h_, kstride_w_, col_data);
-        // gradient w.r.t. weight. Note that we will accumulate diffs.
-        if (this->param_propagate_down_[0]) {
-          for (int g = 0; g < group_; ++g) {
-            caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, M_, K_, N_,
-                                  (Dtype) 1.,
-                                  top_diff + top[i]->offset(n) + top_offset * g,
-                                  col_data + col_offset * g, (Dtype) 1.,
-                                  weight_diff + weight_offset * g);
-          }
+        for (int n = 0; n < num_; ++n) {
+          caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, N_, 1.,
+                                top_diff + top[0]->offset(n),
+                                bias_multiplier_.gpu_data(), 1., bias_diff);
         }
-        // gradient w.r.t. bottom data, if necessary
-        if (propagate_down[i]) {
-          for (int g = 0; g < group_; ++g) {
-            caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, K_, N_, M_,
-                                  (Dtype) 1., weight + weight_offset * g,
-                                  top_diff + top[i]->offset(n) + top_offset * g,
-                                  (Dtype) 0., col_diff + col_offset * g);
+      }
+      if (this->param_propagate_down_[0] || propagate_down[i]) {
+        if (!top_diff) {
+          top_diff = top[i]->gpu_diff();
+        }
+        Dtype* col_data = col_buffer_.mutable_gpu_data();
+        Dtype* col_diff = col_buffer_.mutable_gpu_diff();
+        const Dtype* bottom_data = bottom[i]->gpu_data();
+        Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
+        for (int n = 0; n < num_; ++n) {
+          // Since we saved memory in the forward pass by not storing all col
+          // data, we will need to recompute them.
+          im2col_sk_gpu(bottom_data + bottom[i]->offset(n), channels_, height_,
+                        width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_,
+                        stride_w_, kstride_h_, kstride_w_, col_data);
+          // gradient w.r.t. weight. Note that we will accumulate diffs.
+          if (this->param_propagate_down_[0]) {
+            for (int g = 0; g < group_; ++g) {
+              caffe_gpu_gemm<Dtype>(
+                  CblasNoTrans, CblasTrans, M_, K_, N_, (Dtype) 1.,
+                  top_diff + top[i]->offset(n) + top_offset * g,
+                  col_data + col_offset * g, (Dtype) 1.,
+                  weight_diff + weight_offset * g);
+            }
           }
-          // col2im back to the data
-          col2im_sk_gpu(col_diff, channels_, height_, width_, kernel_h_,
-                        kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-                        kstride_h_, kstride_w_,
-                        bottom_diff + bottom[i]->offset(n));
+          // gradient w.r.t. bottom data, if necessary
+          if (propagate_down[i]) {
+            for (int g = 0; g < group_; ++g) {
+              caffe_gpu_gemm<Dtype>(
+                  CblasTrans, CblasNoTrans, K_, N_, M_, (Dtype) 1.,
+                  weight + weight_offset * g,
+                  top_diff + top[i]->offset(n) + top_offset * g, (Dtype) 0.,
+                  col_diff + col_offset * g);
+            }
+            // col2im back to the data
+            col2im_sk_gpu(col_diff, channels_, height_, width_, kernel_h_,
+                          kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+                          kstride_h_, kstride_w_,
+                          bottom_diff + bottom[i]->offset(n));
+          }
         }
       }
     }
+#endif
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
+
+    const Dtype* weight_cpu = NULL;
+    Dtype* weight_diff_cpu = NULL;
+    cl_mem weight = NULL;
+    cl_mem weight_diff = NULL;
+
+    if (this->param_propagate_down_[0]) {
+      weight = (cl_mem) (this->blobs_[0]->gpu_data());
+      weight_diff = (cl_mem) (this->blobs_[0]->mutable_gpu_diff());
+      greentea_gpu_set(this->device_context_.id(), this->blobs_[0]->count(),
+                       Dtype(0), weight_diff, 0);
+      if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+        weight_cpu = this->blobs_[0]->cpu_data();
+        weight_diff_cpu = this->blobs_[0]->mutable_cpu_diff();
+      }
+    }
+
+    cl_mem bias_diff = NULL;
+
+    if (bias_term_ && this->param_propagate_down_[1]) {
+      bias_diff = (cl_mem) (this->blobs_[1]->mutable_gpu_diff());
+      greentea_gpu_set(this->device_context_.id(), this->blobs_[1]->count(),
+                       Dtype(0), bias_diff, 0);
+    }
+    const int weight_offset = M_ * K_;
+    const int col_offset = K_ * N_;
+    const int top_offset = M_ * N_;
+    for (int i = 0; i < top.size(); ++i) {
+      const Dtype* top_diff_cpu = NULL;
+      cl_mem top_diff = NULL;
+      // Bias gradient, if necessary.
+      if (bias_term_ && this->param_propagate_down_[1]) {
+        top_diff = (cl_mem) (top[i]->gpu_diff());
+        if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+          top_diff_cpu = top[i]->cpu_diff();
+        }
+        for (int n = 0; n < num_; ++n) {
+          greentea_gpu_gemv(this->device_context_.id(), CblasNoTrans,
+                            num_output_, N_, (Dtype) 1., top_diff,
+                            top[0]->offset(n),
+                            (cl_mem) (bias_multiplier_.gpu_data()), 0,
+                            (Dtype) 1., bias_diff, 0);
+        }
+      }
+      if (this->param_propagate_down_[0] || propagate_down[i]) {
+        if (!top_diff) {
+          top_diff = (cl_mem) (top[i]->gpu_diff());
+          if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+            top_diff_cpu = top[i]->cpu_diff();
+          }
+        }
+        cl_mem col_data = (cl_mem) (col_buffer_.mutable_gpu_data());
+        cl_mem col_diff = (cl_mem) (col_buffer_.mutable_gpu_diff());
+        const cl_mem bottom_data = (cl_mem) (bottom[i]->gpu_data());
+        cl_mem bottom_diff = (cl_mem) (bottom[i]->mutable_gpu_diff());
+
+        Dtype* col_data_cpu = NULL;
+        Dtype* col_diff_cpu = NULL;
+        if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+          col_data_cpu = col_buffer_.mutable_cpu_data();
+          col_diff_cpu = col_buffer_.mutable_cpu_diff();
+        }
+
+        for (int n = 0; n < num_; ++n) {
+          // Since we saved memory in the forward pass by not storing all col
+          // data, we will need to recompute them.
+          greentea_im2col_sk_gpu<Dtype>(program, ctx, bottom_data,
+                                 bottom[i]->offset(n), channels_, height_,
+                                 width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+                                 stride_h_, stride_w_, kstride_h_, kstride_w_,
+                                 col_data);
+          // gradient w.r.t. weight. Note that we will accumulate diffs.
+          if (this->param_propagate_down_[0]) {
+            for (int g = 0; g < group_; ++g) {
+              if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+                caffe_cpu_gemm<Dtype>(
+                    CblasNoTrans, CblasTrans, M_, K_, N_, (Dtype) 1.,
+                    top_diff_cpu + top[i]->offset(n) + top_offset * g,
+                    col_data_cpu + col_offset * g, (Dtype) 1.,
+                    weight_diff_cpu + weight_offset * g);
+              } else {
+                greentea_gpu_gemm<Dtype>(this->device_context_.id(),
+                                         CblasNoTrans, CblasTrans, M_, K_, N_,
+                                         (Dtype) 1., top_diff,
+                                         top[i]->offset(n) + top_offset * g,
+                                         col_data, col_offset * g, (Dtype) 1.,
+                                         weight_diff, weight_offset * g);
+              }
+            }
+          }
+          // gradient w.r.t. bottom data, if necessary
+          if (propagate_down[i]) {
+            for (int g = 0; g < group_; ++g) {
+              if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
+                caffe_cpu_gemm<Dtype>(
+                    CblasTrans, CblasNoTrans, K_, N_, M_, (Dtype) 1.,
+                    weight_cpu + weight_offset * g,
+                    top_diff_cpu + top[i]->offset(n) + top_offset * g,
+                    (Dtype) 0., col_diff_cpu + col_offset * g);
+              } else {
+                greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasTrans,
+                                         CblasNoTrans, K_, N_, M_, (Dtype) 1.,
+                                         weight, weight_offset * g, top_diff,
+                                         top[i]->offset(n) + top_offset * g,
+                                         (Dtype) 0., col_diff, col_offset * g);
+              }
+            }
+            // col2im back to the data
+            greentea_col2im_sk_gpu<Dtype>(program, ctx, col_diff, channels_, height_,
+                                   width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
+                                   stride_h_, stride_w_, kstride_h_, kstride_w_,
+                                   bottom_diff, bottom[i]->offset(n));
+          }
+        }
+      }
+    }
+#endif
   }
 }
 
