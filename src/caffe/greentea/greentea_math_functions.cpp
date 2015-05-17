@@ -670,39 +670,45 @@ template void greentea_gpu_powx<double>(const int ctx_id, const int N,
 
 template<typename Dtype>
 void greentea_gpu_sign(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy) {
+                       cl_mem y, const int offy) {
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
-  viennacl::ocl::kernel &oclk_sign = program.get_kernel(CL_KERNEL_SELECT("sign"));
+  viennacl::ocl::kernel &oclk_sign = program.get_kernel(
+      CL_KERNEL_SELECT("sign"));
   viennacl::ocl::enqueue(
       oclk_sign(n, WrapHandle(x, ctx), offx, WrapHandle(y, ctx), offy),
       ctx.get_queue());
 }
 
-template void greentea_gpu_sign<float>(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy);
-template void greentea_gpu_sign<double>(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy);
+template void greentea_gpu_sign<float>(const int ctx_id, const int n,
+                                       const cl_mem x, int offx, cl_mem y,
+                                       const int offy);
+template void greentea_gpu_sign<double>(const int ctx_id, const int n,
+                                        const cl_mem x, int offx, cl_mem y,
+                                        const int offy);
 
 template<typename Dtype>
-void greentea_gpu_sgnbit(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy) {
+void greentea_gpu_sgnbit(const int ctx_id, const int n, const cl_mem x,
+                         int offx, cl_mem y, const int offy) {
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
   viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
 
-  viennacl::ocl::kernel &oclk_sgnbit = program.get_kernel(CL_KERNEL_SELECT("sgnbit"));
+  viennacl::ocl::kernel &oclk_sgnbit = program.get_kernel(
+      CL_KERNEL_SELECT("sgnbit"));
   viennacl::ocl::enqueue(
       oclk_sgnbit(n, WrapHandle(x, ctx), offx, WrapHandle(y, ctx), offy),
       ctx.get_queue());
 }
 
-template void greentea_gpu_sgnbit<float>(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy);
-template void greentea_gpu_sgnbit<double>(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy);
+template void greentea_gpu_sgnbit<float>(const int ctx_id, const int n,
+                                         const cl_mem x, int offx, cl_mem y,
+                                         const int offy);
+template void greentea_gpu_sgnbit<double>(const int ctx_id, const int n,
+                                          const cl_mem x, int offx, cl_mem y,
+                                          const int offy);
 
 void greentea_gpu_rng_uniform(const int n, unsigned int* r) {
   CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));

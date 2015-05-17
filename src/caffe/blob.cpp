@@ -318,7 +318,7 @@ Dtype Blob<Dtype>::sumsq_data() const {
         caffe_gpu_dot(count_, data, data, &sumsq);
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_dot(device_context_.id(), count_, data, 0, data, 0,
+        greentea_gpu_dot(device_context_.id(), count_, (cl_mem)data, 0, (cl_mem)data, 0,
                          &sumsq);
 #endif
       }
@@ -366,7 +366,7 @@ Dtype Blob<Dtype>::sumsq_diff() const {
         caffe_gpu_dot(count_, diff, diff, &sumsq);
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_dot(device_context_.id(), count_, diff, 0, diff, 0,
+        greentea_gpu_dot(device_context_.id(), count_, (cl_mem)diff, 0, (cl_mem)diff, 0,
                          &sumsq);
 #endif
       }
@@ -411,7 +411,7 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
         caffe_gpu_scal(count_, scale_factor, data);
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_scal(device_context_.id(), count_, scale_factor, data, 0);
+        greentea_gpu_scal(device_context_.id(), count_, scale_factor, (cl_mem)data, 0);
 #endif
       }
       return;
@@ -454,7 +454,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
         caffe_gpu_scal(count_, scale_factor, diff);
       } else {
 #ifdef USE_GREENTEA
-        greentea_gpu_scal(device_context_.id(), count_, scale_factor, diff, 0);
+        greentea_gpu_scal(device_context_.id(), count_, scale_factor, (cl_mem)diff, 0);
 #endif
       }
       return;
