@@ -30,6 +30,10 @@ void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
 void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
                          const int offY, viennacl::ocl::context &ctx);
 
+void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
+                         cl_mem Y, const int offY,
+                         viennacl::ocl::context &ctx);
+
 template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, cl_mem Y,
                    viennacl::ocl::context &ctx);

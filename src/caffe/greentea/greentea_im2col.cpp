@@ -20,9 +20,6 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
                             const int kstride_h, const int kstride_w,
                             cl_mem data_col) {
 
-  std::cout << "DATA_IM: " << data_im << std::endl;
-  std::cout << "DATA_COL: " << data_col << std::endl;
-
   int ext_kernel_h = (kernel_h - 1) * kstride_h + 1;
   int ext_kernel_w = (kernel_w - 1) * kstride_w + 1;
   int height_col = (height + 2 * pad_h - ext_kernel_h) / stride_h + 1;
@@ -30,7 +27,7 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
   int num_kernels = channels * height_col * width_col;
 
   viennacl::ocl::kernel &kernel = prog.get_kernel(
-      CL_KERNEL_SELECT("im2col_sk_gpu_kernel"));
+      CL_KERNEL_SELECT("im2col_sk"));
 
   viennacl::ocl::enqueue(
       kernel(num_kernels, WrapHandle(data_im, ctx), data_offset, height, width,
@@ -38,8 +35,6 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
              stride_h, stride_w, kstride_h, kstride_w, height_col, width_col,
              WrapHandle(data_col, ctx)),
       ctx.get_queue());
-
-  std::cout << "END OF IM2COL" << std::endl;
 }
 
 // Explicit instantiation
@@ -96,7 +91,7 @@ void greentea_col2im_sk_gpu(viennacl::ocl::program &prog,
       CL_KERNEL_SELECT("col2im_sk"));
 
   viennacl::ocl::enqueue(
-      kernel(num_kernels, num_kernels, WrapHandle(data_col,ctx), height, width, channels,
+      kernel(num_kernels, WrapHandle(data_col,ctx), height, width, channels,
           patch_h, patch_w, ext_patch_h, ext_patch_w,
           pad_h, pad_w, stride_h, stride_w, kstride_h, kstride_w,
           height_col, width_col, WrapHandle(data_im,ctx), data_offset),

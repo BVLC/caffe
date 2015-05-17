@@ -20,12 +20,13 @@ namespace caffe {
  *
  * TODO(dox): more thorough description.
  */
-template <typename Dtype>
+template<typename Dtype>
 class Net {
  public:
   explicit Net(const NetParameter& param);
   explicit Net(const string& param_file, Phase phase);
-  virtual ~Net() {}
+  virtual ~Net() {
+  }
 
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
@@ -49,8 +50,8 @@ class Net {
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);
   /// @brief Run forward using a set of bottom blobs, and return the result.
-  const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>* > & bottom,
-      Dtype* loss = NULL);
+  const vector<Blob<Dtype>*>& Forward(const vector<Blob<Dtype>*> & bottom,
+                                      Dtype* loss = NULL);
   /**
    * @brief Run forward using a serialized BlobProtoVector and return the
    *        result as a serialized BlobProtoVector
@@ -75,7 +76,7 @@ class Net {
    */
   void Reshape();
 
-  Dtype ForwardBackward(const vector<Blob<Dtype>* > & bottom) {
+  Dtype ForwardBackward(const vector<Blob<Dtype>*> & bottom) {
     Dtype loss;
     Forward(bottom, &loss);
     Backward();
@@ -102,11 +103,17 @@ class Net {
   void ToProto(NetParameter* param, bool write_diff = false) const;
 
   /// @brief returns the network name.
-  inline const string& name() const { return name_; }
+  inline const string& name() const {
+    return name_;
+  }
   /// @brief returns the layer names
-  inline const vector<string>& layer_names() const { return layer_names_; }
+  inline const vector<string>& layer_names() const {
+    return layer_names_;
+  }
   /// @brief returns the blob names
-  inline const vector<string>& blob_names() const { return blob_names_; }
+  inline const vector<string>& blob_names() const {
+    return blob_names_;
+  }
   /// @brief returns the blobs
   inline const vector<shared_ptr<Blob<Dtype> > >& blobs() const {
     return blobs_;
@@ -116,7 +123,9 @@ class Net {
     return layers_;
   }
   /// @brief returns the phase: TRAIN or TEST
-  inline Phase phase() const { return phase_; }
+  inline Phase phase() const {
+    return phase_;
+  }
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
@@ -145,17 +154,25 @@ class Net {
     return params_;
   }
   /// @brief returns the parameter learning rate multipliers
-  inline const vector<float>& params_lr() const { return params_lr_; }
+  inline const vector<float>& params_lr() const {
+    return params_lr_;
+  }
   inline const vector<float>& params_weight_decay() const {
     return params_weight_decay_;
   }
   const map<string, int>& param_names_index() const {
     return param_names_index_;
   }
-  inline const vector<int>& param_owners() const { return param_owners_; }
+  inline const vector<int>& param_owners() const {
+    return param_owners_;
+  }
   /// @brief Input and output blob numbers
-  inline int num_inputs() const { return net_input_blobs_.size(); }
-  inline int num_outputs() const { return net_output_blobs_.size(); }
+  inline int num_inputs() const {
+    return net_input_blobs_.size();
+  }
+  inline int num_outputs() const {
+    return net_output_blobs_.size();
+  }
   inline const vector<Blob<Dtype>*>& input_blobs() const {
     return net_input_blobs_;
   }
@@ -173,7 +190,9 @@ class Net {
   bool has_layer(const string& layer_name) const;
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
 
-  void set_debug_info(const bool value) { debug_info_ = value; }
+  void set_debug_info(const bool value) {
+    debug_info_ = value;
+  }
 
   // Helpers for Init.
   /**
@@ -181,10 +200,10 @@ class Net {
    *        phase, level, and stage.
    */
   static void FilterNet(const NetParameter& param,
-      NetParameter* param_filtered);
+                        NetParameter* param_filtered);
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
-      const string& layer_name);
+                             const string& layer_name);
 
  protected:
   // Helpers for Init.
@@ -259,9 +278,8 @@ class Net {
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
 
-  DISABLE_COPY_AND_ASSIGN(Net);
+DISABLE_COPY_AND_ASSIGN(Net);
 };
-
 
 }  // namespace caffe
 

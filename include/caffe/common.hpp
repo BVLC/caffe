@@ -185,7 +185,7 @@ class Caffe {
 #ifdef USE_GREENTEA
   vector<viennacl::ocl::program> ocl_programs_;
   viennacl::ocl::program default_ocl_program_;
-#endif
+#endif // USE_GREENTEA
 
  private:
   // The private constructor to avoid duplicate instantiation.

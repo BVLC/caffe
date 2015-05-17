@@ -55,8 +55,6 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   } else {
     // GreenTea backend code
 #ifdef USE_GREENTEA
-    std::cout << "CONV GREENTEA BEGIN: " << this->layer_param().name()
-        << std::endl;
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_.id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
@@ -82,10 +80,6 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       int col_offset = K_ * N_;
       int top_offset = M_ * N_;
 
-      std::cout << "M:" << M_ << std::endl;
-      std::cout << "N:" << N_ << std::endl;
-      std::cout << "K:" << K_ << std::endl;
-
       for (int n = 0; n < num_; ++n) {
 
         // First, im2col
@@ -99,7 +93,6 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         // Second, innerproduct with groups
         for (int g = 0; g < group_; ++g) {
           if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-            std::cout << "CPU GEMM" << std::endl;
             caffe_cpu_gemm<Dtype>(
                 CblasNoTrans, CblasNoTrans, M_, N_, K_, (Dtype) 1.,
                 weight_cpu + weight_offset * g, col_data_cpu + col_offset * g,
@@ -133,8 +126,6 @@ void ConvolutionSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         }
       }
     }
-
-    std::cout << "CONV GREENTEA END" << std::endl;
 #endif
   }
 }

@@ -28,14 +28,15 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int count = bottom[0]->count();
   Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
   if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
     // NOLINT_NEXT_LINE(whitespace/operators)
-    ReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+    ReLUForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
         count, bottom_data, top_data, negative_slope);
     CUDA_POST_KERNEL_CHECK
     ;
+#endif // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
-    std::cout << "RELU GREENTEA BEGIN" << std::endl;
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(
         this->device_context_.id());
     viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
@@ -47,9 +48,7 @@ void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                           WrapHandle((cl_mem) top_data, ctx), negative_slope),
         ctx.get_queue());
     ctx.get_queue().finish();
-    std::cout << "RELU GREENTEA END" << std::endl;
-
-#endif
+#endif // USE_GREENTEA
   }
   // << " count: " << count << " bottom_data: "
   //     << (unsigned long)bottom_data
@@ -79,11 +78,31 @@ void ReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
     const int count = bottom[0]->count();
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    ReLUBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, top_diff, bottom_data, bottom_diff, negative_slope);
-    CUDA_POST_KERNEL_CHECK
-    ;
+    if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      ReLUBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS)(
+          count, top_diff, bottom_data, bottom_diff, negative_slope);
+      CUDA_POST_KERNEL_CHECK
+      ;
+#endif // USE_CUDA
+    } else {
+#ifdef USE_GREENTEA
+      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+          this->device_context_.id());
+      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+          this->device_context_.id());
+      viennacl::ocl::kernel &oclk_relu_backward = program.get_kernel(
+          CL_KERNEL_SELECT("relu_backward"));
+      viennacl::ocl::enqueue(
+          oclk_relu_backward(count, WrapHandle((cl_mem) top_diff, ctx),
+                             WrapHandle((cl_mem) bottom_data, ctx),
+                             WrapHandle((cl_mem) bottom_diff, ctx),
+                             negative_slope),
+          ctx.get_queue());
+      ctx.get_queue().finish();
+#endif // USE_GREENTEA
+    }
   }
 }
 
