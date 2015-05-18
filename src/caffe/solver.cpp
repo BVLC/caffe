@@ -587,10 +587,6 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
                              net_params[param_id]->gpu_data(),
                              net_params[param_id]->mutable_gpu_diff());
 
-              greentea_gpu_axpy<Dtype>(
-                  this->device_context_.id(), net_params[param_id]->count(),
-                  local_decay, (cl_mem) (net_params[param_id]->gpu_data()), 0,
-                  (cl_mem) (net_params[param_id]->mutable_gpu_diff()), 0);
             } else if (regularization_type == "L1") {
               caffe_gpu_sign(net_params[param_id]->count(),
                              net_params[param_id]->gpu_data(),
@@ -598,15 +594,6 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
               caffe_gpu_axpy(net_params[param_id]->count(), local_decay,
                              temp_[param_id]->gpu_data(),
                              net_params[param_id]->mutable_gpu_diff());
-
-              greentea_gpu_sign<Dtype>(
-                  this->device_context_.id(), net_params[param_id]->count(),
-                  (cl_mem) (net_params[param_id]->gpu_data()), 0,
-                  (cl_mem) (temp_[param_id]->mutable_gpu_data()), 0);
-              greentea_gpu_axpy<Dtype>(
-                  this->device_context_.id(), net_params[param_id]->count(),
-                  local_decay, (cl_mem) (temp_[param_id]->gpu_data()), 0,
-                  (cl_mem) (net_params[param_id]->mutable_gpu_diff()), 0);
             }
           } else {
             LOG(FATAL)<< "Unknown regularization type: " << regularization_type;
@@ -619,21 +606,6 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
           caffe_copy(net_params[param_id]->count(),
                      history_[param_id]->gpu_data(),
                      net_params[param_id]->mutable_gpu_diff());
-
-          viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-              this->device_context_.id());
-
-          greentea_gpu_axpby(this->device_context_.id(),
-                             net_params[param_id]->count(), local_rate,
-                             (cl_mem) (net_params[param_id]->gpu_diff()), 0,
-                             momentum,
-                             (cl_mem) (history_[param_id]->mutable_gpu_data()),
-                             0);
-          // copy
-          greentea_copy<Dtype>(
-              net_params[param_id]->count(),
-              (cl_mem) (history_[param_id]->gpu_data()),
-              (cl_mem) (net_params[param_id]->mutable_gpu_diff()), ctx);
         }
 #endif // USE_CUDA
       } else {
@@ -825,10 +797,10 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
 
         for (int param_id = 0; param_id < net_params.size(); ++param_id) {
           // save history momentum for stepping back
-          greentea_copy<Dtype>(net_params[param_id]->count(),
-                        (cl_mem) (this->history_[param_id]->gpu_data()),
-                        (cl_mem) (this->update_[param_id]->mutable_gpu_data()),
-                        ctx);
+          greentea_copy<Dtype>(
+              net_params[param_id]->count(),
+              (cl_mem) (this->history_[param_id]->gpu_data()),
+              (cl_mem) (this->update_[param_id]->mutable_gpu_data()), ctx);
 
           Dtype local_rate = rate * net_params_lr[param_id];
           Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
@@ -869,10 +841,10 @@ void NesterovSolver<Dtype>::ComputeUpdateValue() {
               (cl_mem) (this->update_[param_id]->mutable_gpu_data()), 0);
 
           // copy
-          greentea_copy<Dtype>(net_params[param_id]->count(),
-                        (cl_mem) (this->update_[param_id]->gpu_data()),
-                        (cl_mem) (net_params[param_id]->mutable_gpu_diff()),
-                        ctx);
+          greentea_copy<Dtype>(
+              net_params[param_id]->count(),
+              (cl_mem) (this->update_[param_id]->gpu_data()),
+              (cl_mem) (net_params[param_id]->mutable_gpu_diff()), ctx);
         }
 #endif // USE_GREENTEA
       }
