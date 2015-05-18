@@ -30,6 +30,8 @@ DEFINE_string(weights, "",
     "Cannot be set simultaneously with snapshot.");
 DEFINE_int32(iterations, 50,
     "The number of iterations to run.");
+DEFINE_bool(only_forward, false,
+    "Run in GPU mode on given device ID.");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -188,7 +190,7 @@ int test() {
     const std::string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
     const float loss_weight =
-        caffe_net.blob_loss_weights()[caffe_net.output_blob_indices()[i]];
+        caffe_net.blob_loss_weights()[caffe_net.output_blob_indices()[test_score_output_id[i]]];
     std::ostringstream loss_msg_stream;
     const float mean_score = test_score[i] / FLAGS_iterations;
     if (loss_weight) {
@@ -252,20 +254,25 @@ int time() {
     forward_timer.Start();
     for (int i = 0; i < layers.size(); ++i) {
       timer.Start();
+      // Although Reshape should be essentially free, we include it here
+      // so that we will notice Reshape performance bugs.
+      layers[i]->Reshape(bottom_vecs[i], top_vecs[i]);
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
-    backward_timer.Start();
-    for (int i = layers.size() - 1; i >= 0; --i) {
-      timer.Start();
-      layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
-                          bottom_vecs[i]);
-      backward_time_per_layer[i] += timer.MicroSeconds();
+    if (!FLAGS_only_forward) {
+			backward_timer.Start();
+			for (int i = layers.size() - 1; i >= 0; --i) {
+				timer.Start();
+				layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
+														bottom_vecs[i]);
+				backward_time_per_layer[i] += timer.MicroSeconds();
+			}
+			backward_time += backward_timer.MicroSeconds();
+			LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
+				<< iter_timer.MilliSeconds() << " ms.";
     }
-    backward_time += backward_timer.MicroSeconds();
-    LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
-      << iter_timer.MilliSeconds() << " ms.";
   }
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
@@ -273,17 +280,21 @@ int time() {
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
       "\tforward: " << forward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
-    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
-      "\tbackward: " << backward_time_per_layer[i] / 1000 /
-      FLAGS_iterations << " ms.";
+    if (!FLAGS_only_forward) {
+			LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
+				"\tbackward: " << backward_time_per_layer[i] / 1000 /
+				FLAGS_iterations << " ms.";
+    }
   }
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
     FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
-    FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
-    FLAGS_iterations << " ms.";
+  if (!FLAGS_only_forward) {
+		LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
+			FLAGS_iterations << " ms.";
+		LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
+			FLAGS_iterations << " ms.";
+  }
   LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
