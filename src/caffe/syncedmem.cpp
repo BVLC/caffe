@@ -95,7 +95,7 @@ inline void SyncedMemory::to_gpu() {
           cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                        size_, NULL, &err);
           int alpha = 0;
-          greentea_memset(size_, alpha, cl_gpu_mem_, 0, ctx);
+          greentea_memset(device_context_.id(), size_, alpha, cl_gpu_mem_, 0);
         }
         gpu_ptr_ = (void*) cl_gpu_mem_;
         ctx.get_queue().finish();
