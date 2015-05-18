@@ -18,11 +18,8 @@
 
 namespace caffe {
 
-inline void greentea_memset(const size_t N, const int alpha, cl_mem X,
-                            const int offX, viennacl::ocl::context &ctx) {
-  clEnqueueFillBuffer(ctx.get_queue().handle().get(), X, &alpha, sizeof(int),
-                      offX, N, 0, NULL, NULL);
-}
+void greentea_memset(const int ctx_id, const size_t N, const int alpha,
+                     cl_mem X, const int offX);
 
 void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
                          void *Y, viennacl::ocl::context &ctx);
@@ -31,8 +28,7 @@ void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
                          const int offY, viennacl::ocl::context &ctx);
 
 void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
-                         cl_mem Y, const int offY,
-                         viennacl::ocl::context &ctx);
+                         cl_mem Y, const int offY, viennacl::ocl::context &ctx);
 
 template<typename Dtype>
 void greentea_copy(const int N, const cl_mem X, cl_mem Y,
@@ -123,11 +119,11 @@ void greentea_gpu_powx(const int ctx_id, const int N, const cl_mem a,
 
 template<typename Dtype>
 void greentea_gpu_sign(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy);
+                       cl_mem y, const int offy);
 
 template<typename Dtype>
-void greentea_gpu_sgnbit(const int ctx_id, const int n, const cl_mem x, int offx,
-                      cl_mem y, const int offy);
+void greentea_gpu_sgnbit(const int ctx_id, const int n, const cl_mem x,
+                         int offx, cl_mem y, const int offy);
 
 template<typename Dtype>
 void greentea_gpu_rng_uniform(const int ctx_id, const int n, const Dtype a,

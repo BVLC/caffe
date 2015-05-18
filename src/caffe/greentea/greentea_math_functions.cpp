@@ -18,9 +18,7 @@
 #include <cstring>
 
 #include "caffe/common.hpp"
-#include "caffe/util/math_functions.hpp"
 
-#include "caffe/greentea/greentea_math_functions.hpp"
 #include "viennacl/backend/opencl.hpp"
 #include "viennacl/ocl/context.hpp"
 #include "viennacl/ocl/device.hpp"
@@ -40,6 +38,22 @@
 #endif
 
 namespace caffe {
+
+void greentea_memset(const int ctx_id, const size_t N, const int alpha,
+                     cl_mem X, const int offX) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  // OpenCL Version >= 1.2 approach
+  // clEnqueueFillBuffer(ctx.get_queue().handle().get(), X, &alpha, sizeof(int),
+  //                     offX, N, 0, NULL, NULL);
+  // OpenCL Version < 1.2 fallback
+  typedef float Dtype;
+  viennacl::ocl::kernel &oclk_fill = program.get_kernel(
+      CL_KERNEL_SELECT("fill"));
+  viennacl::ocl::enqueue(oclk_fill(int(N/sizeof(Dtype)), Dtype(alpha), WrapHandle(X, ctx), offX),
+                         ctx.get_queue());
+  ctx.get_queue().finish();
+}
 
 // Copy from OpenCL buffer to main memory
 void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
@@ -68,7 +82,8 @@ void greentea_gpu_memcpy(const size_t N, const void* X, cl_mem Y,
 void greentea_gpu_memcpy(const size_t N, const cl_mem X, const int offX,
                          cl_mem Y, const int offY,
                          viennacl::ocl::context &ctx) {
-  clEnqueueCopyBuffer(ctx.get_queue().handle().get(), X, Y, offX, offY, N, 0, NULL,
+  clEnqueueCopyBuffer(ctx.get_queue().handle().get(), X, Y, offX, offY, N, 0,
+  NULL,
                       NULL);
   ctx.get_queue().finish();
 }
@@ -530,10 +545,19 @@ template void greentea_gpu_scale<double>(const int ctx_id, const int n,
 template<typename Dtype>
 void greentea_gpu_set(const int ctx_id, const int N, const Dtype alpha,
                       cl_mem Y, const int offY) {
-  viennacl::ocl::context ctx = viennacl::ocl::get_context(ctx_id);
-  cl_command_queue queue = ctx.get_queue().handle().get();
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+  viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(ctx_id);
+  // OpenCL Version >= 1.2 approach
+  //clEnqueueFillBuffer(ctx.get_queue().handle().get(), Y, &alpha, sizeof(Dtype),
+  //                     offY, N, 0, NULL, NULL);
 
-  clEnqueueFillBuffer(queue, Y, &alpha, sizeof(Dtype), offY, N, 0, NULL, NULL);
+  // OpenCL Version < 1.2 fallback
+  viennacl::ocl::kernel &oclk_fill = program.get_kernel(
+      CL_KERNEL_SELECT("fill"));
+  viennacl::ocl::enqueue(oclk_fill(N, alpha, WrapHandle(Y, ctx), offY),
+                         ctx.get_queue());
+
+  ctx.get_queue().finish();
 }
 
 template void greentea_gpu_set<int>(const int ctx_id, const int N,
