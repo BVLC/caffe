@@ -283,6 +283,9 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
                                  width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
                                  stride_h_, stride_w_, kstride_h_, kstride_w_,
                                  col_data);
+
+          ctx.get_queue().finish();
+
           // gradient w.r.t. weight. Note that we will accumulate diffs.
           if (this->param_propagate_down_[0]) {
             for (int g = 0; g < group_; ++g) {
@@ -324,6 +327,8 @@ void ConvolutionSKLayer<Dtype>::Backward_gpu(
                                    width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
                                    stride_h_, stride_w_, kstride_h_, kstride_w_,
                                    bottom_diff, bottom[i]->offset(n));
+
+            ctx.get_queue().finish();
           }
         }
       }
