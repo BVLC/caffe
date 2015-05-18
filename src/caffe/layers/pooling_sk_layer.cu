@@ -241,56 +241,93 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
               stride_h_, stride_w_, kstride_h_, kstride_w_, top_data);
         }
         break;
-      default:
+      default: {
         LOG(FATAL)<< "Unknown pooling method.";
       }
-      CUDA_POST_KERNEL_CHECK;
+    }
+    CUDA_POST_KERNEL_CHECK;
 
 #endif // USE_CUDA
-    } else {
+  } else {
 #ifdef USE_GREENTEA
-      viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-          this->device_context_.id());
-      viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
-          this->device_context_.id());
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
 
-      switch (this->layer_param_.pooling_param().pool()) {
-        case PoolingParameter_PoolMethod_MAX:
-        {
-          if (use_top_mask) {
-            top_mask = top[1]->mutable_gpu_data();
-          } else {
-            mask = max_idx_.mutable_gpu_data();
-          }
-          viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
-              CL_KERNEL_SELECT("max_pool_forward_sk"));
+    switch (this->layer_param_.pooling_param().pool()) {
+      case PoolingParameter_PoolMethod_MAX: {
+        if (use_top_mask) {
+          top_mask = top[1]->mutable_gpu_data();
+        } else {
+          mask = max_idx_.mutable_gpu_data();
+        }
+        viennacl::ocl::kernel &oclk_max_pool_forward = program.get_kernel(
+            CL_KERNEL_SELECT("max_pool_forward_sk"));
+        viennacl::ocl::enqueue(
+            oclk_max_pool_forward(count, WrapHandle((cl_mem) bottom_data, ctx),
+                bottom[0]->num(), channels_, height_, width_,
+                pooled_height_, pooled_width_, kernel_h_,
+                kernel_w_, ext_kernel_h, ext_kernel_w,
+                stride_h_, stride_w_, kstride_h_, kstride_w_,
+                pad_h_, pad_w_,
+                WrapHandle((cl_mem) top_data, ctx),
+                mask == NULL ? 0 : 1,
+                WrapHandle((cl_mem) mask, ctx),
+                WrapHandle((cl_mem) top_mask, ctx)),
+            ctx.get_queue());
+        ctx.get_queue().finish();
+      }
+      break;
+      case PoolingParameter_PoolMethod_AVE: {
+        viennacl::ocl::kernel &oclk_ave_pool_forward = program.get_kernel(
+            CL_KERNEL_SELECT("ave_pool_forward_sk"));
+        viennacl::ocl::enqueue(
+            oclk_ave_pool_forward(count, WrapHandle((cl_mem) bottom_data,ctx), bottom[0]->num(), channels_,
+                height_, width_, pooled_height_, pooled_width_, kernel_h_,
+                kernel_w_, ext_kernel_h, ext_kernel_w,
+                stride_h_, stride_w_, kstride_h_, kstride_w_,
+                pad_h_, pad_w_, WrapHandle((cl_mem)top_data,ctx)),
+            ctx.get_queue());
+        ctx.get_queue().finish();
+      }
+      break;
+      case PoolingParameter_PoolMethod_STOCHASTIC: {
+        if (this->phase_ == caffe::TRAIN) {
+          // We need to create the random index as well.
+          greentea_gpu_rng_uniform(this->device_context_.id(),count, Dtype(0), Dtype(1),
+              (cl_mem)(rand_idx_.mutable_gpu_data()),0);
+
+          viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
+              CL_KERNEL_SELECT("sto_pool_forward_train_sk"));
           viennacl::ocl::enqueue(
-              oclk_max_pool_forward(count, WrapHandle((cl_mem) bottom_data, ctx),
-                  bottom[0]->num(), channels_, height_, width_,
-                  pooled_height_, pooled_width_, kernel_h_,
+              oclk_sto_pool_forward(count, WrapHandle((cl_mem)bottom_data,ctx), bottom[0]->num(), channels_,
+                  height_, width_, pooled_height_, pooled_width_, kernel_h_,
                   kernel_w_, ext_kernel_h, ext_kernel_w,
                   stride_h_, stride_w_, kstride_h_, kstride_w_,
-                  pad_h_, pad_w_,
-                  WrapHandle((cl_mem) top_data, ctx),
-                  mask == NULL ? 0 : 1,
-                  WrapHandle((cl_mem) mask, ctx),
-                  WrapHandle((cl_mem) top_mask, ctx)),
+                  WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()),ctx), WrapHandle((cl_mem)(top_data),ctx)),
+              ctx.get_queue());
+          ctx.get_queue().finish();
+        } else {
+          viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
+              CL_KERNEL_SELECT("sto_pool_forward_test_sk"));
+          viennacl::ocl::enqueue(
+              oclk_sto_pool_forward(count, WrapHandle((cl_mem)bottom_data,ctx), bottom[0]->num(), channels_,
+                  height_, width_, pooled_height_, pooled_width_, kernel_h_,
+                  kernel_w_, ext_kernel_h, ext_kernel_w,
+                  stride_h_, stride_w_, kstride_h_, kstride_w_, WrapHandle((cl_mem)top_data,ctx)),
               ctx.get_queue());
           ctx.get_queue().finish();
         }
-        break;
-        case PoolingParameter_PoolMethod_AVE:
-        // TODO
-        break;
-        case PoolingParameter_PoolMethod_STOCHASTIC:
-        // TODO
-        break;
-        default:
+      }
+      break;
+      default: {
         LOG(FATAL)<< "Unknown pooling method.";
       }
-#endif // USE_GREENTEA
     }
+#endif // USE_GREENTEA
   }
+}
 
 #ifdef USE_CUDA
 template<typename Dtype>
