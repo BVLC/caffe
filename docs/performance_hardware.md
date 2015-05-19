@@ -48,7 +48,7 @@ and then set the clock speed with
 
     sudo nvidia-smi -i 0 -ac 3004,875    # repeat with -i x for each GPU ID
 
-but note that this configuration resets across driver reloading / rebooting. Include these commands in a boot script to intialize these settings. For a simple fix, add these commands to `/etc/rc.local` (on Ubuntu).
+but note that this configuration resets across driver reloading / rebooting. Include these commands in a boot script to initialize these settings. For a simple fix, add these commands to `/etc/rc.local` (on Ubuntu).
 
 ## NVIDIA Titan
 
