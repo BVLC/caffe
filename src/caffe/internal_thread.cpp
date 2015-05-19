@@ -19,10 +19,7 @@ bool InternalThread::must_stop() {
 }
 
 void InternalThread::StartInternalThread() {
-  // TODO switch to failing once Caffe prefetch thread is persistent.
-  // Threads should not be started and stopped repeatedly.
-  // CHECK(!is_started());
-  StopInternalThread();
+  CHECK(!is_started()) << "Threads should persist and not be restarted.";
 
   int device = 0;
 #ifndef CPU_ONLY

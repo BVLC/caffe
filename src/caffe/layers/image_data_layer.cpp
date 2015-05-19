@@ -17,7 +17,7 @@ namespace caffe {
 
 template <typename Dtype>
 ImageDataLayer<Dtype>::~ImageDataLayer<Dtype>() {
-  this->JoinPrefetchThread();
+  this->StopInternalThread();
 }
 
 template <typename Dtype>
@@ -70,8 +70,10 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   CHECK_GT(batch_size, 0) << "Positive batch size required";
   top_shape[0] = batch_size;
-  this->prefetch_data_.Reshape(top_shape);
-  top[0]->ReshapeLike(this->prefetch_data_);
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].data_.Reshape(top_shape);
+  }
+  top[0]->Reshape(top_shape);
 
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -79,7 +81,9 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   vector<int> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
-  this->prefetch_label_.Reshape(label_shape);
+  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+    this->prefetch_[i].label_.Reshape(label_shape);
+  }
 }
 
 template <typename Dtype>
@@ -89,15 +93,15 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }
 
-// This function is used to create a thread that prefetches the data.
+// This function is called on prefetch thread
 template <typename Dtype>
-void ImageDataLayer<Dtype>::InternalThreadEntry() {
+void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
   double trans_time = 0;
   CPUTimer timer;
-  CHECK(this->prefetch_data_.count());
+  CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
   ImageDataParameter image_data_param = this->layer_param_.image_data_param();
   const int batch_size = image_data_param.batch_size();
@@ -114,12 +118,12 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
   // Use data_transformer to infer the expected blob shape from a cv_img.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
   this->transformed_data_.Reshape(top_shape);
-  // Reshape prefetch_data according to the batch_size.
+  // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
-  this->prefetch_data_.Reshape(top_shape);
+  batch->data_.Reshape(top_shape);
 
-  Dtype* prefetch_data = this->prefetch_data_.mutable_cpu_data();
-  Dtype* prefetch_label = this->prefetch_label_.mutable_cpu_data();
+  Dtype* prefetch_data = batch->data_.mutable_cpu_data();
+  Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
   // datum scales
   const int lines_size = lines_.size();
@@ -133,7 +137,7 @@ void ImageDataLayer<Dtype>::InternalThreadEntry() {
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
-    int offset = this->prefetch_data_.offset(item_id);
+    int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
