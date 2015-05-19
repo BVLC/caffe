@@ -2,12 +2,15 @@
 #include <string>
 #include <vector>
 
+#include "boost/scoped_ptr.hpp"
 #include "google/protobuf/text_format.h"
 #include "gtest/gtest.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
+#include "caffe/util/db.hpp"
+#include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
@@ -2901,6 +2904,15 @@ TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
       continue;  // Empty string isn't actually a valid layer type.
     }
     layer_param.set_type(v2_layer_type);
+    // Data layers expect a DB
+    if (v2_layer_type == "Data") {
+      string tmp;
+      MakeTempDir(&tmp);
+      boost::scoped_ptr<db::DB> db(db::GetDB(DataParameter_DB_LEVELDB));
+      db->Open(tmp, db::NEW);
+      db->Close();
+      layer_param.mutable_data_param()->set_source(tmp);
+    }
     layer = LayerRegistry<float>::CreateLayer(layer_param);
     EXPECT_EQ(v2_layer_type, layer->type());
   }
