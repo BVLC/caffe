@@ -33,11 +33,26 @@ class Solver {
   // function that restores the state from a SolverState protocol buffer.
   void Restore(const char* resume_file);
   virtual ~Solver() {}
+  inline const SolverParameter& param() const { return param_; }
   inline shared_ptr<Net<Dtype> > net() { return net_; }
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
   int iter() { return iter_; }
+
+  // Invoked at specific points during an iteration
+  class Callback {
+   protected:
+    virtual void on_start(Timer* timer, ostringstream* timing) = 0;
+    virtual void on_gradients_ready(Timer* timer, ostringstream* timing) = 0;
+
+    template <typename T>
+    friend class Solver;
+  };
+  const vector<Callback*>& callbacks() const { return callbacks_; }
+  void add_callback(Callback* value) {
+    callbacks_.push_back(value);
+  }
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -59,6 +74,7 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
+  vector<Callback*> callbacks_;
 
   Timer iteration_timer_;
   float iterations_last_;
@@ -66,6 +82,25 @@ class Solver {
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
 
+/**
+ * @brief Solver that only computes gradients, used as worker
+ *        for multi-GPU training.
+ */
+template <typename Dtype>
+class WorkerSolver : public Solver<Dtype> {
+ public:
+  explicit WorkerSolver(const SolverParameter& param)
+      : Solver<Dtype>(param) {}
+
+ protected:
+  void ApplyUpdate() {}
+  void SnapshotSolverState(SolverState* state) {
+    CHECK(false) << "Should not be called on worker";
+  }
+  void RestoreSolverState(const SolverState& state) {
+    CHECK(false) << "Should not be called on worker";
+  }
+};
 
 /**
  * @brief Optimizes the parameters of a Net using

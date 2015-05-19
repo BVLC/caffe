@@ -76,9 +76,7 @@ void DataReader::Body::InternalThreadEntry() {
   shared_ptr<db::Cursor> cursor(db->NewCursor());
   vector<shared_ptr<QueuePair> > qps;
   try {
-    // int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
-    // TODO single solver until multi-gpu merge
-    int solver_count = 1;
+    int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
 
     // To ensure deterministic runs, only start running once all solvers
     // are ready. But solvers need to peek on one item during initialization,

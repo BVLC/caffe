@@ -10,7 +10,9 @@ InternalThread::InternalThread()
     : thread_(),
       device_(),
       mode_(),
-      rand_seed_() {
+      rand_seed_(),
+      solver_count_(),
+      root_solver_() {
 }
 
 InternalThread::~InternalThread() {
@@ -36,6 +38,8 @@ void InternalThread::StartInternalThread() {
 #endif
   mode_ = Caffe::mode();
   rand_seed_ = caffe_rng_rand();
+  solver_count_ = Caffe::solver_count();
+  root_solver_ = Caffe::root_solver();
 
   try {
     thread_.reset(new boost::thread(&InternalThread::entry, this));
@@ -50,6 +54,8 @@ void InternalThread::entry() {
 #endif
   Caffe::set_mode(mode_);
   Caffe::set_random_seed(rand_seed_);
+  Caffe::set_solver_count(solver_count_);
+  Caffe::set_root_solver(root_solver_);
 
   InternalThreadEntry();
 }
