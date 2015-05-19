@@ -300,6 +300,14 @@ ifeq ($(CPU_ONLY), 1)
 	COMMON_FLAGS += -DCPU_ONLY
 endif
 
+# Benchmarks
+ifeq ($(BENCHMARK_DATA), 1)
+	COMMON_FLAGS += -DBENCHMARK_DATA
+endif
+ifeq ($(BENCHMARK_SOLVER), 1)
+	COMMON_FLAGS += -DBENCHMARK_SOLVER
+endif
+
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER

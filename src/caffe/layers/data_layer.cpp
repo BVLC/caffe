@@ -59,7 +59,7 @@ template<typename Dtype>
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
-  double read_time = 0;
+  double deque_time = 0;
   double trans_time = 0;
   CPUTimer timer;
   CHECK(batch->data_.count());
@@ -86,7 +86,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     timer.Start();
     // get a datum
     Datum& datum = *(reader_.full().pop("Waiting for data"));
-    read_time += timer.MicroSeconds();
+    deque_time += timer.MicroSeconds();
     timer.Start();
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
@@ -102,9 +102,13 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   }
   timer.Stop();
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+
+#ifdef BENCHMARK_DATA
+  LOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  LOG(INFO) << "  Dequeue time: " << deque_time / 1000 << " ms.";
+  LOG(INFO) << "   Decode time: " << decod_time / 1000 << " ms.";
+  LOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+#endif
 }
 
 INSTANTIATE_CLASS(DataLayer);

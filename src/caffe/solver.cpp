@@ -15,13 +15,13 @@ namespace caffe {
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param)
-    : net_() {
+    : net_(), iteration_timer_(), iterations_last_() {
   Init(param);
 }
 
 template <typename Dtype>
 Solver<Dtype>::Solver(const string& param_file)
-    : net_() {
+    : net_(), iteration_timer_(), iterations_last_() {
   SolverParameter param;
   ReadProtoFromTextFileOrDie(param_file, &param);
   Init(param);
@@ -167,6 +167,10 @@ void Solver<Dtype>::Step(int iters) {
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
 
+  iteration_timer_.Start();
+  Timer timer;
+  ostringstream timing;
+
   while (iter_ < stop_iter) {
     // zero-init the params
     for (int i = 0; i < net_->params().size(); ++i) {
@@ -191,6 +195,10 @@ void Solver<Dtype>::Step(int iters) {
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
     }
+
+    timer.Start();
+    timing.str("");
+    timing << "Timing ";
 
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
@@ -232,7 +240,15 @@ void Solver<Dtype>::Step(int iters) {
         }
       }
     }
+    timing << " grads: " << timer.MilliSeconds();
+
+    timer.Start();
     ApplyUpdate();
+    timing << " apply: " << timer.MilliSeconds();
+
+#ifdef BENCHMARK_SOLVER
+    LOG(INFO)<< timing.str();
+#endif
 
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
@@ -483,7 +499,12 @@ template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+    float lapse = iteration_timer_.Seconds();
+    float per_s = (this->iter_ - iterations_last_) / (lapse ? lapse : 1);
+    LOG(INFO) << "Iteration " << this->iter_ << " (" << per_s << "/s), "
+              << "lr = " << rate;
+    iteration_timer_.Start();
+    iterations_last_ = this->iter_;
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->params().size(); ++param_id) {
