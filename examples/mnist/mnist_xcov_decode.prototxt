@@ -1,0 +1,148 @@
+name: "MNISTXCovNet"
+input: "encode4_z"
+input_dim: 1
+input_dim: 2
+input_dim: 1
+input_dim: 1
+input: "softmax4_y"
+input_dim: 1
+input_dim: 10
+input_dim: 1
+input_dim: 1
+layer {
+  name: "encode4"
+  bottom: "encode4_z"
+  bottom: "softmax4_y"
+  top: "encode4"
+  type: "Concat"
+}
+
+layer {
+  name: "decode4"
+  type: "InnerProduct"
+  bottom: "encode4"
+  top: "decode4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 250
+    weight_filler {
+      type: "gaussian"
+      std: .1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+layer {
+  name: "decode4neuron"
+  type: "ReLU"
+  bottom: "decode4"
+  top: "decode4neuron"
+}
+layer {
+  name: "decode3"
+  type: "InnerProduct"
+  bottom: "decode4neuron"
+  top: "decode3"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 500
+    weight_filler {
+      type: "gaussian"
+      std: .1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "decode3neuron"
+  type: "ReLU"
+  bottom: "decode3"
+  top: "decode3neuron"
+}
+layer {
+  name: "decode2"
+  type: "InnerProduct"
+  bottom: "decode3neuron"
+  top: "decode2"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 1000
+    weight_filler {
+      type: "gaussian"
+      std: .1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "decode2neuron"
+  type: "ReLU"
+  bottom: "decode2"
+  top: "decode2neuron"
+}
+layer {
+  name: "decode1"
+  type: "InnerProduct"
+  bottom: "decode2neuron"
+  top: "decode1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 784
+    weight_filler {
+      type: "gaussian"
+      std: .1
+      sparse: 15
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "decode1neuron"
+  type: "Sigmoid"
+  bottom: "decode1"
+  top: "decode1neuron"
+}
