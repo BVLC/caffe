@@ -541,14 +541,10 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   caffe_copy(ip2.blobs()[0]->count(), ip.blobs()[0]->cpu_data(),
       ip2.blobs()[0]->mutable_cpu_data());
   // Forward in-place
-  ip.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   ip.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  prelu.Reshape(this->blob_top_vec_, this->blob_top_vec_);
   prelu.Forward(this->blob_top_vec_, this->blob_top_vec_);
   // Forward non-in-place
-  ip2.Reshape(blob_bottom_vec_2, blob_middle_vec_2);
   ip2.Forward(blob_bottom_vec_2, blob_middle_vec_2);
-  prelu2.Reshape(blob_middle_vec_2, blob_top_vec_2);
   prelu2.Forward(blob_middle_vec_2, blob_top_vec_2);
   // Check numbers
   for (int s = 0; s < blob_top_2->count(); ++s) {

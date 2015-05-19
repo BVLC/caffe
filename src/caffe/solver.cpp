@@ -167,7 +167,7 @@ void Solver<Dtype>::Step(int iters) {
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
 
-  for (; iter_ < stop_iter; ++iter_) {
+  while (iter_ < stop_iter) {
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -210,8 +210,12 @@ void Solver<Dtype>::Step(int iters) {
     ComputeUpdateValue();
     net_->Update();
 
+    // Increment the internal iter_ counter -- its value should always indicate
+    // the number of times the weights have been updated.
+    ++iter_;
+
     // Save a snapshot if needed.
-    if (param_.snapshot() && (iter_ + 1) % param_.snapshot() == 0) {
+    if (param_.snapshot() && iter_ % param_.snapshot() == 0) {
       Snapshot();
     }
   }
@@ -327,15 +331,14 @@ void Solver<Dtype>::Snapshot() {
   string model_filename, snapshot_filename;
   const int kBufferSize = 20;
   char iter_str_buffer[kBufferSize];
-  // Add one to iter_ to get the number of iterations that have completed.
-  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_ + 1);
+  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
   filename += iter_str_buffer;
   model_filename = filename + ".caffemodel";
   LOG(INFO) << "Snapshotting to " << model_filename;
   WriteProtoToBinaryFile(net_param, model_filename.c_str());
   SolverState state;
   SnapshotSolverState(&state);
-  state.set_iter(iter_ + 1);
+  state.set_iter(iter_);
   state.set_learned_net(model_filename);
   state.set_current_step(current_step_);
   snapshot_filename = filename + ".solverstate";

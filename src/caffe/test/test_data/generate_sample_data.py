@@ -5,6 +5,8 @@ import os
 import numpy as np
 import h5py
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 num_cols = 8
 num_rows = 10
 height = 6
@@ -27,12 +29,12 @@ label2 = label + 1
 print data
 print label
 
-with h5py.File(os.path.dirname(__file__) + '/sample_data.h5', 'w') as f:
+with h5py.File(script_dir + '/sample_data.h5', 'w') as f:
     f['data'] = data
     f['label'] = label
     f['label2'] = label2
 
-with h5py.File(os.path.dirname(__file__) + '/sample_data_2_gzip.h5', 'w') as f:
+with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
     f.create_dataset(
         'data', data=data + total_size,
         compression='gzip', compression_opts=1
@@ -46,6 +48,6 @@ with h5py.File(os.path.dirname(__file__) + '/sample_data_2_gzip.h5', 'w') as f:
         compression='gzip', compression_opts=1
     )
 
-with open(os.path.dirname(__file__) + '/sample_data_list.txt', 'w') as f:
-    f.write(os.path.dirname(__file__) + '/sample_data.h5\n')
-    f.write(os.path.dirname(__file__) + '/sample_data_2_gzip.h5\n')
+with open(script_dir + '/sample_data_list.txt', 'w') as f:
+    f.write(script_dir + '/sample_data.h5\n')
+    f.write(script_dir + '/sample_data_2_gzip.h5\n')
