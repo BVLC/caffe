@@ -11,10 +11,14 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/util/math_functions.hpp"
-#include "caffe/util/rng.hpp"
 
 namespace caffe {
+
+template <typename Dtype>
+DataLayer<Dtype>::DataLayer(const LayerParameter& param)
+  : BasePrefetchingDataLayer<Dtype>(param),
+    reader_(param) {
+}
 
 template <typename Dtype>
 DataLayer<Dtype>::~DataLayer() {
@@ -24,23 +28,8 @@ DataLayer<Dtype>::~DataLayer() {
 template <typename Dtype>
 void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // Initialize DB
-  db_.reset(db::GetDB(this->layer_param_.data_param().backend()));
-  db_->Open(this->layer_param_.data_param().source(), db::READ);
-  cursor_.reset(db_->NewCursor());
-
-  // Check if we should randomly skip a few data points
-  if (this->layer_param_.data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-                        this->layer_param_.data_param().rand_skip();
-    LOG(INFO) << "Skipping first " << skip << " data points.";
-    while (skip-- > 0) {
-      cursor_->Next();
-    }
-  }
   // Read a data point, and use it to initialize the top blob.
-  Datum datum;
-  datum.ParseFromString(cursor_->value());
+  Datum& datum = *(reader_.full().peek());
 
   bool force_color = this->layer_param_.data_param().force_encoded_color();
   if ((force_color && DecodeDatum(&datum, true)) ||
@@ -97,8 +86,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int crop_size = this->layer_param_.transform_param().crop_size();
   bool force_color = this->layer_param_.data_param().force_encoded_color();
   if (batch_size == 1 && crop_size == 0) {
-    Datum datum;
-    datum.ParseFromString(cursor_->value());
+    Datum& datum = *(reader_.full().peek());
     if (datum.encoded()) {
       if (force_color) {
         DecodeDatum(&datum, true);
@@ -121,9 +109,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     // get a blob
-    Datum datum;
-    datum.ParseFromString(cursor_->value());
-
+    Datum& datum = *(reader_.full().pop("Waiting for data"));
     cv::Mat cv_img;
     if (datum.encoded()) {
       if (force_color) {
@@ -153,12 +139,8 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       top_label[item_id] = datum.label();
     }
     trans_time += timer.MicroSeconds();
-    // go to the next iter
-    cursor_->Next();
-    if (!cursor_->valid()) {
-      DLOG(INFO) << "Restarting data prefetching from start.";
-      cursor_->SeekToFirst();
-    }
+
+    reader_.free().push(const_cast<Datum*>(&datum));
   }
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
