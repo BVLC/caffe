@@ -10,7 +10,7 @@ In the following, we assume that you're using Anaconda Python and Homebrew.
 
 **CUDA**: Install via the NVIDIA package that includes both CUDA and the bundled driver. **CUDA 7 is strongly suggested.** Older CUDA require `libstdc++` while clang++ is the default compiler and `libc++` the default standard library on OS X 10.9+. This disagreement makes it necessary to change the compilation settings for each of the dependencies. This is prone to error.
 
-**Library Path**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
+**Library Path**: We find that everything compiles successfully if `$LD_LIBRARY_PATH` is not set at all, and `$DYLD_FALLBACK_LIBRARY_PATH` is set to provide CUDA, Python, and other relevant libraries (e.g. `/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib`).
 In other `ENV` settings, things may not work as expected.
 
 **General dependencies**
