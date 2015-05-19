@@ -75,7 +75,8 @@ template<typename Dtype>
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
-  double read_time = 0;
+  double deque_time = 0;
+  double decod_time = 0;
   double trans_time = 0;
   CPUTimer timer;
   CHECK(batch->data_.count());
@@ -107,9 +108,12 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     top_label = batch->label_.mutable_cpu_data();
   }
   for (int item_id = 0; item_id < batch_size; ++item_id) {
-    timer.Start();
     // get a blob
+    timer.Start();
     Datum& datum = *(reader_.full().pop("Waiting for data"));
+    deque_time += timer.MicroSeconds();
+
+    timer.Start();
     cv::Mat cv_img;
     if (datum.encoded()) {
       if (force_color) {
@@ -124,10 +128,10 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         << "convert_imageset.";
       }
     }
-    read_time += timer.MicroSeconds();
-    timer.Start();
+    decod_time += timer.MicroSeconds();
 
     // Apply data transformations (mirror, scale, crop...)
+    timer.Start();
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
     if (datum.encoded()) {
@@ -143,9 +147,13 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     reader_.free().push(const_cast<Datum*>(&datum));
   }
   batch_timer.Stop();
-  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+
+#ifdef BENCHMARK_DATA
+  LOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  LOG(INFO) << "  Dequeue time: " << deque_time / 1000 << " ms.";
+  LOG(INFO) << "   Decode time: " << decod_time / 1000 << " ms.";
+  LOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+#endif
 }
 
 INSTANTIATE_CLASS(DataLayer);
