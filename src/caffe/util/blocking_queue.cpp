@@ -1,6 +1,7 @@
 #include <boost/thread.hpp>
 #include <string>
 
+#include "caffe/data_layers.hpp"
 #include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
@@ -82,5 +83,8 @@ size_t BlockingQueue<T>::size() const {
   boost::mutex::scoped_lock lock(sync_->mutex_);
   return queue_.size();
 }
+
+template class BlockingQueue<Batch<float>*>;
+template class BlockingQueue<Batch<double>*>;
 
 }  // namespace caffe
