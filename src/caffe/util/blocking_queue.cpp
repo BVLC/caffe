@@ -2,6 +2,7 @@
 #include <string>
 
 #include "caffe/data_layers.hpp"
+#include "caffe/data_reader.hpp"
 #include "caffe/util/blocking_queue.hpp"
 
 namespace caffe {
@@ -86,5 +87,7 @@ size_t BlockingQueue<T>::size() const {
 
 template class BlockingQueue<Batch<float>*>;
 template class BlockingQueue<Batch<double>*>;
+template class BlockingQueue<Datum*>;
+template class BlockingQueue<shared_ptr<DataReader::QueuePair> >;
 
 }  // namespace caffe
