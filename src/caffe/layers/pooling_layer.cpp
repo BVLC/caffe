@@ -338,49 +338,50 @@ bool clMaxPoolBackward(
 		const int pad_h,
 		const int pad_w,
 		T* bottom_diff) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("MaxPoolBackward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
-	CL_SET_ARRAY_KERNEL_ARG(&mask)
-	CL_SET_ARRAY_KERNEL_ARG(&top_mask)
-	CL_SET_TYPE_KERNEL_ARG(int, num)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, height)
-	CL_SET_TYPE_KERNEL_ARG(int, width)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_diff, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&mask, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_mask, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_w, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
 	size_t global = nthreads;//CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -406,47 +407,48 @@ bool clAvePoolBackward(
 		const int pad_h,
 		const int pad_w,
 		T* bottom_diff) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("AvePoolBackward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
-	CL_SET_TYPE_KERNEL_ARG(int, num)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, height)
-	CL_SET_TYPE_KERNEL_ARG(int, width)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_w, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -471,46 +473,47 @@ bool clStoPoolBackward(
 		const int stride_h,
 		const int stride_w,
 		T* bottom_diff) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("StoPoolBackward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&rand_idx)
-	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
-	CL_SET_TYPE_KERNEL_ARG(int, num)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, height)
-	CL_SET_TYPE_KERNEL_ARG(int, width)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&rand_idx, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_w, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -539,38 +542,39 @@ bool clMaxPoolForward(
 		int* mask,
 		T* top_mask
 		) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string	kernel_name = clGetKernelName<T>("MaxPoolForward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
-	CL_SET_TYPE_KERNEL_ARG(int, num)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, height)
-	CL_SET_TYPE_KERNEL_ARG(int, width)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
-	CL_SET_ARRAY_KERNEL_ARG(&top_data)
-	CL_SET_ARRAY_KERNEL_ARG(&mask)
-	CL_SET_ARRAY_KERNEL_ARG(&top_mask)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_data, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_w, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&mask, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_mask, kernel)
 
 
 	int dim = 1;
@@ -598,11 +602,11 @@ bool clMaxPoolForward(
 	std::string function = __func__;
 	err = clEnqueueNDRangeKernel(*queue, *kernel, dim, NULL, global, local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -664,36 +668,37 @@ bool clAvePoolForward(
 		const int pad_h,
 		const int pad_w,
 		T* top_data) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("AvePoolForward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
-	CL_SET_TYPE_KERNEL_ARG(int, num)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, height)
-	CL_SET_TYPE_KERNEL_ARG(int, width)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_h)
-	CL_SET_TYPE_KERNEL_ARG(int, pad_w)
-	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_data, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pad_w, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
 
 	int dim = 1;
 	size_t *global;
@@ -719,11 +724,11 @@ bool clAvePoolForward(
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, dim, NULL, global, local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -748,46 +753,47 @@ bool clStoPoolForwardTrain(
 		const int stride_w,
 		T* rand_idx,
 		T* top_data) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("StoPoolForwardTrain");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
-	CL_SET_TYPE_KERNEL_ARG(int, num)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, height)
-	CL_SET_TYPE_KERNEL_ARG(int, width)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
-	CL_SET_ARRAY_KERNEL_ARG(&rand_idx)
-	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_data, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_w, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&rand_idx, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -811,45 +817,46 @@ bool clStoPoolForwardTest(
 		const int stride_h,
 		const int stride_w,
 		T* top_data) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("StoPoolForwardTest");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_data)
-	CL_SET_TYPE_KERNEL_ARG(int, num)
-	CL_SET_TYPE_KERNEL_ARG(int, channels)
-	CL_SET_TYPE_KERNEL_ARG(int, height)
-	CL_SET_TYPE_KERNEL_ARG(int, width)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_height)
-	CL_SET_TYPE_KERNEL_ARG(int, pooled_width)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_h)
-	CL_SET_TYPE_KERNEL_ARG(int, kernel_w)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_h)
-	CL_SET_TYPE_KERNEL_ARG(int, stride_w)
-	CL_SET_ARRAY_KERNEL_ARG(&top_data)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_data, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, num, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, channels, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_height, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, pooled_width, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, kernel_w, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_h, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, stride_w, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 

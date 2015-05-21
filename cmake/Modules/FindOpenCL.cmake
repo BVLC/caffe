@@ -74,7 +74,8 @@ if( LIB64 )
         DOC "OpenCL dynamic library path"
         PATH_SUFFIXES x86_64 x64 x86_64/sdk
         PATHS
-            /usr/lib /usr/lib/x86_64-linux-gnu
+            /usr/lib
+            #/usr/lib/x86_64-linux-gnu
     )
 else( )
     find_library( OPENCL_LIBRARIES
@@ -86,7 +87,8 @@ else( )
         DOC "OpenCL dynamic library path"
         PATH_SUFFIXES x86 x86/sdk Win32
         PATHS
-            /usr/lib /usr/lib/i386-linux-gnu
+            /usr/lib
+            #/usr/lib/i386-linux-gnu
     )
 endif( )
 mark_as_advanced( OPENCL_LIBRARIES )

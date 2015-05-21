@@ -37,7 +37,12 @@ int main(int argc, char** argv) {
 #endif
 
 #ifdef USE_OPENCL
-  if ( ! caffe::OpenCL::init() ) {
+  int device_id = 0;
+  if (argc > 1) {
+    device_id = atoi(argv[1]);
+  }
+  caffe::OpenCLManager::SetDeviceId(device_id);
+  if ( ! caffe::OpenCLManager::Init() ) {
 	  LOG(ERROR) << "failed to initialize OpenCL";
 	  return 1;
   }

@@ -3,6 +3,7 @@
 SET(clBLAS_INCLUDE_SEARCH_PATHS
   /usr/include
   /usr/local/include
+  /opt/clBLAS/include
   $ENV{clBLAS_HOME}/include
 )
 
@@ -13,6 +14,7 @@ SET(clBLAS_LIB_SEARCH_PATHS
         /usr/lib64
         /usr/local/lib
         /usr/local/lib64
+        /opt/clBLAS/lib64
         $ENV{clBLAS_HOME}
         $ENV{clBLAS_HOME}/lib
         $ENV{clBLAS_HOME}/lib64
