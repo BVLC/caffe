@@ -475,9 +475,9 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
       this->net_->params_weight_decay();
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();
+  Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
     if (local_decay) {
       if (regularization_type == "L2") {
         // add weight decay
@@ -501,7 +501,6 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
     if (local_decay) {
       if (regularization_type == "L2") {
         // add weight decay
@@ -536,15 +535,13 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
+  Dtype local_rate = rate * net_params_lr[param_id];
+  // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    // Compute the value to history, and then copy them to the blob's diff.
-    Dtype local_rate = rate * net_params_lr[param_id];
-
     caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
               net_params[param_id]->cpu_diff(), momentum,
               history_[param_id]->mutable_cpu_data());
-    // copy
     caffe_copy(net_params[param_id]->count(),
         history_[param_id]->cpu_data(),
         net_params[param_id]->mutable_cpu_diff());
@@ -552,13 +549,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    // Compute the value to history, and then copy them to the blob's diff.
-    Dtype local_rate = rate * net_params_lr[param_id];
-
     caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
               net_params[param_id]->gpu_diff(), momentum,
               history_[param_id]->mutable_gpu_data());
-    // copy
     caffe_copy(net_params[param_id]->count(),
         history_[param_id]->gpu_data(),
         net_params[param_id]->mutable_gpu_diff());
@@ -597,14 +590,13 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
+  Dtype local_rate = rate * net_params_lr[param_id];
   switch (Caffe::mode()) {
   case Caffe::CPU: {
     // save history momentum for stepping back
     caffe_copy(net_params[param_id]->count(),
         this->history_[param_id]->cpu_data(),
         this->update_[param_id]->mutable_cpu_data());
-
-    Dtype local_rate = rate * net_params_lr[param_id];
 
     // update history
     caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
@@ -628,8 +620,6 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     caffe_copy(net_params[param_id]->count(),
         this->history_[param_id]->gpu_data(),
         this->update_[param_id]->mutable_gpu_data());
-
-    Dtype local_rate = rate * net_params_lr[param_id];
 
     // update history
     caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
@@ -660,10 +650,9 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype delta = this->param_.delta();
+  Dtype local_rate = rate * net_params_lr[param_id];
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    Dtype local_rate = rate * net_params_lr[param_id];
-
     // compute square of gradient in update
     caffe_powx(net_params[param_id]->count(),
         net_params[param_id]->cpu_diff(), Dtype(2),
@@ -696,8 +685,6 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    Dtype local_rate = rate * net_params_lr[param_id];
-
     // compute square of gradient in update
     caffe_gpu_powx(net_params[param_id]->count(),
         net_params[param_id]->gpu_diff(), Dtype(2),
