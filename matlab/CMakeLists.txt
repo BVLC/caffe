@@ -32,7 +32,9 @@ endfunction()
 
 # global settings
 file(GLOB Matlab_srcs caffe/matcaffe.cpp)
+file(GLOB Matlab_pkg_srcs +caffe/private/caffe_.cpp)
 set(Matlab_caffe_mex ${PROJECT_SOURCE_DIR}/matlab/caffe/caffe.mex)
+set(Matlab_caffe_pkg_mex ${PROJECT_SOURCE_DIR}/matlab/+caffe/private/caffe_.mex)
 
 caffe_get_current_cflags(cflags)
 caffe_parse_linker_libs(Caffe_LINKER_LIBS folders libflags macos_frameworks)
@@ -50,9 +52,15 @@ if(build_using MATCHES "Matlab")
       ARGS -output ${Matlab_caffe_mex} ${Matlab_srcs} ${cflags} ${link_folders} ${libflags}
       DEPENDS caffe COMMENT "Building Matlab interface: ${Matlab_caffe_mex}" VERBATIM)
   add_custom_target(matlab ALL DEPENDS ${Matlab_caffe_mex} SOURCES ${Matlab_srcs})
+  caffe_fetch_and_set_proper_mexext(Matlab_caffe_pkg_mex)
+  add_custom_command(OUTPUT ${Matlab_caffe_pkg_mex} COMMAND ${Matlab_mex}
+      ARGS -output ${Matlab_caffe_pkg_mex} ${Matlab_pkg_srcs} ${cflags} ${link_folders} ${libflags}
+      DEPENDS caffe COMMENT "Building Matlab interface: ${Matlab_caffe_pkg_mex}" VERBATIM)
+  add_custom_target(matlab ALL DEPENDS ${Matlab_caffe_pkg_mex} SOURCES ${Matlab_pkg_srcs})
 
 elseif(build_using MATCHES "Octave")
 
+  # Note: Matlab Caffe package cannot be used in Octave, so we don't build it
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(libflags -Wl,-force_load,$<TARGET_LINKER_FILE:caffe> ${libflags})
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
