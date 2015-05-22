@@ -10,6 +10,13 @@
 #pragma OPENCL EXTENSION cl_amd_fp64 : enable
 #endif
 
+#if defined(cl_nv_pragma_unroll)
+#pragma OPENCL EXTENSION cl_nv_pragma_unroll : enable
+#define NV_PLATFORM
+#endif
+
+#define OPENCL_LOCAL_SIZE 32
+
 template <class T> __kernel void clsign(const int n, global T* x, global T* y) {
 
 	int idx = get_global_id(0);
@@ -146,32 +153,63 @@ template __attribute__((mangled_name(clexpDouble))) kernel void clexp(const int 
 /* Source: OpenCL Programming Guide by authors Munshi, Gaster, Mattson, Fung, Ginsburg
  * Ch 21 Matrix Multiplication with OpenCL
  */
-template <class T> __kernel void mmul(const int M, const int N, const int K, global T* A, global T* B, global T* C, local T* Bwrk ) {
+template <class T> __kernel void mmul(const int M, const int N, const int K, const T alpha, global T* A, global T* B, const T beta, global T* C, local T* rowBufferA, local T* colBufferA ) {
 
-	int i 		= get_global_id(0);
-	int iloc 	= get_local_id(0);
-	int nloc	= get_local_size(0);
-	
-	T Awrk[4096];
-	T tmp;
-	
-	for( int k = 0; k < K; k++ ) {
-		Awrk[k] = A[i*N+k];
-	}
-	
-	for(int j = 0; j < M; j++ )  {
-		for(int k=iloc; k<K; k += nloc ) {
-			Bwrk[k] = B[k*K+j];
-		}
-		barrier(CLK_LOCAL_MEM_FENCE);
-		
-		tmp = 0.0;
-		for ( int k = 0; k < K; k++ ) {
-			tmp += Awrk[k]*Bwrk[k];
-		}
-		C[i*N+j] += tmp;
-	}
+#if defined(NV_PLATFORM)
+  local T colBufferB[OPENCL_LOCAL_SIZE];
+#else
+  local T colBufferB[OPENCL_LOCAL_SIZE];
+#endif
+  
+  int colBufferSteps = 0;
+  if ( K % OPENCL_LOCAL_SIZE == 0 ) {
+    colBufferSteps    = K / OPENCL_LOCAL_SIZE;
+  } else {
+    colBufferSteps    = K / OPENCL_LOCAL_SIZE + 1;    
+  }
+
+  T tmp;
+  int idx_n = get_global_id(0);
+    
+  for( int s = 0; s < colBufferSteps; s++ ) {
+
+    int idx_k = s*OPENCL_LOCAL_SIZE + get_local_id(1);
+    if ( idx_k < K ) {
+      colBufferB[get_local_id(1)] = B[idx_k*N+idx_n];
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+    
+    for(int idx_m = 0; idx_m < M; idx_m++ )  {
+
+      int idx_k = s*OPENCL_LOCAL_SIZE + get_local_id(1);
+      if ( idx_k < K ) {
+        rowBufferA[idx_k] = A[idx_m*K+idx_k];
+      }
+      barrier(CLK_LOCAL_MEM_FENCE);
+      
+      if ( get_local_id(1) == 0 ) {
+        if ( s == 0 ) {
+          colBufferA[idx_m] = 0.0;
+        }
+        tmp = 0.0;
+        for( int k = 0; k < OPENCL_LOCAL_SIZE && k < K; k++ ) {
+          int idx_k = s*OPENCL_LOCAL_SIZE + k;
+          if ( idx_k < K ) {
+            //tmp += alpha*A[idx_m*K+idx_k]*B[idx_k*N+idx_n];       // direct
+            //tmp += alpha*rowBufferA[idx_k]*B[idx_k*N+idx_n];      // with rowBufferA
+            //tmp += alpha*A[idx_m*K+idx_k]*colBufferB[k];          // with colBufferB
+            tmp += alpha*rowBufferA[idx_k]*colBufferB[k];     // with rowBufferA & colBufferB
+          }
+        }
+        colBufferA[idx_m] += tmp;
+        
+        if ( s == colBufferSteps - 1 ) {
+          C[idx_m*N+idx_n] = colBufferA[idx_m];     
+        }
+      }
+    }
+  }
+  
 }
-template __attribute__((mangled_name(mmulFloat))) kernel void mmul(const int M, const int N, const int K, global float* A, global float* B, global float* C, local float* Bwrk);
-template __attribute__((mangled_name(mmulDouble))) kernel void mmul(const int M, const int N, const int K, global double* A, global double* B, global double* C, local double* Bwrk);
-
+template __attribute__((mangled_name(mmulFloat))) kernel void mmul(const int M, const int N, const int K, const float alpha, global float* A, global float* B, const float beta, global float* C,  local float* rowBufferA,  local float* colBufferA);
+template __attribute__((mangled_name(mmulDouble))) kernel void mmul(const int M, const int N, const int K, const double alpha, global double* A, global double* B, const double beta, global double* C,  local double* rowBufferA,  local double* colBufferA);

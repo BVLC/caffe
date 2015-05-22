@@ -158,18 +158,27 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 
 #endif // USE_OPENCL
 
-#define SNAP_LENGTH 36
-#define snap(array, length) \
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+
+#define SNAP_LENGTH 30
+#define snap(name, array, length) \
 	{ \
 		char buffer[1024];\
-		std::cout<<"snap[" << length << "] = ";\
+		std::cout<<name<<"[" << length << "] = ";\
 		int limit_length  = length < SNAP_LENGTH ? length : SNAP_LENGTH;\
 		for( int i = 0; i < limit_length; i++ ) {\
-			sprintf(buffer, "%6.4f ", (array)[i]);\
+			sprintf(buffer, "%+6.4f ", (array)[i]);\
 			std::cout<<buffer;\
 		}\
 		if ( limit_length < length ) {\
-			sprintf(buffer, "%6.4f ", (array)[length-1]);\
+			sprintf(buffer, "%+6.4f ", (array)[length-1]);\
 			std::cout<<" ... "<<buffer;\
 		}\
 		std::cout<<std::endl;\
@@ -183,11 +192,11 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		int limit_height = height < SNAP_LENGTH ? height : SNAP_LENGTH;\
 		for( int i = 0; i < limit_height; i++ ) {\
 			for( int j = 0; j < limit_width; j++ ) {\
-				sprintf(buffer, "%4.1f ", (array)[i*width+j]);\
+				sprintf(buffer, "%+5.1f ", (array)[i*width+j]);\
 				std::cout<<buffer;\
 			}\
 			if ( limit_width < width ) {\
-				sprintf(buffer, "%4.1f ", (array)[i*width+width-1]);\
+				sprintf(buffer, "%+5.1f ", (array)[i*width+width-1]);\
 				std::cout<<" ... "<<buffer;\
 			}\
 			std::cout<<std::endl;\
@@ -195,15 +204,68 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		if ( limit_height < height ) {\
 			std::cout<<" ..."<<std::endl;\
 			for( int j = 0; j < limit_width; j++ ) {\
-				sprintf(buffer, "%4.1f ", (array)[(height-1)*width+j]);\
+				sprintf(buffer, "%+5.1f ", (array)[(height-1)*width+j]);\
 				std::cout<<buffer;\
 			}\
 			if ( limit_width < width ) {\
-				sprintf(buffer, "%4.1f ", (array)[(height-1)*width+width-1]);\
+				sprintf(buffer, "%+5.1f ", (array)[(height-1)*width+width-1]);\
 				std::cout<<" ... "<<buffer;\
 			}\
 			std::cout<<std::endl;\
 		}\
 	}\
+
+#define diff2D(name, array1, array2, width, height) \
+  { \
+    char buffer[1024];\
+    std::cout<<name<<"[" << width << " x " << height << "] = " <<std::endl;\
+    int limit_width  = width < SNAP_LENGTH ? width : SNAP_LENGTH;\
+    int limit_height = height < SNAP_LENGTH ? height : SNAP_LENGTH;\
+    double delta = 0.0;\
+    double epsilon = 0.01;\
+    for( int i = 0; i < limit_height; i++ ) {\
+      for( int j = 0; j < limit_width; j++ ) {\
+        delta = (array1)[i*width+j] - (array2)[i*width+j];\
+        sprintf(buffer, "%+5.1f ", delta);\
+        if ( fabs(delta) < epsilon ) {\
+          std::cout<<buffer;\
+        } else {\
+          std::cout<<KRED<<buffer<<KNRM;\
+        }\
+      }\
+      if ( limit_width < width ) {\
+        delta = (array1)[i*width+width-1] - (array2)[i*width+width-1];\
+        sprintf(buffer, "%+5.1f ", delta);\
+        if ( fabs(delta) < epsilon ) {\
+          std::cout<<" ... "<<buffer;\
+        } else {\
+          std::cout<<" ... "<<KRED<<buffer<<KNRM;\
+        }\
+      }\
+      std::cout<<std::endl;\
+    }\
+    if ( limit_height < height ) {\
+      std::cout<<" ..."<<std::endl;\
+      for( int j = 0; j < limit_width; j++ ) {\
+        delta = (array1)[(height-1)*width+j] - (array2)[(height-1)*width+j];\
+        sprintf(buffer, "%+5.1f ", delta);\
+        if ( fabs(delta) < epsilon ) {\
+          std::cout<<buffer;\
+        } else {\
+          std::cout<<KRED<<buffer<<KNRM;\
+        }\
+      }\
+      if ( limit_width < width ) {\
+        delta = (array1)[(height-1)*width+width-1] - (array2)[(height-1)*width+width-1];\
+        sprintf(buffer, "%+5.1f ", delta);\
+        if ( fabs(delta) < epsilon ) {\
+          std::cout<<" ... "<<buffer;\
+        } else {\
+          std::cout<<" ... "<<KRED<<buffer<<KNRM;\
+        }\
+      }\
+      std::cout<<std::endl;\
+    }\
+  }\
 
 #endif   // CAFFE_UTIL_BENCHMARK_H_

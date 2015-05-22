@@ -16,6 +16,8 @@ caffe_leave_only_selected_tests(test_cuda ${BUILD_only_tests})
 #caffe_configure_testdatafile(test_data/sample_data_list.txt)
 
 set(the_target test.testbin)
+
+#set(the_target test.testbin)
 #set(test_args --gtest_shuffle)
 
 if(HAVE_CUDA)
@@ -35,4 +37,8 @@ caffe_set_runtime_directory(${the_target} "${PROJECT_BINARY_DIR}/test")
 add_custom_target(runtest COMMAND ${the_target} ${test_args}
                           WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-install(PROGRAMS ${PROJECT_BINARY_DIR}/test/test.testbin DESTINATION bin/)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    install(PROGRAMS ${PROJECT_BINARY_DIR}/test/test.testbin-d DESTINATION bin/)
+else()
+    install(PROGRAMS ${PROJECT_BINARY_DIR}/test/test.testbin DESTINATION bin/)
+endif()

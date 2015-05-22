@@ -236,9 +236,9 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, 
 			return;
 	}
 
+	//BOOL_CHECK(caffe::OpenCL::clgemm<T>(M, N, K, alpha, A, B, beta, C));
+  BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, B, beta, C));
 
-	BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, B, beta, C));
-	//BOOL_CHECK(caffe::OpenCL::clgemm<T>(M, N, K, A, B, C));
 
 }
 template void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const float alpha, const float* A, const float* B, const float beta, float* C);
@@ -287,7 +287,7 @@ void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, 
 			return;
 	}
 
-  //LOG(INFO)<<"[ "<<M<<" x "<<N<<" ] = [ "<<M<<" x "<<K<<" ] x [ "<<K<<" x "<<N<<" ]";
+  //BOOL_CHECK(caffe::OpenCL::clgemm<T>(M, N, K, alpha, A, B, beta, C));
 	BOOL_CHECK(caffe::OpenCL::clBLASgemm<T>(clTransA, clTransB, M, N, K, alpha, A, step_A, B, step_B, beta, C, step_C));
 }
 template void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K, const float alpha, const float* A, const int step_A, const float* B, const int step_B, const float beta, float* C, const int step_C);
@@ -296,8 +296,7 @@ template void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA, const CBLAS_T
 template<typename T>
 void caffe_gpu_gemm_simple(const int M, const int N, const int K, const T* A, const T* B, T* C) {
 
-  LOG(INFO)<<"[ "<<M<<" x "<<N<<" ] = [ "<<M<<" x "<<N<<" ] x [ "<<N<<" x "<<K<<" ]";
-  BOOL_CHECK(caffe::OpenCL::clgemm<T>(M, N, K, A, B, C));
+  BOOL_CHECK(caffe::OpenCL::clgemm<T>(M, N, K, (T) 1, A, B, (T) 0, C));
 
 }
 template void caffe_gpu_gemm_simple<float>(const int M, const int N, const int K, const float* A, const float* B, float* C);

@@ -7,6 +7,7 @@
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
+#include "stdlib.h"
 
 namespace caffe {
 
@@ -22,7 +23,7 @@ class BLASTest: public MultiDeviceTest<TypeParam> {
 	typedef typename TypeParam::Dtype Dtype;
 
 protected:
-	BLASTest() : A(new Blob<Dtype>()), B(new Blob<Dtype>()), C(new Blob<Dtype>()) {
+	BLASTest() : A(new Blob<Dtype>()), B(new Blob<Dtype>()), C(new Blob<Dtype>()), C_(new Blob<Dtype>()) {
 	}
 
 	virtual void SetUp(int num_images, int num_channels, int im_width, int im_height) {
@@ -37,12 +38,14 @@ protected:
 		filler.Fill(this->A);
 		filler.Fill(this->B);
 		filler.Fill(this->C);
+    filler.Fill(this->C_);
 	}
 
 	virtual ~BLASTest() {
 		delete(A);
 		delete(B);
 		delete(C);
+    delete(C_);
 	}
 
 	void BLASTestPerformance(const int m, const int n, const int k) {
@@ -73,12 +76,22 @@ protected:
 		r.img_height		= n;
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
-		A->gpu_data();
-		B->gpu_data();
-		C->mutable_gpu_data();
-		BENCH(r, {
-				caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
-		});
+
+		if ( TypeParam::device == Caffe::GPU ) {
+      A->gpu_data();
+      B->gpu_data();
+      C->mutable_gpu_data();
+      BENCH(r, {
+          caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
+      });
+		}
+
+		if ( TypeParam::device == Caffe::CPU ) {
+      BENCH(r, {
+          caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->cpu_data(), B->cpu_data(), 0.0, C->mutable_cpu_data());
+      });
+    }
+
 #else
 		BENCH(r, {
 				caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->cpu_data(), B->cpu_data(), 0.0, C->mutable_cpu_data());
@@ -87,19 +100,99 @@ protected:
 
 	}
 
+  void BLASTestValidation(const int m, const int n, const int k) {
+
+#ifdef USE_CUDA
+  if ( ! ( sizeof(TypeParam) == 4 || CAFFE_TEST_CUDA_PROP.major >= 2 ) ) {
+    LOG(ERROR) << "Skipping test due to old architecture.";
+    return;
+  }
+#endif
+
+    A->Reshape(1, 1, m, k);
+    B->Reshape(1, 1, k, n);
+    C->Reshape(1, 1, m, n);
+    C_->Reshape(1, 1, m, n);
+
+    FillerParameter filler_param;
+    GaussianFiller<Dtype> filler(filler_param);
+    filler.Fill(this->A);
+    filler.Fill(this->B);
+
+    for ( int i=0; i<m; i++ ) {
+      for ( int j=0; j<n; j++ ) {
+        C->mutable_cpu_data()[i*n+j] = 0.0;
+        C_->mutable_cpu_data()[i*n+j] = 0.0;
+      }
+    }
+
+    record r;
+    r.type      = std::string(typeid(Dtype).name());
+    r.num_images    = 1;
+    r.num_channels  = 1;
+    r.img_width     = m;
+    r.img_height    = n;
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+
+    //snap("A", A->cpu_data(), k*m);
+    //snap2D("A", A->cpu_data(), k, m);
+    //snap("B", B->cpu_data(), n*k);
+    //snap2D("B", B->cpu_data(), n, k);
+
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->gpu_data(), B->gpu_data(), 0.0, C->mutable_gpu_data());
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, m, n, k, 1.0, A->cpu_data(), B->cpu_data(), 0.0, C_->mutable_cpu_data());
+
+    //snap("C(NEW)", C->cpu_data(), n*m);
+    //snap2D("C(NEW)", C->cpu_data(), n, m);
+    //snap("C_(OLD)", C_->cpu_data(), n*m);
+    //snap2D("C_(OLD)", C_->cpu_data(), n, m);
+
+    for (int i = 0; i < m*n; ++i) {
+      EXPECT_NEAR(C->cpu_data()[i], C_->cpu_data()[i], 1e-4);
+    }
+    //diff2D("dC", C->cpu_data(), C_->cpu_data(), n, m);
+
+#endif
+
+  }
+
   Blob<Dtype>* A;
   Blob<Dtype>* B;
   Blob<Dtype>* C;
+  Blob<Dtype>* C_;
 };
 
 TYPED_TEST_CASE(BLASTest, TestDtypesAndDevices);
 
 TYPED_TEST(BLASTest, BLASTestPerformance) {
 
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=4096; i*=2 ) {
-		this->BLASTestPerformance(i,i,i);
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=256; i*=2 ) {
+		//this->BLASTestPerformance(i,i,i);
 	}
 }
+
+#if defined(USE_CUDA) || defined(USE_OPENCL)
+
+TYPED_TEST(BLASTest, BLASTestValidation) {
+
+  srand (time(NULL));
+  int min = 1;
+  int max = 64;
+
+  int m;
+  int n;
+  int k;
+
+  for ( int i = 0; i < 100; i++ ) {
+    m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    this->BLASTestValidation(m,n,k);
+  }
+}
+
+#endif
 
 #if defined(USE_CUDA) || defined(USE_OPENCL)
 
@@ -126,13 +219,16 @@ TYPED_TEST(GemmTest, TestGemmCPUGPU) {
   }
 #endif
     // [1, 2, 3; 4 5 6] * [1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12];
+
     caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
+
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
     }
     caffe_gpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
         A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data());
+
     for (int i = 0; i < 8; ++i) {
       EXPECT_EQ(C.cpu_data()[i], result[i]);
     }

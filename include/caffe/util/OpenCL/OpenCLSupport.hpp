@@ -27,7 +27,7 @@
 #define CAFFE_OPENCL_VERSION "0.0"
 #endif
 
-#define OPENCL_LOCAL_SIZE 256
+#define OPENCL_LOCAL_SIZE 64
 
 #if defined(CL_API_SUFFIX__VERSION_2_0)
 #define OPENCL_VERSION 2.0
@@ -142,7 +142,7 @@ namespace OpenCL {
 	template<typename T> bool cladd_scalar(const int N, const T alpha, T* Y);
 	template<typename T> bool clpowx(const int n, const T* array_GPU_x, const T alpha, T* array_GPU_z);
 	template<typename T> bool clexp(const int n, const T* array_GPU_x, T* array_GPU_y);
-	template<typename T> bool clgemm(const int m, const int n, const int k, const T* A, const T* B, T* C);
+	template<typename T> bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, const T* B, const T beta, T* C);
 
 	/* clBLAS wrapper functions */
 	template<typename T> bool clBLASasum(const int n, const void* gpuPtr, T* y);

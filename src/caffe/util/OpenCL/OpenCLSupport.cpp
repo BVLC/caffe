@@ -1406,7 +1406,7 @@ template bool clBLASgemv<float>(const clblasTranspose TransA, const int m, const
 template bool clBLASgemv<double>(const clblasTranspose TransA, const int m, const int n, const double alpha, const double* A, const int step_A, const double* x, const int step_x, const double beta, double* y, const int step_y);
 
 template<typename T>
-bool clgemm(const int m, const int n, const int k, const T* A, const T* B, T* C) {
+bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, const T* B, const T beta, T* C) {
 
 	queue = gpu->getQueue();
 	if ( ! queue ) {
@@ -1425,30 +1425,52 @@ bool clgemm(const int m, const int n, const int k, const T* A, const T* B, T* C)
 	CL_SET_TYPE_KERNEL_ARG(int, m)
 	CL_SET_TYPE_KERNEL_ARG(int, n)
 	CL_SET_TYPE_KERNEL_ARG(int, k)
+	CL_SET_TYPE_KERNEL_ARG(T, alpha)
 	CL_SET_ARRAY_KERNEL_ARG(&A)
 	CL_SET_ARRAY_KERNEL_ARG(&B)
+  CL_SET_TYPE_KERNEL_ARG(T, beta)
 	CL_SET_ARRAY_KERNEL_ARG(&C)
-	clSetKernelArg(*kernel, 6, sizeof(T)*k, NULL);
+	clSetKernelArg(*kernel, 8, sizeof(T)*k, NULL);
+  clSetKernelArg(*kernel, 9, sizeof(T)*m, NULL);
 
-	size_t global = n;//CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
-	size_t local  = 1;//CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+	size_t global[2] = {(size_t) n,(size_t) k};//CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+	size_t local[2]  = {(size_t) 1,(size_t) k};//CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  if ( n >= 1024 ) {
+    global[0] = 1024;
+  }
+
+	if ( k >= OPENCL_LOCAL_SIZE ) {
+	  global[1] = OPENCL_LOCAL_SIZE;
+    local[1]  = OPENCL_LOCAL_SIZE;
+	}
+
+	/*
+	LOG(ERROR)<<"M = "<<m;
+  LOG(ERROR)<<"N = "<<n;
+  LOG(ERROR)<<"K = "<<k;
+	LOG(ERROR)<<"global[2] = ("<<global[0]<<"|"<<global[1]<<")";
+  LOG(ERROR)<<"local[2]  = ("<<local[0]<<"|"<<local[1]<<")";
+  */
+
+  cl_event kernelFinish;
+	err = clEnqueueNDRangeKernel(*queue, *kernel, 2, NULL, global, local, 0, NULL, &kernelFinish);
+	clWaitForEvents(1, &kernelFinish);
+
 	if ( err != CL_SUCCESS ) {
 		std::ostringstream oss;
 		oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<what(err);
 		throw OpenCLSupportException(oss.str());
 		return false;
 	}
-	//clFinish(*queue);
 	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
 
 	CL_SET_KERNEL_ARG_END
 
 	return true;
 }
-template bool clgemm<float>(const int m, const int n, const int k, const float* A, const float* B, float* C);
-template bool clgemm<double>(const int m, const int n, const int k, const double* A, const double* B, double* C);
+template bool clgemm<float>(const int m, const int n, const int k, const float alpha, const float* A, const float* B, const float beta, float* C);
+template bool clgemm<double>(const int m, const int n, const int k, const double alpha, const double* A, const double* B, const double beta, double* C);
 
 template<typename T>
 bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const T* x, const T beta, T* y) {
@@ -1510,56 +1532,17 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
   y_offset /= sizeof(T);
   //DLOG(INFO)<<y<<" -> "<<y_base<<" with offset = "<<y_offset;
 
-  /*
-	std::vector<cl_mem> sb;
-	std::map<const void*, std::pair<void*, size_t> > bm;
-
-	const void* A_logical;
-	if ( ! clMakeLogical2(A, &A_logical, sb, bm) ) {
-		return false;
-	}
-
-	const void* x_logical;
-	if ( ! clMakeLogical2(x, &x_logical, sb, bm) ) {
-		return false;
-	}
-
-	const void* y_logical;
-	if ( ! clMakeLogical2(y, &y_logical, sb, bm) ) {
-		return false;
-	}
-  */
-
 	// Note that cublas follows fortran order.
 	int lda = (TransA == clblasNoTrans) ? k : m;
 	int ldb = (TransB == clblasNoTrans) ? n : k;
 	int ldc = n;
 
-	/*
-	std::cout<<"TransA = "<<TransA<<std::endl;
-	std::cout<<"TransB = "<<TransB<<std::endl;
-
-	std::cout<<"m   = "<<m<<std::endl;
-	std::cout<<"n   = "<<n<<std::endl;
-	std::cout<<"k   = "<<k<<std::endl;
-
-	std::cout<<"A = ["<<m<<" x "<<k<<"]"<<std::endl;
-	std::cout<<"x = ["<<k<<" x "<<n<<"]"<<std::endl;
-	std::cout<<"y = ["<<m<<" x "<<n<<"]"<<std::endl;
-
-	std::cout<<"lda = "<<lda<<std::endl;
-	std::cout<<"ldb = "<<ldb<<std::endl;
-	std::cout<<"ldc = "<<ldc<<std::endl;
-	*/
-
 	if( typeid(T) == typeid(float) ) {
 		if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
 			LOG(ERROR) << "clblasSgemm() failed on GPU "<<gpu->name();
-			//clReleaseSubBuffers(sb);
-			//clReleaseBufferMap(bm);
 			return false;
 		}
-		////clFinish(*queue);
+		//clFinish(*queue);
 		DLOG(INFO) << "clblasSgemm() succeeded on GPU "<<gpu->name();
 	}
 
@@ -1567,17 +1550,11 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 		if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
 			LOG(ERROR) << "clblasDgemm() failed on GPU "<<gpu->name();
 			return false;
-			//clReleaseSubBuffers(sb);
-			//clReleaseBufferMap(bm);
 		}
-		////clFinish(*queue);
+		//clFinish(*queue);
 		DLOG(INFO) << "clblasDgemm() succeeded on GPU "<<gpu->name();
 	}
 
-	/*
-	clReleaseBufferMap(bm);
-	clReleaseSubBuffers(sb);
-	*/
 	return true;
 }
 template bool clBLASgemm<float>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const float alpha, const float* A, const float* x, const float beta, float* y);
