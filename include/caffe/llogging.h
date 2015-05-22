@@ -18,6 +18,7 @@
 #undef LOG_IF
 #undef CHECK
 #undef CHECK_OP_LOG
+#undef CHECK_EQ
 #include <sstream>
 #define SSTR( x ) dynamic_cast< std::ostringstream & >( \
 		 ( std::ostringstream() << std::dec << x ) ).str()
@@ -37,6 +38,7 @@ public:
   << "Check failed (custom): " #condition " "
 
 #define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1) op (val2))
+#define CHECK_EQ(val1,val2) if (0) std::cerr
 #endif
 
 static std::string INFO="INFO";
@@ -58,7 +60,7 @@ inline std::ostream& LOG(const std::string &severity,std::ostream &out=std::cout
     {
       throw CaffeErrorException(std::string(__FILE__) + ":" + SSTR(__LINE__) + " / Fatal Caffe error"); // XXX: cannot report the exact location of the trigger...
     }
-  return out;
+  //return out;
 }
 
 inline std::ostream& LOG_IF(const std::string &severity,const bool &condition,std::ostream &out=std::cout)
