@@ -162,38 +162,39 @@ namespace OpenCL {
 
 template<typename T>
 bool clMaxForward(const int nthreads, const T* bottom_data_a, const T* bottom_data_b, const int blob_idx, T* top_data, int* mask) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("MaxForward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_data_a)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_data_b)
-	CL_SET_TYPE_KERNEL_ARG(int, blob_idx)
-	CL_SET_ARRAY_KERNEL_ARG(&top_data)
-	CL_SET_ARRAY_KERNEL_ARG(&mask)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_data_a, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_data_b, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, blob_idx, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_data, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&mask, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -204,37 +205,38 @@ template bool clMaxForward<double>(const int nthreads, const double* bottom_data
 
 template<typename T>
 bool clMaxBackward(const int nthreads, const T* top_diff, const int blob_idx, const int* mask, T* bottom_diff) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("MaxBackward");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, nthreads)
-	CL_SET_ARRAY_KERNEL_ARG(&top_diff)
-	CL_SET_TYPE_KERNEL_ARG(int, blob_idx)
-	CL_SET_ARRAY_KERNEL_ARG(&mask)
-	CL_SET_ARRAY_KERNEL_ARG(&bottom_diff)
+  CL_SET_TYPE_KERNEL_ARG(int, nthreads, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&top_diff, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, blob_idx, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&mask, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&bottom_diff, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(nthreads, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<< device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 

@@ -2,6 +2,7 @@
 #define __OPENCL_DEVICE_HPP__
 
 #include <CL/cl.h>
+#include <CL/cl.hpp>
 #include <string>
 #include <iostream>
 #include <map>
@@ -14,19 +15,20 @@ class OpenCLDevice {
 
 public:
 	OpenCLDevice();
-	OpenCLDevice(cl_platform_id pid, cl_device_id did);
+  OpenCLDevice(cl_platform_id pid, cl_device_id did);
 	OpenCLDevice(const OpenCLDevice& dev);
 	~OpenCLDevice();
 
 	bool query();
 	void print();
+  void SetContext(cl::Context context);
 	cl_device_type type();
 	std::string name();
 	cl_device_id id();
-	bool createContext();
+  //bool createContext();
 	bool compile(std::string source);
 	bool createQueue();
-	cl_context* getContext();
+  cl_context getContext();
 	cl_command_queue* getQueue();
 	cl_kernel* getKernel(std::string name);
 	bool add(OpenCLMemory& clMem);
@@ -37,7 +39,7 @@ public:
 	std::string getDeviceName();
 	cl_uint getDeviceMemBaseAddrAlign();
 	size_t getMemoryUsage();
-
+  void Synchronize();
 protected:
 
 private:
@@ -64,10 +66,10 @@ private:
 	cl_bool deviceHostUnifiedMem;
 	cl_uint deviceMemBaseAddrAlign;
 	std::string deviceName;
-	cl_context context;
+  cl::Context context_;
 	std::vector<cl_program> programs;
 	cl_command_queue queue;
-	std::map<std::string, cl_kernel> kernel;
+  std::map<std::string, cl_kernel> kernel_map_;
 
 	std::map<const void*, caffe::OpenCLMemory> memory;
 };

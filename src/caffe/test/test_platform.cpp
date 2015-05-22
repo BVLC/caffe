@@ -55,7 +55,12 @@ TEST_F(PlatformTest, TestInitialization) {
 #endif
 
 #ifdef USE_OPENCL
-  EXPECT_TRUE( caffe::OpenCL::init() );
+  EXPECT_TRUE( caffe::OpenCLManager::Init() );
+  OpenCLManager::Print();
+  std::cout << "Current platform: =============================" << std::endl;
+  OpenCLManager::CurrentPlatform().print();
+  std::cout << "Current Device ================================" << std::endl;
+  OpenCLManager::CurrentPlatform().CurrentDevice().print();
 #endif
 }
 

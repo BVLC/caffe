@@ -69,33 +69,39 @@ TYPED_TEST(OpenCLSimpleTest, TestMaxMemory) {
 }
 
 TYPED_TEST(OpenCLSimpleTest, TestMaxBuffer) {
-	size_t MB 			= 1024*1024;
-	size_t alloc		= MB;
-	int max_cnt			= 100000;
-	int suc_cnt			= 0;
+  size_t MB 			= 1024*1024;
+  long int alloc_increment
+                  = 100 * MB;
+  size_t alloc		= alloc_increment;
+  int max_cnt			= 1000;
+  int suc_cnt			= 0;
 
-	float pattern = 0.0;
-	void* vPtr 		= NULL;
+  float pattern = 0.0;
+  void* vPtr 		= NULL;
 
-	int i = 0;
-	for(i = 0; i < max_cnt; i++ ) {
-		if ( ! caffe::OpenCL::clMalloc(&vPtr, alloc) ) {
-	    break;
-		}
+  int i = 0;
+  for(i = 0; i < max_cnt; i++ ) {
+    if ( ! caffe::OpenCL::clMalloc(&vPtr, alloc) ) {
+      break;
+    }
     try {
-			caffe::OpenCL::clMemset(vPtr, pattern, alloc);
-		} catch (std::exception &e) {
-			break;
-		}
-		suc_cnt++;
-    if ( suc_cnt % 1024 == 0 ) {
-      printf("OpenCL succesfully allocated 1 buffer of %dMB\n", suc_cnt);
+      caffe::OpenCL::clMemset(vPtr, pattern, alloc);
+    } catch (std::exception &e) {
+      break;
+    }
+    suc_cnt++;
+
+    if (suc_cnt % 10 == 0)
+    {
+      printf("OpenCL succesfully allocated 1 buffer of %ldMB\n",
+             suc_cnt * alloc_increment / MB);
     }
 
-		alloc += MB;
-		EXPECT_TRUE(caffe::OpenCL::clFree(vPtr));
-	}
-	printf("OpenCL successfully allocated one buffer of %d MB\n", suc_cnt);
+    alloc += alloc_increment;
+    EXPECT_TRUE(caffe::OpenCL::clFree(vPtr));
+  }
+  long int megabytes= suc_cnt * alloc_increment / MB;
+  printf("OpenCL successfully allocated one buffer of %ld MB\n", megabytes);
 
 }
 

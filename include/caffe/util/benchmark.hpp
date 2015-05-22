@@ -111,8 +111,6 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 #endif // CPU_ONLY
 
 
-#if defined(USE_CUDA)
-
 #define	BENCH(result, this)\
 {\
 	struct timeval s;\
@@ -121,7 +119,7 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 		bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
 	}\
 	(this); \
-	cudaDeviceSynchronize();\
+  caffe::Caffe::DeviceSync(); \
 	double end = 0.0;\
 	if (gettimeofday(&s, 0) == 0) {\
 		end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
@@ -132,31 +130,6 @@ LOG(INFO) << "TIME("<<name<<") = "<<((float) floor(1000*(1000*(end-bgn))))/1000<
 	LOG(INFO) << "TIME::CUDA::"<<result.function.c_str()<<" = "<<result.time<<"ms";\
 	caffe::Timer::log("bench.csv", result);\
 }
-
-#endif // USE_CUDA
-
-#if defined(USE_OPENCL)
-
-#define	BENCH(result, this)\
-{\
-	struct timeval s;\
-	double bgn = 0.0;\
-	if (gettimeofday(&s, 0) == 0) {\
-		bgn = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
-	}\
-	(this); \
-	double end = 0.0;\
-	if (gettimeofday(&s, 0) == 0) {\
-		end = s.tv_sec * 1.0 + s.tv_usec * 1.e-6;\
-	}\
-	result.time 	= ((float) floor(1000*(1000*(end-bgn))))/1000;\
-	result.function = __func__;\
-	result.file     = __FILE__;\
-	LOG(INFO) << "TIME::OpenCL::"<<result.function.c_str()<<" = "<<result.time<<"ms";\
-	caffe::Timer::log("bench.csv", result);\
-}
-
-#endif // USE_OPENCL
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"

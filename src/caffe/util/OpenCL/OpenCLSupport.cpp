@@ -14,13 +14,12 @@ namespace caffe {
 
 namespace OpenCL {
 
-bool inititialized = false;
-caffe::OpenCLManager mgr = OpenCLManager();
-caffe::OpenCLPlatform* pf;
-caffe::OpenCLDevice* gpu;
-cl_context*	context;
-cl_command_queue* queue;
-cl_kernel* kernel;
+//bool inititialized = false;
+//caffe::OpenCLPlatform* pf;
+//caffe::OpenCLDevice* gpu;
+//cl_context*	context;
+//cl_command_queue* queue;
+//cl_kernel* kernel;
 
 const char* what(cl_int value) {
 	int errorCode = (int) value;
@@ -239,92 +238,6 @@ double getTickFrequency() {
 	return (double) t.tv_nsec;
 }
 
-bool init() {
-
-	if ( caffe::OpenCL::inititialized ) {
-		LOG(INFO)<<"OpenCL already initialized";
-		return true;
-	}
-
-	LOG(INFO)<<"Initialize OpenCL";
-	mgr.query();
-
-	if ( ! mgr.query() ) {
-		LOG(ERROR) << "Failed to query OpenCL runtime information";
-		return false;
-	}
-
-	if ( mgr.getNumPlatforms() <= 0 ) {
-		LOG(ERROR) << "No OpenCL platforms found.";
-		return false;
-	}
-
-	pf = mgr.getPlatform(0);
-	if ( ! pf ) {
-		LOG(ERROR) << "Failed to get first platform.";
-		return false;
-	}
-
-	if ( ! pf->createContext() ) {
-		LOG(ERROR) << "failed to create OpenCL context for platform " << pf->name();
-		return false;
-	}
-
-	std::vector<std::string> cl_files;
-	cl_files.push_back("src/caffe/util/OpenCL/math_functions.cl");
-	cl_files.push_back("src/caffe/util/OpenCL/im2col.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/pooling_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/relu_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/prelu_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/sigmoid_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/tanh_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/dropout_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/bnll_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/contrastive_loss_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/eltwise_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/lrn_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/softmax_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/softmax_loss_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/threshold_layer.cl");
-	cl_files.push_back("src/caffe/layers/OpenCL/mvn_layer.cl");
-
-	std::vector<std::string>::iterator it;
-
-	for ( it = cl_files.begin(); it != cl_files.end(); it++ ) {
-		if ( ! pf->compile(*it) ) {
-			LOG(ERROR) << "failed to create to create OpenCL program for platform " << pf->name();
-			return false;
-		}
-	}
-
-	if ( pf->getNumGPUDevices() < 1 ) {
-		LOG(ERROR) << "No GPU devices available at platform " << pf->name();
-		return false;
-	}
-
-	gpu = pf->getDevice(CL_DEVICE_TYPE_GPU, 0);
-	if ( ! gpu ) {
-		LOG(ERROR) << "failed to select first GPU on platform " << pf->name();
-		return false;
-	}
-
-	if ( ! gpu->createQueue() ) {
-		LOG(ERROR) << "failed to create OpenCL command queue for device " << gpu->name();
-		return false;
-	}
-
-
-	if ( clblasSetup() != CL_SUCCESS ) {
-		LOG(ERROR) << "failed to initialize clBlas";
-		return false;
-	}
-
-	gpu->print();
-	caffe::OpenCL::inititialized = true;
-
-	return true;
-}
-
 template<typename T>
 std::string clGetKernelName(std::string name) {
 
@@ -350,6 +263,8 @@ template std::string clGetKernelName<double>(std::string name);
 template std::string clGetKernelName<float>(std::string name);
 
 bool clMalloc(void** virtualPtr, size_t size) {
+  OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf.CurrentDevice();
 
 	OpenCLMemory clMem;
 	try {
@@ -357,28 +272,30 @@ bool clMalloc(void** virtualPtr, size_t size) {
 	} catch (std::exception& e) {
 		return false;
 	}
-	gpu->add(clMem);
+  device.add(clMem);
 
 	*virtualPtr = clMem.getVirtualPointer();
 	return true;
 }
 
 bool clFree(void* virtualPtr) {
+  OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf.CurrentDevice();
 
-	if ( ! gpu->isValidPtr(virtualPtr) ) {
-		LOG(ERROR) << gpu->name() << "> not a valid memory pointer @ " << virtualPtr;
+  if (!device.isValidPtr(virtualPtr)) {
+    LOG(ERROR) << device.name() << "> not a valid memory pointer @ " << virtualPtr;
 		return false;
 	}
 
 	OpenCLMemory clMem;
-	if ( ! gpu->get(virtualPtr, clMem) ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCLMemory object using virtual pointer @ " << virtualPtr;
+  if (!device.get(virtualPtr, clMem)) {
+    LOG(ERROR) << device.name() << "> failed to get OpenCLMemory object using virtual pointer @ " << virtualPtr;
 		return false;
 	}
 
-	gpu->rmMemoryPtr(clMem.getVirtualPointer());
-	queue = gpu->getQueue();
-	if ( queue != NULL ) {
+  device.rmMemoryPtr(clMem.getVirtualPointer());
+  cl_command_queue* queue = device.getQueue();
+  if (queue!=NULL)  {
 		clFinish(*queue);
 	}
 	return true;
@@ -386,32 +303,38 @@ bool clFree(void* virtualPtr) {
 
 template<typename T>
 bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
-
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf.CurrentDevice();
+  cl_command_queue* queue = device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
 #ifdef OPENCL_VERSION_1_2 // at least OpenCL Version 1.2 required
 
-	if ( ! gpu->isValidPtr(virtualPtr) ) {
-		LOG(ERROR) << gpu->name() << "> not a valid memory pointer @ " << virtualPtr;
+  if (!device.isValidPtr(virtualPtr)) {
+    LOG(ERROR) << device.name()
+               << "> not a valid memory pointer @ "
+               << virtualPtr;
 		return false;
 	}
 
 	OpenCLMemory clMem;
-	if ( ! gpu->get(virtualPtr, clMem) ) {
-		LOG(ERROR) << gpu->name() << "> failed to get GPU memory @ " << virtualPtr;
+  if (!device.get(virtualPtr, clMem)) {
+    LOG(ERROR) << device.name() << "> failed to get GPU memory @ "
+               << virtualPtr;
 		return false;
 	}
 	size_t mem_offset	= clGetMemoryOffset(virtualPtr);
 	cl_mem base 			= (cl_mem) clMem.getLogicalPointer();
 
-	cl_int err = clEnqueueFillBuffer(*queue, base, &alpha, sizeof(T), mem_offset, Bytes, 0, NULL, NULL);
-	if ( err != CL_SUCCESS ) {
+  cl_int err = clEnqueueFillBuffer(*queue, base, &alpha, sizeof(T),
+                                   mem_offset, Bytes, 0, NULL, NULL);
+  if (err != CL_SUCCESS) {
     std::ostringstream oss;
-    oss << "clEnqueueFillBuffer() failed on GPU "<<gpu->name()<<" : "<<what(err);
+    oss << "clEnqueueFillBuffer() failed on GPU " << device.name()
+        << " : "<<what(err);
     //LOG(ERROR)<<oss.str();
     throw OpenCLSupportException(oss.str());
 		return false;
@@ -421,7 +344,7 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
 #else
 	std::string kernel_name = clGetKernelName<T>("clFillBuffer");
 
-	kernel = gpu->getKernel(kernel_name);
+  kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
@@ -435,92 +358,100 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL,
+                               &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
 		std::ostringstream oss;
-		oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<what(err);
+    oss << "Failed to enqueue kernel '"
+        << kernel_name <<"' on GPU "<< devuce.name()<<" : "<<what(err);
 		//LOG(ERROR)<<oss.str();
 		throw OpenCLSupportException(oss.str());
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<< kernel_name << "' executed on GPU "
+             << device.name();
 
 	CL_SET_KERNEL_ARG_END
 #endif
 
 
-	DLOG(INFO) << gpu->name() << "> set OpenCL memory at "<<gpu->getMemoryTag(virtualPtr).c_str()<<" to "<<alpha;
+  DLOG(INFO) << device.name() << "> set OpenCL memory at " <<
+                device.getMemoryTag(virtualPtr) << " to " << alpha;
 	return true;
 }
 template bool clMemset<char>(void* gpuPtr, const char alpha, const size_t N);
 template bool clMemset<int>(void* gpuPtr, const int alpha, const size_t N);
 template bool clMemset<float>(void* gpuPtr, const float alpha, const size_t N);
-template bool clMemset<double>(void* gpuPtr, const double alpha, const size_t N);
+template bool clMemset<double>(void* gpuPtr, const double alpha,
+                                const size_t N);
 
 template<typename T>
 bool clGPU2GPU(const void* src, void* dst, size_t Bytes) {
+  OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf.CurrentDevice();
 
-	if ( ! gpu->isValidPtr(src) ) {
-		LOG(ERROR) << gpu->name() << "> not a valid memory pointer @ " << src;
+  if (!device.isValidPtr(src)) {
+    LOG(ERROR) << device.name() << "> not a valid memory pointer @ " << src;
 		return false;
 	}
 
 	OpenCLMemory clMemSrc;
-	if ( ! gpu->get(src, clMemSrc) ) {
-		LOG(ERROR) << gpu->name() << "> failed to get GPU memory @ " << src;
+  if (!device.get(src, clMemSrc)) {
+    LOG(ERROR) << device.name() << "> failed to get GPU memory @ " << src;
 		return false;
 	}
 	size_t offsetSrc	= clGetMemoryOffset(src);
 
-	if ( ! gpu->isValidPtr(dst) ) {
-		LOG(ERROR) << gpu->name() << "> not a valid memory pointer @ " << dst;
+  if (!device.isValidPtr(dst)) {
+    LOG(ERROR) << device.name() << "> not a valid memory pointer @ " << dst;
 		return false;
 	}
 
 	OpenCLMemory clMemDst;
-	if ( ! gpu->get(dst, clMemDst) ) {
-		LOG(ERROR) << gpu->name() << "> failed to get GPU memory @ " << dst;
+  if (!device.get(dst, clMemDst)) {
+    LOG(ERROR) << device.name() << "> failed to get GPU memory @ " << dst;
 		return false;
 	}
 	size_t offsetDst	= clGetMemoryOffset(dst);
 
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+  cl_command_queue* queue = device.getQueue();
+  if (!queue) {
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
 	std::string kernel_name = clGetKernelName<T>("clGPU2GPU");
 
-	kernel = gpu->getKernel(kernel_name);
-	if ( kernel == NULL ) {
+  cl_kernel* kernel = device.getKernel(kernel_name);
+  if (kernel == NULL) {
 		return false;
 	}
 
 	unsigned int N = Bytes/sizeof(T);
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, N)
-	CL_SET_ARRAY_KERNEL_ARG(&src)
-	CL_SET_TYPE_KERNEL_ARG(int, (int) offsetSrc)
-	CL_SET_ARRAY_KERNEL_ARG(&dst)
-	CL_SET_TYPE_KERNEL_ARG(int, (int) offsetDst)
+  CL_SET_TYPE_KERNEL_ARG(int, N, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&src, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, (int) offsetSrc, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&dst, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, (int) offsetDst, kernel)
 
 	size_t global = 1024;//CAFFE_GET_GLOBAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 	size_t local  = 1024;//CAFFE_GET_LOCAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
-	if ( err != CL_SUCCESS ) {
+  if (err != CL_SUCCESS) {
 		std::ostringstream oss;
-		oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<what(err);
+    oss << "Failed to enqueue kernel '" << kernel_name
+        << "' on GPU "<< device.name() << " : " << what(err);
 		throw OpenCLSupportException(oss.str());
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '" << kernel_name
+             << "' executed on GPU " << device.name();
 
 	CL_SET_KERNEL_ARG_END
-
 
 	return true;
 }
@@ -531,12 +462,14 @@ template bool clGPU2GPU<double>(const void* src, void* dst, size_t Bytes);
 
 
 bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int type) {
+  OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf.CurrentDevice();
 
 	std::string function = __func__;
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
@@ -549,107 +482,126 @@ bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int t
 
 	case caffe::OpenCL::COPY_CPU_TO_CPU:
 		/*
-		if ( gpu->isValidPtr(src) ) {
-			LOG(ERROR) << gpu->name() << "> src pointer is in GPU memory @ " << src;
+    if ( device.isValidPtr(src) ) {
+      LOG(ERROR) << device.name() << "> src pointer is in GPU memory @ " << src;
 			return false;
 		}
 		*/
-		if ( gpu->isValidPtr(virtualDstPtr) ) {
-			LOG(ERROR) << gpu->name() << "> dst pointer is in GPU memory @ " << virtualDstPtr;
+    if (device.isValidPtr(virtualDstPtr)) {
+      LOG(ERROR) << device.name()
+                 << "> dst pointer is in GPU memory @ " << virtualDstPtr;
 			return false;
 		}
 		memcpy(virtualDstPtr, virtualSrcPtr, size);
-		DLOG(INFO) << gpu->name() << "> copy CPU@"<<virtualSrcPtr<<" to CPU@"<<virtualDstPtr<<" "<<size<<" Byte transferred.";
+    DLOG(INFO) << device.name() << "> copy CPU@" << virtualSrcPtr
+               << " to CPU@" << virtualDstPtr << " " << size
+               << " Byte transferred.";
 		break;
-
 	case caffe::OpenCL::COPY_CPU_TO_GPU:
 		/*
-		if ( gpu->isValidPtr(src) ) {
-			LOG(ERROR) << gpu->name() << "> src pointer is in GPU memory @ " << src;
+    if ( device.isValidPtr(src) ) {
+      LOG(ERROR) << device.name() << "> src pointer is in GPU memory @ " << src;
 			return false;
 		}
 		*/
-		if ( ! gpu->isValidPtr(virtualDstPtr) ) {
-			LOG(ERROR) << gpu->name() << "> dst pointer is not in GPU memory @ " << virtualDstPtr;
+    if (!device.isValidPtr(virtualDstPtr)) {
+      LOG(ERROR) << device.name() << "> dst pointer is not in GPU memory @ "
+                 << virtualDstPtr;
 			return false;
 		}
 
-		if ( ! gpu->get(virtualDstPtr, clMemDst) ) {
-			LOG(ERROR) << gpu->name() << "> failed to get GPU memory @ " << virtualDstPtr;
+    if (!device.get(virtualDstPtr, clMemDst)) {
+      LOG(ERROR) << device.name() << "> failed to get GPU memory @ "
+                 << virtualDstPtr;
 			return false;
 		}
 		baseDst 	= clMemDst.getLogicalPointer();
 		offsetDst	= clGetMemoryOffset(virtualDstPtr);
 
-		if ( ! CL_CHECK(clEnqueueWriteBuffer(*queue, (cl_mem) baseDst, CL_TRUE, offsetDst, size, virtualSrcPtr, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << gpu->name() << "> copy CPU@"<<virtualSrcPtr<<" to "<<gpu->getMemoryTag(virtualDstPtr).c_str()<<" "<<size<<" Byte transferred failed.";
+    if ( ! CL_CHECK(clEnqueueWriteBuffer(*queue, (cl_mem) baseDst, CL_TRUE,
+                                         offsetDst, size, virtualSrcPtr,
+                                         0, NULL, NULL) ) ) {
+      LOG(ERROR) << device.name() << "> copy CPU@" << virtualSrcPtr
+                 << " to " << device.getMemoryTag(virtualDstPtr).c_str()
+                 << " " << size << " Byte transferred failed.";
 			return false;
 		};
 		//clFinish(*queue);
-		DLOG(INFO) << gpu->name() << "> copy CPU@"<<virtualSrcPtr<<" to "<<gpu->getMemoryTag(virtualDstPtr).c_str()<<" "<<size<<" Byte transferred.";
+    DLOG(INFO) << device.name() << "> copy CPU@" << virtualSrcPtr << " to "
+               << device.getMemoryTag(virtualDstPtr) << " " << size
+               << " Byte transferred.";
 		break;
-
 	case caffe::OpenCL::COPY_GPU_TO_CPU:
-		if ( ! gpu->isValidPtr(virtualSrcPtr) ) {
-			LOG(ERROR) << gpu->name() << "> src pointer is not in GPU memory @ " << virtualSrcPtr;
+    if (!device.isValidPtr(virtualSrcPtr) ) {
+      LOG(ERROR) << device.name() << "> src pointer is not in GPU memory @ " << virtualSrcPtr;
 			return false;
 		}
 		/*
-		if ( gpu->isValidPtr(dst) ) {
-			LOG(ERROR) << gpu->name() << "> dst pointer is in GPU memory @ " << dst;
+    if ( device.isValidPtr(dst) ) {
+      LOG(ERROR) << device.name() << "> dst pointer is in GPU memory @ " << dst;
 			return false;
 		}
 		*/
-		if ( ! gpu->get(virtualSrcPtr, clMemSrc) ) {
-			LOG(ERROR) << gpu->name() << "> failed to get GPU memory @ " << virtualSrcPtr;
+    if (!device.get(virtualSrcPtr, clMemSrc)) {
+      LOG(ERROR) << device.name() << "> failed to get GPU memory @ "
+                 << virtualSrcPtr;
 			return false;
 		}
 		baseSrc 	= clMemSrc.getLogicalPointer();
 		offsetSrc	= clGetMemoryOffset(virtualSrcPtr);
 
-		if ( ! CL_CHECK(clEnqueueReadBuffer(*queue, (cl_mem) baseSrc, CL_TRUE, offsetSrc, size, virtualDstPtr, 0, NULL, NULL) ) ) {
+    if (!CL_CHECK(clEnqueueReadBuffer(*queue, (cl_mem) baseSrc, CL_TRUE,
+                                      offsetSrc, size, virtualDstPtr, 0,
+                                      NULL, NULL) ) ) {
 			return false;
 		};
 		//clFinish(*queue);
-		DLOG(INFO) << gpu->name() << "> copy "<<gpu->getMemoryTag(virtualSrcPtr).c_str()<<" to CPU@"<<virtualDstPtr<<" "<<size<<" Byte transferred.";
+    DLOG(INFO) << device.name() << "> copy "
+               << device.getMemoryTag(virtualSrcPtr) << " to CPU@"
+               << virtualDstPtr << " " << size << " Byte transferred.";
 		break;
 
 	case caffe::OpenCL::COPY_GPU_TO_GPU:
-		if ( ! gpu->isValidPtr(virtualSrcPtr) ) {
-			LOG(ERROR) << gpu->name() << "> src pointer is not in GPU memory @ " << virtualSrcPtr;
+    if (!device.isValidPtr(virtualSrcPtr)) {
+      LOG(ERROR) << device.name() << "> src pointer is not in GPU memory @ "
+                 << virtualSrcPtr;
 			return false;
 		}
-		if ( ! gpu->isValidPtr(virtualDstPtr) ) {
-			LOG(ERROR) << gpu->name() << "> dst pointer is not in GPU memory @ " << virtualDstPtr;
+    if (!device.isValidPtr(virtualDstPtr)) {
+      LOG(ERROR) << device.name() << "> dst pointer is not in GPU memory @ "
+                 << virtualDstPtr;
 			return false;
 		}
-		DLOG(INFO) << "VMS@"<<virtualSrcPtr<<" to VMD@"<<virtualDstPtr<<" size = "<<size;
+    DLOG(INFO) << "VMS@" << virtualSrcPtr << " to VMD@"
+               << virtualDstPtr << " size = " << size;
 
-		if ( ! gpu->get(virtualSrcPtr, clMemSrc) ) {
-			LOG(ERROR) << gpu->name() << "> failed to get GPU memory @ " << virtualSrcPtr;
+    if (!device.get(virtualSrcPtr, clMemSrc)) {
+      LOG(ERROR) << device.name() << "> failed to get GPU memory @ "
+                 << virtualSrcPtr;
 			return false;
 		}
 		baseSrc 	= clMemSrc.getLogicalPointer();
 		offsetSrc	= clGetMemoryOffset(virtualSrcPtr);
-		DLOG(INFO) << gpu->getMemoryTag(clMemSrc.getVirtualPointer()).c_str();
+    DLOG(INFO) << device.getMemoryTag(clMemSrc.getVirtualPointer()).c_str();
 		DLOG(INFO) << "VMS@"<<baseSrc<<" offset = "<<offsetSrc;
 
-		if ( ! gpu->get(virtualDstPtr, clMemDst) ) {
-			LOG(ERROR) << gpu->name() << "> failed to get GPU memory @ " << virtualDstPtr;
+    if (!device.get(virtualDstPtr, clMemDst) ) {
+      LOG(ERROR) << device.name() << "> failed to get GPU memory @ "
+                 << virtualDstPtr;
 			return false;
 		}
 		baseDst 	= clMemDst.getLogicalPointer();
 		offsetDst	= clGetMemoryOffset(virtualDstPtr);
-		DLOG(INFO) << gpu->getMemoryTag(clMemDst.getVirtualPointer()).c_str();
-		DLOG(INFO) << "VMD@"<<baseDst<<" offset = "<<offsetDst;
+    DLOG(INFO) << device.getMemoryTag(clMemDst.getVirtualPointer());
+    DLOG(INFO) << "VMD@" << baseDst << " offset = " << offsetDst;
 
-		if ( offsetSrc + size > clMemSrc.getSize() ) {
-			LOG(ERROR) << gpu->name() << "> copy range out of source range.";
+    if (offsetSrc + size > clMemSrc.getSize()) {
+      LOG(ERROR) << device.name() << "> copy range out of source range.";
 			return false;
 		}
 
-		if ( offsetDst + size > clMemDst.getSize() ) {
-			LOG(ERROR) << gpu->name() << "> copy range out of destination range.";
+    if (offsetDst + size > clMemDst.getSize()) {
+      LOG(ERROR) << device.name() << "> copy range out of destination range.";
 			return false;
 		}
 
@@ -667,14 +619,16 @@ bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int t
 
 			DLOG(INFO) << "no overlap";
 			/*
-			DLOG(INFO) << gpu->getMemoryTag(baseSrc).c_str();
-			DLOG(INFO) << gpu->getMemoryTag(baseDst).c_str();
+      DLOG(INFO) << device.getMemoryTag(baseSrc).c_str();
+      DLOG(INFO) << device.getMemoryTag(baseDst).c_str();
 			DLOG(INFO) << "offset Src = "<<offsetSrc;
 			DLOG(INFO) << "offset Dst = "<<offsetDst;
 			DLOG(INFO) << "size       = "<<size;
 			*/
 
-			if ( ! CL_CHECK( clEnqueueCopyBuffer(*queue, (cl_mem) baseSrc, (cl_mem) baseDst, offsetSrc, offsetDst, size, 0, NULL, NULL) ) ) {
+      if ( ! CL_CHECK( clEnqueueCopyBuffer(*queue, (cl_mem) baseSrc,
+                                           (cl_mem) baseDst, offsetSrc,
+                                           offsetDst, size, 0, NULL, NULL) ) ) {
 				return false;
 			}
 			//clFinish(*queue);
@@ -684,54 +638,56 @@ bool clMemcpy(void* virtualDstPtr, const void* virtualSrcPtr, size_t size, int t
 			//clGPU2GPU<char>(clMemSrc.getVirtualPointer(), clMemDst.getVirtualPointer(), size);
 
 			void* bufVPtr = NULL;
-			if ( ! clMalloc(&bufVPtr, size) ) {
-				LOG(ERROR) << gpu->name() << "> failed to created buffer of size = " << size << " Byte";
+      if (!clMalloc(&bufVPtr, size) ) {
+        LOG(ERROR) << device.name() << "> failed to created buffer of size = "
+                   << size << " Byte";
 				return false;
 			}
 
 			OpenCLMemory buffer;
-			if ( ! gpu->get(bufVPtr, buffer) ) {
-				LOG(ERROR) << gpu->name() << "> failed to get buffer Object GPU@VIRT"<<bufVPtr;
+      if (!device.get(bufVPtr, buffer) ) {
+        LOG(ERROR) << device.name() << "> failed to get buffer Object GPU@VIRT"
+                   << bufVPtr;
 				return false;
 			}
 			const void* bufLPtr = buffer.getLogicalPointer();
 
 			/*
-			DLOG(INFO) << "src = "<<gpu->getMemoryTag(virtualSrcPtr).c_str();
-			DLOG(INFO) << "buf = "<<gpu->getMemoryTag(bufVPtr).c_str();
-			DLOG(INFO) << "dst = "<<gpu->getMemoryTag(virtualDstPtr).c_str();
+      DLOG(INFO) << "src = "<<device.getMemoryTag(virtualSrcPtr).c_str();
+      DLOG(INFO) << "buf = "<<device.getMemoryTag(bufVPtr).c_str();
+      DLOG(INFO) << "dst = "<<device.getMemoryTag(virtualDstPtr).c_str();
 			DLOG(INFO) << "offset Src = "<<offsetSrc;
 			DLOG(INFO) << "offset Dst = "<<offsetDst;
 			DLOG(INFO) << "size       = "<<size;
 			*/
 
-			if ( ! CL_CHECK( clEnqueueCopyBuffer(*queue, (cl_mem) baseSrc, (cl_mem) bufLPtr, offsetSrc, 0, size, 0, NULL, NULL) ) ) {
+      if (!CL_CHECK(clEnqueueCopyBuffer(*queue, (cl_mem) baseSrc, (cl_mem) bufLPtr, offsetSrc, 0, size, 0, NULL, NULL) ) ) {
 				return false;
 			}
-			DLOG(INFO) << gpu->name() << "> copy "<<gpu->getMemoryTag(virtualSrcPtr).c_str()<<" with offset " << offsetSrc << " to buffer " <<gpu->getMemoryTag(bufVPtr).c_str()<< " "<<size<<" Byte transferred.";
+      DLOG(INFO) << device.name() << "> copy "<<device.getMemoryTag(virtualSrcPtr).c_str()<<" with offset " << offsetSrc << " to buffer " <<device.getMemoryTag(bufVPtr).c_str()<< " "<<size<<" Byte transferred.";
 
 			if ( ! CL_CHECK( clEnqueueCopyBuffer(*queue, (cl_mem) bufLPtr, (cl_mem) baseDst, 0, offsetDst, size, 0, NULL, NULL) ) ) {
 				return false;
 			}
-			DLOG(INFO) << gpu->name() << "> copy "<<gpu->getMemoryTag(bufVPtr).c_str()<<" to "<<gpu->getMemoryTag(virtualDstPtr).c_str()<<" with offset "<<offsetDst<<" "<<size<<" Byte transferred.";
+      DLOG(INFO) << device.name() << "> copy "<<device.getMemoryTag(bufVPtr).c_str()<<" to "<<device.getMemoryTag(virtualDstPtr).c_str()<<" with offset "<<offsetDst<<" "<<size<<" Byte transferred.";
 
 			clFree(bufVPtr);
 		}
 
-		DLOG(INFO) << gpu->name() << "> copy "<<gpu->getMemoryTag(virtualSrcPtr).c_str()<<" with offset " << offsetSrc << " to "<<gpu->getMemoryTag(virtualDstPtr).c_str()<<" with offset " << offsetDst << " "<<size<<" Byte transferred.";
+    DLOG(INFO) << device.name() << "> copy "<<device.getMemoryTag(virtualSrcPtr).c_str()<<" with offset " << offsetSrc << " to "<<device.getMemoryTag(virtualDstPtr).c_str()<<" with offset " << offsetDst << " "<<size<<" Byte transferred.";
 		break;
 
 	case caffe::OpenCL::COPY_DEFAULT:
-		if ( ! gpu->isValidPtr(virtualSrcPtr) && ! gpu->isValidPtr(virtualDstPtr) ) {
+    if ( ! device.isValidPtr(virtualSrcPtr) && ! device.isValidPtr(virtualDstPtr) ) {
 			return clMemcpy(virtualDstPtr, virtualSrcPtr, size, caffe::OpenCL::COPY_CPU_TO_CPU);
 		}
-		if ( ! gpu->isValidPtr(virtualSrcPtr) && gpu->isValidPtr(virtualDstPtr) ) {
+    if ( ! device.isValidPtr(virtualSrcPtr) && device.isValidPtr(virtualDstPtr) ) {
 			return clMemcpy(virtualDstPtr, virtualSrcPtr, size, caffe::OpenCL::COPY_CPU_TO_GPU);
 		}
-		if ( gpu->isValidPtr(virtualSrcPtr) && ! gpu->isValidPtr(virtualDstPtr) ) {
+    if ( device.isValidPtr(virtualSrcPtr) && ! device.isValidPtr(virtualDstPtr) ) {
 			return clMemcpy(virtualDstPtr, virtualSrcPtr, size, caffe::OpenCL::COPY_GPU_TO_CPU);
 		}
-		if ( gpu->isValidPtr(virtualSrcPtr) && gpu->isValidPtr(virtualDstPtr) ) {
+    if ( device.isValidPtr(virtualSrcPtr) && device.isValidPtr(virtualDstPtr) ) {
 			return clMemcpy(virtualDstPtr, virtualSrcPtr, size, caffe::OpenCL::COPY_GPU_TO_GPU);
 		}
 		break;
@@ -771,7 +727,12 @@ bool clReleaseBufferMap(std::map<const void*, std::pair<void*, size_t> >& buffer
 	return true;
 }
 
-bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector<cl_mem>& subBuffers, std::map<const void*, std::pair<void*, size_t> >& bufferMap) {
+bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx,
+                         std::vector<cl_mem>& subBuffers,
+                         std::map<const void*,
+                         std::pair<void*, size_t> >& bufferMap,
+                         cl_kernel* kernel) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	cl_int err;
 
@@ -780,7 +741,9 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector
 		DLOG(INFO)<<"kernel variable pointer is NULL for kernel argument "<<idx;
 		err = clSetKernelArg(*kernel, idx, sizeof(cl_mem), NULL);
 		if ( err != CL_SUCCESS ) {
-			LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<gpu->name()<<" : "<<what(err);
+      LOG(ERROR) << "failed to set kernel argument "
+                 << idx<<" for kernel on GPU "
+                 << device.name() << " : "<< what(err);
 			return false;
 		}
 		idx++;
@@ -800,7 +763,7 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector
 	if ( offset == 0 ) {
 		err = clSetKernelArg(*kernel, idx, sizeof(ptr_logical), &ptr_logical);
 		if ( err != CL_SUCCESS ) {
-			LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<gpu->name()<<" : "<<what(err);
+      LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<device.name()<<" : "<<what(err);
 			return false;
 		}
 		idx++;
@@ -808,9 +771,9 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector
 	}
 
 	/* check alignment */
-	cl_uint bytes = gpu->getDeviceMemBaseAddrAlign();
+  cl_uint bytes = device.getDeviceMemBaseAddrAlign();
 	if ( offset % bytes != 0 ) {
-		LOG(WARNING)<<"sub-buffer memory offset ("<<offset<<" Byte) is not aligned with device memory offset ("<<bytes<<" Byte)";
+    LOG(WARNING)<<"sub-buffer memory offset ("<<offset<<" Byte) is not aligned with device memory offset ("<<bytes<<" Byte)";
 
 		cl_mem_flags flags;
 		err = clGetMemObjectInfo((cl_mem) ptr_logical, CL_MEM_FLAGS, sizeof(flags), &flags, NULL);
@@ -836,7 +799,7 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector
 
 		err = clSetKernelArg(*kernel, idx, sizeof(ptr_logical), &ptr_logical);
 		if ( err != CL_SUCCESS ) {
-			LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<gpu->name()<<" : "<<what(err);
+      LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<device.name()<<" : "<<what(err);
 			return false;
 		}
 		idx++;
@@ -848,7 +811,7 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector
 	cl_buffer_region region = {offset, size - offset};
 	cl_mem sb = clCreateSubBuffer((cl_mem) ptr_logical, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, &err);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "failed to create sub-buffer for kernel argument "<<idx<<" for kernel on GPU "<<gpu->name()<<" : "<<what(err);
+    LOG(ERROR) << "failed to create sub-buffer for kernel argument "<<idx<<" for kernel on GPU "<<device.name()<<" : "<<what(err);
 		return false;
 	}
 	DLOG(INFO)<<"create sub-buffer "<<subBuffers.size()<<std::endl;
@@ -856,7 +819,7 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector
 
 	err = clSetKernelArg(*kernel, idx, sizeof(sb), &sb);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<gpu->name()<<" : "<<what(err);
+    LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<device.name()<<" : "<<what(err);
 		return false;
 	}
 	idx++;
@@ -865,33 +828,35 @@ bool clSetKernelArrayArg(const void* ptr_virtual, unsigned int& idx, std::vector
 }
 
 template<typename T>
-bool clSetKernelTypeArg(T variable, unsigned int& idx) {
+bool clSetKernelTypeArg(T variable, unsigned int& idx, cl_kernel* kernel) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	cl_int err;
 
-	err = clSetKernelArg(*kernel, idx, sizeof(T), &variable);
+  err = clSetKernelArg(*kernel, idx, sizeof(T), &variable);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<gpu->name()<<" : "<<what(err);\
+    LOG(ERROR) << "failed to set kernel argument "<<idx<<" for kernel on GPU "<<device.name()<<" : "<<what(err);\
 		return false;
 	}
 	idx++;
 	return true;
 }
-template bool clSetKernelTypeArg<int>(int variable, unsigned int& idx);
-template bool clSetKernelTypeArg<const int>(const int variable, unsigned int& idx);
-template bool clSetKernelTypeArg<unsigned int>(unsigned int variable, unsigned int& idx);
-template bool clSetKernelTypeArg<const unsigned int>(const unsigned int variable, unsigned int& idx);
-template bool clSetKernelTypeArg<float>(float variable, unsigned int& idx);
-template bool clSetKernelTypeArg<const float>(const float variable, unsigned int& idx);
-template bool clSetKernelTypeArg<double>(double variable, unsigned int& idx);
-template bool clSetKernelTypeArg<const double>(const double variable, unsigned int& idx);
+template bool clSetKernelTypeArg<int>(int variable, unsigned int& idx, cl_kernel* kernel);
+template bool clSetKernelTypeArg<const int>(const int variable, unsigned int& idx, cl_kernel* kernel);
+template bool clSetKernelTypeArg<unsigned int>(unsigned int variable, unsigned int& idx, cl_kernel* kernel);
+template bool clSetKernelTypeArg<const unsigned int>(const unsigned int variable, unsigned int& idx, cl_kernel* kernel);
+template bool clSetKernelTypeArg<float>(float variable, unsigned int& idx, cl_kernel* kernel);
+template bool clSetKernelTypeArg<const float>(const float variable, unsigned int& idx, cl_kernel* kernel);
+template bool clSetKernelTypeArg<double>(double variable, unsigned int& idx, cl_kernel* kernel);
+template bool clSetKernelTypeArg<const double>(const double variable, unsigned int& idx, cl_kernel* kernel);
 
 template<typename T>
 bool clBLASasum(const int N, const void* array_virtual, T* y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
@@ -934,35 +899,36 @@ template bool clBLASasum<double>(const int N, const void* array_GPU_ptr, double*
 
 template<typename T>
 bool clsign(const int n, const void* array_GPU_x, void* array_GPU_y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("clsign");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -973,35 +939,36 @@ template bool clsign<double>(const int n, const void* array_GPU_x, void* array_G
 
 template<typename T>
 bool clsgnbit(const int n, const void* array_GPU_x, void* array_GPU_y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("clsgnbit");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1012,35 +979,36 @@ template bool clsgnbit<double>(const int n, const void* array_GPU_x, void* array
 
 template<typename T>
 bool clabs(const int n, const void* array_GPU_x, void* array_GPU_y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("clabs");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1051,36 +1019,37 @@ template bool clabs<double>(const int n, const void* array_GPU_x, void* array_GP
 
 template<typename T>
 bool cldiv(const int n, const void* array_GPU_x, const void* array_GPU_y, void* array_GPU_z) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("cldiv");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1091,36 +1060,37 @@ template bool cldiv<double>(const int n, const void* array_GPU_x, const void* ar
 
 template<typename T>
 bool clmul(const int n, const void* array_GPU_x, const void* array_GPU_y, void* array_GPU_z) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("clmul");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1131,10 +1101,11 @@ template bool clmul<double>(const int n, const void* array_GPU_x, const void* ar
 
 template<typename T>
 bool clBLASscal(const int n, const float alpha, const void* array_x_virtual, void* array_y_virtual) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
@@ -1151,22 +1122,22 @@ bool clBLASscal(const int n, const float alpha, const void* array_x_virtual, voi
 
 	if( typeid(T) == typeid(float) ) {
 		if ( ! CL_CHECK( clblasScopy(n, (cl_mem) array_x_logical, 0, 1, (cl_mem) array_y_logical, 0, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasScopy() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasScopy() failed on GPU "<<device.name();
 			return false;
 		}
 		if ( ! CL_CHECK( clblasSscal(n, alpha, (cl_mem) array_y_logical, 0, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasSscal() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasSscal() failed on GPU "<<device.name();
 			return false;
 		}
 	}
 
 	if( typeid(T) == typeid(double) ) {
 		if ( ! CL_CHECK( clblasDcopy(n, (cl_mem) array_x_logical, 0, 1, (cl_mem) array_y_logical, 0, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDcopy() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasDcopy() failed on GPU "<<device.name();
 			return false;
 		}
 		if ( ! CL_CHECK( clblasDscal(n, alpha, (cl_mem) array_y_logical, 0, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDscal() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasDscal() failed on GPU "<<device.name();
 			return false;
 		}
 	}
@@ -1178,16 +1149,17 @@ template bool clBLASscal<double>(const int n, const float alpha, const void* arr
 
 template<typename T>
 bool clBLASdot(const int n, const T* x, const int incx, const T* y, const int incy, T* out) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
 	/*
 	OpenCLMemory clMem;
-	if ( ! gpu->get(x, clMem) ) {
+  if ( ! device.get(x, clMem) ) {
 		return false;
 	}
 	DLOG(INFO)<<"x : "<<clMem.getTag().c_str();
@@ -1201,7 +1173,7 @@ bool clBLASdot(const int n, const T* x, const int incx, const T* y, const int in
 	}
 
 	/*
-	if ( ! gpu->get(y, clMem) ) {
+  if ( ! device.get(y, clMem) ) {
 		return false;
 	}
 	DLOG(INFO)<<"y : "<<clMem.getTag().c_str();
@@ -1227,22 +1199,22 @@ bool clBLASdot(const int n, const T* x, const int incx, const T* y, const int in
 
 	if( typeid(T) == typeid(float) ) {
 		if ( ! CL_CHECK( clblasSdot(n, (cl_mem) dot_logical, 0, (cl_mem) x_logical, 0, 1, (cl_mem) y_logical, 0, 1, (cl_mem) buf_logical, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasSdot() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasSdot() failed on GPU "<<device.name();
 			clReleaseSubBuffers(sb);
 			clReleaseBufferMap(bm);
 			return false;
 		}
-		DLOG(INFO) << "clblasSdot() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasSdot() succeeded on GPU "<<device.name();
 	}
 
 	if( typeid(T) == typeid(double) ) {
 		if ( ! CL_CHECK( clblasDdot(n, (cl_mem) dot_logical, 0, (cl_mem) x_logical, 0, 1, (cl_mem) y_logical, 0, 1, (cl_mem) buf_logical, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDdot() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasDdot() failed on GPU "<<device.name();
 			clReleaseSubBuffers(sb);
 			clReleaseBufferMap(bm);
 			return false;
 		}
-		DLOG(INFO) << "clblasDdot() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasDdot() succeeded on GPU "<<device.name();
 	}
 
 	clReleaseSubBuffers(sb);
@@ -1255,10 +1227,11 @@ template bool clBLASdot<double>(const int n, const double* x, const int incx, co
 
 template<typename T>
 bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const T* x, const T beta, T* y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
@@ -1336,22 +1309,22 @@ bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T 
 
 	if( typeid(T) == typeid(float) ) {
 		if ( ! CL_CHECK( clblasSgemv(clblasRowMajor, TransA, m, n, alpha, (cl_mem) A_device, A_offset, n, (cl_mem) x_device, x_offset, 1, beta, (cl_mem) y_device, y_offset, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasSgemv() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasSgemv() failed on GPU "<<device.name();
 			//clReleaseSubBuffers(sb);
 			//clReleaseBufferMap(bm);
 			return false;
 		}
-		DLOG(INFO) << "clblasSgemv() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasSgemv() succeeded on GPU "<<device.name();
 	}
 
 	if( typeid(T) == typeid(double) ) {
 		if ( ! CL_CHECK( clblasDgemv(clblasRowMajor, TransA, m, n, alpha, (cl_mem) A_device, A_offset, n, (cl_mem) x_device, x_offset, 1, beta, (cl_mem) y_device, y_offset, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDgemv() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasDgemv() failed on GPU "<<device.name();
 			//clReleaseSubBuffers(sb);
 			//clReleaseBufferMap(bm);
 			return false;
 		}
-		DLOG(INFO) << "clblasDgemv() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasDgemv() succeeded on GPU "<<device.name();
 	}
 	//clReleaseSubBuffers(sb);
 	//clReleaseBufferMap(bm);
@@ -1362,10 +1335,11 @@ template bool clBLASgemv<double>(const clblasTranspose TransA, const int m, cons
 
 template<typename T>
 bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T alpha, const T* A, const int step_A, const T* x, const int step_x, const T beta, T* y, const int step_y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
@@ -1386,18 +1360,18 @@ bool clBLASgemv(const clblasTranspose TransA, const int m, const int n, const T 
 
 	if( typeid(T) == typeid(float) ) {
 		if ( ! CL_CHECK( clblasSgemv(clblasRowMajor, TransA, m, n, alpha, (cl_mem) A_logical, step_A, n, (cl_mem) x_logical, step_x, 1, beta, (cl_mem) y_logical, step_y, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasSgemv() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasSgemv() failed on GPU "<<device.name();
 			return false;
 		}
-		DLOG(INFO) << "clblasSgemv() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasSgemv() succeeded on GPU "<<device.name();
 	}
 
 	if( typeid(T) == typeid(double) ) {
 		if ( ! CL_CHECK( clblasDgemv(clblasRowMajor, TransA, m, n, alpha, (cl_mem) A_logical, step_A, n, (cl_mem) x_logical, step_x, 1, beta, (cl_mem) y_logical, step_y, 1, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDgemv() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasDgemv() failed on GPU "<<device.name();
 			return false;
 		}
-		DLOG(INFO) << "clblasDgemv() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasDgemv() succeeded on GPU "<<device.name();
 	}
 
 	return true;
@@ -1407,102 +1381,110 @@ template bool clBLASgemv<double>(const clblasTranspose TransA, const int m, cons
 
 template<typename T>
 bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, const T* B, const T beta, T* C) {
+  OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf.CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
+	LOG(ERROR)<<"queue = "<<queue;
+
 	std::string kernel_name = clGetKernelName<T>("mmul");
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, m)
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_TYPE_KERNEL_ARG(int, k)
-	CL_SET_TYPE_KERNEL_ARG(T, alpha)
-	CL_SET_ARRAY_KERNEL_ARG(&A)
-	CL_SET_ARRAY_KERNEL_ARG(&B)
-  CL_SET_TYPE_KERNEL_ARG(T, beta)
-	CL_SET_ARRAY_KERNEL_ARG(&C)
+  CL_SET_TYPE_KERNEL_ARG(int, m, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_TYPE_KERNEL_ARG(int, k, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, alpha, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&A, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&B, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, beta, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&C, kernel)
 	clSetKernelArg(*kernel, 8, sizeof(T)*k, NULL);
   clSetKernelArg(*kernel, 9, sizeof(T)*m, NULL);
 
-	size_t global[2] = {(size_t) n,(size_t) k};//CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
-	size_t local[2]  = {(size_t) 1,(size_t) k};//CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
+  size_t global[2] = {(size_t) n,(size_t) k};
+  size_t local[2]  = {(size_t) 1,(size_t) k};
 
   if ( n >= 1024 ) {
     global[0] = 1024;
   }
 
-	if ( k >= OPENCL_LOCAL_SIZE ) {
-	  global[1] = OPENCL_LOCAL_SIZE;
+  if ( k >= OPENCL_LOCAL_SIZE ) {
+    global[1] = OPENCL_LOCAL_SIZE;
     local[1]  = OPENCL_LOCAL_SIZE;
-	}
+  }
 
-	/*
-	LOG(ERROR)<<"M = "<<m;
+  /*
+  LOG(ERROR)<<"M = "<<m;
   LOG(ERROR)<<"N = "<<n;
   LOG(ERROR)<<"K = "<<k;
-	LOG(ERROR)<<"global[2] = ("<<global[0]<<"|"<<global[1]<<")";
+  LOG(ERROR)<<"global[2] = ("<<global[0]<<"|"<<global[1]<<")";
   LOG(ERROR)<<"local[2]  = ("<<local[0]<<"|"<<local[1]<<")";
   */
 
   cl_event kernelFinish;
-	err = clEnqueueNDRangeKernel(*queue, *kernel, 2, NULL, global, local, 0, NULL, &kernelFinish);
-	clWaitForEvents(1, &kernelFinish);
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 2, NULL, global, local, 0, NULL, &kernelFinish);
+  clWaitForEvents(1, &kernelFinish);
 
-	if ( err != CL_SUCCESS ) {
-		std::ostringstream oss;
-		oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<what(err);
-		throw OpenCLSupportException(oss.str());
-		return false;
-	}
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  if ( err != CL_SUCCESS ) {
+    std::ostringstream oss;
+    oss << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<what(err);
+    throw OpenCLSupportException(oss.str());
+    return false;
+  }
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
 	return true;
 }
 template bool clgemm<float>(const int m, const int n, const int k, const float alpha, const float* A, const float* B, const float beta, float* C);
-template bool clgemm<double>(const int m, const int n, const int k, const double alpha, const double* A, const double* B, const double beta, double* C);
+template bool clgemm<double>(const int m, const int n, const int k, const double alpga, const double* A, const double* B, const double beta, double* C);
 
 template<typename T>
 bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const T* x, const T beta, T* y) {
 
-	queue = gpu->getQueue();
-	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
-		return false;
-	}
+  OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
+  OpenCLDevice& device = pf.CurrentDevice();
 
-	void*   A_base    = clGetMemoryBase(A);
-	if ( ! A_base ) {
-	  LOG(ERROR)<<"failed to get OpenCL device memory address for virtual address @ "<<A;
-	  return false;
-	}
-	const void* A_device = NULL;
-	if ( ! clMakeLogical(A_base, &A_device) ) {
-	  return false;
-	}
-	size_t  A_offset  = clGetMemoryOffset(A);
-	if ( A_offset < 0 ) {
-	  LOG(ERROR)<<"failed to get OpenCL device memory offset for virtual address @ "<<A;
-	  return false;
-	}
-	A_offset /= sizeof(T);
-	//DLOG(INFO)<<A<<" -> "<<A_base<<" with offset = "<<A_offset;
+  cl_command_queue* queue = device.getQueue();
+  if ( ! queue ) {
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
+    return false;
+  }
+
+  void*   A_base    = clGetMemoryBase(A);
+  if ( ! A_base ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory address for virtual address @ "<<A;
+    return false;
+  }
+  const void* A_device = NULL;
+  if ( ! clMakeLogical(A_base, &A_device) ) {
+    return false;
+  }
+  size_t  A_offset  = clGetMemoryOffset(A);
+  if ( A_offset < 0 ) {
+    LOG(ERROR)<<"failed to get OpenCL device memory offset for virtual address @ "<<A;
+    return false;
+  }
+  A_offset /= sizeof(T);
+  DLOG(INFO)<<A<<" -> "<<A_base<<" with offset = "<<A_offset<<" on "<<A_device;
 
   void*   x_base    = clGetMemoryBase(x);
   if ( ! x_base ) {
     LOG(ERROR)<<"failed to get OpenCL device memory address for virtual address @ "<<x;
     return false;
   }
+
   const void* x_device = NULL;
   if ( ! clMakeLogical(x_base, &x_device) ) {
     return false;
@@ -1513,7 +1495,7 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
     return false;
   }
   x_offset /= sizeof(T);
-  //DLOG(INFO)<<x<<" -> "<<x_base<<" with offset = "<<x_offset;
+  DLOG(INFO)<<x<<" -> "<<x_base<<" with offset = "<<x_offset<<" on "<<x_device;
 
   void*   y_base    = clGetMemoryBase(y);
   if ( ! y_base ) {
@@ -1530,42 +1512,44 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
     return false;
   }
   y_offset /= sizeof(T);
-  //DLOG(INFO)<<y<<" -> "<<y_base<<" with offset = "<<y_offset;
+  DLOG(INFO)<<y<<" -> "<<y_base<<" with offset = "<<y_offset<<" on "<<y_device;
 
-	// Note that cublas follows fortran order.
-	int lda = (TransA == clblasNoTrans) ? k : m;
-	int ldb = (TransB == clblasNoTrans) ? n : k;
-	int ldc = n;
+  // Note that cublas follows fortran order.
+  int lda = (TransA == clblasNoTrans) ? k : m;
+  int ldb = (TransB == clblasNoTrans) ? n : k;
+  int ldc = n;
 
-	if( typeid(T) == typeid(float) ) {
-		if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasSgemm() failed on GPU "<<gpu->name();
-			return false;
-		}
-		//clFinish(*queue);
-		DLOG(INFO) << "clblasSgemm() succeeded on GPU "<<gpu->name();
-	}
+  if( typeid(T) == typeid(float) ) {
+    clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL);
+     if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
+       LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
+       return false;
+     }
+     //clFinish(*queue);
+     DLOG(INFO) << "clblasSgemm() succeeded on GPU "<<device.name();
+  }
 
-	if( typeid(T) == typeid(double) ) {
-		if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDgemm() failed on GPU "<<gpu->name();
-			return false;
-		}
-		//clFinish(*queue);
-		DLOG(INFO) << "clblasDgemm() succeeded on GPU "<<gpu->name();
-	}
 
-	return true;
+  if( typeid(T) == typeid(double) ) {
+    if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
+      LOG(ERROR) << "clblasDgemm() failed on GPU "<<device.name();
+      return false;
+    }
+    //clFinish(*queue);
+    DLOG(INFO) << "clblasDgemm() succeeded on GPU "<<device.name();
+  }
+  return true;
 }
 template bool clBLASgemm<float>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const float alpha, const float* A, const float* x, const float beta, float* y);
 template bool clBLASgemm<double>(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const double alpha, const double* A, const double* x, const double beta, double* y);
 
 template<typename T>
 bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, const int m, const int n, const int k, const T alpha, const T* A, const int step_A, const T* x, const int step_x, const T beta, T* y, const int step_y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
@@ -1596,20 +1580,20 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
 	  //  {
 	if( typeid(T) == typeid(float) ) {
 		if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, step_A, lda, (cl_mem) x_logical, step_x, ldb, beta, (cl_mem) y_logical, step_y, ldc, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasSgemm() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
 			return false;
 		}
 		////clFinish(*queue);
-		DLOG(INFO) << "clblasSgemm() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasSgemm() succeeded on GPU "<<device.name();
 	}
 
 	if( typeid(T) == typeid(double) ) {
 		if ( ! CL_CHECK( clblasDgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_logical, step_A, lda, (cl_mem) x_logical, step_x, ldb, beta, (cl_mem) y_logical, step_y, ldc, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDgemm() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasDgemm() failed on GPU "<<device.name();
 			return false;
 		}
 		////clFinish(*queue);
-		DLOG(INFO) << "clblasDgemm() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasDgemm() succeeded on GPU "<<device.name();
 	}
 	    //});
 
@@ -1624,10 +1608,11 @@ template bool clBLASgemm<double>(const clblasTranspose TransA, const clblasTrans
 
 template<typename T>
 bool clBLASaxpy(const int N, const T alpha, const T* X, const int incr_x, T* Y, const int incr_y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
@@ -1647,22 +1632,22 @@ bool clBLASaxpy(const int N, const T alpha, const T* X, const int incr_x, T* Y, 
 	if( typeid(T) == typeid(float) ) {
 
 		if ( ! CL_CHECK( clblasSaxpy(N, alpha, (cl_mem) X_logical, 0, incr_x, (cl_mem) Y_logical, 0, incr_y, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasSaxpy() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasSaxpy() failed on GPU "<<device.name();
 			clReleaseSubBuffers(sb);
 			clReleaseBufferMap(bm);
 			return false;
 		}
-		DLOG(INFO) << "clblasSaxpy() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasSaxpy() succeeded on GPU "<<device.name();
 	}
 
 	if( typeid(T) == typeid(double) ) {
 		if ( ! CL_CHECK( clblasDaxpy(N, alpha, (cl_mem) X_logical, 0, incr_x, (cl_mem) Y_logical, 0, incr_y, 1, queue, 0, NULL, NULL) ) ) {
-			LOG(ERROR) << "clblasDaxpy() failed on GPU "<<gpu->name();
+      LOG(ERROR) << "clblasDaxpy() failed on GPU "<<device.name();
 			clReleaseSubBuffers(sb);
 			clReleaseBufferMap(bm);
 			return false;
 		}
-		DLOG(INFO) << "clblasDaxpy() succeeded on GPU "<<gpu->name();
+    DLOG(INFO) << "clblasDaxpy() succeeded on GPU "<<device.name();
 	}
 
 	clReleaseSubBuffers(sb);
@@ -1678,6 +1663,7 @@ bool clIsVirtualMemory(const void* p) {
 }
 
 bool clMakeLogical(const void* ptr_virtual, const void** ptr_logical) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	if ( ! clIsVirtualMemory(ptr_virtual) ) {
 		LOG(WARNING) << "PTR@"<<ptr_virtual<<" is not in virtual memory.";
@@ -1686,7 +1672,7 @@ bool clMakeLogical(const void* ptr_virtual, const void** ptr_logical) {
 	}
 
 	OpenCLMemory clMem;
-	if ( ! gpu->get(ptr_virtual, clMem) ) {
+  if ( ! device.get(ptr_virtual, clMem) ) {
 		LOG(ERROR) << "failed to get OpenCLMemory object associated with VM@" << ptr_virtual;
 		return false;
 	}
@@ -1701,6 +1687,7 @@ bool clMakeLogical(const void* ptr_virtual, const void** ptr_logical) {
 }
 
 bool clMakeLogical2(const void* ptr_virtual, const void** ptr_logical, std::vector<cl_mem>& subBuffers, std::map<const void*, std::pair<void*, size_t> >& bufferMap) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	if ( ! clIsVirtualMemory(ptr_virtual) ) {
 		LOG(WARNING) << "PTR@"<<ptr_virtual<<" is not in virtual memory.";
@@ -1709,7 +1696,7 @@ bool clMakeLogical2(const void* ptr_virtual, const void** ptr_logical, std::vect
 	}
 
 	OpenCLMemory clMem;
-	if ( ! gpu->get(ptr_virtual, clMem) ) {
+  if ( ! device.get(ptr_virtual, clMem) ) {
 		LOG(ERROR) << "failed to get OpenCLMemory object associated with VM@" << ptr_virtual;
 		return false;
 	}
@@ -1727,7 +1714,7 @@ bool clMakeLogical2(const void* ptr_virtual, const void** ptr_logical, std::vect
 	  LOG(INFO)<<"offset = "<<offset;
 
 		/* check alignment */
-		cl_uint bytes = gpu->getDeviceMemBaseAddrAlign();
+    cl_uint bytes = device.getDeviceMemBaseAddrAlign();
 		if ( offset % bytes != 0 ) {
 			LOG(WARNING)<<"sub-buffer memory offset ("<<offset<<" Byte) is not aligned with device memory offset ("<<bytes<<" Byte)";
 
@@ -1759,7 +1746,7 @@ bool clMakeLogical2(const void* ptr_virtual, const void** ptr_logical, std::vect
 		cl_buffer_region region = {offset, size - offset};
 		*ptr_logical = (const void*) clCreateSubBuffer((cl_mem) *ptr_logical, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION, &region, &err);
 		if ( err != CL_SUCCESS ) {
-			LOG(ERROR) << "failed to create sub-buffer on GPU "<<gpu->name()<<" : "<<what(err);
+      LOG(ERROR) << "failed to create sub-buffer on GPU "<<device.name()<<" : "<<what(err);
 			return false;
 		}
 		DLOG(INFO)<<"create sub-buffer ";
@@ -1771,6 +1758,7 @@ bool clMakeLogical2(const void* ptr_virtual, const void** ptr_logical, std::vect
 
 
 size_t clGetMemoryOffset(const void* ptr_virtual) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	if ( ! clIsVirtualMemory(ptr_virtual) ) {
 		LOG(WARNING) << "PTR@"<<ptr_virtual<<" is not in virtual memory.";
@@ -1778,7 +1766,7 @@ size_t clGetMemoryOffset(const void* ptr_virtual) {
 	}
 
 	OpenCLMemory clMem;
-	if ( ! gpu->get(ptr_virtual, clMem) ) {
+  if ( ! device.get(ptr_virtual, clMem) ) {
 		LOG(ERROR) << "failed to get OpenCLMemory object associated with VM@" << ptr_virtual;
 		return -1;
 	}
@@ -1788,6 +1776,7 @@ size_t clGetMemoryOffset(const void* ptr_virtual) {
 }
 
 size_t clGetMemorySize(const void* ptr_virtual) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	if ( ! clIsVirtualMemory(ptr_virtual) ) {
 		LOG(WARNING) << "PTR@"<<ptr_virtual<<" is not in virtual memory.";
@@ -1795,7 +1784,7 @@ size_t clGetMemorySize(const void* ptr_virtual) {
 	}
 
 	OpenCLMemory clMem;
-	if ( ! gpu->get(ptr_virtual, clMem) ) {
+  if ( ! device.get(ptr_virtual, clMem) ) {
 		LOG(ERROR) << "failed to get OpenCLMemory object associated with VM@" << ptr_virtual;
 		return -1;
 	}
@@ -1803,6 +1792,7 @@ size_t clGetMemorySize(const void* ptr_virtual) {
 }
 
 void* clGetMemoryBase(const void* ptr_virtual) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
   if ( ! clIsVirtualMemory(ptr_virtual) ) {
     LOG(WARNING) << "PTR@"<<ptr_virtual<<" is not in virtual memory.";
@@ -1810,7 +1800,7 @@ void* clGetMemoryBase(const void* ptr_virtual) {
   }
 
   OpenCLMemory clMem;
-  if ( ! gpu->get(ptr_virtual, clMem) ) {
+  if ( ! device.get(ptr_virtual, clMem) ) {
     LOG(ERROR) << "failed to get OpenCLMemory object associated with VM@" << ptr_virtual;
     return NULL;
   }
@@ -1819,36 +1809,37 @@ void* clGetMemoryBase(const void* ptr_virtual) {
 
 template<typename T>
 bool clsub(const int n, const T* array_GPU_x, const T* array_GPU_y, T* array_GPU_z) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("clsub");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1859,36 +1850,37 @@ template bool clsub<double>(const int n, const double* array_GPU_x, const double
 
 template<typename T>
 bool cladd(const int n, const T* array_GPU_x, const T* array_GPU_y, T* array_GPU_z) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("cladd");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1899,35 +1891,36 @@ template bool cladd<double>(const int n, const double* array_GPU_x, const double
 
 template<typename T>
 bool cladd_scalar(const int N, const T alpha, T* Y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("cladd_scalar");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, N)
-	CL_SET_TYPE_KERNEL_ARG(T, alpha)
-	CL_SET_ARRAY_KERNEL_ARG(&Y)
+  CL_SET_TYPE_KERNEL_ARG(int, N, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, alpha, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&Y, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1938,36 +1931,37 @@ template bool cladd_scalar<double>(const int N, const double alpha, double* Y);
 
 template<typename T>
 bool clpowx(const int n, const T* array_GPU_x, const T alpha, T* array_GPU_z) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("clpowx");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_TYPE_KERNEL_ARG(T, alpha)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_TYPE_KERNEL_ARG(T, alpha, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_z, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
@@ -1978,35 +1972,36 @@ template bool clpowx<double>(const int n, const double* array_GPU_x, const doubl
 
 template<typename T>
 bool clexp(const int n, const T* array_GPU_x, T* array_GPU_y) {
+  OpenCLDevice& device = OpenCLManager::CurrentPlatform().CurrentDevice();
 
 	std::string kernel_name = clGetKernelName<T>("clexp");
 
-	queue = gpu->getQueue();
+  cl_command_queue* queue = device.getQueue();
 	if ( ! queue ) {
-		LOG(ERROR) << gpu->name() << "> failed to get OpenCL command queue";
+    LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
 	}
 
-	kernel = gpu->getKernel(kernel_name);
+  cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
 	}
 
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, n)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x)
-	CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y)
+  CL_SET_TYPE_KERNEL_ARG(int, n, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_x, kernel)
+  CL_SET_ARRAY_KERNEL_ARG(&array_GPU_y, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(n, OPENCL_LOCAL_SIZE);
 
 	err = clEnqueueNDRangeKernel(*queue, *kernel, 1, NULL, &global, &local, 0, NULL, NULL);
 	if ( err != CL_SUCCESS ) {
-		LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<gpu->name()<<" : "<<caffe::OpenCL::what(err);
+    LOG(ERROR) << "Failed to enqueue kernel '"<<kernel_name.c_str()<<"' on GPU "<<device.name()<<" : "<<caffe::OpenCL::what(err);
 		return false;
 	}
 	//clFinish(*queue);
-	DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<gpu->name();
+  DLOG(INFO) << "kernel '"<<kernel_name.c_str()<<"' executed on GPU "<<device.name();
 
 	CL_SET_KERNEL_ARG_END
 
