@@ -488,7 +488,7 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->params().size(); ++param_id) {
     Regularize(param_id);
-    ComputeUpdateValue(param_id, rate);
+    ComputeUpdateValue(param_id, rate / this->param_.iter_size());
   }
   this->net_->Update();
 }
@@ -500,7 +500,8 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
       this->net_->params_weight_decay();
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();
-  Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+  Dtype local_decay = weight_decay * net_params_weight_decay[param_id]
+                                   * this->param_.iter_size();
   switch (Caffe::mode()) {
   case Caffe::CPU: {
     if (local_decay) {
