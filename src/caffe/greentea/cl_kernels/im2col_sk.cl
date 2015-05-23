@@ -42,7 +42,8 @@ __kernel void TEMPLATE(im2col_sk,Dtype)(const int n,
 
 }
 
-__kernel void TEMPLATE(col2im_sk,Dtype)(const int n, __global const Dtype* data_col,
+__kernel void TEMPLATE(col2im_sk,Dtype)(const int n,
+                                        __global const Dtype* data_col,
                                         const int height, const int width,
                                         const int channels, const int patch_h,
                                         const int patch_w,
@@ -53,7 +54,8 @@ __kernel void TEMPLATE(col2im_sk,Dtype)(const int n, __global const Dtype* data_
                                         const int kstride_w,
                                         const int height_col,
                                         const int width_col,
-                                        __global Dtype* data_im, const int data_offset) {
+                                        __global Dtype* data_im,
+                                        const int data_offset) {
 
   for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
     Dtype val = 0;

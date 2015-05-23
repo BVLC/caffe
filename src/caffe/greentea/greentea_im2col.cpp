@@ -29,6 +29,23 @@ void greentea_im2col_sk_gpu(viennacl::ocl::program &prog,
   viennacl::ocl::kernel &kernel = prog.get_kernel(
       CL_KERNEL_SELECT("im2col_sk"));
 
+  /*std::cout << "num_kernels: " << num_kernels << std::endl;
+   std::cout << "data_offset: " << data_offset << std::endl;
+   std::cout << "height: " << height << std::endl;
+   std::cout << "width: " << width << std::endl;
+   std::cout << "kernel_h: " << kernel_h << std::endl;
+   std::cout << "kernel_w: " << kernel_w << std::endl;
+   std::cout << "ext_kernel_h: " << ext_kernel_h << std::endl;
+   std::cout << "ext_kernel_w: " << ext_kernel_w << std::endl;
+   std::cout << "pad_h: " << pad_h << std::endl;
+   std::cout << "pad_w: " << pad_w << std::endl;
+   std::cout << "stride_h: " << stride_h << std::endl;
+   std::cout << "stride_w: " << stride_w << std::endl;
+   std::cout << "kstride_h: " << kstride_h << std::endl;
+   std::cout << "kstride_w: " << kstride_w << std::endl;
+   std::cout << "height_col: " << height_col << std::endl;
+   std::cout << "width_col: " << width_col << std::endl;*/
+
   viennacl::ocl::enqueue(
       kernel(num_kernels, WrapHandle(data_im, ctx), data_offset, height, width,
              kernel_h, kernel_w, ext_kernel_h, ext_kernel_w, pad_h, pad_w,
