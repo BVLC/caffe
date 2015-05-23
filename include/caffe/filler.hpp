@@ -126,17 +126,18 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 };
 
 /**
- * @brief Fills a Blob with values @f$ x \sim U(-a, +a) @f$ where @f$ a @f$
- *        is set inversely proportional to the number of incoming nodes.
+ * @brief Fills a Blob with values @f$ x \sim U(-a, +a) @f$ where @f$ a @f$ is
+ *        set inversely proportional to number of incoming nodes, outgoing
+ *        nodes, or their average.
  *
  * A Filler based on the paper [Bengio and Glorot 2010]: Understanding
- * the difficulty of training deep feedforward neuralnetworks, but does not
- * use the fan_out value.
+ * the difficulty of training deep feedforward neuralnetworks.
  *
- * It fills the incoming matrix by randomly sampling uniform data from
- * [-scale, scale] where scale = sqrt(3 / fan_in) where fan_in is the number
- * of input nodes. You should make sure the input blob has shape (num, a, b, c)
- * where a * b * c = fan_in.
+ * It fills the incoming matrix by randomly sampling uniform data from [-scale,
+ * scale] where scale = sqrt(3 / n) where n is the fan_in, fan_out, or their
+ * average, depending on the variance_norm option. You should make sure the
+ * input blob has shape (num, a, b, c) where a * b * c = fan_in and num * b * c
+ * = fan_out. Note that this is currently not the case for inner product layers.
  *
  * TODO(dox): make notation in above comment consistent with rest & use LaTeX.
  */
@@ -148,7 +149,16 @@ class XavierFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
     int fan_in = blob->count() / blob->num();
-    Dtype scale = sqrt(Dtype(3) / fan_in);
+    int fan_out = blob->count() / blob->channels();
+    Dtype n = fan_in;  // default to fan_in
+    if (this->filler_param_.variance_norm() ==
+        FillerParameter_VarianceNorm_AVERAGE) {
+      n = (fan_in + fan_out) / Dtype(2);
+    } else if (this->filler_param_.variance_norm() ==
+        FillerParameter_VarianceNorm_FAN_OUT) {
+      n = fan_out;
+    }
+    Dtype scale = sqrt(Dtype(3) / n);
     caffe_rng_uniform<Dtype>(blob->count(), -scale, scale,
         blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)
@@ -156,6 +166,44 @@ class XavierFiller : public Filler<Dtype> {
   }
 };
 
+/**
+ * @brief Fills a Blob with values @f$ x \sim N(0, \sigma^2) @f$ where
+ *        @f$ \sigma^2 @f$ is set inversely proportional to number of incoming
+ *        nodes, outgoing nodes, or their average.
+ *
+ * A Filler based on the paper [He, Zhang, Ren and Sun 2015]: Specifically
+ * accounts for ReLU nonlinearities.
+ *
+ * It fills the incoming matrix by randomly sampling Gaussian data with std =
+ * sqrt(2 / n) where n is the fan_in, fan_out, or their average, depending on
+ * the variance_norm option. You should make sure the input blob has shape (num,
+ * a, b, c) where a * b * c = fan_in and num * b * c = fan_out. Note that this
+ * is currently not the case for inner product layers.
+ */
+template <typename Dtype>
+class MSRAFiller : public Filler<Dtype> {
+ public:
+  explicit MSRAFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+  virtual void Fill(Blob<Dtype>* blob) {
+    CHECK(blob->count());
+    int fan_in = blob->count() / blob->num();
+    int fan_out = blob->count() / blob->channels();
+    Dtype n = fan_in;  // default to fan_in
+    if (this->filler_param_.variance_norm() ==
+        FillerParameter_VarianceNorm_AVERAGE) {
+      n = (fan_in + fan_out) / Dtype(2);
+    } else if (this->filler_param_.variance_norm() ==
+        FillerParameter_VarianceNorm_FAN_OUT) {
+      n = fan_out;
+    }
+    Dtype std = sqrt(Dtype(2) / n);
+    caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
+        blob->mutable_cpu_data());
+    CHECK_EQ(this->filler_param_.sparse(), -1)
+         << "Sparsity not supported by this Filler.";
+  }
+};
 
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
@@ -176,6 +224,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new UniformFiller<Dtype>(param);
   } else if (type == "xavier") {
     return new XavierFiller<Dtype>(param);
+  } else if (type == "msra") {
+    return new MSRAFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
