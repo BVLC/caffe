@@ -79,11 +79,11 @@
             // Load image patch
 #pragma unroll 1
             for (int i = get_local_id(1); i < buff_h; i += get_local_size(1)) {
+              int yidx = (i + yoff);
 #pragma unroll 1
               for (int j = get_local_id(0); j < buff_w;
                   j += get_local_size(0)) {
                 int xidx = (j + xoff);
-                int yidx = (i + yoff);
                 if (xidx < width && yidx < height) {
                   il[j + i * buff_w] = in[xidx + yidx * width
                       + fin * width * height + batch_in_off];
@@ -111,14 +111,15 @@
                   }
                 }
 
-#pragma unroll 2
+#pragma unroll 1
                 for (int ki = 0; ki < kernel_h; ++ki) {
-#pragma unroll 2
+                  int ilpos_i = ((i + ki * kstride_h) % buff_h) * buff_w;
+                  int alpos_i = (i + ki * kstride_h) / buff_h * 2;
+#pragma unroll 10
                   for (int kj = 0; kj < kernel_w; ++kj) {
-                    al[(j + kj * kstride_w) / buff_w + (i + ki * kstride_h) / buff_h * 2] +=
-                        wl[kj + ki * kernel_w]
-                            * il[(j + kj * kstride_w) % buff_w
-                                + ((i + ki * kstride_h) % buff_h) * buff_w];
+                    al[(j + kj * kstride_w) / buff_w + alpos_i] += wl[kj
+                        + ki * kernel_w]
+                        * il[(j + kj * kstride_w) % buff_w + ilpos_i];
                   }
                 }
 
@@ -139,7 +140,7 @@
       }
     }
   }
-}
+}*/
 
 // Fits into 32 KB
 __kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
@@ -221,9 +222,9 @@ __kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
                 + batch_out_off];
 
             // Across the kernel itself
-#pragma unroll 1
+#pragma unroll 10
             for (int i = 0; i < kernel_h; ++i) {
-#pragma unroll 1
+#pragma unroll 10
               for (int j = 0; j < kernel_w; ++j) {
                 outval = fma(
                     wl[j + i * kernel_w],
@@ -240,4 +241,4 @@ __kernel void TEMPLATE(convolution_ip4v2,Dtype)(__global const Dtype *w,
       }barrier(CLK_LOCAL_MEM_FENCE);
     }
   }
-}*/
+}
