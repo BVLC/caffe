@@ -32,7 +32,6 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
 
   virtual SolverParameter_SolverType solver_type() = 0;
   virtual void InitSolver(const SolverParameter& param) = 0;
-
   virtual void InitSolverFromProtoString(const string& proto) {
     SolverParameter param;
     CHECK(google::protobuf::TextFormat::ParseFromString(proto, &param));
@@ -303,8 +302,74 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     // Check that the solver's solution matches ours.
     CheckLeastSquaresUpdate(updated_params);
   }
-};
 
+void TestHistorySnapshot(){
+    const int num_iters = 0;
+    ostringstream proto;
+    proto <<
+        "max_iter: " << num_iters << " "
+        "net_param { "
+        "  name: 'TestNetwork' "
+        "  layer { "
+        "    name: 'data' "
+        "    type: 'DummyData' "
+        "    dummy_data_param { "
+        "      num: " << num_ << " "
+        "      channels: " << channels_ << " "
+        "      height: " << height_ << " "
+        "      width: " << width_ << " "
+        "      channels: 1 "
+        "      height: 1 "
+        "      width: 1 "
+        "      data_filler { "
+        "        type: 'gaussian' "
+        "        std: 1.0 "
+        "      } "
+        "    } "
+        "    top: 'data' "
+        "    top: 'targets' "
+        "  } "
+        "  layer { "
+        "    name: 'innerprod' "
+        "    type: 'InnerProduct' "
+        "    inner_product_param { "
+        "      num_output: 1 "
+        "      weight_filler { "
+        "        type: 'gaussian' "
+        "        std: 1.0 "
+        "      } "
+        "      bias_filler { "
+        "        type: 'gaussian' "
+        "        std: 1.0 "
+        "      } "
+        "    } "
+        "    bottom: 'data' "
+        "    top: 'innerprod' "
+        "  } "
+        "  layer { "
+        "    name: 'loss' "
+        "    type: 'EuclideanLoss' "
+        "    bottom: 'innerprod' "
+        "    bottom: 'targets' "
+        "  } "
+        "} ";
+    this->InitSolverFromProtoString(proto.str());
+    this->solver_->Solve();
+    vector<shared_ptr<Blob<Dtype> > > historyBefore, historyAfter;
+    int sizeBeforeSnapshot, sizeAfterSnapshot;
+    SolverState state;
+    historyBefore = this->solver_->history();
+    sizeBeforeSnapshot = historyBefore.size();
+    this->solver_->SnapshotSolverState(&state);
+    this->solver_->RestoreSolverState(state);
+    historyAfter = this->solver_->history();
+    sizeAfterSnapshot = historyAfter.size();
+    ASSERT_EQ(sizeAfterSnapshot, sizeBeforeSnapshot);
+    for (unsigned i = 0; i < sizeBeforeSnapshot; i++){
+    EXPECT_EQ(historyBefore[i]->cpu_data(), historyAfter[i]->cpu_data());
+}
+}
+};
 
 template <typename TypeParam>
 class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
@@ -372,6 +437,9 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverything) {
   }
 }
 
+TYPED_TEST(SGDSolverTest, TestHistorySnapshot) {
+  this->TestHistorySnapshot();
+}
 
 template <typename TypeParam>
 class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
