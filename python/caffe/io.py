@@ -334,7 +334,7 @@ def resize_image(im, new_dims, interp_order=1):
     return resized_im.astype(np.float32)
 
 
-def oversample(images, crop_dims):
+def crop_image(images, crop_dims, oversample=True):
     """
     Crop images into the four corners, center, and their mirrored versions.
 
@@ -368,12 +368,19 @@ def oversample(images, crop_dims):
     crops_ix = np.tile(crops_ix, (2, 1))
 
     # Extract crops
-    crops = np.empty((10 * len(images), crop_dims[0], crop_dims[1],
-                      im_shape[-1]), dtype=np.float32)
-    ix = 0
-    for im in images:
-        for crop in crops_ix:
-            crops[ix] = im[crop[0]:crop[2], crop[1]:crop[3], :]
-            ix += 1
-        crops[ix-5:ix] = crops[ix-5:ix, :, ::-1, :]  # flip for mirrors
+
+    if oversample:
+        crops = np.empty((10 * len(images), crop_dims[0], crop_dims[1],
+                        im_shape[-1]), dtype=np.float32)
+        ix = 0
+        for im in images:
+            for crop in crops_ix:
+                crops[ix] = im[crop[0]:crop[2], crop[1]:crop[3], :]
+                ix += 1
+            crops[ix-5:ix] = crops[ix-5:ix, :, ::-1, :]  # flip for mirrors
+    else:
+        # if not oversample, then just take the center crop
+        crop = crops_ix[4]
+        crops = images[:, crop[0]:crop[2], crop[1]:crop[3], :]
+
     return crops
