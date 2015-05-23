@@ -1,4 +1,4 @@
-#!/bin/bash
-TOOLS=../../build/tools
+#!/usr/bin/env sh
 
-GLOG_logtostderr=1 $TOOLS/train_net.bin mnist_autoencoder_solver.prototxt
+./build/tools/caffe train \
+  --solver=examples/mnist/mnist_autoencoder_solver.prototxt

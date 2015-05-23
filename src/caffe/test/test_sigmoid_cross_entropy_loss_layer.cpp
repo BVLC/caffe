@@ -1,29 +1,29 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
 
 #include "gtest/gtest.h"
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/vision_layers.hpp"
-#include "caffe/test/test_gradient_check_util.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/test/test_gradient_check_util.hpp"
 
 namespace caffe {
 
-extern cudaDeviceProp CAFFE_TEST_CUDA_PROP;
+template <typename TypeParam>
+class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
 
-template <typename Dtype>
-class SigmoidCrossEntropyLossLayerTest : public ::testing::Test {
  protected:
   SigmoidCrossEntropyLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
-        blob_bottom_targets_(new Blob<Dtype>(10, 5, 1, 1)) {
+        blob_bottom_targets_(new Blob<Dtype>(10, 5, 1, 1)),
+        blob_top_loss_(new Blob<Dtype>()) {
     // Fill the data vector
     FillerParameter data_filler_param;
     data_filler_param.set_std(1);
@@ -37,10 +37,12 @@ class SigmoidCrossEntropyLossLayerTest : public ::testing::Test {
     UniformFiller<Dtype> targets_filler(targets_filler_param);
     targets_filler.Fill(blob_bottom_targets_);
     blob_bottom_vec_.push_back(blob_bottom_targets_);
+    blob_top_vec_.push_back(blob_top_loss_);
   }
   virtual ~SigmoidCrossEntropyLossLayerTest() {
     delete blob_bottom_data_;
     delete blob_bottom_targets_;
+    delete blob_top_loss_;
   }
 
   Dtype SigmoidCrossEntropyLossReference(const int count, const int num,
@@ -61,6 +63,8 @@ class SigmoidCrossEntropyLossLayerTest : public ::testing::Test {
 
   void TestForward() {
     LayerParameter layer_param;
+    const Dtype kLossWeight = 3.7;
+    layer_param.add_loss_weight(kLossWeight);
     FillerParameter data_filler_param;
     data_filler_param.set_std(1);
     GaussianFiller<Dtype> data_filler(data_filler_param);
@@ -69,22 +73,21 @@ class SigmoidCrossEntropyLossLayerTest : public ::testing::Test {
     targets_filler_param.set_max(1.0);
     UniformFiller<Dtype> targets_filler(targets_filler_param);
     Dtype eps = 2e-2;
-    int num_inf = 0;
     for (int i = 0; i < 100; ++i) {
       // Fill the data vector
       data_filler.Fill(this->blob_bottom_data_);
       // Fill the targets vector
       targets_filler.Fill(this->blob_bottom_targets_);
       SigmoidCrossEntropyLossLayer<Dtype> layer(layer_param);
-      layer.SetUp(this->blob_bottom_vec_, &(this->blob_top_vec_));
+      layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
       Dtype layer_loss =
-          layer.Forward(this->blob_bottom_vec_, &(this->blob_top_vec_));
+          layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
       const int count = this->blob_bottom_data_->count();
       const int num = this->blob_bottom_data_->num();
       const Dtype* blob_bottom_data = this->blob_bottom_data_->cpu_data();
       const Dtype* blob_bottom_targets =
           this->blob_bottom_targets_->cpu_data();
-      Dtype reference_loss = this->SigmoidCrossEntropyLossReference(
+      Dtype reference_loss = kLossWeight * SigmoidCrossEntropyLossReference(
           count, num, blob_bottom_data, blob_bottom_targets);
       EXPECT_NEAR(reference_loss, layer_loss, eps) << "debug: trial #" << i;
     }
@@ -92,42 +95,27 @@ class SigmoidCrossEntropyLossLayerTest : public ::testing::Test {
 
   Blob<Dtype>* const blob_bottom_data_;
   Blob<Dtype>* const blob_bottom_targets_;
+  Blob<Dtype>* const blob_top_loss_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-typedef ::testing::Types<float, double> Dtypes;
-TYPED_TEST_CASE(SigmoidCrossEntropyLossLayerTest, Dtypes);
+TYPED_TEST_CASE(SigmoidCrossEntropyLossLayerTest, TestDtypesAndDevices);
 
-
-TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestSigmoidCrossEntropyLossCPU) {
-  Caffe::set_mode(Caffe::CPU);
+TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestSigmoidCrossEntropyLoss) {
   this->TestForward();
 }
 
-TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestSigmoidCrossEntropyLossGPU) {
-  Caffe::set_mode(Caffe::GPU);
-  this->TestForward();
-}
-
-TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestGradientCPU) {
+TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  Caffe::set_mode(Caffe::CPU);
-  SigmoidCrossEntropyLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0, -1, -1);
-}
-
-TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestGradientGPU) {
-  LayerParameter layer_param;
-  Caffe::set_mode(Caffe::GPU);
-  SigmoidCrossEntropyLossLayer<TypeParam> layer(layer_param);
-  layer.SetUp(this->blob_bottom_vec_, &this->blob_top_vec_);
-  GradientChecker<TypeParam> checker(1e-2, 1e-2, 1701);
-  checker.CheckGradientSingle(&layer, &(this->blob_bottom_vec_),
-      &(this->blob_top_vec_), 0, -1, -1);
+  const Dtype kLossWeight = 3.7;
+  layer_param.add_loss_weight(kLossWeight);
+  SigmoidCrossEntropyLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
 }
 
 

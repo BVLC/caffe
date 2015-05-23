@@ -15,3 +15,5 @@ to see line-by-line credits and
 to see the change log even across renames and rewrites.
 
 Please refer to the [acknowledgements](http://caffe.berkeleyvision.org/#acknowledgements) on the Caffe site for further details.
+
+**Copyright** is held by the original contributor according to the versioning history; see LICENSE.

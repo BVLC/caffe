@@ -1,11 +1,11 @@
-// Copyright 2014 BVLC and contributors.
+#ifndef CPU_ONLY
 
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 
-#include "cuda_runtime.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
+
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
@@ -47,7 +47,11 @@ TEST_F(PlatformTest, TestInitialization) {
          CAFFE_TEST_CUDA_PROP.multiProcessorCount);
   printf("Kernel execution timeout:      %s\n",
          (CAFFE_TEST_CUDA_PROP.kernelExecTimeoutEnabled ? "Yes" : "No"));
+  printf("Unified virtual addressing:    %s\n",
+         (CAFFE_TEST_CUDA_PROP.unifiedAddressing ? "Yes" : "No"));
   EXPECT_TRUE(true);
 }
 
 }  // namespace caffe
+
+#endif  // CPU_ONLY

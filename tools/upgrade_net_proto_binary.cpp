@@ -1,12 +1,11 @@
-// Copyright 2014 BVLC and contributors.
-//
 // This is a script to upgrade "V0" network prototxts to the new format.
 // Usage:
 //    upgrade_net_proto_binary v0_net_proto_file_in net_proto_file_out
 
 #include <cstring>
-#include <iostream>  // NOLINT(readability/streams)
 #include <fstream>  // NOLINT(readability/streams)
+#include <iostream>  // NOLINT(readability/streams)
+#include <string>
 
 #include "caffe/caffe.hpp"
 #include "caffe/util/io.hpp"
@@ -25,16 +24,20 @@ int main(int argc, char** argv) {
   }
 
   NetParameter net_param;
-  if (!ReadProtoFromBinaryFile(argv[1], &net_param)) {
+  string input_filename(argv[1]);
+  if (!ReadProtoFromBinaryFile(input_filename, &net_param)) {
     LOG(ERROR) << "Failed to parse input binary file as NetParameter: "
-               << argv[1];
+               << input_filename;
     return 2;
   }
   bool need_upgrade = NetNeedsUpgrade(net_param);
   bool success = true;
   if (need_upgrade) {
-    NetParameter v0_net_param(net_param);
-    success = UpgradeV0Net(v0_net_param, &net_param);
+    success = UpgradeNetAsNeeded(input_filename, &net_param);
+    if (!success) {
+      LOG(ERROR) << "Encountered error(s) while upgrading prototxt; "
+                 << "see details above.";
+    }
   } else {
     LOG(ERROR) << "File already in V1 proto format: " << argv[1];
   }

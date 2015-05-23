@@ -26,37 +26,68 @@
 # Compiled MATLAB
 *.mex*
 
-# build, distribute, and bins
-build/*
-distribute/*
-*.testbin
-*.bin
-python/caffe/proto/
+# IPython notebook checkpoints
+.ipynb_checkpoints
 
 # Editor temporaries
 *.swp
 *~
 
-# IPython notebook checkpoints
-.ipynb_checkpoints
+# Sublime Text settings
+*.sublime-workspace
+*.sublime-project
+
+# Eclipse Project settings
+*.*project
+.settings
+
+# QtCreator files
+*.user
+
+# PyCharm files
+.idea
+
+# OSX dir files
+.DS_Store
 
 ## Caffe
 
 # User's build configuration
 Makefile.config
 
-# Data and examples are either
+# Data and models are either
 # 1. reference, and not casually committed
 # 2. custom, and live on their own unless they're deliberated contributed
 data/*
-examples/*
+models/*
+*.caffemodel
+*.solverstate
+*.binaryproto
+*leveldb
+*lmdb
+
+# build, distribute, and bins (+ python proto bindings)
+build
+.build_debug/*
+.build_release/*
+distribute/*
+*.testbin
+*.bin
+python/caffe/proto/
+cmake_build
+.cmake_build
 
 # Generated documentation
 docs/_site
 docs/gathered
 _site
+doxygen
+docs/dev
 
-# Sublime Text settings
-*.sublime-workspace
-*.sublime-project
-
+# LevelDB files
+*.sst
+*.ldb
+LOCK
+LOG*
+CURRENT
+MANIFEST-*

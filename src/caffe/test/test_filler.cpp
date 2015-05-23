@@ -1,16 +1,12 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <cstring>
 
-#include "cuda_runtime.h"
 #include "gtest/gtest.h"
+
 #include "caffe/filler.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
 namespace caffe {
-
-typedef ::testing::Types<float, double> Dtypes;
 
 template <typename Dtype>
 class ConstantFillerTest : public ::testing::Test {
@@ -28,7 +24,7 @@ class ConstantFillerTest : public ::testing::Test {
   shared_ptr<ConstantFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(ConstantFillerTest, Dtypes);
+TYPED_TEST_CASE(ConstantFillerTest, TestDtypes);
 
 TYPED_TEST(ConstantFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
@@ -57,7 +53,7 @@ class UniformFillerTest : public ::testing::Test {
   shared_ptr<UniformFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(UniformFillerTest, Dtypes);
+TYPED_TEST_CASE(UniformFillerTest, TestDtypes);
 
 TYPED_TEST(UniformFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
@@ -84,7 +80,7 @@ class PositiveUnitballFillerTest : public ::testing::Test {
   shared_ptr<PositiveUnitballFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(PositiveUnitballFillerTest, Dtypes);
+TYPED_TEST_CASE(PositiveUnitballFillerTest, TestDtypes);
 
 TYPED_TEST(PositiveUnitballFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
@@ -123,7 +119,7 @@ class GaussianFillerTest : public ::testing::Test {
   shared_ptr<GaussianFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(GaussianFillerTest, Dtypes);
+TYPED_TEST_CASE(GaussianFillerTest, TestDtypes);
 
 TYPED_TEST(GaussianFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);

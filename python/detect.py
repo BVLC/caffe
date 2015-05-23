@@ -46,20 +46,20 @@ def main(argv):
     parser.add_argument(
         "--model_def",
         default=os.path.join(pycaffe_dir,
-                "../examples/imagenet/imagenet_deploy.prototxt"),
+                "../models/bvlc_reference_caffenet/deploy.prototxt.prototxt"),
         help="Model definition file."
     )
     parser.add_argument(
         "--pretrained_model",
         default=os.path.join(pycaffe_dir,
-                "../examples/imagenet/caffe_reference_imagenet_model"),
+                "../models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel"),
         help="Trained model weights file."
     )
     parser.add_argument(
         "--crop_mode",
-        default="center_only",
+        default="selective_search",
         choices=CROP_MODES,
-        help="Image crop mode"
+        help="How to generate windows for detection."
     )
     parser.add_argument(
         "--gpu",
@@ -76,8 +76,13 @@ def main(argv):
     parser.add_argument(
         "--input_scale",
         type=float,
-        default=255,
-        help="Multiply input features by this scale before input to net"
+        help="Multiply input features by this scale to finish preprocessing."
+    )
+    parser.add_argument(
+        "--raw_scale",
+        type=float,
+        default=255.0,
+        help="Multiply raw input by this scale before preprocessing."
     )
     parser.add_argument(
         "--channel_swap",
@@ -86,21 +91,38 @@ def main(argv):
              "RGB -> BGR since BGR is the Caffe default by way of OpenCV."
 
     )
+    parser.add_argument(
+        "--context_pad",
+        type=int,
+        default='16',
+        help="Amount of surrounding context to collect in input window."
+    )
     args = parser.parse_args()
 
-    channel_swap = [int(s) for s in args.channel_swap.split(',')]
-
-    # Make detector.
-    detector = caffe.Detector(args.model_def, args.pretrained_model,
-            gpu=args.gpu, mean_file=args.mean_file,
-            input_scale=args.input_scale, channel_swap=channel_swap)
+    mean, channel_swap = None, None
+    if args.mean_file:
+        mean = np.load(args.mean_file)
+        if mean.shape[1:] != (1, 1):
+            mean = mean.mean(1).mean(1)
+    if args.channel_swap:
+        channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
     if args.gpu:
-        print 'GPU mode'
+        caffe.set_mode_gpu()
+        print("GPU mode")
+    else:
+        caffe.set_mode_cpu()
+        print("CPU mode")
+
+    # Make detector.
+    detector = caffe.Detector(args.model_def, args.pretrained_model, mean=mean,
+            input_scale=args.input_scale, raw_scale=args.raw_scale,
+            channel_swap=channel_swap,
+            context_pad=args.context_pad)
 
     # Load input.
     t = time.time()
-    print('Loading input...')
+    print("Loading input...")
     if args.input_file.lower().endswith('txt'):
         with open(args.input_file) as f:
             inputs = [_.strip() for _ in f.readlines()]
@@ -113,10 +135,10 @@ def main(argv):
     # Detect.
     if args.crop_mode == 'list':
         # Unpack sequence of (image filename, windows).
-        images_windows = (
+        images_windows = [
             (ix, inputs.iloc[np.where(inputs.index == ix)][COORD_COLS].values)
             for ix in inputs.index.unique()
-        )
+        ]
         detections = detector.detect_windows(images_windows)
     else:
         detections = detector.detect_selective_search(inputs)

@@ -10,11 +10,12 @@ import tornado.wsgi
 import tornado.httpserver
 import numpy as np
 import pandas as pd
-from PIL import Image as PILImage
+from PIL import Image
 import cStringIO as StringIO
 import urllib
-import caffe
 import exifutil
+
+import caffe
 
 REPO_DIRNAME = os.path.abspath(os.path.dirname(__file__) + '/../..')
 UPLOAD_FOLDER = '/tmp/caffe_demos_uploads'
@@ -80,7 +81,7 @@ def classify_upload():
 
 def embed_image_html(image):
     """Creates an image embedded in HTML base64 format."""
-    image_pil = PILImage.fromarray((255 * image).astype('uint8'))
+    image_pil = Image.fromarray((255 * image).astype('uint8'))
     image_pil = image_pil.resize((256, 256))
     string_buf = StringIO.StringIO()
     image_pil.save(string_buf, format='png')
@@ -98,9 +99,9 @@ def allowed_file(filename):
 class ImagenetClassifier(object):
     default_args = {
         'model_def_file': (
-            '{}/examples/imagenet/imagenet_deploy.prototxt'.format(REPO_DIRNAME)),
+            '{}/models/bvlc_reference_caffenet/deploy.prototxt'.format(REPO_DIRNAME)),
         'pretrained_model_file': (
-            '{}/examples/imagenet/caffe_reference_imagenet_model'.format(REPO_DIRNAME)),
+            '{}/models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'.format(REPO_DIRNAME)),
         'mean_file': (
             '{}/python/caffe/imagenet/ilsvrc_2012_mean.npy'.format(REPO_DIRNAME)),
         'class_labels_file': (
@@ -112,16 +113,20 @@ class ImagenetClassifier(object):
         if not os.path.exists(val):
             raise Exception(
                 "File for {} is missing. Should be at: {}".format(key, val))
-    default_args['image_dim'] = 227
-    default_args['gpu_mode'] = True
+    default_args['image_dim'] = 256
+    default_args['raw_scale'] = 255.
 
     def __init__(self, model_def_file, pretrained_model_file, mean_file,
-                 class_labels_file, bet_file, image_dim, gpu_mode=False):
+                 raw_scale, class_labels_file, bet_file, image_dim, gpu_mode):
         logging.info('Loading net and associated files...')
+        if gpu_mode:
+            caffe.set_mode_gpu()
+        else:
+            caffe.set_mode_cpu()
         self.net = caffe.Classifier(
-            model_def_file, pretrained_model_file, input_scale=255,
-            image_dims=(image_dim, image_dim), gpu=gpu_mode,
-            mean_file=mean_file, channel_swap=(2, 1, 0)
+            model_def_file, pretrained_model_file,
+            image_dims=(image_dim, image_dim), raw_scale=raw_scale,
+            mean=np.load(mean_file).mean(1).mean(1), channel_swap=(2, 1, 0)
         )
 
         with open(class_labels_file) as f:
@@ -197,10 +202,17 @@ def start_from_terminal(app):
         '-p', '--port',
         help="which port to serve content on",
         type='int', default=5000)
-    opts, args = parser.parse_args()
+    parser.add_option(
+        '-g', '--gpu',
+        help="use gpu mode",
+        action='store_true', default=False)
 
-    # Initialize classifier
+    opts, args = parser.parse_args()
+    ImagenetClassifier.default_args.update({'gpu_mode': opts.gpu})
+
+    # Initialize classifier + warm start by forward for allocation
     app.clf = ImagenetClassifier(**ImagenetClassifier.default_args)
+    app.clf.net.forward()
 
     if opts.debug:
         app.run(debug=True, host='0.0.0.0', port=opts.port)

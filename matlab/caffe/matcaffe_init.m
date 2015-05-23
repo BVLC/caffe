@@ -8,11 +8,11 @@ if nargin < 1
 end
 if nargin < 2 || isempty(model_def_file)
   % By default use imagenet_deploy
-  model_def_file = '../../examples/imagenet/imagenet_deploy.prototxt';
+  model_def_file = '../../models/bvlc_reference_caffenet/deploy.prototxt';
 end
 if nargin < 3 || isempty(model_file)
   % By default use caffe reference model
-  model_file = '../../examples/imagenet/caffe_reference_imagenet_model';
+  model_file = '../../models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel';
 end
 
 
@@ -25,7 +25,8 @@ if caffe('is_initialized') == 0
     % NOTE: you'll have to get network definition
     error('You need the network prototxt definition');
   end
-  caffe('init', model_def_file, model_file)
+  % load network in TEST phase
+  caffe('init', model_def_file, model_file, 'test')
 end
 fprintf('Done with init\n');
 
@@ -38,7 +39,3 @@ else
   caffe('set_mode_cpu');
 end
 fprintf('Done with set_mode\n');
-
-% put into test mode
-caffe('set_phase_test');
-fprintf('Done with set_phase_test\n');

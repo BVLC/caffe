@@ -3,7 +3,7 @@ from mincepie import mapreducer, launcher
 import gflags
 import os
 import cv2
-import PIL
+from PIL import Image
 
 # gflags
 gflags.DEFINE_string('image_lib', 'opencv',
@@ -37,9 +37,10 @@ class OpenCVResizeCrop:
 
 class PILResizeCrop:
 ## http://united-coders.com/christian-harms/image-resizing-tips-every-coder-should-know/
-    def resize_and_crop_image(self, input_file, output_file, output_side_length = 256):
+    def resize_and_crop_image(self, input_file, output_file, output_side_length = 256, fit = True):
         '''Downsample the image.
         '''
+        img = Image.open(input_file)
         box = (output_side_length, output_side_length)
         #preresize image with factor 2, 4, 8 and fast algorithm
         factor = 1

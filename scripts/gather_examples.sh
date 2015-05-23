@@ -22,7 +22,7 @@ for README_FILENAME in $(find examples -iname "readme.md"); do
 done
 
 # Gather docs from examples/*.ipynb and add YAML front-matter.
-for NOTEBOOK_FILENAME in $(find examples -d 1 -iname "*.ipynb"); do
+for NOTEBOOK_FILENAME in $(find examples -depth -iname "*.ipynb"); do
     DOCS_FILENAME=$GATHERED_DIR/$NOTEBOOK_FILENAME
     mkdir -p `dirname $DOCS_FILENAME`
     python scripts/copy_notebook.py $NOTEBOOK_FILENAME $DOCS_FILENAME

@@ -1,13 +1,9 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
 #include "caffe/layer.hpp"
 #include "caffe/vision_layers.hpp"
-
-using std::max;
 
 namespace caffe {
 
@@ -19,10 +15,10 @@ __global__ void SigmoidForward(const int n, const Dtype* in, Dtype* out) {
 }
 
 template <typename Dtype>
-Dtype SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    vector<Blob<Dtype>*>* top) {
+void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = (*top)[0]->mutable_gpu_data();
+  Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
   // NOLINT_NEXT_LINE(whitespace/operators)
   SigmoidForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
@@ -33,7 +29,6 @@ Dtype SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   //     << " top_data: " << (unsigned long)top_data
   //     << " blocks: " << CAFFE_GET_BLOCKS(count)
   //     << " threads: " << CAFFE_CUDA_NUM_THREADS;
-  return Dtype(0);
 }
 
 template <typename Dtype>
@@ -47,13 +42,13 @@ __global__ void SigmoidBackward(const int n, const Dtype* in_diff,
 
 template <typename Dtype>
 void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const bool propagate_down,
-    vector<Blob<Dtype>*>* bottom) {
-  if (propagate_down) {
+    const vector<bool>& propagate_down,
+    const vector<Blob<Dtype>*>& bottom) {
+  if (propagate_down[0]) {
     const Dtype* top_data = top[0]->gpu_data();
     const Dtype* top_diff = top[0]->gpu_diff();
-    Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
-    const int count = (*bottom)[0]->count();
+    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+    const int count = bottom[0]->count();
     // NOLINT_NEXT_LINE(whitespace/operators)
     SigmoidBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, top_data, bottom_diff);
@@ -61,7 +56,7 @@ void SigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-INSTANTIATE_CLASS(SigmoidLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(SigmoidLayer);
 
 
 }  // namespace caffe

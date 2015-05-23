@@ -1,5 +1,3 @@
-// Copyright 2014 BVLC and contributors.
-
 #ifndef CAFFE_UTIL_MKL_ALTERNATE_H_
 #define CAFFE_UTIL_MKL_ALTERNATE_H_
 
@@ -35,6 +33,7 @@ extern "C" {
 
 DEFINE_VSL_UNARY_FUNC(Sqr, y[i] = a[i] * a[i]);
 DEFINE_VSL_UNARY_FUNC(Exp, y[i] = exp(a[i]));
+DEFINE_VSL_UNARY_FUNC(Abs, y[i] = fabs(a[i]));
 
 // A simple way to define the vsl unary functions with singular parameter b.
 // The operation should be in the form e.g. y[i] = pow(a[i], b)

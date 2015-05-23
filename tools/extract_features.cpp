@@ -1,21 +1,25 @@
-// Copyright 2014 BVLC and contributors.
-
 #include <stdio.h>  // for snprintf
-#include <cuda_runtime.h>
-#include <google/protobuf/text_format.h>
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
 #include <string>
 #include <vector>
+
+#include "boost/algorithm/string.hpp"
+#include "google/protobuf/text_format.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/net.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/vision_layers.hpp"
 
-using namespace caffe;  // NOLINT(build/namespaces)
+using caffe::Blob;
+using caffe::Caffe;
+using caffe::Datum;
+using caffe::Net;
+using boost::shared_ptr;
+using std::string;
+namespace db = caffe::db;
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv);
@@ -27,14 +31,20 @@ int main(int argc, char** argv) {
 
 template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv) {
-  const int num_required_args = 6;
+  ::google::InitGoogleLogging(argv[0]);
+  const int num_required_args = 7;
   if (argc < num_required_args) {
     LOG(ERROR)<<
     "This program takes in a trained network and an input data layer, and then"
     " extract features of the input data produced by the net.\n"
-    "Usage: demo_extract_features  pretrained_net_param"
-    "  feature_extraction_proto_file  extract_feature_blob_name"
-    "  save_feature_leveldb_name  num_mini_batches  [CPU/GPU]  [DEVICE_ID=0]";
+    "Usage: extract_features  pretrained_net_param"
+    "  feature_extraction_proto_file  extract_feature_blob_name1[,name2,...]"
+    "  save_feature_dataset_name1[,name2,...]  num_mini_batches  db_type"
+    "  [CPU/GPU] [DEVICE_ID=0]\n"
+    "Note: you can extract multiple features in one pass by specifying"
+    " multiple feature blob names and dataset names seperated by ','."
+    " The names cannot contain white space characters and the number of blobs"
+    " and datasets must be equal.";
     return 1;
   }
   int arg_pos = num_required_args;
@@ -54,10 +64,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
     LOG(ERROR) << "Using CPU";
     Caffe::set_mode(Caffe::CPU);
   }
-  Caffe::set_phase(Caffe::TEST);
 
   arg_pos = 0;  // the name of the executable
-  string pretrained_binary_proto(argv[++arg_pos]);
+  std::string pretrained_binary_proto(argv[++arg_pos]);
 
   // Expected prototxt contains at least one data layer such as
   //  the layer data_layer_name and one feature blob such as the
@@ -86,80 +95,93 @@ int feature_extraction_pipeline(int argc, char** argv) {
      top: "fc7"
    }
    */
-  string feature_extraction_proto(argv[++arg_pos]);
+  std::string feature_extraction_proto(argv[++arg_pos]);
   shared_ptr<Net<Dtype> > feature_extraction_net(
-      new Net<Dtype>(feature_extraction_proto));
+      new Net<Dtype>(feature_extraction_proto, caffe::TEST));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 
-  string extract_feature_blob_name(argv[++arg_pos]);
-  CHECK(feature_extraction_net->has_blob(extract_feature_blob_name))
-      << "Unknown feature blob name " << extract_feature_blob_name
-      << " in the network " << feature_extraction_proto;
+  std::string extract_feature_blob_names(argv[++arg_pos]);
+  std::vector<std::string> blob_names;
+  boost::split(blob_names, extract_feature_blob_names, boost::is_any_of(","));
 
-  string save_feature_leveldb_name(argv[++arg_pos]);
-  leveldb::DB* db;
-  leveldb::Options options;
-  options.error_if_exists = true;
-  options.create_if_missing = true;
-  options.write_buffer_size = 268435456;
-  LOG(INFO)<< "Opening leveldb " << save_feature_leveldb_name;
-  leveldb::Status status = leveldb::DB::Open(options,
-                                             save_feature_leveldb_name.c_str(),
-                                             &db);
-  CHECK(status.ok()) << "Failed to open leveldb " << save_feature_leveldb_name;
+  std::string save_feature_dataset_names(argv[++arg_pos]);
+  std::vector<std::string> dataset_names;
+  boost::split(dataset_names, save_feature_dataset_names,
+               boost::is_any_of(","));
+  CHECK_EQ(blob_names.size(), dataset_names.size()) <<
+      " the number of blob names and dataset names must be equal";
+  size_t num_features = blob_names.size();
+
+  for (size_t i = 0; i < num_features; i++) {
+    CHECK(feature_extraction_net->has_blob(blob_names[i]))
+        << "Unknown feature blob name " << blob_names[i]
+        << " in the network " << feature_extraction_proto;
+  }
 
   int num_mini_batches = atoi(argv[++arg_pos]);
+
+  std::vector<shared_ptr<db::DB> > feature_dbs;
+  std::vector<shared_ptr<db::Transaction> > txns;
+  for (size_t i = 0; i < num_features; ++i) {
+    LOG(INFO)<< "Opening dataset " << dataset_names[i];
+    shared_ptr<db::DB> db(db::GetDB(argv[++arg_pos]));
+    db->Open(dataset_names.at(i), db::NEW);
+    feature_dbs.push_back(db);
+    shared_ptr<db::Transaction> txn(db->NewTransaction());
+    txns.push_back(txn);
+  }
 
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
-  leveldb::WriteBatch* batch = new leveldb::WriteBatch();
   const int kMaxKeyStrLength = 100;
   char key_str[kMaxKeyStrLength];
-  int num_bytes_of_binary_code = sizeof(Dtype);
-  vector<Blob<float>*> input_vec;
-  int image_index = 0;
+  std::vector<Blob<float>*> input_vec;
+  std::vector<int> image_indices(num_features, 0);
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
-    const shared_ptr<Blob<Dtype> > feature_blob = feature_extraction_net
-        ->blob_by_name(extract_feature_blob_name);
-    int num_features = feature_blob->num();
-    int dim_features = feature_blob->count() / num_features;
-    Dtype* feature_blob_data;
-    for (int n = 0; n < num_features; ++n) {
-      datum.set_height(dim_features);
-      datum.set_width(1);
-      datum.set_channels(1);
-      datum.clear_data();
-      datum.clear_float_data();
-      feature_blob_data = feature_blob->mutable_cpu_data() +
-          feature_blob->offset(n);
-      for (int d = 0; d < dim_features; ++d) {
-        datum.add_float_data(feature_blob_data[d]);
-      }
-      string value;
-      datum.SerializeToString(&value);
-      snprintf(key_str, kMaxKeyStrLength, "%d", image_index);
-      batch->Put(string(key_str), value);
-      ++image_index;
-      if (image_index % 1000 == 0) {
-        db->Write(leveldb::WriteOptions(), batch);
-        LOG(ERROR)<< "Extracted features of " << image_index <<
-            " query images.";
-        delete batch;
-        batch = new leveldb::WriteBatch();
-      }
-    }  // for (int n = 0; n < num_features; ++n)
+    for (int i = 0; i < num_features; ++i) {
+      const shared_ptr<Blob<Dtype> > feature_blob = feature_extraction_net
+          ->blob_by_name(blob_names[i]);
+      int batch_size = feature_blob->num();
+      int dim_features = feature_blob->count() / batch_size;
+      const Dtype* feature_blob_data;
+      for (int n = 0; n < batch_size; ++n) {
+        datum.set_height(feature_blob->height());
+        datum.set_width(feature_blob->width());
+        datum.set_channels(feature_blob->channels());
+        datum.clear_data();
+        datum.clear_float_data();
+        feature_blob_data = feature_blob->cpu_data() +
+            feature_blob->offset(n);
+        for (int d = 0; d < dim_features; ++d) {
+          datum.add_float_data(feature_blob_data[d]);
+        }
+        int length = snprintf(key_str, kMaxKeyStrLength, "%d",
+            image_indices[i]);
+        string out;
+        CHECK(datum.SerializeToString(&out));
+        txns.at(i)->Put(std::string(key_str, length), out);
+        ++image_indices[i];
+        if (image_indices[i] % 1000 == 0) {
+          txns.at(i)->Commit();
+          txns.at(i).reset(feature_dbs.at(i)->NewTransaction());
+          LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+              " query images for feature blob " << blob_names[i];
+        }
+      }  // for (int n = 0; n < batch_size; ++n)
+    }  // for (int i = 0; i < num_features; ++i)
   }  // for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index)
   // write the last batch
-  if (image_index % 1000 != 0) {
-    db->Write(leveldb::WriteOptions(), batch);
-    LOG(ERROR)<< "Extracted features of " << image_index <<
-        " query images.";
+  for (int i = 0; i < num_features; ++i) {
+    if (image_indices[i] % 1000 != 0) {
+      txns.at(i)->Commit();
+    }
+    LOG(ERROR)<< "Extracted features of " << image_indices[i] <<
+        " query images for feature blob " << blob_names[i];
+    feature_dbs.at(i)->Close();
   }
 
-  delete batch;
-  delete db;
   LOG(ERROR)<< "Successfully extracted the features!";
   return 0;
 }
