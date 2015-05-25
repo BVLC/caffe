@@ -682,6 +682,61 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
 }
 
 template <typename Dtype>
+void Net<Dtype>::ShareBlobsWith(const Net* other) {
+  int num_source_blobs = other->blobs().size();
+  for (int i = 0; i < num_source_blobs; ++i) {
+    const string& source_blob_name = other->blob_names()[i];
+    if (
+      std::find(
+        other->input_blob_indices().begin(),
+        other->input_blob_indices().end(), i) !=
+      other->input_blob_indices().end()) {
+      // input blob cannot be shared
+      LOG(INFO) << "Ignoring source blob " << source_blob_name;
+      continue;
+    }
+    int target_blob_id = 0;
+    while (target_blob_id != blob_names_.size() &&
+      blob_names_[target_blob_id] != source_blob_name) {
+      ++target_blob_id;
+    }
+    if (target_blob_id == blob_names_.size() ||
+      std::find(
+        net_input_blob_indices_.begin(),
+        net_input_blob_indices_.end(), target_blob_id) !=
+      net_input_blob_indices_.end()) {
+      LOG(INFO) << "Ignoring source blob " << source_blob_name;
+      continue;
+    }
+    LOG(INFO) << "Sharing source blob " << source_blob_name;
+    // We do not care blob shapes because every call of `Forward` method
+    // reshapes output blobs into right shapes, except input blobs.
+    blobs_[target_blob_id] = other->blobs()[i];
+  }
+  UpdateBlobPointers();
+}
+
+template <typename Dtype>
+void Net<Dtype>::UpdateBlobPointers() {
+  for (int i = 0; i < bottom_vecs_.size(); ++i) {
+    for (int j = 0; j < bottom_vecs_[i].size(); ++j) {
+      bottom_vecs_[i][j] = blobs_[bottom_id_vecs_[i][j]].get();
+    }
+  }
+  for (int i = 0; i < top_vecs_.size(); ++i) {
+    for (int j = 0; j < top_vecs_[i].size(); ++j) {
+      top_vecs_[i][j] = blobs_[top_id_vecs_[i][j]].get();
+    }
+  }
+  for (int i = 0; i < net_input_blobs_.size(); ++i) {
+    net_input_blobs_[i] = blobs_[net_input_blob_indices_[i]].get();
+  }
+  for (int i = 0; i < net_output_blobs_.size(); ++i) {
+    net_output_blobs_[i] = blobs_[net_output_blob_indices_[i]].get();
+  }
+}
+
+template <typename Dtype>
 void Net<Dtype>::BackwardFrom(int start) {
   BackwardFromTo(start, 0);
 }

@@ -47,6 +47,7 @@ TYPED_TEST(DummyDataLayerTest, TestOneTopConstant) {
   Caffe::set_mode(Caffe::CPU);
   LayerParameter param;
   DummyDataParameter* dummy_data_param = param.mutable_dummy_data_param();
+  dummy_data_param->set_refill_constant(false);
   dummy_data_param->add_num(5);
   dummy_data_param->add_channels(3);
   dummy_data_param->add_height(2);
@@ -77,6 +78,7 @@ TYPED_TEST(DummyDataLayerTest, TestTwoTopConstant) {
   Caffe::set_mode(Caffe::CPU);
   LayerParameter param;
   DummyDataParameter* dummy_data_param = param.mutable_dummy_data_param();
+  dummy_data_param->set_refill_constant(false);
   dummy_data_param->add_num(5);
   dummy_data_param->add_channels(3);
   dummy_data_param->add_height(2);
@@ -116,6 +118,7 @@ TYPED_TEST(DummyDataLayerTest, TestThreeTopConstantGaussianConstant) {
   Caffe::set_mode(Caffe::CPU);
   LayerParameter param;
   DummyDataParameter* dummy_data_param = param.mutable_dummy_data_param();
+  dummy_data_param->set_refill_constant(false);
   dummy_data_param->add_num(5);
   dummy_data_param->add_channels(3);
   dummy_data_param->add_height(2);
@@ -190,6 +193,44 @@ TYPED_TEST(DummyDataLayerTest, TestThreeTopConstantGaussianConstant) {
       this->blob_top_b_->cpu_data()[this->blob_top_b_->count() - 1]);
   for (int i = 0; i < this->blob_top_c_->count(); ++i) {
     EXPECT_EQ(9, this->blob_top_c_->cpu_data()[i]);
+  }
+}
+
+TYPED_TEST(DummyDataLayerTest, TestRefillConstant) {
+  Caffe::set_mode(Caffe::CPU);
+  LayerParameter param;
+  DummyDataParameter* dummy_data_param = param.mutable_dummy_data_param();
+  dummy_data_param->set_refill_constant(false);
+  dummy_data_param->add_num(5);
+  dummy_data_param->add_channels(3);
+  dummy_data_param->add_height(2);
+  dummy_data_param->add_width(4);
+  this->blob_top_vec_.resize(1);
+  FillerParameter filler_param;
+  filler_param.set_value(1);
+  ConstantFiller<TypeParam> filler(filler_param);
+  // No refill
+  DummyDataLayer<TypeParam> layer(param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  filler.Fill(this->blob_top_vec_[0]);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // check if the values are kept as 1
+  for (int i = 0; i < this->blob_top_vec_.size(); ++i) {
+    for (int j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
+      EXPECT_EQ(1, this->blob_top_vec_[i]->cpu_data()[j]);
+    }
+  }
+  // Refill
+  dummy_data_param->set_refill_constant(true);
+  DummyDataLayer<TypeParam> layer2(param);
+  layer2.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  filler.Fill(this->blob_top_vec_[0]);
+  layer2.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // check if the values are refilled as 0
+  for (int i = 0; i < this->blob_top_vec_.size(); ++i) {
+    for (int j = 0; j < this->blob_top_vec_[i]->count(); ++j) {
+      EXPECT_EQ(0, this->blob_top_vec_[i]->cpu_data()[j]);
+    }
   }
 }
 

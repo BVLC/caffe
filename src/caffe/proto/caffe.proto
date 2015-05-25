@@ -158,6 +158,11 @@ message SolverParameter {
   // whenever their actual L2 norm is larger.
   optional float clip_gradients = 35 [default = -1];
 
+  // Share blobs that have the same name over nets (training net and testing
+  // nets). Default behavier, different nets use different blobs independently,
+  // leads to much memory consumptions.
+  optional bool share_blobs = 14756 [default = false];
+
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
   optional string snapshot_prefix = 15; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help
@@ -493,6 +498,11 @@ message DummyDataParameter {
   repeated uint32 channels = 3;
   repeated uint32 height = 4;
   repeated uint32 width = 5;
+  // Force to refill top blobs even if the filler is constant every `Forward`
+  // step. This is usefull in a special case that top blobs are overwritten by
+  // other nets and layers etc after layer setup. Default is refilling every
+  // time. If you want to save computational cost, set it false.
+  optional bool refill_constant = 21414 [default = true];
 }
 
 message EltwiseParameter {

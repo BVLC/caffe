@@ -129,6 +129,10 @@ template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
+  for (int i = 0; i < this->layer_param_.top_size(); ++i) {
+    top[i]->Reshape(batch_size, hdf_blobs_[i]->channels(),
+      hdf_blobs_[i]->height(), hdf_blobs_[i]->width());
+  }
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
       if (num_files_ > 1) {
