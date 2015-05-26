@@ -1,3 +1,4 @@
+#include <boost/thread.hpp>
 #include <glog/logging.h>
 #include <cstdio>
 #include <ctime>
@@ -7,7 +8,15 @@
 
 namespace caffe {
 
-shared_ptr<Caffe> Caffe::singleton_;
+// Make sure each thread can have different values.
+static boost::thread_specific_ptr<Caffe> thread_instance_;
+
+Caffe& Caffe::Get() {
+  if (!thread_instance_.get()) {
+    thread_instance_.reset(new Caffe());
+  }
+  return *(thread_instance_.get());
+}
 
 // random seeding
 int64_t cluster_seedgen(void) {
@@ -42,7 +51,8 @@ void GlobalInit(int* pargc, char*** pargv) {
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
 Caffe::Caffe()
-    : random_generator_(), mode_(Caffe::CPU) { }
+    : random_generator_(), mode_(Caffe::CPU),
+      solver_count_(1), root_solver_(true) { }
 
 Caffe::~Caffe() { }
 
@@ -86,7 +96,7 @@ void* Caffe::RNG::generator() {
 
 Caffe::Caffe()
     : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
-    mode_(Caffe::CPU) {
+    mode_(Caffe::CPU), solver_count_(1), root_solver_(true) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {

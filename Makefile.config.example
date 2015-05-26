@@ -81,5 +81,9 @@ TEST_GPUID := 0
 # enable pretty build (comment to see full commands)
 Q ?= @
 
+# Adds timing info in logs
+# BENCHMARK_DATA := 1
+# BENCHMARK_SOLVER := 1
+
 # shared object suffix name to differentiate branches
 LIBRARY_NAME_SUFFIX := -nv

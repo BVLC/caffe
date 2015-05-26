@@ -1,11 +1,19 @@
 PROJECT := caffe
 
 CONFIG_FILE := Makefile.config
+# Explicitly check for the config file, otherwise make -k will proceed anyway.
+ifeq ($(wildcard $(CONFIG_FILE)),)
+$(error $(CONFIG_FILE) not found. See $(CONFIG_FILE).example.)
+endif
 include $(CONFIG_FILE)
 
 BUILD_DIR_LINK := $(BUILD_DIR)
-RELEASE_BUILD_DIR ?= .$(BUILD_DIR)_release
-DEBUG_BUILD_DIR ?= .$(BUILD_DIR)_debug
+ifeq ($(RELEASE_BUILD_DIR),)
+	RELEASE_BUILD_DIR := .$(BUILD_DIR)_release
+endif
+ifeq ($(DEBUG_BUILD_DIR),)
+	DEBUG_BUILD_DIR := .$(BUILD_DIR)_debug
+endif
 
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
@@ -178,6 +186,7 @@ WARNINGS := -Wall -Wno-sign-compare
 # Set build directories
 ##############################
 
+DISTRIBUTE_DIR ?= distribute
 DISTRIBUTE_SUBDIRS := $(DISTRIBUTE_DIR)/bin $(DISTRIBUTE_DIR)/lib
 DIST_ALIASES := dist
 ifneq ($(strip $(DISTRIBUTE_DIR)),distribute)
@@ -298,6 +307,14 @@ ifeq ($(CPU_ONLY), 1)
 	ALL_WARNS := $(ALL_CXX_WARNS)
 	TEST_FILTER := --gtest_filter="-*GPU*"
 	COMMON_FLAGS += -DCPU_ONLY
+endif
+
+# Benchmarks
+ifeq ($(BENCHMARK_DATA), 1)
+	COMMON_FLAGS += -DBENCHMARK_DATA
+endif
+ifeq ($(BENCHMARK_SOLVER), 1)
+	COMMON_FLAGS += -DBENCHMARK_SOLVER
 endif
 
 # Python layer support

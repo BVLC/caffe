@@ -23,25 +23,25 @@ class Detector(caffe.Net):
     """
     Detector extends Net for windowed detection by a list of crops or
     selective search proposals.
+
+    Parameters
+    ----------
+    mean, input_scale, raw_scale, channel_swap : params for preprocessing
+        options.
+    context_pad : amount of surrounding context to take s.t. a `context_pad`
+        sized border of pixels in the network input image is context, as in
+        R-CNN feature extraction.
     """
     def __init__(self, model_file, pretrained_file, mean=None,
                  input_scale=None, raw_scale=None, channel_swap=None,
                  context_pad=None):
-        """
-        Take
-            mean, input_scale, raw_scale, channel_swap: params for
-            preprocessing options.
-        context_pad: amount of surrounding context to take s.t. a `context_pad`
-            sized border of pixels in the network input image is context, as in
-            R-CNN feature extraction.
-        """
         caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
 
         # configure pre-processing
         in_ = self.inputs[0]
         self.transformer = caffe.io.Transformer(
             {in_: self.blobs[in_].data.shape})
-        self.transformer.set_transpose(in_, (2,0,1))
+        self.transformer.set_transpose(in_, (2, 0, 1))
         if mean is not None:
             self.transformer.set_mean(in_, mean)
         if input_scale is not None:
@@ -53,17 +53,18 @@ class Detector(caffe.Net):
 
         self.configure_crop(context_pad)
 
-
     def detect_windows(self, images_windows):
         """
         Do windowed detection over given images and windows. Windows are
         extracted then warped to the input dimensions of the net.
 
-        Take
+        Parameters
+        ----------
         images_windows: (image filename, window list) iterable.
         context_crop: size of context border to crop in pixels.
 
-        Give
+        Returns
+        -------
         detections: list of {filename: image filename, window: crop coordinates,
             predictions: prediction vector} dicts.
         """
@@ -82,7 +83,7 @@ class Detector(caffe.Net):
         for ix, window_in in enumerate(window_inputs):
             caffe_in[ix] = self.transformer.preprocess(in_, window_in)
         out = self.forward_all(**{in_: caffe_in})
-        predictions = out[self.outputs[0]].squeeze(axis=(2,3))
+        predictions = out[self.outputs[0]].squeeze(axis=(2, 3))
 
         # Package predictions with images and windows.
         detections = []
@@ -97,16 +98,17 @@ class Detector(caffe.Net):
                 ix += 1
         return detections
 
-
     def detect_selective_search(self, image_fnames):
         """
         Do windowed detection over Selective Search proposals by extracting
         the crop and warping to the input dimensions of the net.
 
-        Take
+        Parameters
+        ----------
         image_fnames: list
 
-        Give
+        Returns
+        -------
         detections: list of {filename: image filename, window: crop coordinates,
             predictions: prediction vector} dicts.
         """
@@ -120,17 +122,18 @@ class Detector(caffe.Net):
         # Run windowed detection on the selective search list.
         return self.detect_windows(zip(image_fnames, windows_list))
 
-
     def crop(self, im, window):
         """
         Crop a window from the image for detection. Include surrounding context
         according to the `context_pad` configuration.
 
-        Take
+        Parameters
+        ----------
         im: H x W x K image ndarray to crop.
         window: bounding box coordinates as ymin, xmin, ymax, xmax.
 
-        Give
+        Returns
+        -------
         crop: cropped window.
         """
         # Crop window from the image.
@@ -175,14 +178,14 @@ class Detector(caffe.Net):
 
         return crop
 
-
     def configure_crop(self, context_pad):
         """
         Configure crop dimensions and amount of context for cropping.
         If context is included, make the special input mean for context padding.
 
-        Take
-        context_pad: amount of context for cropping.
+        Parameters
+        ----------
+        context_pad : amount of context for cropping.
         """
         # crop dimensions
         in_ = self.inputs[0]
@@ -204,8 +207,8 @@ class Detector(caffe.Net):
                 crop_mean = mean.copy().transpose(inv_transpose)
                 if channel_order is not None:
                     channel_order_inverse = [channel_order.index(i)
-                                            for i in range(crop_mean.shape[2])]
-                    crop_mean = crop_mean[:,:, channel_order_inverse]
+                                             for i in range(crop_mean.shape[2])]
+                    crop_mean = crop_mean[:, :, channel_order_inverse]
                 if raw_scale is not None:
                     crop_mean /= raw_scale
                 self.crop_mean = crop_mean
