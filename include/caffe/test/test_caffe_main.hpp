@@ -46,6 +46,10 @@ struct CPUDevice {
   static const Caffe::Brew device = Caffe::CPU;
 };
 
+template <typename Dtype>
+class CPUDeviceTest : public MultiDeviceTest<CPUDevice<Dtype> > {
+};
+
 #ifdef CPU_ONLY
 
 typedef ::testing::Types<CPUDevice<float>,
@@ -57,6 +61,10 @@ template <typename TypeParam>
 struct GPUDevice {
   typedef TypeParam Dtype;
   static const Caffe::Brew device = Caffe::GPU;
+};
+
+template <typename Dtype>
+class GPUDeviceTest : public MultiDeviceTest<GPUDevice<Dtype> > {
 };
 
 typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
