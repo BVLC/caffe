@@ -49,6 +49,14 @@ message FillerParameter {
   // The expected number of non-zero output weights for a given input in
   // Gaussian filler -- the default -1 means don't perform sparsification.
   optional int32 sparse = 7 [default = -1];
+  // Normalize the filler variance by fan_in, fan_out, or their average.
+  // Applies to 'xavier' and 'msra' fillers.
+  enum VarianceNorm {
+    FAN_IN = 0;
+    FAN_OUT = 1;
+    AVERAGE = 2;
+  }
+  optional VarianceNorm variance_norm = 8 [default = FAN_IN];
 }
 
 message NetParameter {
