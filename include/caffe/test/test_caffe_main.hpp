@@ -40,34 +40,28 @@ class MultiDeviceTest : public ::testing::Test {
 
 typedef ::testing::Types<float, double> TestDtypes;
 
-struct FloatCPU {
-  typedef float Dtype;
-  static const Caffe::Brew device = Caffe::CPU;
-};
-
-struct DoubleCPU {
-  typedef double Dtype;
+template <typename TypeParam>
+struct CPUDevice {
+  typedef TypeParam Dtype;
   static const Caffe::Brew device = Caffe::CPU;
 };
 
 #ifdef CPU_ONLY
 
-typedef ::testing::Types<FloatCPU, DoubleCPU> TestDtypesAndDevices;
+typedef ::testing::Types<CPUDevice<float>,
+                         CPUDevice<double> > TestDtypesAndDevices;
 
 #else
 
-struct FloatGPU {
-  typedef float Dtype;
+template <typename TypeParam>
+struct GPUDevice {
+  typedef TypeParam Dtype;
   static const Caffe::Brew device = Caffe::GPU;
 };
 
-struct DoubleGPU {
-  typedef double Dtype;
-  static const Caffe::Brew device = Caffe::GPU;
-};
-
-typedef ::testing::Types<FloatCPU, DoubleCPU, FloatGPU, DoubleGPU>
-    TestDtypesAndDevices;
+typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
+                         GPUDevice<float>, GPUDevice<double> >
+                         TestDtypesAndDevices;
 
 #endif
 
