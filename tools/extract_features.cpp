@@ -157,7 +157,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }
-        int length = snprintf(key_str, kMaxKeyStrLength, "%d",
+        int length = snprintf(key_str, kMaxKeyStrLength, "%010d",
             image_indices[i]);
         string out;
         CHECK(datum.SerializeToString(&out));
