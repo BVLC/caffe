@@ -51,7 +51,6 @@ classdef Blob < handle
       % note: matlab arrays always have at least 2 dimensions. To compare
       % shape between size of data and shape of this blob, extend shape of
       % this blob to have at least 2 dimensions
-      data_size = size(data);
       self_shape_extended = self.shape;
       if isempty(self_shape_extended)
         % target blob is a scalar (0 dim)
@@ -60,12 +59,18 @@ classdef Blob < handle
         % target blob is a vector (1 dim)
         self_shape_extended = [self_shape_extended, 1];
       end
-      is_matched = (length(self_shape_extended) == length(data_size)) ...
-        && all(self_shape_extended == data_size);
+      % also, matlab cannot have tailing dimension 1 for ndim > 2, so you
+      % cannot create 20 x 10 x 1 x 1 array in matlab as it becomes 20 x 10
+      % extend matlab arrays to have tailing dimension 1 during shape match
+      data_size_extended = ...
+        [size(data), ones(1, length(self_shape_extended) - ndims(data))];
+      is_matched = ...
+      (length(self_shape_extended) == length(data_size_extended)) ...
+        && all(self_shape_extended == data_size_extended);
       CHECK(is_matched, ...
         sprintf('%s, data size: [ %s], blob shape: [ %s]', ...
         'data size does not match blob shape', ...
-        sprintf('%d ', data_size), sprintf('%d ', self_shape_extended)));
+        sprintf('%d ', data_size_extended), sprintf('%d ', self_shape_extended)));
     end
   end
 end
