@@ -68,11 +68,6 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "With Global_pooling: true; only pad = 0 and stride = 1";
   }
   if (pad_h_ != 0 || pad_w_ != 0) {
-    CHECK(this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_AVE
-        || this->layer_param_.pooling_param().pool()
-        == PoolingParameter_PoolMethod_MAX)
-        << "Padding implemented only for average and max pooling.";
     CHECK_LT(pad_h_, kernel_h_);
     CHECK_LT(pad_w_, kernel_w_);
   }
@@ -222,7 +217,101 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+    if (this->phase_ == TRAIN) {
+      // We need random indexes for training.
+      // Initially used as probability values but
+      // later as element indexes in back propagation
+      Dtype *rand_idx = rand_idx_.mutable_cpu_data();
+      caffe_rng_uniform(top_count, Dtype(0), Dtype(1), rand_idx);
+
+      // The main loop
+      for (int n = 0; n < bottom[0]->num(); ++n) {
+        for (int c = 0; c < channels_; ++c) {
+          for (int ph = 0; ph < pooled_height_; ++ph) {
+            for (int pw = 0; pw < pooled_width_; ++pw) {
+              int hstart = ph * stride_h_ - pad_h_;
+              int wstart = pw * stride_w_ - pad_w_;
+              int hend = min(hstart + kernel_h_, height_);
+              int wend = min(wstart + kernel_w_, width_);
+              hstart = max(hstart, 0);
+              wstart = max(wstart, 0);
+              const int pool_index = ph * pooled_width_ + pw;
+
+              Dtype cumsum = 0.;
+
+              // First pass: get sum
+              for (int h = hstart; h < hend; ++h) {
+                for (int w = wstart; w < wend; ++w) {
+                  const int index = h * width_ + w;
+                  cumsum += bottom_data[index];
+                }
+              }
+
+              // Second pass: get value, and set index
+              Dtype thres = rand_idx[pool_index] * cumsum;
+              cumsum = 0.;
+
+              for (int h = hstart; h < hend; ++h) {
+                for (int w = wstart; w < wend; ++w) {
+                  const int index = h * width_ + w;
+                  cumsum += bottom_data[index];
+                  if (cumsum >= thres) {
+                    // rand_idx is a floating point variable.
+                    // Force correct rounding on truncate by adding 0.5
+                    rand_idx[pool_index] = static_cast<Dtype>(
+                        ((n * channels_ + c) * height_ + h) * width_ + w)
+                        + Dtype(0.5);
+                    top_data[pool_index] = bottom_data[index];
+
+                    // Fastest way to break two for-loops
+                    goto next_element;
+                  }
+                }
+              }
+              next_element: {}  // Quick break from the loop
+            }
+          }
+
+          // compute offset
+          bottom_data += bottom[0]->offset(0, 1);
+          top_data += top[0]->offset(0, 1);
+          rand_idx += top[0]->offset(0, 1);
+        }
+      }
+    } else {
+      // Test phase: Generate probability weighted values for output
+      // The main loop
+      for (int n = 0; n < bottom[0]->num(); ++n) {
+        for (int c = 0; c < channels_; ++c) {
+          for (int ph = 0; ph < pooled_height_; ++ph) {
+            for (int pw = 0; pw < pooled_width_; ++pw) {
+              int hstart = ph * stride_h_ - pad_h_;
+              int wstart = pw * stride_w_ - pad_w_;
+              int hend = min(hstart + kernel_h_, height_);
+              int wend = min(wstart + kernel_w_, width_);
+              hstart = max(hstart, 0);
+              wstart = max(wstart, 0);
+
+              // Set cumsum to be non-0 to avoid divide-by-zero problems
+              Dtype cumsum = FLT_MIN;
+              Dtype cumvalues = 0.;
+
+              for (int h = hstart; h < hend; ++h) {
+                for (int w = wstart; w < wend; ++w) {
+                  cumsum += bottom_data[h * width_ + w];
+                  cumvalues += bottom_data[h * width_ + w] *
+                               bottom_data[h * width_ + w];
+                }
+              }
+              top_data[ph * pooled_width_ + pw] = cumvalues / cumsum;
+            }
+          }
+          // compute offset
+          bottom_data += bottom[0]->offset(0, 1);
+          top_data += top[0]->offset(0, 1);
+        }
+      }
+    }
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
@@ -244,6 +333,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;  // suppress warnings about uninitialized variables
   const Dtype* top_mask = NULL;
+  const Dtype* rand_idx = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
@@ -302,7 +392,21 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+    // The main loop
+    rand_idx = rand_idx_.cpu_data();
+    for (int n = 0; n < top[0]->num(); ++n) {
+      for (int c = 0; c < channels_; ++c) {
+        for (int ph = 0; ph < pooled_height_; ++ph) {
+          for (int pw = 0; pw < pooled_width_; ++pw) {
+            const int index = ph * pooled_width_ + pw;
+            const int bottom_index = static_cast<int>(rand_idx[index]);
+            bottom_diff[bottom_index] += top_diff[index];
+          }
+        }
+        top_diff += top[0]->offset(0, 1);
+        rand_idx += top[0]->offset(0, 1);
+      }
+    }
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";

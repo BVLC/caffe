@@ -83,16 +83,19 @@ __global__ void StoPoolForwardTrain(const int nthreads,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* rand_idx, Dtype* top_data) {
+    const int stride_w, const int pad_h, const int pad_w,
+    Dtype* rand_idx, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
     int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h;
+    int hstart = ph * stride_h - pad_h;
+    int wstart = pw * stride_w - pad_w;
     int hend = min(hstart + kernel_h, height);
-    int wstart = pw * stride_w;
     int wend = min(wstart + kernel_w, width);
+    hstart = max(hstart, 0);
+    wstart = max(wstart, 0);
     Dtype cumsum = 0.;
     bottom_data += (n * channels + c) * height * width;
     // First pass: get sum
@@ -101,14 +104,16 @@ __global__ void StoPoolForwardTrain(const int nthreads,
         cumsum += bottom_data[h * width + w];
       }
     }
-    float thres = rand_idx[index] * cumsum;
+    Dtype thres = rand_idx[index] * cumsum;
     // Second pass: get value, and set index.
     cumsum = 0;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
         cumsum += bottom_data[h * width + w];
         if (cumsum >= thres) {
-          rand_idx[index] = ((n * channels + c) * height + h) * width + w;
+          // Force correct rounding on truncate by adding 0.5
+          rand_idx[index] = ((n * channels + c) * height + h) * width + w
+                            + Dtype(0.5);
           top_data[index] = bottom_data[h * width + w];
           return;
         }
@@ -124,16 +129,19 @@ __global__ void StoPoolForwardTest(const int nthreads,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* top_data) {
+    const int stride_w, const int pad_h, const int pad_w, Dtype* top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int pw = index % pooled_width;
     int ph = (index / pooled_width) % pooled_height;
     int c = (index / pooled_width / pooled_height) % channels;
     int n = index / pooled_width / pooled_height / channels;
-    int hstart = ph * stride_h;
+    int hstart = ph * stride_h - pad_h;
+    int wstart = pw * stride_w - pad_w;
     int hend = min(hstart + kernel_h, height);
-    int wstart = pw * stride_w;
     int wend = min(wstart + kernel_w, width);
+    hstart = max(hstart, 0);
+    wstart = max(wstart, 0);
+
     // We set cumsum to be 0 to avoid divide-by-zero problems
     Dtype cumsum = FLT_MIN;
     Dtype cumvalues = 0.;
@@ -191,7 +199,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                    CAFFE_CUDA_NUM_THREADS>>>(
           count, bottom_data, bottom[0]->num(), channels_,
           height_, width_, pooled_height_, pooled_width_, kernel_h_,
-          kernel_w_, stride_h_, stride_w_,
+          kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_,
           rand_idx_.mutable_gpu_data(), top_data);
     } else {
       // NOLINT_NEXT_LINE(whitespace/operators)
@@ -199,7 +207,7 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                   CAFFE_CUDA_NUM_THREADS>>>(
           count, bottom_data, bottom[0]->num(), channels_,
           height_, width_, pooled_height_, pooled_width_, kernel_h_,
-          kernel_w_, stride_h_, stride_w_, top_data);
+          kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
     }
     break;
   default:
@@ -297,12 +305,12 @@ __global__ void StoPoolBackward(const int nthreads,
     const int num, const int channels, const int height,
     const int width, const int pooled_height, const int pooled_width,
     const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* bottom_diff) {
+    const int stride_w, const int pad_h, const int pad_w, Dtype* bottom_diff) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     // find out the local index
     // find out the local offset
-    int w = index % width;
-    int h = (index / width) % height;
+    int w = index % width + pad_w;
+    int h = (index / width) % height + pad_h;
     int c = (index / width / height) % channels;
     int n = index / width / height / channels;
     int phstart = (h < kernel_h) ? 0 : (h - kernel_h) / stride_h + 1;
@@ -364,7 +372,7 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         count, rand_idx_.gpu_data(), top_diff,
         top[0]->num(), channels_, height_, width_, pooled_height_,
         pooled_width_, kernel_h_, kernel_w_, stride_h_, stride_w_,
-        bottom_diff);
+        pad_h_, pad_w_, bottom_diff);
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";
