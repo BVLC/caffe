@@ -11,7 +11,7 @@ namespace caffe {
 /**
  * @brief An interface for classes that perform optimization on Net%s.
  *
- * Requires implementation of ComputeUpdateValue to compute a parameter update
+ * Requires implementation of ApplyUpdate to compute a parameter update
  * given the current state of the Net parameters.
  */
 template <typename Dtype>
@@ -39,8 +39,8 @@ class Solver {
   int iter() { return iter_; }
 
  protected:
-  // Get and apply the update value for the current iteration.
-  virtual void MakeUpdate() = 0;
+  // Make and apply the update value for the current iteration.
+  virtual void ApplyUpdate() = 0;
   // The Solver::Snapshot function implements the basic snapshotting utility
   // that stores the learned net. You should implement the SnapshotSolverState()
   // function that produces a SolverState protocol buffer that needs to be
@@ -80,7 +80,7 @@ class SGDSolver : public Solver<Dtype> {
  protected:
   void PreSolve();
   Dtype GetLearningRate();
-  virtual void MakeUpdate();
+  virtual void ApplyUpdate();
   virtual void Regularize(int param_id);
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   virtual void ClipGradients();
