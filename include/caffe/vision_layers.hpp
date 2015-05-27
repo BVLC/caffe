@@ -16,6 +16,45 @@
 
 namespace caffe {
 
+template<typename Dtype>
+class MergeCropLayer : public Layer<Dtype> {
+ public:
+  explicit MergeCropLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {
+  }
+
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                          const vector<Blob<Dtype>*>& top);
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                       const vector<Blob<Dtype>*>& top);
+
+  virtual inline int ExactNumBottomBlobs() const {
+    return 2;
+  }
+
+  virtual inline int ExactNumTopBlobs() const {
+    return 1;
+  }
+
+  virtual inline const char* type() const {
+    return "MergeCrop";
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+
+};
+
 /**
  * @brief Abstract base class that factors out the BLAS code common to
  *        ConvolutionLayer and DeconvolutionLayer.
@@ -617,35 +656,45 @@ protected:
  *        so that the result vector of different sized
  *        images are of the same size.
  */
-template <typename Dtype>
+template<typename Dtype>
 class SPPLayer : public Layer<Dtype> {
  public:
   explicit SPPLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param) {
+  }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+                          const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+                       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "SPP"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline const char* type() const {
+    return "SPP";
+  }
+  virtual inline int ExactNumBottomBlobs() const {
+    return 1;
+  }
+  virtual inline int MinTopBlobs() const {
+    return 1;
+  }
   // MAX POOL layers can output an extra top blob for the mask;
   // others can only output the pooled inputs.
   virtual inline int MaxTopBlobs() const {
-    return (this->layer_param_.pooling_param().pool() ==
-            PoolingParameter_PoolMethod_MAX) ? 2 : 1;
+    return
+        (this->layer_param_.pooling_param().pool()
+            == PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+                           const vector<Blob<Dtype>*>& top);
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
   // calculates the kernel and stride dimensions for the pooling layer,
   // returns a correctly configured LayerParameter for a PoolingLayer
   virtual LayerParameter GetPoolingParam(const int pyramid_level,
-      const int bottom_h, const int bottom_w, const SPPParameter spp_param);
+                                         const int bottom_h, const int bottom_w,
+                                         const SPPParameter spp_param);
 
   int pyramid_height_;
   int bottom_h_, bottom_w_;
@@ -678,6 +727,5 @@ class SPPLayer : public Layer<Dtype> {
 };
 
 }  // namespace caffe
-
 
 #endif  // CAFFE_VISION_LAYERS_HPP_
