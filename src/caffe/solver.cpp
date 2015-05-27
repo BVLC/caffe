@@ -207,7 +207,7 @@ void Solver<Dtype>::Step(int iters) {
         }
       }
     }
-    MakeUpdate();
+    ApplyUpdate();
 
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
@@ -455,7 +455,7 @@ void SGDSolver<Dtype>::ClipGradients() {
 }
 
 template <typename Dtype>
-void SGDSolver<Dtype>::MakeUpdate() {
+void SGDSolver<Dtype>::ApplyUpdate() {
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
