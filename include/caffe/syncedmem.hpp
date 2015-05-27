@@ -8,26 +8,29 @@
 
 namespace caffe {
 
-// Theoretically, CaffeMallocHost and CaffeFreeHost should simply call the
-// cudaMallocHost and cudaFree functions in order to create pinned memory.
-// However, those codes rely on the existence of a cuda GPU (I don't know
-// why that is a must since allocating memory should not be accessing the
-// GPU resource, but it just creates an error as of Cuda 5.0) and will cause
-// problem when running on a machine without GPU. Thus, we simply define
-// these two functions for safety and possible future change if the problem
-// of calling cuda functions disappears in a future version.
-//
-// In practice, although we are creating unpinned memory here, as long as we
-// are constantly accessing them the memory pages almost always stays in
-// the physical memory (assuming we have large enough memory installed), and
-// does not seem to create a memory bottleneck here.
-
+// If CUDA is available and in GPU mode, host memory will be allocated pinned,
+// using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
+// The improvement in performance seems negligible in the single GPU case,
+// but might be more significant for parallel training. Most importantly,
+// it improved stability for large models on many GPUs.
 inline void CaffeMallocHost(void** ptr, size_t size) {
+#ifndef CPU_ONLY
+  if (Caffe::mode() == Caffe::GPU) {
+    CUDA_CHECK(cudaMallocHost(ptr, size));
+    return;
+  }
+#endif
   *ptr = malloc(size);
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
 inline void CaffeFreeHost(void* ptr) {
+#ifndef CPU_ONLY
+  if (Caffe::mode() == Caffe::GPU) {
+    CUDA_CHECK(cudaFreeHost(ptr));
+    return;
+  }
+#endif
   free(ptr);
 }
 
@@ -55,6 +58,10 @@ class SyncedMemory {
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
+
+#ifndef CPU_ONLY
+  void async_gpu_push(const cudaStream_t& stream);
+#endif
 
  private:
   void to_cpu();
