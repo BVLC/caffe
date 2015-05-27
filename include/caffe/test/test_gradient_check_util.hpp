@@ -157,6 +157,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
       Dtype feature = current_blob->cpu_data()[feat_id];
       // LOG(ERROR) << "debug: " << current_blob->cpu_data()[feat_id] << " "
       //     << current_blob->cpu_diff()[feat_id];
+
       if (kink_ - kink_range_ > fabs(feature)
           || fabs(feature) > kink_ + kink_range_) {
         // We check relative accuracy, but for too small values, we threshold

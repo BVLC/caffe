@@ -44,8 +44,10 @@ TYPED_TEST(MaxPoolingDropoutTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->clear_kernel_size();
+  pooling_param->add_kernel_size(3);
+  pooling_param->clear_stride();
+  pooling_param->add_stride(2);
   PoolingLayer<Dtype> max_layer(layer_param);
   max_layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   DropoutLayer<Dtype> dropout_layer(layer_param);
@@ -61,8 +63,10 @@ TYPED_TEST(MaxPoolingDropoutTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->clear_kernel_size();
+  pooling_param->add_kernel_size(3);
+  pooling_param->clear_stride();
+  pooling_param->add_stride(2);
   PoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -91,8 +95,10 @@ TYPED_TEST(MaxPoolingDropoutTest, TestBackward) {
   LayerParameter layer_param;
   layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->clear_kernel_size();
+  pooling_param->add_kernel_size(3);
+  pooling_param->clear_stride();
+  pooling_param->add_stride(2);
   PoolingLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);

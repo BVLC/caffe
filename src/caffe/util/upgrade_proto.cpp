@@ -193,9 +193,9 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_pad()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->set_pad(v0_layer_param.pad());
+        layer_param->mutable_convolution_param()->add_pad(v0_layer_param.pad());
       } else if (type == "pool") {
-        layer_param->mutable_pooling_param()->set_pad(v0_layer_param.pad());
+        layer_param->mutable_pooling_param()->add_pad(v0_layer_param.pad());
       } else {
         LOG(ERROR) << "Unknown parameter pad for layer type " << type;
         is_fully_compatible = false;
@@ -203,10 +203,10 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_kernelsize()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->set_kernel_size(
+        layer_param->mutable_convolution_param()->add_kernel_size(
             v0_layer_param.kernelsize());
       } else if (type == "pool") {
-        layer_param->mutable_pooling_param()->set_kernel_size(
+        layer_param->mutable_pooling_param()->add_kernel_size(
             v0_layer_param.kernelsize());
       } else {
         LOG(ERROR) << "Unknown parameter kernelsize for layer type " << type;
@@ -224,10 +224,10 @@ bool UpgradeV0LayerParameter(const V1LayerParameter& v0_layer_connection,
     }
     if (v0_layer_param.has_stride()) {
       if (type == "conv") {
-        layer_param->mutable_convolution_param()->set_stride(
+        layer_param->mutable_convolution_param()->add_stride(
             v0_layer_param.stride());
       } else if (type == "pool") {
-        layer_param->mutable_pooling_param()->set_stride(
+        layer_param->mutable_pooling_param()->add_stride(
             v0_layer_param.stride());
       } else {
         LOG(ERROR) << "Unknown parameter stride for layer type " << type;
