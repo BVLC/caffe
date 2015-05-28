@@ -48,6 +48,24 @@ classdef test_net < matlab.unittest.TestCase
     end
   end
   methods (Test)
+    function self = test_blob(self)
+      self.net.blobs('data').set_data(10 * ones(self.net.blobs('data').shape));
+      self.verifyEqual(self.net.blobs('data').get_data(), ...
+        10 * ones(self.net.blobs('data').shape, 'single'));
+      self.net.blobs('data').set_diff(-2 * ones(self.net.blobs('data').shape));
+      self.verifyEqual(self.net.blobs('data').get_diff(), ...
+        -2 * ones(self.net.blobs('data').shape, 'single'));
+      original_shape = self.net.blobs('data').shape;
+      self.net.blobs('data').reshape([6 5 4 3 2 1]);
+      self.verifyEqual(self.net.blobs('data').shape, [6 5 4 3 2 1]);
+      self.net.blobs('data').reshape(original_shape);
+      self.net.reshape();
+    end
+    function self = test_layer(self)
+      self.verifyEqual(self.net.params('conv', 1).shape, [2 2 2 11]);
+      self.verifyEqual(self.net.layers('conv').params(2).shape, 11);
+      self.verifyEqual(self.net.layers('conv').type(), 'Convolution');
+    end
     function test_forward_backward(self)
       self.net.forward_prefilled();
       self.net.backward_prefilled();
@@ -60,13 +78,17 @@ classdef test_net < matlab.unittest.TestCase
       weights_file = tempname();
       self.net.save(weights_file);
       model_file2 = caffe.test.test_net.simple_net_file(self.num_output);
-      net2 = caffe.Net(model_file2, weights_file, 'train');
+      net2 = caffe.Net(model_file2, 'train');
+      net2.copy_from(weights_file);
+      net3 = caffe.Net(model_file2, weights_file, 'train');
       delete(model_file2);
       delete(weights_file);
       for l = 1:length(self.net.layer_vec)
         for i = 1:length(self.net.layer_vec(l).params)
           self.verifyEqual(self.net.layer_vec(l).params(i).get_data(), ...
             net2.layer_vec(l).params(i).get_data());
+          self.verifyEqual(self.net.layer_vec(l).params(i).get_data(), ...
+            net3.layer_vec(l).params(i).get_data());
         end
       end
     end

@@ -36,6 +36,8 @@ classdef test_solver < matlab.unittest.TestCase
   methods (Test)
     function test_solve(self)
       self.verifyEqual(self.solver.iter(), 0)
+      self.solver.step(30);
+      self.verifyEqual(self.solver.iter(), 30)
       self.solver.solve()
       self.verifyEqual(self.solver.iter(), 100)
     end
