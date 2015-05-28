@@ -487,10 +487,37 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->params().size(); ++param_id) {
+    Normalize(param_id);
     Regularize(param_id);
-    ComputeUpdateValue(param_id, rate / this->param_.iter_size());
+    ComputeUpdateValue(param_id, rate);
   }
   this->net_->Update();
+}
+
+template <typename Dtype>
+void SGDSolver<Dtype>::Normalize(int param_id) {
+  if (this->param_.iter_size() == 1) { return; }
+  // Scale gradient to counterbalance accumulation.
+  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    caffe_scal(net_params[param_id]->count(), accum_normalization,
+        net_params[param_id]->mutable_cpu_diff());
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
+        net_params[param_id]->mutable_gpu_diff());
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
 }
 
 template <typename Dtype>
@@ -500,8 +527,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
       this->net_->params_weight_decay();
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();
-  Dtype local_decay = weight_decay * net_params_weight_decay[param_id]
-                                   * this->param_.iter_size();
+  Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
   switch (Caffe::mode()) {
   case Caffe::CPU: {
     if (local_decay) {
