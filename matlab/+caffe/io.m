@@ -17,7 +17,7 @@ classdef io
     function mean_data = read_mean(mean_proto_file)
       % mean_data = read_mean(mean_proto_file)
       %   read image mean data from binaryproto file
-      CHECK(ischar(mean_proto_file), 'im_file must be a string');
+      CHECK(ischar(mean_proto_file), 'mean_proto_file must be a string');
       CHECK_FILE_EXIST(mean_proto_file);
       mean_data = caffe_('read_mean', mean_proto_file);
     end

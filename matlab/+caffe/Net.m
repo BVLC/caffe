@@ -111,7 +111,7 @@ classdef Net < handle
         self.blobs(self.outputs{n}).set_diff(output_diff{n});
       end
       self.backward_prefilled();
-      % retrieve diff from input_blobs
+      % retrieve diff from input blobs
       res = cell(length(self.inputs), 1);
       for n = 1:length(self.inputs)
         res{n} = self.blobs(self.inputs{n}).get_diff();

@@ -41,7 +41,7 @@ classdef Solver < handle
     end
     function restore(self, snapshot_filename)
       CHECK(ischar(snapshot_filename), 'snapshot_filename must be a string');
-      CHECK_FILE_EXIST(snapshot_filename)
+      CHECK_FILE_EXIST(snapshot_filename);
       caffe_('solver_restore', self.hSolver_self, snapshot_filename);
     end
     function solve(self)

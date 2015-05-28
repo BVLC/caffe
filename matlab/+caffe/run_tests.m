@@ -2,6 +2,9 @@ function results = run_tests()
 % results = run_tests()
 %   run all tests in this caffe matlab wrapper package
 
+% use CPU for testing
+caffe.set_mode_cpu();
+
 % reset caffe before testing
 caffe.reset_all();
 

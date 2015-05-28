@@ -82,9 +82,9 @@ In MatCaffe, you can
 * Resume training from solver snapshots
 * Access train net and test nets in a solver
 * Run for a certain number of iterations and give back control to Matlab
-* Intermingle arbitrary Matlab code to with gradient steps
+* Intermingle arbitrary Matlab code with gradient steps
 
-An ILSVRC image classification demo is in caffe/matlab/demo/classification_demo.m
+An ILSVRC image classification demo is in caffe/matlab/demo/classification_demo.m (you need to download BVLC CaffeNet from [Model Zoo](http://caffe.berkeleyvision.org/model_zoo.html) to run it).
 
 ### Build MatCaffe
 
