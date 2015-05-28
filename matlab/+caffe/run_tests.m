@@ -3,7 +3,7 @@ function results = run_tests()
 %   run all tests in this caffe matlab wrapper package
 
 % reset caffe before testing
-caffe.reset();
+caffe.reset_all();
 
 % put all test cases here
 results = [...
@@ -11,6 +11,6 @@ results = [...
   run(caffe.test.test_solver) ];
 
 % reset caffe after testing
-caffe.reset();
+caffe.reset_all();
 
 end
