@@ -7,9 +7,9 @@ classdef Blob < handle
   
   methods
     function self = Blob(hBlob_blob)
-      CHECK(is_valid_handle(hBlob_blob), 'invalid input handle');
+      CHECK(is_valid_handle(hBlob_blob), 'invalid Blob handle');
       
-      % setup self handle and attributes
+      % setup self handle
       self.hBlob_self = hBlob_blob;
     end
     function shape = shape(self)
@@ -37,14 +37,16 @@ classdef Blob < handle
   
   methods (Access = private)
     function shape = check_and_preprocess_shape(~, shape)
-      CHECK(isempty(shape) || isnumeric(shape) && isrow(shape), ...
+      CHECK(isempty(shape) || (isnumeric(shape) && isrow(shape)), ...
         'shape must be a integer row vector');
       shape = double(shape);
     end
     function data = check_and_preprocess_data(self, data)
       CHECK(isnumeric(data), 'data or diff must be numeric types');
-      self.check_data_size_matches(data)
-      data = single(data);
+      self.check_data_size_matches(data);
+      if ~isa(data, 'single')
+        data = single(data);
+      end
     end
     function check_data_size_matches(self, data)
       % check whether size of data matches shape of this blob
@@ -59,17 +61,17 @@ classdef Blob < handle
         % target blob is a vector (1 dim)
         self_shape_extended = [self_shape_extended, 1];
       end
-      % also, matlab cannot have tailing dimension 1 for ndim > 2, so you
+      % Also, matlab cannot have tailing dimension 1 for ndim > 2, so you
       % cannot create 20 x 10 x 1 x 1 array in matlab as it becomes 20 x 10
-      % extend matlab arrays to have tailing dimension 1 during shape match
+      % Extend matlab arrays to have tailing dimension 1 during shape match
       data_size_extended = ...
         [size(data), ones(1, length(self_shape_extended) - ndims(data))];
       is_matched = ...
-      (length(self_shape_extended) == length(data_size_extended)) ...
+        (length(self_shape_extended) == length(data_size_extended)) ...
         && all(self_shape_extended == data_size_extended);
       CHECK(is_matched, ...
-        sprintf('%s, data size: [ %s], blob shape: [ %s]', ...
-        'data size does not match blob shape', ...
+        sprintf('%s, input data/diff size: [ %s] vs target blob shape: [ %s]', ...
+        'input data/diff size does not match target blob shape', ...
         sprintf('%d ', data_size_extended), sprintf('%d ', self_shape_extended)));
     end
   end
