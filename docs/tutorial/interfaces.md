@@ -84,18 +84,18 @@ In MatCaffe, you can
 * Run for a certain number of iterations and give back control to Matlab
 * Intermingle arbitrary Matlab code to with gradient steps
 
-An ILSVRC image classification demo is in caffe/matlab/classification_demo.m
+An ILSVRC image classification demo is in caffe/matlab/demo/classification_demo.m
 
 ### Build MatCaffe
 
 Build MatCaffe with `make all matcaffe`. After that, you may test it using `make mattest`.
 
-Common issue: if you run into error messages `libstdc++.so.6:version 'GLIBCXX_3.4.15' not found` during `make mattest`, then it means that your Matlab's runtime libraries does not match your compile-time libraries. You may need to do the following before you start matlab:
+Common issue: if you run into error messages like `libstdc++.so.6:version 'GLIBCXX_3.4.15' not found` during `make mattest`, then it usually means that your Matlab's runtime libraries do not match your compile-time libraries. You may need to do the following before you start Matlab:
 
     export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda/lib64
     export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
-Or the equivalent based on where things are installed on your system, and do `make mattest` again to see if the issue is fixed. Note: this issue is sometimes more complicated since during its startup Matlab may overwrite your `LD_LIBRARY_PATH` environment variable. You can run `!ldd ./matlab/+caffe/private/caffe_.mexa64` in Matlab to see its runtime libraries, and preload your compile-time libraries by exporting them to your `LD_PRELOAD` environment variable.
+Or the equivalent based on where things are installed on your system, and do `make mattest` again to see if the issue is fixed. Note: this issue is sometimes more complicated since during its startup Matlab may overwrite your `LD_LIBRARY_PATH` environment variable. You can run `!ldd ./matlab/+caffe/private/caffe_.mexa64` (the mex extension may differ on your system) in Matlab to see its runtime libraries, and preload your compile-time libraries by exporting them to your `LD_PRELOAD` environment variable.
 
 After successful building and testing, add this package to Matlab search PATH by starting `matlab` from caffe root folder and running the following commands in Matlab command window.
 
@@ -270,7 +270,9 @@ To read Caffe's example image and resize to `[width, height]` and suppose we wan
     im_data = permute(im_data, [2, 1, 3]); % permute width and height
     im_data = single(im_data); % convert to single precision
 
-We do not provide extra functions for data output as Matlab itself is already quite powerful in output.
+Also, you may take a look at caffe/matlab/demo/classification_demo.m to see how to prepare input by taking crops from an image.
+
+We show in caffe/matlab/hdf5creation how to read and write HDF5 data with Matlab. We do not provide extra functions for data output as Matlab itself is already quite powerful in output.
 
 #### Clear nets and solvers
 
