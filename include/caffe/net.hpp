@@ -23,12 +23,15 @@ namespace caffe {
 template <typename Dtype>
 class Net {
  public:
-  explicit Net(const NetParameter& param);
-  explicit Net(const string& param_file, Phase phase);
+  explicit Net(const NetParameter& param,
+               const size_t force_input_count = 0);
+  explicit Net(const string& param_file, Phase phase,
+               const size_t force_input_count = 0);
   virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.
-  void Init(const NetParameter& param);
+  void Init(const NetParameter& param,
+            const size_t force_input_count = 0);
 
   /**
    * @brief Run Forward with the input Blob%s already fed separately.
@@ -258,6 +261,8 @@ class Net {
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
+
+  size_t force_input_count_;
 
   DISABLE_COPY_AND_ASSIGN(Net);
 };

@@ -19,22 +19,27 @@
 namespace caffe {
 
 template <typename Dtype>
-Net<Dtype>::Net(const NetParameter& param) {
-  Init(param);
+Net<Dtype>::Net(const NetParameter& param,
+                const size_t force_input_count) {
+  Init(param, force_input_count);
 }
 
 template <typename Dtype>
-Net<Dtype>::Net(const string& param_file, Phase phase) {
+Net<Dtype>::Net(const string& param_file, Phase phase,
+                const size_t force_input_count) {
   NetParameter param;
   ReadNetParamsFromTextFileOrDie(param_file, &param);
   param.mutable_state()->set_phase(phase);
-  Init(param);
+  Init(param, force_input_count);
 }
 
 template <typename Dtype>
-void Net<Dtype>::Init(const NetParameter& in_param) {
+void Net<Dtype>::Init(const NetParameter& in_param,
+                      const size_t force_input_count) {
   // Set phase from the state.
   phase_ = in_param.state().phase();
+  // Explicitly set input count
+  force_input_count_ = force_input_count;
   // Filter layers based on their include/exclude rules and
   // the current NetState.
   NetParameter filtered_param;
@@ -378,12 +383,23 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
     if (layer_id == -1) {
       // Set the (explicitly specified) dimensions of the input blob.
       if (param.input_dim_size() > 0) {
-        blob_pointer->Reshape(param.input_dim(top_id * 4),
+        blob_pointer->Reshape(((force_input_count_ > 0) ?
+                               force_input_count_ :
+                               param.input_dim(top_id * 4)),
                               param.input_dim(top_id * 4 + 1),
                               param.input_dim(top_id * 4 + 2),
                               param.input_dim(top_id * 4 + 3));
       } else {
-        blob_pointer->Reshape(param.input_shape(top_id));
+        const BlobShape& input_shape = param.input_shape(top_id);
+
+        vector<int> shape_vec(input_shape.dim_size());
+        for (int i = 0; i < input_shape.dim_size(); ++i) {
+          shape_vec[i] = input_shape.dim(i);
+        }
+        if (force_input_count_ > 0) {
+          shape_vec[0] = force_input_count_;
+        }
+        blob_pointer->Reshape(shape_vec);
       }
       net_input_blob_indices_.push_back(blob_id);
       net_input_blobs_.push_back(blob_pointer.get());
