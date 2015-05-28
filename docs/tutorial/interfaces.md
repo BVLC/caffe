@@ -67,7 +67,7 @@ Compile pycaffe by `make pycaffe`. The module dir caffe/python/caffe should be i
 
 ## MATLAB
 
-The MATLAB interface -- matcaffe -- is a `caffe` package in caffe/matlab in which you can integrate Caffe in your Matlab code.
+The MATLAB interface -- matcaffe -- is the `caffe` package in caffe/matlab in which you can integrate Caffe in your Matlab code.
 
 In MatCaffe, you can
 
@@ -84,7 +84,7 @@ In MatCaffe, you can
 * Run for a certain number of iterations and give back control to Matlab
 * Intermingle arbitrary Matlab code to with gradient steps
 
-A MATLAB demo is in caffe/matlab/matcaffe_demo.m
+An ILSVRC image classification demo is in caffe/matlab/classification_demo.m
 
 ### Build MatCaffe
 
@@ -181,7 +181,7 @@ To get a layer's type (string):
 
 #### Forward and backward
 
-Forward pass can be done using `net.forward` or `net.forward_prefilled`. After creating some data for input blobs like `data = rand(net.blobs('data').shape);` you can run
+Forward pass can be done using `net.forward` or `net.forward_prefilled`. Function `net.forward` takes in a cell array of N-D arrays containing data of input blob(s) and outputs a cell array containing data from output blob(s). Function `net.forward_prefilled` uses existing data in input blob(s) during forward pass, takes no input and produces no output. After creating some data for input blobs like `data = rand(net.blobs('data').shape);` you can run
     
     res = net.forward({data});
     prob = res{1};
@@ -274,4 +274,4 @@ We do not provide extra functions for data output as Matlab itself is already qu
 
 #### Clear nets and solvers
 
-Call `caffe.reset()` to clear all solvers and stand-alone nets you have created.
+Call `caffe.reset_all()` to clear all solvers and stand-alone nets you have created.

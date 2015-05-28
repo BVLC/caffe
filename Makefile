@@ -65,7 +65,6 @@ NONGEN_CXX_SRCS := $(shell find \
 	src/$(PROJECT) \
 	include/$(PROJECT) \
 	python/$(PROJECT) \
-	matlab/$(PROJECT) \
 	matlab/+$(PROJECT)/private \
 	examples \
 	tools \
@@ -80,15 +79,12 @@ NONEMPTY_LINT_REPORT := $(BUILD_DIR)/$(LINT_EXT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/_$(PROJECT).cpp
 PY$(PROJECT)_SO := python/$(PROJECT)/_$(PROJECT).so
 PY$(PROJECT)_HXX := include/$(PROJECT)/python_layer.hpp
-# MAT$(PROJECT)_SRC is the matlab wrapper for $(PROJECT)
-MAT$(PROJECT)_SRC := matlab/$(PROJECT)/mat$(PROJECT).cpp
-# MAT$(PROJECT)_PKG_SRC is the mex entrance point of matlab package for $(PROJECT)
-MAT$(PROJECT)_PKG_SRC := matlab/+$(PROJECT)/private/$(PROJECT)_.cpp
+# MAT$(PROJECT)_SRC is the mex entrance point of matlab package for $(PROJECT)
+MAT$(PROJECT)_SRC := matlab/+$(PROJECT)/private/$(PROJECT)_.cpp
 ifneq ($(MATLAB_DIR),)
 	MAT_SO_EXT := $(shell $(MATLAB_DIR)/bin/mexext)
 endif
-MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT).$(MAT_SO_EXT)
-MAT$(PROJECT)_PKG_SO := matlab/+$(PROJECT)/private/$(PROJECT)_.$(MAT_SO_EXT)
+MAT$(PROJECT)_SO := matlab/+$(PROJECT)/private/$(PROJECT)_.$(MAT_SO_EXT)
 
 ##############################
 # Derive generated files
@@ -451,7 +447,7 @@ $(PY$(PROJECT)_SO): $(PY$(PROJECT)_SRC) $(PY$(PROJECT)_HXX) | $(DYNAMIC_NAME)
 
 mat$(PROJECT): mat
 
-mat: $(MAT$(PROJECT)_SO) $(MAT$(PROJECT)_PKG_SO)
+mat: $(MAT$(PROJECT)_SO)
 
 $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	@ if [ -z "$(MATLAB_DIR)" ]; then \
@@ -461,18 +457,6 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 	fi
 	@ echo MEX $<
 	$(Q)$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_SRC) \
-			CXX="$(CXX)" \
-			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
-			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS)" -output $@
-			
-$(MAT$(PROJECT)_PKG_SO): $(MAT$(PROJECT)_PKG_SRC) $(STATIC_NAME)
-	@ if [ -z "$(MATLAB_DIR)" ]; then \
-		echo "MATLAB_DIR must be specified in $(CONFIG_FILE)" \
-			"to build mat$(PROJECT)."; \
-		exit 1; \
-	fi
-	@ echo MEX $<
-	$(Q)$(MATLAB_DIR)/bin/mex $(MAT$(PROJECT)_PKG_SRC) \
 			CXX="$(CXX)" \
 			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
 			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS)" -output $@
@@ -601,7 +585,6 @@ clean:
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
 	@- $(RM) $(PY$(PROJECT)_SO)
 	@- $(RM) $(MAT$(PROJECT)_SO)
-	@- $(RM) $(MAT$(PROJECT)_PKG_SO)
 
 supercleanfiles:
 	$(eval SUPERCLEAN_FILES := $(strip \
