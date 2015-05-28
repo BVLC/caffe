@@ -33,7 +33,7 @@ classdef Net < handle
       end
       % construct a net from handle
       hNet_net = varargin{1};
-      CHECK(is_valid_handle(hNet_net), 'invalid input handle');
+      CHECK(is_valid_handle(hNet_net), 'invalid Net handle');
       
       % setup self handle and attributes
       self.hNet_self = hNet_net;
@@ -64,7 +64,7 @@ classdef Net < handle
       self.name2blob_index = containers.Map(self.attributes.blob_names, ...
         1:length(self.attributes.blob_names));
       
-      % expose layer_names and blob_names for public access
+      % expose layer_names and blob_names for public read access
       self.layer_names = self.attributes.layer_names;
       self.blob_names = self.attributes.blob_names;
     end
@@ -91,12 +91,12 @@ classdef Net < handle
       CHECK(iscell(input_data), 'input_data must be a cell array');
       CHECK(length(input_data) == length(self.inputs), ...
         'input data cell length must match input blob number');
-      % copy data to input_blobs
+      % copy data to input blobs
       for n = 1:length(self.inputs)
         self.blobs(self.inputs{n}).set_data(input_data{n});
       end
       self.forward_prefilled();
-      % retrieve data from output_blobs
+      % retrieve data from output blobs
       res = cell(length(self.outputs), 1);
       for n = 1:length(self.outputs)
         res{n} = self.blobs(self.outputs{n}).get_data();
@@ -106,7 +106,7 @@ classdef Net < handle
       CHECK(iscell(output_diff), 'output_diff must be a cell array');
       CHECK(length(output_diff) == length(self.outputs), ...
         'output diff cell length must match output blob number');
-      % copy diff to output_blobs
+      % copy diff to output blobs
       for n = 1:length(self.outputs)
         self.blobs(self.outputs{n}).set_diff(output_diff{n});
       end

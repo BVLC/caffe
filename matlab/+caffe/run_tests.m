@@ -2,11 +2,15 @@ function results = run_tests()
 % results = run_tests()
 %   run all tests in this caffe matlab wrapper package
 
+% reset caffe before testing
 caffe.reset();
+
+% put all test cases here
 results = [...
   run(caffe.test.test_net) ...
-  run(caffe.test.test_solver)
-  ];
+  run(caffe.test.test_solver) ];
+
+% reset caffe after testing
 caffe.reset();
 
 end

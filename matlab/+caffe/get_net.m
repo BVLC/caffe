@@ -5,7 +5,7 @@ function net = get_net(varargin)
 %   phase_name can only be 'train' or 'test'
 
 CHECK(nargin == 2 || nargin == 3, ['usage: ' ...
-  'net = get_net(model_file, phase_name) or ', ...
+  'net = get_net(model_file, phase_name) or ' ...
   'net = get_net(model_file, weights_file, phase_name)']);
 if nargin == 3
   model_file = varargin{1};
@@ -23,6 +23,7 @@ CHECK(strcmp(phase_name, 'train') || strcmp(phase_name, 'test'), ...
   sprintf('phase_name can only be %strain%s or %stest%s', ...
   char(39), char(39), char(39), char(39)));
 
+% construct caffe net from model_file
 hNet = caffe_('get_net', model_file, phase_name);
 net = caffe.Net(hNet);
 

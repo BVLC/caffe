@@ -23,7 +23,7 @@ classdef Solver < handle
       end
       % construct a solver from handle
       hSolver_solver = varargin{1};
-      CHECK(is_valid_handle(hSolver_solver), 'invalid input handle');
+      CHECK(is_valid_handle(hSolver_solver), 'invalid Solver handle');
       
       % setup self handle and attributes
       self.hSolver_self = hSolver_solver;

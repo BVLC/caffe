@@ -13,7 +13,7 @@ classdef Layer < handle
   
   methods
     function self = Layer(hLayer_layer)
-      CHECK(is_valid_handle(hLayer_layer), 'invalid input handle');
+      CHECK(is_valid_handle(hLayer_layer), 'invalid Layer handle');
       
       % setup self handle and attributes
       self.hLayer_self = hLayer_layer;
