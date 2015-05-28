@@ -1,5 +1,5 @@
 function [scores, maxlabel] = classification_demo(im, use_gpu)
-% scores = classification_demo(im, use_gpu)
+% [scores, maxlabel] = classification_demo(im, use_gpu)
 %
 % Image classification demo using BVLC CaffeNet.
 %
@@ -18,6 +18,7 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 %
 % output
 %   scores   1000-dimensional ILSVRC score vector
+%   maxlabel the label of the highest score
 %
 % You may need to do the following before you start matlab:
 %  $ export LD_LIBRARY_PATH=/opt/intel/mkl/lib/intel64:/usr/local/cuda-5.5/lib64
@@ -25,7 +26,7 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 % Or the equivalent based on where things are installed on your system
 %
 % Usage:
-%  im = imread('../examples/images/cat.jpg');
+%  im = imread('../../examples/images/cat.jpg');
 %  scores = classification_demo(im, 1);
 %  [score, class] = max(scores);
 % Five things to be aware of:
@@ -51,6 +52,13 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 
 % If you have multiple images, cat them with cat(4, ...)
 
+% Add caffe/matlab to you Matlab search PATH to use matcaffe
+if exist('../+caffe', 'dir')
+  addpath('..');
+else
+  error('Please run this demo from caffe/matlab/demo');
+end
+
 % Set caffe mode
 if exist('use_gpu', 'var') && use_gpu
   caffe.set_mode_gpu();
@@ -62,16 +70,21 @@ end
 
 % Initialize the network using BVLC CaffeNet for image classification
 % Weights (parameter) file needs to be downloaded from Model Zoo.
-model_dir = '../models/bvlc_reference_caffenet/';
+model_dir = '../../models/bvlc_reference_caffenet/';
 net_model = [model_dir 'deploy.prototxt'];
 net_weights = [model_dir 'bvlc_reference_caffenet.caffemodel'];
-phase = 'test';
+phase = 'test'; % run with phase test (so that dropout isn't applied)
+if ~exist(net_weights, 'file')
+  error('Please download CaffeNet from Model Zoo before you run this demo');
+end
+
+% Initialize a network
 net = caffe.Net(net_model, net_weights, phase);
 
 if nargin < 1
   % For demo purposes we will use the cat image
-  fprintf('using ../examples/images/cat.jpg as input image\n');
-  im = imread('../examples/images/cat.jpg');
+  fprintf('using caffe/examples/images/cat.jpg as input image\n');
+  im = imread('../../examples/images/cat.jpg');
 end
 
 % prepare oversampled input
@@ -102,7 +115,7 @@ caffe.reset_all();
 % ------------------------------------------------------------------------
 function images = prepare_image(im)
 % ------------------------------------------------------------------------
-d = load('+caffe/imagenet/ilsvrc_2012_mean.mat');
+d = load('../+caffe/imagenet/ilsvrc_2012_mean.mat');
 IMAGE_MEAN = d.image_mean;
 IMAGE_DIM = 256;
 CROPPED_DIM = 227;
