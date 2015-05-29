@@ -1,3 +1,5 @@
+#ifndef NO_IO_DEPENDENCIES
+
 #include <string>
 #include <vector>
 
@@ -118,3 +120,5 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 }
 
 }  // namespace caffe
+
+#endif

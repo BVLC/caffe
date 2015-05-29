@@ -1,3 +1,5 @@
+#ifndef NO_IO_DEPENDENCIES
+
 #include <vector>
 
 #include "hdf5.h"
@@ -75,3 +77,5 @@ INSTANTIATE_CLASS(HDF5OutputLayer);
 REGISTER_LAYER_CLASS(HDF5Output);
 
 }  // namespace caffe
+
+#endif

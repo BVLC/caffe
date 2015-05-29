@@ -1,11 +1,11 @@
-# Use a build matrix to do two builds in parallel:
-# one using CMake, and one using make.
+# Use a build matrix to do builds in parallel:
 env:
   matrix:
     - WITH_CUDA=false WITH_CMAKE=false
     - WITH_CUDA=false WITH_CMAKE=true
     - WITH_CUDA=true WITH_CMAKE=false
     - WITH_CUDA=true WITH_CMAKE=true
+    - NO_IO_DEPENDENCIES=true WITH_CMAKE=false
 
 language: cpp
 

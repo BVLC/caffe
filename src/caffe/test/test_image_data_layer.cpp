@@ -1,3 +1,5 @@
+#ifndef NO_IO_DEPENDENCIES
+
 #include <map>
 #include <string>
 #include <vector>
@@ -177,3 +179,5 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
 }
 
 }  // namespace caffe
+
+#endif

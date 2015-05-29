@@ -1,5 +1,6 @@
+#ifndef NO_IO_DEPENDENCIES
 #include <opencv2/core/core.hpp>
-
+#endif
 #include <stdint.h>
 
 #include <string>
@@ -125,12 +126,16 @@ void DataLayer<Dtype>::InternalThreadEntry() {
       } else {
         cv_img = DecodeDatumToCVMatNative(datum);
       }
+#ifndef NO_IO_DEPENDENCIES
       if (cv_img.channels() != this->transformed_data_.channels()) {
         LOG(WARNING) << "Your dataset contains encoded images with mixed "
         << "channel sizes. Consider adding a 'force_color' flag to the "
         << "model definition, or rebuild your dataset using "
         << "convert_imageset.";
       }
+#else
+  NO_IO;
+#endif
     }
     read_time += timer.MicroSeconds();
     timer.Start();

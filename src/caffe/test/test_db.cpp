@@ -1,3 +1,5 @@
+#ifndef NO_IO_DEPENDENCIES
+
 #include <string>
 
 #include "boost/scoped_ptr.hpp"
@@ -132,3 +134,5 @@ TYPED_TEST(DBTest, TestWrite) {
 }
 
 }  // namespace caffe
+
+#endif

@@ -1,4 +1,6 @@
+#ifndef NO_IO_DEPENDENCIES
 #include <opencv2/core/core.hpp>
+#endif
 
 #include <string>
 #include <vector>
@@ -196,6 +198,7 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
+#ifndef NO_IO_DEPENDENCIES
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
   const int img_width = cv_img.cols;
@@ -292,6 +295,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       }
     }
   }
+#else
+  NO_IO;
+#endif
 }
 
 template<typename Dtype>

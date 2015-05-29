@@ -169,9 +169,11 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
 	LIBRARIES := cudart cublas curand
 endif
-LIBRARIES += glog gflags protobuf leveldb snappy \
-	lmdb boost_system hdf5_hl hdf5 m \
-	opencv_core opencv_highgui opencv_imgproc
+ifneq ($(NO_IO_DEPENDENCIES), 1)
+	LIBRARIES += leveldb lmdb snappy hdf5_hl hdf5 \
+               opencv_core opencv_highgui opencv_imgproc
+endif
+LIBRARIES += glog gflags protobuf m boost_system
 PYTHON_LIBRARIES := boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare
 
@@ -298,6 +300,11 @@ ifeq ($(CPU_ONLY), 1)
 	ALL_WARNS := $(ALL_CXX_WARNS)
 	TEST_FILTER := --gtest_filter="-*GPU*"
 	COMMON_FLAGS += -DCPU_ONLY
+endif
+
+# No IO dependencies
+ifeq ($(NO_IO_DEPENDENCIES), 1)
+	COMMON_FLAGS += -DNO_IO_DEPENDENCIES
 endif
 
 # Python layer support
