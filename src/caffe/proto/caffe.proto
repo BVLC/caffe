@@ -347,6 +347,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
   optional MILDataParameter mil_data_param = 10001;
+  optional MILParameter mil_param = 10002;
 }
 
 // Message that stores parameters used to apply transformation
@@ -799,6 +800,16 @@ message TanHParameter {
 message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
 }
+
+// Message that stores parameters used by MILLayer
+message MILParameter {
+  enum MILType {
+    MAX = 0;
+    NOR = 1;
+  }
+  optional MILType type = 1 [default = MAX]; // The MIL method
+}
+
 
 message WindowDataParameter {
   // Specify the data source.
