@@ -118,9 +118,18 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>FilterNet()
 : <a class="el" href="classcaffe_1_1Net.html#a4a38a77b5f01ba4754e6007b9f1214f8">caffe::Net&lt; Dtype &gt;</a>
 </li>
+<li>flatten_layers_
+: <a class="el" href="classcaffe_1_1SPPLayer.html#a765c32194d96177869e2b9028b1ff0d4">caffe::SPPLayer&lt; Dtype &gt;</a>
+</li>
+<li>flatten_outputs_
+: <a class="el" href="classcaffe_1_1SPPLayer.html#afd42f96c91f26fe32427865a16796503">caffe::SPPLayer&lt; Dtype &gt;</a>
+</li>
+<li>flatten_top_vecs_
+: <a class="el" href="classcaffe_1_1SPPLayer.html#a7460ba8ed098335de91cd8cab363d365">caffe::SPPLayer&lt; Dtype &gt;</a>
+</li>
 <li>Forward()
 : <a class="el" href="classcaffe_1_1Layer.html#aa5fc9ddb31b58958653372bdaaccde94">caffe::Layer&lt; Dtype &gt;</a>
-, <a class="el" href="classcaffe_1_1Net.html#ad97c5e2984017e0a893a5c396fc8beb8">caffe::Net&lt; Dtype &gt;</a>
+, <a class="el" href="classcaffe_1_1Net.html#ad12d1ab8e1beb2e407e82454b174f83a">caffe::Net&lt; Dtype &gt;</a>
 </li>
 <li>Forward_cpu()
 : <a class="el" href="classcaffe_1_1AbsValLayer.html#a6f9bc11e2459c982b44482305390dfc7">caffe::AbsValLayer&lt; Dtype &gt;</a>
@@ -151,8 +160,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 , <a class="el" href="classcaffe_1_1MVNLayer.html#a32ccd6a52ff81d25ed3d308614183e29">caffe::MVNLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1PoolingLayer.html#ac84e5fb89223f6cc2577cea2c55cd388">caffe::PoolingLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1PowerLayer.html#a35131891dc10f9092ec6dcd115fdb71b">caffe::PowerLayer&lt; Dtype &gt;</a>
+, <a class="el" href="classcaffe_1_1PReLULayer.html#a67128902b4ef419ccfb23db2d49b9ace">caffe::PReLULayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1PythonLayer.html#ad1ec98336aab5e8082721973d59974d4">caffe::PythonLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1ReLULayer.html#aab91a81886843afbe167881b16432947">caffe::ReLULayer&lt; Dtype &gt;</a>
+, <a class="el" href="classcaffe_1_1ReshapeLayer.html#a8fe2fb67597ea0c1c86c9d55ca10026d">caffe::ReshapeLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SigmoidCrossEntropyLossLayer.html#a222746c19788807b94137bbe722033e3">caffe::SigmoidCrossEntropyLossLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SigmoidLayer.html#a36dc176a1f3769219adc7f2de8147f19">caffe::SigmoidLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SilenceLayer.html#afa9d81c781cfa65db1b34978933b388f">caffe::SilenceLayer&lt; Dtype &gt;</a>
@@ -160,6 +171,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 , <a class="el" href="classcaffe_1_1SoftmaxLayer.html#afc7ed2452671d4193659c2d2ab7d4f53">caffe::SoftmaxLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SoftmaxWithLossLayer.html#a61bdef82c2e3546c17183c1002671e75">caffe::SoftmaxWithLossLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SplitLayer.html#a4195a7c3470823223335980bc65d6450">caffe::SplitLayer&lt; Dtype &gt;</a>
+, <a class="el" href="classcaffe_1_1SPPLayer.html#a47c6a647030121c813845c657744547c">caffe::SPPLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1TanHLayer.html#ab6a45bd7a84b1b725544082a7bdb583c">caffe::TanHLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1ThresholdLayer.html#a57d3757107bc9b21379dc56b4f96643e">caffe::ThresholdLayer&lt; Dtype &gt;</a>
 </li>
@@ -184,8 +196,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 , <a class="el" href="classcaffe_1_1MVNLayer.html#ad3ca992f61728f9ad7acd2a3ff964b81">caffe::MVNLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1PoolingLayer.html#a027fcd5f61e6386819e8d02815f72e4a">caffe::PoolingLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1PowerLayer.html#ae942bd168cb49fb02b4d60a4aa2a0e64">caffe::PowerLayer&lt; Dtype &gt;</a>
+, <a class="el" href="classcaffe_1_1PReLULayer.html#af0807c358c94f9947dc42876eca413ce">caffe::PReLULayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1ReLULayer.html#addcdd688e5f137181dc9f28c01252d75">caffe::ReLULayer&lt; Dtype &gt;</a>
-, <a class="el" href="classcaffe_1_1SigmoidCrossEntropyLossLayer.html#afc33199fe9526b4bec94bb8cab02dd9f">caffe::SigmoidCrossEntropyLossLayer&lt; Dtype &gt;</a>
+, <a class="el" href="classcaffe_1_1ReshapeLayer.html#a52fa50275777353d783c0bd406104d6b">caffe::ReshapeLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SigmoidLayer.html#abaabf3202ba640865500f751f2386c20">caffe::SigmoidLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SilenceLayer.html#ae141dc84009edfcf495b55e1e0d131e2">caffe::SilenceLayer&lt; Dtype &gt;</a>
 , <a class="el" href="classcaffe_1_1SliceLayer.html#a99e3e369f0fe44d772e7f7c6fa01690d">caffe::SliceLayer&lt; Dtype &gt;</a>
@@ -208,7 +221,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 11 2015 14:04:10 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 12:07:44 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

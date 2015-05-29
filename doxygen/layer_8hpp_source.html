@@ -279,74 +279,75 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00406"></a><span class="lineno"><a class="line" href="classcaffe_1_1Layer.html#aa5fc9ddb31b58958653372bdaaccde94">  406</a></span>&#160;<span class="keyword">inline</span> Dtype <a class="code" href="classcaffe_1_1Layer.html#aa5fc9ddb31b58958653372bdaaccde94">Layer&lt;Dtype&gt;::Forward</a>(<span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; bottom,</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;    <span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; top) {</div>
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  Dtype loss = 0;</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  <span class="keywordflow">switch</span> (Caffe::mode()) {</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  <span class="keywordflow">case</span> Caffe::CPU:</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    Forward_cpu(bottom, top);</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> top_id = 0; top_id &lt; top.size(); ++top_id) {</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;      <span class="keywordflow">if</span> (!this-&gt;loss(top_id)) { <span class="keywordflow">continue</span>; }</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">int</span> count = top[top_id]-&gt;count();</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;      <span class="keyword">const</span> Dtype* data = top[top_id]-&gt;cpu_data();</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;      <span class="keyword">const</span> Dtype* loss_weights = top[top_id]-&gt;cpu_diff();</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;      loss += caffe_cpu_dot(count, data, loss_weights);</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    }</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;    <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  <span class="keywordflow">case</span> Caffe::GPU:</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    Forward_gpu(bottom, top);</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<span class="preprocessor">#ifndef CPU_ONLY</span></div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> top_id = 0; top_id &lt; top.size(); ++top_id) {</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;      <span class="keywordflow">if</span> (!this-&gt;loss(top_id)) { <span class="keywordflow">continue</span>; }</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">int</span> count = top[top_id]-&gt;count();</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      <span class="keyword">const</span> Dtype* data = top[top_id]-&gt;gpu_data();</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;      <span class="keyword">const</span> Dtype* loss_weights = top[top_id]-&gt;gpu_diff();</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;      Dtype blob_loss = 0;</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;      caffe_gpu_dot(count, data, loss_weights, &amp;blob_loss);</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      loss += blob_loss;</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;    }</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;    <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    LOG(FATAL) &lt;&lt; <span class="stringliteral">&quot;Unknown caffe mode.&quot;</span>;</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  }</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  <span class="keywordflow">return</span> loss;</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;}</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
-<div class="line"><a name="l00441"></a><span class="lineno"><a class="line" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a">  441</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a">Layer&lt;Dtype&gt;::Backward</a>(<span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; top,</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    <span class="keyword">const</span> vector&lt;bool&gt;&amp; propagate_down,</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; bottom) {</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;  <span class="keywordflow">switch</span> (Caffe::mode()) {</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  <span class="keywordflow">case</span> Caffe::CPU:</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    Backward_cpu(top, propagate_down, bottom);</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;    <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  <span class="keywordflow">case</span> Caffe::GPU:</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    Backward_gpu(top, propagate_down, bottom);</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;  <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    LOG(FATAL) &lt;&lt; <span class="stringliteral">&quot;Unknown caffe mode.&quot;</span>;</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;  }</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;}</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;<span class="comment">// Serialize LayerParameter to protocol buffer</span></div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
-<div class="line"><a name="l00458"></a><span class="lineno"><a class="line" href="classcaffe_1_1Layer.html#a4a1754828dda22cc8daa2f63377f3579">  458</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1Layer.html#a4a1754828dda22cc8daa2f63377f3579">Layer&lt;Dtype&gt;::ToProto</a>(LayerParameter* param, <span class="keywordtype">bool</span> write_diff) {</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  param-&gt;Clear();</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  param-&gt;CopyFrom(layer_param_);</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  param-&gt;clear_blobs();</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; blobs_.size(); ++i) {</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;    blobs_[i]-&gt;ToProto(param-&gt;add_blobs(), write_diff);</div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  }</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;}</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;}  <span class="comment">// namespace caffe</span></div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;</div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;<span class="preprocessor">#endif  // CAFFE_LAYER_H_</span></div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  Reshape(bottom, top);</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  <span class="keywordflow">switch</span> (Caffe::mode()) {</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  <span class="keywordflow">case</span> Caffe::CPU:</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;    Forward_cpu(bottom, top);</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> top_id = 0; top_id &lt; top.size(); ++top_id) {</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;      <span class="keywordflow">if</span> (!this-&gt;loss(top_id)) { <span class="keywordflow">continue</span>; }</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">int</span> count = top[top_id]-&gt;count();</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;      <span class="keyword">const</span> Dtype* data = top[top_id]-&gt;cpu_data();</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;      <span class="keyword">const</span> Dtype* loss_weights = top[top_id]-&gt;cpu_diff();</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;      loss += caffe_cpu_dot(count, data, loss_weights);</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;    }</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;  <span class="keywordflow">case</span> Caffe::GPU:</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;    Forward_gpu(bottom, top);</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;<span class="preprocessor">#ifndef CPU_ONLY</span></div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> top_id = 0; top_id &lt; top.size(); ++top_id) {</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;      <span class="keywordflow">if</span> (!this-&gt;loss(top_id)) { <span class="keywordflow">continue</span>; }</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">int</span> count = top[top_id]-&gt;count();</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;      <span class="keyword">const</span> Dtype* data = top[top_id]-&gt;gpu_data();</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;      <span class="keyword">const</span> Dtype* loss_weights = top[top_id]-&gt;gpu_diff();</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;      Dtype blob_loss = 0;</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      caffe_gpu_dot(count, data, loss_weights, &amp;blob_loss);</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;      loss += blob_loss;</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;    }</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  <span class="keywordflow">default</span>:</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;    LOG(FATAL) &lt;&lt; <span class="stringliteral">&quot;Unknown caffe mode.&quot;</span>;</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  }</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  <span class="keywordflow">return</span> loss;</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;}</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
+<div class="line"><a name="l00442"></a><span class="lineno"><a class="line" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a">  442</a></span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a">Layer&lt;Dtype&gt;::Backward</a>(<span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; top,</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="keyword">const</span> vector&lt;bool&gt;&amp; propagate_down,</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; bottom) {</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;  <span class="keywordflow">switch</span> (Caffe::mode()) {</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  <span class="keywordflow">case</span> Caffe::CPU:</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;    Backward_cpu(top, propagate_down, bottom);</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  <span class="keywordflow">case</span> Caffe::GPU:</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    Backward_gpu(top, propagate_down, bottom);</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  <span class="keywordflow">default</span>:</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    LOG(FATAL) &lt;&lt; <span class="stringliteral">&quot;Unknown caffe mode.&quot;</span>;</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  }</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;}</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;<span class="comment">// Serialize LayerParameter to protocol buffer</span></div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
+<div class="line"><a name="l00459"></a><span class="lineno"><a class="line" href="classcaffe_1_1Layer.html#a4a1754828dda22cc8daa2f63377f3579">  459</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1Layer.html#a4a1754828dda22cc8daa2f63377f3579">Layer&lt;Dtype&gt;::ToProto</a>(LayerParameter* param, <span class="keywordtype">bool</span> write_diff) {</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  param-&gt;Clear();</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  param-&gt;CopyFrom(layer_param_);</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;  param-&gt;clear_blobs();</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; blobs_.size(); ++i) {</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;    blobs_[i]-&gt;ToProto(param-&gt;add_blobs(), write_diff);</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  }</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;}</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;}  <span class="comment">// namespace caffe</span></div>
+<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;<span class="preprocessor">#endif  // CAFFE_LAYER_H_</span></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_aa5fc9ddb31b58958653372bdaaccde94"><div class="ttname"><a href="classcaffe_1_1Layer.html#aa5fc9ddb31b58958653372bdaaccde94">caffe::Layer::Forward</a></div><div class="ttdeci">Dtype Forward(const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;bottom, const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;top)</div><div class="ttdoc">Given the bottom blobs, compute the top blobs and the loss. </div><div class="ttdef"><b>Definition:</b> layer.hpp:406</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_add965883f75bbf90c7a06f960cda7a1a"><div class="ttname"><a href="classcaffe_1_1Layer.html#add965883f75bbf90c7a06f960cda7a1a">caffe::Layer::Forward_cpu</a></div><div class="ttdeci">virtual void Forward_cpu(const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;bottom, const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;top)=0</div><div class="ttdoc">Using the CPU device, compute the layer output. </div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_af6d347229a139500994e7a926c680486"><div class="ttname"><a href="classcaffe_1_1Layer.html#af6d347229a139500994e7a926c680486">caffe::Layer::loss_</a></div><div class="ttdeci">vector&lt; Dtype &gt; loss_</div><div class="ttdef"><b>Definition:</b> layer.hpp:301</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html"><div class="ttname"><a href="classcaffe_1_1Layer.html">caffe::Layer</a></div><div class="ttdoc">An interface for the units of computation which can be composed into a Net. </div><div class="ttdef"><b>Definition:</b> layer.hpp:27</div></div>
 <div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_ade3eee97cc743c4e68fff7eba6484916"><div class="ttname"><a href="classcaffe_1_1Layer.html#ade3eee97cc743c4e68fff7eba6484916">caffe::Layer::MinBottomBlobs</a></div><div class="ttdeci">virtual int MinBottomBlobs() const </div><div class="ttdoc">Returns the minimum number of bottom blobs required by the layer, or -1 if no minimum number is requi...</div><div class="ttdef"><b>Definition:</b> layer.hpp:202</div></div>
-<div class="ttc" id="classcaffe_1_1Layer_html_a53df1e081767e07bfb4c81657f4acd0a"><div class="ttname"><a href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a">caffe::Layer::Backward</a></div><div class="ttdeci">void Backward(const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;top, const vector&lt; bool &gt; &amp;propagate_down, const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;bottom)</div><div class="ttdoc">Given the top blob error gradients, compute the bottom blob error gradients. </div><div class="ttdef"><b>Definition:</b> layer.hpp:441</div></div>
+<div class="ttc" id="classcaffe_1_1Layer_html_a53df1e081767e07bfb4c81657f4acd0a"><div class="ttname"><a href="classcaffe_1_1Layer.html#a53df1e081767e07bfb4c81657f4acd0a">caffe::Layer::Backward</a></div><div class="ttdeci">void Backward(const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;top, const vector&lt; bool &gt; &amp;propagate_down, const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;bottom)</div><div class="ttdoc">Given the top blob error gradients, compute the bottom blob error gradients. </div><div class="ttdef"><b>Definition:</b> layer.hpp:442</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_ad412187a0483c310bd59fd5f957faf0d"><div class="ttname"><a href="classcaffe_1_1Layer.html#ad412187a0483c310bd59fd5f957faf0d">caffe::Layer::EqualNumBottomTopBlobs</a></div><div class="ttdeci">virtual bool EqualNumBottomTopBlobs() const </div><div class="ttdoc">Returns true if the layer requires an equal number of bottom and top blobs. </div><div class="ttdef"><b>Definition:</b> layer.hpp:242</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_a8073fcf2c139b47eb99ce71b346b1321"><div class="ttname"><a href="classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321">caffe::Layer::blobs_</a></div><div class="ttdeci">vector&lt; shared_ptr&lt; Blob&lt; Dtype &gt; &gt; &gt; blobs_</div><div class="ttdef"><b>Definition:</b> layer.hpp:295</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_af475062fe280614b18f642c4ccf50b40"><div class="ttname"><a href="classcaffe_1_1Layer.html#af475062fe280614b18f642c4ccf50b40">caffe::Layer::layer_param</a></div><div class="ttdeci">const LayerParameter &amp; layer_param() const </div><div class="ttdoc">Returns the layer parameter. </div><div class="ttdef"><b>Definition:</b> layer.hpp:158</div></div>
@@ -368,7 +369,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classcaffe_1_1Layer_html_a7b4e4ccea08c7b8b15acc6829d5735f6"><div class="ttname"><a href="classcaffe_1_1Layer.html#a7b4e4ccea08c7b8b15acc6829d5735f6">caffe::Layer::Layer</a></div><div class="ttdeci">Layer(const LayerParameter &amp;param)</div><div class="ttdef"><b>Definition:</b> layer.hpp:34</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_a38dc2488bf319b8de5a7ac84e0045393"><div class="ttname"><a href="classcaffe_1_1Layer.html#a38dc2488bf319b8de5a7ac84e0045393">caffe::Layer::LayerSetUp</a></div><div class="ttdeci">virtual void LayerSetUp(const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;bottom, const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;top)</div><div class="ttdoc">Does layer-specific setup: your layer should implement this function as well as Reshape. </div><div class="ttdef"><b>Definition:</b> layer.hpp:85</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_a64d15855f882af4b82e83fa993c4e7c6"><div class="ttname"><a href="classcaffe_1_1Layer.html#a64d15855f882af4b82e83fa993c4e7c6">caffe::Layer::Backward_cpu</a></div><div class="ttdeci">virtual void Backward_cpu(const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;top, const vector&lt; bool &gt; &amp;propagate_down, const vector&lt; Blob&lt; Dtype &gt; * &gt; &amp;bottom)=0</div><div class="ttdoc">Using the CPU device, compute the gradients for any parameters and for the bottom blobs if propagate_...</div></div>
-<div class="ttc" id="classcaffe_1_1Layer_html_a4a1754828dda22cc8daa2f63377f3579"><div class="ttname"><a href="classcaffe_1_1Layer.html#a4a1754828dda22cc8daa2f63377f3579">caffe::Layer::ToProto</a></div><div class="ttdeci">virtual void ToProto(LayerParameter *param, bool write_diff=false)</div><div class="ttdoc">Writes the layer parameter to a protocol buffer. </div><div class="ttdef"><b>Definition:</b> layer.hpp:458</div></div>
+<div class="ttc" id="classcaffe_1_1Layer_html_a4a1754828dda22cc8daa2f63377f3579"><div class="ttname"><a href="classcaffe_1_1Layer.html#a4a1754828dda22cc8daa2f63377f3579">caffe::Layer::ToProto</a></div><div class="ttdeci">virtual void ToProto(LayerParameter *param, bool write_diff=false)</div><div class="ttdoc">Writes the layer parameter to a protocol buffer. </div><div class="ttdef"><b>Definition:</b> layer.hpp:459</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_a1d04ad7f595a82a1c811f102d68b8a19"><div class="ttname"><a href="classcaffe_1_1Layer.html#a1d04ad7f595a82a1c811f102d68b8a19">caffe::Layer::phase_</a></div><div class="ttdeci">Phase phase_</div><div class="ttdef"><b>Definition:</b> layer.hpp:293</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_a7ed12bb2df25c887e41d7ea9557fc701"><div class="ttname"><a href="classcaffe_1_1Layer.html#a7ed12bb2df25c887e41d7ea9557fc701">caffe::Layer::layer_param_</a></div><div class="ttdeci">LayerParameter layer_param_</div><div class="ttdef"><b>Definition:</b> layer.hpp:291</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html_a899b09f4b91ada8545b3a43ee91e0d69"><div class="ttname"><a href="classcaffe_1_1Layer.html#a899b09f4b91ada8545b3a43ee91e0d69">caffe::Layer::set_loss</a></div><div class="ttdeci">void set_loss(const int top_index, const Dtype value)</div><div class="ttdoc">Sets the loss associated with a top blob at a given index. </div><div class="ttdef"><b>Definition:</b> layer.hpp:175</div></div>
@@ -380,7 +381,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 11 2015 14:02:38 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 12:07:27 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

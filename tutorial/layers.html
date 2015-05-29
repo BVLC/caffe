@@ -78,7 +78,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <h4 id="convolution">Convolution</h4>
 
 <ul>
-  <li>LayerType: <code>CONVOLUTION</code></li>
+  <li>Layer type: <code>Convolution</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/convolution_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/convolution_layer.cu</code></li>
   <li>Parameters (<code>ConvolutionParameter convolution_param</code>)
@@ -117,15 +117,15 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
   <li>
     <p>Sample (as seen in <code>./examples/imagenet/imagenet_train_val.prototxt</code>)</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "conv1"
-  type: CONVOLUTION
+  type: "Convolution"
   bottom: "data"
   top: "conv1"
-  blobs_lr: 1          # learning rate multiplier for the filters
-  blobs_lr: 2          # learning rate multiplier for the biases
-  weight_decay: 1      # weight decay multiplier for the filters
-  weight_decay: 0      # weight decay multiplier for the biases
+  # learning rate and decay multipliers for the filters
+  param { lr_mult: 1 decay_mult: 1 }
+  # learning rate and decay multipliers for the biases
+  param { lr_mult: 2 decay_mult: 0 }
   convolution_param {
     num_output: 96     # learn 96 filters
     kernel_size: 11    # each filter is 11x11
@@ -144,12 +144,12 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
   </li>
 </ul>
 
-<p>The <code>CONVOLUTION</code> layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.</p>
+<p>The <code>Convolution</code> layer convolves the input image with a set of learnable filters, each producing one feature map in the output image.</p>
 
 <h4 id="pooling">Pooling</h4>
 
 <ul>
-  <li>LayerType: <code>POOLING</code></li>
+  <li>Layer type: <code>Pooling</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/pooling_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/pooling_layer.cu</code></li>
   <li>Parameters (<code>PoolingParameter pooling_param</code>)
@@ -181,9 +181,9 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
   <li>
     <p>Sample (as seen in <code>./examples/imagenet/imagenet_train_val.prototxt</code>)</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "pool1"
-  type: POOLING
+  type: "Pooling"
   bottom: "conv1"
   top: "pool1"
   pooling_param {
@@ -199,7 +199,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <h4 id="local-response-normalization-lrn">Local Response Normalization (LRN)</h4>
 
 <ul>
-  <li>LayerType: <code>LRN</code></li>
+  <li>Layer type: <code>LRN</code></li>
   <li>CPU Implementation: <code>./src/caffe/layers/lrn_layer.cpp</code></li>
   <li>CUDA GPU Implementation: <code>./src/caffe/layers/lrn_layer.cu</code></li>
   <li>Parameters (<code>LRNParameter lrn_param</code>)
@@ -220,7 +220,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 
 <h4 id="im2col">im2col</h4>
 
-<p><code>IM2COL</code> is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe’s original convolution to do matrix multiplication by laying out all patches into a matrix.</p>
+<p><code>Im2col</code> is a helper for doing the image-to-column transformation that you most likely do not need to know about. This is used in Caffe’s original convolution to do matrix multiplication by laying out all patches into a matrix.</p>
 
 <h3 id="loss-layers">Loss Layers</h3>
 
@@ -229,7 +229,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <h4 id="softmax">Softmax</h4>
 
 <ul>
-  <li>LayerType: <code>SOFTMAX_LOSS</code></li>
+  <li>Layer type: <code>SoftmaxWithLoss</code></li>
 </ul>
 
 <p>The softmax loss layer computes the multinomial logistic loss of the softmax of its inputs. It’s conceptually identical to a softmax layer followed by a multinomial logistic loss layer, but provides a more numerically stable gradient.</p>
@@ -237,7 +237,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <h4 id="sum-of-squares--euclidean">Sum-of-Squares / Euclidean</h4>
 
 <ul>
-  <li>LayerType: <code>EUCLIDEAN_LOSS</code></li>
+  <li>Layer type: <code>EuclideanLoss</code></li>
 </ul>
 
 <p>The Euclidean loss layer computes the sum of squares of differences of its two inputs, <script type="math/tex">\frac 1 {2N} \sum_{i=1}^N \| x^1_i - x^2_i \|_2^2</script>.</p>
@@ -245,7 +245,7 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
 <h4 id="hinge--margin">Hinge / Margin</h4>
 
 <ul>
-  <li>LayerType: <code>HINGE_LOSS</code></li>
+  <li>Layer type: <code>HingeLoss</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/hinge_loss_layer.cpp</code></li>
   <li>CUDA GPU implementation: none yet</li>
   <li>Parameters (<code>HingeLossParameter hinge_loss_param</code>)
@@ -272,17 +272,17 @@ In contrast, other layers (with few exceptions) ignore the spatial structure of 
     <p>Samples</p>
 
     <pre><code># L1 Norm
-layers {
+layer {
   name: "loss"
-  type: HINGE_LOSS
+  type: "HingeLoss"
   bottom: "pred"
   bottom: "label"
 }
 
 # L2 Norm
-layers {
+layer {
   name: "loss"
-  type: HINGE_LOSS
+  type: "HingeLoss"
   bottom: "pred"
   bottom: "label"
   top: "loss"
@@ -298,15 +298,15 @@ layers {
 
 <h4 id="sigmoid-cross-entropy">Sigmoid Cross-Entropy</h4>
 
-<p><code>SIGMOID_CROSS_ENTROPY_LOSS</code></p>
+<p><code>SigmoidCrossEntropyLoss</code></p>
 
 <h4 id="infogain">Infogain</h4>
 
-<p><code>INFOGAIN_LOSS</code></p>
+<p><code>InfogainLoss</code></p>
 
 <h4 id="accuracy-and-top-k">Accuracy and Top-k</h4>
 
-<p><code>ACCURACY</code> scores the output as the accuracy of output with respect to target – it is not actually a loss and has no backward step.</p>
+<p><code>Accuracy</code> scores the output as the accuracy of output with respect to target – it is not actually a loss and has no backward step.</p>
 
 <h3 id="activation--neuron-layers">Activation / Neuron Layers</h3>
 
@@ -328,7 +328,7 @@ layers {
 <h4 id="relu--rectified-linear-and-leaky-relu">ReLU / Rectified-Linear and Leaky-ReLU</h4>
 
 <ul>
-  <li>LayerType: <code>RELU</code></li>
+  <li>Layer type: <code>ReLU</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/relu_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/relu_layer.cu</code></li>
   <li>Parameters (<code>ReLUParameter relu_param</code>)
@@ -343,9 +343,9 @@ layers {
   <li>
     <p>Sample (as seen in <code>./examples/imagenet/imagenet_train_val.prototxt</code>)</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "conv1"
   top: "conv1"
 }
@@ -353,75 +353,75 @@ layers {
   </li>
 </ul>
 
-<p>Given an input value x, The <code>RELU</code> layer computes the output as x if x &gt; 0 and negative_slope * x if x &lt;= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.</p>
+<p>Given an input value x, The <code>ReLU</code> layer computes the output as x if x &gt; 0 and negative_slope * x if x &lt;= 0. When the negative slope parameter is not set, it is equivalent to the standard ReLU function of taking max(x, 0). It also supports in-place computation, meaning that the bottom and the top blob could be the same to preserve memory consumption.</p>
 
 <h4 id="sigmoid">Sigmoid</h4>
 
 <ul>
-  <li>LayerType: <code>SIGMOID</code></li>
+  <li>Layer type: <code>Sigmoid</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/sigmoid_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/sigmoid_layer.cu</code></li>
   <li>
     <p>Sample (as seen in <code>./examples/imagenet/mnist_autoencoder.prototxt</code>)</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "encode1neuron"
   bottom: "encode1"
   top: "encode1neuron"
-  type: SIGMOID
+  type: "Sigmoid"
 }
 </code></pre>
   </li>
 </ul>
 
-<p>The <code>SIGMOID</code> layer computes the output as sigmoid(x) for each input element x.</p>
+<p>The <code>Sigmoid</code> layer computes the output as sigmoid(x) for each input element x.</p>
 
 <h4 id="tanh--hyperbolic-tangent">TanH / Hyperbolic Tangent</h4>
 
 <ul>
-  <li>LayerType: <code>TANH</code></li>
+  <li>Layer type: <code>TanH</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/tanh_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/tanh_layer.cu</code></li>
   <li>
     <p>Sample</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "layer"
   bottom: "in"
   top: "out"
-  type: TANH
+  type: "TanH"
 }
 </code></pre>
   </li>
 </ul>
 
-<p>The <code>TANH</code> layer computes the output as tanh(x) for each input element x.</p>
+<p>The <code>TanH</code> layer computes the output as tanh(x) for each input element x.</p>
 
 <h4 id="absolute-value">Absolute Value</h4>
 
 <ul>
-  <li>LayerType: <code>ABSVAL</code></li>
+  <li>Layer type: <code>AbsVal</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/absval_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/absval_layer.cu</code></li>
   <li>
     <p>Sample</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "layer"
   bottom: "in"
   top: "out"
-  type: ABSVAL
+  type: "AbsVal"
 }
 </code></pre>
   </li>
 </ul>
 
-<p>The <code>ABSVAL</code> layer computes the output as abs(x) for each input element x.</p>
+<p>The <code>AbsVal</code> layer computes the output as abs(x) for each input element x.</p>
 
 <h4 id="power">Power</h4>
 
 <ul>
-  <li>LayerType: <code>POWER</code></li>
+  <li>Layer type: <code>Power</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/power_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/power_layer.cu</code></li>
   <li>Parameters (<code>PowerParameter power_param</code>)
@@ -438,11 +438,11 @@ layers {
   <li>
     <p>Sample</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "layer"
   bottom: "in"
   top: "out"
-  type: POWER
+  type: "Power"
   power_param {
     power: 1
     scale: 1
@@ -453,18 +453,18 @@ layers {
   </li>
 </ul>
 
-<p>The <code>POWER</code> layer computes the output as (shift + scale * x) ^ power for each input element x.</p>
+<p>The <code>Power</code> layer computes the output as (shift + scale * x) ^ power for each input element x.</p>
 
 <h4 id="bnll">BNLL</h4>
 
 <ul>
-  <li>LayerType: <code>BNLL</code></li>
+  <li>Layer type: <code>BNLL</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/bnll_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/bnll_layer.cu</code></li>
   <li>
     <p>Sample</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "layer"
   bottom: "in"
   top: "out"
@@ -485,7 +485,7 @@ layers {
 <h4 id="database">Database</h4>
 
 <ul>
-  <li>LayerType: <code>DATA</code></li>
+  <li>Layer type: <code>Data</code></li>
   <li>Parameters
     <ul>
       <li>Required
@@ -507,7 +507,7 @@ layers {
 <h4 id="in-memory">In-Memory</h4>
 
 <ul>
-  <li>LayerType: <code>MEMORY_DATA</code></li>
+  <li>Layer type: <code>MemoryData</code></li>
   <li>Parameters
     <ul>
       <li>Required
@@ -524,7 +524,7 @@ layers {
 <h4 id="hdf5-input">HDF5 Input</h4>
 
 <ul>
-  <li>LayerType: <code>HDF5_DATA</code></li>
+  <li>Layer type: <code>HDF5Data</code></li>
   <li>Parameters
     <ul>
       <li>Required
@@ -540,7 +540,7 @@ layers {
 <h4 id="hdf5-output">HDF5 Output</h4>
 
 <ul>
-  <li>LayerType: <code>HDF5_OUTPUT</code></li>
+  <li>Layer type: <code>HDF5Output</code></li>
   <li>Parameters
     <ul>
       <li>Required
@@ -557,7 +557,7 @@ layers {
 <h4 id="images">Images</h4>
 
 <ul>
-  <li>LayerType: <code>IMAGE_DATA</code></li>
+  <li>Layer type: <code>ImageData</code></li>
   <li>Parameters
     <ul>
       <li>Required
@@ -579,18 +579,18 @@ layers {
 
 <h4 id="windows">Windows</h4>
 
-<p><code>WINDOW_DATA</code></p>
+<p><code>WindowData</code></p>
 
 <h4 id="dummy">Dummy</h4>
 
-<p><code>DUMMY_DATA</code> is for development and debugging. See <code>DummyDataParameter</code>.</p>
+<p><code>DummyData</code> is for development and debugging. See <code>DummyDataParameter</code>.</p>
 
 <h3 id="common-layers">Common Layers</h3>
 
 <h4 id="inner-product">Inner Product</h4>
 
 <ul>
-  <li>LayerType: <code>INNER_PRODUCT</code></li>
+  <li>Layer type: <code>InnerProduct</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/inner_product_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/inner_product_layer.cu</code></li>
   <li>Parameters (<code>InnerProductParameter inner_product_param</code>)
@@ -626,13 +626,13 @@ layers {
   <li>
     <p>Sample</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "fc8"
-  type: INNER_PRODUCT
-  blobs_lr: 1          # learning rate multiplier for the filters
-  blobs_lr: 2          # learning rate multiplier for the biases
-  weight_decay: 1      # weight decay multiplier for the filters
-  weight_decay: 0      # weight decay multiplier for the biases
+  type: "InnerProduct"
+  # learning rate and decay multipliers for the weights
+  param { lr_mult: 1 decay_mult: 1 }
+  # learning rate and decay multipliers for the biases
+  param { lr_mult: 2 decay_mult: 0 }
   inner_product_param {
     num_output: 1000
     weight_filler {
@@ -651,27 +651,83 @@ layers {
   </li>
 </ul>
 
-<p>The <code>INNER_PRODUCT</code> layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob’s height and width set to 1).</p>
+<p>The <code>InnerProduct</code> layer (also usually referred to as the fully connected layer) treats the input as a simple vector and produces an output in the form of a single vector (with the blob’s height and width set to 1).</p>
 
 <h4 id="splitting">Splitting</h4>
 
-<p>The <code>SPLIT</code> layer is a utility layer that splits an input blob to multiple output blobs. This is used when a blob is fed into multiple output layers.</p>
+<p>The <code>Split</code> layer is a utility layer that splits an input blob to multiple output blobs. This is used when a blob is fed into multiple output layers.</p>
 
 <h4 id="flattening">Flattening</h4>
 
-<p>The <code>FLATTEN</code> layer is a utility layer that flattens an input of shape <code>n * c * h * w</code> to a simple vector output of shape <code>n * (c*h*w) * 1 * 1</code>.</p>
+<p>The <code>Flatten</code> layer is a utility layer that flattens an input of shape <code>n * c * h * w</code> to a simple vector output of shape <code>n * (c*h*w)</code></p>
+
+<h4 id="reshape">Reshape</h4>
+
+<ul>
+  <li>Layer type: <code>Reshape</code></li>
+  <li>Implementation: <code>./src/caffe/layers/reshape_layer.cpp</code></li>
+  <li>Parameters (<code>ReshapeParameter reshape_param</code>)
+    <ul>
+      <li>Optional: (also see detailed description below)
+        <ul>
+          <li><code>shape</code></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Input
+    <ul>
+      <li>a single blob with arbitrary dimensions</li>
+    </ul>
+  </li>
+  <li>Output
+    <ul>
+      <li>the same blob, with modified dimensions, as specified by <code>reshape_param</code></li>
+    </ul>
+  </li>
+  <li>
+    <p>Sample</p>
+
+    <pre><code>  layer {
+    name: "reshape"
+    type: "Reshape"
+    bottom: "input"
+    top: "output"
+    reshape_param {
+      shape {
+        dim: 0  # copy the dimension from below
+        dim: 2
+        dim: 3
+        dim: -1 # infer it from the other dimensions
+      }
+    }
+  }
+</code></pre>
+  </li>
+</ul>
+
+<p>The <code>Reshape</code> layer can be used to change the dimensions of its input, without changing its data. Just like the <code>Flatten</code> layer, only the dimensions are changed; no data is copied in the process.</p>
+
+<p>Output dimensions are specified by the <code>ReshapeParam</code> proto. Positive numbers are used directly, setting the corresponding dimension of the output blob. In addition, two special values are accepted for any of the target dimension values:</p>
+
+<ul>
+  <li><strong>0</strong> means “copy the respective dimension of the bottom layer”. That is, if the bottom has 2 as its 1st dimension, the top will have 2 as its 1st dimension as well, given <code>dim: 0</code> as the 1st target dimension.</li>
+  <li><strong>-1</strong> stands for “infer this from the other dimensions”. This behavior is similar to that of -1 in <em>numpy</em>’s or <code>[]</code> for <em>MATLAB</em>’s reshape: this dimension is calculated to keep the overall element count the same as in the bottom layer. At most one -1 can be used in a reshape operation.</li>
+</ul>
+
+<p>As another example, specifying <code>reshape_param { shape { dim: 0 dim: -1 } }</code> makes the layer behave in exactly the same way as the <code>Flatten</code> layer.</p>
 
 <h4 id="concatenation">Concatenation</h4>
 
 <ul>
-  <li>LayerType: <code>CONCAT</code></li>
+  <li>Layer type: <code>Concat</code></li>
   <li>CPU implementation: <code>./src/caffe/layers/concat_layer.cpp</code></li>
   <li>CUDA GPU implementation: <code>./src/caffe/layers/concat_layer.cu</code></li>
   <li>Parameters (<code>ConcatParameter concat_param</code>)
     <ul>
       <li>Optional
         <ul>
-          <li><code>concat_dim</code> [default 1]: 0 for concatenation along num and 1 for channels.</li>
+          <li><code>axis</code> [default 1]: 0 for concatenation along num and 1 for channels.</li>
         </ul>
       </li>
     </ul>
@@ -683,68 +739,68 @@ layers {
   </li>
   <li>Output
     <ul>
-      <li>if <code>concat_dim = 0</code>: <code>(n_1 + n_2 + ... + n_K) * c_1 * h * w</code>, and all input <code>c_i</code> should be the same.</li>
-      <li>if <code>concat_dim = 1</code>: <code>n_1 * (c_1 + c_2 + ... + c_K) * h * w</code>, and all input <code>n_i</code> should be the same.</li>
+      <li>if <code>axis = 0</code>: <code>(n_1 + n_2 + ... + n_K) * c_1 * h * w</code>, and all input <code>c_i</code> should be the same.</li>
+      <li>if <code>axis = 1</code>: <code>n_1 * (c_1 + c_2 + ... + c_K) * h * w</code>, and all input <code>n_i</code> should be the same.</li>
     </ul>
   </li>
   <li>
     <p>Sample</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "concat"
   bottom: "in1"
   bottom: "in2"
   top: "out"
-  type: CONCAT
+  type: "Concat"
   concat_param {
-    concat_dim: 1
+    axis: 1
   }
 }
 </code></pre>
   </li>
 </ul>
 
-<p>The <code>CONCAT</code> layer is a utility layer that concatenates its multiple input blobs to one single output blob. Currently, the layer supports concatenation along num or channels only.</p>
+<p>The <code>Concat</code> layer is a utility layer that concatenates its multiple input blobs to one single output blob.</p>
 
 <h4 id="slicing">Slicing</h4>
 
-<p>The <code>SLICE</code> layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.</p>
+<p>The <code>Slice</code> layer is a utility layer that slices an input layer to multiple output layers along a given dimension (currently num or channel only) with given slice indices.</p>
 
 <ul>
   <li>
     <p>Sample</p>
 
-    <pre><code>layers {
+    <pre><code>layer {
   name: "slicer_label"
-  type: SLICE
+  type: "Slice"
   bottom: "label"
   ## Example of label with a shape N x 3 x 1 x 1
   top: "label1"
   top: "label2"
   top: "label3"
   slice_param {
-      slice_dim: 1
-      slice_point: 1
-      slice_point: 2
+    axis: 1
+    slice_point: 1
+    slice_point: 2
   }
 }
 </code></pre>
   </li>
 </ul>
 
-<p><code>slice_dim</code> indicates the target dimension and can assume only two values: 0 for num or 1 for channel; <code>slice_point</code> indicates indexes in the selected dimension (the number of indexes must be equal to the number of top blobs minus one). </p>
+<p><code>axis</code> indicates the target axis; <code>slice_point</code> indicates indexes in the selected dimension (the number of indices must be equal to the number of top blobs minus one). </p>
 
 <h4 id="elementwise-operations">Elementwise Operations</h4>
 
-<p><code>ELTWISE</code></p>
+<p><code>Eltwise</code></p>
 
 <h4 id="argmax">Argmax</h4>
 
-<p><code>ARGMAX</code></p>
+<p><code>ArgMax</code></p>
 
 <h4 id="softmax-1">Softmax</h4>
 
-<p><code>SOFTMAX</code></p>
+<p><code>Softmax</code></p>
 
 <h4 id="mean-variance-normalization">Mean-Variance Normalization</h4>
 

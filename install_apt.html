@@ -61,12 +61,24 @@
 <pre><code>sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libboost-all-dev libhdf5-serial-dev
 </code></pre>
 
+<p><strong>CUDA</strong>: Install via the NVIDIA package instead of <code>apt-get</code> to be certain of the library and driver versions.
+Install the library and latest driver separately; the driver bundled with the library is usually out-of-date.
+This can be skipped for CPU-only installation.</p>
+
+<p><strong>BLAS</strong>: install ATLAS by <code>sudo apt-get install libatlas-base-dev</code> or install OpenBLAS or MKL for better CPU performance.</p>
+
+<p><strong>Python</strong> (optional): if you use the default Python you will need to <code>sudo apt-get install</code> the <code>python-dev</code> package to have the Python headers for building the pycaffe interface.</p>
+
 <p><strong>Remaining dependencies, 14.04</strong></p>
+
+<p>Everything is packaged in 14.04.</p>
 
 <pre><code>sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev protobuf-compiler
 </code></pre>
 
 <p><strong>Remaining dependencies, 12.04</strong></p>
+
+<p>These dependencies need manual installation in 12.04.</p>
 
 <pre><code># glog
 wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
@@ -82,19 +94,12 @@ mkdir build &amp;&amp; cd build
 export CXXFLAGS="-fPIC" &amp;&amp; cmake .. &amp;&amp; make VERBOSE=1
 make &amp;&amp; make install
 # lmdb
-git clone git://gitorious.org/mdb/mdb.git
+git clone https://gitorious.org/mdb/mdb.git
 cd mdb/libraries/liblmdb
 make &amp;&amp; make install
 </code></pre>
 
 <p>Note that glog does not compile with the most recent gflags version (2.1), so before that is resolved you will need to build with glog first.</p>
-
-<p><strong>CUDA</strong>: Install via the NVIDIA package instead of <code>apt-get</code> to be certain of the library and driver versions.
-Install the library and latest driver separately; the driver bundled with the library is usually out-of-date.</p>
-
-<p><strong>BLAS</strong>: install ATLAS by <code>sudo apt-get install libatlas-base-dev</code> or install OpenBLAS or MKL for better CPU performance.</p>
-
-<p><strong>Python</strong> (optional): if you use the default Python you will need to <code>sudo apt-get install</code> the <code>python-dev</code> package to have the Python headers for building the pycaffe interface.</p>
 
 <p>Continue with <a href="installation.html#compilation">compilation</a>.</p>
 

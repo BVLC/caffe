@@ -104,12 +104,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="classcaffe_1_1PythonLayer.html">   14</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1PythonLayer.html">PythonLayer</a> : <span class="keyword">public</span> <a class="code" href="classcaffe_1_1Layer.html">Layer</a>&lt;Dtype&gt; {</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <a class="code" href="classcaffe_1_1PythonLayer.html">PythonLayer</a>(PyObject* <span class="keyword">self</span>, <span class="keyword">const</span> LayerParameter&amp; param)</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      : <a class="code" href="classcaffe_1_1Layer.html">Layer&lt;Dtype&gt;</a>(param), self_(<span class="keyword">self</span>) { }</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;      : <a class="code" href="classcaffe_1_1Layer.html">Layer&lt;Dtype&gt;</a>(param), self_(bp::handle&lt;&gt;(bp::borrowed(<span class="keyword">self</span>))) { }</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
 <div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="classcaffe_1_1PythonLayer.html#a937541b5935e0ada452b6af4155f6725">   19</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1PythonLayer.html#a937541b5935e0ada452b6af4155f6725">LayerSetUp</a>(<span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; bottom,</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;      <span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; top) {</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keywordflow">try</span> {</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;      bp::call_method&lt;bp::object&gt;(self_, <span class="stringliteral">&quot;setup&quot;</span>, bottom, top);</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;      self_.attr(<span class="stringliteral">&quot;setup&quot;</span>)(bottom, top);</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    } <span class="keywordflow">catch</span> (bp::error_already_set) {</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;      PyErr_Print();</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;      <span class="keywordflow">throw</span>;</div>
@@ -119,7 +119,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="classcaffe_1_1PythonLayer.html#a06e424b322ff1a6e53da3770cfc6fbc7">   29</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1PythonLayer.html#a06e424b322ff1a6e53da3770cfc6fbc7">Reshape</a>(<span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; bottom,</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;      <span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; top) {</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keywordflow">try</span> {</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;      bp::call_method&lt;bp::object&gt;(self_, <span class="stringliteral">&quot;reshape&quot;</span>, bottom, top);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;      self_.attr(<span class="stringliteral">&quot;reshape&quot;</span>)(bottom, top);</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    } <span class="keywordflow">catch</span> (bp::error_already_set) {</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;      PyErr_Print();</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;      <span class="keywordflow">throw</span>;</div>
@@ -132,7 +132,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classcaffe_1_1PythonLayer.html#ad1ec98336aab5e8082721973d59974d4">   42</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1PythonLayer.html#ad1ec98336aab5e8082721973d59974d4">Forward_cpu</a>(<span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; bottom,</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      <span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; top) {</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordflow">try</span> {</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;      bp::call_method&lt;bp::object&gt;(self_, <span class="stringliteral">&quot;forward&quot;</span>, bottom, top);</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;      self_.attr(<span class="stringliteral">&quot;forward&quot;</span>)(bottom, top);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    } <span class="keywordflow">catch</span> (bp::error_already_set) {</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      PyErr_Print();</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;      <span class="keywordflow">throw</span>;</div>
@@ -141,21 +141,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="classcaffe_1_1PythonLayer.html#ac2daa2441975b3a6db13a57082559800">   51</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classcaffe_1_1PythonLayer.html#ac2daa2441975b3a6db13a57082559800">Backward_cpu</a>(<span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; top,</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      <span class="keyword">const</span> vector&lt;bool&gt;&amp; propagate_down, <span class="keyword">const</span> vector&lt;<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>*&gt;&amp; bottom) {</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordflow">try</span> {</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      bp::call_method&lt;bp::object&gt;(self_, <span class="stringliteral">&quot;backward&quot;</span>, top, propagate_down,</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;          bottom);</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    } <span class="keywordflow">catch</span> (bp::error_already_set) {</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;      PyErr_Print();</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      <span class="keywordflow">throw</span>;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    }</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  }</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  PyObject* self_;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;};</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;}  <span class="comment">// namespace caffe</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      self_.attr(<span class="stringliteral">&quot;backward&quot;</span>)(top, propagate_down, bottom);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    } <span class="keywordflow">catch</span> (bp::error_already_set) {</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      PyErr_Print();</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;      <span class="keywordflow">throw</span>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    }</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  }</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  bp::object self_;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;};</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;}  <span class="comment">// namespace caffe</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="classcaffe_1_1PythonLayer_html_a31d97a3b458b12cd2491968a32fafa76"><div class="ttname"><a href="classcaffe_1_1PythonLayer.html#a31d97a3b458b12cd2491968a32fafa76">caffe::PythonLayer::type</a></div><div class="ttdeci">virtual const char * type() const </div><div class="ttdoc">Returns the layer type. </div><div class="ttdef"><b>Definition:</b> python_layer.hpp:39</div></div>
 <div class="ttc" id="classcaffe_1_1Layer_html"><div class="ttname"><a href="classcaffe_1_1Layer.html">caffe::Layer</a></div><div class="ttdoc">An interface for the units of computation which can be composed into a Net. </div><div class="ttdef"><b>Definition:</b> layer.hpp:27</div></div>
 <div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
@@ -168,7 +167,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 11 2015 14:02:38 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 12:07:27 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

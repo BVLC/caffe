@@ -208,6 +208,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1MemoryDataLayer.html">MemoryDataLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides data to the <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> from memory.  <a href="classcaffe_1_1MemoryDataLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1MSRAFiller.html">MSRAFiller</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim N(0, \sigma^2) $" src="form_124.png"/> where <img class="formulaInl" alt="$ \sigma^2 $" src="form_125.png"/> is set inversely proportional to number of incoming nodes, outgoing nodes, or their average.  <a href="classcaffe_1_1MSRAFiller.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1MultinomialLogisticLossLayer.html">MultinomialLogisticLossLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the multinomial logistic loss for a one-of-many classification task, directly taking a predicted probability distribution as input.  <a href="classcaffe_1_1MultinomialLogisticLossLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,10 +234,15 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1PowerLayer.html">PowerLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes <img class="formulaInl" alt="$ y = (\alpha x + \beta) ^ \gamma $" src="form_101.png"/>, as specified by the scale <img class="formulaInl" alt="$ \alpha $" src="form_98.png"/>, shift <img class="formulaInl" alt="$ \beta $" src="form_99.png"/>, and power <img class="formulaInl" alt="$ \gamma $" src="form_100.png"/>.  <a href="classcaffe_1_1PowerLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1PReLULayer.html">PReLULayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameterized Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y_i = \max(0, x_i) + a_i \min(0, x_i) $" src="form_126.png"/>. The differences from <a class="el" href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa...">ReLULayer</a> are 1) negative slopes are learnable though backprop and 2) negative slopes can vary across channels. The number of axes of input blob should be greater than or equal to 2. The 1st axis (0-based) is seen as channels.  <a href="classcaffe_1_1PReLULayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1PythonLayer.html">PythonLayer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ReLULayer.html">ReLULayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rectified Linear Unit non-linearity <img class="formulaInl" alt="$ y = \max(0, x) $" src="form_102.png"/>. The simple max is fast to compute, and the function does not saturate.  <a href="classcaffe_1_1ReLULayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1ReshapeLayer.html">ReshapeLayer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SGDSolver.html">SGDSolver</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optimizes the parameters of a <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> using stochastic gradient descent (SGD) with momentum.  <a href="classcaffe_1_1SGDSolver.html#details">More...</a><br /></td></tr>
@@ -263,6 +271,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SplitLayer.html">SplitLayer</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a "split" path in the network by copying the bottom <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> into multiple top <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>s to be used by multiple consuming layers.  <a href="classcaffe_1_1SplitLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SPPLayer.html">SPPLayer</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Does spatial pyramid pooling on the input image by taking the max, average, etc. within regions so that the result vector of different sized images are of the same size.  <a href="classcaffe_1_1SPPLayer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1SyncedMemory.html">SyncedMemory</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages memory allocation and synchronization between the host (CPU) and device (GPU).  <a href="classcaffe_1_1SyncedMemory.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -281,7 +292,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides data to the <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> from windows of images files, specified by a window data file.  <a href="classcaffe_1_1WindowDataLayer.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1XavierFiller.html">XavierFiller</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim U(-a, +a) $" src="form_23.png"/> where <img class="formulaInl" alt="$ a $" src="form_24.png"/> is set inversely proportional to the number of incoming nodes.  <a href="classcaffe_1_1XavierFiller.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim U(-a, +a) $" src="form_23.png"/> where <img class="formulaInl" alt="$ a $" src="form_24.png"/> is set inversely proportional to number of incoming nodes, outgoing nodes, or their average.  <a href="classcaffe_1_1XavierFiller.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
@@ -963,9 +974,21 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a67bfabf3ad00dd339bc02f6ea87452f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67bfabf3ad00dd339bc02f6ea87452f6"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Power)</td></tr>
 <tr class="separator:a67bfabf3ad00dd339bc02f6ea87452f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63ffa4025f946ef192d90ec01b836059"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63ffa4025f946ef192d90ec01b836059"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1PReLULayer.html">PReLULayer</a>)</td></tr>
+<tr class="separator:a63ffa4025f946ef192d90ec01b836059"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a94d42ca9a0b3dfca549a754d83a88c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a94d42ca9a0b3dfca549a754d83a88c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (PReLU)</td></tr>
+<tr class="separator:a9a94d42ca9a0b3dfca549a754d83a88c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a889d40ff9d35d8cdcf75089259d4ada0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a889d40ff9d35d8cdcf75089259d4ada0"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1ReLULayer.html">ReLULayer</a>)</td></tr>
 <tr class="separator:a889d40ff9d35d8cdcf75089259d4ada0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace6ac124894e2dc48c15bf442cdd166d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace6ac124894e2dc48c15bf442cdd166d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1ReshapeLayer.html">ReshapeLayer</a>)</td></tr>
+<tr class="separator:ace6ac124894e2dc48c15bf442cdd166d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5402dd2da014a3eb8afae0a14012950b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5402dd2da014a3eb8afae0a14012950b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Reshape)</td></tr>
+<tr class="separator:a5402dd2da014a3eb8afae0a14012950b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8cf0d0032a97f7af35c6ab76023160cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8cf0d0032a97f7af35c6ab76023160cd"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1SigmoidCrossEntropyLossLayer.html">SigmoidCrossEntropyLossLayer</a>)</td></tr>
 <tr class="separator:a8cf0d0032a97f7af35c6ab76023160cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1006,6 +1029,12 @@ template&lt;typename Dtype &gt; </td></tr>
 <tr class="memitem:a497c5806d306e623ed14ab2175ced665"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a497c5806d306e623ed14ab2175ced665"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (Split)</td></tr>
 <tr class="separator:a497c5806d306e623ed14ab2175ced665"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a899ff19b079c1cb64676bdd08fe8854b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a899ff19b079c1cb64676bdd08fe8854b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1SPPLayer.html">SPPLayer</a>)</td></tr>
+<tr class="separator:a899ff19b079c1cb64676bdd08fe8854b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab10cdcd5667c76231b739559ac5569e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab10cdcd5667c76231b739559ac5569e7"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>REGISTER_LAYER_CLASS</b> (SPP)</td></tr>
+<tr class="separator:ab10cdcd5667c76231b739559ac5569e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51e7e7c425ce80cbaec01110d4d7e914"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51e7e7c425ce80cbaec01110d4d7e914"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>INSTANTIATE_CLASS</b> (<a class="el" href="classcaffe_1_1TanHLayer.html">TanHLayer</a>)</td></tr>
 <tr class="separator:a51e7e7c425ce80cbaec01110d4d7e914"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1316,7 +1345,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 11 2015 14:02:38 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 12:07:28 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

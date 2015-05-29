@@ -111,10 +111,11 @@ Inheritance diagram for caffe::NeuronLayer&lt; Dtype &gt;:</div>
 <area href="classcaffe_1_1DropoutLayer.html" title="During training only, sets a random portion of  to 0, adjusting the rest of the vector magnitude acco..." alt="caffe::DropoutLayer&lt; Dtype &gt;" shape="rect" coords="203,224,396,248"/>
 <area href="classcaffe_1_1ExpLayer.html" title="Computes , as specified by the scale , shift , and base . " alt="caffe::ExpLayer&lt; Dtype &gt;" shape="rect" coords="203,280,396,304"/>
 <area href="classcaffe_1_1PowerLayer.html" title="Computes , as specified by the scale , shift , and power . " alt="caffe::PowerLayer&lt; Dtype &gt;" shape="rect" coords="203,336,396,360"/>
-<area href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa..." alt="caffe::ReLULayer&lt; Dtype &gt;" shape="rect" coords="203,392,396,416"/>
-<area href="classcaffe_1_1SigmoidLayer.html" title="Sigmoid function non-linearity , a classic choice in neural networks. " alt="caffe::SigmoidLayer&lt; Dtype &gt;" shape="rect" coords="203,448,396,472"/>
-<area href="classcaffe_1_1TanHLayer.html" title="TanH hyperbolic tangent non-linearity , popular in auto-encoders. " alt="caffe::TanHLayer&lt; Dtype &gt;" shape="rect" coords="203,504,396,528"/>
-<area href="classcaffe_1_1ThresholdLayer.html" title="Tests whether the input exceeds a threshold: outputs 1 for inputs above threshold; 0 otherwise..." alt="caffe::ThresholdLayer&lt; Dtype &gt;" shape="rect" coords="203,560,396,584"/>
+<area href="classcaffe_1_1PReLULayer.html" title="Parameterized Rectified Linear Unit non-linearity . The differences from ReLULayer are 1) negative sl..." alt="caffe::PReLULayer&lt; Dtype &gt;" shape="rect" coords="203,392,396,416"/>
+<area href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa..." alt="caffe::ReLULayer&lt; Dtype &gt;" shape="rect" coords="203,448,396,472"/>
+<area href="classcaffe_1_1SigmoidLayer.html" title="Sigmoid function non-linearity , a classic choice in neural networks. " alt="caffe::SigmoidLayer&lt; Dtype &gt;" shape="rect" coords="203,504,396,528"/>
+<area href="classcaffe_1_1TanHLayer.html" title="TanH hyperbolic tangent non-linearity , popular in auto-encoders. " alt="caffe::TanHLayer&lt; Dtype &gt;" shape="rect" coords="203,560,396,584"/>
+<area href="classcaffe_1_1ThresholdLayer.html" title="Tests whether the input exceeds a threshold: outputs 1 for inputs above threshold; 0 otherwise..." alt="caffe::ThresholdLayer&lt; Dtype &gt;" shape="rect" coords="203,616,396,640"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -354,7 +355,7 @@ template&lt;typename Dtype &gt; </div>
 
 <p>Implements <a class="el" href="classcaffe_1_1Layer.html#ad9d391b972c769c0ebee34ca6d1c973e">caffe::Layer&lt; Dtype &gt;</a>.</p>
 
-<p>Reimplemented in <a class="el" href="classcaffe_1_1DropoutLayer.html#a3d5bce578b44ba2a89c1d4f7205ed842">caffe::DropoutLayer&lt; Dtype &gt;</a>.</p>
+<p>Reimplemented in <a class="el" href="classcaffe_1_1PReLULayer.html#a49e457fde8b31a97978718345d0ff53a">caffe::PReLULayer&lt; Dtype &gt;</a>, and <a class="el" href="classcaffe_1_1DropoutLayer.html#a3d5bce578b44ba2a89c1d4f7205ed842">caffe::DropoutLayer&lt; Dtype &gt;</a>.</p>
 
 </div>
 </div>
@@ -365,7 +366,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 11 2015 14:02:45 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 12:07:34 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

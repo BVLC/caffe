@@ -170,9 +170,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>PreSolve</b> ()</td><
 <tr class="memitem:a985436c42815498163a3d74fdb64ee70"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a985436c42815498163a3d74fdb64ee70"></a>
 Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>GetLearningRate</b> ()</td></tr>
 <tr class="separator:a985436c42815498163a3d74fdb64ee70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15d1fb9c2fdcc59ab8ef1b69aae0f6ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15d1fb9c2fdcc59ab8ef1b69aae0f6ea"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeUpdateValue</b> ()</td></tr>
-<tr class="separator:a15d1fb9c2fdcc59ab8ef1b69aae0f6ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a461fcea902238150520695c0b9afc5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6a461fcea902238150520695c0b9afc5"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ApplyUpdate</b> ()</td></tr>
+<tr class="separator:a6a461fcea902238150520695c0b9afc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58c7580080ad737c214dd666c9314999"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58c7580080ad737c214dd666c9314999"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>Regularize</b> (int param_id)</td></tr>
+<tr class="separator:a58c7580080ad737c214dd666c9314999"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abed831880d7e91cccffba2283cb131a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abed831880d7e91cccffba2283cb131a4"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeUpdateValue</b> (int param_id, Dtype rate)</td></tr>
+<tr class="separator:abed831880d7e91cccffba2283cb131a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6843c11d78770721752379fd8c1f6d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af6843c11d78770721752379fd8c1f6d8"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ClipGradients</b> ()</td></tr>
 <tr class="separator:af6843c11d78770721752379fd8c1f6d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -242,7 +248,7 @@ class caffe::SGDSolver&lt; Dtype &gt;</h3>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 11 2015 14:02:46 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 12:07:35 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
