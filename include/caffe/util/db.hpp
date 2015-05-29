@@ -19,7 +19,9 @@ class Cursor {
   Cursor() { }
   virtual ~Cursor() { }
   virtual void SeekToFirst() = 0;
+  virtual void SeekToLast() = 0;
   virtual void Next() = 0;
+  virtual void Prev() = 0;
   virtual string key() = 0;
   virtual string value() = 0;
   virtual bool valid() = 0;
@@ -55,7 +57,9 @@ class LevelDBCursor : public Cursor {
     : iter_(iter) { SeekToFirst(); }
   ~LevelDBCursor() { delete iter_; }
   virtual void SeekToFirst() { iter_->SeekToFirst(); }
+  virtual void SeekToLast() { iter_->SeekToLast(); }
   virtual void Next() { iter_->Next(); }
+  virtual void Prev() { iter_->Prev(); }
   virtual string key() { return iter_->key().ToString(); }
   virtual string value() { return iter_->value().ToString(); }
   virtual bool valid() { return iter_->Valid(); }
@@ -120,7 +124,9 @@ class LMDBCursor : public Cursor {
     mdb_txn_abort(mdb_txn_);
   }
   virtual void SeekToFirst() { Seek(MDB_FIRST); }
+  virtual void SeekToLast() { Seek(MDB_LAST); }
   virtual void Next() { Seek(MDB_NEXT); }
+  virtual void Prev() { Seek(MDB_PREV); }
   virtual string key() {
     return string(static_cast<const char*>(mdb_key_.mv_data), mdb_key_.mv_size);
   }

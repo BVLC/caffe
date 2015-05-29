@@ -464,6 +464,13 @@ message DataParameter {
   // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
   // be larger than the number of keys in the database.
   optional uint32 rand_skip = 7 [default = 0];
+  // The skip variable is for the data layer to skip a few data points
+  // to desginately learn. Note that skip should not be larger than 
+  // the number of keys in the database.
+  optional uint32 skip = 10 [default = 0];
+  // The rewind is the amout of data points to rewind after batch learning.
+  // Do not set to be larger than batch_size.
+  optional uint32 rewind = 11 [default = 0];
   optional DB backend = 8 [default = LEVELDB];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do
   // simple scaling and subtracting the data mean, if provided. Note that the
