@@ -322,6 +322,42 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
   vector<std::pair<std::string, Datum > > image_database_cache_;
 };
 
+
+/**
+ * @brief Uses a text file which specifies the image names, and a hdf5 file for the labels.
+ *        Note that each image can have multiple positive labels.
+ *
+ * TODO(dox): thorough documentation for Forward and proto params.
+ */
+template <typename Dtype>
+class MILDataLayer : public BasePrefetchingDataLayer<Dtype> {
+ public:
+  explicit MILDataLayer(const LayerParameter& param)
+      : BasePrefetchingDataLayer<Dtype>(param) {}
+  virtual ~MILDataLayer();
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "MILData"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 2; }
+
+ protected:
+  virtual unsigned int PrefetchRand();
+  virtual void InternalThreadEntry();
+  int num_images_;
+  unsigned int counter_;
+  shared_ptr<Caffe::RNG> prefetch_rng_;
+  vector< std::pair<std::string, std::string > > image_database_;
+  hid_t label_file_id_;
+  
+  vector<float> mean_value_;
+  Blob<Dtype> label_blob_;
+};
+
+
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_DATA_LAYERS_HPP_

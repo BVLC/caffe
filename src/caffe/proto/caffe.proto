@@ -346,6 +346,7 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+  optional MILDataParameter mil_data_param = 10001;
 }
 
 // Message that stores parameters used to apply transformation
@@ -831,6 +832,37 @@ message WindowDataParameter {
   // append root_folder to locate images
   optional string root_folder = 13 [default = ""];
 }
+
+message MILDataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  
+  // Number of scales for each image
+  optional uint32 num_scales = 2 [default = 1];
+  
+  // Side length ratio between neighbouring scales
+  optional float scale_factor = 6 [default = 1];
+  
+  // Number of channels in the image
+  optional uint32 channels = 4 [default = 3];
+  
+  // Specify the number of images per batch
+  optional uint32 images_per_batch = 3;
+  // Specify the number of classes
+  optional uint32 n_classes = 5;
+  // specify the box_dir and label_dir
+  optional string label_file = 7;
+  
+  // Root directory which contains all the images
+  optional string root_dir = 11;
+  // Extention for the file
+  optional string ext = 12;
+  
+  // To randomize or not
+  optional bool randomize = 13 [default = true];
+}
+
+
 
 message SPPParameter {
   enum PoolMethod {
