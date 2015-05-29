@@ -11,6 +11,30 @@
 namespace caffe {
 
 template<typename Dtype>
+cv::Mat DataTransformer<Dtype>::Transform_IDL(cv::Mat cv_img, int img_size, bool do_mirror){
+  cv::Size cv_size;  //(width, height)
+  if(cv_img.cols > cv_img.rows){
+    cv::Size tmp(img_size, round(cv_img.rows*img_size/cv_img.cols));
+    cv_size = tmp;
+  }
+  else{
+    cv::Size tmp(round(cv_img.cols*img_size/cv_img.rows), img_size);
+    cv_size = tmp;
+  }
+ 
+  cv::Mat cv_resized_img;
+  cv::resize(cv_img, cv_resized_img,
+      cv_size, 0, 0, cv::INTER_LINEAR);
+
+  // horizontal flip at random
+  if (do_mirror) {
+    cv::flip(cv_resized_img, cv_resized_img, 1);
+  }
+  return cv_resized_img;
+}
+
+
+template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
     : param_(param), phase_(phase) {

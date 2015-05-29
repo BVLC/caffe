@@ -6,6 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "opencv2/opencv.hpp"
 
 namespace caffe {
 
@@ -86,6 +87,18 @@ class DataTransformer {
    *    input blob. It can be part of top blob's data.
    */
   void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
+
+   /**
+   * @brief Imresizes the image so that the longer side is of length img_size
+   * and flip it if do_mirror is on
+   * @param cv_img 
+   *    cv::Mat for the image to transform
+   * @param img_size 
+   *    int, final length of the longer side
+   * @param do_mirror
+   *    bool whether to flip or not
+   */
+  cv::Mat Transform_IDL(cv::Mat cv_img, int img_size, bool do_mirror);
 
  protected:
    /**
