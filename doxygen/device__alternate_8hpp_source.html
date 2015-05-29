@@ -97,7 +97,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment">// Stub out GPU calls as unavailable.</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define NO_GPU LOG(FATAL) &lt;&lt; &quot;CPU-only Mode: cannot make GPU call.&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#define NO_GPU LOG(FATAL) &lt;&lt; &quot;Cannot use GPU in CPU-only Caffe: check mode.&quot;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#define STUB_GPU(classname) \</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">template &lt;typename Dtype&gt; \</span></div>
@@ -190,11 +190,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#endif  // CPU_ONLY</span></div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">#endif  // CAFFE_UTIL_DEVICE_ALTERNATE_H_</span></div>
-<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:9</div></div>
+<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:14 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:47:55 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

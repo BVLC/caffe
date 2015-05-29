@@ -102,7 +102,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">// cudaMallocHost and cudaFree functions in order to create pinned memory.</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="comment">// However, those codes rely on the existence of a cuda GPU (I don&#39;t know</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">// why that is a must since allocating memory should not be accessing the</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">// GPU resorce, but it just creates an error as of Cuda 5.0) and will cause</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">// GPU resource, but it just creates an error as of Cuda 5.0) and will cause</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">// problem when running on a machine without GPU. Thus, we simply define</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">// these two functions for safety and possible future change if the problem</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">// of calling cuda functions disappears in a future version.</span></div>
@@ -155,12 +155,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;}  <span class="comment">// namespace caffe</span></div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">#endif  // CAFFE_SYNCEDMEM_HPP_</span></div>
-<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:9</div></div>
+<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
 <div class="ttc" id="classcaffe_1_1SyncedMemory_html"><div class="ttname"><a href="classcaffe_1_1SyncedMemory.html">caffe::SyncedMemory</a></div><div class="ttdoc">Manages memory allocation and synchronization between the host (CPU) and device (GPU). </div><div class="ttdef"><b>Definition:</b> syncedmem.hpp:41</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:14 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:47:55 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

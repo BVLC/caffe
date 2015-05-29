@@ -139,6 +139,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const stri
 <tr class="memitem:a326b27a6807f57edda47d6d4525a823b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a326b27a6807f57edda47d6d4525a823b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Step</b> (int iters)</td></tr>
 <tr class="separator:a326b27a6807f57edda47d6d4525a823b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac133985ef686e874f5bd326350d266d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac133985ef686e874f5bd326350d266d8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Restore</b> (const char *resume_file)</td></tr>
+<tr class="separator:ac133985ef686e874f5bd326350d266d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed1d6d3b5d8c3bf43dd33464af0c9de1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed1d6d3b5d8c3bf43dd33464af0c9de1"></a>
 shared_ptr&lt; <a class="el" href="classcaffe_1_1Net.html">Net</a>&lt; Dtype &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>net</b> ()</td></tr>
 <tr class="separator:aed1d6d3b5d8c3bf43dd33464af0c9de1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,9 +154,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>iter</b> ()</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a383bca772575006d34d05dd735a8abcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a383bca772575006d34d05dd735a8abcc"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeUpdateValue</b> ()=0</td></tr>
-<tr class="separator:a383bca772575006d34d05dd735a8abcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a798f08452f76d3c328e95fa0acdb2b4d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a798f08452f76d3c328e95fa0acdb2b4d"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ApplyUpdate</b> ()=0</td></tr>
+<tr class="separator:a798f08452f76d3c328e95fa0acdb2b4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54325448a46b2e5d05b8d3c03522c8f7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a54325448a46b2e5d05b8d3c03522c8f7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Snapshot</b> ()</td></tr>
 <tr class="separator:a54325448a46b2e5d05b8d3c03522c8f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,9 +169,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Test</b> (const int t
 <tr class="memitem:a8e5cbfef93c1d7d32aca3db7f270443e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e5cbfef93c1d7d32aca3db7f270443e"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>SnapshotSolverState</b> (SolverState *state)=0</td></tr>
 <tr class="separator:a8e5cbfef93c1d7d32aca3db7f270443e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac133985ef686e874f5bd326350d266d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac133985ef686e874f5bd326350d266d8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Restore</b> (const char *resume_file)</td></tr>
-<tr class="separator:ac133985ef686e874f5bd326350d266d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0383dd4b216989025cb56266a2b97ac"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0383dd4b216989025cb56266a2b97ac"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>RestoreSolverState</b> (const SolverState &amp;state)=0</td></tr>
 <tr class="separator:aa0383dd4b216989025cb56266a2b97ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -202,7 +202,7 @@ vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Net.html">Net</a>&lt
 class caffe::Solver&lt; Dtype &gt;</h3>
 
 <p>An interface for classes that perform optimization on <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a>s. </p>
-<p>Requires implementation of ComputeUpdateValue to compute a parameter update given the current state of the <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> parameters. </p>
+<p>Requires implementation of ApplyUpdate to compute a parameter update given the current state of the <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a> parameters. </p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>include/caffe/<a class="el" href="solver_8hpp_source.html">solver.hpp</a></li>
 <li>src/caffe/solver.cpp</li>
@@ -210,7 +210,7 @@ class caffe::Solver&lt; Dtype &gt;</h3>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:23 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:48:05 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

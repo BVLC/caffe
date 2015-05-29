@@ -165,50 +165,49 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;      <span class="comment">// These have num == channels == 1; width is number of inputs; height is</span></div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;      <span class="comment">// number of outputs.  The &#39;sparse&#39; variable specifies the mean number</span></div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      <span class="comment">// of non-zero input weights for a given output.</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      CHECK_EQ(blob-&gt;num(), 1);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      CHECK_EQ(blob-&gt;channels(), 1);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <span class="keywordtype">int</span> num_outputs = blob-&gt;height();</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      rand_vec_.reset(<span class="keyword">new</span> <a class="code" href="classcaffe_1_1SyncedMemory.html">SyncedMemory</a>(blob-&gt;count() * <span class="keyword">sizeof</span>(int)));</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      <span class="keywordtype">int</span>* mask = <span class="keyword">reinterpret_cast&lt;</span><span class="keywordtype">int</span>*<span class="keyword">&gt;</span>(rand_vec_-&gt;mutable_cpu_data());</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      caffe_rng_bernoulli(blob-&gt;count(), non_zero_probability, mask);</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; blob-&gt;count(); ++i) {</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        data[i] *= mask[i];</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;      }</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    }</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  }</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  shared_ptr&lt;SyncedMemory&gt; rand_vec_;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;};</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
-<div class="line"><a name="l00103"></a><span class="lineno"><a class="line" href="classcaffe_1_1PositiveUnitballFiller.html">  103</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1PositiveUnitballFiller.html">PositiveUnitballFiller</a> : <span class="keyword">public</span> <a class="code" href="classcaffe_1_1Filler.html">Filler</a>&lt;Dtype&gt; {</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classcaffe_1_1PositiveUnitballFiller.html">PositiveUnitballFiller</a>(<span class="keyword">const</span> FillerParameter&amp; param)</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;      : <a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>(param) {}</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> Fill(<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* blob) {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    Dtype* data = blob-&gt;mutable_cpu_data();</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    DCHECK(blob-&gt;count());</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    caffe_rng_uniform&lt;Dtype&gt;(blob-&gt;count(), 0, 1, blob-&gt;mutable_cpu_data());</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="comment">// We expect the filler to not be called very frequently, so we will</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="comment">// just use a simple implementation</span></div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordtype">int</span> dim = blob-&gt;count() / blob-&gt;num();</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    CHECK(dim);</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; blob-&gt;num(); ++i) {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      Dtype sum = 0;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; dim; ++j) {</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        sum += data[i * dim + j];</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      }</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; dim; ++j) {</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        data[i * dim + j] /= sum;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      }</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    }</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    CHECK_EQ(this-&gt;filler_param_.sparse(), -1)</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;Sparsity not supported by this Filler.&quot;</span>;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  }</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;};</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      CHECK_GE(blob-&gt;num_axes(), 1);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;      <span class="keyword">const</span> <span class="keywordtype">int</span> num_outputs = blob-&gt;shape(0);</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      rand_vec_.reset(<span class="keyword">new</span> <a class="code" href="classcaffe_1_1SyncedMemory.html">SyncedMemory</a>(blob-&gt;count() * <span class="keyword">sizeof</span>(int)));</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      <span class="keywordtype">int</span>* mask = <span class="keyword">reinterpret_cast&lt;</span><span class="keywordtype">int</span>*<span class="keyword">&gt;</span>(rand_vec_-&gt;mutable_cpu_data());</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      caffe_rng_bernoulli(blob-&gt;count(), non_zero_probability, mask);</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; blob-&gt;count(); ++i) {</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        data[i] *= mask[i];</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;      }</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    }</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  }</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  shared_ptr&lt;SyncedMemory&gt; rand_vec_;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;};</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
+<div class="line"><a name="l00102"></a><span class="lineno"><a class="line" href="classcaffe_1_1PositiveUnitballFiller.html">  102</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1PositiveUnitballFiller.html">PositiveUnitballFiller</a> : <span class="keyword">public</span> <a class="code" href="classcaffe_1_1Filler.html">Filler</a>&lt;Dtype&gt; {</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classcaffe_1_1PositiveUnitballFiller.html">PositiveUnitballFiller</a>(<span class="keyword">const</span> FillerParameter&amp; param)</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      : <a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>(param) {}</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> Fill(<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* blob) {</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    Dtype* data = blob-&gt;mutable_cpu_data();</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    DCHECK(blob-&gt;count());</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    caffe_rng_uniform&lt;Dtype&gt;(blob-&gt;count(), 0, 1, blob-&gt;mutable_cpu_data());</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="comment">// We expect the filler to not be called very frequently, so we will</span></div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="comment">// just use a simple implementation</span></div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keywordtype">int</span> dim = blob-&gt;count() / blob-&gt;<a class="code" href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">num</a>();</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    CHECK(dim);</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; blob-&gt;<a class="code" href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">num</a>(); ++i) {</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      Dtype sum = 0;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; dim; ++j) {</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        sum += data[i * dim + j];</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      }</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">int</span> j = 0; j &lt; dim; ++j) {</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        data[i * dim + j] /= sum;</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      }</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    }</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    CHECK_EQ(this-&gt;filler_param_.sparse(), -1)</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;Sparsity not supported by this Filler.&quot;</span>;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  }</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;};</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;</div>
 <div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
 <div class="line"><a name="l00145"></a><span class="lineno"><a class="line" href="classcaffe_1_1XavierFiller.html">  145</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1XavierFiller.html">XavierFiller</a> : <span class="keyword">public</span> <a class="code" href="classcaffe_1_1Filler.html">Filler</a>&lt;Dtype&gt; {</div>
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; <span class="keyword">public</span>:</div>
@@ -216,52 +215,90 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;      : <a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>(param) {}</div>
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> Fill(<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* blob) {</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    CHECK(blob-&gt;count());</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordtype">int</span> fan_in = blob-&gt;count() / blob-&gt;num();</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    Dtype scale = sqrt(Dtype(3) / fan_in);</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    caffe_rng_uniform&lt;Dtype&gt;(blob-&gt;count(), -scale, scale,</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        blob-&gt;mutable_cpu_data());</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    CHECK_EQ(this-&gt;filler_param_.sparse(), -1)</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;Sparsity not supported by this Filler.&quot;</span>;</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  }</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;};</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
-<div class="line"><a name="l00168"></a><span class="lineno"><a class="line" href="namespacecaffe.html#a819e1b2fe30b54d6df0fd88e646ec126">  168</a></span>&#160;<a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>* <a class="code" href="namespacecaffe.html#a819e1b2fe30b54d6df0fd88e646ec126">GetFiller</a>(<span class="keyword">const</span> FillerParameter&amp; param) {</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  <span class="keyword">const</span> std::string&amp; type = param.type();</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;constant&quot;</span>) {</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1ConstantFiller.html">ConstantFiller&lt;Dtype&gt;</a>(param);</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;gaussian&quot;</span>) {</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1GaussianFiller.html">GaussianFiller&lt;Dtype&gt;</a>(param);</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;positive_unitball&quot;</span>) {</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1PositiveUnitballFiller.html">PositiveUnitballFiller&lt;Dtype&gt;</a>(param);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;uniform&quot;</span>) {</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1UniformFiller.html">UniformFiller&lt;Dtype&gt;</a>(param);</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;xavier&quot;</span>) {</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1XavierFiller.html">XavierFiller&lt;Dtype&gt;</a>(param);</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    CHECK(<span class="keyword">false</span>) &lt;&lt; <span class="stringliteral">&quot;Unknown filler name: &quot;</span> &lt;&lt; param.type();</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;  }</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;  <span class="keywordflow">return</span> (<a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>*)(NULL);</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;}</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;}  <span class="comment">// namespace caffe</span></div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="preprocessor">#endif  // CAFFE_FILLER_HPP_</span></div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordtype">int</span> fan_in = blob-&gt;count() / blob-&gt;<a class="code" href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">num</a>();</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keywordtype">int</span> fan_out = blob-&gt;count() / blob-&gt;<a class="code" href="classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec">channels</a>();</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    Dtype n = fan_in;  <span class="comment">// default to fan_in</span></div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="keywordflow">if</span> (this-&gt;filler_param_.variance_norm() ==</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        FillerParameter_VarianceNorm_AVERAGE) {</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;      n = (fan_in + fan_out) / Dtype(2);</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (this-&gt;filler_param_.variance_norm() ==</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;        FillerParameter_VarianceNorm_FAN_OUT) {</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;      n = fan_out;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    }</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    Dtype scale = sqrt(Dtype(3) / n);</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    caffe_rng_uniform&lt;Dtype&gt;(blob-&gt;count(), -scale, scale,</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        blob-&gt;mutable_cpu_data());</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    CHECK_EQ(this-&gt;filler_param_.sparse(), -1)</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;Sparsity not supported by this Filler.&quot;</span>;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;  }</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;};</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
+<div class="line"><a name="l00187"></a><span class="lineno"><a class="line" href="classcaffe_1_1MSRAFiller.html">  187</a></span>&#160;<span class="keyword">class </span><a class="code" href="classcaffe_1_1MSRAFiller.html">MSRAFiller</a> : <span class="keyword">public</span> <a class="code" href="classcaffe_1_1Filler.html">Filler</a>&lt;Dtype&gt; {</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160; <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="classcaffe_1_1MSRAFiller.html">MSRAFiller</a>(<span class="keyword">const</span> FillerParameter&amp; param)</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;      : <a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>(param) {}</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> Fill(<a class="code" href="classcaffe_1_1Blob.html">Blob&lt;Dtype&gt;</a>* blob) {</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    CHECK(blob-&gt;count());</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="keywordtype">int</span> fan_in = blob-&gt;count() / blob-&gt;<a class="code" href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">num</a>();</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keywordtype">int</span> fan_out = blob-&gt;count() / blob-&gt;<a class="code" href="classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec">channels</a>();</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    Dtype n = fan_in;  <span class="comment">// default to fan_in</span></div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keywordflow">if</span> (this-&gt;filler_param_.variance_norm() ==</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        FillerParameter_VarianceNorm_AVERAGE) {</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;      n = (fan_in + fan_out) / Dtype(2);</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (this-&gt;filler_param_.variance_norm() ==</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        FillerParameter_VarianceNorm_FAN_OUT) {</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;      n = fan_out;</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    }</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    Dtype std = sqrt(Dtype(2) / n);</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    caffe_rng_gaussian&lt;Dtype&gt;(blob-&gt;count(), Dtype(0), std,</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;        blob-&gt;mutable_cpu_data());</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    CHECK_EQ(this-&gt;filler_param_.sparse(), -1)</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;         &lt;&lt; <span class="stringliteral">&quot;Sparsity not supported by this Filler.&quot;</span>;</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  }</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;};</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Dtype&gt;</div>
+<div class="line"><a name="l00218"></a><span class="lineno"><a class="line" href="namespacecaffe.html#a819e1b2fe30b54d6df0fd88e646ec126">  218</a></span>&#160;<a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>* <a class="code" href="namespacecaffe.html#a819e1b2fe30b54d6df0fd88e646ec126">GetFiller</a>(<span class="keyword">const</span> FillerParameter&amp; param) {</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;  <span class="keyword">const</span> std::string&amp; type = param.type();</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;constant&quot;</span>) {</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1ConstantFiller.html">ConstantFiller&lt;Dtype&gt;</a>(param);</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;gaussian&quot;</span>) {</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1GaussianFiller.html">GaussianFiller&lt;Dtype&gt;</a>(param);</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;positive_unitball&quot;</span>) {</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1PositiveUnitballFiller.html">PositiveUnitballFiller&lt;Dtype&gt;</a>(param);</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;uniform&quot;</span>) {</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1UniformFiller.html">UniformFiller&lt;Dtype&gt;</a>(param);</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;xavier&quot;</span>) {</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1XavierFiller.html">XavierFiller&lt;Dtype&gt;</a>(param);</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (type == <span class="stringliteral">&quot;msra&quot;</span>) {</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">new</span> <a class="code" href="classcaffe_1_1MSRAFiller.html">MSRAFiller&lt;Dtype&gt;</a>(param);</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    CHECK(<span class="keyword">false</span>) &lt;&lt; <span class="stringliteral">&quot;Unknown filler name: &quot;</span> &lt;&lt; param.type();</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  }</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  <span class="keywordflow">return</span> (<a class="code" href="classcaffe_1_1Filler.html">Filler&lt;Dtype&gt;</a>*)(NULL);</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;}</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;}  <span class="comment">// namespace caffe</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="preprocessor">#endif  // CAFFE_FILLER_HPP_</span></div>
 <div class="ttc" id="classcaffe_1_1Filler_html"><div class="ttname"><a href="classcaffe_1_1Filler.html">caffe::Filler</a></div><div class="ttdoc">Fills a Blob with constant or randomly-generated data. </div><div class="ttdef"><b>Definition:</b> filler.hpp:20</div></div>
-<div class="ttc" id="classcaffe_1_1PositiveUnitballFiller_html"><div class="ttname"><a href="classcaffe_1_1PositiveUnitballFiller.html">caffe::PositiveUnitballFiller</a></div><div class="ttdoc">Fills a Blob with values  such that . </div><div class="ttdef"><b>Definition:</b> filler.hpp:103</div></div>
-<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:9</div></div>
-<div class="ttc" id="namespacecaffe_html_a819e1b2fe30b54d6df0fd88e646ec126"><div class="ttname"><a href="namespacecaffe.html#a819e1b2fe30b54d6df0fd88e646ec126">caffe::GetFiller</a></div><div class="ttdeci">Filler&lt; Dtype &gt; * GetFiller(const FillerParameter &amp;param)</div><div class="ttdoc">Get a specific filler from the specification given in FillerParameter. </div><div class="ttdef"><b>Definition:</b> filler.hpp:168</div></div>
-<div class="ttc" id="classcaffe_1_1XavierFiller_html"><div class="ttname"><a href="classcaffe_1_1XavierFiller.html">caffe::XavierFiller</a></div><div class="ttdoc">Fills a Blob with values  where  is set inversely proportional to the number of incoming nodes...</div><div class="ttdef"><b>Definition:</b> filler.hpp:145</div></div>
+<div class="ttc" id="classcaffe_1_1PositiveUnitballFiller_html"><div class="ttname"><a href="classcaffe_1_1PositiveUnitballFiller.html">caffe::PositiveUnitballFiller</a></div><div class="ttdoc">Fills a Blob with values  such that . </div><div class="ttdef"><b>Definition:</b> filler.hpp:102</div></div>
+<div class="ttc" id="namespacecaffe_html"><div class="ttname"><a href="namespacecaffe.html">caffe</a></div><div class="ttdoc">A layer factory that allows one to register layers. During runtime, registered layers could be called...</div><div class="ttdef"><b>Definition:</b> blob.hpp:15</div></div>
+<div class="ttc" id="namespacecaffe_html_a819e1b2fe30b54d6df0fd88e646ec126"><div class="ttname"><a href="namespacecaffe.html#a819e1b2fe30b54d6df0fd88e646ec126">caffe::GetFiller</a></div><div class="ttdeci">Filler&lt; Dtype &gt; * GetFiller(const FillerParameter &amp;param)</div><div class="ttdoc">Get a specific filler from the specification given in FillerParameter. </div><div class="ttdef"><b>Definition:</b> filler.hpp:218</div></div>
+<div class="ttc" id="classcaffe_1_1XavierFiller_html"><div class="ttname"><a href="classcaffe_1_1XavierFiller.html">caffe::XavierFiller</a></div><div class="ttdoc">Fills a Blob with values  where  is set inversely proportional to number of incoming nodes...</div><div class="ttdef"><b>Definition:</b> filler.hpp:145</div></div>
 <div class="ttc" id="classcaffe_1_1UniformFiller_html"><div class="ttname"><a href="classcaffe_1_1UniformFiller.html">caffe::UniformFiller</a></div><div class="ttdoc">Fills a Blob with uniformly distributed values . </div><div class="ttdef"><b>Definition:</b> filler.hpp:51</div></div>
 <div class="ttc" id="classcaffe_1_1GaussianFiller_html"><div class="ttname"><a href="classcaffe_1_1GaussianFiller.html">caffe::GaussianFiller</a></div><div class="ttdoc">Fills a Blob with Gaussian-distributed values . </div><div class="ttdef"><b>Definition:</b> filler.hpp:66</div></div>
 <div class="ttc" id="classcaffe_1_1SyncedMemory_html"><div class="ttname"><a href="classcaffe_1_1SyncedMemory.html">caffe::SyncedMemory</a></div><div class="ttdoc">Manages memory allocation and synchronization between the host (CPU) and device (GPU). </div><div class="ttdef"><b>Definition:</b> syncedmem.hpp:41</div></div>
+<div class="ttc" id="classcaffe_1_1Blob_html_a56c2b25db397d9e82bbd7c43597ae427"><div class="ttname"><a href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">caffe::Blob::num</a></div><div class="ttdeci">int num() const </div><div class="ttdoc">Deprecated legacy shape accessor num: use shape(0) instead. </div><div class="ttdef"><b>Definition:</b> blob.hpp:133</div></div>
+<div class="ttc" id="classcaffe_1_1MSRAFiller_html"><div class="ttname"><a href="classcaffe_1_1MSRAFiller.html">caffe::MSRAFiller</a></div><div class="ttdoc">Fills a Blob with values  where  is set inversely proportional to number of incoming nodes...</div><div class="ttdef"><b>Definition:</b> filler.hpp:187</div></div>
+<div class="ttc" id="classcaffe_1_1Blob_html_a744a987091c4496a2236898ee39558ec"><div class="ttname"><a href="classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec">caffe::Blob::channels</a></div><div class="ttdeci">int channels() const </div><div class="ttdoc">Deprecated legacy shape accessor channels: use shape(1) instead. </div><div class="ttdef"><b>Definition:</b> blob.hpp:135</div></div>
 <div class="ttc" id="classcaffe_1_1ConstantFiller_html"><div class="ttname"><a href="classcaffe_1_1ConstantFiller.html">caffe::ConstantFiller</a></div><div class="ttdoc">Fills a Blob with constant values . </div><div class="ttdef"><b>Definition:</b> filler.hpp:32</div></div>
-<div class="ttc" id="classcaffe_1_1Blob_html"><div class="ttname"><a href="classcaffe_1_1Blob.html">caffe::Blob</a></div><div class="ttdoc">A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...</div><div class="ttdef"><b>Definition:</b> blob.hpp:19</div></div>
+<div class="ttc" id="classcaffe_1_1Blob_html"><div class="ttname"><a href="classcaffe_1_1Blob.html">caffe::Blob</a></div><div class="ttdoc">A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...</div><div class="ttdef"><b>Definition:</b> blob.hpp:25</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:14 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:47:55 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

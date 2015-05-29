@@ -111,10 +111,11 @@ Inheritance diagram for caffe::NeuronLayer&lt; Dtype &gt;:</div>
 <area href="classcaffe_1_1DropoutLayer.html" title="During training only, sets a random portion of  to 0, adjusting the rest of the vector magnitude acco..." alt="caffe::DropoutLayer&lt; Dtype &gt;" shape="rect" coords="203,224,396,248"/>
 <area href="classcaffe_1_1ExpLayer.html" title="Computes , as specified by the scale , shift , and base . " alt="caffe::ExpLayer&lt; Dtype &gt;" shape="rect" coords="203,280,396,304"/>
 <area href="classcaffe_1_1PowerLayer.html" title="Computes , as specified by the scale , shift , and power . " alt="caffe::PowerLayer&lt; Dtype &gt;" shape="rect" coords="203,336,396,360"/>
-<area href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa..." alt="caffe::ReLULayer&lt; Dtype &gt;" shape="rect" coords="203,392,396,416"/>
-<area href="classcaffe_1_1SigmoidLayer.html" title="Sigmoid function non-linearity , a classic choice in neural networks. " alt="caffe::SigmoidLayer&lt; Dtype &gt;" shape="rect" coords="203,448,396,472"/>
-<area href="classcaffe_1_1TanHLayer.html" title="TanH hyperbolic tangent non-linearity , popular in auto-encoders. " alt="caffe::TanHLayer&lt; Dtype &gt;" shape="rect" coords="203,504,396,528"/>
-<area href="classcaffe_1_1ThresholdLayer.html" title="Tests whether the input exceeds a threshold: outputs 1 for inputs above threshold; 0 otherwise..." alt="caffe::ThresholdLayer&lt; Dtype &gt;" shape="rect" coords="203,560,396,584"/>
+<area href="classcaffe_1_1PReLULayer.html" title="Parameterized Rectified Linear Unit non-linearity . The differences from ReLULayer are 1) negative sl..." alt="caffe::PReLULayer&lt; Dtype &gt;" shape="rect" coords="203,392,396,416"/>
+<area href="classcaffe_1_1ReLULayer.html" title="Rectified Linear Unit non-linearity . The simple max is fast to compute, and the function does not sa..." alt="caffe::ReLULayer&lt; Dtype &gt;" shape="rect" coords="203,448,396,472"/>
+<area href="classcaffe_1_1SigmoidLayer.html" title="Sigmoid function non-linearity , a classic choice in neural networks. " alt="caffe::SigmoidLayer&lt; Dtype &gt;" shape="rect" coords="203,504,396,528"/>
+<area href="classcaffe_1_1TanHLayer.html" title="TanH hyperbolic tangent non-linearity , popular in auto-encoders. " alt="caffe::TanHLayer&lt; Dtype &gt;" shape="rect" coords="203,560,396,584"/>
+<area href="classcaffe_1_1ThresholdLayer.html" title="Tests whether the input exceeds a threshold: outputs 1 for inputs above threshold; 0 otherwise..." alt="caffe::ThresholdLayer&lt; Dtype &gt;" shape="rect" coords="203,616,396,640"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -229,6 +230,8 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <tr class="inherit_header pro_attribs_classcaffe_1_1Layer"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classcaffe_1_1Layer')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classcaffe_1_1Layer.html">caffe::Layer&lt; Dtype &gt;</a></td></tr>
 <tr class="memitem:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">LayerParameter&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a7ed12bb2df25c887e41d7ea9557fc701">layer_param_</a></td></tr>
 <tr class="separator:a7ed12bb2df25c887e41d7ea9557fc701 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">Phase&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a1d04ad7f595a82a1c811f102d68b8a19">phase_</a></td></tr>
+<tr class="separator:a1d04ad7f595a82a1c811f102d68b8a19 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#a8073fcf2c139b47eb99ce71b346b1321">blobs_</a></td></tr>
 <tr class="separator:a8073fcf2c139b47eb99ce71b346b1321 inherit pro_attribs_classcaffe_1_1Layer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd4a05def9ff3b42ad72404210613ef7 inherit pro_attribs_classcaffe_1_1Layer"><td class="memItemLeft" align="right" valign="top">vector&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Layer.html#acd4a05def9ff3b42ad72404210613ef7">param_propagate_down_</a></td></tr>
@@ -352,7 +355,7 @@ template&lt;typename Dtype &gt; </div>
 
 <p>Implements <a class="el" href="classcaffe_1_1Layer.html#ad9d391b972c769c0ebee34ca6d1c973e">caffe::Layer&lt; Dtype &gt;</a>.</p>
 
-<p>Reimplemented in <a class="el" href="classcaffe_1_1DropoutLayer.html#a3d5bce578b44ba2a89c1d4f7205ed842">caffe::DropoutLayer&lt; Dtype &gt;</a>.</p>
+<p>Reimplemented in <a class="el" href="classcaffe_1_1PReLULayer.html#a49e457fde8b31a97978718345d0ff53a">caffe::PReLULayer&lt; Dtype &gt;</a>, and <a class="el" href="classcaffe_1_1DropoutLayer.html#a3d5bce578b44ba2a89c1d4f7205ed842">caffe::DropoutLayer&lt; Dtype &gt;</a>.</p>
 
 </div>
 </div>
@@ -363,7 +366,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:21 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:48:02 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

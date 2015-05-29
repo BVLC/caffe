@@ -95,7 +95,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim U(-a, +a) $" src="form_23.png"/> where <img class="formulaInl" alt="$ a $" src="form_24.png"/> is set inversely proportional to the number of incoming nodes.  
+<p>Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim U(-a, +a) $" src="form_23.png"/> where <img class="formulaInl" alt="$ a $" src="form_24.png"/> is set inversely proportional to number of incoming nodes, outgoing nodes, or their average.  
  <a href="classcaffe_1_1XavierFiller.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="filler_8hpp_source.html">filler.hpp</a>&gt;</code></p>
@@ -133,9 +133,9 @@ FillerParameter&#160;</td><td class="memItemRight" valign="bottom"><b>filler_par
 <div class="textblock"><h3>template&lt;typename Dtype&gt;<br />
 class caffe::XavierFiller&lt; Dtype &gt;</h3>
 
-<p>Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim U(-a, +a) $" src="form_23.png"/> where <img class="formulaInl" alt="$ a $" src="form_24.png"/> is set inversely proportional to the number of incoming nodes. </p>
-<p>A <a class="el" href="classcaffe_1_1Filler.html" title="Fills a Blob with constant or randomly-generated data. ">Filler</a> based on the paper [Bengio and Glorot 2010]: Understanding the difficulty of training deep feedforward neuralnetworks, but does not use the fan_out value.</p>
-<p>It fills the incoming matrix by randomly sampling uniform data from [-scale, scale] where scale = sqrt(3 / fan_in) where fan_in is the number of input nodes. You should make sure the input blob has shape (num, a, b, c) where a * b * c = fan_in.</p>
+<p>Fills a <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> with values <img class="formulaInl" alt="$ x \sim U(-a, +a) $" src="form_23.png"/> where <img class="formulaInl" alt="$ a $" src="form_24.png"/> is set inversely proportional to number of incoming nodes, outgoing nodes, or their average. </p>
+<p>A <a class="el" href="classcaffe_1_1Filler.html" title="Fills a Blob with constant or randomly-generated data. ">Filler</a> based on the paper [Bengio and Glorot 2010]: Understanding the difficulty of training deep feedforward neuralnetworks.</p>
+<p>It fills the incoming matrix by randomly sampling uniform data from [-scale, scale] where scale = sqrt(3 / n) where n is the fan_in, fan_out, or their average, depending on the variance_norm option. You should make sure the input blob has shape (num, a, b, c) where a * b * c = fan_in and num * b * c = fan_out. Note that this is currently not the case for inner product layers.</p>
 <p>TODO(dox): make notation in above comment consistent with rest &amp; use LaTeX. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/caffe/<a class="el" href="filler_8hpp_source.html">filler.hpp</a></li>
@@ -143,7 +143,7 @@ class caffe::XavierFiller&lt; Dtype &gt;</h3>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:24 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:48:06 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

@@ -62,7 +62,7 @@ In the following, we assume that you’re using Anaconda Python and Homebrew.</p
 
 <p><strong>CUDA</strong>: Install via the NVIDIA package that includes both CUDA and the bundled driver. <strong>CUDA 7 is strongly suggested.</strong> Older CUDA require <code>libstdc++</code> while clang++ is the default compiler and <code>libc++</code> the default standard library on OS X 10.9+. This disagreement makes it necessary to change the compilation settings for each of the dependencies. This is prone to error.</p>
 
-<p><strong>Library Path</strong>: We find that everything compiles successfully if <code>$LD_LIBRARY_PATH</code> is not set at all, and <code>$DYLD_FALLBACK_LIBRARY_PATH</code> is set to to provide CUDA, Python, and other relevant libraries (e.g. <code>/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib</code>).
+<p><strong>Library Path</strong>: We find that everything compiles successfully if <code>$LD_LIBRARY_PATH</code> is not set at all, and <code>$DYLD_FALLBACK_LIBRARY_PATH</code> is set to provide CUDA, Python, and other relevant libraries (e.g. <code>/usr/local/cuda/lib:$HOME/anaconda/lib:/usr/local/lib:/usr/lib</code>).
 In other <code>ENV</code> settings, things may not work as expected.</p>
 
 <p><strong>General dependencies</strong></p>
@@ -70,7 +70,7 @@ In other <code>ENV</code> settings, things may not work as expected.</p>
 <pre><code>brew install --fresh -vd snappy leveldb gflags glog szip lmdb
 # need the homebrew science source for OpenCV and hdf5
 brew tap homebrew/science
-hdf5 opencv
+brew install hdf5 opencv
 </code></pre>
 
 <p>If using Anaconda Python, a modification to the OpenCV formula might be needed
@@ -86,7 +86,7 @@ Do <code>brew edit opencv</code> and change the lines that look like the two lin
 
 <pre><code># with Python pycaffe needs dependencies built from source
 brew install --build-from-source --with-python --fresh -vd protobuf
-brew install --build-from-source --fresh -vd boost
+brew install --build-from-source --fresh -vd boost boost-python
 # without Python the usual installation suffices
 brew install protobuf boost
 </code></pre>
@@ -176,7 +176,7 @@ git checkout master
 # Update homebrew; hopefully this works without errors!
 brew update
 
-# Switch back to the caffe branches with the forumlae that you modified earlier
+# Switch back to the caffe branches with the formulae that you modified earlier
 cd /usr/local
 git rebase master caffe
 # Fix any merge conflicts and commit to caffe branch

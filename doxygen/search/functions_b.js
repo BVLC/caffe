@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['param_5fpropagate_5fdown',['param_propagate_down',['../classcaffe_1_1Layer.html#a1a3708013b0231e71d725252e10ce6e3',1,'caffe::Layer']]],
-  ['params',['params',['../classcaffe_1_1Net.html#aa1b93c7dd25da5e6edfb0c67d934a7b8',1,'caffe::Net']]],
-  ['params_5flr',['params_lr',['../classcaffe_1_1Net.html#ac1d393efc02a679eb45aefc6c9b9db78',1,'caffe::Net']]],
-  ['powerlayer',['PowerLayer',['../classcaffe_1_1PowerLayer.html#ab008c03c36436e1a0dac0fe1faa53c6d',1,'caffe::PowerLayer']]]
+  ['name',['name',['../classcaffe_1_1Net.html#a0e332faa353749dc063a5af0554e935d',1,'caffe::Net']]],
+  ['num',['num',['../classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427',1,'caffe::Blob']]],
+  ['num_5finputs',['num_inputs',['../classcaffe_1_1Net.html#ad911f70b3b515dffaff447f994c1662e',1,'caffe::Net']]]
 ];

@@ -125,3 +125,10 @@
 \form#124:$ y = \gamma ^ {\alpha x + \beta} $
 \form#125:$ e \approx 2.718 $
 \form#126:$ \frac{\partial E}{\partial x} = \frac{\partial E}{\partial y} y \alpha \log_e(gamma) $
+\form#127:$ x \sim N(0, \sigma^2) $
+\form#128:$ \sigma^2 $
+\form#129:$ y_i = \max(0, x_i) + a_i \min(0, x_i) $
+\form#130:$ (N \times C \times ...) $
+\form#131:$i$
+\form#132:$ \frac{\partial E}{\partial x_i} = \left\{ \begin{array}{lr} a_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i > 0 \end{array} \right. $
+\form#133:$ \frac{\partial E}{\partial a_i} = \left\{ \begin{array}{lr} \sum_{x_i} x_i \frac{\partial E}{\partial y_i} & \mathrm{if} \; x_i \le 0 \\ 0 & \mathrm{if} \; x_i > 0 \end{array} \right. $

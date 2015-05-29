@@ -9,5 +9,6 @@ var searchData=
   ['softmaxwithlosslayer',['SoftmaxWithLossLayer',['../classcaffe_1_1SoftmaxWithLossLayer.html',1,'caffe']]],
   ['solver',['Solver',['../classcaffe_1_1Solver.html',1,'caffe']]],
   ['splitlayer',['SplitLayer',['../classcaffe_1_1SplitLayer.html',1,'caffe']]],
+  ['spplayer',['SPPLayer',['../classcaffe_1_1SPPLayer.html',1,'caffe']]],
   ['syncedmemory',['SyncedMemory',['../classcaffe_1_1SyncedMemory.html',1,'caffe']]]
 ];

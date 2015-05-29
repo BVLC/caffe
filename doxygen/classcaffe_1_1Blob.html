@@ -105,32 +105,74 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a379df830aad9b3cae253e1ddb0863844"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a379df830aad9b3cae253e1ddb0863844"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Blob</b> (const int num, const int channels, const int height, const int width)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a379df830aad9b3cae253e1ddb0863844">Blob</a> (const int <a class="el" href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">num</a>, const int <a class="el" href="classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec">channels</a>, const int <a class="el" href="classcaffe_1_1Blob.html#a422a10a605c30ac02a5377e7cf4c8c6c">height</a>, const int <a class="el" href="classcaffe_1_1Blob.html#a781b5410b7894455a85cd283cf8ee02a">width</a>)</td></tr>
+<tr class="memdesc:a379df830aad9b3cae253e1ddb0863844"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deprecated; use <code>Blob(const vector&lt;int&gt;&amp; shape)</code>. <br /></td></tr>
 <tr class="separator:a379df830aad9b3cae253e1ddb0863844"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#ad0e0a9a4f49478e89161c6afe4e341a0">Reshape</a> (const int num, const int channels, const int height, const int width)</td></tr>
-<tr class="memdesc:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the dimensions of the blob, allocating new memory if necessary.  <a href="#ad0e0a9a4f49478e89161c6afe4e341a0">More...</a><br /></td></tr>
+<tr class="memitem:a2268ef004df012760d300465a28f0f68"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2268ef004df012760d300465a28f0f68"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Blob</b> (const vector&lt; int &gt; &amp;shape)</td></tr>
+<tr class="separator:a2268ef004df012760d300465a28f0f68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad0e0a9a4f49478e89161c6afe4e341a0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#ad0e0a9a4f49478e89161c6afe4e341a0">Reshape</a> (const int <a class="el" href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">num</a>, const int <a class="el" href="classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec">channels</a>, const int <a class="el" href="classcaffe_1_1Blob.html#a422a10a605c30ac02a5377e7cf4c8c6c">height</a>, const int <a class="el" href="classcaffe_1_1Blob.html#a781b5410b7894455a85cd283cf8ee02a">width</a>)</td></tr>
+<tr class="memdesc:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deprecated; use <code><a class="el" href="classcaffe_1_1Blob.html#ac9ce456aa623ff3f4d24225a0db14404" title="Change the dimensions of the blob, allocating new memory if necessary. ">Reshape(const vector&lt;int&gt;&amp; shape)</a></code>. <br /></td></tr>
 <tr class="separator:ad0e0a9a4f49478e89161c6afe4e341a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9ce456aa623ff3f4d24225a0db14404"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#ac9ce456aa623ff3f4d24225a0db14404">Reshape</a> (const vector&lt; int &gt; &amp;shape)</td></tr>
+<tr class="memdesc:ac9ce456aa623ff3f4d24225a0db14404"><td class="mdescLeft">&#160;</td><td class="mdescRight">Change the dimensions of the blob, allocating new memory if necessary.  <a href="#ac9ce456aa623ff3f4d24225a0db14404">More...</a><br /></td></tr>
+<tr class="separator:ac9ce456aa623ff3f4d24225a0db14404"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a787ff5e31db6b53b70fb117002ec0385"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a787ff5e31db6b53b70fb117002ec0385"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Reshape</b> (const BlobShape &amp;shape)</td></tr>
+<tr class="separator:a787ff5e31db6b53b70fb117002ec0385"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8dee739aaa4253f73c44904784ce417"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8dee739aaa4253f73c44904784ce417"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ReshapeLike</b> (const <a class="el" href="classcaffe_1_1Blob.html">Blob</a> &amp;other)</td></tr>
 <tr class="separator:aa8dee739aaa4253f73c44904784ce417"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56c2b25db397d9e82bbd7c43597ae427"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56c2b25db397d9e82bbd7c43597ae427"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>num</b> () const </td></tr>
-<tr class="separator:a56c2b25db397d9e82bbd7c43597ae427"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a744a987091c4496a2236898ee39558ec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a744a987091c4496a2236898ee39558ec"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>channels</b> () const </td></tr>
-<tr class="separator:a744a987091c4496a2236898ee39558ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a422a10a605c30ac02a5377e7cf4c8c6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a422a10a605c30ac02a5377e7cf4c8c6c"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>height</b> () const </td></tr>
-<tr class="separator:a422a10a605c30ac02a5377e7cf4c8c6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a781b5410b7894455a85cd283cf8ee02a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a781b5410b7894455a85cd283cf8ee02a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>width</b> () const </td></tr>
-<tr class="separator:a781b5410b7894455a85cd283cf8ee02a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a300cd4f89222d01ec5d9826625a0227e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a300cd4f89222d01ec5d9826625a0227e"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>shape_string</b> () const </td></tr>
+<tr class="separator:a300cd4f89222d01ec5d9826625a0227e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec8d4b4a44cc0783e9c8333c38226f8f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec8d4b4a44cc0783e9c8333c38226f8f"></a>
+const vector&lt; int &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>shape</b> () const </td></tr>
+<tr class="separator:aec8d4b4a44cc0783e9c8333c38226f8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3aab16f3e07ddc78e29a101d022a34cd"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a3aab16f3e07ddc78e29a101d022a34cd">shape</a> (int index) const </td></tr>
+<tr class="memdesc:a3aab16f3e07ddc78e29a101d022a34cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the dimension of the index-th axis (or the negative index-th axis from the end, if index is negative).  <a href="#a3aab16f3e07ddc78e29a101d022a34cd">More...</a><br /></td></tr>
+<tr class="separator:a3aab16f3e07ddc78e29a101d022a34cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0774eb9e8cd070c7af741b56602f74b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab0774eb9e8cd070c7af741b56602f74b"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>num_axes</b> () const </td></tr>
+<tr class="separator:ab0774eb9e8cd070c7af741b56602f74b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf97753a599dd546c16d55ba926d4e81"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf97753a599dd546c16d55ba926d4e81"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>count</b> () const </td></tr>
 <tr class="separator:abf97753a599dd546c16d55ba926d4e81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcc7936d19ff798cfa8f24901a63d1fa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#adcc7936d19ff798cfa8f24901a63d1fa">count</a> (int start_axis, int end_axis) const </td></tr>
+<tr class="memdesc:adcc7936d19ff798cfa8f24901a63d1fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the volume of a slice; i.e., the product of dimensions among a range of axes.  <a href="#adcc7936d19ff798cfa8f24901a63d1fa">More...</a><br /></td></tr>
+<tr class="separator:adcc7936d19ff798cfa8f24901a63d1fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca6ae30ecc52bd38699fd82fdbe147f7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#aca6ae30ecc52bd38699fd82fdbe147f7">count</a> (int start_axis) const </td></tr>
+<tr class="memdesc:aca6ae30ecc52bd38699fd82fdbe147f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the volume of a slice spanning from a particular first axis to the final axis.  <a href="#aca6ae30ecc52bd38699fd82fdbe147f7">More...</a><br /></td></tr>
+<tr class="separator:aca6ae30ecc52bd38699fd82fdbe147f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ce87a58a08438c46a4858929a77ee77"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a6ce87a58a08438c46a4858929a77ee77">CanonicalAxisIndex</a> (int axis_index) const </td></tr>
+<tr class="memdesc:a6ce87a58a08438c46a4858929a77ee77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the 'canonical' version of a (usually) user-specified axis, allowing for negative indexing (e.g., -1 for the last axis).  <a href="#a6ce87a58a08438c46a4858929a77ee77">More...</a><br /></td></tr>
+<tr class="separator:a6ce87a58a08438c46a4858929a77ee77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56c2b25db397d9e82bbd7c43597ae427"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56c2b25db397d9e82bbd7c43597ae427"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a56c2b25db397d9e82bbd7c43597ae427">num</a> () const </td></tr>
+<tr class="memdesc:a56c2b25db397d9e82bbd7c43597ae427"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deprecated legacy shape accessor num: use shape(0) instead. <br /></td></tr>
+<tr class="separator:a56c2b25db397d9e82bbd7c43597ae427"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a744a987091c4496a2236898ee39558ec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a744a987091c4496a2236898ee39558ec"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a744a987091c4496a2236898ee39558ec">channels</a> () const </td></tr>
+<tr class="memdesc:a744a987091c4496a2236898ee39558ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deprecated legacy shape accessor channels: use shape(1) instead. <br /></td></tr>
+<tr class="separator:a744a987091c4496a2236898ee39558ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a422a10a605c30ac02a5377e7cf4c8c6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a422a10a605c30ac02a5377e7cf4c8c6c"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a422a10a605c30ac02a5377e7cf4c8c6c">height</a> () const </td></tr>
+<tr class="memdesc:a422a10a605c30ac02a5377e7cf4c8c6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deprecated legacy shape accessor height: use shape(2) instead. <br /></td></tr>
+<tr class="separator:a422a10a605c30ac02a5377e7cf4c8c6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a781b5410b7894455a85cd283cf8ee02a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a781b5410b7894455a85cd283cf8ee02a"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a781b5410b7894455a85cd283cf8ee02a">width</a> () const </td></tr>
+<tr class="memdesc:a781b5410b7894455a85cd283cf8ee02a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deprecated legacy shape accessor width: use shape(3) instead. <br /></td></tr>
+<tr class="separator:a781b5410b7894455a85cd283cf8ee02a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6221f2df6da6167db15c2b18aac2e5ee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6221f2df6da6167db15c2b18aac2e5ee"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>LegacyShape</b> (int index) const </td></tr>
+<tr class="separator:a6221f2df6da6167db15c2b18aac2e5ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87022dfa6cc45b3a2727ccce9ccf4b2c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a87022dfa6cc45b3a2727ccce9ccf4b2c"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>offset</b> (const int n, const int c=0, const int h=0, const int w=0) const </td></tr>
 <tr class="separator:a87022dfa6cc45b3a2727ccce9ccf4b2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8463d5d004dc97580151c1a4283f00f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8463d5d004dc97580151c1a4283f00f6"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>offset</b> (const vector&lt; int &gt; &amp;indices) const </td></tr>
+<tr class="separator:a8463d5d004dc97580151c1a4283f00f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64ad51f99e88233f43a21a85ebe10284"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a64ad51f99e88233f43a21a85ebe10284">CopyFrom</a> (const <a class="el" href="classcaffe_1_1Blob.html">Blob</a>&lt; Dtype &gt; &amp;source, bool copy_diff=false, bool reshape=false)</td></tr>
 <tr class="memdesc:a64ad51f99e88233f43a21a85ebe10284"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy from a source <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>.  <a href="#a64ad51f99e88233f43a21a85ebe10284">More...</a><br /></td></tr>
 <tr class="separator:a64ad51f99e88233f43a21a85ebe10284"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,6 +182,12 @@ Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>data_at</b> (const i
 <tr class="memitem:a349ee9442e5ba9736b6ccf12359e776e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a349ee9442e5ba9736b6ccf12359e776e"></a>
 Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>diff_at</b> (const int n, const int c, const int h, const int w) const </td></tr>
 <tr class="separator:a349ee9442e5ba9736b6ccf12359e776e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85a566849633e35492a3dc41d9551731"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85a566849633e35492a3dc41d9551731"></a>
+Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>data_at</b> (const vector&lt; int &gt; &amp;index) const </td></tr>
+<tr class="separator:a85a566849633e35492a3dc41d9551731"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab783abf65ca66df623a8a373de65209b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab783abf65ca66df623a8a373de65209b"></a>
+Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>diff_at</b> (const vector&lt; int &gt; &amp;index) const </td></tr>
+<tr class="separator:ab783abf65ca66df623a8a373de65209b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09d1435056f21ba9df52cee4d6371087"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09d1435056f21ba9df52cee4d6371087"></a>
 const shared_ptr&lt; <a class="el" href="classcaffe_1_1SyncedMemory.html">SyncedMemory</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const </td></tr>
 <tr class="separator:a09d1435056f21ba9df52cee4d6371087"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -176,9 +224,9 @@ Dtype *&#160;</td><td class="memItemRight" valign="bottom"><b>mutable_gpu_diff</
 <tr class="memitem:afe035d7b60c56e4aed2a18296e8ffdc5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe035d7b60c56e4aed2a18296e8ffdc5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Update</b> ()</td></tr>
 <tr class="separator:afe035d7b60c56e4aed2a18296e8ffdc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8b8ccc2dc4c68f07b2257d69cb4bc90"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8b8ccc2dc4c68f07b2257d69cb4bc90"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>FromProto</b> (const BlobProto &amp;proto)</td></tr>
-<tr class="separator:aa8b8ccc2dc4c68f07b2257d69cb4bc90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a95f882414ba0a11d674b134478476d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a95f882414ba0a11d674b134478476d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>FromProto</b> (const BlobProto &amp;proto, bool reshape=true)</td></tr>
+<tr class="separator:a0a95f882414ba0a11d674b134478476d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad297f6b6cad67200c3b5201034653271"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad297f6b6cad67200c3b5201034653271"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ToProto</b> (BlobProto *proto, bool write_diff=false) const </td></tr>
 <tr class="separator:ad297f6b6cad67200c3b5201034653271"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -207,11 +255,14 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a6d2d83920d961fff033434347f64a3b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale the blob diff by a constant factor. <br /></td></tr>
 <tr class="separator:a6d2d83920d961fff033434347f64a3b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fce5a816a2b9629686db69108610d93"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a8fce5a816a2b9629686db69108610d93">ShareData</a> (const <a class="el" href="classcaffe_1_1Blob.html">Blob</a> &amp;other)</td></tr>
-<tr class="memdesc:a8fce5a816a2b9629686db69108610d93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the data_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the data_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>&amp;s which simply perform a copy in their Forward pass.  <a href="#a8fce5a816a2b9629686db69108610d93">More...</a><br /></td></tr>
+<tr class="memdesc:a8fce5a816a2b9629686db69108610d93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the data_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the data_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s which simply perform a copy in their Forward pass.  <a href="#a8fce5a816a2b9629686db69108610d93">More...</a><br /></td></tr>
 <tr class="separator:a8fce5a816a2b9629686db69108610d93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a004781965b09f94c409cec9a6fc7c35c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcaffe_1_1Blob.html#a004781965b09f94c409cec9a6fc7c35c">ShareDiff</a> (const <a class="el" href="classcaffe_1_1Blob.html">Blob</a> &amp;other)</td></tr>
-<tr class="memdesc:a004781965b09f94c409cec9a6fc7c35c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the diff_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the diff_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>&amp;s which simply perform a copy in their Forward pass.  <a href="#a004781965b09f94c409cec9a6fc7c35c">More...</a><br /></td></tr>
+<tr class="memdesc:a004781965b09f94c409cec9a6fc7c35c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the diff_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the diff_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s which simply perform a copy in their Forward pass.  <a href="#a004781965b09f94c409cec9a6fc7c35c">More...</a><br /></td></tr>
 <tr class="separator:a004781965b09f94c409cec9a6fc7c35c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf5af1d79ac66f15dd5ebe504b36efcd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf5af1d79ac66f15dd5ebe504b36efcd"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>ShapeEquals</b> (const BlobProto &amp;other)</td></tr>
+<tr class="separator:aaf5af1d79ac66f15dd5ebe504b36efcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a128b3c929b6282d8741543044b81894b"><td class="memTemplParams" colspan="2"><a class="anchor" id="a128b3c929b6282d8741543044b81894b"></a>
 template&lt;&gt; </td></tr>
 <tr class="memitem:a128b3c929b6282d8741543044b81894b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Update</b> ()</td></tr>
@@ -283,18 +334,9 @@ shared_ptr&lt; <a class="el" href="classcaffe_1_1SyncedMemory.html">SyncedMemory
 <tr class="memitem:a9310f9007aa45e529cb6d69d32dbb80c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9310f9007aa45e529cb6d69d32dbb80c"></a>
 shared_ptr&lt; <a class="el" href="classcaffe_1_1SyncedMemory.html">SyncedMemory</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>diff_</b></td></tr>
 <tr class="separator:a9310f9007aa45e529cb6d69d32dbb80c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1af8433c8c66ae8f2732aa4d102b6c29"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1af8433c8c66ae8f2732aa4d102b6c29"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>num_</b></td></tr>
-<tr class="separator:a1af8433c8c66ae8f2732aa4d102b6c29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7618f913659955dcee178c00a842065c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7618f913659955dcee178c00a842065c"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>channels_</b></td></tr>
-<tr class="separator:a7618f913659955dcee178c00a842065c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada72205fe499a098a6d17b4b1cd34a82"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada72205fe499a098a6d17b4b1cd34a82"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>height_</b></td></tr>
-<tr class="separator:ada72205fe499a098a6d17b4b1cd34a82"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ea591a12504b44d94e3715d88fb37a9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5ea591a12504b44d94e3715d88fb37a9"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>width_</b></td></tr>
-<tr class="separator:a5ea591a12504b44d94e3715d88fb37a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5de50aa2b0e48b52d26ae8fe1c7dca82"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5de50aa2b0e48b52d26ae8fe1c7dca82"></a>
+vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>shape_</b></td></tr>
+<tr class="separator:a5de50aa2b0e48b52d26ae8fe1c7dca82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf06ea13a3a14f77c178a525c35a3ea0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf06ea13a3a14f77c178a525c35a3ea0"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>count_</b></td></tr>
 <tr class="separator:acf06ea13a3a14f77c178a525c35a3ea0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -309,6 +351,40 @@ class caffe::Blob&lt; Dtype &gt;</h3>
 <p>A wrapper around <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holders serving as the basic computational unit through which <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s, <a class="el" href="classcaffe_1_1Net.html" title="Connects Layers together into a directed acyclic graph (DAG) specified by a NetParameter. ">Net</a>s, and <a class="el" href="classcaffe_1_1Solver.html" title="An interface for classes that perform optimization on Nets. ">Solver</a>s interact. </p>
 <p>TODO(dox): more thorough description. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a6ce87a58a08438c46a4858929a77ee77"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="classcaffe_1_1Blob.html">caffe::Blob</a>&lt; Dtype &gt;::CanonicalAxisIndex </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>axis_index</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the 'canonical' version of a (usually) user-specified axis, allowing for negative indexing (e.g., -1 for the last axis). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">index</td><td>the axis index. If 0 &lt;= index &lt; num_axes(), return index. If -num_axes &lt;= index &lt;= -1, return (num_axes() - (-index)), e.g., the last axis index (num_axes() - 1) if index == -1, the second to last if index == -2, etc. Dies on out of range index. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a64ad51f99e88233f43a21a85ebe10284"></a>
 <div class="memitem">
 <div class="memproto">
@@ -353,7 +429,86 @@ template&lt;typename Dtype&gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ad0e0a9a4f49478e89161c6afe4e341a0"></a>
+<a class="anchor" id="adcc7936d19ff798cfa8f24901a63d1fa"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="classcaffe_1_1Blob.html">caffe::Blob</a>&lt; Dtype &gt;::count </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>start_axis</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>end_axis</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute the volume of a slice; i.e., the product of dimensions among a range of axes. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">start_axis</td><td>The first axis to include in the slice.</td></tr>
+    <tr><td class="paramname">end_axis</td><td>The first axis to exclude from the slice. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aca6ae30ecc52bd38699fd82fdbe147f7"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="classcaffe_1_1Blob.html">caffe::Blob</a>&lt; Dtype &gt;::count </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>start_axis</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Compute the volume of a slice spanning from a particular first axis to the final axis. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">start_axis</td><td>The first axis to include in the slice. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ac9ce456aa623ff3f4d24225a0db14404"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -362,31 +517,9 @@ template&lt;typename Dtype &gt; </div>
         <tr>
           <td class="memname">void <a class="el" href="classcaffe_1_1Blob.html">caffe::Blob</a>&lt; Dtype &gt;::Reshape </td>
           <td>(</td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>num</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">const vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>shape</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>channels</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>height</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const int&#160;</td>
-          <td class="paramname"><em>width</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -394,6 +527,40 @@ template&lt;typename Dtype &gt; </div>
 <p>Change the dimensions of the blob, allocating new memory if necessary. </p>
 <p>This function can be called both to create an initial allocation of memory, and to adjust the dimensions of a top blob during <a class="el" href="classcaffe_1_1Layer.html#ad9d391b972c769c0ebee34ca6d1c973e" title="Adjust the shapes of top blobs and internal buffers to accomodate the shapes of the bottom blobs...">Layer::Reshape</a> or <a class="el" href="classcaffe_1_1Layer.html#aa5fc9ddb31b58958653372bdaaccde94" title="Given the bottom blobs, compute the top blobs and the loss. ">Layer::Forward</a>. When changing the size of blob, memory will only be reallocated if sufficient memory does not already exist, and excess memory will never be freed.</p>
 <p>Note that reshaping an input blob and immediately calling <a class="el" href="classcaffe_1_1Net.html#a7a1a6d17347106dd1284b1b6d28cb4e9">Net::Backward</a> is an error; either <a class="el" href="classcaffe_1_1Net.html#ad12d1ab8e1beb2e407e82454b174f83a" title="Run forward using a set of bottom blobs, and return the result. ">Net::Forward</a> or <a class="el" href="classcaffe_1_1Net.html#a8417af82aa83be45d39aab735bdead1d" title="Reshape all layers from bottom to top. ">Net::Reshape</a> need to be called to propagate the new input shape to higher layers. </p>
+
+</div>
+</div>
+<a class="anchor" id="a3aab16f3e07ddc78e29a101d022a34cd"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Dtype&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="classcaffe_1_1Blob.html">caffe::Blob</a>&lt; Dtype &gt;::shape </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>index</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns the dimension of the index-th axis (or the negative index-th axis from the end, if index is negative). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">index</td><td>the axis index, which may be negative as it will be "canonicalized" using CanonicalAxisIndex. Dies on out of range index. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -413,7 +580,7 @@ template&lt;typename Dtype &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Set the data_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the data_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>&amp;s which simply perform a copy in their Forward pass. </p>
+<p>Set the data_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the data_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s which simply perform a copy in their Forward pass. </p>
 <p>This deallocates the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding this <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>'s data_, as shared_ptr calls its destructor when reset with the "=" operator. </p>
 
 </div>
@@ -434,7 +601,7 @@ template&lt;typename Dtype &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Set the diff_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the diff_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>&amp;s which simply perform a copy in their Forward pass. </p>
+<p>Set the diff_ shared_ptr to point to the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding the diff_ of <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a> other &ndash; useful in <a class="el" href="classcaffe_1_1Layer.html" title="An interface for the units of computation which can be composed into a Net. ">Layer</a>s which simply perform a copy in their Forward pass. </p>
 <p>This deallocates the <a class="el" href="classcaffe_1_1SyncedMemory.html" title="Manages memory allocation and synchronization between the host (CPU) and device (GPU). ">SyncedMemory</a> holding this <a class="el" href="classcaffe_1_1Blob.html" title="A wrapper around SyncedMemory holders serving as the basic computational unit through which Layers...">Blob</a>'s diff_, as shared_ptr calls its destructor when reset with the "=" operator. </p>
 
 </div>
@@ -446,7 +613,7 @@ template&lt;typename Dtype &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:16 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:47:57 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

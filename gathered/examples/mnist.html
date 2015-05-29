@@ -88,9 +88,9 @@
 
 <p>Currently, we will read the MNIST data from the lmdb we created earlier in the demo. This is defined by a data layer:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "mnist"
-  type: DATA
+  type: "Data"
   data_param {
     source: "mnist_train_lmdb"
     backend: LMDB
@@ -108,14 +108,14 @@
 
 <p>Let’s define the first convolution layer:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "conv1"
-  type: CONVOLUTION
-  blobs_lr: 1.
-  blobs_lr: 2.
+  type: "Convolution"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
   convolution_param {
     num_output: 20
-    kernelsize: 5
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "xavier"
@@ -133,15 +133,15 @@
 
 <p>The fillers allow us to randomly initialize the value of the weights and bias. For the weight filler, we will use the <code>xavier</code> algorithm that automatically determines the scale of initialization based on the number of input and output neurons. For the bias filler, we will simply initialize it as constant, with the default filling value 0.</p>
 
-<p><code>blobs_lr</code> are the learning rate adjustments for the layer’s learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.</p>
+<p><code>lr_mult</code>s are the learning rate adjustments for the layer’s learnable parameters. In this case, we will set the weight learning rate to be the same as the learning rate given by the solver during runtime, and the bias learning rate to be twice as large as that - this usually leads to better convergence rates.</p>
 
 <h3 id="writing-the-pooling-layer">Writing the Pooling Layer</h3>
 
 <p>Phew. Pooling layers are actually much easier to define:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "pool1"
-  type: POOLING
+  type: "Pooling"
   pooling_param {
     kernel_size: 2
     stride: 2
@@ -160,11 +160,11 @@
 
 <p>Writing a fully connected layer is also simple:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "ip1"
-  type: INNER_PRODUCT
-  blobs_lr: 1.
-  blobs_lr: 2.
+  type: "InnerProduct"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
   inner_product_param {
     num_output: 500
     weight_filler {
@@ -179,15 +179,15 @@
 }
 </code></pre>
 
-<p>This defines a fully connected layer (for some legacy reason, Caffe calls it an <code>innerproduct</code> layer) with 500 outputs. All other lines look familiar, right?</p>
+<p>This defines a fully connected layer (known in Caffe as an <code>InnerProduct</code> layer) with 500 outputs. All other lines look familiar, right?</p>
 
 <h3 id="writing-the-relu-layer">Writing the ReLU Layer</h3>
 
 <p>A ReLU Layer is also simple:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "relu1"
-  type: RELU
+  type: "ReLU"
   bottom: "ip1"
   top: "ip1"
 }
@@ -197,11 +197,11 @@
 
 <p>After the ReLU layer, we will write another innerproduct layer:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "ip2"
-  type: INNER_PRODUCT
-  blobs_lr: 1.
-  blobs_lr: 2.
+  type: "InnerProduct"
+  param { lr_mult: 1 }
+  param { lr_mult: 2 }
   inner_product_param {
     num_output: 10
     weight_filler {
@@ -220,9 +220,9 @@
 
 <p>Finally, we will write the loss!</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "loss"
-  type: SOFTMAX_LOSS
+  type: "SoftmaxWithLoss"
   bottom: "ip2"
   bottom: "label"
 }
@@ -234,7 +234,7 @@
 
 <p>Layer definitions can include rules for whether and when they are included in the network definition, like the one below:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   // ...layer definition...
   include: { phase: TRAIN }
 }
@@ -247,7 +247,7 @@ You can refer to <code>$CAFFE_ROOT/src/caffe/proto/caffe.proto</code> for more i
 If we change <code>TRAIN</code> with <code>TEST</code>, then this layer will be used only in test phase.
 By default, that is without layer rules, a layer is always included in the network.
 Thus, <code>lenet_train_test.prototxt</code> has two <code>DATA</code> layers defined (with different <code>batch_size</code>), one for the training phase and one for the testing phase.
-Also, there is an <code>ACCURACY</code> layer which is included only in <code>TEST</code> phase for reporting the model accuracy every 100 iteration, as defined in <code>lenet_solver.prototxt</code>.</p>
+Also, there is an <code>Accuracy</code> layer which is included only in <code>TEST</code> phase for reporting the model accuracy every 100 iteration, as defined in <code>lenet_solver.prototxt</code>.</p>
 
 <h2 id="define-the-mnist-solver">Define the MNIST Solver</h2>
 

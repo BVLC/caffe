@@ -149,6 +149,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const stri
 <tr class="memitem:a326b27a6807f57edda47d6d4525a823b inherit pub_methods_classcaffe_1_1Solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a326b27a6807f57edda47d6d4525a823b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Step</b> (int iters)</td></tr>
 <tr class="separator:a326b27a6807f57edda47d6d4525a823b inherit pub_methods_classcaffe_1_1Solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac133985ef686e874f5bd326350d266d8 inherit pub_methods_classcaffe_1_1Solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac133985ef686e874f5bd326350d266d8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Restore</b> (const char *resume_file)</td></tr>
+<tr class="separator:ac133985ef686e874f5bd326350d266d8 inherit pub_methods_classcaffe_1_1Solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed1d6d3b5d8c3bf43dd33464af0c9de1 inherit pub_methods_classcaffe_1_1Solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed1d6d3b5d8c3bf43dd33464af0c9de1"></a>
 shared_ptr&lt; <a class="el" href="classcaffe_1_1Net.html">Net</a>&lt; Dtype &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>net</b> ()</td></tr>
 <tr class="separator:aed1d6d3b5d8c3bf43dd33464af0c9de1 inherit pub_methods_classcaffe_1_1Solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -161,9 +164,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>iter</b> ()</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a2ef5d84236973bb94369cf86c008b6ce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ef5d84236973bb94369cf86c008b6ce"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeUpdateValue</b> ()</td></tr>
-<tr class="separator:a2ef5d84236973bb94369cf86c008b6ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adbe3471f5f75aa3b8642e1eaca7ef73f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbe3471f5f75aa3b8642e1eaca7ef73f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeUpdateValue</b> (int param_id, Dtype rate)</td></tr>
+<tr class="separator:adbe3471f5f75aa3b8642e1eaca7ef73f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c6e3d55dfde5836d9b37cbe7b9640e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c6e3d55dfde5836d9b37cbe7b9640e8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>constructor_sanity_check</b> ()</td></tr>
 <tr class="separator:a5c6e3d55dfde5836d9b37cbe7b9640e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -177,6 +180,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>PreSolve</b> ()</td><
 <tr class="memitem:a985436c42815498163a3d74fdb64ee70 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a985436c42815498163a3d74fdb64ee70"></a>
 Dtype&#160;</td><td class="memItemRight" valign="bottom"><b>GetLearningRate</b> ()</td></tr>
 <tr class="separator:a985436c42815498163a3d74fdb64ee70 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a461fcea902238150520695c0b9afc5 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6a461fcea902238150520695c0b9afc5"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ApplyUpdate</b> ()</td></tr>
+<tr class="separator:a6a461fcea902238150520695c0b9afc5 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58c7580080ad737c214dd666c9314999 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58c7580080ad737c214dd666c9314999"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>Regularize</b> (int param_id)</td></tr>
+<tr class="separator:a58c7580080ad737c214dd666c9314999 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6843c11d78770721752379fd8c1f6d8 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af6843c11d78770721752379fd8c1f6d8"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ClipGradients</b> ()</td></tr>
 <tr class="separator:af6843c11d78770721752379fd8c1f6d8 inherit pro_methods_classcaffe_1_1SGDSolver"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -199,9 +208,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TestAll</b> ()</td></
 <tr class="memitem:a9364674374a00fa60cfa7627cce99894 inherit pro_methods_classcaffe_1_1Solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9364674374a00fa60cfa7627cce99894"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Test</b> (const int test_net_id=0)</td></tr>
 <tr class="separator:a9364674374a00fa60cfa7627cce99894 inherit pro_methods_classcaffe_1_1Solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac133985ef686e874f5bd326350d266d8 inherit pro_methods_classcaffe_1_1Solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac133985ef686e874f5bd326350d266d8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Restore</b> (const char *resume_file)</td></tr>
-<tr class="separator:ac133985ef686e874f5bd326350d266d8 inherit pro_methods_classcaffe_1_1Solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a321a24e0422c6f95895f57ed9732192a inherit pro_methods_classcaffe_1_1Solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a321a24e0422c6f95895f57ed9732192a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>DisplayOutputBlobs</b> (const int net_id)</td></tr>
 <tr class="separator:a321a24e0422c6f95895f57ed9732192a inherit pro_methods_classcaffe_1_1Solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -245,7 +251,7 @@ vector&lt; shared_ptr&lt; <a class="el" href="classcaffe_1_1Net.html">Net</a>&lt
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:15 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:47:56 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

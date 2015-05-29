@@ -63,31 +63,31 @@ Hence, the goal of learning is to find a setting of the weights that <em>minimiz
 <p>The loss in Caffe is computed by the Forward pass of the network.
 Each layer takes a set of input (<code>bottom</code>) blobs and produces a set of output (<code>top</code>) blobs.
 Some of these layers’ outputs may be used in the loss function.
-A typical choice of loss function for one-versus-all classification tasks is the <code>SOFTMAX_LOSS</code> function, used in a network definition as follows, for example:</p>
+A typical choice of loss function for one-versus-all classification tasks is the <code>SoftmaxWithLoss</code> function, used in a network definition as follows, for example:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "loss"
-  type: SOFTMAX_LOSS
+  type: "SoftmaxWithLoss"
   bottom: "pred"
   bottom: "label"
   top: "loss"
 }
 </code></pre>
 
-<p>In a <code>SOFTMAX_LOSS</code> function, the <code>top</code> blob is a scalar (dimensions <script type="math/tex">1 \times 1 \times 1 \times 1</script>) which averages the loss (computed from predicted labels <code>pred</code> and actuals labels <code>label</code>) over the entire mini-batch.</p>
+<p>In a <code>SoftmaxWithLoss</code> function, the <code>top</code> blob is a scalar (empty shape) which averages the loss (computed from predicted labels <code>pred</code> and actuals labels <code>label</code>) over the entire mini-batch.</p>
 
 <h3 id="loss-weights">Loss weights</h3>
 
-<p>For nets with multiple layers producing a loss (e.g., a network that both classifies the input using a <code>SOFTMAX_LOSS</code> layer and reconstructs it using a <code>EUCLIDEAN_LOSS</code> layer), <em>loss weights</em> can be used to specify their relative importance.</p>
+<p>For nets with multiple layers producing a loss (e.g., a network that both classifies the input using a <code>SoftmaxWithLoss</code> layer and reconstructs it using a <code>EuclideanLoss</code> layer), <em>loss weights</em> can be used to specify their relative importance.</p>
 
-<p>By convention, Caffe layer types with the suffix <code>_LOSS</code> contribute to the loss function, but other layers are assumed to be purely used for intermediate computations.
+<p>By convention, Caffe layer types with the suffix <code>Loss</code> contribute to the loss function, but other layers are assumed to be purely used for intermediate computations.
 However, any layer can be used as a loss by adding a field <code>loss_weight: &lt;float&gt;</code> to a layer definition for each <code>top</code> blob produced by the layer.
-Layers with the suffix <code>_LOSS</code> have an implicit <code>loss_weight: 1</code> for the first <code>top</code> blob (and <code>loss_weight: 0</code> for any additional <code>top</code>s); other layers have an implicit <code>loss_weight: 0</code> for all <code>top</code>s.
-So, the above <code>SOFTMAX_LOSS</code> layer could be equivalently written as:</p>
+Layers with the suffix <code>Loss</code> have an implicit <code>loss_weight: 1</code> for the first <code>top</code> blob (and <code>loss_weight: 0</code> for any additional <code>top</code>s); other layers have an implicit <code>loss_weight: 0</code> for all <code>top</code>s.
+So, the above <code>SoftmaxWithLoss</code> layer could be equivalently written as:</p>
 
-<pre><code>layers {
+<pre><code>layer {
   name: "loss"
-  type: SOFTMAX_LOSS
+  type: "SoftmaxWithLoss"
   bottom: "pred"
   bottom: "label"
   top: "loss"

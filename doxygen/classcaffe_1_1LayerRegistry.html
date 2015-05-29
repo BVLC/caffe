@@ -98,9 +98,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a89482c1f71ed6a912b045a0b32d8e156"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89482c1f71ed6a912b045a0b32d8e156"></a>
-typedef <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; *(*&#160;</td><td class="memItemRight" valign="bottom"><b>Creator</b>) (const LayerParameter &amp;)</td></tr>
-<tr class="separator:a89482c1f71ed6a912b045a0b32d8e156"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b228e5912a515ef6dcf3f90653a62a2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b228e5912a515ef6dcf3f90653a62a2"></a>
+typedef shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; &gt;(*&#160;</td><td class="memItemRight" valign="bottom"><b>Creator</b>) (const LayerParameter &amp;)</td></tr>
+<tr class="separator:a7b228e5912a515ef6dcf3f90653a62a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa3da63563bd0b8c5ed49a5b5bdf8b0ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa3da63563bd0b8c5ed49a5b5bdf8b0ff"></a>
 typedef std::map&lt; string, Creator &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>CreatorRegistry</b></td></tr>
 <tr class="separator:aa3da63563bd0b8c5ed49a5b5bdf8b0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -113,9 +113,9 @@ static CreatorRegistry &amp;&#160;</td><td class="memItemRight" valign="bottom">
 <tr class="memitem:aba9246a3bd332dd9a3c5620b0ddf1e3f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba9246a3bd332dd9a3c5620b0ddf1e3f"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>AddCreator</b> (const string &amp;type, Creator creator)</td></tr>
 <tr class="separator:aba9246a3bd332dd9a3c5620b0ddf1e3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e65de58478fafec0ec308c44ff954c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5e65de58478fafec0ec308c44ff954c5"></a>
-static <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>CreateLayer</b> (const LayerParameter &amp;param)</td></tr>
-<tr class="separator:a5e65de58478fafec0ec308c44ff954c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17510acda367b34ddd8a65a1e14e3986"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a17510acda367b34ddd8a65a1e14e3986"></a>
+static shared_ptr&lt; <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>CreateLayer</b> (const LayerParameter &amp;param)</td></tr>
+<tr class="separator:a17510acda367b34ddd8a65a1e14e3986"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/caffe/<a class="el" href="layer__factory_8hpp_source.html">layer_factory.hpp</a></li>
@@ -123,7 +123,7 @@ static <a class="el" href="classcaffe_1_1Layer.html">Layer</a>&lt; Dtype &gt; *&
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 16 2015 21:44:20 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri May 29 2015 01:48:01 for Caffe by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
