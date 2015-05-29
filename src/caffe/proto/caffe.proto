@@ -365,6 +365,101 @@ message TransformationParameter {
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
+  //Resize policy
+  repeated ResizeParameter resize_param = 6;
+  //Noise policy
+  repeated NoiseParameter noise_param = 7;
+  // Specify if we want to randomly mirror data around X axis.
+  optional bool vertical_mirror = 8 [default = false];
+  //Random rotation by 0-90-180-270 degrees
+  optional bool random_90_deg_rot = 9 [default = false];
+
+}
+
+// Message that stores parameters used by data transformer for transformation policy
+message ResizeParameter {
+
+//Probability of using this resize policy
+optional float prob = 1 [default = 0];
+
+enum Resize_mode {
+WARP = 1;
+FIT_SMALL_SIZE = 2;
+FIT_LARGE_SIZE_AND_PAD = 3;
+}
+optional Resize_mode resize_mode = 2 [default = WARP];
+optional uint32 height = 3 [default = 0];
+optional uint32 width = 4 [default = 0];
+
+enum Pad_mode {
+CONSTANT = 1;
+MIRRORED = 2;
+REPEAT_NEAREST = 3;
+}
+// Padding mode for BE_SMALL_SIZE_AND_PAD mode and object centering
+optional Pad_mode pad_mode = 5 [default = CONSTANT];
+// if specified can be repeated once (would fill all the channels)
+// or can be repeated the same number of times as channels
+// (would use it them to the corresponding channel)
+repeated float pad_value = 6;
+
+enum Interp_mode { //Same as in OpenCV
+LINEAR = 1;
+AREA = 2;
+NEAREST = 3;
+CUBIC = 4;
+LANCZOS4 = 5;
+}
+//interpolation for for resizing
+optional Interp_mode interp_mode = 7 [default = LINEAR];
+
+// Extracts and centers object if it lays on monotonic background. First operation
+optional bool center_object = 8 [default = false];
+
+// Random rotation. Second operation after centering object
+optional float max_angle = 9 [default = 0];
+}
+
+message SaltPepperParameter {
+enum SaltType{
+	relative = 1;
+	absolute = 2;
+}
+required SaltType type = 3 [default = relative];
+//Percentage of pixels
+optional float fraction = 1 [default = 0];
+repeated float value = 2;
+}
+
+// Message that stores parameters used by data transformer for transformation
+// policy
+message NoiseParameter {
+
+//Probability of using this resize policy
+optional float prob = 1 [default = 0];
+// Histogram equalized
+optional bool hist_eq = 2 [default = false];
+// Color inversion
+optional bool inverse = 3 [default = false];
+// Grayscale
+optional bool decolorize = 4 [default = false];
+// Gaussian blur
+optional bool gauss_blur = 5 [default = false];
+
+// JPEG compression quality (-1 = no compression)
+optional float jpeg = 6 [default = -1];
+
+// Posterization
+optional bool posterize = 7 [default = false];
+
+// Erosion
+optional bool erode = 8 [default = false];
+// Salt-and-pepper noise
+optional bool saltpepper = 9 [default = false];
+
+optional SaltPepperParameter saltpepper_param = 10;
+// Local gistogram equalization
+optional bool clahe = 11 [default = false];
 }
 
 // Message that stores parameters shared by loss layers
