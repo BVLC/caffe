@@ -237,7 +237,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void ShuffleImages();
   virtual void InternalThreadEntry();
 
-  vector<std::pair<std::string, int> > lines_;
+  vector<std::pair<std::vector<std::string>, int> > lines_;
   int lines_id_;
 };
 
