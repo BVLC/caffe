@@ -29,6 +29,7 @@ OpenCLMemory::OpenCLMemory() {
 }
 
 OpenCLMemory::OpenCLMemory(size_t size) {
+
   OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();
   cl_context context = current_device.getContext();
   if ( ! context ) {
@@ -68,7 +69,7 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 	DLOG(INFO) << "new memory "<<this->tag.c_str();
 	this->count++;
 	numCallsMalloc++;
-	statictics();
+	logStatistics();
 }
 
 OpenCLMemory::OpenCLMemory(const OpenCLMemory& mem) {
@@ -93,7 +94,7 @@ void OpenCLMemory::free() {
 		this->ptr_device_mem_ = NULL;
     DLOG(INFO) << current_device.name() << "> clReleaseMemObject(" << this->ptr_device_mem<< ") succeeded.";
 		numCallsFree++;
-		statictics();
+		logStatistics();
 	}
 }
 

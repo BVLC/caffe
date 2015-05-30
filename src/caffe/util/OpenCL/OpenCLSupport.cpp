@@ -306,6 +306,7 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
   OpenCLPlatform& pf = OpenCLManager::CurrentPlatform();
   OpenCLDevice& device = pf.CurrentDevice();
   cl_command_queue* queue = device.getQueue();
+
   if (!queue) {
     LOG(ERROR) << device.name() << "> failed to get OpenCL command queue";
 		return false;
@@ -342,18 +343,19 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
   DLOG(INFO)<<"clEnqueueFillBuffer() succeeded to set memory to "<<alpha;
 
 #else
-	std::string kernel_name = clGetKernelName<T>("clFillBuffer");
 
-  kernel = device.getKernel(kernel_name);
-	if ( kernel == NULL ) {
-		return false;
-	}
+  std::string kernel_name = clGetKernelName<T>("clFillBuffer");
+
+  cl_kernel* kernel = device.getKernel(kernel_name);
+  if (kernel == NULL) {
+    return false;
+  }
 
 	unsigned int N = Bytes/sizeof(T);
 	CL_SET_KERNEL_ARG
-	CL_SET_TYPE_KERNEL_ARG(int, N)
-	CL_SET_TYPE_KERNEL_ARG(T, alpha)
-	CL_SET_ARRAY_KERNEL_ARG(&virtualPtr)
+	CL_SET_TYPE_KERNEL_ARG(int, N, kernel)
+	CL_SET_TYPE_KERNEL_ARG(T, alpha, kernel)
+	CL_SET_ARRAY_KERNEL_ARG(&virtualPtr, kernel)
 
 	size_t global = CAFFE_GET_GLOBAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
 	size_t local  = CAFFE_GET_LOCAL_WORKITEMS(N, OPENCL_LOCAL_SIZE);
@@ -363,7 +365,7 @@ bool clMemset(void* virtualPtr, const T alpha, const size_t Bytes) {
 	if ( err != CL_SUCCESS ) {
 		std::ostringstream oss;
     oss << "Failed to enqueue kernel '"
-        << kernel_name <<"' on GPU "<< devuce.name()<<" : "<<what(err);
+        << kernel_name <<"' on GPU "<< device.name()<<" : "<<what(err);
 		//LOG(ERROR)<<oss.str();
 		throw OpenCLSupportException(oss.str());
 		return false;
@@ -1520,8 +1522,28 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
   int ldc = n;
 
   if( typeid(T) == typeid(float) ) {
-    clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL);
-     if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
+    /*
+    LOG(ERROR)<<"calling clblasSgemm()";
+    LOG(ERROR)<<"clblasRowMajor = "<<clblasRowMajor;
+    LOG(ERROR)<<"TransA = "<<TransA;
+    LOG(ERROR)<<"TransB = "<<TransB;
+    LOG(ERROR)<<"m      = "<<m;
+    LOG(ERROR)<<"n      = "<<n;
+    LOG(ERROR)<<"k      = "<<k;
+    LOG(ERROR)<<"alpha  = "<<alpha;
+    LOG(ERROR)<<"A_device = "<<A_device;
+    LOG(ERROR)<<"A_offset = "<<A_offset;
+    LOG(ERROR)<<"lda      = "<<lda;
+    LOG(ERROR)<<"x_device = "<<x_device;
+    LOG(ERROR)<<"x_offset = "<<x_offset;
+    LOG(ERROR)<<"ldb      = "<<ldb;
+    LOG(ERROR)<<"beta  = "<<beta;
+    LOG(ERROR)<<"y_device = "<<y_device;
+    LOG(ERROR)<<"y_offset = "<<y_offset;
+    LOG(ERROR)<<"ldc      = "<<ldc;
+    LOG(ERROR)<<"queue    = "<<queue;
+    */
+    if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
        LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
        return false;
      }
@@ -1771,7 +1793,6 @@ size_t clGetMemoryOffset(const void* ptr_virtual) {
 		return -1;
 	}
 	size_t mem_offset = static_cast<const char*>(ptr_virtual) - static_cast<const char*>(clMem.getVirtualPointer());
-
 	return mem_offset;
 }
 

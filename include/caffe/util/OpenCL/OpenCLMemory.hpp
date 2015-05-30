@@ -29,7 +29,7 @@ public:
 	static bool isHighMem(const void* ptr);
 	size_t getSize();
 
-	static void statictics() {
+	static void logStatistics() {
 		DLOG(INFO)<<"numCallsMalloc = "<<numCallsMalloc;
 		DLOG(INFO)<<"numCallsFree   = "<<numCallsFree;
 	}

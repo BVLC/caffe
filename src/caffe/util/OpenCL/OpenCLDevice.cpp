@@ -355,7 +355,7 @@ bool OpenCLDevice::createQueue() {
 		LOG(ERROR) << "failed to create OpenCL command queue for device " << this->name();
 		return false;
 	}
-	LOG(INFO) << "create OpenCL command queue for device " << this->name();
+	LOG(INFO) << "create OpenCL command queue for device " << this->name() << " @ queue = "<<queue<<" and deviceID = "<<deviceID;
 	return true;
 }
 
