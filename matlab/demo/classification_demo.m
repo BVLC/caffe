@@ -40,15 +40,17 @@ function [scores, maxlabel] = classification_demo(im, use_gpu)
 %   [width, height, channels, images]
 % where width is the fastest dimension.
 % Here is the rough matlab for putting image data into the correct
-% format:
-%   % convert from uint8 to single
-%   im = single(im);
-%   % reshape to a fixed size (e.g., 227x227)
-%   im = imresize(im, [IMAGE_DIM IMAGE_DIM], 'bilinear');
-%   % permute from RGB to BGR and subtract the data mean (already in BGR)
-%   im = im(:,:,[3 2 1]) - data_mean;
+% format in W x H x C with BGR channels:
+%   % permute channels from RGB to BGR
+%   im_data = im(:, :, [3, 2, 1]);
 %   % flip width and height to make width the fastest dimension
-%   im = permute(im, [2 1 3]);
+%   im_data = permute(im_data, [2, 1, 3]);
+%   % convert from uint8 to single
+%   im_data = single(im_data);
+%   % reshape to a fixed size (e.g., 227x227).
+%   im_data = imresize(im_data, [IMAGE_DIM IMAGE_DIM], 'bilinear');
+%   % subtract mean_data (already in W x H x C with BGR channels)
+%   im_data = im_data - mean_data;
 
 % If you have multiple images, cat them with cat(4, ...)
 
@@ -94,7 +96,7 @@ input_data = {prepare_image(im)};
 toc;
 
 % do forward pass to get scores
-% scores are now Width x Height x Channels x Num
+% scores are now Channels x Num, where Channels == 1000
 tic;
 % The net forward function. It takes in a cell array of N-D arrays
 % (where N == 4 here) containing data of input blob(s) and outputs a cell
@@ -103,43 +105,43 @@ scores = net.forward(input_data);
 toc;
 
 scores = scores{1};
-size(scores)
-scores = squeeze(scores);
-scores = mean(scores,2);
+scores = mean(scores, 2);  % take average scores over 10 crops
 
-[~,maxlabel] = max(scores);
+[~, maxlabel] = max(scores);
 
 % call caffe.reset_all() to reset caffe
 caffe.reset_all();
 
 % ------------------------------------------------------------------------
-function images = prepare_image(im)
+function crops_data = prepare_image(im)
 % ------------------------------------------------------------------------
+% caffe/matlab/+caffe/imagenet/ilsvrc_2012_mean.mat contains mean_data that
+% is already in W x H x C with BGR channels
 d = load('../+caffe/imagenet/ilsvrc_2012_mean.mat');
-IMAGE_MEAN = d.image_mean;
+mean_data = d.mean_data;
 IMAGE_DIM = 256;
 CROPPED_DIM = 227;
 
-% resize to fixed input size
-im = single(im);
-im = imresize(im, [IMAGE_DIM IMAGE_DIM], 'bilinear');
-% permute from RGB to BGR (IMAGE_MEAN is already BGR)
-im = im(:,:,[3 2 1]) - IMAGE_MEAN;
+% Convert an image returned by Matlab's imread to im_data in caffe's data
+% format: W x H x C with BGR channels
+im_data = im(:, :, [3, 2, 1]);  % permute channels from RGB to BGR
+im_data = permute(im_data, [2, 1, 3]);  % flip width and height
+im_data = single(im_data);  % convert from uint8 to single
+im_data = imresize(im_data, [IMAGE_DIM IMAGE_DIM], 'bilinear');  % resize im_data
+im_data = im_data - mean_data;  % subtract mean_data (already in W x H x C, BGR)
 
 % oversample (4 corners, center, and their x-axis flips)
-images = zeros(CROPPED_DIM, CROPPED_DIM, 3, 10, 'single');
+crops_data = zeros(CROPPED_DIM, CROPPED_DIM, 3, 10, 'single');
 indices = [0 IMAGE_DIM-CROPPED_DIM] + 1;
-curr = 1;
+n = 1;
 for i = indices
   for j = indices
-    images(:, :, :, curr) = ...
-      permute(im(i:i+CROPPED_DIM-1, j:j+CROPPED_DIM-1, :), [2 1 3]);
-    images(:, :, :, curr+5) = images(end:-1:1, :, :, curr);
-    curr = curr + 1;
+    crops_data(:, :, :, n) = im_data(i:i+CROPPED_DIM-1, j:j+CROPPED_DIM-1, :);
+    crops_data(:, :, :, n+5) = crops_data(end:-1:1, :, :, n);
+    n = n + 1;
   end
 end
-center = floor(indices(2) / 2)+1;
-images(:,:,:,5) = ...
-  permute(im(center:center+CROPPED_DIM-1,center:center+CROPPED_DIM-1,:), ...
-  [2 1 3]);
-images(:,:,:,10) = images(end:-1:1, :, :, curr);
+center = floor(indices(2) / 2) + 1;
+crops_data(:,:,:,5) = ...
+  im_data(center:center+CROPPED_DIM-1,center:center+CROPPED_DIM-1,:);
+crops_data(:,:,:,10) = crops_data(end:-1:1, :, :, 5);
