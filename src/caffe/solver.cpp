@@ -168,6 +168,25 @@ void Solver<Dtype>::Step(int iters) {
   Dtype smoothed_loss = 0;
 
   while (iter_ < stop_iter) {
+    // zero-init the params
+    for (int i = 0; i < net_->params().size(); ++i) {
+      shared_ptr<Blob<Dtype> > blob = net_->params()[i];
+      switch (Caffe::mode()) {
+      case Caffe::CPU:
+        caffe_set(blob->count(), static_cast<Dtype>(0),
+            blob->mutable_cpu_diff());
+        break;
+      case Caffe::GPU:
+#ifndef CPU_ONLY
+        caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
+            blob->mutable_gpu_diff());
+#else
+        NO_GPU;
+#endif
+        break;
+      }
+    }
+
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
       TestAll();
@@ -175,7 +194,13 @@ void Solver<Dtype>::Step(int iters) {
 
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
-    Dtype loss = net_->ForwardBackward(bottom_vec);
+    // accumulate the loss and gradient
+    Dtype loss = 0;
+    for (int i = 0; i < param_.iter_size(); ++i) {
+      loss += net_->ForwardBackward(bottom_vec);
+    }
+    loss /= param_.iter_size();
+    // average the loss across iterations for smoothed reporting
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
@@ -462,10 +487,37 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->params().size(); ++param_id) {
+    Normalize(param_id);
     Regularize(param_id);
     ComputeUpdateValue(param_id, rate);
   }
   this->net_->Update();
+}
+
+template <typename Dtype>
+void SGDSolver<Dtype>::Normalize(int param_id) {
+  if (this->param_.iter_size() == 1) { return; }
+  // Scale gradient to counterbalance accumulation.
+  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
+  switch (Caffe::mode()) {
+  case Caffe::CPU: {
+    caffe_scal(net_params[param_id]->count(), accum_normalization,
+        net_params[param_id]->mutable_cpu_diff());
+    break;
+  }
+  case Caffe::GPU: {
+#ifndef CPU_ONLY
+    caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
+        net_params[param_id]->mutable_gpu_diff());
+#else
+    NO_GPU;
+#endif
+    break;
+  }
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
 }
 
 template <typename Dtype>
