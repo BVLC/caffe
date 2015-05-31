@@ -651,6 +651,25 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   vector<Blob<Dtype>*> sigmoid_top_vec_;
 };
 
+/* CrossEntropyLossLayer
+*/
+template <typename Dtype>
+class CrossEntropyLossLayer : public LossLayer<Dtype> {
+ public:
+  explicit CrossEntropyLossLayer(const LayerParameter& param)
+      : LossLayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+};
+
+
+
 // Forward declare SoftmaxLayer for use in SoftmaxWithLossLayer.
 template <typename Dtype> class SoftmaxLayer;
 
