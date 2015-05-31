@@ -69,7 +69,7 @@ bool OpenCLManager::Init() {
     LOG(FATAL) << "No GPU devices available at platform " << pf.name();
     return false;
   }
-  pf.SetCurrentDevice(instance_.device_id_);
+  pf.SetCurrentDevice(CL_DEVICE_TYPE_GPU, instance_.device_id_);
   OpenCLDevice& device = pf.CurrentDevice();
   if (!device.createQueue()) {
     LOG(FATAL) << "failed to create OpenCL command queue for device "

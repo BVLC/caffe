@@ -23,7 +23,7 @@ public:
   std::string vendor();
   std::string version();
   std::string profile();
-  void SetCurrentDevice(int device_index);
+  void SetCurrentDevice(cl_device_type type, int device_index);
   OpenCLDevice& CurrentDevice();
 	OpenCLDevice* getDevice(cl_device_type type, unsigned int idx);
 	cl_platform_id id();
@@ -51,6 +51,7 @@ private:
   cl::Context context_;
 //	std::vector<cl_program> programs;
   int current_device_index_;
+  cl_device_type current_device_type_;
 };
 
 } // namespace caffe

@@ -43,9 +43,7 @@ OpenCLPlatform::OpenCLPlatform(const OpenCLPlatform& pf):
 //	programs			= pf.programs;
 }
 
-OpenCLPlatform::OpenCLPlatform(cl::Platform platform):
-  platform_(platform),
-  current_device_index_(-1) {
+OpenCLPlatform::OpenCLPlatform(cl::Platform platform) : platform_(platform), current_device_index_(-1) {
 	numCPUDevices 		= 0;
 	numGPUDevices 		= 0;
 	numDevices	  		= 0;
@@ -278,6 +276,33 @@ OpenCLDevice& OpenCLPlatform::CurrentDevice() {
   if (current_device_index_ < 0 ) {
     LOG(FATAL) << "Current device not set.";
   }
+  int cpuDeviceCount = 0;
+  int gpuDeviceCount = 0;
+
+  switch(current_device_type_) {
+    case CL_DEVICE_TYPE_CPU:
+      for(int i = 0; i < devices.size(); i++) {
+        if ( devices[i].type() == CL_DEVICE_TYPE_CPU ) {
+          if ( cpuDeviceCount == current_device_index_ ) {
+            return devices[i];
+          }
+          cpuDeviceCount++;
+        }
+      }
+      break;
+    case CL_DEVICE_TYPE_GPU:
+      for(int i = 0; i < devices.size(); i++) {
+        if ( devices[i].type() == CL_DEVICE_TYPE_GPU ) {
+          if ( gpuDeviceCount == current_device_index_ ) {
+            return devices[i];
+          }
+          gpuDeviceCount++;
+        }
+      }
+      break;
+    default:
+      LOG(FATAL) << "unsupported CL_DEVICE_TYPE = "<<current_device_type_;
+  }
   return devices[current_device_index_];
 }
 
@@ -285,12 +310,26 @@ void OpenCLPlatform::DeviceSynchronize() {
   CurrentDevice().Synchronize();
 }
 
-void OpenCLPlatform::SetCurrentDevice(int device_index) {
-  if (device_index >= numCPUDevices + numGPUDevices ||
-      device_index < 0) {
-    LOG(FATAL) << "Device index out of range";
+void OpenCLPlatform::SetCurrentDevice(cl_device_type type, int device_index) {
+
+  switch(type) {
+    case CL_DEVICE_TYPE_CPU:
+      if (device_index >= numCPUDevices || device_index < 0) {
+        LOG(FATAL) << "Device index for CL_DEVICE_TYPE_CPU out of range";
+      }
+      current_device_index_ = device_index;
+      current_device_type_  = type;
+      break;
+    case CL_DEVICE_TYPE_GPU:
+      if (device_index >= numGPUDevices || device_index < 0) {
+        LOG(FATAL) << "Device index for CL_DEVICE_TYPE_GPU out of range";
+      }
+      current_device_index_ = device_index;
+      current_device_type_  = type;
+      break;
+    default:
+      LOG(FATAL) << "unsupported CL_DEVICE_TYPE = "<<type;
   }
-  current_device_index_ = device_index;
 }
 
 } // namespace caffe
