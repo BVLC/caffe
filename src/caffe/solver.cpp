@@ -231,15 +231,18 @@ void Solver<Dtype>::Step(int iters) {
   vector<Dtype> losses;
   Dtype smoothed_loss = 0;
 
-  while (iter_ < stop_iter) {
+  for (; iter_ < stop_iter; ++iter_) {
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
-      TestAll();
+      // Currently can't do testing with this solver method
+      //TestAll();
     }
 
     const bool display = param_.display() && iter_ % param_.display() == 0;
     net_->set_debug_info(display && param_.debug_info());
-    Dtype loss = net_->ForwardBackward(bottom_vec);
+    Dtype loss;
+    net_->ForwardPrefilled(&loss);
+    net_->Backward();
     if (losses.size() < average_loss) {
       losses.push_back(loss);
       int size = losses.size();
@@ -531,11 +534,51 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->params().size(); ++param_id) {
+    Normalize(param_id);
     Regularize(param_id);
     ComputeUpdateValue(param_id, rate);
   }
   this->net_->Update();
 }
+
+template<typename Dtype>
+void SGDSolver<Dtype>::Normalize(int param_id) {
+  if (this->param_.iter_size() == 1) {
+    return;
+  }
+  // Scale gradient to counterbalance accumulation.
+  const vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
+  switch (Caffe::mode()) {
+    case Caffe::CPU: {
+      caffe_scal(net_params[param_id]->count(), accum_normalization,
+                 net_params[param_id]->mutable_cpu_diff());
+      break;
+    }
+    case Caffe::GPU: {
+#ifndef CPU_ONLY
+      if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+        caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
+                       net_params[param_id]->mutable_gpu_diff());
+#endif // USE_CUDA
+      } else {
+#ifdef USE_GREENTEA
+        greentea_gpu_scal(this->device_context_.id(),
+                          net_params[param_id]->count(), accum_normalization,
+                          (cl_mem) (net_params[param_id]->mutable_gpu_diff()),
+                          0);
+#endif // USE_GREENTEA
+      }
+#else
+      NO_GPU;
+#endif
+      break;
+    }
+    default:
+      LOG(FATAL)<< "Unknown caffe mode: " << Caffe::mode();
+    }
+  }
 
 template<typename Dtype>
 void SGDSolver<Dtype>::Regularize(int param_id) {
@@ -586,7 +629,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
                 temp_[param_id]->gpu_data(),
                 net_params[param_id]->mutable_gpu_diff());
           } else {
-            LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+            LOG(FATAL)<< "Unknown regularization type: " << regularization_type;
           }
         }
 #endif // USE_CUDA
@@ -608,7 +651,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
                 (cl_mem)(temp_[param_id]->gpu_data()),0,
                 (cl_mem)(net_params[param_id]->mutable_gpu_diff()),0);
           } else {
-            LOG(FATAL) << "Unknown regularization type: " << regularization_type;
+            LOG(FATAL)<< "Unknown regularization type: " << regularization_type;
           }
         }
 #endif // USE_GREENTEA
