@@ -44,8 +44,6 @@ class Solver {
   }
   void Snapshot();
   void Restore(const char* resume_file);
-  // Get the update value for the current iteration.
-  virtual void ComputeUpdateValue() = 0;
 
  protected:
   // Make and apply the update value for the current iteration.
@@ -93,8 +91,6 @@ class SGDSolver : public Solver<Dtype> {
   const vector<shared_ptr<Blob<Dtype> > >& history() {
     return history_;
   }
-
-  virtual void ComputeUpdateValue();
 
  protected:
   void PreSolve();

@@ -4,6 +4,11 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
 
+#ifdef USE_GREENTEA
+#include "caffe/greentea/greentea.hpp"
+#include "caffe/greentea/greentea_math_functions.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDA
@@ -77,7 +82,7 @@ template<typename Dtype>
 void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
 
-  int count = top[0]->count() * 2;
+  int count = top[0]->count();
 
   const Dtype* bottom_data_a = bottom[0]->gpu_data();
   const Dtype* bottom_data_b = bottom[1]->gpu_data();
@@ -96,9 +101,30 @@ void MergeCropLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   int height_b = bottom[1]->height();
   int width_b = bottom[1]->width();
 
-  CopyForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS) (
-      count, bottom_data_a, bottom_data_b, top_data, num, channels_a,
-      channels_b, height_a, width_a, height_b, width_b);
+  if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    CopyForward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS) (
+        count, bottom_data_a, bottom_data_b, top_data, num, channels_a,
+        channels_b, height_a, width_a, height_b, width_b);
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
+
+    viennacl::ocl::kernel &oclk_copy_forward = program.get_kernel(
+        CL_KERNEL_SELECT("merge_copy_forward"));
+    viennacl::ocl::enqueue(
+        oclk_copy_forward(count, WrapHandle((cl_mem) bottom_data_a, ctx),
+                           WrapHandle((cl_mem) bottom_data_b, ctx),
+                           WrapHandle((cl_mem) top_data, ctx), num, channels_a,
+                           channels_b, height_a, width_a, height_b, width_b),
+        ctx.get_queue());
+    ctx.get_queue().finish();
+#endif // USE_GREENTEA
+  }
 
 }
 
@@ -109,7 +135,7 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if (!propagate_down[0]) {
     return;
   }
-  int count = top[0]->count() * 2;
+  int count = top[0]->count();
 
   Dtype* bottom_diff_a = bottom[0]->mutable_gpu_diff();
   const Dtype* top_diff = top[0]->gpu_diff();
@@ -127,9 +153,30 @@ void MergeCropLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   int height_b = bottom[1]->height();
   int width_b = bottom[1]->width();
 
-  CopyBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS) (
-      count, bottom_diff_a, top_diff, num, channels_a, channels_b, height_a,
-      width_a, height_b, width_b);
+  if (this->device_context_.backend() == BACKEND_CUDA) {
+#ifdef USE_CUDA
+    CopyBackward<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS) (
+        count, bottom_diff_a, top_diff, num, channels_a, channels_b, height_a,
+        width_a, height_b, width_b);
+#endif // USE_CUDA
+  } else {
+#ifdef USE_GREENTEA
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
+
+    viennacl::ocl::kernel &oclk_copy_backward = program.get_kernel(
+        CL_KERNEL_SELECT("merge_copy_backward"));
+    viennacl::ocl::enqueue(
+        oclk_copy_backward(count, WrapHandle((cl_mem) bottom_diff_a, ctx),
+                           WrapHandle((cl_mem) top_diff, ctx), num, channels_a,
+                           channels_b, height_a, width_a, height_b, width_b),
+        ctx.get_queue());
+    ctx.get_queue().finish();
+
+#endif // USE_GREENTEA
+  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(MergeCropLayer);
