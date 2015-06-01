@@ -6,6 +6,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
+#include <boost/python/slice.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <numpy/arrayobject.h>
 
@@ -14,6 +15,8 @@
 #include <vector>  // NOLINT(build/include_order)
 #include <fstream>  // NOLINT
 
+#include "caffe/array.hpp"
+#include "caffe/arraymath.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
@@ -39,7 +42,23 @@
   } \
 } while (0)
 
+#if PY_MAJOR_VERSION < 3
+#define PyLong_AS_LONG(val) PyInt_AS_LONG(val)
+#define PyLong_AsLong(val) PyInt_AsLong(val)
+#define PyLong_Check(val) PyInt_Check(val)
+#endif
+
 namespace bp = boost::python;
+
+// Define the ellipsis object in boost python
+namespace boost { namespace python {
+struct ellipsis : public object {
+  BOOST_PYTHON_FORWARD_OBJECT_CONSTRUCTORS(ellipsis, object)
+};
+namespace converter {
+template<> struct object_manager_traits<ellipsis>
+  : pytype_object_manager_traits<&PyEllipsis_Type, slice> {};
+} } };
 
 namespace caffe {
 
@@ -339,6 +358,90 @@ class NCCL {
 };
 #endif
 
+namespace detail {
+struct ArrayShape_to_tuple {
+  static PyObject *convert(const ArrayShape &p) {
+    PyObject *r = PyTuple_New(p.size());
+    for (size_t i = 0; i < p.size(); i++)
+      PyTuple_SET_ITEM(r, i, PyLong_FromLong(p[i]));
+    return r;
+  }
+  static PyTypeObject const *get_pytype() {
+    return &PyTuple_Type;
+  }
+};
+}  // namespace detail
+struct ArrayShape_to_tuple {
+  ArrayShape_to_tuple() {
+    bp::to_python_converter < ArrayShape, detail::ArrayShape_to_tuple
+#ifdef BOOST_PYTHON_SUPPORTS_PY_SIGNATURES
+    , true
+#endif
+    > ();
+  }
+};
+
+struct ArrayShape_from_tuple {
+  ArrayShape_from_tuple() {
+    bp::converter::registry::push_back(&convertible,
+                                       &construct,
+                                       bp::type_id<ArrayShape>()
+#ifdef BOOST_PYTHON_SUPPORTS_PY_SIGNATURES
+                                       , get_pytype
+#endif
+                                       ); // NOLINT[whitespace/parens]
+  }
+
+  static const PyTypeObject *get_pytype() {
+    return &PyTuple_Type;
+  }
+
+  static void *convertible(PyObject *o) {
+    if (!PyTuple_Check(o)) return 0;
+    for (int i = 0, S = PyTuple_Size(o); i < S; i++)
+      if (!PyLong_Check(PyTuple_GET_ITEM(o, i)))
+        return 0;
+    return o;
+  }
+
+  static void construct(
+    PyObject *o,
+    boost::python::converter::rvalue_from_python_stage1_data *data) {
+    using bp::converter::rvalue_from_python_storage;
+    ArrayShape s(PyTuple_Size(o));
+    for (int i = 0; i < s.size(); i++)
+      s[i] = PyLong_AS_LONG(PyTuple_GET_ITEM(o, i));
+    void *storage =
+      ((rvalue_from_python_storage<ArrayShape> *) data)->storage.bytes;
+    new(storage) ArrayShape(s);
+    data->convertible = storage;
+  }
+};
+/**** Python array interface ****/
+template<typename T> Array<T> Blob_data_array( Blob<T> & b ) { // NOLINT[runtime/references]
+  return Array<T>(b.data(), make_shape(b.shape()));
+}
+template<typename T> Array<T> Blob_diff_array( Blob<T> & b ) { // NOLINT[runtime/references]
+  return Array<T>(b.diff(), make_shape(b.shape()));
+}
+template<typename T> struct TS {};
+template<> struct TS<float> { static const char * value(){ return "f4"; } };
+template<> struct TS<double> { static const char * value(){ return "f8"; } };
+
+template<typename T>
+bp::dict Array_interface(Array<T> &a) { // NOLINT[runtime/references]
+  bp::dict r;
+  r["shape"] = bp::tuple(a.shape());
+  r["typestr"] = TS<T>::value();
+  r["version"] = 3;
+  r["data"] = bp::make_tuple((size_t)a.mutable_cpu_data(), 0);
+  return r;
+}
+template<typename T, typename V>
+void Array_setitem(Array<T> &a, const bp::ellipsis &, const V &v) { // NOLINT[runtime/references]
+  a = v;
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -425,6 +528,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
         &Blob<Dtype>::count))
     .def("reshape",           bp::raw_function(&Blob_Reshape))
+    .add_property("data_array", &Blob_data_array<Dtype>)
+    .add_property("diff_array", &Blob_diff_array<Dtype>)
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
@@ -521,6 +626,77 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("stop", &Timer::Stop)
     .add_property("ms", &Timer::MilliSeconds);
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Timer);
+
+  // Caffe Array
+  ArrayShape_to_tuple();
+  ArrayShape_from_tuple();
+
+  bp::enum_<ArrayMode>("ArrayMode")
+  .value("DEFAULT", AR_DEFAULT)
+  .value("CPU", AR_CPU)
+  .value("GPU", AR_GPU);
+
+  typedef Expression<Dtype>(*Binary1)(const ArrayBase<Dtype> &, Dtype);
+  typedef Expression<Dtype>(*Binary2)(const ArrayBase<Dtype> &,
+                                      const ArrayBase<Dtype> &);
+  bp::class_<ArrayBase<Dtype>, boost::noncopyable>("ArrayBase", bp::no_init)
+  // Binary functions
+  .def(bp::self + bp::self)
+  .def(bp::self - bp::self)
+  .def(bp::self * bp::self)
+  .def(bp::self / bp::self)
+  .def(bp::self + float())
+  .def(bp::self - float())
+  .def(bp::self * float())
+  .def(bp::self / float())
+  .def(float() + bp::self)
+  .def(float() - bp::self)
+  .def(float() * bp::self)
+  .def(float() / bp::self)
+  .def("maximum", static_cast<Binary1>(&ARMath<Dtype>::maximum))
+  .def("maximum", static_cast<Binary2>(&ARMath<Dtype>::maximum))
+  .def("minimum", static_cast<Binary1>(&ARMath<Dtype>::minimum))
+  .def("minimum", static_cast<Binary2>(&ARMath<Dtype>::minimum))
+  .def("pow", static_cast<Binary1>(&ARMath<Dtype>::pow))
+  .def("pow", static_cast<Binary2>(&ARMath<Dtype>::pow))
+  // Unary functions
+  .def(- bp::self)
+  .def("abs", &ArrayBase<Dtype>::abs)
+  .def("exp", &ArrayBase<Dtype>::exp)
+  .def("log", &ArrayBase<Dtype>::log)
+  .def("sign", &ArrayBase<Dtype>::sign)
+  .def("sqrt", &ArrayBase<Dtype>::sqrt)
+  // Other functions
+  .def("eval", &ArrayBase<Dtype>::eval)
+  .add_property("mode", &Array<Dtype>::mode)
+  .add_property("effective_mode", &Array<Dtype>::effectiveMode)
+  .add_property("shape", bp::make_function(&Array<Dtype>::shape,
+    bp::return_value_policy<bp::copy_const_reference>()) );
+
+  bp::class_<Array<Dtype>, bp::bases<ArrayBase<Dtype> > >("Array")
+  .def(bp::init<ArrayMode>())
+  .def(bp::init<ArrayShape>())
+  .def(bp::init<ArrayShape, ArrayMode>())
+  .def("reshape", &Array<Dtype>::reshape)
+  .def(bp::self += bp::self)
+  .def(bp::self -= bp::self)
+  .def(bp::self *= bp::self)
+  .def(bp::self /= bp::self)
+  .def(bp::self += float())
+  .def(bp::self -= float())
+  .def(bp::self *= float())
+  .def(bp::self /= float())
+  .def("__setitem__", &Array_setitem<Dtype, Dtype>)
+  .def("__setitem__", &Array_setitem<Dtype, Expression<Dtype> >)
+  .def("__setitem__", &Array_setitem<Dtype, Array<Dtype> >)
+  .add_property("mode", &Array<Dtype>::mode, &Array<Dtype>::setMode)
+  .add_property("__array_interface__", &Array_interface<Dtype>);
+
+  bp::class_ < Expression<Dtype>, bp::bases<ArrayBase<Dtype> > > ("Expression",
+                                                                  bp::no_init);
+
+  bp::def("gemm", &ARMath<Dtype>::gemm);
+  bp::def("conv", &ARMath<Dtype>::conv);
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
