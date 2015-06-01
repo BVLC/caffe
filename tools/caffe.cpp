@@ -1,11 +1,12 @@
 #include <glog/logging.h>
 
 #include <cstring>
+#include <iomanip>
 #include <map>
 #include <string>
 #include <vector>
 
-#include "boost/algorithm/string.hpp"
+
 #include "caffe/caffe.hpp"
 
 using caffe::Blob;
@@ -81,7 +82,7 @@ RegisterBrewFunction(device_query);
 // test nets.
 void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
   std::vector<std::string> model_names;
-  boost::split(model_names, model_list, boost::is_any_of(",") );
+  caffe::string_split(&model_names, model_list, ",");
   for (int i = 0; i < model_names.size(); ++i) {
     LOG(INFO) << "Finetuning from " << model_names[i];
     solver->net()->CopyTrainedLayersFrom(model_names[i]);

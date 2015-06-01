@@ -1,6 +1,7 @@
 #ifndef CAFFE_VISION_LAYERS_HPP_
 #define CAFFE_VISION_LAYERS_HPP_
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>

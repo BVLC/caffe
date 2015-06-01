@@ -72,7 +72,7 @@ class ReductionLayerTest : public MultiDeviceTest<TypeParam> {
       }
       expected_result *= coeff;
       const Dtype computed_result = this->blob_top_->cpu_data()[n];
-      EXPECT_FLOAT_EQ(expected_result, computed_result)
+      EXPECT_NEAR(expected_result, computed_result, 4e-5)
           << "Incorrect result computed with op "
           << ReductionParameter_ReductionOp_Name(op) << ", coeff " << coeff;
     }

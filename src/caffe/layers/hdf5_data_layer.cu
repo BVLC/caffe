@@ -4,6 +4,7 @@ TODO:
 */
 
 #include <stdint.h>
+#include <algorithm>
 #include <string>
 #include <vector>
 

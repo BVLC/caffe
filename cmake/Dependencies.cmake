@@ -2,9 +2,9 @@
 set(Caffe_LINKER_LIBS "")
 
 # ---[ Boost
-find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
-include_directories(SYSTEM ${Boost_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
+#find_package(Boost 1.46 REQUIRED COMPONENTS system thread)
+#include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+#list(APPEND Caffe_LINKER_LIBS ${Boost_LIBRARIES})
 
 # ---[ Threads
 find_package(Threads REQUIRED)
