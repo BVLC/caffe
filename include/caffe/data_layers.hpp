@@ -336,7 +336,7 @@ class MILDataLayer : public BasePrefetchingDataLayer<Dtype> {
       : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~MILDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MILData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }

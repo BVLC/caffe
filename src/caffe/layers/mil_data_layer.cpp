@@ -26,7 +26,7 @@ MILDataLayer<Dtype>::~MILDataLayer<Dtype>() {
 
 template <typename Dtype>
 void MILDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>& top) {
+      const vector<Blob<Dtype>*>& top) {
   // LayerSetUp runs through the image name file and stores them.
 
   string label_file = this->layer_param_.mil_data_param().label_file().c_str();
@@ -148,13 +148,16 @@ void MILDataLayer<Dtype>::InternalThreadEntry() {
     }
     
     // hdf5_load_nd_dataset(this->label_file_id_, string("/label-"+im_name).c_str(), 2, 2, label_blob_);
-    hdf5_load_nd_dataset(this->label_file_id_, string("/labels-"+im_name).c_str(), 2, 2, &this->label_blob_);
+    hdf5_load_nd_dataset(this->label_file_id_, string("/labels-"+im_name).c_str(), 4, 4, &this->label_blob_);
     const Dtype* label = label_blob_.mutable_cpu_data();
     // LOG(INFO) << "[width, height, channels, num] = " << label_blob_.width() << 
-    //  ", " << label_blob_.height() << ", " << label_blob_.channels() << ", " << label_blob_.num();
-    CHECK_EQ(label_blob_.width(), 1) << "Expected width of label to be 1." ;
-    CHECK_EQ(label_blob_.height(), n_classes) << "Expected height of label to be " << n_classes;
+    //   ", " << label_blob_.height() << ", " << label_blob_.channels() << ", " << label_blob_.num();
     
+    CHECK_EQ(label_blob_.width(), 1)          << "Expected width of label to be 1." ;
+    CHECK_EQ(label_blob_.height(), n_classes) << "Expected height of label to be " << n_classes;
+    CHECK_EQ(label_blob_.channels(), 1)       << "Expected channels of label to be 1." ;
+    CHECK_EQ(label_blob_.num(), 1)            << "Expected num of label to be 1." ;
+
     float img_size_i = img_size;
     for(int i_scales = 0; i_scales < num_scales; i_scales++){
       // Resize such that the image is of size img_size, img_size
