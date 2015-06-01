@@ -8,6 +8,7 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template <typename Dtype>
 __global__ void im2col_sk_gpu_kernel(const int n, const Dtype* data_im,
     const int height, const int width, const int kernel_h, const int kernel_w,
@@ -293,4 +294,5 @@ template void col2im_gpu<double>(const double* data_col, const int channels,
     const int pad_h, const int pad_w, const int stride_h,
     const int stride_w, double* data_im);
 
+#endif // USE_CUDA
 }  // namespace caffe

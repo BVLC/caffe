@@ -14,6 +14,11 @@
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+
+#ifdef USE_GREENTEA
+#include "caffe/greentea/greentea_im2col.hpp"
+#endif
+
 namespace caffe {
 
 template<typename Dtype>
@@ -93,14 +98,17 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
 #ifndef CPU_ONLY
-  void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
-                        Dtype* output, bool skip_im2col = false);
-  void forward_gpu_bias(Dtype* output, const Dtype* bias);
-  void backward_gpu_gemm(const Dtype* input, const Dtype* weights,
-                         Dtype* col_output);
-  void weight_gpu_gemm(const Dtype* col_input, const Dtype* output,
+  void forward_gpu_gemm(const Dtype* col_input, const int col_input_off,
+                        const Dtype* weights, Dtype* output,
+                        const int output_off, bool skip_im2col = false);
+  void forward_gpu_bias(Dtype* output, const int output_off, const Dtype* bias);
+  void backward_gpu_gemm(const Dtype* input, const int input_off,
+                         const Dtype* weights, Dtype* col_output,
+                         const int col_output_off);
+  void weight_gpu_gemm(const Dtype* col_input, const int col_input_off,
+                       const Dtype* output, const int output_off,
                        Dtype* weights);
-  void backward_gpu_bias(Dtype* bias, const Dtype* input);
+  void backward_gpu_bias(Dtype* bias, const Dtype* input, const int input_off);
 #endif
 
   // reverse_dimensions should return true iff we are implementing deconv, so
@@ -133,7 +141,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
                data);
   }
+
 #ifndef CPU_ONLY
+#ifdef USE_CUDA
   inline void conv_im2col_gpu(const Dtype* data, Dtype* col_buff) {
     im2col_gpu(data, conv_in_channels_, conv_in_height_, conv_in_width_,
                kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
@@ -144,7 +154,36 @@ class BaseConvolutionLayer : public Layer<Dtype> {
                kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
                data);
   }
-#endif
+#endif // USE_CUDA
+#ifdef USE_GREENTEA
+  inline void greentea_conv_im2col_gpu(const Dtype* data, const int data_off,
+                                       Dtype* col_buff,
+                                       const int col_buff_off) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
+    greentea_im2col_gpu<Dtype>(program, ctx, (cl_mem) data, data_off,
+                               conv_in_channels_, conv_in_height_,
+                               conv_in_width_, kernel_h_, kernel_w_, pad_h_,
+                               pad_w_, stride_h_, stride_w_, (cl_mem) col_buff,
+                               col_buff_off);
+  }
+  inline void greentea_conv_col2im_gpu(const Dtype* col_buff,
+                                       const int col_buff_off, Dtype* data,
+                                       const int data_off) {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+        this->device_context_.id());
+    viennacl::ocl::program &program = Caffe::Get().GetDeviceProgram(
+        this->device_context_.id());
+    greentea_col2im_gpu<Dtype>(program, ctx, (cl_mem) col_buff, col_buff_off,
+                               conv_in_channels_, conv_in_height_,
+                               conv_in_width_, kernel_h_, kernel_w_, pad_h_,
+                               pad_w_, stride_h_, stride_w_, (cl_mem) data,
+                               data_off);
+  }
+#endif // USE_GREENTEA
+#endif // !CPU_ONLY
 
   int conv_out_channels_;
   int conv_in_channels_;
