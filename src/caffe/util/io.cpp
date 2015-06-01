@@ -234,8 +234,8 @@ void hdf5_load_nd_dataset_helper(
     hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
     Blob<Dtype>* blob) {
   // Verify that the dataset exists.
-  CHECK(H5LTfind_dataset(file_id, dataset_name_))
-      << "Failed to find HDF5 dataset " << dataset_name_;
+  // CHECK(H5LTfind_dataset(file_id, dataset_name_))
+  //     << "Failed to find HDF5 dataset " << dataset_name_;
   // Verify that the number of dimensions is in the accepted range.
   herr_t status;
   int ndims;
