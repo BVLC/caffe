@@ -65,7 +65,7 @@ NONGEN_CXX_SRCS := $(shell find \
 	src/$(PROJECT) \
 	include/$(PROJECT) \
 	python/$(PROJECT) \
-	matlab/$(PROJECT) \
+	matlab/+$(PROJECT)/private \
 	examples \
 	tools \
 	-name "*.cpp" -or -name "*.hpp" -or -name "*.cu" -or -name "*.cuh")
@@ -79,12 +79,12 @@ NONEMPTY_LINT_REPORT := $(BUILD_DIR)/$(LINT_EXT)
 PY$(PROJECT)_SRC := python/$(PROJECT)/_$(PROJECT).cpp
 PY$(PROJECT)_SO := python/$(PROJECT)/_$(PROJECT).so
 PY$(PROJECT)_HXX := include/$(PROJECT)/python_layer.hpp
-# MAT$(PROJECT)_SRC is the matlab wrapper for $(PROJECT)
-MAT$(PROJECT)_SRC := matlab/$(PROJECT)/mat$(PROJECT).cpp
+# MAT$(PROJECT)_SRC is the mex entrance point of matlab package for $(PROJECT)
+MAT$(PROJECT)_SRC := matlab/+$(PROJECT)/private/$(PROJECT)_.cpp
 ifneq ($(MATLAB_DIR),)
 	MAT_SO_EXT := $(shell $(MATLAB_DIR)/bin/mexext)
 endif
-MAT$(PROJECT)_SO := matlab/$(PROJECT)/$(PROJECT).$(MAT_SO_EXT)
+MAT$(PROJECT)_SO := matlab/+$(PROJECT)/private/$(PROJECT)_.$(MAT_SO_EXT)
 
 ##############################
 # Derive generated files
@@ -118,7 +118,7 @@ GTEST_OBJ := $(addprefix $(BUILD_DIR)/, ${GTEST_SRC:.cpp=.o})
 EXAMPLE_OBJS := $(addprefix $(BUILD_DIR)/, ${EXAMPLE_SRCS:.cpp=.o})
 # Output files for automatic dependency generation
 DEPS := ${CXX_OBJS:.o=.d} ${CU_OBJS:.o=.d} ${TEST_CXX_OBJS:.o=.d} \
-	${TEST_CU_OBJS:.o=.d}
+	${TEST_CU_OBJS:.o=.d} $(BUILD_DIR)/${MAT$(PROJECT)_SO:.$(MAT_SO_EXT)=.d}
 # tool, example, and test bins
 TOOL_BINS := ${TOOL_OBJS:.o=.bin}
 EXAMPLE_BINS := ${EXAMPLE_OBJS:.o=.bin}
@@ -460,6 +460,9 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 			CXX="$(CXX)" \
 			CXXFLAGS="\$$CXXFLAGS $(MATLAB_CXXFLAGS)" \
 			CXXLIBS="\$$CXXLIBS $(STATIC_LINK_COMMAND) $(LDFLAGS)" -output $@
+	@ if [ -f "$(PROJECT)_.d" ]; then \
+		mv -f $(PROJECT)_.d $(BUILD_DIR)/${MAT$(PROJECT)_SO:.$(MAT_SO_EXT)=.d}; \
+	fi
 
 runtest: $(TEST_ALL_BIN)
 	$(TOOL_BUILD_DIR)/caffe
@@ -467,6 +470,9 @@ runtest: $(TEST_ALL_BIN)
 
 pytest: py
 	cd python; python -m unittest discover -s caffe/test
+	
+mattest: mat
+	cd matlab; $(MATLAB_DIR)/bin/matlab -nodisplay -r 'caffe.run_tests(), exit()'
 
 warn: $(EMPTY_WARN_REPORT)
 
