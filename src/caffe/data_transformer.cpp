@@ -1,4 +1,5 @@
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <string>
 #include <vector>
@@ -32,6 +33,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       mean_values_.push_back(param_.mean_value(c));
     }
   }
+  resize_width_ = resize_height_ = 0;
 }
 
 template<typename Dtype>
@@ -264,8 +266,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   int w_off = 0;
   cv::Mat cv_cropped_img = cv_img;
   if (crop_size) {
-    CHECK_EQ(crop_size, height);
-    CHECK_EQ(crop_size, width);
+  	if (resize_width_ <= 0 || resize_height_ <= 0) {
+      CHECK_EQ(crop_size, height);
+      CHECK_EQ(crop_size, width);
+	}
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
       h_off = Rand(img_height - crop_size + 1);
@@ -282,6 +286,17 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   }
 
   CHECK(cv_cropped_img.data);
+
+  if (resize_width_ > 0 && resize_height_ > 0 && phase_ == TRAIN) {
+    // resize the crop to the current resize dimensions
+    CHECK_EQ(resize_height_, height);
+    CHECK_EQ(resize_width_, width);
+
+    cv::Mat resized;
+	cv::Size size(resize_width_, resize_height_);
+    cv::resize(cv_cropped_img, resized, size);
+	cv_cropped_img = resized;
+  }
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
@@ -486,8 +501,13 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = img_channels;
-  shape[2] = (crop_size)? crop_size: img_height;
-  shape[3] = (crop_size)? crop_size: img_width;
+  if (resize_width_ > 0 && resize_height_ > 0) {
+    shape[2] = resize_height_;
+	shape[3] = resize_width_;
+  } else {
+    shape[2] = (crop_size)? crop_size: img_height;
+    shape[3] = (crop_size)? crop_size: img_width;
+  }
   return shape;
 }
 
@@ -502,11 +522,30 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
   shape[0] = num;
   return shape;
 }
+ 
+template <typename Dtype>
+void DataTransformer<Dtype>::SampleImageResizeDims() {
+  const int min = param_.min_resize();
+  const int max = param_.max_resize();
+  const bool square = param_.square_resize(); 
+  if (min > 0 && max > 0) {
+    CHECK_GT(max, min) << "Resize max is smaller than resize min";
+    resize_width_ = Rand(max - min) + min;   
+	if (square) {
+      resize_height_ = resize_width_;
+	} else {
+	  resize_height_ = Rand(max - min) + min;
+    }
+	DLOG(INFO) << "Changing input dimensions to " << resize_width_ 
+		<< "x" << resize_height_;
+  }
+}
 
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
-      (phase_ == TRAIN && param_.crop_size());
+      (phase_ == TRAIN && param_.crop_size()) ||
+	  (param_.min_resize() > 0 && param_.max_resize() > 0);
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();
     rng_.reset(new Caffe::RNG(rng_seed));

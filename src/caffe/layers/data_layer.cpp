@@ -77,6 +77,7 @@ void DataLayer<Dtype>::InternalThreadEntry() {
   Datum datum;
   datum.ParseFromString(cursor_->value());
   // Use data_transformer to infer the expected blob shape from datum.
+  this->data_transformer_->SampleImageResizeDims();
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
   // Reshape prefetch_data according to the batch_size.

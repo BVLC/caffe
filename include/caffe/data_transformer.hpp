@@ -123,6 +123,12 @@ class DataTransformer {
    */
   vector<int> InferBlobShape(const cv::Mat& cv_img);
 
+  /**
+   * @brief Chooses a new height and width for random image resizing
+        if enabled
+   */
+  void SampleImageResizeDims();
+
  protected:
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
@@ -137,6 +143,7 @@ class DataTransformer {
   void Transform(const Datum& datum, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
+  int resize_width_, resize_height_;
 
 
   shared_ptr<Caffe::RNG> rng_;

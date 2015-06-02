@@ -371,6 +371,12 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+
+  // Specify if we want to randomly resize data (after cropping)
+  optional uint32 min_resize = 8 [default = 0];
+  optional uint32 max_resize = 9 [default = 0];
+  // If randomly resizing, always choose square dimensions
+  optional bool square_resize = 10 [default = true];
 }
 
 // Message that stores parameters shared by loss layers
