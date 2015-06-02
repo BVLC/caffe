@@ -85,6 +85,35 @@ cv::Mat ReadImageToCVMat(const string& filename,
   return cv_img;
 }
 
+cv::Mat ReadImageToCVMat(const string& filename, const int height, const int width, const int min_dim, const bool is_color) {
+    if(min_dim == 0) return ReadImageToCVMat(filename, height, width, is_color);
+    else {
+        cv::Mat cv_img;
+        int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+                CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
+        if (!cv_img_origin.data) {
+            LOG(ERROR) << "Could not open or find file " << filename;
+            return cv_img_origin;
+        }
+        if (min_dim > 0) {
+            float scale_factor = float(min_dim) / std::min(cv_img_origin.rows, cv_img_origin.cols);
+            int new_height, new_width;
+            if(cv_img_origin.rows >= cv_img_origin.cols) {
+                new_width = min_dim;
+                new_height = round(scale_factor * cv_img_origin.rows);
+            } else {
+                new_height = min_dim;
+                new_width = round(scale_factor * cv_img_origin.cols);
+            }
+            cv::resize(cv_img_origin, cv_img, cv::Size(new_width, new_height));
+        } else {
+            cv_img = cv_img_origin;
+        }
+        return cv_img;
+    }
+}
+
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width) {
   return ReadImageToCVMat(filename, height, width, true);
