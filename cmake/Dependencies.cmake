@@ -19,7 +19,7 @@ find_package(Threads REQUIRED)
 list(APPEND Caffe_LINKER_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 # ---[ Google-gflags
-find_package(GFlags REQUIRED)
+include("cmake/External/gflags.cmake")
 include_directories(SYSTEM ${GFLAGS_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
 
@@ -27,7 +27,7 @@ list(APPEND Caffe_LINKER_LIBS ${GFLAGS_LIBRARIES})
 if(MSVC)
     add_definitions(-DGOOGLE_GLOG_DLL_DECL=)
 endif()
-find_package(Glog REQUIRED)
+include("cmake/External/glog.cmake")
 include_directories(SYSTEM ${GLOG_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS ${GLOG_LIBRARIES})
 
