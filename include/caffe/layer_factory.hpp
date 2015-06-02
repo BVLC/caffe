@@ -109,10 +109,13 @@ class LayerRegisterer {
   }
 };
 
+#define DEFINE_LAYER_CREATOR_SYMBOL_REFERENCE(type) DEFINE_SYMBOL_REFERENCE(type, layer_creator)
+#define FORCE_REFERENCE_LAYER_CREATOR_SYMBOL_REFERENCE(type) FORCE_SYMBOL_REFERENCE(type, layer_creator)
 
 #define REGISTER_LAYER_CREATOR(type, creator)                                  \
   static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
-  static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)    \
+  static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>);   \
+  DEFINE_LAYER_CREATOR_SYMBOL_REFERENCE(type);
 
 #define REGISTER_LAYER_CLASS(type)                                             \
   template <typename Dtype>                                                    \

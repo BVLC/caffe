@@ -5,14 +5,32 @@
 #  LevelDB_FOUND     - True if LevelDB found.
 
 # Look for the header file.
+set(LEVELDB_ROOT_INIT "$ENV{LEVELDB_ROOT}")
+file(TO_CMAKE_PATH "${LEVELDB_ROOT_INIT}" LEVELDB_ROOT_INIT)
+set(LEVELDB_ROOT ${LEVELDB_ROOT_INIT} CACHE PATH "LevelDB root folder")
+
 find_path(LevelDB_INCLUDE NAMES leveldb/db.h
-                          PATHS $ENV{LEVELDB_ROOT}/include /opt/local/include /usr/local/include /usr/include
+                          PATHS ${LEVELDB_ROOT}/include /opt/local/include /usr/local/include /usr/include
                           DOC "Path in which the file leveldb/db.h is located." )
 
 # Look for the library.
-find_library(LevelDB_LIBRARY NAMES leveldb
-                             PATHS /usr/lib $ENV{LEVELDB_ROOT}/lib
-                             DOC "Path to leveldb library." )
+if(MSVC)
+    find_library(LevelDB_LIBRARY_RELEASE NAMES leveldb
+                                 PATHS ${LEVELDB_ROOT}/lib
+                                 PATH_SUFFIXES Release
+                                 DOC "Path to leveldb library." )
+    
+    find_library(LevelDB_LIBRARY_DEBUG NAMES leveldbd leveldb
+                                 PATHS ${LEVELDB_ROOT}/lib
+                                 PATH_SUFFIXES Debug
+                                 DOC "Path to leveldb library." )
+    set(LevelDB_LIBRARY optimized ${LevelDB_LIBRARY_RELEASE} debug ${LevelDB_LIBRARY_DEBUG})
+else()
+    find_library(LevelDB_LIBRARY NAMES leveldb
+                                 PATHS /usr/lib ${LEVELDB_ROOT}/lib
+                                 DOC "Path to leveldb library." )
+endif(MSVC)
+
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LevelDB DEFAULT_MSG LevelDB_INCLUDE LevelDB_LIBRARY)

@@ -35,7 +35,9 @@ if(USE_libstdcpp)
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 
+if(NOT MSVC) # rely on gtest header to determine what to do
 add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
+endif(NOT MSVC)
 
 # ---[ Warnings
 caffe_warnings_disable(CMAKE_CXX_FLAGS -Wno-sign-compare -Wno-uninitialized)
