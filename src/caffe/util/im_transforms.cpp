@@ -354,7 +354,7 @@ namespace caffe {
       }
     }
 
-    if (param.clahe()) {
+/*    if (param.clahe()) {
       cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
       clahe->setClipLimit(4);
 
@@ -380,7 +380,7 @@ namespace caffe {
         out_img = temp_img;
       }
     }
-
+*/
     if (param.jpeg() > 0) {
       std::vector<uchar> buf;
       std::vector<int> params;
