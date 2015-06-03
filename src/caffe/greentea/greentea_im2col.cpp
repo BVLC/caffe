@@ -159,7 +159,6 @@ void greentea_im2col_gpu(viennacl::ocl::program &prog,
   int num_kernels = channels * height_col * width_col;
 
   viennacl::ocl::kernel &kernel = prog.get_kernel(CL_KERNEL_SELECT("im2col"));
-
   viennacl::ocl::enqueue(
       kernel(num_kernels, WrapHandle(data_im, ctx), data_im_off, height, width,
              kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, height_col,
