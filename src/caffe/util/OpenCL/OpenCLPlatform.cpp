@@ -87,7 +87,7 @@ bool OpenCLPlatform::Query() {
   if (!CL_CHECK(err)) { vendor_ = "Failed to get platform vendor."; }
 
   version_ = platform_.getInfo<CL_PLATFORM_VERSION>(&err);
-  if (!err) { version_ = "Failed to get platform version."; }
+  if (!CL_CHECK(err)) { version_ = "Failed to get platform version."; }
 
   extensions_ = platform_.getInfo<CL_PLATFORM_EXTENSIONS>(&err);
   if (!CL_CHECK(err)) { extensions_ = "failed to get platform extensions."; }

@@ -167,8 +167,8 @@ TYPED_TEST_CASE(BLASTest, TestDtypesAndDevices);
 
 TYPED_TEST(BLASTest, BLASTestPerformance) {
 
-	for(int i=TEST_IMAGE_WIDTH_MIN; i<=256; i*=2 ) {
-		//this->BLASTestPerformance(i,i,i);
+	for(int i=TEST_IMAGE_WIDTH_MIN; i<=2048; i*=2 ) {
+		this->BLASTestPerformance(i,i,i);
 	}
 }
 
@@ -178,7 +178,7 @@ TYPED_TEST(BLASTest, BLASTestValidation) {
 
   srand (time(NULL));
   int min = 1;
-  int max = 64;
+  int max = 128;
 
   int m;
   int n;
@@ -188,8 +188,21 @@ TYPED_TEST(BLASTest, BLASTestValidation) {
     m = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     n = min + rand() / (RAND_MAX / (max - min + 1) + 1);
     k = min + rand() / (RAND_MAX / (max - min + 1) + 1);
+    LOG(ERROR)<<m<<" x "<<n<<" x "<<k;
     this->BLASTestValidation(m,n,k);
   }
+
+  /*
+  this->BLASTestValidation(1,1,1);
+  this->BLASTestValidation(8,8,8);
+  this->BLASTestValidation(16,16,16);
+
+  this->BLASTestValidation(32,32,32);
+  this->BLASTestValidation(64,64,64);
+  this->BLASTestValidation(16,16,17);
+  this->BLASTestValidation(17,16,16);
+  this->BLASTestValidation(16,17,16);
+  */
 }
 
 #endif

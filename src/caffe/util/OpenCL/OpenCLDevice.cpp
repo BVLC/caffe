@@ -569,7 +569,7 @@ size_t OpenCLDevice::getMemoryUsage() {
 
 void OpenCLDevice::Synchronize() {
   if (queue != NULL) {
-    clFinish(queue);
+    CL_CHECK(clFinish(queue));
   }
 }
 

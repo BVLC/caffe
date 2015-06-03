@@ -14,7 +14,7 @@ class OpenCLMemory {
 public:
 	OpenCLMemory();
 	OpenCLMemory(size_t size);
-	OpenCLMemory(const OpenCLMemory& mem);
+	//OpenCLMemory(const OpenCLMemory& mem);
 	~OpenCLMemory();
 
 	void free();

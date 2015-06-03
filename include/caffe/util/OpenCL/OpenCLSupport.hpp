@@ -58,9 +58,8 @@
 		bool ret = false;\
 		std::ostringstream message;\
 		message << "[" << __FILE__ << " > " << __func__ << "():" << __LINE__ << "]";\
-		cl_int err = code;\
-		if ( err != CL_SUCCESS ) { \
-			message << " failed: " << caffe::OpenCL::what(err) << " : " << err; \
+		if ( code != CL_SUCCESS ) { \
+			message << " failed: " << caffe::OpenCL::what(code) << " : " << code; \
 			std::cerr << message.str() << std::endl; \
 			ret = false;\
 		} else { \

@@ -72,6 +72,7 @@ OpenCLMemory::OpenCLMemory(size_t size) {
 	logStatistics();
 }
 
+/*
 OpenCLMemory::OpenCLMemory(const OpenCLMemory& mem) {
 
 	this->ptr_device_mem 	= mem.ptr_device_mem;
@@ -80,6 +81,7 @@ OpenCLMemory::OpenCLMemory(const OpenCLMemory& mem) {
 	this->size 				= mem.size;
 	this->tag				= mem.tag;
 }
+*/
 
 void OpenCLMemory::free() {
   OpenCLDevice& current_device = OpenCLManager::CurrentPlatform().CurrentDevice();

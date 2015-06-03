@@ -1392,10 +1392,8 @@ bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, co
 		return false;
 	}
 
-	LOG(ERROR)<<"queue = "<<queue;
-
-	std::string kernel_name = clGetKernelName<T>("mmul");
-
+	//std::string kernel_name = clGetKernelName<T>("mmul");
+  std::string kernel_name = clGetKernelName<T>("mmul2");
   cl_kernel* kernel = device.getKernel(kernel_name);
 	if ( kernel == NULL ) {
 		return false;
@@ -1413,9 +1411,9 @@ bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, co
 	clSetKernelArg(*kernel, 8, sizeof(T)*k, NULL);
   clSetKernelArg(*kernel, 9, sizeof(T)*m, NULL);
 
+  /*
   size_t global[2] = {(size_t) n,(size_t) k};
   size_t local[2]  = {(size_t) 1,(size_t) k};
-
   if ( n >= 1024 ) {
     global[0] = 1024;
   }
@@ -1424,6 +1422,26 @@ bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, co
     global[1] = OPENCL_LOCAL_SIZE;
     local[1]  = OPENCL_LOCAL_SIZE;
   }
+  */
+
+  int BLOCK_SIZE = 32;
+  int global_x = 0;
+  int global_y = 0;
+
+  if ( n % BLOCK_SIZE == 0 ) {
+    global_x = n;
+  } else {
+    global_x = (n/BLOCK_SIZE + 1)*BLOCK_SIZE;
+  }
+
+  if ( m % BLOCK_SIZE == 0 ) {
+    global_y = m;
+  } else {
+    global_y = (m/BLOCK_SIZE + 1)*BLOCK_SIZE;
+  }
+
+  size_t global[2] = {(size_t) global_x,(size_t) global_y};
+  size_t local[2]  = {(size_t) BLOCK_SIZE,(size_t) BLOCK_SIZE};
 
   /*
   LOG(ERROR)<<"M = "<<m;
@@ -1434,8 +1452,10 @@ bool clgemm(const int m, const int n, const int k, const T alpha, const T* A, co
   */
 
   cl_event kernelFinish;
-  err = clEnqueueNDRangeKernel(*queue, *kernel, 2, NULL, global, local, 0, NULL, &kernelFinish);
-  clWaitForEvents(1, &kernelFinish);
+  //TIME("clgemm() kernel", {
+  err = clEnqueueNDRangeKernel(*queue, *kernel, 2, NULL, global, local, 0, NULL, NULL);
+  //clWaitForEvents(1, &kernelFinish);
+  //});
 
   if ( err != CL_SUCCESS ) {
     std::ostringstream oss;
@@ -1522,27 +1542,6 @@ bool clBLASgemm(const clblasTranspose TransA, const clblasTranspose TransB, cons
   int ldc = n;
 
   if( typeid(T) == typeid(float) ) {
-    /*
-    LOG(ERROR)<<"calling clblasSgemm()";
-    LOG(ERROR)<<"clblasRowMajor = "<<clblasRowMajor;
-    LOG(ERROR)<<"TransA = "<<TransA;
-    LOG(ERROR)<<"TransB = "<<TransB;
-    LOG(ERROR)<<"m      = "<<m;
-    LOG(ERROR)<<"n      = "<<n;
-    LOG(ERROR)<<"k      = "<<k;
-    LOG(ERROR)<<"alpha  = "<<alpha;
-    LOG(ERROR)<<"A_device = "<<A_device;
-    LOG(ERROR)<<"A_offset = "<<A_offset;
-    LOG(ERROR)<<"lda      = "<<lda;
-    LOG(ERROR)<<"x_device = "<<x_device;
-    LOG(ERROR)<<"x_offset = "<<x_offset;
-    LOG(ERROR)<<"ldb      = "<<ldb;
-    LOG(ERROR)<<"beta  = "<<beta;
-    LOG(ERROR)<<"y_device = "<<y_device;
-    LOG(ERROR)<<"y_offset = "<<y_offset;
-    LOG(ERROR)<<"ldc      = "<<ldc;
-    LOG(ERROR)<<"queue    = "<<queue;
-    */
     if ( ! CL_CHECK( clblasSgemm(clblasRowMajor, TransA, TransB, m, n, k, alpha, (cl_mem) A_device, A_offset, lda, (cl_mem) x_device, x_offset, ldb, beta, (cl_mem) y_device, y_offset, ldc, 1, queue, 0, NULL, NULL) ) ) {
        LOG(ERROR) << "clblasSgemm() failed on GPU "<<device.name();
        return false;

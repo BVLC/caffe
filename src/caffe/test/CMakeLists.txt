@@ -38,7 +38,11 @@ add_custom_target(runtest COMMAND ${the_target} ${test_args}
                           WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/test/test.testbin-d DESTINATION bin/)
+    if(EXISTS "${PROJECT_BINARY_DIR}/test/test.testbin-d")
+        install(PROGRAMS ${PROJECT_BINARY_DIR}/test/test.testbin-d DESTINATION bin/)
+    endif()
 else()
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/test/test.testbin DESTINATION bin/)
+    if(EXISTS "${PROJECT_BINARY_DIR}/test/test.testbin")
+        install(PROGRAMS ${PROJECT_BINARY_DIR}/test/test.testbin DESTINATION bin/)
+    endif()
 endif()
