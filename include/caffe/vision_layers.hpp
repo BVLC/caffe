@@ -14,7 +14,6 @@
 #include "caffe/neuron_layers.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-
 #ifdef USE_GREENTEA
 #include "caffe/greentea/greentea_im2col.hpp"
 #endif
