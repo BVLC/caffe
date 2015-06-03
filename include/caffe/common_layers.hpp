@@ -211,12 +211,12 @@ class FilterLayer : public Layer<Dtype> {
    *   -# @f$ (N \times 1 \times 1 \times 1) @f$
    *      the selector blob
    * @param top output Blob vector (length 1+)
-   *   -# @f$ (S \times C \times H \times W) @f$ () 
-   *        the filtered output @f$ x_1 @f$ 
+   *   -# @f$ (S \times C \times H \times W) @f$ ()
+   *        the filtered output @f$ x_1 @f$
    *        where S is the number of items
    *        that haven't been filtered
    *      @f$ (S \times C \times H \times W) @f$
-   *        the filtered output @f$ x_K @f$ 
+   *        the filtered output @f$ x_K @f$
    *        where S is the number of items
    *        that haven't been filtered
    */
