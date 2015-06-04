@@ -525,3 +525,19 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
 #### Mean-Variance Normalization
 
 `MVN`
+
+#### Dropout
+
+`Dropout` is a regaluasation method introduced by the researchers that developed AlexNet. Caffe implements this as a `Dropout`-layer. By setting the output of hidden neurons to zero at a probability of `dropout_ratio`, commonly between 0.5 and 1.0, the same effect is achieved when multiple networks are combined. This latter approach is computationally not possible for large networks. `Dropout` makes that a neuron cannot rely too much on others, so it will learn more robust features.
+
+* Sample from AlexNet
+
+  layer {
+    name: "drop7"
+    type: "Dropout"
+    bottom: "fc7"
+    top: "fc7"
+    dropout_param {
+      dropout_ratio: 0.5
+    }
+  }
