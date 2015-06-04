@@ -244,10 +244,10 @@ Configure the HDF5 version
 
         cd /usr/lib/x86_64-linux-gnu
 
-* Link the system version of HDF5 from 7 to 8:
+* Link the system version of HDF5 from 7 to 9:
 
-        sudo ln -s libhdf5.so.7 libhdf5.so.8
-        sudo ln -s libhdf5_hl.so.7 libhdf5_hl.so.8
+        sudo ln -s libhdf5.so.7 libhdf5.so.9
+        sudo ln -s libhdf5_hl.so.7 libhdf5_hl.so.9
 
 * Update the "Dynamic Linker":
 
