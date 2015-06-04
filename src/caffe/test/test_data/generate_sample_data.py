@@ -51,3 +51,37 @@ with h5py.File(script_dir + '/sample_data_2_gzip.h5', 'w') as f:
 with open(script_dir + '/sample_data_list.txt', 'w') as f:
     f.write(script_dir + '/sample_data.h5\n')
     f.write(script_dir + '/sample_data_2_gzip.h5\n')
+
+# Generate GradientBasedSolver solver_data.h5
+
+num_cols = 3
+num_rows = 8
+height = 10
+width = 10
+
+data = np.random.randn(num_rows, num_cols, height, width)
+data = data.reshape(num_rows, num_cols, height, width)
+data = data.astype('float32')
+
+targets = np.random.randn(num_rows, 1)
+targets = targets.astype('float32')
+
+print data
+print targets
+
+with h5py.File(script_dir + '/solver_data.h5', 'w') as f:
+    f['data'] = data
+    f['targets'] = targets
+
+with open(script_dir + '/solver_data_list.txt', 'w') as f:
+    f.write(script_dir + '/solver_data.h5\n')
+=======
+with open(os.path.dirname(__file__) + '/sample_data_list.txt', 'w') as f:
+    f.write(os.path.dirname(__file__) + '/sample_data.h5\n')
+    f.write(os.path.dirname(__file__) + '/sample_data_2_gzip.h5\n')
+>>>>>>> triplet data generation and network update
+=======
+with open(script_dir + '/sample_data_list.txt', 'w') as f:
+    f.write(script_dir + '/sample_data.h5\n')
+    f.write(script_dir + '/sample_data_2_gzip.h5\n')
+>>>>>>> restore

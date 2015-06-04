@@ -21,9 +21,19 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     CHECK_EQ(param_.mean_value_size(), 0) <<
       "Cannot specify mean_file and mean_value at the same time";
     const string& mean_file = param.mean_file();
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
     if (Caffe::root_solver()) {
       LOG(INFO) << "Loading mean file from: " << mean_file;
     }
+=======
+<<<<<<< HEAD
+    LOG(INFO) << "Loading mean file from: " << mean_file;
+=======
+    if (Caffe::root_solver()) {
+      LOG(INFO) << "Loading mean file from: " << mean_file;
+    }
+>>>>>>> 0dbadac... triplet data generation and network update
+>>>>>>> triplet data generation and network update
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
     data_mean_.FromProto(blob_proto);
@@ -132,8 +142,14 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+=======
+<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
+>>>>>>> 0dbadac... triplet data generation and network update
+>>>>>>> triplet data generation and network update
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
 <<<<<<< fa941056111876e03082cdc5695d75339ed24ed9
@@ -201,13 +217,19 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
 =======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
 >>>>>>> 011aef0... restore
 =======
 >>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
 =======
 >>>>>>> 80a07dd... macro define in upgrade_proto
+=======
+>>>>>>> triplet data generation and network update
+>>>>>>> 0dbadac... triplet data generation and network update
+>>>>>>> triplet data generation and network update
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
@@ -494,8 +516,14 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+=======
+<<<<<<< 6c5f31d1aa704b9eb9cfe7469b0e3661f0fcdb21
+>>>>>>> 0dbadac... triplet data generation and network update
+>>>>>>> triplet data generation and network update
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   if (datum.encoded()) {
@@ -620,13 +648,19 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
 >>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
 =======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da
 >>>>>>> 011aef0... restore
 =======
 >>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
 =======
 >>>>>>> 80a07dd... macro define in upgrade_proto
+=======
+>>>>>>> triplet data generation and network update
+>>>>>>> 0dbadac... triplet data generation and network update
+>>>>>>> triplet data generation and network update
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||

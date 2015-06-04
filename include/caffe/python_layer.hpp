@@ -25,7 +25,6 @@ class PythonLayer : public Layer<Dtype> {
       throw;
     }
   }
-
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     try {
@@ -34,6 +33,10 @@ class PythonLayer : public Layer<Dtype> {
       PyErr_Print();
       throw;
     }
+  }
+
+  virtual inline bool ShareInParallel() const {
+    return this->layer_param_.python_param().share_in_parallel();
   }
 
   virtual inline const char* type() const { return "Python"; }

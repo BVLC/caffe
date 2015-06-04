@@ -1,0 +1,317 @@
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+
+#include "gtest/gtest.h"
+
+#include "caffe/blob.hpp"
+#include "caffe/common.hpp"
+#include "caffe/filler.hpp"
+#include "caffe/vision_layers.hpp"
+
+#include "caffe/test/test_caffe_main.hpp"
+#include "caffe/test/test_gradient_check_util.hpp"
+
+namespace caffe {
+
+template <typename TypeParam>
+class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
+  typedef typename TypeParam::Dtype Dtype;
+
+ protected:
+  TripletLossLayerTest()
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+<<<<<<< 22f42667487341b9aa1d7d1f9854410111b1601c
+=======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+<<<<<<< 80a07dd611590aa6547f3a3b2af35c791f32dfcf
+>>>>>>> triplet data generation and network update
+      : blob_bottom_data_(new Blob<Dtype>(50, 1, 1, 1)),
+        blob_bottom_y_(new Blob<Dtype>(50, 1, 1, 1)),
+=======
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+      : blob_bottom_data_i_(new Blob<Dtype>(512, 2, 1, 1)),
+        blob_bottom_data_j_(new Blob<Dtype>(512, 2, 1, 1)),
+	blob_bottom_data_k_(new Blob<Dtype>(512, 2, 1, 1)),
+        blob_bottom_y_(new Blob<Dtype>(512, 1, 1, 1)),
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+>>>>>>> suit for opencv3.0.0
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+        blob_top_loss_(new Blob<Dtype>()) {
+    // fill the values
+    FillerParameter filler_param;
+    filler_param.set_min(-1.0);
+    filler_param.set_max(1.0);  // distances~=1.0 to test both sides of margin
+    UniformFiller<Dtype> filler(filler_param);
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+<<<<<<< 22f42667487341b9aa1d7d1f9854410111b1601c
+=======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+<<<<<<< 80a07dd611590aa6547f3a3b2af35c791f32dfcf
+>>>>>>> triplet data generation and network update
+    filler.Fill(this->blob_bottom_data_);
+    blob_bottom_vec_.push_back(blob_bottom_data_);
+=======
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+    filler.Fill(this->blob_bottom_data_i_);
+    blob_bottom_vec_.push_back(blob_bottom_data_i_);
+    filler.Fill(this->blob_bottom_data_j_);
+    blob_bottom_vec_.push_back(blob_bottom_data_j_);
+    filler.Fill(this->blob_bottom_data_k_);
+    blob_bottom_vec_.push_back(blob_bottom_data_k_);
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+>>>>>>> suit for opencv3.0.0
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+    for (int i = 0; i < blob_bottom_y_->count(); ++i) {
+      blob_bottom_y_->mutable_cpu_data()[i] = caffe_rng_rand() % 2;  // 0 or 1
+    }
+    blob_bottom_vec_.push_back(blob_bottom_y_);
+    blob_top_vec_.push_back(blob_top_loss_);
+  }
+  virtual ~TripletLossLayerTest() {
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+<<<<<<< 22f42667487341b9aa1d7d1f9854410111b1601c
+=======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+<<<<<<< 80a07dd611590aa6547f3a3b2af35c791f32dfcf
+>>>>>>> triplet data generation and network update
+    delete blob_bottom_data_;
+=======
+    delete blob_bottom_data_i_;
+    delete blob_bottom_data_j_;
+    delete blob_bottom_data_k_;
+>>>>>>> suit for opencv3.0.0
+=======
+    delete blob_bottom_data_i_;
+    delete blob_bottom_data_j_;
+    delete blob_bottom_data_k_;
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+    delete blob_bottom_y_;
+    delete blob_top_loss_;
+  }
+
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+<<<<<<< 22f42667487341b9aa1d7d1f9854410111b1601c
+=======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+<<<<<<< 80a07dd611590aa6547f3a3b2af35c791f32dfcf
+>>>>>>> triplet data generation and network update
+  Blob<Dtype>* const blob_bottom_data_;
+=======
+  Blob<Dtype>* const blob_bottom_data_i_;
+  Blob<Dtype>* const blob_bottom_data_j_;
+  Blob<Dtype>* const blob_bottom_data_k_;
+>>>>>>> suit for opencv3.0.0
+=======
+  Blob<Dtype>* const blob_bottom_data_i_;
+  Blob<Dtype>* const blob_bottom_data_j_;
+  Blob<Dtype>* const blob_bottom_data_k_;
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+  Blob<Dtype>* const blob_bottom_y_;
+  Blob<Dtype>* const blob_top_loss_;
+  vector<Blob<Dtype>*> blob_bottom_vec_;
+  vector<Blob<Dtype>*> blob_top_vec_;
+};
+
+TYPED_TEST_CASE(TripletLossLayerTest, TestDtypesAndDevices);
+
+TYPED_TEST(TripletLossLayerTest, TestForward) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  TripletLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // manually compute to compare
+  const Dtype margin = layer_param.triplet_loss_param().margin();
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+<<<<<<< 22f42667487341b9aa1d7d1f9854410111b1601c
+=======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+<<<<<<< 80a07dd611590aa6547f3a3b2af35c791f32dfcf
+>>>>>>> triplet data generation and network update
+  const Dtype losstype = 0;//layer_param.triplet_loss_param().losstype();
+  const int num_triplets = 3;
+  const int num_set = this->blob_bottom_data_->num()/(2 + num_triplets);
+  const int channels = this->blob_bottom_data_->channels();
+=======
+  const int num = this->blob_bottom_data_i_->num();
+  const int channels = this->blob_bottom_data_i_->channels();
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+  Dtype loss(0);
+  for (int i = 0; i < num; ++i) {
+    Dtype dist_sq(0);
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+    Dtype dist_par(0);
+=======
+  const int num = this->blob_bottom_data_i_->num();
+  const int channels = this->blob_bottom_data_i_->channels();
+  Dtype loss(0);
+  for (int i = 0; i < num; ++i) {
+    Dtype dist_sq(0);
+>>>>>>> suit for opencv3.0.0
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+    for (int j = 0; j < channels; ++j) {
+      Dtype diff_pos = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
+      dist_sq += diff_pos*diff_pos;
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+<<<<<<< 22f42667487341b9aa1d7d1f9854410111b1601c
+=======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+<<<<<<< 80a07dd611590aa6547f3a3b2af35c791f32dfcf
+>>>>>>> triplet data generation and network update
+      dist_sq += margin;
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+      Dtype diff_neg = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
+      dist_sq -= diff_neg*diff_neg;
+    }
+    loss += std::max(margin + dist_sq, 0.0);
+    /*if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
+      loss += dist_sq;
+    } else {
+      Dtype dist = std::max(margin - sqrt(dist_sq), 0.0);
+      loss += dist*dist;
+    }*/
+  }
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+  }*/
+  loss /= static_cast<Dtype>(num_set) * Dtype(2);
+=======
+      Dtype diff_neg = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
+      dist_sq -= diff_neg*diff_neg;
+    }
+    loss += std::max(margin + dist_sq, 0.0);
+    /*if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
+      loss += dist_sq;
+    } else {
+      Dtype dist = std::max(margin - sqrt(dist_sq), 0.0);
+      loss += dist*dist;
+    }*/
+  }
+  loss /= static_cast<Dtype>(num) * Dtype(2);
+>>>>>>> suit for opencv3.0.0
+=======
+  loss /= static_cast<Dtype>(num) * Dtype(2);
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
+}
+
+TYPED_TEST(TripletLossLayerTest, TestGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  TripletLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+<<<<<<< 22f42667487341b9aa1d7d1f9854410111b1601c
+=======
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+<<<<<<< 80a07dd611590aa6547f3a3b2af35c791f32dfcf
+>>>>>>> triplet data generation and network update
+  // check the gradient for the first 5 bottom layers
+=======
+  // check the gradient for the first two bottom layers
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 1);
+}
+
+/*TYPED_TEST(TripletLossLayerTest, TestForwardLegacy) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_triplet_loss_param()->set_legacy_version(true);
+  TripletLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // manually compute to compare
+  const Dtype margin = layer_param.triplet_loss_param().margin();
+  const int num = this->blob_bottom_data_i_->num();
+  const int channels = this->blob_bottom_data_i_->channels();
+  Dtype loss(0);
+  for (int i = 0; i < num; ++i) {
+    Dtype dist_sq(0);
+    for (int j = 0; j < channels; ++j) {
+      Dtype diff = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
+      dist_sq += diff*diff;
+    }
+    if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
+      loss += dist_sq;
+    } else {
+      loss += std::max(margin - dist_sq, Dtype(0.0));
+    }
+  }
+  loss /= static_cast<Dtype>(num) * Dtype(2);
+  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
+}
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+=======
+  // check the gradient for the first two bottom layers
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 1);
+}
+
+/*TYPED_TEST(TripletLossLayerTest, TestForwardLegacy) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_triplet_loss_param()->set_legacy_version(true);
+  TripletLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // manually compute to compare
+  const Dtype margin = layer_param.triplet_loss_param().margin();
+  const int num = this->blob_bottom_data_i_->num();
+  const int channels = this->blob_bottom_data_i_->channels();
+  Dtype loss(0);
+  for (int i = 0; i < num; ++i) {
+    Dtype dist_sq(0);
+    for (int j = 0; j < channels; ++j) {
+      Dtype diff = this->blob_bottom_data_i_->cpu_data()[i*channels+j] -
+          this->blob_bottom_data_j_->cpu_data()[i*channels+j];
+      dist_sq += diff*diff;
+    }
+    if (this->blob_bottom_y_->cpu_data()[i]) {  // similar pairs
+      loss += dist_sq;
+    } else {
+      loss += std::max(margin - dist_sq, Dtype(0.0));
+    }
+  }
+  loss /= static_cast<Dtype>(num) * Dtype(2);
+  EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
+}
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+
+TYPED_TEST(TripletLossLayerTest, TestGradientLegacy) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  layer_param.mutable_triplet_loss_param()->set_legacy_version(true);
+  TripletLossLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+  // check the gradient for the first two bottom layers
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 0);
+  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_, 1);
+}*/
+
+<<<<<<< c1f1dd90b4c8cde3ee05a2b077d0ebe69c9766da:src/caffe/test/test_triplet_loss_layer.orig
+>>>>>>> suit for opencv3.0.0
+=======
+>>>>>>> triplet data generation and network update:src/caffe/test/test_triplet_loss_layer
+}  // namespace caffe

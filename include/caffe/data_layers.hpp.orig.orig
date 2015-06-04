@@ -4,33 +4,21 @@
 #include <string>
 #include <utility>
 #include <vector>
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
 <<<<<<< ca976a2b520c8024cc7f41a048d2c1abe73f6022
 =======
 
 #include "boost/scoped_ptr.hpp"
 >>>>>>> macro define in upgrade_proto
-=======
-
->>>>>>> add initiate class name of triplet loss layer
 #include "hdf5.h"
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
-=======
-#include "caffe/data_reader.hpp"
->>>>>>> add initiate class name of triplet loss layer
 #include "caffe/data_transformer.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
-=======
-#include "caffe/util/blocking_queue.hpp"
->>>>>>> add initiate class name of triplet loss layer
 #include "caffe/util/db.hpp"
 
 namespace caffe {
@@ -50,11 +38,6 @@ class BaseDataLayer : public Layer<Dtype> {
   // This method may not be overridden except by the BasePrefetchingDataLayer.
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
-=======
-  // Data layers should be shared by multiple solvers in parallel
-  virtual inline bool ShareInParallel() const { return true; }
->>>>>>> add initiate class name of triplet loss layer
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
   // Data layers have no bottoms, so reshaping is trivial.
@@ -73,12 +56,13 @@ class BaseDataLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
 class BasePrefetchingDataLayer :
     public BaseDataLayer<Dtype>, public InternalThread {
  public:
   explicit BasePrefetchingDataLayer(const LayerParameter& param)
       : BaseDataLayer<Dtype>(param) {}
+<<<<<<< 683e7dcafe240094f47b3afea6bc9ca3e64c2b46
+=======
 =======
 class Batch {
  public:
@@ -101,6 +85,7 @@ class BasePrefetchingDataLayer :
   virtual ~BasePrefetchingDataLayer() {}
 >>>>>>> triplet data generation and network update
 >>>>>>> triplet data generation and network update
+>>>>>>> triplet data generation and network update
   // LayerSetUp: implements common data layer setup functionality, and calls
   // DataLayerSetUp to do special data layer setup for individual layer types.
   // This method may not be overridden.
@@ -112,7 +97,6 @@ class BasePrefetchingDataLayer :
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
   virtual void CreatePrefetchThread();
   virtual void JoinPrefetchThread();
   // The thread's function
@@ -121,56 +105,28 @@ class BasePrefetchingDataLayer :
  protected:
   Blob<Dtype> prefetch_data_;
   Blob<Dtype> prefetch_label_;
-=======
-  // Prefetches batches (asynchronously if to GPU memory)
-  static const int PREFETCH_COUNT = 3;
-
- protected:
-  virtual void InternalThreadEntry();
-  virtual void load_batch(Batch<Dtype>* batch) = 0;
-
-  Batch<Dtype> prefetch_[PREFETCH_COUNT];
-  BlockingQueue<Batch<Dtype>*> prefetch_free_;
-  BlockingQueue<Batch<Dtype>*> prefetch_full_;
-
->>>>>>> add initiate class name of triplet loss layer
   Blob<Dtype> transformed_data_;
 };
 
 template <typename Dtype>
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
   explicit DataLayer(const LayerParameter& param)
       : BasePrefetchingDataLayer<Dtype>(param) {}
   virtual ~DataLayer();
   virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-=======
-  explicit DataLayer(const LayerParameter& param);
-  virtual ~DataLayer();
-  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  // DataLayer uses DataReader instead for sharing for parallelism
-  virtual inline bool ShareInParallel() const { return false; }
->>>>>>> add initiate class name of triplet loss layer
   virtual inline const char* type() const { return "Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
   virtual void InternalThreadEntry();
 
   shared_ptr<db::DB> db_;
   shared_ptr<db::Cursor> cursor_;
-=======
-  virtual void load_batch(Batch<Dtype>* batch);
-
-  DataReader reader_;
->>>>>>> add initiate class name of triplet loss layer
 };
 
 /**
@@ -185,11 +141,6 @@ class DummyDataLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
-=======
-  // Data layers should be shared by multiple solvers in parallel
-  virtual inline bool ShareInParallel() const { return true; }
->>>>>>> add initiate class name of triplet loss layer
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -223,11 +174,6 @@ class HDF5DataLayer : public Layer<Dtype> {
   virtual ~HDF5DataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
-=======
-  // Data layers should be shared by multiple solvers in parallel
-  virtual inline bool ShareInParallel() const { return true; }
->>>>>>> add initiate class name of triplet loss layer
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -269,11 +215,6 @@ class HDF5OutputLayer : public Layer<Dtype> {
   virtual ~HDF5OutputLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
-=======
-  // Data layers should be shared by multiple solvers in parallel
-  virtual inline bool ShareInParallel() const { return true; }
->>>>>>> add initiate class name of triplet loss layer
   // Data layers have no bottoms, so reshaping is trivial.
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
@@ -324,11 +265,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
   virtual void ShuffleImages();
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
   virtual void InternalThreadEntry();
-=======
-  virtual void load_batch(Batch<Dtype>* batch);
->>>>>>> add initiate class name of triplet loss layer
 
   vector<std::pair<std::string, int> > lines_;
   int lines_id_;
@@ -352,15 +289,10 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
 #ifdef USE_OPENCV
   virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
       const vector<int>& labels);
 #endif  // USE_OPENCV
-=======
-  virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
-      const vector<int>& labels);
->>>>>>> add initiate class name of triplet loss layer
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
@@ -407,11 +339,7 @@ class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
  protected:
   virtual unsigned int PrefetchRand();
-<<<<<<< c90df3f9e2c00643425be1c4caf1b62cdf7bc398
   virtual void InternalThreadEntry();
-=======
-  virtual void load_batch(Batch<Dtype>* batch);
->>>>>>> add initiate class name of triplet loss layer
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
   vector<std::pair<std::string, vector<int> > > image_database_;
