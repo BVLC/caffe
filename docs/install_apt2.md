@@ -333,7 +333,7 @@ Configure and compile Caffe
 
 * Install Python dependencies using pip (to install what couldn't be installed by conda):
 
-        for req in $(cat python/requirements.txt); do pip install $req; done
+        pip install -r python/requirements.txt
 
 * Remove bad Anaconda libm:
 
