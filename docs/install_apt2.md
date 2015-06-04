@@ -24,9 +24,9 @@ The "code formatted" sections should be run in a terminal.
 
 This guide was based on the guides in:
 
-* [Caffe: General, Caffe installation](http://caffe.berkeleyvision.org/installation.html)
-* [Caffe: Ubuntu prerequisites](http://caffe.berkeleyvision.org/install_apt.html)
-* [NVIDIA: CUDA Installation (more complete guide)](http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux/)
+* [Caffe: General, Caffe installation](http://caffe.berkeleyvision.org/installation.html).
+* [Caffe: Ubuntu prerequisites](http://caffe.berkeleyvision.org/install_apt.html).
+* [NVIDIA: CUDA Installation (more complete guide)](http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux/).
 * Other resources as StackOverflow, Caffe-users group, forums, etc. 
 
 - - -
@@ -61,7 +61,7 @@ NVIDIA drivers
 
         sudo shutdown -r now
         
-* Check the nvidia drivers installed:
+* Check the NVIDIA drivers installed:
 
         cat /proc/driver/nvidia/version
 
@@ -146,9 +146,12 @@ Check CUDA installation
 
         bin/x86_64/linux/release/deviceQuery
 
-* Check that it detects a CUDA device
-* Check that it detects your graphics card
+* Check that it detects a CUDA device.
+
+* Check that it detects your graphics card.
+
 * Check at the end that it says that the test passed.
+
 * Run the bandwidth test to check that the system and the CUDA device are capable to communicate:
 
         bin/x86_64/linux/release/bandwidthTest
@@ -255,7 +258,7 @@ Install CuDNN
 
 **Note**: for this to work, you need a NVIDIA GPU based on the *"Kepler"* architeture (or the newer, *"Maxwell"* architecture).
 
-**Note**: although this guide includes all the build, installation and configuration of CuDNN, only the build and installation was tested, the usage hasn't been tested. (It was only tested on a NVIDIA GT 525m and a NVIDIA GTX 580 which has a *"Fermi"* (older) architecture, and is not supported by CuDNN.
+**Note**: although this guide includes all the build, installation and configuration of CuDNN, only the build and installation was tested, the usage hasn't been tested. (It was only tested on a NVIDIA GT 525m and a NVIDIA GTX 580 which have a *"Fermi"* (older) architecture, and is not supported by CuDNN.
 
 * You need to have an account or register in the NVIDIA developer program (it's free): <https://developer.nvidia.com/user>
 * Using your account, download CuDNN: <https://developer.nvidia.com/cuDNN>
