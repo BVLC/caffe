@@ -371,6 +371,8 @@ Configure and compile Caffe
 **Technical Note**: you could add Caffe to your PYTHONPATH directly, but by using a CAFFE_ROOT variable, you could move your Caffe directory and would only have to modify your CAFFE_ROOT variable. And you could use the same to export Caffe binaries to your PATH variable.
 
         echo 'export PYTHONPATH=$CAFFE_ROOT/python:$PYTHONPATH' >> ~/.bashrc
+        
+* Log out and log in again to activate the new variables (close and open the terminal).
 
 * To test that PyCaffe is working open IPython:
 
