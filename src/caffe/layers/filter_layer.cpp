@@ -55,7 +55,7 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     shape_top[0] = new_tops_num;
     for (int ts = 1; ts < num_axes; ++ts)
       shape_top[ts] = bottom[t]->shape(ts);
-    top[t]->Reshape(shape_top);
+    top[t]->Reshape(shape_top,this->device_context_);
   }
 }
 

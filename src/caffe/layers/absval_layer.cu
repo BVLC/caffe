@@ -14,6 +14,7 @@ void AbsValLayer<Dtype>::Forward_gpu(
   caffe_gpu_abs(count, bottom[0]->gpu_data(), top_data);
 }
 
+
 template <typename Dtype>
 void AbsValLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {

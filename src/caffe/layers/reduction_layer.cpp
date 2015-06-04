@@ -25,14 +25,14 @@ void ReductionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // we'd need to also copy any axes following an "end_axis".
   vector<int> top_shape(bottom[0]->shape().begin(),
                         bottom[0]->shape().begin() + axis_);
-  top[0]->Reshape(top_shape);
+  top[0]->Reshape(top_shape, this->device_context_);
   num_ = bottom[0]->count(0, axis_);
   dim_ = bottom[0]->count(axis_);
   CHECK_EQ(num_, top[0]->count());
   if (op_ == ReductionParameter_ReductionOp_SUM ||
       op_ == ReductionParameter_ReductionOp_MEAN) {
     vector<int> sum_mult_shape(1, dim_);
-    sum_multiplier_.Reshape(sum_mult_shape);
+    sum_multiplier_.Reshape(sum_mult_shape, this->device_context_);
     caffe_set(dim_, Dtype(1), sum_multiplier_.mutable_cpu_data());
   }
   coeff_ = this->layer_param().reduction_param().coeff();
