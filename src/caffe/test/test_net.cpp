@@ -614,6 +614,10 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     InitNetFromProtoString(proto);
   }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 011aef0... restore
   virtual void InitSkipPropNet(bool test_skip_true) {
     string proto =
       "name: 'SkipPropTestNetwork' "
@@ -702,6 +706,9 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     if (test_skip_true)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 00341b2... triplet data generation and network update
       proto += "  propagate_down: true "
                "  propagate_down: false ";
     else
@@ -712,6 +719,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     else
       proto += "  propagate_down: [true, true] ";
 >>>>>>> 011aef0... restore
+<<<<<<< HEAD
 =======
       proto += "  propagate_down: true "
                "  propagate_down: false ";
@@ -719,6 +727,8 @@ class NetTest : public MultiDeviceTest<TypeParam> {
       proto += "  propagate_down: true "
                "  propagate_down: true ";
 >>>>>>> 98fb438... fixed two bugs with prototext format
+=======
+>>>>>>> 00341b2... triplet data generation and network update
     proto +=
       "  top: 'cross_entropy_loss' "
       "  type: 'SigmoidCrossEntropyLoss' "
@@ -727,6 +737,11 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     InitNetFromProtoString(proto);
   }
 
+<<<<<<< HEAD
+=======
+>>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
+=======
+>>>>>>> 011aef0... restore
   int seed_;
   shared_ptr<Net<Dtype> > net_;
 };

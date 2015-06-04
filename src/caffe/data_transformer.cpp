@@ -130,10 +130,31 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
+<<<<<<< HEAD
+<<<<<<< HEAD
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
+<<<<<<< fa941056111876e03082cdc5695d75339ed24ed9
 #ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+    CHECK(!(param_.force_color() && param_.force_gray()))
+=======
+<<<<<<< HEAD
+    CHECK(!param_.force_color() && !param_.force_gray())
+>>>>>>> 011aef0... restore
+=======
+    CHECK(!(param_.force_color() && param_.force_gray()))
+>>>>>>> d2acfed... fixed _force_color check, fixes #2635
+=======
+  // If datum is encoded, decoded and transform the cv::image.
+  if (datum.encoded()) {
+    CHECK(!param_.force_color() && !param_.force_gray())
+>>>>>>> 011aef0... restore
+>>>>>>> 00341b2... triplet data generation and network update
+>>>>>>> triplet data generation and network update
         << "cannot set both force_color and force_gray";
     cv::Mat cv_img;
     if (param_.force_color() || param_.force_gray()) {
@@ -154,6 +175,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   const int crop_size = param_.crop_size();
+<<<<<<< HEAD
+=======
+>>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
+=======
+>>>>>>> 011aef0... restore
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
@@ -438,11 +464,31 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   }
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
   if (datum.encoded()) {
 #ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
+<<<<<<< fa941056111876e03082cdc5695d75339ed24ed9
+=======
+=======
+    CHECK(!param_.force_color() && !param_.force_gray())
+>>>>>>> 011aef0... restore
+=======
+    CHECK(!(param_.force_color() && param_.force_gray()))
+<<<<<<< HEAD
+>>>>>>> d2acfed... fixed _force_color check, fixes #2635
+=======
+=======
+template<typename Dtype>
+vector<int> DataTransformer<Dtype>::InferBlobShape(const Datum& datum) {
+  if (datum.encoded()) {
+    CHECK(!param_.force_color() && !param_.force_gray())
+>>>>>>> 011aef0... restore
+>>>>>>> 00341b2... triplet data generation and network update
+>>>>>>> triplet data generation and network update
         << "cannot set both force_color and force_gray";
     cv::Mat cv_img;
     if (param_.force_color() || param_.force_gray()) {
@@ -519,6 +565,11 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 }
 #endif  // USE_OPENCV
 
+<<<<<<< HEAD
+=======
+>>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
+=======
+>>>>>>> 011aef0... restore
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
