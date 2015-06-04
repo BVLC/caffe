@@ -7,7 +7,7 @@ title: Installation: Ubuntu (step by step, including external libraries)
 
 Guide for Ubuntu 14.04 with a 64 bit processor.
 
-Tested on a Dell XPS laptop with a Nvidia GT 525m.  
+Tested on a Dell XPS laptop with a NVIDIA GeForce GT 525m and a Desktop PC with a NVIDIA GeForce GTX 580.
 
 This guide is intended to be a (sort of) comprehensive step by step tutorial, including the installation of external dependencies.
 
@@ -255,7 +255,7 @@ Install CuDNN
 
 **Note**: for this to work, you need a NVIDIA GPU based on the *"Kepler"* architeture (or the newer, *"Maxwell"* architecture).
 
-**Note**: although this guide includes all the build, installation and configuration of CuDNN, only the build and installation was tested, the usage hasn't been tested. (It was only tested on a NVIDIA GT 525m which has a *"Fermi"* (older) architecture, and is not supported by CuDNN.
+**Note**: although this guide includes all the build, installation and configuration of CuDNN, only the build and installation was tested, the usage hasn't been tested. (It was only tested on a NVIDIA GT 525m and a NVIDIA GTX 580 which has a *"Fermi"* (older) architecture, and is not supported by CuDNN.
 
 * You need to have an account or register in the NVIDIA developer program (it's free): <https://developer.nvidia.com/user>
 * Using your account, download CuDNN: <https://developer.nvidia.com/cuDNN>
