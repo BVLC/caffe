@@ -188,7 +188,7 @@ Install OpenBLAS
 
 * Install OpenBLAS:
 
-        make PREFIX=/usr/local install
+        sudo make PREFIX=/usr/local install
 
 Install Boost
 -------------
