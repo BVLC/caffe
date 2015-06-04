@@ -138,6 +138,10 @@ Check CUDA installation
 
 **Note**: you could just run `make`, but that last part (`-j $(($(nproc) + 1))`) executes the `make` command in parallel, using the number of cores in your machine (plus one), so the compilation would finish faster.
 
+* Restart your computer:
+
+        sudo shutdown -r now
+
 * Check the CUDA installation, run:
 
         bin/x86_64/linux/release/deviceQuery
