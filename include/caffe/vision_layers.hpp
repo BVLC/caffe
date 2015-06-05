@@ -453,6 +453,36 @@ class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
 };
 #endif
 
+template <typename Dtype>
+class UnPoolingLayer : public Layer<Dtype> {
+ public:
+  explicit UnPoolingLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "UnPooling"; }
+  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
+  int pad_h_, pad_w_;
+  int channels_;
+  int height_, width_;
+  int unpooled_height_, unpooled_width_;
+  bool global_pooling_;
+};
+
 /**
  * @brief Does spatial pyramid pooling on the input image
  *        by taking the max, average, etc. within regions
