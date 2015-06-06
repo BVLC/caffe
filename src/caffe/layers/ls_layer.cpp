@@ -31,13 +31,17 @@ template <typename Dtype>
 void LSLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
-  
+  // Dimension verification can be added later  
 }
 
 template <typename Dtype>
 void LSLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
- 
+  const Dtype* hidden_output = bottom[0]->cpu_data();
+  const Dtype* expected_output = bottom[1]->cpu_data();
+  Dtype* beta = this->blobs_[0]->mutable_cpu_data();
+
+  // Inverse code here
 }
 
 
