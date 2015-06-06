@@ -269,7 +269,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 137 (last added: reduction_param)
+// LayerParameter next available layer-specific ID: 138 (last added: reduction_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -351,8 +351,13 @@ message LayerParameter {
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
+  // Parameters for LSLayer
+  optional LSParameter = 138;
 }
 
+message LSParameter {
+  optional uint32 C = 1 [default = 0]; // Regularization parameter
+}
 // Message that stores parameters used to apply transformation
 // to the data layer's data
 message TransformationParameter {
