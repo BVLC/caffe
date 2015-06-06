@@ -46,11 +46,14 @@ class CocoSequenceGenerator(SequenceGenerator):
     num_missing = 0
     num_captions = 0
     known_images = {}
+    self.coco = coco
     if split_ids is None:
       split_ids = coco.imgs.keys()
+    self.image_path_to_id = {}
     for image_id in split_ids:
       image_info = coco.imgs[image_id]
       image_path = '%s/%s' % (image_root, image_info['file_name'])
+      self.image_path_to_id[image_path] = image_id
       if os.path.isfile(image_path):
         assert image_id not in known_images  # no duplicates allowed
         known_images[image_id] = {}
@@ -217,8 +220,8 @@ OUTPUT_DIR = './examples/coco_caption/h5_data/buffer_%d' % BUFFER_SIZE
 SPLITS_PATTERN = './data/coco/coco2014_cocoid.%s.txt'
 OUTPUT_DIR_PATTERN = '%s/%%s_batches' % OUTPUT_DIR
 
-def preprocess_dataset(split_name, coco_split_name, batch_stream_length,
-                       vocab=None, aligned=True):
+def process_dataset(split_name, coco_split_name, batch_stream_length,
+                    vocab=None, aligned=True):
   with open(SPLITS_PATTERN % split_name, 'r') as split_file:
     split_image_ids = [int(line) for line in split_file.readlines()]
   output_dataset_name = split_name
@@ -249,9 +252,9 @@ def preprocess_dataset(split_name, coco_split_name, batch_stream_length,
       (num_pads, num_outs, num_truncates, num_outs)
   return sg.vocabulary_inverted
 
-def preprocess_coco():
+def process_coco(include_trainval=False):
   vocab = None
-  DATASETS = [
+  datasets = [
       ('train', 'train', 100000, True),
       ('val', 'val', 100000, True),
       ('test', 'val', 100000, True),
@@ -260,9 +263,16 @@ def preprocess_coco():
       ('val', 'val', 100000, False),
       ('test', 'val', 100000, False),
   ]
-  for split_name, coco_split_name, batch_stream_length, aligned in DATASETS:
-    vocab = preprocess_dataset(split_name, coco_split_name, batch_stream_length,
-                               vocab=vocab, aligned=aligned)
+  # Also create a 'trainval' set if include_trainval is set.
+  # ./data/coco/make_trainval.py must have been run for this to work.
+  if include_trainval:
+    datasets += [
+      ('trainval', 'trainval', 100000, True),
+      ('trainval', 'trainval', 100000, False),
+    ]
+  for split_name, coco_split_name, batch_stream_length, aligned in datasets:
+    vocab = process_dataset(split_name, coco_split_name, batch_stream_length,
+                            vocab=vocab, aligned=aligned)
 
 if __name__ == "__main__":
-  preprocess_coco()
+  process_coco(include_trainval=False)
