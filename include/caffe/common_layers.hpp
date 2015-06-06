@@ -370,6 +370,46 @@ class LSLayer : public Layer<Dtype> {
 };
 
 /**
+ * @brief Transpose weight sharing layer. As it may be a requirement for autoencoders
+ * to share weights between two layers but in a transposed way. Its requirement may 
+ * if we could instruct Inner Product layer not to use transpose of weights.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+*/
+template <typename Dtype>
+class TransposeLayer : public Layer<Dtype> {
+ public:
+  explicit TransposeLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Transpose"; }
+  virtual inline int ExactNumBottomBlobs() const { return 0; }
+  virtual inline int ExactNumTopBlobs() const { return 0; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom){
+    NOT_IMPLEMENTED;
+  }
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom){
+    NOT_IMPLEMENTED;
+  }
+
+  int M_;
+  int K_;
+  int N_;
+};
+
+/**
  * @brief Normalizes the input to have 0-mean and/or unit (1) variance.
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
