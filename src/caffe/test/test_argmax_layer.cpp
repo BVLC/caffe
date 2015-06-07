@@ -13,12 +13,13 @@
 namespace caffe {
 
 template <typename Dtype>
-class ArgMaxLayerTest : public CPUDeviceTest<Dtype> {
+class ArgMaxLayerTest : public ::testing::Test {
  protected:
   ArgMaxLayerTest()
       : blob_bottom_(new Blob<Dtype>(10, 20, 1, 1)),
         blob_top_(new Blob<Dtype>()),
         top_k_(5) {
+    Caffe::set_mode(Caffe::CPU);
     Caffe::set_random_seed(1701);
     // fill the values
     FillerParameter filler_param;
