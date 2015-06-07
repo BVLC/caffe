@@ -14,12 +14,12 @@ template <typename Dtype>
 class PythonLayer : public Layer<Dtype> {
  public:
   PythonLayer(PyObject* self, const LayerParameter& param)
-      : Layer<Dtype>(param), self_(bp::handle<>(bp::borrowed(self))) { }
+      : Layer<Dtype>(param), self_(self) { }
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     try {
-      self_.attr("setup")(bottom, top);
+      bp::call_method<bp::object>(self_, "setup", bottom, top);
     } catch (bp::error_already_set) {
       PyErr_Print();
       throw;
@@ -29,7 +29,7 @@ class PythonLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     try {
-      self_.attr("reshape")(bottom, top);
+      bp::call_method<bp::object>(self_, "reshape", bottom, top);
     } catch (bp::error_already_set) {
       PyErr_Print();
       throw;
@@ -42,7 +42,7 @@ class PythonLayer : public Layer<Dtype> {
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     try {
-      self_.attr("forward")(bottom, top);
+      bp::call_method<bp::object>(self_, "forward", bottom, top);
     } catch (bp::error_already_set) {
       PyErr_Print();
       throw;
@@ -51,7 +51,8 @@ class PythonLayer : public Layer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     try {
-      self_.attr("backward")(top, propagate_down, bottom);
+      bp::call_method<bp::object>(self_, "backward", top, propagate_down,
+          bottom);
     } catch (bp::error_already_set) {
       PyErr_Print();
       throw;
@@ -59,7 +60,7 @@ class PythonLayer : public Layer<Dtype> {
   }
 
  private:
-  bp::object self_;
+  PyObject* self_;
 };
 
 }  // namespace caffe
