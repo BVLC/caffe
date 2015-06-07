@@ -63,7 +63,6 @@ class DataTransformer {
    */
   void Transform(const vector<cv::Mat> & mat_vector,
                 Blob<Dtype>* transformed_blob);
-
   /**
    * @brief Applies the transformation defined in the data layer's
    * transform_param block to a cv::Mat
@@ -90,6 +89,7 @@ class DataTransformer {
    */
   void Transform(Blob<Dtype>* input_blob, Blob<Dtype>* transformed_blob);
 
+<<<<<<< ed5d44f53efe58e4cc2cd299f23c5164cbd7172c
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
@@ -127,6 +127,8 @@ class DataTransformer {
   vector<int> InferBlobShape(const cv::Mat& cv_img);
 #endif  // USE_OPENCV
 
+=======
+>>>>>>> New triplet loss layer added(beta1 version-no test source files)
  protected:
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).

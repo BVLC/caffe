@@ -410,45 +410,6 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     }
   }
 
-  void CheckAccumulation(const Dtype kLearningRate, const Dtype kWeightDecay,
-      const Dtype kMomentum, const int kNumIters, const int kIterSize) {
-    const double kPrecision = 1e-2;
-    const double kMinPrecision = 1e-7;
-    // Solve without accumulation and save parameters.
-    this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,
-        kNumIters);
-    // Save parameters for comparison.
-    Net<Dtype>& net = *this->solver_->net();
-    const vector<shared_ptr<Blob<Dtype> > >& param_blobs =
-        net.layer_by_name("innerprod")->blobs();
-    vector<shared_ptr<Blob<Dtype> > > noaccum_params(param_blobs.size());
-    for (int i = 0; i < param_blobs.size(); ++i) {
-      noaccum_params[i].reset(new Blob<Dtype>());
-      noaccum_params[i]->CopyFrom(*param_blobs[i], false, true);
-    }
-    // Solve by equivalent accumulation of gradients over divided batches.
-    this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,
-        kNumIters, kIterSize);
-    Net<Dtype>& net_accum = *this->solver_->net();
-    const vector<shared_ptr<Blob<Dtype> > >& accum_params =
-        net_accum.layer_by_name("innerprod")->blobs();
-    // Compare accumulated parameters against no accumulation standard.
-    const int D = this->channels_ * this->height_ * this->width_;
-    for (int i = 0; i < D; ++i) {
-      const Dtype expected_param = noaccum_params[0]->cpu_data()[i];
-      const Dtype accum_param = accum_params[0]->cpu_data()[i];
-      const Dtype error_margin = std::max(kMinPrecision, kPrecision *
-          std::min(fabs(expected_param), fabs(accum_param)));
-      EXPECT_NEAR(expected_param, accum_param, error_margin);
-    }
-    ASSERT_EQ(1, accum_params[1]->count());
-    const Dtype expected_bias = noaccum_params[1]->cpu_data()[0];
-    const Dtype accum_bias = accum_params[1]->cpu_data()[0];
-    const Dtype error_margin = std::max(kMinPrecision, kPrecision *
-        std::min(fabs(expected_bias), fabs(accum_bias)));
-    EXPECT_NEAR(expected_bias, accum_bias, error_margin);
-  }
-
   // Test that the correct update is computed for a regularized least squares
   // problem:
   //

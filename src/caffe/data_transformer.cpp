@@ -132,6 +132,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
 <<<<<<< fa941056111876e03082cdc5695d75339ed24ed9
@@ -190,11 +191,12 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 >>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
 =======
 >>>>>>> 011aef0... restore
+=======
+>>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
   const int datum_channels = datum.channels();
   const int datum_height = datum.height();
   const int datum_width = datum.width();
 
-  // Check dimensions.
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
   const int width = transformed_blob->width();
@@ -204,6 +206,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   CHECK_LE(height, datum_height);
   CHECK_LE(width, datum_width);
   CHECK_GE(num, 1);
+
+  const int crop_size = param_.crop_size();
 
   if (crop_size) {
     CHECK_EQ(crop_size, height);
@@ -261,12 +265,10 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
-  const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
   const int img_height = cv_img.rows;
   const int img_width = cv_img.cols;
 
-  // Check dimensions.
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();
   const int width = transformed_blob->width();
@@ -279,6 +281,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
+  const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
@@ -364,22 +367,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
                                        Blob<Dtype>* transformed_blob) {
-  const int crop_size = param_.crop_size();
   const int input_num = input_blob->num();
   const int input_channels = input_blob->channels();
   const int input_height = input_blob->height();
   const int input_width = input_blob->width();
-
-  if (transformed_blob->count() == 0) {
-    // Initialize transformed_blob with the right shape.
-    if (crop_size) {
-      transformed_blob->Reshape(input_num, input_channels,
-                                crop_size, crop_size);
-    } else {
-      transformed_blob->Reshape(input_num, input_channels,
-                                input_height, input_width);
-    }
-  }
 
   const int num = transformed_blob->num();
   const int channels = transformed_blob->channels();
@@ -392,7 +383,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   CHECK_GE(input_height, height);
   CHECK_GE(input_width, width);
 
-
+  const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
@@ -474,6 +465,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   }
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 template<typename Dtype>
@@ -590,6 +582,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 >>>>>>> 083f61b... New triplet loss layer added(beta1 version-no test source files)
 =======
 >>>>>>> 011aef0... restore
+=======
+>>>>>>> 4d8130b... New triplet loss layer added(beta1 version-no test source files)
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||

@@ -15,10 +15,8 @@
 
 namespace caffe {
 
-template <typename TypeParam>
-class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
-  typedef typename TypeParam::Dtype Dtype;
-
+template<typename Dtype>
+class MathFunctionsTest : public ::testing::Test {
  protected:
   MathFunctionsTest()
       : blob_bottom_(new Blob<Dtype>()),
@@ -66,19 +64,14 @@ class MathFunctionsTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_;
 };
 
-template <typename Dtype>
-class CPUMathFunctionsTest
-  : public MathFunctionsTest<CPUDevice<Dtype> > {
-};
+TYPED_TEST_CASE(MathFunctionsTest, TestDtypes);
 
-TYPED_TEST_CASE(CPUMathFunctionsTest, TestDtypes);
-
-TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
+TYPED_TEST(MathFunctionsTest, TestNothing) {
   // The first test case of a test suite takes the longest time
   //   due to the set up overhead.
 }
 
-TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
+TYPED_TEST(MathFunctionsTest, TestHammingDistanceCPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
@@ -86,7 +79,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestHammingDistance) {
             caffe_cpu_hamming_distance<TypeParam>(n, x, y));
 }
 
-TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
+TYPED_TEST(MathFunctionsTest, TestAsumCPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
@@ -97,7 +90,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
   EXPECT_LT((cpu_asum - std_asum) / std_asum, 1e-2);
 }
 
-TYPED_TEST(CPUMathFunctionsTest, TestSign) {
+TYPED_TEST(MathFunctionsTest, TestSignCPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   caffe_cpu_sign<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
@@ -107,7 +100,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestSign) {
   }
 }
 
-TYPED_TEST(CPUMathFunctionsTest, TestSgnbit) {
+TYPED_TEST(MathFunctionsTest, TestSgnbitCPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   caffe_cpu_sgnbit<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
@@ -117,7 +110,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestSgnbit) {
   }
 }
 
-TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
+TYPED_TEST(MathFunctionsTest, TestFabsCPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   caffe_abs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
@@ -127,7 +120,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
   }
 }
 
-TYPED_TEST(CPUMathFunctionsTest, TestScale) {
+TYPED_TEST(MathFunctionsTest, TestScaleCPU) {
   int n = this->blob_bottom_->count();
   TypeParam alpha = this->blob_bottom_->cpu_diff()[caffe_rng_rand() %
                                                    this->blob_bottom_->count()];
@@ -140,10 +133,11 @@ TYPED_TEST(CPUMathFunctionsTest, TestScale) {
   }
 }
 
-TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
+TYPED_TEST(MathFunctionsTest, TestCopyCPU) {
   const int n = this->blob_bottom_->count();
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   TypeParam* top_data = this->blob_top_->mutable_cpu_data();
+  Caffe::set_mode(Caffe::CPU);
   caffe_copy(n, bottom_data, top_data);
   for (int i = 0; i < n; ++i) {
     EXPECT_EQ(bottom_data[i], top_data[i]);
@@ -152,14 +146,8 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
 
 #ifndef CPU_ONLY
 
-template <typename Dtype>
-class GPUMathFunctionsTest : public MathFunctionsTest<GPUDevice<Dtype> > {
-};
-
-TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
-
 // TODO: Fix caffe_gpu_hamming_distance and re-enable this test.
-TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
+TYPED_TEST(MathFunctionsTest, DISABLED_TestHammingDistanceGPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   const TypeParam* y = this->blob_top_->cpu_data();
@@ -170,7 +158,7 @@ TYPED_TEST(GPUMathFunctionsTest, DISABLED_TestHammingDistance) {
   EXPECT_EQ(reference_distance, computed_distance);
 }
 
-TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
+TYPED_TEST(MathFunctionsTest, TestAsumGPU) {
   int n = this->blob_bottom_->count();
   const TypeParam* x = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
@@ -182,7 +170,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   EXPECT_LT((gpu_asum - std_asum) / std_asum, 1e-2);
 }
 
-TYPED_TEST(GPUMathFunctionsTest, TestSign) {
+TYPED_TEST(MathFunctionsTest, TestSignGPU) {
   int n = this->blob_bottom_->count();
   caffe_gpu_sign<TypeParam>(n, this->blob_bottom_->gpu_data(),
                             this->blob_bottom_->mutable_gpu_diff());
@@ -193,7 +181,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestSign) {
   }
 }
 
-TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
+TYPED_TEST(MathFunctionsTest, TestSgnbitGPU) {
   int n = this->blob_bottom_->count();
   caffe_gpu_sgnbit<TypeParam>(n, this->blob_bottom_->gpu_data(),
                             this->blob_bottom_->mutable_gpu_diff());
@@ -204,7 +192,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
   }
 }
 
-TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
+TYPED_TEST(MathFunctionsTest, TestFabsGPU) {
   int n = this->blob_bottom_->count();
   caffe_gpu_abs<TypeParam>(n, this->blob_bottom_->gpu_data(),
                             this->blob_bottom_->mutable_gpu_diff());
@@ -215,7 +203,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   }
 }
 
-TYPED_TEST(GPUMathFunctionsTest, TestScale) {
+TYPED_TEST(MathFunctionsTest, TestScaleGPU) {
   int n = this->blob_bottom_->count();
   TypeParam alpha = this->blob_bottom_->cpu_diff()[caffe_rng_rand() %
                                                    this->blob_bottom_->count()];
@@ -228,10 +216,11 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
   }
 }
 
-TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
+TYPED_TEST(MathFunctionsTest, TestCopyGPU) {
   const int n = this->blob_bottom_->count();
   const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
   TypeParam* top_data = this->blob_top_->mutable_gpu_data();
+  Caffe::set_mode(Caffe::GPU);
   caffe_copy(n, bottom_data, top_data);
   bottom_data = this->blob_bottom_->cpu_data();
   top_data = this->blob_top_->mutable_cpu_data();

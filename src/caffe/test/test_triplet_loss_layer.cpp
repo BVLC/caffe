@@ -17,13 +17,14 @@
 namespace caffe {
 
 template <typename TypeParam>
-class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
+class TripletLossLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
-  ContrastiveLossLayerTest()
+  TripletLossLayerTest()
       : blob_bottom_data_i_(new Blob<Dtype>(128, 10, 1, 1)),
         blob_bottom_data_j_(new Blob<Dtype>(128, 10, 1, 1)),
+        blob_bottom_data_k_(new Blob<Dtype>(128, 10, 1, 1)),
         blob_bottom_y_(new Blob<Dtype>(128, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
@@ -35,33 +36,37 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
     blob_bottom_vec_.push_back(blob_bottom_data_i_);
     filler.Fill(this->blob_bottom_data_j_);
     blob_bottom_vec_.push_back(blob_bottom_data_j_);
+    filler.Fill(this->blob_bottom_data_k_);
+    blob_bottom_vec_.push_back(blob_bottom_data_k_);
     for (int i = 0; i < blob_bottom_y_->count(); ++i) {
       blob_bottom_y_->mutable_cpu_data()[i] = caffe_rng_rand() % 2;  // 0 or 1
     }
     blob_bottom_vec_.push_back(blob_bottom_y_);
     blob_top_vec_.push_back(blob_top_loss_);
   }
-  virtual ~ContrastiveLossLayerTest() {
+  virtual ~TripletLossLayerTest() {
     delete blob_bottom_data_i_;
     delete blob_bottom_data_j_;
-    delete blob_bottom_y_;
+    delete blob_bottom_data_k_;
+    delete blob_bottom_y_; 
     delete blob_top_loss_;
   }
 
   Blob<Dtype>* const blob_bottom_data_i_;
   Blob<Dtype>* const blob_bottom_data_j_;
+  Blob<Dtype>* const blob_bottom_data_k_;
   Blob<Dtype>* const blob_bottom_y_;
   Blob<Dtype>* const blob_top_loss_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ContrastiveLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(TripletLossLayerTest, TestDtypesAndDevices);
 
-TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
+TYPED_TEST(TripletLossLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ContrastiveLossLayer<Dtype> layer(layer_param);
+  TripletLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
@@ -86,10 +91,10 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
   EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, 1e-6);
 }
 
-TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
+TYPED_TEST(TripletLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ContrastiveLossLayer<Dtype> layer(layer_param);
+  TripletLossLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   // check the gradient for the first two bottom layers

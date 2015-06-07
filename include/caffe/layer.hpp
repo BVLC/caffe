@@ -453,7 +453,6 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   // Lock during forward to ensure sequential forward
   Lock();
   Dtype loss = 0;
-  Reshape(bottom, top);
   switch (Caffe::mode()) {
   case Caffe::CPU:
     Forward_cpu(bottom, top);
