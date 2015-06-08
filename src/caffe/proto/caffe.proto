@@ -352,7 +352,7 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
   // Parameters for LSLayer
-  optional LSParameter = 138;
+  optional LSParameter ls_param= 138;
 }
 
 message LSParameter {
