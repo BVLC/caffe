@@ -88,6 +88,7 @@ void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     // bottom[last] is the selector and never needs backpropagation
     // so we can iterate over top vector because top.size() == bottom.size() -1
     if (propagate_down[i]) {
+      if (top[i]->shape(0) == 0) continue;
       const int dim = top[i]->count() / top[i]->shape(0);
       int next_to_backward_offset = 0;
       int batch_offset = 0;
