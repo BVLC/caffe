@@ -29,7 +29,6 @@ class Solver {
     Solve(resume_file.c_str());
   }
   void Step(int iters);
-  void StepPrefilled();
   virtual ~Solver() {
   }
   inline shared_ptr<Net<Dtype> > net() {

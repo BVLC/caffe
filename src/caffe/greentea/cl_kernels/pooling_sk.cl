@@ -104,7 +104,6 @@ __kernel void TEMPLATE(max_pool_backward_sk,Dtype)(
         }
       }
     } else {
-      mask_ptr += offset;
       for (int ph = phstart; ph <= phend; ph += kstride_h) {
         for (int pw = pwstart; pw <= pwend; pw += kstride_w) {
           if (top_mask[ph * pooled_width + pw] == h * width + w) {

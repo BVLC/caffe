@@ -38,7 +38,7 @@ void SliceLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const int top_slice_size = top_slice_axis * slice_size_;
     const int nthreads = top_slice_size * num_slices_;
     Slice<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-        <<<CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS>>>(
+        CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
         nthreads, bottom_data, kForward, num_slices_, slice_size_,
         bottom_slice_axis, top_slice_axis, offset_slice_axis, top_data);
     offset_slice_axis += top_slice_axis;
@@ -59,7 +59,7 @@ void SliceLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const int top_slice_size = top_slice_axis * slice_size_;
     const int nthreads = top_slice_size * num_slices_;
     Slice<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-        <<<CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS>>>(
+        CUDA_KERNEL(CAFFE_GET_BLOCKS(nthreads), CAFFE_CUDA_NUM_THREADS)(
         nthreads, top_diff, kForward, num_slices_, slice_size_,
         bottom_slice_axis, top_slice_axis, offset_slice_axis, bottom_diff);
     offset_slice_axis += top_slice_axis;
