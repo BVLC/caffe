@@ -5,7 +5,7 @@
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/common_layers.hpp"
 
 namespace caffe {
 
@@ -47,7 +47,7 @@ void LSLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 
 #ifdef CPU_ONLY
-STUB_GPU(LSLayer);
+//STUB_GPU(LSLayer);
 #endif
 
 INSTANTIATE_CLASS(LSLayer);
