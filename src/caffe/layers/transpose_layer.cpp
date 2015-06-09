@@ -19,7 +19,7 @@ void TransposeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     this->blobs_.resize(2);
     vector<int> weight_shape = this->blobs_[0].shape();
-    vector<int> transposed_weight_shape(2)
+    vector<int> transposed_weight_shape(2);
     transposed_weight_shape[0] = weight_shape[1];
     transposed_weight_shape[1] = weight_shape[0];
     this->blobs_[1].reset(new Blob<Dtype>(transposed_weight_shape));
