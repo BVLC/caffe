@@ -18,7 +18,7 @@ void TransposeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     this->blobs_.resize(2);
-    vector<int> weight_shape = this->blobs_[0].shape();
+    vector<int> weight_shape = this->blobs_[0]->shape();
     vector<int> transposed_weight_shape(2);
     transposed_weight_shape[0] = weight_shape[1];
     transposed_weight_shape[1] = weight_shape[0];
@@ -29,6 +29,7 @@ void TransposeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void TransposeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+  const vector<Blob<Dtype>*>& top) {
     // Dimension verification can be added later
 }
 
@@ -45,7 +46,7 @@ void TransposeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 
 #ifdef CPU_ONLY
-STUB_GPU(TransposeLayer);
+// STUB_GPU(TransposeLayer);
 #endif
 
 INSTANTIATE_CLASS(TransposeLayer);
