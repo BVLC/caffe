@@ -21,3 +21,11 @@ __kernel void TEMPLATE(relu_backward,Dtype)(const int n,
         * ((in_data[index] > 0) + (in_data[index] <= 0) * negative_slope);
   }
 }
+
+__kernel void TEMPLATE(threshold,Dtype)(const int n, const Dtype threshold,
+                                        __global const Dtype* in,
+                                        __global Dtype* out) {
+  for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
+    out[index] = in[index] > threshold ? 1 : 0;
+  }
+}
