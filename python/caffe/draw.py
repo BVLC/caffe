@@ -72,7 +72,7 @@ def get_layer_label(layer, rankdir):
     else:
         # If graph orientation is horizontal, vertical space is free and
         # horizontal space is not; separate words with newlines
-        separator = '\n'
+        separator = '\\n'
 
     if layer.type == 'Convolution':
         # Outer double quotes needed or else colon characters don't parse
