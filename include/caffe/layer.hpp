@@ -7,6 +7,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/device.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/device_alternate.hpp"
@@ -110,15 +111,56 @@ class Layer {
    *     outputs
    * \return The total loss from the layer.
    *
-   * The Forward wrapper calls the relevant device wrapper function
-   * (Forward_cpu or Forward_gpu) to compute the top blob values given the
-   * bottom blobs.  If the layer has any non-zero loss_weights, the wrapper
-   * then computes and returns the loss.
+   * The Forward wrapper calls the relevant device wrapper method
+   * (Forward_cpu or Forward_gpu) which calls forward(brew, bottom, top)
+   * to compute the top blob values given the bottom blobs.  If the layer has
+   * any non-zero loss_weights, the wrapper then computes and returns the loss.
    *
-   * Your layer should implement Forward_cpu and (optionally) Forward_gpu.
+   * Your layer should implement forward(bottom, top, brew).
    */
   inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top) {
+    Dtype loss = 0;
+    Reshape(bottom, top);
+    Caffe::Brew brew;
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      brew = Caffe::CPU;
+      Forward_cpu(bottom, top);
+      break;
+    case Caffe::GPU:
+      brew = Caffe::GPU;
+      Forward_gpu(bottom, top);
+  #ifdef CPU_ONLY
+      NO_GPU;
+  #endif
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode.";
+    }
+    /*
+     * TODO: Replace the above Forward_cpu/Forward_gpu with the following
+     * when all the layers have implemented it.
+    Forward(bottom, top, brew);
+    */
+    for (int top_id = 0; top_id < top.size(); ++top_id) {
+      if (!this->loss(top_id)) { continue; }
+      const int count = top[top_id]->count();
+      const Dtype* data = top[top_id]->data(brew);
+      const Dtype* loss_weights = top[top_id]->diff(brew);
+      Dtype blob_loss = 0;
+      GetDevice<Dtype>(brew)->dot(count, data, loss_weights, &blob_loss);
+      loss += blob_loss;
+    }
+    return loss;
+  }
+
+  // Forward can't be overloaded
+  virtual void forward(const Caffe::Brew brew,
+      const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+    NOT_IMPLEMENTED;
+    return;
+  }
 
   /**
    * @brief Given the top blob error gradients, compute the bottom blob error
@@ -135,15 +177,44 @@ class Layer {
    *     the input blobs, whose diff fields will store the gradient of the error
    *     with respect to themselves after Backward is run
    *
-   * The Backward wrapper calls the relevant device wrapper function
-   * (Backward_cpu or Backward_gpu) to compute the bottom blob diffs given the
-   * top blob diffs.
+   * The Backward wrapper calls the relevant device wrapper method
+   * (Backward_cpu or Backward_gpu) which calls
+   * backward(brew, top, propagate_down, bottom)
+   * to compute the bottom blob diffs given the top blob diffs.
    *
-   * Your layer should implement Forward_cpu and (optionally) Forward_gpu.
+   * Your layer should implement backward(brew, top, propagate_down, bottom).
    */
   inline void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
-      const vector<Blob<Dtype>*>& bottom);
+      const vector<Blob<Dtype>*>& bottom) {
+    /*
+     * TODO: Replace the above Forward_cpu/Forward_gpu with the following
+     * when all the layers have implemented
+     * backward(brew, top, propagate_down, bottom);
+     */
+  // TODO: Caffe::Brew brew;
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+  // TODO: brew = Caffe::CPU;
+      Backward_cpu(top, propagate_down, bottom);
+      break;
+    case Caffe::GPU:
+  // TODO: brew = Caffe::GPU;
+      Backward_gpu(top, propagate_down, bottom);
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode.";
+    }
+  // TODO: backward(brew, top, propagate_down, bottom);
+  }
+
+  // Backward can't be overloaded
+  virtual void backward(const Caffe::Brew brew,
+      const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
+      const vector<Blob<Dtype>*>& bottom) {
+    NOT_IMPLEMENTED;
+    return;
+  }
 
   /**
    * @brief Returns the vector of learnable parameter blobs.
@@ -302,7 +373,10 @@ class Layer {
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) = 0;
+      const vector<Blob<Dtype>*>& top) {
+    // NOT_IMPLEMENTED by default
+    forward(Caffe::CPU, bottom, top);
+  }
   /**
    * @brief Using the GPU device, compute the layer output.
    *        Fall back to Forward_cpu() if unavailable.
@@ -319,7 +393,10 @@ class Layer {
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
-      const vector<Blob<Dtype>*>& bottom) = 0;
+      const vector<Blob<Dtype>*>& bottom) {
+    // NOT_IMPLEMENTED by default
+    backward(Caffe::CPU, top, propagate_down, bottom);
+  }
   /**
    * @brief Using the GPU device, compute the gradients for any parameters and
    *        for the bottom blobs if propagate_down is true.
@@ -398,61 +475,6 @@ class Layer {
 
   DISABLE_COPY_AND_ASSIGN(Layer);
 };  // class Layer
-
-// Forward and backward wrappers. You should implement the cpu and
-// gpu specific implementations instead, and should not change these
-// functions.
-template <typename Dtype>
-inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  Dtype loss = 0;
-  Reshape(bottom, top);
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    Forward_cpu(bottom, top);
-    for (int top_id = 0; top_id < top.size(); ++top_id) {
-      if (!this->loss(top_id)) { continue; }
-      const int count = top[top_id]->count();
-      const Dtype* data = top[top_id]->cpu_data();
-      const Dtype* loss_weights = top[top_id]->cpu_diff();
-      loss += caffe_cpu_dot(count, data, loss_weights);
-    }
-    break;
-  case Caffe::GPU:
-    Forward_gpu(bottom, top);
-#ifndef CPU_ONLY
-    for (int top_id = 0; top_id < top.size(); ++top_id) {
-      if (!this->loss(top_id)) { continue; }
-      const int count = top[top_id]->count();
-      const Dtype* data = top[top_id]->gpu_data();
-      const Dtype* loss_weights = top[top_id]->gpu_diff();
-      Dtype blob_loss = 0;
-      caffe_gpu_dot(count, data, loss_weights, &blob_loss);
-      loss += blob_loss;
-    }
-#endif
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode.";
-  }
-  return loss;
-}
-
-template <typename Dtype>
-inline void Layer<Dtype>::Backward(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
-  switch (Caffe::mode()) {
-  case Caffe::CPU:
-    Backward_cpu(top, propagate_down, bottom);
-    break;
-  case Caffe::GPU:
-    Backward_gpu(top, propagate_down, bottom);
-    break;
-  default:
-    LOG(FATAL) << "Unknown caffe mode.";
-  }
-}
 
 // Serialize LayerParameter to protocol buffer
 template <typename Dtype>

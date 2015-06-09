@@ -52,6 +52,10 @@ class SyncedMemory {
   const void* gpu_data();
   void* mutable_cpu_data();
   void* mutable_gpu_data();
+
+  const void* data(Caffe::Brew brew);
+  void* mutable_data(Caffe::Brew brew);
+
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
   SyncedHead head() { return head_; }
   size_t size() { return size_; }
