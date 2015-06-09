@@ -6,15 +6,16 @@
  * Based on code from the Caffe examples and tools
  *
  * \version
- * -	v0.1a	Initial version
+ * -    v0.1a   Initial version
+ * -    v0.1b   Moved the creation of a imageset text file to creat_imageset.
  *
  * Future versions:
  * \todo
  * -	Add image encoding (compression) -> not needed for mnist
- * -	(Re)move the creation of the imageset text file to separate executable
  *
  * \author    	Floris Gaisser <f.gaisser@tudelft.nl>
- * \date      	v0.1a 2015-06-04
+ * \date        v0.1a 2015-06-04
+ *              v0.1b 2015-06-09
  *
  * \copyright \verbatim
  * Copyright (c) 2015, Floris Gaisser, Delft University of Technology
@@ -118,7 +119,6 @@ void convert_dataset(const char* image_filename, const char* label_filename, con
     std::string label_folder_base = output_path + "label_";
     cv::Mat image;
     std::map<char, int> labels;
-    std::vector<std::pair<std::string, char> >	image_file_labels;
     for (int itemid = 0; itemid < num_items; ++itemid) {
         image_file.read(pixels, rows * cols);
         label_file.read(&label, 1);
@@ -141,35 +141,8 @@ void convert_dataset(const char* image_filename, const char* label_filename, con
         ss << labels[label] << ".pgm";
         cv::imwrite(ss.str(), image);
         labels[label]++;
-        image_file_labels.push_back(std::make_pair(ss.str(), label));
     }
-
-    //	shuffle the image files
-    caffe::shuffle(image_file_labels.begin(), image_file_labels.end());
-
-    // create a text file with the file names and the similarity label
-	std::ofstream output_file(std::string(output_path + "siamese_set.txt").c_str(), std::ios::out | std::ios::binary);
-	CHECK(output_file) << "Unable to open file " << output_file;
-    // At least 1 times the total number of images, preferred would be a full cross.
-	int scale = 1;
-	// round the number of pairs to 100.
-	int num_pairs = scale*image_file_labels.size() - ((scale*image_file_labels.size()) % 100);
-	std::cout << "making " << num_pairs << " pairs\n";
-
-	// ToDo: change the output amount by param
-	// Feature: make a full cross or select only a few closest as similar
-    for(int counter = 0; counter < num_pairs; ++counter) {
-    	// pick a random  pair
-        int i = caffe::caffe_rng_rand() % num_items;
-        int j = caffe::caffe_rng_rand() % num_items;
-    	// ToDo: check if there are no random double entries
-
-        output_file << image_file_labels.at(i).first << " ";
-        output_file << image_file_labels.at(j).first << " ";
-        output_file << (image_file_labels.at(i).second == image_file_labels.at(j).second) << "\n";
-
-    }
-    output_file.close();
+    std::cout << "use create_imageset.bin to make imagesets to your liking\n";
 
     delete pixels;
 }
