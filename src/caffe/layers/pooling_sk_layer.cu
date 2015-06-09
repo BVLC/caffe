@@ -276,7 +276,6 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                 WrapHandle((cl_mem) mask, ctx),
                 WrapHandle((cl_mem) top_mask, ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
       break;
       case PoolingParameter_PoolMethod_AVE: {
@@ -289,7 +288,6 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                 stride_h_, stride_w_, kstride_h_, kstride_w_,
                 pad_h_, pad_w_, WrapHandle((cl_mem)top_data,ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
       break;
       case PoolingParameter_PoolMethod_STOCHASTIC: {
@@ -307,7 +305,6 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                   stride_h_, stride_w_, kstride_h_, kstride_w_,
                   WrapHandle((cl_mem)(rand_idx_.mutable_gpu_data()),ctx), WrapHandle((cl_mem)(top_data),ctx)),
               ctx.get_queue());
-          ctx.get_queue().finish();
         } else {
           viennacl::ocl::kernel &oclk_sto_pool_forward = program.get_kernel(
               CL_KERNEL_SELECT("sto_pool_forward_test_sk"));
@@ -317,7 +314,6 @@ void PoolingSKLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                   kernel_w_, ext_kernel_h, ext_kernel_w,
                   stride_h_, stride_w_, kstride_h_, kstride_w_, WrapHandle((cl_mem)top_data,ctx)),
               ctx.get_queue());
-          ctx.get_queue().finish();
         }
       }
       break;
@@ -460,7 +456,6 @@ void PoolingSKLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                                    pad_h_, pad_w_,
                                    WrapHandle((cl_mem) bottom_diff, ctx)),
             ctx.get_queue());
-        ctx.get_queue().finish();
       }
         break;
       default:
