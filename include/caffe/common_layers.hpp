@@ -298,9 +298,9 @@ class MVNLayer : public Layer<Dtype> {
 };
 
 /**
- * @brief output the one-of-n vector for language inputs
+ * @brief convert integer valued data into the one-of-n vectors
  *
- * Intended for use expand labels into features that are suitable for 
+ * Intended for expanding labels into features that are suitable for 
  *        convolution with language data
  *
  * NOTE: does not implement Backwards operation.
