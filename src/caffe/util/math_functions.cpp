@@ -21,6 +21,24 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
 }
 
 template<>
+void caffe_cpu_omatcopy<float>(const char trans, const int M, const int N, const float alpha, const float* A, float* B) {
+    int lda = N;
+    int ldb = (trans == 'T') ? M:N;
+    mkl_somatcopy('r',trans,M,N,1.0,A,lda,B,ldb); 
+}
+
+template<>
+void caffe_cpu_dgels<float>(const int M, const int N, const int NRHS, const float* H, float* x, const float* y) {
+    int LDA = N;
+    int LDB = NRHS;
+    MKL_INT m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
+    float* h = new float();
+    caffe_cpu_omatcopy<float>('N',m,n,1.0,H,h); 
+    caffe_cpu_omatcopy<float>('N',M,NRHS,1.0,y,x);
+    info = LAPACKE_sgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
+}
+
+template<>
 void caffe_cpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
     const double alpha, const double* A, const double* B, const double beta,
