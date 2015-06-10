@@ -11,9 +11,12 @@
 # Adapted from FindCWD by:
 # Copyright 2013 Conrad Steenberg <conrad.steenberg@gmail.com>
 # Aug 31, 2013
+set(LMDB_DIR_INIT "$ENV{LMDB_DIR}")
+file(TO_CMAKE_PATH "${LMDB_DIR_INIT}" LMDB_DIR_INIT)
+set(LMDB_DIR ${LMDB_DIR_INIT} CACHE PATH "LMDB root directory")
 
-find_path(LMDB_INCLUDE_DIR NAMES  lmdb.h PATHS "$ENV{LMDB_DIR}/include")
-find_library(LMDB_LIBRARIES NAMES lmdb   PATHS "$ENV{LMDB_DIR}/lib" )
+find_path(LMDB_INCLUDE_DIR NAMES  lmdb.h PATHS "${LMDB_DIR}/include")
+find_library(LMDB_LIBRARIES NAMES lmdb   PATHS "${LMDB_DIR}/lib" )
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LMDB DEFAULT_MSG LMDB_INCLUDE_DIR LMDB_LIBRARIES)

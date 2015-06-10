@@ -5,7 +5,7 @@ if (NOT __GFLAGS_INCLUDED) # guard against multiple includes
   find_package(GFlags)
   if (GFLAGS_FOUND)
     set(GFLAGS_EXTERNAL FALSE)
-  else()
+  elseif(NOT MSVC)
     # gflags will use pthreads if it's available in the system, so we must link with it
     find_package(Threads)
 

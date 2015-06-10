@@ -8,7 +8,7 @@ if (NOT __GLOG_INCLUDED)
   find_package(Glog)
   if (GLOG_FOUND)
       set(GLOG_EXTERNAL FALSE)
-  else()
+  elseif(NOT MSVC)
     # fetch and build glog from github
 
     # build directory

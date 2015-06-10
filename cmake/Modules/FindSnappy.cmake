@@ -8,6 +8,7 @@
 #  Snappy_INCLUDE_DIR
 #  Snappy_LIBRARIES
 
+set(SNAPPY_ROOT_DIR "" CACHE PATH "Snappy root dir")
 find_path(Snappy_INCLUDE_DIR NAMES snappy.h
                              PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/include)
 

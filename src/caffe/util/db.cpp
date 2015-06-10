@@ -1,5 +1,8 @@
 #include "caffe/util/db.hpp"
-
+#include "caffe/util/msvc.hpp"
+#ifdef _MSC_VER
+#include <direct.h>
+#endif
 #include <sys/stat.h>
 #include <string>
 
