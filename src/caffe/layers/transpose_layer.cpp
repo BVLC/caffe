@@ -39,8 +39,11 @@ void TransposeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* transposed_weight = this->blobs_[1]->mutable_cpu_data();
-
-  // Transpose function code 
+  vector<int> weight_shape = this->blobs_[0]->shape();
+  const int m = weight_shape[0];
+  const int n = weight_shape[1];
+  // Transpose function code
+  caffe_cpu_omatcopy<Dtype>('T',m,n,1.0,weight,transposed_weight); 
 }
 
 
