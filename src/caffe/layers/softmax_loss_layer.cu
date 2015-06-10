@@ -101,7 +101,6 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
                                   spatial_dim, has_ignore_label_ ? 1 : 0,
                                   ignore_label_, WrapHandle(counts, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
 
     Dtype loss;
 
@@ -209,7 +208,6 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(
       viennacl::ocl::enqueue(
           oclk_softmax_loss_backward(nthreads, WrapHandle(top_data,ctx), WrapHandle(label,ctx), WrapHandle(bottom_diff,ctx), num, dim, spatial_dim, has_ignore_label_?1:0, ignore_label_, WrapHandle(counts,ctx)),
           ctx.get_queue());
-      ctx.get_queue().finish();
 
       const Dtype loss_weight = top[0]->cpu_diff()[0];
       if (normalize_) {

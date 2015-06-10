@@ -167,7 +167,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         oclk_channel_max(num, channels, spatial_dim, WrapHandle(top_data, ctx),
                          WrapHandle(scale_data, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
+
 
     viennacl::ocl::kernel &oclk_channel_subtract = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_subtract"));
@@ -176,7 +176,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                               WrapHandle(scale_data, ctx),
                               WrapHandle(top_data, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
+
 
     viennacl::ocl::kernel &oclk_exp = program.get_kernel(
         CL_KERNEL_SELECT("kernel_exp"));
@@ -184,7 +184,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         oclk_exp(num * channels * spatial_dim, WrapHandle(top_data, ctx),
                  WrapHandle(top_data, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
+
 
     viennacl::ocl::kernel &oclk_channel_sum = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_sum"));
@@ -192,7 +192,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         oclk_channel_sum(num, channels, spatial_dim, WrapHandle(top_data, ctx),
                          WrapHandle(scale_data, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
+
 
     viennacl::ocl::kernel &oclk_channel_div = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_div"));
@@ -201,7 +201,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                          WrapHandle(scale_data, ctx),
                          WrapHandle(top_data, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
+
 
 #endif
   }
@@ -248,7 +248,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         this->device_context_.id());
 
     greentea_copy<Dtype>(top[0]->count(), top_diff, bottom_diff, ctx);
-    ctx.get_queue().finish();
+
 
     viennacl::ocl::kernel &oclk_channel_dot = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_dot"));
@@ -257,7 +257,7 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                          WrapHandle(top_diff, ctx), WrapHandle(top_data, ctx),
                          WrapHandle(scale_data, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
+
 
     viennacl::ocl::kernel &oclk_channel_subtract = program.get_kernel(
         CL_KERNEL_SELECT("kernel_channel_subtract"));
@@ -266,11 +266,11 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                               WrapHandle(scale_data, ctx),
                               WrapHandle(bottom_diff, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
+
 
     greentea_gpu_mul<Dtype>(this->device_context_.id(), top[0]->count(),
                             bottom_diff, 0, top_data, 0, bottom_diff, 0);
-    ctx.get_queue().finish();
+
 #endif
   }
 }

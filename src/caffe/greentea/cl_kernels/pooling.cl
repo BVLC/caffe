@@ -78,7 +78,7 @@ __kernel void TEMPLATE(ave_pool_forward,Dtype)(
   }
 }
 
-__kernel void TEMPLATE(sto_pool_forward_train,DType)(
+__kernel void TEMPLATE(sto_pool_forward_train,Dtype)(
     const int nthreads, __global const Dtype* const bottom_data, const int num,
     const int channels, const int height, const int width,
     const int pooled_height, const int pooled_width, const int kernel_h,
@@ -120,7 +120,7 @@ __kernel void TEMPLATE(sto_pool_forward_train,DType)(
   }
 }
 
-__kernel void TEMPLATE(sto_pool_forward_test,DType)(
+__kernel void TEMPLATE(sto_pool_forward_test,Dtype)(
     const int nthreads, __global const Dtype* const bottom_data, const int num,
     const int channels, const int height, const int width,
     const int pooled_height, const int pooled_width, const int kernel_h,
