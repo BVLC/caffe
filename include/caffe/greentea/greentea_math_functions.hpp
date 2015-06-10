@@ -129,6 +129,9 @@ template<typename Dtype>
 void greentea_gpu_rng_uniform(const int ctx_id, const int n, const Dtype a,
                               const Dtype b, cl_mem r, const int offr);
 
+void greentea_gpu_rng_uniform(const int ctx_id, const int n, cl_mem r,
+                              int offr);
+
 template<typename Dtype>
 void greentea_gpu_rng_gaussian(const int ctx_id, const int n, const Dtype mu,
                                const Dtype sigma, cl_mem r, const int offr);

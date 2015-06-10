@@ -10,7 +10,6 @@ viennacl::ocl::kernel &oclk_kernel = program.get_kernel(
 viennacl::ocl::enqueue(
     oclk_kernel(WrapHandle((cl_mem) data, ctx)),
     ctx.get_queue());
-ctx.get_queue().finish();
 
 if (this->device_context_.backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

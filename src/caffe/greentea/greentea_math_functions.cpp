@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 #include "caffe/common.hpp"
 
@@ -837,8 +838,29 @@ template void greentea_gpu_sgnbit<double>(const int ctx_id, const int n,
                                           const cl_mem x, int offx, cl_mem y,
                                           const int offy);
 
-void greentea_gpu_rng_uniform(const int n, unsigned int* r) {
-  CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
+void greentea_gpu_rng_uniform(const int ctx_id, const int n, cl_mem r,
+                              int offr) {
+
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
+#ifdef __APPLE__
+  std::seed_seq seq {(int)(start_time.tv_sec), (int)(start_time.tv_usec)};
+#else
+  std::seed_seq seq { start_time.tv_sec, start_time.tv_usec };
+#endif
+  std::mt19937_64 generator(seq);
+  std::uniform_int_distribution<unsigned int> distribution(0, UINT32_MAX);
+  std::function<unsigned int()> rndfunc = std::bind(distribution, generator);
+
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(ctx_id);
+
+  std::vector<unsigned int> random(n);
+
+  for (int i = 0; i < n; ++i) {
+    random[i] = rndfunc();
+  }
+
+  greentea_gpu_memcpy(sizeof(unsigned int) * n, &random[0], r, offr, ctx);
 }
 
 template<typename Dtype>
@@ -864,7 +886,7 @@ void greentea_gpu_rng_uniform(const int ctx_id, const int n, const Dtype a,
     random[i] = rndfunc();
   }
 
-  greentea_gpu_memcpy(n, &random[0], r, offr, ctx);
+  greentea_gpu_memcpy(sizeof(Dtype) * n, &random[0], r, offr, ctx);
 }
 
 template void greentea_gpu_rng_uniform<float>(const int ctx_id, const int n,
@@ -897,7 +919,7 @@ void greentea_gpu_rng_gaussian(const int ctx_id, const int n, const Dtype mu,
     random[i] = rndfunc();
   }
 
-  greentea_gpu_memcpy(n, &random[0], r, offr, ctx);
+  greentea_gpu_memcpy(sizeof(Dtype) * n, &random[0], r, offr, ctx);
 }
 
 template void greentea_gpu_rng_gaussian<float>(const int ctx_id, const int n,

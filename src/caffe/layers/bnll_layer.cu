@@ -53,7 +53,6 @@ void BNLLLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         oclk_bnll(count, WrapHandle((cl_mem) bottom_data, ctx),
                   WrapHandle((cl_mem) top_data, ctx)),
         ctx.get_queue());
-    ctx.get_queue().finish();
 #endif // USE_GREENTEA
   }
 }
@@ -102,7 +101,6 @@ void BNLLLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                     WrapHandle((cl_mem) bottom_data, ctx),
                     WrapHandle((cl_mem) bottom_diff, ctx)),
           ctx.get_queue());
-      ctx.get_queue().finish();
 #endif // USE_GREENTEA
     }
   }

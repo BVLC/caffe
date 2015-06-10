@@ -11,6 +11,7 @@
 
 namespace caffe {
 
+#ifdef USE_CUDA
 template<typename Dtype>
 __global__ void Concat(const int nthreads, const Dtype* in_data,
                        const bool forward, const int num_concats,
@@ -31,6 +32,7 @@ __global__ void Concat(const int nthreads, const Dtype* in_data,
     }
   }
 }
+#endif // USE_CUDA
 
 template<typename Dtype>
 void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -68,8 +70,6 @@ void ConcatLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                       top_concat_axis, bottom_concat_axis, offset_concat_axis,
                       WrapHandle((cl_mem) top_data, ctx)),
           ctx.get_queue());
-      ctx.get_queue().finish();
-
 #endif // USE_GREENTEA
     }
     offset_concat_axis += bottom_concat_axis;
@@ -117,8 +117,6 @@ void ConcatLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
                       top_concat_axis, bottom_concat_axis, offset_concat_axis,
                       WrapHandle((cl_mem) bottom_diff, ctx)),
           ctx.get_queue());
-      ctx.get_queue().finish();
-
 #endif // USE_GREENTEA
     }
 
