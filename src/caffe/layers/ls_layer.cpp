@@ -40,8 +40,13 @@ void LSLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* hidden_output = bottom[0]->cpu_data();
   const Dtype* expected_output = bottom[1]->cpu_data();
   Dtype* beta = this->blobs_[0]->mutable_cpu_data();
-
+  vector<int> hidden_output_shape = bottom[0]->shape();
+  vector<int> expected_output_shape = bottom[1]->shape();
+  const int M=hidden_output_shape[0];
+  const int N=hidden_output_shape[1];
+  const int NRHS=expected_output_shape[1];
   // Inverse code here
+  caffe_cpu_dgels<Dtype>(M,N,NRHS,hidden_output,beta,expected_output);
 }
 
 
