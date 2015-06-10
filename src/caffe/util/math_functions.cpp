@@ -28,6 +28,13 @@ void caffe_cpu_omatcopy<float>(const char trans, const int M, const int N, const
 }
 
 template<>
+void caffe_cpu_omatcopy<double>(const char trans, const int M, const int N, const double alpha, const double* A, double* B) {
+    int lda = N;
+    int ldb = (trans == 'T') ? M:N;
+    mkl_domatcopy('r',trans,M,N,1.0,A,lda,B,ldb); 
+}
+
+template<>
 void caffe_cpu_dgels<float>(const int M, const int N, const int NRHS, const float* H, float* x, const float* y) {
     int LDA = N;
     int LDB = NRHS;
