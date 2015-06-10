@@ -22,13 +22,13 @@
  * \version
  * -	v0.1a	Initial version:
  * 				Random selection of similar and dissimilar images
+ *              Full and limited cross of (dis)similar images
+ *              Limited cross of (dis)similar images using Euclidean difference
  *
  * Future versions:
- * -	v0.1b	Full and limited cross of (dis)similar images
- * -	v0.1c	Limited cross of (dis)similar images using Euclidean difference
  *
  * \author    	Floris Gaisser <f.gaisser@tudelft.nl>
- * \date      	v0.1a 2015-06-08
+ * \date      	v0.1a   2015-06-08 ~ 2015-06-09
  *
  * \copyright \verbatim
  * Copyright (c) 2015, Floris Gaisser, Delft University of Technology
@@ -309,18 +309,8 @@ void selectRandom(
             output_file << images.at(i).first << " ";
             output_file << images.at(j).first << " ";
             output_file << (images.at(i).second == images.at(j).second) << "\n";
+            counter++;
         }
-//        std::stringstream ss, ss_reverse;
-//        ss << i << "_" << j;
-//        ss_reverse << j << "_" << i;
-//        if(std::find(pair_hashes.begin(), pair_hashes.end(), ss.str()) == pair_hashes.end()) {
-//            output_file << images.at(i).first << " ";
-//            output_file << images.at(j).first << " ";
-//            output_file << (images.at(i).second == images.at(j).second) << "\n";
-//            pair_hashes.push_back(ss.str());
-//            pair_hashes.push_back(ss_reverse.str());
-//            counter++;
-//        }
     }
     output_file.close();
 }
@@ -410,12 +400,6 @@ void selectCross(
                     int j = caffe::caffe_rng_rand() % other_label_it->second.size();
 
                     // check if there are no random double entries
-//                    std::cout   << label_it->first << " @ "
-//                                << i << " < "
-//                                << label_it->second.size() << "\t\t"
-//                                << other_label_it->first << " @ "
-//                                << j << " < "
-//                                << other_label_it->second.size() << "\n";
                     if(!checkAddForLabeledPair(i, label_it->first, j, other_label_it->first, pair_hashes)) {
                         selected_image_pairs.push_back(
                                 std::make_pair(
@@ -591,6 +575,10 @@ int main(int argc, char** argv) {
                     case 'i':   //  input folder
                         i_counter++;
                         input_folder = std::string(argv[i+i_counter]);
+                        break;
+                    case 'e':   //  input folder
+                        i_counter++;
+                        file_extention = std::string(argv[i+i_counter]);
                         break;
                     case 'r':   //  random selection
                         random_select = true;
