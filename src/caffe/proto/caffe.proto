@@ -463,6 +463,7 @@ message DataParameter {
   enum DB {
     LEVELDB = 0;
     LMDB = 1;
+    DATUMFILE = 2;
   }
   // Specify the data source.
   optional string source = 1;
