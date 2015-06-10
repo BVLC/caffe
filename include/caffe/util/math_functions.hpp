@@ -24,7 +24,7 @@ template <typename Dtype>
 void caffe_cpu_dgels(const int M, const int N, const int NRHS, const float* h, float* x, const float* y);
 
 template <typename Dtype>
-void caffe_cpu_omatcopy(const char trans, const int M, const int N, const float alpha, const float* A, float* B);
+void caffe_cpu_omatcopy(const char trans, const int M, const int N, const Dtype alpha, const Dtype* A, Dtype* B);
 
 template <typename Dtype>
 void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int M, const int N,
