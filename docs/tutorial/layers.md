@@ -5,9 +5,7 @@ title: Layer Catalogue
 
 To create a Caffe model you need to define the model architecture in a protocol buffer definition file (prototxt).
 
-Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto). The latest definitions are in the [dev caffe.proto](https://github.com/BVLC/caffe/blob/dev/src/caffe/proto/caffe.proto).
-
-TODO complete list of layers linking to headings
+Caffe layers and their parameters are defined in the protocol buffer definitions for the project in [caffe.proto](https://github.com/BVLC/caffe/blob/master/src/caffe/proto/caffe.proto).
 
 ### Vision Layers
 
@@ -507,7 +505,7 @@ The `Slice` layer is a utility layer that slices an input layer to multiple outp
         }
       }
 
-`axis` indicates the target axis; `slice_point` indicates indexes in the selected dimension (the number of indices must be equal to the number of top blobs minus one). 
+`axis` indicates the target axis; `slice_point` indicates indexes in the selected dimension (the number of indices must be equal to the number of top blobs minus one).
 
 
 #### Elementwise Operations
