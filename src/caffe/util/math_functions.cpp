@@ -35,7 +35,7 @@ void caffe_cpu_omatcopy<double>(const char trans, const int M, const int N, cons
 }
 
 template<>
-void caffe_cpu_dgels<float>(const int M, const int N, const int NRHS, const float* H, float* x, const float* y) {
+void caffe_cpu_gels<float>(const int M, const int N, const int NRHS, const float* H, float* x, const float* y) {
     int LDA = N;
     int LDB = NRHS;
     MKL_INT m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
@@ -43,6 +43,17 @@ void caffe_cpu_dgels<float>(const int M, const int N, const int NRHS, const floa
     caffe_cpu_omatcopy<float>('N',m,n,1.0,H,h); 
     caffe_cpu_omatcopy<float>('N',M,NRHS,1.0,y,x);
     info = LAPACKE_sgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
+}
+
+template<>
+void caffe_cpu_gels<double>(const int M, const int N, const int NRHS, const double* H, double* x, const double* y) {
+    int LDA = N;
+    int LDB = NRHS;
+    MKL_INT m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
+    double* h = new double();
+    caffe_cpu_omatcopy<double>('N',m,n,1.0,H,h); 
+    caffe_cpu_omatcopy<double>('N',M,NRHS,1.0,y,x);
+    info = LAPACKE_dgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
 }
 
 template<>
