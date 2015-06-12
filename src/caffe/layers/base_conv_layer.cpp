@@ -367,8 +367,8 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
                             conv_out_channels_ / group_, kernel_dim_ / group_,
                             conv_out_spatial_dim_, (Dtype) 1.,
-                            output + output_offset_ * g,
-                            col_buff + col_offset_ * g, (Dtype) 1.,
+                            output + output_off + output_offset_ * g,
+                            col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 1.,
                             weights + weight_offset_ * g);
     }
 #endif // USE_CUDA
@@ -382,8 +382,8 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
       greentea_gpu_gemm<Dtype>(this->device_context_.id(), CblasNoTrans,
                                CblasTrans, conv_out_channels_ / group_,
                                kernel_dim_ / group_, conv_out_spatial_dim_,
-                               (Dtype) 1., (cl_mem) output, output_offset_ * g,
-                               (cl_mem) col_buff, col_offset_ * g, (Dtype) 1.,
+                               (Dtype) 1., (cl_mem) output, output_off + output_offset_ * g,
+                               (cl_mem) col_buff, (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 1.,
                                (cl_mem) weights, weight_offset_ * g);
     }
 #endif // USE_GREENTEA

@@ -21,8 +21,8 @@ class DeconvolutionLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   DeconvolutionLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4)),
-        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4)),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 4, Caffe::GetDefaultDeviceContext())),
+        blob_bottom_2_(new Blob<Dtype>(2, 3, 6, 4, Caffe::GetDefaultDeviceContext())),
         blob_top_(new Blob<Dtype>()),
         blob_top_2_(new Blob<Dtype>()) {}
   virtual void SetUp() {

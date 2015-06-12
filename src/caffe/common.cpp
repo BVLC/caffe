@@ -91,12 +91,16 @@ void* Caffe::RNG::generator() {
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
-    : cublas_handle_(NULL),
+    :
+#ifdef USE_CUDA
+    cublas_handle_(NULL),
       curand_generator_(NULL),
+#endif // USE_CUDA
       random_generator_(),
       mode_(Caffe::CPU) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
+#ifdef USE_CUDA
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
     LOG(ERROR)<< "Cannot create Cublas handle. Cublas won't be available.";
   }
@@ -107,14 +111,17 @@ Caffe::Caffe()
       != CURAND_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Curand generator. Curand won't be available.";
   }
+#endif // USE_CUDA
 }
 
 Caffe::~Caffe() {
+#ifdef USE_CUDA
   if (cublas_handle_)
     CUBLAS_CHECK(cublasDestroy(cublas_handle_));
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
+#endif // USE_CUDA
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -135,11 +142,11 @@ void Caffe::set_random_seed(const unsigned int seed) {
     }
     // RNG seed
     Get().random_generator_.reset(new RNG(seed));
-#endif
+#endif // USE_CUDA
   } else {
 #ifdef USE_GREENTEA
 // TODO: Proper RNG and Seed for OpenCL
-#endif
+#endif // USE_GREENTEA
   }
 }
 
@@ -364,8 +371,8 @@ void Caffe::DeviceQuery() {
       LOG(INFO)<< "Kernel execution timeout:      "
       << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
     }
-  }
 #endif // USE_CUDA
+  }
   else
   {
 #ifdef USE_GREENTEA

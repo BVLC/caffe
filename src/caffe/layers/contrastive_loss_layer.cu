@@ -60,7 +60,7 @@ void ContrastiveLossLayer<Dtype>::Forward_gpu(
       if (legacy_version) {
         loss += std::max(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
       } else {
-        Dtype dist = std::max(margin - sqrt(dist_sq_.cpu_data()[i]),
+        Dtype dist = std::max(margin - (Dtype)sqrt(dist_sq_.cpu_data()[i]),
                               Dtype(0.0));
         loss += dist * dist;
       }

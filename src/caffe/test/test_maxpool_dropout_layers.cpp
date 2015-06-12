@@ -22,7 +22,7 @@ class MaxPoolingDropoutTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     Caffe::set_random_seed(1703);
-    blob_bottom_->Reshape(2, 3, 6, 5);
+    blob_bottom_->Reshape(2, 3, 6, 5, Caffe::GetDefaultDeviceContext());
     // fill the values
     FillerParameter filler_param;
     filler_param.set_value(1.);

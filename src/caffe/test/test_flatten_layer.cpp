@@ -18,7 +18,7 @@ class FlattenLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   FlattenLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5, Caffe::GetDefaultDeviceContext())),
         blob_top_(new Blob<Dtype>()) {
     Caffe::set_random_seed(1701);
     // fill the values

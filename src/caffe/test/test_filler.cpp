@@ -12,7 +12,7 @@ template <typename Dtype>
 class ConstantFillerTest : public ::testing::Test {
  protected:
   ConstantFillerTest()
-      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         filler_param_() {
     filler_param_.set_value(10.);
     filler_.reset(new ConstantFiller<Dtype>(filler_param_));
@@ -40,7 +40,7 @@ template <typename Dtype>
 class UniformFillerTest : public ::testing::Test {
  protected:
   UniformFillerTest()
-      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         filler_param_() {
     filler_param_.set_min(1.);
     filler_param_.set_max(2.);
@@ -69,7 +69,7 @@ template <typename Dtype>
 class PositiveUnitballFillerTest : public ::testing::Test {
  protected:
   PositiveUnitballFillerTest()
-      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         filler_param_() {
     filler_.reset(new PositiveUnitballFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
@@ -106,7 +106,7 @@ template <typename Dtype>
 class GaussianFillerTest : public ::testing::Test {
  protected:
   GaussianFillerTest()
-      : blob_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         filler_param_() {
     filler_param_.set_mean(10.);
     filler_param_.set_std(0.1);
@@ -146,7 +146,7 @@ template <typename Dtype>
 class XavierFillerTest : public ::testing::Test {
  protected:
   XavierFillerTest()
-      : blob_(new Blob<Dtype>(1000, 2, 4, 5)),
+      : blob_(new Blob<Dtype>(1000, 2, 4, 5, Caffe::GetDefaultDeviceContext())),
         filler_param_() {
   }
   virtual void test_params(FillerParameter_VarianceNorm variance_norm,
@@ -195,7 +195,7 @@ template <typename Dtype>
 class MSRAFillerTest : public ::testing::Test {
  protected:
   MSRAFillerTest()
-      : blob_(new Blob<Dtype>(1000, 2, 4, 5)),
+      : blob_(new Blob<Dtype>(1000, 2, 4, 5, Caffe::GetDefaultDeviceContext())),
         filler_param_() {
   }
   virtual void test_params(FillerParameter_VarianceNorm variance_norm,

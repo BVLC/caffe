@@ -15,10 +15,10 @@ namespace caffe {
 class SyncedMemoryTest : public ::testing::Test {};
 
 TEST_F(SyncedMemoryTest, TestInitialization) {
-  SyncedMemory mem(10);
+  SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   EXPECT_EQ(mem.head(), SyncedMemory::UNINITIALIZED);
   EXPECT_EQ(mem.size(), 10);
-  SyncedMemory* p_mem = new SyncedMemory(10 * sizeof(float));
+  SyncedMemory* p_mem = new SyncedMemory(10 * sizeof(float), Caffe::GetDefaultDeviceContext());
   EXPECT_EQ(p_mem->size(), 10 * sizeof(float));
   delete p_mem;
 }
@@ -26,7 +26,7 @@ TEST_F(SyncedMemoryTest, TestInitialization) {
 #ifndef CPU_ONLY  // GPU test
 
 TEST_F(SyncedMemoryTest, TestAllocationCPUGPU) {
-  SyncedMemory mem(10);
+  SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   EXPECT_TRUE(mem.cpu_data());
   EXPECT_TRUE(mem.gpu_data());
   EXPECT_TRUE(mem.mutable_cpu_data());
@@ -36,7 +36,7 @@ TEST_F(SyncedMemoryTest, TestAllocationCPUGPU) {
 #endif
 
 TEST_F(SyncedMemoryTest, TestAllocationCPU) {
-  SyncedMemory mem(10);
+  SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   EXPECT_TRUE(mem.cpu_data());
   EXPECT_TRUE(mem.mutable_cpu_data());
 }
@@ -44,7 +44,7 @@ TEST_F(SyncedMemoryTest, TestAllocationCPU) {
 #ifndef CPU_ONLY  // GPU test
 
 TEST_F(SyncedMemoryTest, TestAllocationGPU) {
-  SyncedMemory mem(10);
+  SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   EXPECT_TRUE(mem.gpu_data());
   EXPECT_TRUE(mem.mutable_gpu_data());
 }
@@ -52,7 +52,7 @@ TEST_F(SyncedMemoryTest, TestAllocationGPU) {
 #endif
 
 TEST_F(SyncedMemoryTest, TestCPUWrite) {
-  SyncedMemory mem(10);
+  SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   void* cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   caffe_memset(mem.size(), 1, cpu_data);
@@ -71,7 +71,7 @@ TEST_F(SyncedMemoryTest, TestCPUWrite) {
 #ifndef CPU_ONLY  // GPU test
 
 TEST_F(SyncedMemoryTest, TestGPURead) {
-  SyncedMemory mem(10);
+  SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   void* cpu_data = mem.mutable_cpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_CPU);
   caffe_memset(mem.size(), 1, cpu_data);
@@ -101,7 +101,7 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
 }
 
 TEST_F(SyncedMemoryTest, TestGPUWrite) {
-  SyncedMemory mem(10);
+  SyncedMemory mem(10, Caffe::GetDefaultDeviceContext());
   void* gpu_data = mem.mutable_gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
   caffe_gpu_memset(mem.size(), 1, gpu_data);

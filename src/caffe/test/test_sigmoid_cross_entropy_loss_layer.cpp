@@ -21,8 +21,8 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   SigmoidCrossEntropyLossLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
-        blob_bottom_targets_(new Blob<Dtype>(10, 5, 1, 1)),
+      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1, Caffe::GetDefaultDeviceContext())),
+        blob_bottom_targets_(new Blob<Dtype>(10, 5, 1, 1, Caffe::GetDefaultDeviceContext())),
         blob_top_loss_(new Blob<Dtype>()) {
     // Fill the data vector
     FillerParameter data_filler_param;

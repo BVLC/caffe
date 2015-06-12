@@ -20,9 +20,9 @@ class FilterLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   FilterLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(4, 3, 6, 4)),
-        blob_bottom_labels_(new Blob<Dtype>(4, 1, 1, 1)),
-        blob_bottom_selector_(new Blob<Dtype>(4, 1, 1, 1)),
+      : blob_bottom_data_(new Blob<Dtype>(4, 3, 6, 4, Caffe::GetDefaultDeviceContext())),
+        blob_bottom_labels_(new Blob<Dtype>(4, 1, 1, 1, Caffe::GetDefaultDeviceContext())),
+        blob_bottom_selector_(new Blob<Dtype>(4, 1, 1, 1, Caffe::GetDefaultDeviceContext())),
         blob_top_data_(new Blob<Dtype>()),
         blob_top_labels_(new Blob<Dtype>()) {}
   virtual void SetUp() {

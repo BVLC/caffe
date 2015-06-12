@@ -18,7 +18,7 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
   Im2colLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5, Caffe::GetDefaultDeviceContext())),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;

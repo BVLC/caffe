@@ -19,7 +19,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
   PowerLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5)),
+      : blob_bottom_(new Blob<Dtype>(2, 3, 4, 5, Caffe::GetDefaultDeviceContext())),
         blob_top_(new Blob<Dtype>()) {
     Caffe::set_random_seed(1701);
     // fill the values
