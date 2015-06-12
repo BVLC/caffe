@@ -24,14 +24,14 @@ template<>
 void caffe_cpu_omatcopy<float>(const char trans, const int M, const int N, const float alpha, const float* A, float* B) {
     int lda = N;
     int ldb = (trans == 'T') ? M:N;
-    mkl_somatcopy('r',trans,M,N,1.0,A,lda,B,ldb); 
+    mkl_somatcopy('r',trans,M,N,(float)1.0,A,lda,B,ldb); 
 }
 
 template<>
 void caffe_cpu_omatcopy<double>(const char trans, const int M, const int N, const double alpha, const double* A, double* B) {
     int lda = N;
     int ldb = (trans == 'T') ? M:N;
-    mkl_domatcopy('r',trans,M,N,1.0,A,lda,B,ldb); 
+    mkl_domatcopy('r',trans,M,N,(double)1.0,A,lda,B,ldb); 
 }
 
 template<>
@@ -39,7 +39,7 @@ void caffe_cpu_gels<float>(const int M, const int N, const int NRHS, const float
     int LDA = N;
     int LDB = NRHS;
     MKL_INT m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
-    float* h = new float();
+    float h[m*n];
     caffe_cpu_omatcopy<float>('N',m,n,1.0,H,h); 
     caffe_cpu_omatcopy<float>('N',M,NRHS,1.0,y,x);
     info = LAPACKE_sgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);
@@ -50,7 +50,7 @@ void caffe_cpu_gels<double>(const int M, const int N, const int NRHS, const doub
     int LDA = N;
     int LDB = NRHS;
     MKL_INT m = M, n = N, nrhs = NRHS, lda = LDA, ldb = LDB, info;
-    double* h = new double();
+    double h[m*n];
     caffe_cpu_omatcopy<double>('N',m,n,1.0,H,h); 
     caffe_cpu_omatcopy<double>('N',M,NRHS,1.0,y,x);
     info = LAPACKE_dgels(LAPACK_ROW_MAJOR,'N',m,n,nrhs,h,lda,x,ldb);

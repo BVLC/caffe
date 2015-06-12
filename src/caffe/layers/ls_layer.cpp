@@ -19,7 +19,7 @@ void LSLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->blobs_.resize(1);
     vector<int> hidden_output_shape = bottom[0]->shape();
     vector<int> expected_output_shape = bottom[1]->shape();
-    vector<int> weight_shape;
+    vector<int> weight_shape(2);
     weight_shape[0] = hidden_output_shape[0];
     weight_shape[1] = expected_output_shape[1];
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
@@ -51,9 +51,9 @@ void LSLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 
 
-#ifdef CPU_ONLY
-//STUB_GPU(LSLayer);
-#endif
+// #ifdef CPU_ONLY
+// //STUB_GPU(LSLayer);
+// #endif
 
 INSTANTIATE_CLASS(LSLayer);
 REGISTER_LAYER_CLASS(LS);
