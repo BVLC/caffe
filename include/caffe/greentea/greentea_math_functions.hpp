@@ -118,6 +118,11 @@ void greentea_gpu_powx(const int ctx_id, const int N, const cl_mem a,
                        const int offy);
 
 template<typename Dtype>
+void greentea_gpu_log(const int ctx_id, const int N, const cl_mem a,
+                       const int offa, cl_mem y,
+                       const int offy);
+
+template<typename Dtype>
 void greentea_gpu_sign(const int ctx_id, const int n, const cl_mem x, int offx,
                        cl_mem y, const int offy);
 

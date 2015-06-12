@@ -64,6 +64,14 @@ __kernel void TEMPLATE(exp,Dtype)(const int n, __global const Dtype* a,
   }
 }
 
+__kernel void TEMPLATE(log,Dtype)(const int n, __global const Dtype* a,
+                                  const int offa, __global Dtype* y,
+                                  const int offy) {
+  for (int index = get_global_id(0); index < n; index += get_global_size(0)) {
+    y[offy + index] = log(a[offa + index]);
+  }
+}
+
 __kernel void TEMPLATE(powx,Dtype)(const int n, __global const Dtype* a,
                                    const int offa, Dtype alpha,
                                    __global Dtype* y,
